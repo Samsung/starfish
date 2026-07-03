@@ -2,7 +2,7 @@
 http://web-platform.test:8000/css/CSS2/abspos/adjacent-to-relpos-inline-in-inline-that-had-block.html
 http://web-platform.test:8000/css/CSS2/abspos/adjacent-to-relpos-inline-that-had-block.html
 # [auto-fail] http://web-platform.test:8000/css/CSS2/borders/discrete-no-interpolation.html
-http://web-platform.test:8000/css/CSS2/floats-clear/adjoining-float-new-fc-crash.html
+# [crashtest-only, see tool/wpt/crashtest_lists/css_CSS2.res] http://web-platform.test:8000/css/CSS2/floats-clear/adjoining-float-new-fc-crash.html
 # [auto-fail] http://web-platform.test:8000/css/CSS2/floats-clear/clear-no-interpolation.html
 # [auto-fail] http://web-platform.test:8000/css/CSS2/floats/computed-float-position-absolute.html
 http://web-platform.test:8000/css/CSS2/floats/float-in-self-painting-inline.html
@@ -27,7 +27,7 @@ http://web-platform.test:8000/css/CSS2/linebox/inline-children-root-linebox-cras
 http://web-platform.test:8000/css/CSS2/linebox/inline-negative-margin-minmax-crash-001.html
 http://web-platform.test:8000/css/CSS2/linebox/needs-layout-transform.html
 # [auto-fail] http://web-platform.test:8000/css/CSS2/linebox/vertical-align-top-bottom-001.html
-http://web-platform.test:8000/css/CSS2/linebox/video-needs-layout-crash.html
+# [crashtest-only, see tool/wpt/crashtest_lists/css_CSS2.res] http://web-platform.test:8000/css/CSS2/linebox/video-needs-layout-crash.html
 # [auto-fail] http://web-platform.test:8000/css/CSS2/normal-flow/auto-margins-root-element.html
 http://web-platform.test:8000/css/CSS2/normal-flow/auto-margins-used-values.html
 # [auto-fail] http://web-platform.test:8000/css/CSS2/normal-flow/auto-margins-used-values-with-floats.tentative.html
