@@ -68,8 +68,8 @@ kuep_net_signer.sh
 .design
 
 # WPT audit byproducts: regenerable by tool/wpt_audit.py, not read at runtime.
-tool/wpt/lists/*.remap
-tool/wpt/lists/*.missing
+tool/wpt/testharness_lists/*.remap
+tool/wpt/testharness_lists/*.missing
 
 # WPT status report generation
 report.html

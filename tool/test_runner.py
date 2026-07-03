@@ -281,13 +281,13 @@ def wpt_all():
     # wpt_serve_fullscreen()  # migrated to wpt_serve_fullscreen
 
 # WPT (testharness) via on-demand `wpt serve` -- see docs/wpt.md.
-# Runs the active (expected-pass) lists under tool/wpt/lists/; any active test
-# failing is treated as a regression. Failing tests are kept as
+# Runs the active (expected-pass) lists under tool/wpt/testharness_lists/; any
+# active test failing is treated as a regression. Failing tests are kept as
 # `# [auto-fail:REASON]` comments (refresh with wpt_runner.py + wpt_annotate.py).
 #
-# wpt_serve_all runs every list; each wpt_serve_<module> suite runs one group of
-# lists so a module can be checked in isolation.
-_WPT_LISTS_DIR = os.path.join(working_directory, "tool/wpt/lists")
+# wpt_serve_testharness runs every list; each wpt_serve_<module> suite runs
+# one group of lists so a module can be checked in isolation.
+_WPT_TESTHARNESS_LISTS_DIR = os.path.join(working_directory, "tool/wpt/testharness_lists")
 
 
 def _wpt_serve_run(*patterns, jobs=8, timeout=20):
@@ -298,9 +298,9 @@ def _wpt_serve_run(*patterns, jobs=8, timeout=20):
     if patterns:
         targets = []
         for pat in patterns:
-            targets.extend(sorted(glob.glob(os.path.join(_WPT_LISTS_DIR, pat))))
+            targets.extend(sorted(glob.glob(os.path.join(_WPT_TESTHARNESS_LISTS_DIR, pat))))
     else:
-        targets = [_WPT_LISTS_DIR]
+        targets = [_WPT_TESTHARNESS_LISTS_DIR]
 
     items = []
     for t in targets:
@@ -329,65 +329,65 @@ def _wpt_serve_run(*patterns, jobs=8, timeout=20):
         sys.exit(ERRORCODE.TEST_FAILED)
 
 
-def wpt_serve_css():
+def wpt_serve_testharness_css():
     _wpt_serve_run("css_*.res")
 
 
-def wpt_serve_dom():
+def wpt_serve_testharness_dom():
     _wpt_serve_run("dom_*.res")
 
 
-def wpt_serve_canvas():
+def wpt_serve_testharness_canvas():
     _wpt_serve_run("2dcontext.res")
 
 
-def wpt_serve_html():
+def wpt_serve_testharness_html():
     _wpt_serve_run("html_*.res")
 
 
-def wpt_serve_xhr():
+def wpt_serve_testharness_xhr():
     _wpt_serve_run("xhr_*.res")
 
 
-def wpt_serve_fetch():
+def wpt_serve_testharness_fetch():
     _wpt_serve_run("fetch_*.res")
 
 
-def wpt_serve_worker():
+def wpt_serve_testharness_worker():
     _wpt_serve_run("worker.res")
 
 
-def wpt_serve_idb():
+def wpt_serve_testharness_idb():
     _wpt_serve_run("indexeddb.res")
 
 
-def wpt_serve_websocket():
+def wpt_serve_testharness_websocket():
     _wpt_serve_run("websocket.res")
 
 
-def wpt_serve_webrtc():
+def wpt_serve_testharness_webrtc():
     _wpt_serve_run("webrtc.res")
 
 
-def wpt_serve_intersection_observer():
+def wpt_serve_testharness_intersection_observer():
     _wpt_serve_run("intersection-observer.res")
 
 
-def wpt_serve_svg():
+def wpt_serve_testharness_svg():
     _wpt_serve_run("svg_*.res")
 
 
-def wpt_serve_fullscreen():
+def wpt_serve_testharness_fullscreen():
     _wpt_serve_run("fullscreen.res")
 
 
-def wpt_serve_others():
+def wpt_serve_testharness_others():
     _wpt_serve_run("battery_status.res", "cookies.res", "cors.res", "csp.res",
                    "fileAPI.res", "frame-ancestors.res", "page_visibility_basic.res",
                    "webstorage.res", "x-frame-options.res")
 
 
-def wpt_serve_all():
+def wpt_serve_testharness():
     _wpt_serve_run()
 
 

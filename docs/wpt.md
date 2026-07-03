@@ -203,12 +203,14 @@ python3 tool/wpt_runner.py tool/wpt/reftest_lists --mode reftest -j8
 python3 tool/wpt_runner.py tool/wpt/crashtest_lists --mode crashtest -j8
 ```
 
-Or through `test_runner.py`, which gates on the active lists — `wpt_serve_all`
-runs everything, and each `wpt_serve_<module>` runs one group so a module can be
-checked in isolation:
+Or through `test_runner.py`, which gates on the active lists —
+`wpt_serve_testharness` runs the whole testharness corpus, and each
+`wpt_serve_<module>` runs one group so a module can be checked in isolation;
+`wpt_serve_reftest`/`wpt_serve_crashtest` are the equivalent whole-corpus
+suites for those two kinds:
 
 ```sh
-./tool/test_runner.py wpt_serve_all
+./tool/test_runner.py wpt_serve_testharness
 ./tool/test_runner.py wpt_serve_dom      # css, dom, canvas, html, xhr, fetch,
                                          # worker, idb, websocket, webrtc, svg,
                                          # intersection_observer, others
@@ -218,8 +220,9 @@ checked in isolation:
 
 `wpt_serve_reftest`/`wpt_serve_crashtest` run lists generated straight from
 MANIFEST.json (see below) rather than carried forward from a legacy corpus,
-but they are baselined and annotated the same way as `wpt_serve_all` and gate
-at ~100%. Both run in CI (`.github/workflows/x64_test.yml`). Re-baseline and
+but they are baselined and annotated the same way as `wpt_serve_testharness`
+and gate at ~100%. All three run in CI (`.github/workflows/x64_test.yml`).
+Re-baseline and
 re-annotate them like any other list (see `tool/CLAUDE.md`'s WPT workflow)
 after an engine fix or WPT pin bump changes what passes.
 
@@ -305,7 +308,8 @@ writes `PASS|FAIL <reason> <url>` per test (line-buffered); `--resume` skips URL
 already in that file and appends (survives interruption); `-f/--force` also runs
 `#`-commented lines; `--no-serve` reuses an already-running server. Prints a
 per-list table and a failure-reason histogram, and exits non-zero if anything in
-an active list fails (so `test_runner.py wpt_serve_all` is a regression gate).
+an active list fails (so `test_runner.py wpt_serve_testharness` is a regression
+gate).
 
 ### tool/wpt_audit.py — generate / refresh the lists
 Decides which legacy tests still exist in the pinned revision and (re)writes the

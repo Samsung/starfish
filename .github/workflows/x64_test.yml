@@ -265,9 +265,9 @@ jobs:
       - name: Setup WPT hosts
         run: python3.9 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts
 
-      - name: Run wpt_serve_all
+      - name: Run wpt_serve_testharness
         run: |
-          xvfb-run -s '-screen 0 1920x1080x24' -a python3.9 ./tool/test_runner.py wpt_serve_all || exit 1
+          xvfb-run -s '-screen 0 1920x1080x24' -a python3.9 ./tool/test_runner.py wpt_serve_testharness || exit 1
 
       - name: Run wpt_serve_reftest
         run: |
