@@ -45,6 +45,10 @@ from html import escape
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from wpt_server import wpt_serve, DEFAULT_WPT_ROOT  # noqa: E402
 from wpt_runner import RE_PASS, RE_FAIL, RE_DONE, STARFISH  # noqa: E402
+# Re-exported for existing callers (wpt_manifest_lists.py, test_runner.py);
+# actually defined in wpt_reftest.py, the lowest-level module that needs it,
+# so no module here needs a deferred/circular-avoiding import for it.
+from wpt_reftest import ensure_manifest  # noqa: E402,F401
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_TARGETS = os.path.join(REPO_ROOT, "tool", "wpt_status_targets.txt")
@@ -109,39 +113,23 @@ def _collect_urls(node, prefix, out):
             _collect_urls(val, prefix + "/" + name, out)
 
 
-def ensure_manifest(wpt_root, manifest_path):
-    """Build MANIFEST.json if absent.
+def enumerate_tests(manifest_path, targets, test_type="testharness"):
+    """Return ({category: [full_url, ...]}, [missing_category, ...]).
 
-    The manifest is .gitignored, so a fresh checkout / CI runner won't have it,
-    and we read it before starting the server (so `wpt serve` can't build it for
-    us). `wpt manifest` also bootstraps the wpt virtualenv on first run.
-    --no-download builds locally instead of fetching, which is robust behind a
-    proxy.
+    test_type selects the MANIFEST.json items branch to walk ("testharness",
+    "reftest", "crashtest", ...). Non-testharness branches use a 3-element
+    variant ([url, references-or-extras, extras]) instead of testharness's
+    2-element one, but _collect_urls only ever reads variant[0] (the url), so
+    the same walker works unchanged across types.
     """
-    if os.path.isfile(manifest_path):
-        return
-    wpt_bin = os.path.join(wpt_root, "wpt")
-    if not os.path.isfile(wpt_bin):
-        raise SystemExit(
-            "no wpt checkout at %s (missing ./wpt); run "
-            "`git submodule update --init third_party/wpt`" % wpt_root)
-    print("MANIFEST.json not found; building it (one-time, may take a "
-          "while)...", flush=True)
-    subprocess.run([sys.executable, wpt_bin, "manifest",
-                    "-p", manifest_path, "--tests-root", wpt_root,
-                    "--no-download"], check=True)
-
-
-def enumerate_tests(manifest_path, targets):
-    """Return ({category: [full_url, ...]}, [missing_category, ...])."""
     with open(manifest_path) as fp:
         manifest = json.load(fp)
     url_base = manifest["url_base"]
-    testharness = manifest["items"]["testharness"]
+    branch = manifest["items"][test_type]
     by_category = {}
     missing = []
     for target in targets:
-        node = testharness
+        node = branch
         found = True
         for part in target.split("/"):
             if isinstance(node, dict) and part in node:

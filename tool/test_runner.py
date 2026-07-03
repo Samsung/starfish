@@ -282,8 +282,8 @@ def wpt_all():
 
 # WPT (testharness) via on-demand `wpt serve` -- see docs/wpt.md.
 # Runs the active (expected-pass) lists under tool/wpt/lists/; any active test
-# failing is treated as a regression. Failing tests are kept as `# [auto-fail]`
-# comments (refresh with wpt_runner.py + wpt_annotate.py).
+# failing is treated as a regression. Failing tests are kept as
+# `# [auto-fail:REASON]` comments (refresh with wpt_runner.py + wpt_annotate.py).
 #
 # wpt_serve_all runs every list; each wpt_serve_<module> suite runs one group of
 # lists so a module can be checked in isolation.
@@ -391,6 +391,67 @@ def wpt_serve_all():
     _wpt_serve_run()
 
 
+# WPT reftest / crashtest via on-demand `wpt serve` -- MVP, see docs/wpt.md.
+# Unlike wpt_serve_* (curated tool/wpt/lists/, ~100% by design), these lists
+# are generated straight from MANIFEST.json by wpt_manifest_lists.py and are
+# not yet curated with wpt_annotate.py, so a fresh run is expected to show
+# real failures rather than gate at 100%.
+_WPT_REFTEST_LISTS_DIR = os.path.join(working_directory, "tool/wpt/reftest_lists")
+_WPT_CRASHTEST_LISTS_DIR = os.path.join(working_directory, "tool/wpt/crashtest_lists")
+
+
+def _wpt_manifest_run(list_dir, mode, jobs=8, timeout=20):
+    import wpt_runner
+    from wpt_server import wpt_serve, DEFAULT_WPT_ROOT, WptServerError
+
+    if not os.path.isdir(list_dir):
+        print("no lists at %s -- run: python3 tool/wpt_manifest_lists.py "
+              "--mode %s --out-dir %s" % (list_dir, mode, list_dir))
+        sys.exit(ERRORCODE.TEST_STOPPED)
+
+    print("NOTE: un-curated MANIFEST-derived list, not yet baselined -- "
+          "failures are expected until annotated (see docs/wpt.md)")
+    items = wpt_runner.collect(list_dir, force=False)
+    print_table("Running WPT %s (on-demand)" % mode, "%d tests" % len(items))
+    manifest = None
+    if mode == "reftest":
+        from wpt_reftest import ensure_imgdiff
+        from wpt_status import ensure_manifest
+        ensure_imgdiff()
+        manifest_path = os.path.join(DEFAULT_WPT_ROOT, "MANIFEST.json")
+        ensure_manifest(DEFAULT_WPT_ROOT, manifest_path)
+        manifest = wpt_runner.load_manifest(DEFAULT_WPT_ROOT)
+    try:
+        with wpt_serve(DEFAULT_WPT_ROOT, verbose=True):
+            npass, reasons, per_list = wpt_runner.run_all(
+                items, jobs, timeout, None, mode=mode, manifest=manifest)
+    except WptServerError as e:
+        print("wpt serve failed: %s" % e)
+        print("hosts not set? run: "
+              "python3 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts")
+        sys.exit(ERRORCODE.TEST_STOPPED)
+
+    global ran_test_count
+    ran_test_count += len(items)
+    if len(per_list) > 1:
+        for name in sorted(per_list):
+            pn, tn = per_list[name]
+            print("  %-44s %d/%d" % (name, pn, tn))
+    print("WPT %s pass %d/%d" % (mode, npass, len(items)))
+    if npass != len(items):
+        for reason, n in reasons.most_common():
+            print("  %5d  %s" % (n, reason))
+        sys.exit(ERRORCODE.TEST_FAILED)
+
+
+def wpt_serve_reftest():
+    _wpt_manifest_run(_WPT_REFTEST_LISTS_DIR, "reftest")
+
+
+def wpt_serve_crashtest():
+    _wpt_manifest_run(_WPT_CRASHTEST_LISTS_DIR, "crashtest")
+
+
 def bidi_test():
     run_test(["bidi", "tool/reftest/cairo/bidi.res", "cairo", "--font-dep"])
 
@@ -429,7 +490,8 @@ if __name__ == "__main__":
     for key, value in list(locals().items()):
         if callable(value) and value.__module__ == __name__:
             if key not in ["file_len", "print_columns", "print_table",
-                           "run_test", "run_vendor_test_khronos", "_wpt_serve_run"]:
+                           "run_test", "run_vendor_test_khronos", "_wpt_serve_run",
+                           "_wpt_manifest_run"]:
                 test_functions.append(key)
     print_columns(sorted(test_functions), 4)
 
