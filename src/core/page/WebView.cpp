@@ -1867,8 +1867,20 @@ RenderResult WebView::rendering(bool force)
                         ->asPseudoElement()
                         ->originElement()
                         ->setNeedsStyleRecalcForAnimation();
+                    task->targetElement()
+                        ->asPseudoElement()
+                        ->originElement()
+                        ->setNeedsPainting();
                 } else {
                     task->targetElement()->setNeedsStyleRecalcForAnimation();
+                    // A transitioning element that is not itself composited is
+                    // baked into an ancestor's composited buffer. When a video
+                    // content surface floods the render loop with
+                    // composite-only frames, that buffer is not re-rasterized,
+                    // so the transition (e.g. YouTube controls fading via
+                    // opacity) freezes as a ghost. Force a repaint each tick so
+                    // the animated property is re-rasterized into the buffer.
+                    task->targetElement()->setNeedsPainting();
                 }
             }
 

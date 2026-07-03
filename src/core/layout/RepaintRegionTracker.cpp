@@ -259,10 +259,24 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
             auto iter = m_prevDrawnStackingContextInfoMap.find(frame->node());
             if (iter != m_prevDrawnStackingContextInfoMap.end()) {
                 iter.value().hasThisLayerThisTime = true;
-                iter.value().isEqualsWithPrevDrawing = true;
-                if (!iter->second.isVisibleBefore) {
-                    needToSkip = false;
+                if (iter->second.isVisibleBefore) {
+                    // The box was visible in the previous frame and has just
+                    // become invisible (e.g. opacity animated to 0). Its pixels
+                    // are still baked into the containing composited buffer, so
+                    // we must dirty the region it occupied to erase it -- on a
+                    // video-driven composite-only render nothing else will.
+                    // Skipping here (the old behavior) left the content painted
+                    // as a ghost (YouTube player controls not disappearing).
+                    iter.value().isVisibleBefore = false;
+                    FrameBox* cb = containingBlock(frame);
+                    if (cb) {
+                        notifyDirty(cb, cb->stackingContext(),
+                                    cb->computeScreenMatrix(),
+                                    cb->frameVisibleRect());
+                    }
+                    return;
                 }
+                iter.value().isEqualsWithPrevDrawing = true;
             } else {
                 needToSkip = false;
             }
