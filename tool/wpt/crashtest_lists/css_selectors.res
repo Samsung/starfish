@@ -1,0 +1,17 @@
+http://web-platform.test:8000/css/selectors/backdrop-input-crash.html
+http://web-platform.test:8000/css/selectors/eof-right-after-selector-crash.html
+http://web-platform.test:8000/css/selectors/eof-some-after-selector-crash.html
+http://web-platform.test:8000/css/selectors/has-nth-of-crash.html
+http://web-platform.test:8000/css/selectors/has-sibling-chrome-crash.html
+http://web-platform.test:8000/css/selectors/invalidation/crashtests/has-pseudoclass-only-crash.html
+http://web-platform.test:8000/css/selectors/invalidation/crashtests/nth-child-of-attribute-crash.html
+http://web-platform.test:8000/css/selectors/invalidation/has-nested-pseudo-001-crash.html
+http://web-platform.test:8000/css/selectors/invalidation/has-nested-pseudo-002-crash.html
+http://web-platform.test:8000/css/selectors/invalidation/has-nested-pseudo-003-crash.html
+http://web-platform.test:8000/css/selectors/invalidation/nth-of-namespace-class-invalidation-crash.html
+http://web-platform.test:8000/css/selectors/is-where-error-crash.html
+http://web-platform.test:8000/css/selectors/link-sharing-crash.html
+http://web-platform.test:8000/css/selectors/nth-child-spurious-brace-crash.html
+http://web-platform.test:8000/css/selectors/pseudo-where-crash.html
+http://web-platform.test:8000/css/selectors/spurious-brace-crash.html
+http://web-platform.test:8000/css/selectors/visited-part-crash.html

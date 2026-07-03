@@ -1,0 +1,26 @@
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/large-scroll-margin-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-snap-root-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-snap-root-002.html
+http://web-platform.test:8000/css/css-scroll-snap/scroll-snap-root-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-target-align-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-target-align-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-target-align-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-target-align-004.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-target-align-005.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-target-align-006.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-target-margin-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-target-margin-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-target-margin-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-target-margin-004.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-target-padding-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-target-padding-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-target-padding-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-target-snap-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-target-snap-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/scroll-target-snap-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/snap-after-initial-layout/direction-rtl.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/snap-after-initial-layout/scroll-snap-initial-layout-000.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/snap-after-initial-layout/scroll-snap-writing-mode-000.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/snap-after-initial-layout/writing-mode-horizontal-tb.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/snap-after-initial-layout/writing-mode-vertical-lr.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-scroll-snap/snap-after-initial-layout/writing-mode-vertical-rl.html
