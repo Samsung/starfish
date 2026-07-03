@@ -3802,7 +3802,7 @@ public:
         lastState.abbreviatedClipPaths.push_back(path);
     }
 
-    virtual Unit::Rect currentClipRect() override
+    virtual Optional<Unit::Rect> currentClipRect() override
     {
         return m_state.back().clipRect;
     }

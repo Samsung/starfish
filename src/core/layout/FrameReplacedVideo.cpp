@@ -59,6 +59,7 @@ void FrameReplacedVideo::didCompositeStackingContext(Compositor* c)
 
 void FrameReplacedVideo::didCullStackingContext()
 {
+    STARFISH_ASSERT(node()->isHTMLVideoElement());
     auto v = node()->asHTMLVideoElement();
     if (v->activeMediaPlayer()) {
         v->activeMediaPlayer()->hideVideoOverlay();

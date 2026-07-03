@@ -805,8 +805,9 @@ public:
     }
 
     // Called when this box's stacking context is skipped/culled for a frame
-    // (empty visible rect, or extent off-screen) instead of being composited.
-    // A video on a HW overlay plane uses this to hide the plane, which the web
+    // (empty visible rect, extent off-screen, whole subtree visibility:hidden,
+    // or non-invertible composite matrix) instead of being composited. A video
+    // on a HW overlay plane uses this to hide the plane, which the web
     // compositor does not drive.
     virtual void didCullStackingContext()
     {

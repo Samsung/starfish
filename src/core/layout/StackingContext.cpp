@@ -2789,6 +2789,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             }
         });
         if (everyDescendantHidden) {
+            owner()->didCullStackingContext();
             return;
         }
     }
@@ -2890,6 +2891,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     // If current matrix is invalid, we could not composite StackckingContext
     SkMatrix test;
     if (!r.canvasOrCompositor()->currentTransformMatrix().invert(&test)) {
+        owner()->didCullStackingContext();
         return;
     }
 

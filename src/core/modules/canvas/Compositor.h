@@ -86,11 +86,13 @@ public:
     // Current accumulated clip rectangle in logical-screen coordinates (the
     // same space as applyMatrixTo produces). A HW video overlay is a separate
     // layer that the page clip does not affect, so the overlay path reads this
-    // to shrink the plane to the actually-visible region. An empty rect means
-    // "unknown / unbounded" (compositors that don't track it fall back).
-    virtual Unit::Rect currentClipRect()
+    // to shrink the plane to the actually-visible region. A disengaged
+    // Optional means the compositor does not track the clip (callers fall
+    // back to the viewport); an engaged empty rect means genuinely clipped
+    // to nothing.
+    virtual Optional<Unit::Rect> currentClipRect()
     {
-        return Unit::Rect(0, 0, 0, 0);
+        return Optional<Unit::Rect>();
     }
 
     // reset transform matrix & clip
