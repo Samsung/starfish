@@ -126,8 +126,12 @@ void MediaPlayerTizen::setNativePlayerDisplayMode()
         player_set_ecore_wl_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_OVERLAY,
                                     ecoreWaylandHandle, 0, 0, width, height);
 #endif
-        player_set_display_visible(m_nativePlayer, true);
-        m_overlayPlaneVisible = true;
+        int ret = player_set_display_visible(m_nativePlayer, true);
+        if (ret == PLAYER_ERROR_NONE) {
+            m_overlayPlaneVisible = true;
+        } else {
+            PLAYER_LOGE("**ERROR: player_set_display_visible %x -> ", ret);
+        }
     } else {
         setNativePlayerDisplayModeWithGL();
     }
@@ -167,8 +171,6 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
     if (!videoOverlayEnabled()) {
         return;
     }
-    canvas->punchHole(Unit::Rect(videoRect.x(), videoRect.y(),
-                                 videoRect.width(), videoRect.height()));
 
     // The HW plane is a separate layer behind the (transparent) page, so it is
     // NOT clipped by the page: whatever rect it is given paints straight
@@ -177,7 +179,8 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
     // content correctly, but the overlay must be confined here to match. The
     // visible region is the video rect intersected with the compositor's
     // current clip rect (logical-screen space, same as absVideoRect); it falls
-    // back to the page viewport when the compositor does not report a clip.
+    // back to the page viewport when the compositor does not track the clip
+    // (disengaged Optional); an engaged empty rect means clipped to nothing.
     // In PLAYER_DISPLAY_MODE_DST_ROI the frame is scaled to fit the display
     // ROI, so shrinking the display ROI to that intersection confines the
     // plane; the source is cropped to the same part (player_set_video_roi_area,
@@ -188,16 +191,16 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
     // player_set_display_visible, because the compositor culls the off-screen
     // stacking context and stops calling this method, so the plane would
     // otherwise freeze at its last on-screen ROI.
-    Unit::Rect clipRect = canvas->currentClipRect();
+    Optional<Unit::Rect> clipRect = canvas->currentClipRect();
     LayoutUnit clipX(0);
     LayoutUnit clipY(0);
     LayoutUnit clipMaxX(m_container->webView()->renderer()->width());
     LayoutUnit clipMaxY(m_container->webView()->renderer()->height());
-    if (!clipRect.isEmpty()) {
-        clipX = LayoutUnit(clipRect.x());
-        clipY = LayoutUnit(clipRect.y());
-        clipMaxX = LayoutUnit(clipRect.maxX());
-        clipMaxY = LayoutUnit(clipRect.maxY());
+    if (clipRect) {
+        clipX = LayoutUnit(clipRect.value().x());
+        clipY = LayoutUnit(clipRect.value().y());
+        clipMaxX = LayoutUnit(clipRect.value().maxX());
+        clipMaxY = LayoutUnit(clipRect.value().maxY());
     }
     LayoutUnit visibleX = std::max(absVideoRect.x(), clipX);
     LayoutUnit visibleY = std::max(absVideoRect.y(), clipY);
@@ -209,6 +212,8 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
         return;
     }
     setOverlayPlaneVisible(true);
+    canvas->punchHole(Unit::Rect(videoRect.x(), videoRect.y(),
+                                 videoRect.width(), videoRect.height()));
 
     LayoutRect roiArea(visibleX, visibleY, visibleMaxX - visibleX,
                        visibleMaxY - visibleY);
