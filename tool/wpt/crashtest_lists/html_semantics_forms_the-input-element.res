@@ -1,0 +1,9 @@
+http://web-platform.test:8000/html/semantics/forms/the-input-element/disabled-attempt-focus-crash.html
+http://web-platform.test:8000/html/semantics/forms/the-input-element/input-form-detach-style-crash.html
+http://web-platform.test:8000/html/semantics/forms/the-input-element/input-importNode-to-detached-document-crash.html
+http://web-platform.test:8000/html/semantics/forms/the-input-element/input-type-change-empty-crash.html
+http://web-platform.test:8000/html/semantics/forms/the-input-element/input-type-number-rtl-invalid-crash.html
+http://web-platform.test:8000/html/semantics/forms/the-input-element/invalid-datalist-options-crash.html
+http://web-platform.test:8000/html/semantics/forms/the-input-element/large-step-crash.html
+http://web-platform.test:8000/html/semantics/forms/the-input-element/time-datalist-crash.html
+http://web-platform.test:8000/html/semantics/forms/the-input-element/type-change-file-to-text-crash.html

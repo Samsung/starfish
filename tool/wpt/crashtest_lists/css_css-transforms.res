@@ -1,0 +1,23 @@
+http://web-platform.test:8000/css/css-transforms/crashtests/fragmented-block-in-inline-with-perspective.html
+http://web-platform.test:8000/css/css-transforms/crashtests/large-scale3d-001.html
+http://web-platform.test:8000/css/css-transforms/crashtests/large-scaley-001.html
+http://web-platform.test:8000/css/css-transforms/crashtests/locked-display-transform-crash.html
+http://web-platform.test:8000/css/css-transforms/crashtests/preserve3d-containing-block-inline-001.html
+http://web-platform.test:8000/css/css-transforms/crashtests/preserve3d-containing-block-inline-002.html
+http://web-platform.test:8000/css/css-transforms/crashtests/preserve3d-containing-br-001.html
+http://web-platform.test:8000/css/css-transforms/crashtests/preserve3d-containing-br-002.html
+http://web-platform.test:8000/css/css-transforms/crashtests/preserve3d-inline-hit-test.html
+http://web-platform.test:8000/css/css-transforms/crashtests/preserve3d-scene-001.html
+http://web-platform.test:8000/css/css-transforms/crashtests/preserve3d-scene-002.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-transforms/crashtests/preserve3d-svg-foreign-object-hit-test.svg
+http://web-platform.test:8000/css/css-transforms/crashtests/transform-marquee-resize-div-image-001.html
+http://web-platform.test:8000/css/css-transforms/crashtests/uninvertible-transform-and-script-queries.html
+http://web-platform.test:8000/css/css-transforms/crashtests/w-crossing-zero-001.html
+http://web-platform.test:8000/css/css-transforms/crashtests/w-negative-001.html
+http://web-platform.test:8000/css/css-transforms/crashtests/w-negative-002.html
+http://web-platform.test:8000/css/css-transforms/crashtests/w-negative-003.html
+http://web-platform.test:8000/css/css-transforms/crashtests/zero-perspective-001.html
+http://web-platform.test:8000/css/css-transforms/large-matrix-crash.html
+http://web-platform.test:8000/css/css-transforms/transform-3d-fixed-under-fixed-opacity-crash.html
+http://web-platform.test:8000/css/css-transforms/transform-scroll-child-tweak-crash.html
+http://web-platform.test:8000/css/css-transforms/webkit-transform-origin-x-supports-crash.html

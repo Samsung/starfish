@@ -1,0 +1,9 @@
+http://web-platform.test:8000/css/css-fonts/font-face-local-css-wide-keyword-crash.html
+http://web-platform.test:8000/css/css-fonts/font-features-two-stylesheets-crash.html
+http://web-platform.test:8000/css/css-fonts/font-palette-relative-color-crash.html
+http://web-platform.test:8000/css/css-fonts/font-size-adjust-generic-font-fallback-crash.html
+http://web-platform.test:8000/css/css-fonts/font-size-adjust-nan-crash.html
+http://web-platform.test:8000/css/css-fonts/infinite-size-crash.html
+http://web-platform.test:8000/css/css-fonts/math-script-level-and-math-style/math-depth-001-crash.html
+http://web-platform.test:8000/css/css-fonts/oblique-request-italic-only-family-no-crash.html
+http://web-platform.test:8000/css/css-fonts/variable-in-feature-crash.html

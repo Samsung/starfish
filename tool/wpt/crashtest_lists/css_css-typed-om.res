@@ -1,0 +1,9 @@
+http://web-platform.test:8000/css/css-typed-om/cycle-in-unparsed-value-crash.html
+http://web-platform.test:8000/css/css-typed-om/perspective-typed-arithmetic-crash.html
+http://web-platform.test:8000/css/css-typed-om/set-css-wide-in-custom-property-crash.html
+http://web-platform.test:8000/css/css-typed-om/set-invalid-untyped-value-crash.html
+http://web-platform.test:8000/css/css-typed-om/stylevalue-serialization/crashtests/cssInvertValue-convert-crash.html
+http://web-platform.test:8000/css/css-typed-om/stylevalue-serialization/crashtests/cssInvertValue-zero.html
+http://web-platform.test:8000/css/css-typed-om/stylevalue-serialization/crashtests/cssTransform-Internal-value.html
+http://web-platform.test:8000/css/css-typed-om/the-stylepropertymap/computed/get-border-shorthand-crash.html
+http://web-platform.test:8000/css/css-typed-om/the-stylepropertymap/computed/getAll-disconnected-element-crash.html
