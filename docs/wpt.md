@@ -191,16 +191,20 @@ parallel, and judges the result according to `--mode` (default `testharness`):
   crashing the shell.
 
 ```sh
-# whole baseline (all lists under tool/wpt/lists/)
-python3 tool/wpt_runner.py tool/wpt/lists -j8
+# whole baseline (all lists under tool/wpt/testharness_lists/)
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py tool/wpt/testharness_lists -j8
 
 # one list, or resume an interrupted run (results are flushed per line)
-python3 tool/wpt_runner.py tool/wpt/lists/dom_basic.res
-python3 tool/wpt_runner.py tool/wpt/lists --results out.txt --resume
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py tool/wpt/testharness_lists/dom_basic.res
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py \
+    tool/wpt/testharness_lists --results out.txt --resume
 
-# reftest / crashtest lists (tool/wpt/reftest_lists/, tool/wpt/crashtest_lists/)
-python3 tool/wpt_runner.py tool/wpt/reftest_lists --mode reftest -j8
-python3 tool/wpt_runner.py tool/wpt/crashtest_lists --mode crashtest -j8
+# reftest / crashtest lists (tool/wpt/reftest_lists/, tool/wpt/crashtest_lists/),
+# capturing a --results file to baseline/re-baseline against (see wpt_annotate.py below)
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py \
+    tool/wpt/reftest_lists --mode reftest -j8 --results reftest_baseline.txt
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py \
+    tool/wpt/crashtest_lists --mode crashtest -j8 --results crashtest_baseline.txt
 ```
 
 Or through `test_runner.py`, which gates on the active lists —
@@ -210,12 +214,13 @@ Or through `test_runner.py`, which gates on the active lists —
 suites for those two kinds:
 
 ```sh
-./tool/test_runner.py wpt_serve_testharness
-./tool/test_runner.py wpt_serve_dom      # css, dom, canvas, html, xhr, fetch,
+xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py wpt_serve_testharness
+xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py wpt_serve_dom
+                                         # css, dom, canvas, html, xhr, fetch,
                                          # worker, idb, websocket, webrtc, svg,
                                          # intersection_observer, others
-./tool/test_runner.py wpt_serve_reftest    # tool/wpt/reftest_lists/
-./tool/test_runner.py wpt_serve_crashtest  # tool/wpt/crashtest_lists/
+xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py wpt_serve_reftest    # tool/wpt/reftest_lists/
+xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py wpt_serve_crashtest  # tool/wpt/crashtest_lists/
 ```
 
 `wpt_serve_reftest`/`wpt_serve_crashtest` run lists generated straight from
@@ -283,10 +288,12 @@ Runs the tests and judges them. Input: a `.res` file or a directory of them.
 verdict mechanism:
 
 ```sh
-python3 tool/wpt_runner.py tool/wpt/lists                          # whole testharness baseline
-python3 tool/wpt_runner.py .../dom_basic.res -j8 --timeout 20
-python3 tool/wpt_runner.py tool/wpt/reftest_lists --mode reftest   # reftest
-python3 tool/wpt_runner.py tool/wpt/crashtest_lists --mode crashtest
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py tool/wpt/testharness_lists  # whole testharness baseline
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py .../dom_basic.res -j8 --timeout 20
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py \
+    tool/wpt/reftest_lists --mode reftest      # reftest
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py \
+    tool/wpt/crashtest_lists --mode crashtest  # crashtest
 ```
 
 For each active URL, `testharness` mode runs `./Starfish <url> --hide-window`,
@@ -313,10 +320,10 @@ gate).
 
 ### tool/wpt_audit.py — generate / refresh the lists
 Decides which legacy tests still exist in the pinned revision and (re)writes the
-`tool/wpt/lists/` lists.
+`tool/wpt/testharness_lists/` lists.
 
 ```sh
-python3 tool/wpt_audit.py --out-dir tool/wpt/lists
+python3 tool/wpt_audit.py --out-dir tool/wpt/testharness_lists
 ```
 
 It probes the running server for each legacy URL (HTTP 200 = served, 404 =
@@ -352,8 +359,9 @@ regenerating the list.
 `items["reftest"]`; `run_reftest(url, ...)` captures the test page and each
 reference with `--screen-shot`, diffs with `imgdiff`, and applies the relation
 (`==` must match, `!=` must not). Also runnable standalone against one URL for
-debugging: `python3 tool/wpt_reftest.py <url>` (run inside a `wpt_serve`
-context, e.g. via `python3 tool/wpt_server.py` in another shell).
+debugging: `xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_reftest.py
+<url>` (run inside a `wpt_serve` context, e.g. via `python3 tool/wpt_server.py`
+in another shell).
 
 ### tool/wpt_annotate.py — mark failures
 Turns a measurement into the green gate. Reads a `--results` file and, in each
@@ -364,13 +372,29 @@ marker so a known tooling gap stays distinguishable from a real engine bug
 engine fix or pin bump to refresh which tests gate.
 
 ```sh
-python3 tool/wpt_runner.py tool/wpt/lists --results r.txt
-python3 tool/wpt_annotate.py r.txt tool/wpt/lists
+# testharness
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py \
+    tool/wpt/testharness_lists --results testharness_baseline.txt
+python3 tool/wpt_annotate.py testharness_baseline.txt tool/wpt/testharness_lists
+
+# reftest
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py \
+    tool/wpt/reftest_lists --mode reftest --results reftest_baseline.txt
+python3 tool/wpt_annotate.py reftest_baseline.txt tool/wpt/reftest_lists/
+
+# crashtest
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py \
+    tool/wpt/crashtest_lists --mode crashtest --results crashtest_baseline.txt
+python3 tool/wpt_annotate.py crashtest_baseline.txt tool/wpt/crashtest_lists/
 ```
+
+`wpt_annotate.py` itself never launches Starfish (it only rewrites `.res` files
+from a results file), so it does not need `xvfb-run` — only the `wpt_runner.py`
+measurement step does.
 
 ## Test lists
 
-`tool/wpt/lists/*.res` (testharness) — generated by `wpt_audit.py` from the
+`tool/wpt/testharness_lists/*.res` (testharness) — generated by `wpt_audit.py` from the
 legacy `tool/reftest/cairo/wpt/*.res` against the pinned revision. Only the
 `.res` files are tracked; the sibling `*.remap` (renamed tests, old→new) and
 `*.missing` (dropped, with HTTP status) provenance files are regenerated by
@@ -388,9 +412,9 @@ after an engine fix or WPT pin bump changes what passes.
 ```sh
 git -C third_party/wpt fetch --depth 1 origin <new-sha>
 git -C third_party/wpt checkout <new-sha>
-python3 tool/wpt_audit.py --out-dir tool/wpt/lists   # regen lists
-python3 tool/wpt_runner.py tool/wpt/lists            # re-measure
-git add third_party/wpt tool/wpt/lists
+python3 tool/wpt_audit.py --out-dir tool/wpt/testharness_lists   # regen lists (HTTP probe only, no Starfish)
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py tool/wpt/testharness_lists  # re-measure
+git add third_party/wpt tool/wpt/testharness_lists
 ```
 
 ## Baseline
