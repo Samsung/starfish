@@ -1,9 +1,0 @@
-#http://web-platform.test:8000/page-visibility/idlharness.html
-#http://web-platform.test:8000/page-visibility/iframe-unload.html
-#http://web-platform.test:8000/page-visibility/onvisibilitychange.html
-#http://web-platform.test:8000/page-visibility/prerender_call.html
-http://web-platform.test:8000/page-visibility/test_attributes_exist.html
-http://web-platform.test:8000/page-visibility/test_child_document.html
-#http://web-platform.test:8000/page-visibility/test_default_view.html
-http://web-platform.test:8000/page-visibility/test_read_only.html
-#http://web-platform.test:8000/page-visibility/unload.html

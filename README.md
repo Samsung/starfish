@@ -236,7 +236,7 @@ ninja install_pixel_test_dep
 
 # B. Web Platfrom Test
 ./tool/test_runner.py wpt_all or
-./tool/test_runner.py wpt_[css_css21|css_backgrounds|css_color|css_flexbox|css_transforms|css_variables|cssom_view|mediaqueries|selectors|others|canvas|pwa]
+./tool/test_runner.py wpt_[css_css21|css_backgrounds|css_color|css_flexbox|css_transforms|css_variables|mediaqueries|selectors]
 
 # C. Vendor Test
 ./tool/test_runner.py vendor_test or vendor_test_[blink|webkit|gecko]
