@@ -476,22 +476,22 @@ struct CompositorImplGLState {
     std::vector<std::vector<PathCommand>> pathCommands;
     Optional<Clipper2Lib::PathsD> computedPathCommands;
 
-    // Analytic rounded-rectangle clip (logical-screen space). When every
-    // clipPath() of the chain is a uniform-radius, axis-aligned rounded rect
-    // and they are nested (each contained in the others), their intersection is
-    // just the innermost rect, which drawSurface clips with a shader SDF
-    // instead of a mask FBO. roundedRectClip holds that innermost rect.
-    // radius==0 is a plain rect; valid==false means "no analytic rounded clip".
+    // Analytic rounded-rectangle clip (logical-screen space).
+    // Up to kMaxAnalyticRoundedClips rounded-rect clips are tracked; the
+    // fragment shader evaluates all of their SDFs and multiplies coverage.
+    // Nested clips are compressed (outer discarded, inner kept) to save slots.
+    // If the chain exceeds the limit, roundedClipChainOk is cleared and the
+    // mask-FBO path is used instead.
+    static constexpr int kMaxAnalyticRoundedClips = 4;
     struct RoundedRectClip {
-        bool valid = false;
         float cx = 0, cy = 0; // center
         float hx = 0, hy = 0; // half-size
         float radius = 0;
     };
-    RoundedRectClip roundedRectClip;
-    // True while the clip chain so far stays analytic-representable (every
-    // clipPath a nested rounded rect). Starts true (vacuously, no clips); a
-    // non-rounded or non-nested clip sets it false and forces the mask path.
+    RoundedRectClip roundedRectClips[kMaxAnalyticRoundedClips];
+    int roundedRectClipCount = 0;
+    // True while the clip chain so far stays analytic-representable.
+    // A non-rounded or overflow clip sets it false and forces the mask path.
     bool roundedClipChainOk = true;
 
     BlendMode blendMode;
@@ -542,7 +542,7 @@ public:
     GLint m_texShaderProgramAlpha;
 
     // Analytic rounded-rect clip (GL_TEXTURE_2D): clips the textured quad with
-    // a rounded-box SDF in the fragment shader, replacing the mask-FBO path.
+    // up to kMaxAnalyticRoundedClips rounded-box SDFs in the fragment shader.
     GLuint m_texShaderProgramRoundedClip;
     GLint m_texShaderProgramRoundedClipTexPos;
     GLint m_texShaderProgramRoundedClipTexIdx;
@@ -550,9 +550,13 @@ public:
     GLint m_texShaderProgramRoundedClipClipPos;
     GLint m_texShaderProgramRoundedClipTexture;
     GLint m_texShaderProgramRoundedClipAlpha;
-    GLint m_texShaderProgramRoundedClipCenter;
-    GLint m_texShaderProgramRoundedClipHalf;
-    GLint m_texShaderProgramRoundedClipRadius;
+    GLint m_texShaderProgramRoundedClipRef;    // uClipRef: reference center
+                                               // (vertex, highp)
+    GLint m_texShaderProgramRoundedClipOffset; // uClipOffset[N]: center - ref
+                                               // (fragment)
+    GLint m_texShaderProgramRoundedClipHalf;   // uClipHalf[N]
+    GLint m_texShaderProgramRoundedClipRadius; // uClipRadius[N]
+    GLint m_texShaderProgramRoundedClipCount;  // uClipCount
 
     GLuint m_texFragmentShaderWithMask;
     GLuint m_texShaderProgramWithMask; // With mask
@@ -1824,25 +1828,19 @@ public:
         return m_texShaderProgram;
     }
 
-    // Shader program that clips a GL_TEXTURE_2D quad to an analytic rounded
-    // rectangle via a signed-distance field, instead of sampling a mask FBO.
-    // vClipPos carries the per-vertex logical-screen position (uClipPos[4]);
-    // the SDF is evaluated in logical-screen pixels so a fixed ~1px ramp gives
-    // AA without needing GL derivatives.
+    // Shader program that clips a GL_TEXTURE_2D quad to the intersection of up
+    // to kMaxAnalyticRoundedClips rounded rectangles via per-fragment SDFs,
+    // replacing the mask-FBO path. vClipPos carries the per-vertex position
+    // relative to uClipRef (subtracted in the highp vertex stage for mediump
+    // accuracy in the fragment stage). Each additional clip's center offset is
+    // passed as uClipOffset[i]; coverage = product of per-clip 1px ramps.
     GLuint texShaderProgramRoundedClip()
     {
         if (!m_texShaderProgramRoundedClip) {
-            // Subtract the clip center here (vertex stage is highp) so the
-            // fragment shader's SDF works on small centered coordinates -
-            // mediump stays accurate even when logical coords are large.
-            // uClipCenter (vertex) and uClipHalf (fragment) are deliberately
-            // separate uniforms: a single uniform shared across stages would
-            // need matching precision (vertex defaults to highp, fragment to
-            // mediump) and fail to link.
             const GLchar* vertexSource =
                 "uniform vec2 uPosition[4];\n"
                 "uniform vec2 uClipPos[4];\n"
-                "uniform vec2 uClipCenter;\n"
+                "uniform vec2 uClipRef;\n"
                 "attribute vec2 aTexPos;\n"
                 "attribute float aTexIdx;\n"
                 "varying vec2 vTexPos;\n"
@@ -1851,54 +1849,63 @@ public:
                 "  vTexPos = vec2(aTexPos.x, aTexPos.y);\n"
                 "  int idx = int(aTexIdx);\n"
                 "  gl_Position = vec4(uPosition[idx].xy, 0.0, 1.0);\n"
-                "  vClipPos = uClipPos[idx] - uClipCenter;\n"
+                "  vClipPos = uClipPos[idx] - uClipRef;\n"
                 "}";
 
-            // sdRoundedBox in logical-screen px; coverage = 1px linear ramp.
+            // Unrolled N=4 SDF loop (GLSL ES 1.00 safe).
+            // uClipOffset[i] = clips[i].center - uClipRef (so [0] == vec2(0)).
+            // coverage = product of per-clip clamp(0.5 - sdf, 0, 1) ramps.
+#define RRCLIP_FRAG_BODY(RGB_SHUFFLE)                                          \
+    "#ifdef GL_ES\n"                                                           \
+    "  precision mediump float;\n"                                             \
+    "#endif\n"                                                                 \
+    "uniform sampler2D uTexture;\n"                                            \
+    "uniform float uAlpha;\n"                                                  \
+    "uniform vec2 uClipOffset[4];\n"                                           \
+    "uniform vec2 uClipHalf[4];\n"                                             \
+    "uniform float uClipRadius[4];\n"                                          \
+    "uniform int uClipCount;\n"                                                \
+    "varying vec2 vTexPos;\n"                                                  \
+    "varying vec2 vClipPos;\n"                                                 \
+    "void main(void)\n"                                                        \
+    "{\n"                                                                      \
+    "  vec2 pos, q;\n"                                                         \
+    "  float d;\n"                                                             \
+    "  pos = vClipPos - uClipOffset[0];\n"                                     \
+    "  q = abs(pos) - uClipHalf[0] + vec2(uClipRadius[0]);\n"                  \
+    "  d = min(max(q.x,q.y),0.0)+length(max(q,vec2(0.0)))-uClipRadius[0];\n"   \
+    "  float coverage = clamp(0.5 - d, 0.0, 1.0);\n"                           \
+    "  if (uClipCount > 1) {\n"                                                \
+    "    pos = vClipPos - uClipOffset[1];\n"                                   \
+    "    q = abs(pos) - uClipHalf[1] + vec2(uClipRadius[1]);\n"                \
+    "    d = min(max(q.x,q.y),0.0)+length(max(q,vec2(0.0)))-uClipRadius[1];\n" \
+    "    coverage *= clamp(0.5 - d, 0.0, 1.0);\n"                              \
+    "  }\n"                                                                    \
+    "  if (uClipCount > 2) {\n"                                                \
+    "    pos = vClipPos - uClipOffset[2];\n"                                   \
+    "    q = abs(pos) - uClipHalf[2] + vec2(uClipRadius[2]);\n"                \
+    "    d = min(max(q.x,q.y),0.0)+length(max(q,vec2(0.0)))-uClipRadius[2];\n" \
+    "    coverage *= clamp(0.5 - d, 0.0, 1.0);\n"                              \
+    "  }\n"                                                                    \
+    "  if (uClipCount > 3) {\n"                                                \
+    "    pos = vClipPos - uClipOffset[3];\n"                                   \
+    "    q = abs(pos) - uClipHalf[3] + vec2(uClipRadius[3]);\n"                \
+    "    d = min(max(q.x,q.y),0.0)+length(max(q,vec2(0.0)))-uClipRadius[3];\n" \
+    "    coverage *= clamp(0.5 - d, 0.0, 1.0);\n"                              \
+    "  }\n"                                                                    \
+    "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n" RGB_SHUFFLE    \
+    "}\n"
+
             const GLchar* fragmentSource =
-                "#ifdef GL_ES\n"
-                "  precision mediump float;\n"
-                "#endif\n"
-                "uniform sampler2D uTexture;\n"
-                "uniform float uAlpha;\n"
-                "uniform vec2 uClipHalf;\n"
-                "uniform float uClipRadius;\n"
-                "varying vec2 vTexPos;\n"
-                "varying vec2 vClipPos;\n"
-                "void main(void)\n"
-                "{\n"
-                "  vec2 q = abs(vClipPos) - uClipHalf + vec2(uClipRadius);\n"
-                "  float d = min(max(q.x, q.y), 0.0) +\n"
-                "            length(max(q, vec2(0.0))) - uClipRadius;\n"
-                "  float coverage = clamp(0.5 - d, 0.0, 1.0);\n"
-                "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n"
-                "  gl_FragColor = texData * coverage;\n"
-                "}";
+                RRCLIP_FRAG_BODY("  gl_FragColor = texData * coverage;\n");
             if (g_needsRGBShuffle) {
-                fragmentSource =
-                    "#ifdef GL_ES\n"
-                    "  precision mediump float;\n"
-                    "#endif\n"
-                    "uniform sampler2D uTexture;\n"
-                    "uniform float uAlpha;\n"
-                    "uniform vec2 uClipHalf;\n"
-                    "uniform float uClipRadius;\n"
-                    "varying vec2 vTexPos;\n"
-                    "varying vec2 vClipPos;\n"
-                    "void main(void)\n"
-                    "{\n"
-                    "  vec2 q = abs(vClipPos) - uClipHalf + "
-                    "vec2(uClipRadius);\n"
-                    "  float d = min(max(q.x, q.y), 0.0) +\n"
-                    "            length(max(q, vec2(0.0))) - uClipRadius;\n"
-                    "  float coverage = clamp(0.5 - d, 0.0, 1.0);\n"
-                    "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n"
+                fragmentSource = RRCLIP_FRAG_BODY(
                     "  gl_FragColor.r = texData[2] * coverage;\n"
                     "  gl_FragColor.g = texData[1] * coverage;\n"
                     "  gl_FragColor.b = texData[0] * coverage;\n"
-                    "  gl_FragColor.a = texData[3] * coverage;\n"
-                    "}";
+                    "  gl_FragColor.a = texData[3] * coverage;\n");
             }
+#undef RRCLIP_FRAG_BODY
 
             GLuint vs = loadShader(gl(), GL_VERTEX_SHADER, vertexSource);
             GLuint fs = loadShader(gl(), GL_FRAGMENT_SHADER, fragmentSource);
@@ -1927,12 +1934,16 @@ public:
                 gl()->getUniformLocation(p, "uTexture");
             m_texShaderProgramRoundedClipAlpha =
                 gl()->getUniformLocation(p, "uAlpha");
-            m_texShaderProgramRoundedClipCenter =
-                gl()->getUniformLocation(p, "uClipCenter");
+            m_texShaderProgramRoundedClipRef =
+                gl()->getUniformLocation(p, "uClipRef");
+            m_texShaderProgramRoundedClipOffset =
+                gl()->getUniformLocation(p, "uClipOffset");
             m_texShaderProgramRoundedClipHalf =
                 gl()->getUniformLocation(p, "uClipHalf");
             m_texShaderProgramRoundedClipRadius =
                 gl()->getUniformLocation(p, "uClipRadius");
+            m_texShaderProgramRoundedClipCount =
+                gl()->getUniformLocation(p, "uClipCount");
 
             gl()->uniform1i(m_texShaderProgramRoundedClipTexture, 0);
             gl()->uniform1f(m_texShaderProgramRoundedClipAlpha, 1);
@@ -4552,13 +4563,13 @@ public:
         checkError(gl());
     }
 
-    void drawTexture(CanvasSurfaceGL* cs, float position[8], GLuint textureID,
-                     GLenum textureKind, GLenum textureBindNumber,
-                     size_t textureWidth, size_t textureHeight,
-                     GLuint maskTextureID, float maskUV[4],
-                     Optional<const float*> roundedClipPos = nullptr,
-                     const Optional<CompositorImplGLState::RoundedRectClip>&
-                         activeClip = NullOption)
+    void drawTexture(
+        CanvasSurfaceGL* cs, float position[8], GLuint textureID,
+        GLenum textureKind, GLenum textureBindNumber, size_t textureWidth,
+        size_t textureHeight, GLuint maskTextureID, float maskUV[4],
+        Optional<const float*> roundedClipPos = nullptr,
+        const CompositorImplGLState::RoundedRectClip* roundedClips = nullptr,
+        int roundedClipCount = 0)
     {
         auto& lastState = m_state.back();
         if (lastState.blurRadius) {
@@ -4570,11 +4581,10 @@ public:
         bool isEGLImage = textureKind != GL_TEXTURE_2D;
         bool enableMask = maskTextureID != 0;
 
-        // Analytic rounded-rect clip: clip the quad with a shader SDF instead
-        // of a mask texture. GL_TEXTURE_2D only; EGLImage falls back to the
-        // mask.
-        if (activeClip && roundedClipPos && !isEGLImage) {
-            const auto& clip = activeClip.value();
+        // Analytic rounded-rect clip: clip the quad with per-fragment SDFs
+        // instead of a mask texture. GL_TEXTURE_2D only; EGLImage falls back.
+        if (roundedClipPos && roundedClips && roundedClipCount > 0 &&
+            !isEGLImage) {
             auto* cc = m_compositorContext;
             cc->texShaderProgramRoundedClip();
             gl()->activeTexture(GL_TEXTURE0);
@@ -4588,12 +4598,29 @@ public:
                              position);
             gl()->uniform2fv(cc->m_texShaderProgramRoundedClipClipPos, 4,
                              roundedClipPos.value());
-            gl()->uniform2f(cc->m_texShaderProgramRoundedClipCenter, clip.cx,
-                            clip.cy);
-            gl()->uniform2f(cc->m_texShaderProgramRoundedClipHalf, clip.hx,
-                            clip.hy);
-            gl()->uniform1f(cc->m_texShaderProgramRoundedClipRadius,
-                            clip.radius);
+
+            // uClipRef = clips[0].center (subtracted in vertex stage, highp).
+            // uClipOffset[i] = clips[i].center - clips[0].center (fragment).
+            gl()->uniform2f(cc->m_texShaderProgramRoundedClipRef,
+                            roundedClips[0].cx, roundedClips[0].cy);
+            float offsets[CompositorImplGLState::kMaxAnalyticRoundedClips * 2];
+            float halves[CompositorImplGLState::kMaxAnalyticRoundedClips * 2];
+            float radii[CompositorImplGLState::kMaxAnalyticRoundedClips];
+            for (int i = 0; i < roundedClipCount; i++) {
+                offsets[i * 2] = roundedClips[i].cx - roundedClips[0].cx;
+                offsets[i * 2 + 1] = roundedClips[i].cy - roundedClips[0].cy;
+                halves[i * 2] = roundedClips[i].hx;
+                halves[i * 2 + 1] = roundedClips[i].hy;
+                radii[i] = roundedClips[i].radius;
+            }
+            gl()->uniform2fv(cc->m_texShaderProgramRoundedClipOffset,
+                             roundedClipCount, offsets);
+            gl()->uniform2fv(cc->m_texShaderProgramRoundedClipHalf,
+                             roundedClipCount, halves);
+            gl()->uniform1fv(cc->m_texShaderProgramRoundedClipRadius,
+                             roundedClipCount, radii);
+            gl()->uniform1i(cc->m_texShaderProgramRoundedClipCount,
+                            roundedClipCount);
 
             float a = lastState.opacity;
             if (a != 1) {
@@ -4764,7 +4791,7 @@ public:
         mapPointsByMatrix(dest[3][0], dest[3][1], ctm);
 
         // Logical-screen (post-ctm, pre-screenMatrix) corners for the analytic
-        // rounded-rect clip SDF - same space as state.roundedRectClip.
+        // rounded-rect clip SDF - same space as state.roundedRectClips[].
         if (clipPos) {
             float* cp = clipPos.value();
             for (int i = 0; i < 4; i++) {
@@ -4842,21 +4869,22 @@ public:
         dest[3][1] = dst.maxY();
         mapPointsToLogicalScreen(dest[3][0], dest[3][1]);
 
-        // Analytic rounded-rect clip: a chain of nested rounded clips reduces
-        // to the innermost rect, which is clipped per-fragment by the SDF
-        // shader, skipping the mask FBO; we just scissor to its bbox.
-        Optional<CompositorImplGLState::RoundedRectClip> activeClip;
-        bool useAnalyticRoundedClip =
-            lastState.roundedClipChainOk && lastState.roundedRectClip.valid &&
-            lastState.matrixStaysInRect && !csGL->m_isEGLImageExternal;
+        // Analytic rounded-rect clip: the SDF shader clips each fragment to the
+        // intersection of all tracked rounded rects; we scissor to their bbox
+        // intersection, skipping the mask FBO entirely.
+        bool activeClip = lastState.roundedClipChainOk &&
+                          lastState.roundedRectClipCount > 0 &&
+                          lastState.matrixStaysInRect &&
+                          !csGL->m_isEGLImageExternal;
 
-        if (useAnalyticRoundedClip) {
-            activeClip = lastState.roundedRectClip;
-            const auto& rr = activeClip.value();
-            Unit::Rect rrBox(rr.cx - rr.hx, rr.cy - rr.hy, rr.hx * 2.f,
-                             rr.hy * 2.f);
+        if (activeClip) {
             visibleArea = toRect(dest);
-            visibleArea.intersect(rrBox);
+            for (int i = 0; i < lastState.roundedRectClipCount; i++) {
+                const auto& rr = lastState.roundedRectClips[i];
+                Unit::Rect rrBox(rr.cx - rr.hx, rr.cy - rr.hy, rr.hx * 2.f,
+                                 rr.hy * 2.f);
+                visibleArea.intersect(rrBox);
+            }
             visibleArea.intersect(lastState.clipRect);
             shouldSkipTexturePainting = visibleArea.isEmpty();
             gl()->enable(GL_SCISSOR_TEST);
@@ -5091,12 +5119,15 @@ public:
                                     maskUV[3] = (maxY - minY) / h * fh;
                                 }
 
-                                drawTexture(csGL, texPosition, tid,
-                                            GL_TEXTURE_2D, GL_TEXTURE0,
-                                            texureDataWidth, texureDataHeight,
-                                            maskFBO.fboTex, maskUV,
-                                            activeClip ? clipPosition : nullptr,
-                                            activeClip);
+                                drawTexture(
+                                    csGL, texPosition, tid, GL_TEXTURE_2D,
+                                    GL_TEXTURE0, texureDataWidth,
+                                    texureDataHeight, maskFBO.fboTex, maskUV,
+                                    activeClip ? clipPosition : nullptr,
+                                    activeClip ? lastState.roundedRectClips
+                                               : nullptr,
+                                    activeClip ? lastState.roundedRectClipCount
+                                               : 0);
                             }
                         }
                         i++;
@@ -5158,7 +5189,7 @@ public:
         lastState.clipRect = Unit::Rect(0, 0, screenWidth(), screenHeight());
         lastState.abbreviatedClipPaths.clear();
         lastState.pathCommands.clear();
-        lastState.roundedRectClip.valid = false;
+        lastState.roundedRectClipCount = 0;
         lastState.roundedClipChainOk = true;
         applyDevicePixelRatio();
     }
@@ -5169,7 +5200,7 @@ public:
         lastState.clipRect = Unit::Rect(0, 0, screenWidth(), screenHeight());
         lastState.abbreviatedClipPaths.clear();
         lastState.pathCommands.clear();
-        lastState.roundedRectClip.valid = false;
+        lastState.roundedRectClipCount = 0;
         lastState.roundedClipChainOk = true;
     }
 
@@ -5319,7 +5350,6 @@ public:
             }
         }
 
-        out.valid = true;
         out.cx = (float)cx;
         out.cy = (float)cy;
         out.hx = (float)hx;
@@ -5364,34 +5394,40 @@ public:
     {
         auto& lastState = m_state.back();
         if (m_abbreviatedPath.size()) {
-            // Record nested rounded-rect clips so drawSurface can use the
-            // analytic SDF shader instead of a mask FBO. The chain stays
-            // analytic while every clipPath is a rounded rect AND the rects are
-            // nested (one contained in the other) - then the intersection is
-            // just the innermost rect. A non-rounded or non-nested clip breaks
-            // the chain and forces the mask path.
+            // Track rounded-rect clips for the analytic SDF shader path.
+            // Nested clips (one contained in the other) are compressed: the
+            // outer is discarded, keeping only the inner. Non-nested clips are
+            // appended up to kMaxAnalyticRoundedClips; overflow breaks the
+            // chain and forces the mask-FBO path.
             CompositorImplGLState::RoundedRectClip rr;
             bool detected = detectRoundedRectClip(m_abbreviatedPath, rr);
             if (!lastState.roundedClipChainOk) {
                 // already on the mask path; nothing more to track
             } else if (!detected) {
                 lastState.roundedClipChainOk = false;
-                lastState.roundedRectClip.valid = false;
-            } else if (!lastState.roundedRectClip.valid) {
-                lastState.roundedRectClip = rr; // first rounded clip of chain
             } else {
-                // Keep the smaller rect if it is contained in the larger (true
-                // nesting); otherwise the intersection is not a single rounded
-                // rect, so fall back to the mask.
-                const auto cur = lastState.roundedRectClip;
-                bool newIsSmaller = rr.hx * rr.hy <= cur.hx * cur.hy;
-                const auto& inner = newIsSmaller ? rr : cur;
-                const auto& outer = newIsSmaller ? cur : rr;
-                if (roundedRectInside(outer, inner)) {
-                    lastState.roundedRectClip = inner;
-                } else {
-                    lastState.roundedClipChainOk = false;
-                    lastState.roundedRectClip.valid = false;
+                // Try nesting compression: if new and an existing clip are
+                // nested, keep the inner (tighter) one and discard the outer.
+                bool compressed = false;
+                for (int i = 0; i < lastState.roundedRectClipCount; i++) {
+                    const auto& cur = lastState.roundedRectClips[i];
+                    bool newIsSmaller = rr.hx * rr.hy <= cur.hx * cur.hy;
+                    const auto& inner = newIsSmaller ? rr : cur;
+                    const auto& outer = newIsSmaller ? cur : rr;
+                    if (roundedRectInside(outer, inner)) {
+                        lastState.roundedRectClips[i] = inner;
+                        compressed = true;
+                        break;
+                    }
+                }
+                if (!compressed) {
+                    if (lastState.roundedRectClipCount <
+                        CompositorImplGLState::kMaxAnalyticRoundedClips) {
+                        lastState.roundedRectClips
+                            [lastState.roundedRectClipCount++] = rr;
+                    } else {
+                        lastState.roundedClipChainOk = false;
+                    }
                 }
             }
             lastState.abbreviatedClipPaths.push_back(
