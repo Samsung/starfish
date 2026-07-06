@@ -1547,7 +1547,7 @@ void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind keyKind,
                     m_cssValues[i].setValue(value.value());
                     m_cssValues[i].setFlagImportant(value.flagImportant());
                     rootPointerValueIfExists(value);
-                    notifyNeedsStyleRecalc();
+                    notifyNeedsStyleRecalc(keyKind);
                 }
             }
             return;
@@ -1556,7 +1556,7 @@ void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind keyKind,
     m_cssValues.push_back(value);
     m_cssValues.back().setKeyKind(keyKind);
     rootPointerValueIfExists(value);
-    notifyNeedsStyleRecalc();
+    notifyNeedsStyleRecalc(keyKind);
 }
 
 void CSSStyleDeclaration::removeCSSValuePair(CSSStyleValuePair::KeyKind keyKind)
@@ -1565,7 +1565,7 @@ void CSSStyleDeclaration::removeCSSValuePair(CSSStyleValuePair::KeyKind keyKind)
     for (unsigned i = 0; i < len; i++) {
         if (m_cssValues[i].keyKind() == keyKind) {
             m_cssValues.erase(m_cssValues.begin() + i);
-            notifyNeedsStyleRecalc();
+            notifyNeedsStyleRecalc(keyKind);
             return;
         }
     }
@@ -1760,10 +1760,31 @@ bool CSSStyleDeclaration::shouldKeepAppearanceOrder(
     return false;
 }
 
+bool CSSStyleDeclaration::hasRenderingCriticalProperties()
+{
+    if (m_cssCustomValues && m_cssCustomValues.value()->values().size()) {
+        return true;
+    }
+    return hasCSSValuePair(CSSStyleValuePair::KeyKind::Visibility) ||
+           hasCSSValuePair(CSSStyleValuePair::KeyKind::Display) ||
+           hasCSSValuePair(CSSStyleValuePair::KeyKind::Position) ||
+           hasCSSValuePair(CSSStyleValuePair::KeyKind::Float) ||
+           hasCSSValuePair(CSSStyleValuePair::KeyKind::Content) ||
+           hasCSSValuePair(CSSStyleValuePair::KeyKind::All);
+}
+
 void CSSStyleDeclaration::notifyNeedsStyleRecalc()
 {
     if (m_node->isElement()) {
         m_node->asElement()->notifyInlineStyleChanged();
+    }
+}
+
+void CSSStyleDeclaration::notifyNeedsStyleRecalc(
+    CSSStyleValuePair::KeyKind keyKind)
+{
+    if (m_node->isElement()) {
+        m_node->asElement()->notifyInlineStyleChanged(keyKind);
     }
 }
 

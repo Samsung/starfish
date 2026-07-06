@@ -2364,7 +2364,7 @@ void Node::setNeedsStyleRecalcForAnimation()
     window()->browsingContext()->setNeedsStyleRecalc();
 }
 
-void Node::setNeedsStyleRecalc(StyleChangeReason reason)
+void Node::setNeedsStyleRecalc(StyleChangeReason reason, bool scheduleRendering)
 {
     if (!isInDocumentScopeAndDocumentParticipateInRendering()) {
         return;
@@ -2404,7 +2404,13 @@ void Node::setNeedsStyleRecalc(StyleChangeReason reason)
         setChildrenNeedsStyleRecalcIfNeeded(reason);
     }
 
-    window()->browsingContext()->setNeedsStyleRecalc();
+    if (scheduleRendering) {
+        window()->browsingContext()->setNeedsStyleRecalc();
+    } else {
+        window()
+            ->browsingContext()
+            ->setNeedsStyleRecalcWithoutSchedulingRendering();
+    }
 }
 
 void Node::setSiblingsNeedsStyleRecalcIfNeeded(StyleChangeReason reason)

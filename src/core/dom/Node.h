@@ -541,7 +541,8 @@ public:
         ElementStateChangeDomTree = 1 << 5,
     };
     void setNeedsStyleRecalc(
-        StyleChangeReason reason = StyleChangeReason::JustNeedsRecalcSelf);
+        StyleChangeReason reason = StyleChangeReason::JustNeedsRecalcSelf,
+        bool scheduleRendering = true);
     void setSiblingsNeedsStyleRecalcIfNeeded(StyleChangeReason reason);
     void setChildrenNeedsStyleRecalcIfNeeded(StyleChangeReason reason);
 

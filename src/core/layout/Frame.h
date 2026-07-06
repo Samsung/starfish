@@ -1970,6 +1970,11 @@ public:
         return false;
     }
 
+    // Whether this frame or anything below it would put pixels on screen.
+    // False for a subtree that is entirely visibility:hidden (visibility is
+    // overridable down the tree, so the whole subtree must be checked).
+    bool subtreePaintsSomething();
+
     void propagateMarkNeedsLayout(
         Optional<ComputedStyle*> newStyle = NullOption);
     void markNeedsLayout()

@@ -883,8 +883,13 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
                 current->asCharacterData()->isText()) {
                 // mark needs painting dirty check
                 // because layout repaint tracker don't track damage
-                // without length change
-                current->webView()->markNeedsPaintingConsiderInRendering();
+                // without length change. hidden text paints nothing, so it
+                // may skip the mark (a visibility flip repaints via style
+                // damage on the ancestor).
+                if (!current->style() ||
+                    current->style()->visibility() == VisibleVisibilityValue) {
+                    current->webView()->markNeedsPaintingConsiderInRendering();
+                }
                 return new FrameText(current, current->style());
             } else if (current->isComment()) {
                 FrameTreeBuilder::clearTree(current);

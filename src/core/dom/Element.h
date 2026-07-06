@@ -410,6 +410,7 @@ public:
     void dumpStyle();
 #endif
     void notifyInlineStyleChanged();
+    void notifyInlineStyleChanged(CSSStyleValuePair::KeyKind keyKind);
     void registerInlineStyleCallback();
 
     bool focused() const

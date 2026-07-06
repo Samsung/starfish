@@ -84,6 +84,8 @@ using namespace Escargot;
 
 namespace Starfish {
 
+static bool hiddenElementChangeIsContained(Element* element, bool paintOnly);
+
 static bool isInHTMLNamespaceAndHTMLDocument(Element* e)
 {
     if (e->namespaceURI().hasValue() &&
@@ -683,6 +685,13 @@ void Element::didAttributeChanged(QualifiedName name, Optional<String*> old,
         if (attributeCreated) {
             registerInlineStyleCallback();
         }
+        // A whole-declaration replacement may add or drop any property, so
+        // the renderer may only stay asleep when neither the old nor the
+        // new declaration touches a rendering-critical property and the
+        // hidden element's layout effects are contained (see
+        // hiddenElementChangeIsContained).
+        bool hadRenderingCriticalProperties =
+            inlineStyle()->hasRenderingCriticalProperties();
         inlineStyle()->clear();
 
         if (!value->isEmpty()) {
@@ -690,7 +699,12 @@ void Element::didAttributeChanged(QualifiedName name, Optional<String*> old,
             parser.parseStyleDeclaration(value, inlineStyle());
         }
         m_didInlineStyleModifiedAfterAttributeSet = false;
-        setNeedsStyleRecalc(StyleChangeReason::InlineStyleChange);
+        bool scheduleRendering =
+            hadRenderingCriticalProperties ||
+            inlineStyle()->hasRenderingCriticalProperties() ||
+            !hiddenElementChangeIsContained(this, false);
+        setNeedsStyleRecalc(StyleChangeReason::InlineStyleChange,
+                            scheduleRendering);
     } else if (name == ss->m_name) {
         // TODO we should not always invalidate cache
         // according spec,
@@ -2252,9 +2266,99 @@ void Element::registerInlineStyleCallback()
             });
 }
 
+// Containment half of the skip decision: the element's own painting is
+// hidden and every box its change could move or repaint is inside a
+// non-painting subtree.
+static bool hiddenElementChangeIsContained(Element* element, bool paintOnly)
+{
+    ComputedStyle* cs = element->style();
+    if (!cs || cs->visibility() != HiddenVisibilityValue) {
+        return false;
+    }
+
+    // A pure paint property confines the effect to this element's subtree.
+    // A layout-affecting change ripples upward through in-flow ancestors
+    // (auto heights chain up), but cannot escape an out-of-flow box: its
+    // position doesn't depend on flow, and its size change moves nothing
+    // outside. So the containment boundary is the element itself for
+    // paint-only properties, else the nearest out-of-flow self-or-ancestor.
+    // Nothing under the boundary may paint (visibility is overridable down
+    // the tree). Known accepted edge: a hidden box growing can still change
+    // a visible ancestor scrollbar's scroll range.
+    Element* boundary = nullptr;
+    if (paintOnly) {
+        boundary = element;
+    } else {
+        Element* cur = element;
+        while (cur) {
+            ComputedStyle* curStyle = cur->style();
+            if (!curStyle) {
+                return false;
+            }
+            if (curStyle->position() == AbsolutePositionValue ||
+                curStyle->position() == FixedPositionValue) {
+                boundary = cur;
+                break;
+            }
+            cur = cur->renderingParentElement();
+        }
+        if (!boundary) {
+            return false;
+        }
+    }
+
+    Frame* boundaryFrame = boundary->frame();
+    if (boundaryFrame && boundaryFrame->subtreePaintsSomething()) {
+        return false;
+    }
+    return true;
+}
+
+// True when an inline style change cannot alter any pixel on screen, so
+// marking style dirty is enough and the renderer need not be woken (the
+// recalc still runs on the next forced layout or any other-triggered pass).
+// Skipping never cancels a pending pass: any non-skippable change (e.g. a
+// visibility flip anywhere) schedules rendering itself, and that pass
+// resolves every dirty node including skipped ones.
+static bool inlineStyleChangeCannotAffectVisiblePixels(
+    Element* element, CSSStyleValuePair::KeyKind keyKind)
+{
+    switch (keyKind) {
+    // can reveal the element or change its layout participation
+    case CSSStyleValuePair::KeyKind::Visibility:
+    case CSSStyleValuePair::KeyKind::Display:
+    case CSSStyleValuePair::KeyKind::Position:
+    case CSSStyleValuePair::KeyKind::Float:
+    case CSSStyleValuePair::KeyKind::Content:
+    case CSSStyleValuePair::KeyKind::All:
+        return false;
+    default:
+        break;
+    }
+
+    bool paintOnly = keyKind == CSSStyleValuePair::KeyKind::Transform ||
+                     keyKind == CSSStyleValuePair::KeyKind::TransformOrigin ||
+                     keyKind == CSSStyleValuePair::KeyKind::Opacity;
+    return hiddenElementChangeIsContained(element, paintOnly);
+}
+
 void Element::notifyInlineStyleChanged()
 {
     setNeedsStyleRecalc(StyleChangeReason::InlineStyleChange);
+    m_didInlineStyleModifiedAfterAttributeSet = true;
+    if (hasAttribute(starfish()->staticStrings()->m_style) == SIZE_MAX) {
+        m_attributes.push_back(Attribute(starfish()->staticStrings()->m_style,
+                                         String::emptyString));
+        registerInlineStyleCallback();
+    }
+}
+
+void Element::notifyInlineStyleChanged(CSSStyleValuePair::KeyKind keyKind)
+{
+    bool scheduleRendering =
+        !inlineStyleChangeCannotAffectVisiblePixels(this, keyKind);
+    setNeedsStyleRecalc(StyleChangeReason::InlineStyleChange,
+                        scheduleRendering);
     m_didInlineStyleModifiedAfterAttributeSet = true;
     if (hasAttribute(starfish()->staticStrings()->m_style) == SIZE_MAX) {
         m_attributes.push_back(Attribute(starfish()->staticStrings()->m_style,

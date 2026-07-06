@@ -84,6 +84,14 @@ static void collectInlineBoxes(
     for (size_t i = 0; i < b.size(); i++) {
         Frame* f = b[i];
         bool inserted = false;
+        if (f->isInlineTextBox() &&
+            f->style()->visibility() != VisibleVisibilityValue) {
+            // hidden text never paints; keep it out of the diff so its
+            // updates (e.g. a time readout under hidden controls) don't
+            // dirty the region. A visibility flip repaints via the style
+            // damage path.
+            continue;
+        }
         if (f->isInlineTextBox()) {
             LayoutRepaintTracker::InlineLayoutResultItem r;
             r.m_frameRect = f->asFrameBox()->absoluteRectIncludingScroll(
@@ -203,27 +211,38 @@ static void traceRepaintRegionJob(
                 !gotNewNode && (iter->second.first != newLayoutResultRect);
 
             if (gotNewNode || frameRectChanged) {
-                // got new node || frameRectChanged -> dirty
-                gotPaintingDirty = true;
+                // got new node || frameRectChanged -> dirty, unless nothing
+                // in this subtree paints (e.g. progress UI kept laid out
+                // under visibility:hidden). The subtree must be checked, not
+                // just this owner: descendants can override visibility back
+                // to visible, and their rects are traced relative to this
+                // owner, so an owner move only registers here.
+                bool paintsSomething =
+                    currentFrameBox->subtreePaintsSomething();
+                if (paintsSomething) {
+                    gotPaintingDirty = true;
+                }
                 if (frameRectChanged) {
-                    LayoutRect dirtyRect = currentFrameBox->frameRect();
-                    dirtyRect.unite(iter->second.first);
-                    dirtyRect.setX(0);
-                    dirtyRect.setY(0);
+                    if (paintsSomething) {
+                        LayoutRect dirtyRect = currentFrameBox->frameRect();
+                        dirtyRect.unite(iter->second.first);
+                        dirtyRect.setX(0);
+                        dirtyRect.setY(0);
 
-                    auto iter2 = dirtyAreaMapPerStackingContext.find(node);
-                    if (iter2 == dirtyAreaMapPerStackingContext.end()) {
-                        dirtyAreaMapPerStackingContext.insert(
-                            std::make_pair(node, dirtyRect));
-                    } else {
-                        iter2->second.unite(dirtyRect);
+                        auto iter2 = dirtyAreaMapPerStackingContext.find(node);
+                        if (iter2 == dirtyAreaMapPerStackingContext.end()) {
+                            dirtyAreaMapPerStackingContext.insert(
+                                std::make_pair(node, dirtyRect));
+                        } else {
+                            iter2->second.unite(dirtyRect);
+                        }
                     }
 
                     iter->second.first.setX(LayoutUnit::min());
                     iter->second.first.setY(LayoutUnit::min());
                 }
 
-                if (currentFrameBox->isVisible() &&
+                if (paintsSomething && currentFrameBox->isVisible() &&
                     currentFrameBox != lastStackingContextOwner) {
                     if (!lastStackingContextOwner->stackingContext() ||
                         !lastStackingContextOwner->stackingContext()
@@ -261,8 +280,10 @@ static void traceRepaintRegionJob(
             bool frameRectChanged =
                 !gotNewNode && (iter->second.first != newLayoutResultRect);
             if (gotNewNode || frameRectChanged) {
-                // got new node || frameRectChanged -> dirty
-                gotPaintingDirty = true;
+                // got new node || frameRectChanged -> dirty. A box that
+                // paints nothing itself is skipped: its children are traced
+                // with their own absolute rects, so their movement registers
+                // independently of this box.
                 LayoutRect rt = newLayoutResultRect;
                 if (iter != oldResultMap.end()) {
                     rt.unite(iter->second.first);
@@ -274,6 +295,7 @@ static void traceRepaintRegionJob(
                 }
 
                 if (currentFrameBox->isVisible()) {
+                    gotPaintingDirty = true;
                     Node* stackingContextOwner =
                         lastStackingContextOwner->node();
                     auto iter2 = dirtyAreaMapPerStackingContext.find(
