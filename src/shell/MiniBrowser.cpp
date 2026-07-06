@@ -133,6 +133,8 @@ void MiniBrowser::parseArgs(int argc, char* argv[],
             env.glCompositorScale = argv[i] + strlen("--gl-compositor-scale=");
         } else if (strstr(argv[i], "--show-fps") == argv[i]) {
             settings.showFps = true;
+        } else if (strcmp(argv[i], "--enable-video-overlay") == 0) {
+            settings.videoOverlayEnabled = true;
         } else if (strstr(argv[i], "--timeout=") == argv[i]) {
             others.timeout = std::atoi(argv[i] + strlen("--timeout="));
         }
@@ -261,6 +263,10 @@ void MiniBrowser::setSettings(const Settings& settings)
 
     if (settings.showFps) {
         lweSettings.UpdateSetting("--show-fps", "true");
+    }
+
+    if (settings.videoOverlayEnabled) {
+        lweSettings.UpdateSetting("videoOverlayEnabled", "True");
     }
 
     lweSettings.SetUseSpatialNavigation(settings.useSpatialNavigation);
