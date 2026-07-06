@@ -468,10 +468,6 @@ void Scrolling::giveDamageToTarget(bool inScrollbarAppearingOrDisappearing)
             }
         }
     } else {
-        m_target->asElement()
-            ->webView()
-            ->setNeedsComputeStackingContextProperties();
-
         if (m_target->asElement()->frame() &&
             m_target->asElement()->frame()->isFrameBox() &&
             m_target->asElement()->frame()->asFrameBox()->stackingContext()) {
@@ -486,6 +482,9 @@ void Scrolling::giveDamageToTarget(bool inScrollbarAppearingOrDisappearing)
                 return;
             }
         }
+        m_target->asElement()
+            ->webView()
+            ->setNeedsComputeStackingContextProperties();
         m_target->asElement()->setNeedsPainting();
     }
 }

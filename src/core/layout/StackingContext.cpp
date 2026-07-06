@@ -693,14 +693,52 @@ void StackingContext::computeStackingContextProperties(
     bool selfNeedsGraphicsBuffer = m_owner->needsGraphicsBuffer();
 
     if (m_owner->style()->position() == PositionValue::FixedPositionValue) {
-        if (!compositingState.needsToAllocateGraphicsBufferForFixedElement &&
-            compositingState.seenCompositedLayer()) {
+        // position:fixed inside a scrolling ancestor does not follow the
+        // scroll. Without its own buffer it would be composited as part of the
+        // scroll container's buffer and appear to move with the scrolled
+        // content. Giving it a buffer lets the compositor place it at its fixed
+        // screen position independently, and guarantees that
+        // Scrolling::giveDamageToTarget can skip SC recomputation on every
+        // scroll tick.
+        bool hasScrollingAncestor = false;
+        for (StackingContext* p = parent(); p; p = p->parent()) {
+            if (p->inScrollActive()) {
+                hasScrollingAncestor = true;
+                break;
+            }
+        }
+        if (hasScrollingAncestor) {
+            selfNeedsGraphicsBuffer = true;
+        } else if (!compositingState
+                        .needsToAllocateGraphicsBufferForFixedElement &&
+                   compositingState.seenCompositedLayer()) {
             throw RecomputeStackContextReason::PositionFixed;
         } else if (compositingState
                        .needsToAllocateGraphicsBufferForFixedElement) {
             selfNeedsGraphicsBuffer = true;
         } else {
             compositingState.seenPositionFixed = true;
+        }
+    } else if (m_owner->style()->position() ==
+               PositionValue::AbsolutePositionValue) {
+        // position:absolute whose containing block lies above a scrolling
+        // ancestor does not follow that scroll (its layout position is relative
+        // to the containing block, which is outside the scroll container). Same
+        // reasoning as the fixed case: own buffer keeps it composited at its
+        // correct screen position independently of the scroll container's
+        // buffer, enabling the SC-recompute skip in
+        // Scrolling::giveDamageToTarget.
+        FrameBox* cb = containingBlock(m_owner);
+        Frame* f = m_owner->parent();
+        while (f && f != cb) {
+            if (f->isFrameBox()) {
+                StackingContext* fSC = f->asFrameBox()->stackingContext();
+                if (fSC && fSC->inScrollActive()) {
+                    selfNeedsGraphicsBuffer = true;
+                    break;
+                }
+            }
+            f = f->parent();
         }
     }
 
