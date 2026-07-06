@@ -130,6 +130,7 @@ BrowsingContext::BrowsingContext(WebView* webView, HTMLIFrameElement* source,
 void BrowsingContext::initFlags()
 {
     m_needsStyleRecalc = false;
+    m_styleRecalcRenderingSkipped = false;
     m_needsStyleRecalcForWholeDocument = false;
     m_needsStyleSheetsRecalc = true;
     m_needsFrameTreeBuild = false;
@@ -251,6 +252,7 @@ void BrowsingContext::resolveStyleIfNeeds()
         document()->styleResolver().resolveDOMStyle(
             document(), m_needsStyleRecalcForWholeDocument);
         m_needsStyleRecalc = false;
+        m_styleRecalcRenderingSkipped = false;
         m_needsStyleRecalcForWholeDocument = false;
 
         if (document()->animationExecutor()->activeTransitions().size() > 0) {

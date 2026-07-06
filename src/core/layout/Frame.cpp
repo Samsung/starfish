@@ -1404,7 +1404,32 @@ Frame::Frame(Node* node, ComputedStyle* s)
     if (needToEstablishKindsOfFormattingContext()) {
         m_flags.m_needsLayout = true;
     }
-    m_flags.m_needsPainting = true;
+    // A frame born invisible has nothing to paint; when visibility flips
+    // later, the style damage marks it (and its subtree) again. Keeping the
+    // flag off here stops rebuilt-but-hidden content (e.g. a time readout
+    // under hidden player controls) from dirtying the repaint region.
+    m_flags.m_needsPainting =
+        !style() || style()->visibility() == VisibleVisibilityValue;
+}
+
+bool Frame::subtreePaintsSomething()
+{
+    if (isFrameBox()) {
+        if (asFrameBox()->isVisible()) {
+            return true;
+        }
+    } else if (!style() || style()->visibility() == VisibleVisibilityValue) {
+        return true;
+    }
+
+    Frame* child = firstChild();
+    while (child) {
+        if (child->subtreePaintsSomething()) {
+            return true;
+        }
+        child = child->next();
+    }
+    return false;
 }
 
 void Frame::computePaintingFlags()

@@ -103,9 +103,24 @@ public:
 
     void setNeedsStyleRecalc()
     {
+        if (!m_needsStyleRecalc || m_styleRecalcRenderingSkipped) {
+            m_needsStyleRecalc = true;
+            m_styleRecalcRenderingSkipped = false;
+            setNeedsRendering();
+            registerNeedsLayoutInWebView();
+        }
+    }
+
+    // Marks style dirty without waking the renderer. The recalc still runs
+    // on the next forced layout (e.g. getBoundingClientRect goes through
+    // WebView::layoutIfNeeded, which resolves every registered context) or
+    // whenever anything else schedules rendering. Only for changes proven
+    // unable to affect visible pixels.
+    void setNeedsStyleRecalcWithoutSchedulingRendering()
+    {
         if (!m_needsStyleRecalc) {
             m_needsStyleRecalc = true;
-            setNeedsRendering();
+            m_styleRecalcRenderingSkipped = true;
             registerNeedsLayoutInWebView();
         }
     }
@@ -339,6 +354,7 @@ private:
     HTMLIFrameElement* m_sourceElement;
 
     bool m_needsStyleRecalc : 1;
+    bool m_styleRecalcRenderingSkipped : 1;
     bool m_needsStyleRecalcForWholeDocument : 1;
     bool m_needsStyleSheetsRecalc : 1;
     bool m_needsFrameTreeBuild : 1;

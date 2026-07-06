@@ -58,6 +58,7 @@ public:
     String* generateCSSText() const;
 
     void notifyNeedsStyleRecalc();
+    void notifyNeedsStyleRecalc(CSSStyleValuePair::KeyKind keyKind);
 
     static void tokenizeCSSValue(CSSTokenVector& tokens, const char* src,
                                  size_t len, const char* seperator = "",
@@ -71,6 +72,9 @@ public:
 
     void removeCSSValuePair(CSSStyleValuePair::KeyKind keyKind);
     bool hasCSSValuePair(CSSStyleValuePair::KeyKind keyKind);
+    // any property that could reveal the element, change its layout
+    // participation, or feed arbitrary values through var()
+    bool hasRenderingCriticalProperties();
     CSSStyleValuePair getCSSValuePair(CSSStyleValuePair::KeyKind keyKind);
     bool hasVarFunctionValueKindCSSValue(CSSStyleValuePair::KeyKind keyKind);
 
