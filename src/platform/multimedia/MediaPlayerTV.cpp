@@ -153,19 +153,25 @@ void MediaPlayerTizen::setNativePlayerDisplayMode()
         m_lastAbsoluteROIArea = LayoutRect(0, 0, 1, 1);
         player_set_display_roi_area(m_nativePlayer, 0, 0, 1, 1);
 
+#if STARFISH_TIZEN_MAJOR_VERSION >= 11
+        void* tcoreWaylandHandle =
+            m_container->webView()->publicLayerUserDataMap()
+                ["__internalLWEWebViewTcoreWaylandHandle"];
+        auto width = m_container->webView()->renderer()->width();
+        auto height = m_container->webView()->renderer()->height();
+        player_set_tcore_display(m_nativePlayer,
+                                 PLAYER_DISPLAY_TYPE_TCORE_OVERLAY,
+                                 tcoreWaylandHandle);
+#else
         void* ecoreWaylandHandle =
             m_container->webView()->publicLayerUserDataMap()
                 ["__internalLWEWebViewEFLEcoreWaylandHandle"];
-
-        // This is need for displaying video
-        // ecore_wl2_window_alpha_set((Ecore_Wl2_Window*)ecoreWaylandHandle,
-        // false);
-
         auto width = m_container->webView()->renderer()->width();
         auto height = m_container->webView()->renderer()->height();
-
         player_set_ecore_wl_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_OVERLAY,
                                     ecoreWaylandHandle, 0, 0, width, height);
+#endif
+
         player_set_display_visible(m_nativePlayer, true);
     } else {
         setNativePlayerDisplayModeWithGL();
