@@ -112,11 +112,33 @@ void MediaPlayerTizen::setNativePlayerDisplayMode()
         m_lastVideoSourceROI = { { 0.0, 0.0, 1.0, 1.0 } };
         player_set_display_roi_area(m_nativePlayer, 0, 0, 1, 1);
 #if defined(STARFISH_TIZEN_USERAPP_SDK_API_ONLY)
+
+#if STARFISH_TIZEN_MAJOR_VERSION < 11
         void* elmWindowHandle =
             m_container->webView()->publicLayerUserDataMap()
                 ["__internalLWEWebViewEFLNativeWindowEvasObject"];
         player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_OVERLAY,
                            GET_DISPLAY(elmWindowHandle));
+#else
+        void* windowHandle = m_container->webView()->publicLayerUserDataMap()
+                                 ["__internalLWEWebViewTcoreWaylandHandle"];
+        // NOTE(below line maybe wrong, I implemented this before player-API
+        // ACR)
+        player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_OVERLAY,
+                           GET_DISPLAY(windowHandle));
+#endif
+
+#else
+
+#if STARFISH_TIZEN_MAJOR_VERSION >= 11
+        void* tcoreWaylandHandle =
+            m_container->webView()->publicLayerUserDataMap()
+                ["__internalLWEWebViewTcoreWaylandHandle"];
+        auto width = m_container->webView()->renderer()->width();
+        auto height = m_container->webView()->renderer()->height();
+        player_set_tcore_display(m_nativePlayer,
+                                 PLAYER_DISPLAY_TYPE_TCORE_OVERLAY,
+                                 tcoreWaylandHandle);
 #else
         void* ecoreWaylandHandle =
             m_container->webView()->publicLayerUserDataMap()
@@ -125,6 +147,8 @@ void MediaPlayerTizen::setNativePlayerDisplayMode()
         auto height = m_container->webView()->renderer()->height();
         player_set_ecore_wl_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_OVERLAY,
                                     ecoreWaylandHandle, 0, 0, width, height);
+#endif
+
 #endif
         int ret = player_set_display_visible(m_nativePlayer, true);
         if (ret == PLAYER_ERROR_NONE) {

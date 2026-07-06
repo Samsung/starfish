@@ -382,6 +382,9 @@ public:
                     tizen_core_imf_context_focus_out(m_imfContext);
                 }
             });
+
+        m_webContainer->SetUserData("__internalLWEWebViewTcoreWaylandHandle",
+                                    m_window);
     }
 
     ~WebViewTcoreWl()
