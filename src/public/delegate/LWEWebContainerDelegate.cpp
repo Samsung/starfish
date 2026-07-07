@@ -561,7 +561,8 @@ WebContainer* WebContainer::CreateWithPlatformImage(
                 Starfish::RenderInfo result;
 #ifdef STARFISH_FLUTTER
                 tbm_surface_info_s tbmSurfaceInfo;
-                // Unmap the previous frame's surface before mapping the new one.
+                // Unmap the previous frame's surface before mapping the new
+                // one.
                 if (*mappedTbmSurface != nullptr) {
                     tbm_surface_unmap((tbm_surface_h)*mappedTbmSurface);
                     *mappedTbmSurface = nullptr;
@@ -578,11 +579,13 @@ WebContainer* WebContainer::CreateWithPlatformImage(
             });
 
         webView->renderer()->registerRenderingFinishedCallback(
-            [newWebContainer, flushCb, mappedTbmSurface](const Starfish::RenderResult& renderResult) {
+            [newWebContainer, flushCb,
+             mappedTbmSurface](const Starfish::RenderResult& renderResult) {
                 flushCb(newWebContainer, renderResult.didPaintingOrCompositing);
 #ifdef STARFISH_FLUTTER
                 // Unmap the TBM surface after rendering is complete.
-                // This ensures the surface is unmapped before Destroy() is called.
+                // This ensures the surface is unmapped before Destroy() is
+                // called.
                 if (*mappedTbmSurface != nullptr) {
                     tbm_surface_unmap((tbm_surface_h)*mappedTbmSurface);
                     *mappedTbmSurface = nullptr;
