@@ -1,11 +1,11 @@
-# [auto-fail] http://web-platform.test:8000/workers/constructors/SharedWorker/dummy-name.html
-# [auto-fail] http://web-platform.test:8000/workers/constructors/SharedWorker/dummy-shared-worker.html
-# [auto-fail] http://web-platform.test:8000/workers/constructors/SharedWorker/empty-name.html
-# [auto-fail] http://web-platform.test:8000/workers/constructors/SharedWorker/name.html
-# [auto-fail] http://web-platform.test:8000/workers/constructors/SharedWorker/port-onmessage.html
-# [auto-fail] http://web-platform.test:8000/workers/constructors/SharedWorker/port-properties.html
-# [auto-fail] http://web-platform.test:8000/workers/constructors/SharedWorker/port-readonly.html
-# [auto-fail] http://web-platform.test:8000/workers/constructors/SharedWorker/unexpected-global-properties.html
+http://web-platform.test:8000/workers/constructors/SharedWorker/dummy-name.html
+http://web-platform.test:8000/workers/constructors/SharedWorker/dummy-shared-worker.html
+http://web-platform.test:8000/workers/constructors/SharedWorker/empty-name.html
+http://web-platform.test:8000/workers/constructors/SharedWorker/name.html
+http://web-platform.test:8000/workers/constructors/SharedWorker/port-onmessage.html
+http://web-platform.test:8000/workers/constructors/SharedWorker/port-properties.html
+http://web-platform.test:8000/workers/constructors/SharedWorker/port-readonly.html
+http://web-platform.test:8000/workers/constructors/SharedWorker/unexpected-global-properties.html
 http://web-platform.test:8000/workers/constructors/Worker/use-base-url.html
 http://web-platform.test:8000/workers/interfaces/DedicatedWorkerGlobalScope/postMessage/event-ports-dedicated.html
 http://web-platform.test:8000/workers/interfaces/DedicatedWorkerGlobalScope/postMessage/message-event.html
