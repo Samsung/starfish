@@ -1059,8 +1059,22 @@ bool BrowsingContext::isInnerIFrameEvent(Node* targetNode, double& posX,
         // the coordinates handed to the inner browsing context. The
         // document's own scroll is already part of the incoming page
         // coordinates, so it must not be subtracted again.
-        auto absPoint = fb->absolutePointIncludingScroll(
-            document()->frame()->asFrameBox(), false);
+        LayoutLocation absPoint;
+        if (fb->style()->position() == PositionValue::FixedPositionValue) {
+            // A fixed-position iframe (notably the UA-forced :fullscreen
+            // style) is anchored to the viewport: ancestor scroll offsets do
+            // not move it, so they must not be subtracted from its offset
+            // (painting agrees - StackingContext::relativeLocation skips
+            // ancestor scrolls for fixed owners). Its page-coordinate
+            // position is the plain layout position plus the document
+            // scroll that the incoming page coordinates already contain.
+            absPoint = fb->absolutePoint(document()->frame()->asFrameBox());
+            absPoint.setX(absPoint.x() + LayoutUnit(window()->scrollX(false)));
+            absPoint.setY(absPoint.y() + LayoutUnit(window()->scrollY(false)));
+        } else {
+            absPoint = fb->absolutePointIncludingScroll(
+                document()->frame()->asFrameBox(), false);
+        }
         double newPosX = posX - (double)absPoint.x();
         double newPosY = posY - (double)absPoint.y();
         double contentX = (double)(fb->paddingLeft() + fb->borderLeft());
@@ -1197,6 +1211,22 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
     if (count < 1) {
         return false;
     }
+    // hitTest() and isInnerIFrameEvent() operate in page coordinates:
+    // dispatchMouseEvent() and dispatchMouseWheelEvent() both add the
+    // document scroll offset to the incoming window coordinates before hit
+    // testing, but the touch path never did. With the document scrolled,
+    // every touch hit-tested against a point shifted up/left by the scroll
+    // offset (most visibly on a fullscreen element, which sits at the
+    // viewport origin regardless of scroll). Mirror the mouse conversion;
+    // downstream consumers (m_touchDownPoint, the synthesized click's
+    // MouseData, createTouchEvent) all see the same page-coordinate
+    // convention the mouse path establishes.
+    const double scrollOffsetX = window()->scrollX(false);
+    const double scrollOffsetY = window()->scrollY(false);
+    for (size_t i = 0; i < count; i++) {
+        touches[i].setClientX(touches[i].clientX() + scrollOffsetX);
+        touches[i].setClientY(touches[i].clientY() + scrollOffsetY);
+    }
     // Handle touch informations
     // - Do the hitTest for all `Touch` informations and set target for each.
     // - Decide representative target (= first non-empty target).
@@ -1262,6 +1292,21 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
     }
 
     bool returnValue = false;
+    // Pointer Events compat for touch input. The mouse path dispatches
+    // pointerdown/pointermove/pointerup alongside the mouse events, but the
+    // touch path only produced touch events plus a synthesized click, so
+    // pointer-driven UI never reacted to touch (e.g. the YouTube player's
+    // progress bar seeks from pointerdown: a mouse click on it seeks, a touch
+    // tap on it did nothing, while its legacy touchmove scrubbing kept
+    // working). Mirror the mouse path: same MouseData shape as the
+    // synthesized click, same pointer-capture retargeting for move/up, and
+    // implicit capture release on pointerup.
+    // https://w3c.github.io/pointerevents/#compatibility-mapping-with-mouse-events
+    MouseData pointerData(MouseButtonValue::LeftButton,
+                          MouseButtonsValue::LeftButtonDown, targetX, targetY,
+                          1);
+    pointerData.setScreenX(targetScreenX);
+    pointerData.setScreenY(targetScreenY);
     // Dispatch events
     String* name = String::emptyString;
     switch (kind) {
@@ -1272,6 +1317,10 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         Node* t = targetNode->nearestParentElement();
         t = t ? t : document();
         returnValue = !document()->window()->dispatchEventByUA(t, e);
+        Event* pe = createPointerEvent(
+            document(), starfish()->staticStrings()->m_pointerdown.localName(),
+            pointerData);
+        document()->window()->dispatchEventByUA(t, pe);
         break;
     }
     case TouchEventKind::TouchEventMove: {
@@ -1281,6 +1330,20 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         Node* t = targetNode->nearestParentElement();
         t = t ? t : document();
         returnValue = !document()->window()->dispatchEventByUA(t, e);
+        // Pointer capture retargeting, and the same listener gate the mouse
+        // path uses to skip the redundant dispatch per high-frequency move.
+        Node* pt =
+            (m_pointerCaptureTarget && m_pointerCaptureTarget->isConnected())
+                ? m_pointerCaptureTarget
+                : t;
+        if (pt->hasListenerForTypeOnPath(
+                starfish()->staticStrings()->m_pointermove.localName())) {
+            Event* pe = createPointerEvent(
+                document(),
+                starfish()->staticStrings()->m_pointermove.localName(),
+                pointerData);
+            document()->window()->dispatchEventByUA(pt, pe);
+        }
         break;
     }
     case TouchEventKind::TouchEventEnd: {
@@ -1302,6 +1365,16 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         name = starfish()->staticStrings()->m_touchend.localName();
         Event* e = createTouchEvent(document(), name, touches, count);
         returnValue = !document()->window()->dispatchEventByUA(t, e);
+        Node* pt =
+            (m_pointerCaptureTarget && m_pointerCaptureTarget->isConnected())
+                ? m_pointerCaptureTarget
+                : t;
+        Event* pe = createPointerEvent(
+            document(), starfish()->staticStrings()->m_pointerup.localName(),
+            pointerData);
+        document()->window()->dispatchEventByUA(pt, pe);
+        // Implicit pointer capture release on pointerup.
+        m_pointerCaptureTarget = nullptr;
         break;
     }
     default:
