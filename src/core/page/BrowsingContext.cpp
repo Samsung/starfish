@@ -738,8 +738,13 @@ Node* BrowsingContext::imageAreaForImage(Frame* cb, float x, float y)
         return nullptr;
     }
 
-    LayoutLocation l =
-        cb->asFrameBox()->absolutePoint(document()->frame()->asFrameBox());
+    // x/y are page coordinates (see hitTest), so the image's offset must
+    // reflect scrolled ancestors; absolutePoint() ignores ancestor scroll
+    // offsets and would shift the area lookup for an image inside a scrolled
+    // container. The document's own scroll is already part of the incoming
+    // coordinates, so it must not be subtracted again.
+    LayoutLocation l = cb->asFrameBox()->absolutePointIncludingScroll(
+        document()->frame()->asFrameBox(), false);
     float newX = x - l.x().toFloat();
     float newY = y - l.y().toFloat();
 
@@ -1047,7 +1052,15 @@ bool BrowsingContext::isInnerIFrameEvent(Node* targetNode, double& posX,
         }
 
         auto fb = iframe->frame()->asFrameBox();
-        auto absPoint = fb->absolutePoint(document()->frame()->asFrameBox());
+        // posX/posY are page coordinates of this browsing context, so the
+        // iframe's offset must reflect scrolled ancestors (e.g. an
+        // overflow:auto container that has been scrolled); absolutePoint()
+        // ignores ancestor scroll offsets, which shifts (or entirely misses)
+        // the coordinates handed to the inner browsing context. The
+        // document's own scroll is already part of the incoming page
+        // coordinates, so it must not be subtracted again.
+        auto absPoint = fb->absolutePointIncludingScroll(
+            document()->frame()->asFrameBox(), false);
         double newPosX = posX - (double)absPoint.x();
         double newPosY = posY - (double)absPoint.y();
         double contentX = (double)(fb->paddingLeft() + fb->borderLeft());
