@@ -230,7 +230,7 @@ def wpt_all():
 _WPT_TESTHARNESS_LISTS_DIR = os.path.join(working_directory, "tool/wpt/testharness_lists")
 
 
-def _wpt_serve_run(*patterns, jobs=8, timeout=20):
+def _wpt_serve_run(*patterns, jobs=8, timeout=20, daemons=()):
     import glob
     import wpt_runner
     from wpt_server import wpt_serve, DEFAULT_WPT_ROOT, WptServerError
@@ -247,9 +247,16 @@ def _wpt_serve_run(*patterns, jobs=8, timeout=20):
         items.extend(wpt_runner.collect(t, force=False))
     label = ", ".join(patterns) if patterns else "all"
     print_table("Running WPT (on-demand)", "%d tests [%s]" % (len(items), label))
+    runners = [WorkerRunner(name) for name in daemons]
     try:
         with wpt_serve(DEFAULT_WPT_ROOT, verbose=True):
-            npass, reasons, per_list = wpt_runner.run_all(items, jobs, timeout, None)
+            for r in runners:
+                r.run()
+            try:
+                npass, reasons, per_list = wpt_runner.run_all(items, jobs, timeout, None)
+            finally:
+                for r in runners:
+                    r.terminate()
     except WptServerError as e:
         print("wpt serve failed: %s" % e)
         print("hosts not set? run: "
@@ -294,7 +301,7 @@ def wpt_serve_testharness_fetch():
 
 
 def wpt_serve_testharness_worker():
-    _wpt_serve_run("worker.res")
+    _wpt_serve_run("worker.res", daemons=("Starfish-sharedworker",))
 
 
 def wpt_serve_testharness_idb():

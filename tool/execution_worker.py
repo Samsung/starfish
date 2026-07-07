@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import os
+import signal
 import time
-from subprocess import Popen
+from subprocess import Popen, TimeoutExpired
 
 class WorkerRunner:
     def __init__(self, target_name):
@@ -26,13 +27,29 @@ class WorkerRunner:
         print("run " + self.target_name)
         self.worker = Popen(
             ["./" + self.target_name],
-            shell=True,
             cwd=self.working_directory,
+            start_new_session=True,
         )
         time.sleep(1)
 
     def terminate(self):
-        if self.worker:
-            print("terminate " + self.target_name)
-            self.worker.terminate()
-            self.worker = None
+        if not self.worker:
+            return
+        print("terminate " + self.target_name)
+        if self.worker.poll() is None:
+            try:
+                os.killpg(os.getpgid(self.worker.pid), signal.SIGTERM)
+            except OSError:
+                pass
+            try:
+                self.worker.wait(timeout=10)
+            except TimeoutExpired:
+                try:
+                    os.killpg(os.getpgid(self.worker.pid), signal.SIGKILL)
+                except OSError:
+                    pass
+                try:
+                    self.worker.wait(timeout=5)
+                except TimeoutExpired:
+                    pass
+        self.worker = None
