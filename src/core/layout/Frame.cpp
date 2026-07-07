@@ -1412,24 +1412,39 @@ Frame::Frame(Node* node, ComputedStyle* s)
         !style() || style()->visibility() == VisibleVisibilityValue;
 }
 
-bool Frame::subtreePaintsSomething()
+bool Frame::subtreePaintsSomething(std::unordered_map<Frame*, bool>* cache)
 {
-    if (isFrameBox()) {
-        if (asFrameBox()->isVisible()) {
-            return true;
+    if (cache) {
+        auto iter = cache->find(this);
+        if (iter != cache->end()) {
+            return iter->second;
         }
-    } else if (!style() || style()->visibility() == VisibleVisibilityValue) {
-        return true;
     }
 
-    Frame* child = firstChild();
-    while (child) {
-        if (child->subtreePaintsSomething()) {
-            return true;
+    bool paints = false;
+    if (isFrameBox()) {
+        if (asFrameBox()->isVisible()) {
+            paints = true;
         }
-        child = child->next();
+    } else if (!style() || style()->visibility() == VisibleVisibilityValue) {
+        paints = true;
     }
-    return false;
+
+    if (!paints) {
+        Frame* child = firstChild();
+        while (child) {
+            if (child->subtreePaintsSomething(cache)) {
+                paints = true;
+                break;
+            }
+            child = child->next();
+        }
+    }
+
+    if (cache) {
+        cache->insert(std::make_pair(this, paints));
+    }
+    return paints;
 }
 
 void Frame::computePaintingFlags()
