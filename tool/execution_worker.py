@@ -51,5 +51,6 @@ class WorkerRunner:
                 try:
                     self.worker.wait(timeout=5)
                 except TimeoutExpired:
-                    pass
+                    print("warning: " + self.target_name +
+                          " still running after SIGKILL")
         self.worker = None

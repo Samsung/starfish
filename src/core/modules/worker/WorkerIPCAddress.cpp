@@ -62,7 +62,8 @@ const std::string WorkerIPCAddress::createIPCAddress(const std::string& last)
 
 void WorkerIPCAddress::acquire()
 {
-    // TODO: consider making parent directories as needed.
+    // mkdirIfNotExists creates any missing ancestor directories, so
+    // m_resourceDirPath may be nested below the storage root.
     LocalStorageHelper::File::mkdirIfNotExists(m_resourceDirPath);
 
     LocalStorageHelper::File::createClearDirectory(getIPCHandlePath());
