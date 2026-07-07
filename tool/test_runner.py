@@ -230,7 +230,7 @@ def wpt_all():
 _WPT_TESTHARNESS_LISTS_DIR = os.path.join(working_directory, "tool/wpt/testharness_lists")
 
 
-def _wpt_serve_run(*patterns, jobs=8, timeout=20, daemons=()):
+def _wpt_serve_run(*patterns, jobs=8, timeout=20, daemons=(), exclude=()):
     import glob
     import wpt_runner
     from wpt_server import wpt_serve, DEFAULT_WPT_ROOT, WptServerError
@@ -240,7 +240,10 @@ def _wpt_serve_run(*patterns, jobs=8, timeout=20, daemons=()):
         for pat in patterns:
             targets.extend(sorted(glob.glob(os.path.join(_WPT_TESTHARNESS_LISTS_DIR, pat))))
     else:
-        targets = [_WPT_TESTHARNESS_LISTS_DIR]
+        targets = sorted(glob.glob(os.path.join(_WPT_TESTHARNESS_LISTS_DIR, "*.res")))
+    if exclude:
+        targets = [t for t in targets
+                   if os.path.basename(t) not in exclude]
 
     items = []
     for t in targets:
@@ -339,7 +342,11 @@ def wpt_serve_testharness_others():
 
 
 def wpt_serve_testharness():
-    _wpt_serve_run(daemons=("Starfish-sharedworker", "Starfish-serviceworker"))
+    # worker.res/serviceworker.res need the SharedWorker/ServiceWorker daemon
+    # peers, which this aggregate's CI job (x64_test.yml) does not build. They
+    # are gated separately by the daemon-equipped wpt_serve_testharness_worker/
+    # _serviceworker suites, so exclude them here and skip daemon startup.
+    _wpt_serve_run(exclude=("worker.res", "serviceworker.res"))
 
 
 # WPT reftest / crashtest via on-demand `wpt serve` -- see docs/wpt.md.
