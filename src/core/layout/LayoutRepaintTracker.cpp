@@ -84,7 +84,7 @@ static void collectInlineBoxes(
     for (size_t i = 0; i < b.size(); i++) {
         Frame* f = b[i];
         bool inserted = false;
-        if (f->isInlineTextBox() &&
+        if (f->isInlineTextBox() && f->style() &&
             f->style()->visibility() != VisibleVisibilityValue) {
             // hidden text never paints; keep it out of the diff so its
             // updates (e.g. a time readout under hidden controls) don't
@@ -171,6 +171,7 @@ static void traceRepaintRegionJob(
     std::unordered_map<Node*, LayoutRect>& dirtyAreaMapPerStackingContext,
     GCUnorderedSet<Node*, std::hash<Node*>, std::equal_to<Node*>,
                    GCUtil::gc_malloc_allocator<Node*>>& rootedNodeSet,
+    std::unordered_map<Frame*, bool>& subtreePaintsCache,
     bool& gotPaintingDirty, bool inCompositeMode)
 {
     // if box is invisible from here, ignore from currentBox
@@ -217,8 +218,8 @@ static void traceRepaintRegionJob(
                 // just this owner: descendants can override visibility back
                 // to visible, and their rects are traced relative to this
                 // owner, so an owner move only registers here.
-                bool paintsSomething =
-                    currentFrameBox->subtreePaintsSomething();
+                bool paintsSomething = currentFrameBox->subtreePaintsSomething(
+                    &subtreePaintsCache);
                 if (paintsSomething) {
                     gotPaintingDirty = true;
                 }
@@ -397,7 +398,7 @@ static void traceRepaintRegionJob(
             tracker, f, lastStackingContextOwner, lastGraphicsBufferContext,
             oldResultMap, newLayoutResultMap, oldInlineResultMap,
             newInlineResultMap, dirtyAreaMapPerStackingContext, rootedNodeSet,
-            gotPaintingDirty, inCompositeMode);
+            subtreePaintsCache, gotPaintingDirty, inCompositeMode);
         f = f->next();
     }
 }
@@ -417,11 +418,15 @@ bool LayoutRepaintTracker::traceRepaintRegion(FrameDocument* fd)
         lastGraphicsContext = fd;
     }
 
-    traceRepaintRegionJob(
-        *this, fd, fd, lastGraphicsContext, m_lastLayoutResult, newResult,
-        m_lastInlineTextLayoutResult, newInlineLayoutResult,
-        m_dirtyAreaPerStackingContextOwners, m_rootedNodeSet, gotPaintingDirty,
-        fd->node()->webView()->needsComposite());
+    // Valid for this pass only: frames may be rebuilt between passes, so a
+    // fresh cache is built per trace.
+    std::unordered_map<Frame*, bool> subtreePaintsCache;
+    traceRepaintRegionJob(*this, fd, fd, lastGraphicsContext,
+                          m_lastLayoutResult, newResult,
+                          m_lastInlineTextLayoutResult, newInlineLayoutResult,
+                          m_dirtyAreaPerStackingContextOwners, m_rootedNodeSet,
+                          subtreePaintsCache, gotPaintingDirty,
+                          fd->node()->webView()->needsComposite());
 
     auto iter = m_lastLayoutResult.begin();
     while (iter != m_lastLayoutResult.end()) {

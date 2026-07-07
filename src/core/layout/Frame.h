@@ -22,6 +22,8 @@
 
 #include "core/util/PoolAllocator.h"
 
+#include <unordered_map>
+
 namespace Starfish {
 
 class Canvas;
@@ -1973,7 +1975,12 @@ public:
     // Whether this frame or anything below it would put pixels on screen.
     // False for a subtree that is entirely visibility:hidden (visibility is
     // overridable down the tree, so the whole subtree must be checked).
-    bool subtreePaintsSomething();
+    // Callers querying many frames in one pass should share a cache: the
+    // memoized recursion makes the total cost linear in the tree size
+    // instead of quadratic. Entries are only valid within a single pass
+    // (frames may be rebuilt between passes).
+    bool subtreePaintsSomething(
+        std::unordered_map<Frame*, bool>* cache = nullptr);
 
     void propagateMarkNeedsLayout(
         Optional<ComputedStyle*> newStyle = NullOption);
