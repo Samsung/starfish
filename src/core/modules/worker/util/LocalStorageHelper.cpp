@@ -50,6 +50,20 @@ namespace LocalStorageHelper {
 
         TRACE(LOCALSTORAGE, path.data());
 
+        // POSIX mkdir() is non-recursive and fails with ENOENT when an
+        // intermediate directory is missing (e.g. ServiceWorker's IPC handle
+        // dir <storage>/service_worker/ipc, whose <storage>/service_worker
+        // parent is never pre-created). Create each missing ancestor first.
+        size_t pos = 0;
+        while ((pos = path.find('/', pos + 1)) != std::string::npos) {
+            std::string ancestor = path.substr(0, pos);
+            if (!LocalStorageHelper::File::exists(ancestor)) {
+                if (mkdir(ancestor.data(), 0755) != 0) {
+                    STARFISH_LOG_ERROR("cannot mkdir: %s", ancestor.data());
+                }
+            }
+        }
+
         if (mkdir(path.data(), 0755) != 0) {
             STARFISH_LOG_ERROR("cannot mkdir: %s", path.data());
         }
