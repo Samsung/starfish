@@ -37,8 +37,6 @@ LayoutRepaintTracker::ComputeOverflow::ComputeOverflow(
 {
     if (frame->shouldApplyOverflow()) {
         LayoutRect repaintRect = frame->asFrameBox()->overflowRepaintRect();
-        repaintRect.setX(repaintRect.x() + frame->asFrameBox()->x());
-        repaintRect.setY(repaintRect.y() + frame->asFrameBox()->y());
         LayoutLocation pos = frame->asFrameBox()->absolutePointIncludingScroll(
             stackingContextOwner);
         LayoutRect overflowRect(LayoutLocation(pos.x() + repaintRect.x(),
