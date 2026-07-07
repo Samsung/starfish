@@ -2277,7 +2277,7 @@ public:
                 m_lastProgram = m_texBlurShaderProgramEGLImageExternalW;
                 gl()->useProgram(m_texBlurShaderProgramEGLImageExternalW);
                 bindTexPos(m_texBlurShaderProgramEGLImageExternalWTexPos);
-                bindTexIdx(m_texBlurShaderProgramWTexIdx, true);
+                bindTexIdx(m_texBlurShaderProgramEGLImageExternalWTexIdx, true);
             }
             return m_texBlurShaderProgramEGLImageExternalW;
         }
@@ -4441,7 +4441,7 @@ public:
                     &m_compositorContext->m_texBlurShaderProgramWBlurRadius;
             }
 
-            gl()->enableVertexAttribArray(*positionPos);
+            gl()->enableVertexAttribArray(*texPos);
             gl()->enableVertexAttribArray(*texIdx);
 
             gl()->uniform2fv(*positionPos, 4, position);
@@ -4455,7 +4455,7 @@ public:
 
             gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-            gl()->disableVertexAttribArray(*positionPos);
+            gl()->disableVertexAttribArray(*texPos);
             gl()->disableVertexAttribArray(*texIdx);
         }
 
