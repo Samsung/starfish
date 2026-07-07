@@ -769,6 +769,7 @@ test/cairo/internal-test/svg/svg_fe_turbulence1.html
 test/cairo/internal-test/svg/svg_fe_displacement_map1.html
 test/cairo/internal-test/svg/svg_inline_style_01.html
 test/cairo/internal-test/svg/additional-pixel-ratio.html
+test/cairo/internal-test/svg/svg_overflow.html
 test/cairo/internal-test/transition/transition_event_borderWidth.html
 test/cairo/internal-test/transition/transition_transform.html
 test/cairo/internal-test/canvas/basicFillRect.html
