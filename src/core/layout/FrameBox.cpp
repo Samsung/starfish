@@ -3573,6 +3573,30 @@ void FrameBox::establishesStackingContextIfNeedsAndComputingPaintingFlags()
                                                   ->stackingContext());
             }
         } else if (layoutParent() && !isFrameDocument()) {
+            // Fullscreen top-layer emulation, part 2 (part 1 is the forced
+            // position:fixed + z-index INT_MAX in StyleResolver). The UA
+            // z-index alone is confined to the nearest ancestor stacking
+            // context, so a sibling context with a higher z-index (e.g. an
+            // overlay next to the container that holds a fullscreen iframe)
+            // would still paint above the fullscreen element. A real top
+            // layer escapes ancestor contexts entirely; emulate that by
+            // parenting the fullscreen element's stacking context to its
+            // document's root context, where the INT_MAX z-index wins. Both
+            // painting and hit testing follow the stacking context tree, so
+            // this also routes input to the fullscreen content.
+            if (!isAnonymous() && node()->isElement() &&
+                node()->document()->fullscreenElement() == node()) {
+                Frame* rootFrame =
+                    node()->document()->rootElement()
+                        ? node()->document()->rootElement()->frame()
+                        : nullptr;
+                if (rootFrame && rootFrame->asFrameBox()->stackingContext()) {
+                    ensureFrameBoxRareData()->m_stackingContext =
+                        new StackingContext(
+                            this, rootFrame->asFrameBox()->stackingContext());
+                    return;
+                }
+            }
             FrameBox* p = layoutParent()->asFrameBox();
             while (true) {
                 if (p->needToEstablishStackingContext() &&
