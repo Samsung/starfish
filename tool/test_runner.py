@@ -304,6 +304,10 @@ def wpt_serve_testharness_worker():
     _wpt_serve_run("worker.res", daemons=("Starfish-sharedworker",))
 
 
+def wpt_serve_testharness_serviceworker():
+    _wpt_serve_run("serviceworker.res", daemons=("Starfish-serviceworker",))
+
+
 def wpt_serve_testharness_idb():
     _wpt_serve_run("indexeddb.res")
 
