@@ -250,9 +250,9 @@ def _wpt_serve_run(*patterns, jobs=8, timeout=20, daemons=()):
     runners = [WorkerRunner(name) for name in daemons]
     try:
         with wpt_serve(DEFAULT_WPT_ROOT, verbose=True):
-            for r in runners:
-                r.run()
             try:
+                for r in runners:
+                    r.run()
                 npass, reasons, per_list = wpt_runner.run_all(items, jobs, timeout, None)
             finally:
                 for r in runners:
@@ -339,7 +339,7 @@ def wpt_serve_testharness_others():
 
 
 def wpt_serve_testharness():
-    _wpt_serve_run()
+    _wpt_serve_run(daemons=("Starfish-sharedworker", "Starfish-serviceworker"))
 
 
 # WPT reftest / crashtest via on-demand `wpt serve` -- see docs/wpt.md.
