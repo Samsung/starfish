@@ -180,15 +180,18 @@ void Renderer::destroy()
 void Renderer::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
                                   size_t touchCount)
 {
+    // Scale on a local copy: callers reuse one TouchData array across
+    // dispatches (Window::simulateClick passes the same array to
+    // TouchEventStart and TouchEventEnd), so dividing by the device pixel
+    // ratio in place would compound it on the second dispatch.
+    std::vector<TouchData> scaledTouches(touches, touches + touchCount);
+    touches = scaledTouches.data();
+    const float devicePixelRatio = webView()->screenInfo().devicePixelRatio;
     for (size_t i = 0; i < touchCount; i++) {
-        touches[i].setScreenX(touches[i].screenX() /
-                              webView()->screenInfo().devicePixelRatio);
-        touches[i].setScreenY(touches[i].screenY() /
-                              webView()->screenInfo().devicePixelRatio);
-        touches[i].setClientX(touches[i].clientX() /
-                              webView()->screenInfo().devicePixelRatio);
-        touches[i].setClientY(touches[i].clientY() /
-                              webView()->screenInfo().devicePixelRatio);
+        touches[i].setScreenX(touches[i].screenX() / devicePixelRatio);
+        touches[i].setScreenY(touches[i].screenY() / devicePixelRatio);
+        touches[i].setClientX(touches[i].clientX() / devicePixelRatio);
+        touches[i].setClientY(touches[i].clientY() / devicePixelRatio);
     }
     webView()->dispatchTouchEvent(kind, touches, touchCount);
 }

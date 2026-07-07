@@ -796,6 +796,10 @@ test/cairo/internal-test/iframe/postmessage-typedarray.html
 test/cairo/internal-test/iframe/iframe-click-event-isolation.html
 test/cairo/internal-test/iframe/iframe-mouse-screen-coords.html
 test/cairo/internal-test/iframe/iframe-focus-mouse-event.html
+test/cairo/internal-test/iframe/fixed-iframe-click-in-scrolled-document.html
+test/cairo/internal-test/fullscreen/fullscreen-element-above-sibling-stacking-context.html
+test/cairo/internal-test/click/click-on-scrolled-document.html
+test/cairo/internal-test/event/touch-generates-pointer-events.html
 test/cairo/internal-test/canvas/transform.html
 test/cairo/internal-test/css/overflow/scroll-test.html
 test/cairo/internal-test/css/overflow/scroll-test-2.html

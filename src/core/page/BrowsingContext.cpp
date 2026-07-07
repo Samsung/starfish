@@ -1221,6 +1221,12 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
     // downstream consumers (m_touchDownPoint, the synthesized click's
     // MouseData, createTouchEvent) all see the same page-coordinate
     // convention the mouse path establishes.
+    // Convert on a local copy: callers reuse one TouchData array across
+    // dispatches (Window::simulateClick and the CDP input domain pass the
+    // same array to TouchEventStart and TouchEventEnd), so adding the
+    // scroll offset in place would compound it on the second dispatch.
+    std::vector<TouchData> pageTouches(touches, touches + count);
+    touches = pageTouches.data();
     const double scrollOffsetX = window()->scrollX(false);
     const double scrollOffsetY = window()->scrollY(false);
     for (size_t i = 0; i < count; i++) {
