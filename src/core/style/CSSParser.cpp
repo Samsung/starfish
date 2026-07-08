@@ -992,7 +992,8 @@ CSSSelector* CSSParser::getPseudoSelector()
             return nullptr;
         }
 
-        if (selectorArgumentsContainPseudoElement(selector->selectorArguments())) {
+        if (selectorArgumentsContainPseudoElement(
+                selector->selectorArguments())) {
             return nullptr;
         }
 
