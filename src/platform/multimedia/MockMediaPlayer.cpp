@@ -54,7 +54,7 @@
 
 namespace Starfish {
 
-MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
+MediaPlayer* MediaPlayer::create(HTMLMediaElement* element, ResourceURL* url)
 {
     return new MockMediaPlayer(element);
 }

@@ -76,7 +76,11 @@ public:
         SEEKSTATE_WAITING, // Waiting second callback (for Tizen2.4 TV)
     };
 
-    static MediaPlayer* create(HTMLMediaElement* element);
+    // `url` is the resource selected by HTMLMediaElement (null when not
+    // yet known, e.g. srcObject flows); Tizen uses it to route MediaSource
+    // playback to the esplusplayer backend.
+    static MediaPlayer* create(HTMLMediaElement* element,
+                               ResourceURL* url = nullptr);
     static bool isSupport(MediaCodec codec);
     virtual void destroy() = 0;
     virtual void play() = 0;
@@ -112,6 +116,11 @@ public:
     virtual double duration() = 0;
     virtual void setVolume(double volume) = 0;
     virtual void setMuted(bool muted) = 0;
+    // Optional: backends without native rate support ignore it (the
+    // element still reflects the value and fires ratechange).
+    virtual void setPlaybackRate(double rate)
+    {
+    }
 
     PlaybackState playbackState();
     void setPlaybackState(PlaybackState state);

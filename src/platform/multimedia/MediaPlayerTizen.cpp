@@ -41,6 +41,9 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "platform/multimedia/MediaPlayerTizen.h"
+#if defined(STARFISH_USE_ESPLUSPLAYER)
+#include "platform/multimedia/MediaPlayerESPlusPlayer.h"
+#endif
 
 namespace Starfish {
 
@@ -922,8 +925,19 @@ void MediaPlayerTizen::prepare(ResourceURL* url)
             processNextOperationQueueInContainer();
             return;
         } else {
-            // fire eror
-            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            // Unknown blob URL: typically a MediaSource object URL the page
+            // already revoked (YouTube revokes right after setting src, then
+            // re-sets the same src when it reloads after a playback error).
+            // Page-controlled input must not abort; fire the standard error
+            // path instead.
+            PLAYER_LOGE(
+                "MediaPlayerTizen::prepare: unknown (revoked?) blob URL - "
+                "firing error");
+            m_foundError = true;
+            m_container->giveupFetchingResource();
+            processNextOperationQueueInContainer();
+            destroy();
+            return;
         }
     } else {
         auto s = url->urlString()->toUTF8NonGCString();
@@ -1483,12 +1497,18 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
     size_t submitBytes = 0;
     uint64_t sizeUpTo =
         stream->maxBufferSize() * STARFISH_MSE_SUBMIT_BYTES_RATE;
+    // Reused across iterations. copyProperMediaPacket snapshots the packet's
+    // encoded bytes here under the source-buffer lock, so the memory handed to
+    // media_packet_create_from_external_memory / player_push_media_stream is a
+    // caller-owned copy that a concurrent remove()/eviction (e.g. the buffer
+    // clear a page issues on seek) cannot free out from under the push.
+    std::vector<uint8_t> packetData;
     while (submitBytes < sizeUpTo) {
-        std::pair<MediaPacket*, size_t> packet =
-            sb->findProperMediaPacket(streamIdx, lastDTS);
+        SourceBuffer::MediaPacketView packet =
+            sb->copyProperMediaPacket(streamIdx, lastDTS, packetData);
         media_packet_h mediaPacket = nullptr;
 
-        if (packet.first == nullptr) {
+        if (!packet.m_found) {
             uint64_t endTime = m_activeMediaSource->duration() * 1000;
             if (std::isinf(m_activeMediaSource->duration())) {
                 endTime = std::numeric_limits<uint64_t>::max();
@@ -1518,17 +1538,17 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
             stream->setWaitingDemuxer(true);
             break;
         }
-        if (packet.first->m_dts < lastDTS) {
+        if (packet.m_dts < lastDTS) {
             // Already-consumed packet; defer to next demuxer event.
             sb->clearPacketAccessCache();
             DEBUG_STREAMBUFFER_LOG(
                 "fillBuffer waiting demuxer[2] - requested(%lld) but "
                 "returned(%lld)",
-                (long long int)lastDTS, (long long int)packet.first->m_dts);
+                (long long int)lastDTS, (long long int)packet.m_dts);
             stream->setWaitingDemuxer(true);
             break;
         }
-        if (packet.first->m_dts - lastDTS > 500) {
+        if (packet.m_dts - lastDTS > 500) {
             // The MSE source has a >500ms gap ahead of our submission
             // pointer (typical when the player evicted old segments while
             // we were paused, or at a Cluster boundary in WebM where
@@ -1547,13 +1567,13 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
             // advance.
             DEBUG_STREAMBUFFER_LOG(
                 "fillBuffer skip-ahead: requested(%lld) jumped to (%lld)",
-                (long long int)lastDTS, (long long int)packet.first->m_dts);
-            lastDTS = packet.first->m_dts;
+                (long long int)lastDTS, (long long int)packet.m_dts);
+            lastDTS = packet.m_dts;
         }
 
-        if (packet.second != currentInitIndex) {
-            if (!packet.first->m_hasIdr) {
-                lastDTS = packet.first->m_dts + packet.first->m_duration;
+        if (packet.m_initSegmentIndex != currentInitIndex) {
+            if (!packet.m_hasIdr) {
+                lastDTS = packet.m_dts + packet.m_duration;
                 DEBUG_STREAMBUFFER_LOG(
                     "fillBuffer drops non-idr packet (config changed)");
                 continue;
@@ -1561,26 +1581,26 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
                 DEBUG_STREAMBUFFER_LOG(
                     "fillBuffer detect changed config (and will submit packet "
                     "including idr. DTS:%d)",
-                    (int)packet.first->m_dts);
-                updateStreamInfo(stream, currentInitIndex, packet.second);
-                stream->setInitSegmentIndex(packet.second);
-                currentInitIndex = packet.second;
+                    (int)packet.m_dts);
+                updateStreamInfo(stream, currentInitIndex,
+                                 packet.m_initSegmentIndex);
+                stream->setInitSegmentIndex(packet.m_initSegmentIndex);
+                currentInitIndex = packet.m_initSegmentIndex;
                 sizeUpTo =
                     stream->maxBufferSize() * STARFISH_MSE_SUBMIT_BYTES_RATE;
             }
         }
 
         int ret = media_packet_create_from_external_memory(
-            format, packet.first->m_data, packet.first->m_dataSize, nullptr,
-            nullptr, &mediaPacket);
+            format, packetData.data(), packet.m_dataSize, nullptr, nullptr,
+            &mediaPacket);
         RETURN_WHEN_MEDIA_PACKET_ERROR(
             "ERROR: media_packet_create_from_external_memory");
 
-        ret = media_packet_set_pts(mediaPacket, packet.first->m_pts * 1e6);
+        ret = media_packet_set_pts(mediaPacket, packet.m_pts * 1e6);
         RETURN_WHEN_MEDIA_PACKET_ERROR("ERROR: media_packet_set_pts");
 
-        ret = media_packet_set_duration(mediaPacket,
-                                        packet.first->m_duration * 1e6);
+        ret = media_packet_set_duration(mediaPacket, packet.m_duration * 1e6);
         RETURN_WHEN_MEDIA_PACKET_ERROR("ERROR: media_packet_set_duration");
 
         ret = player_push_media_stream(m_nativePlayer, mediaPacket);
@@ -1598,10 +1618,10 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
         }
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
         submitCount++;
-        submitMS += packet.first->m_duration;
+        submitMS += packet.m_duration;
 #endif
-        submitBytes += packet.first->m_dataSize;
-        lastDTS = packet.first->m_dts + packet.first->m_duration;
+        submitBytes += packet.m_dataSize;
+        lastDTS = packet.m_dts + packet.m_duration;
     }
     stream->setLastSubmittedDTS(lastDTS);
     DEBUG_STREAMBUFFER_LOG("fillBuffer end %llums (count:%d, size:%d)",
@@ -1907,8 +1927,37 @@ void MediaPlayerTizen::updateVideoStreamInfo(MediaPlayerSourceStream* stream,
     PLAYER_LOGI("---------------------------------------");
 }
 
-MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
+#if defined(STARFISH_USE_ESPLUSPLAYER)
+static bool isMediaSourceBlob(HTMLMediaElement* element, ResourceURL* url)
 {
+    if (url == nullptr || url->isBlobURL() == false) {
+        return false;
+    }
+    BlobURLStore store;
+    if (WebBase::stringToBlobURLString(url->urlString(), store) == false) {
+        return false;
+    }
+    return element->webView()->isValidMediaSourceBlobURL(store);
+}
+#endif
+
+MediaPlayer* MediaPlayer::create(HTMLMediaElement* element, ResourceURL* url)
+{
+#if defined(STARFISH_USE_ESPLUSPLAYER)
+    // MediaSource playback goes to the esplusplayer backend; plain URL and
+    // Blob playback stays on capi-media-player (esplusplayer has no URI
+    // mode). STARFISH_FORCE_ESPP=1/0 overrides the automatic routing for
+    // debugging.
+    static int forceESPP = []() {
+        const char* v = getenv("STARFISH_FORCE_ESPP");
+        return v && *v ? (atoi(v) != 0 ? 1 : 0) : -1;
+    }();
+    bool useESPP =
+        forceESPP >= 0 ? (forceESPP == 1) : isMediaSourceBlob(element, url);
+    if (useESPP) {
+        return new MediaPlayerESPlusPlayer(element);
+    }
+#endif
     return new MediaPlayerTizen(element);
 }
 
@@ -1920,6 +1969,18 @@ bool MediaPlayer::isSupport(MediaCodec codec)
     }
     if (codec == MediaCodec::MediaCodecAudioOpus ||
         codec == MediaCodec::MediaCodecVideoVP9) {
+#if defined(STARFISH_USE_ESPLUSPLAYER)
+        // MSE playback routes to the esplusplayer backend (see
+        // MediaPlayer::create), which accepts VP9 and Opus stream infos
+        // that capi-media-player's player_set_media_stream_info rejected
+        // with PLAYER_ERROR_CLASS | 0x31 on this platform. Advertising
+        // them through MediaSource::isTypeSupported and
+        // MediaCapabilities.decodingInfo lets YouTube serve VP9+Opus
+        // instead of falling back to avc1+mp4a (same quality at a
+        // significantly lower bitrate). STARFISH_FORCE_ESPP=0 (the capi
+        // debug override) must not be combined with VP9/Opus content.
+        return true;
+#else
         // The Tizen TV native player returns PLAYER_ERROR_CLASS | 0x31
         // (a TV-specific "format/codec not accepted" code outside the
         // public player_error_e enum) from player_set_media_stream_info
@@ -1939,6 +2000,7 @@ bool MediaPlayer::isSupport(MediaCodec codec)
         //
         // Linux uses MediaPlayerLinux (ffmpeg) and is unaffected.
         return false;
+#endif
     }
     return true;
 }

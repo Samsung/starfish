@@ -293,6 +293,18 @@ IF (${WEBRTC} STREQUAL "1")
     )
 ENDIF()
 
+IF ("${ENABLE_ESPLUSPLAYER}" STREQUAL "1")
+    # esplusplayer is a platform-internal Tizen package (Tizen 6.0+, not in
+    # the public app SDK); only meaningful on Tizen platform builds.
+    IF (NOT ${HOST} STREQUAL "tizen")
+        MESSAGE (FATAL_ERROR "ENABLE_ESPLUSPLAYER requires HOST=tizen")
+    ENDIF()
+    MESSAGE (STATUS "esplusplayer MSE backend enabled")
+    SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
+        -DSTARFISH_USE_ESPLUSPLAYER
+    )
+ENDIF()
+
 IF (${WEBGL} STREQUAL "1")
     MESSAGE (STATUS "WEBGL Experimental Enabled")
     SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
@@ -547,6 +559,9 @@ IF (${HOST} STREQUAL "tizen")
     ENDIF()
     IF (${WEBRTC} STREQUAL "1")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM_WEBRTC REQUIRED capi-media-player capi-media-sound-manager capi-media-camera capi-media-tool capi-system-device capi-media-audio-io)
+    ENDIF()
+    IF ("${ENABLE_ESPLUSPLAYER}" STREQUAL "1")
+        pkg_check_modules (STARFISH_TIZEN_ESPLUSPLAYER REQUIRED esplusplayer)
     ENDIF()
 ENDIF()
 

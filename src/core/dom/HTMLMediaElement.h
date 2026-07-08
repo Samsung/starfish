@@ -316,6 +316,7 @@ public:
 
     TimeRanges* played();
     TimeRanges* seekable();
+    TimeRanges* seekableIntersection();
 
     void load();
     Promise* play();
@@ -416,6 +417,7 @@ public:
 protected:
     uint64_t m_lastVideoFrameCompositeTime{ 0 };
     bool m_autoplayingFlag;
+    double m_playbackRate;
     bool m_isPaused;
     bool m_isSeeking;
     bool m_isEnded;
@@ -443,7 +445,7 @@ protected:
     double m_currentPlayStart;
     GCAtomicVector<TimeRange> m_pastPlayed;
 
-    void initMediaPlayer();
+    void initMediaPlayer(ResourceURL* url = nullptr);
     void closeMediaPlayer();
 
     void resourceSelection();
