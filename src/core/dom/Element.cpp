@@ -1736,7 +1736,10 @@ void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
         // frameRect of svgElement stores actual visible rect for hittesting &
         // repainting but spec want to return don't include stroke-width here :(
         if (isSVGElement() && asSVGElement()->isShapeElement()) {
-            auto path = frameBox->asFrameSVGBox()->path();
+            auto path = frameBox->asFrameSVGBox()->motionTransformedPath();
+            if (!path) {
+                path = frameBox->asFrameSVGBox()->path();
+            }
             if (path) {
                 SkMatrix svgMatrix = SkMatrix::I();
                 if (frameBox->asFrameSVGBox()->computedSVGTransform()) {
