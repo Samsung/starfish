@@ -3189,15 +3189,19 @@ public:
         return m_pseudotype;
     }
 
-    CSSSelectorList& pseudoSelectorList()
+    // Each element is one complex-selector branch of the pseudo's argument:
+    // comma-separated branches for :is()/:where()/:not(), and exactly one
+    // branch (a single compound selector) for :host(). See
+    // CSSParser::getPseudoSelector() for how each pseudo populates this.
+    GCVector<CSSSelectorList*>& selectorArguments()
     {
-        return m_pseudoSelectorList;
+        return m_selectorArguments;
     }
 
-    void addToPseudoSelectorList(CSSSelector* selector)
+    void addSelectorArgument(CSSSelectorList* argument)
     {
         STARFISH_ASSERT(m_type != Tag);
-        m_pseudoSelectorList.push_back(CSSSelectorListItem(selector));
+        m_selectorArguments.push_back(argument);
     }
 
     String* argument()
@@ -3236,7 +3240,7 @@ public:
                           bool hasArguments);
 
 protected:
-    CSSSelectorList m_pseudoSelectorList;
+    GCVector<CSSSelectorList*> m_selectorArguments;
     String* m_argument;
     struct {
         int m_a; // Used for :nth-*
@@ -3468,6 +3472,8 @@ protected:
     void recalcWebFonts();
     void addToRuleSet(CSSStyleSheet* sheet);
     void addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule);
+    void registerAttrFilterFromSelectorArguments(
+        CSSPseudoSelector* pseudoSelector);
     void addToKeyframesRule(StyleRuleKeyframes* rule);
     void removeAllRules();
     size_t nextRuleSetOrder();
@@ -3500,7 +3506,7 @@ protected:
         CSSSelector* selector, MatchResult& result,
         bool isQueryingSelector = false);
     bool checkPseudoClass(Element* element, CSSPseudoSelector* selector,
-                          MatchResult& result);
+                          MatchResult& result, bool isQueryingSelector = false);
     bool checkPseudoElement(Element* element, CSSPseudoSelector* selector,
                             MatchResult& result);
     bool anyAttributeMatches(Element* element, CSSSelector::Type type,
