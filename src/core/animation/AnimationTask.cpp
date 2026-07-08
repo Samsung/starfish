@@ -1876,6 +1876,11 @@ bool ActiveSVGLengthAnimationTask::needsContinuousRendering(uint64_t tick)
             return false;
         }
     }
+
+    if (std::isinf(m_iterationCount)) {
+        return true;
+    }
+
     auto remainTime = this->remainTime(tick);
 
     if (remainTime <= 0 && fillMode() == AnimationFillModeValue::None &&
