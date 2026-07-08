@@ -42,6 +42,7 @@ public:
                                      bool attributeRemoved) override;
 
     virtual void beginElementAt(float offset) override;
+    virtual void didNodeRemovedFromDocumentTree() override;
 
     static Unit::FloatPoint computePoint(
         const GCAtomicVector<Unit::FloatPoint>& pl, float progress);

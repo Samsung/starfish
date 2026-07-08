@@ -696,6 +696,7 @@ test/cairo/internal-test/svg/animation/animateMotion.html
 test/cairo/internal-test/svg/animation/animate_begin_negative.html
 test/cairo/internal-test/svg/animation/animate_begin_negative_dur_no_unit.html
 test/cairo/internal-test/svg/animation/animate_dur_without_unit.html
+test/cairo/internal-test/svg/animation/anim-path-manipulation-test.html
 test/cairo/internal-test/svg/svg_attributeName_camelcase.html
 test/cairo/internal-test/svg/svg_01.html
 test/cairo/internal-test/svg/svg_02.html

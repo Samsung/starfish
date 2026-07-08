@@ -31,6 +31,9 @@
 #include "core/dom/svg/SVGElement.h"
 #include "core/dom/svg/SVGFilterPrimitiveStandardAttributes.h"
 #include "core/dom/svg/SVGAnimateMotionElement.h"
+#include "core/dom/svg/SVGMPathElement.h"
+#include "core/dom/svg/SVGPathElement.h"
+#include "core/modules/canvas/Path.h"
 #include "core/dom/AnimationEvent.h"
 #include "core/dom/TransitionEvent.h"
 #include "core/layout/Frame.h"
@@ -1820,6 +1823,38 @@ void ActiveSVGLengthAnimationTask::execute(double progress)
             m_attributeName, NullOption, transformValue, this);
         return;
     } else if (a1->isAnimateMotion()) {
+        // Check if the referenced path's d attribute has changed.
+        if (m_originAnimationElement &&
+            m_originAnimationElement->isSVGAnimateMotionElement()) {
+            auto* mpath = m_originAnimationElement->firstElementChild();
+            if (mpath && mpath->isSVGMPathElement()) {
+                auto href = mpath->asSVGMPathElement()->href();
+                if (href) {
+                    auto target = m_originAnimationElement->asSVGElement()
+                                      ->findHrefTarget(href.value());
+                    if (target && target->isSVGPathElement()) {
+                        String* currentD =
+                            target->asSVGPathElement()->getAttributeOrEmpty(
+                                m_targetElement->starfish()
+                                    ->staticStrings()
+                                    ->m_d);
+                        if (!m_lastMotionPathD.hasValue()) {
+                            m_lastMotionPathD = currentD;
+                        } else if (!currentD->equals(
+                                       m_lastMotionPathD.value())) {
+                            m_lastMotionPathD = currentD;
+                            auto newPath = Path::create();
+                            SVGPathElement::parsePath(currentD, newPath);
+                            auto* pointList = a1->getAnimateMotionValue();
+                            pointList->clear();
+                            for (auto& p : newPath->pointList()) {
+                                pointList->push_back(p);
+                            }
+                        }
+                    }
+                }
+            }
+        }
         auto pt = SVGAnimateMotionElement::computePoint(
             *a1->getAnimateMotionValue(), progress);
         // NOTE use dx, dy to store point
@@ -1865,8 +1900,7 @@ void ActiveSVGLengthAnimationTask::attachToElement()
 
 void ActiveSVGLengthAnimationTask::detachFromElement()
 {
-    m_targetElement->asSVGElement()->removeAnimatedAttribute(m_attributeName,
-                                                             this);
+    m_targetElement->asSVGElement()->removeAllAnimatedAttributesByTask(this);
 }
 
 bool ActiveSVGLengthAnimationTask::needsContinuousRendering(uint64_t tick)
