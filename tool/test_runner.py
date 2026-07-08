@@ -208,14 +208,6 @@ def wpt_css_all():
     wpt_selectors()
 
 
-def wpt_worker():
-    runner = WorkerRunner('Starfish-sharedworker')
-    runner.run()
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/worker.res", "cairo"])
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/serviceworker.res", "cairo"])
-    runner.terminate()
-
-
 def wpt_all():
     wpt_css_all()
 
