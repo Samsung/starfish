@@ -1839,6 +1839,7 @@ private:
     RefPtr<CSSToken> lookAhead(bool aSkipWS, bool aSkipComment);
 
     bool parseComplexSelectorList(GCVector<CSSSelectorList*>& sList);
+    void parseForgivingSelectorList(GCVector<CSSSelectorList*>& sList);
     void parseComplexSelector(CSSSelectorList* selectorList);
     void parseCompoundSelector(CSSSelectorList* selectorList);
     CSSSelectorListItem::RelationType parseCombinator();
@@ -1853,6 +1854,8 @@ private:
                                      String* elementName,
                                      CSSSelector* compoundSelector);
     unsigned extractCompoundFlags(CSSSelector* simpleSelector);
+    bool selectorArgumentsContainPseudoElement(
+        const GCVector<CSSSelectorList*>& args);
     bool getANPlusB(std::pair<int, int>& result);
     CSSSelector::Type getAttributeMatch(RefPtr<CSSToken> token);
     CSSSelector::AttributeMatchType getAttributeFlags();

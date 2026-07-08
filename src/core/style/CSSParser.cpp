@@ -985,25 +985,62 @@ CSSSelector* CSSParser::getPseudoSelector()
     getToken(true, true);
 
     switch (selector->pseudoType()) {
-    case CSSSelector::PseudoHostFunction:
     case CSSSelector::PseudoNot: {
-        CSSSelectorList selectorList;
-        parseCompoundSelector(&selectorList);
-
-        if (selectorList.size() != 1) {
+        // :not() takes a <complex-selector-list> (non-forgiving: any invalid
+        // branch drops the whole rule, unlike :is()/:where()).
+        if (!parseComplexSelectorList(selector->selectorArguments())) {
             return nullptr;
         }
 
-        CSSSelector* innerSelector = selectorList[0].m_selector;
-        if ((innerSelector->isPseudoSelector() &&
-             innerSelector->asCSSPseudoSelector()
-                 ->pseudoSelectorList()
-                 .size()) ||
-            innerSelector->type() == CSSSelector::PseudoElement) {
+        if (selectorArgumentsContainPseudoElement(selector->selectorArguments())) {
             return nullptr;
         }
 
-        selector->addToPseudoSelectorList(innerSelector);
+        RefPtr<CSSToken> closeToken = currentToken();
+        if (!closeToken->isSymbol(')')) {
+            return nullptr;
+        }
+        getToken(false, true);
+
+        return selector;
+    }
+    case CSSSelector::PseudoHostFunction: {
+        // :host() takes a single <compound-selector> (no combinators, no
+        // comma list) per css-scoping; pseudo-elements are not allowed.
+        CSSSelectorList* branch = new (GC) CSSSelectorList();
+        parseCompoundSelector(branch);
+
+        if (branch->size() == 0) {
+            return nullptr;
+        }
+
+        for (size_t i = 0; i < branch->size(); i++) {
+            if (branch->at(i).m_selector->type() ==
+                CSSSelector::PseudoElement) {
+                return nullptr;
+            }
+        }
+
+        selector->addSelectorArgument(branch);
+
+        RefPtr<CSSToken> closeToken = currentToken();
+        if (!closeToken->isSymbol(')')) {
+            return nullptr;
+        }
+        getToken(false, true);
+
+        return selector;
+    }
+    case CSSSelector::PseudoIs:
+    case CSSSelector::PseudoWhere: {
+        // :is()/:where() take a forgiving <complex-selector-list>: invalid
+        // branches are dropped, not fatal to the whole selector.
+        parseForgivingSelectorList(selector->selectorArguments());
+
+        RefPtr<CSSToken> closeToken = currentToken();
+        if (!closeToken->isSymbol(')')) {
+            return nullptr;
+        }
         getToken(false, true);
 
         return selector;
@@ -1583,6 +1620,70 @@ bool CSSParser::parseComplexSelectorList(
     }
 
     return true;
+}
+
+bool CSSParser::selectorArgumentsContainPseudoElement(
+    const GCVector<CSSSelectorList*>& args)
+{
+    for (size_t i = 0; i < args.size(); i++) {
+        CSSSelectorList* branch = args[i];
+        for (size_t j = 0; j < branch->size(); j++) {
+            if (branch->at(j).m_selector->type() ==
+                CSSSelector::PseudoElement) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// Parses a <forgiving-selector-list> for :is()/:where(): each comma-separated
+// branch is parsed independently, and a branch that fails to parse (or turns
+// out to reference a pseudo-element) is simply dropped instead of failing the
+// whole argument list. An empty result (zero valid branches) is still a
+// valid, always-non-matching selector.
+void CSSParser::parseForgivingSelectorList(GCVector<CSSSelectorList*>& list)
+{
+    while (true) {
+        preserveState();
+        bool savedFailedParsing = m_failedParsing;
+        m_failedParsing = false;
+
+        CSSSelectorList* branch = new (GC) CSSSelectorList();
+        parseComplexSelector(branch);
+
+        bool branchIsValid = branch->size() > 0 && !m_failedParsing;
+        if (branchIsValid) {
+            for (size_t j = 0; j < branch->size(); j++) {
+                if (branch->at(j).m_selector->type() ==
+                    CSSSelector::PseudoElement) {
+                    branchIsValid = false;
+                    break;
+                }
+            }
+        }
+
+        m_failedParsing = savedFailedParsing;
+
+        if (branchIsValid) {
+            forgetState();
+            list.push_back(branch);
+        } else {
+            restoreState();
+            RefPtr<CSSToken> token = currentToken();
+            while (token->isNotNull() && !token->isSymbol(',') &&
+                   !token->isSymbol(')')) {
+                token = getToken(false, true);
+            }
+        }
+
+        RefPtr<CSSToken> token = currentToken();
+        if (token->isNotNull() && token->isSymbol(',')) {
+            getToken(false, true);
+            continue;
+        }
+        break;
+    }
 }
 
 CSSTokenString CSSParser::parseDefaultPropertyValue(RefPtr<CSSToken> token)

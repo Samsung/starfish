@@ -203,15 +203,35 @@ static unsigned calcSpecificity(CSSSelectorList& selectorList)
     for (unsigned i = 0; i < selectorList.size(); i++) {
         CSSSelector* selector = selectorList[i].m_selector;
 
-        // The negation pseudo-class has another simple selector in own data
-        // structure.
-        if (selector->type() == CSSSelector::Type::PseudoClass &&
-            selector->asCSSPseudoSelector()->pseudoType() ==
-                CSSSelector::PseudoType::PseudoNot) {
-            temp = total + selector->asCSSPseudoSelector()
-                               ->pseudoSelectorList()[0]
-                               .m_selector->specificityForOneSelector();
+        CSSSelector::PseudoType pseudoType = CSSSelector::PseudoNone;
+        if (selector->type() == CSSSelector::Type::PseudoClass) {
+            pseudoType = selector->asCSSPseudoSelector()->pseudoType();
+        }
+
+        if (pseudoType == CSSSelector::PseudoType::PseudoNot ||
+            pseudoType == CSSSelector::PseudoType::PseudoIs) {
+            // :not()/:is() contribute the specificity of their single most
+            // specific branch (Selectors-4 specificity of a pseudo-class).
+            unsigned best = 0;
+            GCVector<CSSSelectorList*>& args =
+                selector->asCSSPseudoSelector()->selectorArguments();
+            for (size_t j = 0; j < args.size(); j++) {
+                unsigned branchSpecificity = calcSpecificity(*args[j]);
+                if (branchSpecificity > best) {
+                    best = branchSpecificity;
+                }
+            }
+            temp = total + best;
+        } else if (pseudoType == CSSSelector::PseudoType::PseudoWhere) {
+            // :where() always contributes zero specificity.
+            temp = total;
         } else {
+            // Note: :host()'s compound-selector argument intentionally does
+            // not contribute here (falls through to a flat
+            // specificityForOneSelector() below, same as any other
+            // pseudo-class) -- unlike :not()/:is(), generalizing this would
+            // change :host()'s existing specificity behavior, which is out
+            // of scope for now.
             temp = total + selector->specificityForOneSelector();
         }
 

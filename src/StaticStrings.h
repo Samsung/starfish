@@ -270,6 +270,7 @@ namespace Starfish {
     F(InRange, inRange, "in-range")                            \
     F(Indeterminate, indeterminate, "indeterminate")           \
     F(Invalid, invalid, "invalid")                             \
+    F(Is, is, "is(")                                           \
     F(Lang, lang, "lang(")                                     \
     F(LastChild, lastChild, "last-child")                      \
     F(LastOfType, lastOfType, "last-of-type")                  \
@@ -299,6 +300,7 @@ namespace Starfish {
     F(UserInvalid, userInvalid, "user-invalid")                \
     F(Valid, valid, "valid")                                   \
     F(Visited, visited, "visited")                             \
+    F(Where, where, "where(")                                  \
     F(Cue, cue, "cue")                                         \
     F(GrammarError, grammarError, "grammar-error")             \
     F(Placeholder, placeholder, "placeholder")                 \

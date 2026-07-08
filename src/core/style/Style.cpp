@@ -769,8 +769,21 @@ String* CSSSelectorList::selectorText(CSSSelectorList* list, unsigned idx,
                 str.appendChar(')');
                 break;
             case CSSSelector::PseudoNot:
-                STARFISH_ASSERT(pcs->pseudoSelectorList().size() > 0);
-                str.appendString(pcs->pseudoSelectorList().selectorText());
+            case CSSSelector::PseudoIs:
+            case CSSSelector::PseudoWhere: {
+                GCVector<CSSSelectorList*>& args = pcs->selectorArguments();
+                for (size_t i = 0; i < args.size(); i++) {
+                    if (i > 0) {
+                        str.appendString(", ");
+                    }
+                    str.appendString(args[i]->selectorText());
+                }
+                str.appendChar(')');
+                break;
+            }
+            case CSSSelector::PseudoHostFunction:
+                STARFISH_ASSERT(pcs->selectorArguments().size() == 1);
+                str.appendString(pcs->selectorArguments()[0]->selectorText());
                 str.appendChar(')');
                 break;
             default:
@@ -870,7 +883,7 @@ bool CSSSelector::isSimple(CSSSelectorList* selectorList)
     STARFISH_ASSERT(selectorList != nullptr);
 
     if ((isPseudoSelector() &&
-         asCSSPseudoSelector()->pseudoSelectorList().size()) ||
+         asCSSPseudoSelector()->selectorArguments().size()) ||
         type() == CSSSelector::PseudoElement) {
         return false;
     }
@@ -1052,6 +1065,7 @@ void CSSPseudoSelector::updatePseudoType(Starfish* starfish, AtomicString name,
     */
     case PseudoIndeterminate:
     case PseudoInvalid:
+    case PseudoIs:
     case PseudoLang:
     case PseudoLastChild:
     case PseudoLastOfType:
@@ -1093,6 +1107,7 @@ void CSSPseudoSelector::updatePseudoType(Starfish* starfish, AtomicString name,
     case PseudoValid:
     // case PseudoVertical:
     case PseudoVisited:
+    case PseudoWhere:
         // case PseudoWindowInactive:
         if (type() != PseudoClass) {
             m_pseudotype = PseudoNone;
@@ -6559,8 +6574,9 @@ void StyleResolver::applyProperty(Element* element,
                     if (attrValue.hasValue()) {
                         style->setContentText(attrValue.getValue());
                     }
-                    style->m_styleDamageSource = (StyleDamageSource)(
-                        style->m_styleDamageSource | StyleDamageFromAttribute);
+                    style->m_styleDamageSource =
+                        (StyleDamageSource)(style->m_styleDamageSource |
+                                            StyleDamageFromAttribute);
 
                     m_ruleSetAttrFilter.push_back(
                         element->document()
@@ -7986,9 +8002,11 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
         if (result.seenCombinator) {
             ret->setStyleDamageSource(result.styleDamageFrom);
         } else {
-            ret->setStyleDamageSource((StyleResolver::StyleDamageSource)(
-                result.styleDamageFrom &
-                ~StyleResolver::StyleDamageSource::StyleDamageFromDOMTree));
+            ret->setStyleDamageSource(
+                (StyleResolver::
+                     StyleDamageSource)(result.styleDamageFrom &
+                                        ~StyleResolver::StyleDamageSource::
+                                            StyleDamageFromDOMTree));
         }
         ret->setStyleDamageSourceNodeStateMap(
             result.styleDamageSourceNodeStateMap);
@@ -8109,8 +8127,9 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
             if (hsrResult.seenCombinator) {
                 ret->setStyleDamageSource(hsrResult.styleDamageFrom);
             } else {
-                ret->setStyleDamageSource((StyleDamageSource)(
-                    hsrResult.styleDamageFrom & ~StyleDamageFromDOMTree));
+                ret->setStyleDamageSource(
+                    (StyleDamageSource)(hsrResult.styleDamageFrom &
+                                        ~StyleDamageFromDOMTree));
             }
             ret->setStyleDamageSourceNodeStateMap(
                 hsrResult.styleDamageSourceNodeStateMap);
@@ -8410,14 +8429,15 @@ bool StyleResolver::checkOne(
         case CSSSelector::AttributeContain: // css3: E[foo*="bar"]
         case CSSSelector::AttributeBegin:   // css3: E[foo^="bar"]
         case CSSSelector::AttributeEnd:     // css3: E[foo$="bar"]
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromAttribute);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromAttribute);
             return anyAttributeMatches(element, selector->type(),
                                        selector->asCSSAttributeSelector(),
                                        result);
         case CSSSelector::Type::PseudoClass:
             return checkPseudoClass(element, selector->asCSSPseudoSelector(),
-                                    result);
+                                    result, isQueryingSelector);
         case CSSSelector::Type::PseudoElement:
             // while the use of pseudo-elements in selectors of querySelector is
             // permitted, they will not match any elements in the document, and
@@ -8577,7 +8597,8 @@ static unsigned nthLastOfTypeIndex(Element* element)
 
 bool StyleResolver::checkPseudoClass(Element* element,
                                      CSSPseudoSelector* selector,
-                                     MatchResult& result)
+                                     MatchResult& result,
+                                     bool isQueryingSelector)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(selector != nullptr);
@@ -8585,70 +8606,80 @@ bool StyleResolver::checkPseudoClass(Element* element,
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoType::PseudoHover:
         if (result.seenCombinator) {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementStateDOMTree);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementStateDOMTree);
             result.styleDamageSourceNodeStateDOMTreeMap =
                 result.styleDamageSourceNodeStateDOMTreeMap |
                 Node::NodeStateHovered;
         } else {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementState);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementState);
             result.styleDamageSourceNodeStateMap =
                 result.styleDamageSourceNodeStateMap | Node::NodeStateHovered;
         }
         return element->state() & Node::NodeState::NodeStateHovered;
     case CSSSelector::PseudoType::PseudoActive:
         if (result.seenCombinator) {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementStateDOMTree);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementStateDOMTree);
             result.styleDamageSourceNodeStateDOMTreeMap =
                 result.styleDamageSourceNodeStateDOMTreeMap |
                 Node::NodeStateActive;
         } else {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementState);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementState);
             result.styleDamageSourceNodeStateMap =
                 result.styleDamageSourceNodeStateMap | Node::NodeStateActive;
         }
         return element->state() & Node::NodeState::NodeStateActive;
     case CSSSelector::PseudoType::PseudoFocus:
         if (result.seenCombinator) {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementStateDOMTree);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementStateDOMTree);
             result.styleDamageSourceNodeStateDOMTreeMap =
                 result.styleDamageSourceNodeStateDOMTreeMap |
                 Node::NodeStateFocused;
         } else {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementState);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementState);
             result.styleDamageSourceNodeStateMap =
                 result.styleDamageSourceNodeStateMap | Node::NodeStateFocused;
         }
         return element->state() & Node::NodeState::NodeStateFocused;
     case CSSSelector::PseudoType::PseudoTarget:
         if (result.seenCombinator) {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementStateDOMTree);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementStateDOMTree);
             result.styleDamageSourceNodeStateDOMTreeMap =
                 result.styleDamageSourceNodeStateDOMTreeMap |
                 Node::NodeStateTarget;
         } else {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementState);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementState);
             result.styleDamageSourceNodeStateMap =
                 result.styleDamageSourceNodeStateMap | Node::NodeStateTarget;
         }
         return element->state() & Node::NodeState::NodeStateTarget;
     case CSSSelector::PseudoType::PseudoLink:
         if (result.seenCombinator) {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementStateDOMTree);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementStateDOMTree);
             result.styleDamageSourceNodeStateDOMTreeMap =
                 result.styleDamageSourceNodeStateDOMTreeMap |
                 Node::NodeStateLink;
         } else {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementState);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementState);
             result.styleDamageSourceNodeStateMap =
                 result.styleDamageSourceNodeStateMap | Node::NodeStateLink;
         }
@@ -8763,14 +8794,50 @@ bool StyleResolver::checkPseudoClass(Element* element,
         return true;
     }
     case CSSSelector::PseudoType::PseudoNot: {
-        STARFISH_ASSERT(selector->pseudoSelectorList().size() == 1);
+        // :not() matches when NONE of its complex-selector-list branches
+        // match (Selectors-4 negation-pseudo semantics).
         result.styleDamageFrom = StyleDamageFromAll;
         AtomicString elementName = element->name().localNameAtomic();
         AtomicString elementId = element->atomicId();
         const GCAtomicTightVector<AtomicString>& elementClasses =
             element->classNames();
-        return !checkOne(element, elementName, elementId, elementClasses,
-                         selector->pseudoSelectorList()[0].m_selector, result);
+        GCVector<CSSSelectorList*>& args = selector->selectorArguments();
+        for (size_t i = 0; i < args.size(); i++) {
+            MatchResult sub(result.scope);
+            Match m =
+                matchSelector(element, elementName, elementId, elementClasses,
+                              *args[i], 0, sub, isQueryingSelector);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    sub.styleDamageFrom);
+            if (m == Match::SelectorMatches) {
+                return false;
+            }
+        }
+        return true;
+    }
+    case CSSSelector::PseudoType::PseudoIs:
+    case CSSSelector::PseudoType::PseudoWhere: {
+        // :is()/:where() match when ANY branch of their (forgiving)
+        // complex-selector-list matches.
+        AtomicString elementName = element->name().localNameAtomic();
+        AtomicString elementId = element->atomicId();
+        const GCAtomicTightVector<AtomicString>& elementClasses =
+            element->classNames();
+        GCVector<CSSSelectorList*>& args = selector->selectorArguments();
+        for (size_t i = 0; i < args.size(); i++) {
+            MatchResult sub(result.scope);
+            Match m =
+                matchSelector(element, elementName, elementId, elementClasses,
+                              *args[i], 0, sub, isQueryingSelector);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    sub.styleDamageFrom);
+            if (m == Match::SelectorMatches) {
+                return true;
+            }
+        }
+        return false;
     }
     case CSSSelector::PseudoType::PseudoDefined: {
         if (element->isHTMLElement() && !element->isHTMLUnknownElement()) {
@@ -8843,14 +8910,21 @@ bool StyleResolver::checkPseudoClass(Element* element,
             return false;
         }
 
-        STARFISH_ASSERT(selector->pseudoSelectorList().size() == 1);
+        // :host() argument is a single compound selector (no combinators),
+        // stored as one branch; matchSelector walks its SubSelector chain.
+        STARFISH_ASSERT(selector->selectorArguments().size() == 1);
         result.styleDamageFrom = StyleDamageFromAll;
         AtomicString elementName = element->name().localNameAtomic();
         AtomicString elementId = element->atomicId();
         const GCAtomicTightVector<AtomicString>& elementClasses =
             element->classNames();
-        return checkOne(element, elementName, elementId, elementClasses,
-                        selector->pseudoSelectorList()[0].m_selector, result);
+        MatchResult sub(result.scope);
+        Match m = matchSelector(element, elementName, elementId, elementClasses,
+                                *selector->selectorArguments()[0], 0, sub,
+                                isQueryingSelector);
+        result.styleDamageFrom =
+            (StyleDamageSource)(result.styleDamageFrom | sub.styleDamageFrom);
+        return m == Match::SelectorMatches;
     }
     default:
 #ifdef STARFISH_ENABLE_TEST
@@ -9420,25 +9494,28 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
     };
 
     if (!element->style()) {
-        damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageInherited |
-            ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::
+                                           ComputedStyleDamageInherited |
+                                       ComputedStyleDamage::
+                                           ComputedStyleDamageRebuildFrame);
     } else {
         if (!element->frame()) {
-            damage = (ComputedStyleDamage)(
-                ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
+            damage = (ComputedStyleDamage)(ComputedStyleDamage::
+                                               ComputedStyleDamageRebuildFrame);
         }
-        damage = (ComputedStyleDamage)(
-            damage | compareStyle(element->style(), style, damagedKeys,
-                                  element->isSVGDescendantElement()));
+        damage = (ComputedStyleDamage)(damage |
+                                       compareStyle(
+                                           element->style(), style, damagedKeys,
+                                           element->isSVGDescendantElement()));
 
         if (damagedKeys[CSSStyleValuePair::KeyKind::Animation] ||
             damagedKeys[CSSStyleValuePair::KeyKind::AnimationName]) {
             element->clearDidPrepareAnimation();
         }
     }
-    damage = (ComputedStyleDamage)(
-        damage | DamageComputedStyleDamageForBeginAnimation(element, style));
+    damage = (ComputedStyleDamage)(damage |
+                                   DamageComputedStyleDamageForBeginAnimation(
+                                       element, style));
 
     ComputedStyle* oldStyle = element->style();
     Frame* oldFrame = element->frame();
@@ -10350,6 +10427,34 @@ void StyleResolver::addToRuleSet(CSSStyleSheet* sheet)
     }
 }
 
+// Registers attribute selectors found inside a functional pseudo-class's
+// arguments (e.g. :is([attr]), :not([attr]), :host([attr])) in the attr
+// filter, so that attribute mutations correctly trigger a restyle. Only one
+// level of the argument's sub-selectors is walked; an attribute selector
+// nested inside a further functional pseudo (e.g. :is(:not([attr]))) is not
+// registered — out of scope for now.
+void StyleResolver::registerAttrFilterFromSelectorArguments(
+    CSSPseudoSelector* pseudoSelector)
+{
+    GCVector<CSSSelectorList*>& args = pseudoSelector->selectorArguments();
+    for (size_t i = 0; i < args.size(); i++) {
+        CSSSelectorList* branch = args[i];
+        for (size_t j = 0; j < branch->size(); j++) {
+            CSSSelector* inner = branch->at(j).m_selector;
+            if (inner->isAttributeSelector()) {
+                if (!mayHaveAttrSelectorWithName(inner->asCSSAttributeSelector()
+                                                     ->attribute()
+                                                     .localNameAtomic())) {
+                    m_ruleSetAttrFilter.push_back(
+                        inner->asCSSAttributeSelector()
+                            ->attribute()
+                            .localNameAtomic());
+                }
+            }
+        }
+    }
+}
+
 void StyleResolver::addHostScopedRule(std::pair<StyleRule*, ResourceURL*> rule,
                                       Element* host)
 {
@@ -10362,31 +10467,20 @@ void StyleResolver::addHostScopedRule(std::pair<StyleRule*, ResourceURL*> rule,
     size_t size = selectorList.size();
     for (size_t i = 0; i < size; i++) {
         CSSSelector* selector = selectorList[i].m_selector;
-        CSSSelector* currentSelector = selector;
-        size_t subSelectorIndex = 0;
-        size_t subSelectorSize =
-            UNLIKELY(selector->type() == CSSSelector::Type::PseudoClass)
-                ? selector->asCSSPseudoSelector()->pseudoSelectorList().size()
-                : 0;
-        while (currentSelector) {
-            if (currentSelector->isAttributeSelector()) {
-                if (!mayHaveAttrSelectorWithName(
-                        currentSelector->asCSSAttributeSelector()
-                            ->attribute()
-                            .localNameAtomic())) {
-                    m_ruleSetAttrFilter.push_back(
-                        currentSelector->asCSSAttributeSelector()
-                            ->attribute()
-                            .localNameAtomic());
-                }
+        if (selector->isAttributeSelector()) {
+            if (!mayHaveAttrSelectorWithName(selector->asCSSAttributeSelector()
+                                                 ->attribute()
+                                                 .localNameAtomic())) {
+                m_ruleSetAttrFilter.push_back(selector->asCSSAttributeSelector()
+                                                  ->attribute()
+                                                  .localNameAtomic());
             }
-            if (UNLIKELY(subSelectorIndex < subSelectorSize)) {
-                currentSelector = selector->asCSSPseudoSelector()
-                                      ->pseudoSelectorList()[subSelectorIndex++]
-                                      .m_selector;
-            } else {
-                currentSelector = nullptr;
-            }
+        }
+        if (UNLIKELY(
+                selector->type() == CSSSelector::Type::PseudoClass &&
+                selector->asCSSPseudoSelector()->selectorArguments().size())) {
+            registerAttrFilterFromSelectorArguments(
+                selector->asCSSPseudoSelector());
         }
     }
 
@@ -10420,34 +10514,23 @@ void StyleResolver::addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule)
 
     for (size_t i = 0; i < size; i++) {
         CSSSelector* selector = selectorList[i].m_selector;
-        CSSSelector* currentSelector = selector;
-        size_t subSelectorIndex = 0;
-        size_t subSelectorSize =
-            UNLIKELY(selector->type() == CSSSelector::Type::PseudoClass)
-                ? selector->asCSSPseudoSelector()->pseudoSelectorList().size()
-                : 0;
-        while (currentSelector) {
-            if (currentSelector->isAttributeSelector()) {
-                if (!mayHaveAttrSelectorWithName(
-                        currentSelector->asCSSAttributeSelector()
-                            ->attribute()
-                            .localNameAtomic())) {
-                    m_ruleSetAttrFilter.push_back(
-                        currentSelector->asCSSAttributeSelector()
-                            ->attribute()
-                            .localNameAtomic());
-                }
+        if (selector->isAttributeSelector()) {
+            if (!mayHaveAttrSelectorWithName(selector->asCSSAttributeSelector()
+                                                 ->attribute()
+                                                 .localNameAtomic())) {
+                m_ruleSetAttrFilter.push_back(selector->asCSSAttributeSelector()
+                                                  ->attribute()
+                                                  .localNameAtomic());
             }
-
-            if (UNLIKELY(subSelectorIndex < subSelectorSize)) {
-                // For functional pseudo class selector such as :not(), :host()
-                // can have compound selector
-                currentSelector = selector->asCSSPseudoSelector()
-                                      ->pseudoSelectorList()[subSelectorIndex++]
-                                      .m_selector;
-            } else {
-                currentSelector = nullptr;
-            }
+        }
+        if (UNLIKELY(
+                selector->type() == CSSSelector::Type::PseudoClass &&
+                selector->asCSSPseudoSelector()->selectorArguments().size())) {
+            // For functional pseudo-class selectors such as :not(), :is(),
+            // :where(), :host() the argument can itself contain attribute
+            // selectors (e.g. :is([attr])).
+            registerAttrFilterFromSelectorArguments(
+                selector->asCSSPseudoSelector());
         }
     }
 

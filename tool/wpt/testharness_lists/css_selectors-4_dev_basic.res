@@ -159,13 +159,13 @@ http://web-platform.test:8000/css/selectors/invalidation/sheet-going-away-001.ht
 # [auto-fail] http://web-platform.test:8000/css/selectors/invalidation/user-action-pseudo-classes-in-has.html
 # [auto-fail] http://web-platform.test:8000/css/selectors/invalidation/user-valid-user-invalid.html
 # [auto-fail] http://web-platform.test:8000/css/selectors/invalidation/where.html
-# [auto-fail] http://web-platform.test:8000/css/selectors/is-nested.html
-# [auto-fail] http://web-platform.test:8000/css/selectors/is-specificity.html
+http://web-platform.test:8000/css/selectors/is-nested.html
+http://web-platform.test:8000/css/selectors/is-specificity.html
 # [auto-fail] http://web-platform.test:8000/css/selectors/is-specificity-shadow.html
-# [auto-fail] http://web-platform.test:8000/css/selectors/is-where-basic.html
+http://web-platform.test:8000/css/selectors/is-where-basic.html
 # [auto-fail] http://web-platform.test:8000/css/selectors/is-where-error-recovery.html
 # [auto-fail] http://web-platform.test:8000/css/selectors/is-where-not.html
-# [auto-fail] http://web-platform.test:8000/css/selectors/is-where-pseudo-classes.html
+http://web-platform.test:8000/css/selectors/is-where-pseudo-classes.html
 # [auto-fail] http://web-platform.test:8000/css/selectors/is-where-shadow.html
 http://web-platform.test:8000/css/selectors/last-child.html
 http://web-platform.test:8000/css/selectors/last-of-type.html
@@ -208,8 +208,8 @@ http://web-platform.test:8000/css/selectors/parsing/invalid-pseudos.html
 # [auto-fail] http://web-platform.test:8000/css/selectors/parsing/parse-where.html
 # [auto-fail] http://web-platform.test:8000/css/selectors/placeholder-shown.html
 # [auto-fail] http://web-platform.test:8000/css/selectors/pseudo-enabled-disabled.html
-# [auto-fail] http://web-platform.test:8000/css/selectors/query/query-is.html
-# [auto-fail] http://web-platform.test:8000/css/selectors/query/query-where.html
+http://web-platform.test:8000/css/selectors/query/query-is.html
+http://web-platform.test:8000/css/selectors/query/query-where.html
 http://web-platform.test:8000/css/selectors/quirks-mode-import.html
 http://web-platform.test:8000/css/selectors/scope-selector.html
 http://web-platform.test:8000/css/selectors/selector-after-font-family.html
