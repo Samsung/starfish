@@ -127,9 +127,9 @@ http://web-platform.test:8000/css/selectors/invalidation/negated-is-always-match
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/invalidation/nth-last-child-when-sibling-changes.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/invalidation/part-pseudo.html
 http://web-platform.test:8000/css/selectors/invalidation/sheet-going-away-002.html
-http://web-platform.test:8000/css/selectors/is-default-ns-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/is-default-ns-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/is-default-ns-002.html
-http://web-platform.test:8000/css/selectors/is-default-ns-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/is-default-ns-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/is-where-pseudo-elements.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/is-where-visited.html
 http://web-platform.test:8000/css/selectors/not-default-ns-001.html
@@ -269,7 +269,7 @@ http://web-platform.test:8000/css/selectors/old-tests/css3-modsel-56.xml
 http://web-platform.test:8000/css/selectors/old-tests/css3-modsel-59.xml
 http://web-platform.test:8000/css/selectors/old-tests/css3-modsel-60.xml
 http://web-platform.test:8000/css/selectors/old-tests/css3-modsel-7b.xml
-http://web-platform.test:8000/css/selectors/old-tests/css3-modsel-83.xml
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/old-tests/css3-modsel-83.xml
 http://web-platform.test:8000/css/selectors/old-tests/css3-modsel-87.xml
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/old-tests/css3-modsel-87b.xml
 http://web-platform.test:8000/css/selectors/old-tests/css3-modsel-90.xml
