@@ -231,11 +231,37 @@ Re-baseline and
 re-annotate them like any other list (see `tool/CLAUDE.md`'s WPT workflow)
 after an engine fix or WPT pin bump changes what passes.
 
-The server can also be driven standalone:
+## Running the server standalone
+
+`tool/wpt_runner.py`/`test_runner.py` each start their own `wpt serve` for
+the duration of a batch run and tear it down afterwards. To reproduce that
+same environment for one test — without going through either driver — start
+the server on its own and keep it up:
 
 ```sh
 python3 tool/wpt_server.py            # serve until Ctrl-C (third_party/wpt)
 ```
+
+This is the exact same `wpt serve --no-h2 --inject-script inject_report.js`
+process the drivers use (`tool/wpt_server.py`'s `wpt_serve()`), on the same
+`web-platform.test` hosts/ports set up in "One-time setup" — so any URL you
+load against it (in a browser, via `curl`, or by invoking `./Starfish`
+directly) sees the exact same server-side behavior a batched run would,
+including `inject_report.js`'s injection. Take the exact `http://...` URL
+from the `.res` file/line under test.
+
+`wpt_runner.py ... --no-serve` also accepts this same standalone server
+instead of starting its own — useful for running a full batch against the
+environment you're inspecting by hand.
+
+A bare file-path invocation (`./Starfish <file-path>`, bypassing `wpt serve`
+entirely) has none of this — no injected script, no exit trigger — and hangs
+unconditionally regardless of the page (see the crashtest-TIMEOUT discussion
+above); always go through the standalone server and a served URL instead.
+
+For reftest, `python3 tool/wpt_reftest.py <url>` (run against this same
+standalone server) reproduces the full capture+diff and reports which
+reference failed and why.
 
 ## Tooling
 
@@ -391,6 +417,59 @@ python3 tool/wpt_annotate.py crashtest_baseline.txt tool/wpt/crashtest_lists/
 `wpt_annotate.py` itself never launches Starfish (it only rewrites `.res` files
 from a results file), so it does not need `xvfb-run` — only the `wpt_runner.py`
 measurement step does.
+
+## Verdict reasons
+
+`tool/wpt_runner.py`/`tool/wpt_reftest.py` record one of these reason strings
+per test, in `--results` output and the failure-reason histogram. A reason
+with a `:` or `(...)` suffix (`IMGDIFF_ERROR: ...`, `REF_LOAD_FAIL(TIMEOUT)`)
+is bucketed by the text before it — that's also what `wpt_annotate.py` writes
+into the `# [auto-fail:<category>]` marker (`reason_category()` in
+`tool/wpt_runner.py`).
+
+testharness (`run_one`):
+- `OK` — `DONE status=0`, at least one subtest, no `FAIL`.
+- `TIMEOUT` — the shell didn't exit within `--timeout` (default 15s; 20s in
+  `test_runner.py` suites) — a hang, an infinite loop, or a page whose
+  completion signal never fires.
+- `SHELL_ERROR` — failed to exec Starfish (`OSError`).
+- `NO_COMPLETION` — the shell exited but no `WPTR DONE` line was printed
+  (injection didn't run, the page exited early, testharness.js never loaded).
+- `HARNESS_STATUS_<n>` — `DONE status=n` with n≠0: `1`=ERROR, `2`=TIMEOUT
+  (testharness.js's own internal timeout, distinct from the runner's
+  `--timeout`), `3`=PRECONDITION_FAILED (see the status legend above).
+- `NO_SUBTESTS` — completed with `count=0`.
+- `SUBTESTS_FAILED` — `status=0` but at least one `WPTR FAIL`.
+
+crashtest (`run_one_crashtest`):
+- `OK` — `WPTR CRASHOK` seen (page loaded, any `test-wait` class cleared, no
+  crash).
+- `SIGNAL_CRASH` — the shell was killed by a signal — the actual crash a
+  crashtest exists to catch.
+- `TIMEOUT` / `SHELL_ERROR` — same meaning as testharness.
+- `NO_COMPLETION` — exited cleanly but no `WPTR CRASHOK` (e.g. injection
+  skipped on malformed markup, or the completion signal never fired — see the
+  crashtest TIMEOUT-taxonomy discussion above).
+
+reftest (`run_reftest`/`_screenshot`):
+- `OK` — every MANIFEST-declared reference's relation held (`==` matched,
+  `!=` didn't).
+- `NO_REFERENCE` — the URL has no reftest reference in `MANIFEST.json`.
+- `TC_CRASH` — the render didn't come out right (a broad "something's wrong
+  with the screenshot" bucket inherited from the golden-image driver) —
+  distinct from crashtest's `SIGNAL_CRASH`, not a synonym for it.
+- `REF_LOAD_FAIL(<reason>)` — capturing the *reference* page failed; the
+  parenthesized reason is one of `TIMEOUT`/`SHELL_ERROR`/`TC_CRASH` above.
+- `IMGDIFF_TIMEOUT` / `IMGDIFF_ERROR: <msg>` — `tool/imgdiff/imgdiff` itself
+  timed out or errored.
+- `IMG_MISMATCH` — `==` reference but pixels differed.
+- `IMG_UNEXPECTED_MATCH` — `!=` reference but pixels matched.
+- `TIMEOUT` / `SHELL_ERROR` — same meaning as testharness, for the test-page
+  capture itself.
+
+Tooling-only, not a test verdict: `INTERNAL_ERROR: <exc>` from `run_all`'s
+per-item exception backstop — a bug in the runner/tooling, not the page under
+test.
 
 ## Test lists
 
