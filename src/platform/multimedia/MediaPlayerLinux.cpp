@@ -137,6 +137,11 @@ namespace Starfish {
 #define STARFISH_VIDEO_DEFAULT_FRAMERATE_DEN 100
 #define STARFISH_MSE_SUBMIT_BYTES_RATE 0.3
 #define STARFISH_MSE_MIN_MARGIN_IN_MS 3000
+// Post-seek, how close (ms) the nearest buffered packet must be to the seek
+// target to count as "landed". Wide enough to absorb sparse-keyframe / segment
+// alignment, narrow enough to reject stale post-seek data still buffered far
+// ahead after a backward seek into an evicted range.
+#define SEEK_LAND_TOLERANCE_MS 5000
 
 // How far ahead of the playback clock the decode pipeline may run, in ms.
 // Each queued frame is a full-resolution RGBA buffer (e.g. 1080x1920 ~= 8MB),
@@ -1096,7 +1101,86 @@ void MediaPlayerLinux::seekOperation(int timeInMS)
 {
     PLAYER_LOGI("MediaPlayerLinux::seekOperation() (time: %d)", timeInMS);
     if (isMSE()) {
-        // MSE seek is driven by the demuxer feed; not handled here.
+        // MSE has no native player seek (FFmpeg av_seek only drives the
+        // file/URL path). Do the seek entirely in software: repoint the
+        // demuxer feed and the soft playback clock at the target, drop the
+        // pre-seek decoded video frames and pending audio, flush the
+        // decoders, wake the feed, and complete the seek. Without this the
+        // element stayed SEEKING until the 30s timeout, so the page (e.g. the
+        // YouTube player) never received a `seeked` event: playback froze at
+        // the old position and stayed paused. Mirrors the capi backend's feed
+        // reset in MediaPlayerTizen::seekOperation.
+        {
+            Locker<Mutex> locker(*m_fillBufferMutex);
+            if (m_audioStream != nullptr) {
+                m_audioStream->setLastSubmittedDTS(timeInMS);
+                m_audioStream->setWaitingDemuxer(true);
+                m_audioStream->setSeekHoldTargetMs(timeInMS);
+                if (m_audioStream->codecContext() != nullptr) {
+                    avcodec_flush_buffers(m_audioStream->codecContext());
+                }
+            }
+            if (m_videoStream != nullptr) {
+                m_videoStream->setLastSubmittedDTS(timeInMS);
+                m_videoStream->setWaitingDemuxer(true);
+                m_videoStream->setSeekHoldTargetMs(timeInMS);
+                if (m_videoStream->codecContext() != nullptr) {
+                    avcodec_flush_buffers(m_videoStream->codecContext());
+                }
+            }
+            if (activeSourceBuffer(StreamTypeAudio) != nullptr) {
+                activeSourceBuffer(StreamTypeAudio)->clearPacketAccessCache();
+            }
+            if (activeSourceBuffer(StreamTypeVideo) != nullptr) {
+                activeSourceBuffer(StreamTypeVideo)->clearPacketAccessCache();
+            }
+        }
+        // Drop decoded video frames queued for the old position.
+        {
+            Locker<Mutex> l(*m_decodedVideoFrameMutex);
+            if (m_lastDecodedVideoPacket != nullptr) {
+                freeFramePacketLocked(m_lastDecodedVideoPacket);
+                m_lastDecodedVideoPacket = nullptr;
+            }
+            for (auto& entry : m_decodedVideoQueue) {
+                if (entry.packet != nullptr) {
+                    freeFramePacketLocked(entry.packet);
+                }
+            }
+            m_decodedVideoQueue.clear();
+        }
+        // Drop pending audio so no stale pre-seek samples play out.
+        {
+            std::lock_guard<std::mutex> lk(m_audioWriteMutex);
+            for (auto& item : m_audioWriteQueue) {
+                if (item.first != nullptr) {
+                    av_free(item.first);
+                }
+            }
+            m_audioWriteQueue.clear();
+            m_audioWriteQueueBytes = 0;
+        }
+        // Repoint the soft clock so currentTime() reports the target at once
+        // (video promotion and the decode-lookahead gate both key off it).
+        m_clockOffsetSec = timeInMS / 1000.0;
+        if (playbackState() == PLAYBACK_STATE_PLAYING) {
+            struct timespec ts;
+            clock_gettime(CLOCK_MONOTONIC, &ts);
+            m_clockStartMs = (uint64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+        } else {
+            m_clockStartMs = 0;
+        }
+        fillBufferIfNeeded(StreamTypeAudio);
+        fillBufferIfNeeded(StreamTypeVideo);
+        // Complete the seek off the current operation-queue call stack so the
+        // `seeked` event / any chained seek do not run reentrantly here. We
+        // are on the main thread, so use the main-thread idler (the
+        // *InOtherThread variant asserts !isMainThread).
+        MessageLoop* msgLoop = m_container->webView()->messageLoop();
+        msgLoop->addIdler(
+            m_container->window(),
+            [](size_t, void* d) { ((MediaPlayerLinux*)d)->handleSeeked(); },
+            this);
         return;
     }
     if (!m_nativePlayer) {
@@ -1964,13 +2048,18 @@ void MediaPlayerLinux::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
     }
 
     size_t submitBytes = 0;
+    // Reused across iterations. copyProperMediaPacket snapshots the packet's
+    // encoded bytes here under the source-buffer lock, so decoding is done
+    // from a caller-owned copy that a concurrent remove()/eviction (e.g. the
+    // buffer clear a page issues on seek) cannot free out from under us.
+    std::vector<uint8_t> packetData;
     while (submitBytes < sizeUpTo) {
         if (lastDTS > currentMs + lookaheadMs) {
             break;
         }
-        std::pair<MediaPacket*, size_t> packet =
-            sb->findProperMediaPacket(streamIdx, lastDTS);
-        if (packet.first == nullptr) {
+        SourceBuffer::MediaPacketView packet =
+            sb->copyProperMediaPacket(streamIdx, lastDTS, packetData);
+        if (!packet.m_found) {
             uint64_t endTime = m_activeMediaSource->duration() * 1000;
             if (std::isinf(m_activeMediaSource->duration())) {
                 endTime = std::numeric_limits<uint64_t>::max();
@@ -1985,13 +2074,31 @@ void MediaPlayerLinux::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
             stream->setWaitingDemuxer(true);
             break;
         }
-        if (packet.first->m_dts < lastDTS) {
+        if (packet.m_dts < lastDTS) {
             // Already-consumed packet; defer to next demuxer event.
             sb->clearPacketAccessCache();
             stream->setWaitingDemuxer(true);
             break;
         }
-        if (packet.first->m_dts - lastDTS > 500) {
+        int64_t seekHold = stream->seekHoldTargetMs();
+        if (seekHold >= 0) {
+            // A seek repointed lastDTS at the target. If the buffered data at
+            // (or just after) the target is present, clear the hold and feed
+            // normally. If instead the nearest packet is far ahead of the
+            // target, the target region is not appended yet (typical for a
+            // backward seek into an evicted range): wait for the demuxer to
+            // deliver it rather than gap-skipping forward onto the stale
+            // post-seek data still buffered ahead, which would drag the clock
+            // back to the old position and undo the seek.
+            if (packet.m_dts <= (uint64_t)seekHold + SEEK_LAND_TOLERANCE_MS) {
+                stream->setSeekHoldTargetMs(-1);
+            } else {
+                sb->clearPacketAccessCache();
+                stream->setWaitingDemuxer(true);
+                break;
+            }
+        }
+        if (packet.m_dts - lastDTS > 500) {
             // The MSE source has a >500ms gap ahead of our submission
             // pointer (typical when the player evicted old segments while
             // we were paused / falling behind). Jump lastDTS forward to
@@ -2005,23 +2112,29 @@ void MediaPlayerLinux::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
             // the lastDTS jump but not the clock fixup — its currentTime()
             // reads from player_get_play_position() so there is no soft
             // clock to advance.)
-            if (stream->isVideo() && isMSE() &&
-                packet.first->m_dts > currentMs) {
+            if (stream->isVideo() && isMSE() && packet.m_dts > currentMs) {
                 struct timespec ts;
                 clock_gettime(CLOCK_MONOTONIC, &ts);
                 uint64_t nowMonoMs =
                     (uint64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
-                m_clockOffsetSec = packet.first->m_dts / 1000.0;
+                m_clockOffsetSec = packet.m_dts / 1000.0;
                 m_clockStartMs = nowMonoMs;
-                currentMs = packet.first->m_dts;
+                currentMs = packet.m_dts;
             }
-            lastDTS = packet.first->m_dts;
+            lastDTS = packet.m_dts;
         }
-        decodeAndDeliverPacket(stream, packet.first);
+        MediaPacket tmp;
+        tmp.m_data = packetData.data();
+        tmp.m_dataSize = packet.m_dataSize;
+        tmp.m_pts = packet.m_pts;
+        tmp.m_dts = packet.m_dts;
+        tmp.m_duration = packet.m_duration;
+        tmp.m_hasIdr = packet.m_hasIdr;
+        decodeAndDeliverPacket(stream, &tmp);
         // Data is flowing again; clear the wait latch so it reflects reality.
         stream->setWaitingDemuxer(false);
-        submitBytes += packet.first->m_dataSize;
-        lastDTS = packet.first->m_dts + packet.first->m_duration;
+        submitBytes += packet.m_dataSize;
+        lastDTS = packet.m_dts + packet.m_duration;
     }
     stream->setLastSubmittedDTS(lastDTS);
     if (stream->bufferState() != MediaPlayerSourceStream::BUFFERSTATE_EOS) {
@@ -2691,7 +2804,7 @@ void MediaPlayerLinux::updateAudioStreamInfo(MediaPlayerSourceStream* stream,
                 (int)info->audioChannels(), (int)info->audioSampleRate());
 }
 
-MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
+MediaPlayer* MediaPlayer::create(HTMLMediaElement* element, ResourceURL* url)
 {
     return new MediaPlayerLinux(element);
 }

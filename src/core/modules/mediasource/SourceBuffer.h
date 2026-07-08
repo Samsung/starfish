@@ -71,6 +71,14 @@ struct MediaPacketGroup {
         , m_maxFrameDuration(maxFrameDuration)
         , m_groupTimestampStart(start)
         , m_groupTimestampEnd(end)
+        // These were left uninitialized: updateGroupInfo only min/maxes them,
+        // so a garbage initial value (esp. a huge one for the end) was never
+        // corrected, leaving the group's DTS range corrupt. Every DTS-keyed
+        // lookup (findProperMediaPacket, the feed cursor) then mismatched,
+        // manifesting as phantom "gaps" / skip-ahead blocks mid-playback.
+        // Match refresh(): min-accumulator starts at max, max-accumulator at 0.
+        , m_groupDtsTimestampStart(std::numeric_limits<uint64_t>::max())
+        , m_groupDtsTimestampEnd(0)
     {
     }
 
@@ -95,7 +103,7 @@ struct MediaPacketGroup {
         if (packet->m_pts < m_groupTimestampStart) {
             m_groupTimestampStart = packet->m_pts;
         }
-        if (packet->m_pts < m_groupDtsTimestampStart) {
+        if (packet->m_dts < m_groupDtsTimestampStart) {
             m_groupDtsTimestampStart = packet->m_dts;
         }
         if (packet->m_pts + packet->m_duration > m_groupTimestampEnd) {
@@ -200,9 +208,33 @@ public:
     // these methods are thread-safe
     std::pair<MediaPacket*, size_t> findProperMediaPacket(
         size_t streamIdx, uint64_t startPositionInDTSWantToFind);
+    // Like findProperMediaPacket, but copies the located packet's encoded
+    // bytes + metadata into `outData` / the returned view under the packet
+    // lock, so the result stays valid even if a concurrent remove()/eviction
+    // frees the underlying MediaPacket while the caller is still decoding it.
+    // (findProperMediaPacket hands back a raw MediaPacket* that becomes a
+    // use-after-free the moment the lock is dropped.) Thread-safe.
+    struct MediaPacketView {
+        uint64_t m_dts = 0;
+        uint64_t m_pts = 0;
+        size_t m_duration = 0;
+        size_t m_dataSize = 0;
+        size_t m_initSegmentIndex = SIZE_MAX;
+        bool m_hasIdr = false;
+        bool m_found = false;
+    };
+    MediaPacketView copyProperMediaPacket(size_t streamIdx,
+                                          uint64_t startPositionInDTSWantToFind,
+                                          std::vector<uint8_t>& outData);
     void revertLastCacheIfPossible(size_t streamIdx);
     uint64_t lastBufferedTimestamp(size_t streamIdx);
     void clearPacketAccessCache();
+    // Finds the DTS of the closest keyframe (IDR) at or before `dts` on
+    // the stream. Returns false when none is buffered (outDTS untouched).
+    // Used to restart ES submission after a seek from a decodable
+    // position; thread-safe.
+    bool findNearestIdrDTSBefore(size_t streamIdx, uint64_t dts,
+                                 uint64_t& outDTS);
     void initializePacketAccessCache(size_t streamCount);
 
     TimeRanges* buffered();
@@ -263,6 +295,9 @@ public:
     void appendError();
 
 protected:
+    // this method needs packet group lock
+    std::pair<MediaPacket*, size_t> findProperMediaPacketLocked(
+        size_t streamIdx, uint64_t startPositionInDTSWantToFind);
     // this method needs packet group lock
     void rangeRemovalWithoutGuard(
         uint64_t start, uint64_t end,

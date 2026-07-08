@@ -468,6 +468,134 @@ public:
         return true;
     }
 
+    // Scans [entryPos, entryPos+bufferSize) for the next top-level WebM
+    // element start: a Cluster id (1F 43 B6 75) or an EBML id (1A 45 DF
+    // A3). Returns the absolute offset of the earliest match, entryPos if
+    // the buffer already starts on one, or -1 if none is present. Restores
+    // the source position before returning.
+    long long scanForElementStart(DemuxerSource* source, long long entryPos,
+                                  long long bufferSize)
+    {
+        static const uint8_t kCluster[4] = { 0x1F, 0x43, 0xB6, 0x75 };
+        static const uint8_t kEbml[4] = { 0x1A, 0x45, 0xDF, 0xA3 };
+        const long long kChunk = 65536;
+        // Overlap by 3 so a pattern straddling a chunk boundary is not
+        // missed.
+        std::vector<uint8_t> buf(kChunk + 3);
+        long long found = -1;
+        for (long long pos = entryPos; pos < entryPos + bufferSize;
+             pos += kChunk) {
+            long long want = std::min(kChunk + 3, entryPos + bufferSize - pos);
+            source->onSeek(pos, DemuxerSource::SeekWhenceSet);
+            size_t got = 0;
+            int err = 0;
+            source->onRead((size_t)want, got, err, buf.data());
+            if (got < 4) {
+                break;
+            }
+            for (size_t i = 0; i + 4 <= got; i++) {
+                if ((buf[i] == kCluster[0] && buf[i + 1] == kCluster[1] &&
+                     buf[i + 2] == kCluster[2] && buf[i + 3] == kCluster[3]) ||
+                    (buf[i] == kEbml[0] && buf[i + 1] == kEbml[1] &&
+                     buf[i + 2] == kEbml[2] && buf[i + 3] == kEbml[3])) {
+                    found = pos + (long long)i;
+                    break;
+                }
+            }
+            if (found >= 0) {
+                break;
+            }
+        }
+        source->onSeek(entryPos, DemuxerSource::SeekWhenceSet);
+        return found;
+    }
+
+    // Checks that entryPos plausibly starts a top-level WebM element: the
+    // full 4-byte element id must be one of the known top-level ids (a
+    // single head-byte range check passes on truncated-Cluster garbage
+    // whose first byte merely happens to be 0x11-0x1F), and a Cluster with
+    // a known declared size must declare something sane. A bogus
+    // multi-megabyte size makes mkvparser return "incomplete" forever
+    // while appends pile up (observed after a seek: LoadCluster incomplete
+    // with the unprocessed buffer growing 65KB -> 2.8MB, playback frozen).
+    // Restores the source position before returning. Returns true when the
+    // buffer is too short to judge (wait for more data).
+    bool looksLikeTopLevelElement(DemuxerSource* source, long long entryPos)
+    {
+        uint8_t buf[12];
+        size_t got = 0;
+        int err = 0;
+        source->onSeek(entryPos, DemuxerSource::SeekWhenceSet);
+        source->onRead(sizeof(buf), got, err, buf);
+        source->onSeek(entryPos, DemuxerSource::SeekWhenceSet);
+        if (got < 1) {
+            return true;
+        }
+        if (buf[0] == 0xEC) { // Void
+            return true;
+        }
+        if (got < 5) {
+            // Not enough bytes for id + first size byte; cannot judge yet.
+            return true;
+        }
+        uint32_t id = ((uint32_t)buf[0] << 24) | ((uint32_t)buf[1] << 16) |
+                      ((uint32_t)buf[2] << 8) | (uint32_t)buf[3];
+        static const uint32_t kTopLevelIds[] = {
+            0x1A45DFA3, // EBML
+            0x18538067, // Segment
+            0x114D9B74, // SeekHead
+            0x1549A966, // Info
+            0x1654AE6B, // Tracks
+            0x1F43B675, // Cluster
+            0x1C53BB6B, // Cues
+            0x1043A770, // Chapters
+            0x1254C367, // Tags
+            0x1941A469, // Attachments
+        };
+        bool known = false;
+        for (size_t i = 0; i < sizeof(kTopLevelIds) / sizeof(uint32_t); i++) {
+            if (id == kTopLevelIds[i]) {
+                known = true;
+                break;
+            }
+        }
+        if (!known) {
+            return false;
+        }
+        if (id != 0x1F43B675) {
+            // Size sanity only makes sense for Clusters: a Segment
+            // legitimately declares the whole remaining file.
+            return true;
+        }
+        // Parse the EBML vint size that follows the id and sanity-check it.
+        uint8_t first = buf[4];
+        if (first == 0) {
+            return false; // invalid vint (>8 byte length marker)
+        }
+        int extra = 0;
+        uint8_t mask = 0x80;
+        while (!(first & mask)) {
+            mask >>= 1;
+            extra++;
+        }
+        if (got < (size_t)(5 + extra)) {
+            return true; // size field still incomplete; wait
+        }
+        uint64_t value = first & (uint64_t)(mask - 1);
+        bool allOnes = (first & (uint8_t)(mask - 1)) == (uint8_t)(mask - 1);
+        for (int i = 0; i < extra; i++) {
+            value = (value << 8) | buf[5 + i];
+            allOnes = allOnes && buf[5 + i] == 0xFF;
+        }
+        if (allOnes) {
+            return true; // unknown-size element (streaming Cluster)
+        }
+        // One MSE-appended media segment is a handful of seconds; even a
+        // high-bitrate Cluster stays well under this.
+        const uint64_t kMaxSaneElementSize = 64ull * 1024 * 1024;
+        return value <= kMaxSaneElementSize;
+    }
+
     virtual bool findStreamPacket(DemuxerSource* source)
     {
         STARFISH_ASSERT(m_isStreamFinded);
@@ -479,6 +607,50 @@ public:
             (long long)source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
         long long bufferSize =
             (long long)source->onSeek(0, DemuxerSource::SeekWhenceLookSize);
+
+        // Resync guard. A forward seek without a preceding abort() (the
+        // YouTube player does this) leaves a partial Cluster from the old
+        // position in m_bufferUnprocessed; the newly appended segment is
+        // concatenated after it, so the buffer now starts mid-element and
+        // mkvparser never finds a Cluster (LoadCluster loops on
+        // no-cluster/incomplete while data piles up to megabytes). A
+        // top-level WebM element always starts with a 0x1X id byte
+        // (EBML 0x1A, Segment 0x18, SeekHead/Info/Tracks/Cluster 0x11-0x1F)
+        // or Void 0xEC; anything else means the buffer head is stale
+        // garbage. Scan forward for the next Cluster (1F 43 B6 75) or EBML
+        // (1A 45 DF A3) start and drop everything before it.
+        {
+            uint8_t head = 0;
+            size_t got = 0;
+            int err = 0;
+            source->onSeek(entryPos, DemuxerSource::SeekWhenceSet);
+            source->onRead(1, got, err, &head);
+            source->onSeek(entryPos, DemuxerSource::SeekWhenceSet);
+            bool validStart =
+                got == 1 && looksLikeTopLevelElement(source, entryPos);
+            if (!validStart && bufferSize > 8) {
+                long long resyncPos =
+                    scanForElementStart(source, entryPos, bufferSize);
+                if (resyncPos > entryPos) {
+                    STARFISH_LOG_INFO(
+                        "[WebM] resync: dropped %lld stale bytes (head was "
+                        "0x%02x, bufferSize=%lld)",
+                        resyncPos - entryPos, head, bufferSize);
+                    source->onSeek(resyncPos, DemuxerSource::SeekWhenceSet);
+                    entryPos = resyncPos;
+                } else if (resyncPos < 0) {
+                    // No element start anywhere in the buffer yet: it is all
+                    // stale trailing bytes. Discard so it stops piling up;
+                    // the next appendBuffer brings fresh data.
+                    STARFISH_LOG_INFO(
+                        "[WebM] resync: no element start in %lld bytes "
+                        "(head 0x%02x), discarding",
+                        bufferSize, head);
+                    source->onSeek(bufferSize, DemuxerSource::SeekWhenceSet);
+                    return true;
+                }
+            }
+        }
 
         // MSE feeds bare Cluster elements. Pretend a Segment-of-unknown-size
         // wraps the buffer so mkvparser can stream Clusters out of it.
@@ -506,14 +678,58 @@ public:
         ret = segment->LoadCluster();
         if (ret < 0) {
             // Incomplete data; wait for more in the next appendBuffer.
+            STARFISH_LOG_INFO(
+                "[WebM] LoadCluster incomplete (ret<0) bufferSize=%lld "
+                "entryPos=%lld scale=%llu",
+                bufferSize, entryPos, (unsigned long long)m_timeCodeScaleNs);
             delete segment;
+            // Stall safety net: many consecutive incompletes pinned at the
+            // same entryPos while appends keep arriving means the head
+            // element will never complete (a corrupt block/size that the
+            // strict id check above could not catch). Force a resync past
+            // it instead of accumulating unprocessed data forever.
+            if (entryPos == m_stallEntryPos) {
+                m_stallIncompleteCount++;
+            } else {
+                m_stallEntryPos = entryPos;
+                m_stallIncompleteCount = 1;
+            }
+            if (m_stallIncompleteCount >= 16 || bufferSize > (4ll << 20)) {
+                m_stallEntryPos = -1;
+                m_stallIncompleteCount = 0;
+                long long resyncPos =
+                    bufferSize > 8 ? scanForElementStart(source, entryPos + 4,
+                                                         bufferSize - 4)
+                                   : -1;
+                if (resyncPos > entryPos) {
+                    STARFISH_LOG_INFO(
+                        "[WebM] stall resync: dropped %lld wedged bytes "
+                        "(bufferSize=%lld)",
+                        resyncPos - entryPos, bufferSize);
+                    source->onSeek(resyncPos, DemuxerSource::SeekWhenceSet);
+                    return true;
+                }
+                STARFISH_LOG_INFO(
+                    "[WebM] stall resync: no element start in %lld bytes, "
+                    "discarding",
+                    bufferSize);
+                source->onSeek(bufferSize, DemuxerSource::SeekWhenceSet);
+                return true;
+            }
             source->onSeek(entryPos, DemuxerSource::SeekWhenceSet);
             return true;
         }
+        // Parser made progress; the stall net starts over.
+        m_stallEntryPos = -1;
+        m_stallIncompleteCount = 0;
         if (ret > 0) {
             // No Cluster element in this buffer (e.g. init segment that only
             // carries EBML/Info/Tracks). Discard it -- everything has been
             // examined and there's nothing of value to keep around.
+            STARFISH_LOG_INFO(
+                "[WebM] LoadCluster no-cluster (ret>0) bufferSize=%lld "
+                "entryPos=%lld",
+                bufferSize, entryPos);
             delete segment;
             source->onSeek(bufferSize, DemuxerSource::SeekWhenceSet);
             return true;
@@ -718,6 +934,11 @@ public:
     mkvparser::Segment* m_headerSegment;
     bool m_isStreamFinded;
     uint64_t m_timeCodeScaleNs;
+    size_t m_peekLogCounter = 0;
+    // Stall net for findStreamPacket: consecutive LoadCluster-incomplete
+    // results pinned at the same entryPos (see the ret<0 branch).
+    long long m_stallEntryPos = -1;
+    int m_stallIncompleteCount = 0;
     std::map<long long, uint64_t> m_trackDefaultDurationsMs;
     // Track numbers that resolved to a video/audio StreamInfo during
     // findStreamInfo. Subtitle, metadata, and other auxiliary tracks

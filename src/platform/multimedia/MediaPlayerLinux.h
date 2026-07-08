@@ -272,6 +272,18 @@ public:
     {
         m_isAnnexB = flag;
     }
+    // After an MSE seek, the feed must land near this target (ms) before the
+    // >500ms gap-skip is allowed to run again; otherwise a backward seek into
+    // an evicted region skips forward onto the stale post-seek data still
+    // buffered ahead. -1 means no seek is pending.
+    int64_t seekHoldTargetMs()
+    {
+        return m_seekHoldTargetMs;
+    }
+    void setSeekHoldTargetMs(int64_t value)
+    {
+        m_seekHoldTargetMs = value;
+    }
 
 protected:
     StreamType m_type;
@@ -291,6 +303,7 @@ protected:
     volatile bool m_waitingDemuxer;
     AVCodecContext* m_codecCtx;
     bool m_isAnnexB;
+    volatile int64_t m_seekHoldTargetMs = -1;
 };
 
 class MediaPlayerLinux : public MediaPlayer {

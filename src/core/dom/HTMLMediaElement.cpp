@@ -64,6 +64,7 @@ HTMLMediaElement::HTMLMediaElement(Document* document,
                                    const QualifiedName& qname)
     : HTMLElement(document, qname)
     , m_autoplayingFlag(true)
+    , m_playbackRate(1.0)
     , m_isPaused(true)
     , m_isSeeking(false)
     , m_isEnded(false)
@@ -331,7 +332,7 @@ void HTMLMediaElement::closeMediaPlayer()
     }
 }
 
-void HTMLMediaElement::initMediaPlayer()
+void HTMLMediaElement::initMediaPlayer(ResourceURL* url)
 {
     closeMediaPlayer();
 
@@ -349,7 +350,7 @@ void HTMLMediaElement::initMediaPlayer()
     }
 
     if (m_mediaPlayer == nullptr) {
-        m_mediaPlayer = MediaPlayer::create(this);
+        m_mediaPlayer = MediaPlayer::create(this, url);
     }
 
     m_mediaPlayer->setLoop(loop());
@@ -664,7 +665,67 @@ String* HTMLMediaElement::preload()
 
 TimeRanges* HTMLMediaElement::buffered()
 {
-    return seekable();
+    // buffered() reports what is actually downloaded (the SourceBuffer
+    // intersection); seekable() reports the whole media as seekable so the
+    // MSE page can seek ahead of the buffer. Keep them decoupled.
+    return seekableIntersection();
+}
+
+TimeRanges* HTMLMediaElement::seekableIntersection()
+{
+    MediaPlayer* player = activeMediaPlayer();
+    if (!player) {
+        return new TimeRanges(executionContext());
+    }
+    if (player->activeMediaSource()) {
+        // Intersection of the active source buffers' buffered ranges: the
+        // media is only playable where every stream has data.
+        SourceBufferList* bufferList =
+            player->activeMediaSource()->activeSourceBuffers();
+        STARFISH_ASSERT(bufferList);
+        unsigned nbuffer = bufferList->length();
+
+        if (nbuffer == 0) {
+            return new TimeRanges(executionContext());
+        }
+
+        TimeRanges* result = (*bufferList)[0]->buffered();
+        for (unsigned i = 1; i < nbuffer; i++) {
+            TimeRanges* buffered = (*bufferList)[i]->buffered();
+            unsigned bufferedSize = buffered->size();
+            unsigned resultSize = result->size();
+            TimeRanges* newResult = new TimeRanges(executionContext());
+
+            unsigned t = 0, j = 0;
+            while (t != bufferedSize && j != resultSize) {
+                if (buffered->end(t) < result->start(j)) {
+                    t++;
+                } else if (buffered->start(t) > result->end(j)) {
+                    j++;
+                } else {
+                    newResult->emplace_back(
+                        std::max(buffered->start(t), result->start(j)),
+                        std::min(buffered->end(t), result->end(j)));
+                    if (buffered->start(t) >= result->start(j) &&
+                        buffered->end(t) <= result->end(j)) {
+                        t++;
+                    } else if (buffered->start(t) <= result->start(j) &&
+                               buffered->end(t) >= result->end(j)) {
+                        j++;
+                    } else if (buffered->start(t) < result->start(j)) {
+                        t++;
+                    } else {
+                        j++;
+                    }
+                }
+            }
+            result = newResult;
+        }
+        return result;
+    }
+    TimeRanges* r = new TimeRanges(executionContext());
+    r->emplace_back(0, player->duration());
+    return r;
 }
 
 String* HTMLMediaElement::canPlayType(String* type)
@@ -724,8 +785,7 @@ double HTMLMediaElement::defaultPlaybackRate()
 
 double HTMLMediaElement::playbackRate()
 {
-    STARFISH_UNSUPPORTED_METHOD();
-    return 1;
+    return m_playbackRate;
 }
 
 TimeRanges* HTMLMediaElement::played()
@@ -744,58 +804,24 @@ TimeRanges* HTMLMediaElement::played()
 
 TimeRanges* HTMLMediaElement::seekable()
 {
+    // Report the whole media [0, duration] as seekable so an MSE page
+    // (YouTube) issues a seek to a position ahead of the downloaded buffer
+    // instead of clamping to the buffered range. The forward-seek then
+    // reaches setCurrentTime -> the native esplusplayer_seek, and the page
+    // appends the target segment. (An earlier attempt at this appeared to
+    // "append the wrong segment" only because seek fed audio from a frame
+    // after the target; that is fixed in the esplusplayer fill path.)
     MediaPlayer* player = activeMediaPlayer();
     if (!player) {
         return new TimeRanges(executionContext());
     }
-    if (player->activeMediaSource()) {
-        SourceBufferList* bufferList =
-            player->activeMediaSource()->activeSourceBuffers();
-        STARFISH_ASSERT(bufferList);
-        unsigned nbuffer = bufferList->length();
-
-        if (nbuffer == 0) {
-            return new TimeRanges(executionContext());
-        }
-
-        TimeRanges* result = (*bufferList)[0]->buffered();
-        for (unsigned i = 1; i < nbuffer; i++) {
-            TimeRanges* buffered = (*bufferList)[i]->buffered();
-            unsigned bufferedSize = buffered->size();
-            unsigned resultSize = result->size();
-            TimeRanges* newResult = new TimeRanges(executionContext());
-
-            unsigned t = 0, j = 0;
-            while (t != bufferedSize && j != resultSize) {
-                if (buffered->end(t) < result->start(j)) {
-                    t++;
-                } else if (buffered->start(t) > result->end(j)) {
-                    j++;
-                } else {
-                    newResult->emplace_back(
-                        std::max(buffered->start(t), result->start(j)),
-                        std::min(buffered->end(t), result->end(j)));
-                    if (buffered->start(t) >= result->start(j) &&
-                        buffered->end(t) <= result->end(j)) {
-                        t++;
-                    } else if (buffered->start(t) <= result->start(j) &&
-                               buffered->end(t) >= result->end(j)) {
-                        j++;
-                    } else if (buffered->start(t) < result->start(j)) {
-                        t++;
-                    } else {
-                        j++;
-                    }
-                }
-            }
-            result = newResult;
-        }
-        return result;
-    } else {
-        TimeRanges* r = new TimeRanges(executionContext());
-        r->emplace_back(0, player->duration());
-        return r;
+    double dur = duration();
+    if (std::isnan(dur) || dur <= 0) {
+        return seekableIntersection();
     }
+    TimeRanges* result = new TimeRanges(executionContext());
+    result->emplace_back(0, dur);
+    return result;
 }
 
 bool HTMLMediaElement::ended()
@@ -901,8 +927,10 @@ void HTMLMediaElement::setCurrentTime(double time)
             // the step that it is running to complete.
             // Note : But there is no way of aborting player_set_position_async,
             // we have to wait.
-            MEDIA_ELEMENT_LOG(
-                this, "HTMLMediaElement::setCurrentTime() Seek pending..");
+            STARFISH_LOG_INFO(
+                "HTMLMediaElement::setCurrentTime(%lf) while seeking -> "
+                "pending (old pending %lf)",
+                time, m_pendingSeek);
             m_pendingSeek = time;
         } else {
             if (!m_isPaused) {
@@ -945,7 +973,15 @@ void HTMLMediaElement::setDefaultPlaybackRate(double defaultPlaybackRate)
 
 void HTMLMediaElement::setPlaybackRate(double playbackRate)
 {
-    STARFISH_UNSUPPORTED_METHOD();
+    if (playbackRate == m_playbackRate) {
+        return;
+    }
+    m_playbackRate = playbackRate;
+    MediaPlayer* player = activeMediaPlayer();
+    if (player) {
+        player->setPlaybackRate(playbackRate);
+    }
+    dispatchRatechangeEvent();
 }
 
 void HTMLMediaElement::setAutoplay(bool autoplay)
@@ -1136,6 +1172,8 @@ void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
     // Note : Set officialPlaybackPosition manually instead of calling
     // setOfficialPlaybackPosition()
     //        Because m_isSeeking effects setOfficialPlaybackPosition()
+    STARFISH_LOG_INFO("HTMLMediaElement::seeked notify t=%lf pending=%lf",
+                      currentTime, m_pendingSeek);
     m_officialPlaybackPosition = currentTime;
 
     if (!std::isnan(m_pendingSeek) && m_pendingSeek != currentTime) {
@@ -1551,7 +1589,7 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
         self->m_currentSrc = url->urlString();
         // End the synchronous section, continuing the remaining steps in
         // parallel.
-        self->initMediaPlayer();
+        self->initMediaPlayer(url);
         self->appendToOperationQueue(
             new MediaOperationQueueDataRequestPrepare(self, url));
         self->appendToOperationQueue(
@@ -1599,7 +1637,7 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
         self->m_currentSrc = url->urlString();
         // End the synchronous section, continuing the remaining steps in
         // parallel.
-        self->initMediaPlayer();
+        self->initMediaPlayer(url);
         self->appendToOperationQueue(
             new MediaOperationQueueDataRequestPrepare(self, url));
         self->appendToOperationQueue(

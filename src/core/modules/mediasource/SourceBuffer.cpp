@@ -1034,16 +1034,21 @@ static size_t tryDemuxing(SourceBufferData* inputBuffer)
     STARFISH_ASSERT(client->m_detectedStream.size() == 0);
     size_t maxPos = client->m_bufferUnprocessed.size() + inputBuffer->m_length;
     if (!demuxer->findStreamInfo(&src, inputBuffer->m_sourceBuffer->type())) {
-        SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer,
-                         "Found error while demuxing");
+        STARFISH_LOG_INFO(
+            "[MSE] tryDemuxing findStreamInfo FAIL (len=%d unprocessed=%d)",
+            (int)inputBuffer->m_length,
+            (int)client->m_bufferUnprocessed.size());
         client->m_foundError = true;
         return maxPos;
     }
     client->setTimestampInfo(inputBuffer->m_sourceBuffer);
     SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer, "findStreamPacket");
     if (!demuxer->findStreamPacket(&src)) {
-        SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer,
-                         "Found error while demuxing");
+        STARFISH_LOG_INFO(
+            "[MSE] tryDemuxing findStreamPacket FAIL (len=%d unprocessed=%d "
+            "readPos=%d)",
+            (int)inputBuffer->m_length, (int)client->m_bufferUnprocessed.size(),
+            (int)src.m_readPos);
         client->m_foundError = true;
         return maxPos;
     }
@@ -1248,6 +1253,35 @@ void SourceBuffer::clearPacketAccessCache()
     }
 }
 
+bool SourceBuffer::findNearestIdrDTSBefore(size_t streamIdx, uint64_t dts,
+                                           uint64_t& outDTS)
+{
+    Locker<Mutex> packetGroupLocker(*m_packetGroupsMutex);
+    bool found = false;
+    uint64_t best = 0;
+    for (size_t i = 0; i < m_packetGroups.size(); i++) {
+        MediaPacketGroup* grp = m_packetGroups[i];
+        if (grp->m_streamIndex != streamIdx ||
+            grp->m_groupDtsTimestampStart > dts) {
+            continue;
+        }
+        const std::vector<MediaPacket*>& v = grp->m_packets;
+        for (size_t j = 0; j < v.size(); j++) {
+            if (v[j]->m_dts > dts) {
+                break;
+            }
+            if (v[j]->m_hasIdr && (!found || v[j]->m_dts > best)) {
+                found = true;
+                best = v[j]->m_dts;
+            }
+        }
+    }
+    if (found) {
+        outDTS = best;
+    }
+    return found;
+}
+
 void SourceBuffer::initializePacketAccessCache(size_t streamCount)
 {
     for (size_t i = 0; i < streamCount; i++) {
@@ -1262,6 +1296,41 @@ std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
     size_t streamIdx, uint64_t startPositionInDTSWantToFind)
 {
     Locker<Mutex> packetGroupLocker(*m_packetGroupsMutex);
+    return findProperMediaPacketLocked(streamIdx, startPositionInDTSWantToFind);
+}
+
+SourceBuffer::MediaPacketView SourceBuffer::copyProperMediaPacket(
+    size_t streamIdx, uint64_t startPositionInDTSWantToFind,
+    std::vector<uint8_t>& outData)
+{
+    Locker<Mutex> packetGroupLocker(*m_packetGroupsMutex);
+    MediaPacketView view;
+    std::pair<MediaPacket*, size_t> found =
+        findProperMediaPacketLocked(streamIdx, startPositionInDTSWantToFind);
+    MediaPacket* pkt = found.first;
+    if (pkt == nullptr) {
+        return view;
+    }
+    view.m_found = true;
+    view.m_dts = pkt->m_dts;
+    view.m_pts = pkt->m_pts;
+    view.m_duration = pkt->m_duration;
+    view.m_dataSize = pkt->m_dataSize;
+    view.m_initSegmentIndex = found.second;
+    view.m_hasIdr = pkt->m_hasIdr;
+    // Copy the encoded bytes while still under the lock so the snapshot
+    // outlives any concurrent remove()/eviction that frees `pkt`.
+    outData.resize(pkt->m_dataSize);
+    if (pkt->m_dataSize > 0) {
+        memcpy(outData.data(), pkt->m_data, pkt->m_dataSize);
+    }
+    return view;
+}
+
+std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacketLocked(
+    size_t streamIdx, uint64_t startPositionInDTSWantToFind)
+{
+    // caller holds m_packetGroupsMutex
     // test cache first
     {
         auto cache = m_packetAccessCachePerStream[streamIdx];
