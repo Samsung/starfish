@@ -24,6 +24,7 @@
 #include "StaticStrings.h"
 #include "Starfish.h"
 #include "core/animation/AnimationTask.h"
+#include "core/animation/AnimationExecutor.h"
 #include "core/animation/SVGAnimationApplier.h"
 #include "core/style/Style.h"
 #include "core/style/CSSParser.h"
@@ -96,7 +97,18 @@ void SVGAnimationElement::didNodeInsertedToDocumentTree()
 void SVGAnimationElement::didNodeRemovedFromDocumentTree()
 {
     SVGElement::didNodeRemovedFromDocumentTree();
-    // TODO stop animation
+    if (m_activeTarget && m_animationKeyframes) {
+        AnimationExecutor* executor = document()->animationExecutor();
+        auto* fromKeyframe =
+            m_animationKeyframes.value()->animationKeyframeList()[0];
+        for (auto keyKind : fromKeyframe->keyKinds()) {
+            executor->cancelActiveAnimationTaskIfNeeds(
+                m_animationKeyframes.value()->name(), m_activeTarget.value(),
+                AnimationType::SVGAnimation, keyKind, 0);
+        }
+        m_animationKeyframes.reset();
+    }
+    m_activeTarget.reset();
 }
 
 void SVGAnimationElement::didAttributeChanged(QualifiedName name,
@@ -359,6 +371,7 @@ void SVGAnimationElement::beginElementAtInternal(
         STARFISH_LOG_ERROR("Failed to apply animation.");
         return;
     }
+    m_activeTarget = targetElement;
 
     webView()->updateActiveAnimationExecutorRegistration(
         document()->animationExecutor());

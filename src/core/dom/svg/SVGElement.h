@@ -279,6 +279,22 @@ public:
         }
     }
 
+    void removeAllAnimatedAttributesByTask(ActiveSVGLengthAnimationTask* task)
+    {
+        if (!m_animatedAttributes) {
+            return;
+        }
+        size_t i = m_animatedAttributes->size();
+        while (i > 0) {
+            i--;
+            if (std::get<3>(m_animatedAttributes->at(i)) == task) {
+                AtomicString name = std::get<0>(m_animatedAttributes->at(i));
+                m_animatedAttributes->erase(i);
+                computeAttributeChangeDamage(name);
+            }
+        }
+    }
+
     Optional<Length> animatedLengthAttribute(AtomicString s) const
     {
         if (!m_animatedAttributes) {

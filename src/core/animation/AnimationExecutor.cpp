@@ -265,6 +265,36 @@ void AnimationExecutor::removeActiveAnimationTaskIfNeeds(
     }
 }
 
+void AnimationExecutor::cancelActiveAnimationTaskIfNeeds(
+    String* animationName, Element* element, AnimationType animationType,
+    CSSStyleValuePair::KeyKind p, size_t layer)
+{
+    STARFISH_ASSERT(element != nullptr);
+
+    for (auto animations = m_activeAnimations.begin();
+         animations != m_activeAnimations.end();) {
+        auto activeElementAnimation = (*animations).first;
+        if ((*animations).second.size() == 0) {
+            animations = m_activeAnimations.erase(animations);
+        } else {
+            for (auto task = (*animations).second.begin();
+                 task != (*animations).second.end();) {
+                if ((*task)->targetElement() == element &&
+                    (*task)->animationType() == animationType &&
+                    (*task)->property() == p &&
+                    (*task)->layerIndex() == layer &&
+                    activeElementAnimation->name()->equals(animationName)) {
+                    (*task)->detachFromElement();
+                    task = animations.value().erase(task);
+                } else {
+                    task++;
+                }
+            }
+            animations++;
+        }
+    }
+}
+
 void AnimationExecutor::registerAnimation(ActiveAnimationTask* task,
                                           String* name, size_t index,
                                           float iterationCount,

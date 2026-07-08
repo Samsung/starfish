@@ -68,6 +68,9 @@ void SVGAnimateMotionElement::didAttributeChanged(QualifiedName name,
 
 void SVGAnimateMotionElement::beginElementAt(float offset)
 {
+    if (!isConnected()) {
+        return;
+    }
     StaticStrings* ss = starfish()->staticStrings();
 
     String* value = String::emptyString;
@@ -104,6 +107,11 @@ void SVGAnimateMotionElement::beginElementAt(float offset)
     v.push_back(p);
     beginElementAtInternal(offset, CSSStyleValuePair::KeyKind::Unknown,
                            NullOption, NullOption, v);
+}
+
+void SVGAnimateMotionElement::didNodeRemovedFromDocumentTree()
+{
+    SVGAnimationElement::didNodeRemovedFromDocumentTree();
 }
 
 Unit::FloatPoint SVGAnimateMotionElement::computePoint(

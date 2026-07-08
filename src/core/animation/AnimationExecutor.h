@@ -238,6 +238,11 @@ public:
                                           AnimationType animationType,
                                           CSSStyleValuePair::KeyKind p,
                                           size_t layer = 0);
+    void cancelActiveAnimationTaskIfNeeds(String* animationName,
+                                          Element* element,
+                                          AnimationType animationType,
+                                          CSSStyleValuePair::KeyKind p,
+                                          size_t layer = 0);
 
     void registerAnimation(ActiveAnimationTask* task, String* name,
                            size_t index, float iterationCount,

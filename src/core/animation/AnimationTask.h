@@ -530,6 +530,8 @@ public:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         ActiveAnimationTask::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(ActiveSVGLengthAnimationTask,
+                                        m_lastMotionPathD));
     }
 
     virtual void attachToElement() override;
@@ -541,6 +543,7 @@ public:
 
 protected:
     AtomicString m_attributeName;
+    Optional<String*> m_lastMotionPathD;
 };
 
 class ActiveFilterAnimationTask : public ActiveAnimationTask {

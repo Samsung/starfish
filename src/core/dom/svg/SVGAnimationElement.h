@@ -65,6 +65,7 @@ public:
         GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement,
                                         m_valuesFromToPointerRooter));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_keySplines));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_activeTarget));
     }
 
     SVGAnimationElement(Document* document, const QualifiedName& qname);
@@ -183,6 +184,7 @@ protected:
     Optional<float> m_repeatCount;
     Optional<SVGAnimationCalcMode> m_calcMode;
     Optional<GCVector<TimingFunction*>> m_keySplines;
+    Optional<Element*> m_activeTarget;
 };
 } // namespace Starfish
 
