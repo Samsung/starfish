@@ -655,6 +655,8 @@ public:
     QualifiedName m_ontouchmove;
     QualifiedName m_touchend;
     QualifiedName m_ontouchend;
+    QualifiedName m_touchcancel;
+    QualifiedName m_ontouchcancel;
     QualifiedName m_load;
     QualifiedName m_onload;
     QualifiedName m_submit;

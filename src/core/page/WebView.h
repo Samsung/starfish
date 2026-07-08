@@ -398,6 +398,15 @@ public:
         return m_activeScrollingSet;
     }
 
+    bool scrollOccurredDuringGesture() const
+    {
+        return m_scrollOccurredDuringGesture;
+    }
+    void setScrollOccurredDuringGesture(bool v)
+    {
+        m_scrollOccurredDuringGesture = v;
+    }
+
     void dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
                             size_t touchCount);
     void dispatchMouseEvent(MouseEventKind kind, MouseData data);
@@ -694,6 +703,7 @@ private:
     size_t m_idleCheckTimerID;
     bool m_needsDownloadWebFontsEarly;
     bool m_scrollbarVisible;
+    bool m_scrollOccurredDuringGesture;
     bool m_useExternalPopup;
     bool m_useSpatialNavigation;
     uint32_t m_needsDownScaleImageResourceLargerThan;
