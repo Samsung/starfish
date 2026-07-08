@@ -8810,6 +8810,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
             result.styleDamageFrom =
                 (StyleDamageSource)(result.styleDamageFrom |
                                     sub.styleDamageFrom);
+            result.seenCombinator = result.seenCombinator || sub.seenCombinator;
             if (m == Match::SelectorMatches) {
                 return false;
             }
@@ -8833,6 +8834,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
             result.styleDamageFrom =
                 (StyleDamageSource)(result.styleDamageFrom |
                                     sub.styleDamageFrom);
+            result.seenCombinator = result.seenCombinator || sub.seenCombinator;
             if (m == Match::SelectorMatches) {
                 return true;
             }
@@ -8924,6 +8926,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
                                 isQueryingSelector);
         result.styleDamageFrom =
             (StyleDamageSource)(result.styleDamageFrom | sub.styleDamageFrom);
+        result.seenCombinator = result.seenCombinator || sub.seenCombinator;
         return m == Match::SelectorMatches;
     }
     default:
