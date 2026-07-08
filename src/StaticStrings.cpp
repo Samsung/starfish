@@ -486,6 +486,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "touchend"));
     m_ontouchend =
         QualifiedName(AtomicString::createAtomicString(starfish, "ontouchend"));
+    m_touchcancel = QualifiedName(
+        AtomicString::createAtomicString(starfish, "touchcancel"));
+    m_ontouchcancel = QualifiedName(
+        AtomicString::createAtomicString(starfish, "ontouchcancel"));
     m_pointerdown = QualifiedName(
         AtomicString::createAtomicString(starfish, "pointerdown"));
     m_onpointerdown = QualifiedName(

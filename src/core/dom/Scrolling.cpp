@@ -140,6 +140,9 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
                         ->webView()
                         ->addGlobalPointingEventInterceptListener(m_target);
                     m_isScrollTarget = true;
+                    window->browsingContext()
+                        ->webView()
+                        ->setScrollOccurredDuringGesture(true);
                     m_pointingEventX = m_lastPointingEventX = x;
                     m_pointingEventY = m_lastPointingEventY = y;
                     m_pointingEventTimeStamp = timeStamp;

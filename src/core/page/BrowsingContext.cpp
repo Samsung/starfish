@@ -1268,6 +1268,7 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
     }
     // Handle event inside iframe
     bool clickableEvent = (kind == TouchEventKind::TouchEventEnd) &&
+                          !webView()->scrollOccurredDuringGesture() &&
                           targetNode && m_activeNodeTarget &&
                           (targetNode == m_activeNodeTarget ||
                            targetNode->isDescendantOf(m_activeNodeTarget));
@@ -1317,6 +1318,7 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
     String* name = String::emptyString;
     switch (kind) {
     case TouchEventKind::TouchEventStart: {
+        webView()->setScrollOccurredDuringGesture(false);
         // Dispatch touchstart event
         name = starfish()->staticStrings()->m_touchstart.localName();
         Event* e = createTouchEvent(document(), name, touches, count);
@@ -1330,12 +1332,28 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         break;
     }
     case TouchEventKind::TouchEventMove: {
+        bool scrollAlreadyOccurred = webView()->scrollOccurredDuringGesture();
+        // Once scroll has started, don't dispatch touchmove to JS — the touch
+        // sequence was already cancelled via touchcancel (matches Chrome).
+        if (scrollAlreadyOccurred) {
+            break;
+        }
         // Dispatch touchmove event
         name = starfish()->staticStrings()->m_touchmove.localName();
         Event* e = createTouchEvent(document(), name, touches, count);
         Node* t = targetNode->nearestParentElement();
         t = t ? t : document();
         returnValue = !document()->window()->dispatchEventByUA(t, e);
+        // If scroll just started during this touchmove dispatch, fire
+        // touchcancel to let JS clean up (matches Chrome behavior).
+        if (!scrollAlreadyOccurred &&
+            webView()->scrollOccurredDuringGesture()) {
+            name = starfish()->staticStrings()->m_touchcancel.localName();
+            Event* cancel = createTouchEvent(document(), name, touches, count);
+            document()->window()->dispatchEventByUA(t, cancel);
+            releaseActiveNode();
+            break;
+        }
         // Pointer capture retargeting, and the same listener gate the mouse
         // path uses to skip the redundant dispatch per high-frequency move.
         Node* pt =
@@ -1460,6 +1478,8 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     double newY = targetY;
 
     bool clickableEvent = (kind == MouseEventKind::MouseEventUp) &&
+                          !data.isDefaultPrevented() &&
+                          !webView()->scrollOccurredDuringGesture() &&
                           targetNode && m_activeNodeTarget &&
                           (targetNode == m_activeNodeTarget ||
                            targetNode->isDescendantOf(m_activeNodeTarget));
@@ -1524,6 +1544,7 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     }
     switch (kind) {
     case MouseEventKind::MouseEventDown: {
+        webView()->setScrollOccurredDuringGesture(false);
         // Dispatch mousedown event
         name = starfish()->staticStrings()->m_mousedown.localName();
         MouseData downData(data);
@@ -1537,6 +1558,10 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
         break;
     }
     case MouseEventKind::MouseEventMove: {
+        // Once scroll has started, don't dispatch mousemove to JS.
+        if (webView()->scrollOccurredDuringGesture()) {
+            break;
+        }
         // Dispatch mousemove event
         name = starfish()->staticStrings()->m_mousemove.localName();
         // Reuse the by-value `data` local instead of allocating a separate
