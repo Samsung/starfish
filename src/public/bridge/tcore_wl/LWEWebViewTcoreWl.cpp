@@ -40,6 +40,8 @@
 #include <cstring>
 #include <locale>
 #include <csignal>
+#include <string>
+#include <unordered_set>
 
 namespace {
 
@@ -189,6 +191,8 @@ public:
         , m_mouseWheelListener(nullptr)
         , m_windowConfigureListener(nullptr)
         , m_windowDestroyListener(nullptr)
+        , m_deviceAddListener(nullptr)
+        , m_deviceDelListener(nullptr)
     {
         STARFISH_LOG_INFO("WebViewTcoreWl::WebViewTcoreWl");
 
@@ -430,6 +434,12 @@ public:
             if (m_windowDestroyListener) {
                 tizen_core_wl_event_remove_listener(m_eventHandle,
                                                     m_windowDestroyListener);
+                if (m_deviceAddListener)
+                    tizen_core_wl_event_remove_listener(m_eventHandle,
+                                                        m_deviceAddListener);
+                if (m_deviceDelListener)
+                    tizen_core_wl_event_remove_listener(m_eventHandle,
+                                                        m_deviceDelListener);
             }
         }
 
@@ -727,40 +737,105 @@ public:
             break;
         }
 
+        case TIZEN_CORE_WL_EVENT_DEVICE_ADD: {
+            tizen_core_wl_event_device_info_h info =
+                (tizen_core_wl_event_device_info_h)event;
+            tizen_core_wl_device_class_e devClass =
+                TIZEN_CORE_WL_DEVICE_CLASS_NONE;
+            char* identifier = nullptr;
+            tizen_core_wl_event_device_info_get_class(info, &devClass);
+            if (devClass == TIZEN_CORE_WL_DEVICE_CLASS_TOUCH &&
+                tizen_core_wl_event_device_info_get_identifier(
+                    info, &identifier) == TIZEN_CORE_WL_ERROR_NONE &&
+                identifier) {
+                win->m_touchDeviceIds.insert(identifier);
+                free(identifier);
+            }
+            break;
+        }
+
+        case TIZEN_CORE_WL_EVENT_DEVICE_DEL: {
+            tizen_core_wl_event_device_info_h info =
+                (tizen_core_wl_event_device_info_h)event;
+            char* identifier = nullptr;
+            if (tizen_core_wl_event_device_info_get_identifier(
+                    info, &identifier) == TIZEN_CORE_WL_ERROR_NONE &&
+                identifier) {
+                win->m_touchDeviceIds.erase(identifier);
+                free(identifier);
+            }
+            break;
+        }
+
         case TIZEN_CORE_WL_EVENT_MOUSE_BUTTON_DOWN: {
-            if (win->m_mouseButtonCallback) {
-                tizen_core_wl_event_input_base_h inputEvent =
-                    (tizen_core_wl_event_input_base_h)event;
-                int x = 0, y = 0;
-                tizen_core_wl_event_mouse_button_get_position(inputEvent, &x,
-                                                              &y);
-                win->m_mouseX = x;
-                win->m_mouseY = y;
+            tizen_core_wl_event_input_base_h inputEvent =
+                (tizen_core_wl_event_input_base_h)event;
+            int x = 0, y = 0;
+            tizen_core_wl_event_mouse_button_get_position(inputEvent, &x, &y);
+            win->m_mouseX = x;
+            win->m_mouseY = y;
+
+            char* devId = nullptr;
+            tizen_core_wl_event_input_base_get_device_identifier(inputEvent,
+                                                                 &devId);
+            bool isTouch = devId && win->m_touchDeviceIds.count(devId) > 0;
+            if (devId)
+                free(devId);
+
+            if (isTouch) {
+                float pts[2] = { (float)x, (float)y };
+                win->m_webContainer->DispatchTouchStartEvent(pts, 1);
+                win->m_isMouseLbuttonDown = true;
+                win->m_isTouchDown = true;
+            } else if (win->m_mouseButtonCallback) {
                 win->m_mouseButtonCallback(1, x, y);
             }
             break;
         }
 
         case TIZEN_CORE_WL_EVENT_MOUSE_BUTTON_UP: {
-            if (win->m_mouseButtonCallback) {
-                tizen_core_wl_event_input_base_h inputEvent =
-                    (tizen_core_wl_event_input_base_h)event;
-                int x = 0, y = 0;
-                tizen_core_wl_event_mouse_button_get_position(inputEvent, &x,
-                                                              &y);
-                win->m_mouseX = x;
-                win->m_mouseY = y;
+            tizen_core_wl_event_input_base_h inputEvent =
+                (tizen_core_wl_event_input_base_h)event;
+            int x = 0, y = 0;
+            tizen_core_wl_event_mouse_button_get_position(inputEvent, &x, &y);
+            win->m_mouseX = x;
+            win->m_mouseY = y;
+
+            char* devId = nullptr;
+            tizen_core_wl_event_input_base_get_device_identifier(inputEvent,
+                                                                 &devId);
+            bool isTouch = devId && win->m_touchDeviceIds.count(devId) > 0;
+            if (devId)
+                free(devId);
+
+            if (isTouch) {
+                float pts[2] = { (float)x, (float)y };
+                win->m_webContainer->DispatchTouchEndEvent(pts, 1);
+                win->m_isMouseLbuttonDown = false;
+                win->m_isTouchDown = false;
+            } else if (win->m_mouseButtonCallback) {
                 win->m_mouseButtonCallback(0, x, y);
             }
             break;
         }
 
         case TIZEN_CORE_WL_EVENT_MOUSE_MOVE: {
-            if (win->m_mouseMoveCallback) {
-                tizen_core_wl_event_input_base_h inputEvent =
-                    (tizen_core_wl_event_input_base_h)event;
-                int x = 0, y = 0;
-                tizen_core_wl_event_mouse_move_get_position(inputEvent, &x, &y);
+            tizen_core_wl_event_input_base_h inputEvent =
+                (tizen_core_wl_event_input_base_h)event;
+            int x = 0, y = 0;
+            tizen_core_wl_event_mouse_move_get_position(inputEvent, &x, &y);
+
+            char* devId = nullptr;
+            tizen_core_wl_event_input_base_get_device_identifier(inputEvent,
+                                                                 &devId);
+            bool isTouch = devId && win->m_touchDeviceIds.count(devId) > 0;
+            if (devId)
+                free(devId);
+
+            if (isTouch && win->m_isMouseLbuttonDown) {
+                float pts[2] = { (float)x, (float)y };
+                win->m_webContainer->DispatchTouchMoveEvent(pts, 1);
+            } else if (!win->m_isTouchDown && win->m_mouseMoveCallback) {
                 win->m_mouseMoveCallback(x, y);
             }
             break;
@@ -878,6 +953,12 @@ public:
             m_eventHandle, TIZEN_CORE_WL_EVENT_MOUSE_WHEEL, eventCallback, this,
             &m_mouseWheelListener);
         tizen_core_wl_event_add_listener(
+            m_eventHandle, TIZEN_CORE_WL_EVENT_DEVICE_ADD, eventCallback, this,
+            &m_deviceAddListener);
+        tizen_core_wl_event_add_listener(
+            m_eventHandle, TIZEN_CORE_WL_EVENT_DEVICE_DEL, eventCallback, this,
+            &m_deviceDelListener);
+        tizen_core_wl_event_add_listener(
             m_eventHandle, TIZEN_CORE_WL_EVENT_WINDOW_CONFIGURE, eventCallback,
             this, &m_windowConfigureListener);
         tizen_core_wl_event_add_listener(
@@ -970,6 +1051,7 @@ private:
     int m_lastWidth;
     int m_lastHeight;
     bool m_isMouseLbuttonDown = false;
+    bool m_isTouchDown = false;
 
     WebContainer* m_webContainer;
 
@@ -992,7 +1074,10 @@ private:
     tizen_core_wl_event_listener_h m_mouseWheelListener;
     tizen_core_wl_event_listener_h m_windowConfigureListener;
     tizen_core_wl_event_listener_h m_windowDestroyListener;
+    tizen_core_wl_event_listener_h m_deviceAddListener;
+    tizen_core_wl_event_listener_h m_deviceDelListener;
     tizen_core_event_h m_eventHandle;
+    std::unordered_set<std::string> m_touchDeviceIds;
 
     int m_mouseX;
     int m_mouseY;

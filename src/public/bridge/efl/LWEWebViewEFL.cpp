@@ -1161,6 +1161,7 @@ public:
         , m_lastMouseX(0)
         , m_lastMouseY(0)
         , m_isMouseLbuttonDown(false)
+        , m_isTouchDown(false)
         , m_isKeyDown(false)
         , m_isDestroyed(false)
         , m_lastRenderingTime(0)
@@ -1324,7 +1325,6 @@ public:
                                      void* event_info) -> void {
             WebViewEFL* webView = (WebViewEFL*)data;
             Evas_Event_Mouse_Down* ev = (Evas_Event_Mouse_Down*)event_info;
-            // We care just left button now
             int currentPosX = ev->output.x;
             int currentPosY = ev->output.y;
 
@@ -1333,7 +1333,16 @@ public:
             currentPosX -= x;
             currentPosY -= y;
 
-            if (ev->button == 1 && (currentPosX >= 0 && currentPosY >= 0)) {
+            bool isTouch = ev->dev && evas_device_class_get(ev->dev) ==
+                                          EVAS_DEVICE_CLASS_TOUCH;
+
+            if (isTouch && (currentPosX >= 0 && currentPosY >= 0)) {
+                float pts[2] = { (float)currentPosX, (float)currentPosY };
+                webView->FetchWebContainer()->DispatchTouchStartEvent(pts, 1);
+                webView->m_isMouseLbuttonDown = true;
+                webView->m_isTouchDown = true;
+            } else if (ev->button == 1 &&
+                       (currentPosX >= 0 && currentPosY >= 0)) {
                 if (ev->timestamp - webView->m_lastClickedTimestamp >
                     CLICK_REFRESH_DELAY) {
                     webView->m_clickedCount = 1;
@@ -1360,7 +1369,6 @@ public:
                                    void* event_info) -> void {
             WebViewEFL* webView = (WebViewEFL*)data;
             Evas_Event_Mouse_Up* ev = (Evas_Event_Mouse_Up*)event_info;
-            // We care just left button now
             int currentPosX = ev->output.x;
             int currentPosY = ev->output.y;
             int x, y;
@@ -1368,7 +1376,16 @@ public:
             currentPosX -= x;
             currentPosY -= y;
 
-            if (ev->button == 1 && (currentPosX >= 0 && currentPosY >= 0)) {
+            bool isTouch = ev->dev && evas_device_class_get(ev->dev) ==
+                                          EVAS_DEVICE_CLASS_TOUCH;
+
+            if (isTouch) {
+                float pts[2] = { (float)currentPosX, (float)currentPosY };
+                webView->FetchWebContainer()->DispatchTouchEndEvent(pts, 1);
+                webView->m_isMouseLbuttonDown = false;
+                webView->m_isTouchDown = false;
+            } else if (ev->button == 1 &&
+                       (currentPosX >= 0 && currentPosY >= 0)) {
                 if (ev->timestamp - webView->m_lastClickedTimestamp >
                     CLICK_REFRESH_DELAY) {
                     webView->m_clickedCount = 1;
@@ -1410,19 +1427,29 @@ public:
                                      void* event_info) -> void {
             WebViewEFL* webView = (WebViewEFL*)data;
             Evas_Event_Mouse_Move* ev = (Evas_Event_Mouse_Move*)event_info;
-            // We care just left button now
             int currentPosX = ev->cur.output.x;
             int currentPosY = ev->cur.output.y;
             int x, y;
             evas_object_geometry_get(webView->m_graphicsAdapter, &x, &y, 0, 0);
             currentPosX -= x;
             currentPosY -= y;
-            unsigned char buttons = webView->m_isMouseLbuttonDown
-                                        ? MouseButtonsValue::LeftButtonDown
-                                        : MouseButtonsValue::NoButtonDown;
-            webView->FetchWebContainer()->DispatchMouseMoveEvent(
-                MouseButtonValue::NoButton, (MouseButtonsValue)buttons,
-                currentPosX, currentPosY);
+
+            bool isTouch = ev->dev && evas_device_class_get(ev->dev) ==
+                                          EVAS_DEVICE_CLASS_TOUCH;
+
+            if (isTouch && webView->m_isMouseLbuttonDown) {
+                float pts[2] = { (float)currentPosX, (float)currentPosY };
+                webView->FetchWebContainer()->DispatchTouchMoveEvent(pts, 1);
+            } else if (!webView->m_isTouchDown) {
+                // Suppress non-touch mouse move events during a touch sequence
+                // to prevent spurious hover/mouseleave updates.
+                unsigned char buttons = webView->m_isMouseLbuttonDown
+                                            ? MouseButtonsValue::LeftButtonDown
+                                            : MouseButtonsValue::NoButtonDown;
+                webView->FetchWebContainer()->DispatchMouseMoveEvent(
+                    MouseButtonValue::NoButton, (MouseButtonsValue)buttons,
+                    currentPosX, currentPosY);
+            }
             return;
         };
         evas_object_event_callback_add(m_graphicsAdapter,
@@ -2462,6 +2489,7 @@ protected:
 
     float m_lastMouseX, m_lastMouseY;
     bool m_isMouseLbuttonDown;
+    bool m_isTouchDown;
     bool m_isKeyDown;
     bool m_isDestroyed;
     uint32_t m_lastClickedTimestamp;
