@@ -105,6 +105,27 @@ def generate_html(data):
             rate=latest.get("rate", 0.0),
             passed=latest.get("passed", 0),
         )
+        # "types" (added alongside reftest/crashtest support) breaks the
+        # above testharness-only totals down per test kind. Older records
+        # predate this key, so only render it when present -- no schema
+        # migration needed for existing history.
+        types = latest.get("types")
+        if types:
+            rows = "".join(
+                '<tr><td>{t}</td><td>{fp:,}/{ft:,}</td><td>{rate:.1f}%</td>'
+                '<td>{passed:,}/{total:,}</td></tr>'.format(
+                    t=escape(kind),
+                    fp=m.get("files_passed", 0), ft=m.get("files_total", 0),
+                    rate=m.get("rate", 0.0),
+                    passed=m.get("passed", 0), total=m.get("total", 0))
+                for kind, m in sorted(types.items())
+            )
+            latest_html += (
+                '<table style="margin-top:0.5rem"><thead><tr>'
+                '<th>Type</th><th>Files passed/total</th><th>Rate</th>'
+                '<th>Subtests passed/total</th></tr></thead>'
+                '<tbody>{rows}</tbody></table>'
+            ).format(rows=rows)
 
     html = """<!DOCTYPE html>
 <html lang="en">
@@ -191,7 +212,7 @@ def generate_html(data):
 <body>
   <h1>Starfish WPT Status Dashboard</h1>
   <div class="meta">Web Platform Tests (WPT) status for Starfish &mdash; counted at the subtest level, comparable to wpt.fyi.</div>
-  <div class="note"><strong>Scope:</strong> only <strong>testharness</strong> tests are counted (reftest / crashtest / wdspec excluded), so the total test count is smaller than wpt.fyi's full set. Compare at the subtest level, not by raw totals.</div>
+  <div class="note"><strong>Scope:</strong> the headline totals, trend charts, and Recent Reports table combine every test type the nightly run covers (testharness + reftest + crashtest when all three run; wdspec still excluded), so the total test count is smaller than wpt.fyi's testharness-only set -- compare at the subtest level, not by raw totals. testharness is counted per subtest; reftest/crashtest are whole-file pass/fail, so the combined number blends two units. The per-type split (with the same fields) is in the table below the headline; older reports predate reftest/crashtest and are testharness only throughout.</div>
 
   <div class="section">
     <h2>Latest Metrics</h2>
