@@ -252,6 +252,14 @@ public:
                                       ::LWE::MouseButtonsValue buttons,
                                       double x, double y) = 0;
     virtual void DispatchMouseWheelEvent(double x, double y, int delta) = 0;
+    // points: interleaved [x0,y0, x1,y1, ...], pointCount: number of touch
+    // points
+    virtual void DispatchTouchStartEvent(const float* points,
+                                         size_t pointCount) = 0;
+    virtual void DispatchTouchMoveEvent(const float* points,
+                                        size_t pointCount) = 0;
+    virtual void DispatchTouchEndEvent(const float* points,
+                                       size_t pointCount) = 0;
     virtual void DispatchKeyDownEvent(::LWE::KeyValue keyCode) = 0;
     virtual void DispatchKeyPressEvent(::LWE::KeyValue keyCode) = 0;
     virtual void DispatchKeyUpEvent(::LWE::KeyValue keyCode) = 0;

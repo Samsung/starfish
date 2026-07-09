@@ -28,6 +28,7 @@
 #include "ResourceErrorDelegate.h"
 
 #include "core/modules/renderer/Renderer.h"
+#include "core/dom/Touch.h"
 #include "browser/history/HistoryManager.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
@@ -308,6 +309,11 @@ public:
                               ::LWE::MouseButtonsValue buttons, double x,
                               double y) override;
     void DispatchMouseWheelEvent(double x, double y, int delta) override;
+    void DispatchTouchStartEvent(const float* points,
+                                 size_t pointCount) override;
+    void DispatchTouchMoveEvent(const float* points,
+                                size_t pointCount) override;
+    void DispatchTouchEndEvent(const float* points, size_t pointCount) override;
     void DispatchKeyDownEvent(::LWE::KeyValue keyCode) override;
     void DispatchKeyPressEvent(::LWE::KeyValue keyCode) override;
     void DispatchKeyUpEvent(::LWE::KeyValue keyCode) override;
@@ -1579,6 +1585,64 @@ void WebContainerImpl::DispatchMouseWheelEvent(double x, double y, int delta)
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
             m_webView->renderer()->dispatchMouseWheelEvent(x, y, delta, true);
+        });
+}
+
+static std::vector<::Starfish::TouchData> buildTouchData(const float* points,
+                                                         size_t pointCount)
+{
+    std::vector<::Starfish::TouchData> touches;
+    touches.reserve(pointCount);
+    for (size_t i = 0; i < pointCount; i++) {
+        float x = points[i * 2];
+        float y = points[i * 2 + 1];
+        touches.emplace_back(x, y, x, y);
+    }
+    return touches;
+}
+
+void WebContainerImpl::DispatchTouchStartEvent(const float* points,
+                                               size_t pointCount)
+{
+    std::vector<::Starfish::TouchData> touches =
+        buildTouchData(points, pointCount);
+    auto wv = m_webView;
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
+        m_webView->messageLoop(), [touches, wv]() -> void {
+            wv->renderer()->dispatchTouchEvent(
+                ::Starfish::TouchEventKind::TouchEventStart,
+                const_cast<::Starfish::TouchData*>(touches.data()),
+                touches.size());
+        });
+}
+
+void WebContainerImpl::DispatchTouchMoveEvent(const float* points,
+                                              size_t pointCount)
+{
+    std::vector<::Starfish::TouchData> touches =
+        buildTouchData(points, pointCount);
+    auto wv = m_webView;
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
+        m_webView->messageLoop(), [touches, wv]() -> void {
+            wv->renderer()->dispatchTouchEvent(
+                ::Starfish::TouchEventKind::TouchEventMove,
+                const_cast<::Starfish::TouchData*>(touches.data()),
+                touches.size());
+        });
+}
+
+void WebContainerImpl::DispatchTouchEndEvent(const float* points,
+                                             size_t pointCount)
+{
+    std::vector<::Starfish::TouchData> touches =
+        buildTouchData(points, pointCount);
+    auto wv = m_webView;
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
+        m_webView->messageLoop(), [touches, wv]() -> void {
+            wv->renderer()->dispatchTouchEvent(
+                ::Starfish::TouchEventKind::TouchEventEnd,
+                const_cast<::Starfish::TouchData*>(touches.data()),
+                touches.size());
         });
 }
 
