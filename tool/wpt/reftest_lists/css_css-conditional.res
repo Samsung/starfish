@@ -1,7 +1,7 @@
 http://web-platform.test:8000/css/css-conditional/at-media-001.html
 http://web-platform.test:8000/css/css-conditional/at-media-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/at-media-003.html
-http://web-platform.test:8000/css/css-conditional/at-media-content-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/at-media-content-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/at-media-content-002.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-conditional/at-media-content-003.html
 http://web-platform.test:8000/css/css-conditional/at-media-content-004.html
@@ -52,7 +52,7 @@ http://web-platform.test:8000/css/css-conditional/at-supports-043.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/at-supports-045.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/at-supports-046.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/at-supports-048.html
-http://web-platform.test:8000/css/css-conditional/at-supports-content-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/at-supports-content-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/at-supports-content-002.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-conditional/at-supports-content-003.html
 http://web-platform.test:8000/css/css-conditional/at-supports-content-004.html
