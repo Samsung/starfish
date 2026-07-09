@@ -37,12 +37,14 @@ ThreadedCallHelper* ThreadedCallHelper::Instance()
 
 ThreadedCallHelper::ThreadedCallHelper()
     : m_isLWEThreadStarted(false)
+    , m_isThreadMode(false)
 {
     pthread_mutex_init(&m_mainThreadInitLocker, nullptr);
 }
 
 void ThreadedCallHelper::Initialize(bool isThreadMode)
 {
+    m_isThreadMode = isThreadMode;
     if (isThreadMode) {
         if (!m_isLWEThreadStarted) {
             CreateLWEMainThread();
@@ -50,6 +52,11 @@ void ThreadedCallHelper::Initialize(bool isThreadMode)
     } else {
         Starfish::MessageLoop::init();
     }
+}
+
+bool ThreadedCallHelper::isThreadMode() const
+{
+    return m_isThreadMode;
 }
 
 void ThreadedCallHelper::PostTaskToLWEMainThreadSync(

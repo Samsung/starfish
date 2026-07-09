@@ -102,7 +102,7 @@ bool LWEDelegateLoader::loadCookieManagerProcTable()
 
 bool LWEDelegateLoader::loadLWEProcTable()
 {
-    kLWEProcTable.Initialize = reinterpret_cast<void (*)(const char*)>(
+    kLWEProcTable.Initialize = reinterpret_cast<void (*)(const char*, bool)>(
         dlsym(m_handle, "LWEDelegate_LWE_Initialize"));
     kLWEProcTable.IsInitialized = reinterpret_cast<bool (*)()>(
         dlsym(m_handle, "LWEDelegate_LWE_IsInitialized"));
@@ -115,9 +115,12 @@ bool LWEDelegateLoader::loadLWEProcTable()
             dlsym(m_handle, "LWEDelegate_LWE_SetGCFrequency"));
     kLWEProcTable.GetVersion = reinterpret_cast<void (*)(int*, int*, int*)>(
         dlsym(m_handle, "LWEDelegate_LWE_GetVersion"));
+    kLWEProcTable.IsUsingSeparateThread = reinterpret_cast<bool (*)()>(
+        dlsym(m_handle, "LWEDelegate_LWE_IsUsingSeparateThread"));
     return kLWEProcTable.Initialize && kLWEProcTable.IsInitialized &&
            kLWEProcTable.Finalize && kLWEProcTable.GetGCFrequency &&
-           kLWEProcTable.SetGCFrequency && kLWEProcTable.GetVersion;
+           kLWEProcTable.SetGCFrequency && kLWEProcTable.GetVersion &&
+           kLWEProcTable.IsUsingSeparateThread;
 }
 
 bool LWEDelegateLoader::loadResourceErrorProcTable()
@@ -185,7 +188,8 @@ void LWEDelegateLoader::unloadCookieManagerProcTable()
 
 void LWEDelegateLoader::unloadLWEProcTable()
 {
-    kLWEProcTable = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+    kLWEProcTable = { nullptr, nullptr, nullptr, nullptr,
+                      nullptr, nullptr, nullptr };
 }
 
 void LWEDelegateLoader::unloadResourceErrorProcTable()

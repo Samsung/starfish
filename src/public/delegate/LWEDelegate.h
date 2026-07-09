@@ -24,7 +24,8 @@
 namespace LWEDelegate {
 class EXPORT_UNMANAGED_API LWE {
 public:
-    static void Initialize(const char* storageDirectoryPath);
+    static void Initialize(const char* storageDirectoryPath,
+                           bool preferMainThread);
 
     static bool IsInitialized();
 
@@ -35,14 +36,16 @@ public:
     static void SetGCFrequency(unsigned char freq);
 
     static void GetVersion(int* major, int* minor, int* patch);
+
+    static bool IsUsingSeparateThread();
 };
 
 } // namespace LWEDelegate
 
 // C wrappers used for dlopen/dlsym.
 extern "C" {
-void EXPORT_UNMANAGED_API
-LWEDelegate_LWE_Initialize(const char* storageDirectoryPath);
+void EXPORT_UNMANAGED_API LWEDelegate_LWE_Initialize(
+    const char* storageDirectoryPath, bool useMainThread);
 
 bool EXPORT_UNMANAGED_API LWEDelegate_LWE_IsInitialized();
 
@@ -55,13 +58,16 @@ void EXPORT_UNMANAGED_API LWEDelegate_LWE_SetGCFrequency(unsigned char freq);
 void EXPORT_UNMANAGED_API LWEDelegate_LWE_GetVersion(int* major, int* minor,
                                                      int* patch);
 
+bool EXPORT_UNMANAGED_API LWEDelegate_LWE_IsUsingSeparateThread();
+
 typedef struct {
-    void (*Initialize)(const char*);
+    void (*Initialize)(const char*, bool);
     bool (*IsInitialized)();
     void (*Finalize)();
     unsigned char (*GetGCFrequency)();
     void (*SetGCFrequency)(unsigned char);
     void (*GetVersion)(int*, int*, int*);
+    bool (*IsUsingSeparateThread)();
 } LWEProcTable;
 }
 #endif
