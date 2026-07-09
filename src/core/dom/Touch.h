@@ -45,6 +45,7 @@ public:
     TouchData(double clientX, double clientY, double screenX, double screenY,
               DOMTimeStamp timeStamp = timestamp())
         : m_target(nullptr)
+        , m_identifier(0)
         , m_clientX(clientX)
         , m_clientY(clientY)
         , m_screenX(screenX)
@@ -99,8 +100,18 @@ public:
         return m_timeStamp;
     }
 
+    long identifier() const
+    {
+        return m_identifier;
+    }
+    void setIdentifier(long id)
+    {
+        m_identifier = id;
+    }
+
 protected:
     EventTarget* m_target;
+    long m_identifier;
     double m_clientX;
     double m_clientY;
     double m_screenX;
@@ -135,6 +146,11 @@ public:
     {
         m_touchData.m_target = target;
     }
+    long identifier() const
+    {
+        return m_touchData.m_identifier;
+    }
+
     double clientX() const
     {
         return m_touchData.m_clientX;

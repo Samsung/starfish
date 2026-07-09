@@ -28,12 +28,16 @@ namespace Starfish {
 TouchEvent::TouchEvent(Document* document)
     : UIEvent(document->executionContext())
     , m_touches(new TouchList(document))
+    , m_targetTouches(new TouchList(document))
+    , m_changedTouches(new TouchList(document))
 {
 }
 
 TouchEvent::TouchEvent(Document* document, String* eventType)
     : UIEvent(document->executionContext(), eventType)
     , m_touches(new TouchList(document))
+    , m_targetTouches(new TouchList(document))
+    , m_changedTouches(new TouchList(document))
 {
 }
 
@@ -42,7 +46,10 @@ TouchEvent::TouchEvent(Document* document, String* eventType, TouchData* data,
     : TouchEvent(document, eventType)
 {
     for (size_t i = 0; i < touchCount; i++) {
-        m_touches->push_back(new Touch(document, data[i]));
+        Touch* t = new Touch(document, data[i]);
+        m_touches->push_back(t);
+        m_targetTouches->push_back(t);
+        m_changedTouches->push_back(t);
     }
 }
 } // namespace Starfish

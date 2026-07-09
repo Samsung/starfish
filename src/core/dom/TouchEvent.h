@@ -48,8 +48,20 @@ public:
         return m_touches;
     }
 
+    TouchList* targetTouches()
+    {
+        return m_targetTouches;
+    }
+
+    TouchList* changedTouches()
+    {
+        return m_changedTouches;
+    }
+
 private:
     TouchList* m_touches;
+    TouchList* m_targetTouches;
+    TouchList* m_changedTouches;
 };
 } // namespace Starfish
 
