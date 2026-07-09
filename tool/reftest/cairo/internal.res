@@ -873,6 +873,13 @@ test/cairo/internal-test/event/mouse_enter_leave_event_order.html
 test/cairo/internal-test/event/scroll-suppresses-click.html
 test/cairo/internal-test/event/no-scroll-fires-click.html
 test/cairo/internal-test/event/scroll-no-touchmove-after-start.html
+test/cairo/internal-test/event/touch-event-sequence.html
+test/cairo/internal-test/event/touch-event-lists.html
+test/cairo/internal-test/event/touch-slop-suppresses-touchmove.html
+test/cairo/internal-test/event/touch-slop-dispatches-touchmove.html
+test/cairo/internal-test/event/touch-end-before-click.html
+test/cairo/internal-test/event/touch-no-mouseleave.html
+test/cairo/internal-test/event/touch-cancel-clears-state.html
 test/cairo/internal-test/dom/DOMRect01.html
 test/cairo/internal-test/resize-observer/observe.html
 test/cairo/internal-test/resize-observer/observe2.html
