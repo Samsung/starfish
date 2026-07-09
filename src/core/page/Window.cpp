@@ -652,6 +652,38 @@ void Window::simulateMouseMove(float x, float y)
                                               data, true);
 }
 
+void Window::simulateTouchStart(float x, float y)
+{
+    TouchData data(x * webView()->screenInfo().devicePixelRatio,
+                   y * webView()->screenInfo().devicePixelRatio);
+    webView()->renderer()->dispatchTouchEvent(TouchEventKind::TouchEventStart,
+                                              &data, 1);
+}
+
+void Window::simulateTouchMove(float x, float y)
+{
+    TouchData data(x * webView()->screenInfo().devicePixelRatio,
+                   y * webView()->screenInfo().devicePixelRatio);
+    webView()->renderer()->dispatchTouchEvent(TouchEventKind::TouchEventMove,
+                                              &data, 1);
+}
+
+void Window::simulateTouchEnd(float x, float y)
+{
+    TouchData data(x * webView()->screenInfo().devicePixelRatio,
+                   y * webView()->screenInfo().devicePixelRatio);
+    webView()->renderer()->dispatchTouchEvent(TouchEventKind::TouchEventEnd,
+                                              &data, 1);
+}
+
+void Window::simulateTouchCancel(float x, float y)
+{
+    TouchData data(x * webView()->screenInfo().devicePixelRatio,
+                   y * webView()->screenInfo().devicePixelRatio);
+    webView()->renderer()->dispatchTouchEvent(TouchEventKind::TouchEventCancel,
+                                              &data, 1);
+}
+
 void Window::simulateVisibilitychange(bool show)
 {
     if (show) {
