@@ -391,10 +391,11 @@ static EventPathStruct makeEventPathStruct(
     s.shadowAdjustedTarget = retarget(target, invocationTarget);
     // Same per-struct independent retarget() pattern as shadowAdjustedTarget
     // above, applied to the event's original (dispatch-start) relatedTarget.
-    s.relatedTarget = originalRelatedTarget
-        ? Optional<EventTarget*>(
-              retarget(originalRelatedTarget.value(), invocationTarget))
-        : NullOption;
+    s.relatedTarget =
+        originalRelatedTarget
+            ? Optional<EventTarget*>(
+                  retarget(originalRelatedTarget.value(), invocationTarget))
+            : NullOption;
     s.rootOfClosedTree = rootOfClosedTree;
     s.slotInClosedTree = slotInClosedTree;
     return s;
@@ -534,7 +535,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
         }
     }
     suppressDispatchEntirely = stopBeforeNode && origin->isNode() &&
-        stopBeforeNode.value() == origin->asNode();
+                               stopBeforeNode.value() == origin->asNode();
 
     // 4. If event's target attribute value is participating in a tree, let
     // event path be a static ordered list of all its ancestors in tree order,
@@ -596,7 +597,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                         node->assignedSlotInternal()) {
                     Node* slotRoot = slot.value()->getRootNode();
                     slotInClosedTree = slotRoot->isShadowRoot() &&
-                        slotRoot->asShadowRoot()->isClosed();
+                                       slotRoot->asShadowRoot()->isClosed();
                 }
             }
             eventTarget = eventFlatTreeParent(node, event);
@@ -632,7 +633,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
         const EventPathStruct& lastPathStruct = eventPath.back();
         auto rootIsShadowRootNow = [](Optional<EventTarget*> t) {
             return t && t.value()->isNode() &&
-                t.value()->asNode()->getRootNode()->isShadowRoot();
+                   t.value()->asNode()->getRootNode()->isShadowRoot();
         };
         clearTargets =
             rootIsShadowRootNow(lastPathStruct.shadowAdjustedTarget) ||
