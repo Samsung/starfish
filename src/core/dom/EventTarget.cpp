@@ -381,15 +381,20 @@ static EventTarget* retarget(EventTarget* a, EventTarget* b)
     }
 }
 
-static EventPathStruct makeEventPathStruct(EventTarget* target,
-                                           EventTarget* invocationTarget,
-                                           bool rootOfClosedTree,
-                                           bool slotInClosedTree)
+static EventPathStruct makeEventPathStruct(
+    EventTarget* target, EventTarget* invocationTarget,
+    Optional<EventTarget*> originalRelatedTarget, bool rootOfClosedTree,
+    bool slotInClosedTree)
 {
     EventPathStruct s;
     s.invocationTarget = invocationTarget;
     s.shadowAdjustedTarget = retarget(target, invocationTarget);
-    s.relatedTarget = NullOption;
+    // Same per-struct independent retarget() pattern as shadowAdjustedTarget
+    // above, applied to the event's original (dispatch-start) relatedTarget.
+    s.relatedTarget = originalRelatedTarget
+        ? Optional<EventTarget*>(
+              retarget(originalRelatedTarget.value(), invocationTarget))
+        : NullOption;
     s.rootOfClosedTree = rootOfClosedTree;
     s.slotInClosedTree = slotInClosedTree;
     return s;
@@ -436,6 +441,15 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     event->setTarget(origin);
 
     EventTarget* activationTarget = nullptr;
+    // Set below (host build only) when path shortening's empty-path case
+    // applies -- relatedTarget fully absorbs origin AND origin is itself a
+    // shadow host, so nothing at all should be invoked. This is NOT the same
+    // as eventPath being empty for an unrelated reason (e.g. origin is a
+    // plain EventTarget like XMLHttpRequest, neither Node nor Window, so the
+    // build loop below never covers it) -- that case must still dispatch to
+    // origin's own listeners exactly as before, so guard on this flag
+    // specifically rather than on eventPath.empty().
+    bool suppressDispatchEntirely = false;
     // A reference to event's own path member (not a local list): composedPath
     // reads this during and after dispatch, so the path must live on event,
     // not as a dispatchEvent-local. Cleared defensively in case this Event
@@ -452,6 +466,76 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     bool isActivationEvent =
         event->isUIEvent() && event->type()->equals("click");
 
+    // Captured once, up front: every struct's relatedTarget is computed via
+    // an independent retarget() call against THIS fixed original value (same
+    // pattern as shadowAdjustedTarget's use of the fixed `origin` above) --
+    // never against an already-retargeted intermediate value.
+    Optional<EventTarget*> originalRelatedTarget =
+        event->relatedTargetForDispatch();
+
+    // Path shortening (WHATWG "if parent is relatedTarget, then set parent to
+    // null", the "get the parent" main-loop counterpart of this build loop's
+    // ancestor walk): retarget relatedTarget against origin once -- this is
+    // "where relatedTarget appears from origin's own point of view" (itself,
+    // if already visible there; otherwise the nearest shadow-tree host that
+    // is). No reliable spec excerpt was available for the exact branch this
+    // session, so this was reverse-engineered against every topology in
+    // event-with-related-target.html + event-composed-path-with-related-
+    // target.html:
+    // - If that result IS origin itself: origin fully absorbs relatedTarget.
+    //   If origin is itself a shadow host, nothing can be dispatched at all
+    //   (target and relatedTarget are indistinguishable from every possible
+    //   external point of view) -- empty path. Otherwise (plain node, no
+    //   shadow tree involved anywhere) this is a no-op -- no shortening.
+    // - Otherwise, if that result's own root is a shadow root: stop growing
+    //   the path right after including a struct for that root (inclusive --
+    //   e.g. relatedTarget buried inside an ancestor's shadow tree), whether
+    //   or not retargeting actually had to hop through a host to reach it.
+    // - Otherwise (a plain light-DOM ancestor, not itself shadow-rooted) --
+    //   only when retargeting needed zero hops, i.e. relatedTarget was
+    //   already this exact node with no shadow tree involved at all: stop
+    //   right before reaching it (exclusive -- it would fully reveal
+    //   relatedTarget with nothing left to retarget, so it and anything
+    //   beyond are excluded). A plain light-DOM ancestor reached only via a
+    //   hop (relatedTarget itself was hidden somewhere else entirely, e.g. a
+    //   sibling shadow tree under a shared ancestor) does not shorten at all
+    //   -- that ancestor is a normal, unrelated part of origin's own path.
+    Optional<Node*> stopAfterNode = NullOption;
+    Optional<Node*> stopBeforeNode = NullOption;
+    if (originalRelatedTarget && originalRelatedTarget.value()->isNode()) {
+        Node* relatedNode = originalRelatedTarget.value()->asNode();
+        EventTarget* retargetedRelated = retarget(relatedNode, origin);
+        if (retargetedRelated == origin) {
+            if (origin->isNode()) {
+                // origin fully absorbs relatedTarget. If origin itself lives
+                // inside a shadow tree, that shadow root is still a real
+                // boundary to stop after (inclusive) even though origin
+                // wasn't hidden behind ANOTHER host to get here. Otherwise,
+                // if origin merely hosts its own shadow tree (but itself
+                // lives in ordinary light DOM), nothing can be dispatched at
+                // all -- empty path (see the block comment above).
+                Node* originRoot = origin->asNode()->getRootNode();
+                if (originRoot->isShadowRoot()) {
+                    stopAfterNode = originRoot;
+                } else if (origin->asNode()->isElement() &&
+                           origin->asNode()
+                               ->asElement()
+                               ->internalShadowRoot()) {
+                    stopBeforeNode = origin->asNode();
+                }
+            }
+        } else if (retargetedRelated->isNode()) {
+            Node* relatedRoot = retargetedRelated->asNode()->getRootNode();
+            if (relatedRoot->isShadowRoot()) {
+                stopAfterNode = relatedRoot;
+            } else if (retargetedRelated == relatedNode) {
+                stopBeforeNode = retargetedRelated->asNode();
+            }
+        }
+    }
+    suppressDispatchEntirely = stopBeforeNode && origin->isNode() &&
+        stopBeforeNode.value() == origin->asNode();
+
     // 4. If event's target attribute value is participating in a tree, let
     // event path be a static ordered list of all its ancestors in tree order,
     // and let event path be the empty list otherwise.
@@ -462,6 +546,12 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     // "append to an event path" slot-in-closed-tree bookkeeping.
     bool slotInClosedTree = false;
     while (eventTarget) {
+        // Path-shortening exclusive stop point (see stopBeforeNode above):
+        // this candidate itself (and everything beyond) is excluded.
+        if (stopBeforeNode && eventTarget->isNode() &&
+            eventTarget->asNode() == stopBeforeNode.value()) {
+            break;
+        }
         if (isActivationEvent && !activationTarget &&
             eventTarget->hasActivationBehavior()) {
             activationTarget = eventTarget;
@@ -474,22 +564,28 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                 node->isShadowRoot() && node->asShadowRoot()->isClosed();
             if (node->isHTMLElement() || node->isSVGElement()) {
                 eventPath.push_back(makeEventPathStruct(
-                    origin, eventTarget, rootOfClosedTree,
-                    thisSlotInClosedTree));
+                    origin, eventTarget, originalRelatedTarget,
+                    rootOfClosedTree, thisSlotInClosedTree));
             } else if (node->isShadowRoot()) {
                 // A shadow root is an ancestor in the (flat) tree, so it must
                 // participate in the event path; otherwise bubbling events such
                 // as slotchange never reach listeners (or the onslotchange
                 // attribute handler) registered on the shadow root.
                 eventPath.push_back(makeEventPathStruct(
-                    origin, eventTarget, rootOfClosedTree,
-                    thisSlotInClosedTree));
+                    origin, eventTarget, originalRelatedTarget,
+                    rootOfClosedTree, thisSlotInClosedTree));
             } else if (node->isDocument()) {
                 eventPath.push_back(makeEventPathStruct(
-                    origin, eventTarget, false, thisSlotInClosedTree));
+                    origin, eventTarget, originalRelatedTarget, false,
+                    thisSlotInClosedTree));
                 eventPath.push_back(makeEventPathStruct(
-                    origin, eventTarget->asDocument()->window(), false,
-                    false));
+                    origin, eventTarget->asDocument()->window(),
+                    originalRelatedTarget, false, false));
+                break;
+            }
+            // Path-shortening stop point (see stopAfterNode above): the
+            // struct for it was just pushed; don't walk any further.
+            if (stopAfterNode && node == stopAfterNode.value()) {
                 break;
             }
             // If we're about to cross a slot assignment boundary, remember
@@ -505,8 +601,8 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
             }
             eventTarget = eventFlatTreeParent(node, event);
         } else if (eventTarget->isWindow()) {
-            eventPath.push_back(
-                makeEventPathStruct(origin, eventTarget, false, false));
+            eventPath.push_back(makeEventPathStruct(
+                origin, eventTarget, originalRelatedTarget, false, false));
             break;
         } else {
             break;
@@ -517,102 +613,60 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
         EventPathStruct s;
         s.invocationTarget = origin;
         s.shadowAdjustedTarget = origin;
-        s.relatedTarget = NullOption;
+        s.relatedTarget = event->relatedTargetForDispatch();
         s.rootOfClosedTree = false;
         s.slotInClosedTree = false;
         eventPath.push_back(s);
     }
 #endif /* defined(STARFISH_WEBWORKER_NOT_HOST) */
 
-    // 5. Initialize event's eventPhase attribute to CAPTURING_PHASE.
-    // 1) Path : highest ancestor -> origin
-    // 6. For each object in event path, invoke its event listeners with event
-    // event, as long as event's stop propagation flag is unset.
-    event->setEventPhase(Event::CAPTURING_PHASE);
-
-    // If activationTarget is non-null and activationTarget has
-    // legacy-pre-activation behavior, then run activationTarget’s
-    // legacy-pre-activation behavior.
-    if (activationTarget) {
-        activationTarget->legacyPreActivationBehavior();
+    // "Clear targets" (see the full explanation further down) must be
+    // decided from the tree shape as it was AT THIS POINT -- right after
+    // building the path, before any listener runs. A listener can mutate the
+    // tree (move target in/out of a shadow tree) during dispatch; querying
+    // getRootNode() live at the end would answer based on the POST-mutation
+    // tree instead of the tree the path was actually built against. Snapshot
+    // it now into plain booleans so later mutation can't change the answer.
+    bool clearTargets = false;
+    if (!eventPath.empty()) {
+        const EventPathStruct& lastPathStruct = eventPath.back();
+        auto rootIsShadowRootNow = [](Optional<EventTarget*> t) {
+            return t && t.value()->isNode() &&
+                t.value()->asNode()->getRootNode()->isShadowRoot();
+        };
+        clearTargets =
+            rootIsShadowRootNow(lastPathStruct.shadowAdjustedTarget) ||
+            rootIsShadowRootNow(lastPathStruct.relatedTarget);
     }
 
-    for (size_t i = eventPath.size(); i > 1; i--) {
-        if (event->stopPropagationValue()) {
-            break;
-        }
-        const EventPathStruct& pathStruct = eventPath[i - 1];
-        EventTarget* eventTarget = pathStruct.invocationTarget;
-        // https://dom.spec.whatwg.org/#concept-event-dispatch "invoke":
-        // retarget event.target to this struct's shadow-adjusted target before
-        // calling its listeners.
-        event->setTarget(pathStruct.shadowAdjustedTarget.value());
-        auto originals = eventTarget->getEventListeners(event->type());
-        if (originals) {
-            // Iterate Copied Vector : listeners can be removed during iteration
-            GCVector<EventListener*> copies =
-                GCVector<EventListener*>(*originals);
-            for (auto listener : copies) {
-                STARFISH_ASSERT(listener);
-                if (event->stopImmediatePropagationValue()) {
-                    break;
-                }
-                if (listener->capture() && !listener->isRemoved()) {
-                    // STARFISH_LOG_INFO("[CAPTURING_PHASE] node: %s",
-                    // node->localName()->toUTF8NonGCString().data());
-                    event->setCurrentTarget(eventTarget);
-                    listener->call(event);
-                }
-            }
-        }
-    }
+    // Path shortening's empty-path case (stopBeforeNode matching origin
+    // itself, see above) means literally nothing is invoked -- not even
+    // listeners on origin itself skip straight past capture/target/bubble.
+    if (!suppressDispatchEntirely) {
+        // 5. Initialize event's eventPhase attribute to CAPTURING_PHASE.
+        // 1) Path : highest ancestor -> origin
+        // 6. For each object in event path, invoke its event listeners with
+        // event event, as long as event's stop propagation flag is unset.
+        event->setEventPhase(Event::CAPTURING_PHASE);
 
-    // 7. Initialize event's eventPhase attribute to AT_TARGET.
-    event->setEventPhase(Event::AT_TARGET);
-    // retarget(origin, origin) is always origin (a target always sees itself
-    // untargeted); restore it explicitly since the capture loop above may
-    // have left event.target retargeted to an ancestor's shadow-adjusted
-    // target.
-    event->setTarget(origin);
-
-    // 8. Invoke the event listeners of event's target attribute value with
-    // event, if event's stop propagation flag is unset.
-    auto originals = origin->getEventListeners(event->type());
-    if (originals) {
-        if (!event->stopPropagationValue()) {
-            // Iterate Copied Vector : listeners can be removed during iteration
-            GCVector<EventListener*> copies =
-                GCVector<EventListener*>(*originals);
-            for (auto listener : copies) {
-                STARFISH_ASSERT(listener);
-                if (event->stopImmediatePropagationValue()) {
-                    break;
-                }
-                if (!listener->isRemoved()) {
-                    // STARFISH_LOG_INFO("[AT_TARGET] node: %s",
-                    // origin->localName()->toUTF8NonGCString().data());
-                    event->setCurrentTarget(origin);
-                    listener->call(event);
-                }
-            }
+        // If activationTarget is non-null and activationTarget has
+        // legacy-pre-activation behavior, then run activationTarget’s
+        // legacy-pre-activation behavior.
+        if (activationTarget) {
+            activationTarget->legacyPreActivationBehavior();
         }
-    }
 
-    // 9. If event's bubbles attribute value is true, run these substeps:
-    // 1) Path : origin -> highest ancestor
-    // 2) Initialize event's eventPhase attribute to BUBBLING_PHASE.
-    // 3) For each object in event path, invoke its event listeners, with event
-    // event as long as event's stop propagation flag is unset.
-    if (event->bubbles()) {
-        event->setEventPhase(Event::BUBBLING_PHASE);
-        for (size_t i = 1; i < eventPath.size(); i++) {
+        for (size_t i = eventPath.size(); i > 1; i--) {
             if (event->stopPropagationValue()) {
                 break;
             }
-            const EventPathStruct& pathStruct = eventPath[i];
+            const EventPathStruct& pathStruct = eventPath[i - 1];
             EventTarget* eventTarget = pathStruct.invocationTarget;
-            // See the CAPTURING_PHASE loop above for the retargeting rationale.
+            // https://dom.spec.whatwg.org/#concept-event-dispatch "invoke":
+            // retarget event.target to this struct's shadow-adjusted target
+            // before calling its listeners.
             event->setTarget(pathStruct.shadowAdjustedTarget.value());
+            event->setRelatedTargetForDispatch(pathStruct.relatedTarget);
             auto originals = eventTarget->getEventListeners(event->type());
             if (originals) {
                 // Iterate Copied Vector : listeners can be removed during
@@ -624,8 +678,8 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                     if (event->stopImmediatePropagationValue()) {
                         break;
                     }
-                    if (!listener->capture() && !listener->isRemoved()) {
-                        // STARFISH_LOG_INFO("[BUBBLING_PHASE] node: %s",
+                    if (listener->capture() && !listener->isRemoved()) {
+                        // STARFISH_LOG_INFO("[CAPTURING_PHASE] node: %s",
                         // node->localName()->toUTF8NonGCString().data());
                         event->setCurrentTarget(eventTarget);
                         listener->call(event);
@@ -633,7 +687,87 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                 }
             }
         }
-    }
+
+        // 7. Initialize event's eventPhase attribute to AT_TARGET.
+        event->setEventPhase(Event::AT_TARGET);
+        // retarget(origin, origin) is always origin (a target always sees
+        // itself untargeted); restore it explicitly since the capture loop
+        // above may have left event.target retargeted to an ancestor's
+        // shadow-adjusted target. eventPath[0] is origin's own struct when
+        // present (see the build loop above), so its relatedTarget is the
+        // correspondingly-restored value; eventPath can still be empty here
+        // for a reason unrelated to path shortening (origin is neither a
+        // Node nor a Window, e.g. XMLHttpRequest, so the build loop never
+        // covered it at all) -- in that case relatedTarget was never
+        // retargeted to begin with, so leave it untouched.
+        event->setTarget(origin);
+        if (!eventPath.empty()) {
+            event->setRelatedTargetForDispatch(eventPath[0].relatedTarget);
+        }
+
+        // 8. Invoke the event listeners of event's target attribute value with
+        // event, if event's stop propagation flag is unset.
+        auto originals = origin->getEventListeners(event->type());
+        if (originals) {
+            if (!event->stopPropagationValue()) {
+                // Iterate Copied Vector : listeners can be removed during
+                // iteration
+                GCVector<EventListener*> copies =
+                    GCVector<EventListener*>(*originals);
+                for (auto listener : copies) {
+                    STARFISH_ASSERT(listener);
+                    if (event->stopImmediatePropagationValue()) {
+                        break;
+                    }
+                    if (!listener->isRemoved()) {
+                        // STARFISH_LOG_INFO("[AT_TARGET] node: %s",
+                        // origin->localName()->toUTF8NonGCString().data());
+                        event->setCurrentTarget(origin);
+                        listener->call(event);
+                    }
+                }
+            }
+        }
+
+        // 9. If event's bubbles attribute value is true, run these substeps:
+        // 1) Path : origin -> highest ancestor
+        // 2) Initialize event's eventPhase attribute to BUBBLING_PHASE.
+        // 3) For each object in event path, invoke its event listeners, with
+        // event event as long as event's stop propagation flag is unset.
+        if (event->bubbles()) {
+            event->setEventPhase(Event::BUBBLING_PHASE);
+            for (size_t i = 1; i < eventPath.size(); i++) {
+                if (event->stopPropagationValue()) {
+                    break;
+                }
+                const EventPathStruct& pathStruct = eventPath[i];
+                EventTarget* eventTarget = pathStruct.invocationTarget;
+                // See the CAPTURING_PHASE loop above for the retargeting
+                // rationale.
+                event->setTarget(pathStruct.shadowAdjustedTarget.value());
+                event->setRelatedTargetForDispatch(pathStruct.relatedTarget);
+                auto originals = eventTarget->getEventListeners(event->type());
+                if (originals) {
+                    // Iterate Copied Vector : listeners can be removed during
+                    // iteration
+                    GCVector<EventListener*> copies =
+                        GCVector<EventListener*>(*originals);
+                    for (auto listener : copies) {
+                        STARFISH_ASSERT(listener);
+                        if (event->stopImmediatePropagationValue()) {
+                            break;
+                        }
+                        if (!listener->capture() && !listener->isRemoved()) {
+                            // STARFISH_LOG_INFO("[BUBBLING_PHASE] node: %s",
+                            // node->localName()->toUTF8NonGCString().data());
+                            event->setCurrentTarget(eventTarget);
+                            listener->call(event);
+                        }
+                    }
+                }
+            }
+        }
+    } // if (!eventPath.empty())
 #if defined(STARFISH_WEBWORKER_NOT_HOST)
     if (event->defaultPrevented()) {
         if (event->type()->equals("keydown")) {
@@ -660,20 +794,13 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     }
 
     // https://dom.spec.whatwg.org/#dom-event-dispatchevent "clear targets":
-    // if the value external listeners would ultimately see as event's target
-    // still resolves into a shadow tree (never escaped to a light-DOM node),
-    // null it out so it isn't observable post-dispatch. retarget() is
-    // idempotent along the ancestor chain once it stops changing (see
-    // isShadowIncludingInclusiveAncestor's monotonicity), so eventPath's last
-    // entry always holds this outermost resolved value.
-    // relatedTarget/touch-target clearing is deferred to Phase C.
-    if (!eventPath.empty()) {
-        EventTarget* outermostTarget =
-            eventPath.back().shadowAdjustedTarget.value();
-        if (outermostTarget->isNode() &&
-            outermostTarget->asNode()->getRootNode()->isShadowRoot()) {
-            event->setTarget(nullptr);
-        }
+    // BOTH event's target and relatedTarget are nulled together (not
+    // independently per-field) when the pre-dispatch snapshot (clearTargets,
+    // computed above before any listener could mutate the tree) says so, so
+    // neither is observable post-dispatch.
+    if (clearTargets) {
+        event->setTarget(nullptr);
+        event->setRelatedTargetForDispatch(NullOption);
     }
     // https://dom.spec.whatwg.org/#dom-event-dispatchevent "empty event's
     // path": composedPath() called after dispatch must return an empty list.

@@ -21,14 +21,14 @@ http://web-platform.test:8000/shadow-dom/Element-interface-shadowRoot-attribute.
 http://web-platform.test:8000/shadow-dom/event-composed.html
 http://web-platform.test:8000/shadow-dom/event-composed-path-after-dom-mutation.html
 http://web-platform.test:8000/shadow-dom/event-composed-path.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/event-composed-path-with-related-target.html
+http://web-platform.test:8000/shadow-dom/event-composed-path-with-related-target.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/event-dispatch-order.tentative.html
 http://web-platform.test:8000/shadow-dom/event-inside-shadow-tree.html
 http://web-platform.test:8000/shadow-dom/event-inside-slotted-node.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/event-on-pseudo-element-crash.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/event-post-dispatch.html
 http://web-platform.test:8000/shadow-dom/event-post-dispatch-no-listeners.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/event-with-related-target.html
+http://web-platform.test:8000/shadow-dom/event-with-related-target.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/execcommand-insertList-in-shadow.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/Extensions-to-Event-Interface.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/focus-within-shadow.html
