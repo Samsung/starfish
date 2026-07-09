@@ -20,14 +20,17 @@
 #include "StarfishConfig.h"
 
 #include "platform/message_loop/RunLoopLibUV.h"
+#include "platform/message_loop/RunLoopGLib.h"
 #include "core/modules/message_loop/RunLoop.h"
 
 namespace Starfish {
 
 RunLoop* RunLoop::create()
 {
-#if defined(PORT_EVENTLOOP_BACKEND_LIBUV) || defined(STARFISH_ENABLE_WORKER)
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     return new RunLoopLibUV();
+#elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
+    return new RunLoopGLib();
 #else
     STARFISH_ASSERT_NOT_REACHED();
     return nullptr;

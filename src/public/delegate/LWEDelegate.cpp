@@ -146,6 +146,12 @@ void LWE::GetVersion(int* major, int* minor, int* patch)
     g_starfishInstance->version(major, minor, patch);
 }
 
+std::string LWE::GetStorageDirectoryPath()
+{
+    STARFISH_RELEASE_ASSERT(IsInitialized());
+    return g_starfishInstance->storageDirectoryPath();
+}
+
 } // namespace LWEDelegate
 
 extern "C" {
@@ -178,5 +184,12 @@ void LWEDelegate_LWE_SetGCFrequency(unsigned char freq)
 void LWEDelegate_LWE_GetVersion(int* major, int* minor, int* patch)
 {
     LWEDelegate::LWE::GetVersion(major, minor, patch);
+}
+
+const char* LWEDelegate_LWE_GetStorageDirectoryPath()
+{
+    static thread_local std::string path;
+    path = LWEDelegate::LWE::GetStorageDirectoryPath();
+    return path.c_str();
 }
 }

@@ -26,6 +26,7 @@
 #include "core/page/WebBase.h"
 
 #include "platform/message_loop/TimerGLib.h"
+#include "platform/message_loop/MessageLoopGLib.h"
 
 #include <glib.h>
 
@@ -67,22 +68,25 @@ size_t TimerGLib::addTimer(unsigned delay, GlobalScope* globalScope,
     td->m_data = data;
     td->m_handler = handler;
 
+    GMainContext* context = reinterpret_cast<GMainContext*>(glibMainContext());
+    GSource* source = g_timeout_source_new(delay);
+
     if (repetitive) {
-        td->m_timerID = g_timeout_add(
-            delay,
-            [](gpointer data) -> gboolean {
+        g_source_set_callback(
+            source,
+            (GSourceFunc)[](gpointer data)->gboolean {
                 TimeoutData* td = (TimeoutData*)data;
                 if (td->m_handler && td->m_timer && td->m_id && td->m_timerID) {
                     td->m_handler(td->m_data);
                 }
                 return G_SOURCE_CONTINUE;
             },
-            td);
-
+            td, nullptr);
+        td->m_timerID = g_source_attach(source, context);
     } else {
-        td->m_timerID = g_timeout_add(
-            delay,
-            [](gpointer data) -> gboolean {
+        g_source_set_callback(
+            source,
+            (GSourceFunc)[](gpointer data)->gboolean {
                 TimeoutData* td = (TimeoutData*)data;
                 TimerGLib* timer = td->m_timer;
                 int32_t id = td->m_id;
@@ -96,8 +100,10 @@ size_t TimerGLib::addTimer(unsigned delay, GlobalScope* globalScope,
                 }
                 return G_SOURCE_REMOVE;
             },
-            td);
+            td, nullptr);
+        td->m_timerID = g_source_attach(source, context);
     }
+    g_source_unref(source);
 
     m_timeoutHandler.insert(std::make_pair(id, td));
     return id;
@@ -106,11 +112,15 @@ size_t TimerGLib::addTimer(unsigned delay, GlobalScope* globalScope,
 void TimerGLib::removeTimer(size_t reqID)
 {
     STARFISH_RELEASE_ASSERT(isMainThread());
-
+    GMainContext* context = reinterpret_cast<GMainContext*>(glibMainContext());
     auto handlerData = m_timeoutHandler.find(reqID);
     if (handlerData != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)handlerData->second;
-        g_source_remove(td->m_timerID);
+        GSource* source =
+            g_main_context_find_source_by_id(context, td->m_timerID);
+        if (source) {
+            g_source_destroy(source);
+        }
         td->m_timer = nullptr;
         GC_FREE(td);
         m_timeoutHandler.erase(handlerData);
@@ -128,9 +138,12 @@ size_t TimerGLib::addAnimator(GlobalScope* globalScope,
     ad->m_data = data;
     ad->m_handler = handler;
     ad->m_globalScope = globalScope;
-    ad->m_timerID = g_timeout_add(
-        0,
-        [](gpointer data) -> gboolean {
+
+    GMainContext* context = reinterpret_cast<GMainContext*>(glibMainContext());
+    GSource* source = g_timeout_source_new(0);
+    g_source_set_callback(
+        source,
+        (GSourceFunc)[](gpointer data)->gboolean {
             AnimationTickData* ad = (AnimationTickData*)data;
             auto a = ad->m_timer->m_animationHandler.find(ad->m_id);
             if (ad->m_handler(ad->m_data)) {
@@ -140,11 +153,20 @@ size_t TimerGLib::addAnimator(GlobalScope* globalScope,
             if (ad->m_timer->m_animationHandler.end() != a) {
                 ad->m_timer->m_animationHandler.erase(a);
             }
-            g_source_remove(ad->m_timerID);
+            GMainContext* context =
+                reinterpret_cast<GMainContext*>(glibMainContext());
+            GSource* source =
+                g_main_context_find_source_by_id(context, ad->m_timerID);
+            if (source) {
+                g_source_destroy(source);
+            }
             GC_FREE(ad);
             return G_SOURCE_REMOVE;
         },
-        ad);
+        ad, nullptr);
+    ad->m_timerID = g_source_attach(source, context);
+    g_source_unref(source);
+
     m_animationHandler.insert(std::make_pair(id, ad));
     return id;
 }
@@ -152,11 +174,15 @@ size_t TimerGLib::addAnimator(GlobalScope* globalScope,
 void TimerGLib::removeGenericAnimator(size_t reqID)
 {
     STARFISH_RELEASE_ASSERT(isMainThread());
-
+    GMainContext* context = reinterpret_cast<GMainContext*>(glibMainContext());
     auto handlerData = m_animationHandler.find(reqID);
     if (handlerData != m_animationHandler.end()) {
         AnimationTickData* ad = (AnimationTickData*)handlerData->second;
-        g_source_remove(ad->m_timerID);
+        GSource* source =
+            g_main_context_find_source_by_id(context, ad->m_timerID);
+        if (source) {
+            g_source_destroy(source);
+        }
         GC_FREE(ad);
         m_animationHandler.erase(handlerData);
     }
@@ -165,13 +191,17 @@ void TimerGLib::removeGenericAnimator(size_t reqID)
 void TimerGLib::clear(GlobalScope* globalScope)
 {
     STARFISH_RELEASE_ASSERT(isMainThread());
-
+    GMainContext* context = reinterpret_cast<GMainContext*>(glibMainContext());
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)timerIter->second;
         if ((td->m_globalScope && td->m_globalScope == globalScope) ||
             globalScope == nullptr) {
-            g_source_remove(td->m_timerID);
+            GSource* source =
+                g_main_context_find_source_by_id(context, td->m_timerID);
+            if (source) {
+                g_source_destroy(source);
+            }
             td->m_timer = nullptr;
             GC_FREE(td);
             timerIter = m_timeoutHandler.erase(timerIter);
@@ -197,7 +227,11 @@ void TimerGLib::clear(GlobalScope* globalScope)
         AnimationTickData* ad = (AnimationTickData*)aniIter2->second;
         if ((ad->m_globalScope && ad->m_globalScope == globalScope) ||
             globalScope == nullptr) {
-            g_source_remove(ad->m_timerID);
+            GSource* source =
+                g_main_context_find_source_by_id(context, ad->m_timerID);
+            if (source) {
+                g_source_destroy(source);
+            }
             GC_FREE(ad);
             aniIter2 = m_animationHandler.erase(aniIter2);
         } else {
@@ -209,12 +243,16 @@ void TimerGLib::clear(GlobalScope* globalScope)
 void TimerGLib::destroy()
 {
     STARFISH_RELEASE_ASSERT(isMainThread());
-
+    GMainContext* context = reinterpret_cast<GMainContext*>(glibMainContext());
     STARFISH_LOG_INFO("TimerGLib::destroy");
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)timerIter->second;
-        g_source_remove(td->m_timerID);
+        GSource* source =
+            g_main_context_find_source_by_id(context, td->m_timerID);
+        if (source) {
+            g_source_destroy(source);
+        }
         td->m_timer = nullptr;
         GC_FREE(td);
         timerIter++;
@@ -232,7 +270,11 @@ void TimerGLib::destroy()
     auto aniIter2 = m_animationHandler.begin();
     while (aniIter2 != m_animationHandler.end()) {
         AnimationTickData* ad = (AnimationTickData*)aniIter2->second;
-        g_source_remove(ad->m_timerID);
+        GSource* source =
+            g_main_context_find_source_by_id(context, ad->m_timerID);
+        if (source) {
+            g_source_destroy(source);
+        }
         GC_FREE(ad);
         aniIter2++;
     }

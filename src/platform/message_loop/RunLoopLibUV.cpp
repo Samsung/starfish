@@ -18,7 +18,7 @@
  */
 
 #include "StarfishPlatform.h"
-#if defined(PORT_EVENTLOOP_BACKEND_LIBUV) || defined(STARFISH_ENABLE_WORKER)
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
 
 #include "StarfishConfig.h"
 
