@@ -86,16 +86,16 @@ css/css-paint-api
 css/css-parser-api
 css/css-image-animation
 css/fetching
-# Disabled: reftest-only specs with no testharness tests (this report runs
-# only items["testharness"], so these always enumerate 0 and add no signal).
-# css/CSS1
-# css/css-gcpm
-# css/css-namespaces
-# css/css-round-display
-# css/css-speech
-# css/css-style-attr
-# css/printing
-# css/WOFF2
+# Reftest-only specs (no testharness tests here, so they enumerate 0 tasks
+# and add no signal unless --test-types includes reftest/crashtest).
+css/CSS1
+css/css-gcpm
+css/css-namespaces
+css/css-round-display
+css/css-speech
+css/css-style-attr
+css/printing
+css/WOFF2
 
 # --- DOM / HTML ---
 dom
@@ -174,10 +174,11 @@ mathml
 media-capabilities
 webvtt
 imagebitmap-renderingcontext
-# Disabled: no testharness tests at these paths (images/fonts are reftest-only;
-# bare "media" is not a WPT spec dir -- see media-* dirs instead).
-# images
-# fonts
+# images/fonts are reftest-only (no testharness tests here, see the note
+# above). "media" is not a WPT spec dir -- see media-* dirs instead -- so it
+# stays disabled.
+images
+fonts
 # media
 
 # --- Encoding / URL ---

@@ -84,6 +84,8 @@ jobs:
 
       - name: Prepare test environment
         run: |
+          mkdir -p ~/.fonts
+          cp /root/workspace/Ahem.ttf ~/.fonts
           chmod a+x $PWD/out/debug/bin/lightweight-web-engine
           ln -s -f $PWD/out/debug/bin/lightweight-web-engine Starfish
           ln -s -f $PWD/out/debug/lib/libnanomsg.so ./out/debug/lib/libnanomsg.so.5
@@ -92,13 +94,20 @@ jobs:
           ln -s -f $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.3
           ln -s -f $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.3
 
+      # reftest needs the pixel-diff tool (see tool/wpt_reftest.py); mirrors
+      # x64_test.yml's test_wpt_serve_reftest job.
+      - name: Build image diff tool
+        run: |
+          cmake build/test -G Ninja
+          ninja install_pixel_test_dep
+
       - name: Setup WPT hosts file
         run: python3.9 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts
 
       - name: Generate WPT status report
         run: |
           xvfb-run -s '-screen 0 1920x1080x24' -a python3.9 tool/wpt_status.py \
-            -j16 --timeout 15 \
+            -j16 --timeout 15 --test-types testharness,reftest,crashtest \
             -o report-$(date +%Y%m%d).html \
             --output-json metrics.json
 

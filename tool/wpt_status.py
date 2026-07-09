@@ -19,10 +19,16 @@ Unlike tool/wpt_runner.py (which runs the CI-gate `.res` lists, always ~100%
 pass), this runs *un-curated* spec directories so the report reveals where
 Starfish is strong or weak per spec area.
 
-It enumerates testharness tests from third_party/wpt/MANIFEST.json for each
-directory in tool/wpt_status_targets.txt, runs them in the Starfish shell under
-an on-demand `wpt serve`, and writes a self-contained HTML report grouped by
+It enumerates tests from third_party/wpt/MANIFEST.json for each directory in
+tool/wpt_status_targets.txt, runs them in the Starfish shell under an
+on-demand `wpt serve`, and writes a self-contained HTML report grouped by
 spec category. No external reporting dependency (mozlog / wptrunner) is used.
+
+By default only testharness is run; --test-types also accepts reftest and/or
+crashtest (comma-separated), reusing wpt_runner.py's run_one_reftest /
+run_one_crashtest for those. testharness is scored at the subtest level
+(wpt.fyi's rule); reftest/crashtest have no subtests, so each test is simply
+1 pass or 1 fail.
 
 The per-test result keeps each subtest's name and status, so a future
 `render_wptreport()` (wpt.fyi format) can be added without re-running anything.
@@ -31,6 +37,9 @@ The per-test result keeps each subtest's name and status, so a future
       python3 tool/wpt_status.py --only css/selectors --limit 30 -o report.html
     xvfb-run -s '-screen 0 1920x1080x24' -a \
       python3 tool/wpt_status.py -j8 -o report.html
+    xvfb-run -s '-screen 0 1920x1080x24' -a \
+      python3 tool/wpt_status.py --test-types testharness,reftest,crashtest \
+      -o report.html --output-json metrics.json
 """
 
 import json
@@ -44,11 +53,17 @@ from html import escape
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from wpt_server import wpt_serve, DEFAULT_WPT_ROOT  # noqa: E402
-from wpt_runner import RE_PASS, RE_FAIL, RE_DONE, STARFISH  # noqa: E402
-# Re-exported for existing callers (wpt_manifest_lists.py, test_runner.py);
-# actually defined in wpt_reftest.py, the lowest-level module that needs it,
-# so no module here needs a deferred/circular-avoiding import for it.
-from wpt_reftest import ensure_manifest  # noqa: E402,F401
+from wpt_runner import (RE_PASS, RE_FAIL, RE_DONE, STARFISH,  # noqa: E402
+                        run_one_reftest, run_one_crashtest)
+# ensure_manifest is re-exported for existing callers (wpt_manifest_lists.py,
+# test_runner.py); actually defined in wpt_reftest.py, the lowest-level module
+# that needs it, so no module here needs a deferred/circular-avoiding import
+# for it. load_manifest/ensure_imgdiff are reftest's own prerequisites (see
+# main()'s reftest setup, mirroring wpt_runner.py's --mode reftest path).
+from wpt_reftest import (ensure_manifest, load_manifest,  # noqa: E402,F401
+                         ensure_imgdiff)
+
+TEST_TYPES = ("testharness", "reftest", "crashtest")
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_TARGETS = os.path.join(REPO_ROOT, "tool", "wpt_status_targets.txt")
@@ -149,12 +164,26 @@ def enumerate_tests(manifest_path, targets, test_type="testharness"):
     return by_category, missing
 
 
-def run_test(url, timeout):
+def run_test(url, timeout, test_type="testharness", manifest=None):
     """Run one test in the Starfish shell; return a result dict.
 
-    Subtests are kept by name+status (not just counts) so the same data can
-    later be rendered as a wpt.fyi-format wptreport.
+    testharness parses WPTR PASS/FAIL/DONE lines and keeps each subtest's
+    name+status (not just counts) so the same data can later be rendered as a
+    wpt.fyi-format wptreport. reftest/crashtest have no subtests, so this
+    reuses wpt_runner.py's run_one_reftest/run_one_crashtest (whole-file
+    pass/fail) instead of duplicating their capture/diff or crash-marker
+    mechanisms here; the result is normalized to the same dict shape so
+    verdict()/score() work unchanged across all three types.
     """
+    if test_type == "reftest":
+        ok, reason, _, _ = run_one_reftest(url, timeout, manifest)
+        return {"status": "OK" if ok else reason, "subtests": [],
+                "message": None if ok else reason}
+    if test_type == "crashtest":
+        ok, reason, _, _ = run_one_crashtest(url, timeout)
+        return {"status": "OK" if ok else reason, "subtests": [],
+                "message": None if ok else reason}
+
     cmd = [STARFISH, url, "--hide-window", "--width=800", "--height=600"]
     env = dict(os.environ)
     env["HIDE_WINDOW"] = "1"
@@ -189,11 +218,16 @@ def run_test(url, timeout):
             "subtests": subtests, "message": None}
 
 
-def verdict(result):
-    """Pass/fail of a whole test, matching wpt_runner's criteria."""
+def verdict(result, test_type="testharness"):
+    """Pass/fail of a whole test, matching wpt_runner's criteria.
+
+    reftest/crashtest have no subtests by design -- an "OK" status alone is
+    a pass for them (see run_test()) -- so the NO_SUBTESTS rule below only
+    applies to testharness.
+    """
     if result["status"] != "OK":
         return False, result["status"]
-    if not result["subtests"]:
+    if test_type == "testharness" and not result["subtests"]:
         return False, "NO_SUBTESTS"
     if any(s["status"] == "FAIL" for s in result["subtests"]):
         return False, "SUBTESTS_FAILED"
@@ -217,23 +251,24 @@ def score(result):
     return (1, 1) if result["status"] in ("OK", "PASS") else (0, 1)
 
 
-def run_all(tasks, jobs, timeout):
-    """tasks: [(category, url)]; returns list of result dicts with verdicts."""
+def run_all(tasks, jobs, timeout, manifest=None):
+    """tasks: [(category, url, test_type)]; returns result dicts w/ verdicts."""
     results = []
     total = len(tasks)
     done_n = 0
     with ThreadPoolExecutor(max_workers=jobs) as ex:
-        futs = {ex.submit(run_test, url, timeout): (cat, url)
-                for cat, url in tasks}
+        futs = {ex.submit(run_test, url, timeout, ttype, manifest):
+                (cat, url, ttype) for cat, url, ttype in tasks}
         for fut in as_completed(futs):
-            cat, url = futs[fut]
+            cat, url, ttype = futs[fut]
             r = fut.result()
-            ok, reason = verdict(r)
-            r.update({"category": cat, "url": url, "ok": ok, "reason": reason})
+            ok, reason = verdict(r, ttype)
+            r.update({"category": cat, "url": url, "type": ttype,
+                      "ok": ok, "reason": reason})
             results.append(r)
             done_n += 1
             mark = "PASS" if ok else "FAIL"
-            print("[%4d/%d] %s %s" % (done_n, total, mark, url))
+            print("[%4d/%d] %s %s %s" % (done_n, total, mark, ttype, url))
     return results
 
 
@@ -355,9 +390,15 @@ def render_node(name, node, parts):
             cls = "pass" if r["ok"] else "fail"
             np, nt = score(r)
             rrate = (np / nt) if nt else 0.0
-            detail = "%d/%d subtests" % (np, nt)
-            if not r["ok"] and r["reason"] not in ("SUBTESTS_FAILED", "OK"):
-                detail = r["reason"]
+            # reftest/crashtest have no subtests (score() always returns
+            # (1, 1) or (0, 1) for them, see score()'s docstring), so an
+            # "N/N subtests" detail would be misleading -- just say PASS/FAIL.
+            if r.get("type", "testharness") != "testharness":
+                detail = "OK" if r["ok"] else r["reason"]
+            else:
+                detail = "%d/%d subtests" % (np, nt)
+                if not r["ok"] and r["reason"] not in ("SUBTESTS_FAILED", "OK"):
+                    detail = r["reason"]
             leaf = r["url"][len(SERVER):].rstrip("/").rsplit("/", 1)[-1]
             parts.append('<tr class="%s" data-name="%s" data-pass="%d" '
                          'data-total="%d" data-rate="%.6f">'
@@ -370,33 +411,35 @@ def render_node(name, node, parts):
     parts.append("</details>")
 
 
-def render_html(results, generated_at, missing, revision=None):
-    # Subtest-level totals, matching wpt.fyi's classification (see score()).
-    passed = sum(score(r)[0] for r in results)
-    total = sum(score(r)[1] for r in results)
-    pct = (100.0 * passed / total) if total else 0.0
+def render_html(results, generated_at, missing, revision=None, test_types=None):
+    """Render the report; one section per requested test type.
+
+    testharness is scored at the subtest level (wpt.fyi's rule, see score());
+    reftest/crashtest have no subtests, so each is simply 1 pass or 1 fail.
+    The single-type (testharness-only) case keeps the original flat layout
+    (no per-type <h2>) since that's still the default/most common invocation.
+    """
+    test_types = list(test_types) if test_types else ["testharness"]
 
     parts = [HTML_HEAD]
     parts.append("<h1>Starfish WPT status</h1>")
-    # wpt.fyi-style "N tests (M subtests)" so the file count and subtest count
-    # are both visible (a smaller total here is scope, not a regression).
-    parts.append('<div class="meta">Generated {date} &middot; Showing '
-                 "{files:,} tests ({total:,} subtests) &middot; "
-                 "{passed:,}/{total:,} subtests passed ({pct:.1f}%) "
-                 "&middot; comparable to wpt.fyi</div>"
-                 .format(date=escape(generated_at), files=len(results),
-                         total=total, passed=passed, pct=pct))
-    parts.append('<div class="meta">WPT revision: <strong>%s</strong></div>'
-                 % escape(revision or "unknown"))
-    parts.append('<div class="bar"><span style="width:%.2f%%"></span></div>'
-                 % pct)
-    parts.append('<div class="meta">Counts <strong>testharness</strong> '
-                 "subtests only (reftest / crashtest / wdspec excluded), so "
-                 "the total test count looks smaller than wpt.fyi's full set; "
-                 "read the comparison at the subtest level.</div>")
+    parts.append('<div class="meta">Generated {date} &middot; WPT revision: '
+                 "<strong>{rev}</strong></div>"
+                 .format(date=escape(generated_at), rev=escape(revision or "unknown")))
     if missing:
-        parts.append('<div class="meta">Not in manifest (skipped): %s</div>'
-                     % escape(", ".join(missing)))
+        parts.append('<div class="meta">Not in manifest for any requested '
+                     "type (skipped): %s</div>" % escape(", ".join(missing)))
+    if test_types == ["testharness"]:
+        parts.append('<div class="meta">Counts <strong>testharness</strong> '
+                     "subtests only (reftest / crashtest / wdspec excluded), so "
+                     "the total test count looks smaller than wpt.fyi's full set; "
+                     "read the comparison at the subtest level.</div>")
+    else:
+        parts.append('<div class="meta">Includes <strong>%s</strong> '
+                     "(wdspec still excluded). testharness is counted at the "
+                     "subtest level (wpt.fyi rule); reftest/crashtest are "
+                     "whole-file pass/fail (no subtests).</div>"
+                     % escape(", ".join(test_types)))
     parts.append('<label class="toggle"><input type="checkbox" '
                  'onchange="failOnly(this)"> Show failures only</label>')
     parts.append('<div class="toggle">Sort: '
@@ -407,30 +450,37 @@ def render_html(results, generated_at, missing, revision=None):
                  '<option value="asc">Ascending</option>'
                  '<option value="desc">Descending</option></select></div>')
 
-    root = build_tree(results)
-    for name in sorted(root["dirs"]):
-        render_node(name, root["dirs"][name], parts)
+    for ttype in test_types:
+        rs = [r for r in results if r.get("type", "testharness") == ttype]
+        # wpt.fyi-style "N tests (M subtests)" so the file count and subtest
+        # count are both visible (a smaller total here is scope, not a
+        # regression).
+        passed = sum(score(r)[0] for r in rs)
+        total = sum(score(r)[1] for r in rs)
+        pct = (100.0 * passed / total) if total else 0.0
+        if len(test_types) > 1:
+            parts.append("<h2>%s</h2>" % escape(ttype))
+        tail = " &middot; comparable to wpt.fyi" if ttype == "testharness" else ""
+        parts.append('<div class="meta">Showing {files:,} tests ({total:,} '
+                     "subtests) &middot; {passed:,}/{total:,} subtests passed "
+                     "({pct:.1f}%){tail}</div>"
+                     .format(files=len(rs), total=total, passed=passed,
+                             pct=pct, tail=tail))
+        parts.append('<div class="bar"><span style="width:%.2f%%"></span></div>'
+                     % pct)
+        root = build_tree(rs)
+        for name in sorted(root["dirs"]):
+            render_node(name, root["dirs"][name], parts)
+
     parts.append("</body></html>")
     return "".join(parts)
 
 
-def extract_metrics(results, now=None, revision=None):
-    """Extract metrics from test results for dashboard JSON.
-
-    passed/failed/total/rate are at the *subtest* level (see score()), so the
-    dashboard numbers are comparable to wpt.fyi. files_passed/files_total keep
-    the per-test-file view for our own diagnostics, and categories holds the
-    per-spec-dir [passed, total] subtest breakdown (used by the browser
-    comparison in Phase 2). wpt_revision records which WPT checkout produced
-    these numbers so historical entries stay interpretable across submodule
-    bumps.
-
-    now: datetime to use (defaults to datetime.now()); pass the same value
-    used for the HTML report so timestamps are consistent.
-    revision: WPT version string (see wpt_revision()).
+def _summarize(results):
+    """Subtest-level (passed, failed, total, rate, files_*, categories) for
+    one set of results -- the same shape as the top-level metrics dict, so
+    it can be reused per-type in the "types" breakdown below.
     """
-    if now is None:
-        now = datetime.now()
     passed = sum(score(r)[0] for r in results)
     total = sum(score(r)[1] for r in results)
     categories = {}
@@ -440,9 +490,6 @@ def extract_metrics(results, now=None, revision=None):
         agg[0] += p
         agg[1] += t
     return {
-        "date": now.strftime("%Y-%m-%d"),
-        "time": now.strftime("%H:%M:%S"),
-        "timestamp": int(now.timestamp()),
         "passed": passed,
         "failed": total - passed,
         "total": total,
@@ -450,8 +497,56 @@ def extract_metrics(results, now=None, revision=None):
         "files_passed": sum(1 for r in results if r["ok"]),
         "files_total": len(results),
         "categories": categories,
+    }
+
+
+def extract_metrics(results, now=None, revision=None, test_types=None):
+    """Extract metrics from test results for dashboard JSON.
+
+    The top-level fields are the union across every type actually run:
+    testharness contributes its subtest-level (passed, total) (see score());
+    reftest/crashtest each contribute whole-file (1, 1) or (0, 1) per test.
+    Summing these into one number blends two different units (subtest vs.
+    file), but that's the tradeoff for the dashboard's trend charts and
+    Recent Reports table to reflect the *whole* run rather than testharness
+    alone -- see [[wpt-status-board]]/the dashboard note for the caveat.
+    files_passed/files_total keep the per-test-file view for our own
+    diagnostics, and categories holds the per-spec-dir [passed, total]
+    breakdown (used by the browser comparison in Phase 2). wpt_revision
+    records which WPT checkout produced these numbers so historical entries
+    stay interpretable across submodule bumps.
+
+    Older data.json entries (predating reftest/crashtest) only ever ran
+    testharness, so their combined total already equals their testharness
+    total -- no migration needed. When test_types requests more than just
+    testharness, an additional "types" key holds the same breakdown split
+    out per type (testharness included, for symmetry).
+
+    now: datetime to use (defaults to datetime.now()); pass the same value
+    used for the HTML report so timestamps are consistent.
+    revision: WPT version string (see wpt_revision()).
+    test_types: test kinds that were actually run (defaults to
+    ["testharness"], matching the pre-existing behavior).
+    """
+    if now is None:
+        now = datetime.now()
+    test_types = list(test_types) if test_types else ["testharness"]
+
+    metrics = {
+        "date": now.strftime("%Y-%m-%d"),
+        "time": now.strftime("%H:%M:%S"),
+        "timestamp": int(now.timestamp()),
         "wpt_revision": revision or "unknown",
     }
+    metrics.update(_summarize(results))
+
+    if test_types != ["testharness"]:
+        metrics["types"] = {
+            t: _summarize([r for r in results
+                          if r.get("type", "testharness") == t])
+            for t in test_types
+        }
+    return metrics
 
 
 def main(argv):
@@ -474,30 +569,62 @@ def main(argv):
                    help="JSON metrics file (for dashboard)")
     p.add_argument("--no-serve", action="store_true",
                    help="assume a server is already running")
+    p.add_argument("--test-types", default="testharness",
+                   help="comma-separated MANIFEST.json branches to run: "
+                        "testharness, reftest, crashtest (default: "
+                        "testharness)")
     args = p.parse_args(argv)
+
+    test_types = [t.strip() for t in args.test_types.split(",") if t.strip()]
+    for t in test_types:
+        if t not in TEST_TYPES:
+            p.error("--test-types: unknown type %r (choose from %s)"
+                    % (t, ", ".join(TEST_TYPES)))
+    if not test_types:
+        p.error("--test-types: at least one type is required")
 
     targets = args.only if args.only else read_targets(args.targets)
     manifest = args.manifest or os.path.join(args.wpt_root, "MANIFEST.json")
     ensure_manifest(args.wpt_root, manifest)
-    by_category, missing = enumerate_tests(manifest, targets)
 
+    reftest_manifest = None
+    if "reftest" in test_types:
+        # Mirrors wpt_runner.py's --mode reftest setup: imgdiff for the pixel
+        # compare, plus the parsed manifest run_one_reftest() needs to
+        # resolve each test's reference/relation/fuzzy at run time.
+        ensure_imgdiff()
+        reftest_manifest = load_manifest(args.wpt_root)
+
+    # Enumerate every requested type up front. A target dir absent from one
+    # type's branch is normal (most spec dirs are testharness-only, some are
+    # reftest-only) -- only a dir missing from *every* requested branch is
+    # worth a warning.
     tasks = []
-    for cat in targets:
-        urls = by_category.get(cat, [])
-        if args.limit:
-            urls = urls[:args.limit]
-        tasks.extend((cat, u) for u in urls)
+    missing_by_type = {}
+    for ttype in test_types:
+        by_category, missing = enumerate_tests(manifest, targets, ttype)
+        missing_by_type[ttype] = set(missing)
+        for cat in targets:
+            urls = by_category.get(cat, [])
+            if args.limit:
+                urls = urls[:args.limit]
+            tasks.extend((cat, u, ttype) for u in urls)
+    missing = sorted(set.intersection(*missing_by_type.values()))
 
     if missing:
-        print("WARNING: not found in manifest: %s" % ", ".join(missing))
-    print("Enumerated %d testharness tests across %d categories"
-          % (len(tasks), len([c for c in targets if c not in missing])))
+        print("WARNING: not found in manifest for any requested type: %s"
+              % ", ".join(missing))
+    for ttype in test_types:
+        n = sum(1 for _, _, t in tasks if t == ttype)
+        cats = len([c for c in targets if c not in missing_by_type[ttype]])
+        print("Enumerated %d %s tests across %d categories"
+              % (n, ttype, cats))
     if not tasks:
         print("No tests to run.")
         return 1
 
     def go():
-        return run_all(tasks, args.jobs, args.timeout)
+        return run_all(tasks, args.jobs, args.timeout, reftest_manifest)
 
     if args.no_serve:
         results = go()
@@ -508,7 +635,7 @@ def main(argv):
     revision = wpt_revision(args.wpt_root)
     generated_at_dt = datetime.now()
     generated_at = generated_at_dt.strftime("%Y-%m-%d %H:%M:%S")
-    html = render_html(results, generated_at, missing, revision)
+    html = render_html(results, generated_at, missing, revision, test_types)
     with open(args.output, "w") as fp:
         fp.write(html)
 
@@ -519,7 +646,7 @@ def main(argv):
           % (args.output, sub_pass, sub_total, files_pass, len(results)))
 
     if args.output_json:
-        metrics = extract_metrics(results, generated_at_dt, revision)
+        metrics = extract_metrics(results, generated_at_dt, revision, test_types)
         with open(args.output_json, "w") as fp:
             json.dump(metrics, fp, indent=2)
         print("Wrote %s" % args.output_json)
