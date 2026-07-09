@@ -42,7 +42,11 @@ Timer* Timer::create(WebBase* webBase)
 #if defined(STARFISH_ENABLE_WORKER)
 Timer* Timer::createForWorker(WebBase* webBase)
 {
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     return new TimerLibUV(webBase);
+#elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
+    return new TimerGLib(webBase);
+#endif
 }
 #endif
 

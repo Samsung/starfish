@@ -16,7 +16,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#if defined(PORT_EVENTLOOP_BACKEND_LIBUV) || defined(STARFISH_ENABLE_WORKER)
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
 
 #ifndef __StarfishTimerLibUV__
 #define __StarfishTimerLibUV__

@@ -16,25 +16,48 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
+#if defined(PORT_EVENTLOOP_BACKEND_GLIB) || defined(STARFISH_ENABLE_WORKER)
 
-#include "StarfishConfig.h"
+#ifndef __StarfishRunLoopGLib__
+#define __StarfishRunLoopGLib__
 
-#include "platform/message_loop/RunLoopLibUV.h"
-#include "platform/message_loop/RunLoopGLib.h"
 #include "core/modules/message_loop/RunLoop.h"
 
 namespace Starfish {
 
-RunLoop* RunLoop::create()
-{
-#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
-    return new RunLoopLibUV();
-#elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
-    return new RunLoopGLib();
-#else
-    STARFISH_ASSERT_NOT_REACHED();
-    return nullptr;
-#endif
-}
+class RunLoopGLib final : public RunLoop {
+    friend class RunLoop;
+
+public:
+    RunLoopGLib(bool referMainContext = false);
+
+    ~RunLoopGLib();
+
+    void* mainContext()
+    {
+        return m_context;
+    }
+    void* mainLoop()
+    {
+        return m_loop;
+    }
+
+    void run() override;
+    void stop() override;
+
+private:
+    void* m_context;
+    void* m_loop;
+    bool m_ownsContext;
+    bool m_running;
+};
+
+extern Optional<RunLoopGLib*> g_threadedMainRunLoop;
+
+void* glibMainContext();
 
 } // namespace Starfish
+
+#endif
+
+#endif

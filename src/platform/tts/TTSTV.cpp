@@ -35,7 +35,7 @@
 #include "core/modules/tts/TTS.h"
 #include "core/modules/tts/SpeechSynthesisEvent.h"
 #include "core/modules/profiling/Profiling.h"
-
+#include "platform/message_loop/RunLoopGLib.h"
 #include <vconf/vconf.h>
 #include <glib.h>
 
@@ -388,9 +388,15 @@ void TTS::initialize()
 
     if (m_handle == NULL) {
         guint* idleIdPtr = new guint(0);
-        guint callbackId = g_idle_add_full(
-            G_PRIORITY_DEFAULT,
-            [](gpointer data) -> gboolean {
+
+        GMainContext* context =
+            reinterpret_cast<GMainContext*>(glibMainContext());
+        GSource* source = g_idle_source_new();
+        g_source_set_ready_time(source, -1);
+        g_source_set_priority(source, G_PRIORITY_DEFAULT);
+        g_source_set_callback(
+            source,
+            (GSourceFunc)[](gpointer data)->gboolean {
                 std::pair<TTS*, guint*>* pair = (std::pair<TTS*, guint*>*)data;
                 TTS* t = pair->first;
                 guint* idleIdPtr = pair->second;
@@ -408,6 +414,10 @@ void TTS::initialize()
                 delete pair->second;
                 delete pair;
             });
+        guint callbackId = g_source_attach(source, context);
+        g_source_set_ready_time(source, 0);
+        g_source_unref(source);
+
         addCallbackId(callbackId);
         *idleIdPtr = callbackId;
     }
@@ -486,7 +496,12 @@ void TTS::destroy()
     STARFISH_LOG_ERROR("[TTS] TTS::destroy");
 
     for (guint id : m_callbackIds) {
-        g_source_remove(id);
+        GMainContext* context =
+            reinterpret_cast<GMainContext*>(glibMainContext());
+        GSource* source = g_main_context_find_source_by_id(context, id);
+        if (source) {
+            g_source_destroy(source);
+        }
     }
     clearCallbackIds();
 
@@ -726,9 +741,13 @@ void TTS::speech(SpeechSynthesisUtterance* utterance)
     d->u = utterance;
     d->callbackId = new guint(0);
 
-    guint callbackId = g_idle_add_full(
-        G_PRIORITY_DEFAULT,
-        [](gpointer data) -> gboolean {
+    GMainContext* context = reinterpret_cast<GMainContext*>(glibMainContext());
+    GSource* source = g_idle_source_new();
+    g_source_set_ready_time(source, -1);
+    g_source_set_priority(source, G_PRIORITY_DEFAULT);
+    g_source_set_callback(
+        source,
+        (GSourceFunc)[](gpointer data)->gboolean {
             Dummy* d = (Dummy*)data;
             TTS* t = d->t;
             t->removeCallbackId(*d->callbackId);
@@ -752,6 +771,10 @@ void TTS::speech(SpeechSynthesisUtterance* utterance)
             delete d->callbackId;
             delete d;
         });
+    guint callbackId = g_source_attach(source, context);
+    g_source_set_ready_time(source, 0);
+    g_source_unref(source);
+
     addCallbackId(callbackId);
     *d->callbackId = callbackId;
 }

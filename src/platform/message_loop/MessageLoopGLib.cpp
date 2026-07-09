@@ -28,6 +28,7 @@
 #include "core/modules/threading/Mutex.h"
 #include "core/page/GlobalScope.h"
 #include "platform/message_loop/MessageLoopGLib.h"
+#include "platform/message_loop/RunLoopGLib.h"
 
 #include <glib.h>
 #include <unistd.h>
@@ -43,6 +44,11 @@ static bool isSystemMainThread()
 }
 
 MessageLoopGLib::MessageLoopGLib()
+    : MessageLoop()
+{
+}
+
+MessageLoopGLib::MessageLoopGLib(RunLoopGLib* loop)
     : MessageLoop()
 {
 }
@@ -72,7 +78,8 @@ void MessageLoopGLib::destroy()
             }
         }
 
-        g_main_context_iteration(nullptr, FALSE);
+        g_main_context_iteration(
+            reinterpret_cast<GMainContext*>(glibMainContext()), FALSE);
     }
     {
         Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
@@ -108,9 +115,11 @@ size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
     id->m_data = data;
     id->m_ml = this;
     id->m_globalScope = globalScope;
-    id->m_idler = g_timeout_add(
-        0,
-        [](gpointer data) -> gboolean {
+
+    GSource* source = g_timeout_source_new(0);
+    g_source_set_callback(
+        source,
+        (GSourceFunc)[](gpointer data)->gboolean {
             IdlerData* id = (IdlerData*)data;
             if (removeIderFromList(id->m_ml->m_idlers, id)) {
                 id->m_fn((size_t)id, id->m_data);
@@ -118,7 +127,10 @@ size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
             }
             return G_SOURCE_REMOVE;
         },
-        id);
+        id, nullptr);
+    id->m_idler = g_source_attach(
+        source, reinterpret_cast<GMainContext*>(glibMainContext()));
+    g_source_unref(source);
 
     return (size_t)id;
 }
@@ -136,9 +148,11 @@ size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
     id->m_data1 = data1;
     id->m_ml = this;
     id->m_globalScope = globalScope;
-    id->m_idler = g_timeout_add(
-        0,
-        [](gpointer data) -> gboolean {
+
+    GSource* source = g_timeout_source_new(0);
+    g_source_set_callback(
+        source,
+        (GSourceFunc)[](gpointer data)->gboolean {
             IdlerData* id = (IdlerData*)data;
 
             if (removeIderFromList(id->m_ml->m_idlers, id)) {
@@ -148,7 +162,10 @@ size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
             }
             return G_SOURCE_REMOVE;
         },
-        id);
+        id, nullptr);
+    id->m_idler = g_source_attach(
+        source, reinterpret_cast<GMainContext*>(glibMainContext()));
+    g_source_unref(source);
 
     return (size_t)id;
 }
@@ -167,9 +184,11 @@ size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
     id->m_data2 = data2;
     id->m_ml = this;
     id->m_globalScope = globalScope;
-    id->m_idler = g_timeout_add(
-        0,
-        [](gpointer data) -> gboolean {
+
+    GSource* source = g_timeout_source_new(0);
+    g_source_set_callback(
+        source,
+        (GSourceFunc)[](gpointer data)->gboolean {
             IdlerData* id = (IdlerData*)data;
             if (removeIderFromList(id->m_ml->m_idlers, id)) {
                 ((void (*)(size_t, void*, void*, void*))id->m_fn)(
@@ -178,7 +197,10 @@ size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
             }
             return G_SOURCE_REMOVE;
         },
-        id);
+        id, nullptr);
+    id->m_idler = g_source_attach(
+        source, reinterpret_cast<GMainContext*>(glibMainContext()));
+    g_source_unref(source);
 
     return (size_t)id;
 }
@@ -204,9 +226,12 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
     // g_timeout_add(0) (an EFL elm-shutdown workaround carried through the
     // GLib port), costing an extra main-context iteration per posting. It
     // runs at G_PRIORITY_DEFAULT, same as the old g_timeout_add(0) source.
-    g_idle_add_full(
-        G_PRIORITY_HIGH,
-        [](gpointer data) -> gboolean {
+    GSource* source = g_idle_source_new();
+    g_source_set_ready_time(source, -1);
+    g_source_set_priority(source, G_PRIORITY_HIGH);
+    g_source_set_callback(
+        source,
+        (GSourceFunc)[](gpointer data)->gboolean {
             IdlerData* id = (IdlerData*)data;
             if (!id->m_isDestroyed) {
                 if (id->m_ml && id->m_ml->m_idlersFromOtherThreadMutex) {
@@ -222,7 +247,11 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
             delete id;
             return G_SOURCE_REMOVE;
         },
-        id, NULL);
+        id, nullptr);
+    id->m_idler = g_source_attach(
+        source, reinterpret_cast<GMainContext*>(glibMainContext()));
+    g_source_set_ready_time(source, 0);
+    g_source_unref(source);
     return (size_t)id;
 }
 
@@ -249,9 +278,12 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
     // g_timeout_add(0) (an EFL elm-shutdown workaround carried through the
     // GLib port), costing an extra main-context iteration per posting. It
     // runs at G_PRIORITY_DEFAULT, same as the old g_timeout_add(0) source.
-    g_idle_add_full(
-        G_PRIORITY_HIGH,
-        [](gpointer data) -> gboolean {
+    GSource* source = g_idle_source_new();
+    g_source_set_ready_time(source, -1);
+    g_source_set_priority(source, G_PRIORITY_HIGH);
+    g_source_set_callback(
+        source,
+        (GSourceFunc)[](gpointer data)->gboolean {
             IdlerData* id = (IdlerData*)data;
             if (!id->m_isDestroyed) {
                 id->m_isDestroyed = true;
@@ -269,7 +301,11 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
             delete id;
             return G_SOURCE_REMOVE;
         },
-        id, NULL);
+        id, nullptr);
+    id->m_idler = g_source_attach(
+        source, reinterpret_cast<GMainContext*>(glibMainContext()));
+    g_source_set_ready_time(source, 0);
+    g_source_unref(source);
     return (size_t)id;
 }
 
@@ -281,7 +317,11 @@ void MessageLoopGLib::removeIdler(size_t handle)
     }
     IdlerData* id = (IdlerData*)handle;
     if (removeIderFromList(m_idlers, id)) {
-        g_source_remove(id->m_idler);
+        GSource* source = g_main_context_find_source_by_id(
+            reinterpret_cast<GMainContext*>(glibMainContext()), id->m_idler);
+        if (source) {
+            g_source_destroy(source);
+        }
         GC_FREE(id);
     }
 }
@@ -305,7 +345,12 @@ void MessageLoopGLib::clearPendingIdlers(GlobalScope* globalScope)
     while (iter != m_idlers.end()) {
         IdlerData* id = (IdlerData*)*iter;
         if (id->m_globalScope == globalScope || globalScope == nullptr) {
-            g_source_remove(id->m_idler);
+            GSource* source = g_main_context_find_source_by_id(
+                reinterpret_cast<GMainContext*>(glibMainContext()),
+                id->m_idler);
+            if (source) {
+                g_source_destroy(source);
+            }
             iter = m_idlers.erase(iter);
             GC_FREE(id);
         } else {
@@ -336,6 +381,7 @@ void MessageLoopGLib::runOnMainThreadAsync(const std::function<void()>& functor)
     p->functor = functor;
 
     if (isMainThread()) {
+        // Already on this MessageLoop's main thread, add directly
         addIdler(
             nullptr,
             [](size_t, void* data) -> void {
@@ -344,35 +390,57 @@ void MessageLoopGLib::runOnMainThreadAsync(const std::function<void()>& functor)
                 delete p;
             },
             p);
-        return;
     } else {
-        addIdlerWithNoGCRootingInOtherThread(
-            nullptr,
-            [](size_t, void* data) {
+        // Called from another thread: add to this MessageLoop's GMainContext
+        GMainContext* context =
+            reinterpret_cast<GMainContext*>(glibMainContext());
+        GSource* source = g_idle_source_new();
+        g_source_set_ready_time(source, -1);
+        g_source_set_priority(source, G_PRIORITY_DEFAULT);
+        g_source_set_callback(
+            source,
+            (GSourceFunc)[](gpointer data)->gboolean {
                 Param* p = (Param*)data;
                 p->functor();
                 delete p;
+                return G_SOURCE_REMOVE;
             },
-            p);
+            p, nullptr);
+        g_source_attach(source, context);
+        g_source_set_ready_time(source, 0);
+        g_source_unref(source);
     }
 }
 
 void MessageLoopGLib::init()
 {
-    STARFISH_RELEASE_ASSERT(isSystemMainThread());
+    // init our glib message-loop context for thread mode
+    if (!isSystemMainThread()) {
+        if (!g_threadedMainRunLoop) {
+            RunLoopGLib* runLoop = new RunLoopGLib();
+            g_threadedMainRunLoop = runLoop;
+        }
+    }
 }
 
 void MessageLoopGLib::run()
 {
+    if (!isSystemMainThread()) {
+        g_threadedMainRunLoop->run();
+    }
 }
 
 void MessageLoopGLib::stop()
 {
+    if (!isSystemMainThread()) {
+        g_threadedMainRunLoop->stop();
+    }
 }
 
 void MessageLoopGLib::runOnMainThreadSync(const std::function<void()>& functor)
 {
     if (isMainThread()) {
+        // Already on this MessageLoop's main thread, execute directly
         functor();
         return;
     }
@@ -388,8 +456,14 @@ void MessageLoopGLib::runOnMainThreadSync(const std::function<void()>& functor)
     p->functor = functor;
     p->completed = false;
 
-    g_idle_add(
-        [](gpointer data) -> gboolean {
+    // Add task to this MessageLoop's GMainContext
+    GMainContext* context = reinterpret_cast<GMainContext*>(glibMainContext());
+    GSource* source = g_idle_source_new();
+    g_source_set_ready_time(source, -1);
+    g_source_set_priority(source, G_PRIORITY_DEFAULT);
+    g_source_set_callback(
+        source,
+        (GSourceFunc)[](gpointer data)->gboolean {
             Param* p = (Param*)data;
             p->functor();
             {
@@ -399,7 +473,10 @@ void MessageLoopGLib::runOnMainThreadSync(const std::function<void()>& functor)
             p->cv.notify_one();
             return G_SOURCE_REMOVE;
         },
-        p);
+        p, nullptr);
+    g_source_attach(source, context);
+    g_source_set_ready_time(source, 0);
+    g_source_unref(source);
 
     // Wait for completion
     {

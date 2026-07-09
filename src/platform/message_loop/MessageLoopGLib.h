@@ -23,6 +23,7 @@
 #define __StarfishMessageLoopGLib__
 
 #include "core/modules/message_loop/MessageLoop.h"
+#include "platform/message_loop/RunLoopGLib.h"
 
 namespace Starfish {
 
@@ -63,6 +64,7 @@ public:
 
 private:
     MessageLoopGLib();
+    MessageLoopGLib(RunLoopGLib* loop);
 };
 
 } // namespace Starfish

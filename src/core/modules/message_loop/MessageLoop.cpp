@@ -46,7 +46,11 @@ MessageLoop* MessageLoop::create()
 #if defined(STARFISH_ENABLE_WORKER)
 MessageLoop* MessageLoop::createForWorker(RunLoop* runLoop)
 {
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     return new MessageLoopLibUV(reinterpret_cast<RunLoopLibUV*>(runLoop));
+#elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
+    return new MessageLoopGLib(reinterpret_cast<RunLoopGLib*>(runLoop));
+#endif
 }
 #endif
 
