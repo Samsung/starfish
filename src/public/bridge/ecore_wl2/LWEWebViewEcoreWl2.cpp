@@ -1087,11 +1087,20 @@ public:
                 Ecore_Event_Mouse_Button* buttonEvent =
                     static_cast<Ecore_Event_Mouse_Button*>(event);
 
-                if (win->m_mouseButtonCallback) {
-                    if (buttonEvent->buttons == 1) {
-                        win->m_mouseButtonCallback(1, buttonEvent->x,
-                                                   buttonEvent->y);
-                    }
+                bool isTouch = buttonEvent->dev &&
+                               ecore_device_class_get(buttonEvent->dev) ==
+                                   ECORE_DEVICE_CLASS_TOUCH;
+
+                if (isTouch) {
+                    float pts[2] = { (float)buttonEvent->x,
+                                     (float)buttonEvent->y };
+                    win->m_webContainer->DispatchTouchStartEvent(pts, 1);
+                    win->m_isMouseLbuttonDown = true;
+                    win->m_isTouchDown = true;
+                } else if (win->m_mouseButtonCallback &&
+                           buttonEvent->buttons == 1) {
+                    win->m_mouseButtonCallback(1, buttonEvent->x,
+                                               buttonEvent->y);
                 }
                 return ECORE_CALLBACK_PASS_ON;
             },
@@ -1104,11 +1113,20 @@ public:
                 Ecore_Event_Mouse_Button* buttonEvent =
                     static_cast<Ecore_Event_Mouse_Button*>(event);
 
-                if (win->m_mouseButtonCallback) {
-                    if (buttonEvent->buttons == 1) {
-                        win->m_mouseButtonCallback(0, buttonEvent->x,
-                                                   buttonEvent->y);
-                    }
+                bool isTouch = buttonEvent->dev &&
+                               ecore_device_class_get(buttonEvent->dev) ==
+                                   ECORE_DEVICE_CLASS_TOUCH;
+
+                if (isTouch) {
+                    float pts[2] = { (float)buttonEvent->x,
+                                     (float)buttonEvent->y };
+                    win->m_webContainer->DispatchTouchEndEvent(pts, 1);
+                    win->m_isMouseLbuttonDown = false;
+                    win->m_isTouchDown = false;
+                } else if (win->m_mouseButtonCallback &&
+                           buttonEvent->buttons == 1) {
+                    win->m_mouseButtonCallback(0, buttonEvent->x,
+                                               buttonEvent->y);
                 }
                 return ECORE_CALLBACK_PASS_ON;
             },
@@ -1121,7 +1139,14 @@ public:
                 Ecore_Event_Mouse_Move* moveEvent =
                     static_cast<Ecore_Event_Mouse_Move*>(event);
 
-                if (win->m_mouseMoveCallback) {
+                bool isTouch =
+                    moveEvent->dev && ecore_device_class_get(moveEvent->dev) ==
+                                          ECORE_DEVICE_CLASS_TOUCH;
+
+                if (isTouch && win->m_isMouseLbuttonDown) {
+                    float pts[2] = { (float)moveEvent->x, (float)moveEvent->y };
+                    win->m_webContainer->DispatchTouchMoveEvent(pts, 1);
+                } else if (!win->m_isTouchDown && win->m_mouseMoveCallback) {
                     win->m_mouseMoveCallback(moveEvent->x, moveEvent->y);
                 }
                 return ECORE_CALLBACK_PASS_ON;
@@ -1294,6 +1319,7 @@ private:
     int m_lastWidth;
     int m_lastHeight;
     bool m_isMouseLbuttonDown = false;
+    bool m_isTouchDown = false;
 
     FboPresenter* m_presenter;
     WebContainer* m_webContainer;
