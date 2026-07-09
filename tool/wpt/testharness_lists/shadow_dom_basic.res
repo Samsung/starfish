@@ -23,8 +23,8 @@ http://web-platform.test:8000/shadow-dom/Element-interface-shadowRoot-attribute.
 # [auto-fail] http://web-platform.test:8000/shadow-dom/event-composed-path.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/event-composed-path-with-related-target.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/event-dispatch-order.tentative.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/event-inside-shadow-tree.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/event-inside-slotted-node.html
+http://web-platform.test:8000/shadow-dom/event-inside-shadow-tree.html
+http://web-platform.test:8000/shadow-dom/event-inside-slotted-node.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/event-on-pseudo-element-crash.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/event-post-dispatch.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/event-post-dispatch-no-listeners.html
