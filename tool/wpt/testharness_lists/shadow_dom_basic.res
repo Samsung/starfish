@@ -18,16 +18,16 @@ http://web-platform.test:8000/shadow-dom/build-deep-detached-shadow-then-append-
 # [auto-fail] http://web-platform.test:8000/shadow-dom/Element-interface-attachShadow-custom-element.html
 http://web-platform.test:8000/shadow-dom/Element-interface-attachShadow.html
 http://web-platform.test:8000/shadow-dom/Element-interface-shadowRoot-attribute.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/event-composed.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/event-composed-path-after-dom-mutation.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/event-composed-path.html
+http://web-platform.test:8000/shadow-dom/event-composed.html
+http://web-platform.test:8000/shadow-dom/event-composed-path-after-dom-mutation.html
+http://web-platform.test:8000/shadow-dom/event-composed-path.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/event-composed-path-with-related-target.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/event-dispatch-order.tentative.html
 http://web-platform.test:8000/shadow-dom/event-inside-shadow-tree.html
 http://web-platform.test:8000/shadow-dom/event-inside-slotted-node.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/event-on-pseudo-element-crash.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/event-post-dispatch.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/event-post-dispatch-no-listeners.html
+http://web-platform.test:8000/shadow-dom/event-post-dispatch-no-listeners.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/event-with-related-target.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/execcommand-insertList-in-shadow.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/Extensions-to-Event-Interface.html

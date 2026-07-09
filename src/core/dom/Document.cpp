@@ -2450,6 +2450,9 @@ Event* Document::createSimulatedMouseClickEvent()
         new MouseEvent(executionContext(), eventType, clickData);
     event->setBubbles(true);
     event->setCancelable(true);
+    // UI Events: a UA-activation click must cross shadow boundaries so
+    // listeners on the host (and beyond) observe it.
+    event->setComposed(true);
     event->setView(this->window());
     return event;
 }
