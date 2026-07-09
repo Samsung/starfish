@@ -1425,6 +1425,26 @@ void WebContainer::DispatchMouseWheelEvent(double x, double y, int delta)
         ->DispatchMouseWheelEvent(x, y, delta);
 }
 
+void WebContainer::DispatchTouchStartEvent(const float* points,
+                                           size_t pointCount)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->DispatchTouchStartEvent(points, pointCount);
+}
+
+void WebContainer::DispatchTouchMoveEvent(const float* points,
+                                          size_t pointCount)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->DispatchTouchMoveEvent(points, pointCount);
+}
+
+void WebContainer::DispatchTouchEndEvent(const float* points, size_t pointCount)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->DispatchTouchEndEvent(points, pointCount);
+}
+
 void WebContainer::DispatchKeyDownEvent(KeyValue keyCode)
 {
     STARFISH_API_RECORD_EVENT_FMT("DispatchKeyDownEvent", "{\"key\":%d}",
@@ -1943,6 +1963,12 @@ float WebView::GetDevicePixelRatio()
 {
     return toImpl<LWEDelegate::WebView>(m_delegate.get())
         ->GetDevicePixelRatio();
+}
+
+WebContainer* WebView::FetchWebContainer()
+{
+    return WebContainer::CreateWebContainer(
+        toImpl<LWEDelegate::WebView>(m_delegate.get())->FetchWebContainer());
 }
 
 } // namespace LWE
