@@ -309,11 +309,12 @@ public:
                               ::LWE::MouseButtonsValue buttons, double x,
                               double y) override;
     void DispatchMouseWheelEvent(double x, double y, int delta) override;
-    void DispatchTouchStartEvent(const float* points,
+    void DispatchTouchStartEvent(const float* points, const int* ids,
                                  size_t pointCount) override;
-    void DispatchTouchMoveEvent(const float* points,
+    void DispatchTouchMoveEvent(const float* points, const int* ids,
                                 size_t pointCount) override;
-    void DispatchTouchEndEvent(const float* points, size_t pointCount) override;
+    void DispatchTouchEndEvent(const float* points, const int* ids,
+                               size_t pointCount) override;
     void DispatchKeyDownEvent(::LWE::KeyValue keyCode) override;
     void DispatchKeyPressEvent(::LWE::KeyValue keyCode) override;
     void DispatchKeyUpEvent(::LWE::KeyValue keyCode) override;
@@ -1589,6 +1590,7 @@ void WebContainerImpl::DispatchMouseWheelEvent(double x, double y, int delta)
 }
 
 static std::vector<::Starfish::TouchData> buildTouchData(const float* points,
+                                                         const int* ids,
                                                          size_t pointCount)
 {
     std::vector<::Starfish::TouchData> touches;
@@ -1596,16 +1598,19 @@ static std::vector<::Starfish::TouchData> buildTouchData(const float* points,
     for (size_t i = 0; i < pointCount; i++) {
         float x = points[i * 2];
         float y = points[i * 2 + 1];
-        touches.emplace_back(x, y, x, y);
+        ::Starfish::TouchData td(x, y, x, y);
+        td.setIdentifier(ids[i]);
+        touches.push_back(td);
     }
     return touches;
 }
 
 void WebContainerImpl::DispatchTouchStartEvent(const float* points,
+                                               const int* ids,
                                                size_t pointCount)
 {
     std::vector<::Starfish::TouchData> touches =
-        buildTouchData(points, pointCount);
+        buildTouchData(points, ids, pointCount);
     auto wv = m_webView;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [touches, wv]() -> void {
@@ -1617,10 +1622,10 @@ void WebContainerImpl::DispatchTouchStartEvent(const float* points,
 }
 
 void WebContainerImpl::DispatchTouchMoveEvent(const float* points,
-                                              size_t pointCount)
+                                              const int* ids, size_t pointCount)
 {
     std::vector<::Starfish::TouchData> touches =
-        buildTouchData(points, pointCount);
+        buildTouchData(points, ids, pointCount);
     auto wv = m_webView;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [touches, wv]() -> void {
@@ -1632,10 +1637,10 @@ void WebContainerImpl::DispatchTouchMoveEvent(const float* points,
 }
 
 void WebContainerImpl::DispatchTouchEndEvent(const float* points,
-                                             size_t pointCount)
+                                             const int* ids, size_t pointCount)
 {
     std::vector<::Starfish::TouchData> touches =
-        buildTouchData(points, pointCount);
+        buildTouchData(points, ids, pointCount);
     auto wv = m_webView;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [touches, wv]() -> void {

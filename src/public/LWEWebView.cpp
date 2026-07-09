@@ -1425,24 +1425,25 @@ void WebContainer::DispatchMouseWheelEvent(double x, double y, int delta)
         ->DispatchMouseWheelEvent(x, y, delta);
 }
 
-void WebContainer::DispatchTouchStartEvent(const float* points,
+void WebContainer::DispatchTouchStartEvent(const float* points, const int* ids,
                                            size_t pointCount)
 {
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
-        ->DispatchTouchStartEvent(points, pointCount);
+        ->DispatchTouchStartEvent(points, ids, pointCount);
 }
 
-void WebContainer::DispatchTouchMoveEvent(const float* points,
+void WebContainer::DispatchTouchMoveEvent(const float* points, const int* ids,
                                           size_t pointCount)
 {
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
-        ->DispatchTouchMoveEvent(points, pointCount);
+        ->DispatchTouchMoveEvent(points, ids, pointCount);
 }
 
-void WebContainer::DispatchTouchEndEvent(const float* points, size_t pointCount)
+void WebContainer::DispatchTouchEndEvent(const float* points, const int* ids,
+                                         size_t pointCount)
 {
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
-        ->DispatchTouchEndEvent(points, pointCount);
+        ->DispatchTouchEndEvent(points, ids, pointCount);
 }
 
 void WebContainer::DispatchKeyDownEvent(KeyValue keyCode)

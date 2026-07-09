@@ -1338,7 +1338,9 @@ public:
 
             if (isTouch && (currentPosX >= 0 && currentPosY >= 0)) {
                 float pts[2] = { (float)currentPosX, (float)currentPosY };
-                webView->FetchWebContainer()->DispatchTouchStartEvent(pts, 1);
+                int ids[1] = { 0 };
+                webView->FetchWebContainer()->DispatchTouchStartEvent(pts, ids,
+                                                                      1);
                 webView->m_isMouseLbuttonDown = true;
                 webView->m_isTouchDown = true;
             } else if (ev->button == 1 &&
@@ -1381,7 +1383,9 @@ public:
 
             if (isTouch) {
                 float pts[2] = { (float)currentPosX, (float)currentPosY };
-                webView->FetchWebContainer()->DispatchTouchEndEvent(pts, 1);
+                int ids[1] = { 0 };
+                webView->FetchWebContainer()->DispatchTouchEndEvent(pts, ids,
+                                                                    1);
                 webView->m_isMouseLbuttonDown = false;
                 webView->m_isTouchDown = false;
             } else if (ev->button == 1 &&
@@ -1439,7 +1443,9 @@ public:
 
             if (isTouch && webView->m_isMouseLbuttonDown) {
                 float pts[2] = { (float)currentPosX, (float)currentPosY };
-                webView->FetchWebContainer()->DispatchTouchMoveEvent(pts, 1);
+                int ids[1] = { 0 };
+                webView->FetchWebContainer()->DispatchTouchMoveEvent(pts, ids,
+                                                                     1);
             } else if (!webView->m_isTouchDown) {
                 // Suppress non-touch mouse move events during a touch sequence
                 // to prevent spurious hover/mouseleave updates.
