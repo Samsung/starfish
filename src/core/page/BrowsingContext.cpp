@@ -75,6 +75,16 @@
 #include "binding/ScriptBindingInstance.h"
 #include "platform/loader/ResourceLoader.h"
 
+// Matches Chrome/Android ViewConfiguration.getTouchSlop() default of 8dp.
+// Coordinates here are already DPR-divided CSS pixels, so this value is
+// device-independent. Increase if jitter still leaks; decrease if short
+// swipes are not recognized as moves.
+#ifndef STARFISH_TOUCH_SLOP_PX
+// Chrome/Android phone default is 8dp; TV touch panels have coarser precision
+// so the default is raised to 20px (override via -DSTARFISH_TOUCH_SLOP_PX=N).
+#define STARFISH_TOUCH_SLOP_PX 20.0
+#endif
+
 namespace Starfish {
 
 BrowsingContext* BrowsingContext::create(WebView* webView)
@@ -1206,6 +1216,36 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
     if (kind == TouchEventKind::TouchEventCancel) {
         releaseActiveNode();
         releaseHoveredNode();
+        // Dispatch the DOM touchcancel so JS handlers can clean up gesture
+        // state (e.g. remove ripple animations, cancel drag logic).
+        if (count >= 1) {
+            const double scrollOffsetX = window()->scrollX(false);
+            const double scrollOffsetY = window()->scrollY(false);
+            std::vector<TouchData> pageTouches(touches, touches + count);
+            for (size_t i = 0; i < count; i++) {
+                pageTouches[i].setClientX(pageTouches[i].clientX() +
+                                          scrollOffsetX);
+                pageTouches[i].setClientY(pageTouches[i].clientY() +
+                                          scrollOffsetY);
+            }
+            Node* cancelTarget =
+                hitTest(pageTouches[0].clientX(), pageTouches[0].clientY());
+            Node* t =
+                cancelTarget ? cancelTarget->nearestParentElement() : nullptr;
+            if (!t && m_pointerCaptureTarget &&
+                m_pointerCaptureTarget->isConnected()) {
+                t = m_pointerCaptureTarget;
+            }
+            if (!t) {
+                t = document();
+            }
+            String* cancelName =
+                starfish()->staticStrings()->m_touchcancel.localName();
+            Event* cancelEvent = createTouchEvent(document(), cancelName,
+                                                  pageTouches.data(), count);
+            document()->window()->dispatchEventByUA(t, cancelEvent);
+        }
+        m_pointerCaptureTarget = nullptr;
         return false;
     }
     if (count < 1) {
@@ -1319,6 +1359,7 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
     switch (kind) {
     case TouchEventKind::TouchEventStart: {
         webView()->setScrollOccurredDuringGesture(false);
+        m_touchDownPoint = Unit::Location(targetX, targetY);
         // Dispatch touchstart event
         name = starfish()->staticStrings()->m_touchstart.localName();
         Event* e = createTouchEvent(document(), name, touches, count);
@@ -1337,6 +1378,17 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         // sequence was already cancelled via touchcancel (matches Chrome).
         if (scrollAlreadyOccurred) {
             break;
+        }
+        // Suppress touchmove below the touch-slop threshold so that slight
+        // finger jitter during a tap does not cancel ripple animations or
+        // other gesture-start logic (Chrome uses ~8 CSS px).
+        {
+            const double dx = targetX - (double)m_touchDownPoint.x();
+            const double dy = targetY - (double)m_touchDownPoint.y();
+            const double slopPx = STARFISH_TOUCH_SLOP_PX;
+            if (dx * dx + dy * dy < slopPx * slopPx) {
+                break;
+            }
         }
         // Dispatch touchmove event
         name = starfish()->staticStrings()->m_touchmove.localName();
@@ -1371,21 +1423,13 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         break;
     }
     case TouchEventKind::TouchEventEnd: {
+        // Chrome clears hover and active on touch end — neither persists
+        // across touch sequences (no :hover/:active maintained by touch).
+        releaseHoveredNode();
+        releaseActiveNode();
         Node* t = targetNode->nearestParentElement();
-        if (clickableEvent) {
-            // Dispatch click event
-            Node* t = targetNode->nearestParentElement();
-            t = t ? t : document();
-            name = starfish()->staticStrings()->m_click.localName();
-            MouseData clickData(MouseButtonValue::LeftButton,
-                                MouseButtonsValue::LeftButtonDown, targetX,
-                                targetY, 1);
-            clickData.setScreenX(targetScreenX);
-            clickData.setScreenY(targetScreenY);
-            Event* click = createMouseEvent(document(), name, clickData);
-            document()->window()->dispatchEventByUA(t, click);
-        }
-        // Dispatch touchend event
+        t = t ? t : document();
+        // Spec order: touchend → pointerup → click.
         name = starfish()->staticStrings()->m_touchend.localName();
         Event* e = createTouchEvent(document(), name, touches, count);
         returnValue = !document()->window()->dispatchEventByUA(t, e);
@@ -1399,6 +1443,16 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         document()->window()->dispatchEventByUA(pt, pe);
         // Implicit pointer capture release on pointerup.
         m_pointerCaptureTarget = nullptr;
+        if (clickableEvent) {
+            name = starfish()->staticStrings()->m_click.localName();
+            MouseData clickData(MouseButtonValue::LeftButton,
+                                MouseButtonsValue::LeftButtonDown, targetX,
+                                targetY, 1);
+            clickData.setScreenX(targetScreenX);
+            clickData.setScreenY(targetScreenY);
+            Event* click = createMouseEvent(document(), name, clickData);
+            document()->window()->dispatchEventByUA(t, click);
+        }
         break;
     }
     default:
