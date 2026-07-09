@@ -86,16 +86,20 @@ css/css-paint-api
 css/css-parser-api
 css/css-image-animation
 css/fetching
-# Reftest-only specs (no testharness tests here, so they enumerate 0 tasks
-# and add no signal unless --test-types includes reftest/crashtest).
-css/CSS1
-css/css-gcpm
+# Reftest-only specs (no testharness tests here; only add signal when
+# --test-types includes reftest -- verified against the pinned
+# third_party/wpt/MANIFEST.json, not just directory existence).
 css/css-namespaces
-css/css-round-display
-css/css-speech
 css/css-style-attr
 css/printing
 css/WOFF2
+# Disabled: verified 0 tests in testharness, reftest, AND crashtest at the
+# current WPT pin (visual/manual-only specs, not reftest/crashtest as their
+# directory names might suggest).
+# css/CSS1
+# css/css-gcpm
+# css/css-round-display
+# css/css-speech
 
 # --- DOM / HTML ---
 dom
@@ -174,11 +178,11 @@ mathml
 media-capabilities
 webvtt
 imagebitmap-renderingcontext
-# images/fonts are reftest-only (no testharness tests here, see the note
-# above). "media" is not a WPT spec dir -- see media-* dirs instead -- so it
-# stays disabled.
-images
-fonts
+# Disabled: verified 0 tests in testharness, reftest, AND crashtest at the
+# current WPT pin (images/fonts only have manual/support files here). "media"
+# is not a WPT spec dir -- see media-* dirs instead.
+# images
+# fonts
 # media
 
 # --- Encoding / URL ---

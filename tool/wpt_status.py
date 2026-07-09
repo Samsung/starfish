@@ -58,10 +58,12 @@ from wpt_runner import (RE_PASS, RE_FAIL, RE_DONE, STARFISH,  # noqa: E402
 # ensure_manifest is re-exported for existing callers (wpt_manifest_lists.py,
 # test_runner.py); actually defined in wpt_reftest.py, the lowest-level module
 # that needs it, so no module here needs a deferred/circular-avoiding import
-# for it. load_manifest/ensure_imgdiff are reftest's own prerequisites (see
-# main()'s reftest setup, mirroring wpt_runner.py's --mode reftest path).
-from wpt_reftest import (ensure_manifest, load_manifest,  # noqa: E402,F401
-                         ensure_imgdiff)
+# for it. ensure_imgdiff is reftest's own prerequisite (see main()'s reftest
+# setup, mirroring wpt_runner.py's --mode reftest path). The manifest itself
+# is parsed once in main() and passed directly to enumerate_tests()/
+# run_one_reftest() -- no separate load_manifest() call (see enumerate_tests()
+# docstring).
+from wpt_reftest import ensure_manifest, ensure_imgdiff  # noqa: E402,F401
 
 TEST_TYPES = ("testharness", "reftest", "crashtest")
 
@@ -136,9 +138,17 @@ def enumerate_tests(manifest_path, targets, test_type="testharness"):
     variant ([url, references-or-extras, extras]) instead of testharness's
     2-element one, but _collect_urls only ever reads variant[0] (the url), so
     the same walker works unchanged across types.
+
+    manifest_path may be a path to MANIFEST.json (existing callers:
+    wpt_manifest_lists.py) or an already-parsed manifest dict -- main() below
+    parses it once and passes the dict for each requested test type, instead
+    of re-parsing the same (potentially tens-of-MB) file once per type.
     """
-    with open(manifest_path) as fp:
-        manifest = json.load(fp)
+    if isinstance(manifest_path, dict):
+        manifest = manifest_path
+    else:
+        with open(manifest_path) as fp:
+            manifest = json.load(fp)
     url_base = manifest["url_base"]
     branch = manifest["items"][test_type]
     by_category = {}
@@ -584,16 +594,24 @@ def main(argv):
         p.error("--test-types: at least one type is required")
 
     targets = args.only if args.only else read_targets(args.targets)
-    manifest = args.manifest or os.path.join(args.wpt_root, "MANIFEST.json")
-    ensure_manifest(args.wpt_root, manifest)
+    manifest_path = args.manifest or os.path.join(args.wpt_root, "MANIFEST.json")
+    ensure_manifest(args.wpt_root, manifest_path)
+    # Parsed once here and reused for every requested type's enumerate_tests()
+    # call below AND as run_one_reftest()'s manifest -- MANIFEST.json can be
+    # tens of MB, so re-parsing it per type (or via a separate load_manifest()
+    # call keyed on --wpt-root, which would silently ignore --manifest) is
+    # both wasteful and a footgun for a custom --manifest path.
+    with open(manifest_path) as fp:
+        manifest = json.load(fp)
 
     reftest_manifest = None
     if "reftest" in test_types:
-        # Mirrors wpt_runner.py's --mode reftest setup: imgdiff for the pixel
-        # compare, plus the parsed manifest run_one_reftest() needs to
-        # resolve each test's reference/relation/fuzzy at run time.
+        # Mirrors wpt_runner.py's --mode reftest setup: imgdiff is the only
+        # extra prerequisite reftest needs beyond the manifest already parsed
+        # above (which run_one_reftest() uses the same way wpt_runner.py's
+        # load_manifest() result does, to resolve reference/relation/fuzzy).
         ensure_imgdiff()
-        reftest_manifest = load_manifest(args.wpt_root)
+        reftest_manifest = manifest
 
     # Enumerate every requested type up front. A target dir absent from one
     # type's branch is normal (most spec dirs are testharness-only, some are
