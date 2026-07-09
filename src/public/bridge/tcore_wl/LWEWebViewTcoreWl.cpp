@@ -784,7 +784,8 @@ public:
 
             if (isTouch) {
                 float pts[2] = { (float)x, (float)y };
-                win->m_webContainer->DispatchTouchStartEvent(pts, 1);
+                int ids[1] = { 0 };
+                win->m_webContainer->DispatchTouchStartEvent(pts, ids, 1);
                 win->m_isMouseLbuttonDown = true;
                 win->m_isTouchDown = true;
             } else if (win->m_mouseButtonCallback) {
@@ -810,7 +811,8 @@ public:
 
             if (isTouch) {
                 float pts[2] = { (float)x, (float)y };
-                win->m_webContainer->DispatchTouchEndEvent(pts, 1);
+                int ids[1] = { 0 };
+                win->m_webContainer->DispatchTouchEndEvent(pts, ids, 1);
                 win->m_isMouseLbuttonDown = false;
                 win->m_isTouchDown = false;
             } else if (win->m_mouseButtonCallback) {
@@ -834,7 +836,8 @@ public:
 
             if (isTouch && win->m_isMouseLbuttonDown) {
                 float pts[2] = { (float)x, (float)y };
-                win->m_webContainer->DispatchTouchMoveEvent(pts, 1);
+                int ids[1] = { 0 };
+                win->m_webContainer->DispatchTouchMoveEvent(pts, ids, 1);
             } else if (!win->m_isTouchDown && win->m_mouseMoveCallback) {
                 win->m_mouseMoveCallback(x, y);
             }
