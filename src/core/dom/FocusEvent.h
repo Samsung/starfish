@@ -80,6 +80,15 @@ public:
     {
         m_relatedTarget = relatedTarget;
     }
+    virtual Optional<EventTarget*> relatedTargetForDispatch() const override
+    {
+        return relatedTarget();
+    }
+    virtual void setRelatedTargetForDispatch(
+        Optional<EventTarget*> relatedTarget) override
+    {
+        setRelatedTarget(relatedTarget);
+    }
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isFocusEvent() const override;

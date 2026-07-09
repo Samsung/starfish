@@ -121,6 +121,20 @@ public:
     // https://dom.spec.whatwg.org/#dom-event-composedpath
     GCVector<EventTarget*> composedPath();
 
+    // Dispatch-time relatedTarget hooks. Base Event has no relatedTarget
+    // concept, so this defaults to a no-op/NullOption pair; MouseEvent and
+    // FocusEvent override these to forward to their own storage. Lets
+    // EventTarget::dispatchEvent read/retarget/write relatedTarget generically
+    // without type-checking the concrete Event subclass.
+    virtual Optional<EventTarget*> relatedTargetForDispatch() const
+    {
+        return NullOption;
+    }
+    virtual void setRelatedTargetForDispatch(
+        Optional<EventTarget*> relatedTarget)
+    {
+    }
+
     // The event path built by EventTarget::dispatchEvent, exposed so the
     // dispatcher can populate it and composedPath() can read it. Emptied at the
     // end of dispatch (spec "empty event's path") so a post-dispatch call

@@ -291,6 +291,21 @@ public:
         return m_mouseData.relatedTarget();
     }
 
+    void setRelatedTarget(Optional<EventTarget*> relatedTarget)
+    {
+        m_mouseData.setRelatedTarget(relatedTarget);
+    }
+
+    virtual Optional<EventTarget*> relatedTargetForDispatch() const override
+    {
+        return relatedTarget();
+    }
+    virtual void setRelatedTargetForDispatch(
+        Optional<EventTarget*> relatedTarget) override
+    {
+        setRelatedTarget(relatedTarget);
+    }
+
     bool ctrlKey() const
     {
         return m_eventModifierData.ctrlKey();
