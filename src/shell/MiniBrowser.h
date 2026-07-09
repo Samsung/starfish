@@ -97,6 +97,7 @@ public:
     struct OtherOptions {
         bool crashTest = false;
         bool disableConsole = false;
+        bool preferIsolatedThread = true;
         double timeout = 0; // seconds, 0 means no timeout.
     };
 
@@ -110,7 +111,7 @@ public:
     MiniBrowser();
     ~MiniBrowser();
 
-    bool init(const InitOption& initOption);
+    bool init(const InitOption& initOption, bool preferIsolatedThread = true);
     void setSettings(const Settings& settings);
 
     void loadURL(const std::string& url);
