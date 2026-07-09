@@ -625,6 +625,54 @@ static ValueRef* simulateMouseMoveFunction(ExecutionStateRef* state,
     return scriptUndefined();
 }
 
+static ValueRef* simulateTouchStartFunction(ExecutionStateRef* state,
+                                            ValueRef* thisValue, size_t argc,
+                                            NULLABLE ValueRef** argv,
+                                            bool isNewExpression)
+{
+    GENERATE_WINDOW();
+    double value0 = argv[0]->toNumber(state);
+    double value1 = argv[1]->toNumber(state);
+    window->simulateTouchStart(value0, value1);
+    return scriptUndefined();
+}
+
+static ValueRef* simulateTouchMoveFunction(ExecutionStateRef* state,
+                                           ValueRef* thisValue, size_t argc,
+                                           NULLABLE ValueRef** argv,
+                                           bool isNewExpression)
+{
+    GENERATE_WINDOW();
+    double value0 = argv[0]->toNumber(state);
+    double value1 = argv[1]->toNumber(state);
+    window->simulateTouchMove(value0, value1);
+    return scriptUndefined();
+}
+
+static ValueRef* simulateTouchEndFunction(ExecutionStateRef* state,
+                                          ValueRef* thisValue, size_t argc,
+                                          NULLABLE ValueRef** argv,
+                                          bool isNewExpression)
+{
+    GENERATE_WINDOW();
+    double value0 = argv[0]->toNumber(state);
+    double value1 = argv[1]->toNumber(state);
+    window->simulateTouchEnd(value0, value1);
+    return scriptUndefined();
+}
+
+static ValueRef* simulateTouchCancelFunction(ExecutionStateRef* state,
+                                             ValueRef* thisValue, size_t argc,
+                                             NULLABLE ValueRef** argv,
+                                             bool isNewExpression)
+{
+    GENERATE_WINDOW();
+    double value0 = argv[0]->toNumber(state);
+    double value1 = argv[1]->toNumber(state);
+    window->simulateTouchCancel(value0, value1);
+    return scriptUndefined();
+}
+
 static ValueRef* simulateVisibilitychangeFunction(ExecutionStateRef* state,
                                                   ValueRef* thisValue,
                                                   size_t argc, ValueRef** argv,
@@ -1238,6 +1286,10 @@ void Window::postInit(ScriptBindingInstance* instance)
             DEFINE_TEST_FUNCTION(simulateMouseDown, 2);
             DEFINE_TEST_FUNCTION(simulateMouseUp, 2);
             DEFINE_TEST_FUNCTION(simulateMouseMove, 2);
+            DEFINE_TEST_FUNCTION(simulateTouchStart, 2);
+            DEFINE_TEST_FUNCTION(simulateTouchMove, 2);
+            DEFINE_TEST_FUNCTION(simulateTouchEnd, 2);
+            DEFINE_TEST_FUNCTION(simulateTouchCancel, 2);
             DEFINE_TEST_FUNCTION(simulateVisibilitychange, 1);
             DEFINE_TEST_FUNCTION(testAssert, 1);
             DEFINE_TEST_FUNCTION(testEnd, 0);

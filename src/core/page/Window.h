@@ -300,6 +300,10 @@ public:
     void simulateMouseDown(float x, float y);
     void simulateMouseUp(float x, float y);
     void simulateMouseMove(float x, float y);
+    void simulateTouchStart(float x, float y);
+    void simulateTouchMove(float x, float y);
+    void simulateTouchEnd(float x, float y);
+    void simulateTouchCancel(float x, float y);
     void simulateVisibilitychange(bool show);
     void testStart();
 #endif
