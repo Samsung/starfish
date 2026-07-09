@@ -31,6 +31,7 @@ public:
     std::string getHttpCacheDataDirectoryPath() const;
     std::string getSharedWorkerDataDirectoryPath() const;
     std::string getServiceWorkerDataDirectoryPath() const;
+    std::string getStorageDirectoryPath() const;
 
 private:
     std::string m_storageDirectoryPath;

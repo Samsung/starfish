@@ -64,13 +64,23 @@ public:
      * function before using WebContainer or WebView
      *
      * \code{.cpp}
-     *     LWE::LWE::Initialize("/tmp/Starfish_storage");
+     *     // Prefer main thread (default behavior)
+     *     LWE::LWE::Initialize("/tmp/Starfish_storage", true);
+     *
+     *     // Prefer separate thread (may be ignored by some backends)
+     *     LWE::LWE::Initialize("/tmp/Starfish_storage", false);
      * \endcode
      *
      * \param storageDirectoryPath Directory path for storage.
      *
+     * \param preferMainThread If true, LWE prefers to run on the process main
+     * thread. If false, LWE prefers to use a separate thread. Default is true
+     * (prefer main thread). Note: Some backends (e.g., flutter, uv_cairo_gl)
+     * always use a separate thread regardless of this parameter.
+     *
      */
-    static void Initialize(const char* storageDirectoryPath);
+    static void Initialize(const char* storageDirectoryPath,
+                           bool preferMainThread = true);
 
     /**
      * \brief Returns the initialization status of lightweight web engine.
@@ -110,6 +120,16 @@ public:
      * \brief Returns LWE version number if the parameter is not null.
      */
     static void GetVersion(int* major, int* minor, int* patch);
+
+    /**
+     * \brief Returns whether LWE is running on a separate thread.
+     *
+     * \return true if LWE is using a separate thread, false if running on the
+     * main thread.
+     *
+     * \remark Must be called after Initialize.
+     */
+    static bool IsUsingSeparateThread();
 };
 
 #define LWE_DEFAULT_FONT_SIZE 16

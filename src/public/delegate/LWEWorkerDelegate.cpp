@@ -58,7 +58,7 @@ void LWEWorker::Initialize(const std::string& storageDirectoryPath)
 
     STARFISH_LOG_INFO("WORKER STARTS");
 
-    LWEDelegate::LWE::Initialize(storageDirectoryPath.c_str());
+    LWEDelegate::LWE::Initialize(storageDirectoryPath.c_str(), false);
 
     LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
         []() -> void {

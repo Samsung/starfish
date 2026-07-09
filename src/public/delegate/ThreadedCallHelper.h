@@ -44,11 +44,14 @@ public:
     void PostTaskToLWEMainThreadAsync(Starfish::MessageLoop* messageLoop,
                                       const std::function<void()>& functor);
 
+    bool isThreadMode() const;
+
 private:
     ThreadedCallHelper();
     void CreateLWEMainThread();
 
     std::atomic<bool> m_isLWEThreadStarted;
+    bool m_isThreadMode;
     pthread_mutex_t m_mainThreadInitLocker;
 };
 

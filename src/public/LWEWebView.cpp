@@ -65,7 +65,7 @@ void LWE::SetVersionPreference(bool preferUpdatedVersion)
     // Supported only when using a loader.
 }
 
-void LWE::Initialize(const char* storageDirectoryPath)
+void LWE::Initialize(const char* storageDirectoryPath, bool preferMainThread)
 {
     STARFISH_API_RECORD_INIT();
 #ifdef STARFISH_API_ENABLE_LOADER
@@ -73,9 +73,9 @@ void LWE::Initialize(const char* storageDirectoryPath)
         LWE_ASSERT(false);
     }
     LWEDelegateLoader::getSafeInstance()->kLWEProcTable.Initialize(
-        storageDirectoryPath);
+        storageDirectoryPath, preferMainThread);
 #else
-    LWEDelegate::LWE::Initialize(storageDirectoryPath);
+    LWEDelegate::LWE::Initialize(storageDirectoryPath, preferMainThread);
 #endif
 }
 
@@ -128,6 +128,16 @@ void LWE::GetVersion(int* major, int* minor, int* patch)
         major, minor, patch);
 #else
     return LWEDelegate::LWE::GetVersion(major, minor, patch);
+#endif
+}
+
+bool LWE::IsUsingSeparateThread()
+{
+#ifdef STARFISH_API_ENABLE_LOADER
+    return LWEDelegateLoader::getSafeInstance()
+        ->kLWEProcTable.IsUsingSeparateThread();
+#else
+    return LWEDelegate::LWE::IsUsingSeparateThread();
 #endif
 }
 

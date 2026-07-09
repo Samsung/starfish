@@ -43,7 +43,6 @@ namespace LWEDelegate {
 
 Starfish::Starfish* g_starfishInstance;
 Starfish::Starfish** g_starfishInstanceHolder;
-
 static void StarfishGCMemoryLogger(void* data)
 {
     STARFISH_LOG_INFO("Done GC: HeapSize: [%f MB , %f MB]",
@@ -51,17 +50,21 @@ static void StarfishGCMemoryLogger(void* data)
                       GC_get_heap_size() / 1024.f / 1024.f);
 }
 
-void LWE::Initialize(const char* storageDirectoryPath)
+void LWE::Initialize(const char* storageDirectoryPath, bool preferMainThread)
 {
     STARFISH_RELEASE_ASSERT(!IsInitialized());
 
-    // TODO: Provide API to determine whether to use threaded call or not.
     std::string backend = STARFISH_BACKEND_STR;
-    bool isThreadMode = false;
+    // preferMainThread=true (default) means prefer main thread
+    // (isThreadMode=false) preferMainThread=false means prefer separate thread
+    // (isThreadMode=true) Note: Some backends ignore this preference and always
+    // use thread mode
+    bool isThreadMode = !preferMainThread;
     Starfish::StarfishRendererType rendererType =
         Starfish::StarfishRendererType::kOpenGL;
     if (backend == "uv_cairo_gl" || backend == "flutter" ||
         backend == "uv_worker") {
+        // These backends always require thread mode regardless of preference
         isThreadMode = true;
     }
     if (backend == "glib_headless") {
@@ -146,50 +149,49 @@ void LWE::GetVersion(int* major, int* minor, int* patch)
     g_starfishInstance->version(major, minor, patch);
 }
 
-std::string LWE::GetStorageDirectoryPath()
+bool LWE::IsUsingSeparateThread()
 {
-    STARFISH_RELEASE_ASSERT(IsInitialized());
-    return g_starfishInstance->storageDirectoryPath();
+    return ThreadedCallHelper::Instance()->isThreadMode();
 }
 
 } // namespace LWEDelegate
 
 extern "C" {
-void LWEDelegate_LWE_Initialize(const char* storageDirectoryPath)
+void EXPORT_UNMANAGED_API LWEDelegate_LWE_Initialize(
+    const char* storageDirectoryPath, bool preferMainThread)
 
 {
-    LWEDelegate::LWE::Initialize(storageDirectoryPath);
+    LWEDelegate::LWE::Initialize(storageDirectoryPath, preferMainThread);
 }
 
-bool LWEDelegate_LWE_IsInitialized()
+bool EXPORT_UNMANAGED_API LWEDelegate_LWE_IsInitialized()
 {
     return LWEDelegate::LWE::IsInitialized();
 }
 
-void LWEDelegate_LWE_Finalize()
+void EXPORT_UNMANAGED_API LWEDelegate_LWE_Finalize()
 {
     LWEDelegate::LWE::Finalize();
 }
 
-unsigned char LWEDelegate_LWE_GetGCFrequency()
+unsigned char EXPORT_UNMANAGED_API LWEDelegate_LWE_GetGCFrequency()
 {
     return LWEDelegate::LWE::GetGCFrequency();
 }
 
-void LWEDelegate_LWE_SetGCFrequency(unsigned char freq)
+void EXPORT_UNMANAGED_API LWEDelegate_LWE_SetGCFrequency(unsigned char freq)
 {
     LWEDelegate::LWE::SetGCFrequency(freq);
 }
 
-void LWEDelegate_LWE_GetVersion(int* major, int* minor, int* patch)
+void EXPORT_UNMANAGED_API LWEDelegate_LWE_GetVersion(int* major, int* minor,
+                                                     int* patch)
 {
     LWEDelegate::LWE::GetVersion(major, minor, patch);
 }
 
-const char* LWEDelegate_LWE_GetStorageDirectoryPath()
+bool EXPORT_UNMANAGED_API LWEDelegate_LWE_IsUsingSeparateThread()
 {
-    static thread_local std::string path;
-    path = LWEDelegate::LWE::GetStorageDirectoryPath();
-    return path.c_str();
+    return LWEDelegate::LWE::IsUsingSeparateThread();
 }
 }

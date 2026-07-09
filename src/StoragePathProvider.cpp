@@ -69,4 +69,9 @@ std::string StoragePathProvider::getServiceWorkerDataDirectoryPath() const
                                       STARFISH_SERVICE_WORKER_DIR_NAME);
 }
 
+std::string StoragePathProvider::getStorageDirectoryPath() const
+{
+    return m_storageDirectoryPath;
+}
+
 } // namespace Starfish

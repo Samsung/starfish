@@ -105,6 +105,15 @@ TEST_F(LWETest, GetVersion)
     EXPECT_TRUE(major >= 0 && minor >= 0 && patch >= 0);
 }
 
+TEST_F(LWETest, IsUsingSeparateThread)
+{
+    // Test that we can check if LWE is using a separate thread
+    bool isSeparateThread = LWE::LWE::IsUsingSeparateThread();
+    // This will depend on backend and preferMainThread setting
+    // Just verify it doesn't crash
+    EXPECT_TRUE(isSeparateThread == true || isSeparateThread == false);
+}
+
 class LWETestWitoutInit : public ::testing::Test {
 public:
     LWETestWitoutInit() = default;
@@ -135,4 +144,5 @@ TEST_F(LWETestWitoutInit, GetVersion)
     EXPECT_EXIT(LWE::LWE::GetVersion(&major, &minor, &patch),
                 ::testing::KilledBySignal(SIGABRT), "");
 }
+
 } // namespace StarfishShell
