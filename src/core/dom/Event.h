@@ -48,6 +48,21 @@ private:
     bool m_composed;
 };
 
+// One entry of the event path built by EventTarget::dispatchEvent (WHATWG
+// "event path"), one per node/window visited while walking from the target to
+// the top. Lives on Event so composedPath() can read it during dispatch.
+// `rootOfClosedTree`/`slotInClosedTree` are booleans per the spec's
+// "append to an event path" (used only for composedPath() closed-tree
+// visibility); `relatedTarget` is reserved for relatedTarget retargeting.
+// https://dom.spec.whatwg.org/#event-path
+struct EventPathStruct {
+    EventTarget* invocationTarget; // always non-null
+    Optional<EventTarget*> shadowAdjustedTarget;
+    Optional<EventTarget*> relatedTarget;
+    bool rootOfClosedTree;
+    bool slotInClosedTree;
+};
+
 class Event : public ScriptWrappable {
 protected:
 public:
@@ -101,6 +116,22 @@ public:
     void setCurrentTarget(EventTarget* currentTarget)
     {
         m_currentTarget = currentTarget;
+    }
+
+    // https://dom.spec.whatwg.org/#dom-event-composedpath
+    GCVector<EventTarget*> composedPath();
+
+    // The event path built by EventTarget::dispatchEvent, exposed so the
+    // dispatcher can populate it and composedPath() can read it. Emptied at the
+    // end of dispatch (spec "empty event's path") so a post-dispatch call
+    // returns an empty list.
+    GCVector<EventPathStruct>& eventPath()
+    {
+        return m_eventPath;
+    }
+    void clearEventPath()
+    {
+        m_eventPath.clear();
     }
 
     unsigned short eventPhase() const
@@ -263,6 +294,8 @@ private:
     DOMTimeStamp m_timeStamp;
 
     bool m_isDispatched; // dispatch flag
+
+    GCVector<EventPathStruct> m_eventPath;
 };
 } // namespace Starfish
 

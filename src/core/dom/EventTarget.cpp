@@ -340,19 +340,6 @@ bool EventTarget::hasListenerForTypeOnPath(const String* eventType)
     return true;
 }
 
-// One entry of the event path built by dispatchEvent (WHATWG "event path"),
-// one per node/window visited while walking from the target to the top.
-// `relatedTarget`/`rootOfClosedTree`/`slotInClosedTree` are reserved for
-// relatedTarget retargeting and composedPath()'s closed-tree visibility and
-// are always NullOption for now (not read).
-struct EventPathStruct {
-    EventTarget* invocationTarget; // always non-null
-    Optional<EventTarget*> shadowAdjustedTarget;
-    Optional<EventTarget*> relatedTarget;
-    Optional<Node*> rootOfClosedTree;
-    Optional<Node*> slotInClosedTree;
-};
-
 #if defined(STARFISH_WEBWORKER_NOT_HOST)
 // Whether `ancestor` is a shadow-including inclusive ancestor of `node`:
 // an inclusive ancestor in the ordinary tree, or - recursing across shadow
@@ -395,14 +382,16 @@ static EventTarget* retarget(EventTarget* a, EventTarget* b)
 }
 
 static EventPathStruct makeEventPathStruct(EventTarget* target,
-                                           EventTarget* invocationTarget)
+                                           EventTarget* invocationTarget,
+                                           bool rootOfClosedTree,
+                                           bool slotInClosedTree)
 {
     EventPathStruct s;
     s.invocationTarget = invocationTarget;
     s.shadowAdjustedTarget = retarget(target, invocationTarget);
     s.relatedTarget = NullOption;
-    s.rootOfClosedTree = NullOption;
-    s.slotInClosedTree = NullOption;
+    s.rootOfClosedTree = rootOfClosedTree;
+    s.slotInClosedTree = slotInClosedTree;
     return s;
 }
 
@@ -447,7 +436,14 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     event->setTarget(origin);
 
     EventTarget* activationTarget = nullptr;
-    GCVector<EventPathStruct> eventPath;
+    // A reference to event's own path member (not a local list): composedPath
+    // reads this during and after dispatch, so the path must live on event,
+    // not as a dispatchEvent-local. Cleared defensively in case this Event
+    // object is being re-dispatched (the dispatch flag allows sequential
+    // re-dispatch; the end of a prior dispatch already clears it via
+    // clearEventPath(), see below).
+    GCVector<EventPathStruct>& eventPath = event->eventPath();
+    eventPath.clear();
 
 #if defined(STARFISH_WEBWORKER_NOT_HOST)
     // https://dom.spec.whatwg.org/#dom-eventtarget-dispatchevent
@@ -460,30 +456,57 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     // event path be a static ordered list of all its ancestors in tree order,
     // and let event path be the empty list otherwise.
     EventTarget* eventTarget = origin;
+    // Whether the struct about to be pushed is a slot assigned-to from the
+    // previous (slotted) node, and that slot's root is a closed shadow root.
+    // https://dom.spec.whatwg.org/#concept-event-dispatch step 4.9's
+    // "append to an event path" slot-in-closed-tree bookkeeping.
+    bool slotInClosedTree = false;
     while (eventTarget) {
         if (isActivationEvent && !activationTarget &&
             eventTarget->hasActivationBehavior()) {
             activationTarget = eventTarget;
         }
+        bool thisSlotInClosedTree = slotInClosedTree;
+        slotInClosedTree = false;
         if (eventTarget->isNode()) {
             Node* node = eventTarget->asNode();
+            bool rootOfClosedTree =
+                node->isShadowRoot() && node->asShadowRoot()->isClosed();
             if (node->isHTMLElement() || node->isSVGElement()) {
-                eventPath.push_back(makeEventPathStruct(origin, eventTarget));
+                eventPath.push_back(makeEventPathStruct(
+                    origin, eventTarget, rootOfClosedTree,
+                    thisSlotInClosedTree));
             } else if (node->isShadowRoot()) {
                 // A shadow root is an ancestor in the (flat) tree, so it must
                 // participate in the event path; otherwise bubbling events such
                 // as slotchange never reach listeners (or the onslotchange
                 // attribute handler) registered on the shadow root.
-                eventPath.push_back(makeEventPathStruct(origin, eventTarget));
-            } else if (node->isDocument()) {
-                eventPath.push_back(makeEventPathStruct(origin, eventTarget));
                 eventPath.push_back(makeEventPathStruct(
-                    origin, eventTarget->asDocument()->window()));
+                    origin, eventTarget, rootOfClosedTree,
+                    thisSlotInClosedTree));
+            } else if (node->isDocument()) {
+                eventPath.push_back(makeEventPathStruct(
+                    origin, eventTarget, false, thisSlotInClosedTree));
+                eventPath.push_back(makeEventPathStruct(
+                    origin, eventTarget->asDocument()->window(), false,
+                    false));
                 break;
+            }
+            // If we're about to cross a slot assignment boundary, remember
+            // whether that slot lives in a closed shadow tree so the struct
+            // pushed for the slot itself (next iteration) is marked.
+            if (node->isSlotted()) {
+                if (Optional<HTMLSlotElement*> slot =
+                        node->assignedSlotInternal()) {
+                    Node* slotRoot = slot.value()->getRootNode();
+                    slotInClosedTree = slotRoot->isShadowRoot() &&
+                        slotRoot->asShadowRoot()->isClosed();
+                }
             }
             eventTarget = eventFlatTreeParent(node, event);
         } else if (eventTarget->isWindow()) {
-            eventPath.push_back(makeEventPathStruct(origin, eventTarget));
+            eventPath.push_back(
+                makeEventPathStruct(origin, eventTarget, false, false));
             break;
         } else {
             break;
@@ -495,8 +518,8 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
         s.invocationTarget = origin;
         s.shadowAdjustedTarget = origin;
         s.relatedTarget = NullOption;
-        s.rootOfClosedTree = NullOption;
-        s.slotInClosedTree = NullOption;
+        s.rootOfClosedTree = false;
+        s.slotInClosedTree = false;
         eventPath.push_back(s);
     }
 #endif /* defined(STARFISH_WEBWORKER_NOT_HOST) */
@@ -635,6 +658,26 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
             }
         }
     }
+
+    // https://dom.spec.whatwg.org/#dom-event-dispatchevent "clear targets":
+    // if the value external listeners would ultimately see as event's target
+    // still resolves into a shadow tree (never escaped to a light-DOM node),
+    // null it out so it isn't observable post-dispatch. retarget() is
+    // idempotent along the ancestor chain once it stops changing (see
+    // isShadowIncludingInclusiveAncestor's monotonicity), so eventPath's last
+    // entry always holds this outermost resolved value.
+    // relatedTarget/touch-target clearing is deferred to Phase C.
+    if (!eventPath.empty()) {
+        EventTarget* outermostTarget =
+            eventPath.back().shadowAdjustedTarget.value();
+        if (outermostTarget->isNode() &&
+            outermostTarget->asNode()->getRootNode()->isShadowRoot()) {
+            event->setTarget(nullptr);
+        }
+    }
+    // https://dom.spec.whatwg.org/#dom-event-dispatchevent "empty event's
+    // path": composedPath() called after dispatch must return an empty list.
+    event->clearEventPath();
 
     // 10. Unset event's dispatch flag, stop propagation flag,
     //     and stop immediate propagation flag.
