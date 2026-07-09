@@ -147,7 +147,7 @@ int Shell::runMiniBrowser(int argc, char* argv[])
     MiniBrowser::setEnvironmentValues(env);
 
     auto browser = std::unique_ptr<MiniBrowser>(new MiniBrowser());
-    if (!browser->init(init)) {
+    if (!browser->init(init, others.preferIsolatedThread)) {
         return false;
     }
 

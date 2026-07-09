@@ -137,6 +137,8 @@ void MiniBrowser::parseArgs(int argc, char* argv[],
             settings.videoOverlayEnabled = true;
         } else if (strstr(argv[i], "--timeout=") == argv[i]) {
             others.timeout = std::atoi(argv[i] + strlen("--timeout="));
+        } else if (strcmp(argv[i], "--prefer-isolated-thread") == 0) {
+            others.preferIsolatedThread = false;
         }
     }
 }
@@ -206,7 +208,7 @@ MiniBrowser::~MiniBrowser()
     LWE::LWE::Finalize();
 }
 
-bool MiniBrowser::init(const InitOption& initOption)
+bool MiniBrowser::init(const InitOption& initOption, bool preferIsolatedThread)
 {
     // on EFL, createWindow must be called first
     // since createWindow does elm_init();
@@ -215,7 +217,7 @@ bool MiniBrowser::init(const InitOption& initOption)
     }
 
     LWE::LWE::SetVersionPreference(true);
-    LWE::LWE::Initialize(storageDir().c_str());
+    LWE::LWE::Initialize(storageDir().c_str(), preferIsolatedThread);
 
     int major, minor, patch;
     LWE::LWE::GetVersion(&major, &minor, &patch);
