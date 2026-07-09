@@ -1330,6 +1330,42 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         // re-dispatched in the parent browsing context.
         Node* afterTarget = hitTest(targetX, targetY);
         if (afterTarget == targetNode) {
+            // JS touch events stay inside the iframe (isolation above), but
+            // scrolling is a UA default action that must still chain to a
+            // scrollable ancestor in this browsing context when the iframe's
+            // own content did not consume the gesture as a scroll — otherwise
+            // a touch-drag over an iframe that covers a scroll container can
+            // never scroll the parent. The wheel path already chains this way.
+            // Feed the gesture to the ancestor scrollers' default handlers only
+            // (no JS listeners), and only until some scroller claims the
+            // gesture; once claimed, the WebView global pointing-event
+            // intercept drives continuation. scrollOccurredDuringGesture is
+            // shared across the parent/child browsing contexts (same WebView),
+            // so a true value means the inner content already owns the scroll —
+            // leave it be.
+            if (!webView()->scrollOccurredDuringGesture()) {
+                String* scrollName;
+                if (kind == TouchEventKind::TouchEventStart) {
+                    scrollName =
+                        starfish()->staticStrings()->m_touchstart.localName();
+                } else if (kind == TouchEventKind::TouchEventMove) {
+                    scrollName =
+                        starfish()->staticStrings()->m_touchmove.localName();
+                } else {
+                    scrollName =
+                        starfish()->staticStrings()->m_touchend.localName();
+                }
+                Event* scrollEvent =
+                    createTouchEvent(document(), scrollName, touches, count);
+                bool scrollHandled = false;
+                for (Node* n = targetNode; n && !scrollHandled;
+                     n = n->parentNode()) {
+                    scrollHandled = n->handleDefaultEvent(scrollEvent);
+                }
+                if (!scrollHandled) {
+                    document()->window()->handleDefaultEvent(scrollEvent);
+                }
+            }
             return innerReturn;
         }
         if (!afterTarget) {
