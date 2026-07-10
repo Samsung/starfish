@@ -326,8 +326,17 @@ def run_all(items, jobs, timeout, results_path, append=False,
                       % (RED, RST, url, RED, reason, RST))
             if verbose and not ok and log and _is_crash_reason(reason):
                 tail = _tail_lines(log, log_lines)
-                header = ("  --- Starfish output (last %d lines) ---" % log_lines
-                          if log_lines > 0 else "  --- Starfish output ---")
+                total = len(log.splitlines())
+                shown = len(tail.splitlines())
+                # Report what was actually printed, not the configured cap:
+                # a short-lived crash/timeout may capture fewer lines than
+                # log_lines, in which case "(last N lines)" would falsely
+                # imply N lines are always shown.
+                if shown < total:
+                    header = "  --- Starfish output (last %d of %d lines) ---" \
+                        % (shown, total)
+                else:
+                    header = "  --- Starfish output (%d lines) ---" % total
                 print(header)
                 for line in tail.splitlines():
                     print("  | %s" % line)
