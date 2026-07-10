@@ -122,6 +122,7 @@ BrowsingContext::BrowsingContext(WebView* webView, HTMLIFrameElement* source,
     , m_pendingStyleSheetCount(0)
     , m_pendingRenderingCount(0)
     , m_touchDownPoint(0, 0)
+    , m_touchSlopExceeded(false)
     , m_lastMouseMovePoint(std::numeric_limits<float>::quiet_NaN(),
                            std::numeric_limits<float>::quiet_NaN())
     , m_activeNodeTarget(nullptr)
@@ -1396,6 +1397,7 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
     case TouchEventKind::TouchEventStart: {
         webView()->setScrollOccurredDuringGesture(false);
         m_touchDownPoint = Unit::Location(targetX, targetY);
+        m_touchSlopExceeded = false;
         // Dispatch touchstart event
         name = starfish()->staticStrings()->m_touchstart.localName();
         Event* e = createTouchEvent(document(), name, touches, count);
@@ -1417,14 +1419,19 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         }
         // Suppress touchmove below the touch-slop threshold so that slight
         // finger jitter during a tap does not cancel ripple animations or
-        // other gesture-start logic (Chrome uses ~8 CSS px).
-        {
+        // other gesture-start logic (Chrome uses ~8 CSS px). The check is
+        // one-shot per gesture: once the slop is exceeded the gesture is a
+        // drag, and every subsequent touchmove must be dispatched even if it
+        // passes back within slop distance of the touch-down point (e.g.
+        // scrubbing a seek bar back and forth across the starting position).
+        if (!m_touchSlopExceeded) {
             const double dx = targetX - (double)m_touchDownPoint.x();
             const double dy = targetY - (double)m_touchDownPoint.y();
             const double slopPx = STARFISH_TOUCH_SLOP_PX;
             if (dx * dx + dy * dy < slopPx * slopPx) {
                 break;
             }
+            m_touchSlopExceeded = true;
         }
         // Dispatch touchmove event
         name = starfish()->staticStrings()->m_touchmove.localName();
