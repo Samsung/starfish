@@ -186,11 +186,11 @@ def run_test(url, timeout, test_type="testharness", manifest=None):
     verdict()/score() work unchanged across all three types.
     """
     if test_type == "reftest":
-        ok, reason, _, _ = run_one_reftest(url, timeout, manifest)
+        ok, reason, _, _, _ = run_one_reftest(url, timeout, manifest)
         return {"status": "OK" if ok else reason, "subtests": [],
                 "message": None if ok else reason}
     if test_type == "crashtest":
-        ok, reason, _, _ = run_one_crashtest(url, timeout)
+        ok, reason, _, _, _ = run_one_crashtest(url, timeout)
         return {"status": "OK" if ok else reason, "subtests": [],
                 "message": None if ok else reason}
 
