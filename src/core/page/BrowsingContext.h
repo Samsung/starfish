@@ -372,6 +372,10 @@ private:
     size_t m_pendingRenderingCount;
 
     Unit::Location m_touchDownPoint;
+    // Latched once a touch gesture moves past the slop threshold; further
+    // touchmoves in the same gesture bypass the slop check so drags (e.g.
+    // seek-bar scrubbing back near the touch-down point) are not suppressed.
+    bool m_touchSlopExceeded;
     Unit::Location m_lastMouseMovePoint;
 
     GCUnorderedSet<Node*> m_activeNodeSet;

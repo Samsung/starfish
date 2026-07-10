@@ -376,6 +376,19 @@ private:
     ::LWE::MouseButtonsValue m_mouseMoveButtons = ::LWE::MouseButtonsValue();
     double m_mouseMoveX = 0;
     double m_mouseMoveY = 0;
+
+    // Touch-move coalescing, mirroring the mouse-move coalescing above. Touch
+    // panels report motion at 90-120Hz and every dispatched task runs a full
+    // hit-test (plus touchmove and pointermove dispatch) on the LWE thread, so
+    // without coalescing a drag during video playback builds a task backlog
+    // and the page sees touch positions seconds behind the finger. Only
+    // touchmove is coalesced; start/end/cancel stay one task each, and the
+    // message loop's FIFO order guarantees a pending move still runs before a
+    // subsequently posted end. UA coalescing of touchmove is permitted by the
+    // spec.
+    std::mutex m_touchMoveLock;
+    bool m_touchMovePending = false;
+    std::vector<::Starfish::TouchData> m_touchMoveData;
 };
 
 WebContainer* WebContainer::CreateWithBuffer(void* buffer, unsigned width,
@@ -1624,14 +1637,35 @@ void WebContainerImpl::DispatchTouchStartEvent(const float* points,
 void WebContainerImpl::DispatchTouchMoveEvent(const float* points,
                                               const int* ids, size_t pointCount)
 {
-    std::vector<::Starfish::TouchData> touches =
-        buildTouchData(points, ids, pointCount);
-    auto wv = m_webView;
+    bool needPost = false;
+    {
+        std::lock_guard<std::mutex> guard(m_touchMoveLock);
+        // Always remember the newest touch state so the eventual dispatch
+        // uses it.
+        m_touchMoveData = buildTouchData(points, ids, pointCount);
+        // Only post a task if none is already in flight; an in-flight task
+        // will pick up the state we just stored.
+        if (!m_touchMovePending) {
+            m_touchMovePending = true;
+            needPost = true;
+        }
+    }
+
+    if (!needPost) {
+        return;
+    }
+
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        m_webView->messageLoop(), [touches, wv]() -> void {
-            wv->renderer()->dispatchTouchEvent(
-                ::Starfish::TouchEventKind::TouchEventMove,
-                const_cast<::Starfish::TouchData*>(touches.data()),
+        m_webView->messageLoop(), [this]() -> void {
+            std::vector<::Starfish::TouchData> touches;
+            {
+                std::lock_guard<std::mutex> guard(m_touchMoveLock);
+                touches = std::move(m_touchMoveData);
+                m_touchMoveData.clear();
+                m_touchMovePending = false;
+            }
+            m_webView->renderer()->dispatchTouchEvent(
+                ::Starfish::TouchEventKind::TouchEventMove, touches.data(),
                 touches.size());
         });
 }
