@@ -21,6 +21,8 @@
 #include <curl/curl.h>
 
 #include "Starfish.h"
+#include "binding/ScriptBindingInstance.h"
+#include "binding/ScriptEngineInstance.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/fileapi/Blob.h"
 #include "platform/file/PlatformFile.h"
@@ -186,6 +188,34 @@ static Optional<String*> decodeURI(String* uriString, bool noComponent = true)
         String::fromUTF16(unescaped.data(), unescaped.size()));
 }
 
+void ResourceRequestJobInterface::dispatchWorker(
+    ResourceRequest* request, String* arg,
+    void (*worker)(ResourceRequest*, String*))
+{
+    if (request->isSync()) {
+        MicroTaskExecutionManager m(request->executionContext()
+                                        ->scriptBindingInstance()
+                                        ->engineInstance());
+        worker(request, arg);
+    } else {
+        size_t handle = request->webBase()->messageLoop()->addIdler(
+            request->globalScope(),
+            [](size_t handle, void* data, void* data1, void* data2) {
+                ResourceRequest* request = (ResourceRequest*)data;
+                request->removeIdlerHandle(handle);
+                auto worker =
+                    reinterpret_cast<void (*)(ResourceRequest*, String*)>(
+                        data2);
+                MicroTaskExecutionManager m(request->executionContext()
+                                                ->scriptBindingInstance()
+                                                ->engineInstance());
+                worker(request, (String*)data1);
+            },
+            request, arg, (void*)worker);
+        request->pushIdlerHandle(handle);
+    }
+}
+
 ResourceRequestJobInterface* ResourceRequestJobDelegateFactory::createJob(
     ResourceRequest* proxy)
 {
@@ -231,20 +261,8 @@ void FileURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     }
 
     String* filePath = path->substring(7, path->length() - 7);
-    if (m_orgProxy->isSync()) {
-        worker(m_orgProxy, filePath);
-    } else {
-        size_t handle = m_orgProxy->webBase()->messageLoop()->addIdler(
-            m_orgProxy->globalScope(),
-            [](size_t handle, void* data, void* data1) {
-                ResourceRequest* request = (ResourceRequest*)data;
-                request->removeIdlerHandle(handle);
-                FileURLResourceRequestJobDelegate::worker(
-                    (ResourceRequest*)data, (String*)data1);
-            },
-            m_orgProxy, filePath);
-        m_orgProxy->pushIdlerHandle(handle);
-    }
+    dispatchWorker(m_orgProxy, filePath,
+                   &FileURLResourceRequestJobDelegate::worker);
 }
 
 void FileURLResourceRequestJobDelegate::worker(ResourceRequest* request,
@@ -310,20 +328,8 @@ void DataURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     STARFISH_ASSERT(m_orgProxy->url()->isDataURL());
     // this area doesn't require lock.
     // reading url does not require thread
-    if (m_orgProxy->isSync()) {
-        worker(m_orgProxy, m_orgProxy->url()->urlString());
-    } else {
-        size_t handle = m_orgProxy->webBase()->messageLoop()->addIdler(
-            m_orgProxy->globalScope(),
-            [](size_t handle, void* data, void* data1) {
-                ResourceRequest* request = (ResourceRequest*)data;
-                request->removeIdlerHandle(handle);
-                DataURLResourceRequestJobDelegate::worker(
-                    (ResourceRequest*)data, (String*)data1);
-            },
-            m_orgProxy, m_orgProxy->url()->urlString());
-        m_orgProxy->pushIdlerHandle(handle);
-    }
+    dispatchWorker(m_orgProxy, m_orgProxy->url()->urlString(),
+                   &DataURLResourceRequestJobDelegate::worker);
 }
 
 void DataURLResourceRequestJobDelegate::worker(ResourceRequest* request,
@@ -384,20 +390,8 @@ void AboutURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 {
     STARFISH_ASSERT(m_orgProxy->url()->isAboutURL());
     // this area doesn't require lock.
-    if (m_orgProxy->isSync()) {
-        worker(m_orgProxy, m_orgProxy->url()->urlString());
-    } else {
-        size_t handle = m_orgProxy->webBase()->messageLoop()->addIdler(
-            m_orgProxy->globalScope(),
-            [](size_t handle, void* data, void* data1) {
-                ResourceRequest* request = (ResourceRequest*)data;
-                request->removeIdlerHandle(handle);
-                AboutURLResourceRequestJobDelegate::worker(
-                    (ResourceRequest*)data, (String*)data1);
-            },
-            m_orgProxy, m_orgProxy->url()->urlString());
-        m_orgProxy->pushIdlerHandle(handle);
-    }
+    dispatchWorker(m_orgProxy, m_orgProxy->url()->urlString(),
+                   &AboutURLResourceRequestJobDelegate::worker);
 }
 
 void AboutURLResourceRequestJobDelegate::worker(ResourceRequest* request,
@@ -425,20 +419,8 @@ void JavaScriptURLResourceRequestJobDelegate::send(String* body,
 {
     STARFISH_ASSERT(m_orgProxy->url()->isJavascriptURL());
     // this area doesn't require lock.
-    if (m_orgProxy->isSync()) {
-        worker(m_orgProxy, m_orgProxy->url()->urlString());
-    } else {
-        size_t handle = m_orgProxy->webBase()->messageLoop()->addIdler(
-            m_orgProxy->globalScope(),
-            [](size_t handle, void* data, void* data1) {
-                ResourceRequest* request = (ResourceRequest*)data;
-                request->removeIdlerHandle(handle);
-                AboutURLResourceRequestJobDelegate::worker(
-                    (ResourceRequest*)data, (String*)data1);
-            },
-            m_orgProxy, m_orgProxy->url()->urlString());
-        m_orgProxy->pushIdlerHandle(handle);
-    }
+    dispatchWorker(m_orgProxy, m_orgProxy->url()->urlString(),
+                   &JavaScriptURLResourceRequestJobDelegate::worker);
 }
 
 void JavaScriptURLResourceRequestJobDelegate::worker(ResourceRequest* request,
@@ -459,20 +441,8 @@ UnknownURLResourceRequestJobDelegate::UnknownURLResourceRequestJobDelegate(
 void UnknownURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 {
     // this area doesn't require lock.
-    if (m_orgProxy->isSync()) {
-        worker(m_orgProxy, m_orgProxy->url()->urlString());
-    } else {
-        size_t handle = m_orgProxy->webBase()->messageLoop()->addIdler(
-            m_orgProxy->globalScope(),
-            [](size_t handle, void* data, void* data1) {
-                ResourceRequest* request = (ResourceRequest*)data;
-                request->removeIdlerHandle(handle);
-                UnknownURLResourceRequestJobDelegate::worker(
-                    (ResourceRequest*)data, (String*)data1);
-            },
-            m_orgProxy, m_orgProxy->url()->urlString());
-        m_orgProxy->pushIdlerHandle(handle);
-    }
+    dispatchWorker(m_orgProxy, m_orgProxy->url()->urlString(),
+                   &UnknownURLResourceRequestJobDelegate::worker);
 }
 
 void UnknownURLResourceRequestJobDelegate::worker(ResourceRequest* request,
@@ -495,20 +465,8 @@ void BlobURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     STARFISH_ASSERT(m_orgProxy->url()->isBlobURL());
     // this area doesn't require lock.
     // reading url does not require thread
-    if (m_orgProxy->isSync()) {
-        worker(m_orgProxy, m_orgProxy->url()->urlString());
-    } else {
-        size_t handle = m_orgProxy->webBase()->messageLoop()->addIdler(
-            m_orgProxy->globalScope(),
-            [](size_t handle, void* data, void* data1) {
-                ResourceRequest* request = (ResourceRequest*)data;
-                request->removeIdlerHandle(handle);
-                BlobURLResourceRequestJobDelegate::worker(
-                    (ResourceRequest*)data, (String*)data1);
-            },
-            m_orgProxy, m_orgProxy->url()->urlString());
-        m_orgProxy->pushIdlerHandle(handle);
-    }
+    dispatchWorker(m_orgProxy, m_orgProxy->url()->urlString(),
+                   &BlobURLResourceRequestJobDelegate::worker);
 }
 
 void BlobURLResourceRequestJobDelegate::worker(ResourceRequest* request,

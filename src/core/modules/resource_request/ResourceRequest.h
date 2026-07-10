@@ -112,6 +112,11 @@ class ResourceRequest : public gc, public ResourceRequestJobInterface {
     friend class XMLHttpRequest;
     friend class NetworkURLWorkerHelper;
     friend class AsyncNetworkWorkHelper;
+    // Grants ResourceRequestJobInterface::dispatchWorker() access to
+    // pushIdlerHandle/removeIdlerHandle, so the shared sync/async +
+    // macrotask-scope trampoline used by every scheme delegate's send()
+    // doesn't need per-delegate friendship of its own.
+    friend class ResourceRequestJobInterface;
     friend class FileURLResourceRequestJobDelegate;
     friend class DataURLResourceRequestJobDelegate;
     friend class BlobURLResourceRequestJobDelegate;

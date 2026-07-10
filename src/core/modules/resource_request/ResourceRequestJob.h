@@ -33,6 +33,18 @@ public:
     // interfaces can be added later.
     virtual void send(String* body = String::emptyString,
                       bool allowCache = false) = 0;
+
+protected:
+    // Shared sync/async dispatch for scheme delegates whose completion is a
+    // single free function `worker(request, arg)`. Installs a
+    // MicroTaskExecutionManager scope around `worker` on both paths, because
+    // completion (changeReadyState/changeProgress/handleResponseEOF/
+    // handleError) can synchronously run JS (event listeners, parser-driven
+    // custom element upgrades) that calls enqueueMicrotask(), which asserts
+    // the scope is active. Centralized here so a new scheme delegate can't
+    // forget it the way File/Data/About/JavaScript/Unknown/Blob once did.
+    static void dispatchWorker(ResourceRequest* request, String* arg,
+                               void (*worker)(ResourceRequest*, String*));
 };
 
 class ResourceRequestJobDelegateFactory {
