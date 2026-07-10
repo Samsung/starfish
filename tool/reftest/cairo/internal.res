@@ -923,6 +923,7 @@ test/cairo/internal-test/shadowdom/slot_reassign.html
 test/cairo/internal-test/shadowdom/slotchange_basic.html
 test/cairo/internal-test/shadowdom/slotchange_nested_bubble.html
 test/cairo/internal-test/shadowdom/slotchange_nested_fallback.html
+test/cairo/internal-test/shadowdom/parser_upgrade_slotchange.html
 test/cairo/internal-test/shadowdom/template-innerhtml.html
 test/cairo/internal-test/shadowdom/shadowdom-svg-use.html
 test/cairo/internal-test/shadowdom/slot-fallback-layout.html
