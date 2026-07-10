@@ -1611,6 +1611,43 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
         Node* afterTarget =
             hitTest((float)data.clientX(), (float)data.clientY());
         if (afterTarget == iframeNode) {
+            // JS mouse events stay inside the iframe (isolation above), but
+            // scrolling is a UA default action that must still chain to a
+            // scrollable ancestor in this browsing context when the iframe's
+            // own content did not consume the gesture as a scroll — otherwise
+            // a mouse-drag over an iframe that covers a scroll container can
+            // never scroll the parent. The wheel path already chains this way,
+            // and dispatchTouchEvent chains the same way for touch-drag.
+            // Feed the gesture to the ancestor scrollers' default handlers only
+            // (no JS listeners), and only until some scroller claims the
+            // gesture; once claimed, the WebView global pointing-event
+            // intercept drives continuation. scrollOccurredDuringGesture is
+            // shared across the parent/child browsing contexts (same WebView),
+            // so a true value means the inner content already owns the scroll —
+            // leave it be.
+            if (!webView()->scrollOccurredDuringGesture()) {
+                String* scrollName;
+                if (kind == MouseEventKind::MouseEventDown) {
+                    scrollName =
+                        starfish()->staticStrings()->m_mousedown.localName();
+                } else if (kind == MouseEventKind::MouseEventMove) {
+                    scrollName =
+                        starfish()->staticStrings()->m_mousemove.localName();
+                } else {
+                    scrollName =
+                        starfish()->staticStrings()->m_mouseup.localName();
+                }
+                Event* scrollEvent =
+                    createMouseEvent(document(), scrollName, data);
+                bool scrollHandled = false;
+                for (Node* n = iframeNode; n && !scrollHandled;
+                     n = n->parentNode()) {
+                    scrollHandled = n->handleDefaultEvent(scrollEvent);
+                }
+                if (!scrollHandled) {
+                    document()->window()->handleDefaultEvent(scrollEvent);
+                }
+            }
             return innerReturn;
         }
 
