@@ -248,7 +248,11 @@ def _wpt_serve_run(*patterns, jobs=8, timeout=20, daemons=(), exclude=()):
             try:
                 for r in runners:
                     r.run()
-                npass, reasons, per_list = wpt_runner.run_all(items, jobs, timeout, None)
+                # verbose=True: this suite gates CI, so a crash here means a
+                # crash on the CI machine -- surface the captured backtrace
+                # in the (only) log we get, the CI job's own live stdout.
+                npass, reasons, per_list = wpt_runner.run_all(
+                    items, jobs, timeout, None, verbose=True)
             finally:
                 for r in runners:
                     r.terminate()
@@ -375,8 +379,12 @@ def _wpt_manifest_run(list_dir, mode, jobs=8, timeout=20):
         manifest = wpt_runner.load_manifest(DEFAULT_WPT_ROOT)
     try:
         with wpt_serve(DEFAULT_WPT_ROOT, verbose=True):
+            # verbose=True: this suite gates CI, so a crash here means a
+            # crash on the CI machine -- surface the captured backtrace
+            # in the (only) log we get, the CI job's own live stdout.
             npass, reasons, per_list = wpt_runner.run_all(
-                items, jobs, timeout, None, mode=mode, manifest=manifest)
+                items, jobs, timeout, None, mode=mode, manifest=manifest,
+                verbose=True)
     except WptServerError as e:
         print("wpt serve failed: %s" % e)
         print("hosts not set? run: "

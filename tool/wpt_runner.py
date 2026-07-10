@@ -118,7 +118,13 @@ def collect(path, force):
 
 
 def run_one(url, timeout):
-    """Return (ok, reason, npass_subtests, nfail_subtests)."""
+    """Return (ok, reason, npass_subtests, nfail_subtests, log).
+
+    log carries the captured Starfish stdout+stderr (crash backtraces print
+    to stdout, see src/shell/Shell.cpp) for the crash-ish reasons (NO_COMPLETION,
+    TIMEOUT, SHELL_ERROR); it is None for the logical HARNESS_STATUS_*/
+    NO_SUBTESTS/SUBTESTS_FAILED/OK outcomes, which have no crash to show.
+    """
     cmd = [STARFISH, url, "--hide-window", "--width=800", "--height=600"]
     env = dict(os.environ)
     env["HIDE_WINDOW"] = "1"
@@ -129,31 +135,31 @@ def run_one(url, timeout):
     try:
         out = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                              env=env, timeout=timeout).stdout.decode("utf-8", "replace")
-    except subprocess.TimeoutExpired:
-        return False, "TIMEOUT", 0, 0
+    except subprocess.TimeoutExpired as e:
+        return False, "TIMEOUT", 0, 0, (e.output or b"").decode("utf-8", "replace")
     except OSError:
-        return False, "SHELL_ERROR", 0, 0
+        return False, "SHELL_ERROR", 0, 0, None
 
     npass = len(RE_PASS.findall(out))
     nfail = len(RE_FAIL.findall(out))
     done = RE_DONE.search(out)
     if done is None:
-        return False, "NO_COMPLETION", npass, nfail
+        return False, "NO_COMPLETION", npass, nfail, out
     status, count = int(done.group(1)), int(done.group(2))
     if status != 0:
-        return False, "HARNESS_STATUS_%d" % status, npass, nfail
+        return False, "HARNESS_STATUS_%d" % status, npass, nfail, None
     if count == 0:
-        return False, "NO_SUBTESTS", npass, nfail
+        return False, "NO_SUBTESTS", npass, nfail, None
     if nfail:
-        return False, "SUBTESTS_FAILED", npass, nfail
-    return True, "OK", npass, nfail
+        return False, "SUBTESTS_FAILED", npass, nfail, None
+    return True, "OK", npass, nfail, None
 
 
 def run_one_reftest(url, timeout, manifest):
-    """Return (ok, reason, 0, 0). See tool/wpt_reftest.py for the mechanism."""
-    ok, reason = run_reftest(url, manifest=manifest, timeout=timeout,
-                             tmp_dir=TMP_DIR)
-    return ok, reason, 0, 0
+    """Return (ok, reason, 0, 0, log). See tool/wpt_reftest.py for the mechanism."""
+    ok, reason, log = run_reftest(url, manifest=manifest, timeout=timeout,
+                                  tmp_dir=TMP_DIR)
+    return ok, reason, 0, 0, log
 
 
 def _with_crashtest_marker(url):
@@ -170,13 +176,16 @@ def _with_crashtest_marker(url):
 
 
 def run_one_crashtest(url, timeout):
-    """Return (ok, reason, 0, 0).
+    """Return (ok, reason, 0, 0, log).
 
     A crashtest has no testharness.js, so completion is signaled by
     inject_report.js's crashtest path (see tool/wpt/inject_report.js) instead
     of the WPTR DONE contract: it waits for the WPT `test-wait` class to be
     gone from <html>, then prints WPTR CRASHOK. The query marker keeps that
     path from engaging on ordinary testharness runs.
+
+    log carries the captured Starfish stdout+stderr (crash backtraces print
+    to stdout, see src/shell/Shell.cpp) for the crash-ish reasons; None for OK.
     """
     gated_url = _with_crashtest_marker(url)
     cmd = [STARFISH, gated_url, "--hide-window", "--width=800", "--height=600"]
@@ -189,10 +198,10 @@ def run_one_crashtest(url, timeout):
     try:
         r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                            env=env, timeout=timeout)
-    except subprocess.TimeoutExpired:
-        return False, "TIMEOUT", 0, 0
+    except subprocess.TimeoutExpired as e:
+        return False, "TIMEOUT", 0, 0, (e.output or b"").decode("utf-8", "replace")
     except OSError:
-        return False, "SHELL_ERROR", 0, 0
+        return False, "SHELL_ERROR", 0, 0, None
     out = r.stdout.decode("utf-8", "replace")
     if r.returncode < 0:
         # Distinct from reftest's "TC_CRASH" (tool/wpt_reftest.py's
@@ -200,10 +209,37 @@ def run_one_crashtest(url, timeout):
         # inherited from the legacy wpt_test.py driver) -- this specifically
         # means the shell was killed by a signal, which is exactly the
         # condition a crashtest exists to detect.
-        return False, "SIGNAL_CRASH", 0, 0
+        return False, "SIGNAL_CRASH", 0, 0, out
     if RE_CRASHOK.search(out):
-        return True, "OK", 0, 0
-    return False, "NO_COMPLETION", 0, 0
+        return True, "OK", 0, 0, None
+    return False, "NO_COMPLETION", 0, 0, out
+
+
+# Reason categories that mean "the Starfish process itself misbehaved"
+# (crashed, hung, never signaled completion) as opposed to a logical
+# pass/fail verdict (SUBTESTS_FAILED, IMG_MISMATCH, ...) -- only these carry
+# a captured process log worth printing under --verbose. REF_LOAD_FAIL wraps
+# one of these same tokens for the reference page (e.g. "REF_LOAD_FAIL(TC_CRASH)"),
+# so the check strips both a "(...)" wrapper and a ": msg" suffix before
+# matching, unlike reason_category() above which only strips the latter.
+CRASH_REASONS = frozenset((
+    "TC_CRASH", "SIGNAL_CRASH", "REF_LOAD_FAIL", "SHELL_ERROR",
+    "NO_COMPLETION", "TIMEOUT", "INTERNAL_ERROR",
+))
+
+
+def _is_crash_reason(reason):
+    return reason.split("(", 1)[0].split(":", 1)[0].strip() in CRASH_REASONS
+
+
+def _tail_lines(text, n):
+    """Return the last n lines of text, or all of it if n <= 0 or it fits."""
+    if not text or n <= 0:
+        return text
+    lines = text.splitlines()
+    if len(lines) <= n:
+        return text
+    return "\n".join(lines[-n:])
 
 
 def load_done(results_path):
@@ -219,7 +255,16 @@ def load_done(results_path):
 
 
 def run_all(items, jobs, timeout, results_path, append=False,
-           mode="testharness", manifest=None):
+           mode="testharness", manifest=None, verbose=False, log_lines=100):
+    """Run items and print verdicts.
+
+    verbose: also print the captured Starfish output (tail-bound to
+    log_lines, 0=unbounded) under a crash-ish FAIL (see CRASH_REASONS) --
+    this is where a SIGSEGV/SIGABRT backtrace (src/shell/Shell.cpp) would
+    otherwise be silently discarded. Off by default so a clean gating run
+    stays as quiet as before; --results is unaffected either way (still the
+    plain 3-column PASS/FAIL\treason\turl format wpt_annotate.py expects).
+    """
     total = len(items)
     npass = 0
     reasons = Counter()
@@ -233,11 +278,11 @@ def run_all(items, jobs, timeout, results_path, append=False,
         name, url = item
         try:
             if mode == "reftest":
-                ok, reason, np, nf = run_one_reftest(url, timeout, manifest)
+                ok, reason, np, nf, log = run_one_reftest(url, timeout, manifest)
             elif mode == "crashtest":
-                ok, reason, np, nf = run_one_crashtest(url, timeout)
+                ok, reason, np, nf, log = run_one_crashtest(url, timeout)
             else:
-                ok, reason, np, nf = run_one(url, timeout)
+                ok, reason, np, nf, log = run_one(url, timeout)
         except Exception as e:
             # Backstop: ThreadPoolExecutor.map() re-raises a worker exception
             # when its result is consumed, which would abort this whole
@@ -245,11 +290,11 @@ def run_all(items, jobs, timeout, results_path, append=False,
             # result. One bad item (e.g. an unexpected crash deep in a mode's
             # subprocess handling) must not take down a multi-thousand-item
             # batch -- record it as this item's own failure instead.
-            ok, reason, np, nf = False, "INTERNAL_ERROR: %s" % e, 0, 0
-        return name, url, ok, reason, np, nf
+            ok, reason, np, nf, log = False, "INTERNAL_ERROR: %s" % e, 0, 0, None
+        return name, url, ok, reason, np, nf, log
 
     with ThreadPoolExecutor(max_workers=jobs) as ex:
-        for name, url, ok, reason, np, nf in ex.map(task, items):
+        for name, url, ok, reason, np, nf, log in ex.map(task, items):
             done_n += 1
             pl = per_list.setdefault(name, [0, 0])
             pl[1] += 1
@@ -279,6 +324,13 @@ def run_all(items, jobs, timeout, results_path, append=False,
             else:
                 print("%s[FAIL] %s%s (%s%s%s)"
                       % (RED, RST, url, RED, reason, RST))
+            if verbose and not ok and log and _is_crash_reason(reason):
+                tail = _tail_lines(log, log_lines)
+                header = ("  --- Starfish output (last %d lines) ---" % log_lines
+                          if log_lines > 0 else "  --- Starfish output ---")
+                print(header)
+                for line in tail.splitlines():
+                    print("  | %s" % line)
             if results_fp:
                 results_fp.write("%s\t%s\t%s\n"
                                  % ("PASS" if ok else "FAIL", reason, url))
@@ -305,6 +357,14 @@ def main(argv):
                    default="testharness",
                    help="test kind the .res list(s) contain (default: "
                         "testharness)")
+    p.add_argument("-v", "--verbose", action="store_true",
+                   help="print captured Starfish output (crash backtrace etc.) "
+                        "for crash-ish FAILs (TC_CRASH, SIGNAL_CRASH, "
+                        "REF_LOAD_FAIL, TIMEOUT, NO_COMPLETION, SHELL_ERROR, "
+                        "INTERNAL_ERROR)")
+    p.add_argument("--log-lines", type=int, default=100,
+                   help="tail this many lines of --verbose output (0=unbounded, "
+                        "default: 100)")
     args = p.parse_args(argv)
     if not args.no_serve and not args.wpt_root:
         p.error("--wpt-root or WPT_ROOT is required (or pass --no-serve)")
@@ -325,7 +385,8 @@ def main(argv):
 
     def go():
         return run_all(items, args.jobs, args.timeout, args.results,
-                       append=args.resume, mode=args.mode, manifest=manifest)
+                       append=args.resume, mode=args.mode, manifest=manifest,
+                       verbose=args.verbose, log_lines=args.log_lines)
 
     if args.no_serve:
         npass, reasons, per_list = go()

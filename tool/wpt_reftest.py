@@ -192,7 +192,12 @@ def url_to_test_path(url):
 
 
 def _screenshot(url, out_path, timeout, width=800, height=600):
-    """Render one page and dump a PNG. Returns True on a clean exit."""
+    """Render one page and dump a PNG. Returns (ok, reason, log).
+
+    log carries the captured Starfish stdout+stderr (crash backtraces print
+    to stdout, see src/shell/Shell.cpp) on any failure path, so a caller can
+    surface it (e.g. wpt_runner.py's --verbose); it is None on success.
+    """
     cmd = [STARFISH, url, "--hide-window", "--screen-shot=" + out_path,
           "--width=%d" % width, "--height=%d" % height]
     env = dict(os.environ)
@@ -204,13 +209,14 @@ def _screenshot(url, out_path, timeout, width=800, height=600):
     try:
         r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                            env=env, timeout=timeout)
-    except subprocess.TimeoutExpired:
-        return False, "TIMEOUT"
+    except subprocess.TimeoutExpired as e:
+        # e.output holds whatever the process wrote before being killed.
+        return False, "TIMEOUT", (e.output or b"").decode("utf-8", "replace")
     except OSError:
-        return False, "SHELL_ERROR"
+        return False, "SHELL_ERROR", None
     if r.returncode != 0 or not os.path.isfile(out_path):
-        return False, "TC_CRASH"
-    return True, None
+        return False, "TC_CRASH", r.stdout.decode("utf-8", "replace")
+    return True, None, None
 
 
 _DIFF_RE = re.compile(r"diff: ([\d.]+)%")
@@ -256,18 +262,22 @@ def _images_differ(png_a, png_b, timeout):
 
 def run_reftest(url, wpt_root=DEFAULT_WPT_ROOT, manifest=None, timeout=15,
                 tmp_dir=None, width=800, height=600):
-    """Run one WPT reftest. Return (ok, reason).
+    """Run one WPT reftest. Return (ok, reason, log).
 
     ok=True means the test's own pass condition (relation vs the actual pixel
     comparison) was satisfied for every listed reference -- WPT reftests with
     multiple references require ALL of them to hold.
+
+    log carries the captured Starfish output when a page failed to render
+    (crash/timeout/shell-error); it is None for a purely logical mismatch
+    (IMG_MISMATCH etc., where there is no process output to show).
     """
     if manifest is None:
         manifest = load_manifest(wpt_root)
     test_path = url_to_test_path(url)
     references = resolve_references(manifest, test_path)
     if not references:
-        return False, "NO_REFERENCE"
+        return False, "NO_REFERENCE", None
 
     # wpt_runner.py fans out via ThreadPoolExecutor, so many reftests run
     # concurrently inside one process -- pid alone is not unique per-call the
@@ -280,9 +290,9 @@ def run_reftest(url, wpt_root=DEFAULT_WPT_ROOT, manifest=None, timeout=15,
     # test_png is cleaned up on every exit path, including the test page's
     # own screenshot failing (e.g. TIMEOUT after partially writing the file).
     try:
-        ok, reason = _screenshot(url, test_png, timeout, width, height)
+        ok, reason, log = _screenshot(url, test_png, timeout, width, height)
         if not ok:
-            return False, reason
+            return False, reason, log
 
         for ref_url, relation, fuzzy in references:
             # MVP: fuzzy tolerance is not implemented (exact-pixel only), so a
@@ -292,9 +302,9 @@ def run_reftest(url, wpt_root=DEFAULT_WPT_ROOT, manifest=None, timeout=15,
             # adds tolerance support.
             ref_png = os.path.join(tmp_dir, "reftest_%s_ref.png" % tag)
             try:
-                ok, reason = _screenshot(ref_url, ref_png, timeout, width, height)
+                ok, reason, log = _screenshot(ref_url, ref_png, timeout, width, height)
                 if not ok:
-                    return False, "REF_LOAD_FAIL(%s)" % reason
+                    return False, "REF_LOAD_FAIL(%s)" % reason, log
                 # A single corrupt/unreadable PNG or a hung imgdiff must not
                 # take down the whole batch run (ThreadPoolExecutor.map()
                 # re-raises on the consuming side, which would abort the
@@ -303,16 +313,17 @@ def run_reftest(url, wpt_root=DEFAULT_WPT_ROOT, manifest=None, timeout=15,
                 try:
                     differ = _images_differ(test_png, ref_png, timeout)
                 except subprocess.TimeoutExpired:
-                    return False, "IMGDIFF_TIMEOUT"
+                    return False, "IMGDIFF_TIMEOUT", None
                 except RuntimeError as e:
-                    return False, "IMGDIFF_ERROR: %s" % e
+                    return False, "IMGDIFF_ERROR: %s" % e, None
             finally:
                 os.path.exists(ref_png) and os.remove(ref_png)
             wants_match = (relation == "==")
             passed = (not differ) if wants_match else differ
             if not passed:
-                return False, "IMG_MISMATCH" if wants_match else "IMG_UNEXPECTED_MATCH"
-        return True, "OK"
+                return False, ("IMG_MISMATCH" if wants_match
+                               else "IMG_UNEXPECTED_MATCH"), None
+        return True, "OK", None
     finally:
         os.path.exists(test_png) and os.remove(test_png)
 
@@ -327,6 +338,8 @@ if __name__ == "__main__":
     p.add_argument("--timeout", type=int, default=15)
     args = p.parse_args()
     ensure_manifest(args.wpt_root, _manifest_path(args.wpt_root))
-    ok, reason = run_reftest(args.url, wpt_root=args.wpt_root, timeout=args.timeout)
+    ok, reason, log = run_reftest(args.url, wpt_root=args.wpt_root, timeout=args.timeout)
     print("PASS" if ok else "FAIL", reason)
+    if log:
+        print(log)
     sys.exit(0 if ok else 1)
