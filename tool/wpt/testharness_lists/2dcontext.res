@@ -583,6 +583,7 @@ http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2
 http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.zerocanvas.html
 http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/drawimage_html_image.html
 http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/drawimage_svg_image_1.html
+http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/drawimage_svg_image_with_foreign_object_does_not_taint.html
 # [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.center.html
 # [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.end.ltr.html
 # [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.end.rtl.html
