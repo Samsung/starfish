@@ -1327,6 +1327,35 @@ SourceBuffer::MediaPacketView SourceBuffer::copyProperMediaPacket(
     return view;
 }
 
+SourceBuffer::MediaPacketView SourceBuffer::peekProperMediaPacket(
+    size_t streamIdx, uint64_t startPositionInDTSWantToFind)
+{
+    Locker<Mutex> packetGroupLocker(*m_packetGroupsMutex);
+    MediaPacketView view;
+    // findProperMediaPacketLocked records the returned packet in
+    // m_packetAccessCachePerStream as if it were consumed, which would make
+    // the next lookup for the same DTS return the packet AFTER the peeked
+    // one (e.g. the post-seek forward IDR align would then feed from the
+    // packet following the keyframe instead of the keyframe itself). A peek
+    // must not consume, so restore the cache entry afterwards.
+    auto savedCache = m_packetAccessCachePerStream[streamIdx];
+    std::pair<MediaPacket*, size_t> found =
+        findProperMediaPacketLocked(streamIdx, startPositionInDTSWantToFind);
+    m_packetAccessCachePerStream[streamIdx] = savedCache;
+    MediaPacket* pkt = found.first;
+    if (pkt == nullptr) {
+        return view;
+    }
+    view.m_found = true;
+    view.m_dts = pkt->m_dts;
+    view.m_pts = pkt->m_pts;
+    view.m_duration = pkt->m_duration;
+    view.m_dataSize = pkt->m_dataSize;
+    view.m_initSegmentIndex = found.second;
+    view.m_hasIdr = pkt->m_hasIdr;
+    return view;
+}
+
 std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacketLocked(
     size_t streamIdx, uint64_t startPositionInDTSWantToFind)
 {

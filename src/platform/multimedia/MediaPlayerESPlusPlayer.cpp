@@ -67,10 +67,14 @@ namespace Starfish {
 // Byte threshold registered with esplusplayer for status callbacks,
 // mirroring chromium-efl kMediaStreamBufferMinThreshold.
 #define STARFISH_ESPP_MIN_BYTE_THRESHOLD 100
-// Max distance a post-seek keyframe may sit behind the seek target. A
-// GOP is a few seconds; a match farther back than this means the target
-// segment is not buffered yet, so wait rather than feed the wrong spot.
-#define STARFISH_ESPP_SEEK_IDR_MAX_LOOKBACK_MS 12000
+// Max distance a post-seek keyframe may sit behind the seek target. Must
+// exceed one video GOP: YouTube VP9 keyframes are ~13.8s apart (device-
+// measured), so a target lands up to a full GOP after the nearest preceding
+// keyframe. An earlier 12000 cut below the GOP and rejected the legitimate
+// GOP-start align, wedging the seek. A match farther back than this means
+// the target segment is not buffered yet, so wait rather than feed the wrong
+// spot; the hundreds-of-seconds stale-prefetch gap stays well outside.
+#define STARFISH_ESPP_SEEK_IDR_MAX_LOOKBACK_MS 20000
 // Same bound for the forward direction (true forward seek where the page
 // appends the target segment starting at a keyframe after the target) and
 // for the mid-stream skip-ahead. Without a bound the feeder submits
@@ -78,8 +82,11 @@ namespace Starfish {
 // feeding video from 233.7s / audio from 222.3s), which poisons the
 // esplusplayer preroll and turns a 1s rebuffer into a 10s+ stall or a
 // full wedge. Anything farther than this from the cursor means the target
-// data has not been appended yet: wait for the demuxer instead.
-#define STARFISH_ESPP_SEEK_IDR_MAX_LOOKAHEAD_MS 12000
+// data has not been appended yet: wait for the demuxer instead. Sized to a
+// full GOP like the lookback: device logs showed seek(120s) landing in a
+// buffer hole whose next keyframe was 133.8s (13.8s ahead), just past the
+// old 12000 cap -> the align never fired and seek_done never came.
+#define STARFISH_ESPP_SEEK_IDR_MAX_LOOKAHEAD_MS 20000
 // Steady-state skip-ahead cap: how far past the cursor the feed may jump to
 // the next buffered packet. Wide enough for the ~20s segment alignment of a
 // freshly appended post-seek range and for normal eviction gaps, yet far
@@ -784,6 +791,14 @@ void MediaPlayerESPlusPlayer::fillBufferWithoutGuard(ESPPSourceStream* stream)
     if (alive() == false || m_player == nullptr || stream->m_eosSubmitted) {
         return;
     }
+    if (stream->m_seekCursorStale) {
+        // Between seek() and this stream's ready_to_seek the cursor still
+        // points at the pre-seek position; feeding from it would submit
+        // stale packets into the freshly flushed native buffer (the
+        // byte-status UNDERRUN callback can unpark the stream inside that
+        // window). ready_to_seek repositions the cursor and clears the flag.
+        return;
+    }
     SourceBuffer* sb = activeSourceBuffer(stream->m_type);
     if (sb == nullptr) {
         return;
@@ -824,7 +839,9 @@ void MediaPlayerESPlusPlayer::fillBufferWithoutGuard(ESPPSourceStream* stream)
         // exactly 90s, video at 94.9s) -- start at the first keyframe
         // at-or-after the target instead.
         uint64_t alignedDTS = 0;
-        if (sb->findNearestIdrDTSBefore(streamIdx, lastDTS, alignedDTS) &&
+        bool haveBack =
+            sb->findNearestIdrDTSBefore(streamIdx, lastDTS, alignedDTS);
+        if (haveBack &&
             lastDTS - alignedDTS <= STARFISH_ESPP_SEEK_IDR_MAX_LOOKBACK_MS) {
             STARFISH_LOG_INFO("ESPP: IDR align %llu -> %llu (%s)",
                               (unsigned long long)lastDTS,
@@ -833,22 +850,40 @@ void MediaPlayerESPlusPlayer::fillBufferWithoutGuard(ESPPSourceStream* stream)
             lastDTS = alignedDTS;
             stream->m_needIdrAlign = false;
         } else {
-            std::pair<MediaPacket*, size_t> peek =
-                sb->findProperMediaPacket(streamIdx, lastDTS);
-            if (peek.first != nullptr && peek.first->m_hasIdr &&
-                peek.first->m_dts >= lastDTS &&
-                peek.first->m_dts - lastDTS <=
+            // Metadata-only peek via the snapshotting accessor: the raw
+            // findProperMediaPacket hands back a MediaPacket* that a concurrent
+            // main-thread remove()/eviction can free the instant the source-
+            // buffer lock is dropped, so reading m_hasIdr/m_dts off it races.
+            SourceBuffer::MediaPacketView peek =
+                sb->peekProperMediaPacket(streamIdx, lastDTS);
+            if (peek.m_found && peek.m_hasIdr && peek.m_dts >= lastDTS &&
+                peek.m_dts - lastDTS <=
                     STARFISH_ESPP_SEEK_IDR_MAX_LOOKAHEAD_MS) {
                 STARFISH_LOG_INFO("ESPP: IDR align (forward) %llu -> %llu (%s)",
                                   (unsigned long long)lastDTS,
-                                  (unsigned long long)peek.first->m_dts,
+                                  (unsigned long long)peek.m_dts,
                                   stream->isAudio() ? "AUDIO" : "VIDEO");
-                lastDTS = peek.first->m_dts;
+                lastDTS = peek.m_dts;
                 stream->m_needIdrAlign = false;
             } else {
                 // Nothing decodable near the target yet (a keyframe far
                 // ahead is stale pre-seek prefetch, not the target
-                // segment). Wait for the next append.
+                // segment). Wait for the next append. Throttled: the demuxer
+                // append callback re-probes this path many times per second
+                // while the page is still fetching the target segment.
+                uint64_t nowMs = monotonicMs();
+                if (nowMs - stream->m_lastIdrWaitLogMs > 1000) {
+                    stream->m_lastIdrWaitLogMs = nowMs;
+                    STARFISH_LOG_INFO(
+                        "ESPP: IDR align waiting target data (%s) target:%llu "
+                        "nearestBackDTS:%llu nextIdrDTS:%llu lastBuffered:%llu",
+                        stream->isAudio() ? "AUDIO" : "VIDEO",
+                        (unsigned long long)lastDTS,
+                        haveBack ? (unsigned long long)alignedDTS : 0ULL,
+                        peek.m_found ? (unsigned long long)peek.m_dts : 0ULL,
+                        (unsigned long long)sb->lastBufferedTimestamp(
+                            streamIdx));
+                }
                 stream->m_waitingDemuxer = true;
                 return;
             }
@@ -860,11 +895,19 @@ void MediaPlayerESPlusPlayer::fillBufferWithoutGuard(ESPPSourceStream* stream)
     uint64_t fillStartDTS = lastDTS;
     size_t submitCount = 0;
 
+    // Reused across iterations. copyProperMediaPacket snapshots the packet's
+    // encoded bytes here under the source-buffer lock, so the memory handed to
+    // esplusplayer_submit_packet is a caller-owned copy that a concurrent
+    // main-thread remove()/eviction (YouTube appends+evicts segments
+    // continuously) cannot free out from under the push. The raw
+    // findProperMediaPacket used before returned a MediaPacket* that became a
+    // use-after-free the moment the lock dropped -> random crash under MSE.
+    std::vector<uint8_t> packetData;
     while (submitBytes < sizeUpTo) {
-        std::pair<MediaPacket*, size_t> packet =
-            sb->findProperMediaPacket(streamIdx, lastDTS);
+        SourceBuffer::MediaPacketView packet =
+            sb->copyProperMediaPacket(streamIdx, lastDTS, packetData);
 
-        if (packet.first == nullptr) {
+        if (!packet.m_found) {
             STARFISH_LOG_INFO(
                 "ESPP: no packet at DTS %llu (%s); pushed %u this pass "
                 "(%llu -> %llu), lastBuffered %llu",
@@ -893,7 +936,7 @@ void MediaPlayerESPlusPlayer::fillBufferWithoutGuard(ESPPSourceStream* stream)
             stream->m_waitingDemuxer = true;
             break;
         }
-        if (packet.first->m_dts < lastDTS) {
+        if (packet.m_dts < lastDTS) {
             // Already-consumed packet; defer to next demuxer event.
             sb->clearPacketAccessCache();
             stream->m_waitingDemuxer = true;
@@ -911,8 +954,8 @@ void MediaPlayerESPlusPlayer::fillBufferWithoutGuard(ESPPSourceStream* stream)
         uint64_t skipAheadCap = stream->m_everSubmitted
                                     ? STARFISH_ESPP_MAX_SKIP_AHEAD_MS
                                     : std::numeric_limits<uint64_t>::max();
-        if (packet.first->m_dts - lastDTS > 500) {
-            if (packet.first->m_dts - lastDTS > skipAheadCap) {
+        if (packet.m_dts - lastDTS > 500) {
+            if (packet.m_dts - lastDTS > skipAheadCap) {
                 // The only buffered data ahead is far from the cursor:
                 // stale pre-seek/scrub prefetch, or the segment covering the
                 // cursor has not been appended yet. Feeding it would hand
@@ -923,7 +966,7 @@ void MediaPlayerESPlusPlayer::fillBufferWithoutGuard(ESPPSourceStream* stream)
                     "ESPP: skip-ahead blocked %llu -> %llu (%s); waiting "
                     "demuxer",
                     (unsigned long long)lastDTS,
-                    (unsigned long long)packet.first->m_dts,
+                    (unsigned long long)packet.m_dts,
                     stream->isAudio() ? "AUDIO" : "VIDEO");
                 stream->m_waitingDemuxer = true;
                 break;
@@ -937,14 +980,14 @@ void MediaPlayerESPlusPlayer::fillBufferWithoutGuard(ESPPSourceStream* stream)
             // keyframe.
             STARFISH_LOG_INFO("ESPP: skip-ahead %llu -> %llu (%s)",
                               (unsigned long long)lastDTS,
-                              (unsigned long long)packet.first->m_dts,
+                              (unsigned long long)packet.m_dts,
                               stream->isAudio() ? "AUDIO" : "VIDEO");
-            lastDTS = packet.first->m_dts;
+            lastDTS = packet.m_dts;
         }
 
-        if (packet.second != currentInitIndex) {
-            if (!packet.first->m_hasIdr) {
-                lastDTS = packet.first->m_dts + packet.first->m_duration;
+        if (packet.m_initSegmentIndex != currentInitIndex) {
+            if (!packet.m_hasIdr) {
+                lastDTS = packet.m_dts + packet.m_duration;
                 continue;
             }
             // Unlike the capi path there is no stream-info re-registration:
@@ -953,20 +996,20 @@ void MediaPlayerESPlusPlayer::fillBufferWithoutGuard(ESPPSourceStream* stream)
             STARFISH_LOG_INFO(
                 "ESPP: config change detected (initIdx %u -> %u) at "
                 "DTS %llu (%s)",
-                (unsigned)currentInitIndex, (unsigned)packet.second,
-                (unsigned long long)packet.first->m_dts,
+                (unsigned)currentInitIndex, (unsigned)packet.m_initSegmentIndex,
+                (unsigned long long)packet.m_dts,
                 stream->isAudio() ? "AUDIO" : "VIDEO");
-            stream->m_initSegmentIndex = packet.second;
-            currentInitIndex = packet.second;
+            stream->m_initSegmentIndex = packet.m_initSegmentIndex;
+            currentInitIndex = packet.m_initSegmentIndex;
         }
 
         esplusplayer_es_packet esPacket;
         memset(&esPacket, 0, sizeof(esplusplayer_es_packet));
         esPacket.type = toESPPStreamType(stream->m_type);
-        esPacket.buffer = (char*)packet.first->m_data;
-        esPacket.buffer_size = packet.first->m_dataSize;
-        esPacket.pts = packet.first->m_pts;           // ms
-        esPacket.duration = packet.first->m_duration; // ms
+        esPacket.buffer = (char*)packetData.data();
+        esPacket.buffer_size = packet.m_dataSize;
+        esPacket.pts = packet.m_pts;           // ms
+        esPacket.duration = packet.m_duration; // ms
 
         esplusplayer_submit_status status =
             esplusplayer_submit_packet(m_player, &esPacket);
@@ -1000,8 +1043,8 @@ void MediaPlayerESPlusPlayer::fillBufferWithoutGuard(ESPPSourceStream* stream)
             handlePlayerError();
             return;
         }
-        submitBytes += packet.first->m_dataSize;
-        lastDTS = packet.first->m_dts + packet.first->m_duration;
+        submitBytes += packet.m_dataSize;
+        lastDTS = packet.m_dts + packet.m_duration;
         submitCount++;
         // First packet accepted: the uncapped preroll ends, steady cap
         // applies from here on.
@@ -1110,6 +1153,8 @@ void MediaPlayerESPlusPlayer::handleReadyToSeek(StreamType type,
         stream->m_waitingDemuxer = false;
         stream->m_shouldFeed = true;
         stream->m_lastSubmitRejectedMs = 0;
+        // Cursor repositioned to the seek target: feeding may resume.
+        stream->m_seekCursorStale = false;
     }
     wakeMseThread();
 }
@@ -1118,6 +1163,13 @@ void MediaPlayerESPlusPlayer::handleSeeked(bool success)
 {
     if (isMainThread() == false) {
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
+        // Same success-passing route as handlePrepared: the idler carries only
+        // `this`, so a failure is recorded in m_foundError before the hop and
+        // success is re-derived from it on the main thread. Without the store
+        // a cross-thread handleSeeked(false) would arrive as success=true.
+        if (!success) {
+            m_foundError = true;
+        }
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
             m_container->window(),
             [](size_t, void* data) {
@@ -1129,6 +1181,10 @@ void MediaPlayerESPlusPlayer::handleSeeked(bool success)
     }
     STARFISH_LOG_INFO("ESPP: handleSeeked success:%d target:%lf pending:%lf",
                       (int)success, m_lastSeekTargetTime, m_pendingSeekTime);
+    if (m_seekingTimer != TimerInvalidID && m_container != nullptr) {
+        m_container->window()->clearTimeout(m_seekingTimer);
+        m_seekingTimer = TimerInvalidID;
+    }
     if (m_seekState == SEEKSTATE_NO_SEEK) {
         return;
     }
@@ -1227,6 +1283,13 @@ void MediaPlayerESPlusPlayer::handleBufferByteStatus(
         if (stream->m_shouldFeed == false) {
             stream->m_shouldFeed = true;
         }
+        // The player wants data. If the feed had parked this stream on
+        // m_waitingDemuxer (no packet at the cursor at the time), clear it so
+        // the feed thread re-probes the source buffer: the poll loop skips
+        // waitingDemuxer streams and the only other clears are the demuxer
+        // append callback and ready_to_seek, so a missed/raced append event
+        // would otherwise leave the stream stalled until the next seek.
+        stream->m_waitingDemuxer = false;
         wakeMseThread();
     } else {
         // OVERRUN: park the stream and stamp the retry-backoff deadline, but
@@ -1456,6 +1519,23 @@ void MediaPlayerESPlusPlayer::seek(double time)
     }
     m_seekState = SEEKSTATE_SEEKING;
     m_lastSeekTargetTime = time;
+    prepareStreamsForNativeSeek();
+    int ret = esplusplayer_seek(m_player, (uint64_t)(time * 1000));
+    if (ret != ESPLUSPLAYER_ERROR_TYPE_NONE) {
+        PLAYER_LOGE("ESPP: seek failed: %s",
+                    esplusplayer_get_error_string(
+                        static_cast<esplusplayer_error_type>(ret)));
+        m_foundError = true;
+        handleSeeked(false);
+        return;
+    }
+    // Watchdog: if seek_done never arrives (wedged pipeline / bad segment /
+    // resource conflict), unwedge m_seekState instead of buffering forever.
+    armSeekWatchdog();
+}
+
+void MediaPlayerESPlusPlayer::prepareStreamsForNativeSeek()
+{
     {
         // Match the capi-media-player seek: only reset the packet access
         // cache and let the native player drive the seek. Do NOT reset the
@@ -1479,18 +1559,110 @@ void MediaPlayerESPlusPlayer::seek(double time)
     }
     if (m_audioStream != nullptr) {
         m_audioStream->m_shouldFeed = false;
+        m_audioStream->m_seekCursorStale = true;
     }
     if (m_videoStream != nullptr) {
         m_videoStream->m_shouldFeed = false;
+        m_videoStream->m_seekCursorStale = true;
     }
+}
+
+bool MediaPlayerESPlusPlayer::supersedeSeek(double time)
+{
+    if (alive() == false || m_foundError == true || m_player == nullptr ||
+        !m_prepared || m_seekState == SEEKSTATE_NO_SEEK) {
+        return false;
+    }
+    STARFISH_LOG_INFO("ESPP: supersedeSeek(%lf) over in-flight target %lf",
+                      time, m_lastSeekTargetTime);
+    // Retarget the in-flight native seek. Without this the pipeline
+    // deadlocks on rapid consecutive seeks: the native player waits to
+    // preroll at the OLD target while the page fetches and appends data
+    // only for the NEW one, so seek_done never comes and the watchdog
+    // eventually tears the player down (observed with YouTube: seekTo A,
+    // then seekTo B 400ms later, froze playback until the teardown).
+    prepareStreamsForNativeSeek();
     int ret = esplusplayer_seek(m_player, (uint64_t)(time * 1000));
     if (ret != ESPLUSPLAYER_ERROR_TYPE_NONE) {
-        PLAYER_LOGE("ESPP: seek failed: %s",
+        // Could not retarget (backend rejected the mid-seek seek). Fall
+        // back to the legacy chain: finish the old seek, then seek again
+        // from handleSeeked.
+        PLAYER_LOGE("ESPP: supersede seek failed: %s",
                     esplusplayer_get_error_string(
                         static_cast<esplusplayer_error_type>(ret)));
-        m_foundError = true;
-        handleSeeked(false);
+        m_pendingSeekTime = time;
+        return true;
     }
+    m_lastSeekTargetTime = time;
+    m_pendingSeekTime = std::numeric_limits<double>::quiet_NaN();
+    // Fresh watchdog for the new target (armSeekWatchdog no-ops while
+    // armed, so drop the old one first).
+    if (m_seekingTimer != TimerInvalidID && m_container != nullptr) {
+        m_container->window()->clearTimeout(m_seekingTimer);
+        m_seekingTimer = TimerInvalidID;
+    }
+    armSeekWatchdog();
+    return true;
+}
+
+void MediaPlayerESPlusPlayer::armSeekWatchdog()
+{
+    if (m_seekingTimer != TimerInvalidID || m_container == nullptr) {
+        return;
+    }
+    m_seekWatchdogStamp = seekProgressStamp();
+    m_seekingTimer = m_container->window()->setTimeout(
+        [](void* data) {
+            MediaPlayerESPlusPlayer* self = (MediaPlayerESPlusPlayer*)data;
+            self->handleSeekTimeout();
+        },
+        STARFISH_ESPP_SEEK_WATCHDOG_MS, this);
+}
+
+uint64_t MediaPlayerESPlusPlayer::seekProgressStamp()
+{
+    uint64_t stamp = 0;
+    ESPPSourceStream* streams[2] = { m_audioStream, m_videoStream };
+    for (int i = 0; i < 2; i++) {
+        ESPPSourceStream* st = streams[i];
+        if (st == nullptr) {
+            continue;
+        }
+        stamp = stamp * 1000003 + st->m_lastSubmittedDTS;
+        SourceBuffer* sb = activeSourceBuffer(st->m_type);
+        if (sb != nullptr) {
+            stamp = stamp * 1000003 +
+                    sb->lastBufferedTimestamp(activeStreamIndex(st->m_type));
+        }
+    }
+    return stamp;
+}
+
+void MediaPlayerESPlusPlayer::handleSeekTimeout()
+{
+    STARFISH_ASSERT(isMainThread());
+    m_seekingTimer = TimerInvalidID;
+    if (m_seekState == SEEKSTATE_NO_SEEK || alive() == false) {
+        return;
+    }
+    uint64_t stamp = seekProgressStamp();
+    if (stamp != m_seekWatchdogStamp) {
+        // Something moved during the period -- the page is still appending
+        // (slow network fetching the target segment) or the feeder is still
+        // submitting. Not a wedge: keep waiting, and fail only after a full
+        // period with no movement at all.
+        STARFISH_LOG_INFO(
+            "ESPP: seek watchdog re-armed (target:%lf), still progressing",
+            m_lastSeekTargetTime);
+        armSeekWatchdog();
+        return;
+    }
+    PLAYER_LOGE("ESPP: seek watchdog fired (target:%lf) — seek_done never came",
+                m_lastSeekTargetTime);
+    // Treat as a failed seek: same recovery contract as the capi backend
+    // (mediaPlayerNotifySeekFailure + teardown, letting the element rebuild).
+    m_foundError = true;
+    handleSeeked(false);
 }
 
 double MediaPlayerESPlusPlayer::currentTime()
@@ -1616,9 +1788,26 @@ void MediaPlayerESPlusPlayer::destroy()
         return;
     }
     if (m_seekState != SEEKSTATE_NO_SEEK) {
-        m_foundError = true;
-        handleSeeked(false);
-        return;
+        if (m_foundError == true) {
+            // Genuine pipeline error while a seek is in flight: report it
+            // as a seek failure (unwinds through handleSeeked -> notify ->
+            // destroy() again with the state cleared).
+            handleSeeked(false);
+            return;
+        }
+        // Element-driven teardown (JS load()/src change): the element has
+        // already cleared its own seeking state, so abort the in-flight
+        // seek SILENTLY and continue. Routing this through
+        // handleSeeked(false) fired mediaPlayerNotifySeekFailure ->
+        // dedicatedMediaSourceFailure, i.e. a spurious MEDIA_ERR + error
+        // event in the middle of the page's own load() -- observed wedging
+        // YouTube into a permanent spinner.
+        m_seekState = SEEKSTATE_NO_SEEK;
+        m_pendingSeekTime = std::numeric_limits<double>::quiet_NaN();
+        if (m_seekingTimer != TimerInvalidID && m_container != nullptr) {
+            m_container->window()->clearTimeout(m_seekingTimer);
+            m_seekingTimer = TimerInvalidID;
+        }
     }
 
     m_alive = false;
@@ -1638,6 +1827,10 @@ void MediaPlayerESPlusPlayer::dispose()
 {
     STARFISH_LOG_INFO("ESPP: dispose (%p)", this);
     stopCurrentTimeUpdateTimer();
+    if (m_seekingTimer != TimerInvalidID && m_container != nullptr) {
+        m_container->window()->clearTimeout(m_seekingTimer);
+        m_seekingTimer = TimerInvalidID;
+    }
     if (m_playerDeadFlag != nullptr) {
         *m_playerDeadFlag = true;
         wakeMseThread();
