@@ -103,6 +103,10 @@ ANNOTATE_DEFINE;
 #endif
 #ifdef STARFISH_ENABLE_TTS
 #include "core/modules/tts/TTS.h"
+#ifdef STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
+#include "core/page/A11yTouchExploration.h"
+#include "core/page/A11yAtspiTreeSource.h"
+#endif
 #endif
 
 #ifdef STARFISH_ENABLE_TEST
@@ -288,6 +292,12 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 #ifdef STARFISH_ENABLE_TTS
     , m_tts(new TTS(this))
 #endif
+#ifdef STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
+    , m_a11yTouchExploration(new A11yTouchExploration(this))
+#endif
+#ifdef STARFISH_ENABLE_A11Y_ATSPI
+    , m_a11yAtspiTreeSource(new A11yAtspiTreeSource(this))
+#endif
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     , m_avplay(new Avplay(this))
 #endif
@@ -438,6 +448,12 @@ void* WebView::operator new(size_t size)
 
 #ifdef STARFISH_ENABLE_TTS
         GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_tts));
+#endif
+#ifdef STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_a11yTouchExploration));
+#endif
+#ifdef STARFISH_ENABLE_A11Y_ATSPI
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_a11yAtspiTreeSource));
 #endif
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
         GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_avplay));
@@ -874,6 +890,12 @@ void WebView::navigateCrossDocument(ResourceURL* url, HistoryManagerAction type,
         m_tts->destroy();
     }
     m_tts = new TTS(this);
+#endif
+#ifdef STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
+    m_a11yTouchExploration = new A11yTouchExploration(this);
+#endif
+#ifdef STARFISH_ENABLE_A11Y_ATSPI
+    m_a11yAtspiTreeSource = new A11yAtspiTreeSource(this);
 #endif
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     m_avplay = new Avplay(this);
@@ -2218,6 +2240,13 @@ void WebView::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
         }
     }
 
+#ifdef STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
+    if (m_a11yTouchExploration->isEnabled() &&
+        m_a11yTouchExploration->handleTouchEvent(kind, touches, touchCount)) {
+        return;
+    }
+#endif
+
     if (mainBrowsingContext()) {
         mainBrowsingContext()->dispatchTouchEvent(kind, touches, touchCount);
     }
@@ -2271,6 +2300,13 @@ void WebView::dispatchMouseEvent(MouseEventKind kind, MouseData data)
             }
         }
     }
+
+#ifdef STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
+    if (m_a11yTouchExploration->isEnabled() &&
+        m_a11yTouchExploration->handleMouseEvent(kind, data)) {
+        return;
+    }
+#endif
 
     if (mainBrowsingContext()) {
         mainBrowsingContext()->dispatchMouseEvent(kind, data);

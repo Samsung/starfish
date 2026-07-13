@@ -25,6 +25,10 @@
 
 #if defined(STARFISH_SHELL_EFL)
 
+#if defined(STARFISH_ENABLE_A11Y_ATSPI)
+#include "public/bridge/efl/A11yAtspiBridge.h"
+#endif
+
 #define STARFISH_ENABLE_PROFILE_TIMER
 
 // Tizen-only threaded TBM presenter. The engine runs on a dedicated LWE thread
@@ -935,6 +939,14 @@ public:
         elm_box_pack_end(m_mainBox, m_nonIMEKeyEventBox);
         elm_box_pack_end(m_mainBox, m_graphicsAdapter);
 
+#if defined(STARFISH_ENABLE_A11Y_ATSPI)
+        // m_mainBox is the elm widget standing in for the webview in the
+        // host's widget tree; m_graphicsAdapter covers the web content area
+        // that the elm accessibility wrapper tracks.
+        A11yAtspiBridge::registerWindow(m_windowObject, m_mainBox,
+                                        m_graphicsAdapter);
+#endif
+
         m_isRenderedOnce = false;
         m_immediatelyClearScreenAnimator = nullptr;
 #ifdef STARFISH_TIZEN
@@ -1050,6 +1062,11 @@ public:
 
             bool isTouch = ev->dev && evas_device_class_get(ev->dev) ==
                                           EVAS_DEVICE_CLASS_TOUCH;
+
+            // Diagnostic: prove whether raw input reaches the shell and via
+            // which device class (touch vs mouse).
+            STARFISH_LOG_INFO("WebViewEFL: mouse down at (%d, %d) isTouch %d",
+                              currentPosX, currentPosY, isTouch ? 1 : 0);
 
             if (isTouch && (currentPosX >= 0 && currentPosY >= 0)) {
                 float pts[2] = { (float)currentPosX, (float)currentPosY };
@@ -1779,6 +1796,10 @@ public:
     virtual void Destroy() override
     {
         m_isDestroyed = true;
+
+#if defined(STARFISH_ENABLE_A11Y_ATSPI)
+        A11yAtspiBridge::unregisterWindow(m_windowObject);
+#endif
 
         Blur();
 

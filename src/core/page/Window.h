@@ -306,6 +306,10 @@ public:
     void simulateTouchCancel(float x, float y);
     void simulateVisibilitychange(bool show);
     void testStart();
+    // Touch-exploration accessibility test helpers.
+    String* getLastTTSText();
+    void setTTSAccessibilityMode(bool value);
+    String* getA11yFocusedElementId();
 #endif
 
 #define VIRTUAL

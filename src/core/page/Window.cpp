@@ -51,6 +51,16 @@
 #include "core/page/Screen.h"
 #include "core/page/WebView.h"
 #include "core/page/GlobalScope.h"
+#if defined(STARFISH_ENABLE_TEST) && defined(STARFISH_ENABLE_TTS)
+#include "core/modules/tts/TTS.h"
+#endif
+#if defined(STARFISH_ENABLE_TEST) && \
+    defined(STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION)
+#include "core/page/A11yTouchExploration.h"
+#endif
+#ifdef STARFISH_ENABLE_A11Y_ATSPI
+#include "core/page/A11yAtspiTreeSource.h"
+#endif
 #if defined(STARFISH_ENABLE_CDP)
 #include "core/cdp/CDPServer.h"
 #include "core/cdp/CDPDispatcher.h"
@@ -526,6 +536,11 @@ bool Window::scrollToWithoutLayout(double x, double y)
                 dispatchEventIdleTimeByUA(e);
             }
 
+#ifdef STARFISH_ENABLE_A11Y_ATSPI
+            // Scrolling moves every exposed rect; the bridge repositions
+            // its focus ring (and re-checks bounds) on this ping.
+            A11yAtspiTreeSource::notifyPageChanged(document());
+#endif
             return true;
         }
     }
@@ -696,6 +711,34 @@ void Window::simulateVisibilitychange(bool show)
 void Window::testStart()
 {
     invokeTestStartFunction(scriptBindingInstance());
+}
+
+String* Window::getLastTTSText()
+{
+#ifdef STARFISH_ENABLE_TTS
+    String* t = TTS::lastSpeechTextForTest();
+    return t ? t : String::emptyString;
+#else
+    return String::emptyString;
+#endif
+}
+
+void Window::setTTSAccessibilityMode(bool value)
+{
+#ifdef STARFISH_ENABLE_TTS
+    webView()->tts()->setAccessibilityMode(value);
+#endif
+}
+
+String* Window::getA11yFocusedElementId()
+{
+#ifdef STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
+    Element* el = webView()->a11yTouchExploration()->focusedElementForTest();
+    if (el) {
+        return el->getAttributeOrEmpty(staticStrings()->m_id);
+    }
+#endif
+    return String::emptyString;
 }
 #endif
 

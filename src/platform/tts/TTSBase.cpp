@@ -34,7 +34,12 @@ namespace Starfish {
 
 void TTS::initialize()
 {
-#ifdef STARFISH_ENABLE_TEST
+#if defined(STARFISH_ENABLE_TEST) && \
+    !defined(STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION)
+    // Legacy smoke behavior: force accessibility mode on in test builds. When
+    // touch-exploration is compiled in, leaving this on would make the
+    // controller consume every simulated touch (breaking existing click/touch
+    // tests), so a11y tests toggle the mode explicitly instead.
     m_isAccessibilityMode = true;
     if (m_isAccessibilityMode) {
         String* text = String::createASCIIString("Hi, I am Starfish");
@@ -68,6 +73,9 @@ void TTS::unprepare()
 
 void TTS::speech(Element* element, String* text)
 {
+#ifdef STARFISH_ENABLE_TEST
+    lastSpeechTextForTest() = text;
+#endif
     if (text && text != String::emptyString) {
         webView()->messageLoop()->addIdler(
             nullptr,

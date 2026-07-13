@@ -80,6 +80,12 @@ using namespace Escargot;
 #ifdef STARFISH_ENABLE_TTS
 #include "core/modules/tts/TextAlternativeHelper.h"
 #include "core/modules/tts/TTS.h"
+#ifdef STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
+#include "core/page/A11yTouchExploration.h"
+#endif
+#endif
+#ifdef STARFISH_ENABLE_A11Y_ATSPI
+#include "core/page/A11yAtspiTreeSource.h"
 #endif
 
 namespace Starfish {
@@ -329,6 +335,12 @@ void Element::invokeDidAttributeChanged(QualifiedName name,
     didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
 #if !defined(NDEBUG)
     STARFISH_ASSERT(m_didAttributeChangedCorrectlyInvoked);
+#endif
+#ifdef STARFISH_ENABLE_A11Y_ATSPI
+    // Attribute changes can move a11y tree membership (aria-hidden, role,
+    // tabindex, ...), names, or geometry; ping the AT-SPI tree source so it
+    // re-diffs (chromium marks the AXObject dirty here).
+    A11yAtspiTreeSource::notifyPageChanged(document());
 #endif
 }
 
@@ -1052,6 +1064,13 @@ bool Element::handleDefaultEvent(Event* event)
         wv->tts()->mode() == LWE::TTSMode::Forced) {
         if (event->type()->equals("focus") && isHTMLElement() &&
             isFocusable() && event->isFocusEvent()) {
+#ifdef STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
+            // The touch-exploration controller drives focus + speech itself;
+            // skip so the same target isn't spoken twice.
+            if (wv->a11yTouchExploration()->isSettingDomFocus()) {
+                return false;
+            }
+#endif
             TextAlternativeHelper tah(wv);
             String* altText = tah.getComputedTextAlternative(this);
             if (altText->length()) {

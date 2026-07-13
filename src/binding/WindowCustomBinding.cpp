@@ -688,6 +688,36 @@ static ValueRef* simulateVisibilitychangeFunction(ExecutionStateRef* state,
     return scriptUndefined();
 }
 
+static ValueRef* getLastTTSTextFunction(ExecutionStateRef* state,
+                                        ValueRef* thisValue, size_t argc,
+                                        NULLABLE ValueRef** argv,
+                                        bool isNewExpression)
+{
+    GENERATE_WINDOW();
+    return createScriptString(window->getLastTTSText());
+}
+
+static ValueRef* setTTSAccessibilityModeFunction(ExecutionStateRef* state,
+                                                 ValueRef* thisValue,
+                                                 size_t argc,
+                                                 NULLABLE ValueRef** argv,
+                                                 bool isNewExpression)
+{
+    GENERATE_WINDOW();
+    window->setTTSAccessibilityMode(argv[0]->toBoolean(state));
+    return scriptUndefined();
+}
+
+static ValueRef* getA11yFocusedElementIdFunction(ExecutionStateRef* state,
+                                                 ValueRef* thisValue,
+                                                 size_t argc,
+                                                 NULLABLE ValueRef** argv,
+                                                 bool isNewExpression)
+{
+    GENERATE_WINDOW();
+    return createScriptString(window->getA11yFocusedElementId());
+}
+
 static bool gotTestAssert = false;
 
 static ValueRef* testAssertFunction(ExecutionStateRef* state,
@@ -1291,6 +1321,9 @@ void Window::postInit(ScriptBindingInstance* instance)
             DEFINE_TEST_FUNCTION(simulateTouchEnd, 2);
             DEFINE_TEST_FUNCTION(simulateTouchCancel, 2);
             DEFINE_TEST_FUNCTION(simulateVisibilitychange, 1);
+            DEFINE_TEST_FUNCTION(getLastTTSText, 0);
+            DEFINE_TEST_FUNCTION(setTTSAccessibilityMode, 1);
+            DEFINE_TEST_FUNCTION(getA11yFocusedElementId, 0);
             DEFINE_TEST_FUNCTION(testAssert, 1);
             DEFINE_TEST_FUNCTION(testEnd, 0);
             DEFINE_TEST_FUNCTION(testImgDiff, 2);

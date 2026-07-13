@@ -297,6 +297,15 @@ BuildRequires: pkgconfig(vconf-internal-keys-tv)
 BuildRequires: pkgconfig(capi-media-tool)
 %endif
 
+# Touch-exploration accessibility + AT-SPI2 provider (ENABLE_A11Y_TOUCH)
+%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
+BuildRequires: pkgconfig(vconf)
+BuildRequires: pkgconfig(atk)
+BuildRequires: pkgconfig(atk-bridge-2.0)
+BuildRequires: pkgconfig(atspi-2)
+BuildRequires: pkgconfig(dbus-1)
+%endif
+
 %if 0%{?enable_webrtc:1}
 BuildRequires: pkgconfig(capi-media-camera)
 BuildRequires: pkgconfig(capi-media-tool)
@@ -693,7 +702,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DBACKEND='%{lwe_backend}' -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DSHELL='%{lwe_shell_type}' -DTARGETNAME=lightweight-web-engine.mobile \
   -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
-  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' \
+  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' -DENABLE_A11Y_TOUCH=1 \
   -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library

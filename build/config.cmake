@@ -42,6 +42,7 @@ ENDIF()
 # STARFISH_ENABLE_INSPECTOR : enable inspector which is used for message sender in separate thread
 # STARFISH_ENABLE_CDP : enable Chrome DevTools Protocol server (Target/Page/Runtime/DOM/Log)
 # STARFISH_ENABLE_TTS : enable TTS (Text-To-Speech)
+# STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION : enable touch-exploration accessibility (tap=speak aria-label, double-tap=activate, swipe=next/prev). Non-TV profiles only. Controlled by cmake option ENABLE_A11Y_TOUCH.
 # STARFISH_ENABLE_HTTPCACHE : enable HTTPCache feature which caches resources downloaded through HTML
 # STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING : enable multi threaded image decoding
 # STARFISH_TIZEN : enable several TIZEN specific features such as media player, backend graphic library
@@ -76,6 +77,12 @@ ENDIF()
 SET (LWE_DEFINES_DEFAULT -DSTARFISH_VERSION_STR="${LWE_VERSION}")
 FILE (WRITE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/VERSION "${LWE_VERSION}")
 
+# Touch-exploration accessibility. Off by default on Tizen; opt-in via
+# -DENABLE_A11Y_TOUCH=1. Force-disabled on TV profiles (see below).
+IF (NOT DEFINED ENABLE_A11Y_TOUCH)
+    SET (ENABLE_A11Y_TOUCH "0")
+ENDIF()
+
 SET (USE_CUSTOM_WEBP "0")
 
 IF (${DOCKER} STREQUAL "1")
@@ -97,6 +104,7 @@ IF (${ARCH} STREQUAL "x64")
         -DSTARFISH_ENABLE_MULTIMEDIA
         -DSTARFISH_ENABLE_INSPECTOR
         -DSTARFISH_ENABLE_TTS
+        -DSTARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
         -DSTARFISH_ENABLE_HTTPCACHE
         -DSTARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING
         -DSTARFISH_ENABLE_CANVAS
@@ -227,6 +235,20 @@ ELSEIF (${CUSTOM} STREQUAL "headless")
         -DSTARFISH_ENABLE_MULTIMEDIA
     )
 
+ENDIF()
+
+# Touch-exploration accessibility for non-TV Tizen profiles. TV profiles keep
+# their existing behavior untouched (macro stays undefined there).
+IF (${ENABLE_A11Y_TOUCH} STREQUAL "1" AND ${HOST} STREQUAL "tizen")
+    IF (${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "prod_tv")
+        MESSAGE (WARNING "ENABLE_A11Y_TOUCH ignored on TV profiles (${CUSTOM})")
+    ELSE()
+        SET (LWE_DEFINES_CUSTOM
+            ${LWE_DEFINES_CUSTOM}
+            -DSTARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
+            -DSTARFISH_ENABLE_TTS
+        )
+    ENDIF()
 ENDIF()
 
 IF (${MODE} STREQUAL "debug")
@@ -557,6 +579,33 @@ IF (${HOST} STREQUAL "tizen")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM_VCONF REQUIRED vconf)
     ELSEIF (${CUSTOM} STREQUAL "flutter")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED capi-appfw-app-common dlog)
+    ENDIF()
+    IF (${ENABLE_A11Y_TOUCH} STREQUAL "1"
+        AND NOT ${CUSTOM} STREQUAL "unified_tv" AND NOT ${CUSTOM} STREQUAL "prod_tv")
+        pkg_check_modules (STARFISH_TIZEN_A11Y REQUIRED tts vconf)
+        # AT-SPI2 provider prototype (ATK plug registration). Needs the EFL
+        # shell (plug id is exposed on the app window evas object).
+        IF (${SHELL} STREQUAL "efl")
+            pkg_check_modules (STARFISH_TIZEN_A11Y_ATSPI REQUIRED atk atk-bridge-2.0 atspi-2 dbus-1)
+            SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
+                -DSTARFISH_ENABLE_A11Y_ATSPI
+            )
+            # Tizen's patched atk adds grab_highlight/clear_highlight to
+            # AtkComponentIface (plus the HIGHLIGHTABLE/HIGHLIGHTED states);
+            # stock atk does not have them.
+            INCLUDE (CheckCSourceCompiles)
+            SET (CMAKE_REQUIRED_INCLUDES ${STARFISH_TIZEN_A11Y_ATSPI_INCLUDE_DIRS})
+            CHECK_C_SOURCE_COMPILES ("
+#include <atk/atk.h>
+int main() { AtkComponentIface i; i.grab_highlight = 0; (void)i; return 0; }"
+                STARFISH_ATK_HAS_GRAB_HIGHLIGHT_TEST)
+            UNSET (CMAKE_REQUIRED_INCLUDES)
+            IF (STARFISH_ATK_HAS_GRAB_HIGHLIGHT_TEST)
+                SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
+                    -DSTARFISH_ATK_HAS_GRAB_HIGHLIGHT
+                )
+            ENDIF()
+        ENDIF()
     ENDIF()
     IF (${WEBRTC} STREQUAL "1")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM_WEBRTC REQUIRED capi-media-player capi-media-sound-manager capi-media-camera capi-media-tool capi-system-device capi-media-audio-io)

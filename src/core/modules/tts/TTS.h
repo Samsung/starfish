@@ -60,6 +60,9 @@ public:
 
     void setAccessibilityMode(bool value)
     {
+        if (m_isAccessibilityMode != value) {
+            STARFISH_LOG_INFO("[TTS] accessibilityMode -> %d", value ? 1 : 0);
+        }
         m_isAccessibilityMode = value;
     }
 
@@ -139,6 +142,17 @@ public:
 
     void speech(Element* element, String* text);
     void speech(SpeechSynthesisUtterance* utterance);
+
+#ifdef STARFISH_ENABLE_TEST
+    // Captures the most recent element speech text so internal tests can
+    // assert what was spoken without a real TTS engine. Shared across all
+    // platform TTS backends.
+    static String*& lastSpeechTextForTest()
+    {
+        static String* s = nullptr;
+        return s;
+    }
+#endif
     void changeDefaultVoice(String* language, const int voiceType);
     bool isPaused();
     void pause();
