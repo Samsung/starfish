@@ -81,6 +81,12 @@ class Avplay;
 #ifdef STARFISH_ENABLE_TTS
 class TTS;
 #endif
+#ifdef STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
+class A11yTouchExploration;
+#endif
+#ifdef STARFISH_ENABLE_A11Y_ATSPI
+class A11yAtspiTreeSource;
+#endif
 union FontFamilyData;
 
 enum class TouchEventKind;
@@ -368,6 +374,12 @@ public:
         return m_tts;
     }
 #endif
+#ifdef STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
+    A11yTouchExploration* a11yTouchExploration() const
+    {
+        return m_a11yTouchExploration;
+    }
+#endif
     PlatformFontSelector* platformFontSelector()
     {
         return m_platformFontSelector;
@@ -645,6 +657,15 @@ private:
 
 #ifdef STARFISH_ENABLE_TTS
     TTS* m_tts;
+#endif
+#ifdef STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
+    A11yTouchExploration* m_a11yTouchExploration;
+#endif
+#ifdef STARFISH_ENABLE_A11Y_ATSPI
+    // GC anchor only (reached via A11yAtspiTreeSource::current()). WebView
+    // uses a precise GC descriptor, so every GC-pointer member must also be
+    // registered with GC_set_bit in WebView::operator new.
+    A11yAtspiTreeSource* m_a11yAtspiTreeSource;
 #endif
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     Avplay* m_avplay;

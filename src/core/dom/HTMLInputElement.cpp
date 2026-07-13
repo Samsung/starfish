@@ -35,6 +35,9 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/layout/FrameInputBox.h"
+#ifdef STARFISH_ENABLE_A11Y_ATSPI
+#include "core/page/A11yAtspiTreeSource.h"
+#endif
 
 namespace Starfish {
 
@@ -322,6 +325,11 @@ void HTMLInputElement::setChecked(bool checked)
         resetRadioButtons();
     }
     setNeedsFrameTreeBuildWithoutSelf();
+#ifdef STARFISH_ENABLE_A11Y_ATSPI
+    // Checkedness is internal state (not an attribute); notify so the
+    // AT-SPI bridge can emit state-change::checked.
+    A11yAtspiTreeSource::notifyPageChanged(document());
+#endif
 }
 
 void HTMLInputElement::resetRadioButtons()

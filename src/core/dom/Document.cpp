@@ -46,6 +46,9 @@
 #include "core/dom/KeyboardEvent.h"
 #include "core/dom/TouchEvent.h"
 #include "core/page/HashChangeEvent.h"
+#ifdef STARFISH_ENABLE_A11Y_ATSPI
+#include "core/page/A11yAtspiTreeSource.h"
+#endif
 #include "core/dom/HTMLBaseElement.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLCollection.h"
@@ -1648,6 +1651,11 @@ void Document::processBaseElement()
 void Document::updateDOMVersion()
 {
     m_domVersion++;
+#ifdef STARFISH_ENABLE_A11Y_ATSPI
+    // Chromium-style event-driven a11y: node inserts/removes funnel through
+    // here, so the AT-SPI tree source re-diffs instead of polling.
+    A11yAtspiTreeSource::notifyPageChanged(this);
+#endif
     invalidFocusRingCacheIfNeeded();
     clearDialogsInShowModalCache();
     window()->invalidateFramesIfNeeded();
