@@ -276,6 +276,18 @@ static bool g_shouldUseEGLImageOnPlainSurface = true;
 static bool g_needsRGBShuffle = true;
 static bool g_isSupported_EGL_NATIVE_SURFACE_TIZEN = false;
 
+// Generic canvas textures use immutable storage (glTexStorage2D) instead of
+// glTexImage2D, so the driver never has to re-validate/reallocate storage on
+// later updates. Always allocates as plain GL_RGBA8 (core ES3, no BGRA
+// extension dependency) and corrects channel order at sample time via the
+// fixed-function GL_TEXTURE_SWIZZLE_R/G/B/A state (core since ES 3.0) instead
+// of relying on GL_EXT_texture_format_BGRA8888 having a matching sized
+// internalformat for texStorage2D
+static bool immutableTextureUpload()
+{
+    return g_isOpenGLES3;
+}
+
 #ifndef MIN_MAX_TEXTURE_SIZE
 #define MIN_MAX_TEXTURE_SIZE 2048
 #endif
@@ -3242,6 +3254,8 @@ public:
 
                             gl()->pixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+                            bool useImmutableTex = immutableTextureUpload();
+
                             bool textureJustCreated = false;
                             if (fragment.textureID == 0) {
                                 textureJustCreated = true;
@@ -3265,9 +3279,22 @@ public:
                                                     GL_TEXTURE_WRAP_T,
                                                     GL_CLAMP_TO_EDGE);
 
+                                if (useImmutableTex) {
+                                    // Always plain GL_RGBA8 (core, no BGRA
+                                    // sized-format guessing); correct channel
+                                    // order at sample time via the swizzle
+                                    // below instead of relying on native BGRA
+                                    // storage.
+                                    gl()->texStorage2D(GL_TEXTURE_2D, 1,
+                                                       GL_RGBA8,
+                                                       fragment.textureWidth,
+                                                       fragment.textureHeight);
+                                }
+
 #if defined(PORT_PIXEL_ORDER_BGRA)
-                                if (g_isSupportTextureSwizzle &&
-                                    !g_needsRGBShuffle) {
+                                if (useImmutableTex ||
+                                    (g_isSupportTextureSwizzle &&
+                                     !g_needsRGBShuffle)) {
                                     GLint swizzleMask[] = { GL_BLUE, GL_GREEN,
                                                             GL_RED, GL_ALPHA };
                                     gl()->texParameteriv(GL_TEXTURE_2D,
@@ -3279,14 +3306,26 @@ public:
 
                             auto bData = m_buffer;
                             auto bStride = bufferStride();
-                            auto kind = textureFormat();
+                            // With immutable storage the texture is always
+                            // plain RGBA8 (see above); the true BGRA channel
+                            // order (if any) is corrected by the swizzle
+                            // state, not by the upload's declared format.
+                            auto kind =
+                                useImmutableTex ? GL_RGBA : textureFormat();
 
-                            bool updateWholeTexture = textureJustCreated;
-                            if (!updateWholeTexture && xx == 0 && yy == 0 &&
-                                xxEnd == fragment.textureWidth &&
-                                yyEnd == fragment.textureHeight) {
-                                updateWholeTexture = true;
-                            }
+                            // Fix (unconditional, not part of any
+                            // experiment): only (re)allocate storage
+                            // (texImage2D) at true first creation. A REUSED
+                            // texture whose whole tile happens to be dirty
+                            // must still go through texSubImage2D -- calling
+                            // texImage2D again here needlessly reallocates
+                            // storage every time the tile is fully repainted
+                            // (e.g. every frame on a full-viewport repaint),
+                            // not just once. With immutable storage
+                            // (texStorage2D, already allocated above) it must
+                            // NEVER be called again at all.
+                            bool needsTexImageAlloc =
+                                textureJustCreated && !useImmutableTex;
 
                             gl()->bindTexture(GL_TEXTURE_2D,
                                               fragment.textureID);
@@ -3301,7 +3340,7 @@ public:
                                 auto data = bData;
                                 data += textureDataY * bStride;
                                 data += textureDataX * 4;
-                                if (updateWholeTexture) {
+                                if (needsTexImageAlloc) {
                                     gl()->texImage2D(GL_TEXTURE_2D, 0, kind,
                                                      fragment.textureWidth,
                                                      fragment.textureHeight, 0,
@@ -3318,7 +3357,7 @@ public:
                                 gl()->pixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
                                 gl()->pixelStorei(GL_UNPACK_SKIP_ROWS, 0);
                             } else {
-                                if (updateWholeTexture) {
+                                if (needsTexImageAlloc) {
                                     gl()->texImage2D(GL_TEXTURE_2D, 0, kind,
                                                      fragment.textureWidth,
                                                      fragment.textureHeight, 0,

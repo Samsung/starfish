@@ -60,6 +60,9 @@ public:
                             GLenum usage) = 0;
     virtual void bufferSubData(GLenum target, GLintptr offset, GLsizeiptr size,
                                const void *data) = 0;
+    virtual void texStorage2D(GLenum target, GLsizei levels,
+                              GLenum internalformat, GLsizei width,
+                              GLsizei height) = 0;
     virtual GLenum checkFramebufferStatus(GLenum target) = 0;
     virtual void clear(GLbitfield mask) = 0;
     virtual void clearColor(GLclampf red, GLclampf green, GLclampf blue,
