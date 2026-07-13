@@ -553,8 +553,13 @@ public:
     GLint m_texShaderProgramTexture;
     GLint m_texShaderProgramAlpha;
 
-    // Analytic rounded-rect clip (GL_TEXTURE_2D): clips the textured quad with
-    // up to kMaxAnalyticRoundedClips rounded-box SDFs in the fragment shader.
+    // Analytic rounded-rect clip: clips the textured quad with up to
+    // kMaxAnalyticRoundedClips rounded-box SDFs in the fragment shader. Both
+    // the GL_TEXTURE_2D and EGLImageExternal (video) variants share one
+    // vertex shader (texVertexShaderRoundedClip); only the fragment sampler
+    // type differs.
+    GLuint m_texVertexShaderRoundedClip;
+    GLuint m_texFragmentShaderRoundedClip;
     GLuint m_texShaderProgramRoundedClip;
     GLint m_texShaderProgramRoundedClipTexPos;
     GLint m_texShaderProgramRoundedClipTexIdx;
@@ -569,6 +574,21 @@ public:
     GLint m_texShaderProgramRoundedClipHalf;   // uClipHalf[N]
     GLint m_texShaderProgramRoundedClipRadius; // uClipRadius[N]
     GLint m_texShaderProgramRoundedClipCount;  // uClipCount
+
+    // Same analytic rounded-rect clip, for GL_TEXTURE_EXTERNAL_OES (video).
+    GLuint m_texFragmentShaderRoundedClipEGLImageExternal;
+    GLuint m_texShaderProgramRoundedClipEGLImageExternal;
+    GLint m_texShaderProgramRoundedClipEGLImageExternalTexPos;
+    GLint m_texShaderProgramRoundedClipEGLImageExternalTexIdx;
+    GLint m_texShaderProgramRoundedClipEGLImageExternalPosition;
+    GLint m_texShaderProgramRoundedClipEGLImageExternalClipPos;
+    GLint m_texShaderProgramRoundedClipEGLImageExternalTexture;
+    GLint m_texShaderProgramRoundedClipEGLImageExternalAlpha;
+    GLint m_texShaderProgramRoundedClipEGLImageExternalRef;
+    GLint m_texShaderProgramRoundedClipEGLImageExternalOffset;
+    GLint m_texShaderProgramRoundedClipEGLImageExternalHalf;
+    GLint m_texShaderProgramRoundedClipEGLImageExternalRadius;
+    GLint m_texShaderProgramRoundedClipEGLImageExternalCount;
 
     GLuint m_texFragmentShaderWithMask;
     GLuint m_texShaderProgramWithMask; // With mask
@@ -824,7 +844,11 @@ public:
     void clearGLProgramVariables()
     {
         m_polygonVertexShader = m_polygonShaderProgram = m_texShaderProgram = 0;
+        m_texVertexShaderRoundedClip = 0;
+        m_texFragmentShaderRoundedClip = 0;
         m_texShaderProgramRoundedClip = 0;
+        m_texFragmentShaderRoundedClipEGLImageExternal = 0;
+        m_texShaderProgramRoundedClipEGLImageExternal = 0;
         m_polygonFragmentShader = 0;
         m_polygonShaderProgramPosition = 0;
         m_polygonShaderProgramCoverage = 0;
@@ -1024,6 +1048,28 @@ public:
                                m_texFragmentShaderEGLImageExternal);
             gl()->deleteProgram(m_texShaderProgramEGLImageExternal);
             gl()->deleteShader(m_texFragmentShaderEGLImageExternal);
+        }
+
+        if (m_texShaderProgramRoundedClip) {
+            gl()->detachShader(m_texShaderProgramRoundedClip,
+                               m_texVertexShaderRoundedClip);
+            gl()->detachShader(m_texShaderProgramRoundedClip,
+                               m_texFragmentShaderRoundedClip);
+            gl()->deleteProgram(m_texShaderProgramRoundedClip);
+            gl()->deleteShader(m_texFragmentShaderRoundedClip);
+        }
+
+        if (m_texShaderProgramRoundedClipEGLImageExternal) {
+            gl()->detachShader(m_texShaderProgramRoundedClipEGLImageExternal,
+                               m_texVertexShaderRoundedClip);
+            gl()->detachShader(m_texShaderProgramRoundedClipEGLImageExternal,
+                               m_texFragmentShaderRoundedClipEGLImageExternal);
+            gl()->deleteProgram(m_texShaderProgramRoundedClipEGLImageExternal);
+            gl()->deleteShader(m_texFragmentShaderRoundedClipEGLImageExternal);
+        }
+
+        if (m_texVertexShaderRoundedClip) {
+            gl()->deleteShader(m_texVertexShaderRoundedClip);
         }
 
         if (m_texShaderProgram) {
@@ -1840,15 +1886,12 @@ public:
         return m_texShaderProgram;
     }
 
-    // Shader program that clips a GL_TEXTURE_2D quad to the intersection of up
-    // to kMaxAnalyticRoundedClips rounded rectangles via per-fragment SDFs,
-    // replacing the mask-FBO path. vClipPos carries the per-vertex position
-    // relative to uClipRef (subtracted in the highp vertex stage for mediump
-    // accuracy in the fragment stage). Each additional clip's center offset is
-    // passed as uClipOffset[i]; coverage = product of per-clip 1px ramps.
-    GLuint texShaderProgramRoundedClip()
+    // Vertex shader shared by both analytic rounded-clip fragment programs
+    // (GL_TEXTURE_2D and EGLImageExternal) - only the fragment sampler type
+    // differs between them.
+    GLuint texVertexShaderRoundedClip()
     {
-        if (!m_texShaderProgramRoundedClip) {
+        if (!m_texVertexShaderRoundedClip) {
             const GLchar* vertexSource =
                 "uniform vec2 uPosition[4];\n"
                 "uniform vec2 uClipPos[4];\n"
@@ -1863,15 +1906,21 @@ public:
                 "  gl_Position = vec4(uPosition[idx].xy, 0.0, 1.0);\n"
                 "  vClipPos = uClipPos[idx] - uClipRef;\n"
                 "}";
+            m_texVertexShaderRoundedClip =
+                loadShader(gl(), GL_VERTEX_SHADER, vertexSource);
+        }
+        return m_texVertexShaderRoundedClip;
+    }
 
-            // Unrolled N=4 SDF loop (GLSL ES 1.00 safe).
-            // uClipOffset[i] = clips[i].center - uClipRef (so [0] == vec2(0)).
-            // coverage = product of per-clip clamp(0.5 - sdf, 0, 1) ramps.
-#define RRCLIP_FRAG_BODY(RGB_SHUFFLE)                                          \
+    // Unrolled N=4 SDF loop (GLSL ES 1.00 safe), shared by the GL_TEXTURE_2D
+    // and EGLImageExternal rounded-clip fragment shaders.
+    // uClipOffset[i] = clips[i].center - uClipRef (so [0] == vec2(0)).
+    // coverage = product of per-clip clamp(0.5 - sdf, 0, 1) ramps.
+#define RRCLIP_FRAG_BODY(SAMPLER_PREAMBLE, RGB_SHUFFLE)                        \
+    SAMPLER_PREAMBLE                                                           \
     "#ifdef GL_ES\n"                                                           \
     "  precision mediump float;\n"                                             \
     "#endif\n"                                                                 \
-    "uniform sampler2D uTexture;\n"                                            \
     "uniform float uAlpha;\n"                                                  \
     "uniform vec2 uClipOffset[4];\n"                                           \
     "uniform vec2 uClipHalf[4];\n"                                             \
@@ -1908,24 +1957,36 @@ public:
     "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n" RGB_SHUFFLE    \
     "}\n"
 
+    // Shader program that clips a GL_TEXTURE_2D quad to the intersection of up
+    // to kMaxAnalyticRoundedClips rounded rectangles via per-fragment SDFs,
+    // replacing the mask-FBO path. vClipPos carries the per-vertex position
+    // relative to uClipRef (subtracted in the highp vertex stage for mediump
+    // accuracy in the fragment stage). Each additional clip's center offset is
+    // passed as uClipOffset[i]; coverage = product of per-clip 1px ramps.
+    GLuint texShaderProgramRoundedClip()
+    {
+        if (!m_texShaderProgramRoundedClip) {
             const GLchar* fragmentSource =
-                RRCLIP_FRAG_BODY("  gl_FragColor = texData * coverage;\n");
+                RRCLIP_FRAG_BODY("uniform sampler2D uTexture;\n",
+                                 "  gl_FragColor = texData * coverage;\n");
             if (g_needsRGBShuffle) {
                 fragmentSource = RRCLIP_FRAG_BODY(
+                    "uniform sampler2D uTexture;\n",
                     "  gl_FragColor.r = texData[2] * coverage;\n"
                     "  gl_FragColor.g = texData[1] * coverage;\n"
                     "  gl_FragColor.b = texData[0] * coverage;\n"
                     "  gl_FragColor.a = texData[3] * coverage;\n");
             }
-#undef RRCLIP_FRAG_BODY
 
-            GLuint vs = loadShader(gl(), GL_VERTEX_SHADER, vertexSource);
-            GLuint fs = loadShader(gl(), GL_FRAGMENT_SHADER, fragmentSource);
+            m_texFragmentShaderRoundedClip =
+                loadShader(gl(), GL_FRAGMENT_SHADER, fragmentSource);
             checkError(gl());
 
             m_texShaderProgramRoundedClip = gl()->createProgram();
-            gl()->attachShader(m_texShaderProgramRoundedClip, vs);
-            gl()->attachShader(m_texShaderProgramRoundedClip, fs);
+            gl()->attachShader(m_texShaderProgramRoundedClip,
+                               texVertexShaderRoundedClip());
+            gl()->attachShader(m_texShaderProgramRoundedClip,
+                               m_texFragmentShaderRoundedClip);
             gl()->linkProgram(m_texShaderProgramRoundedClip);
             checkError(gl());
 
@@ -1960,6 +2021,12 @@ public:
             gl()->uniform1i(m_texShaderProgramRoundedClipTexture, 0);
             gl()->uniform1f(m_texShaderProgramRoundedClipAlpha, 1);
 
+            gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+            gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
+                             GL_STREAM_DRAW);
+            gl()->vertexAttribPointer(m_texShaderProgramRoundedClipTexPos, 2,
+                                      GL_FLOAT, false, 0, 0);
+            gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
             bindTexPos(m_texShaderProgramRoundedClipTexPos);
             bindTexIdx(m_texShaderProgramRoundedClipTexIdx, false);
         } else {
@@ -1974,6 +2041,99 @@ public:
 
         return m_texShaderProgramRoundedClip;
     }
+
+    // Same analytic rounded-clip SDF, for GL_TEXTURE_EXTERNAL_OES (video via
+    // EGLImage). Identical math; only the sampler type differs.
+    GLuint texShaderProgramRoundedClipEGLImageExternal()
+    {
+        if (!m_texShaderProgramRoundedClipEGLImageExternal) {
+#define RRCLIP_EGL_SAMPLER_PREAMBLE                    \
+    "#extension GL_OES_EGL_image_external : require\n" \
+    "uniform samplerExternalOES uTexture;\n"
+            const GLchar* fragmentSource =
+                RRCLIP_FRAG_BODY(RRCLIP_EGL_SAMPLER_PREAMBLE,
+                                 "  gl_FragColor = texData * coverage;\n");
+            if (g_needsRGBShuffle) {
+                fragmentSource = RRCLIP_FRAG_BODY(
+                    RRCLIP_EGL_SAMPLER_PREAMBLE,
+                    "  gl_FragColor.r = texData[2] * coverage;\n"
+                    "  gl_FragColor.g = texData[1] * coverage;\n"
+                    "  gl_FragColor.b = texData[0] * coverage;\n"
+                    "  gl_FragColor.a = texData[3] * coverage;\n");
+            }
+#undef RRCLIP_EGL_SAMPLER_PREAMBLE
+
+            m_texFragmentShaderRoundedClipEGLImageExternal =
+                loadShader(gl(), GL_FRAGMENT_SHADER, fragmentSource);
+            checkError(gl());
+
+            m_texShaderProgramRoundedClipEGLImageExternal =
+                gl()->createProgram();
+            gl()->attachShader(m_texShaderProgramRoundedClipEGLImageExternal,
+                               texVertexShaderRoundedClip());
+            gl()->attachShader(m_texShaderProgramRoundedClipEGLImageExternal,
+                               m_texFragmentShaderRoundedClipEGLImageExternal);
+            gl()->linkProgram(m_texShaderProgramRoundedClipEGLImageExternal);
+            checkError(gl());
+
+            m_lastProgram = m_texShaderProgramRoundedClipEGLImageExternal;
+            gl()->useProgram(m_texShaderProgramRoundedClipEGLImageExternal);
+            checkError(gl());
+
+            GLuint p = m_texShaderProgramRoundedClipEGLImageExternal;
+            m_texShaderProgramRoundedClipEGLImageExternalPosition =
+                gl()->getUniformLocation(p, "uPosition");
+            m_texShaderProgramRoundedClipEGLImageExternalClipPos =
+                gl()->getUniformLocation(p, "uClipPos");
+            m_texShaderProgramRoundedClipEGLImageExternalTexPos =
+                gl()->getAttribLocation(p, "aTexPos");
+            m_texShaderProgramRoundedClipEGLImageExternalTexIdx =
+                gl()->getAttribLocation(p, "aTexIdx");
+            m_texShaderProgramRoundedClipEGLImageExternalTexture =
+                gl()->getUniformLocation(p, "uTexture");
+            m_texShaderProgramRoundedClipEGLImageExternalAlpha =
+                gl()->getUniformLocation(p, "uAlpha");
+            m_texShaderProgramRoundedClipEGLImageExternalRef =
+                gl()->getUniformLocation(p, "uClipRef");
+            m_texShaderProgramRoundedClipEGLImageExternalOffset =
+                gl()->getUniformLocation(p, "uClipOffset");
+            m_texShaderProgramRoundedClipEGLImageExternalHalf =
+                gl()->getUniformLocation(p, "uClipHalf");
+            m_texShaderProgramRoundedClipEGLImageExternalRadius =
+                gl()->getUniformLocation(p, "uClipRadius");
+            m_texShaderProgramRoundedClipEGLImageExternalCount =
+                gl()->getUniformLocation(p, "uClipCount");
+
+            gl()->uniform1i(
+                m_texShaderProgramRoundedClipEGLImageExternalTexture, 0);
+            gl()->uniform1f(m_texShaderProgramRoundedClipEGLImageExternalAlpha,
+                            1);
+
+            gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+            gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
+                             GL_STREAM_DRAW);
+            gl()->vertexAttribPointer(
+                m_texShaderProgramRoundedClipEGLImageExternalTexPos, 2,
+                GL_FLOAT, false, 0, 0);
+            gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+            bindTexPos(m_texShaderProgramRoundedClipEGLImageExternalTexPos);
+            bindTexIdx(m_texShaderProgramRoundedClipEGLImageExternalTexIdx,
+                       false);
+        } else {
+            if (m_lastProgram !=
+                m_texShaderProgramRoundedClipEGLImageExternal) {
+                m_lastProgram = m_texShaderProgramRoundedClipEGLImageExternal;
+                gl()->useProgram(m_texShaderProgramRoundedClipEGLImageExternal);
+
+                bindTexPos(m_texShaderProgramRoundedClipEGLImageExternalTexPos);
+                bindTexIdx(m_texShaderProgramRoundedClipEGLImageExternalTexIdx,
+                           true);
+            }
+        }
+
+        return m_texShaderProgramRoundedClipEGLImageExternal;
+    }
+#undef RRCLIP_FRAG_BODY
 
     // Shader program with mask support
     GLuint texShaderProgramWithMask()
@@ -3292,14 +3452,36 @@ public:
                                 }
 
 #if defined(PORT_PIXEL_ORDER_BGRA)
-                                if (useImmutableTex ||
-                                    (g_isSupportTextureSwizzle &&
-                                     !g_needsRGBShuffle)) {
-                                    GLint swizzleMask[] = { GL_BLUE, GL_GREEN,
-                                                            GL_RED, GL_ALPHA };
-                                    gl()->texParameteriv(GL_TEXTURE_2D,
-                                                         TEXTURE_SWIZZLE_RGBA,
-                                                         swizzleMask);
+                                // g_needsRGBShuffle means the fragment shader
+                                // itself already swaps R/B when sampling
+                                // (picked independently of texture storage
+                                // type - see g_needsRGBShuffle's shader
+                                // variants). Swizzling the texture on top of
+                                // that would swap R/B twice, cancelling out
+                                // back to the wrong (unfixed) order.
+                                if (!g_needsRGBShuffle &&
+                                    (useImmutableTex ||
+                                     g_isSupportTextureSwizzle)) {
+                                    // GL_TEXTURE_SWIZZLE_RGBA (the combined
+                                    // 4-at-once pname) is desktop-GL only
+                                    // (GL_ARB_texture_swizzle); it isn't valid
+                                    // on GLES3 core, which only has the
+                                    // per-channel R/G/B/A pnames (as used
+                                    // elsewhere in this file, e.g. the mask
+                                    // texture's alpha-from-red swizzle) - set
+                                    // each individually instead.
+                                    gl()->texParameteri(GL_TEXTURE_2D,
+                                                        GL_TEXTURE_SWIZZLE_R,
+                                                        GL_BLUE);
+                                    gl()->texParameteri(GL_TEXTURE_2D,
+                                                        GL_TEXTURE_SWIZZLE_G,
+                                                        GL_GREEN);
+                                    gl()->texParameteri(GL_TEXTURE_2D,
+                                                        GL_TEXTURE_SWIZZLE_B,
+                                                        GL_RED);
+                                    gl()->texParameteri(GL_TEXTURE_2D,
+                                                        GL_TEXTURE_SWIZZLE_A,
+                                                        GL_ALPHA);
                                 }
 #endif
                             }
@@ -4621,27 +4803,53 @@ public:
         bool enableMask = maskTextureID != 0;
 
         // Analytic rounded-rect clip: clip the quad with per-fragment SDFs
-        // instead of a mask texture. GL_TEXTURE_2D only; EGLImage falls back.
-        if (roundedClipPos && roundedClips && roundedClipCount > 0 &&
-            !isEGLImage) {
+        // instead of a mask texture. Works for both GL_TEXTURE_2D and
+        // EGLImageExternal (video) textures via two otherwise-identical
+        // shader programs (texShaderProgramRoundedClip[EGLImageExternal]).
+        if (roundedClipPos && roundedClips && roundedClipCount > 0) {
             auto* cc = m_compositorContext;
-            cc->texShaderProgramRoundedClip();
+            struct {
+                GLint texPos, texIdx, position, clipPos, alpha, ref, offset,
+                    half, radius, count;
+            } loc;
+            if (isEGLImage) {
+                cc->texShaderProgramRoundedClipEGLImageExternal();
+                loc = {
+                    cc->m_texShaderProgramRoundedClipEGLImageExternalTexPos,
+                    cc->m_texShaderProgramRoundedClipEGLImageExternalTexIdx,
+                    cc->m_texShaderProgramRoundedClipEGLImageExternalPosition,
+                    cc->m_texShaderProgramRoundedClipEGLImageExternalClipPos,
+                    cc->m_texShaderProgramRoundedClipEGLImageExternalAlpha,
+                    cc->m_texShaderProgramRoundedClipEGLImageExternalRef,
+                    cc->m_texShaderProgramRoundedClipEGLImageExternalOffset,
+                    cc->m_texShaderProgramRoundedClipEGLImageExternalHalf,
+                    cc->m_texShaderProgramRoundedClipEGLImageExternalRadius,
+                    cc->m_texShaderProgramRoundedClipEGLImageExternalCount
+                };
+            } else {
+                cc->texShaderProgramRoundedClip();
+                loc = { cc->m_texShaderProgramRoundedClipTexPos,
+                        cc->m_texShaderProgramRoundedClipTexIdx,
+                        cc->m_texShaderProgramRoundedClipPosition,
+                        cc->m_texShaderProgramRoundedClipClipPos,
+                        cc->m_texShaderProgramRoundedClipAlpha,
+                        cc->m_texShaderProgramRoundedClipRef,
+                        cc->m_texShaderProgramRoundedClipOffset,
+                        cc->m_texShaderProgramRoundedClipHalf,
+                        cc->m_texShaderProgramRoundedClipRadius,
+                        cc->m_texShaderProgramRoundedClipCount };
+            }
             gl()->activeTexture(GL_TEXTURE0);
             gl()->bindTexture(textureKind, textureID);
 
-            gl()->enableVertexAttribArray(
-                cc->m_texShaderProgramRoundedClipTexPos);
-            gl()->enableVertexAttribArray(
-                cc->m_texShaderProgramRoundedClipTexIdx);
-            gl()->uniform2fv(cc->m_texShaderProgramRoundedClipPosition, 4,
-                             position);
-            gl()->uniform2fv(cc->m_texShaderProgramRoundedClipClipPos, 4,
-                             roundedClipPos.value());
+            gl()->enableVertexAttribArray(loc.texPos);
+            gl()->enableVertexAttribArray(loc.texIdx);
+            gl()->uniform2fv(loc.position, 4, position);
+            gl()->uniform2fv(loc.clipPos, 4, roundedClipPos.value());
 
             // uClipRef = clips[0].center (subtracted in vertex stage, highp).
             // uClipOffset[i] = clips[i].center - clips[0].center (fragment).
-            gl()->uniform2f(cc->m_texShaderProgramRoundedClipRef,
-                            roundedClips[0].cx, roundedClips[0].cy);
+            gl()->uniform2f(loc.ref, roundedClips[0].cx, roundedClips[0].cy);
             float offsets[CompositorImplGLState::kMaxAnalyticRoundedClips * 2];
             float halves[CompositorImplGLState::kMaxAnalyticRoundedClips * 2];
             float radii[CompositorImplGLState::kMaxAnalyticRoundedClips];
@@ -4652,34 +4860,28 @@ public:
                 halves[i * 2 + 1] = roundedClips[i].hy;
                 radii[i] = roundedClips[i].radius;
             }
-            gl()->uniform2fv(cc->m_texShaderProgramRoundedClipOffset,
-                             roundedClipCount, offsets);
-            gl()->uniform2fv(cc->m_texShaderProgramRoundedClipHalf,
-                             roundedClipCount, halves);
-            gl()->uniform1fv(cc->m_texShaderProgramRoundedClipRadius,
-                             roundedClipCount, radii);
-            gl()->uniform1i(cc->m_texShaderProgramRoundedClipCount,
-                            roundedClipCount);
+            gl()->uniform2fv(loc.offset, roundedClipCount, offsets);
+            gl()->uniform2fv(loc.half, roundedClipCount, halves);
+            gl()->uniform1fv(loc.radius, roundedClipCount, radii);
+            gl()->uniform1i(loc.count, roundedClipCount);
 
             float a = lastState.opacity;
             if (a != 1) {
-                gl()->uniform1f(cc->m_texShaderProgramRoundedClipAlpha, a);
+                gl()->uniform1f(loc.alpha, a);
             }
             if (UNLIKELY(cs->isFlipYNeeded())) {
-                cc->bindTexPos(cc->m_texShaderProgramRoundedClipTexPos, true);
+                cc->bindTexPos(loc.texPos, true);
             }
             gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
             checkError(gl());
             if (UNLIKELY(cs->isFlipYNeeded())) {
-                cc->bindTexPos(cc->m_texShaderProgramRoundedClipTexPos, false);
+                cc->bindTexPos(loc.texPos, false);
             }
             if (a != 1) {
-                gl()->uniform1f(cc->m_texShaderProgramRoundedClipAlpha, 1);
+                gl()->uniform1f(loc.alpha, 1);
             }
-            gl()->disableVertexAttribArray(
-                cc->m_texShaderProgramRoundedClipTexPos);
-            gl()->disableVertexAttribArray(
-                cc->m_texShaderProgramRoundedClipTexIdx);
+            gl()->disableVertexAttribArray(loc.texPos);
+            gl()->disableVertexAttribArray(loc.texIdx);
             return;
         }
 
@@ -4913,8 +5115,7 @@ public:
         // intersection, skipping the mask FBO entirely.
         bool activeClip = lastState.roundedClipChainOk &&
                           lastState.roundedRectClipCount > 0 &&
-                          lastState.matrixStaysInRect &&
-                          !csGL->m_isEGLImageExternal;
+                          lastState.matrixStaysInRect;
 
         if (activeClip) {
             visibleArea = toRect(dest);
@@ -5066,17 +5267,21 @@ public:
         if (!shouldSkipTexturePainting) {
             if (csGL->m_isEGLImageExternal) {
                 float texPosition[8];
+                float clipPosition[8];
                 computeTexturePosition(dst, ctm, screenMatrix, screenWidth,
-                                       screenHeight, texPosition);
-                drawTexture(csGL, texPosition,
-                            csGL->m_textureFragments[0].textureID,
+                                       screenHeight, texPosition,
+                                       activeClip ? clipPosition : nullptr);
+                drawTexture(
+                    csGL, texPosition, csGL->m_textureFragments[0].textureID,
 #if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
-                            GL_TEXTURE_2D, -1,
+                    GL_TEXTURE_2D, -1,
 #else
-                            GL_TEXTURE_EXTERNAL_OES, -1,
+                    GL_TEXTURE_EXTERNAL_OES, -1,
 #endif
-                            csGL->m_bufferWidth, csGL->m_bufferHeight,
-                            maskFBO.fboTex, maskUV);
+                    csGL->m_bufferWidth, csGL->m_bufferHeight, maskFBO.fboTex,
+                    maskUV, activeClip ? clipPosition : nullptr,
+                    activeClip ? lastState.roundedRectClips : nullptr,
+                    activeClip ? lastState.roundedRectClipCount : 0);
             } else {
                 size_t coveredRowsCount = 0;
                 size_t i = 0;
