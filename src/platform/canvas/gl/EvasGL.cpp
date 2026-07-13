@@ -115,6 +115,14 @@ public:
         m_evasGLAPI->glBufferSubData(target, offset, size, data);
     }
 
+    virtual void texStorage2D(GLenum target, GLsizei levels,
+                              GLenum internalformat, GLsizei width,
+                              GLsizei height) override
+    {
+        m_evasGLAPI->glTexStorage2D(target, levels, internalformat, width,
+                                    height);
+    }
+
     virtual GLenum checkFramebufferStatus(GLenum target) override
     {
         return m_evasGLAPI->glCheckFramebufferStatus(target);
