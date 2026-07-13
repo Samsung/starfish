@@ -932,6 +932,14 @@ void HTMLMediaElement::setCurrentTime(double time)
                 "pending (old pending %lf)",
                 time, m_pendingSeek);
             m_pendingSeek = time;
+            // Let the backend retarget the in-flight native seek if it can
+            // (see MediaPlayer::supersedeSeek). Keeping the new target only
+            // in m_pendingSeek deadlocks a push-model MSE backend: it waits
+            // for data at the old target that the page -- already fetching
+            // for the new target -- will never append. m_pendingSeek stays
+            // set either way; on completion the element compares it against
+            // the reported target and re-seeks only on mismatch.
+            player->supersedeSeek(time);
         } else {
             if (!m_isPaused) {
                 setPlayEndPos(currentTime());
@@ -1187,7 +1195,13 @@ void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
         appendToOperationQueue(
             new MediaOperationQueueDataRequestSeek(this, pendingSeek));
     } else {
-        // Finish "seek"
+        // Finish "seek". The pending target must be consumed here too: when
+        // the backend retargeted the in-flight seek (supersedeSeek) the
+        // completion already reports the pending target, so the branch above
+        // is skipped -- leaving m_pendingSeek set would bounce the NEXT
+        // seek's completion back to this stale target (observed: seek A,
+        // burst-seek B, then a later seek C snapped back to B on completion).
+        m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
         m_isSeeking = false;
         mediaPlayerNotifyUpdateReadyStateItsContainer(HAVE_ENOUGH_DATA);
         // Spec order for seek completion: one timeupdate, then seeked

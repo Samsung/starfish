@@ -226,6 +226,14 @@ public:
     MediaPacketView copyProperMediaPacket(size_t streamIdx,
                                           uint64_t startPositionInDTSWantToFind,
                                           std::vector<uint8_t>& outData);
+    // Metadata-only variant of copyProperMediaPacket: snapshots the view
+    // under the packet lock but skips copying the encoded bytes. Use when
+    // only m_dts/m_hasIdr/etc. are needed (e.g. IDR-align probing).
+    // Unlike find/copy it does NOT advance the packet access cache, so the
+    // peeked packet is still returned by the next find/copy for the same
+    // DTS. Thread-safe.
+    MediaPacketView peekProperMediaPacket(
+        size_t streamIdx, uint64_t startPositionInDTSWantToFind);
     void revertLastCacheIfPossible(size_t streamIdx);
     uint64_t lastBufferedTimestamp(size_t streamIdx);
     void clearPacketAccessCache();

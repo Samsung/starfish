@@ -86,6 +86,17 @@ public:
     virtual void play() = 0;
     virtual void pause() = 0;
     virtual void seek(double time) = 0;
+    // Called instead of seek() when the element already has a seek in
+    // flight (m_isSeeking). A backend that can retarget the in-flight
+    // native seek should do so and return true; the default keeps the
+    // legacy behavior (the element parks the target in m_pendingSeek and
+    // chains it after the current seek completes). Without retargeting, a
+    // pure push-model backend can deadlock: it waits for data at the OLD
+    // target while the page only fetches data for the NEW one.
+    virtual bool supersedeSeek(double)
+    {
+        return false;
+    }
 
     bool alive()
     {
