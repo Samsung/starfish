@@ -44,6 +44,7 @@ extern "C" DBusConnection* atspi_get_a11y_bus(void);
 
 #include <algorithm>
 #include <map>
+#include <set>
 #include <vector>
 
 // The accessibility TTS key lives in vconf-internal-setting-keys.h, which is
@@ -968,6 +969,31 @@ static gboolean flushTreeEvents(gpointer)
     }
     TreeSnapshotData& previous = *g_lastTree;
 
+    // A pure reorder (same membership, different sibling order) would fall
+    // through the membership diff below and leave the daemon's cached
+    // sibling order stale; detect it by comparing the surviving items'
+    // relative order and resync that parent wholesale (remove all old
+    // children, re-add all new ones).
+    auto survivorsReordered = [](const std::vector<void*>& oldList,
+                                 const std::vector<void*>& newList) {
+        std::vector<void*> oldSurvivors;
+        std::vector<void*> newSurvivors;
+        for (void* handle : oldList) {
+            if (std::find(newList.begin(), newList.end(), handle) !=
+                newList.end()) {
+                oldSurvivors.push_back(handle);
+            }
+        }
+        for (void* handle : newList) {
+            if (std::find(oldList.begin(), oldList.end(), handle) !=
+                oldList.end()) {
+                newSurvivors.push_back(handle);
+            }
+        }
+        return oldSurvivors != newSurvivors;
+    };
+    std::set<void*> resyncParents;
+
     // Removals first (old indices), per surviving parent. A parent that
     // vanished entirely is reported as a single remove under ITS parent;
     // its subtree needs no events of its own.
@@ -980,13 +1006,19 @@ static gboolean flushTreeEvents(gpointer)
         auto newIt = current.children.find(parent);
         const std::vector<void*>* newList =
             newIt != current.children.end() ? &newIt->second : nullptr;
+        bool resync =
+            newList && survivorsReordered(oldList, *newList);
+        if (resync) {
+            resyncParents.insert(parent);
+        }
         // Descending order so each emitted index is still accurate after
         // the preceding (higher-index) siblings were removed.
         for (size_t j = oldList.size(); j > 0; j--) {
             size_t i = j - 1;
             void* handle = oldList[i];
-            if (newList && std::find(newList->begin(), newList->end(),
-                                     handle) != newList->end()) {
+            if (!resync && newList &&
+                std::find(newList->begin(), newList->end(), handle) !=
+                    newList->end()) {
                 continue;
             }
             AtkObject* parentObj = parent ? lookupNode(parent) : g_plug;
@@ -1010,10 +1042,12 @@ static gboolean flushTreeEvents(gpointer)
         auto oldIt = previous.children.find(parent);
         const std::vector<void*>* oldList =
             oldIt != previous.children.end() ? &oldIt->second : nullptr;
+        bool resync = resyncParents.count(parent) != 0;
         for (size_t i = 0; i < newList.size(); i++) {
             void* handle = newList[i];
-            if (oldList && std::find(oldList->begin(), oldList->end(),
-                                     handle) != oldList->end()) {
+            if (!resync && oldList &&
+                std::find(oldList->begin(), oldList->end(), handle) !=
+                    oldList->end()) {
                 continue;
             }
             AtkObject* parentObj = parent ? lookupNode(parent) : g_plug;
