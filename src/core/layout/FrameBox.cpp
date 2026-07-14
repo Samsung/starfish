@@ -4467,8 +4467,15 @@ ALWAYS_INLINE void applyTransformIfNeeded(FrameBox* fBox, SkMatrix& m,
                 }
             }
         } else {
+            // fBox->style() maps to node()->style(), which can be cleared to
+            // null while the layout tree is being torn down (e.g. a blur/focus
+            // change triggering getBoundingClientRect() during app shutdown
+            // while media is playing). The rendering branch above already
+            // null-checks stackingContext(); mirror that here so a box whose
+            // style is gone contributes no transform instead of crashing.
             ComputedStyle* cs = fBox->style();
-            StyleTransformDataGroup* transforms = cs->transforms(fBox);
+            StyleTransformDataGroup* transforms =
+                cs ? cs->transforms(fBox) : nullptr;
             if (transforms) {
                 SkMatrix m2 = cs->transformsToMatrix(
                     fBox->width(), fBox->height(), fBox, true);
