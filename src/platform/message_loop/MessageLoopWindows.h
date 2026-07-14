@@ -34,6 +34,9 @@ public:
     static void run();
     static void stop();
     static void runOnMainThreadSync(const std::function<void()>& functor);
+    static void runWithProcessMainThreadPausedSync(
+        const std::function<void()>& functor);
+    static bool isCallerInsideBackendEventLoop();
 
     size_t addIdler(GlobalScope* globalScope, void (*fn)(size_t handle, void*),
                     void* data) override;

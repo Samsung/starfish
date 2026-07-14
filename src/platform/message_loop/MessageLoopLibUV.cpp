@@ -433,6 +433,21 @@ void MessageLoopLibUV::runOnMainThreadSync(const std::function<void()>& functor)
     pthread_mutex_unlock(&g_threadSyncExecuteGuard);
 }
 
+void MessageLoopLibUV::runWithProcessMainThreadPausedSync(
+    const std::function<void()>& functor)
+{
+    // LibUV backend has no notion of a process main thread distinct from the
+    // LWE main thread, so there's nothing to pause -- just run.
+    functor();
+}
+
+bool MessageLoopLibUV::isCallerInsideBackendEventLoop()
+{
+    // No LibUV equivalent of g_main_depth() to confirm this from the
+    // caller's own stack -- always report "unconfirmed".
+    return false;
+}
+
 #endif
 
 } // namespace Starfish

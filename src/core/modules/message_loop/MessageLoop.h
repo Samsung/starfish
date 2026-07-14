@@ -51,6 +51,25 @@ public:
     static void stop();
     static void runOnMainThreadSync(const std::function<void()>& functor);
 
+    // Runs `functor` on the calling thread while excluding the process main
+    // thread from running any of its own code, for backends/modes where the
+    // LWE main thread is a dedicated thread distinct from the process main
+    // thread (e.g. GLib isolated thread mode). Backends/modes that have no
+    // such distinction just run `functor` directly.
+    static void runWithProcessMainThreadPausedSync(
+        const std::function<void()>& functor);
+
+    // Diagnostic only: reports whether the calling thread is, right now,
+    // confirmed to be executing from within this backend's own native event
+    // loop dispatch (e.g. GLib: getCurrentThreadID() == getpid() and
+    // g_main_depth() > 0). Backends/modes with no way to confirm this (or no
+    // such concept at all) return false -- false means "unconfirmed", not
+    // "definitely not running one", so this must never be used to gate
+    // behavior (see runWithProcessMainThreadPausedSync's own bounded runtime
+    // handshake for that); it exists purely so callers can log/understand
+    // the calling context, e.g. once at LWE::Initialize() time.
+    static bool isCallerInsideBackendEventLoop();
+
     virtual size_t addIdler(GlobalScope* globalScope,
                             void (*fn)(size_t handle, void*), void* data) = 0;
     virtual size_t addIdler(GlobalScope* globalScope,

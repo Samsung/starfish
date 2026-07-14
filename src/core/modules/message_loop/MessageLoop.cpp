@@ -107,6 +107,33 @@ void MessageLoop::runOnMainThreadSync(const std::function<void()>& functor)
 #endif
 }
 
+void MessageLoop::runWithProcessMainThreadPausedSync(
+    const std::function<void()>& functor)
+{
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+    MessageLoopLibUV::runWithProcessMainThreadPausedSync(functor);
+#elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
+    MessageLoopWindows::runWithProcessMainThreadPausedSync(functor);
+#elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
+    MessageLoopGLib::runWithProcessMainThreadPausedSync(functor);
+#else
+#error "Unknown EventLoop back-end"
+#endif
+}
+
+bool MessageLoop::isCallerInsideBackendEventLoop()
+{
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+    return MessageLoopLibUV::isCallerInsideBackendEventLoop();
+#elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
+    return MessageLoopWindows::isCallerInsideBackendEventLoop();
+#elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
+    return MessageLoopGLib::isCallerInsideBackendEventLoop();
+#else
+#error "Unknown EventLoop back-end"
+#endif
+}
+
 MessageLoop::MessageLoop()
     : m_inClosingState(false)
     , m_idlersFromOtherThreadMutex(new Mutex())
