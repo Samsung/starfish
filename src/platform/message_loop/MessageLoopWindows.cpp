@@ -345,5 +345,20 @@ void MessageLoopWindows::runOnMainThreadSync(
     pthread_mutex_unlock(&g_threadSyncFlowControler);
 }
 
+void MessageLoopWindows::runWithProcessMainThreadPausedSync(
+    const std::function<void()>& functor)
+{
+    // Windows backend has no notion of a process main thread distinct from
+    // the LWE main thread, so there's nothing to pause -- just run.
+    functor();
+}
+
+bool MessageLoopWindows::isCallerInsideBackendEventLoop()
+{
+    // No cheap way to confirm this from the caller's own stack on this
+    // backend -- always report "unconfirmed".
+    return false;
+}
+
 } // namespace Starfish
 #endif

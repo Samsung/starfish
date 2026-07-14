@@ -74,6 +74,19 @@ void LWE::Initialize(const char* storageDirectoryPath, bool preferMainThread)
     setenv("BACKEND", backend.data(), TRUE);
 #endif
 
+    // Diagnostic only (never used to gate runWithProcessMainThreadPausedSync
+    // -- see MessageLoop::isCallerInsideBackendEventLoop()'s doc comment).
+    // This is the right place to check it because LWE::Initialize() always
+    // runs on whatever thread the embedder calls it from -- typically the
+    // process main thread, alongside setting up its other UI components --
+    // regardless of isThreadMode. In isolated thread mode, MessageLoop::init()
+    // itself instead runs on the freshly created dedicated LWE thread, which
+    // can't tell us anything about the process main thread.
+    STARFISH_LOG_INFO(
+        "LWE::Initialize() called with isThreadMode=%d, "
+        "isCallerInsideBackendEventLoop=%d",
+        isThreadMode, Starfish::MessageLoop::isCallerInsideBackendEventLoop());
+
     ThreadedCallHelper::Instance()->Initialize(isThreadMode);
 
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {

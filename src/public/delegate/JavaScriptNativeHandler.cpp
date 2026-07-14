@@ -22,6 +22,7 @@
 
 #include "binding/ScriptWrappable.h"
 #include "JavaScriptNativeHandler.h"
+#include "core/modules/message_loop/MessageLoop.h"
 
 namespace Starfish {
 
@@ -44,7 +45,17 @@ String* JavaScriptNativeHandler::callNativeHandler(String* param)
 {
     STARFISH_ASSERT(param != nullptr);
     STARFISH_ASSERT(m_callback != nullptr);
-    auto returnValue = m_callback(param->toUTF8NonGCString());
+    std::string nonGCParam = param->toUTF8NonGCString();
+    std::string returnValue;
+    // The embedder's callback may assume it runs on the process main thread
+    // (that used to be guaranteed pre-isolated-thread-mode). Exclude the
+    // process main thread while it runs instead of hopping the call onto it:
+    // the callback still executes here, on the LWE thread, which is the only
+    // thread with valid bdwgc state in this engine.
+    MessageLoop::runWithProcessMainThreadPausedSync(
+        [this, &nonGCParam, &returnValue]() {
+            returnValue = m_callback(nonGCParam);
+        });
     return String::fromUTF8(returnValue.data(), returnValue.size());
 }
 } // namespace Starfish
