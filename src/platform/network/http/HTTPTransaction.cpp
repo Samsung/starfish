@@ -94,6 +94,12 @@ void HTTPTransaction::preprocess()
             m_httpRequest->baseURL());
     m_curl = cd.curl;
 
+    // curl_easy_reset does not clear the handle's private cookie engine, so a
+    // reused cached handle may still hold cookies from an earlier transfer;
+    // every transfer starts from a clean private store (credentialed ones are
+    // reseeded from the master store in setupPrivateCookieEngine).
+    curl_easy_setopt(m_curl, CURLOPT_COOKIELIST, "ALL");
+
 #ifdef STARFISH_ENABLE_TEST
     const char* verbose = getenv("NETWORK_LOG_VERBOSE");
     if (verbose && strlen(verbose)) {
@@ -204,22 +210,13 @@ void HTTPTransaction::start()
     curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(m_curl, CURLOPT_MAXREDIRS, 128);
     curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url().data());
+    struct curl_slist* injectedCookies = nullptr;
     if (includeCredentials) {
         curl_easy_setopt(
             m_curl, CURLOPT_SHARE,
             NetworkSharedResourceManager::getInstance()->curlShareHandle());
-        if (NetworkSharedResourceManager::getInstance()
-                ->cookieStoreFilePath()
-                .compare("") != 0) {
-            curl_easy_setopt(m_curl, CURLOPT_COOKIEJAR,
-                             NetworkSharedResourceManager::getInstance()
-                                 ->cookieStoreFilePath()
-                                 .data());
-            curl_easy_setopt(m_curl, CURLOPT_COOKIEFILE,
-                             NetworkSharedResourceManager::getInstance()
-                                 ->cookieStoreFilePath()
-                                 .data());
-        }
+        injectedCookies = NetworkSharedResourceManager::getInstance()
+                              ->setupPrivateCookieEngine(m_curl);
     } else {
         curl_easy_setopt(m_curl, CURLOPT_SHARE,
                          NetworkSharedResourceManager::getInstance()
@@ -275,6 +272,12 @@ void HTTPTransaction::start()
     m_httpResponse->setResponseTime(timestamp() / 1000);
 
     updateTransactionStatus();
+    if (includeCredentials) {
+        // Publish Set-Cookie results (and server-side deletions) from this
+        // transfer's private cookie engine into the master store.
+        NetworkSharedResourceManager::getInstance()->mergeTransferCookies(
+            m_curl, injectedCookies);
+    }
     curl_slist_free_all(list);
     postprocess();
 }

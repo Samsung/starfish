@@ -64,6 +64,25 @@ public:
     void setCookieStoreFilePath(const std::string& name);
     Mutex* resourceMutex(curl_lock_data data);
 
+    // Cookies are kept in an engine-owned master store instead of a CURLSH
+    // cookie share: libcurl builds the outgoing Cookie header from shared
+    // list nodes after releasing the share lock (fixed upstream only in
+    // 8.16.0, c278c508e2), so concurrent transfers on the shared store
+    // corrupt it. Each credentialed transfer runs a private cookie engine
+    // seeded from the master store and merged back after the transfer.
+    //
+    // Enables the transfer's private cookie engine and seeds it with a
+    // snapshot of the master store. Returns the injected snapshot; pass it
+    // to mergeTransferCookies (which frees it) after the transfer.
+    struct curl_slist* setupPrivateCookieEngine(CURL* curl);
+    void mergeTransferCookies(CURL* curl, struct curl_slist* injected);
+
+    // Netscape-format lines of every cookie in the master store.
+    // Caller frees with curl_slist_free_all.
+    struct curl_slist* allCookies();
+    // Adds/replaces one Netscape-format cookie line in the master store.
+    void addCookieLine(const char* line);
+
     CurlHandleData getCurlHandleData(const std::string& host);
     void cachingCurlHandleData(const std::string& host, CurlHandleData& cd);
     void clearAllCurlHandleDataCache();
@@ -117,10 +136,17 @@ private:
     Mutex* m_curlMultiRequestDataMutex;
     static void* curlMultiWorker(void* data);
 
+    // Master cookie store. A CURL easy handle that never performs transfers
+    // and is never attached to a share; it only hosts the process-wide
+    // cookie engine state. Guarded by resourceMutex(CURL_LOCK_DATA_COOKIE).
+    CURL* masterCookieHandleLocked();
+    void flushMasterCookiesLocked();
+
     CurlHandleDataMultiMap m_curlHandleDataCache;
     uint64_t m_lastCachePruneTime;
     size_t m_cacheClearTimerID;
     std::string m_cookieStoreFilePath;
+    CURL* m_masterCookieHandle;
 };
 } // namespace Starfish
 
