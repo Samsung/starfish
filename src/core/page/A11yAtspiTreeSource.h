@@ -111,9 +111,27 @@ public:
         Document,
     };
     Role roleOf(void* handle);
-    // Live checked state for CheckBox/RadioButton targets (aria-checked is
-    // not consulted; native controls only).
-    bool isChecked(void* handle);
+
+    // Live widget states: native control state plus the ARIA state
+    // attributes (aria-checked/disabled/expanded/selected), the same subset
+    // chromium's AXNodeObject maps for these roles. For native
+    // checkboxes/radios the native checkedness wins over aria-checked.
+    struct States {
+        bool checkable{ false };
+        bool checked{ false };
+        bool mixed{ false }; // aria-checked="mixed"
+        bool disabled{ false };
+        bool expandable{ false };
+        bool expanded{ false };
+        bool selectable{ false };
+        bool selected{ false };
+    };
+    States statesOf(void* handle);
+
+    // aria-labelledby / aria-describedby IDREF targets, filtered to
+    // elements that are themselves exposed in the tree (a reference to an
+    // unexposed node is dropped).
+    std::vector<void*> relationTargetsOf(void* handle, bool describedBy);
 
     float devicePixelRatio() const;
 

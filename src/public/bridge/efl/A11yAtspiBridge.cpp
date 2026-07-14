@@ -534,8 +534,12 @@ static AtkStateSet* starfish_atk_node_ref_state_set(AtkObject* atkObject)
         atk_state_set_add_state(stateSet, ATK_STATE_DEFUNCT);
         return stateSet;
     }
-    atk_state_set_add_state(stateSet, ATK_STATE_ENABLED);
-    atk_state_set_add_state(stateSet, ATK_STATE_SENSITIVE);
+    Starfish::A11yAtspiTreeSource::States states =
+        source->statesOf(node->handle);
+    if (!states.disabled) {
+        atk_state_set_add_state(stateSet, ATK_STATE_ENABLED);
+        atk_state_set_add_state(stateSet, ATK_STATE_SENSITIVE);
+    }
     atk_state_set_add_state(stateSet, ATK_STATE_SHOWING);
     atk_state_set_add_state(stateSet, ATK_STATE_VISIBLE);
     // Only targets are focusable/highlightable; the daemon's navigation
@@ -550,13 +554,66 @@ static AtkStateSet* starfish_atk_node_ref_state_set(AtkObject* atkObject)
     if (node->handle == g_highlightedHandle) {
         atk_state_set_add_state(stateSet, ATK_STATE_HIGHLIGHTED);
     }
-    using Role = Starfish::A11yAtspiTreeSource::Role;
-    Role role = source->roleOf(node->handle);
-    if ((role == Role::CheckBox || role == Role::RadioButton) &&
-        source->isChecked(node->handle)) {
-        atk_state_set_add_state(stateSet, ATK_STATE_CHECKED);
+    if (states.checkable) {
+        if (states.mixed) {
+            atk_state_set_add_state(stateSet, ATK_STATE_INDETERMINATE);
+        } else if (states.checked) {
+            atk_state_set_add_state(stateSet, ATK_STATE_CHECKED);
+        }
+    }
+    if (states.expandable) {
+        atk_state_set_add_state(stateSet, ATK_STATE_EXPANDABLE);
+        if (states.expanded) {
+            atk_state_set_add_state(stateSet, ATK_STATE_EXPANDED);
+        }
+    }
+    if (states.selectable) {
+        atk_state_set_add_state(stateSet, ATK_STATE_SELECTABLE);
+        if (states.selected) {
+            atk_state_set_add_state(stateSet, ATK_STATE_SELECTED);
+        }
     }
     return stateSet;
+}
+
+// aria-labelledby / aria-describedby as ATK relations (chromium exposes
+// the same pairs). Only references to exposed nodes are handed out.
+static void addRelations(AtkRelationSet* set,
+                         Starfish::A11yAtspiTreeSource* source, void* handle,
+                         bool describedBy, AtkRelationType type)
+{
+    std::vector<void*> handles = source->relationTargetsOf(handle, describedBy);
+    if (handles.empty()) {
+        return;
+    }
+    std::vector<AtkObject*> objects;
+    for (void* target : handles) {
+        AtkObject* obj = lookupNode(target);
+        if (obj) {
+            objects.push_back(obj);
+        }
+    }
+    if (objects.empty()) {
+        return;
+    }
+    AtkRelation* relation =
+        atk_relation_new(objects.data(), (gint)objects.size(), type);
+    atk_relation_set_add(set, relation);
+    g_object_unref(relation);
+}
+
+static AtkRelationSet* starfish_atk_node_ref_relation_set(AtkObject* atkObject)
+{
+    StarfishAtkNode* node = STARFISH_ATK_NODE(atkObject);
+    AtkRelationSet* set = atk_relation_set_new();
+    Starfish::A11yAtspiTreeSource* source = treeSource();
+    if (source && source->isValid(node->handle)) {
+        addRelations(set, source, node->handle, false,
+                     ATK_RELATION_LABELLED_BY);
+        addRelations(set, source, node->handle, true,
+                     ATK_RELATION_DESCRIBED_BY);
+    }
+    return set;
 }
 
 static void starfish_atk_node_class_init(StarfishAtkNodeClass* klass)
@@ -571,6 +628,7 @@ static void starfish_atk_node_class_init(StarfishAtkNodeClass* klass)
     atkObjectClass->ref_child = starfish_atk_node_ref_child;
     atkObjectClass->get_index_in_parent = starfish_atk_node_get_index_in_parent;
     atkObjectClass->ref_state_set = starfish_atk_node_ref_state_set;
+    atkObjectClass->ref_relation_set = starfish_atk_node_ref_relation_set;
 }
 
 // Border box in window px (window-relative device px); false if stale.
@@ -863,11 +921,11 @@ static guint g_flushTimer = 0;
 // Bridge-side copy of the exposed hierarchy from the previous flush.
 // children is keyed by parent handle (nullptr = plug level) and has an
 // entry for EVERY exposed node, so key presence doubles as a node
-// existence check. checked tracks CheckBox/RadioButton state for
-// state-change::checked events.
+// existence check. states tracks the live widget states for
+// state-change emissions.
 struct TreeSnapshotData {
     std::map<void*, std::vector<void*>> children;
-    std::map<void*, bool> checked;
+    std::map<void*, Starfish::A11yAtspiTreeSource::States> states;
 };
 static TreeSnapshotData* g_lastTree = nullptr;
 
@@ -884,11 +942,7 @@ static void captureChildren(Starfish::A11yAtspiTreeSource* source, void* handle,
             continue;
         }
         list.push_back(child);
-        using Role = Starfish::A11yAtspiTreeSource::Role;
-        Role role = source->roleOf(child);
-        if (role == Role::CheckBox || role == Role::RadioButton) {
-            out.checked[child] = source->isChecked(child);
-        }
+        out.states[child] = source->statesOf(child);
         captureChildren(source, child, out);
     }
 }
@@ -971,16 +1025,43 @@ static gboolean flushTreeEvents(gpointer)
                                   lookupNode(handle));
         }
     }
-    // Checked-state transitions on surviving checkables.
-    for (const auto& entry : current.checked) {
-        auto oldIt = previous.checked.find(entry.first);
-        if (oldIt != previous.checked.end() && oldIt->second != entry.second) {
+    // State transitions on surviving nodes (checked/indeterminate/
+    // expanded/selected/enabled), mirroring chromium's state-change
+    // notifications.
+    for (const auto& entry : current.states) {
+        auto oldIt = previous.states.find(entry.first);
+        if (oldIt == previous.states.end()) {
+            continue;
+        }
+        const auto& was = oldIt->second;
+        const auto& now = entry.second;
+        AtkObject* obj = nullptr;
+        struct Transition {
+            bool before;
+            bool after;
+            AtkStateType state;
+        } transitions[] = {
+            { was.checked, now.checked, ATK_STATE_CHECKED },
+            { was.mixed, now.mixed, ATK_STATE_INDETERMINATE },
+            { was.expanded && was.expandable, now.expanded && now.expandable,
+              ATK_STATE_EXPANDED },
+            { was.selected && was.selectable, now.selected && now.selectable,
+              ATK_STATE_SELECTED },
+            { !was.disabled, !now.disabled, ATK_STATE_ENABLED },
+            { !was.disabled, !now.disabled, ATK_STATE_SENSITIVE },
+        };
+        for (const Transition& t : transitions) {
+            if (t.before == t.after) {
+                continue;
+            }
+            if (!obj) {
+                obj = lookupNode(entry.first);
+            }
             STARFISH_LOG_INFO(
-                "A11yAtspiBridge: state-change::checked %p -> %d\n",
-                entry.first, entry.second ? 1 : 0);
-            atk_object_notify_state_change(lookupNode(entry.first),
-                                           ATK_STATE_CHECKED,
-                                           entry.second ? TRUE : FALSE);
+                "A11yAtspiBridge: state-change %d on %p -> %d\n",
+                (int)t.state, entry.first, t.after ? 1 : 0);
+            atk_object_notify_state_change(obj, t.state,
+                                           t.after ? TRUE : FALSE);
         }
     }
 

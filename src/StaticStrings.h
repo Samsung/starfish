@@ -631,6 +631,10 @@ public:
     QualifiedName m_ariaLabel;
     QualifiedName m_ariaLabelledby;
     QualifiedName m_ariaDescribedby;
+    QualifiedName m_ariaChecked;
+    QualifiedName m_ariaDisabled;
+    QualifiedName m_ariaExpanded;
+    QualifiedName m_ariaSelected;
     // Event Names
     QualifiedName m_click;
     QualifiedName m_onclick;
