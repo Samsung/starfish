@@ -41,7 +41,7 @@ jobs:
 
       - name: Build image
         run: |
-          DOCKER_BUILDKIT=1 docker build \
+          docker build \
             -f docker/Dockerfile.starfish-build \
             -t lws-docker-local.bart.sec.samsung.net/starfish-build:24.04 \
             -t lws-docker-local.bart.sec.samsung.net/starfish-build:latest \
