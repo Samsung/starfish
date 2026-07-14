@@ -63,7 +63,12 @@ jobs:
         run: git submodule foreach --recursive git reset --hard
 
       - name: Make source for Windows
+        env:
+          DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_SSH_KEY }}
         run: |
+              mkdir -p ~/.ssh
+              printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/id_rsa
+              chmod 600 ~/.ssh/id_rsa
               git config --global user.email "github-actions[bot]@users.noreply.github.com"
               git config --global user.name "github-actions[bot]"
               tool/release/prepare_source_without_thirdparty.sh
@@ -73,6 +78,7 @@ jobs:
               git push origin HEAD:${{ github.event.pull_request.number }} -f
               cd ../starfish
               rm -rf ../lwe_rel_tmp
+              rm -f ~/.ssh/id_rsa
 
   x64_test:
     needs: [ squash_thirdparty ]
