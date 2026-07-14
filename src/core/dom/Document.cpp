@@ -49,6 +49,10 @@
 #ifdef STARFISH_ENABLE_A11Y_ATSPI
 #include "core/page/A11yAtspiTreeSource.h"
 #endif
+#if defined(STARFISH_ENABLE_TTS) && \
+    defined(STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION)
+#include "core/modules/tts/A11yLiveRegion.h"
+#endif
 #include "core/dom/HTMLBaseElement.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLCollection.h"
@@ -1678,6 +1682,11 @@ void Document::willNodeBeRemoved(Node* parent, Node* oldChild)
 void Document::didNodeInserted(Node* parent, Node* newChild)
 {
     Node::didNodeInserted(parent, newChild);
+
+#if defined(STARFISH_ENABLE_TTS) && \
+    defined(STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION)
+    A11yLiveRegion::nodeInserted(this, newChild);
+#endif
 
     if (UNLIKELY(newChild->isHTMLBaseElement())) {
         processBaseElement();

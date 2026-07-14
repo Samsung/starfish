@@ -635,6 +635,9 @@ public:
     QualifiedName m_ariaDisabled;
     QualifiedName m_ariaExpanded;
     QualifiedName m_ariaSelected;
+    QualifiedName m_ariaLive;
+    QualifiedName m_ariaAtomic;
+    QualifiedName m_ariaBusy;
     // Event Names
     QualifiedName m_click;
     QualifiedName m_onclick;

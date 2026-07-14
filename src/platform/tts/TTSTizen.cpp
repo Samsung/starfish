@@ -770,6 +770,11 @@ int TTS::ttsState()
     return cur;
 }
 
+bool TTS::isSpeaking()
+{
+    return m_handle != NULL && ttsState() == TTS_STATE_PLAYING;
+}
+
 void TTS::speech(SpeechSynthesisUtterance* utterance)
 {
     if (!utterance || utterance->text()->isEmpty()) {

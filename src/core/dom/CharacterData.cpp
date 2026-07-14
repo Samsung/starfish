@@ -25,6 +25,10 @@
 #include "core/layout/Frame.h"
 #include "core/layout/FrameText.h"
 #include "core/dom/MutationObservationScope.h"
+#if defined(STARFISH_ENABLE_TTS) && \
+    defined(STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION)
+#include "core/modules/tts/A11yLiveRegion.h"
+#endif
 
 namespace Starfish {
 
@@ -110,6 +114,13 @@ void CharacterData::setData(String* data)
     notifyDOMEventToParentTree(parentNode(), [oldData, data](Node* parent) {
         parent->didCharacterDataModified(oldData, data);
     });
+
+#if defined(STARFISH_ENABLE_TTS) && \
+    defined(STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION)
+    // Text swaps inside aria-live regions (e.g. node.data = "...") do not
+    // go through node insertion; announce them here.
+    A11yLiveRegion::characterDataChanged(this);
+#endif
 }
 
 void CharacterData::appendData(String* d)
