@@ -89,9 +89,10 @@ public:
     UTF8StringDataNonGCStd textOf(void* handle);
     // Two-finger pan gesture: scroll the main document by CSS px.
     void scrollBy(double dx, double dy);
-    // Border box in CSS px relative to the top-level viewport (frame chain
-    // offsets included for elements inside iframes). False for a stale
-    // handle.
+    // Border box in CSS px relative to the top-level viewport, CLIPPED by
+    // every ancestor overflow box and each enclosing frame's viewport
+    // (chromium reports clipped bounds the same way). A fully clipped
+    // target yields an empty (zero-size) rect. False for a stale handle.
     bool rectOf(void* handle, double& x, double& y, double& width,
                 double& height);
 
@@ -125,6 +126,9 @@ public:
         bool expanded{ false };
         bool selectable{ false };
         bool selected{ false };
+        // Fully scrolled/clipped out of view (drops SHOWING, as chromium
+        // marks offscreen objects).
+        bool offscreen{ false };
     };
     States statesOf(void* handle);
 
