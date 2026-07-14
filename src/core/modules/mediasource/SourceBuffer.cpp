@@ -44,10 +44,10 @@
 #define STARFISH_FRAME_EVICTION_BACKWARD_DUR 500
 
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
-#define SOURCEBUFFER_TYPE(sb)     \
-    (sb->type()->charAt(0) == 'v' \
-         ? "video"                \
-         : sb->type()->charAt(0) == 'a' ? "audio" : "etc")
+#define SOURCEBUFFER_TYPE(sb)                 \
+    (sb->type()->charAt(0) == 'v'   ? "video" \
+     : sb->type()->charAt(0) == 'a' ? "audio" \
+                                    : "etc")
 #define SOURCEBUFFER_LOG(sb, STR, ...) \
     STARFISH_LOG_INFO(                 \
         "[SourceBuffer|%p|%s] "        \

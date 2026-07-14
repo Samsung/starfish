@@ -48,8 +48,7 @@
 
 namespace std {
 template <>
-struct tuple_size<Clipper2Lib::PointD> : integral_constant<size_t, 2> {
-};
+struct tuple_size<Clipper2Lib::PointD> : integral_constant<size_t, 2> {};
 
 template <>
 struct tuple_element<0, Clipper2Lib::PointD> {

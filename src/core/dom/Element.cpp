@@ -819,13 +819,15 @@ static ComputedStyleDamage comparePseudoElementStyle(ComputedStyle* oldStyle,
     if (newContent == nullptr && oldContent == nullptr) {
     } else if (newContent == nullptr || oldContent == nullptr) {
         damagedKeys[CSSStyleValuePair::KeyKind::Content] = true;
-        damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::
+                                           ComputedStyleDamageRebuildFrame |
+                                       damage);
     } else {
         if (*oldContent != *newContent) {
             damagedKeys[CSSStyleValuePair::KeyKind::Content] = true;
-            damage = (ComputedStyleDamage)(
-                ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+            damage = (ComputedStyleDamage)(ComputedStyleDamage::
+                                               ComputedStyleDamageRebuildFrame |
+                                           damage);
         }
     }
 
@@ -892,10 +894,12 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                         false,
                     };
 
-                    ComputedStyleDamage damage = (ComputedStyleDamage)(
-                        compareStyle(ocs, ncs, damagedKeys,
-                                     isSVGDescendantElement()) |
-                        comparePseudoElementStyle(ocs, ncs, damagedKeys));
+                    ComputedStyleDamage damage =
+                        (ComputedStyleDamage)(compareStyle(
+                                                  ocs, ncs, damagedKeys,
+                                                  isSVGDescendantElement()) |
+                                              comparePseudoElementStyle(
+                                                  ocs, ncs, damagedKeys));
 
                     if (damage !=
                         ComputedStyleDamage::ComputedStyleDamageNone) {

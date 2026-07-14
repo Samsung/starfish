@@ -122,7 +122,7 @@ public:
         return (MediaPlayerWebRtc*)this;
     }
 
-    virtual void prepare(ResourceURL* url){};
+    virtual void prepare(ResourceURL* url) {};
     virtual double currentTime() = 0;
     virtual double duration() = 0;
     virtual void setVolume(double volume) = 0;

@@ -39,12 +39,12 @@ public:
 
     static MediaPlayer* create(HTMLMediaElement* element);
 
-    void destroy() override{};
-    void play() override{};
-    void pause() override{};
-    void seek(double time) override{};
+    void destroy() override {};
+    void play() override {};
+    void pause() override {};
+    void seek(double time) override {};
 
-    virtual void prepare(MediaProvider* mediaProvider){};
+    virtual void prepare(MediaProvider* mediaProvider) {};
     bool isWebRtcPlayer() override
     {
         return true;
@@ -60,14 +60,14 @@ public:
         return 0;
     }
 
-    void setVolume(double volume) override{};
-    void setMuted(bool muted) override{};
-    void prepareMediaSource() override{};
+    void setVolume(double volume) override {};
+    void setMuted(bool muted) override {};
+    void prepareMediaSource() override {};
 
     void didDrawVideo(Compositor* canvas, const LayoutRect& videoRect,
-                      const LayoutRect& absVideoRect) override{};
+                      const LayoutRect& absVideoRect) override {};
     void willDrawVideo(Compositor* canvas,
-                       const LayoutRect& videoRect) override{};
+                       const LayoutRect& videoRect) override {};
 
     virtual void onFrame(MediaStream::VideoFrameObserver* observer) = 0;
     virtual void onData(MediaStream::AudioTrackObserver* observer) = 0;

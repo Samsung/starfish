@@ -880,15 +880,13 @@ template <typename T, typename Allocator = GCUtil::gc_malloc_allocator<T>>
 using GCVectorT = Starfish::Vector<T, Allocator>;
 
 template <typename T, typename Allocator = GCUtil::gc_malloc_allocator<T>>
-class GCVector : public GCVectorT<T, Allocator>, public gc {
-};
+class GCVector : public GCVectorT<T, Allocator>, public gc {};
 
 template <typename T, typename Allocator = GCUtil::gc_malloc_allocator<T>>
 using GCTightVectorT = Starfish::TightVector<T, Allocator>;
 
 template <typename T, typename Allocator = GCUtil::gc_malloc_allocator<T>>
-class GCTightVector : public GCTightVectorT<T, Allocator>, public gc {
-};
+class GCTightVector : public GCTightVectorT<T, Allocator>, public gc {};
 
 // typedef of GC-aware vector with atomic contents
 template <typename T,
@@ -897,8 +895,7 @@ using GCAtomicVectorT = Starfish::Vector<T, Allocator>;
 
 template <typename T,
           typename Allocator = GCUtil::gc_malloc_atomic_allocator<T>>
-class GCAtomicVector : public GCAtomicVectorT<T, Allocator>, public gc {
-};
+class GCAtomicVector : public GCAtomicVectorT<T, Allocator>, public gc {};
 
 template <typename T,
           typename Allocator = GCUtil::gc_malloc_atomic_allocator<T>>
@@ -907,8 +904,7 @@ using GCAtomicTightVectorT = Starfish::TightVector<T, Allocator>;
 template <typename T,
           typename Allocator = GCUtil::gc_malloc_atomic_allocator<T>>
 class GCAtomicTightVector : public GCAtomicTightVectorT<T, Allocator>,
-                            public gc {
-};
+                            public gc {};
 
 template <class Key, class T, class Hash = std::hash<Key>,
           class KeyEqual = std::equal_to<Key>,
@@ -931,8 +927,7 @@ template <typename Key, typename Value, typename Hasher = std::hash<Key>,
               GCUtil::gc_malloc_allocator<std::pair<Key const, Value>>>
 class GCUnorderedMap
     : public GCUnorderedMapT<Key, Value, Hasher, Predicate, Allocator>,
-      public gc {
-};
+      public gc {};
 
 template <typename Key, typename Value, typename Hasher = std::hash<Key>,
           typename Predicate = std::equal_to<Key>,
@@ -946,8 +941,7 @@ template <typename Key, typename Value, typename Hasher = std::hash<Key>,
               GCUtil::gc_malloc_atomic_allocator<std::pair<Key const, Value>>>
 class GCAtomicUnorderedMap
     : public GCAtomicUnorderedMapT<Key, Value, Hasher, Predicate, Allocator>,
-      public gc {
-};
+      public gc {};
 
 template <class Key, class Hash = std::hash<Key>,
           class KeyEqual = std::equal_to<Key>,
@@ -961,8 +955,7 @@ template <typename T, typename Hasher = std::hash<T>,
           typename Predicate = std::equal_to<T>,
           typename Allocator = GCUtil::gc_malloc_allocator<T>>
 class GCUnorderedSet : public HashSet<T, Hasher, Predicate, Allocator>,
-                       public gc {
-};
+                       public gc {};
 
 #endif // NO_EXPOSE_GC
 

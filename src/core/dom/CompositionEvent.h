@@ -26,8 +26,7 @@ namespace Starfish {
 
 class Window;
 
-struct CompositionEventData {
-};
+struct CompositionEventData {};
 
 struct CompositionEventInit : UIEventInit {
     STARFISH_MAKE_STACK_ALLOCATED()

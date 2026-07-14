@@ -35,7 +35,7 @@ public:
     static void queue(IdleTask* task);
 
     virtual void run() = 0;
-    virtual void end(){};
+    virtual void end() {};
     void start();
 
     GlobalScope* globalScope()
@@ -54,7 +54,7 @@ public:
     static void queue(ParallelTask* task);
 
     virtual void run() = 0;
-    virtual void end(){};
+    virtual void end() {};
     void start();
 };
 

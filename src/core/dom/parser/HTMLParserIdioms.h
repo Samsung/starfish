@@ -156,7 +156,7 @@ public:
 
     Decimal operator+(const Decimal&) const;
     Decimal operator-(const Decimal&) const;
-    Decimal operator*(const Decimal&)const;
+    Decimal operator*(const Decimal&) const;
     Decimal operator/(const Decimal&) const;
 
     int exponent() const

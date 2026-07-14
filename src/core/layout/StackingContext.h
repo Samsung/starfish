@@ -109,8 +109,7 @@ protected:
     }
 };
 
-class StackingContextChild : public GCVector<StackingContext*> {
-};
+class StackingContextChild : public GCVector<StackingContext*> {};
 
 struct StackingContextRareData : public gc {
     LayoutRect m_visibleRect;

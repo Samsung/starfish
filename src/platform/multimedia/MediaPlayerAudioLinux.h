@@ -37,8 +37,8 @@ public:
 
     virtual void destroy() override;
     virtual void play() override;
-    virtual void pause() override{};
-    virtual void seek(double time) override{};
+    virtual void pause() override {};
+    virtual void seek(double time) override {};
 
     void prepare(ResourceURL* url) override;
 
@@ -52,9 +52,9 @@ public:
         return 0;
     }
 
-    virtual void setVolume(double volume) override{};
-    virtual void setMuted(bool muted) override{};
-    virtual void prepareMediaSource() override{};
+    virtual void setVolume(double volume) override {};
+    virtual void setMuted(bool muted) override {};
+    virtual void prepareMediaSource() override {};
 
 private:
 };

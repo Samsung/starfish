@@ -31,8 +31,7 @@ class IServiceWorkerHostConnection;
 class IServiceWorkerClientConnection;
 class ServiceWorkerJobData;
 
-class Job : public gc {
-};
+class Job : public gc {};
 
 class ServiceWorkerJob : public Job {
 public:

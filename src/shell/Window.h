@@ -105,7 +105,7 @@ public:
     }
 
     virtual bool init(const char* applicationName, int width, int height) = 0;
-    virtual void pollEvent(){};
+    virtual void pollEvent() {};
     virtual void terminate() = 0;
 
 #if defined(STARFISH_SHELL_EFL)
@@ -119,7 +119,7 @@ public:
 
     virtual RendererDelegate* renderer() = 0;
 
-    virtual void setRotate(int degree){};
+    virtual void setRotate(int degree) {};
 
     virtual void ShowSoftwareKeyboardIfPossible()
     {

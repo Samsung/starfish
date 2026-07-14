@@ -122,8 +122,7 @@ struct RTCOfferOptions : public RTCOfferAnswerOptions {
     bool m_offerToReceiveVideo = false;
 };
 
-struct RTCAnswerOptions : public RTCOfferAnswerOptions {
-};
+struct RTCAnswerOptions : public RTCOfferAnswerOptions {};
 
 class ObserverBase : public gc {
 public:

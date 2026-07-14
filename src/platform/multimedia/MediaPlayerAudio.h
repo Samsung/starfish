@@ -46,8 +46,8 @@ public:
 
     virtual void destroy();
     virtual void play();
-    virtual void pause(){};
-    virtual void seek(double time){};
+    virtual void pause() {};
+    virtual void seek(double time) {};
 
     virtual void setBuffer(uint8_t* buffer, uint32_t length);
     virtual void prepare(ResourceURL* url);
@@ -62,14 +62,14 @@ public:
         return 0;
     }
 
-    virtual void setVolume(double volume){};
-    virtual void setMuted(bool muted){};
-    virtual void prepareMediaSource(){};
+    virtual void setVolume(double volume) {};
+    virtual void setMuted(bool muted) {};
+    virtual void prepareMediaSource() {};
 
     virtual void didDrawVideo(Compositor* canvas, const LayoutRect& videoRect,
-                              const LayoutRect& absVideoRect){};
+                              const LayoutRect& absVideoRect) {};
     virtual void willDrawVideo(Compositor* canvas,
-                               const LayoutRect& videoRect){};
+                               const LayoutRect& videoRect) {};
 
 protected:
     Resource* m_audioResource{ nullptr };

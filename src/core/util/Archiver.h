@@ -167,15 +167,15 @@ public:
     JsonReader& EndObject() override;
     JsonReader& StartArray(size_t* size = 0) override;
     JsonReader& EndArray() override;
-    JsonReader& operator&(bool& b)override;
-    JsonReader& operator&(unsigned& u)override;
-    JsonReader& operator&(uint64_t& u)override;
-    JsonReader& operator&(int& i)override;
-    JsonReader& operator&(double& d)override;
-    JsonReader& operator&(std::string& s)override;
-    JsonReader& operator&(String*& s)override;
-    JsonReader& operator&(std::unordered_map<std::string, std::string>& m)
-        override;
+    JsonReader& operator&(bool& b) override;
+    JsonReader& operator&(unsigned& u) override;
+    JsonReader& operator&(uint64_t& u) override;
+    JsonReader& operator&(int& i) override;
+    JsonReader& operator&(double& d) override;
+    JsonReader& operator&(std::string& s) override;
+    JsonReader& operator&(String*& s) override;
+    JsonReader& operator&(
+        std::unordered_map<std::string, std::string>& m) override;
     JsonReader& SetNull() override;
 
     bool IsReader() override
@@ -217,15 +217,15 @@ public:
     JsonWriter& EndObject() override;
     JsonWriter& StartArray(size_t* size = 0) override;
     JsonWriter& EndArray() override;
-    JsonWriter& operator&(bool& b)override;
-    JsonWriter& operator&(unsigned& u)override;
-    JsonWriter& operator&(uint64_t& u)override;
-    JsonWriter& operator&(int& i)override;
-    JsonWriter& operator&(double& d)override;
-    JsonWriter& operator&(std::string& s)override;
-    JsonWriter& operator&(String*& s)override;
-    JsonWriter& operator&(std::unordered_map<std::string, std::string>& m)
-        override;
+    JsonWriter& operator&(bool& b) override;
+    JsonWriter& operator&(unsigned& u) override;
+    JsonWriter& operator&(uint64_t& u) override;
+    JsonWriter& operator&(int& i) override;
+    JsonWriter& operator&(double& d) override;
+    JsonWriter& operator&(std::string& s) override;
+    JsonWriter& operator&(String*& s) override;
+    JsonWriter& operator&(
+        std::unordered_map<std::string, std::string>& m) override;
     JsonWriter& SetNull() override;
 
     bool IsReader() override

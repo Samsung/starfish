@@ -32,8 +32,7 @@ class ExecutionContext;
 class HTMLMediaElement;
 class MediaElementAudioSourceNode;
 
-struct AudioContextOptions {
-};
+struct AudioContextOptions {};
 
 class AudioContext : public BaseAudioContext {
 public:
