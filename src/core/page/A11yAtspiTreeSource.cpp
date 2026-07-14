@@ -40,6 +40,8 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 
+#include <algorithm>
+
 namespace Starfish {
 
 static bool isAriaHiddenSelf(WebView* webView, Element* element)
@@ -49,31 +51,70 @@ static bool isAriaHiddenSelf(WebView* webView, Element* element)
     return element->getAttributeOrEmpty(hidden)->equalsIgnoreCase("true");
 }
 
-// Offset of an element's frame chain: sums, over every enclosing iframe, the
-// iframe's border box position in ITS parent frame's viewport plus the
-// border+padding to the inner content origin (same content-origin math as
-// BrowsingContext::isInnerIFrameEvent). Yields top-level viewport CSS px.
-static void frameChainOffset(Element* element, double& offsetX, double& offsetY)
+static void intersectRect(double& x, double& y, double& width, double& height,
+                          double clipX, double clipY, double clipWidth,
+                          double clipHeight)
 {
-    offsetX = 0;
-    offsetY = 0;
+    double right = std::min(x + width, clipX + clipWidth);
+    double bottom = std::min(y + height, clipY + clipHeight);
+    x = std::max(x, clipX);
+    y = std::max(y, clipY);
+    width = std::max(0.0, right - x);
+    height = std::max(0.0, bottom - y);
+}
+
+// Border box in top-level viewport CSS px, clipped like painting clips:
+// within each document by the ancestor boxes that apply overflow and by
+// the document's viewport, then translated into the parent frame through
+// the owning iframe's content origin (same content-origin math as
+// BrowsingContext::isInnerIFrameEvent) and clipped again up the frame
+// chain. Fully clipped content converges to a zero-size rect.
+static void clippedBorderBox(Element* element, double& x, double& y,
+                             double& width, double& height)
+{
+    DOMRect* rect = element->getBoundingClientRect();
+    x = rect->x();
+    y = rect->y();
+    width = rect->width();
+    height = rect->height();
+
+    Element* current = element;
     Document* doc = element->ownerDocument();
-    BrowsingContext* bc = doc ? doc->browsingContext() : nullptr;
-    while (bc && bc->parentBrowsingContext()) {
+    while (doc) {
+        for (Element* ancestor = current->parentElement(); ancestor;
+             ancestor = ancestor->parentElement()) {
+            if (ancestor->frame() &&
+                ancestor->frame()->shouldApplyOverflow()) {
+                DOMRect* clip = ancestor->getBoundingClientRect();
+                intersectRect(x, y, width, height, clip->x(), clip->y(),
+                              clip->width(), clip->height());
+            }
+        }
+        Window* window = doc->window();
+        if (window) {
+            intersectRect(x, y, width, height, 0, 0,
+                          (double)window->innerWidth(),
+                          (double)window->innerHeight());
+        }
+        BrowsingContext* bc = doc->browsingContext();
+        if (!bc || !bc->parentBrowsingContext()) {
+            break;
+        }
         HTMLIFrameElement* source = bc->sourceElement();
         if (!source) {
             break;
         }
-        DOMRect* rect = source->getBoundingClientRect();
+        DOMRect* frameRect = source->getBoundingClientRect();
         double contentX = 0, contentY = 0;
         if (source->frame() && source->frame()->isFrameBox()) {
             FrameBox* fb = source->frame()->asFrameBox();
             contentX = (double)(fb->paddingLeft() + fb->borderLeft());
             contentY = (double)(fb->paddingTop() + fb->borderTop());
         }
-        offsetX += rect->x() + contentX;
-        offsetY += rect->y() + contentY;
-        bc = bc->parentBrowsingContext();
+        x += frameRect->x() + contentX;
+        y += frameRect->y() + contentY;
+        current = source;
+        doc = source->ownerDocument();
     }
 }
 
@@ -461,13 +502,7 @@ bool A11yAtspiTreeSource::rectOf(void* handle, double& x, double& y,
     if (!element) {
         return false;
     }
-    DOMRect* rect = element->getBoundingClientRect();
-    double offsetX = 0, offsetY = 0;
-    frameChainOffset(element, offsetX, offsetY);
-    x = rect->x() + offsetX;
-    y = rect->y() + offsetY;
-    width = rect->width();
-    height = rect->height();
+    clippedBorderBox(element, x, y, width, height);
     return true;
 }
 
@@ -609,6 +644,10 @@ A11yAtspiTreeSource::States A11yAtspiTreeSource::statesOf(void* handle)
         states.selectable = true;
         states.selected = ariaSelected->equalsIgnoreCase("true");
     }
+
+    double x = 0, y = 0, width = 0, height = 0;
+    clippedBorderBox(element, x, y, width, height);
+    states.offscreen = width <= 0 || height <= 0;
     return states;
 }
 

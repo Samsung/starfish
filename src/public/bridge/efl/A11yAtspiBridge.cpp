@@ -541,7 +541,11 @@ static AtkStateSet* starfish_atk_node_ref_state_set(AtkObject* atkObject)
         atk_state_set_add_state(stateSet, ATK_STATE_ENABLED);
         atk_state_set_add_state(stateSet, ATK_STATE_SENSITIVE);
     }
-    atk_state_set_add_state(stateSet, ATK_STATE_SHOWING);
+    // SHOWING means "in view": scrolled/clipped-out targets keep VISIBLE
+    // (not display:none) but drop SHOWING, as chromium reports offscreen.
+    if (!states.offscreen) {
+        atk_state_set_add_state(stateSet, ATK_STATE_SHOWING);
+    }
     atk_state_set_add_state(stateSet, ATK_STATE_VISIBLE);
     // Only targets are focusable/highlightable; the daemon's navigation
     // uses these states to skip the structural Section/Document containers
@@ -1083,6 +1087,7 @@ static gboolean flushTreeEvents(gpointer)
               ATK_STATE_SELECTED },
             { !was.disabled, !now.disabled, ATK_STATE_ENABLED },
             { !was.disabled, !now.disabled, ATK_STATE_SENSITIVE },
+            { !was.offscreen, !now.offscreen, ATK_STATE_SHOWING },
         };
         for (const Transition& t : transitions) {
             if (t.before == t.after) {

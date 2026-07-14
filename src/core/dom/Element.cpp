@@ -1403,6 +1403,12 @@ static void elementScrollPropertyChanged(Element* element)
         scrolling->setPendingScrollEvent(true);
         element->window()->webView()->pendingScrollEventSet().insert(scrolling);
     }
+#ifdef STARFISH_ENABLE_A11Y_ATSPI
+    // Overflow scrolling moves (and re-clips) the exposed rects; the
+    // bridge repositions its focus ring and re-checks SHOWING on this
+    // ping.
+    A11yAtspiTreeSource::notifyPageChanged(element->document());
+#endif
 }
 
 bool Element::setScrollLeft(double s, bool layoutIfNeeds)
