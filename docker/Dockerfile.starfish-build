@@ -17,11 +17,6 @@ FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Seoul
-# Ubuntu 24.04 ships FreeType 2.13 (TrueType interpreter v40), while the
-# legacy 20.04 image used FreeType 2.10 (v35). The different hinting
-# algorithm causes sub-pixel anti-aliasing changes that make reftest
-# imgdiff fail (~0.3–0.5% pixel diff). Force v35 to match 20.04 output.
-ENV FREETYPE_PROPERTIES=truetype:interpreter-version=35
 
 # ---------------------------------------------------------------------------
 # Core build toolchain
@@ -107,11 +102,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Pre-install to ~/.fonts so tests can run without a separate copy step.
 COPY docker/Ahem.ttf /root/workspace/Ahem.ttf
 RUN mkdir -p /root/.fonts && cp /root/workspace/Ahem.ttf /root/.fonts/Ahem.ttf
-
-# Ubuntu 24.04 fontconfig defaults differ from 20.04 (subpixel rendering,
-# different hint style). This config forces 20.04-equivalent rendering
-# settings to ensure reftest pixel-identical output.
-COPY docker/fonts.conf /etc/fonts/local.conf
 RUN fc-cache -f
 
 # When host directories are bind-mounted into the container (e.g. -v flag),
