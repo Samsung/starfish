@@ -437,6 +437,14 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "aria-labelledby"));
     m_ariaDescribedby = QualifiedName(
         AtomicString::createAtomicString(starfish, "aria-describedby"));
+    m_ariaChecked = QualifiedName(
+        AtomicString::createAtomicString(starfish, "aria-checked"));
+    m_ariaDisabled = QualifiedName(
+        AtomicString::createAtomicString(starfish, "aria-disabled"));
+    m_ariaExpanded = QualifiedName(
+        AtomicString::createAtomicString(starfish, "aria-expanded"));
+    m_ariaSelected = QualifiedName(
+        AtomicString::createAtomicString(starfish, "aria-selected"));
 
     m_click =
         QualifiedName(AtomicString::createAtomicString(starfish, "click"));

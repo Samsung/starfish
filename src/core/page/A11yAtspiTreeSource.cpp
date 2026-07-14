@@ -494,6 +494,12 @@ A11yAtspiTreeSource::Role A11yAtspiTreeSource::roleOf(void* handle)
     if (role->equalsIgnoreCase("link")) {
         return Role::Link;
     }
+    if (role->equalsIgnoreCase("checkbox")) {
+        return Role::CheckBox;
+    }
+    if (role->equalsIgnoreCase("radio")) {
+        return Role::RadioButton;
+    }
     if (element->isHTMLButtonElement()) {
         return Role::Button;
     }
@@ -558,13 +564,95 @@ void A11yAtspiTreeSource::scrollBy(double dx, double dy)
     bc->window()->scrollBy(dx, dy);
 }
 
-bool A11yAtspiTreeSource::isChecked(void* handle)
+A11yAtspiTreeSource::States A11yAtspiTreeSource::statesOf(void* handle)
 {
+    States states;
     Element* element = toElement(handle);
-    if (!element || !element->isHTMLInputElement()) {
-        return false;
+    if (!element) {
+        return states;
     }
-    return element->asHTMLInputElement()->checked();
+    StaticStrings* ss = webView()->starfish()->staticStrings();
+
+    // Checkedness: native checkbox/radio state wins; aria-checked only
+    // drives ARIA widgets (role="checkbox"/"radio" etc.), as in chromium.
+    bool nativeCheckable = false;
+    if (element->isHTMLInputElement()) {
+        String* type = element->getAttributeOrEmpty(ss->m_type)->toASCIILower();
+        nativeCheckable = type->equals("checkbox") || type->equals("radio");
+    }
+    String* ariaChecked = element->getAttributeOrEmpty(ss->m_ariaChecked);
+    Role role = roleOf(handle);
+    if (nativeCheckable) {
+        states.checkable = true;
+        states.checked = element->asHTMLInputElement()->checked();
+    } else if (!ariaChecked->isEmpty() || role == Role::CheckBox ||
+               role == Role::RadioButton) {
+        // ARIA widget: an absent aria-checked reads as unchecked.
+        states.checkable = true;
+        states.mixed = ariaChecked->equalsIgnoreCase("mixed");
+        states.checked =
+            !states.mixed && ariaChecked->equalsIgnoreCase("true");
+    }
+
+    states.disabled = element->isDisabledFormControl() ||
+        element->getAttributeOrEmpty(ss->m_ariaDisabled)
+            ->equalsIgnoreCase("true");
+
+    String* ariaExpanded = element->getAttributeOrEmpty(ss->m_ariaExpanded);
+    if (!ariaExpanded->isEmpty()) {
+        states.expandable = true;
+        states.expanded = ariaExpanded->equalsIgnoreCase("true");
+    }
+
+    String* ariaSelected = element->getAttributeOrEmpty(ss->m_ariaSelected);
+    if (!ariaSelected->isEmpty()) {
+        states.selectable = true;
+        states.selected = ariaSelected->equalsIgnoreCase("true");
+    }
+    return states;
+}
+
+std::vector<void*> A11yAtspiTreeSource::relationTargetsOf(void* handle,
+                                                          bool describedBy)
+{
+    std::vector<void*> targets;
+    Element* element = toElement(handle);
+    if (!element) {
+        return targets;
+    }
+    StaticStrings* ss = webView()->starfish()->staticStrings();
+    String* refs = element->getAttributeOrEmpty(
+        describedBy ? ss->m_ariaDescribedby : ss->m_ariaLabelledby);
+    if (refs->isEmpty()) {
+        return targets;
+    }
+    Document* doc = element->ownerDocument();
+    if (!doc) {
+        return targets;
+    }
+    // IDREF list: split on ASCII whitespace.
+    UTF8StringDataNonGCStd list = refs->toUTF8NonGCString();
+    size_t start = 0;
+    while (start < list.size()) {
+        while (start < list.size() && isspace(list[start])) {
+            start++;
+        }
+        size_t end = start;
+        while (end < list.size() && !isspace(list[end])) {
+            end++;
+        }
+        if (end > start) {
+            Element* target = doc->getElementById(
+                String::fromUTF8(list.data() + start, end - start));
+            // Only hand out handles that are exposed (and thus GC-pinned
+            // and revalidatable) in the current tree.
+            if (target && isValid(target)) {
+                targets.push_back(target);
+            }
+        }
+        start = end;
+    }
+    return targets;
 }
 
 float A11yAtspiTreeSource::devicePixelRatio() const
