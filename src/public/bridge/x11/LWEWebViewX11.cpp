@@ -203,6 +203,14 @@ public:
         }
 
         m_display = XOpenDisplay(nullptr);
+#if defined(STARFISH_ENABLE_TEST)
+        for (int retry = 0; retry < 3 && m_display == nullptr; retry++) {
+            STARFISH_LOG_INFO("XOpenDisplay failed, retrying (%d/3)...",
+                              retry + 1);
+            usleep(500000);
+            m_display = XOpenDisplay(nullptr);
+        }
+#endif
         if (m_display == nullptr) {
             STARFISH_LOG_ERROR("Cannot open display");
             return;
