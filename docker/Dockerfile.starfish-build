@@ -102,10 +102,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # ---------------------------------------------------------------------------
 
 # Ahem.ttf — standard WPT reference font used by reftest/internal tests.
-# The test submodule contains it, but baking it into the image avoids
-# submodule checkout latency during CI.
+# Bundled in docker/ to avoid cloning the test submodule during image build.
 # Pre-install to ~/.fonts so tests can run without a separate copy step.
-COPY test/cairo/reftest/web_platform_test/fonts/Ahem.ttf /root/workspace/Ahem.ttf
+COPY docker/Ahem.ttf /root/workspace/Ahem.ttf
 RUN mkdir -p /root/.fonts && cp /root/workspace/Ahem.ttf /root/.fonts/Ahem.ttf
 
 # Ubuntu 24.04 fontconfig defaults differ from 20.04 (subpixel rendering,
