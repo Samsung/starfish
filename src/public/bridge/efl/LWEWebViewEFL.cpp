@@ -973,10 +973,11 @@ public:
 // or ./src/modules/evas/engines/gl_common/evas_gl_core.c in efl git
 #define EVAS_GL_OPTIONS_DIRECT_MEMORY_OPTIMIZE (1 << 12)
 #define EVAS_GL_OPTIONS_DIRECT_OVERRIDE (1 << 13)
-            m_glCfg->options_bits = (Evas_GL_Options_Bits)(
-                EVAS_GL_OPTIONS_DIRECT | EVAS_GL_OPTIONS_DIRECT_OVERRIDE |
-                EVAS_GL_OPTIONS_DIRECT_MEMORY_OPTIMIZE |
-                EVAS_GL_OPTIONS_CLIENT_SIDE_ROTATION);
+            m_glCfg->options_bits =
+                (Evas_GL_Options_Bits)(EVAS_GL_OPTIONS_DIRECT |
+                                       EVAS_GL_OPTIONS_DIRECT_OVERRIDE |
+                                       EVAS_GL_OPTIONS_DIRECT_MEMORY_OPTIMIZE |
+                                       EVAS_GL_OPTIONS_CLIENT_SIDE_ROTATION);
             STARFISH_LOG_INFO("try to use EvasGL direct mode");
 
             // Create a surface and context

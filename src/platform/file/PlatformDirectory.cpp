@@ -24,7 +24,7 @@
 #define mkdir(a, b) _mkdir(a)
 #define rmdir _rmdir
 #ifndef S_ISDIR
-#define S_ISDIR(mode) (((mode)&S_IFMT) == S_IFDIR)
+#define S_ISDIR(mode) (((mode) & S_IFMT) == S_IFDIR)
 #endif
 /*
 

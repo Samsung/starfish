@@ -36,12 +36,12 @@ public:
     void destroy() override;
     void play() override;
     void pause() override;
-    void seek(double time) override{};
+    void seek(double time) override {};
 
     void prepare(MediaProvider* mediaProvider) override;
 
-    void setVolume(double volume) override{};
-    void setMuted(bool muted) override{};
+    void setVolume(double volume) override {};
+    void setMuted(bool muted) override {};
     void prepareMediaSource() override;
 
     void onFrame(MediaStream::VideoFrameObserver* observer) override;

@@ -92,12 +92,12 @@ HTMLMediaElement::HTMLMediaElement(Document* document,
         this,
         [](void* obj, void* cd) {
             HTMLMediaElement* element = (HTMLMediaElement*)obj;
-            MEDIA_ELEMENT_LOG(
-                element, "HTMLMediaElement::~HTMLMediaElement (%s|%p)",
-                element->isHTMLVideoElement()
-                    ? "VIDEO"
-                    : element->isHTMLAudioElement() ? "AUDIO" : "ETC",
-                element);
+            MEDIA_ELEMENT_LOG(element,
+                              "HTMLMediaElement::~HTMLMediaElement (%s|%p)",
+                              element->isHTMLVideoElement()   ? "VIDEO"
+                              : element->isHTMLAudioElement() ? "AUDIO"
+                                                              : "ETC",
+                              element);
             element->closeMediaPlayer();
         },
         NULL, NULL, NULL);

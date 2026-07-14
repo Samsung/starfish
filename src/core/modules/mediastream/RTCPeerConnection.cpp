@@ -71,7 +71,7 @@ class VideoFrameObserver
           libwebrtc::scoped_refptr<libwebrtc::RTCVideoFrame>> {
 public:
     void OnFrame(
-        libwebrtc::scoped_refptr<libwebrtc::RTCVideoFrame> frame) override{};
+        libwebrtc::scoped_refptr<libwebrtc::RTCVideoFrame> frame) override {};
 };
 #endif
 

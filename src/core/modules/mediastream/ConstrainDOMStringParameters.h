@@ -25,8 +25,7 @@
 namespace Starfish {
 class ExecutionContext;
 
-struct ConstrainDOMStringParameters : public gc {
-};
+struct ConstrainDOMStringParameters : public gc {};
 } // namespace Starfish
 
 #endif

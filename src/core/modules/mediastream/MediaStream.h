@@ -107,7 +107,7 @@ public:
                            libwebrtc::RTCAudioTrack* audioTrack);
         virtual ~AudioTrackObserver();
 
-        virtual void Release() override{};
+        virtual void Release() override {};
 
         virtual void UpdateFrame(int id, uint32_t timestamp,
                                  const int16_t* data, size_t samplesPerChannel,

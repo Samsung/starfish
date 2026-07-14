@@ -82,7 +82,7 @@ NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
     , helper(nullptr)
     , curlMultiRequestData(orgRequest->webBase()->useHttp2() &&
                                    !orgRequest->isSync()
-                               ? new (NoGC) CurlMultiRequestData(new Mutex())
+                               ? new(NoGC) CurlMultiRequestData(new Mutex())
                                : nullptr)
     , httpTransaction(HTTPTransaction::create(curlMultiRequestData))
     , responseSpaceReserved(false)

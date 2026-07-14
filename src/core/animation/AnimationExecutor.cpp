@@ -137,24 +137,27 @@ void AnimationExecutor::ExecutionContext::recomputeStyleDamageInAnimation()
     memset(m_damagedKeys, 0, sizeof(m_damagedKeys));
 
     if (!m_element->frame()) {
-        m_damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
+        m_damage = (ComputedStyleDamage)(ComputedStyleDamage::
+                                             ComputedStyleDamageRebuildFrame);
     }
 
-    m_damage = (ComputedStyleDamage)(
-        m_damage |
-        compareStyle(m_fromStyle.getValue(), m_toStyle, m_damagedKeys,
-                     m_element->isSVGDescendantElement()));
+    m_damage = (ComputedStyleDamage)(m_damage |
+                                     compareStyle(
+                                         m_fromStyle.getValue(), m_toStyle,
+                                         m_damagedKeys,
+                                         m_element->isSVGDescendantElement()));
 
     if (m_afterRunningStates.first != m_beforeRunningStates.first &&
         m_toStyle->opacity() == 1) {
-        m_damage = (ComputedStyleDamage)(
-            m_damage | ComputedStyleDamageEstablishesStackingContext);
+        m_damage =
+            (ComputedStyleDamage)(m_damage |
+                                  ComputedStyleDamageEstablishesStackingContext);
     }
     if (m_afterRunningStates.second != m_beforeRunningStates.second &&
         (!m_toStyle->transforms() || !m_toStyle->transforms()->size())) {
-        m_damage = (ComputedStyleDamage)(
-            m_damage | ComputedStyleDamageEstablishesStackingContext);
+        m_damage =
+            (ComputedStyleDamage)(m_damage |
+                                  ComputedStyleDamageEstablishesStackingContext);
     }
 }
 

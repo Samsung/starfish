@@ -132,7 +132,7 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
-    virtual void updateSVGAttributeNeeded(QualifiedName name){};
+    virtual void updateSVGAttributeNeeded(QualifiedName name) {};
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues,

@@ -6574,8 +6574,9 @@ void StyleResolver::applyProperty(Element* element,
                     if (attrValue.hasValue()) {
                         style->setContentText(attrValue.getValue());
                     }
-                    style->m_styleDamageSource = (StyleDamageSource)(
-                        style->m_styleDamageSource | StyleDamageFromAttribute);
+                    style->m_styleDamageSource =
+                        (StyleDamageSource)(style->m_styleDamageSource |
+                                            StyleDamageFromAttribute);
 
                     m_ruleSetAttrFilter.push_back(
                         element->document()
@@ -8124,8 +8125,9 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
             if (hsrResult.seenCombinator) {
                 ret->setStyleDamageSource(hsrResult.styleDamageFrom);
             } else {
-                ret->setStyleDamageSource((StyleDamageSource)(
-                    hsrResult.styleDamageFrom & ~StyleDamageFromDOMTree));
+                ret->setStyleDamageSource(
+                    (StyleDamageSource)(hsrResult.styleDamageFrom &
+                                        ~StyleDamageFromDOMTree));
             }
             ret->setStyleDamageSourceNodeStateMap(
                 hsrResult.styleDamageSourceNodeStateMap);
@@ -8425,8 +8427,9 @@ bool StyleResolver::checkOne(
         case CSSSelector::AttributeContain: // css3: E[foo*="bar"]
         case CSSSelector::AttributeBegin:   // css3: E[foo^="bar"]
         case CSSSelector::AttributeEnd:     // css3: E[foo$="bar"]
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromAttribute);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromAttribute);
             return anyAttributeMatches(element, selector->type(),
                                        selector->asCSSAttributeSelector(),
                                        result);
@@ -8601,70 +8604,80 @@ bool StyleResolver::checkPseudoClass(Element* element,
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoType::PseudoHover:
         if (result.seenCombinator) {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementStateDOMTree);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementStateDOMTree);
             result.styleDamageSourceNodeStateDOMTreeMap =
                 result.styleDamageSourceNodeStateDOMTreeMap |
                 Node::NodeStateHovered;
         } else {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementState);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementState);
             result.styleDamageSourceNodeStateMap =
                 result.styleDamageSourceNodeStateMap | Node::NodeStateHovered;
         }
         return element->state() & Node::NodeState::NodeStateHovered;
     case CSSSelector::PseudoType::PseudoActive:
         if (result.seenCombinator) {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementStateDOMTree);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementStateDOMTree);
             result.styleDamageSourceNodeStateDOMTreeMap =
                 result.styleDamageSourceNodeStateDOMTreeMap |
                 Node::NodeStateActive;
         } else {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementState);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementState);
             result.styleDamageSourceNodeStateMap =
                 result.styleDamageSourceNodeStateMap | Node::NodeStateActive;
         }
         return element->state() & Node::NodeState::NodeStateActive;
     case CSSSelector::PseudoType::PseudoFocus:
         if (result.seenCombinator) {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementStateDOMTree);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementStateDOMTree);
             result.styleDamageSourceNodeStateDOMTreeMap =
                 result.styleDamageSourceNodeStateDOMTreeMap |
                 Node::NodeStateFocused;
         } else {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementState);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementState);
             result.styleDamageSourceNodeStateMap =
                 result.styleDamageSourceNodeStateMap | Node::NodeStateFocused;
         }
         return element->state() & Node::NodeState::NodeStateFocused;
     case CSSSelector::PseudoType::PseudoTarget:
         if (result.seenCombinator) {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementStateDOMTree);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementStateDOMTree);
             result.styleDamageSourceNodeStateDOMTreeMap =
                 result.styleDamageSourceNodeStateDOMTreeMap |
                 Node::NodeStateTarget;
         } else {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementState);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementState);
             result.styleDamageSourceNodeStateMap =
                 result.styleDamageSourceNodeStateMap | Node::NodeStateTarget;
         }
         return element->state() & Node::NodeState::NodeStateTarget;
     case CSSSelector::PseudoType::PseudoLink:
         if (result.seenCombinator) {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementStateDOMTree);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementStateDOMTree);
             result.styleDamageSourceNodeStateDOMTreeMap =
                 result.styleDamageSourceNodeStateDOMTreeMap |
                 Node::NodeStateLink;
         } else {
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | StyleDamageFromElementState);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    StyleDamageFromElementState);
             result.styleDamageSourceNodeStateMap =
                 result.styleDamageSourceNodeStateMap | Node::NodeStateLink;
         }
@@ -8792,8 +8805,9 @@ bool StyleResolver::checkPseudoClass(Element* element,
             Match m =
                 matchSelector(element, elementName, elementId, elementClasses,
                               *args[i], 0, sub, isQueryingSelector);
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | sub.styleDamageFrom);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    sub.styleDamageFrom);
             result.seenCombinator = result.seenCombinator || sub.seenCombinator;
             if (m == Match::SelectorMatches) {
                 return false;
@@ -8815,8 +8829,9 @@ bool StyleResolver::checkPseudoClass(Element* element,
             Match m =
                 matchSelector(element, elementName, elementId, elementClasses,
                               *args[i], 0, sub, isQueryingSelector);
-            result.styleDamageFrom = (StyleDamageSource)(
-                result.styleDamageFrom | sub.styleDamageFrom);
+            result.styleDamageFrom =
+                (StyleDamageSource)(result.styleDamageFrom |
+                                    sub.styleDamageFrom);
             result.seenCombinator = result.seenCombinator || sub.seenCombinator;
             if (m == Match::SelectorMatches) {
                 return true;
@@ -9480,25 +9495,28 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
     };
 
     if (!element->style()) {
-        damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageInherited |
-            ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::
+                                           ComputedStyleDamageInherited |
+                                       ComputedStyleDamage::
+                                           ComputedStyleDamageRebuildFrame);
     } else {
         if (!element->frame()) {
-            damage = (ComputedStyleDamage)(
-                ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
+            damage = (ComputedStyleDamage)(ComputedStyleDamage::
+                                               ComputedStyleDamageRebuildFrame);
         }
-        damage = (ComputedStyleDamage)(
-            damage | compareStyle(element->style(), style, damagedKeys,
-                                  element->isSVGDescendantElement()));
+        damage = (ComputedStyleDamage)(damage |
+                                       compareStyle(
+                                           element->style(), style, damagedKeys,
+                                           element->isSVGDescendantElement()));
 
         if (damagedKeys[CSSStyleValuePair::KeyKind::Animation] ||
             damagedKeys[CSSStyleValuePair::KeyKind::AnimationName]) {
             element->clearDidPrepareAnimation();
         }
     }
-    damage = (ComputedStyleDamage)(
-        damage | DamageComputedStyleDamageForBeginAnimation(element, style));
+    damage = (ComputedStyleDamage)(damage |
+                                   DamageComputedStyleDamageForBeginAnimation(
+                                       element, style));
 
     ComputedStyle* oldStyle = element->style();
     Frame* oldFrame = element->frame();

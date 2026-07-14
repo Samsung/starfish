@@ -784,11 +784,14 @@ inline void convertImageBufferAsUnmultipliedAlphaIfNeeds(uint8_t* ptr,
             STARFISH_ASSERT(STARFISH_PIXEL_A_INDEX == 3);
             uint8_t a = u8[STARFISH_PIXEL_A_INDEX];
             if (a && a != 255) {
-                *u32ptr = (uint32_t)(
-                    ((uint32_t)unpremultipliedComponentByte(u8[0], a)) |
-                    ((uint32_t)unpremultipliedComponentByte(u8[1], a) << 8) |
-                    ((uint32_t)unpremultipliedComponentByte(u8[2], a) << 16) |
-                    ((uint32_t)(a) << 24));
+                *u32ptr =
+                    (uint32_t)(((uint32_t)unpremultipliedComponentByte(u8[0],
+                                                                       a)) |
+                               ((uint32_t)unpremultipliedComponentByte(u8[1], a)
+                                << 8) |
+                               ((uint32_t)unpremultipliedComponentByte(u8[2], a)
+                                << 16) |
+                               ((uint32_t)(a) << 24));
             }
 
             u32ptr++;

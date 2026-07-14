@@ -98,9 +98,9 @@ struct TextToken {
         str = FrameText::replaceAll(str, "\n", "\\n");
         printf("%s (", str.data());
         printf("width:%d, ", width().toInt());
-        printf("type:%s)\n", m_type == General
-                                 ? "GN"
-                                 : m_type == ForcedNewline ? "NL" : "WS");
+        printf("type:%s)\n", m_type == General         ? "GN"
+                             : m_type == ForcedNewline ? "NL"
+                                                       : "WS");
     }
 #endif
 };
