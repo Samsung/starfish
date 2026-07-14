@@ -33,13 +33,6 @@ jobs:
       - name: Add safe directory
         run: git config --global --add safe.directory /__w/starfish/starfish
 
-      # The test/ submodule is needed for Ahem.ttf in the Dockerfile.
-      # Only fetch the test directory to keep checkout fast.
-      - name: Checkout test submodule (for Ahem.ttf)
-        run: |
-          git submodule init test
-          git submodule update --depth 1 test
-
       - name: Login to bart registry
         run: |
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | \
