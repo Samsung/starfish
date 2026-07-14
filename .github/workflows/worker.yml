@@ -14,7 +14,7 @@ jobs:
     # After the firewall registraion is done, a code runner should also be added to test work.
     runs-on:  [ code-linux, code-2xlarge ]
     container:
-      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
       credentials:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -65,10 +65,7 @@ jobs:
     # After the firewall registraion is done, a code runner should also be added to test work.
     runs-on:  [ code-linux, code-2xlarge ]
     container:
-      # python3.9 image: matches x64_test.yml's wpt_serve job so the on-demand
-      # `wpt serve` runner has its Python deps (this job's daemon binaries
-      # come from build_x64_workers, which keeps the plain 20.04 image).
-      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04_python3.9
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
       credentials:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -101,12 +98,12 @@ jobs:
             ln -s -f $PWD/uv_cairo_gl/debug/bin/Starfish Starfish
             ln -s -f $PWD/uv_cairo_gl/debug/bin/Starfish-sharedworker Starfish-sharedworker
             ln -s -f $PWD/uv_cairo_gl/debug/bin/Starfish-serviceworker Starfish-serviceworker
-            python3.9 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts
+            python3 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts
 
       - name: Run SharedWorker WPT
         run: |
-            xvfb-run -s '-screen 0 1920x1080x24' -a python3.9 ./tool/test_runner.py wpt_serve_testharness_worker || exit 1
+            xvfb-run -s '-screen 0 1920x1080x24' -a python3 ./tool/test_runner.py wpt_serve_testharness_worker || exit 1
 
       - name: Run ServiceWorker WPT
         run: |
-            xvfb-run -s '-screen 0 1920x1080x24' -a python3.9 ./tool/test_runner.py wpt_serve_testharness_serviceworker || exit 1
+            xvfb-run -s '-screen 0 1920x1080x24' -a python3 ./tool/test_runner.py wpt_serve_testharness_serviceworker || exit 1

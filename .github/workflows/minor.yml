@@ -14,7 +14,7 @@ jobs:
   build_x64_x11_debug_wasm:
     runs-on:  [ code-linux, code-2xlarge ]
     container:
-      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
       credentials:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -40,7 +40,7 @@ jobs:
   build_x64_x11_release:
     runs-on:  [ code-linux, code-2xlarge ]
     container:
-      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
       credentials:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -71,7 +71,7 @@ jobs:
   x64_x11_webcontainer:
     runs-on:  [ code-linux, code-2xlarge ]
     container:
-      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
       credentials:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -98,7 +98,7 @@ jobs:
   x64_glib_headless:
     runs-on:  [ code-linux, code-2xlarge ]
     container:
-      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
       credentials:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -126,7 +126,7 @@ jobs:
   test_api_record_replay:
     runs-on: [ code-linux, code-2xlarge ]
     container:
-      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
       credentials:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}

@@ -13,7 +13,7 @@ jobs:
   build_x64_clang:
     runs-on:  [ code-linux, code-2xlarge ]
     container:
-      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
       credentials:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -72,7 +72,7 @@ jobs:
     timeout-minutes: 60
     runs-on: [ code-linux, code-2xlarge ]
     container:
-      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
       credentials:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -115,7 +115,7 @@ jobs:
     timeout-minutes: 60
     runs-on: [ code-linux, code-2xlarge ]
     container:
-      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
       credentials:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -167,7 +167,7 @@ jobs:
     timeout-minutes: 60
     runs-on: [ runner-type3 ]
     container:
-      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
       credentials:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -219,7 +219,7 @@ jobs:
   #   timeout-minutes: 60
   #   runs-on: [ code-linux, code-2xlarge ]
   #   container:
-  #     image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04_python3.9
+  #     image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
   #     credentials:
   #       username: ${{ secrets.DOCKERHUB_USERNAME }}
   #       password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -255,8 +255,8 @@ jobs:
   #         ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.3
 
   #     - name: Setup WPT hosts
-  #       run: python3.9 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts
+  #       run: python3 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts
 
   #     - name: Run wpt_serve_all
   #       run: |
-  #         xvfb-run -s '-screen 0 1920x1080x24' -a python3.9 ./tool/test_runner.py wpt_serve_all || exit 1
+  #         xvfb-run -s '-screen 0 1920x1080x24' -a python3 ./tool/test_runner.py wpt_serve_all || exit 1
