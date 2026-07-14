@@ -132,7 +132,15 @@ Requires(postun): /sbin/ldconfig
 
 %if 0%{?enable_esplusplayer:1}
 %else
+# config.cmake force-enables the esplusplayer MSE backend for the mobile
+# profile, so the matching BuildRequires / -DENABLE_ESPLUSPLAYER must default
+# on for mobile too. Otherwise cmake requires pkgconfig(esplusplayer) that the
+# buildroot never pulled in and configuration fails.
+%if "%{rpm}" == "mobile"
+%define enable_esplusplayer 1
+%else
 %define enable_esplusplayer 0
+%endif
 %endif
 
 %if 0%{?asan:1}
