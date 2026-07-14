@@ -40,6 +40,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
+# squash_thirdparty (tool/release/prepare_source_without_thirdparty.sh) pushes
+# over an ssh git@github.sec.samsung.net remote. Pre-seed its host key so that
+# push doesn't hit ssh's interactive "Host key verification failed" prompt in
+# CI -- the legacy 20.04 image had this baked into ~/.ssh/known_hosts already.
+RUN mkdir -p /etc/ssh && \
+    echo 'github.sec.samsung.net ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCzDNGYzsLUhjNwkOaQUdd6HurQy6EdZZn52D6dX6PC2ua58y3ZB3E6ac8u828hFJ7hSCe3B9N7vIu3KPQ/fuBAK/jHgTc2uyjoftDhwkBGPqzv+WN5M7WnhzazUHp8gqO7vRwmzzweDdeedI1RN8j4xMN9FgX/98wvzcypHy406ya75V1O0P696tnG7RqyOtKyZdY0v1reos4wQNhQoOjudN+gHaSs9gEef8fqJ0KiQhgEvK9AOZVOo17FTHfu9LbZUf7Tigx5hBX9rrRYnqY298KJz2RmCexEJtU79/CCMWVcLaz8jD0xvsLCooobWrA0wLQdMOognhSuZ1QfAlNR' \
+        >> /etc/ssh/ssh_known_hosts
+
 # ---------------------------------------------------------------------------
 # Starfish build dependencies (from README "Install required packages")
 # ---------------------------------------------------------------------------
