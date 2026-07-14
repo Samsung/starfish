@@ -1,0 +1,126 @@
+# =============================================================================
+# Starfish CI Build Image — Ubuntu 24.04 (noble)
+#
+# Replaces the legacy starfish-build:20.04 image.
+# Includes all build + test dependencies for native x64 builds and reftest/WPT
+# test execution.
+#
+# Build:
+#   docker build -f docker/Dockerfile.starfish-build \
+#     -t lws-docker-local.bart.sec.samsung.net/starfish-build:24.04 .
+#
+# Push to bart registry:
+#   docker push lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
+# =============================================================================
+
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Seoul
+# Ubuntu 24.04 ships FreeType 2.13 (TrueType interpreter v40), while the
+# legacy 20.04 image used FreeType 2.10 (v35). The different hinting
+# algorithm causes sub-pixel anti-aliasing changes that make reftest
+# imgdiff fail (~0.3–0.5% pixel diff). Force v35 to match 20.04 output.
+ENV FREETYPE_PROPERTIES=truetype:interpreter-version=35
+
+# ---------------------------------------------------------------------------
+# Core build toolchain
+# ---------------------------------------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        ninja-build \
+        pkg-config \
+        git \
+        curl \
+        wget \
+        ca-certificates \
+        autoconf \
+        automake \
+        libtool \
+        patchelf \
+        clang \
+        clang-format \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---------------------------------------------------------------------------
+# Starfish build dependencies (from README "Install required packages")
+# ---------------------------------------------------------------------------
+# libjpeg-dev: provides jpeglib.h (libturbojpeg0-dev only provides turbojpeg.h)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libglib2.0-dev \
+        libcairo2-dev \
+        libfreetype-dev \
+        libfontconfig-dev \
+        libharfbuzz-dev \
+        libx11-dev \
+        libxext-dev \
+        libxrender-dev \
+        libxi-dev \
+        libegl-dev \
+        libgles-dev \
+        libgl1-mesa-dev \
+        libpng-dev \
+        libturbojpeg0-dev \
+        libjpeg-dev \
+        libgif-dev \
+        libwebp-dev \
+        libcurl4-openssl-dev \
+        libssl-dev \
+        libicu-dev \
+        libcap-dev \
+        libasound2-dev \
+        zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---------------------------------------------------------------------------
+# Python 3 (default on noble is 3.12) + Jinja2 for binding generator
+# ---------------------------------------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        python3 \
+        python3-pip \
+        python3-jinja2 \
+        python3-venv \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---------------------------------------------------------------------------
+# Test infrastructure: Xvfb for headless rendering, image diff tools
+# ---------------------------------------------------------------------------
+# fontconfig: provides fc-cache/fc-match, required by install_pixel_test_dep
+# (libfontconfig-dev only provides dev headers, not the CLI tools)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        xvfb \
+        xauth \
+        imagemagick \
+        fonts-dejavu-core \
+        fonts-liberation \
+        fontconfig \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---------------------------------------------------------------------------
+# Test workspace: fonts baked into the image
+# ---------------------------------------------------------------------------
+
+# Ahem.ttf — standard WPT reference font used by reftest/internal tests.
+# The test submodule contains it, but baking it into the image avoids
+# submodule checkout latency during CI.
+# Pre-install to ~/.fonts so tests can run without a separate copy step.
+COPY test/cairo/reftest/web_platform_test/fonts/Ahem.ttf /root/workspace/Ahem.ttf
+RUN mkdir -p /root/.fonts && cp /root/workspace/Ahem.ttf /root/.fonts/Ahem.ttf
+
+# Ubuntu 24.04 fontconfig defaults differ from 20.04 (subpixel rendering,
+# different hint style). This config forces 20.04-equivalent rendering
+# settings to ensure reftest pixel-identical output.
+COPY docker/fonts.conf /etc/fonts/local.conf
+RUN fc-cache -f
+
+# When host directories are bind-mounted into the container (e.g. -v flag),
+# Git detects a mismatch between the repo owner and the container user,
+# raising "fatal: detected dubious ownership". This is required for local
+# development builds and CI steps that mount the workspace.
+RUN git config --global --add safe.directory '*'
+
+WORKDIR /workspace
+
+# Default shell — bash for consistent scripting in CI steps
+SHELL ["/bin/bash", "-c"]

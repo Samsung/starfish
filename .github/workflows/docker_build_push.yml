@@ -1,0 +1,64 @@
+# =============================================================================
+# Build and push the starfish-build Docker image to the bart registry.
+#
+# Triggers:
+#   - Manual (workflow_dispatch)
+#   - Push to docker/ directory on master
+#
+# The image is tagged with :24.04 and also :latest for the default tag.
+# CI workflows reference starfish-build:24.04 after migration.
+# =============================================================================
+name: Build & Push Docker Image
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - 'docker/**'
+      - '.github/workflows/docker_build_push.yml'
+
+jobs:
+  build-and-push:
+    runs-on: [code-linux, code-2xlarge]
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout source
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
+      # The test/ submodule is needed for Ahem.ttf in the Dockerfile.
+      # Only fetch the test directory to keep checkout fast.
+      - name: Checkout test submodule (for Ahem.ttf)
+        run: |
+          git submodule init test
+          git submodule update --depth 1 test
+
+      - name: Login to bart registry
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | \
+            docker login lws-docker-local.bart.sec.samsung.net \
+            -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build image
+        run: |
+          DOCKER_BUILDKIT=1 docker build \
+            -f docker/Dockerfile.starfish-build \
+            -t lws-docker-local.bart.sec.samsung.net/starfish-build:24.04 \
+            -t lws-docker-local.bart.sec.samsung.net/starfish-build:latest \
+            .
+
+      - name: Push image
+        run: |
+          docker push lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
+          docker push lws-docker-local.bart.sec.samsung.net/starfish-build:latest
+
+      - name: Logout from bart registry
+        if: always()
+        run: docker logout lws-docker-local.bart.sec.samsung.net
