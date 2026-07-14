@@ -33,6 +33,9 @@
 namespace Starfish {
 
 class Element;
+#ifdef STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
+class A11yLiveRegion;
+#endif
 class TTS : public gc, public WebViewHoldable {
 public:
     TTS(WebView* webView)
@@ -142,6 +145,13 @@ public:
 
     void speech(Element* element, String* text);
     void speech(SpeechSynthesisUtterance* utterance);
+    // Whether an utterance is currently playing (platform TTS state).
+    // Used by the live region queue to wait for a quiet channel.
+    bool isSpeaking();
+
+#ifdef STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
+    A11yLiveRegion* liveRegion();
+#endif
 
 #ifdef STARFISH_ENABLE_TEST
     // Captures the most recent element speech text so internal tests can
@@ -193,6 +203,9 @@ private:
     int m_defaultVoiceType;
     int m_currentUtterId;
     std::set<unsigned int> m_callbackIds;
+#ifdef STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
+    A11yLiveRegion* m_liveRegion{ nullptr };
+#endif
 };
 } // namespace Starfish
 #endif

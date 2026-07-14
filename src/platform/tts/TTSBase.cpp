@@ -128,6 +128,11 @@ int TTS::ttsState()
     return 0;
 }
 
+bool TTS::isSpeaking()
+{
+    return false;
+}
+
 int TTS::ttsPlay()
 {
     return 0;
