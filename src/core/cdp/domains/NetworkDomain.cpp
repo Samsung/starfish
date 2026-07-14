@@ -101,19 +101,12 @@ namespace {
         return true;
     }
 
-    // Read every cookie currently in the shared curl jar.
+    // Read every cookie currently in the engine's master cookie store.
     static std::vector<CookieEntry> readAllCookies()
     {
         std::vector<CookieEntry> result;
-        CURL* curl = curl_easy_init();
-        if (!curl) {
-            return result;
-        }
-        curl_easy_setopt(
-            curl, CURLOPT_SHARE,
-            NetworkSharedResourceManager::getInstance()->curlShareHandle());
-        struct curl_slist* list = nullptr;
-        curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &list);
+        struct curl_slist* list =
+            NetworkSharedResourceManager::getInstance()->allCookies();
         for (struct curl_slist* p = list; p; p = p->next) {
             if (!p->data) {
                 continue;
@@ -126,21 +119,13 @@ namespace {
         if (list) {
             curl_slist_free_all(list);
         }
-        curl_easy_cleanup(curl);
         return result;
     }
 
-    // Write a single cookie record into the shared jar via CURLOPT_COOKIELIST.
+    // Write a single cookie record into the master cookie store.
     // Passing expires in the past removes a matching cookie.
     static void writeCookieLine(const CookieEntry& e)
     {
-        CURL* curl = curl_easy_init();
-        if (!curl) {
-            return;
-        }
-        curl_easy_setopt(
-            curl, CURLOPT_SHARE,
-            NetworkSharedResourceManager::getInstance()->curlShareHandle());
         std::string path = e.path.empty() ? "/" : e.path;
         // domain field with leading '.' marks "subdomains allowed" (flag TRUE).
         bool includeSub = (!e.domain.empty() && e.domain[0] == '.');
@@ -161,8 +146,8 @@ namespace {
         line += e.name;
         line += "\t";
         line += e.value;
-        curl_easy_setopt(curl, CURLOPT_COOKIELIST, line.c_str());
-        curl_easy_cleanup(curl);
+        NetworkSharedResourceManager::getInstance()->addCookieLine(
+            line.c_str());
     }
 
     static std::string paramStr(CDPCommand& cmd, const char* name)

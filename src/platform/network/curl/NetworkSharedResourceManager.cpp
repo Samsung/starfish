@@ -28,6 +28,9 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/loader/ResourceURL.h"
 
+#include <map>
+#include <set>
+
 #if !defined(OS_WINDOWS)
 #include <unistd.h>
 #endif
@@ -354,6 +357,7 @@ NetworkSharedResourceManager::NetworkSharedResourceManager()
     , m_lastCachePruneTime(0)
     , m_cacheClearTimerID(SIZE_MAX)
     , m_cookieStoreFilePath("")
+    , m_masterCookieHandle(nullptr)
 {
     initMutexes();
 #if !(defined(OS_WINDOWS) || defined(STARFISH_ANDROID))
@@ -362,8 +366,8 @@ NetworkSharedResourceManager::NetworkSharedResourceManager()
 
     curl_global_init(CURL_GLOBAL_ALL);
     m_curlShareHandle = curl_share_init();
-    curl_share_setopt(m_curlShareHandle, CURLSHOPT_SHARE,
-                      CURL_LOCK_DATA_COOKIE);
+    // CURL_LOCK_DATA_COOKIE is deliberately NOT shared; see the master
+    // cookie store comment in the header.
     curl_share_setopt(m_curlShareHandle, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS);
     curl_share_setopt(m_curlShareHandle, CURLSHOPT_SHARE,
                       CURL_LOCK_DATA_SSL_SESSION);
@@ -403,6 +407,14 @@ NetworkSharedResourceManager::~NetworkSharedResourceManager()
     multiData.clear();
 
     clearAllCurlHandleDataCache();
+    {
+        Locker<Mutex> l(*g_mutexes[curl_lock_data::CURL_LOCK_DATA_COOKIE]);
+        if (m_masterCookieHandle) {
+            flushMasterCookiesLocked();
+            curl_easy_cleanup(m_masterCookieHandle);
+            m_masterCookieHandle = nullptr;
+        }
+    }
     curl_share_cleanup(m_curlShareHandle);
     curl_share_cleanup(m_curlNonCookieShareHandle);
     curl_global_cleanup();
@@ -453,21 +465,192 @@ void NetworkSharedResourceManager::setCookieStoreFilePath(
 
 void NetworkSharedResourceManager::initCookieSession()
 {
-    CURL* curl = curl_easy_init();
-
-    if (!curl) {
-        STARFISH_ASSERT_NOT_REACHED();
+    Locker<Mutex> l(*g_mutexes[curl_lock_data::CURL_LOCK_DATA_COOKIE]);
+    CURL* master = masterCookieHandleLocked();
+    if (!master) {
         return;
     }
+    curl_easy_setopt(master, CURLOPT_COOKIELIST, "SESS");
+}
 
-    curl_easy_setopt(curl, CURLOPT_SHARE, m_curlShareHandle);
+CURL* NetworkSharedResourceManager::masterCookieHandleLocked()
+{
+    if (m_masterCookieHandle) {
+        return m_masterCookieHandle;
+    }
+    CURL* curl = curl_easy_init();
+    if (!curl) {
+        STARFISH_ASSERT_NOT_REACHED();
+        return nullptr;
+    }
     if (m_cookieStoreFilePath.compare("") != 0) {
         curl_easy_setopt(curl, CURLOPT_COOKIEFILE,
                          m_cookieStoreFilePath.data());
         curl_easy_setopt(curl, CURLOPT_COOKIEJAR, m_cookieStoreFilePath.data());
+        // The handle never performs a transfer, which is what normally
+        // loads CURLOPT_COOKIEFILE; force the load here.
+        curl_easy_setopt(curl, CURLOPT_COOKIELIST, "RELOAD");
+    } else {
+        // Enable the cookie engine with an in-memory store only.
+        curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
     }
-    curl_easy_setopt(curl, CURLOPT_COOKIESESSION, 1);
-    curl_easy_cleanup(curl);
+    m_masterCookieHandle = curl;
+    return m_masterCookieHandle;
+}
+
+void NetworkSharedResourceManager::flushMasterCookiesLocked()
+{
+    if (m_masterCookieHandle && m_cookieStoreFilePath.compare("") != 0) {
+        curl_easy_setopt(m_masterCookieHandle, CURLOPT_COOKIELIST, "FLUSH");
+    }
+}
+
+struct curl_slist* NetworkSharedResourceManager::setupPrivateCookieEngine(
+    CURL* curl)
+{
+    // Private in-memory cookie engine for this transfer; any state left by a
+    // previous use of this (cached) handle was cleared in preprocess().
+    curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
+
+    struct curl_slist* snapshot = nullptr;
+    {
+        Locker<Mutex> l(*g_mutexes[curl_lock_data::CURL_LOCK_DATA_COOKIE]);
+        CURL* master = masterCookieHandleLocked();
+        if (master) {
+            curl_easy_getinfo(master, CURLINFO_COOKIELIST, &snapshot);
+        }
+    }
+    for (struct curl_slist* p = snapshot; p; p = p->next) {
+        if (p->data) {
+            curl_easy_setopt(curl, CURLOPT_COOKIELIST, p->data);
+        }
+    }
+    return snapshot;
+}
+
+// "domain\tpath\tname" of a Netscape cookie line ("#HttpOnly_" stripped),
+// or an empty string for a malformed line.
+static std::string netscapeCookieLineKey(const char* line,
+                                         std::string* domainFlagOut = nullptr)
+{
+    const char* p = line;
+    static const char kHttpOnlyPrefix[] = "#HttpOnly_";
+    if (!strncmp(p, kHttpOnlyPrefix, sizeof(kHttpOnlyPrefix) - 1)) {
+        p += sizeof(kHttpOnlyPrefix) - 1;
+    }
+    std::vector<std::string> tokens;
+    const char* start = p;
+    for (const char* c = p;; ++c) {
+        if (*c == '\t' || *c == '\0') {
+            tokens.push_back(std::string(start, c - start));
+            if (*c == '\0') {
+                break;
+            }
+            start = c + 1;
+        }
+    }
+    if (tokens.size() != 7) {
+        return std::string();
+    }
+    if (domainFlagOut) {
+        *domainFlagOut = tokens[1];
+    }
+    return tokens[0] + "\t" + tokens[2] + "\t" + tokens[5];
+}
+
+void NetworkSharedResourceManager::mergeTransferCookies(
+    CURL* curl, struct curl_slist* injected)
+{
+    struct curl_slist* result = nullptr;
+    curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &result);
+
+    // Index what was injected so only actual changes touch the master store.
+    std::map<std::string, std::string> injectedByKey;
+    for (struct curl_slist* p = injected; p; p = p->next) {
+        if (!p->data) {
+            continue;
+        }
+        std::string key = netscapeCookieLineKey(p->data);
+        if (!key.empty()) {
+            injectedByKey[key] = p->data;
+        }
+    }
+
+    std::vector<const char*> changedLines;
+    std::set<std::string> resultKeys;
+    for (struct curl_slist* p = result; p; p = p->next) {
+        if (!p->data) {
+            continue;
+        }
+        std::string key = netscapeCookieLineKey(p->data);
+        if (key.empty()) {
+            continue;
+        }
+        resultKeys.insert(key);
+        auto iter = injectedByKey.find(key);
+        if (iter == injectedByKey.end() || iter->second.compare(p->data)) {
+            changedLines.push_back(p->data);
+        }
+    }
+
+    // A cookie that was injected but is gone from the transfer's private
+    // store was deleted by the server (Set-Cookie with a past expiry);
+    // propagate the deletion as an already-expired replacement line.
+    std::vector<std::string> deletionLines;
+    for (auto& entry : injectedByKey) {
+        if (resultKeys.find(entry.first) == resultKeys.end()) {
+            size_t firstTab = entry.first.find('\t');
+            size_t secondTab = entry.first.find('\t', firstTab + 1);
+            std::string domainFlag;
+            netscapeCookieLineKey(entry.second.data(), &domainFlag);
+            deletionLines.push_back(
+                entry.first.substr(0, firstTab) + "\t" + domainFlag + "\t" +
+                entry.first.substr(firstTab + 1, secondTab - firstTab - 1) +
+                "\tFALSE\t1\t" + entry.first.substr(secondTab + 1) + "\t");
+        }
+    }
+
+    if (changedLines.size() || deletionLines.size()) {
+        Locker<Mutex> l(*g_mutexes[curl_lock_data::CURL_LOCK_DATA_COOKIE]);
+        CURL* master = masterCookieHandleLocked();
+        if (master) {
+            for (auto line : changedLines) {
+                curl_easy_setopt(master, CURLOPT_COOKIELIST, line);
+            }
+            for (auto& line : deletionLines) {
+                curl_easy_setopt(master, CURLOPT_COOKIELIST, line.data());
+            }
+            flushMasterCookiesLocked();
+        }
+    }
+
+    if (result) {
+        curl_slist_free_all(result);
+    }
+    if (injected) {
+        curl_slist_free_all(injected);
+    }
+}
+
+struct curl_slist* NetworkSharedResourceManager::allCookies()
+{
+    Locker<Mutex> l(*g_mutexes[curl_lock_data::CURL_LOCK_DATA_COOKIE]);
+    CURL* master = masterCookieHandleLocked();
+    struct curl_slist* list = nullptr;
+    if (master) {
+        curl_easy_getinfo(master, CURLINFO_COOKIELIST, &list);
+    }
+    return list;
+}
+
+void NetworkSharedResourceManager::addCookieLine(const char* line)
+{
+    Locker<Mutex> l(*g_mutexes[curl_lock_data::CURL_LOCK_DATA_COOKIE]);
+    CURL* master = masterCookieHandleLocked();
+    if (master) {
+        curl_easy_setopt(master, CURLOPT_COOKIELIST, line);
+        flushMasterCookiesLocked();
+    }
 }
 
 Mutex* NetworkSharedResourceManager::resourceMutex(curl_lock_data data)
@@ -550,15 +733,7 @@ void NetworkSharedResourceManager::clearAllCurlHandleDataCache()
 String* NetworkSharedResourceManager::cookies(ResourceURL* url)
 {
     String* cookies = String::emptyString;
-    CURL* curl = curl_easy_init();
-
-    if (!curl) {
-        return cookies;
-    }
-    curl_easy_setopt(curl, CURLOPT_SHARE, m_curlShareHandle);
-
-    struct curl_slist* cookieList = nullptr;
-    curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &cookieList);
+    struct curl_slist* cookieList = allCookies();
 
     if (cookieList) {
         String* domain = url->hostname();
@@ -572,69 +747,42 @@ String* NetworkSharedResourceManager::cookies(ResourceURL* url)
         cookies = cookiesBuilder.finalize();
         curl_slist_free_all(cookieList);
     }
-    curl_easy_cleanup(curl);
     return cookies;
 }
 
 bool NetworkSharedResourceManager::hasCookies()
 {
-    CURL* curl = curl_easy_init();
-
-    if (!curl) {
-        return false;
-    }
-    curl_easy_setopt(curl, CURLOPT_SHARE, m_curlShareHandle);
-
-    struct curl_slist* cookieList = nullptr;
-    curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &cookieList);
+    struct curl_slist* cookieList = allCookies();
 
     bool hasCookies = false;
     if (cookieList) {
         hasCookies = true;
         curl_slist_free_all(cookieList);
     }
-    curl_easy_cleanup(curl);
     return hasCookies;
 }
 
 void NetworkSharedResourceManager::setCookies(
     ExecutionContext* executionContext, ResourceURL* url, String* value)
 {
-    CURL* curl = curl_easy_init();
-
-    if (!curl) {
-        return;
-    }
-    curl_easy_setopt(curl, CURLOPT_SHARE, m_curlShareHandle);
-    if (m_cookieStoreFilePath.compare("") != 0) {
-        curl_easy_setopt(curl, CURLOPT_COOKIEJAR, m_cookieStoreFilePath.data());
-    }
-#ifdef STARFISH_ENABLE_TEST
-// dumpCookies(curl, "Before setCookie");
-#endif
     String* cookie =
         transformetoNetscapeCookieFormat(executionContext, url, value);
+    if (cookie->isEmpty()) {
+        return;
+    }
     STARFISH_ASSERT(cookie->containsOnlyASCIIChars());
     STARFISH_ASSERT(cookie->bufferAccessData().isNullTerminated);
-    curl_easy_setopt(curl, CURLOPT_COOKIELIST,
-                     cookie->bufferAccessData().asciiData());
-#ifdef STARFISH_ENABLE_TEST
-// dumpCookies(curl, "Affter setCookie");
-#endif
-    curl_easy_cleanup(curl);
+    addCookieLine(cookie->bufferAccessData().asciiData());
 }
 
 void NetworkSharedResourceManager::clearCookies()
 {
-    CURL* curl = curl_easy_init();
-
-    if (!curl) {
-        return;
+    Locker<Mutex> l(*g_mutexes[curl_lock_data::CURL_LOCK_DATA_COOKIE]);
+    CURL* master = masterCookieHandleLocked();
+    if (master) {
+        curl_easy_setopt(master, CURLOPT_COOKIELIST, "ALL");
+        flushMasterCookiesLocked();
     }
-
-    curl_easy_setopt(curl, CURLOPT_SHARE, m_curlShareHandle);
-    curl_easy_setopt(curl, CURLOPT_COOKIELIST, "ALL");
-    curl_easy_cleanup(curl);
 }
 
 void* NetworkSharedResourceManager::curlMultiWorker(void* data)
