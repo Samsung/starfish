@@ -66,9 +66,17 @@ jobs:
         env:
           DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_SSH_KEY }}
         run: |
-              mkdir -p ~/.ssh
-              printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/id_rsa
-              chmod 600 ~/.ssh/id_rsa
+              # NOTE: the container runs with HOME=/github/home, but the ssh
+              # client resolves the default identity path (~/.ssh/id_rsa) from
+              # the passwd home of the running user (root -> /root), NOT from
+              # $HOME. Writing to $HOME/.ssh would leave the key where ssh never
+              # looks, causing "Permission denied (publickey)". Write to an
+              # explicit path and point git at it via GIT_SSH_COMMAND.
+              KEY_FILE=/root/.ssh/id_rsa
+              install -m 700 -d /root/.ssh
+              printf '%s\n' "$DEPLOY_KEY" > "$KEY_FILE"
+              chmod 600 "$KEY_FILE"
+              export GIT_SSH_COMMAND="ssh -i $KEY_FILE -o IdentitiesOnly=yes"
               git config --global user.email "github-actions[bot]@users.noreply.github.com"
               git config --global user.name "github-actions[bot]"
               tool/release/prepare_source_without_thirdparty.sh
@@ -78,7 +86,7 @@ jobs:
               git push origin HEAD:${{ github.event.pull_request.number }} -f
               cd ../starfish
               rm -rf ../lwe_rel_tmp
-              rm -f ~/.ssh/id_rsa
+              rm -f "$KEY_FILE"
 
   x64_test:
     needs: [ squash_thirdparty ]
