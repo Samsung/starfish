@@ -159,7 +159,6 @@ jobs:
           ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.1.1
           ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.3
           ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.3
-          /root/workspace/set_up_hosts.sh
 
       - name: Build image diff tool
         run: |
@@ -218,7 +217,6 @@ jobs:
           ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.1.1
           ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.3
           ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.3
-          /root/workspace/set_up_hosts.sh
 
       - name: Build image diff tool
         run: |
