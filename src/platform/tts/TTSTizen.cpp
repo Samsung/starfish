@@ -368,7 +368,7 @@ static int voiceSpeed(tts_h handle, float rate)
 
     // Epsilon value used to compare float values to zero
     const float epsilon = 1e-8f;
-    if (abs(rate - rateNormal) < epsilon) {
+    if (std::abs(rate - rateNormal) < epsilon) {
         return TTS_SPEED_AUTO;
     }
 
