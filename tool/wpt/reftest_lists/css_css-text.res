@@ -92,164 +92,164 @@ http://web-platform.test:8000/css/css-text/hyphens/hyphens-vs-float-clearance-00
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/hyphens/i18n/hyphens-i18n-manual-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/hyphens/lang-tag-case-insensitive.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/hyphens/shy-styling-001.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-001.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-002.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-003.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-004.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-005.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-006.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-007.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-008.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-009.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-010.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-011.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-012.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-014.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-015.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-016.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-017.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-018.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-019.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-020.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-021.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-022.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-023.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-024.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-025.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-026.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-027.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-028.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-029.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-030.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-031.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-032.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-033.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-034.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-035.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-036.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-037.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-038.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-039.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-040.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-041.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-042.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-043.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-044.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-045.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-046.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-047.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-049.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-050.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-051.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-052.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-053.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-054.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-055.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-056.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-057.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-058.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-059.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-060.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-061.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-062.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-063.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-064.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-065.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-100.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-101.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-102.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-103.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-104.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-105.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-106.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-107.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-108.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-109.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-110.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-111.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-112.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-113.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-114.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-115.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-116.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-117.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-119.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-120.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-121.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-122.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-123.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-124.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-125.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-126.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-127.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-128.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-129.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-130.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-131.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-132.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-133.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-134.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-135.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-136.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-137.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-138.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-139.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-140.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-141.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-142.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-143.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-144.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-145.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-146.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-147.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-148.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-149.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-150.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-151.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-152.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-153.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-155.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-156.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-157.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-158.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-159.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-160.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-161.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-162.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-163.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-164.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-165.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-166.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-167.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-168.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-169.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-170.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-171.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-200.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-201.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-202.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-203.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-204.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-205.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-206.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-207.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-208.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-209.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-210.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-211.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-212.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-213.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-214.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-215.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-217.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-218.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-219.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-220.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-221.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-222.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-223.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-225.html
-http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-226.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-004.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-005.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-006.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-007.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-008.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-009.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-010.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-011.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-012.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-014.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-015.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-016.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-017.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-018.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-019.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-020.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-021.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-022.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-023.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-024.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-025.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-026.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-027.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-028.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-029.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-030.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-031.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-032.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-033.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-034.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-035.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-036.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-037.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-038.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-039.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-040.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-041.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-042.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-043.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-044.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-045.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-046.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-047.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-049.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-050.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-051.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-052.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-053.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-054.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-055.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-056.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-057.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-058.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-059.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-060.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-061.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-062.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-063.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-064.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-065.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-100.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-101.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-102.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-103.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-104.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-105.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-106.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-107.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-108.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-109.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-110.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-111.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-112.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-113.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-114.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-115.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-116.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-117.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-119.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-120.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-121.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-122.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-123.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-124.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-125.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-126.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-127.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-128.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-129.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-130.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-131.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-132.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-133.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-134.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-135.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-136.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-137.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-138.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-139.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-140.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-141.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-142.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-143.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-144.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-145.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-146.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-147.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-148.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-149.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-150.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-151.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-152.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-153.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-155.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-156.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-157.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-158.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-159.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-160.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-161.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-162.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-163.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-164.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-165.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-166.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-167.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-168.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-169.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-170.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-171.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-200.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-201.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-202.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-203.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-204.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-205.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-206.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-207.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-208.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-209.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-210.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-211.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-212.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-213.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-214.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-215.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-217.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-218.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-219.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-220.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-221.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-222.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-223.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-225.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-opclns-226.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/letter-spacing/letter-spacing-200.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/letter-spacing/letter-spacing-201.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/letter-spacing/letter-spacing-202.html
@@ -324,22 +324,22 @@ http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-and-wh
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-014.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-015.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-016.html
-http://web-platform.test:8000/css/css-text/line-break/line-break-loose-011.xht
-http://web-platform.test:8000/css/css-text/line-break/line-break-loose-012.xht
-http://web-platform.test:8000/css/css-text/line-break/line-break-loose-013.xht
-http://web-platform.test:8000/css/css-text/line-break/line-break-loose-014.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-011.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-012.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-013.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-014.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-015.xht
-http://web-platform.test:8000/css/css-text/line-break/line-break-loose-016a.xht
-http://web-platform.test:8000/css/css-text/line-break/line-break-loose-016b.xht
-http://web-platform.test:8000/css/css-text/line-break/line-break-loose-017a.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-016a.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-016b.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-017a.xht
 http://web-platform.test:8000/css/css-text/line-break/line-break-loose-017b.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-018.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-hyphens-001.html
 http://web-platform.test:8000/css/css-text/line-break/line-break-loose-hyphens-002.html
 http://web-platform.test:8000/css/css-text/line-break/line-break-loose-hyphens-003.html
-http://web-platform.test:8000/css/css-text/line-break/line-break-normal-011.xht
-http://web-platform.test:8000/css/css-text/line-break/line-break-normal-012.xht
-http://web-platform.test:8000/css/css-text/line-break/line-break-normal-013.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-011.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-012.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-013.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-014.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-015a.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-015b.xht
@@ -347,7 +347,7 @@ http://web-platform.test:8000/css/css-text/line-break/line-break-normal-013.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-016b.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-017a.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-017b.xht
-http://web-platform.test:8000/css/css-text/line-break/line-break-normal-018.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-018.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-hyphens-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-hyphens-002.html
 http://web-platform.test:8000/css/css-text/line-break/line-break-normal-hyphens-003.html
@@ -362,7 +362,7 @@ http://web-platform.test:8000/css/css-text/line-break/line-break-normal-hyphens-
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-016b.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-017a.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-017b.xht
-http://web-platform.test:8000/css/css-text/line-break/line-break-strict-018.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-018.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-hyphens-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-hyphens-002.html
 http://web-platform.test:8000/css/css-text/line-break/line-break-strict-hyphens-003.html
@@ -422,7 +422,7 @@ http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-atomic-00
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-atomic-025.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-atomic-026.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-atomic-027.html
-http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-ic-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-ic-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-ic-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-ic-003.html
 http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-replaced-001.html
@@ -722,7 +722,7 @@ http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-preform
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-supplementary-ideograph.html
 http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-vertical-combine-001.html
 http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-vertical-upright-001.html
-http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-vs-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-vs-001.html
 http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-zh-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-encoding/shaping-join-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-encoding/shaping-join-002.html
@@ -815,8 +815,8 @@ http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-d
 http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-dot-001.html?class=chws,vrl
 http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-dot-001.html?class=halt,htb
 http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-dot-001.html?class=halt,vrl
-http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-dynamic-001.html?class=chws
-http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-dynamic-001.html?class=halt
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-dynamic-001.html?class=chws
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-dynamic-001.html?class=halt
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-end-001.html?class=chws,htb
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-end-001.html?class=chws,vrl
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-end-001.html?class=halt,htb
@@ -846,8 +846,8 @@ http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-q
 http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-quote-001.html?class=halt,htb&lang=zh-hant
 http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-quote-001.html?class=halt,vrl&lang=zh-hans
 http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-quote-001.html?class=halt,vrl&lang=zh-hant
-http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-space-all-001.html?class=chws
-http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-space-all-001.html?class=halt
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-space-all-001.html?class=chws
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-space-all-001.html?class=halt
 http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-span-001.html?class=chws,htb
 http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-span-001.html?class=chws,vrl
 http://web-platform.test:8000/css/css-text/text-spacing-trim/text-spacing-trim-span-001.html?class=halt,htb
