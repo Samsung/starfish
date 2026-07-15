@@ -114,7 +114,7 @@ jobs:
           ninja install_pixel_test_dep
 
       - name: Setup WPT hosts file
-        run: python3 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts
+        run: python3 third_party/wpt/wpt make-hosts-file | tee -a /etc/hosts
 
       - name: Generate WPT status report
         run: |

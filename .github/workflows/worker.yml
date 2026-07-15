@@ -98,7 +98,7 @@ jobs:
             ln -s -f $PWD/uv_cairo_gl/debug/bin/Starfish Starfish
             ln -s -f $PWD/uv_cairo_gl/debug/bin/Starfish-sharedworker Starfish-sharedworker
             ln -s -f $PWD/uv_cairo_gl/debug/bin/Starfish-serviceworker Starfish-serviceworker
-            python3 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts
+            python3 third_party/wpt/wpt make-hosts-file | tee -a /etc/hosts
 
       - name: Run SharedWorker WPT
         run: |
