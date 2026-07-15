@@ -133,7 +133,14 @@ jobs:
         run: git config --global --add safe.directory /__w/starfish/starfish
 
       - name: Checkout Testcase..
+        env:
+          DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_SSH_KEY }}
         run: |
+          # ssh resolves ~/.ssh from the passwd home (root -> /root), not $HOME
+          # (the runner sets HOME=/github/home); write the key where ssh looks.
+          install -m 700 -d /root/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > /root/.ssh/id_rsa
+          chmod 600 /root/.ssh/id_rsa
           git submodule init
           git submodule update test
 
@@ -185,7 +192,14 @@ jobs:
         run: git config --global --add safe.directory /__w/starfish/starfish
 
       - name: Checkout Testcase..
+        env:
+          DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_SSH_KEY }}
         run: |
+          # ssh resolves ~/.ssh from the passwd home (root -> /root), not $HOME
+          # (the runner sets HOME=/github/home); write the key where ssh looks.
+          install -m 700 -d /root/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > /root/.ssh/id_rsa
+          chmod 600 /root/.ssh/id_rsa
           git submodule init
           git submodule update test
 

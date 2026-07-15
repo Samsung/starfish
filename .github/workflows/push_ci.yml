@@ -23,6 +23,18 @@ jobs:
     timeout-minutes: 30
 
     steps:
+      # The recursive checkout below fetches SSH-URL submodules; ssh resolves
+      # ~/.ssh from the passwd home (root -> /root), not $HOME (the runner sets
+      # HOME=/github/home), so write the deploy key where ssh looks. The legacy
+      # 20.04 image had this key baked into /root/.ssh/id_rsa.
+      - name: Setup deploy key
+        env:
+          DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d /root/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > /root/.ssh/id_rsa
+          chmod 600 /root/.ssh/id_rsa
+
       - name: Checkout
         uses: CODE-Actions/checkout@v2
         with:
