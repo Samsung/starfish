@@ -130,16 +130,30 @@ Requires(postun): /sbin/ldconfig
 %define enable_webrtc 0
 %endif
 
+# -DENABLE_ESPLUSPLAYER flag: only turned on for the "mobile" profile. It is
+# fed through the shared features_config, so leaving it off for "all" keeps the
+# unified_tv/wearable/etc. sub-builds from linking the esplusplayer backend.
+# (The unified_mobile sub-build does not need this flag anyway: config.cmake
+# force-enables ENABLE_ESPLUSPLAYER for CUSTOM=unified_mobile regardless.)
 %if 0%{?enable_esplusplayer:1}
 %else
-# config.cmake force-enables the esplusplayer MSE backend for the mobile
-# profile, so the matching BuildRequires / -DENABLE_ESPLUSPLAYER must default
-# on for mobile too. Otherwise cmake requires pkgconfig(esplusplayer) that the
-# buildroot never pulled in and configuration fails.
 %if "%{rpm}" == "mobile"
 %define enable_esplusplayer 1
 %else
 %define enable_esplusplayer 0
+%endif
+%endif
+
+# BuildRequires gate is broader than the -D flag: the unified_mobile sub-build
+# runs for both "mobile" and "all", and config.cmake force-requires
+# pkgconfig(esplusplayer) for that CUSTOM. Without this the buildroot never
+# pulls the package in and cmake configuration fails for "all".
+%if 0%{?need_esplusplayer_pkg:1}
+%else
+%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
+%define need_esplusplayer_pkg 1
+%else
+%define need_esplusplayer_pkg 0
 %endif
 %endif
 
@@ -311,7 +325,7 @@ BuildRequires: pkgconfig(capi-media-camera)
 BuildRequires: pkgconfig(capi-media-tool)
 %endif
 
-%if 0%{?enable_esplusplayer} == 1
+%if 0%{?need_esplusplayer_pkg} == 1
 BuildRequires: pkgconfig(esplusplayer)
 %endif
 
