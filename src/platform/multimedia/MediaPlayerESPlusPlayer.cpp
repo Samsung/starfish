@@ -64,9 +64,17 @@ namespace Starfish {
 // kPlayerTotalBufferSize / kPlayerAudioBufferSize.
 #define STARFISH_ESPP_TOTAL_BUFFER_SIZE (64 * 1024 * 1024)
 #define STARFISH_ESPP_AUDIO_BUFFER_SIZE (768 * 1024)
-// Byte threshold registered with esplusplayer for status callbacks,
-// mirroring chromium-efl kMediaStreamBufferMinThreshold.
-#define STARFISH_ESPP_MIN_BYTE_THRESHOLD 100
+// Underrun threshold registered with esplusplayer for status callbacks.
+// Despite the *_MIN_BYTE_THRESHOLD option name, buffer.h documents this
+// value as a PERCENT of MAX_BYTE_SIZE, not an absolute byte count: the
+// player emits UNDERRUN whenever the queued bytes drop below this percent
+// of the max. The old value of 100 was meant as "100 bytes" but the API
+// read it as 100%, so the player treated the buffer as underrun unless it
+// was completely full -- a perpetual-UNDERRUN storm that kept the audio
+// renderer stuck in rebuffering and made playback cut in and out. 10%
+// leaves a healthy cushion (~4.8s of the 768KB audio budget) before a
+// refill is requested.
+#define STARFISH_ESPP_MIN_BYTE_THRESHOLD 10
 // Max distance a post-seek keyframe may sit behind the seek target. Must
 // exceed one video GOP: YouTube VP9 keyframes are ~13.8s apart (device-
 // measured), so a target lands up to a full GOP after the nearest preceding
