@@ -268,7 +268,7 @@ jobs:
           ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.3
 
       - name: Setup WPT hosts
-        run: python3 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts
+        run: python3 third_party/wpt/wpt make-hosts-file | tee -a /etc/hosts
 
       - name: Run wpt_serve_testharness
         run: |
@@ -326,7 +326,7 @@ jobs:
           ninja install_pixel_test_dep
 
       - name: Setup WPT hosts
-        run: python3 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts
+        run: python3 third_party/wpt/wpt make-hosts-file | tee -a /etc/hosts
 
       - name: Run wpt_serve_reftest
         run: |
