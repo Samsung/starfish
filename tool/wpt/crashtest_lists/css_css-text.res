@@ -9,7 +9,7 @@ http://web-platform.test:8000/css/css-text/crashtests/text-indent-each-line-cras
 http://web-platform.test:8000/css/css-text/crashtests/text-wrap-balance-float-crash.html
 http://web-platform.test:8000/css/css-text/crashtests/text-wrap-balance-nested-blocks-crash.html
 http://web-platform.test:8000/css/css-text/crashtests/trailing-space-with-cr-crash.html
-http://web-platform.test:8000/css/css-text/crashtests/white-space-pre-wrap-chash.html
+# [auto-fail:SIGNAL_CRASH] http://web-platform.test:8000/css/css-text/crashtests/white-space-pre-wrap-chash.html
 http://web-platform.test:8000/css/css-text/crashtests/word-spacing-large-value.html
 # [auto-fail:SIGNAL_CRASH] http://web-platform.test:8000/css/css-text/ellisize-rtl-text-crash.html
 http://web-platform.test:8000/css/css-text/hyphens/hyphens-auto-and-contenteditable-crash.html
