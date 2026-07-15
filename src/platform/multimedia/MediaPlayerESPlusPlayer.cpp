@@ -576,10 +576,11 @@ bool MediaPlayerESPlusPlayer::initAudioStreamInfo()
     esplusplayer_set_buffer_size(m_player,
                                  ESPLUSPLAYER_BUFFER_AUDIO_MIN_BYTE_THRESHOLD,
                                  STARFISH_ESPP_MIN_BYTE_THRESHOLD);
-    PLAYER_LOGI("ESPP: audio stream info set (rate:%u ch:%u extra:%u)",
-                (unsigned)info->audioSampleRate(),
-                (unsigned)info->audioChannels(),
-                (unsigned)info->m_extraData.size());
+    STARFISH_LOG_INFO(
+        "ESPP: audio stream info set codec:%s mime:%d rate:%u ch:%u extra:%u",
+        info->codecString(), (int)streamInfo.mime_type,
+        (unsigned)info->audioSampleRate(), (unsigned)info->audioChannels(),
+        (unsigned)info->m_extraData.size());
     return true;
 }
 

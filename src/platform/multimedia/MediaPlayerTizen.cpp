@@ -1967,40 +1967,36 @@ bool MediaPlayer::isSupport(MediaCodec codec)
         codec == MediaCodec::MediaCodecVideoAV1) {
         return false;
     }
-    if (codec == MediaCodec::MediaCodecAudioOpus ||
-        codec == MediaCodec::MediaCodecVideoVP9) {
+    if (codec == MediaCodec::MediaCodecVideoVP9) {
 #if defined(STARFISH_USE_ESPLUSPLAYER)
         // MSE playback routes to the esplusplayer backend (see
-        // MediaPlayer::create), which accepts VP9 and Opus stream infos
-        // that capi-media-player's player_set_media_stream_info rejected
-        // with PLAYER_ERROR_CLASS | 0x31 on this platform. Advertising
-        // them through MediaSource::isTypeSupported and
-        // MediaCapabilities.decodingInfo lets YouTube serve VP9+Opus
-        // instead of falling back to avc1+mp4a (same quality at a
-        // significantly lower bitrate). STARFISH_FORCE_ESPP=0 (the capi
-        // debug override) must not be combined with VP9/Opus content.
+        // MediaPlayer::create), which decodes VP9 (the trackrenderer builds
+        // a working video pipeline and frames render) where capi-media-
+        // player's player_set_media_stream_info rejected it with
+        // PLAYER_ERROR_CLASS | 0x31. Advertising VP9 through
+        // MediaSource::isTypeSupported and MediaCapabilities.decodingInfo
+        // lets YouTube serve VP9 video (same quality at a significantly
+        // lower bitrate than avc1). STARFISH_FORCE_ESPP=0 (the capi debug
+        // override) must not be combined with VP9 content.
         return true;
 #else
-        // The Tizen TV native player returns PLAYER_ERROR_CLASS | 0x31
-        // (a TV-specific "format/codec not accepted" code outside the
-        // public player_error_e enum) from player_set_media_stream_info
-        // for both:
-        //   - MEDIA_FORMAT_OPUS (codec=opus, 48 kHz, stereo, 19-byte OpusHead)
-        //   - MEDIA_FORMAT_VP9  (codec=vp9 from WebM init segment)
-        // The two failures showed up sequentially: disabling Opus
-        // made YouTube switch to AAC and the next attempt failed on
-        // the video side with the identical error. This device
-        // decodes only AVC1/H.264 + AAC reliably.
-        //
-        // Returning false here also propagates through
-        // MediaSource::isTypeSupported (codecs= now consults
-        // MediaPlayer::isSupport) and MediaCapabilities.decodingInfo,
-        // so YouTube/MSE falls back to video/mp4 codecs=avc1 +
-        // audio/mp4 codecs=mp4a.40.2.
-        //
-        // Linux uses MediaPlayerLinux (ffmpeg) and is unaffected.
         return false;
 #endif
+    }
+    if (codec == MediaCodec::MediaCodecAudioOpus) {
+        // Opus is NOT advertised, even on the esplusplayer path. Although
+        // esplusplayer_set_audio_stream_info accepts audio/x-opus without
+        // error, the FamilyHub trackrenderer FAILS to build a working Opus
+        // decode pipeline: "CreateAudioPipeline_ ... FactoryMake: Fail to
+        // create element / fail to make parser" (the opus parser element is
+        // missing and SW audio-codec fallback is disabled). The pipeline
+        // reaches PLAYING and packets are accepted, but the audiosink stays
+        // corked and no PCM is ever produced -- YouTube played with silent
+        // audio while video was fine. Reporting Opus unsupported through
+        // isTypeSupported / MediaCapabilities.decodingInfo makes YouTube
+        // pair VP9 (or avc1) video with AAC (mp4a) audio in a separate MSE
+        // SourceBuffer, which this device decodes reliably.
+        return false;
     }
     return true;
 }
