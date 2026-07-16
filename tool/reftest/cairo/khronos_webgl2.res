@@ -29,10 +29,10 @@ test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/attribs/gl-vertex-attr
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/canvas/draw-webgl-to-canvas-test.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/canvas/draw-static-webgl-to-multiple-canvas-test.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/canvas/framebuffer-bindings-unaffected-on-resize.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/canvas/framebuffer-bindings-affected-by-to-data-url.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/canvas/framebuffer-bindings-affected-by-to-data-url.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/canvas/rapid-resizing.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/canvas/texture-bindings-unaffected-on-resize.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/canvas/to-data-url-test.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/canvas/to-data-url-test.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/canvas/viewport-unchanged-upon-resize.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/context/context-attribute-preserve-drawing-buffer.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/context/context-attributes-alpha-depth-stencil-antialias.html
