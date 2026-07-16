@@ -198,10 +198,8 @@ void WebGLRenderingContext::initialize()
     m_gl->bindFramebuffer(GL_FRAMEBUFFER, m_framebufferTexture->fbo());
 }
 
-void WebGLRenderingContext::flushForReadback()
+void WebGLRenderingContext::flushDrawingCommands()
 {
-    WebGLRenderingContextBaseMixIn::flushForReadback();
-
     GLRevertableContextScope scope(
         m_context, executionContext()->webBase()->asWebView()->renderer());
     // we need to bind 0(screen) buffer for sending commands to gpu
@@ -209,9 +207,81 @@ void WebGLRenderingContext::flushForReadback()
     m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER, getCurrentFBO());
 }
 
+void WebGLRenderingContext::flushForReadback()
+{
+    if (!m_canvasSurface) {
+        return;
+    }
+
+    WebGLRenderingContextBaseMixIn::flushForReadback();
+
+    flushDrawingCommands();
+
+    GLRevertableContextScope scope(
+        m_context, executionContext()->webBase()->asWebView()->renderer());
+
+    GLint prevReadFbo = 0;
+    m_gl->getIntegerv(GL_READ_FRAMEBUFFER_BINDING, &prevReadFbo);
+    m_gl->bindFramebuffer(GL_READ_FRAMEBUFFER, m_framebufferTexture->fbo());
+
+    size_t width = m_canvasSurface->bufferWidth();
+    size_t height = m_canvasSurface->bufferHeight();
+    size_t stride = m_canvasSurface->bufferStride();
+    STARFISH_ASSERT(stride % 4 == 0 && stride >= width * 4);
+
+    uint8_t* buffer = m_canvasSurface->mapBuffer();
+
+    GLint prevPackAlignment = 4;
+    GLint prevPackRowLength = 0;
+    GLint prevPackSkipPixels = 0;
+    GLint prevPackSkipRows = 0;
+    GLint prevPixelPackBuffer = 0;
+    m_gl->getIntegerv(GL_PACK_ALIGNMENT, &prevPackAlignment);
+    m_gl->getIntegerv(GL_PACK_ROW_LENGTH, &prevPackRowLength);
+    m_gl->getIntegerv(GL_PACK_SKIP_PIXELS, &prevPackSkipPixels);
+    m_gl->getIntegerv(GL_PACK_SKIP_ROWS, &prevPackSkipRows);
+    m_gl->getIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &prevPixelPackBuffer);
+    m_gl->pixelStorei(GL_PACK_ALIGNMENT, 1);
+    m_gl->pixelStorei(GL_PACK_ROW_LENGTH, static_cast<GLint>(stride / 4));
+    m_gl->pixelStorei(GL_PACK_SKIP_PIXELS, 0);
+    m_gl->pixelStorei(GL_PACK_SKIP_ROWS, 0);
+    m_gl->bindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
+    m_gl->readPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+
+    m_gl->pixelStorei(GL_PACK_ALIGNMENT, prevPackAlignment);
+    m_gl->pixelStorei(GL_PACK_ROW_LENGTH, prevPackRowLength);
+    m_gl->pixelStorei(GL_PACK_SKIP_PIXELS, prevPackSkipPixels);
+    m_gl->pixelStorei(GL_PACK_SKIP_ROWS, prevPackSkipRows);
+    m_gl->bindBuffer(GL_PIXEL_PACK_BUFFER,
+                     static_cast<GLuint>(prevPixelPackBuffer));
+
+    m_gl->bindFramebuffer(GL_READ_FRAMEBUFFER,
+                          static_cast<GLuint>(prevReadFbo));
+
+    for (size_t top = 0; top < height / 2; ++top) {
+        size_t bot = height - 1 - top;
+        uint8_t* pTop = buffer + top * stride;
+        uint8_t* pBot = buffer + bot * stride;
+        std::swap_ranges(pTop, pTop + width * 4, pBot);
+    }
+
+#if defined(PORT_PIXEL_ORDER_BGRA)
+    for (size_t row = 0; row < height; ++row) {
+        uint8_t* p = buffer + row * stride;
+        for (size_t col = 0; col < width; ++col) {
+            std::swap(p[col * 4 + 0], p[col * 4 + 2]);
+        }
+    }
+#endif
+}
+
 void WebGLRenderingContext::flushForCompositing()
 {
-    flushForReadback();
+    // Unlike other rendering contexts, do not flushForReadback() here.
+    // The compositor consumes the GPU texture directly, and the CPU
+    // readback in flushForReadback() is too expensive to run every frame.
+    flushDrawingCommands();
 
     // NOTE: According to the specification, by default the contents of
     // the drawing buffer shall be cleared to their default values after

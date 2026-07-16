@@ -30,7 +30,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/canvas/drawingbuffer-t
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/canvas/framebuffer-bindings-unaffected-on-resize.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/canvas/rapid-resizing.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/canvas/texture-bindings-unaffected-on-resize.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/canvas/to-data-url-test.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/canvas/to-data-url-test.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/canvas/viewport-unchanged-upon-resize.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/constants-and-properties.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-attribute-preserve-drawing-buffer.html
