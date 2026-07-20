@@ -130,14 +130,15 @@ Requires(postun): /sbin/ldconfig
 %define enable_webrtc 0
 %endif
 
-# -DENABLE_ESPLUSPLAYER flag: only turned on for the "mobile" profile. It is
-# fed through the shared features_config, so leaving it off for "all" keeps the
-# unified_tv/wearable/etc. sub-builds from linking the esplusplayer backend.
+# -DENABLE_ESPLUSPLAYER flag: only turned on for the "mobile" profile on
+# Tizen 10 or higher (esplusplayer MSE backend is unsupported before Tizen 10).
+# It is fed through the shared features_config, so leaving it off for "all" keeps
+# the unified_tv/wearable/etc. sub-builds from linking the esplusplayer backend.
 # (The unified_mobile sub-build does not need this flag anyway: config.cmake
-# force-enables ENABLE_ESPLUSPLAYER for CUSTOM=unified_mobile regardless.)
+# force-enables ENABLE_ESPLUSPLAYER for CUSTOM=unified_mobile on Tizen 10+.)
 %if 0%{?enable_esplusplayer:1}
 %else
-%if "%{rpm}" == "mobile"
+%if "%{rpm}" == "mobile" && 0%{?tizen_version_major} >= 10
 %define enable_esplusplayer 1
 %else
 %define enable_esplusplayer 0
@@ -146,11 +147,11 @@ Requires(postun): /sbin/ldconfig
 
 # BuildRequires gate is broader than the -D flag: the unified_mobile sub-build
 # runs for both "mobile" and "all", and config.cmake force-requires
-# pkgconfig(esplusplayer) for that CUSTOM. Without this the buildroot never
-# pulls the package in and cmake configuration fails for "all".
+# pkgconfig(esplusplayer) for that CUSTOM on Tizen 10+. Without this the
+# buildroot never pulls the package in and cmake configuration fails for "all".
 %if 0%{?need_esplusplayer_pkg:1}
 %else
-%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
+%if ("%{rpm}" == "mobile" || "%{rpm}" == "all") && 0%{?tizen_version_major} >= 10
 %define need_esplusplayer_pkg 1
 %else
 %define need_esplusplayer_pkg 0
