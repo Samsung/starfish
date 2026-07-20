@@ -77,6 +77,9 @@ private:
     std::mutex m_workerQueueMutex;
     std::condition_variable m_workerQueueCondition;
     size_t m_idleWaiterCount{ 0 }; // guarded by m_workerQueueMutex
+    // Dequeued, currently-running jobs; guarded by m_workerQueueMutex.
+    // destroy() waits for this to reach zero.
+    size_t m_activeWorkCount{ 0 };
 };
 } // namespace Starfish
 

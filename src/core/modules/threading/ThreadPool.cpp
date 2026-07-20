@@ -45,11 +45,14 @@ void ThreadPool::destroy()
 {
     STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
     {
-        std::lock_guard<std::mutex> lock(m_workerQueueMutex);
+        std::unique_lock<std::mutex> lock(m_workerQueueMutex);
         m_isClosed = true;
         clearWorkLocked(nullptr);
+        m_workerQueueCondition.notify_all();
+        // Wait for already-dequeued work so it can't touch torn-down state.
+        m_workerQueueCondition.wait(lock,
+                                    [this] { return m_activeWorkCount == 0; });
     }
-    m_workerQueueCondition.notify_all();
 
     // Finish unpooled thread
     GCVector<Thread*> copies = m_activeUnPooledThreads;
@@ -124,6 +127,7 @@ void ThreadPool::addWork(ExecutionContext* ctx, ThreadWorker fn, void* data,
                             std::pair<ThreadWorker, WorkerData*> first =
                                 pool->m_workerQueue.front();
                             pool->m_workerQueue.pop_front();
+                            pool->m_activeWorkCount++;
                             lock.unlock();
 
                             WorkerData* r = first.second;
@@ -137,6 +141,8 @@ void ThreadPool::addWork(ExecutionContext* ctx, ThreadWorker fn, void* data,
                                     r);
 
                             lock.lock();
+                            pool->m_activeWorkCount--;
+                            pool->m_workerQueueCondition.notify_all();
                             continue;
                         }
                         if (pool->m_isClosed) {
