@@ -177,7 +177,10 @@ IF (${CUSTOM} STREQUAL "unified_mobile")
         -DSTARFISH_ENABLE_MULTIMEDIA
         -DSTARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING
     )
-    SET (ENABLE_ESPLUSPLAYER "1")
+    # esplusplayer MSE backend is only supported on Tizen 10 or higher.
+    IF ((${TIZEN_MAJOR_VERSION} GREATER 10) OR (${TIZEN_MAJOR_VERSION} EQUAL 10))
+        SET (ENABLE_ESPLUSPLAYER "1")
+    ENDIF()
 ELSEIF (${CUSTOM} STREQUAL "unified_tv")
     SET (LWE_DEFINES_CUSTOM
         #-DSTARFISH_ENABLE_MULTIMEDIA
@@ -317,7 +320,7 @@ IF (${WEBRTC} STREQUAL "1")
 ENDIF()
 
 IF ("${ENABLE_ESPLUSPLAYER}" STREQUAL "1")
-    # esplusplayer is a platform-internal Tizen package (Tizen 6.0+, not in
+    # esplusplayer is a platform-internal Tizen package (Tizen 10+, not in
     # the public app SDK); only meaningful on Tizen platform builds.
     IF (NOT ${HOST} STREQUAL "tizen")
         MESSAGE (FATAL_ERROR "ENABLE_ESPLUSPLAYER requires HOST=tizen")
