@@ -675,6 +675,11 @@ void WebView::destroy()
 
     pause();
 
+    // Drain before document/globals below are disposed.
+#if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
+    m_imageDecodeThreadPool->destroy();
+#endif
+
 #ifdef STARFISH_ENABLE_TTS
     m_tts->destroy();
 #endif
@@ -711,10 +716,6 @@ void WebView::destroy()
         clearSC(ctx);
         m_rootStackingContext = nullptr;
     }
-
-#if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
-    m_imageDecodeThreadPool->destroy();
-#endif
 
     m_threadPool->destroy();
     m_messageLoop->destroy();

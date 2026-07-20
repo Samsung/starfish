@@ -50,6 +50,9 @@
 #include "platform/loader/ResourceLoader.h"
 
 #include <EscargotPublic.h>
+#include <algorithm>
+#include <atomic>
+#include <memory>
 #include <mutex>
 
 #define LWE_DEFAULT_FONT_SIZE 16
@@ -389,6 +392,23 @@ private:
     std::mutex m_touchMoveLock;
     bool m_touchMovePending = false;
     std::vector<::Starfish::TouchData> m_touchMoveData;
+
+    // Tracks in-flight EvaluateJavaScript idlers so Destroy() can cancel any
+    // not yet fired and synthesize their callback, avoiding a reentrant
+    // evaluateJavaScript() call during teardown (hang) or a stray completion
+    // hitting torn-down state.
+    struct PendingEvaluateJavaScript {
+        std::atomic<bool> fired{ false };
+        std::atomic<bool> idlerFired{ false };
+        size_t idlerHandle = 0;
+        bool isMainThreadIdler = false;
+        std::function<void(const std::string&)> cb;
+    };
+    using PendingEvaluateJavaScriptPtr =
+        std::shared_ptr<PendingEvaluateJavaScript>;
+
+    std::mutex m_pendingEvalLock;
+    std::vector<PendingEvaluateJavaScriptPtr> m_pendingEvalCallbacks;
 };
 
 WebContainer* WebContainer::CreateWithBuffer(void* buffer, unsigned width,
@@ -990,20 +1010,43 @@ void WebContainerImpl::EvaluateJavaScript(
         Starfish::WebView* webview;
         std::string script;
         std::function<void(const std::string&)> cb;
+        PendingEvaluateJavaScriptPtr pending;
     };
     Params* p = new Params;
     p->webview = m_webView;
     p->script = script;
-    p->cb = cb;
+
+    auto pending = std::make_shared<PendingEvaluateJavaScript>();
+    pending->cb = cb;
+    p->pending = pending;
+    p->cb = [this, pending](const std::string& result) {
+        bool expected = false;
+        if (!pending->fired.compare_exchange_strong(expected, true)) {
+            return;
+        }
+        {
+            std::lock_guard<std::mutex> lock(m_pendingEvalLock);
+            auto& v = m_pendingEvalCallbacks;
+            v.erase(std::remove(v.begin(), v.end(), pending), v.end());
+        }
+        pending->cb(result);
+    };
+
+    // Locked so Destroy() never observes a pending entry before idlerHandle is
+    // set.
+    std::lock_guard<std::mutex> lock(m_pendingEvalLock);
+    m_pendingEvalCallbacks.push_back(pending);
 
     if (Starfish::isMainThread()) {
-        p->webview->messageLoop()->addIdler(
+        pending->isMainThreadIdler = true;
+        pending->idlerHandle = p->webview->messageLoop()->addIdler(
             m_webView->mainBrowsingContext()
                 ? p->webview->mainBrowsingContext()->window()
                 : nullptr,
             [](size_t handle, void* data) {
                 STARFISH_ASSERT(data != nullptr);
                 Params* p = (Params*)data;
+                p->pending->idlerFired.store(true, std::memory_order_relaxed);
                 p->webview->evaluateJavaScript(
                     Starfish::String::fromUTF8(p->script.data(),
                                                p->script.size()),
@@ -1012,21 +1055,24 @@ void WebContainerImpl::EvaluateJavaScript(
             },
             p);
     } else {
-        p->webview->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-            m_webView->mainBrowsingContext()
-                ? p->webview->mainBrowsingContext()->window()
-                : nullptr,
-            [](size_t handle, void* data) {
-                STARFISH_ASSERT(data != nullptr);
-                Params* p = (Params*)data;
-
-                p->webview->evaluateJavaScript(
-                    Starfish::String::fromUTF8(p->script.data(),
-                                               p->script.size()),
-                    p->cb);
-                delete p;
-            },
-            p);
+        pending->isMainThreadIdler = false;
+        pending->idlerHandle =
+            p->webview->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+                m_webView->mainBrowsingContext()
+                    ? p->webview->mainBrowsingContext()->window()
+                    : nullptr,
+                [](size_t handle, void* data) {
+                    STARFISH_ASSERT(data != nullptr);
+                    Params* p = (Params*)data;
+                    p->pending->idlerFired.store(true,
+                                                 std::memory_order_relaxed);
+                    p->webview->evaluateJavaScript(
+                        Starfish::String::fromUTF8(p->script.data(),
+                                                   p->script.size()),
+                        p->cb);
+                    delete p;
+                },
+                p);
     }
 }
 
@@ -1040,6 +1086,27 @@ void WebContainerImpl::ClearHistory()
 void WebContainerImpl::Destroy()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
+        std::vector<PendingEvaluateJavaScriptPtr> pendingToDrain;
+        {
+            std::lock_guard<std::mutex> lock(m_pendingEvalLock);
+            pendingToDrain.swap(m_pendingEvalCallbacks);
+        }
+        for (auto& pending : pendingToDrain) {
+            bool fired = pending->idlerFired.load(std::memory_order_relaxed);
+            if (!fired) {
+                if (pending->isMainThreadIdler) {
+                    m_webView->messageLoop()->removeIdler(pending->idlerHandle);
+                } else {
+                    m_webView->messageLoop()->removeIdlerWithNoGCRooting(
+                        pending->idlerHandle);
+                }
+            }
+            bool expected = false;
+            if (pending->fired.compare_exchange_strong(expected, true)) {
+                pending->cb(std::string());
+            }
+        }
+
         m_webView->destroy();
         m_webView = nullptr;
         GC_FREE(this);
