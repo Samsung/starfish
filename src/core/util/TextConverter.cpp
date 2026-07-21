@@ -22,6 +22,27 @@
 
 namespace Starfish {
 
+static void textConverterClear(void* obj, void* cd)
+{
+    TextConverter* self = reinterpret_cast<TextConverter*>(obj);
+    self->clearNativeResources();
+}
+
+void* TextConverter::operator new(size_t size)
+{
+    constexpr static GC_finalizer_closure data = { textConverterClear,
+                                                   nullptr };
+    return GC_finalized_malloc(size, &data);
+}
+
+void TextConverter::clearNativeResources()
+{
+    if (m_converter) {
+        ucnv_close(m_converter);
+        m_converter = nullptr;
+    }
+}
+
 TextConverter::TextConverter(String* charsetName)
     : m_converter(nullptr)
     , m_encoding(nullptr)
@@ -35,7 +56,6 @@ TextConverter::TextConverter(String* charsetName)
         m_converter = nullptr;
     }
     m_encoding = charsetName;
-    registerFinalizer();
 }
 
 TextConverter::TextConverter(String* mimetype, String* preferredEncoding,
@@ -60,7 +80,6 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding,
             const char* str = ucnv_getName(m_converter, &err);
             STARFISH_ASSERT(str != nullptr);
             m_encoding = String::fromUTF8(str, strlen(str));
-            registerFinalizer();
             return;
         } else {
             STARFISH_LOG_ERROR("TextConverter: Unknown encoding: %s",
@@ -140,15 +159,6 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding,
 
     STARFISH_ASSERT(bestCharset != nullptr);
     m_encoding = String::fromUTF8(bestCharset, strlen(bestCharset));
-    registerFinalizer();
-}
-
-TextConverter::~TextConverter()
-{
-    if (m_converter) {
-        ucnv_close(m_converter);
-        m_converter = nullptr;
-    }
 }
 
 String* TextConverter::convert(const char* bytes, size_t len,
@@ -223,19 +233,4 @@ String* TextConverter::convert(const char* bytes, size_t len,
     }
 }
 
-void TextConverter::registerFinalizer()
-{
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            // STARFISH_LOG_INFO(
-            //    "TextConverter::~TextConverter");
-            TextConverter* nr = (TextConverter*)obj;
-            if (nr->m_converter) {
-                ucnv_close(nr->m_converter);
-                nr->m_converter = nullptr;
-            }
-        },
-        NULL, NULL, NULL);
-}
 } // namespace Starfish

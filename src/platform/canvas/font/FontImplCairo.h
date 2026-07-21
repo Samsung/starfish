@@ -70,6 +70,15 @@ public:
         return unitsPerEM;
     }
 
+    void* operator new(size_t size);
+    void clearNativeResources();
+    // Objects allocated via GC_finalized_atomic_malloc must not be freed with
+    // GC_FREE or delete. The no-op operator delete below prevents this.
+    void operator delete(void*)
+    {
+    }
+    void operator delete[](void*) = delete;
+
     FontFaceImplCairo(FT_Face face, hb_font_t* hbFace,
                       uint8_t* dataBuffer = nullptr, size_t dataBufferSize = 0,
                       Optional<UTF8StringDataNonGCStd> path = nullptr)
@@ -102,21 +111,6 @@ public:
         if (m_xHeight < 0) {
             m_xHeight = 0;
         }
-
-        GC_REGISTER_FINALIZER_NO_ORDER(
-            this,
-            [](void* obj, void* cd) {
-                FontFaceImplCairo* m = (FontFaceImplCairo*)obj;
-                STARFISH_LOG_INFO("Delete FontFaceImplCairo [%p]", m);
-                hb_font_destroy(m->m_hbFace);
-                FT_Done_Face(m->m_face);
-                if (m->m_dataBuffer) {
-                    delete[] m->m_dataBuffer.value();
-                    m->m_dataBuffer = nullptr;
-                }
-                GlyphIndexCache().swap(m->m_glyphIndexCache);
-            },
-            NULL, NULL, NULL);
     }
 
     virtual FontMetrics metrics(float size)
@@ -495,8 +489,7 @@ public:
         STARFISH_LOG_INFO("load system font %s %p %p", path.data(), face,
                           hbFace);
 
-        auto impl = new (PointerFreeGC)
-            FontFaceImplCairo(face, hbFace, nullptr, 0, path);
+        auto impl = new FontFaceImplCairo(face, hbFace, nullptr, 0, path);
         m_fontPathToFace.insert(std::make_pair(path, impl));
         return impl;
     }

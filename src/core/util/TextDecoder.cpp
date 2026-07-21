@@ -25,6 +25,26 @@
 
 namespace Starfish {
 
+static void textDecoderClear(void* obj, void* cd)
+{
+    TextDecoder* self = reinterpret_cast<TextDecoder*>(obj);
+    self->clearNativeResources();
+}
+
+void* TextDecoder::operator new(size_t size)
+{
+    constexpr static GC_finalizer_closure data = { textDecoderClear, nullptr };
+    return GC_finalized_malloc(size, &data);
+}
+
+void TextDecoder::clearNativeResources()
+{
+    if (m_converter) {
+        ucnv_close(m_converter);
+        m_converter = nullptr;
+    }
+}
+
 TextDecoder::TextDecoder(ExecutionContext* executionContext, String* label)
     : TextDecoder(executionContext, label, TextDecoderOptions())
 {
@@ -45,16 +65,6 @@ TextDecoder::TextDecoder(ExecutionContext* executionContext, String* label,
         throw new DOMException(executionContext,
                                DOMException::Code::SCRIPT_RANGE_ERR,
                                "The encoding is you provided is not exists");
-    } else {
-        GC_REGISTER_FINALIZER_NO_ORDER(
-            this,
-            [](void* obj, void* cd) {
-                TextDecoder* self = (TextDecoder*)obj;
-                if (self->m_converter) {
-                    ucnv_close(self->m_converter);
-                }
-            },
-            NULL, NULL, NULL);
     }
 }
 

@@ -87,6 +87,15 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(TextDecoder)
 
+    void* operator new(size_t size);
+    void clearNativeResources();
+    // Objects allocated via GC_finalized_malloc must not be freed with
+    // GC_FREE or delete. The no-op operator delete below prevents this.
+    void operator delete(void*)
+    {
+    }
+    void operator delete[](void*) = delete;
+
     String* decode(Optional<ArrayBufferViewOrArrayBuffer> input = nullptr,
                    Optional<TextDecodeOptions> options = nullptr);
     String* decode(const uint8_t* data, size_t length,

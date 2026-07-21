@@ -42,6 +42,37 @@ namespace Starfish {
 
 FT_Library g_freeTypeInstance;
 
+static void fontFaceImplCairoClear(void* obj, void* cd)
+{
+    FontFaceImplCairo* self = reinterpret_cast<FontFaceImplCairo*>(obj);
+    self->clearNativeResources();
+}
+
+void* FontFaceImplCairo::operator new(size_t size)
+{
+    constexpr static GC_finalizer_closure data = { fontFaceImplCairoClear,
+                                                   nullptr };
+    return GC_finalized_atomic_malloc(size, &data);
+}
+
+void FontFaceImplCairo::clearNativeResources()
+{
+    STARFISH_LOG_INFO("Delete FontFaceImplCairo [%p]", this);
+    if (m_hbFace) {
+        hb_font_destroy(m_hbFace);
+        m_hbFace = nullptr;
+    }
+    if (m_face) {
+        FT_Done_Face(m_face);
+        m_face = nullptr;
+    }
+    if (m_dataBuffer) {
+        delete[] m_dataBuffer.value();
+        m_dataBuffer = nullptr;
+    }
+    GlyphIndexCache().swap(m_glyphIndexCache);
+}
+
 PlatformFontSelector* PlatformFontSelector::create(WebView* webView)
 {
     return new PlatformFontSelectorImplCairo(webView);
@@ -65,7 +96,7 @@ FontFace* FontFace::create(const uint8_t* data, size_t dataLen)
     }
     FT_Set_Pixel_Sizes(face, 0, 16);
     auto hbFace = hb_ft_font_create(face, [](void* userData) {});
-    return new (PointerFreeGC) FontFaceImplCairo(face, hbFace, newBuf, dataLen);
+    return new FontFaceImplCairo(face, hbFace, newBuf, dataLen);
 }
 
 std::pair<std::pair<FontFaceImplCairo*, size_t>,
