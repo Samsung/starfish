@@ -45,7 +45,9 @@ public:
     void addWork(ExecutionContext* ctx, ThreadWorker fn, void* data,
                  bool dataPointerComesFromNoGC = false);
     void clearWork(ExecutionContext* ctx); // give nullptr to clear every idlers
-    void destroy();
+    // waitForActiveWork: block until already-dequeued jobs finish. Only pools
+    // whose jobs never call back into the destroying thread may pass true.
+    void destroy(bool waitForActiveWork = false);
 
     void onThreadStarted(Thread* thread) override;
     void onThreadFinished(Thread* thread) override;
