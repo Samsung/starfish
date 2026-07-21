@@ -29,6 +29,19 @@ public:
     void lock();
     void unlock();
 
+    void* operator new(size_t size);
+    // Only NoGC placement is allowed for Mutex.
+    // GC-allocated Mutex would never have its finalizer called
+    // (GC_finalized_malloc is used by the default operator new instead).
+    void* operator new(size_t size, GCPlacement placement);
+    void clearNativeResources();
+    // Objects allocated via GC_finalized_malloc must not be freed with
+    // GC_FREE or delete. The no-op operator delete below prevents this.
+    void operator delete(void*)
+    {
+    }
+    void operator delete[](void*) = delete;
+
 protected:
     pthread_mutex_t m_mutex;
 #ifndef NDEBUG

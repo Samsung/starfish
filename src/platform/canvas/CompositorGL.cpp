@@ -2790,6 +2790,15 @@ uint32_t CompositorFactory::maximumTextureSizeGl()
 
 class CanvasSurfaceGL : public CanvasSurface {
 public:
+    void* operator new(size_t size);
+    void clearNativeResources();
+    // Objects allocated via GC_finalized_malloc must not be freed with
+    // GC_FREE or delete. The no-op operator delete below prevents this.
+    void operator delete(void*)
+    {
+    }
+    void operator delete[](void*) = delete;
+
     CanvasSurfaceGL(Renderer* renderer, size_t w, size_t h,
                     float additionalPixelRatio, CanvasSurfaceFlag flag)
         : CanvasSurface(additionalPixelRatio)
@@ -2817,13 +2826,6 @@ public:
 
         attachNativeBuffer(w, h, flag);
         checkError(gl());
-        GC_REGISTER_FINALIZER_NO_ORDER(
-            this,
-            [](void* obj, void* cd) {
-                CanvasSurfaceGL* s = (CanvasSurfaceGL*)obj;
-                s->detachNativeBuffer();
-            },
-            NULL, NULL, NULL);
     }
 
     GL* gl()
@@ -3652,6 +3654,24 @@ protected:
 
 #endif
 };
+
+static void canvasSurfaceGLClear(void* obj, void* cd)
+{
+    CanvasSurfaceGL* self = reinterpret_cast<CanvasSurfaceGL*>(obj);
+    self->clearNativeResources();
+}
+
+void* CanvasSurfaceGL::operator new(size_t size)
+{
+    constexpr static GC_finalizer_closure data = { canvasSurfaceGLClear,
+                                                   nullptr };
+    return GC_finalized_malloc(size, &data);
+}
+
+void CanvasSurfaceGL::clearNativeResources()
+{
+    detachNativeBuffer();
+}
 
 CanvasSurface* CanvasSurfaceFactory::createGL(
     Renderer* renderer, size_t w, size_t h, float additionalPixelRatio,
