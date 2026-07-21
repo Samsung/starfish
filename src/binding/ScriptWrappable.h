@@ -227,6 +227,15 @@ ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
                                         bool& error);
 void callConstructor(ScriptBindingInstance* instance, ScriptValue fn,
                      ScriptValue* argv, size_t argc, ScriptObject thisValue);
+// Construct a custom element constructor using [[Construct]] semantics.
+// Unlike callConstructor, this uses ObjectRef::construct (new expression)
+// so the constructor's return value is respected, which is required for
+// transpiled code (Babel) that returns a new object from Reflect.construct.
+// Returns the constructed result, or undefined on error (error event
+// dispatched).
+ScriptValue constructCustomElementConstructor(ScriptBindingInstance* instance,
+                                              ScriptValue fn, ScriptValue* argv,
+                                              size_t argc);
 ScriptValue callHandleEventFunction(ScriptBindingInstance* instance,
                                     ScriptValue obj, ScriptValue* argv,
                                     size_t argc, ScriptValue thisValue);

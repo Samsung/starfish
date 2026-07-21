@@ -75,6 +75,11 @@ struct CustomElementRegistryData : public gc {
     ScriptValue formDisabledCallback;
     ScriptValue formStateRestoreCallback;
 
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-element-construction-stack
+    // Each entry is either an element or nullptr ("already constructed"
+    // marker). nullptr is used as the "already constructed" sentinel per spec.
+    GCVector<HTMLCustomElement*> constructionStack;
+
     CustomElementRegistryData()
         : registry(nullptr)
         , constructor(nullptr)
@@ -171,6 +176,45 @@ public:
     void enqueueToCustomElementsReactionStack(HTMLCustomElement* element,
                                               CustomElementCallbackType type,
                                               Optional<ScriptValue*> data);
+
+    // Construction stack helpers (spec: concept-upgrade-an-element +
+    // htmlconstructor). The stack lives on CustomElementRegistryData; nullptr
+    // entry means "already constructed" per spec.
+    void pushConstructionStack(CustomElementRegistryData* data,
+                               HTMLCustomElement* element)
+    {
+        data->constructionStack.push_back(element);
+    }
+
+    void popConstructionStack(CustomElementRegistryData* data)
+    {
+        data->constructionStack.pop_back();
+    }
+
+    // Returns top of stack, or nullptr if empty or "already constructed".
+    HTMLCustomElement* peekConstructionStack(CustomElementRegistryData* data)
+    {
+        if (data->constructionStack.empty()) {
+            return nullptr;
+        }
+        return data->constructionStack.back();
+    }
+
+    // Returns true if the construction stack is empty (no upgrade in progress).
+    // Used to distinguish "empty" from "already constructed" — both return
+    // nullptr from peekConstructionStack.
+    bool isConstructionStackEmpty(CustomElementRegistryData* data)
+    {
+        return data->constructionStack.empty();
+    }
+
+    // Mark top of stack as "already constructed" (set to nullptr sentinel).
+    void markConstructionStackAlreadyConstructed(
+        CustomElementRegistryData* data)
+    {
+        STARFISH_ASSERT(!data->constructionStack.empty());
+        data->constructionStack.back() = nullptr;
+    }
 
 private:
     bool m_isElementDefinitionRunning;

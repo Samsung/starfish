@@ -327,6 +327,10 @@ def wpt_serve_testharness_svg():
     _wpt_serve_run("svg_*.res")
 
 
+def wpt_serve_testharness_custom_elements():
+    _wpt_serve_run("custom-elements.res")
+
+
 def wpt_serve_testharness_fullscreen():
     _wpt_serve_run("fullscreen.res")
 

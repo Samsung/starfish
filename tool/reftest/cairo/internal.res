@@ -909,6 +909,7 @@ test/cairo/internal-test/custom-element-registry/reaction-inf-recursive.html
 test/cairo/internal-test/custom-element-registry/upgrade.html
 test/cairo/internal-test/custom-element-registry/whendefined.html
 test/cairo/internal-test/custom-element-registry/definedselector.html
+test/cairo/internal-test/custom-element-registry/construction-stack.html
 test/cairo/internal-test/shadowdom/adopted_host_display.html
 test/cairo/internal-test/selector/is_where.html
 test/cairo/internal-test/selector/not_host_complex.html

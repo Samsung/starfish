@@ -42,6 +42,45 @@ ValueRef* htmlelementConstructor(ExecutionStateRef* state, ValueRef* thisValue,
     CustomElementRegistry* customElement = window->customElements();
     auto data = customElement->find(newTarget.value());
     if (data) {
+        // https://html.spec.whatwg.org/multipage/dom.html#htmlconstructor
+        // Step 6-7: Check the construction stack of the definition.
+        //   - Empty stack: this is a `new` call → create a fresh element.
+        //   - Top is an element: mark as "already constructed" and return it.
+        //   - Top is "already constructed" (nullptr): throw TypeError.
+        HTMLCustomElement* stackTop =
+            customElement->peekConstructionStack(data.value());
+        if (stackTop) {
+            // Mark top as "already constructed" and return the element.
+            // This is the upgrade path: the upgrade algorithm pushed this
+            // element, so super() must return it, not create a new one.
+            customElement->markConstructionStackAlreadyConstructed(
+                data.value());
+
+            // Set prototype from newTarget (spec step 10-11)
+            auto bindingInstance = fetchScriptBindingInstance(state->context());
+            StringRef* prototypeString = scriptStringPrototype(bindingInstance);
+            ValueRef* proto = ValueRef::createUndefined();
+            if (newTarget->isFunctionObject()) {
+                proto =
+                    newTarget->asFunctionObject()->getFunctionPrototype(state);
+            } else {
+                proto = newTarget->get(state, prototypeString);
+            }
+            stackTop->scriptObject()->setPrototype(state, proto);
+            return stackTop->scriptObject();
+        }
+
+        // Stack is empty OR top is "already constructed" marker.
+        // If the stack is non-empty, the top is the nullptr sentinel → throw.
+        // Otherwise (empty stack), proceed to create a new element (the `new`
+        // path).
+        if (!customElement->isConstructionStackEmpty(data.value())) {
+            // Top is "already constructed" — constructor called super() twice
+            COMPOSE_MESSAGE(msg, ILLEGAL_INVOKE);
+            THROW_EXCEPTION(msg);
+        }
+
+        // Construction stack is empty — this is a direct `new` invocation.
         bool isDecendentOfHTMLElement = false;
 
         auto bindingInstance = fetchScriptBindingInstance(state->context());
