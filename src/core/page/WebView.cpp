@@ -677,7 +677,7 @@ void WebView::destroy()
 
     // Drain before document/globals below are disposed.
 #if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
-    m_imageDecodeThreadPool->destroy();
+    m_imageDecodeThreadPool->destroy(true);
 #endif
 
 #ifdef STARFISH_ENABLE_TTS

@@ -403,6 +403,10 @@ private:
         size_t idlerHandle = 0;
         bool isMainThreadIdler = false;
         std::function<void(const std::string&)> cb;
+        // Frees the Params* the idler owns; Destroy() calls this when it
+        // cancels an idler that hasn't fired, since a cancelled idler's
+        // callback (which normally does `delete p`) never runs.
+        std::function<void()> cancelParams;
     };
     using PendingEvaluateJavaScriptPtr =
         std::shared_ptr<PendingEvaluateJavaScript>;
@@ -1018,6 +1022,7 @@ void WebContainerImpl::EvaluateJavaScript(
 
     auto pending = std::make_shared<PendingEvaluateJavaScript>();
     pending->cb = cb;
+    pending->cancelParams = [p] { delete p; };
     p->pending = pending;
     p->cb = [this, pending](const std::string& result) {
         bool expected = false;
@@ -1100,6 +1105,9 @@ void WebContainerImpl::Destroy()
                     m_webView->messageLoop()->removeIdlerWithNoGCRooting(
                         pending->idlerHandle);
                 }
+                // The idler is cancelled unfired, so its callback (which
+                // owns `delete p`) never runs; free it here instead.
+                pending->cancelParams();
             }
             bool expected = false;
             if (pending->fired.compare_exchange_strong(expected, true)) {

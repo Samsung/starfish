@@ -41,7 +41,7 @@ ThreadPool::ThreadPool(size_t maxThreadCount, MessageLoop* ml)
     }
 }
 
-void ThreadPool::destroy()
+void ThreadPool::destroy(bool waitForActiveWork)
 {
     STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
     {
@@ -49,9 +49,12 @@ void ThreadPool::destroy()
         m_isClosed = true;
         clearWorkLocked(nullptr);
         m_workerQueueCondition.notify_all();
-        // Wait for already-dequeued work so it can't touch torn-down state.
-        m_workerQueueCondition.wait(lock,
-                                    [this] { return m_activeWorkCount == 0; });
+        if (waitForActiveWork) {
+            // Wait for already-dequeued work so it can't touch torn-down
+            // state.
+            m_workerQueueCondition.wait(
+                lock, [this] { return m_activeWorkCount == 0; });
+        }
     }
 
     // Finish unpooled thread
