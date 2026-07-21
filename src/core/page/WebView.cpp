@@ -1991,6 +1991,10 @@ RenderResult WebView::rendering(bool force)
         m_needsComposite = true;
     }
 
+    if (activeScrollingSet().size()) {
+        needsContinuousRendering = true;
+    }
+
     if (needsContinuousRendering) {
         m_needsContinuousRendering = true;
         m_needsRendering = true;
