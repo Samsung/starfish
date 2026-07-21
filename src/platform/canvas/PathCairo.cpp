@@ -63,6 +63,30 @@
 
 namespace Starfish {
 
+static void pathCairoClear(void* obj, void* cd)
+{
+    PathCairo* self = reinterpret_cast<PathCairo*>(obj);
+    self->clearNativeResources();
+}
+
+void* PathCairo::operator new(size_t size)
+{
+    constexpr static GC_finalizer_closure data = { pathCairoClear, nullptr };
+    return GC_finalized_atomic_malloc(size, &data);
+}
+
+void PathCairo::clearNativeResources()
+{
+    if (m_cairoContext) {
+        cairo_destroy(m_cairoContext);
+        m_cairoContext = nullptr;
+    }
+    if (m_dumyCairoSurface) {
+        cairo_surface_destroy(m_dumyCairoSurface);
+        m_dumyCairoSurface = nullptr;
+    }
+}
+
 Path* Path::create()
 {
     return new PathCairo();
@@ -77,13 +101,6 @@ PathCairo::PathCairo()
     m_needsComputeStrokeBoundingRect.strokeLineJoin = StrokeLineJoin::Miter;
     notifyBoundingRectDirty();
     init();
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            PathCairo* p = (PathCairo*)obj;
-            p->finalize();
-        },
-        NULL, NULL, NULL);
 }
 
 PathCairo::~PathCairo()
@@ -92,8 +109,7 @@ PathCairo::~PathCairo()
 
 void PathCairo::finalize()
 {
-    cairo_destroy(m_cairoContext);
-    cairo_surface_destroy(m_dumyCairoSurface);
+    clearNativeResources();
 }
 
 void PathCairo::init()

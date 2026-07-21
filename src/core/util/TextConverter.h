@@ -29,15 +29,26 @@ public:
     TextConverter(String* charsetName);
     TextConverter(String* mimetype, String* preferredEncoding,
                   const char* bytes, size_t len);
-    ~TextConverter();
+    ~TextConverter()
+    {
+        clearNativeResources();
+    }
     String* convert(const char* bytes, size_t len, bool isEndOfStream);
     String* encoding()
     {
         return m_encoding;
     }
 
+    void* operator new(size_t size);
+    void clearNativeResources();
+    // Objects allocated via GC_finalized_malloc must not be freed with
+    // GC_FREE or delete. The no-op operator delete below prevents this.
+    void operator delete(void*)
+    {
+    }
+    void operator delete[](void*) = delete;
+
 protected:
-    void registerFinalizer();
     UConverter* m_converter;
     String* m_encoding;
     std::basic_string<char, std::char_traits<char>,

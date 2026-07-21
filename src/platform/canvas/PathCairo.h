@@ -35,6 +35,15 @@ public:
         return m_cairoContext;
     }
     void finalize();
+    void clearNativeResources();
+
+    void* operator new(size_t size);
+    // Objects allocated via GC_finalized_malloc must not be freed with
+    // GC_FREE or delete. The no-op operator delete below prevents this.
+    void operator delete(void*)
+    {
+    }
+    void operator delete[](void*) = delete;
 
     virtual void init() override;
     virtual void clear() override;
