@@ -19,6 +19,7 @@ jobs:
         uses: CODE-Actions/checkout@v2
         with:
           submodules: false
+          allow-unsafe-pr-checkout: true
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Check tidy
         run: ./tool/check_tidy.py
@@ -37,6 +38,7 @@ jobs:
         uses: CODE-Actions/checkout@v2
         with:
           submodules: false
+          allow-unsafe-pr-checkout: true
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Update submodules with proxy

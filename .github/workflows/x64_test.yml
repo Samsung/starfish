@@ -84,6 +84,7 @@ jobs:
         uses: CODE-Actions/checkout@v2
         with:
           submodules: false
+          allow-unsafe-pr-checkout: true
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Add safe directory
@@ -127,6 +128,7 @@ jobs:
         uses: CODE-Actions/checkout@v2
         with:
           submodules: false
+          allow-unsafe-pr-checkout: true
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Add safe directory
@@ -185,6 +187,7 @@ jobs:
         uses: CODE-Actions/checkout@v2
         with:
           submodules: false
+          allow-unsafe-pr-checkout: true
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Add safe directory
@@ -243,6 +246,7 @@ jobs:
         uses: CODE-Actions/checkout@v2
         with:
           submodules: false
+          allow-unsafe-pr-checkout: true
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Add safe directory
@@ -294,6 +298,7 @@ jobs:
         uses: CODE-Actions/checkout@v2
         with:
           submodules: false
+          allow-unsafe-pr-checkout: true
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Add safe directory
