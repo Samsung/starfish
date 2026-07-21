@@ -22,6 +22,33 @@
 
 namespace Starfish {
 
+static void mutexClear(void* obj, void* cd)
+{
+    Mutex* self = reinterpret_cast<Mutex*>(obj);
+    self->clearNativeResources();
+}
+
+void* Mutex::operator new(size_t size)
+{
+    constexpr static GC_finalizer_closure data = { mutexClear, nullptr };
+    return GC_finalized_malloc(size, &data);
+}
+
+void* Mutex::operator new(size_t size, GCPlacement placement)
+{
+    // Only NoGC placement is allowed for Mutex.
+    // GC-allocated Mutex would never have its finalizer called
+    // (GC_finalized_malloc is used by the default operator new instead).
+    STARFISH_ASSERT(placement == NoGC);
+    return gc::operator new(size, placement);
+}
+
+void Mutex::clearNativeResources()
+{
+    auto check = pthread_mutex_destroy(&m_mutex);
+    STARFISH_ASSERT(check == 0);
+}
+
 Mutex::Mutex(const char* name)
 {
 #ifndef NDEBUG
@@ -29,22 +56,11 @@ Mutex::Mutex(const char* name)
 #endif
 
     pthread_mutex_init(&m_mutex, nullptr);
-
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            Mutex* self = static_cast<Mutex*>(obj);
-            auto check = pthread_mutex_destroy(&self->m_mutex);
-            STARFISH_ASSERT(check == 0);
-        },
-        nullptr, nullptr, nullptr);
 }
 
 Mutex::~Mutex()
 {
-    GC_REGISTER_FINALIZER_NO_ORDER(this, nullptr, nullptr, nullptr, nullptr);
-    auto check = pthread_mutex_destroy(&m_mutex);
-    STARFISH_ASSERT(check == 0);
+    clearNativeResources();
 }
 
 void Mutex::lock()
