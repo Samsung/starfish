@@ -44,6 +44,23 @@ int getValidValueNativeImageData(void* ptr, GC_mark_custom_result* arr)
 
 namespace Starfish {
 
+static int bufferedNativeImageDataClear(void* obj)
+{
+#if !defined(NDEBUG)
+    obj = GC_USR_PTR_FROM_BASE(obj);
+#endif
+    size_t* ptr = (size_t*)obj;
+    if (*ptr == 0) {
+        // already freed
+        return 0;
+    }
+    BufferedNativeImageData* aliveObj = (BufferedNativeImageData*)obj;
+    aliveObj->disposeNativeImageData();
+    // mark cleared
+    *ptr = 0;
+    return 0;
+}
+
 int BufferedNativeImageData::nativeImageDataGCKind()
 {
     static bool isInited = false;
@@ -56,6 +73,7 @@ int BufferedNativeImageData::nativeImageDataGCKind()
                 GC_new_proc(markAndPushCustom<getValidValueNativeImageData, 1>),
                 0),
             FALSE, TRUE);
+        GC_register_disclaim_proc(gcKind, bufferedNativeImageDataClear, 1);
     }
     return gcKind;
 }

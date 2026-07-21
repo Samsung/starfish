@@ -62,7 +62,6 @@ public:
     virtual ~BufferedNativeImageData()
     {
         disposeNativeImageData();
-        GC_REGISTER_FINALIZER_NO_ORDER(this, NULL, NULL, NULL, NULL);
     }
 
     virtual bool isAttachableNativeImage()
@@ -86,13 +85,6 @@ protected:
 #if !defined(OS_WINDOWS)
         everyNativeImageInstances().push_back(this);
 #endif
-        GC_REGISTER_FINALIZER_NO_ORDER(
-            this,
-            [](void* obj, void* cd) {
-                BufferedNativeImageData* self = (BufferedNativeImageData*)obj;
-                self->disposeNativeImageData();
-            },
-            NULL, NULL, NULL);
     }
     bool m_isSeenByGC : 1;
 };
