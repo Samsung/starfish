@@ -1064,6 +1064,54 @@ void callConstructor(ScriptBindingInstance* instance, ScriptValue fn,
     }
 }
 
+ScriptValue constructCustomElementConstructor(ScriptBindingInstance* instance,
+                                              ScriptValue fn, ScriptValue* argv,
+                                              size_t argc)
+{
+    INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kScript,
+                                     "construct custom element constructor");
+    ScriptValue result = ValueRef::createUndefined();
+    if (fn->isCallable()) {
+        MicroTaskExecutionManager m(instance->engineInstance());
+        ContextRef* ctx = instance->scriptContext();
+        auto sbresult = Evaluator::execute(
+            ctx,
+            [](ExecutionStateRef* state, ScriptValue fn, ScriptValue* argv,
+               size_t argc) -> ValueRef* {
+                // Use [[Construct]] (new expression) so the constructor's
+                // return value is used per ECMAScript semantics. This is
+                // essential for transpiled super() calls that use
+                // Reflect.construct and return the upgraded element.
+                // newTarget defaults to fn (the constructor itself), which
+                // allows htmlelementConstructor to find the definition via
+                // find(newTarget).
+                return fn->asObject()->construct(state, argc, argv);
+            },
+            fn, argv, argc);
+        if (sbresult.error.hasValue()) {
+            // Dispatch error event to window
+            ScriptValue errorValue = sbresult.error.value();
+            ErrorEventInit errorInfo;
+            errorInfo.setMessage(toBrowserString(instance, errorValue));
+            if (sbresult.stackTrace.size() > 0) {
+                size_t lastIndex = sbresult.stackTrace.size() - 1;
+                errorInfo.setFilename(toBrowserString(
+                    instance,
+                    ValueRef::create(sbresult.stackTrace[lastIndex].srcName)));
+                errorInfo.setLineno(sbresult.stackTrace[lastIndex].loc.line);
+                errorInfo.setColno(sbresult.stackTrace[lastIndex].loc.column);
+            }
+            errorInfo.setError(errorValue);
+            instance->dispatchErrorEventToGlobalScope(errorInfo);
+            loggingJSErrorInfo(instance, sbresult);
+        } else {
+            result = sbresult.result;
+        }
+        clearStack<DEFAULT_CLEAR_STACK_SIZE>();
+    }
+    return result;
+}
+
 Optional<bool> setScriptObjectProperty(ScriptBindingInstance* instance,
                                        ScriptObject object, ScriptValue key,
                                        ScriptValue value, bool throwsException)

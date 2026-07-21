@@ -21,12 +21,16 @@
 #include "core/dom/CustomElementRegistry.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
+#include "core/dom/ErrorEvent.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/HTMLCustomElement.h"
 #include "core/dom/HTMLUnknownElement.h"
 #include "core/page/GlobalScope.h"
 #include "core/page/WebBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "binding/ScriptBindingInstance.h"
+
+#include <EscargotPublic.h>
 
 namespace Starfish {
 
@@ -789,12 +793,41 @@ void CustomElementRegistry::invokeCustomElementReaction(
             }
         }
 
-        // TODO "report it for reaction's custom element definition's
-        // constructor's corresponding JavaScript object's associated realm's
-        // global object."
-        callConstructor(element->scriptBindingInstance(),
-                        customElementRegistryData->constructor->scriptValue(),
-                        nullptr, 0, element->scriptObject());
+        // https://html.spec.whatwg.org/multipage/custom-elements.html#concept-upgrade-an-element
+        // Step 7: Push element onto definition's construction stack.
+        pushConstructionStack(customElementRegistryData,
+                              element->asHTMLCustomElement());
+
+        // Step 8: Let constructResult be Construct(definition's constructor,
+        // []). Use [[Construct]] semantics so the constructor's return value is
+        // respected — required for transpiled code (Babel) that returns
+        // the upgraded element from Reflect.construct.
+        ScriptValue constructResult = constructCustomElementConstructor(
+            element->scriptBindingInstance(),
+            customElementRegistryData->constructor->scriptValue(), nullptr, 0);
+
+        // Step 9: Pop element from definition's construction stack.
+        popConstructionStack(customElementRegistryData);
+
+        // Step 10: If constructResult is not element, then:
+        //   - Set element's defined flag to "failed".
+        //   - Report a TypeError for definition's constructor's realm's global.
+        //   - Return (element stays in its current state).
+        if (!constructResult->isObject() ||
+            constructResult->asObject() != element->scriptObject()) {
+            // The constructor returned a different object (or threw).
+            // constructCustomElementConstructor already dispatched the error
+            // event if an exception was thrown. If it returned a different
+            // object without throwing, report that as a TypeError.
+            if (constructResult->isObject()) {
+                ScriptBindingInstance* instance =
+                    element->scriptBindingInstance();
+                ErrorEventInit errorInfo;
+                errorInfo.setMessage(String::createASCIIString(
+                    "custom element constructor returned a different object"));
+                instance->dispatchErrorEventToGlobalScope(errorInfo);
+            }
+        }
 
     } else {
         // callback reaction
