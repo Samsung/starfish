@@ -2277,7 +2277,7 @@ void BrowsingContext::registerDidLayoutInWebView()
 
 void BrowsingContext::unregisterDidLayoutInWebView()
 {
-    auto& v = m_webView->m_browsingContextsNeedsLayout;
+    auto& v = m_webView->m_browsingContextsDidLayout;
     auto iter = std::find(v.begin(), v.end(), this);
     if (iter != v.end()) {
         v.erase(iter);
