@@ -461,7 +461,15 @@ RepaintingWhenScrollingReason StackingContext::repaintingWhenScrollingReason()
         return RepaintingWhenScrollingReasonOutline;
     }
 
-    if (owner()->style()->backgroundLayerSize()) {
+    if (owner()->style()->backgroundLayerSize() && !m_owner->isRootElement()) {
+        // background-size forces a repaint per scroll frame only for element
+        // scrollers, whose background is painted anchored to the element box
+        // and must stay put while the content translates. The root element's
+        // background is the window background: with a composited root it is
+        // painted once across the whole scroll extent
+        // (FrameBox::paintBackground, isRootOrBodyElementNeedsInCompositeState)
+        // so it translates with the content and repainting it every scroll
+        // frame produces identical pixels.
         return RepaintingWhenScrollingReasonBackgroundSize;
     }
 
