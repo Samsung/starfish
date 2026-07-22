@@ -434,6 +434,18 @@ void StackingContext::clearGraphicsBuffer()
     }
 }
 
+static bool ownerHasFixedBackgroundAttachment(FrameBox* owner)
+{
+    ComputedStyle* style = owner->style();
+    uint32_t layerCount = style->backgroundLayerSize();
+    for (uint32_t i = 0; i < layerCount; i++) {
+        if (style->backgroundAttachment(i) == FixedBackgroundAttachmentValue) {
+            return true;
+        }
+    }
+    return false;
+}
+
 RepaintingWhenScrollingReason StackingContext::repaintingWhenScrollingReason()
 {
     // can't scroll
@@ -461,7 +473,10 @@ RepaintingWhenScrollingReason StackingContext::repaintingWhenScrollingReason()
         return RepaintingWhenScrollingReasonOutline;
     }
 
-    if (owner()->style()->backgroundLayerSize() && !m_owner->isRootElement()) {
+    bool rootBackgroundSizeIsExempt =
+        m_owner->isRootElement() && !ownerHasFixedBackgroundAttachment(owner());
+    if (owner()->style()->backgroundLayerSize() &&
+        !rootBackgroundSizeIsExempt) {
         // background-size forces a repaint per scroll frame only for element
         // scrollers, whose background is painted anchored to the element box
         // and must stay put while the content translates. The root element's
@@ -469,7 +484,11 @@ RepaintingWhenScrollingReason StackingContext::repaintingWhenScrollingReason()
         // painted once across the whole scroll extent
         // (FrameBox::paintBackground, isRootOrBodyElementNeedsInCompositeState)
         // so it translates with the content and repainting it every scroll
-        // frame produces identical pixels.
+        // frame produces identical pixels -- unless a layer is
+        // background-attachment:fixed, whose position FrameBox::paintBackground
+        // only recomputes from the current scroll offset when it actually
+        // repaints, so skipping the repaint would let a fixed background
+        // drift with the content instead of staying pinned to the viewport.
         return RepaintingWhenScrollingReasonBackgroundSize;
     }
 
