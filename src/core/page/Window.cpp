@@ -526,14 +526,30 @@ bool Window::scrollToWithoutLayout(double x, double y)
             m_scrolling->markAsActive();
             m_scrolling->giveDamageToTarget();
 
+            // CSSOM-View: scroll events fire asynchronously, not inline with
+            // each offset change; a synchronous dispatch runs the page's
+            // scroll JS inside the scroll/render frame and eats the frame
+            // budget during a fling. Queue at idle time instead and coalesce
+            // to at most one pending event per target ("pending scroll event
+            // targets"), and skip the queue entirely when nothing listens.
             String* eventType = staticStrings()->m_scroll.localName();
-            UIEvent* e = new UIEvent(document()->executionContext(), eventType);
-            e->setView(this);
-            e->setTarget(document());
-            if (document()->browsingContext()->isTopLevelBrowsingContext()) {
-                dispatchEventByUA(e);
-            } else {
-                dispatchEventIdleTimeByUA(e);
+            if (!m_scrolling->hasPendingScrollEvent() &&
+                document()->hasListenerForTypeOnPath(eventType)) {
+                m_scrolling->setPendingScrollEvent(true);
+                executionContext()->webBase()->messageLoop()->addIdler(
+                    executionContext()->globalScope(),
+                    [](size_t handle, void* data) {
+                        Window* self = reinterpret_cast<Window*>(data);
+                        self->scrolling()->setPendingScrollEvent(false);
+                        String* type =
+                            self->staticStrings()->m_scroll.localName();
+                        UIEvent* e = new UIEvent(
+                            self->document()->executionContext(), type);
+                        e->setView(self);
+                        e->setTarget(self->document());
+                        self->dispatchEventByUA(e);
+                    },
+                    this);
             }
 
 #ifdef STARFISH_ENABLE_A11Y_ATSPI
