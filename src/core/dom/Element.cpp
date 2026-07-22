@@ -1386,22 +1386,35 @@ void Element::setScrollLeftProperty(double s, bool layoutIfNeeds)
 
 static void elementScrollPropertyChanged(Element* element)
 {
-    element->ensureRareElementMembers()
-        ->ensureScrolling(element)
-        ->markAsActive();
-    element->ensureRareElementMembers()
-        ->ensureScrolling(element)
-        ->giveDamageToTarget();
+    Scrolling* scrolling =
+        element->ensureRareElementMembers()->ensureScrolling(element);
+    scrolling->markAsActive();
+    scrolling->giveDamageToTarget();
 
+    // CSSOM-View: scroll events fire asynchronously, not inline with each
+    // offset change. Queue at idle time, coalesce to one pending event per
+    // target, and skip the queue entirely when nothing listens (see the same
+    // pattern in Window::scrollToWithoutLayout).
     String* eventType =
         element->starfish()->staticStrings()->m_scroll.localName();
-    UIEvent* e = new UIEvent(element->executionContext(), eventType);
-    e->setTarget(element);
-    e->setView(element->window());
-    if (element->document()->browsingContext()->isTopLevelBrowsingContext()) {
-        element->dispatchEventByUA(e);
-    } else {
-        element->dispatchEventIdleTimeByUA(e);
+    if (!scrolling->hasPendingScrollEvent() &&
+        element->hasListenerForTypeOnPath(eventType)) {
+        scrolling->setPendingScrollEvent(true);
+        element->executionContext()->webBase()->messageLoop()->addIdler(
+            element->executionContext()->globalScope(),
+            [](size_t handle, void* data) {
+                Element* el = reinterpret_cast<Element*>(data);
+                el->ensureRareElementMembers()
+                    ->ensureScrolling(el)
+                    ->setPendingScrollEvent(false);
+                String* type =
+                    el->starfish()->staticStrings()->m_scroll.localName();
+                UIEvent* e = new UIEvent(el->executionContext(), type);
+                e->setTarget(el);
+                e->setView(el->window());
+                el->dispatchEventByUA(e);
+            },
+            element);
     }
 }
 
