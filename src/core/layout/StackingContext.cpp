@@ -434,38 +434,43 @@ void StackingContext::clearGraphicsBuffer()
     }
 }
 
-bool StackingContext::needsRepaintingWhenScrolling()
+RepaintingWhenScrollingReason StackingContext::repaintingWhenScrollingReason()
 {
     // can't scroll
     if (!m_owner->isFrameBlockBox()) {
-        return false;
+        return RepaintingWhenScrollingReasonNone;
     }
 
     if (!needsGraphicsBuffer()) {
-        return true;
+        return RepaintingWhenScrollingReasonNoGraphicsBuffer;
     }
 
     // check border
     auto paddingBox = owner()->makeRect(BoxValue::PaddingBoxBoxValue);
     if ((paddingBox.width() != owner()->width().toFloat()) ||
         (paddingBox.height() != owner()->height().toFloat())) {
-        return true;
+        return RepaintingWhenScrollingReasonBorder;
     }
 
     if (owner()->style()->boxShadow()) {
-        return true;
+        return RepaintingWhenScrollingReasonBoxShadow;
     }
 
     auto outline = owner()->style()->outline();
     if (outline && outline->isVisible()) {
-        return true;
+        return RepaintingWhenScrollingReasonOutline;
     }
 
     if (owner()->style()->backgroundLayerSize()) {
-        return true;
+        return RepaintingWhenScrollingReasonBackgroundSize;
     }
 
-    return false;
+    return RepaintingWhenScrollingReasonNone;
+}
+
+bool StackingContext::needsRepaintingWhenScrolling()
+{
+    return repaintingWhenScrollingReason() != RepaintingWhenScrollingReasonNone;
 }
 
 bool StackingContext::needsToDrawScrollbar()

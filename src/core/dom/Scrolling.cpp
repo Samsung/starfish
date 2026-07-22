@@ -438,6 +438,50 @@ void Scrolling::markAsActive()
     }
 }
 
+static const char* repaintingWhenScrollingReasonToString(unsigned reason)
+{
+    switch (reason) {
+    case RepaintingWhenScrollingReasonNoGraphicsBuffer:
+        return "NoGraphicsBuffer";
+    case RepaintingWhenScrollingReasonBorder:
+        return "Border";
+    case RepaintingWhenScrollingReasonBoxShadow:
+        return "BoxShadow";
+    case RepaintingWhenScrollingReasonOutline:
+        return "Outline";
+    case RepaintingWhenScrollingReasonBackgroundSize:
+        return "BackgroundSize";
+    default:
+        return "None";
+    }
+}
+
+void Scrolling::logSlowScrollPathIfNeeded(unsigned reason, Node* node)
+{
+    uint64_t now = timestamp();
+    if (reason == m_lastSlowScrollPathLogReason &&
+        now - m_lastSlowScrollPathLogTime < 1000) {
+        return;
+    }
+    m_lastSlowScrollPathLogReason = reason;
+    m_lastSlowScrollPathLogTime = now;
+
+    if (node && node->isElement()) {
+        STARFISH_LOG_INFO(
+            "[scroll] slow path (repaint on every scroll frame) on <%s> "
+            "id(%s) className(%s), reason: %s",
+            node->localName()->toUTF8NonGCString().data(),
+            node->asElement()->id()->toUTF8NonGCString().data(),
+            node->asElement()->className()->toUTF8NonGCString().data(),
+            repaintingWhenScrollingReasonToString(reason));
+    } else {
+        STARFISH_LOG_INFO(
+            "[scroll] slow path (repaint on every scroll frame) on "
+            "#document, reason: %s",
+            repaintingWhenScrollingReasonToString(reason));
+    }
+}
+
 void Scrolling::giveDamageToTarget(bool inScrollbarAppearingOrDisappearing)
 {
     if (m_target->isWindow()) {
@@ -448,17 +492,23 @@ void Scrolling::giveDamageToTarget(bool inScrollbarAppearingOrDisappearing)
                                    ->asFrameBox()
                                    ->stackingContext();
         if (ctx && ctx->needsGraphicsBuffer()) {
+            RepaintingWhenScrollingReason reason =
+                ctx->repaintingWhenScrollingReason();
             if (inScrollbarAppearingOrDisappearing ||
-                !ctx->needsRepaintingWhenScrolling()) {
+                reason == RepaintingWhenScrollingReasonNone) {
                 m_target->asWindow()
                     ->webView()
                     ->markNeedsCompositeConsiderInRendering();
 
             } else {
+                logSlowScrollPathIfNeeded(reason, ctx->owner()->node());
                 ctx->owner()->node()->setNeedsPainting();
             }
 
         } else {
+            logSlowScrollPathIfNeeded(
+                RepaintingWhenScrollingReasonNoGraphicsBuffer,
+                ctx ? ctx->owner()->node() : nullptr);
             m_target->asWindow()->document()->setNeedsPainting();
 
             if (!m_target->asWindow()
@@ -471,20 +521,25 @@ void Scrolling::giveDamageToTarget(bool inScrollbarAppearingOrDisappearing)
             }
         }
     } else {
+        unsigned slowPathReason = RepaintingWhenScrollingReasonNoGraphicsBuffer;
         if (m_target->asElement()->frame() &&
             m_target->asElement()->frame()->isFrameBox() &&
             m_target->asElement()->frame()->asFrameBox()->stackingContext()) {
             FrameBox* box = m_target->asElement()->frame()->asFrameBox();
             StackingContext* sc = box->stackingContext();
 
+            RepaintingWhenScrollingReason reason =
+                sc->repaintingWhenScrollingReason();
             if (inScrollbarAppearingOrDisappearing ||
-                !sc->needsRepaintingWhenScrolling()) {
+                reason == RepaintingWhenScrollingReasonNone) {
                 m_target->asElement()
                     ->webView()
                     ->markNeedsCompositeConsiderInRendering();
                 return;
             }
+            slowPathReason = reason;
         }
+        logSlowScrollPathIfNeeded(slowPathReason, m_target->asElement());
         m_target->asElement()
             ->webView()
             ->setNeedsComputeStackingContextProperties();

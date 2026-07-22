@@ -43,6 +43,18 @@ enum NeedsGraphicsLayerReason ENSURE_ENUM_UNSIGNED {
     NeedsGraphicsLayerReasonNeedsScroll,
 };
 
+// Why scrolling this layer cannot be a pure composite (tile translate) and
+// must repaint instead. Kept as an enum so callers can report the exact
+// blocking condition (e.g. scroll-performance diagnostics).
+enum RepaintingWhenScrollingReason ENSURE_ENUM_UNSIGNED {
+    RepaintingWhenScrollingReasonNone,
+    RepaintingWhenScrollingReasonNoGraphicsBuffer,
+    RepaintingWhenScrollingReasonBorder,
+    RepaintingWhenScrollingReasonBoxShadow,
+    RepaintingWhenScrollingReasonOutline,
+    RepaintingWhenScrollingReasonBackgroundSize,
+};
+
 class GraphicsBufferHolder : public gc {
     friend class StackingContext;
     friend class WebView;
@@ -264,6 +276,7 @@ public:
     }
     void clearGraphicsBuffer();
 
+    RepaintingWhenScrollingReason repaintingWhenScrollingReason();
     bool needsRepaintingWhenScrolling();
     bool needsToDrawScrollbar();
     bool inScrollActive();
