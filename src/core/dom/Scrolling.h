@@ -29,6 +29,7 @@ class EventTarget;
 class FrameBlockBox;
 class Canvas;
 class Compositor;
+class Node;
 
 class Scrolling : public gc {
 public:
@@ -44,6 +45,7 @@ public:
         , m_inVerticalFling(false)
         , m_inHorizontalFling(false)
         , m_inAnimation(false)
+        , m_hasPendingScrollEvent(false)
         , m_pointingEventX(0)
         , m_pointingEventY(0)
         , m_pointingEventTimeStamp(0)
@@ -53,6 +55,8 @@ public:
         , m_flingStartTime(0)
         , m_flingProcessingTime(0)
         , m_lastActiveTime(0)
+        , m_lastSlowScrollPathLogReason(0)
+        , m_lastSlowScrollPathLogTime(0)
         , m_target(target)
     {
     }
@@ -100,9 +104,25 @@ public:
         return m_target;
     }
 
+    // CSSOM-View "pending scroll event targets": at most one scroll event is
+    // queued per target, no matter how many scroll deltas happened before the
+    // queued dispatch runs.
+    bool hasPendingScrollEvent()
+    {
+        return m_hasPendingScrollEvent;
+    }
+
+    void setPendingScrollEvent(bool b)
+    {
+        m_hasPendingScrollEvent = b;
+    }
+
 protected:
     void stopScrolling();
     void stopFling();
+    // reason is a RepaintingWhenScrollingReason value (kept as unsigned to
+    // avoid pulling StackingContext.h into this header)
+    void logSlowScrollPathIfNeeded(unsigned reason, Node* node);
 
     bool m_gotPointingDownEvent : 1;
     bool m_isScrollTarget : 1;
@@ -115,6 +135,7 @@ protected:
     bool m_inVerticalFling : 1;
     bool m_inHorizontalFling : 1;
     bool m_inAnimation : 1;
+    bool m_hasPendingScrollEvent : 1;
     float m_pointingEventX;
     float m_pointingEventY;
     uint64_t m_pointingEventTimeStamp;
@@ -126,6 +147,9 @@ protected:
     uint64_t m_flingProcessingTime;
 
     uint64_t m_lastActiveTime;
+
+    unsigned m_lastSlowScrollPathLogReason;
+    uint64_t m_lastSlowScrollPathLogTime;
 
     EventTarget* m_target;
 
