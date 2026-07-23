@@ -139,6 +139,8 @@ void MiniBrowser::parseArgs(int argc, char* argv[],
             others.timeout = std::atoi(argv[i] + strlen("--timeout="));
         } else if (strcmp(argv[i], "--prefer-isolated-thread") == 0) {
             others.preferIsolatedThread = false;
+        } else if (strcmp(argv[i], "--prefer-incremental-gc") == 0) {
+            others.preferIncrementalGC = true;
         }
     }
 }
@@ -208,7 +210,8 @@ MiniBrowser::~MiniBrowser()
     LWE::LWE::Finalize();
 }
 
-bool MiniBrowser::init(const InitOption& initOption, bool preferIsolatedThread)
+bool MiniBrowser::init(const InitOption& initOption,
+                       LWE::InitializeOption initializeOption)
 {
     // on EFL, createWindow must be called first
     // since createWindow does elm_init();
@@ -217,7 +220,7 @@ bool MiniBrowser::init(const InitOption& initOption, bool preferIsolatedThread)
     }
 
     LWE::LWE::SetVersionPreference(true);
-    LWE::LWE::Initialize(storageDir().c_str(), preferIsolatedThread);
+    LWE::LWE::Initialize(storageDir().c_str(), initializeOption);
 
     int major, minor, patch;
     LWE::LWE::GetVersion(&major, &minor, &patch);
