@@ -410,6 +410,15 @@ public:
         return m_activeScrollingSet;
     }
 
+    // CSSOM-View: scroll events fire once per "update the rendering" pass
+    // rather than inline with each offset change (see WebView::rendering()),
+    // so a fling still queues only one event per target. Element/Window
+    // insert their Scrolling here instead of dispatching immediately.
+    GCUnorderedSet<Scrolling*>& pendingScrollEventSet()
+    {
+        return m_pendingScrollEventSet;
+    }
+
     bool scrollOccurredDuringGesture() const
     {
         return m_scrollOccurredDuringGesture;
@@ -695,6 +704,7 @@ private:
 
     GCVector<EventTarget*> m_globalPointingEventListener;
     GCUnorderedSet<Scrolling*> m_activeScrollingSet;
+    GCUnorderedSet<Scrolling*> m_pendingScrollEventSet;
     Unit::Location m_lastMouseMovePoint;
 
 #if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)

@@ -1392,29 +1392,16 @@ static void elementScrollPropertyChanged(Element* element)
     scrolling->giveDamageToTarget();
 
     // CSSOM-View: scroll events fire asynchronously, not inline with each
-    // offset change. Queue at idle time, coalesce to one pending event per
-    // target, and skip the queue entirely when nothing listens (see the same
-    // pattern in Window::scrollToWithoutLayout).
+    // offset change. Queue the target on the WebView and let
+    // WebView::rendering() fire it once per rendering pass, coalescing to
+    // one pending event per target, and skip the queue entirely when nothing
+    // listens (see the same pattern in Window::scrollToWithoutLayout).
     String* eventType =
         element->starfish()->staticStrings()->m_scroll.localName();
     if (!scrolling->hasPendingScrollEvent() &&
         element->hasListenerForTypeOnPath(eventType)) {
         scrolling->setPendingScrollEvent(true);
-        element->executionContext()->webBase()->messageLoop()->addIdler(
-            element->executionContext()->globalScope(),
-            [](size_t handle, void* data) {
-                Element* el = reinterpret_cast<Element*>(data);
-                el->ensureRareElementMembers()
-                    ->ensureScrolling(el)
-                    ->setPendingScrollEvent(false);
-                String* type =
-                    el->starfish()->staticStrings()->m_scroll.localName();
-                UIEvent* e = new UIEvent(el->executionContext(), type);
-                e->setTarget(el);
-                e->setView(el->window());
-                el->dispatchEventByUA(e);
-            },
-            element);
+        element->window()->webView()->pendingScrollEventSet().insert(scrolling);
     }
 }
 

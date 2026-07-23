@@ -17,6 +17,7 @@
  *  USA
  */
 #include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/EventTarget.h"
 #include "core/dom/Scrolling.h"
 #include "core/dom/Element.h"
@@ -25,6 +26,7 @@
 #include "core/dom/MouseEvent.h"
 #include "core/dom/TouchEvent.h"
 #include "core/dom/TouchList.h"
+#include "core/dom/UIEvent.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/StackingContext.h"
@@ -436,6 +438,24 @@ void Scrolling::markAsActive()
         window->webView()->timer()->requestAnimationFrame(
             window, onAnimationFrameHandler, this);
     }
+}
+
+void Scrolling::dispatchPendingScrollEventIfNeeded()
+{
+    if (!m_hasPendingScrollEvent) {
+        return;
+    }
+    m_hasPendingScrollEvent = false;
+
+    Window* window = m_target->isWindow() ? m_target->asWindow()
+                                          : m_target->asElement()->window();
+    ExecutionContext* ec = m_target->executionContext();
+    String* type = ec->starfish()->staticStrings()->m_scroll.localName();
+    UIEvent* e = new UIEvent(ec, type);
+    e->setView(window);
+    e->setTarget(m_target->isWindow() ? (EventTarget*)window->document()
+                                      : m_target);
+    m_target->dispatchEventByUA(e);
 }
 
 static const char* repaintingWhenScrollingReasonToString(unsigned reason)
