@@ -27,26 +27,34 @@
 
 namespace Starfish {
 
+static void readableStreamBufferClear(void* obj, void* cd)
+{
+    ReadableStreamBuffer* self = reinterpret_cast<ReadableStreamBuffer*>(obj);
+    self->clearNativeResources();
+}
+
+void* ReadableStreamBuffer::operator new(size_t size)
+{
+    constexpr static GC_finalizer_closure data = { readableStreamBufferClear,
+                                                   nullptr };
+    return GC_finalized_malloc(size, &data);
+}
+
+void ReadableStreamBuffer::clearNativeResources()
+{
+    ReadableStreamChunk().swap(m_buffer);
+}
+
 ReadableStreamBuffer::ReadableStreamBuffer(size_t chunkSize)
     : m_buffer()
     , m_chunkSize(chunkSize)
     , m_type(BodyType::Empty)
     , m_mimeType(String::emptyString)
 {
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            STARFISH_ASSERT(obj != nullptr);
-            ReadableStreamBuffer* readableStreamBuffer =
-                (ReadableStreamBuffer*)obj;
-            readableStreamBuffer->~ReadableStreamBuffer();
-        },
-        NULL, NULL, NULL);
 }
 
 ReadableStreamBuffer::~ReadableStreamBuffer()
 {
-    ReadableStreamChunk().swap(m_buffer);
 }
 
 void ReadableStreamBuffer::push(const char* buffer, size_t length)

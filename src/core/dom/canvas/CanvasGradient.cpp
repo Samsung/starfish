@@ -26,19 +26,29 @@
 
 namespace Starfish {
 
+static void canvasGradientClear(void* obj, void* cd)
+{
+    CanvasGradient* self = reinterpret_cast<CanvasGradient*>(obj);
+    self->clearNativeResources();
+}
+
+void* CanvasGradient::operator new(size_t size)
+{
+    constexpr static GC_finalizer_closure data = { canvasGradientClear,
+                                                   nullptr };
+    return GC_finalized_malloc(size, &data);
+}
+
+void CanvasGradient::clearNativeResources()
+{
+    m_nativeGardient.reset();
+}
+
 CanvasGradient::CanvasGradient(ExecutionContext* executionContext)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
 {
     STARFISH_ASSERT(executionContext != nullptr);
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            STARFISH_ASSERT(obj != nullptr);
-            CanvasGradient* c = (CanvasGradient*)obj;
-            c->~CanvasGradient();
-        },
-        NULL, NULL, NULL);
 }
 
 CanvasGradient::CanvasGradient(ExecutionContext* executionContext, double x0,

@@ -36,6 +36,15 @@ public:
     ReadableStreamBuffer(size_t chunkSize = READABLE_STREAM_BUFFER_CHUNK_SIZE);
     ~ReadableStreamBuffer();
 
+    void* operator new(size_t size);
+    void clearNativeResources();
+    // Objects allocated via GC_finalized_malloc must not be freed with
+    // GC_FREE or delete. The no-op operator delete below prevents this.
+    void operator delete(void*)
+    {
+    }
+    void operator delete[](void*) = delete;
+
     size_t size()
     {
         return m_buffer.size();

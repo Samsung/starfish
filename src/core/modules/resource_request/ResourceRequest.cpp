@@ -40,6 +40,25 @@
 
 namespace Starfish {
 
+static void resourceRequestClear(void* obj, void* cd)
+{
+    ResourceRequest* self = reinterpret_cast<ResourceRequest*>(obj);
+    self->clearNativeResources();
+}
+
+void* ResourceRequest::operator new(size_t size)
+{
+    constexpr static GC_finalizer_closure data = { resourceRequestClear,
+                                                   nullptr };
+    return GC_finalized_malloc(size, &data);
+}
+
+void ResourceRequest::clearNativeResources()
+{
+    std::string().swap(m_lastLocation);
+    std::string().swap(m_lastEffectiveURL);
+}
+
 class ActiveResourceRequestTracker : public ResourceRequestClient {
 public:
     virtual void onProgressEvent(ResourceRequest* request,
@@ -109,17 +128,6 @@ ResourceRequest::ResourceRequest(ExecutionContext* executionContext)
     , m_abortRequestState(AbortRequestType::NoPendingRequest)
     , m_requestError(RequestErrorType::NoError)
 {
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            // STARFISH_LOG_INFO("ResourceRequest::~ResourceRequest
-            // %p", obj);
-            ResourceRequest* nr = (ResourceRequest*)obj;
-            std::string().swap(nr->m_lastLocation);
-            std::string().swap(nr->m_lastEffectiveURL);
-        },
-        NULL, NULL, NULL);
-
     initVariables();
     addResourceRequestClient(new ActiveResourceRequestTracker());
 }

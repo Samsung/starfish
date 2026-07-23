@@ -36,6 +36,15 @@ public:
 
     HeadersData();
 
+    void* operator new(size_t size);
+    void clearNativeResources();
+    // Objects allocated via GC_finalized_malloc must not be freed with
+    // GC_FREE or delete. The no-op operator delete below prevents this.
+    void operator delete(void*)
+    {
+    }
+    void operator delete[](void*) = delete;
+
     void append(String* name, String* value, bool* typeErrorOccurred = nullptr);
     void deleteHeader(String* name, bool* typeErrorOccurred = nullptr);
     Optional<String*> get(String* name, bool* typeErrorOccurred = nullptr);

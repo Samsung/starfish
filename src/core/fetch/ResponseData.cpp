@@ -22,6 +22,23 @@
 
 namespace Starfish {
 
+static void responseDataClear(void* obj, void* cd)
+{
+    ResponseData* self = reinterpret_cast<ResponseData*>(obj);
+    self->clearNativeResources();
+}
+
+void* ResponseData::operator new(size_t size)
+{
+    constexpr static GC_finalizer_closure data = { responseDataClear, nullptr };
+    return GC_finalized_malloc(size, &data);
+}
+
+void ResponseData::clearNativeResources()
+{
+    ResponseBody().swap(m_responseBody);
+}
+
 // https://fetch.spec.whatwg.org/#responses
 ResponseData::ResponseData()
     : m_type(ResponseType::Default)
@@ -34,13 +51,6 @@ ResponseData::ResponseData()
     , m_responseBody()
     , m_corsExposedHeaderNameList()
 {
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            ResponseData* res = (ResponseData*)obj;
-            ResponseBody().swap(res->m_responseBody);
-        },
-        NULL, NULL, NULL);
 }
 
 String* ResponseData::reponseTypeString(ResponseType type)
