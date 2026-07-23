@@ -31,6 +31,23 @@
 
 namespace Starfish {
 
+static void headersDataClear(void* obj, void* cd)
+{
+    HeadersData* self = reinterpret_cast<HeadersData*>(obj);
+    self->clearNativeResources();
+}
+
+void* HeadersData::operator new(size_t size)
+{
+    constexpr static GC_finalizer_closure data = { headersDataClear, nullptr };
+    return GC_finalized_malloc(size, &data);
+}
+
+void HeadersData::clearNativeResources()
+{
+    m_httpHeaderMap.clear();
+}
+
 // https://tools.ietf.org/html/rfc2616#section-2.2
 bool HeadersData::isValidHTTPToken(const String* name)
 {
@@ -101,13 +118,6 @@ bool HeadersData::isForbiddenHeaderName(const String* name)
 HeadersData::HeadersData()
     : m_guard(Guard::None)
 {
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            HeadersData* headersData = (HeadersData*)obj;
-            headersData->m_httpHeaderMap.~HTTPHeaderMap();
-        },
-        NULL, NULL, NULL);
 }
 
 void HeadersData::append(String* name, String* value, bool* typeErrorOccurred)
