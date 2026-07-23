@@ -43,6 +43,42 @@ using LWEDelegateRef = std::unique_ptr<void, std::function<void(void*)>>;
 namespace LWE {
 
 /**
+ * \brief Initialize option bit-flags that can be combined with the | operator.
+ *
+ * Pass to LWE::Initialize to prefer specific runtime behaviors.
+ */
+enum class InitializeOption : uint32_t {
+    None = 0,
+    /**
+     * \brief Prefer running LWE on a separate thread instead of the process
+     * main thread. Some backends (e.g., flutter, uv_cairo_gl) always use a
+     * separate thread regardless of this flag.
+     */
+    PreferSeparateThread = 1 << 0,
+    /**
+     * \brief Prefer using incremental garbage collection if the GC supports it.
+     */
+    PreferIncrementalGC = 1 << 1,
+};
+
+inline InitializeOption operator|(InitializeOption a, InitializeOption b)
+{
+    return static_cast<InitializeOption>(static_cast<uint32_t>(a) |
+                                         static_cast<uint32_t>(b));
+}
+
+inline InitializeOption operator&(InitializeOption a, InitializeOption b)
+{
+    return static_cast<InitializeOption>(static_cast<uint32_t>(a) &
+                                         static_cast<uint32_t>(b));
+}
+
+inline InitializeOption operator~(InitializeOption a)
+{
+    return static_cast<InitializeOption>(~static_cast<uint32_t>(a));
+}
+
+/**
  * \brief Perform initialization or cleanup of lightweight web engine.
  */
 class LWE_EXPORT LWE {
@@ -64,23 +100,29 @@ public:
      * function before using WebContainer or WebView
      *
      * \code{.cpp}
-     *     // Prefer main thread (default behavior)
-     *     LWE::LWE::Initialize("/tmp/Starfish_storage", true);
+     *     // Default: prefer main thread, no incremental GC
+     *     LWE::LWE::Initialize("/tmp/Starfish_storage");
      *
      *     // Prefer separate thread (may be ignored by some backends)
-     *     LWE::LWE::Initialize("/tmp/Starfish_storage", false);
+     *     LWE::LWE::Initialize("/tmp/Starfish_storage",
+     *         LWE::InitializeOption::PreferSeparateThread);
+     *
+     *     // Combine options with the | operator
+     *     LWE::LWE::Initialize("/tmp/Starfish_storage",
+     *         LWE::InitializeOption::PreferSeparateThread |
+     *         LWE::InitializeOption::PreferIncrementalGC);
      * \endcode
      *
      * \param storageDirectoryPath Directory path for storage.
      *
-     * \param preferMainThread If true, LWE prefers to run on the process main
-     * thread. If false, LWE prefers to use a separate thread. Default is true
-     * (prefer main thread). Note: Some backends (e.g., flutter, uv_cairo_gl)
-     * always use a separate thread regardless of this parameter.
+     * \param option Bit-flag combination of InitializeOption values.
+     * Default is InitializeOption::None (prefer main thread, no incremental
+     * GC). Note: Some backends (e.g., flutter, uv_cairo_gl) always use a
+     * separate thread regardless of the PreferSeparateThread flag.
      *
      */
     static void Initialize(const char* storageDirectoryPath,
-                           bool preferMainThread = true);
+                           InitializeOption option = InitializeOption::None);
 
     /**
      * \brief Returns the initialization status of lightweight web engine.

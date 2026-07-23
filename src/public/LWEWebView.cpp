@@ -65,17 +65,18 @@ void LWE::SetVersionPreference(bool preferUpdatedVersion)
     // Supported only when using a loader.
 }
 
-void LWE::Initialize(const char* storageDirectoryPath, bool preferMainThread)
+void LWE::Initialize(const char* storageDirectoryPath, InitializeOption option)
 {
     STARFISH_API_RECORD_INIT();
+    uint32_t optionBits = static_cast<uint32_t>(option);
 #ifdef STARFISH_API_ENABLE_LOADER
     if (!LWEDelegateLoader::getInstance()->load()) {
         LWE_ASSERT(false);
     }
     LWEDelegateLoader::getSafeInstance()->kLWEProcTable.Initialize(
-        storageDirectoryPath, preferMainThread);
+        storageDirectoryPath, optionBits);
 #else
-    LWEDelegate::LWE::Initialize(storageDirectoryPath, preferMainThread);
+    LWEDelegate::LWE::Initialize(storageDirectoryPath, optionBits);
 #endif
 }
 

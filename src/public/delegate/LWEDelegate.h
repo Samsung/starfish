@@ -21,11 +21,18 @@
 
 #include "LWEDelegateConfig.h"
 
+#include <cstdint>
+
 namespace LWEDelegate {
+
+// Initialize option bit flags (must match LWE::InitializeOption in
+// LWEWebView.h)
+constexpr uint32_t kInitializeOptionPreferSeparateThread = 1 << 0;
+constexpr uint32_t kInitializeOptionPreferIncrementalGC = 1 << 1;
+
 class EXPORT_UNMANAGED_API LWE {
 public:
-    static void Initialize(const char* storageDirectoryPath,
-                           bool preferMainThread);
+    static void Initialize(const char* storageDirectoryPath, uint32_t option);
 
     static bool IsInitialized();
 
@@ -44,8 +51,8 @@ public:
 
 // C wrappers used for dlopen/dlsym.
 extern "C" {
-void EXPORT_UNMANAGED_API LWEDelegate_LWE_Initialize(
-    const char* storageDirectoryPath, bool useMainThread);
+void EXPORT_UNMANAGED_API
+LWEDelegate_LWE_Initialize(const char* storageDirectoryPath, uint32_t option);
 
 bool EXPORT_UNMANAGED_API LWEDelegate_LWE_IsInitialized();
 
@@ -61,7 +68,7 @@ void EXPORT_UNMANAGED_API LWEDelegate_LWE_GetVersion(int* major, int* minor,
 bool EXPORT_UNMANAGED_API LWEDelegate_LWE_IsUsingSeparateThread();
 
 typedef struct {
-    void (*Initialize)(const char*, bool);
+    void (*Initialize)(const char*, uint32_t);
     bool (*IsInitialized)();
     void (*Finalize)();
     unsigned char (*GetGCFrequency)();

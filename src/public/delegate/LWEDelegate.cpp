@@ -50,16 +50,22 @@ static void StarfishGCMemoryLogger(void* data)
                       GC_get_heap_size() / 1024.f / 1024.f);
 }
 
-void LWE::Initialize(const char* storageDirectoryPath, bool preferMainThread)
+void LWE::Initialize(const char* storageDirectoryPath, uint32_t option)
 {
     STARFISH_RELEASE_ASSERT(!IsInitialized());
 
     std::string backend = STARFISH_BACKEND_STR;
-    // preferMainThread=true (default) means prefer main thread
-    // (isThreadMode=false) preferMainThread=false means prefer separate thread
-    // (isThreadMode=true) Note: Some backends ignore this preference and always
-    // use thread mode
-    bool isThreadMode = !preferMainThread;
+    // Extract thread mode from option flags.
+    // If PreferSeparateThread is set, use a separate thread; otherwise prefer
+    // the process main thread. Note: Some backends ignore this preference and
+    // always use thread mode.
+    bool isThreadMode = option & kInitializeOptionPreferSeparateThread;
+    // Apply PreferIncrementalGC
+    if (option & kInitializeOptionPreferIncrementalGC) {
+#if defined(OS_POSIX)
+        setenv("GC_ENABLE_INCREMENTAL", "1", 1);
+#endif
+    }
     Starfish::StarfishRendererType rendererType =
         Starfish::StarfishRendererType::kOpenGL;
     if (backend == "uv_cairo_gl" || backend == "flutter" ||
@@ -170,11 +176,11 @@ bool LWE::IsUsingSeparateThread()
 } // namespace LWEDelegate
 
 extern "C" {
-void EXPORT_UNMANAGED_API LWEDelegate_LWE_Initialize(
-    const char* storageDirectoryPath, bool preferMainThread)
+void EXPORT_UNMANAGED_API
+LWEDelegate_LWE_Initialize(const char* storageDirectoryPath, uint32_t option)
 
 {
-    LWEDelegate::LWE::Initialize(storageDirectoryPath, preferMainThread);
+    LWEDelegate::LWE::Initialize(storageDirectoryPath, option);
 }
 
 bool EXPORT_UNMANAGED_API LWEDelegate_LWE_IsInitialized()
