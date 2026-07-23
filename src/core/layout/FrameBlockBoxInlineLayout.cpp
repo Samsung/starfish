@@ -5085,6 +5085,26 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
                     radiusOffset *= 2;
                 }
 
+                if (shadow->radius() <= 1) {
+                    // Fast path: blur radius is negligible (<= 1px), so
+                    // draw the shadow text directly on the canvas without
+                    // allocating an offscreen image buffer.
+                    canvas->save();
+                    auto tdc = canvas->textDecorationData();
+                    if (shadow->hasColor()) {
+                        canvas->setFillColor(shadow->color());
+                        tdc.setUnderLineColor(shadow->color());
+                        tdc.setLineThroughColor(shadow->color());
+                    } else {
+                        canvas->setFillColor(s->color());
+                    }
+                    canvas->setTextDecorationData(tdc);
+                    canvas->translate(shadow->offsetX(), shadow->offsetY());
+                    canvas->drawText(0, 0, contentWidth(), txt);
+                    canvas->restore();
+                    continue;
+                }
+
                 auto imageWidth = width + ceil(radiusOffset);
                 auto imageHeight = height + ceil(radiusOffset);
                 NativeImageData* nativeImage = BufferedNativeImageData::create(
@@ -5105,11 +5125,9 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
                 cv->drawText(0, 0, contentWidth(), txt);
                 delete cv;
 
-                if (shadow->radius() > 0) {
-                    ShadowBlur sb(nativeImage->data(), nativeImage->width(),
-                                  nativeImage->height(), nativeImage->stride());
-                    sb.process(shadow->radius() / 2 * dp);
-                }
+                ShadowBlur sb(nativeImage->data(), nativeImage->width(),
+                              nativeImage->height(), nativeImage->stride());
+                sb.process(shadow->radius() / 2 * dp);
 
                 Unit::Rect rect(0, 0, imageWidth, imageHeight);
                 float offset = ceil(radiusOffset / 2);
