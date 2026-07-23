@@ -616,6 +616,21 @@ void BrowsingContext::dispose()
         }
     }
 
+    // A scroll that happened just before this context is torn down (e.g. on
+    // navigation) may still be queued for its next WebView::rendering() pass
+    // (see Scrolling::dispatchPendingScrollEventIfNeeded); drop it so a
+    // detached document doesn't get a stale "scroll" event.
+    auto& pendingScrollEventSet = webView()->pendingScrollEventSet();
+    auto pendingScrollIter = pendingScrollEventSet.begin();
+    while (pendingScrollIter != pendingScrollEventSet.end()) {
+        if ((*pendingScrollIter)->target()->executionContext()->document() ==
+            document()) {
+            pendingScrollIter = pendingScrollEventSet.erase(pendingScrollIter);
+        } else {
+            pendingScrollIter++;
+        }
+    }
+
     webView()->timer()->clear(m_window);
 
     if (m_window) {

@@ -472,6 +472,7 @@ void* WebView::operator new(size_t size)
         GC_set_bit(desc,
                    GC_WORD_OFFSET(WebView, m_globalPointingEventListener));
         markHashTable(desc, GC_WORD_OFFSET(WebView, m_activeScrollingSet));
+        markHashTable(desc, GC_WORD_OFFSET(WebView, m_pendingScrollEventSet));
 
 #if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
         GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_imageDecodeThreadPool));
@@ -881,6 +882,7 @@ void WebView::navigateCrossDocument(ResourceURL* url, HistoryManagerAction type,
     m_repaintRegionInRendering.clear();
     m_globalPointingEventListener.clear();
     GCUnorderedSet<Scrolling*>().swap(m_activeScrollingSet);
+    GCUnorderedSet<Scrolling*>().swap(m_pendingScrollEventSet);
     m_repaintRegionTrackerContext.clear();
     m_stackingContextsNeedsGraphicsBuffer.clear();
     PrevDrawnStackingContextInfoMap().swap(m_prevDrawnStackingContextInfo);
@@ -1477,6 +1479,23 @@ RenderResult WebView::rendering(bool force)
     ANNOTATE_SETUP;
     ANNOTATE_CHANNEL_COLOR(3001, ANNOTATE_BLUE, "WebView::rendering");
     INSTALL_PROFILE_TIMER("WebView::rendering");
+
+    if (m_pendingScrollEventSet.size()) {
+        // CSSOM-View: run the scroll steps (fire each pending target's
+        // queued "scroll" event) as part of "update the rendering", before
+        // the resize/rAF steps and layout below. Copy out first: a scroll
+        // handler here may itself change scrollTop and re-queue a target.
+        MicroTaskExecutionManager microTaskExecutionManager(
+            m_scriptEngineInstance);
+        GCVector<Scrolling*> pendingScrollEventTargets;
+        for (auto scrolling : m_pendingScrollEventSet) {
+            pendingScrollEventTargets.push_back(scrolling);
+        }
+        m_pendingScrollEventSet.clear();
+        for (auto scrolling : pendingScrollEventTargets) {
+            scrolling->dispatchPendingScrollEventIfNeeded();
+        }
+    }
 
     {
         auto rafHandlers = std::move(timer()->m_requestAnimationFrameHandler);

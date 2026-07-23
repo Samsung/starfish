@@ -117,6 +117,11 @@ public:
         m_hasPendingScrollEvent = b;
     }
 
+    // Fires this target's queued "scroll" event, if one is pending, and
+    // clears the pending flag. Called from WebView::rendering() for every
+    // Scrolling in WebView::pendingScrollEventSet() once per rendering pass.
+    void dispatchPendingScrollEventIfNeeded();
+
 protected:
     void stopScrolling();
     void stopFling();
