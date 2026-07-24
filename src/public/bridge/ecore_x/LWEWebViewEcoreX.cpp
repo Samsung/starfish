@@ -326,7 +326,7 @@ public:
         });
 
         setKeyCallback([this](int key, int isKeyDown) {
-            LWE::KeyValue keyValue = static_cast<LWE::KeyValue>(key);
+            ::LWE::KeyValue keyValue = static_cast<::LWE::KeyValue>(key);
             if (isKeyDown) {
                 m_webContainer->DispatchKeyDownEvent(keyValue);
                 m_webContainer->DispatchKeyPressEvent(keyValue);
@@ -536,62 +536,62 @@ public:
                 }
 
                 if (win->m_keyCallback && keyEvent->keyname) {
-                    LWE::KeyValue keyValue = LWE::UnidentifiedKey;
+                    ::LWE::KeyValue keyValue = ::LWE::UnidentifiedKey;
                     const char* keyname = keyEvent->keyname;
 
                     if (strcmp(keyname, "Left") == 0) {
-                        keyValue = LWE::ArrowLeftKey;
+                        keyValue = ::LWE::ArrowLeftKey;
                     } else if (strcmp(keyname, "Up") == 0) {
-                        keyValue = LWE::ArrowUpKey;
+                        keyValue = ::LWE::ArrowUpKey;
                     } else if (strcmp(keyname, "Right") == 0) {
-                        keyValue = LWE::ArrowRightKey;
+                        keyValue = ::LWE::ArrowRightKey;
                     } else if (strcmp(keyname, "Down") == 0) {
-                        keyValue = LWE::ArrowDownKey;
+                        keyValue = ::LWE::ArrowDownKey;
                     } else if (strcmp(keyname, "Return") == 0) {
-                        keyValue = LWE::EnterKey;
+                        keyValue = ::LWE::EnterKey;
                     } else if (strcmp(keyname, "Escape") == 0) {
-                        keyValue = LWE::EscapeKey;
+                        keyValue = ::LWE::EscapeKey;
                     } else if (strcmp(keyname, "BackSpace") == 0) {
-                        keyValue = LWE::BackspaceKey;
+                        keyValue = ::LWE::BackspaceKey;
                     } else if (strcmp(keyname, "Tab") == 0) {
-                        keyValue = LWE::TabKey;
+                        keyValue = ::LWE::TabKey;
                     } else if (strcmp(keyname, "Delete") == 0) {
-                        keyValue = LWE::DeleteKey;
+                        keyValue = ::LWE::DeleteKey;
                     } else if (strcmp(keyname, "Home") == 0) {
-                        keyValue = LWE::HomeKey;
+                        keyValue = ::LWE::HomeKey;
                     } else if (strcmp(keyname, "End") == 0) {
-                        keyValue = LWE::EndKey;
+                        keyValue = ::LWE::EndKey;
                     } else if (strcmp(keyname, "Page_Up") == 0) {
-                        keyValue = LWE::PageUpKey;
+                        keyValue = ::LWE::PageUpKey;
                     } else if (strcmp(keyname, "Page_Down") == 0) {
-                        keyValue = LWE::PageDownKey;
+                        keyValue = ::LWE::PageDownKey;
                     } else if (strcmp(keyname, "Insert") == 0) {
-                        keyValue = LWE::InsertKey;
+                        keyValue = ::LWE::InsertKey;
                     } else if (strlen(keyname) == 1) {
                         unsigned char c = keyname[0];
                         if (c >= 'A' && c <= 'Z') {
-                            keyValue = static_cast<LWE::KeyValue>(
-                                static_cast<int>(LWE::AKey) + (c - 'A'));
+                            keyValue = static_cast<::LWE::KeyValue>(
+                                static_cast<int>(::LWE::AKey) + (c - 'A'));
                         } else if (c >= 'a' && c <= 'z') {
-                            keyValue = static_cast<LWE::KeyValue>(
-                                static_cast<int>(LWE::LowerAKey) + (c - 'a'));
+                            keyValue = static_cast<::LWE::KeyValue>(
+                                static_cast<int>(::LWE::LowerAKey) + (c - 'a'));
                         } else if (c >= '0' && c <= '9') {
-                            keyValue = static_cast<LWE::KeyValue>(
-                                static_cast<int>(LWE::Digit0Key) + (c - '0'));
+                            keyValue = static_cast<::LWE::KeyValue>(
+                                static_cast<int>(::LWE::Digit0Key) + (c - '0'));
                         } else if (c == ' ') {
-                            keyValue = LWE::SpaceKey;
+                            keyValue = ::LWE::SpaceKey;
                         } else {
-                            keyValue = static_cast<LWE::KeyValue>(c);
+                            keyValue = static_cast<::LWE::KeyValue>(c);
                         }
                     } else if (strncmp(keyname, "F", 1) == 0 &&
                                strlen(keyname) <= 3) {
                         int fnum = atoi(keyname + 1);
                         if (fnum >= 1 && fnum <= 12) {
-                            keyValue = static_cast<LWE::KeyValue>(
-                                static_cast<int>(LWE::F1Key) + (fnum - 1));
+                            keyValue = static_cast<::LWE::KeyValue>(
+                                static_cast<int>(::LWE::F1Key) + (fnum - 1));
                         }
                     } else {
-                        keyValue = LWE::UnidentifiedKey;
+                        keyValue = ::LWE::UnidentifiedKey;
                     }
 
                     win->m_keyCallback(static_cast<int>(keyValue), 1);
@@ -608,62 +608,62 @@ public:
                     static_cast<Ecore_Event_Key*>(event);
 
                 if (win->m_keyCallback && keyEvent->keyname) {
-                    LWE::KeyValue keyValue = LWE::UnidentifiedKey;
+                    ::LWE::KeyValue keyValue = ::LWE::UnidentifiedKey;
                     const char* keyname = keyEvent->keyname;
 
                     if (strcmp(keyname, "Left") == 0) {
-                        keyValue = LWE::ArrowLeftKey;
+                        keyValue = ::LWE::ArrowLeftKey;
                     } else if (strcmp(keyname, "Up") == 0) {
-                        keyValue = LWE::ArrowUpKey;
+                        keyValue = ::LWE::ArrowUpKey;
                     } else if (strcmp(keyname, "Right") == 0) {
-                        keyValue = LWE::ArrowRightKey;
+                        keyValue = ::LWE::ArrowRightKey;
                     } else if (strcmp(keyname, "Down") == 0) {
-                        keyValue = LWE::ArrowDownKey;
+                        keyValue = ::LWE::ArrowDownKey;
                     } else if (strcmp(keyname, "Return") == 0) {
-                        keyValue = LWE::EnterKey;
+                        keyValue = ::LWE::EnterKey;
                     } else if (strcmp(keyname, "Escape") == 0) {
-                        keyValue = LWE::EscapeKey;
+                        keyValue = ::LWE::EscapeKey;
                     } else if (strcmp(keyname, "BackSpace") == 0) {
-                        keyValue = LWE::BackspaceKey;
+                        keyValue = ::LWE::BackspaceKey;
                     } else if (strcmp(keyname, "Tab") == 0) {
-                        keyValue = LWE::TabKey;
+                        keyValue = ::LWE::TabKey;
                     } else if (strcmp(keyname, "Delete") == 0) {
-                        keyValue = LWE::DeleteKey;
+                        keyValue = ::LWE::DeleteKey;
                     } else if (strcmp(keyname, "Home") == 0) {
-                        keyValue = LWE::HomeKey;
+                        keyValue = ::LWE::HomeKey;
                     } else if (strcmp(keyname, "End") == 0) {
-                        keyValue = LWE::EndKey;
+                        keyValue = ::LWE::EndKey;
                     } else if (strcmp(keyname, "Page_Up") == 0) {
-                        keyValue = LWE::PageUpKey;
+                        keyValue = ::LWE::PageUpKey;
                     } else if (strcmp(keyname, "Page_Down") == 0) {
-                        keyValue = LWE::PageDownKey;
+                        keyValue = ::LWE::PageDownKey;
                     } else if (strcmp(keyname, "Insert") == 0) {
-                        keyValue = LWE::InsertKey;
+                        keyValue = ::LWE::InsertKey;
                     } else if (strlen(keyname) == 1) {
                         unsigned char c = keyname[0];
                         if (c >= 'A' && c <= 'Z') {
-                            keyValue = static_cast<LWE::KeyValue>(
-                                static_cast<int>(LWE::AKey) + (c - 'A'));
+                            keyValue = static_cast<::LWE::KeyValue>(
+                                static_cast<int>(::LWE::AKey) + (c - 'A'));
                         } else if (c >= 'a' && c <= 'z') {
-                            keyValue = static_cast<LWE::KeyValue>(
-                                static_cast<int>(LWE::LowerAKey) + (c - 'a'));
+                            keyValue = static_cast<::LWE::KeyValue>(
+                                static_cast<int>(::LWE::LowerAKey) + (c - 'a'));
                         } else if (c >= '0' && c <= '9') {
-                            keyValue = static_cast<LWE::KeyValue>(
-                                static_cast<int>(LWE::Digit0Key) + (c - '0'));
+                            keyValue = static_cast<::LWE::KeyValue>(
+                                static_cast<int>(::LWE::Digit0Key) + (c - '0'));
                         } else if (c == ' ') {
-                            keyValue = LWE::SpaceKey;
+                            keyValue = ::LWE::SpaceKey;
                         } else {
-                            keyValue = static_cast<LWE::KeyValue>(c);
+                            keyValue = static_cast<::LWE::KeyValue>(c);
                         }
                     } else if (strncmp(keyname, "F", 1) == 0 &&
                                strlen(keyname) <= 3) {
                         int fnum = atoi(keyname + 1);
                         if (fnum >= 1 && fnum <= 12) {
-                            keyValue = static_cast<LWE::KeyValue>(
-                                static_cast<int>(LWE::F1Key) + (fnum - 1));
+                            keyValue = static_cast<::LWE::KeyValue>(
+                                static_cast<int>(::LWE::F1Key) + (fnum - 1));
                         }
                     } else {
-                        keyValue = LWE::UnidentifiedKey;
+                        keyValue = ::LWE::UnidentifiedKey;
                     }
 
                     win->m_keyCallback(static_cast<int>(keyValue), 0);
