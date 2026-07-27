@@ -915,6 +915,7 @@ test/cairo/internal-test/selector/is_where.html
 test/cairo/internal-test/selector/not_host_complex.html
 test/cairo/internal-test/shadowdom/adopted_host_update.html
 test/cairo/internal-test/shadowdom/adopted_host_cross_tree.html
+test/cairo/internal-test/shadowdom/slotted_basic.html
 test/cairo/internal-test/shadowdom/inherit_style_from_shadow-host.html
 test/cairo/internal-test/shadowdom/shadowdom.html
 test/cairo/internal-test/shadowdom/shadowdom2.html

@@ -46,6 +46,7 @@
 #include "core/dom/HTMLStyleElement.h"
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/HTMLOptionElement.h"
+#include "core/dom/HTMLSlotElement.h"
 #include "core/dom/Text.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/ShadowRoot.h"
@@ -792,6 +793,12 @@ String* CSSSelectorList::selectorText(CSSSelectorList* list, unsigned idx,
         } else if (cs->type() == CSSSelector::PseudoElement) {
             str.appendString("::");
             str.appendString(cs->selectorText().string());
+            CSSPseudoSelector* pcs = cs->asCSSPseudoSelector();
+            if (pcs->pseudoType() == CSSSelector::PseudoSlotted) {
+                STARFISH_ASSERT(pcs->selectorArguments().size() == 1);
+                str.appendString(pcs->selectorArguments()[0]->selectorText());
+                str.appendChar(')');
+            }
         } else if (cs->isAttributeSelector()) {
             CSSAttributeSelector* acs = cs->asCSSAttributeSelector();
             str.appendChar('[');
@@ -914,6 +921,12 @@ bool CSSSelector::isPseudoClassHostFamilySelector()
             m_pseudotype == CSSSelector::PseudoType::PseudoHostFunction);
 }
 
+bool CSSSelector::isSlottedSelector()
+{
+    return m_type == CSSSelector::Type::PseudoElement &&
+           m_pseudotype == CSSSelector::PseudoType::PseudoSlotted;
+}
+
 bool CSSPseudoSelector::matchNth(int count)
 {
     if (!nthAValue()) {
@@ -999,11 +1012,11 @@ void CSSPseudoSelector::updatePseudoType(Starfish* starfish, AtomicString name,
     */
     case PseudoSelection:
     case PseudoSpellingError:
+    case PseudoSlotted:
         /*
             case PseudoWebKitCustomElement:
             case PseudoContent:
             case PseudoShadow:
-            case PseudoSlotted:
         */
         if (type() != PseudoElement) {
             m_pseudotype = PseudoNone;
@@ -2683,6 +2696,7 @@ StyleResolver::StyleResolver(Document* document, ShadowRoot* ownerShadowRoot)
     , m_usesFirstLineRule(false)
     , m_needsRecalcRuleSet(true)
     , m_hasSimplePseudoClassHostSelector(false)
+    , m_hasSlottedSelector(false)
     , m_mediumFontSize(document->webView()->defaultFontSize())
     , m_ownerShadowRoot(ownerShadowRoot)
     , m_mediaQueryEvaluator(nullptr)
@@ -8136,6 +8150,45 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
         }
     }
 
+    // Match ::slotted() rules promoted from shadow resolvers -- the mirror
+    // image of the :host block above. `element` here is a slotted light-DOM
+    // node (styled by this, the document resolver -- see Node::styleResolver);
+    // its origin shadow tree is found via its assigned slot, and only rules
+    // promoted from that same tree apply.
+    if (UNLIKELY(m_hasSlottedSelector) && element->isSlotted()) {
+        Optional<HTMLSlotElement*> slot = element->assignedSlotInternal();
+        if (slot) {
+            Element* slotHost = slot.value()->parentShadowRoot()->host();
+            for (size_t i = 0; i < m_slottedScopedRules.size(); i++) {
+                const SlottedScopedRule& ssr = m_slottedScopedRules[i];
+                if (ssr.host != slotHost) {
+                    continue;
+                }
+                MatchResult ssrResult(slotHost); // scope = origin host
+                if (matchSelector(element, elementName, elementId,
+                                  elementClasses, ssr.rule->selectorList(), 0,
+                                  ssrResult) == Match::SelectorMatches) {
+                    matchedRules.push_back(std::make_pair(ssr.rule, ssr.url));
+                }
+                // Propagate damage-source flags so that attribute/class/state
+                // changes affecting ::slotted()'s argument or an ancestor
+                // combinator correctly invalidate the cache, mirroring the
+                // :host block above.
+                if (ssrResult.seenCombinator) {
+                    ret->setStyleDamageSource(ssrResult.styleDamageFrom);
+                } else {
+                    ret->setStyleDamageSource(
+                        (StyleDamageSource)(ssrResult.styleDamageFrom &
+                                            ~StyleDamageFromDOMTree));
+                }
+                ret->setStyleDamageSourceNodeStateMap(
+                    ssrResult.styleDamageSourceNodeStateMap);
+                ret->setStyleDamageSourceNodeStateDOMTreeMap(
+                    ssrResult.styleDamageSourceNodeStateDOMTreeMap);
+            }
+        }
+    }
+
     auto begin = &matchedRules[0];
     auto end = matchedRules.data() + matchedRules.size();
 
@@ -8306,6 +8359,21 @@ StyleResolver::Match StyleResolver::matchForRelation(
                 return nullptr;
             }
             return element->renderingParentElement();
+        };
+    } else if (UNLIKELY(selectorList[0].m_selector->isSlottedSelector())) {
+        // ::slotted()'s preceding combinators (e.g. ".mydiv ::slotted(*)")
+        // match ancestors of the <slot> the subject was assigned to, inside
+        // the shadow tree -- not the subject's own light-DOM ancestors. The
+        // first hop crosses from the slotted subject to its <slot>; once
+        // inside the shadow tree, subsequent hops are plain ancestor walks
+        // (the slot and ".mydiv" are connected via ordinary parentElement()).
+        nextParentElement = [](Element* element) -> Element* {
+            if (element->isSlotted()) {
+                Optional<HTMLSlotElement*> slot =
+                    element->assignedSlotInternal();
+                return slot ? slot.value() : nullptr;
+            }
+            return element->parentElement();
         };
     }
 
@@ -8965,6 +9033,27 @@ bool StyleResolver::checkPseudoElement(Element* element,
     case CSSSelector::PseudoType::PseudoAfter:
         result.pseudoType = PseudoElementType::PseudoElementAfter;
         return true;
+    case CSSSelector::PseudoType::PseudoSlotted: {
+        // ::slotted() matches the element itself (not a generated box, so
+        // result.pseudoType stays PseudoElementNone) against its single
+        // compound-selector argument. Whether `element` is actually slotted
+        // into the rule's origin shadow tree was already established by the
+        // caller (the ::slotted block in matchAllRules, keyed by origin
+        // host via result.scope) -- this only checks the argument itself.
+        STARFISH_ASSERT(selector->selectorArguments().size() == 1);
+        result.styleDamageFrom = StyleDamageFromAll;
+        AtomicString elementName = element->name().localNameAtomic();
+        AtomicString elementId = element->atomicId();
+        const GCAtomicTightVector<AtomicString>& elementClasses =
+            element->classNames();
+        MatchResult sub(result.scope);
+        Match m = matchSelector(element, elementName, elementId, elementClasses,
+                                *selector->selectorArguments()[0], 0, sub);
+        result.styleDamageFrom =
+            (StyleDamageSource)(result.styleDamageFrom | sub.styleDamageFrom);
+        result.seenCombinator = result.seenCombinator || sub.seenCombinator;
+        return m == Match::SelectorMatches;
+    }
     default:
         STARFISH_UNSUPPORTED("css pseudo-element: %d", selector->pseudoType());
         return false;
@@ -10071,8 +10160,9 @@ void StyleResolver::removeAllRules()
     m_ruleSet->clear();
     m_ruleSetAttrFilter.clear();
     m_hostScopedRules.clear();
+    m_slottedScopedRules.clear();
 
-    if (m_hasSimplePseudoClassHostSelector) {
+    if (m_hasSimplePseudoClassHostSelector || m_hasSlottedSelector) {
         Traverse::traverseIncludingShadowDOM(document(), [](Node* node) {
             if (node->isShadowRoot()) {
                 node->asShadowRoot()->styleResolver().setNeedsRecalcRuleSet();
@@ -10080,6 +10170,7 @@ void StyleResolver::removeAllRules()
         });
     }
     m_hasSimplePseudoClassHostSelector = false;
+    m_hasSlottedSelector = false;
 
     resetNextRuleSetOrder();
 }
@@ -10411,12 +10502,19 @@ void StyleResolver::addToRuleSet(CSSStyleSheet* sheet)
         // matching can be restricted to the correct shadow tree.
         // A shadow resolver is identified by isShadowResolver() (i.e. it was
         // created for a ShadowRoot rather than the document).
+        // ::slotted() rules are the mirror image: also promoted to the
+        // document resolver (its subject is a slotted light-DOM element that
+        // the document resolver styles), keyed by the same origin host.
         if (UNLIKELY(rule->isSimplePseudoClassHostSelector() &&
                      isShadowResolver())) {
             m_document->styleResolver().addHostScopedRule(
                 sheet->styleRules()[j], ownerHost());
             m_document->styleResolver().m_hasSimplePseudoClassHostSelector =
                 true;
+        } else if (UNLIKELY(rule->hasSlottedSelector() && isShadowResolver())) {
+            m_document->styleResolver().addSlottedScopedRule(
+                sheet->styleRules()[j], ownerHost());
+            m_document->styleResolver().m_hasSlottedSelector = true;
         } else {
             addToRuleSet(sheet->styleRules()[j]);
         }
@@ -10489,6 +10587,44 @@ void StyleResolver::addHostScopedRule(std::pair<StyleRule*, ResourceURL*> rule,
     rule.first->setOrder(order);
     m_hostScopedRules.push_back(
         HostScopedRule{ rule.first, rule.second, host });
+}
+
+void StyleResolver::addSlottedScopedRule(
+    std::pair<StyleRule*, ResourceURL*> rule, Element* host)
+{
+    rule.first->initFlagsRelatedWithSelectorList();
+
+    // Register any attribute selectors inside the rule (including inside
+    // ::slotted()'s argument) in the attr filter so that attribute mutations
+    // on a slotted element correctly trigger a restyle. Mirrors
+    // addHostScopedRule, generalized to also cover the PseudoElement
+    // (::slotted) case since its argument can itself carry attribute
+    // selectors (e.g. ::slotted([disabled])).
+    auto selectorList = rule.first->selectorList();
+    size_t size = selectorList.size();
+    for (size_t i = 0; i < size; i++) {
+        CSSSelector* selector = selectorList[i].m_selector;
+        if (selector->isAttributeSelector()) {
+            if (!mayHaveAttrSelectorWithName(selector->asCSSAttributeSelector()
+                                                 ->attribute()
+                                                 .localNameAtomic())) {
+                m_ruleSetAttrFilter.push_back(selector->asCSSAttributeSelector()
+                                                  ->attribute()
+                                                  .localNameAtomic());
+            }
+        }
+        if (UNLIKELY(
+                selector->isPseudoSelector() &&
+                selector->asCSSPseudoSelector()->selectorArguments().size())) {
+            registerAttrFilterFromSelectorArguments(
+                selector->asCSSPseudoSelector());
+        }
+    }
+
+    size_t order = nextRuleSetOrder();
+    rule.first->setOrder(order);
+    m_slottedScopedRules.push_back(
+        SlottedScopedRule{ rule.first, rule.second, host });
 }
 
 void StyleResolver::addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule)

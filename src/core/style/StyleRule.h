@@ -217,6 +217,16 @@ public:
         return m_isPseudoClassHostSelector;
     }
 
+    // True when the selector's subject (index 0; see the reversed,
+    // subject-first storage order built by CSSParser::parseComplexSelector)
+    // is ::slotted(). Unlike :host()'s "simple" flag, this intentionally
+    // allows ancestor combinators before ::slotted() (e.g. ".x ::slotted(*)")
+    // since ::slotted() is always required to be the rightmost compound.
+    bool hasSlottedSelector()
+    {
+        return m_hasSlottedSelector;
+    }
+
     void initFlagsRelatedWithSelectorList();
     void wrapperTakeSelectorList(CSSSelectorList& selectors);
 
@@ -230,6 +240,7 @@ protected:
     bool m_isSimpleTagSelector : 1;
     bool m_isSimplePseudoClassHostSelector : 1;
     bool m_isPseudoClassHostSelector : 1;
+    bool m_hasSlottedSelector : 1;
 
     unsigned m_identifierHashes[maximumIdentifierCount];
 };

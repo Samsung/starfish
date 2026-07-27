@@ -108,6 +108,7 @@ void StyleRule::initFlagsRelatedWithSelectorList()
     m_isSimpleTagSelector = false;
     m_isSimplePseudoClassHostSelector = false;
     m_isPseudoClassHostSelector = false;
+    m_hasSlottedSelector = false;
 
     unsigned size = m_selectorList.size();
     if (size == 1) {
@@ -131,6 +132,14 @@ void StyleRule::initFlagsRelatedWithSelectorList()
                 m_isPseudoClassHostSelector = true;
             }
         }
+    }
+
+    // ::slotted() is always the subject (index 0 in this subject-first
+    // storage order) since the grammar requires it to be the rightmost
+    // compound; unlike :host() this is checked independently of `size` so
+    // that ancestor combinators (".x ::slotted(*)") are still recognized.
+    if (size > 0 && m_selectorList[0].m_selector->isSlottedSelector()) {
+        m_hasSlottedSelector = true;
     }
 
     AncestorSelectorFilter::computeIdentifierHash(this);

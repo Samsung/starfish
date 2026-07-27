@@ -1032,6 +1032,34 @@ CSSSelector* CSSParser::getPseudoSelector()
 
         return selector;
     }
+    case CSSSelector::PseudoSlotted: {
+        // ::slotted() takes a single <compound-selector> (no combinators, no
+        // comma list) per css-scoping, same argument shape as :host() —
+        // pseudo-elements are not allowed inside it.
+        CSSSelectorList* branch = new (GC) CSSSelectorList();
+        parseCompoundSelector(branch);
+
+        if (branch->size() == 0) {
+            return nullptr;
+        }
+
+        for (size_t i = 0; i < branch->size(); i++) {
+            if (branch->at(i).m_selector->type() ==
+                CSSSelector::PseudoElement) {
+                return nullptr;
+            }
+        }
+
+        selector->addSelectorArgument(branch);
+
+        RefPtr<CSSToken> closeToken = currentToken();
+        if (!closeToken->isSymbol(')')) {
+            return nullptr;
+        }
+        getToken(false, true);
+
+        return selector;
+    }
     case CSSSelector::PseudoIs:
     case CSSSelector::PseudoWhere: {
         // :is()/:where() take a forgiving <complex-selector-list>: invalid
