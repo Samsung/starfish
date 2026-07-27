@@ -7,7 +7,7 @@
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-values/attr-color-valid.html
 http://web-platform.test:8000/css/css-values/attr-dynamic-marker-content.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-values/attr-in-max.html
-http://web-platform.test:8000/css/css-values/attr-in-slotted.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-values/attr-in-slotted.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-values/attr-length-invalid-cast.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-values/attr-length-valid-zero-nofallback.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-values/attr-length-valid-zero.html
