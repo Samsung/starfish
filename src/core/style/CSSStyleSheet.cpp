@@ -204,12 +204,24 @@ static unsigned calcSpecificity(CSSSelectorList& selectorList)
         CSSSelector* selector = selectorList[i].m_selector;
 
         CSSSelector::PseudoType pseudoType = CSSSelector::PseudoNone;
-        if (selector->type() == CSSSelector::Type::PseudoClass) {
+        if (selector->type() == CSSSelector::Type::PseudoClass ||
+            selector->type() == CSSSelector::Type::PseudoElement) {
             pseudoType = selector->asCSSPseudoSelector()->pseudoType();
         }
 
-        if (pseudoType == CSSSelector::PseudoType::PseudoNot ||
-            pseudoType == CSSSelector::PseudoType::PseudoIs) {
+        if (pseudoType == CSSSelector::PseudoType::PseudoSlotted) {
+            // ::slotted(<compound>) contributes the pseudo-element's own unit
+            // (from specificityForOneSelector() below) plus its single
+            // argument compound's specificity -- unlike :host(), whose
+            // argument intentionally does not contribute (see the comment
+            // below).
+            GCVector<CSSSelectorList*>& args =
+                selector->asCSSPseudoSelector()->selectorArguments();
+            STARFISH_ASSERT(args.size() == 1);
+            temp = total + selector->specificityForOneSelector() +
+                   calcSpecificity(*args[0]);
+        } else if (pseudoType == CSSSelector::PseudoType::PseudoNot ||
+                   pseudoType == CSSSelector::PseudoType::PseudoIs) {
             // :not()/:is() contribute the specificity of their single most
             // specific branch (Selectors-4 specificity of a pseudo-class).
             unsigned best = 0;

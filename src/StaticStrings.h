@@ -307,7 +307,8 @@ namespace Starfish {
     F(SpellingError, spellingError, "spelling-error")          \
     F(Marker, marker, "marker")                                \
     F(Backdrop, backdrop, "backdrop")                          \
-    F(FullScreen, fullScreen, "fullscreen")
+    F(FullScreen, fullScreen, "fullscreen")                    \
+    F(Slotted, slotted, "slotted(")
 
 class StaticStrings : public gc {
     friend class QualifiedName;

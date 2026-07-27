@@ -3128,6 +3128,7 @@ public:
     // http://www.w3.org/TR/css3-selectors/#specificity
     unsigned specificityForOneSelector() const;
     bool isPseudoClassHostFamilySelector();
+    bool isSlottedSelector();
 
 protected:
     Type m_type : 4;
@@ -3386,6 +3387,19 @@ public:
     void addHostScopedRule(std::pair<StyleRule*, ResourceURL*> rule,
                            Element* host);
 
+    // ::slotted() is the mirror image of :host(): the rule also lives in a
+    // shadow resolver, but the element it matches is a slotted light-DOM
+    // node that the OUTER resolver styles. Promoted the same way, keyed by
+    // the same origin host, so matching can find "the rules from the shadow
+    // tree this element is slotted into".
+    struct SlottedScopedRule {
+        StyleRule* rule;
+        ResourceURL* url;
+        Element* host; // ShadowRoot::host() of the originating shadow tree
+    };
+    void addSlottedScopedRule(std::pair<StyleRule*, ResourceURL*> rule,
+                              Element* host);
+
     GCVector<CSSStyleSheet*>& sheets()
     {
         return m_sheets;
@@ -3519,6 +3533,7 @@ protected:
     bool m_usesFirstLineRule;
     bool m_needsRecalcRuleSet;
     bool m_hasSimplePseudoClassHostSelector;
+    bool m_hasSlottedSelector;
     uint32_t m_mediumFontSize;
     Optional<ShadowRoot*> m_ownerShadowRoot;
     GCVector<CSSStyleSheet*> m_sheets;
@@ -3526,6 +3541,9 @@ protected:
     // :host rules promoted from shadow resolvers, stored with the origin host
     // so the document resolver can scope matching to the correct element.
     GCVector<HostScopedRule> m_hostScopedRules;
+    // ::slotted() rules promoted from shadow resolvers; matched against
+    // slotted light-DOM elements by the outer resolver (see matchAllRules).
+    GCVector<SlottedScopedRule> m_slottedScopedRules;
     GCVector<std::pair<CSSStyleDeclaration*, ResourceURL*>> m_webFonts;
     MediaQueryEvaluator* m_mediaQueryEvaluator;
     MediaQueryResultList m_viewportDependentMediaQueryResults;
