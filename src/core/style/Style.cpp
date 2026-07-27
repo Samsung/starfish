@@ -9036,10 +9036,16 @@ bool StyleResolver::checkPseudoElement(Element* element,
     case CSSSelector::PseudoType::PseudoSlotted: {
         // ::slotted() matches the element itself (not a generated box, so
         // result.pseudoType stays PseudoElementNone) against its single
-        // compound-selector argument. Whether `element` is actually slotted
-        // into the rule's origin shadow tree was already established by the
-        // caller (the ::slotted block in matchAllRules, keyed by origin
-        // host via result.scope) -- this only checks the argument itself.
+        // compound-selector argument. The promoted-rule path (the ::slotted
+        // block in matchAllRules, keyed by origin host via result.scope)
+        // already guarantees `element` is slotted into the right tree before
+        // reaching here; this check is defense in depth against any other
+        // path that might call checkPseudoElement directly (mirroring
+        // PseudoHost/PseudoHostFunction's own independent
+        // isShadowRootHost() check above, for the same reason).
+        if (!element->isSlotted()) {
+            return false;
+        }
         STARFISH_ASSERT(selector->selectorArguments().size() == 1);
         result.styleDamageFrom = StyleDamageFromAll;
         AtomicString elementName = element->name().localNameAtomic();
@@ -10515,6 +10521,16 @@ void StyleResolver::addToRuleSet(CSSStyleSheet* sheet)
             m_document->styleResolver().addSlottedScopedRule(
                 sheet->styleRules()[j], ownerHost());
             m_document->styleResolver().m_hasSlottedSelector = true;
+        } else if (UNLIKELY(rule->hasSlottedSelector())) {
+            // A ::slotted() rule outside any shadow tree (e.g. in the main
+            // document's own stylesheet) has no originating slot and can
+            // never legitimately match anything. Drop it instead of falling
+            // through to addToRuleSet(), which would bucket it as an
+            // ordinary universal/class/tag rule and test it against every
+            // element via the normal per-element matching path -- that path
+            // does not know about slot/host scoping the way the promoted-
+            // rule block above does, so the rule would wrongly match
+            // whatever its argument matches, globally.
         } else {
             addToRuleSet(sheet->styleRules()[j]);
         }
