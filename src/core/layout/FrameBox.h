@@ -955,6 +955,9 @@ public:
     template <typename T>
     void applyBorderRadius(T canvas, const LayoutRect& rect,
                            float spreadDistance = 0, bool inset = false);
+    BorderRadiusFixedData computeFixedBorderRadius(const LayoutRect& rect,
+                                                   float spreadDistance,
+                                                   bool inset);
 
     // outline-width + outline-offset
     LayoutUnit outlineThickness();

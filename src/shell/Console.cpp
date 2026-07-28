@@ -83,7 +83,20 @@ void Console::run()
 
                 if (FD_ISSET(STDIN_FILENO, &readfds)) {
                     if (!std::fgets(buf, sizeof(buf), stdin)) {
-                        continue;
+                        if (std::feof(stdin)) {
+                            // stdin is closed or /dev/null: select() keeps
+                            // reporting it readable, so continuing here spins
+                            // this thread at 100% CPU for the rest of the
+                            // process' life.
+                            break;
+                        }
+                        if (errno == EINTR) {
+                            // A signal landed mid-read; the stream is still
+                            // usable once the error indicator is cleared.
+                            std::clearerr(stdin);
+                            continue;
+                        }
+                        break;
                     }
 
                     Param* param = new Param;
