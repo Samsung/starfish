@@ -596,15 +596,21 @@ void FlexFormattingContext::applyFlexFactor()
 
                     unclampedSize += targetMainSize;
 
+                    // CSS Flexbox §9.7.4: while fixing min/max violations the
+                    // item's content-box size is also floored at zero. Shrink
+                    // factors can drive the target below zero when the line
+                    // overflows the container; using it as-is would leave the
+                    // box with a negative height/width.
+                    LayoutUnit usedMainSize =
+                        std::max(targetMainSize, LayoutUnit(0));
+
                     if (m_isMainAxisInInlineAxis) {
                         flexItem->setContentWidthConsideringMinMaxWidths(
-                            m_layoutContext, targetMainSize,
-                            m_availableMainSize);
+                            m_layoutContext, usedMainSize, m_availableMainSize);
                         mainSize = flexItem->contentWidth();
                     } else {
                         flexItem->setContentHeightConsideringMinMaxHeights(
-                            m_layoutContext, targetMainSize,
-                            m_availableMainSize);
+                            m_layoutContext, usedMainSize, m_availableMainSize);
                         mainSize = flexItem->contentHeight();
                     }
 

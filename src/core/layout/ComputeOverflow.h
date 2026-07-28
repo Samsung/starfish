@@ -464,8 +464,20 @@ public:
                     }
 
                     if (overflowOrScroll.first && childFrameBox != frameBox) {
-                        clipFrameBoxRect(frameBox);
-                        clipBorderRadiusIfNeeds(frameBox);
+                        // The buffer of a scrolling frame holds the whole
+                        // scrollable content in unscrolled coordinates, and the
+                        // scroll translate above is skipped for it. Clipping to
+                        // its border box here would cut the content down to the
+                        // first viewport-worth of pixels, so leave the clip to
+                        // the compositor, which applies it when the buffer is
+                        // drawn at its scrolled position.
+                        if (frameBox != nearestBufferedFrame ||
+                            !stackingContext ||
+                            !stackingContext
+                                 ->inScrollWithGraphicsBufferActive()) {
+                            clipFrameBoxRect(frameBox);
+                            clipBorderRadiusIfNeeds(frameBox);
+                        }
                     }
 
                     if (style->isAbsolutePositioned()) {
