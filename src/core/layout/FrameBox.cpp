@@ -623,35 +623,32 @@ void FrameBox::computeBorderRadiusProperties(
         br.m_bottomRightHorizontal.specifiedValue(rect.width(), this);
 }
 
-template <typename T>
-void FrameBox::applyBorderRadius(T canvas, const LayoutRect& inputRect,
-                                 float spreadDistance, bool inset)
+BorderRadiusFixedData FrameBox::computeFixedBorderRadius(const LayoutRect& rect,
+                                                         float spreadDistance,
+                                                         bool inset)
 {
-    // apply clip if border-radius exists
-    if (hasFrameBorderRadius()) {
-        LayoutRect rect = inputRect.snapSizeToPixel();
-        BorderRadiusData br = frameBorderRadius();
-        BorderRadiusFixedData fixed(br, rect.width(), rect.height(), this);
+    BorderRadiusData br = frameBorderRadius();
+    BorderRadiusFixedData fixed(br, rect.width(), rect.height(), this);
 
-        if (inset) {
+    if (inset) {
 #define APPLY_BORDER_WIDTH(POS, BORDER_SIDE) \
     if (POS) {                               \
         POS -= BORDER_SIDE();                \
     }
-            APPLY_BORDER_WIDTH(fixed.m_topLeftHorizontal, borderLeft);
-            APPLY_BORDER_WIDTH(fixed.m_topRightHorizontal, borderRight);
-            APPLY_BORDER_WIDTH(fixed.m_topLeftVertical, borderTop);
-            APPLY_BORDER_WIDTH(fixed.m_bottomLeftVertical, borderBottom);
-            APPLY_BORDER_WIDTH(fixed.m_topRightVertical, borderTop);
-            APPLY_BORDER_WIDTH(fixed.m_bottomRightVertical, borderBottom);
-            APPLY_BORDER_WIDTH(fixed.m_bottomLeftHorizontal, borderLeft);
-            APPLY_BORDER_WIDTH(fixed.m_bottomRightHorizontal, borderRight);
+        APPLY_BORDER_WIDTH(fixed.m_topLeftHorizontal, borderLeft);
+        APPLY_BORDER_WIDTH(fixed.m_topRightHorizontal, borderRight);
+        APPLY_BORDER_WIDTH(fixed.m_topLeftVertical, borderTop);
+        APPLY_BORDER_WIDTH(fixed.m_bottomLeftVertical, borderBottom);
+        APPLY_BORDER_WIDTH(fixed.m_topRightVertical, borderTop);
+        APPLY_BORDER_WIDTH(fixed.m_bottomRightVertical, borderBottom);
+        APPLY_BORDER_WIDTH(fixed.m_bottomLeftHorizontal, borderLeft);
+        APPLY_BORDER_WIDTH(fixed.m_bottomRightHorizontal, borderRight);
 
 #undef APPLY_BORDER_WIDTH
-        }
+    }
 
-        float r, m;
-        if (spreadDistance != 0.0f) {
+    float r, m;
+    if (spreadDistance != 0.0f) {
 #define APPLY_SPREAD_DISTANCE(POS)                       \
     if (0 < POS) {                                       \
         if (POS < spreadDistance) {                      \
@@ -666,195 +663,208 @@ void FrameBox::applyBorderRadius(T canvas, const LayoutRect& inputRect,
             POS += m;                                    \
         }                                                \
     }
-            APPLY_SPREAD_DISTANCE(fixed.m_topLeftHorizontal);
-            APPLY_SPREAD_DISTANCE(fixed.m_topRightHorizontal);
-            APPLY_SPREAD_DISTANCE(fixed.m_topLeftVertical);
-            APPLY_SPREAD_DISTANCE(fixed.m_bottomLeftVertical);
-            APPLY_SPREAD_DISTANCE(fixed.m_topRightVertical);
-            APPLY_SPREAD_DISTANCE(fixed.m_bottomRightVertical);
-            APPLY_SPREAD_DISTANCE(fixed.m_bottomLeftHorizontal);
-            APPLY_SPREAD_DISTANCE(fixed.m_bottomRightHorizontal);
+        APPLY_SPREAD_DISTANCE(fixed.m_topLeftHorizontal);
+        APPLY_SPREAD_DISTANCE(fixed.m_topRightHorizontal);
+        APPLY_SPREAD_DISTANCE(fixed.m_topLeftVertical);
+        APPLY_SPREAD_DISTANCE(fixed.m_bottomLeftVertical);
+        APPLY_SPREAD_DISTANCE(fixed.m_topRightVertical);
+        APPLY_SPREAD_DISTANCE(fixed.m_bottomRightVertical);
+        APPLY_SPREAD_DISTANCE(fixed.m_bottomLeftHorizontal);
+        APPLY_SPREAD_DISTANCE(fixed.m_bottomRightHorizontal);
 #undef APPLY_SPREAD_DISTANCE
+    }
+
+    reduceBorderRadiusToFit(rect, fixed);
+    return fixed;
+}
+
+template <typename T>
+static void emitBorderRadiusPath(T canvas, const LayoutRect& rect,
+                                 const BorderRadiusFixedData& fixed)
+{
+    const float topLeftVertical = fixed.m_topLeftVertical;
+    const float topLeftHorizontal = fixed.m_topLeftHorizontal;
+    const float topRightHorizontal = fixed.m_topRightHorizontal;
+    const float topRightVertical = fixed.m_topRightVertical;
+    const float bottomLeftVertical = fixed.m_bottomLeftVertical;
+    const float bottomLeftHorizontal = fixed.m_bottomLeftHorizontal;
+    const float bottomRightHorizontal = fixed.m_bottomRightHorizontal;
+    const float bottomRightVertical = fixed.m_bottomRightVertical;
+
+    float arcR;
+    // border-left
+    {
+        if (topLeftHorizontal > 0 && topLeftVertical > 0) {
+            canvas->save();
+            canvas->translate(topLeftHorizontal + rect.x().toFloat(),
+                              topLeftVertical + rect.y().toFloat());
+            if (topLeftVertical > topLeftHorizontal) {
+                canvas->scale(1 * (topLeftHorizontal / topLeftVertical), 1);
+                arcR = topLeftVertical;
+            } else {
+                canvas->scale(1, 1 * (topLeftVertical / topLeftHorizontal));
+                arcR = topLeftHorizontal;
+            }
+            canvas->arcNegative(0, 0, arcR, M_PI + M_PI / 4, M_PI);
+            canvas->restore();
+        } else {
+            canvas->moveTo(rect.x(), rect.y());
         }
 
-        reduceBorderRadiusToFit(rect, fixed);
-        const float topLeftVertical = fixed.m_topLeftVertical;
-        const float topLeftHorizontal = fixed.m_topLeftHorizontal;
-        const float topRightHorizontal = fixed.m_topRightHorizontal;
-        const float topRightVertical = fixed.m_topRightVertical;
-        const float bottomLeftVertical = fixed.m_bottomLeftVertical;
-        const float bottomLeftHorizontal = fixed.m_bottomLeftHorizontal;
-        const float bottomRightHorizontal = fixed.m_bottomRightHorizontal;
-        const float bottomRightVertical = fixed.m_bottomRightVertical;
+        if (bottomLeftHorizontal > 0 && bottomLeftVertical > 0) {
+            canvas->save();
+            canvas->translate(rect.x() + bottomLeftHorizontal,
+                              rect.maxY() - bottomLeftVertical);
 
-        float arcR;
-        // border-left
-        {
-            if (topLeftHorizontal > 0 && topLeftVertical > 0) {
-                canvas->save();
-                canvas->translate(topLeftHorizontal + rect.x().toFloat(),
-                                  topLeftVertical + rect.y().toFloat());
-                if (topLeftVertical > topLeftHorizontal) {
-                    canvas->scale(1 * (topLeftHorizontal / topLeftVertical), 1);
-                    arcR = topLeftVertical;
-                } else {
-                    canvas->scale(1, 1 * (topLeftVertical / topLeftHorizontal));
-                    arcR = topLeftHorizontal;
-                }
-                canvas->arcNegative(0, 0, arcR, M_PI + M_PI / 4, M_PI);
-                canvas->restore();
+            if (bottomLeftVertical > bottomLeftHorizontal) {
+                canvas->scale(1 * (bottomLeftHorizontal / bottomLeftVertical),
+                              1);
+                arcR = bottomLeftVertical;
             } else {
-                canvas->moveTo(rect.x(), rect.y());
+                canvas->scale(1,
+                              1 * (bottomLeftVertical / bottomLeftHorizontal));
+                arcR = bottomLeftHorizontal;
             }
 
-            if (bottomLeftHorizontal > 0 && bottomLeftVertical > 0) {
-                canvas->save();
-                canvas->translate(rect.x() + bottomLeftHorizontal,
-                                  rect.maxY() - bottomLeftVertical);
+            canvas->arcNegative(0, 0, arcR, M_PI, M_PI - M_PI / 2 + M_PI / 4);
+            canvas->restore();
+        } else {
+            canvas->lineTo(rect.x(), rect.maxY());
+        }
+    }
 
-                if (bottomLeftVertical > bottomLeftHorizontal) {
-                    canvas->scale(
-                        1 * (bottomLeftHorizontal / bottomLeftVertical), 1);
-                    arcR = bottomLeftVertical;
-                } else {
-                    canvas->scale(
-                        1, 1 * (bottomLeftVertical / bottomLeftHorizontal));
-                    arcR = bottomLeftHorizontal;
-                }
-
-                canvas->arcNegative(0, 0, arcR, M_PI,
-                                    M_PI - M_PI / 2 + M_PI / 4);
-                canvas->restore();
+    // border-bottom
+    {
+        if (bottomLeftHorizontal > 0 && bottomLeftVertical > 0) {
+            canvas->save();
+            canvas->translate(rect.x() + bottomLeftHorizontal,
+                              rect.maxY() - bottomLeftVertical);
+            if (bottomLeftVertical > bottomLeftHorizontal) {
+                canvas->scale(1 * (bottomLeftHorizontal / bottomLeftVertical),
+                              1);
+                arcR = bottomLeftVertical;
             } else {
-                canvas->lineTo(rect.x(), rect.maxY());
+                canvas->scale(1,
+                              1 * (bottomLeftVertical / bottomLeftHorizontal));
+                arcR = bottomLeftHorizontal;
             }
+            canvas->arcNegative(0, 0, arcR, M_PI + M_PI / 4 - M_PI / 2,
+                                M_PI - M_PI / 2);
+            canvas->restore();
+        } else {
+            canvas->lineTo(rect.x(), rect.maxY());
         }
 
-        // border-bottom
-        {
-            if (bottomLeftHorizontal > 0 && bottomLeftVertical > 0) {
-                canvas->save();
-                canvas->translate(rect.x() + bottomLeftHorizontal,
-                                  rect.maxY() - bottomLeftVertical);
-                if (bottomLeftVertical > bottomLeftHorizontal) {
-                    canvas->scale(
-                        1 * (bottomLeftHorizontal / bottomLeftVertical), 1);
-                    arcR = bottomLeftVertical;
-                } else {
-                    canvas->scale(
-                        1, 1 * (bottomLeftVertical / bottomLeftHorizontal));
-                    arcR = bottomLeftHorizontal;
-                }
-                canvas->arcNegative(0, 0, arcR, M_PI + M_PI / 4 - M_PI / 2,
-                                    M_PI - M_PI / 2);
-                canvas->restore();
+        if (bottomRightHorizontal > 0 && bottomRightVertical > 0) {
+            canvas->save();
+            canvas->translate(rect.maxX() - bottomRightHorizontal,
+                              rect.maxY() - bottomRightVertical);
+            if (bottomRightVertical > bottomRightHorizontal) {
+                canvas->scale(1 * (bottomRightHorizontal / bottomRightVertical),
+                              1);
+                arcR = bottomRightVertical;
             } else {
-                canvas->lineTo(rect.x(), rect.maxY());
+                canvas->scale(
+                    1, 1 * (bottomRightVertical / bottomRightHorizontal));
+                arcR = bottomRightHorizontal;
             }
+            canvas->arcNegative(0, 0, arcR, M_PI / 2, M_PI / 4);
+            canvas->restore();
+        } else {
+            canvas->lineTo(rect.maxX(), rect.maxY());
+        }
+    }
 
-            if (bottomRightHorizontal > 0 && bottomRightVertical > 0) {
-                canvas->save();
-                canvas->translate(rect.maxX() - bottomRightHorizontal,
-                                  rect.maxY() - bottomRightVertical);
-                if (bottomRightVertical > bottomRightHorizontal) {
-                    canvas->scale(
-                        1 * (bottomRightHorizontal / bottomRightVertical), 1);
-                    arcR = bottomRightVertical;
-                } else {
-                    canvas->scale(
-                        1, 1 * (bottomRightVertical / bottomRightHorizontal));
-                    arcR = bottomRightHorizontal;
-                }
-                canvas->arcNegative(0, 0, arcR, M_PI / 2, M_PI / 4);
-                canvas->restore();
+    // border-right
+    {
+        if (bottomRightHorizontal > 0 && bottomRightVertical > 0) {
+            canvas->save();
+            canvas->translate(rect.maxX() - bottomRightHorizontal,
+                              rect.maxY() - bottomRightVertical);
+            if (bottomRightVertical > bottomRightHorizontal) {
+                canvas->scale(1 * (bottomRightHorizontal / bottomRightVertical),
+                              1);
+                arcR = bottomRightVertical;
             } else {
-                canvas->lineTo(rect.maxX(), rect.maxY());
+                canvas->scale(
+                    1, 1 * (bottomRightVertical / bottomRightHorizontal));
+                arcR = bottomRightHorizontal;
             }
+            canvas->arcNegative(0, 0, arcR, M_PI / 4, 0);
+            canvas->restore();
+        } else {
+            canvas->lineTo(rect.maxX(), rect.maxY());
         }
 
-        // border-right
-        {
-            if (bottomRightHorizontal > 0 && bottomRightVertical > 0) {
-                canvas->save();
-                canvas->translate(rect.maxX() - bottomRightHorizontal,
-                                  rect.maxY() - bottomRightVertical);
-                if (bottomRightVertical > bottomRightHorizontal) {
-                    canvas->scale(
-                        1 * (bottomRightHorizontal / bottomRightVertical), 1);
-                    arcR = bottomRightVertical;
-                } else {
-                    canvas->scale(
-                        1, 1 * (bottomRightVertical / bottomRightHorizontal));
-                    arcR = bottomRightHorizontal;
-                }
-                canvas->arcNegative(0, 0, arcR, M_PI / 4, 0);
-                canvas->restore();
+        if (topRightHorizontal > 0 && topRightVertical > 0) {
+            canvas->save();
+            canvas->translate(rect.maxX().toFloat() - topRightHorizontal,
+                              rect.y().toFloat() + topRightVertical);
+            if (topRightVertical > topRightHorizontal) {
+                canvas->scale(1 * (topRightHorizontal / topRightVertical), 1);
+                arcR = topRightVertical;
             } else {
-                canvas->lineTo(rect.maxX(), rect.maxY());
+                canvas->scale(1, 1 * (topRightVertical / topRightHorizontal));
+                arcR = topRightHorizontal;
+            }
+            canvas->arcNegative(0, 0, arcR, M_PI / 2 - M_PI / 2,
+                                M_PI / 4 - M_PI / 2);
+            canvas->restore();
+        } else {
+            canvas->lineTo(rect.maxX(), rect.y());
+        }
+    }
+
+    // border-top
+    {
+        if (topRightHorizontal > 0 && topRightVertical > 0) {
+            canvas->save();
+            canvas->translate(-topRightHorizontal + rect.maxX().toFloat(),
+                              topRightVertical + rect.y().toFloat());
+
+            if (topRightVertical > topRightHorizontal) {
+                canvas->scale(1 * (topRightHorizontal / topRightVertical), 1);
+                arcR = topRightVertical;
+            } else {
+                canvas->scale(1, 1 * (topRightVertical / topRightHorizontal));
+                arcR = topRightHorizontal;
             }
 
-            if (topRightHorizontal > 0 && topRightVertical > 0) {
-                canvas->save();
-                canvas->translate(rect.maxX().toFloat() - topRightHorizontal,
-                                  rect.y().toFloat() + topRightVertical);
-                if (topRightVertical > topRightHorizontal) {
-                    canvas->scale(1 * (topRightHorizontal / topRightVertical),
-                                  1);
-                    arcR = topRightVertical;
-                } else {
-                    canvas->scale(1,
-                                  1 * (topRightVertical / topRightHorizontal));
-                    arcR = topRightHorizontal;
-                }
-                canvas->arcNegative(0, 0, arcR, M_PI / 2 - M_PI / 2,
-                                    M_PI / 4 - M_PI / 2);
-                canvas->restore();
-            } else {
-                canvas->lineTo(rect.maxX(), rect.y());
-            }
+            canvas->arcNegative(0, 0, arcR, M_PI / 4 - M_PI / 2, -M_PI / 2);
+            canvas->restore();
+        } else {
+            canvas->lineTo(rect.maxX(), rect.y());
         }
 
-        // border-top
-        {
-            if (topRightHorizontal > 0 && topRightVertical > 0) {
-                canvas->save();
-                canvas->translate(-topRightHorizontal + rect.maxX().toFloat(),
-                                  topRightVertical + rect.y().toFloat());
-
-                if (topRightVertical > topRightHorizontal) {
-                    canvas->scale(1 * (topRightHorizontal / topRightVertical),
-                                  1);
-                    arcR = topRightVertical;
-                } else {
-                    canvas->scale(1,
-                                  1 * (topRightVertical / topRightHorizontal));
-                    arcR = topRightHorizontal;
-                }
-
-                canvas->arcNegative(0, 0, arcR, M_PI / 4 - M_PI / 2, -M_PI / 2);
-                canvas->restore();
+        if (topLeftHorizontal > 0 && topLeftVertical > 0) {
+            canvas->save();
+            canvas->translate(topLeftHorizontal + rect.x().toFloat(),
+                              topLeftVertical + rect.y().toFloat());
+            if (topLeftVertical > topLeftHorizontal) {
+                canvas->scale(1 * (topLeftHorizontal / topLeftVertical), 1);
+                arcR = topLeftVertical;
             } else {
-                canvas->lineTo(rect.maxX(), rect.y());
+                canvas->scale(1, 1 * (topLeftVertical / topLeftHorizontal));
+                arcR = topLeftHorizontal;
             }
-
-            if (topLeftHorizontal > 0 && topLeftVertical > 0) {
-                canvas->save();
-                canvas->translate(topLeftHorizontal + rect.x().toFloat(),
-                                  topLeftVertical + rect.y().toFloat());
-                if (topLeftVertical > topLeftHorizontal) {
-                    canvas->scale(1 * (topLeftHorizontal / topLeftVertical), 1);
-                    arcR = topLeftVertical;
-                } else {
-                    canvas->scale(1, 1 * (topLeftVertical / topLeftHorizontal));
-                    arcR = topLeftHorizontal;
-                }
-                canvas->arcNegative(0, 0, arcR, M_PI + M_PI / 2,
-                                    M_PI + M_PI / 4);
-                canvas->restore();
-            } else {
-                canvas->lineTo(rect.x(), rect.y());
-            }
+            canvas->arcNegative(0, 0, arcR, M_PI + M_PI / 2, M_PI + M_PI / 4);
+            canvas->restore();
+        } else {
+            canvas->lineTo(rect.x(), rect.y());
         }
+    }
+}
+
+template <typename T>
+void FrameBox::applyBorderRadius(T canvas, const LayoutRect& inputRect,
+                                 float spreadDistance, bool inset)
+{
+    // apply clip if border-radius exists
+    if (hasFrameBorderRadius()) {
+        LayoutRect rect = inputRect.snapSizeToPixel();
+        emitBorderRadiusPath(
+            canvas, rect,
+            computeFixedBorderRadius(rect, spreadDistance, inset));
     }
 }
 
@@ -867,6 +877,47 @@ template void FrameBox::applyBorderRadius<Compositor*>(Compositor*,
                                                        float spreadDistance,
                                                        bool inset);
 
+// A rounded-corner clip differs from a plain rect clip only inside the four
+// corner boxes. When the current clip cannot reach any of them, clipping to
+// the rect is exactly equivalent and skips building the eight-arc path, which
+// is a large part of the per-tile paint cost while scrolling.
+static bool clipAvoidsBorderRadiusCorners(Canvas* canvas,
+                                          const LayoutRect& rect,
+                                          const BorderRadiusFixedData& fixed)
+{
+    const float corners[4][4] = {
+        { rect.x().toFloat(), rect.y().toFloat(), fixed.m_topLeftHorizontal,
+          fixed.m_topLeftVertical },
+        { rect.maxX().toFloat() - fixed.m_topRightHorizontal,
+          rect.y().toFloat(), fixed.m_topRightHorizontal,
+          fixed.m_topRightVertical },
+        { rect.x().toFloat(),
+          rect.maxY().toFloat() - fixed.m_bottomLeftVertical,
+          fixed.m_bottomLeftHorizontal, fixed.m_bottomLeftVertical },
+        { rect.maxX().toFloat() - fixed.m_bottomRightHorizontal,
+          rect.maxY().toFloat() - fixed.m_bottomRightVertical,
+          fixed.m_bottomRightHorizontal, fixed.m_bottomRightVertical },
+    };
+
+    for (size_t i = 0; i < 4; i++) {
+        if (corners[i][2] <= 0 || corners[i][3] <= 0) {
+            continue;
+        }
+        if (!canvas->canRejectPainting(LayoutRect(
+                corners[i][0], corners[i][1], corners[i][2], corners[i][3]))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// The compositor has no clip-extents query, so it always takes the path.
+static bool clipAvoidsBorderRadiusCorners(Compositor*, const LayoutRect&,
+                                          const BorderRadiusFixedData&)
+{
+    return false;
+}
+
 template <typename T>
 void FrameBox::applyBorderRadiusClippingIfNeeds(T canvas,
                                                 const LayoutRect& rect,
@@ -874,7 +925,15 @@ void FrameBox::applyBorderRadiusClippingIfNeeds(T canvas,
                                                 bool inset)
 {
     if (hasFrameBorderRadius()) {
-        applyBorderRadius(canvas, rect, spreadDistance, inset);
+        LayoutRect snapped = rect.snapSizeToPixel();
+        BorderRadiusFixedData fixed =
+            computeFixedBorderRadius(snapped, spreadDistance, inset);
+        if (clipAvoidsBorderRadiusCorners(canvas, snapped, fixed)) {
+            canvas->clip(Unit::Rect(snapped.x(), snapped.y(), snapped.width(),
+                                    snapped.height()));
+            return;
+        }
+        emitBorderRadiusPath(canvas, snapped, fixed);
         canvas->clipPath();
     }
 }
