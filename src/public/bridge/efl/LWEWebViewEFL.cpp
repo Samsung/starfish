@@ -67,6 +67,13 @@
 #define EGL_IMAGE_PRESERVED_KHR 0x30D2
 #endif
 #if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 5
+// Ecore_Wl2.h keeps its whole body behind EFL_BETA_API_SUPPORT. Without the
+// define the header expands to nothing, so Ecore_Wl2_Window/Ecore_Wl2_Display
+// stay undeclared and Ecore_Evas.h (pulled in by Elementary.h below) fails on
+// its ecore_evas_wayland2_window_get() prototype.
+#ifndef EFL_BETA_API_SUPPORT
+#define EFL_BETA_API_SUPPORT
+#endif
 #include <Ecore_Wl2.h>
 #else
 #include <Ecore_Wayland.h>
