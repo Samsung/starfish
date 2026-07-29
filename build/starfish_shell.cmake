@@ -115,21 +115,40 @@ IF(${ARCH} STREQUAL "x64" AND ${HOST} STREQUAL "linux")
 ENDIF()
 
 # gtest
-SET (BUILD_GMOCK OFF)
-SET (INSTALL_GTEST OFF)
-# Build gtest without LTO. On Tizen the shell is force-linked with -fno-lto
-# (see LWE_*_FORCE_NOLTO in config.cmake), so LTO objects inside libgtest.a
-# cannot be consumed by ld at link time (gcc14/binutils: "plugin needed to
-# handle lto object") and produce undefined references. Append -fno-lto so it
-# overrides any -flto coming from the environment/LTO flags, then restore.
-SET (STARFISH_SAVED_C_FLAGS "${CMAKE_C_FLAGS}")
-SET (STARFISH_SAVED_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-lto")
-SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-lto")
-ADD_SUBDIRECTORY (third_party/googletest)
-SET (CMAKE_C_FLAGS "${STARFISH_SAVED_C_FLAGS}")
-SET (CMAKE_CXX_FLAGS "${STARFISH_SAVED_CXX_FLAGS}")
-SET(STARFISH_SHELL_LINK_LIBRARIES ${STARFISH_SHELL_LINK_LIBRARIES} gtest)
+SET (STARFISH_GTEST_DIR ${STARFISH_ROOT}/third_party/googletest/googletest)
+
+IF (CMAKE_VERSION VERSION_LESS 3.5)
+    # googletest's own CMakeLists requires CMake 3.5, which is newer than the
+    # CMake shipped by some target build roots (Tizen 5.0 has 2.8.12). Build the
+    # single-file amalgamation directly instead; gtest 1.11 only needs C++11.
+    ADD_LIBRARY (gtest STATIC ${STARFISH_GTEST_DIR}/src/gtest-all.cc)
+    # SYSTEM matches what googletest's own CMakeLists exports. The shell builds
+    # with -Wextra -Werror and gtest's macros expand to code that trips
+    # -Wsign-compare, so its headers must not be warned about in consumers.
+    TARGET_INCLUDE_DIRECTORIES (gtest SYSTEM PUBLIC
+        ${STARFISH_GTEST_DIR}/include
+        ${STARFISH_GTEST_DIR}
+    )
+    # Same -fno-lto reason as the ADD_SUBDIRECTORY path below.
+    SET_TARGET_PROPERTIES (gtest PROPERTIES COMPILE_FLAGS "-fno-lto")
+    SET (STARFISH_SHELL_LINK_LIBRARIES ${STARFISH_SHELL_LINK_LIBRARIES} gtest -lpthread)
+ELSE ()
+    SET (BUILD_GMOCK OFF)
+    SET (INSTALL_GTEST OFF)
+    # Build gtest without LTO. On Tizen the shell is force-linked with -fno-lto
+    # (see LWE_*_FORCE_NOLTO in config.cmake), so LTO objects inside libgtest.a
+    # cannot be consumed by ld at link time (gcc14/binutils: "plugin needed to
+    # handle lto object") and produce undefined references. Append -fno-lto so it
+    # overrides any -flto coming from the environment/LTO flags, then restore.
+    SET (STARFISH_SAVED_C_FLAGS "${CMAKE_C_FLAGS}")
+    SET (STARFISH_SAVED_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-lto")
+    SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-lto")
+    ADD_SUBDIRECTORY (third_party/googletest)
+    SET (CMAKE_C_FLAGS "${STARFISH_SAVED_C_FLAGS}")
+    SET (CMAKE_CXX_FLAGS "${STARFISH_SAVED_CXX_FLAGS}")
+    SET (STARFISH_SHELL_LINK_LIBRARIES ${STARFISH_SHELL_LINK_LIBRARIES} gtest)
+ENDIF ()
 
 ADD_EXECUTABLE (starfish.executable ${STARFISH_SHELL_SRC})
 ADD_DEPENDENCIES (starfish.executable starfish_api.shared_library ${STARFISH_SHELL_DEPENDENCIES})

@@ -463,6 +463,14 @@ public:
     void DispatchMouseUpEvent(MouseButtonValue button,
                               MouseButtonsValue buttons, double x, double y);
     void DispatchMouseWheelEvent(double x, double y, int delta);
+    // points: interleaved [x0,y0, x1,y1, ...], ids: per-point identifier,
+    // pointCount: number of touch points
+    void DispatchTouchStartEvent(const float* points, const int* ids,
+                                 size_t pointCount);
+    void DispatchTouchMoveEvent(const float* points, const int* ids,
+                                size_t pointCount);
+    void DispatchTouchEndEvent(const float* points, const int* ids,
+                               size_t pointCount);
     void DispatchKeyDownEvent(KeyValue keyCode);
     void DispatchKeyPressEvent(KeyValue keyCode);
     void DispatchKeyUpEvent(KeyValue keyCode);
@@ -1036,6 +1044,14 @@ public:
      *
      */
     float GetDevicePixelRatio();
+
+    /**
+     * \brief Returns the WebContainer associated with this WebView.
+     *
+     * \return Pointer to the WebContainer. Owned by this WebView.
+     *
+     */
+    WebContainer* FetchWebContainer();
 
 private:
     WebView();

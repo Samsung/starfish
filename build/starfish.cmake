@@ -42,11 +42,15 @@ ENDIF()
 IF (STARFISH_BINDING_NEED_GENERATE)
     MESSAGE (STATUS "GENERATE BINDING: inputs changed, regenerating binding code")
 
-    # Generate binding code into a scratch directory first.
+    # Generate binding code into a scratch directory first. Each step must run in
+    # order: EXECUTE_PROCESS treats multiple COMMANDs as a pipeline and starts
+    # them concurrently, so the directory setup has to happen separately from the
+    # generator invocation.
+    FILE (REMOVE_RECURSE ${OUTPUT_DIRECTORY}/starfish_generated/binding_test)
+    FILE (MAKE_DIRECTORY ${STARFISH_BINDING_GENERATED_DIR})
+    FILE (MAKE_DIRECTORY ${OUTPUT_DIRECTORY}/starfish_generated/binding_test/generated)
+
     EXECUTE_PROCESS(
-        COMMAND rm -rf ${OUTPUT_DIRECTORY}/starfish_generated/binding_test
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${STARFISH_BINDING_GENERATED_DIR}/
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIRECTORY}/starfish_generated/binding_test/generated/
         COMMAND python3 ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${OUTPUT_DIRECTORY}/starfish_generated/binding_test/generated/
         RESULT_VARIABLE _result
         OUTPUT_VARIABLE _output
@@ -85,7 +89,7 @@ IF (STARFISH_BINDING_NEED_GENERATE)
         ENDIF()
     ENDFOREACH()
 
-    EXECUTE_PROCESS (COMMAND rm -rf ${OUTPUT_DIRECTORY}/starfish_generated/binding_test)
+    FILE (REMOVE_RECURSE ${OUTPUT_DIRECTORY}/starfish_generated/binding_test)
 
     # Record the signature so the next configure can skip regeneration.
     FILE (WRITE ${STARFISH_BINDING_STAMP} "${STARFISH_BINDING_SIGNATURE_HASH}")
