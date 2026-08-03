@@ -85,6 +85,12 @@ public:
     WebOrigin* webOrigin();
     bool hasRequestError();
 
+    // Re-issues the same fetch as the current href/xlink:href so the image
+    // is (re)decoded against the webView's current devicePixelRatio, since
+    // ImageResource captures devicePixelRatio at decode time and never
+    // revisits it afterward.
+    void reloadImageForDevicePixelRatioChange();
+
 protected:
     virtual void computeAttributeChangeDamage(AtomicString attrName) override;
 

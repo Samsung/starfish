@@ -247,6 +247,7 @@ public:
     }
 
     void setNeedsFullRepainting();
+    void invalidateRenderCachesForDevicePixelRatioChange();
 
     bool inRendering()
     {

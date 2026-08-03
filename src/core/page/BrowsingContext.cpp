@@ -72,6 +72,7 @@
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/InputEvent.h"
 #include "core/dom/svg/SVGAnimationElement.h"
+#include "core/dom/svg/SVGImageElement.h"
 #include "binding/ScriptBindingInstance.h"
 #include "platform/loader/ResourceLoader.h"
 
@@ -696,6 +697,37 @@ void BrowsingContext::updateDefaultFontSize()
 
     iterateChildContext(
         [](BrowsingContext* ctx) { ctx->updateDefaultFontSize(); });
+}
+
+void BrowsingContext::invalidateForDevicePixelRatioChange()
+{
+    // devicePixelRatio feeds bitmap sizes (gradients, box-shadows, canvas
+    // buffers) that are computed at frame-tree build / paint time and cached
+    // beyond the normal style-recalc path, so a plain style recalc isn't
+    // enough: force a whole-document style recalc + frame tree rebuild, and
+    // drop the paint-time gradient cache which isn't touched by either.
+    document()->clearNativeGradientCacheIfNeeds();
+    setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
+    setNeedsFrameTreeBuild();
+
+    // <img> decode size is pinned to the devicePixelRatio active when it
+    // was first loaded (see ImageResource::didLoadFinished), so already
+    // loaded images need to be refetched to redecode against the new value.
+    // The URL cache must be evicted first, otherwise the refetch below just
+    // cache-hits the stale decoded resource (see ResourceLoader::cacheHit).
+    document()->resourceLoader().clearImageResourceCache();
+    Traverse::traverseIncludingShadowDOM(document(), [](Node* node) {
+        if (node->isHTMLImageElement()) {
+            node->asHTMLImageElement()->reloadImageForDevicePixelRatioChange();
+        } else if (node->isSVGImageElement()) {
+            static_cast<SVGImageElement*>(node)
+                ->reloadImageForDevicePixelRatioChange();
+        }
+    });
+
+    iterateChildContext([](BrowsingContext* ctx) {
+        ctx->invalidateForDevicePixelRatioChange();
+    });
 }
 
 Node* BrowsingContext::hitTest(float x, float y)

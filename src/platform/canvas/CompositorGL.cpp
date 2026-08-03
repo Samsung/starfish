@@ -2810,6 +2810,7 @@ public:
         m_bufferHeight = m_height = -1;
         m_bufferStride = 0;
         m_buffer = nullptr;
+        m_lastDevicePixelRatio = -1;
         m_isEGLImageExternal = false;
         m_isEGLBufferOwner = false;
         m_flag = flag;
@@ -2924,14 +2925,15 @@ public:
 
     bool attachNativeBuffer(size_t w, size_t h, CanvasSurfaceFlag flag) override
     {
-        if (m_width != w || m_height != h) {
+        float devicePixelRatio =
+            m_renderer->webView()->screenInfo().devicePixelRatio;
+        if (m_width != w || m_height != h ||
+            m_lastDevicePixelRatio != devicePixelRatio) {
             detachNativeBuffer();
             m_width = w;
             m_height = h;
+            m_lastDevicePixelRatio = devicePixelRatio;
             m_flag = flag;
-
-            float devicePixelRatio =
-                m_renderer->webView()->screenInfo().devicePixelRatio;
 
             m_bufferWidth = std::max((size_t)1, (size_t)(w * devicePixelRatio));
             m_bufferHeight =
@@ -3632,6 +3634,7 @@ protected:
     size_t m_bufferWidth;
     size_t m_bufferHeight;
     size_t m_bufferStride;
+    float m_lastDevicePixelRatio;
     size_t m_wTextureCount;
     size_t m_hTextureCount;
     size_t m_textureTileSize;

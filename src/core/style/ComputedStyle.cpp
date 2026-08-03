@@ -457,7 +457,11 @@ void ComputedStyle::loadBackgroundImage(
                 *(prevComputedStyleValueForReferenceLoadedResources
                       ->background()
                       ->imageResource(bgIndex)
-                      ->url()) == *u) {
+                      ->url()) == *u &&
+                prevComputedStyleValueForReferenceLoadedResources->background()
+                        ->imageResource(bgIndex)
+                        ->devicePixelRatioAtFetch() ==
+                    consumer->webView()->screenInfo().devicePixelRatio) {
                 consumer->document()
                     ->resourceLoader()
                     .notifyImageResourceActiveState(
@@ -520,7 +524,9 @@ void ComputedStyle::loadBorderImage(
                 prevComputedStyleValueForReferenceLoadedResources->border();
             if (prevBorder.hasBorderImageData()) {
                 ImageResource* res = prevBorder.image().imageResource();
-                if (*res->url() == *u) {
+                if (*res->url() == *u &&
+                    res->devicePixelRatioAtFetch() ==
+                        consumer->webView()->screenInfo().devicePixelRatio) {
                     consumer->document()
                         ->resourceLoader()
                         .notifyImageResourceActiveState(res);
@@ -575,7 +581,9 @@ void ComputedStyle::loadListStyleImage(
                 prevComputedStyleValueForReferenceLoadedResources
                     ->listStyleData();
             ImageResource* prevRes = prevListStyle.imageResource();
-            if (prevRes && *prevRes->url() == *u) {
+            if (prevRes && *prevRes->url() == *u &&
+                prevRes->devicePixelRatioAtFetch() ==
+                    consumer->webView()->screenInfo().devicePixelRatio) {
                 consumer->document()
                     ->resourceLoader()
                     .notifyImageResourceActiveState(prevRes);
@@ -630,7 +638,11 @@ void ComputedStyle::loadMaskImage(
                     ->imageResource(i) &&
                 *(prevComputedStyleValueForReferenceLoadedResources->mask()
                       ->imageResource(i)
-                      ->url()) == *resourceURL) {
+                      ->url()) == *resourceURL &&
+                prevComputedStyleValueForReferenceLoadedResources->mask()
+                        ->imageResource(i)
+                        ->devicePixelRatioAtFetch() ==
+                    consumer->webView()->screenInfo().devicePixelRatio) {
                 imageResource =
                     prevComputedStyleValueForReferenceLoadedResources->mask()
                         ->imageResource(i);

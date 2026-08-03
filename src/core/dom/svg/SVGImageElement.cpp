@@ -124,6 +124,18 @@ void SVGImageElement::loadImage(String* src)
     m_imageResource->request(reqData, true);
 }
 
+void SVGImageElement::reloadImageForDevicePixelRatioChange()
+{
+    if (!m_imageResource) {
+        return;
+    }
+    StaticStrings* ss = starfish()->staticStrings();
+    String* src = hasAttribute(ss->m_href) != SIZE_MAX
+                      ? getAttributeOrEmpty(ss->m_href)
+                      : getAttributeOrEmpty(ss->m_xlinkHref);
+    loadImage(src);
+}
+
 void SVGImageElement::computeAttributeChangeDamage(AtomicString name)
 {
     SVGElement::computeAttributeChangeDamage(name);

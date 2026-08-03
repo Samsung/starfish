@@ -79,6 +79,7 @@ public:
         m_bufferStride = m_bufferWidth = m_width = -1;
         m_bufferHeight = m_height = -1;
         m_buffer = nullptr;
+        m_lastDevicePixelRatio = -1;
 
         attachNativeBuffer(w, h, CanvasSurface::PlainElement);
         GC_REGISTER_FINALIZER_NO_ORDER(
@@ -107,14 +108,15 @@ public:
     virtual bool attachNativeBuffer(size_t w, size_t h,
                                     CanvasSurfaceFlag flag) override
     {
-        if (m_width != w || m_height != h) {
+        float devicePixelRatio =
+            m_renderer->webView()->screenInfo().devicePixelRatio *
+            additionalPixelRatio();
+        if (m_width != w || m_height != h ||
+            m_lastDevicePixelRatio != devicePixelRatio) {
             detachNativeBuffer();
             m_width = w;
             m_height = h;
-
-            float devicePixelRatio =
-                m_renderer->webView()->screenInfo().devicePixelRatio *
-                additionalPixelRatio();
+            m_lastDevicePixelRatio = devicePixelRatio;
 
             m_bufferWidth = std::max((size_t)1, (size_t)(w * devicePixelRatio));
             m_bufferHeight =
@@ -179,6 +181,7 @@ protected:
     size_t m_bufferWidth;
     size_t m_bufferHeight;
     size_t m_bufferStride;
+    float m_lastDevicePixelRatio;
 };
 
 class CanvasSurfaceCanvasTarget : public CanvasSurface {

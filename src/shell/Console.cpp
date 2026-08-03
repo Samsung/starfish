@@ -126,6 +126,11 @@ void Console::write(const std::string& input)
                 degrees == 270) {
                 m_browser->setRotate(degrees);
             }
+        } else if (command.find("dpr", 0) == 0) { // ex) \dpr 1.3
+            float dpr = std::atof(command.c_str() + 4);
+            if (dpr > 0) {
+                m_browser->setDevicePixelRatio(dpr);
+            }
         }
         return;
     }

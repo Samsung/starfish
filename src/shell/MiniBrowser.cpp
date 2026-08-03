@@ -307,6 +307,11 @@ void MiniBrowser::setRotate(int degree)
     m_window->setRotate(degree);
 }
 
+void MiniBrowser::setDevicePixelRatio(float dpr)
+{
+    m_lwe->SetDevicePixelRatio(dpr);
+}
+
 int MiniBrowser::runMainLoop()
 {
     return m_window->appLoop()->start();
