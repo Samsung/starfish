@@ -130,6 +130,7 @@ public:
     void setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
 
     void updateDefaultFontSize();
+    void invalidateForDevicePixelRatioChange();
 
     void setNeedsFrameTreeBuild()
     {

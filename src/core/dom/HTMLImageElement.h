@@ -102,6 +102,17 @@ public:
 
     void updateFrame(size_t delay);
 
+    // Re-issues the same fetch as the current src so the image is
+    // (re)decoded against the webView's current devicePixelRatio, since
+    // ImageResource captures devicePixelRatio at decode time and never
+    // revisits it afterward.
+    void reloadImageForDevicePixelRatioChange()
+    {
+        if (m_imageResource) {
+            loadImage(src());
+        }
+    }
+
 private:
     void unloadImage();
     void loadImage(String* src);

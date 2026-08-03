@@ -37,9 +37,23 @@ class ImageResource : public Resource {
     {
         m_imageData = nullptr;
         m_mockFrameForSVGDocument = nullptr;
+        m_devicePixelRatioAtFetch = 1;
     }
 
 public:
+    // devicePixelRatio captured when this resource was fetched: decode size
+    // (see ImageResource::didLoadFinished) is pinned to that value, so
+    // ComputedStyle's same-URL resource-reuse checks must also compare this
+    // before reusing a previously fetched resource across a DPR change.
+    float devicePixelRatioAtFetch()
+    {
+        return m_devicePixelRatioAtFetch;
+    }
+    void setDevicePixelRatioAtFetch(float dpr)
+    {
+        m_devicePixelRatioAtFetch = dpr;
+    }
+
     virtual void prepare()
     {
         if (m_resourceRequest != nullptr) {
@@ -81,6 +95,7 @@ public:
 protected:
     NativeImageData* m_imageData;
     MockHTMLIFrameElement* m_mockFrameForSVGDocument;
+    float m_devicePixelRatioAtFetch;
 };
 } // namespace Starfish
 

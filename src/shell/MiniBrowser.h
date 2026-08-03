@@ -127,6 +127,8 @@ public:
 
     void setRotate(int degree);
 
+    void setDevicePixelRatio(float dpr);
+
     int runMainLoop();
 
     int runMainLoopWithTimeout(double timeoutInSec);

@@ -2037,6 +2037,40 @@ void WebView::setNeedsFullRepainting()
     m_needsFullPainting = true;
 }
 
+void WebView::invalidateRenderCachesForDevicePixelRatioChange()
+{
+    // Same trio WebView::navigateCrossDocument() resets, for the same
+    // reason: these hold prior-frame render state keyed by Node*/FrameBox*
+    // that survives setNeedsFrameTreeBuild()'s frame-tree rebuild, and
+    // RepaintRegionTracker/StackingContext diff against it to decide what
+    // repainting/buffer-reuse to skip -- none of those comparisons include
+    // devicePixelRatio, so leaving them in place would let stale pre-DPR-
+    // change geometry and buffers survive into the next paint.
+    m_repaintRegionTrackerContext.clear();
+    m_stackingContextsNeedsGraphicsBuffer.clear();
+    PrevDrawnStackingContextInfoMap().swap(m_prevDrawnStackingContextInfo);
+    if (m_rootStackingContext) {
+        StackingContext* ctx = m_rootStackingContext;
+        std::function<void(StackingContext*)> clearSC =
+            [&](StackingContext* ctx) {
+                STARFISH_ASSERT(ctx != nullptr);
+
+                ctx->clearGraphicsBuffer();
+                auto iter = ctx->childContexts().begin();
+                while (iter != ctx->childContexts().end()) {
+                    StackingContextChild* child = *iter;
+                    auto iter2 = child->begin();
+                    while (iter2 != child->end()) {
+                        clearSC(*iter2);
+                        iter2++;
+                    }
+                    iter++;
+                }
+            };
+        clearSC(ctx);
+    }
+}
+
 void WebView::clearStackingContext()
 {
     if (m_rootStackingContext) {
@@ -2168,6 +2202,10 @@ void WebView::setDevicePixelRatio(float dpr)
     STARFISH_LOG_INFO("WebView::setDevicePixelRatio");
     if (screenInfo().devicePixelRatio != dpr) {
         mutableScreenInfo().devicePixelRatio = dpr;
+        invalidateRenderCachesForDevicePixelRatioChange();
+        if (mainBrowsingContext()) {
+            mainBrowsingContext()->invalidateForDevicePixelRatioChange();
+        }
     }
 }
 

@@ -75,6 +75,7 @@ TextResource* ResourceLoader::fetchText(ResourceURL* url,
 ImageResource* ResourceLoader::fetchImage(ResourceURL* url)
 {
     ImageResource* res = new ImageResource(url, this);
+    res->setDevicePixelRatioAtFetch(webView()->screenInfo().devicePixelRatio);
     return res;
 }
 

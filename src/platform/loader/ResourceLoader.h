@@ -69,6 +69,17 @@ public:
         m_isDocumentInOpenState = false;
     }
 
+    // Unlike clear(), leaves in-flight requests alone: evicts only the
+    // URL -> decoded-ImageResource lookup table so a subsequent fetch of
+    // the same URL decodes fresh instead of reusing the cache-hit path
+    // (see requestResourcePreprocess/cacheHit), which otherwise copies the
+    // old resource's devicePixelRatio-pinned decode into the new one.
+    void clearImageResourceCache()
+    {
+        m_imageResourceCache.clear();
+        m_imageResourceCacheLRUList.clear();
+    }
+
     void cachePruning(); // this function uses iterateChildFrameBox. only call
                          // after rendering!
     void notifyImageResourceActiveState(ImageResource* res);
