@@ -550,6 +550,14 @@ CXXFLAGS+=' -fno-lto '
 %endif
 
 ##############################################
+# Disable userfaultfd write-protect VDB on prod_tv
+# (Tizen x86_64 build env kernel headers lack UFFDIO_WRITEPROTECT support)
+##############################################
+%if "%{rpm}" == "prod_tv"
+CFLAGS+=' -DNO_UFFDWP_VDB '
+%endif
+
+##############################################
 ## Build rules for each profile
 ##############################################
 %define fp_mode soft
