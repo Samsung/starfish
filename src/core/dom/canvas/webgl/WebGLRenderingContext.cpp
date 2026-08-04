@@ -3231,7 +3231,6 @@ void WebGLRenderingContext::handleTexImageWithArrayBufferView(
             std::vector<GLushort> blackData;
             if (byteLengthOfPixels <= maxTextureSize) {
                 if (type == GL_UNSIGNED_SHORT_5_5_5_1) {
-                    std::vector<GLushort> blackData;
                     blackData.resize(byteLengthOfPixels,
                                      Pixel::makePixel5551(0, 0, 0, 0xFF));
                 } else if (type == GL_UNSIGNED_SHORT_4_4_4_4) {
