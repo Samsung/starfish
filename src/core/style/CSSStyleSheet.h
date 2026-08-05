@@ -242,6 +242,26 @@ public:
     bool disabled() override;
     void setDisabled(bool disabled) override;
 
+    // https://drafts.csswg.org/css-namespaces/ -- prefix -> namespace URI,
+    // scoped to this stylesheet only (a prefix declared in one stylesheet is
+    // not visible from another). An empty `prefix` registers the *default*
+    // namespace instead (`@namespace "uri";`, no prefix token) -- stored
+    // separately from the prefix map since it needs its own presence/absence
+    // state (`@namespace "";` legitimately declares an empty-string default
+    // namespace, which must stay distinguishable from "no default namespace
+    // declared at all").
+    void registerNamespace(const AtomicString& prefix, const AtomicString& uri);
+    Optional<AtomicString> namespaceURIFromPrefix(
+        const AtomicString& prefix) const;
+    Optional<AtomicString> defaultNamespaceURI() const
+    {
+        return m_defaultNamespaceURI;
+    }
+    bool hasNamespacePrefix(const AtomicString& prefix) const
+    {
+        return m_namespacePrefixMap.find(prefix) != m_namespacePrefixMap.end();
+    }
+
 protected:
     void syncChildRuleWrappers();
     void notifyStyleSheetChanged();
@@ -260,6 +280,11 @@ protected:
     GCVector<std::pair<StyleRule*, ResourceURL*>> m_styleRules;
     GCVector<StyleRuleKeyframes*> m_keyframes;
     GCVector<CSSRule*> m_childRuleWrappers;
+
+    // @namespace prefix -> URI, scoped to this stylesheet. See
+    // registerNamespace()/namespaceURIFromPrefix() above.
+    GCUnorderedMap<AtomicString, AtomicString> m_namespacePrefixMap;
+    Optional<AtomicString> m_defaultNamespaceURI;
 
     bool m_disabled : 1;
 };
