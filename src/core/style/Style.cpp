@@ -8497,8 +8497,19 @@ bool StyleResolver::checkOne(
             elementName != selector->selectorText()) {
             return false;
         }
-        if (want.namespaceURI().getValue().string()->equals("*")) {
+        AtomicString wantNsURI = want.namespaceURI().getValue();
+        if (wantNsURI.string()->equals("*")) {
             return true; // any-namespace wildcard; local name already checked
+        }
+        if (wantNsURI.isEmptyAtomicString()) {
+            // "no namespace" (|name, or an in-scope @namespace "";) must
+            // match an element with no namespace at all -- but QualifiedName
+            // represents "no namespace" as a true null namespaceURI
+            // (namespaceURI().hasValue() == false), not an empty string, so
+            // hasSameNamespaceURI()'s null-vs-empty distinction would
+            // otherwise never match this case (an empty-string Optional
+            // never equals a valueless one).
+            return !element->name().namespaceURI().hasValue();
         }
         return element->name().hasSameNamespaceURI(want.namespaceURI());
     } else if (selectorType == CSSSelector::Type::Id) {
