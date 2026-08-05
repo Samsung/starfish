@@ -155,6 +155,31 @@ void CSSStyleSheet::setOwnerRule(CSSRule* ownerRule)
     m_ownerRule = ownerRule;
 }
 
+void CSSStyleSheet::registerNamespace(const AtomicString& prefix,
+                                      const AtomicString& uri)
+{
+    // A later @namespace re-declaring the same prefix (or the default
+    // namespace) overrides the earlier one -- CSS Namespaces §2 doesn't
+    // define this explicitly, but it follows from "@namespace rules are
+    // processed in order" plus prefix resolution always consulting the
+    // current state of the map.
+    if (prefix.isEmptyAtomicString()) {
+        m_defaultNamespaceURI = Optional<AtomicString>(uri);
+        return;
+    }
+    m_namespacePrefixMap[prefix] = uri;
+}
+
+Optional<AtomicString> CSSStyleSheet::namespaceURIFromPrefix(
+    const AtomicString& prefix) const
+{
+    auto iter = m_namespacePrefixMap.find(prefix);
+    if (iter == m_namespacePrefixMap.end()) {
+        return Optional<AtomicString>();
+    }
+    return iter->second;
+}
+
 ResourceURL* CSSStyleSheet::url()
 {
     // Constructable stylesheets have no origin node; relative URLs inside them
