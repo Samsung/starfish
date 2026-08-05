@@ -764,6 +764,7 @@ CSSParser::CSSParser(Node* origin)
     , m_preserveComments(false)
     , m_origin(origin)
     , m_executionContext(origin->executionContext())
+    , m_styleSheet(nullptr)
     , m_scanner(nullptr)
     , m_error(nullptr)
     , m_state()
@@ -780,6 +781,7 @@ CSSParser::CSSParser(ExecutionContext* executionContext)
     , m_preserveComments(false)
     , m_origin(nullptr)
     , m_executionContext(executionContext)
+    , m_styleSheet(nullptr)
     , m_scanner(nullptr)
     , m_error(nullptr)
     , m_state()
@@ -928,14 +930,19 @@ String* CSSParser::determineNamespace(String* prefix)
         return String::fromUTF8("*"); // We'll match any namespace.
     }
 
-    if (m_origin->styleResolver().sheets().size() == 0) {
-        return nullptr; // Cannot resolve prefix to namespace without a
-                        // stylesheet, syntax error.
+    if (!m_styleSheet) {
+        // No owning sheet to resolve the prefix against (querySelector(),
+        // Element.matches(), CSS.supports() -- see setStyleSheet()), so a
+        // named prefix can never be declared here == invalid selector.
+        return nullptr;
     }
 
-    // TODO: Implement logic for getting namespace uri from prefix in stylesheet
-    // return m_styleSheet->namespaceURIFromPrefix(prefix);
-    return String::emptyString;
+    Optional<AtomicString> uri = m_styleSheet->namespaceURIFromPrefix(
+        AtomicString::createAtomicString(starfish(), prefix));
+    if (!uri.hasValue()) {
+        return nullptr; // Undeclared prefix -- invalid selector.
+    }
+    return uri.getValue().string();
 }
 
 CSSSelector* CSSParser::getPseudoSelector()
@@ -2641,6 +2648,19 @@ StyleRuleNamespace* CSSParser::parseNamespaceRule()
     }
 
     forgetState();
+
+    // Registered immediately (not deferred to CSSStyleSheet::addRule()) so
+    // the map is already populated while parsing the selectors that follow
+    // this rule in the same parseRules() pass. No-op if this parse has no
+    // owning sheet (querySelector/matches/CSS.supports -- see
+    // CSSParser::setStyleSheet()).
+    if (m_styleSheet) {
+        m_styleSheet->registerNamespace(
+            AtomicString::createAtomicString(starfish(), prefix),
+            AtomicString::createAtomicString(starfish(),
+                                             namespaceURI.getValue()));
+    }
+
     return new StyleRuleNamespace(namespaceURI.getValue(), prefix);
 }
 
@@ -2772,6 +2792,10 @@ Optional<String*> CSSParser::parseURLString()
 
 void CSSParser::parseStyleSheet(String* sourceString, CSSStyleSheet* target)
 {
+    // Set before parseRules() below so @namespace rules register into the
+    // right sheet as they're parsed, not just after the fact via addRule().
+    m_styleSheet = target;
+
     // @charset can only appear at first char of the stylesheet
     RefPtr<CSSToken> token = makeToken(sourceString);
     if (!token->isNotNull()) {

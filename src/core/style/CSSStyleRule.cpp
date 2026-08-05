@@ -87,6 +87,9 @@ String* CSSStyleRule::selectorText() const
 void CSSStyleRule::setSelectorText(String* selectorText)
 {
     CSSParser parser(scriptBindingInstance()->ownerDocument());
+    if (parentStyleSheet()) {
+        parser.setStyleSheet(parentStyleSheet());
+    }
     parser.makeToken(selectorText);
 
     bool isValid = true;
@@ -156,6 +159,9 @@ unsigned CSSGroupingRule::insertRule(String* ruleString, unsigned index)
     Node* node = parentSheet ? parentSheet->root()
                              : scriptBindingInstance()->ownerDocument();
     CSSParser parser(node);
+    if (parentSheet) {
+        parser.setStyleSheet(parentSheet);
+    }
     RefPtr<CSSToken> token = parser.makeToken(ruleString);
 
     GCVector<StyleRuleBase*> rules;

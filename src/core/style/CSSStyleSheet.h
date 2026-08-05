@@ -167,6 +167,20 @@ public:
         clearKeyframesRules();
     }
 
+    // Separate from clearAllRules() -- replaceSync()/replace() parse the
+    // replacement text (which registers its own @namespace declarations)
+    // *before* calling clearAllRules(), to keep "parse first, commit after"
+    // atomicity for the rule list. Namespace state has no such commit step
+    // (registerNamespace() applies immediately during parsing, see
+    // CSSParser::parseNamespaceRule()), so it must be cleared *before*
+    // parsing the replacement text instead, or the old namespaces would
+    // leak into resolving the new text's own prefixed selectors.
+    void clearNamespaces()
+    {
+        m_namespacePrefixMap.clear();
+        m_defaultNamespaceURI = Optional<AtomicString>();
+    }
+
     void clearStyleRules()
     {
         m_styleRules.clear();
