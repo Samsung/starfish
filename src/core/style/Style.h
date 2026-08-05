@@ -2987,6 +2987,7 @@ protected:
 
 class CSSSelector;
 class CSSAttributeSelector;
+class CSSNamespacedTagSelector;
 class CSSPseudoSelector;
 
 struct CSSSelectorListItem {
@@ -3037,6 +3038,13 @@ public:
         Class,
         PseudoElement,
         PseudoClass,
+        // A type/universal selector qualified by an explicit or default
+        // namespace (`svg|rect`, `*|rect`, `|rect`, or a bare `div`/`*`
+        // rewritten under an in-scope default namespace -- see
+        // CSSNamespacedTagSelector below). Must stay strictly before
+        // AttributeExact: hasImmutableData()/isAttributeSelector() below key
+        // off this enum's ordering, and this type is neither.
+        NamespacedTag,
         AttributeExact,   // Example: E[foo="bar"]
         AttributeSet,     // Example: E[foo]
         AttributeHyphen,  // Example: E[foo|="bar"]
@@ -3084,6 +3092,23 @@ public:
     {
         STARFISH_ASSERT(isAttributeSelector());
         return (CSSAttributeSelector*)this;
+    }
+
+    bool isNamespacedTagSelector() const
+    {
+        return m_type == NamespacedTag;
+    }
+
+    CSSNamespacedTagSelector* asCSSNamespacedTagSelector()
+    {
+        STARFISH_ASSERT(isNamespacedTagSelector());
+        return (CSSNamespacedTagSelector*)this;
+    }
+
+    const CSSNamespacedTagSelector* asCSSNamespacedTagSelector() const
+    {
+        STARFISH_ASSERT(isNamespacedTagSelector());
+        return (const CSSNamespacedTagSelector*)this;
     }
 
     bool isPseudoSelector() const
@@ -3173,6 +3198,37 @@ public:
 protected:
     String* m_value;
     QualifiedName m_attribute;
+};
+
+// A type/universal selector qualified by a namespace (explicit prefix,
+// explicit `*` any-namespace, explicit `|` no-namespace, or an in-scope
+// default namespace applied at parse time -- see
+// CSSParser::prependTypeSelectorIfNeeded()/determineNamespace()).
+// `m_selectorText` (inherited) is kept as the bare local name -- NOT
+// `prefix|localName` -- so existing local-name-keyed code (rule bucketing,
+// the ancestor Bloom filter, SelectorQuery's tag fast path) keeps working
+// unmodified; only matching/serialization/specificity need to know about the
+// namespace, and consult `m_name` for it.
+//
+// Namespace URI convention (matches determineNamespace()'s return value):
+// literal "*" = any namespace, empty = no namespace, anything else = that
+// resolved URI. Local name "*" = any tag (the namespaced-universal form,
+// e.g. `svg|*`).
+class CSSNamespacedTagSelector : public CSSSelector {
+public:
+    CSSNamespacedTagSelector(const QualifiedName& name)
+        : CSSSelector(CSSSelector::Type::NamespacedTag, name.localNameAtomic())
+        , m_name(name)
+    {
+    }
+
+    const QualifiedName& qualifiedName() const
+    {
+        return m_name;
+    }
+
+protected:
+    QualifiedName m_name;
 };
 
 class CSSPseudoSelector : public CSSSelector {

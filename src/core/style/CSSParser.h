@@ -1856,7 +1856,13 @@ private:
     void parseComplexSelector(CSSSelectorList* selectorList);
     void parseCompoundSelector(CSSSelectorList* selectorList);
     CSSSelectorListItem::RelationType parseCombinator();
-    bool parseName(CSSTokenString& name);
+    // Parses a type-selector or universal-selector name, one of:
+    // `name`, `*`, `prefix|name`, `*|name`, `|name` (explicit no-namespace),
+    // `prefix|*`, `*|*`. `hasPrefix`/`prefix` report whether a `|` separator
+    // was present and the (possibly empty, possibly `*`) text before it --
+    // `prefix` is untouched when `hasPrefix` comes back false.
+    bool parseName(CSSTokenString& name, bool& hasPrefix,
+                   CSSTokenString& prefix);
     CSSSelector* getSimpleSelector();
     CSSSelector* getIdSelector();
     CSSSelector* getClassSelector();
