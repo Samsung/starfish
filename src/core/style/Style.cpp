@@ -682,6 +682,16 @@ unsigned CSSSelector::specificityForOneSelector() const
     case Tag:
     case PseudoElement:
         return specificity + 0x000001;
+    case NamespacedTag:
+        // A namespaced *universal* selector (local name "*", e.g. `svg|*`)
+        // contributes nothing, same as plain Universal below; a namespaced
+        // *type* selector (`svg|rect`) counts as one type selector, same as
+        // plain Tag above.
+        if (asCSSNamespacedTagSelector()->qualifiedName().localName()->equals(
+                "*")) {
+            return 0;
+        }
+        return specificity + 0x000001;
     case Id:
         return specificity + 0x010000;
     case Class:
@@ -719,6 +729,17 @@ String* CSSSelectorList::selectorText(CSSSelectorList* list, unsigned idx,
     if (cs->type() == CSSSelector::Tag ||
         cs->type() == CSSSelector::Universal) {
         str.appendString(cs->selectorText().string());
+    } else if (cs->type() == CSSSelector::NamespacedTag) {
+        const QualifiedName& name =
+            cs->asCSSNamespacedTagSelector()->qualifiedName();
+        // Only an explicit prefix (svg|, *|, |) round-trips into the
+        // serialization -- one implicitly applied from an in-scope default
+        // namespace has no source-level prefix token to reproduce.
+        if (name.hasPrefix()) {
+            str.appendString(name.prefix().getValue().string());
+            str.appendChar('|');
+        }
+        str.appendString(name.localName());
     }
 
     while (true) {
@@ -898,18 +919,6 @@ bool CSSSelector::isSimple(CSSSelectorList* selectorList)
     if (selectorList->size() == 1) {
         return true;
     }
-    /*
-        if (m_selector->match() == CSSSelector::Tag) {
-            // We can't check against anyQName() here because namespace may
-            // not be nullAtom.
-            // Example:
-            //     @namespace "http://www.w3.org/2000/svg";
-            //     svg:not(:root) { ...
-            if (m_selector->tagQName().localName() == starAtom) {
-                    return m_tagHistory->isSimple();
-            }
-        }
-    */
 
     return false;
 }
@@ -8479,6 +8488,19 @@ bool StyleResolver::checkOne(
         return false;
     } else if (selectorType == CSSSelector::Type::Tag) {
         return (elementName == selector->selectorText());
+    } else if (selectorType == CSSSelector::Type::NamespacedTag) {
+        const QualifiedName& want =
+            selector->asCSSNamespacedTagSelector()->qualifiedName();
+        // selectorText() (inherited) is the bare local name -- see
+        // CSSNamespacedTagSelector's comment for why.
+        if (!want.localName()->equals("*") &&
+            elementName != selector->selectorText()) {
+            return false;
+        }
+        if (want.namespaceURI().getValue().string()->equals("*")) {
+            return true; // any-namespace wildcard; local name already checked
+        }
+        return element->name().hasSameNamespaceURI(want.namespaceURI());
     } else if (selectorType == CSSSelector::Type::Id) {
         STARFISH_ASSERT(!selector->selectorText().isEmptyAtomicString());
         result.styleDamageFrom =
@@ -10287,6 +10309,19 @@ static void extractValuesforSelector(const CSSSelector* selector,
     case CSSSelector::Tag:
         tagName = selector->selectorText();
         break;
+    case CSSSelector::NamespacedTag: {
+        // Bucket by local name same as a plain Tag, unless the local name
+        // itself is the wildcard (`svg|*`) -- that has no concrete tag name
+        // to key a bucket by, so leave tagName unset and let it fall through
+        // to the universal-rules bucket (checked by the ancestor filter path
+        // above; still safe, just not tag-bucket-optimized).
+        const QualifiedName& name =
+            selector->asCSSNamespacedTagSelector()->qualifiedName();
+        if (!name.localName()->equals("*")) {
+            tagName = selector->selectorText();
+        }
+        break;
+    }
     default:
         break;
     }

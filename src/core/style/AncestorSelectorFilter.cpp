@@ -98,6 +98,20 @@ static inline void collectDescendantSelectorIdentifierHashes(
         (*hash++) =
             selector->selectorText().string()->hashValue() * TagNameSalt;
         break;
+    case CSSSelector::NamespacedTag: {
+        // Same as Tag above (selectorText() is the bare local name), unless
+        // the local name is the wildcard ("svg|*") -- no concrete tag name
+        // to hash then, so contribute nothing (safe: an omitted hash can
+        // only make the filter more conservative, never cause a false
+        // reject of a rule that could actually match).
+        const QualifiedName& name =
+            selector->asCSSNamespacedTagSelector()->qualifiedName();
+        if (!name.localName()->equals("*")) {
+            (*hash++) =
+                selector->selectorText().string()->hashValue() * TagNameSalt;
+        }
+        break;
+    }
     default:
         break;
     }

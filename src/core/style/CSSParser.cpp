@@ -1352,7 +1352,17 @@ CSSSelector* CSSParser::getAttributeSelector()
     RefPtr<CSSToken> token = getToken(true, true);
 
     CSSTokenString attributeName;
-    if (!parseName(attributeName)) {
+    bool hasPrefix = false;
+    CSSTokenString prefix;
+    if (!parseName(attributeName, hasPrefix, prefix)) {
+        return nullptr;
+    }
+    if (hasPrefix) {
+        // Namespaced attribute selectors ([ns|attr]) are out of scope --
+        // treat as a hard parse failure (getSimpleSelector() promotes this
+        // to m_failedParsing since it already consumed the '[' sigil), same
+        // severity as any other malformed attribute selector, rather than
+        // silently matching as if unnamespaced.
         return nullptr;
     }
 
@@ -1448,8 +1458,11 @@ CSSSelector* CSSParser::getSimpleSelector()
     return selector;
 }
 
-bool CSSParser::parseName(CSSTokenString& name)
+bool CSSParser::parseName(CSSTokenString& name, bool& hasPrefix,
+                          CSSTokenString& prefix)
 {
+    hasPrefix = false;
+
     RefPtr<CSSToken> firstToken = currentToken();
     if (firstToken->isIdent()) {
         name = *firstToken->value();
@@ -1458,21 +1471,32 @@ bool CSSParser::parseName(CSSTokenString& name)
         name.appendChar('*');
         getToken(false, true);
     } else if (firstToken->isSymbol('|')) {
+        // Bare `|name` form -- no prefix text before the separator; don't
+        // consume it here, the check below does.
     } else {
         return false;
     }
 
-    if (!firstToken->isSymbol('|')) {
+    if (!currentToken()->isSymbol('|')) {
+        // No namespace separator followed -- `name` above is already the
+        // final (unqualified) name.
         return true;
     }
 
+    // What was parsed above was actually the prefix (empty for the bare
+    // `|name` form), not the final name.
+    hasPrefix = true;
+    prefix = name;
     name.clear();
 
-    RefPtr<CSSToken> nameToken = getToken(true, true);
+    getToken(true, true); // consume '|'
+    RefPtr<CSSToken> nameToken = currentToken();
     if (nameToken->isIdent()) {
-        name = *firstToken->value();
+        name = *nameToken->value();
+        getToken(false, true);
     } else if (nameToken->isSymbol('*')) {
         name.appendChar('*');
+        getToken(false, true);
     } else {
         return false;
     }
@@ -1485,8 +1509,10 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
     CSSSelector* compoundSelector;
 
     CSSTokenString elementName;
+    bool hasPrefix = false;
+    CSSTokenString prefix;
     CSSSelector::PseudoType compoundPseudoElement = CSSSelector::PseudoNone;
-    if (!parseName(elementName)) {
+    if (!parseName(elementName, hasPrefix, prefix)) {
         compoundSelector = getSimpleSelector();
 
         if (!compoundSelector) {
@@ -1522,25 +1548,83 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
 
     if (elementName.length()) {
         bool isStar = elementName.equals("*");
-        if (isStar && selectorList->size() > 0 && !foundPseudoClassHost) {
+
+        // Resolve an explicit prefix (svg|div, *|div, |div) or fall back to
+        // an in-scope default namespace (@namespace "uri"; div{}) -- see
+        // CSSNamespacedTagSelector (Style.h) for the nsURI convention ("*" =
+        // any namespace, empty = no namespace).
+        Optional<AtomicString> nsURI;
+        bool explicitNamespace = false;
+        if (hasPrefix) {
+            String* uri = determineNamespace(prefix.toString());
+            if (!uri) {
+                // Undeclared prefix -- invalid selector, drop the whole rule
+                // (this is what issue #5041 is about: a selector like
+                // `:not(foo|div)` with an undeclared `foo` must invalidate
+                // the rule, not degenerate into a compound that can never
+                // match anything while still parsing "successfully").
+                m_failedParsing = true;
+                return;
+            }
+            nsURI = AtomicString::createAtomicString(starfish(), uri);
+            explicitNamespace = true;
+        } else if (m_styleSheet) {
+            nsURI = m_styleSheet->defaultNamespaceURI();
+        }
+
+        if (isStar && !nsURI.hasValue() && selectorList->size() > 0 &&
+            !foundPseudoClassHost) {
             // Note: foundPseudoClassHost
             // We suppress the creation of universal selectors in most cases.
             // but in the case of Pseudo class host, the two types must be
             // strictly distinguished.
             // For example: :host{}, *:host
+            // A namespace-constrained universal (explicit prefix or default
+            // namespace) is never suppressed this way -- unlike a bare `*`,
+            // it adds a real matching constraint that can't be folded away.
             return;
         }
 
         auto rt = selectorList->size() == 0 ? CSSSelectorListItem::None
                                             : CSSSelectorListItem::SubSelector;
-        CSSSelector* selector = getSelector(
-            { isStar ? CSSSelector::Type::Universal : CSSSelector::Type::Tag,
-              CSSSelector::PseudoNone, CSSSelector::CaseInsensitive,
-              elementName.toAttrAtomicString(starfish()) });
+        CSSSelector* selector;
+        if (nsURI.hasValue()) {
+            AtomicString localName = elementName.toAttrAtomicString(starfish());
+            QualifiedName qname =
+                explicitNamespace
+                    ? QualifiedName(prefix.toAttrAtomicString(starfish()),
+                                    nsURI.getValue(), localName)
+                    : QualifiedName(nsURI.getValue(), localName);
+            selector = new CSSNamespacedTagSelector(qname);
+        } else {
+            selector = getSelector(
+                { isStar ? CSSSelector::Type::Universal
+                         : CSSSelector::Type::Tag,
+                  CSSSelector::PseudoNone, CSSSelector::CaseInsensitive,
+                  elementName.toAttrAtomicString(starfish()) });
+        }
 
         selectorList->insert(selectorList->begin(),
                              CSSSelectorListItem(selector));
         selectorList->front().m_relation = rt;
+    } else if (m_styleSheet) {
+        // No explicit type/universal selector in this compound (e.g. `.foo`,
+        // `:hover`) -- Selectors-4's default-namespace rule still implicitly
+        // restricts the compound's subject to the default namespace, same
+        // as it would for a bare type selector. (PR-B carves out the one
+        // spec exception to this: the *subject* compound of a
+        // :is()/:where()/:not() argument is exempt unless it has its own
+        // explicit type/universal selector -- not implemented here.)
+        Optional<AtomicString> defaultNS = m_styleSheet->defaultNamespaceURI();
+        if (defaultNS.hasValue()) {
+            QualifiedName qname(
+                defaultNS.getValue(),
+                AtomicString::createAtomicString(starfish(), "*"));
+            CSSSelector* selector = new CSSNamespacedTagSelector(qname);
+            selectorList->insert(selectorList->begin(),
+                                 CSSSelectorListItem(selector));
+            selectorList->front().m_relation = CSSSelectorListItem::SubSelector;
+        }
     }
 }
 
