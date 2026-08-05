@@ -637,11 +637,13 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
     GCVector<StyleRuleBase*> rules;
     if (m_origin) {
         CSSParser parser(m_origin);
+        parser.setStyleSheet(this);
         RefPtr<CSSToken> token = parser.makeToken(ruleString);
         parser.parseRules(token, rules,
                           CSSParser::RuleListType::TopLevelRuleList, true);
     } else {
         CSSParser parser(m_executionContext);
+        parser.setStyleSheet(this);
         RefPtr<CSSToken> token = parser.makeToken(ruleString);
         parser.parseRules(token, rules,
                           CSSParser::RuleListType::TopLevelRuleList, true);
@@ -796,7 +798,9 @@ void CSSStyleSheet::replaceSync(String* text)
     // implemented yet)
 
     // Step 3: Parse a stylesheet from text
+    clearNamespaces();
     CSSParser parser(m_executionContext);
+    parser.setStyleSheet(this);
     RefPtr<CSSToken> token = parser.makeToken(text);
     GCVector<StyleRuleBase*> newRules;
     parser.parseRules(token, newRules,
@@ -837,7 +841,9 @@ Promise* CSSStyleSheet::replace(String* text)
     // implemented yet)
 
     // Step 3: Parse first to ensure atomic replacement
+    clearNamespaces();
     CSSParser parser(m_executionContext);
+    parser.setStyleSheet(this);
     RefPtr<CSSToken> token = parser.makeToken(text);
     GCVector<StyleRuleBase*> newRules;
     parser.parseRules(token, newRules,

@@ -1794,6 +1794,19 @@ public:
 
     Starfish* starfish();
 
+    // The CSSStyleSheet this parser's output namespace declarations
+    // (@namespace) get registered into, and prefixes get resolved against.
+    // Neither constructor can supply this: `Node* origin` is the owning
+    // <style>/<link> element, not the sheet itself, and `ExecutionContext*`
+    // is document-wide (a document can hold many sheets). Left null for
+    // parsing contexts that have no single owning sheet (querySelector,
+    // Element.matches, CSS.supports) -- see call sites in CSSStyleSheet.cpp /
+    // CSSStyleRule.cpp for where this is set.
+    void setStyleSheet(CSSStyleSheet* sheet)
+    {
+        m_styleSheet = sheet;
+    }
+
     void parseStyleSheet(String* sourceString, CSSStyleSheet* target);
     bool parseSupportCondition(String* str);
     void parseRules(RefPtr<CSSToken> token, GCVector<StyleRuleBase*>& rootRule,
@@ -1877,6 +1890,7 @@ private:
     bool m_preserveComments;
     Node* m_origin;
     ExecutionContext* m_executionContext;
+    CSSStyleSheet* m_styleSheet;
     GCVector<RefPtr<CSSToken>> m_preservedTokens;
 
     Document* document();
