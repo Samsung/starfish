@@ -2886,7 +2886,14 @@ void CSSParser::parseRules(RefPtr<CSSToken> token,
                 rule = parseSupportsRule();
             } else if (token->isAtRule("@counter-style")) {
                 rule = parseCounterStyleRule();
-            } else if (token->isAtRule("@namespace")) {
+            } else if (allowedRules <= AllowNamespaceRules &&
+                       token->isAtRule("@namespace")) {
+                // https://drafts.csswg.org/css-namespaces/#syntax -- must
+                // come after any @charset/@import but before any other rule.
+                // Mirrors the @import guard above; an @namespace found too
+                // late (e.g. nested inside @media, or after a style rule)
+                // falls through to addUnknownAtRule() below and is dropped,
+                // matching CSS's forgiving-parsing model.
                 rule = parseNamespaceRule();
             } else if (token->isAtRule("@keyframes")) {
                 rule = parseKeyframesRule();
