@@ -4,6 +4,12 @@ coding style generally follows
 [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
 This document highlights core coding style.
 
+Formatting (indentation, line length, brace placement, spacing, ...) is
+governed by the project-root `.clang-format` file and enforced by
+`tool/check_tidy.py` in CI — that is the source of truth for formatting, not
+this document. This guide focuses on naming, structure, and semantic
+conventions that `.clang-format` cannot express.
+
 ## Header Files
 ### `#define` Guard
 
