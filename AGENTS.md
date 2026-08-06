@@ -165,3 +165,9 @@ norm here only if it keeps tripping people up. When code referenced here
 changes, update the pointer in the same change. Note this file has two
 consumers: coding agents working in the repo, and the AI review bot, which
 applies it as the repository rule on every PR (see Code review checkers).
+
+This file is the shared baseline. Personal or machine-specific instructions
+(your build directory, your workflow) belong in an untracked local overlay
+— e.g. `CLAUDE.local.md`, `.clinerules/` — which is git-ignored, must not
+contradict this file, and whose rules move here once they turn out to be
+team-wide.
