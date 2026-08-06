@@ -715,6 +715,11 @@ inline bool operator!=(const T& a, const Optional<T>& b)
     return b != a;
 }
 
+// Pointer specialization: absence is encoded in the pointer itself -- there
+// is no separate has-value flag like the generic Optional<T> keeps -- so a
+// stored null pointer and NullOption collapse into the same empty state
+// (hasValue() is just !!m_value). Don't use Optional<T*> where "explicitly
+// set to null" must stay distinct from "empty".
 template <typename T>
 class Optional<T*> : public gc {
 public:

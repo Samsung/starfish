@@ -80,6 +80,11 @@ inline InitializeOption operator~(InitializeOption a)
 
 /**
  * \brief Perform initialization or cleanup of lightweight web engine.
+ *
+ * NOTE: this class shares its name with the enclosing namespace, so wherever
+ * the class is in scope (e.g. under `using namespace LWE;`) an unqualified
+ * `LWE::` resolves to the class and is ambiguous — reference the namespace
+ * with the global qualifier `::LWE::` instead.
  */
 class LWE_EXPORT LWE {
 public:

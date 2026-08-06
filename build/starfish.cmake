@@ -10,7 +10,9 @@ SET (STARFISH_BINDING_STAMP ${OUTPUT_DIRECTORY}/starfish_generated/binding/bindi
 
 # Collect every input the generator depends on: the generator scripts and
 # templates plus all IDL files. Adding, modifying or deleting any of these must
-# trigger regeneration; nothing else should.
+# trigger regeneration; nothing else should. The glob and the mtime signature
+# below are evaluated at configure time only (no CONFIGURE_DEPENDS), so any
+# .idl change requires re-running cmake -- an incremental ninja won't see it.
 FILE (GLOB_RECURSE STARFISH_BINDING_IDL_FILES ${STARFISH_ROOT}/src/*.idl)
 FILE (GLOB STARFISH_BINDING_GENERATOR_FILES
     ${STARFISH_ROOT}/binding_generator/scripts/*.py

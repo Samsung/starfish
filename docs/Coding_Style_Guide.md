@@ -159,10 +159,21 @@ private:
 }
 ```
 
-## Functions
-### Function Names
-Use camelcases when naming a function.
+## Naming
 
+- Types (classes, structs, enums) use PascalCase. A class lives in a file
+  pair named after it (`Element.h` / `Element.cpp`).
+- Functions and local variables use camelCase.
+- Data members use the `m_` prefix (`m_firstChild`).
+- Boolean predicates read as questions — `isXxx`, `hasXxx`, `shouldXxx`,
+  `didXxx`, `inXxx` (see Code readability below for how they are checked).
+- The public embedder API namespace `LWE` also contains a class named `LWE`
+  (`inc/LWEWebView.h`), so an unqualified `LWE::` is ambiguous wherever that
+  class is in scope (e.g. under `using namespace LWE;`). Reference the
+  namespace with the global qualifier — `::LWE::KeyValue` — as the bridge
+  implementations do.
+
+## Functions
 ### Function Calls
 Write a function call all in the same line if it fits. If not, split the
 function call into multiple lines by either adding a newline after the
@@ -237,80 +248,79 @@ Do not use Run Time Type Information.
 Use of C++11 features are encouraged. In addition, use of C++11 compatible
 style formatting is encouraged, e.g., use `A<B<int>>` instead of `A<B<int> >`
 
+### Scoped enums
+Prefer `enum class` over a plain `enum` when declaring a new enum type — it
+doesn't leak enumerators into the enclosing scope and doesn't implicitly
+convert to int. Plain enums remain in older code; don't mass-convert them.
+
+### `override`
+Mark every virtual function that overrides a base-class function with
+`override`, so a signature mismatch fails to compile instead of silently
+declaring a new virtual function.
+
 ### Use of `try-catch` statements
 Do not use try-catch statements except throwing a DOMException.
 ## Assertions and nullptr
 ### Basic principle
-* When using a pointer type variable, be sure to add the Assertions statement if you do not want to consider the situation where the value is nullptr, if you do not want to add assertions, be sure to write your defense code.
+* This codebase is GC-based and passes objects around as raw pointers by default: a pointer parameter or member is expected to be valid unless its type says otherwise. Express "can be absent" in the type with `Optional<T>` — not with asserts or defensive null checks.
 * In our strategy, Starfish will be terminated along with an error message when a memory allocation attempt fails.
 * If you use c-style allocator like malloc/free, you should check allocation fail.
 * Don't use native(not GC) operator new [] like new char[1240000]
+* Don't hold GC-managed pointers in a non-GC container such as `std::vector`, even as a short-lived local. The container's backing buffer is allocated outside the GC heap, so the collector does not scan it and a still-referenced element can be collected. Use `GCVector`/`GCTightVector` (see `StarfishBase.h`) instead.
 * While you don't use GC allocator, check before dereferencing with ASSERT or if, depends on the expected behavior what you want to achieve.
 
-### Add an assertion in the following situations.
-* If the function argument is a pointer type
+### Assertions on pointer arguments are legacy
+Blanket-asserting every pointer argument used to be the rule here:
 ```cpp
 void A::functionA(B* arg1, int arg2) {
-    STARFISH_ASSERT(arg1 != nullptr);
+    STARFISH_ASSERT(arg1 != nullptr); // legacy pattern -- don't add new ones
 }
 ```
+It is outdated: validity is the default expectation for a pointer in this
+codebase, and nullability belongs in the type (`Optional<T>`). Don't add new
+blanket asserts; the remaining ones should gradually disappear. Reserve
+assertions for real invariants — conditions a caller could plausibly violate
+that the type system can't express.
 
 * Don't make String* as nullptr
 Use String::emptyString instead of nullptr.
-If you want to make String* as nullptr, Use Nullable<String*>
+If you want to represent an absent String*, use Optional<String*>
 
 
 ### Handling a nullable pointer
 
 There are the following choices where you handle a pointer which can be nullable.
 
-* Use NULLABLE macro
+* Use `Optional<T>` (preferred)
 
-Add `NULLABLE` definition before the type of pointers. `NULLABLE` is nothing but a notation which explicitly shows whether or not the given pointer can be nullable.
+A variable, member, or return value that can be absent should be typed as
+`Optional<T>` rather than a raw pointer overloaded with `nullptr`. Absence is
+`NullOption`; presence is checked with implicit truthiness, mirroring plain
+pointer null checks.
 
 ```cpp
-// `NULLABLE` is predefined in Starfish as below.
-#define NULLABLE
+Optional<Object*> A::functionA(ObjectC* c) {
+    // `c` is not Optional: it is expected valid as-is.
 
-...
-
-NULLABLE Object* A::functionA(NULLABLE ObjectB* b, ObjectC* c) {
-
-    // NOTE: If NULLABLE isn't prepended on the type of the given parameter,
-    // ASSERTION is preferred as below.
-    STARFISH_ASSERT(c != nullptr);
-
-    ...
-
-    // Access violation should be considered for a nullable pointer.
-    if ((b != nullptr) && b->isLoaded())
-    {
+    // Absence must be considered for an Optional value before use.
+    Optional<ObjectB*> b = c->getObjectB();
+    if (b && (*b)->isLoaded()) {
         ...
     }
-
-    // Use `NULLABLE` when calling a function which can return a nullable pointer.
-    NULLABLE Object* obj = c->getObject(...);
-    // NULLABLE auto obj = c->getObject(...);
 
     if (cnd) {
         return new Object;
     } else {
-        return nullptr;
+        return NullOption;
     }
 }
 ```
 
-* Use Nullable template only for javascript binding interfaces
-```cpp
-Nullable<Object> A::functionA() {
-    if (cnd) {
-        return valueOfObjectClass;
-    } else {
-        // return nullptr;
-        return Nullable<Object>();
-    }
-}
-```
+Note: the pointer specialization `Optional<T*>` keeps no separate has-value
+flag — assigning a null pointer collapses indistinguishably into the empty
+state (see the comment at its definition in `StarfishBase.h`). Where
+"explicitly set to null" must stay distinct from "empty", don't use
+`Optional<T*>`.
 
 * Use reference instead of pointer
 
@@ -356,27 +366,26 @@ Make sure your code is obvious and readable with the following conventions.
 ```diff
 ++ // NOTE: the statements in green are preferred.
 
-// Use a more explicit expression for `nullptr` checking.
-- if (ptr)
-+ if (ptr != nullptr)
+// Pointer and Optional emptiness checks use implicit truthiness, mirroring
+// Optional's own operator bool (the prevailing style of the codebase).
+- if (ptr != nullptr)
++ if (ptr)
 
-- STARFISH_ASSERT(ptr)
-+ STARFISH_ASSERT(ptr != nullptr)
-
-// Using the obvious meaning is preferred. ((e.g) the following usage for `strlen`)
+// Non-boolean values (counts, lengths, ...) still compare explicitly --
+// don't let an integer masquerade as a boolean.
 - if (verbose && strlen(verbose))
-+ if ((verbose != nullptr) && (strlen(verbose) > 0))
++ if (verbose && strlen(verbose) > 0)
 
-// Regarding readability, The primary rule is to use explicit expression consists of left and right operand
-// and not to use single operand logical operator such as (`!`). You can use single operand logical expression
-// only if function/member name is boolean-identifiable. acceptable formats are "isXXX", "shouldXXX", "didXXX" ,"hasXXX" , "inXXX" or "flagXXX".
-// Other cases are not recommended to omit the right operand.
+// Single-operand `!` is fine for pointer/Optional emptiness checks and for
+// boolean-identifiable names ("isXXX", "shouldXXX", "didXXX", "hasXXX",
+// "inXXX", "flagXXX"). Booleans never compare against true/false; other
+// value categories keep an explicit right operand.
 bool isLoaded();
 bool sunnyToday();
 int howMuchLoaded();
 
 - if (!isLoaded() && howMuchLoaded() && ptr)
-- if (sunnyToday())
-+ if (!isLoaded() && howMuchLoaded() != 0 && ptr != nullptr)
-+ if (sunnyToday() == true)
++ if (!isLoaded() && howMuchLoaded() != 0 && ptr)
+- if (sunnyToday() == true)
++ if (sunnyToday())
 ```
