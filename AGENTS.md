@@ -100,6 +100,10 @@ Conventions:
 
 - `git commit -s` (DCO); subject ≤50 chars, imperative, no trailing period;
   body explains why/what, not how.
+- When an AI coding agent authored or materially contributed to a commit,
+  add a `Co-Authored-By: <Agent Name> <email>` trailer identifying it,
+  placed before the `Signed-off-by` line — regardless of which agent tool
+  was used.
 - Branch prefixes: `feat/ fix/ docs/ style/ refactor/ chore/`.
 - Never push directly or force-push to `master` — land changes through a PR.
 
