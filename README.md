@@ -52,6 +52,11 @@ cmake -Bout/release -DMODE=release -DHOST=linux -DARCH=x64 -DBACKEND=glib_cairo_
 ninja -C out/release starfish.executable
 ```
 
+> Note: JS bindings for spec-defined interfaces are generated from `src/**/*.idl`
+> at cmake configure time (see `build/starfish.cmake`). After adding, editing or
+> deleting any `.idl`, re-run the cmake command above — an incremental `ninja`
+> alone will not regenerate the bindings.
+
 #### Build targets
 
 * starfish.executable
@@ -224,10 +229,16 @@ gradle build
 # install imgdiff tool
 ninja install_pixel_test_dep
 ```
+
+Wrap every test run in `xvfb-run -s '-screen 0 1920x1080x24' -a`, even on a
+machine with a live desktop session: the suites launch Starfish instances
+8-way in parallel, which spikes load on a real X server, and the fixed
+virtual screen keeps pixel/reftest comparisons reproducible.
+
 ### Summary
 ``` sh
 # Run all test at once
-./tool/test_runner.py
+xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py
 ```
 ``` sh
 # Sub tests
