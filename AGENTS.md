@@ -155,8 +155,19 @@ the checker below is pinned explicitly so it is always enforced.
   that intentional deviations are visible (a why-comment citing the spec)
   rather than silent
 
+#### 4) Security
+- Security : Treat web content, network data, files, and inputs crossing
+  script/native or process boundaries as attacker-controlled. Flag reachable
+  paths to memory corruption, code or command injection, path traversal, or
+  unauthorized data access or modification
+- Security : Preserve browser security boundaries, including same-origin
+  checks, CORS, CSP, cookie and storage scoping, permissions, and TLS
+  certificate verification. Flag bypasses, fail-open behavior, or weaker
+  defaults. Explicit developer or embedder opt-outs are acceptable only when
+  they remain opt-in and cannot be enabled by web content
+
 ### Severity
-- Critical : None
+- Critical : Security
 - Major : Test Coverage, Memory Efficiency, Web Standards Compliance
 - Minor : None
 
