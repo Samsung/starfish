@@ -103,10 +103,65 @@ Conventions:
 - Branch prefixes: `feat/ fix/ docs/ style/ refactor/ chore/`.
 - Never push directly or force-push to `master` — land changes through a PR.
 
+## Code review checkers
+
+Severity mapping for the AI review bot (Review Quality Agent), which reads
+this file as the repository rule. The bot comments only on findings it
+judges Major or Critical. The norms in the sections above apply as written;
+the checker below is pinned explicitly so it is always enforced.
+
+### Checker
+
+#### 1) Test Coverage
+- Test Coverage : A behavior change (new feature, bug fix) must land
+  together with tests that cover it
+- Test Coverage : Enabling a feature through an `.idl` change or
+  implementing a new web spec (DOM, CSS, or another web API) must activate
+  the relevant web-platform-tests in the `.res` lists. The lists are
+  curated per spec area, so the needed list may not exist yet — in that
+  case a new `.res` file must be seeded (see `docs/wpt.md`), not skipped.
+  When WPT doesn't cover the behavior, an internal test must be added
+  instead
+- Test Coverage : When flagging missing coverage, search the pinned WPT
+  corpus (`third_party/wpt/`) for tests relevant to the change and
+  recommend them concretely (spec directory and test files) in the review
+  comment
+
+#### 2) Memory Efficiency
+- Memory Efficiency : Low runtime memory usage is this engine's core
+  constraint. Even when the code is functionally correct, actively propose
+  concrete ways to reduce runtime memory — a leaner data structure or
+  container choice, avoiding unnecessary copies or caching, allocating
+  lazily, shrinking per-instance footprint of frequently-instantiated
+  classes
+- Memory Efficiency : A memory saving must not degrade rendering
+  performance or responsiveness — don't propose trading speed on hot paths
+  (layout, paint, style resolution, event handling) for memory; when the
+  two conflict, flag the trade-off instead of picking a side
+
+#### 3) Web Standards Compliance
+- Web Standards Compliance : Review behavior changes against the relevant
+  web spec (WHATWG/W3C/ECMA-262) and flag behavior that contradicts the
+  spec it implements
+- Web Standards Compliance : Apply this with pragmatic compromise — full
+  spec coverage is often impossible under this engine's constraints, and
+  features land incrementally. A deliberately scoped partial implementation
+  or a stepwise landing is acceptable and should not be flagged as a
+  violation; what matters is that the implemented part behaves per spec and
+  that intentional deviations are visible (a why-comment citing the spec)
+  rather than silent
+
+### Severity
+- Critical : None
+- Major : Test Coverage, Memory Efficiency, Web Standards Compliance
+- Minor : None
+
 ## Maintaining this file
 
 Explanations belong at their closest home — `README.md`, `docs/`, or a code
 comment; this file carries only norms and pointers. When you discover a new
 non-obvious invariant, document it at its home first, and add a one-line
 norm here only if it keeps tripping people up. When code referenced here
-changes, update the pointer in the same change.
+changes, update the pointer in the same change. Note this file has two
+consumers: coding agents working in the repo, and the AI review bot, which
+applies it as the repository rule on every PR (see Code review checkers).
