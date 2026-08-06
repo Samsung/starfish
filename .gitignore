@@ -66,6 +66,9 @@ out_coverage/
 kuep_net_signer.sh
 .clinerules
 .design
+# Per-developer agent instruction overlays (see AGENTS.md) — never committed.
+CLAUDE.md
+CLAUDE.local.md
 
 # WPT audit byproducts: regenerable by tool/wpt_audit.py, not read at runtime.
 tool/wpt/testharness_lists/*.remap
