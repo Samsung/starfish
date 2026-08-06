@@ -1896,7 +1896,7 @@ private:
     bool m_preserveComments;
     Node* m_origin;
     ExecutionContext* m_executionContext;
-    CSSStyleSheet* m_styleSheet;
+    Optional<CSSStyleSheet*> m_styleSheet;
     GCVector<RefPtr<CSSToken>> m_preservedTokens;
 
     Document* document();
