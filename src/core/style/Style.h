@@ -765,6 +765,8 @@ class CSSFilterFunction;
     F(AlignItems, alignItems, "align-items")                                   \
     F(AlignSelf, alignSelf, "align-self")                                      \
     F(AlignContent, alignContent, "align-content")                             \
+    F(JustifyItems, justifyItems, "justify-items")                             \
+    F(JustifySelf, justifySelf, "justify-self")                                \
     F(FlexGrow, flexGrow, "flex-grow")                                         \
     F(FlexShrink, flexShrink, "flex-shrink")                                   \
     F(FlexBasis, flexBasis, "flex-basis")                                      \

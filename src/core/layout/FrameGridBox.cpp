@@ -111,6 +111,7 @@ void GridFormattingContext::computeColumnsAndRows()
     buildGridTrackTemplate();
     layoutGridItems();
     applyJustifyContent();
+    applyJustifyItems();
     applyAlignItems();
     layoutNonGridItems();
 }
@@ -1688,8 +1689,18 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
         width = style->width().specifiedValue(colTrackWidth, gridItem->node()) +
                 mbp.width();
     } else {
+        // start, center, end are supported.
+        // justify-self is overwritten by justify-items
+        AlignItemValue justify = style->justifySelf();
+        bool isSelfAligned = justify == AlignItemValue::StartAlignItemValue ||
+                             justify == AlignItemValue::CenterAlignItemValue ||
+                             justify == AlignItemValue::EndAlignItemValue;
         if (gridArea.isMarginLeftAuto() || gridArea.isMarginRightAuto()) {
             width = gridArea.preferredWidth();
+        } else if (isSelfAligned) {
+            // A self-aligned item is fit-content sized, so it never overflows
+            // its track.
+            width = std::min(gridArea.preferredWidth(), colTrackWidth);
         } else {
             width = colTrackWidth;
         }
@@ -1922,6 +1933,37 @@ void GridFormattingContext::applyAlignItems()
                 "css property (grid): align-items with stretch");
             break;
         }
+    }
+}
+
+void GridFormattingContext::applyJustifyItems()
+{
+    // Inline-axis counterpart of applyAlignItems(). The item already sits at
+    // the inline start edge of its grid area, so only center and end need to
+    // move it; stretch, start and baseline keep the start edge.
+    for (GridArea& area : m_orderedGridArea) {
+        AlignItemValue justify = area.box()->style()->justifySelf();
+        if (justify != AlignItemValue::CenterAlignItemValue &&
+            justify != AlignItemValue::EndAlignItemValue) {
+            continue;
+        }
+
+        LayoutUnit trackSize;
+        for (size_t i = area.columnStart(); i < area.columnEnd(); i++) {
+            trackSize += m_gridTemplateColumns[i].size();
+        }
+        trackSize += (area.columnEnd() - area.columnStart() - 1) * m_columnGap;
+
+        FrameBox* box = area.box();
+        LayoutUnit freeSpace =
+            trackSize - box->marginLeft() - box->width() - box->marginRight();
+        if (freeSpace <= 0) {
+            continue;
+        }
+
+        box->moveX(justify == AlignItemValue::CenterAlignItemValue
+                       ? freeSpace / 2
+                       : freeSpace);
     }
 }
 

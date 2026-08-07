@@ -3885,6 +3885,26 @@ public:
         return m_alignSelf;
     }
 
+    void setJustifyItems(AlignItemValue value)
+    {
+        m_justifyItems = value;
+    }
+
+    AlignItemValue justifyItems()
+    {
+        return m_justifyItems;
+    }
+
+    void setJustifySelf(AlignItemValue value)
+    {
+        m_justifySelf = value;
+    }
+
+    AlignItemValue justifySelf()
+    {
+        return m_justifySelf;
+    }
+
     void setAlignContent(AlignContentValue value)
     {
         m_alignContent = value;
@@ -5038,6 +5058,9 @@ protected:
         m_alignSelf = AlignItemValue::StretchAlignItemValue;
         m_alignSelfSpecifiedByUser = false;
         m_alignContent = AlignContentValue::StretchAlignContentValue;
+        m_justifyItems = AlignItemValue::StretchAlignItemValue;
+        m_justifySelf = AlignItemValue::StretchAlignItemValue;
+        m_justifySelfSpecifiedByUser = false;
         m_pseudoId = PseudoElementType::PseudoElementNone;
         m_styleDamageSource = StyleResolver::StyleDamageSource::NoDamage;
         m_styleDamageSourceNodeStateMap = 0;
@@ -5094,6 +5117,9 @@ protected:
     bool m_alignSelfSpecifiedByUser : 1;
     AlignItemValue m_alignSelf : 3;
     AlignContentValue m_alignContent : 3;
+    AlignItemValue m_justifyItems : 3;
+    bool m_justifySelfSpecifiedByUser : 1;
+    AlignItemValue m_justifySelf : 3;
     PseudoElementType m_pseudoId : 3;
     StyleResolver::StyleDamageSource m_styleDamageSource : 6;
     int m_styleDamageSourceNodeStateMap : 5;

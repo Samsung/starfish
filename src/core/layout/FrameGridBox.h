@@ -460,6 +460,7 @@ private:
     void stretchAutoColumnTracks();
     void applyAlignItems();
     void applyJustifyContent();
+    void applyJustifyItems();
 
     void initializeContentHeights();
     void applyImplicitTrackSizing();

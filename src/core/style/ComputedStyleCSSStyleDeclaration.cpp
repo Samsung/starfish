@@ -3032,6 +3032,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         ADD_VALUE_PAIR(AlignItems, AlignItemValueKind, alignItems)
         ADD_VALUE_PAIR(AlignSelf, AlignItemValueKind, alignSelf)
         ADD_VALUE_PAIR(AlignContent, AlignContentValueKind, alignContent)
+        ADD_VALUE_PAIR(JustifyItems, AlignItemValueKind, justifyItems)
+        ADD_VALUE_PAIR(JustifySelf, AlignItemValueKind, justifySelf)
         ADD_VALUE_PAIR(FlexGrow, Number, flexGrow)
         ADD_VALUE_PAIR(FlexShrink, Number, flexShrink)
         ADD_VALUE_PAIR(ObjectFit, ObjectFitValueKind, objectFit)
