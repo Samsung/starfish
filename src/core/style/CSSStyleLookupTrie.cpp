@@ -594,6 +594,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         // font-kerning
         // grid-row-end
         // grid-row-gap
+        // justify-self
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-image", 12) == 0) {
@@ -669,6 +670,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
                 return CSSStyleValuePair::KeyKind::RowGap;
             }
             break;
+        case 'j':
+            if (memcmp(data, "justify-self", 12) == 0) {
+                return CSSStyleValuePair::KeyKind::JustifySelf;
+            }
+            break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
         case '-':
             if (memcmp(data, "-webkit-flex", 12) == 0) {
@@ -694,6 +700,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         // text-overflow
         // mask-position
         // grid-template
+        // justify-items
         switch (data[0]) {
         case 'g':
             if (memcmp(data, "grid-template", 13) == 0) {
@@ -730,6 +737,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         case 'a':
             if (memcmp(data, "align-content", 13) == 0) {
                 return CSSStyleValuePair::KeyKind::AlignContent;
+            }
+            break;
+        case 'j':
+            if (memcmp(data, "justify-items", 13) == 0) {
+                return CSSStyleValuePair::KeyKind::JustifyItems;
             }
             break;
         case 'c':
@@ -1985,6 +1997,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
                 return CSSStyleValuePair::KeyKind::WordSpacing;
             }
             break;
+        case 'j':
+            if (memcmp(data, "justifySelf", 11) == 0) {
+                return CSSStyleValuePair::KeyKind::JustifySelf;
+            }
+            break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
         case '-':
             if (memcmp(data, "webkitOrder", 11) == 0) {
@@ -1996,6 +2013,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
         break;
     case 12:
         switch (data[0]) {
+        case 'j':
+            if (memcmp(data, "justifyItems", 12) == 0) {
+                return CSSStyleValuePair::KeyKind::JustifyItems;
+            }
+            break;
         case 'a':
             if (memcmp(data, "alignContent", 12) == 0) {
                 return CSSStyleValuePair::KeyKind::AlignContent;

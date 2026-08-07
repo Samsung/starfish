@@ -6732,6 +6732,40 @@ void StyleResolver::applyProperty(Element* element,
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
+    case CSSStyleValuePair::KeyKind::JustifyItems:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_justifyItems = AlignItemValue::StretchAlignItemValue;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->m_justifyItems = parentStyle->m_justifyItems;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::AlignItemValueKind) {
+            style->setJustifyItems(newCssValue.alignItemValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::JustifySelf:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Initial ||
+            newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset ||
+            newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Auto) {
+            style->m_justifySelfSpecifiedByUser = false;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->m_justifySelfSpecifiedByUser = false;
+            style->m_justifySelf = parentStyle->m_justifySelf;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::AlignItemValueKind) {
+            style->m_justifySelfSpecifiedByUser = true;
+            style->setJustifySelf(newCssValue.alignItemValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
     case CSSStyleValuePair::KeyKind::AlignContent:
         if ((newCssValue.valueKind() ==
              CSSStyleValuePair::ValueKind::Initial) ||
@@ -15585,6 +15619,40 @@ bool CSSStyleValuePair::updateValueAlignSelf(Document* document,
         return true;
     }
     return updateValueAlignItems(document, tokens);
+}
+
+bool CSSStyleValuePair::updateValueJustifyItems(Document* document,
+                                                const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    if (value.equals("normal") || value.equals("legacy")) {
+        // In a grid container 'normal' behaves as 'stretch'; 'legacy' with no
+        // following keyword computes to 'normal'.
+        // https://www.w3.org/TR/css-align-3/#propdef-justify-items
+        m_valueKind = CSSStyleValuePair::ValueKind::AlignItemValueKind;
+        m_value.m_alignItem = AlignItemValue::StretchAlignItemValue;
+        return true;
+    }
+    return updateValueUnitAlignItem(value);
+}
+
+bool CSSStyleValuePair::updateValueJustifySelf(Document* document,
+                                               const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    if (value.equals("auto")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Auto;
+        return true;
+    }
+    return updateValueJustifyItems(document, tokens);
 }
 
 bool CSSStyleValuePair::updateValueAlignContent(Document* document,

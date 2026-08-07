@@ -800,6 +800,13 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
         m_alignSelf = parentStyle->m_alignItems;
     }
 
+    if (!m_justifySelfSpecifiedByUser) {
+        // https://www.w3.org/TR/css-align-3/#propdef-justify-self
+        // initial value of 'justify-self' is 'auto', which computes to the
+        // parent's 'justify-items' value
+        m_justifySelf = parentStyle->m_justifyItems;
+    }
+
     Length curFontSize = fontSize();
     Length rootFontSize = Length(
         Length::Fixed, current->document()->webView()->defaultFontSize());
@@ -2271,6 +2278,18 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->m_alignContent != oldStyle->m_alignContent) {
         damagedKeys[CSSStyleValuePair::KeyKind::AlignContent] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->m_justifyItems != oldStyle->m_justifyItems) {
+        damagedKeys[CSSStyleValuePair::KeyKind::JustifyItems] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->m_justifySelf != oldStyle->m_justifySelf) {
+        damagedKeys[CSSStyleValuePair::KeyKind::JustifySelf] = true;
         damage = static_cast<ComputedStyleDamage>(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
