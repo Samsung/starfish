@@ -2030,8 +2030,16 @@ void GridFormattingContext::layoutNonGridItems()
 
         auto position = nonGridItem->style()->position();
         if (position == AbsolutePositionValue) {
-            nonGridItem->setX(xPosSoFar);
-            nonGridItem->setY(yPosSoFar);
+            // The static position rectangle only applies on an axis whose
+            // insets are both auto; a specified inset is resolved against the
+            // grid container's padding box by the box's own layout above.
+            LengthData offset = nonGridItem->style()->offset();
+            if (offset.left().isAuto() && offset.right().isAuto()) {
+                nonGridItem->setX(xPosSoFar);
+            }
+            if (offset.top().isAuto() && offset.bottom().isAuto()) {
+                nonGridItem->setY(yPosSoFar);
+            }
         } else if (position == FixedPositionValue) {
             repositionFixedNonGridItem(nonGridItem);
         }
