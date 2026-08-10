@@ -1692,9 +1692,12 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
         // start, center, end are supported.
         // justify-self is overwritten by justify-items
         AlignItemValue justify = style->justifySelf();
-        bool isSelfAligned = justify == AlignItemValue::StartAlignItemValue ||
-                             justify == AlignItemValue::CenterAlignItemValue ||
-                             justify == AlignItemValue::EndAlignItemValue;
+        bool isSelfAligned =
+            justify == AlignItemValue::StartAlignItemValue ||
+            justify == AlignItemValue::FlexStartAlignItemValue ||
+            justify == AlignItemValue::CenterAlignItemValue ||
+            justify == AlignItemValue::EndAlignItemValue ||
+            justify == AlignItemValue::FlexEndAlignItemValue;
         if (gridArea.isMarginLeftAuto() || gridArea.isMarginRightAuto()) {
             width = gridArea.preferredWidth();
         } else if (isSelfAligned) {
@@ -1898,6 +1901,11 @@ void GridFormattingContext::applyAlignItems()
         }
     }
 
+    // The row offsets above are measured from the container's content edge,
+    // which is where layoutGridItems() placed the items.
+    LayoutUnit contentTop =
+        m_container->borderTop() + m_container->paddingTop();
+
     for (GridArea& area : m_orderedGridArea) {
         STARFISH_ASSERT(area.rowStart() < yOffsetsForRows.size());
         LayoutUnit yOffset = yOffsetsForRows[area.rowStart()];
@@ -1908,23 +1916,29 @@ void GridFormattingContext::applyAlignItems()
         }
         trackSize += (area.rowEnd() - area.rowStart() - 1) * m_rowGap;
 
+        // 'flex-start' and 'flex-end' are only meaningful in flex layout;
+        // everywhere else they behave as 'start' and 'end'.
+        // https://drafts.csswg.org/css-align-3/#typedef-self-position
         switch (area.box()->style()->alignSelf()) {
         case AlignItemValue::StretchAlignItemValue:
         case AlignItemValue::StartAlignItemValue:
+        case AlignItemValue::FlexStartAlignItemValue:
             // Do nothing.
             break;
         case AlignItemValue::CenterAlignItemValue: {
             if (needAdjustCenter &&
-                m_container->height() > yOffsetForRowsSoFar) {
-                yOffset += ((m_container->height() - yOffsetForRowsSoFar) / 2);
+                m_container->contentHeight() > yOffsetForRowsSoFar) {
+                yOffset +=
+                    ((m_container->contentHeight() - yOffsetForRowsSoFar) / 2);
             }
-            LayoutUnit yPos =
-                yOffset + (trackSize / 2) - (area.box()->height() / 2);
+            LayoutUnit yPos = contentTop + yOffset + (trackSize / 2) -
+                              (area.box()->height() / 2);
             area.box()->setY(yPos);
         } break;
-        case AlignItemValue::EndAlignItemValue: {
-            LayoutUnit yPos = yOffset + trackSize - area.box()->height() -
-                              area.box()->marginBottom();
+        case AlignItemValue::EndAlignItemValue:
+        case AlignItemValue::FlexEndAlignItemValue: {
+            LayoutUnit yPos = contentTop + yOffset + trackSize -
+                              area.box()->height() - area.box()->marginBottom();
             area.box()->setY(yPos);
         } break;
         default:
@@ -1944,7 +1958,8 @@ void GridFormattingContext::applyJustifyItems()
     for (GridArea& area : m_orderedGridArea) {
         AlignItemValue justify = area.box()->style()->justifySelf();
         if (justify != AlignItemValue::CenterAlignItemValue &&
-            justify != AlignItemValue::EndAlignItemValue) {
+            justify != AlignItemValue::EndAlignItemValue &&
+            justify != AlignItemValue::FlexEndAlignItemValue) {
             continue;
         }
 
@@ -2013,6 +2028,27 @@ void GridFormattingContext::applyJustifyContent()
     }
 }
 
+// Offset of a box of marginBoxSize within a staticPositionRectSize long
+// static position rectangle, per its self-alignment value in that axis.
+// https://drafts.csswg.org/css-align-3/#staticpos-rect
+static LayoutUnit staticPositionAlignmentOffset(
+    AlignItemValue alignment, LayoutUnit staticPositionRectSize,
+    LayoutUnit marginBoxSize)
+{
+    // 'stretch' behaves as 'start' here: the box was already sized by its own
+    // layout, which resolves an auto size as shrink-to-fit rather than
+    // stretching it to the static position rectangle.
+    if (alignment != AlignItemValue::CenterAlignItemValue &&
+        alignment != AlignItemValue::EndAlignItemValue &&
+        alignment != AlignItemValue::FlexEndAlignItemValue) {
+        return 0;
+    }
+
+    LayoutUnit freeSpace = staticPositionRectSize - marginBoxSize;
+    return alignment == AlignItemValue::CenterAlignItemValue ? freeSpace / 2
+                                                             : freeSpace;
+}
+
 void GridFormattingContext::layoutNonGridItems()
 {
     // https://drafts.csswg.org/css-grid/#abspos
@@ -2030,15 +2066,32 @@ void GridFormattingContext::layoutNonGridItems()
 
         auto position = nonGridItem->style()->position();
         if (position == AbsolutePositionValue) {
-            // The static position rectangle only applies on an axis whose
-            // insets are both auto; a specified inset is resolved against the
-            // grid container's padding box by the box's own layout above.
-            LengthData offset = nonGridItem->style()->offset();
+            // The static position rectangle of an absolutely positioned child
+            // of a grid container is the container's content box, and the box
+            // is self-aligned within it just like a grid item is within its
+            // grid area.
+            // https://drafts.csswg.org/css-grid/#static-position
+            //
+            // It only applies on an axis whose insets are both auto; a
+            // specified inset is resolved against the grid container's padding
+            // box by the box's own layout above.
+            ComputedStyle* style = nonGridItem->style();
+            LengthData offset = style->offset();
             if (offset.left().isAuto() && offset.right().isAuto()) {
-                nonGridItem->setX(xPosSoFar);
+                nonGridItem->setX(
+                    xPosSoFar +
+                    staticPositionAlignmentOffset(
+                        style->justifySelf(), m_container->contentWidth(),
+                        nonGridItem->marginLeft() + nonGridItem->width() +
+                            nonGridItem->marginRight()));
             }
             if (offset.top().isAuto() && offset.bottom().isAuto()) {
-                nonGridItem->setY(yPosSoFar);
+                nonGridItem->setY(
+                    yPosSoFar +
+                    staticPositionAlignmentOffset(
+                        style->alignSelf(), m_container->contentHeight(),
+                        nonGridItem->marginTop() + nonGridItem->height() +
+                            nonGridItem->marginBottom()));
             }
         } else if (position == FixedPositionValue) {
             repositionFixedNonGridItem(nonGridItem);

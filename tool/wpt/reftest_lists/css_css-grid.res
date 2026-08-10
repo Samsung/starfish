@@ -3,22 +3,22 @@
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/descendant-static-position-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/descendant-static-position-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/descendant-static-position-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-items-center-large-border-padding.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-items-center.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-items-end-large-border-padding.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-items-end.html
+http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-items-center-large-border-padding.html
+http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-items-center.html
+http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-items-end-large-border-padding.html
+http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-items-end.html
 http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-items-flex-end-large-border-padding.html
 http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-items-flex-end.html
 http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-items-self-end-large-border-padding.html
 http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-items-self-end.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-center-large-border-padding.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-center.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-end-large-border-padding.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-end.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-flex-end-large-border-padding.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-flex-end.html
+http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-center-large-border-padding.html
+http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-center.html
+http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-end-large-border-padding.html
+http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-end.html
+http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-flex-end-large-border-padding.html
+http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-flex-end.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-img-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-img-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-img-last-baseline-001.html
@@ -37,7 +37,7 @@ http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-se
 http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-safe-outer-cb-001.tentative.html
 http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-safe-outer-cb-002.tentative.html
 http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-safe-outer-cb-003.tentative.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-self-end-large-border-padding.html
+http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-self-end-large-border-padding.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-self-end.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-vertWM-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-vertWM-002.html
