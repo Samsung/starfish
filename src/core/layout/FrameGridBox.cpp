@@ -1956,6 +1956,14 @@ void GridFormattingContext::applyJustifyItems()
     // the inline start edge of its grid area, so only center and end need to
     // move it; stretch, start and baseline keep the start edge.
     for (GridArea& area : m_orderedGridArea) {
+        // An auto margin absorbs the free space of the track and takes
+        // precedence over the alignment properties, so layoutGridItems() has
+        // already placed the item and there is nothing left to distribute.
+        // https://drafts.csswg.org/css-grid/#auto-margins
+        if (area.isMarginLeftAuto() || area.isMarginRightAuto()) {
+            continue;
+        }
+
         AlignItemValue justify = area.box()->style()->justifySelf();
         if (justify != AlignItemValue::CenterAlignItemValue &&
             justify != AlignItemValue::EndAlignItemValue &&
