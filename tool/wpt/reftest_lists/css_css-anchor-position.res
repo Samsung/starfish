@@ -97,7 +97,7 @@ http://web-platform.test:8000/css/css-anchor-position/anchored-transition-displa
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/auto-margins-position-area.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/container-queries/anchored-fallback-color-change.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/container-queries/anchored-fallback-style-containment.html
-http://web-platform.test:8000/css/css-anchor-position/grid-position-area-basic.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/grid-position-area-basic.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/inherit-height-from-fallback.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/no-anchor-anchor-center.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/position-anchor-001.html

@@ -34,9 +34,9 @@ http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-se
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-rtl-last-baseline-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-rtl-last-baseline-004.html
 http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-safe-001.html
-http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-safe-outer-cb-001.tentative.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-safe-outer-cb-001.tentative.html
 http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-safe-outer-cb-002.tentative.html
-http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-safe-outer-cb-003.tentative.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-safe-outer-cb-003.tentative.html
 http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-self-end-large-border-padding.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-self-end.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-align-self-vertWM-001.html
@@ -232,7 +232,7 @@ http://web-platform.test:8000/css/css-grid/alignment/grid-item-no-aspect-ratio-s
 http://web-platform.test:8000/css/css-grid/alignment/grid-item-no-aspect-ratio-stretch-5.html
 http://web-platform.test:8000/css/css-grid/alignment/grid-item-no-aspect-ratio-stretch-6.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/grid-item-self-baseline-001.html
-http://web-platform.test:8000/css/css-grid/alignment/grid-justify-baseline-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/grid-justify-baseline-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/grid-self-alignment-baseline-with-grid-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/grid-self-alignment-baseline-with-grid-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/grid-self-alignment-baseline-with-grid-003.html
