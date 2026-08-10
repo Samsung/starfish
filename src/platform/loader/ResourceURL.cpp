@@ -923,7 +923,9 @@ String* ResourceURL::origin()
         }
     } else if (m_protocol >= WS_PROTOCOL && m_protocol <= WSS_PROTOCOL) {
         if (!hostname()->isEmpty()) {
-            return host();
+            // A ws/wss URL has a tuple origin like any other special scheme,
+            // so it serializes with the scheme, same as the http branch above.
+            return protocol()->concat("//")->concat(host());
         } else {
             return String::createASCIIString("null");
         }
