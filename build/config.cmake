@@ -518,6 +518,13 @@ IF (${HOST} STREQUAL "tizen")
     ENDIF()
     IF (DEFINED STARFISH_OPENSSL_MODULE)
         pkg_check_modules (STARFISH_OPENSSL REQUIRED ${STARFISH_OPENSSL_MODULE})
+        # third_party.cmake builds absolute library paths for the libwebsockets
+        # sub-build out of the module's own libdir/includedir. Refuse to hand it a
+        # "/libssl.so" style path if pkg-config ever reports neither.
+        IF (NOT STARFISH_OPENSSL_LIBDIR OR NOT STARFISH_OPENSSL_INCLUDEDIR)
+            MESSAGE (FATAL_ERROR "${STARFISH_OPENSSL_MODULE} reports no libdir/includedir: "
+                "libdir='${STARFISH_OPENSSL_LIBDIR}' includedir='${STARFISH_OPENSSL_INCLUDEDIR}'")
+        ENDIF()
     ENDIF()
 ENDIF()
 
