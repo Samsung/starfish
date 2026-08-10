@@ -151,11 +151,13 @@ void WebSocket::init(String* url, String* protocol)
 {
     // https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket
 
+    // These failures happen before any socket exists, so they only throw: the
+    // object never reaches script, and firing error/close events here would
+    // both be unobservable and re-enter close() with a null m_socketLWS.
     m_url = new ResourceURL(url);
     // Let urlRecord be the result of applying the URL parser to url.
     // If urlRecord is failure, then throw a "SyntaxError" DOMException.
     if (!m_url->isValid()) {
-        close(CloseCode::InternalError);
         throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
                                "url's is not valid");
     }
@@ -163,7 +165,6 @@ void WebSocket::init(String* url, String* protocol)
     // If urlRecord's scheme is not "ws" or "wss", then throw a "SyntaxError"
     // DOMException.
     if (!m_url->isWSURL() && !m_url->isWSSURL()) {
-        close(CloseCode::InternalError);
         throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
                                "url's scheme is not \"ws\" or \"wss\"");
     }
@@ -171,7 +172,6 @@ void WebSocket::init(String* url, String* protocol)
     // If urlRecord's fragment is non-null, then throw a "SyntaxError"
     // DOMException.
     if (!m_url->hash()->equals(String::emptyString)) {
-        close(CloseCode::InternalError);
         throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
                                "url's fragment is non-null");
     }
@@ -183,7 +183,6 @@ void WebSocket::init(String* url, String* protocol)
     // Sec-WebSocket-Protocol fields as defined by The WebSocket protocol, then
     // throw a "SyntaxError" DOMException. [WSP]
     if (m_hasProtocol && !IsValidSubprotocolString(protocol)) {
-        close(CloseCode::InternalError);
         throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
                                "protocol has invalid value");
     }
@@ -226,40 +225,43 @@ void WebSocket::close()
 
 void WebSocket::close(uint16_t code)
 {
-    // TODO
     close(code, String::emptyString);
 }
 
 void WebSocket::close(String* reason)
 {
-    // TODO
     close(CloseCode::NormalClosure, reason);
 }
 
 void WebSocket::close(uint16_t code, String* reason)
 {
     // https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket-close
-    if (m_socketLWS) {
-        setReadyState(WebSocket::ReadyState::CLOSING);
-        UTF8StringDataNonGCStd reasonString = reason->toUTF8NonGCString();
-        m_socketLWS->close(reasonString.c_str(), reasonString.length(), code);
-    } else {
-        if (code != CloseCode::NormalClosure) {
-            Event* e = new Event(executionContext(), executionContext()
-                                                         ->starfish()
-                                                         ->staticStrings()
-                                                         ->m_error.localName());
-            EventTarget::dispatchEventByUA(this, e);
-        }
-        setReadyState(WebSocket::ReadyState::CLOSED);
-        CloseEvent* e =
-            new CloseEvent(executionContext(), executionContext()
-                                                   ->starfish()
-                                                   ->staticStrings()
-                                                   ->m_close.localName());
-        EventTarget::dispatchEventByUA(this, e);
-        dispose();
+
+    // If code is present, but is neither an integer equal to 1000 nor an
+    // integer in the range 3000 to 4999, inclusive, throw an
+    // "InvalidAccessError" DOMException.
+    if (code != CloseCode::NormalClosure && (code < 3000 || code > 4999)) {
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_ACCESS_ERR,
+                               "close code is not 1000 or in 3000-4999");
     }
+
+    UTF8StringDataNonGCStd reasonString = reason->toUTF8NonGCString();
+    // If reason is present, then its UTF-8 encoding must not be longer than
+    // 123 bytes, otherwise throw a "SyntaxError" DOMException.
+    if (reasonString.length() > 123) {
+        throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
+                               "close reason is longer than 123 bytes");
+    }
+
+    // If this's ready state is CLOSING or CLOSED, do nothing.
+    if (m_readyState == ReadyState::CLOSING ||
+        m_readyState == ReadyState::CLOSED) {
+        return;
+    }
+
+    setReadyState(WebSocket::ReadyState::CLOSING);
+    m_socketLWS->close(reasonString.c_str(), reasonString.length(), code);
 }
 
 DEFINE_EVENT_LISTENER(WebSocket, open);
@@ -298,6 +300,14 @@ void WebSocket::send(const void* buf, size_t len, int type)
                                "readyState attribute should not be CONNECTING");
     }
 
+    // If the readyState attribute is CLOSING or CLOSED, the data is discarded.
+    // Queueing it instead would grow m_txBuffer without bound, because the
+    // WRITEABLE callback that drains it never runs again.
+    if (m_readyState == ReadyState::CLOSING ||
+        m_readyState == ReadyState::CLOSED) {
+        return;
+    }
+
     m_socketLWS->send(buf, len, type);
 }
 
@@ -326,6 +336,10 @@ void WebSocket::send(ScriptArrayBuffer data)
 
 void WebSocket::send(ScriptArrayBufferView data)
 {
+    if (data->buffer()->isArrayBufferObject() &&
+        data->buffer()->asArrayBufferObject()->isDetachedBuffer()) {
+        return;
+    }
     send(data->rawBuffer(), data->byteLength(), 1);
 }
 } // namespace Starfish

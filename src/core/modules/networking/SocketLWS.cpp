@@ -61,6 +61,52 @@ static const char* SocketLWSDefaultCertPath =
         return;       \
     }
 
+// LWS_CALLBACK_EVENT_WAIT_CANCELLED is broadcast with a fake wsi and a null
+// `user` (lws_broadcast() in lib/core-net/wsi.c), so the socket has to be
+// recovered from the context instead.
+SocketLWS* SocketLWS::fromContext(struct lws* wsi)
+{
+    struct lws_context* context = lws_get_context(wsi);
+    if (!context) {
+        return nullptr;
+    }
+    return (SocketLWS*)lws_context_user(context);
+}
+
+// Caller must hold m_txMutex. Writes at most one queued message, because lws
+// enforces a single lws_write() per WRITEABLE callback.
+void SocketLWS::serviceTxQueueLocked(struct lws* wsi, bool* failed)
+{
+    if (m_txBuffer.empty()) {
+        return;
+    }
+
+    SocketLWSData* data = m_txBuffer.front();
+    int written =
+        lws_write(wsi, ((unsigned char*)data->data()) + LWS_PRE, data->size(),
+                  data->type() == SocketLWSData::SocketLWSDataType::TEXT
+                      ? LWS_WRITE_TEXT
+                      : LWS_WRITE_BINARY);
+
+    // A short write means lws could not take the frame and the connection is
+    // going away; dropping the data silently would lose the message with no
+    // error surfaced to script.
+    if (written < 0 || (size_t)written != data->size()) {
+        STARFISH_LOG_ERROR("%p SocketLWS: lws_write returned %d for %zu bytes",
+                           this, written, data->size());
+        *failed = true;
+        return;
+    }
+
+    m_txBufferSize -= data->size();
+    m_txBuffer.erase(m_txBuffer.begin());
+    delete data;
+
+    if (!m_txBuffer.empty()) {
+        lws_callback_on_writable(wsi);
+    }
+}
+
 int SocketLWS::lwsEventCallback(struct lws* wsi,
                                 enum lws_callback_reasons reason, void* user,
                                 void* in, size_t len)
@@ -68,6 +114,35 @@ int SocketLWS::lwsEventCallback(struct lws* wsi,
     SocketLWS* socket = (SocketLWS*)user;
 
     switch (reason) {
+    case LWS_CALLBACK_GET_THREAD_ID:
+        // Lets lws notice that a pollfd change came from a foreign thread and
+        // wake its own service loop (lib/core-net/pollfd.c). Without this
+        // pt->service_tid stays 0 and that check is skipped entirely. The mask
+        // keeps the value positive, because lws reads -1 here as an error.
+        return (int)((uintptr_t)pthread_self() & 0x7fffffff);
+
+    case LWS_CALLBACK_EVENT_WAIT_CANCELLED: {
+        // Another thread called wakeService(). Everything that has to touch
+        // lws state runs here, on the service thread.
+        SocketLWS* self = SocketLWS::fromContext(wsi);
+        if (!self) {
+            break;
+        }
+        if (self->needsToClose() && !self->isConnected()) {
+            // Teardown was requested before the handshake finished, so there
+            // is no close handshake to perform. End the worker now instead of
+            // leaving WebSocket::dispose() blocked in join().
+            self->updateState(WebSocket::ReadyState::CLOSED);
+            self->publishEvent(SocketLWS::LwsEvent::CLOSE);
+            self->shutdown(0);
+            break;
+        }
+        if (self->m_lwsClient) {
+            lws_callback_on_writable(self->m_lwsClient);
+        }
+        break;
+    }
+
     case LWS_CALLBACK_CLIENT_ESTABLISHED:
         socket->updateState(WebSocket::ReadyState::OPEN);
         socket->publishEvent(SocketLWS::LwsEvent::OPEN);
@@ -76,7 +151,15 @@ int SocketLWS::lwsEventCallback(struct lws* wsi,
 
     case LWS_CALLBACK_CLIENT_RECEIVE:
 
-        socket->addToRxBuffer((char*)in, len);
+        if (!socket->addToRxBuffer((char*)in, len)) {
+            // Fail the connection from here rather than going through close():
+            // we are already on the service thread, and close() would take
+            // m_contextMutex, which finalize() can be holding.
+            static const char kTooBig[] = "message too big";
+            lws_close_reason(wsi, LWS_CLOSE_STATUS_MESSAGE_TOO_LARGE,
+                             (unsigned char*)kTooBig, sizeof(kTooBig) - 1);
+            return -1;
+        }
         if (lws_is_final_fragment(wsi)) {
             socket->publishEvent(SocketLWS::LwsEvent::ONMESSAGE,
                                  lws_frame_is_binary(wsi));
@@ -105,39 +188,13 @@ int SocketLWS::lwsEventCallback(struct lws* wsi,
             return -1;
         }
 
+        bool failed = false;
         {
             Locker<Mutex> l(*socket->m_txMutex);
-            std::vector<SocketLWSData*>* buffer = &socket->m_txBuffer;
-            if (!buffer->empty()) {
-                auto iter = buffer->begin();
-                SocketLWSData* data = (SocketLWSData*)*iter;
-                if (data->type() == SocketLWSData::SocketLWSDataType::TEXT) {
-                    lws_write(wsi, ((unsigned char*)data->data()) + LWS_PRE,
-                              data->size(), LWS_WRITE_TEXT);
-                } else {
-                    lws_write(wsi, ((unsigned char*)data->data()) + LWS_PRE,
-                              data->size(), LWS_WRITE_BINARY);
-                }
-                size_t siz = data->size();
-                iter = buffer->erase(iter);
-                delete data;
-
-                WebBase* webBase =
-                    socket->parent()->executionContext()->webBase();
-                socket->ref();
-                webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-                    nullptr,
-                    [](size_t handle, void* data, void* data1) {
-                        SocketLWS* socket = (SocketLWS*)data;
-                        socket->deref();
-                        size_t siz = (size_t)data1;
-                        socket->m_txBufferSize -= siz;
-                    },
-                    socket, (void*)siz);
-            }
-            if (!buffer->empty()) {
-                lws_callback_on_writable(wsi);
-            }
+            socket->serviceTxQueueLocked(wsi, &failed);
+        }
+        if (failed) {
+            return -1;
         }
         break;
     }
@@ -177,15 +234,18 @@ SocketLWS::SocketLWS(WebSocket* socket)
     , m_alive(true)
     , m_isReady(false)
     , m_refCount(0)
+    , m_serviceThreadId(0)
     , m_parent(socket)
     , m_lwsContext(nullptr)
     , m_lwsProtocols(nullptr)
     , m_lwsContextCreationInfo(nullptr)
     , m_lwsClient(nullptr)
     , m_txMutex(new Mutex())
+    , m_contextMutex(new Mutex())
+    , m_closeMutex(new Mutex())
+    , m_txBufferSize(0)
     , m_closeReasonStr(std::string())
     , m_closeReasonCode(WebSocket::CloseCode::NoStatusReceived)
-    , m_txBufferSize(0)
 {
     int logs = LLL_USER | LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO |
                LLL_PARSER | LLL_HEADER | LLL_EXT | LLL_CLIENT | LLL_LATENCY |
@@ -201,7 +261,15 @@ SocketLWS::SocketLWS(WebSocket* socket)
     const char* prot;
     m_url = parent()->url()->toUTF8NonGCString();
     m_protocol = parent()->protocol()->toUTF8NonGCString();
-    m_origin = parent()->urlObject()->origin()->toUTF8NonGCString();
+    // RFC6455 4.1: the Origin header carries the origin of the script that
+    // opened the connection, not the origin of the target URL. Sending the
+    // target's own origin made every server-side origin check pass.
+    m_origin =
+        parent()->executionContext()->baseURL()->origin()->toUTF8NonGCString();
+    if (m_origin.empty() || m_origin == "file://") {
+        // An opaque origin serializes as "null" on the wire.
+        m_origin = "null";
+    }
     char* param = (char*)m_url.c_str();
     if (lws_parse_uri(param, &prot, &m_lwsClientConnectInfo.address,
                       &m_lwsClientConnectInfo.port,
@@ -223,8 +291,10 @@ SocketLWS::SocketLWS(WebSocket* socket)
     m_runnable = new LWSRunnable(webBase->messageLoop(), this);
 
     if (!strcmp(prot, "https") || !strcmp(prot, "wss")) {
-        useSSL = LCCSCF_USE_SSL | LCCSCF_ALLOW_SELFSIGNED |
-                 LCCSCF_SKIP_SERVER_CERT_HOSTNAME_CHECK;
+        // Verify the chain against client_ssl_ca_filepath and match the
+        // hostname. Relaxing either of these is only acceptable when web
+        // security has been explicitly turned off, which is handled below.
+        useSSL = LCCSCF_USE_SSL;
     }
 
     m_lwsProtocols = new lws_protocols[2];
@@ -236,13 +306,17 @@ SocketLWS::SocketLWS(WebSocket* socket)
     m_lwsContextCreationInfo = new lws_context_creation_info();
     m_lwsContextCreationInfo->port = CONTEXT_PORT_NO_LISTEN;
     m_lwsContextCreationInfo->protocols = m_lwsProtocols;
-    m_lwsContextCreationInfo->options = 0;
+    // m_origin is already a full origin serialization; without this lws
+    // rewrites it as "Origin: http://<string>".
+    m_lwsContextCreationInfo->options = LWS_SERVER_OPTION_JUST_USE_RAW_ORIGIN;
+    // LWS_CALLBACK_EVENT_WAIT_CANCELLED arrives on a fake wsi with no user
+    // pointer, so the context carries the back reference.
+    m_lwsContextCreationInfo->user = this;
 
     static bool sslInited = false;
     if (!sslInited && useSSL) {
         m_lwsContextCreationInfo->options |=
             LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
-        m_lwsContextCreationInfo->options |= LWS_SERVER_OPTION_UNIX_SOCK;
         sslInited = true;
     }
 
@@ -250,9 +324,11 @@ SocketLWS::SocketLWS(WebSocket* socket)
         m_lwsContextCreationInfo->client_ssl_ca_filepath =
             SocketLWSDefaultCertPath;
     }
-    if (webBase->getWebSecurityMode() == LWE::WebSecurityMode::Disable) {
-        useSSL = useSSL | LCCSCF_ALLOW_SELFSIGNED | LCCSCF_ALLOW_INSECURE |
-                 LCCSCF_PIPELINE;
+    if (useSSL &&
+        webBase->getWebSecurityMode() == LWE::WebSecurityMode::Disable) {
+        useSSL = useSSL | LCCSCF_ALLOW_SELFSIGNED | LCCSCF_ALLOW_EXPIRED |
+                 LCCSCF_SKIP_SERVER_CERT_HOSTNAME_CHECK |
+                 LCCSCF_ALLOW_INSECURE | LCCSCF_PIPELINE;
     }
 
     m_lwsContext = lws_create_context(m_lwsContextCreationInfo);
@@ -303,15 +379,50 @@ void SocketLWS::deref()
 void SocketLWS::finalize()
 {
     m_alive = false;
+    Locker<Mutex> l(*m_contextMutex);
     if (m_lwsContext != nullptr) {
+        // Destroying the context frees the wsi, so m_lwsClient must not
+        // outlive it even briefly.
+        m_lwsClient = nullptr;
         lws_context_destroy(m_lwsContext);
         m_lwsContext = nullptr;
-        m_lwsClient = nullptr;
     }
+}
+
+void SocketLWS::wakeService()
+{
+    // close() can reach here from an lws callback. Waking ourselves would be
+    // pointless, and taking m_contextMutex on this thread risks deadlocking
+    // against finalize(), which holds it while destroying the context.
+    if (m_serviceThreadId.load(std::memory_order_acquire) ==
+        (unsigned long)pthread_self()) {
+        return;
+    }
+
+    // Held so the service thread cannot destroy the context underneath us in
+    // finalize(). lws_cancel_service() itself is safe to call from any thread.
+    Locker<Mutex> l(*m_contextMutex);
+    if (m_lwsContext) {
+        lws_cancel_service(m_lwsContext);
+    }
+}
+
+std::string SocketLWS::closeReason()
+{
+    Locker<Mutex> l(*m_closeMutex);
+    return m_closeReasonStr;
+}
+
+size_t SocketLWS::closeCode()
+{
+    Locker<Mutex> l(*m_closeMutex);
+    return m_closeReasonCode;
 }
 
 void SocketLWS::run()
 {
+    m_serviceThreadId.store((unsigned long)pthread_self(),
+                            std::memory_order_release);
     if (m_lwsContext) {
         lws_service(m_lwsContext, 0);
     }
@@ -337,14 +448,22 @@ int SocketLWS::bind(const char* addr)
 
 void SocketLWS::close(const char* ptr, size_t len, size_t code)
 {
-    m_closeReasonStr = std::string(ptr, len);
-    m_closeReasonCode = code;
-    if (!m_needsToClose) {
-        m_needsToClose = true;
-        if (m_lwsClient && m_isReady) {
-            lws_callback_on_writable(m_lwsClient);
-        }
+    {
+        Locker<Mutex> l(*m_closeMutex);
+        m_closeReasonStr.assign(ptr ? ptr : "", ptr ? len : 0);
+        m_closeReasonCode = code;
     }
+
+    bool alreadyClosing = false;
+    if (!m_needsToClose.compare_exchange_strong(alreadyClosing, true)) {
+        return;
+    }
+
+    // Wake the service thread unconditionally. The old code only did this when
+    // the handshake had completed, so tearing a still-connecting socket down
+    // left the worker asleep in poll() and WebSocket::dispose() stuck in
+    // join().
+    wakeService();
 }
 
 int SocketLWS::close()
@@ -378,16 +497,32 @@ int SocketLWS::send(const void* buf, size_t len, int flags)
         type = SocketLWSData::SocketLWSDataType::BINARY;
     }
 
+    bool overflowed = false;
     {
         Locker<Mutex> l(*m_txMutex);
-        SocketLWSData* newData = new SocketLWSData((char*)buf, len, type);
-        m_txBuffer.push_back(newData);
-        m_txBufferSize += len;
+        if (m_txBufferSize + len > kMaxTxBufferSize) {
+            overflowed = true;
+        } else {
+            SocketLWSData* newData = new SocketLWSData((char*)buf, len, type);
+            m_txBuffer.push_back(newData);
+            m_txBufferSize += len;
+        }
     }
 
-    if (m_lwsClient) {
-        lws_callback_on_writable(m_lwsClient);
+    if (overflowed) {
+        // Dropping the frame silently would leave script with no way to notice
+        // the loss, so fail the connection instead.
+        STARFISH_LOG_ERROR(
+            "%p SocketLWS: send queue limit reached, "
+            "failing the connection",
+            this);
+        close(nullptr, 0, WebSocket::CloseCode::MessageTooBig);
+        return -1;
     }
+
+    // send() runs on the main thread; only the service thread may call
+    // lws_callback_on_writable(), so hand the request over via the event pipe.
+    wakeService();
     return 0;
 }
 
@@ -409,9 +544,15 @@ short SocketLWS::getEvents()
     return 0;
 }
 
-void SocketLWS::addToRxBuffer(char* param, size_t size)
+bool SocketLWS::addToRxBuffer(char* param, size_t size)
 {
+    if (m_rxBuffer.size() + size > kMaxRxBufferSize) {
+        STARFISH_LOG_ERROR("%p SocketLWS: incoming message exceeds %zu bytes",
+                           this, kMaxRxBufferSize);
+        return false;
+    }
     m_rxBuffer.insert(m_rxBuffer.end(), param, param + size);
+    return true;
 }
 
 void SocketLWS::waitForWorkerEnd()
@@ -442,8 +583,10 @@ void SocketLWS::updateState(WebSocket::ReadyState state)
             nullptr,
             [](size_t handle, void* data) {
                 SocketLWS* socket = (SocketLWS*)data;
-                socket->deref();
                 socket->parent()->setReadyState(WebSocket::ReadyState::OPEN);
+                // deref() last: dropping the final reference unroots the
+                // socket, so it must not be touched afterwards.
+                socket->deref();
             },
             this);
         break;
@@ -453,8 +596,8 @@ void SocketLWS::updateState(WebSocket::ReadyState state)
         // if there was error, the callback is fired by main thread
         auto fn = [](size_t handle, void* data) {
             SocketLWS* socket = (SocketLWS*)data;
-            socket->deref();
             socket->parent()->setReadyState(WebSocket::ReadyState::CLOSED);
+            socket->deref();
         };
         ref();
         if (isMainThread()) {
@@ -484,7 +627,6 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
             nullptr,
             [](size_t handle, void* data) {
                 SocketLWS* lws = (SocketLWS*)data;
-                lws->deref();
                 WebSocket* socket = lws->parent();
                 String* eventName = socket->executionContext()
                                         ->starfish()
@@ -492,6 +634,7 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
                                         ->m_open.localName();
                 Event* e = new Event(socket->executionContext(), eventName);
                 socket->EventTarget::dispatchEventByUA(socket, e);
+                lws->deref();
             },
             this);
     } break;
@@ -499,7 +642,6 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
         // if address is wrong, the callback is fired by main thread
         auto fn = [](size_t handle, void* data) {
             SocketLWS* lws = (SocketLWS*)data;
-            lws->deref();
             WebSocket* socket = lws->parent();
             String* eventName = socket->executionContext()
                                     ->starfish()
@@ -507,6 +649,7 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
                                     ->m_error.localName();
             Event* e = new Event(socket->executionContext(), eventName);
             socket->EventTarget::dispatchEventByUA(socket, e);
+            lws->deref();
         };
         ref();
         if (isMainThread()) {
@@ -520,7 +663,6 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
         // if there was error, the callback is fired by main thread
         auto fn = [](size_t handle, void* data) {
             SocketLWS* lws = (SocketLWS*)data;
-            lws->deref();
             WebSocket* socket = lws->parent();
             String* eventName = socket->executionContext()
                                     ->starfish()
@@ -528,13 +670,15 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
                                     ->m_close.localName();
             CloseEvent* e =
                 new CloseEvent(socket->executionContext(), eventName);
+            std::string reason = lws->closeReason();
             if (lws->closeCode() == WebSocket::CloseCode::NormalClosure) {
                 e->setWasClean(true);
             }
             e->setCode(lws->closeCode());
-            e->setReason(String::createASCIIString(
-                lws->closeReason().c_str(), lws->closeReason().length()));
+            e->setReason(
+                String::createASCIIString(reason.c_str(), reason.length()));
             socket->EventTarget::dispatchEventByUA(socket, e);
+            lws->deref();
         };
         ref();
         if (isMainThread()) {
@@ -554,13 +698,14 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
             Param* p = new Param();
             p->lws = this;
             p->data = std::move(m_rxBuffer);
+            // A moved-from vector is only guaranteed to be valid, not empty.
+            m_rxBuffer.clear();
 
             webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
                 nullptr,
                 [](size_t handle, void* data) {
                     Param* p = (Param*)data;
                     SocketLWS* lws = p->lws;
-                    lws->deref();
                     WebSocket* socket = lws->parent();
                     String* eventName = socket->executionContext()
                                             ->starfish()
@@ -568,6 +713,7 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
                                             ->m_message.localName();
                     MessageEvent* e =
                         new MessageEvent(socket->executionContext(), eventName);
+                    e->setOrigin(socket->urlObject()->origin());
 
                     size_t dataSize = p->data.size();
                     if (socket->isBlobBinaryType()) {
@@ -589,6 +735,7 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
                     }
                     socket->EventTarget::dispatchEventByUA(socket, e);
                     delete p;
+                    lws->deref();
                 },
                 p);
         } else {
@@ -602,13 +749,13 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
             p->lws = this;
             p->isAllASCII = isAllASCII(m_rxBuffer.data(), m_rxBuffer.size());
             p->msg = std::move(m_rxBuffer);
+            m_rxBuffer.clear();
 
             webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
                 nullptr,
                 [](size_t handle, void* data) {
                     Param* p = (Param*)data;
                     SocketLWS* lws = p->lws;
-                    lws->deref();
                     WebSocket* socket = lws->parent();
                     String* eventName = socket->executionContext()
                                             ->starfish()
@@ -616,6 +763,7 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
                                             ->m_message.localName();
                     MessageEvent* e =
                         new MessageEvent(socket->executionContext(), eventName);
+                    e->setOrigin(socket->urlObject()->origin());
                     if (p->isAllASCII) {
                         e->setData(createScriptValue(createScriptASCIIString(
                             p->msg.data(), p->msg.size())));
@@ -625,6 +773,7 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
                     }
                     socket->EventTarget::dispatchEventByUA(socket, e);
                     delete p;
+                    lws->deref();
                 },
                 p);
         }

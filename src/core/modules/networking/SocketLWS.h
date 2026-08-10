@@ -22,6 +22,7 @@
 
 #include "core/modules/networking/Socket.h"
 #include <libwebsockets.h>
+#include <atomic>
 
 namespace Starfish {
 
@@ -87,8 +88,16 @@ public:
 
     void run();
     void publishEvent(LwsEvent eventType, bool isBinary = false);
-    void addToRxBuffer(char* param, size_t size);
+    // Returns false when the peer exceeded the per-message receive limit; the
+    // caller must then fail the connection instead of growing the buffer.
+    bool addToRxBuffer(char* param, size_t size);
     void updateState(WebSocket::ReadyState state);
+
+    // lws_cancel_service() is the only lws entry point that may be called from
+    // a thread other than the one running lws_service(). Everything else has
+    // to be deferred to LWS_CALLBACK_EVENT_WAIT_CANCELLED on the service
+    // thread. See third_party/libwebsockets/READMEs/README.coding.md.
+    void wakeService();
 
     WebSocket* parent()
     {
@@ -97,23 +106,17 @@ public:
 
     bool needsToClose()
     {
-        return m_needsToClose;
+        return m_needsToClose.load(std::memory_order_acquire);
     }
 
     bool isConnected()
     {
-        return m_isReady;
+        return m_isReady.load(std::memory_order_acquire);
     }
 
-    std::string closeReason()
-    {
-        return m_closeReasonStr;
-    }
+    std::string closeReason();
 
-    size_t closeCode()
-    {
-        return m_closeReasonCode;
-    }
+    size_t closeCode();
 
     void waitForWorkerEnd();
 
@@ -130,13 +133,27 @@ public:
 
     void deref();
 
+    // Upper bound on a single incoming message. Without it a peer that never
+    // sets FIN can grow m_rxBuffer until the process is killed.
+    static const size_t kMaxRxBufferSize = 16 * 1024 * 1024;
+    // Upper bound on data queued by send() but not yet handed to lws.
+    static const uint64_t kMaxTxBufferSize = 16 * 1024 * 1024;
+
 private:
-    bool m_needsToClose;
+    static SocketLWS* fromContext(struct lws* wsi);
+    void serviceTxQueueLocked(struct lws* wsi, bool* failed);
+
+    // Written by the main thread, read by the lws service thread.
+    std::atomic<bool> m_needsToClose;
+    // Main thread only (constructor / waitForWorkerEnd).
     bool m_workerStarted;
-    bool m_alive;
-    bool m_isReady;
+    std::atomic<bool> m_alive;
+    std::atomic<bool> m_isReady;
 
     std::atomic<unsigned> m_refCount;
+    // Set once the service loop is running, so wakeService() can tell whether
+    // it is already on that thread.
+    std::atomic<unsigned long> m_serviceThreadId;
 
     IThread* m_thread{ nullptr };
     LWSRunnable* m_runnable{ nullptr };
@@ -147,19 +164,28 @@ private:
     std::string m_origin;
 
     lws_client_connect_info m_lwsClientConnectInfo;
+    // Guarded by m_contextMutex: the service thread destroys the context in
+    // finalize() while the main thread may be waking it in wakeService().
     lws_context* m_lwsContext;
     lws_protocols* m_lwsProtocols;
     lws_context_creation_info* m_lwsContextCreationInfo;
 
+    // Service thread only. lws owns the wsi and frees it during context
+    // teardown, so no other thread may hold or dereference it.
     lws* m_lwsClient;
 
     Mutex* m_txMutex;
+    Mutex* m_contextMutex;
+    Mutex* m_closeMutex;
 
+    // Guarded by m_txMutex.
     std::vector<SocketLWSData*> m_txBuffer;
+    uint64_t m_txBufferSize;
+    // Service thread only.
     std::vector<char> m_rxBuffer;
+    // Guarded by m_closeMutex.
     std::string m_closeReasonStr;
     size_t m_closeReasonCode;
-    uint64_t m_txBufferSize;
 };
 
 } // namespace Starfish
