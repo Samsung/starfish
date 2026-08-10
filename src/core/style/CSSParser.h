@@ -1851,10 +1851,24 @@ private:
     void forgetState();
     RefPtr<CSSToken> lookAhead(bool aSkipWS, bool aSkipComment);
 
-    bool parseComplexSelectorList(GCVector<CSSSelectorList*>& sList);
+    // `stripSubjectDefaultNamespace`: Selectors-4's default-namespace rule
+    // exempts the *subject* (rightmost) compound of each :is()/:where()/
+    // :not() branch, unless that compound has its own explicit type/
+    // universal selector -- see stripImplicitDefaultNamespaceFromSubject().
+    // Callers outside those pseudo-class arguments (top-level rule
+    // selectors) must NOT set this.
+    bool parseComplexSelectorList(GCVector<CSSSelectorList*>& sList,
+                                  bool stripSubjectDefaultNamespace = false);
     void parseForgivingSelectorList(GCVector<CSSSelectorList*>& sList);
     void parseComplexSelector(CSSSelectorList* selectorList);
     void parseCompoundSelector(CSSSelectorList* selectorList);
+    // Removes a compound's leading implicit default-namespace universal
+    // selector (added by parseCompoundSelector()) if it turns out to be the
+    // subject of a :is()/:where()/:not() branch -- a no-op if the compound
+    // has an explicit type/universal selector of its own, or no implicit
+    // one was added.
+    void stripImplicitDefaultNamespaceFromSubject(
+        CSSSelectorList* selectorList);
     CSSSelectorListItem::RelationType parseCombinator();
     // Parses a type-selector or universal-selector name, one of:
     // `name`, `*`, `prefix|name`, `*|name`, `|name` (explicit no-namespace),
@@ -1905,6 +1919,11 @@ private:
     RefPtr<CSSToken> m_token;
     String* m_error;
     bool m_failedParsing;
+    // Set by parseCompoundSelector() when the compound it just parsed got an
+    // implicit default-namespace universal selector prepended (no explicit
+    // type/universal selector of its own) -- see
+    // stripImplicitDefaultNamespaceFromSubject().
+    bool m_lastCompoundAddedImplicitDefaultNamespace;
 
     // Media Query
     enum MediaQueryParserType {

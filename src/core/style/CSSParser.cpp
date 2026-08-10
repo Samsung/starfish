@@ -797,6 +797,7 @@ void CSSParser::init()
 {
     m_error = String::emptyString;
     m_failedParsing = false;
+    m_lastCompoundAddedImplicitDefaultNamespace = false;
 
     m_initialTokenMemoryPoolSize = CSSTOKEN_POOL_INITIAL_SIZE;
     CSSToken* ptr = (CSSToken*)m_tokenInnerPool;
@@ -994,8 +995,10 @@ CSSSelector* CSSParser::getPseudoSelector()
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoNot: {
         // :not() takes a <complex-selector-list> (non-forgiving: any invalid
-        // branch drops the whole rule, unlike :is()/:where()).
-        if (!parseComplexSelectorList(selector->selectorArguments())) {
+        // branch drops the whole rule, unlike :is()/:where()). Each branch's
+        // subject compound is exempt from the default-namespace rule (see
+        // stripImplicitDefaultNamespaceFromSubject()).
+        if (!parseComplexSelectorList(selector->selectorArguments(), true)) {
             return nullptr;
         }
 
@@ -1547,6 +1550,14 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
     }
 
     if (elementName.length()) {
+        // An explicit type/universal token -- never the implicit-
+        // default-namespace case stripImplicitDefaultNamespaceFromSubject()
+        // exempts, even when this token's own namespace happens to come
+        // from the ambient default (a bare `*`/`div` with no `|` prefix but
+        // an in-scope @namespace still counts as "explicit" per spec
+        // wording).
+        m_lastCompoundAddedImplicitDefaultNamespace = false;
+
         bool isStar = elementName.equals("*");
 
         // Resolve an explicit prefix (svg|div, *|div, |div) or fall back to
@@ -1607,25 +1618,63 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
         selectorList->insert(selectorList->begin(),
                              CSSSelectorListItem(selector));
         selectorList->front().m_relation = rt;
-    } else if (m_styleSheet) {
+    } else {
         // No explicit type/universal selector in this compound (e.g. `.foo`,
         // `:hover`) -- Selectors-4's default-namespace rule still implicitly
         // restricts the compound's subject to the default namespace, same
-        // as it would for a bare type selector. (PR-B carves out the one
-        // spec exception to this: the *subject* compound of a
-        // :is()/:where()/:not() argument is exempt unless it has its own
-        // explicit type/universal selector -- not implemented here.)
-        Optional<AtomicString> defaultNS = m_styleSheet->defaultNamespaceURI();
-        if (defaultNS.hasValue()) {
-            QualifiedName qname(
-                defaultNS.getValue(),
-                AtomicString::createAtomicString(starfish(), "*"));
-            CSSSelector* selector = new CSSNamespacedTagSelector(qname);
-            selectorList->insert(selectorList->begin(),
-                                 CSSSelectorListItem(selector));
-            selectorList->front().m_relation = CSSSelectorListItem::SubSelector;
+        // as it would for a bare type selector. If this compound turns out
+        // to be the subject of a :is()/:where()/:not() branch,
+        // stripImplicitDefaultNamespaceFromSubject() undoes it afterward
+        // (spec exception) -- it needs to know, for exactly this compound,
+        // whether that implicit selector got inserted, so reset on every
+        // path through here, not just when one actually is.
+        m_lastCompoundAddedImplicitDefaultNamespace = false;
+
+        if (m_styleSheet) {
+            Optional<AtomicString> defaultNS =
+                m_styleSheet->defaultNamespaceURI();
+            if (defaultNS.hasValue()) {
+                QualifiedName qname(
+                    defaultNS.getValue(),
+                    AtomicString::createAtomicString(starfish(), "*"));
+                CSSSelector* selector = new CSSNamespacedTagSelector(qname);
+                selectorList->insert(selectorList->begin(),
+                                     CSSSelectorListItem(selector));
+                selectorList->front().m_relation =
+                    CSSSelectorListItem::SubSelector;
+                m_lastCompoundAddedImplicitDefaultNamespace = true;
+            }
         }
     }
+}
+
+// Selectors-4 (issue #5041) exempts the compound representing the
+// *subject* of a :is()/:where()/:not() branch from the default-namespace
+// rule, unless that compound has its own explicit type/universal
+// selector. parseCompoundSelector() always applies the general rule
+// first (matching a bare type selector's behavior), so this undoes it
+// specifically for the subject once the whole branch has parsed -- see
+// matchSelector() (Style.cpp) for why the subject always ends up at
+// index 0: each compound is merged at the FRONT of the growing selector
+// list as parsing walks left-to-right, so the last (rightmost/subject)
+// compound parsed occupies the lowest indices.
+void CSSParser::stripImplicitDefaultNamespaceFromSubject(
+    CSSSelectorList* selectorList)
+{
+    // The flag is a raw parser member, not scoped per-branch like
+    // m_failedParsing -- a branch that failed to parse anything (size 0)
+    // can still leave a stale `true` behind from an earlier, unrelated
+    // compound, so this checks size defensively rather than asserting it.
+    // Whenever the flag legitimately applies, the implicit selector was
+    // inserted ahead of at least one other simple selector in the same
+    // compound (see parseCompoundSelector()), so size is at least 2 and the
+    // subject still has a real selector left at the new index 0 after
+    // removing it -- its relation is untouched and already correct.
+    if (!m_lastCompoundAddedImplicitDefaultNamespace ||
+        selectorList->size() <= 1) {
+        return;
+    }
+    selectorList->erase((size_t)0);
 }
 
 enum CompoundSelectorFlags {
@@ -1708,10 +1757,14 @@ void CSSParser::parseComplexSelector(CSSSelectorList* selectorList)
 }
 
 bool CSSParser::parseComplexSelectorList(
-    GCVector<CSSSelectorList*>& listOfSelectorList)
+    GCVector<CSSSelectorList*>& listOfSelectorList,
+    bool stripSubjectDefaultNamespace)
 {
     CSSSelectorList* selectorList = new (GC) CSSSelectorList();
     parseComplexSelector(selectorList);
+    if (stripSubjectDefaultNamespace) {
+        stripImplicitDefaultNamespaceFromSubject(selectorList);
+    }
 
     if (selectorList->size() == 0) {
         return false;
@@ -1727,6 +1780,9 @@ bool CSSParser::parseComplexSelectorList(
 
         CSSSelectorList* nextSelectorList = new (GC) CSSSelectorList();
         parseComplexSelector(nextSelectorList);
+        if (stripSubjectDefaultNamespace) {
+            stripImplicitDefaultNamespaceFromSubject(nextSelectorList);
+        }
         if (nextSelectorList->size() == 0) {
             return false;
         }
@@ -1771,6 +1827,9 @@ void CSSParser::parseForgivingSelectorList(GCVector<CSSSelectorList*>& list)
 
         CSSSelectorList* branch = new (GC) CSSSelectorList();
         parseComplexSelector(branch);
+        // :is()/:where() branches get the same subject-compound exemption
+        // as :not()'s -- see stripImplicitDefaultNamespaceFromSubject().
+        stripImplicitDefaultNamespaceFromSubject(branch);
 
         bool branchIsValid = branch->size() > 0 && !m_failedParsing;
         if (branchIsValid) {
