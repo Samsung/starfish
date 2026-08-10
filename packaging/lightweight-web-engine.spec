@@ -282,7 +282,11 @@ BuildRequires: libjpeg-turbo-devel
 %endif
 
 %%if (0%{?tizen_version_major} >= 6)
-  %if (0%{?tizen_version_major} > 9)
+  # Tizen 10.0 and below build against OpenSSL 1.1, Tizen 10.1 and above against
+  # OpenSSL 3. libopenssl3-devel conflicts with libopenssl1.1-devel and both own
+  # /usr/include/openssl and /usr/lib/lib{ssl,crypto}.so, so this choice also
+  # decides what the libwebsockets sub-build links against.
+  %if (0%{?tizen_version_major} > 10) || ((0%{?tizen_version_major} == 10) && (0%{?tizen_version_minor} >= 1))
 BuildRequires: pkgconfig(openssl3)
   %else
 BuildRequires: pkgconfig(openssl1.1)

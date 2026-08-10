@@ -505,6 +505,22 @@ SET (LWE_LDFLAGS
 #######################################################
 find_package (PkgConfig REQUIRED)
 
+# OpenSSL on Tizen: 10.0 and below ship OpenSSL 1.1, 10.1 and above ship OpenSSL 3.
+# The two -devel packages conflict and both own /usr/include/openssl and
+# /usr/lib/lib{ssl,crypto}.so, so the module picked here matches the BuildRequires
+# in the spec and is also what the libwebsockets sub-build is told to use
+# (see third_party.cmake). Older Tizen versions keep their previous behaviour.
+IF (${HOST} STREQUAL "tizen")
+    IF ((${TIZEN_MAJOR_VERSION} GREATER 10) OR ((${TIZEN_MAJOR_VERSION} EQUAL 10) AND (${TIZEN_MINOR_VERSION} GREATER 0)))
+        SET (STARFISH_OPENSSL_MODULE openssl3)
+    ELSEIF ((${TIZEN_MAJOR_VERSION} GREATER 6) OR (${TIZEN_MAJOR_VERSION} EQUAL 6))
+        SET (STARFISH_OPENSSL_MODULE openssl1.1)
+    ENDIF()
+    IF (DEFINED STARFISH_OPENSSL_MODULE)
+        pkg_check_modules (STARFISH_OPENSSL REQUIRED ${STARFISH_OPENSSL_MODULE})
+    ENDIF()
+ENDIF()
+
 IF (${RUNTIME_ICU} STREQUAL "0")
     pkg_check_modules (STARFISH_THIRD_PARTY_LIBS REQUIRED icu-uc icu-i18n)
     SET (LWE_DEFINES_ICU)
