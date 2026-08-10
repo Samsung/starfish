@@ -13,6 +13,7 @@ of spec compliance.
 | Build, cross-compile, per-platform steps, testing setup | `README.md` |
 | C++ style (headers, formatting, classes, nullability, GC) | `docs/Coding_Style_Guide.md` |
 | WPT structure, tooling, `.res` list workflow | `docs/wpt.md` |
+| Supported web surface (HTML tags, DOM interfaces, CSS properties, build-conditional flags) | `docs/Spec.md` |
 | Full test suite list | `./tool/test_runner.py -h` |
 | Source layout | `src/{core,binding,platform,browser,public,shell,launcher}` — `core/` is the engine proper; `public/` is the embedding API (`public/bridge` = per-platform bridges, `public/delegate` = API/impl separation) |
 
@@ -36,6 +37,11 @@ comments they point to.
    off — follow the existing flag pattern in `CMakeLists.txt` (WEBGL,
    WEBRTC, WORKER, IDB, ENABLE_WASM, ...). That default-off posture is the
    lightweight identity of the engine; don't bypass it.
+5. `docs/Spec.md` is the curated list of the web surface the engine
+   supports, so surface changes update it in the same change — a newly
+   exposed interface or member, an HTML tag or attribute, a CSS property or
+   accepted value, a new or re-defaulted build flag (see that file's
+   verification procedure for how each table is derived).
 
 ## Coding rules
 
@@ -62,6 +68,11 @@ Procedures live in `README.md`. One rule worth repeating: **editing any
 `.idl` (add, modify, delete) requires re-running cmake** — incremental
 `ninja` never regenerates the bindings (see the comment in
 `build/starfish.cmake`).
+
+`README.md` is what a newcomer follows to build, run and test, so keep it in
+step with what you change: a build option or its default, a build target, a
+system or third-party dependency, a supported host/arch/backend/shell, an
+output path, or how a test suite is invoked.
 
 ## Testing
 
@@ -166,9 +177,35 @@ the checker below is pinned explicitly so it is always enforced.
   defaults. Explicit developer or embedder opt-outs are acceptable only when
   they remain opt-in and cannot be enabled by web content
 
+#### 5) Documentation
+- Documentation : `docs/Spec.md` is the curated list of the web surface the
+  engine supports. A change that adds, removes, or re-gates that surface
+  must update the matching `docs/Spec.md` section in the same change — a
+  newly exposed IDL interface or member (including dropping
+  `[Unimplemented]`), a new HTML tag or attribute, a new CSS property or
+  newly accepted value, a new compile-time flag or a changed flag default
+- Documentation : Scope this to surface changes. A bug fix or
+  spec-conformance correction to an already-documented feature needs no
+  `docs/Spec.md` edit; don't flag one
+- Documentation : When flagging a missing update, name the section and
+  table to edit (the HTML tag table, the DOM interface table, the CSS
+  property table, the build-conditional flags table, ...) instead of asking
+  for "documentation", and check whether the entry already exists as a
+  build-conditional or stub-only note that only needs re-gating
+- Documentation : `README.md` is the build/run/test entry point for
+  newcomers. A change to a build option or its default, a build target, a
+  system or third-party dependency, a supported host/arch/backend/shell, an
+  output path, or how a test suite is invoked must update the matching
+  `README.md` section in the same change; name that section when flagging
+- Documentation : Scope the `README.md` rule to what a developer or
+  embedder invokes from outside the tree. Internal refactoring of CMake
+  files, a new `.res` list entry, or adding a test case to an existing
+  suite changes nothing a reader follows — don't flag those
+
 ### Severity
 - Critical : Security
-- Major : Test Coverage, Memory Efficiency, Web Standards Compliance
+- Major : Test Coverage, Memory Efficiency, Web Standards Compliance,
+  Documentation
 - Minor : None
 
 ## Maintaining this file
