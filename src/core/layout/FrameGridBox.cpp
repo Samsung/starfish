@@ -1168,7 +1168,13 @@ void GridFormattingContext::initializePreferredWidths()
         LayoutSize mbp = fetchFixedMarginBorderPadding(m_container, style);
 
         if (style->width().isFixed()) {
-            LayoutUnit width = style->width().fixed() + mbp.width();
+            // A border-box width already contains the border and the padding,
+            // as initializeContentHeights() does for a fixed height.
+            LayoutUnit width =
+                style->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue
+                    ? style->width().fixed() +
+                          fetchFixedMargin(m_container, style).width()
+                    : style->width().fixed() + mbp.width();
             preferredMinWidth = contentWidth = width;
         } else {
             auto cache = m_layoutContext.testGridItemPreferredWidthCache(
@@ -1185,6 +1191,15 @@ void GridFormattingContext::initializePreferredWidths()
                 m_layoutContext.registerToGridItemPreferredWidthCache(
                     gridItemBox, m_availableWidth, p.preferredWidth(),
                     p.preferredMinWidth());
+            }
+
+            // https://drafts.csswg.org/css-grid/#min-size-auto
+            // The automatic minimum size of a grid item that is a scroll
+            // container is zero, so such an item lets its track shrink below
+            // its content instead of overflowing the grid.
+            if (style->minWidth().isAuto() &&
+                style->overflowX() != OverflowValue::VisibleOverflow) {
+                preferredMinWidth = mbp.width();
             }
         }
         gridArea.setPreferredWidth(contentWidth);
@@ -1293,13 +1308,22 @@ void GridFormattingContext::increaseColumnGridTracksForSpans(
             continue;
         }
 
-        LayoutUnit requiredSpace = gridArea->preferredWidth() - sumOfTracks;
+        LayoutUnit spannedGaps =
+            (gridArea->columnEnd() - gridArea->columnStart() - 1) * m_columnGap;
+        LayoutUnit requiredSpace =
+            gridArea->preferredWidth() - sumOfTracks - spannedGaps;
+        if (requiredSpace <= 0) {
+            continue;
+        }
+
+        // The space the item still needs is shared by the auto tracks it
+        // spans, on top of the size they already have.
         LayoutUnit eachColumnSize = requiredSpace.toDouble() / numOfAutoTracks;
         for (size_t i = gridArea->columnStart(); i < gridArea->columnEnd();
              i++) {
             GridTrack* track = &m_gridTemplateColumns[i];
             if (track->isAuto()) {
-                track->setSize(std::max(track->size(), eachColumnSize));
+                track->setSize(track->size() + eachColumnSize);
                 track->setGrowthLimit(
                     std::max(track->size(), track->growthLimit()));
             }
@@ -1353,9 +1377,11 @@ void GridFormattingContext::maximizeColumnTracks()
 
     LayoutUnit availableSpace = remainingSpace;
     // Iterate until either all remaining space is allocated or tracks
-    // can no longer be extended.
-    // availableSpace can be nagative, so auto tracks is reduced accordingly.
-    while (availableSpace.toInt() != 0 && growableTracks.size() > 0) {
+    // can no longer be extended. Only positive free space is distributed: a
+    // track never grows smaller than the base size it was given while
+    // resolving the intrinsic sizes, a grid whose tracks do not fit simply
+    // overflows. https://drafts.csswg.org/css-grid/#algo-grow-tracks
+    while (availableSpace.toInt() > 0 && growableTracks.size() > 0) {
         LayoutUnit additionalWidth = availableSpace / growableTracks.size();
 
         GCVector<GridTrack*> remainingGrowableTracks;
@@ -1977,12 +2003,11 @@ void GridFormattingContext::applyJustifyItems()
         }
         trackSize += (area.columnEnd() - area.columnStart() - 1) * m_columnGap;
 
+        // The default alignment is unsafe: an item wider than its track keeps
+        // being aligned and overflows the track on both sides.
         FrameBox* box = area.box();
         LayoutUnit freeSpace =
             trackSize - box->marginLeft() - box->width() - box->marginRight();
-        if (freeSpace <= 0) {
-            continue;
-        }
 
         box->moveX(justify == AlignItemValue::CenterAlignItemValue
                        ? freeSpace / 2
