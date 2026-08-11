@@ -26,6 +26,7 @@
 #include "core/modules/networking/WebSocket.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/networking/SocketLWS.h"
+#include "core/modules/threading/Thread.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/threading/Mutex.h"
@@ -119,7 +120,7 @@ int SocketLWS::lwsEventCallback(struct lws* wsi,
         // wake its own service loop (lib/core-net/pollfd.c). Without this
         // pt->service_tid stays 0 and that check is skipped entirely. The mask
         // keeps the value positive, because lws reads -1 here as an error.
-        return (int)((uintptr_t)pthread_self() & 0x7fffffff);
+        return (int)((uintptr_t)getCurrentThreadID() & 0x7fffffff);
 
     case LWS_CALLBACK_EVENT_WAIT_CANCELLED: {
         // Another thread called wakeService(). Everything that has to touch
@@ -395,7 +396,7 @@ void SocketLWS::wakeService()
     // pointless, and taking m_contextMutex on this thread risks deadlocking
     // against finalize(), which holds it while destroying the context.
     if (m_serviceThreadId.load(std::memory_order_acquire) ==
-        (unsigned long)pthread_self()) {
+        (unsigned long)getCurrentThreadID()) {
         return;
     }
 
@@ -421,7 +422,7 @@ size_t SocketLWS::closeCode()
 
 void SocketLWS::run()
 {
-    m_serviceThreadId.store((unsigned long)pthread_self(),
+    m_serviceThreadId.store((unsigned long)getCurrentThreadID(),
                             std::memory_order_release);
     if (m_lwsContext) {
         lws_service(m_lwsContext, 0);
