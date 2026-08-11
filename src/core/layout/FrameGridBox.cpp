@@ -1196,8 +1196,13 @@ void GridFormattingContext::initializePreferredWidths()
             // https://drafts.csswg.org/css-grid/#min-size-auto
             // The automatic minimum size of a grid item that is a scroll
             // container is zero, so such an item lets its track shrink below
-            // its content instead of overflowing the grid.
-            if (style->minWidth().isAuto() &&
+            // its content instead of overflowing the grid. Only when there is
+            // a width to size the track against: with no available width,
+            // which is the intrinsic pass of computePreferredWidth(),
+            // maximizeColumnTracks() never grows the track back up to its
+            // growth limit, so the grid would report a zero max-content width
+            // and collapse instead of shrinking to fit its content.
+            if (m_availableWidth > 0 && style->minWidth().isAuto() &&
                 style->overflowX() != OverflowValue::VisibleOverflow) {
                 preferredMinWidth = mbp.width();
             }
