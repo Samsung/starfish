@@ -26,6 +26,10 @@ import os
 import errno
 import optparse
 import re
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from repo_paths import REPO_ROOT  # noqa: E402
 
 
 def mkdir_p(path):
@@ -67,7 +71,7 @@ def read_lincese_file(filename):
 
 # constants
 
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+ROOT_DIR = REPO_ROOT
 OUTPUT_FILE_PREFIX = "Js2c_"
 
 LICENSE = """/*

@@ -23,11 +23,18 @@ import platform
 from argparse import ArgumentParser
 from difflib import unified_diff
 from os.path import join, relpath, splitext
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _HERE)                   # same-dir (execution_worker, http_server)
+sys.path.insert(0, os.path.dirname(_HERE))  # tool/ for drivers.basics, repo_paths
+sys.path.insert(0, os.path.join(os.path.dirname(_HERE), "wpt", "scripts"))
+
+from repo_paths import REPO_ROOT
 from drivers.basics.constants import ENVOPTS, ERRORCODE
 from execution_worker import WorkerRunner
 
 script_path = "./tool/drivers/run_test.py"
-working_directory = os.path.dirname(os.path.abspath(__file__)) + "/../"
+working_directory = REPO_ROOT
 ran_test_count = 0
 
 def file_len(fname):
@@ -367,7 +374,7 @@ def _wpt_manifest_run(list_dir, mode, jobs=8, timeout=20):
     from wpt_server import wpt_serve, DEFAULT_WPT_ROOT, WptServerError
 
     if not os.path.isdir(list_dir):
-        print("no lists at %s -- run: python3 tool/wpt_manifest_lists.py "
+        print("no lists at %s -- run: python3 tool/wpt/scripts/wpt_manifest_lists.py "
               "--mode %s --out-dir %s" % (list_dir, mode, list_dir))
         sys.exit(ERRORCODE.TEST_STOPPED)
 
@@ -444,10 +451,10 @@ def print_columns(iterable, num_columns):
 
 if __name__ == "__main__":
     print("Usage----------------------------")
-    print("run ./tool/test_runner.py")
+    print("run ./tool/runner/test_runner.py")
     print("on repository root directory")
     print("if you want to run specific test suite,")
-    print("run ./tool/test_runner.py <test_name> <test_name> ...")
+    print("run ./tool/runner/test_runner.py <test_name> <test_name> ...")
     print("this is list of test suites")
 
     test_functions = []

@@ -24,16 +24,16 @@ compose two already-CI-proven primitives —
 suites) and `tool/imgdiff/imgdiff` — with the reference URL, comparison
 relation, and any fuzzy tolerance read from `third_party/wpt/MANIFEST.json` at
 run time, the same way `wptrunner`'s reftest executor resolves them (see
-`tool/wpt_reftest.py`). If Starfish ever gains WebDriver-BiDi support (for its
-own sake, not just for this), migrating this tooling to wptrunner would pick
-up `testdriver.js`-dependent tests, wdspec, and print-reftest for free — worth
-revisiting then.
+`tool/wpt/scripts/wpt_reftest.py`). If Starfish ever gains WebDriver-BiDi
+support (for its own sake, not just for this), migrating this tooling to
+wptrunner would pick up `testdriver.js`-dependent tests, wdspec, and
+print-reftest for free — worth revisiting then.
 
 MVP limits (tracked as follow-ups, not blocking): fuzzy tolerance is not
 applied (exact-pixel only, so `<meta name=fuzzy>` tests may false-FAIL),
 reference chains (a reference that is itself a reftest) are not resolved
 recursively, and `reftest-wait` extra settle time isn't honored beyond `load`.
-`tool/wpt_reftest.py` judges reftest by parsing the pixel-difference
+`tool/wpt/scripts/wpt_reftest.py` judges reftest by parsing the pixel-difference
 percentage `tool/imgdiff/imgdiff` prints, not its own pass/fail verdict (which
 folds in a golden-image antialiasing tolerance inappropriate for reftest). Two
 gaps remain in that percentage itself, and they are not independent of the
@@ -142,23 +142,23 @@ proves nothing about the page under test. Always reproduce through
 `wpt_serve_crashtest` — never a direct file-path invocation.)
 
 Smaller known follow-ups from tooling review, not blocking: `run_all()`'s
-per-item exception backstop (`tool/wpt_runner.py`) records only `str(e)` with
-no traceback, so an unexpected tooling bug (vs. an expected external failure)
-is hard to tell apart in a large batch's failure histogram -- logging the
-traceback to stderr (without changing the recorded reason) would help without
-giving up the backstop's batch-safety property. The `wpt_domains`/`no_proxy`
-Starfish-subprocess env setup is duplicated across three call sites
-(`wpt_runner.py`'s `run_one`/`run_one_crashtest`, `wpt_reftest.py`'s
-`_screenshot`) and could be a single shared helper. `wpt_runner.py`'s new
-`_with_crashtest_marker` (via `urlsplit`/`urlunsplit`) and `wpt_audit.py`'s
-existing manual URL-string reconstruction are two different conventions for
-the same category of operation in the same directory; worth unifying if a
-third URL-rewrite need comes up.
+per-item exception backstop (`tool/wpt/scripts/wpt_runner.py`) records only
+`str(e)` with no traceback, so an unexpected tooling bug (vs. an expected
+external failure) is hard to tell apart in a large batch's failure histogram --
+logging the traceback to stderr (without changing the recorded reason) would
+help without giving up the backstop's batch-safety property. The
+`wpt_domains`/`no_proxy` Starfish-subprocess env setup is duplicated across
+three call sites (`wpt_runner.py`'s `run_one`/`run_one_crashtest`,
+`wpt_reftest.py`'s `_screenshot`) and could be a single shared helper.
+`wpt_runner.py`'s new `_with_crashtest_marker` (via `urlsplit`/`urlunsplit`)
+and `wpt_audit.py`'s existing manual URL-string reconstruction are two
+different conventions for the same category of operation in the same directory;
+worth unifying if a third URL-rewrite need comes up.
 
 Out of scope (separate concerns, not run by this path):
 - **Golden-image pixel tests** (`csswg`/`vendor_pixel`/`bidi` in
-  `tool/test_runner.py`) — Starfish's own harness, needs expected PNGs from the
-  internal `test/` submodule.
+  `tool/runner/test_runner.py`) — Starfish's own harness, needs expected PNGs
+  from the internal `test/` submodule.
 - **print-reftest, wdspec, manual, visual** — need paginated rendering, a
   WebDriver session, or a human, respectively. Not run by this path.
 
@@ -180,34 +180,35 @@ Pixel-diff fonts (Ahem etc.) and `tool/imgdiff` come from
 
 ## Running
 
-`tool/wpt_runner.py` starts `wpt serve`, runs each URL in the Starfish shell in
-parallel, and judges the result according to `--mode` (default `testharness`):
+`tool/wpt/scripts/wpt_runner.py` starts `wpt serve`, runs each URL in the
+Starfish shell in parallel, and judges the result according to `--mode`
+(default `testharness`):
 
 - `testharness` (default): judges from the `WPTR` lines emitted by the
   injected report script. PASSES when the harness completes cleanly
   (`status=0`), has at least one subtest, and no subtest failed.
 - `reftest`: judges from a `--screen-shot` capture of the test page and each
   MANIFEST-declared reference, diffed with `tool/imgdiff/imgdiff` (see
-  `tool/wpt_reftest.py`). PASSES when every reference's relation (`==` must
-  match, `!=` must not) holds.
+  `tool/wpt/scripts/wpt_reftest.py`). PASSES when every reference's relation
+  (`==` must match, `!=` must not) holds.
 - `crashtest`: judges from the `WPTR CRASHOK` marker the injected script emits
   once the page loads (waiting out a `test-wait` class if present) without
   crashing the shell.
 
 ```sh
 # whole baseline (all lists under tool/wpt/testharness_lists/)
-xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py tool/wpt/testharness_lists -j8
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py tool/wpt/testharness_lists -j8
 
 # one list, or resume an interrupted run (results are flushed per line)
-xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py tool/wpt/testharness_lists/dom_basic.res
-xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py \
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py tool/wpt/testharness_lists/dom_basic.res
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py \
     tool/wpt/testharness_lists --results out.txt --resume
 
 # reftest / crashtest lists (tool/wpt/reftest_lists/, tool/wpt/crashtest_lists/),
 # capturing a --results file to baseline/re-baseline against (see wpt_annotate.py below)
-xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py \
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py \
     tool/wpt/reftest_lists --mode reftest -j8 --results reftest_baseline.txt
-xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py \
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py \
     tool/wpt/crashtest_lists --mode crashtest -j8 --results crashtest_baseline.txt
 ```
 
@@ -218,13 +219,13 @@ Or through `test_runner.py`, which gates on the active lists —
 suites for those two kinds:
 
 ```sh
-xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py wpt_serve_testharness
-xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py wpt_serve_dom
+xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py wpt_serve_testharness
+xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py wpt_serve_dom
                                          # css, dom, canvas, html, xhr, fetch,
                                          # worker, idb, websocket, webrtc, svg,
                                          # intersection_observer, others
-xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py wpt_serve_reftest    # tool/wpt/reftest_lists/
-xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py wpt_serve_crashtest  # tool/wpt/crashtest_lists/
+xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py wpt_serve_reftest    # tool/wpt/reftest_lists/
+xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py wpt_serve_crashtest  # tool/wpt/crashtest_lists/
 ```
 
 `wpt_serve_reftest`/`wpt_serve_crashtest` run lists generated straight from
@@ -232,27 +233,27 @@ MANIFEST.json (see below) rather than carried forward from a legacy corpus,
 but they are baselined and annotated the same way as `wpt_serve_testharness`
 and gate at ~100%. All three run in CI (`.github/workflows/x64_test.yml`).
 Re-baseline and
-re-annotate them like any other list (see `tool/wpt_annotate.py` below)
-after an engine fix or WPT pin bump changes what passes.
+re-annotate them like any other list (see `tool/wpt/scripts/wpt_annotate.py`
+below) after an engine fix or WPT pin bump changes what passes.
 
 ## Running the server standalone
 
-`tool/wpt_runner.py`/`test_runner.py` each start their own `wpt serve` for
-the duration of a batch run and tear it down afterwards. To reproduce that
-same environment for one test — without going through either driver — start
-the server on its own and keep it up:
+`tool/wpt/scripts/wpt_runner.py`/`test_runner.py` each start their own `wpt
+serve` for the duration of a batch run and tear it down afterwards. To
+reproduce that same environment for one test — without going through either
+driver — start the server on its own and keep it up:
 
 ```sh
-python3 tool/wpt_server.py            # serve until Ctrl-C (third_party/wpt)
+python3 tool/wpt/scripts/wpt_server.py            # serve until Ctrl-C (third_party/wpt)
 ```
 
 This is the exact same `wpt serve --no-h2 --inject-script inject_report.js`
-process the drivers use (`tool/wpt_server.py`'s `wpt_serve()`), on the same
-`web-platform.test` hosts/ports set up in "One-time setup" — so any URL you
-load against it (in a browser, via `curl`, or by invoking `./Starfish`
+process the drivers use (`tool/wpt/scripts/wpt_server.py`'s `wpt_serve()`), on
+the same `web-platform.test` hosts/ports set up in "One-time setup" — so any
+URL you load against it (in a browser, via `curl`, or by invoking `./Starfish`
 directly) sees the exact same server-side behavior a batched run would,
-including `inject_report.js`'s injection. Take the exact `http://...` URL
-from the `.res` file/line under test.
+including `inject_report.js`'s injection. Take the exact `http://...` URL from
+the `.res` file/line under test.
 
 `wpt_runner.py ... --no-serve` also accepts this same standalone server
 instead of starting its own — useful for running a full batch against the
@@ -263,20 +264,32 @@ entirely) has none of this — no injected script, no exit trigger — and hangs
 unconditionally regardless of the page (see the crashtest-TIMEOUT discussion
 above); always go through the standalone server and a served URL instead.
 
-For reftest, `python3 tool/wpt_reftest.py <url>` (run against this same
-standalone server) reproduces the full capture+diff and reports which
+For reftest, `python3 tool/wpt/scripts/wpt_reftest.py <url>` (run against this
+same standalone server) reproduces the full capture+diff and reports which
 reference failed and why.
 
 ## Tooling
 
-All scripts live in `tool/`. Default WPT checkout is `third_party/wpt`
-(override with `--wpt-root` or `$WPT_ROOT`). Data flows:
+Everything WPT lives under `tool/wpt/`: the drivers in `tool/wpt/scripts/`,
+the curated `.res` lists and the injected page script beside them as data.
+Default WPT checkout is `third_party/wpt` (override with `--wpt-root` or
+`$WPT_ROOT`).
 
-    legacy lists ──wpt_audit.py──▶ wpt/lists/*.res ──wpt_runner.py──▶ results
-    (tool/reftest/cairo/wpt/)        (generated)        │                │
-                                                         │                ▼
-                                              wpt_server.py        wpt_annotate.py
-                                              (serves both)        (results ─▶ # [auto-fail])
+    tool/wpt/
+    ├── scripts/            wpt_runner.py, wpt_reftest.py, wpt_audit.py, ...
+    ├── inject_report.js    injected into every page under test
+    ├── testharness_lists/  curated .res lists (the CI gate)
+    ├── reftest_lists/      generated from MANIFEST.json
+    ├── crashtest_lists/    generated from MANIFEST.json
+    └── wpt_status_targets.txt   spec dirs for the status board
+
+Data flows:
+
+    legacy lists ─wpt_audit.py─▶ testharness_lists/*.res ─wpt_runner.py─▶ results
+    (tool/reftest/cairo/wpt/)         (generated)          │                 │
+                                                           │                 ▼
+                                                 wpt_server.py        wpt_annotate.py
+                                                 (serves both)  (results ─▶ # [auto-fail])
 
 ### tool/wpt/inject_report.js
 Injected into every served page by `wpt serve --inject-script`. For a
@@ -296,14 +309,15 @@ the root element's `test-wait` class to be gone (if present), then prints:
     WPTR CRASHOK
 
 reftest has no page-side contract at all — the harness captures each page's
-pixels externally via `--screen-shot` (see `tool/wpt_reftest.py`).
+pixels externally via `--screen-shot` (see `tool/wpt/scripts/wpt_reftest.py`).
 
 The query marker keeps the two page-side paths mutually exclusive, and no
 other script parses page output.
 
-### tool/wpt_server.py
+### tool/wpt/scripts/wpt_server.py
 On-demand `wpt serve` as a context manager, `wpt_serve(wpt_root, ...)`, plus a
-CLI (`python3 tool/wpt_server.py` serves until Ctrl-C). Responsibilities:
+CLI (`python3 tool/wpt/scripts/wpt_server.py` serves until Ctrl-C).
+Responsibilities:
 - start `wpt serve --no-h2 --inject-script inject_report.js` in its own session;
 - consider it healthy only after several consecutive good HTTP probes, and fail
   fast if it dies during boot;
@@ -312,17 +326,17 @@ CLI (`python3 tool/wpt_server.py` serves until Ctrl-C). Responsibilities:
 - on exit, kill the whole process group and wait for the ports to free.
 Other scripts import `wpt_serve` / `DEFAULT_WPT_ROOT` from here.
 
-### tool/wpt_runner.py — measure / gate
+### tool/wpt/scripts/wpt_runner.py — measure / gate
 Runs the tests and judges them. Input: a `.res` file or a directory of them.
 `--mode {testharness,reftest,crashtest}` (default `testharness`) selects the
 verdict mechanism:
 
 ```sh
-xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py tool/wpt/testharness_lists  # whole testharness baseline
-xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py .../dom_basic.res -j8 --timeout 20
-xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py \
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py tool/wpt/testharness_lists  # whole testharness baseline
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py .../dom_basic.res -j8 --timeout 20
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py \
     tool/wpt/reftest_lists --mode reftest      # reftest
-xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py \
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py \
     tool/wpt/crashtest_lists --mode crashtest  # crashtest
 ```
 
@@ -332,13 +346,13 @@ parses the `WPTR` lines, and records a verdict:
 - FAIL  = anything else (reason: `SUBTESTS_FAILED`, `TIMEOUT`,
   `HARNESS_STATUS_1/2`, `NO_COMPLETION`, …)
 
-`reftest` mode delegates to `tool/wpt_reftest.py`: capture the test page and
-every MANIFEST-declared reference with `--screen-shot`, diff with
+`reftest` mode delegates to `tool/wpt/scripts/wpt_reftest.py`: capture the test
+page and every MANIFEST-declared reference with `--screen-shot`, diff with
 `tool/imgdiff/imgdiff`, and require every reference's relation to hold (reason:
-`IMG_MISMATCH`, `IMG_UNEXPECTED_MATCH`, `REF_LOAD_FAIL(...)`, `NO_REFERENCE`
-if the URL isn't in MANIFEST.json's `reftest` branch, …). `crashtest` mode
-looks for the `WPTR CRASHOK` marker (reason: `SIGNAL_CRASH` if the shell
-exited on a signal, `NO_COMPLETION`/`TIMEOUT` otherwise).
+`IMG_MISMATCH`, `IMG_UNEXPECTED_MATCH`, `REF_LOAD_FAIL(...)`, `NO_REFERENCE` if
+the URL isn't in MANIFEST.json's `reftest` branch, …). `crashtest` mode looks
+for the `WPTR CRASHOK` marker (reason: `SIGNAL_CRASH` if the shell exited on a
+signal, `NO_COMPLETION`/`TIMEOUT` otherwise).
 
 Key flags: `-j` parallel shells; `--timeout` per-test seconds; `--results FILE`
 writes `PASS|FAIL <reason> <url>` per test (line-buffered); `--resume` skips URLs
@@ -348,12 +362,12 @@ per-list table and a failure-reason histogram, and exits non-zero if anything in
 an active list fails (so `test_runner.py wpt_serve_testharness` is a regression
 gate).
 
-### tool/wpt_audit.py — generate / refresh the lists
+### tool/wpt/scripts/wpt_audit.py — generate / refresh the lists
 Decides which legacy tests still exist in the pinned revision and (re)writes the
 `tool/wpt/testharness_lists/` lists.
 
 ```sh
-python3 tool/wpt_audit.py --out-dir tool/wpt/testharness_lists
+python3 tool/wpt/scripts/wpt_audit.py --out-dir tool/wpt/testharness_lists
 ```
 
 It probes the running server for each legacy URL (HTTP 200 = served, 404 =
@@ -367,15 +381,16 @@ rename patterns (directory move, `.htm`↔`.html` swap, plain→`*.any.js` /
 
 Flags: `--include-commented`, `--no-remap`, `--workers`.
 
-### tool/wpt_manifest_lists.py — generate reftest / crashtest lists
+### tool/wpt/scripts/wpt_manifest_lists.py — generate reftest / crashtest lists
 reftest and crashtest have no legacy corpus for `wpt_audit.py` to carry
 forward, so this instead enumerates `third_party/wpt/MANIFEST.json` directly
-per spec directory in `tool/wpt_status_targets.txt` (the same mechanism
-`tool/wpt_status.py` already uses for its testharness coverage report):
+per spec directory in `tool/wpt/wpt_status_targets.txt` (the same mechanism
+`tool/wpt/scripts/wpt_status.py` already uses for its testharness coverage
+report):
 
 ```sh
-python3 tool/wpt_manifest_lists.py --mode reftest --out-dir tool/wpt/reftest_lists
-python3 tool/wpt_manifest_lists.py --mode crashtest --out-dir tool/wpt/crashtest_lists
+python3 tool/wpt/scripts/wpt_manifest_lists.py --mode reftest --out-dir tool/wpt/reftest_lists
+python3 tool/wpt/scripts/wpt_manifest_lists.py --mode crashtest --out-dir tool/wpt/crashtest_lists
 ```
 
 Caution: this rewrites **every** target's list under `--out-dir`, not just
@@ -383,21 +398,21 @@ the one you care about — any hand-applied annotations in the other lists are
 silently clobbered. Diff the directory before committing.
 
 Lists carry only test URLs, no reference/relation/fuzzy metadata — that is
-resolved live from MANIFEST.json at run time (`tool/wpt_reftest.py`), so a
-submodule bump that changes a reference or adds fuzzy just works without
-regenerating the list.
+resolved live from MANIFEST.json at run time
+(`tool/wpt/scripts/wpt_reftest.py`), so a submodule bump that changes a
+reference or adds fuzzy just works without regenerating the list.
 
-### tool/wpt_reftest.py — reftest capture + compare
+### tool/wpt/scripts/wpt_reftest.py — reftest capture + compare
 `resolve_references(manifest, test_path)` reads a reftest's references
 (`[[ref_path, relation], ...]` plus any `fuzzy` extras) out of
 `items["reftest"]`; `run_reftest(url, ...)` captures the test page and each
 reference with `--screen-shot`, diffs with `imgdiff`, and applies the relation
 (`==` must match, `!=` must not). Also runnable standalone against one URL for
-debugging: `xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_reftest.py
-<url>` (run inside a `wpt_serve` context, e.g. via `python3 tool/wpt_server.py`
-in another shell).
+debugging: `xvfb-run -s '-screen 0 1920x1080x24' -a python3
+tool/wpt/scripts/wpt_reftest.py <url>` (run inside a `wpt_serve` context, e.g.
+via `python3 tool/wpt/scripts/wpt_server.py` in another shell).
 
-### tool/wpt_annotate.py — mark failures
+### tool/wpt/scripts/wpt_annotate.py — mark failures
 Turns a measurement into the green gate. Reads a `--results` file and, in each
 `.res`, prefixes every FAIL URL with `# [auto-fail:REASON] ` (e.g.
 `# [auto-fail:NO_REFERENCE]`) — the reason from the results file is kept in the
@@ -411,19 +426,19 @@ invisible to the gate — until someone manually uncomments it and re-runs.
 
 ```sh
 # testharness
-xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py \
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py \
     tool/wpt/testharness_lists --results testharness_baseline.txt
-python3 tool/wpt_annotate.py testharness_baseline.txt tool/wpt/testharness_lists
+python3 tool/wpt/scripts/wpt_annotate.py testharness_baseline.txt tool/wpt/testharness_lists
 
 # reftest
-xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py \
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py \
     tool/wpt/reftest_lists --mode reftest --results reftest_baseline.txt
-python3 tool/wpt_annotate.py reftest_baseline.txt tool/wpt/reftest_lists/
+python3 tool/wpt/scripts/wpt_annotate.py reftest_baseline.txt tool/wpt/reftest_lists/
 
 # crashtest
-xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py \
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py \
     tool/wpt/crashtest_lists --mode crashtest --results crashtest_baseline.txt
-python3 tool/wpt_annotate.py crashtest_baseline.txt tool/wpt/crashtest_lists/
+python3 tool/wpt/scripts/wpt_annotate.py crashtest_baseline.txt tool/wpt/crashtest_lists/
 ```
 
 `wpt_annotate.py` itself never launches Starfish (it only rewrites `.res` files
@@ -432,12 +447,12 @@ measurement step does.
 
 ## Verdict reasons
 
-`tool/wpt_runner.py`/`tool/wpt_reftest.py` record one of these reason strings
-per test, in `--results` output and the failure-reason histogram. A reason
-with a `:` or `(...)` suffix (`IMGDIFF_ERROR: ...`, `REF_LOAD_FAIL(TIMEOUT)`)
-is bucketed by the text before it — that's also what `wpt_annotate.py` writes
-into the `# [auto-fail:<category>]` marker (`reason_category()` in
-`tool/wpt_runner.py`).
+`tool/wpt/scripts/wpt_runner.py`/`tool/wpt/scripts/wpt_reftest.py` record one
+of these reason strings per test, in `--results` output and the failure-reason
+histogram. A reason with a `:` or `(...)` suffix (`IMGDIFF_ERROR: ...`,
+`REF_LOAD_FAIL(TIMEOUT)`) is bucketed by the text before it — that's also what
+`wpt_annotate.py` writes into the `# [auto-fail:<category>]` marker
+(`reason_category()` in `tool/wpt/scripts/wpt_runner.py`).
 
 testharness (`run_one`):
 - `OK` — `DONE status=0`, at least one subtest, no `FAIL`.
@@ -499,7 +514,7 @@ legacy `tool/reftest/cairo/wpt/*.res` against the pinned revision. Only the
 `tool/wpt/reftest_lists/*.res` and `tool/wpt/crashtest_lists/*.res` —
 generated by `wpt_manifest_lists.py` straight from MANIFEST.json (no legacy
 corpus to carry forward), then baselined and annotated the same way as the
-testharness lists (`tool/wpt_runner.py --mode ... --results` +
+testharness lists (`tool/wpt/scripts/wpt_runner.py --mode ... --results` +
 `wpt_annotate.py`, see above). Re-run this
 after an engine fix or WPT pin bump changes what passes.
 
@@ -508,8 +523,8 @@ after an engine fix or WPT pin bump changes what passes.
 ```sh
 git -C third_party/wpt fetch --depth 1 origin <new-sha>
 git -C third_party/wpt checkout <new-sha>
-python3 tool/wpt_audit.py --out-dir tool/wpt/testharness_lists   # regen lists (HTTP probe only, no Starfish)
-xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_runner.py tool/wpt/testharness_lists  # re-measure
+python3 tool/wpt/scripts/wpt_audit.py --out-dir tool/wpt/testharness_lists   # regen lists (HTTP probe only, no Starfish)
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py tool/wpt/testharness_lists  # re-measure
 git add third_party/wpt tool/wpt/testharness_lists
 ```
 
@@ -523,7 +538,7 @@ html/syntax, html/rendering, cors. Strong: css, dom, html/canvas, workers, xhr.
 ## Status board (wpt.fyi-comparable)
 
 The nightly status board at <https://pages.github.sec.samsung.net/lws/starfish/>
-runs *un-curated* spec directories (`tool/wpt_status_targets.txt`) to reveal
+runs *un-curated* spec directories (`tool/wpt/wpt_status_targets.txt`) to reveal
 where Starfish is strong or weak per spec area — unlike the CI gate above, which
 runs the curated `.res` lists at ~100% by design.
 
@@ -549,7 +564,7 @@ Pipeline (`.github/workflows/wpt_status_nightly.yml`, nightly):
 Run it locally:
 
 ```sh
-xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_status.py \
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_status.py \
   --only css/selectors --limit 30 -o report.html --output-json metrics.json
 ```
 

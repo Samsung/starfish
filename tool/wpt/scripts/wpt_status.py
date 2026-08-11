@@ -15,12 +15,12 @@
 
 """Generate an overall WPT status report for Starfish.
 
-Unlike tool/wpt_runner.py (which runs the CI-gate `.res` lists, always ~100%
-pass), this runs *un-curated* spec directories so the report reveals where
-Starfish is strong or weak per spec area.
+Unlike tool/wpt/scripts/wpt_runner.py (which runs the CI-gate `.res` lists,
+always ~100% pass), this runs *un-curated* spec directories so the report
+reveals where Starfish is strong or weak per spec area.
 
 It enumerates tests from third_party/wpt/MANIFEST.json for each directory in
-tool/wpt_status_targets.txt, runs them in the Starfish shell under an
+tool/wpt/wpt_status_targets.txt, runs them in the Starfish shell under an
 on-demand `wpt serve`, and writes a self-contained HTML report grouped by
 spec category. No external reporting dependency (mozlog / wptrunner) is used.
 
@@ -34,11 +34,13 @@ The per-test result keeps each subtest's name and status, so a future
 `render_wptreport()` (wpt.fyi format) can be added without re-running anything.
 
     xvfb-run -s '-screen 0 1920x1080x24' -a \
-      python3 tool/wpt_status.py --only css/selectors --limit 30 -o report.html
+      python3 tool/wpt/scripts/wpt_status.py --only css/selectors --limit 30 \
+      -o report.html
     xvfb-run -s '-screen 0 1920x1080x24' -a \
-      python3 tool/wpt_status.py -j8 -o report.html
+      python3 tool/wpt/scripts/wpt_status.py -j8 -o report.html
     xvfb-run -s '-screen 0 1920x1080x24' -a \
-      python3 tool/wpt_status.py --test-types testharness,reftest,crashtest \
+      python3 tool/wpt/scripts/wpt_status.py \
+      --test-types testharness,reftest,crashtest \
       -o report.html --output-json metrics.json
 """
 
@@ -51,7 +53,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from html import escape
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _HERE)                                      # sibling wpt_*
+sys.path.insert(0, os.path.join(_HERE, os.pardir, os.pardir))  # tool/
 from wpt_server import wpt_serve, DEFAULT_WPT_ROOT  # noqa: E402
 from wpt_runner import (RE_PASS, RE_FAIL, RE_DONE, STARFISH,  # noqa: E402
                         run_one_reftest, run_one_crashtest)
@@ -67,8 +71,7 @@ from wpt_reftest import ensure_manifest, ensure_imgdiff  # noqa: E402,F401
 
 TEST_TYPES = ("testharness", "reftest", "crashtest")
 
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEFAULT_TARGETS = os.path.join(REPO_ROOT, "tool", "wpt_status_targets.txt")
+DEFAULT_TARGETS = os.path.join(_HERE, os.pardir, "wpt_status_targets.txt")
 SERVER = "http://web-platform.test:8000"
 
 # WPTR DONE status codes emitted by tool/wpt/inject_report.js (testharness.js

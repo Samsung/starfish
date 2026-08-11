@@ -103,8 +103,8 @@ jobs:
 
       - name: Run SharedWorker WPT
         run: |
-            xvfb-run -s '-screen 0 1920x1080x24' -a python3 ./tool/test_runner.py wpt_serve_testharness_worker || exit 1
+            xvfb-run -s '-screen 0 1920x1080x24' -a python3 ./tool/runner/test_runner.py wpt_serve_testharness_worker || exit 1
 
       - name: Run ServiceWorker WPT
         run: |
-            xvfb-run -s '-screen 0 1920x1080x24' -a python3 ./tool/test_runner.py wpt_serve_testharness_serviceworker || exit 1
+            xvfb-run -s '-screen 0 1920x1080x24' -a python3 ./tool/runner/test_runner.py wpt_serve_testharness_serviceworker || exit 1

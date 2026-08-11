@@ -15,20 +15,22 @@
 
 """Generate per-spec `.res` URL lists for a non-testharness WPT test type.
 
-tool/wpt/lists/ (testharness) is curated from the legacy tool/reftest/cairo/wpt/
-lists via wpt_audit.py. reftest and crashtest have no such legacy corpus, so
-this instead enumerates MANIFEST.json directly -- the same mechanism
-tool/wpt_status.py already uses for its un-curated testharness coverage report
--- against the spec directories in tool/wpt_status_targets.txt.
+tool/wpt/testharness_lists/ (testharness) is curated from the legacy
+tool/reftest/cairo/wpt/ lists via wpt_audit.py. reftest and crashtest have no
+such legacy corpus, so this instead enumerates MANIFEST.json directly -- the
+same mechanism tool/wpt/scripts/wpt_status.py already uses for its un-curated
+testharness coverage report -- against the spec directories in
+tool/wpt/wpt_status_targets.txt.
 
 The generated lists intentionally carry only test URLs, no reference/relation/
-fuzzy metadata: tool/wpt_reftest.py resolves that from MANIFEST.json at run
-time (so a submodule bump that changes a reference or adds fuzzy just works,
-the way wptrunner also resolves it live rather than baking it into a list).
+fuzzy metadata: tool/wpt/scripts/wpt_reftest.py resolves that from
+MANIFEST.json at run time (so a submodule bump that changes a reference or adds
+fuzzy just works, the way wptrunner also resolves it live rather than baking it
+into a list).
 
-    python3 tool/wpt_manifest_lists.py --mode reftest \
+    python3 tool/wpt/scripts/wpt_manifest_lists.py --mode reftest \
         --out-dir tool/wpt/reftest_lists
-    python3 tool/wpt_manifest_lists.py --mode crashtest \
+    python3 tool/wpt/scripts/wpt_manifest_lists.py --mode crashtest \
         --out-dir tool/wpt/crashtest_lists
 """
 
@@ -40,8 +42,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from wpt_server import DEFAULT_WPT_ROOT  # noqa: E402
 from wpt_status import (DEFAULT_TARGETS, ensure_manifest,  # noqa: E402
                         enumerate_tests, read_targets)
-
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def list_name(target):

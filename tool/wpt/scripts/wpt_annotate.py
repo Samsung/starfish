@@ -16,18 +16,20 @@
 """Comment out currently-failing tests in the generated WPT `.res` lists.
 
 This repo's convention is: active lines = expected-pass, `#`-commented lines =
-known failures. After a measurement run (tool/wpt_runner.py --results FILE),
-feed the results here to mark FAIL URLs as `# [auto-fail:REASON] ...` (the
-FAIL reason from the results file, e.g. `# [auto-fail:TIMEOUT]`), so the
-lists become a clean green regression gate while keeping failures -- and why
-they were excluded -- visible/auditable. Note this label is write-once: an
-already-commented line's reason is not re-verified or refreshed by a later
-run until the line is uncommented and re-run by hand.
+known failures. After a measurement run (tool/wpt/scripts/wpt_runner.py
+--results FILE), feed the results here to mark FAIL URLs as `#
+[auto-fail:REASON] ...` (the FAIL reason from the results file, e.g. `#
+[auto-fail:TIMEOUT]`), so the lists become a clean green regression gate while
+keeping failures -- and why they were excluded -- visible/auditable. Note this
+label is write-once: an already-commented line's reason is not re-verified or
+refreshed by a later run until the line is uncommented and re-run by hand.
 
 Re-run after any engine fix or pin bump to refresh the gate.
 
-    python3 tool/wpt_runner.py tool/wpt/lists --results res.txt
-    python3 tool/wpt_annotate.py res.txt tool/wpt/lists
+    python3 tool/wpt/scripts/wpt_runner.py \
+        tool/wpt/testharness_lists --results res.txt
+    python3 tool/wpt/scripts/wpt_annotate.py \
+        res.txt tool/wpt/testharness_lists
 """
 
 import os

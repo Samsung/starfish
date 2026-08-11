@@ -22,7 +22,7 @@ jobs:
           allow-unsafe-pr-checkout: true
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Check tidy
-        run: ./tool/check_tidy.py
+        run: ./tool/lint/check_tidy.py
 
   squash_thirdparty:
     needs: check_source

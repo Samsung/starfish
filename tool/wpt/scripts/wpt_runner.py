@@ -30,8 +30,10 @@ Verdict per test:
 Needs no stored expected `.txt` files, so it works without the internal
 `test/` submodule.
 
-    python3 tool/wpt_runner.py tool/wpt/lists --wpt-root /path/to/wpt
-    python3 tool/wpt_runner.py tool/wpt/lists/dom_basic.res -j8
+    python3 tool/wpt/scripts/wpt_runner.py \
+        tool/wpt/testharness_lists --wpt-root /path/to/wpt
+    python3 tool/wpt/scripts/wpt_runner.py \
+        tool/wpt/testharness_lists/dom_basic.res -j8
 """
 
 import os
@@ -43,12 +45,14 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlsplit, urlunsplit
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _HERE)                                      # sibling wpt_*
+sys.path.insert(0, os.path.join(_HERE, os.pardir, os.pardir))  # tool/
+from repo_paths import REPO_ROOT  # noqa: E402
 from wpt_server import wpt_serve, DEFAULT_WPT_ROOT  # noqa: E402
 from wpt_reftest import (run_reftest, load_manifest, ensure_manifest,  # noqa: E402
                          ensure_imgdiff)
 
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STARFISH = os.path.join(REPO_ROOT, "Starfish")
 TMP_DIR = "/tmp"
 
@@ -156,7 +160,10 @@ def run_one(url, timeout):
 
 
 def run_one_reftest(url, timeout, manifest):
-    """Return (ok, reason, 0, 0, log). See tool/wpt_reftest.py for the mechanism."""
+    """Return (ok, reason, 0, 0, log).
+
+    See tool/wpt/scripts/wpt_reftest.py for the mechanism.
+    """
     ok, reason, log = run_reftest(url, manifest=manifest, timeout=timeout,
                                   tmp_dir=TMP_DIR)
     return ok, reason, 0, 0, log
@@ -204,7 +211,7 @@ def run_one_crashtest(url, timeout):
         return False, "SHELL_ERROR", 0, 0, None
     out = r.stdout.decode("utf-8", "replace")
     if r.returncode < 0:
-        # Distinct from reftest's "TC_CRASH" (tool/wpt_reftest.py's
+        # Distinct from reftest's "TC_CRASH" (tool/wpt/scripts/wpt_reftest.py's
         # _screenshot, a broader "the render didn't come out right" bucket
         # inherited from the legacy wpt_test.py driver) -- this specifically
         # means the shell was killed by a signal, which is exactly the

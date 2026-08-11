@@ -6,7 +6,7 @@ This document highlights core coding style.
 
 Formatting (indentation, line length, brace placement, spacing, ...) is
 governed by the project-root `.clang-format` file and enforced by
-`tool/check_tidy.py` in CI — that is the source of truth for formatting, not
+`tool/lint/check_tidy.py` in CI — that is the source of truth for formatting, not
 this document. This guide focuses on naming, structure, and semantic
 conventions that `.clang-format` cannot express.
 

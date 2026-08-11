@@ -297,7 +297,7 @@ SET (STARFISH_SERVICE_WORKER_LINK_LIBRARIES
 MACRO (add_js2c_target name output source license)
     ADD_CUSTOM_COMMAND (OUTPUT ${output}
                        COMMENT "Js2c (${name})"
-                       COMMAND ${CMAKE_SOURCE_DIR}/tool/js2c.py -s${source} -l${license} -o${output}
+                       COMMAND ${CMAKE_SOURCE_DIR}/tool/build/js2c.py -s${source} -l${license} -o${output}
                        DEPENDS ${source}
     )
     ADD_CUSTOM_TARGET (${name} DEPENDS ${output})

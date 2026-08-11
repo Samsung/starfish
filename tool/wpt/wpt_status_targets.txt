@@ -1,6 +1,6 @@
-# WPT spec directories for the "overall status" report (tool/wpt_status.py).
+# WPT spec directories for the "overall status" report (tool/wpt/scripts/wpt_status.py).
 # One spec directory per line; '#' starts a comment.
-# These are NOT the CI gate lists (tool/wpt/lists/*.res) -- they are run
+# These are NOT the CI gate lists (tool/wpt/testharness_lists/*.res) -- they are run
 # un-curated so the report shows where Starfish is strong or weak.
 # Adjust freely: add a directory to widen coverage, comment one out to skip it.
 

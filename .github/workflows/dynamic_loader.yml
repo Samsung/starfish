@@ -38,4 +38,4 @@ jobs:
       - name: Build
         run: ninja -C uv_cairo_gl/debug starfish.executable
       - name: Execution test
-        run: xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/execution_test.py
+        run: xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/execution_test.py

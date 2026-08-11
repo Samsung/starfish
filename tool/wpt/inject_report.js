@@ -37,7 +37,7 @@
 
     // Crashtests have no testharness.js and no completion contract of their
     // own -- the WPT pass condition is simply "the browser didn't crash
-    // rendering this page". tool/wpt_runner.py's crashtest mode appends this
+    // rendering this page". tool/wpt/scripts/wpt_runner.py's crashtest mode appends this
     // query marker so the two paths never both fire on the same page (e.g. a
     // page that happens to also load testharness.js for unrelated reasons).
     // The literal must match wpt_runner.py's CRASHTEST_QUERY

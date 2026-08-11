@@ -19,7 +19,7 @@ Loads a metrics JSON file (from wpt_status.py --output-json), appends it to
 a cumulative data.json file, and writes back. Used by the nightly CI workflow
 to maintain time-series data for the dashboard.
 
-    python3 tool/wpt_update_data.py \\
+    python3 tool/wpt/scripts/wpt_update_data.py \\
       --metrics /tmp/metrics.json \\
       --data-file data.json
 """

@@ -23,7 +23,7 @@ Creates an index.html dashboard with Chart.js graphs showing:
 Uses Chart.js CDN to avoid external dependencies. Data is inlined as a
 JavaScript variable to work around GitHub Pages CORS restrictions.
 
-    python3 tool/wpt_generate_dashboard.py \\
+    python3 tool/wpt/scripts/wpt_generate_dashboard.py \\
       --data-file data.json \\
       --output index.html
 """

@@ -25,8 +25,9 @@ have no matching file on disk yet are served fine.
 Use it to (1) pick a pin revision that maximises survival of the curated set,
 and (2) generate the new `.res` base = old active URLs that still serve.
 
-    python3 tool/wpt_audit.py --wpt-root /path/to/wpt
-    python3 tool/wpt_audit.py --wpt-root /path/to/wpt --out-dir tool/wpt/lists
+    python3 tool/wpt/scripts/wpt_audit.py --wpt-root /path/to/wpt
+    python3 tool/wpt/scripts/wpt_audit.py --wpt-root /path/to/wpt \
+        --out-dir tool/wpt/testharness_lists
 """
 
 import os
@@ -37,10 +38,12 @@ from concurrent.futures import ThreadPoolExecutor
 from http.client import HTTPConnection, HTTPSConnection
 from urllib.parse import urlsplit
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _HERE)                                      # sibling wpt_*
+sys.path.insert(0, os.path.join(_HERE, os.pardir, os.pardir))  # tool/
+from repo_paths import REPO_ROOT  # noqa: E402
 from wpt_server import wpt_serve, DEFAULT_WPT_ROOT  # noqa: E402
 
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_RES_DIR = os.path.join(REPO_ROOT, "tool", "reftest", "cairo", "wpt")
 _NOVERIFY = ssl._create_unverified_context()
 

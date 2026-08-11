@@ -168,7 +168,7 @@ jobs:
 
       - name: Run internal_test
         run: |
-          xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py internal_test || exit 1
+          xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py internal_test || exit 1
 
   test_clang_reftest_all:
     needs: build_x64_clang
@@ -227,7 +227,7 @@ jobs:
 
       - name: Run reftest_all
         run: |
-          xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py reftest_all || exit 1
+          xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py reftest_all || exit 1
 
   # test_clang_wpt_serve_all:
   #   needs: build_x64_clang
@@ -274,4 +274,4 @@ jobs:
 
   #     - name: Run wpt_serve_all
   #       run: |
-  #         xvfb-run -s '-screen 0 1920x1080x24' -a python3 ./tool/test_runner.py wpt_serve_all || exit 1
+  #         xvfb-run -s '-screen 0 1920x1080x24' -a python3 ./tool/runner/test_runner.py wpt_serve_all || exit 1
