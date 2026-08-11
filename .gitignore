@@ -70,7 +70,8 @@ kuep_net_signer.sh
 CLAUDE.md
 CLAUDE.local.md
 
-# WPT audit byproducts: regenerable by tool/wpt_audit.py, not read at runtime.
+# WPT audit byproducts: regenerable by tool/wpt/scripts/wpt_audit.py,
+# not read at runtime.
 tool/wpt/testharness_lists/*.remap
 tool/wpt/testharness_lists/*.missing
 

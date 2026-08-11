@@ -19,9 +19,12 @@ import sys
 import time
 from subprocess import Popen, PIPE
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from repo_paths import REPO_ROOT  # noqa: E402
+
 
 def run():
-    working_directory = os.path.dirname(os.path.abspath(__file__)) + "/../"
+    working_directory = REPO_ROOT
     args = ["about:blank", "--screen-shot=dummy.png"]
     process = Popen(["./Starfish"] + args, stdout=PIPE,
                     stderr=PIPE, cwd=working_directory)

@@ -4,6 +4,12 @@
 
 import os
 import subprocess
+import sys
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _HERE)          # test_runner (same dir)
+sys.path.insert(0, os.path.dirname(_HERE))  # tool/ for drivers.basics
+
 from test_runner import __file__ as test_runner_path
 from drivers.basics.constants import ERRORCODE
 

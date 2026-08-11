@@ -14,7 +14,7 @@ of spec compliance.
 | C++ style (headers, formatting, classes, nullability, GC) | `docs/Coding_Style_Guide.md` |
 | WPT structure, tooling, `.res` list workflow | `docs/wpt.md` |
 | Supported web surface (HTML tags, DOM interfaces, CSS properties, build-conditional flags) | `docs/Spec.md` |
-| Full test suite list | `./tool/test_runner.py -h` |
+| Full test suite list | `./tool/runner/test_runner.py -h` |
 | Source layout | `src/{core,binding,platform,browser,public,shell,launcher}` — `core/` is the engine proper; `public/` is the embedding API (`public/bridge` = per-platform bridges, `public/delegate` = API/impl separation) |
 
 This file holds the norms; explanations live in the documents and code
@@ -84,10 +84,10 @@ After a change, run the closest suites first:
 
 | Touched | Run | Notes |
 |---|---|---|
-| Any C++ | `./tool/check_tidy.py` | Same check as the PR CI `check_source` job |
-| `core/dom`, DOM APIs | `./tool/test_runner.py wpt_serve_dom internal_test` | Fast |
-| `core/style`, CSS/selectors | `./tool/test_runner.py wpt_serve_css` | |
-| HTML parsing/elements | `./tool/test_runner.py wpt_serve_html` | |
+| Any C++ | `./tool/lint/check_tidy.py` | Same check as the PR CI `check_source` job |
+| `core/dom`, DOM APIs | `./tool/runner/test_runner.py wpt_serve_dom internal_test` | Fast |
+| `core/style`, CSS/selectors | `./tool/runner/test_runner.py wpt_serve_css` | |
+| HTML parsing/elements | `./tool/runner/test_runner.py wpt_serve_html` | |
 | fetch / xhr / canvas / svg / ... | matching `wpt_serve_*` suite | |
 | worker / serviceworker | `wpt_serve_testharness_worker` / `_serviceworker` | Excluded from the aggregate suite (needs daemon peers) |
 | Layout, paint, rendering | `wpt_serve_reftest`, or `reftest_all` for a full pass | `reftest_all` is slow; prefer targeted suites while iterating |

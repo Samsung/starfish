@@ -44,7 +44,10 @@ HTTP_PORT = 8000
 # Ports that must be free for `wpt serve` to come up fully.
 REQUIRED_PORTS = (8000, 8001, 8443, 8444)
 
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(_HERE, os.pardir, os.pardir))  # tool/
+from repo_paths import REPO_ROOT as _REPO_ROOT  # noqa: E402
+
 DEFAULT_INJECT = os.path.join(_REPO_ROOT, "tool", "wpt", "inject_report.js")
 # Pinned WPT checkout (the `third_party/wpt` submodule). Override with WPT_ROOT.
 DEFAULT_WPT_ROOT = os.environ.get(

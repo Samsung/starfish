@@ -14,13 +14,17 @@
 
 import os
 import signal
+import sys
 import time
 from subprocess import Popen, TimeoutExpired
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from repo_paths import REPO_ROOT  # noqa: E402
 
 class WorkerRunner:
     def __init__(self, target_name):
         self.target_name = target_name
-        self.working_directory = os.path.dirname(os.path.abspath(__file__)) + "/../"
+        self.working_directory = REPO_ROOT
         self.worker = None
 
     def run(self):

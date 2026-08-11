@@ -25,7 +25,7 @@ does this internally, but currently crashes navigating to the reference
 (WebView.cpp:816, referrerURL null assert) and only understands rel=match.
 Rather than fix and extend engine-internal test orchestration, this instead
 composes two already-CI-proven primitives from the harness side, the same way
-tool/wpt_runner.py already judges testharness tests externally:
+tool/wpt/scripts/wpt_runner.py already judges testharness tests externally:
 
   - `--screen-shot=<file>`: render one page, dump one PNG, exit. Used as-is
     by tool/drivers/basics/starfish_pixel_test.py in the existing golden-image
@@ -54,10 +54,12 @@ import subprocess
 import sys
 import threading
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _HERE)                                      # sibling wpt_*
+sys.path.insert(0, os.path.join(_HERE, os.pardir, os.pardir))  # tool/
+from repo_paths import REPO_ROOT  # noqa: E402
 from wpt_server import DEFAULT_WPT_ROOT  # noqa: E402
 
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STARFISH = os.path.join(REPO_ROOT, "Starfish")
 IMGDIFF = os.path.join(REPO_ROOT, "tool", "imgdiff", "imgdiff")
 SERVER = "http://web-platform.test:8000"

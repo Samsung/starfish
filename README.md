@@ -238,25 +238,25 @@ virtual screen keeps pixel/reftest comparisons reproducible.
 ### Summary
 ``` sh
 # Run all test at once
-xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py
+xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py
 ```
 ``` sh
 # Sub tests
 # A. Dom Conformance Test
-./tool/test_runner.py dom_conformance
+./tool/runner/test_runner.py dom_conformance
 
 # B. Web Platfrom Test
-./tool/test_runner.py wpt_all or
-./tool/test_runner.py wpt_[css_css21|css_backgrounds|css_color|css_flexbox|css_transforms|css_variables|mediaqueries|selectors]
+./tool/runner/test_runner.py wpt_all or
+./tool/runner/test_runner.py wpt_[css_css21|css_backgrounds|css_color|css_flexbox|css_transforms|css_variables|mediaqueries|selectors]
 
 # C. Vendor Test
-./tool/test_runner.py vendor_test or vendor_test_[blink|webkit|gecko]
+./tool/runner/test_runner.py vendor_test or vendor_test_[blink|webkit|gecko]
 
 # D. Bidi Test
-./tool/test_runner.py bidi_test
+./tool/runner/test_runner.py bidi_test
 
 # E. Internal Test
-./tool/test_runner.py internal_test
+./tool/runner/test_runner.py internal_test
 ```
 
 If you want to capture the screenshot on the command line, use:
@@ -279,7 +279,7 @@ You can find these in `test/reftest/web-platform-tests/*`
 To run the Web Platform Tests, use:
 
 ``` sh
-./tool/test_runner.py wpt_[name]
+./tool/runner/test_runner.py wpt_[name]
 ```
 
 ### Bidi Tests
