@@ -487,6 +487,18 @@ public:
         m_scrollbarVisible = visible;
     }
 
+    // Tap-sound (link effect) feedback on interactive targets, parity with
+    // the Tizen reference webview's ewk_settings_link_effect_enabled.
+    void setLinkEffectEnabled(bool enabled)
+    {
+        m_linkEffectEnabled = enabled;
+    }
+
+    bool linkEffectEnabled()
+    {
+        return m_linkEffectEnabled;
+    }
+
     bool scrollbarVisible()
     {
         return m_scrollbarVisible;
@@ -735,6 +747,7 @@ private:
     size_t m_idleCheckTimerID;
     bool m_needsDownloadWebFontsEarly;
     bool m_scrollbarVisible;
+    bool m_linkEffectEnabled;
     bool m_scrollOccurredDuringGesture;
     bool m_useExternalPopup;
     bool m_useSpatialNavigation;

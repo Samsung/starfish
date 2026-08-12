@@ -76,6 +76,7 @@
 #include "core/dom/svg/SVGImageElement.h"
 #include "binding/ScriptBindingInstance.h"
 #include "platform/loader/ResourceLoader.h"
+#include "platform/feedback/TapSoundFeedback.h"
 
 // Matches Chrome/Android ViewConfiguration.getTouchSlop() default of 8dp.
 // Coordinates here are already DPR-divided CSS pixels, so this value is
@@ -1309,6 +1310,49 @@ void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
     }
 }
 
+// Tap-sound (link effect) target check, parity with the Tizen reference
+// webview (ewk_settings_link_effect_enabled): a synthesized click on an
+// interactive target gives the system tap-sound feedback. Interactive means
+// the computed cursor resolves to `pointer` (the reference's hand-cursor
+// rule; cursor inherits, so an ancestor's `pointer` is already reflected on
+// the target), or the cursor is left `auto` while the target sits inside a
+// natively interactive element or an explicit button/link role.
+static bool isTapSoundFeedbackTarget(Starfish* starfish, Node* clickTarget)
+{
+    if (clickTarget == nullptr || !clickTarget->isElement()) {
+        return false;
+    }
+    Element* element = clickTarget->asElement();
+    if (ComputedStyle* style = element->style()) {
+        CursorValue cursor = style->cursor();
+        if (cursor == CursorPointerValue) {
+            return true;
+        }
+        if (cursor != CursorAutoValue) {
+            // The author explicitly picked a non-hand cursor.
+            return false;
+        }
+    }
+    StaticStrings* ss = starfish->staticStrings();
+    for (Node* n = element; n; n = n->parentElement()) {
+        if (!n->isElement()) {
+            continue;
+        }
+        Element* e = n->asElement();
+        if (e->isHTMLAnchorElement() || e->isHTMLAreaElement() ||
+            e->isHTMLButtonElement() || e->isHTMLInputElement() ||
+            e->isHTMLSelectElement() || e->isHTMLTextAreaElement()) {
+            return true;
+        }
+        String* role = e->getAttributeOrEmpty(ss->m_role);
+        if (role->equalsIgnoreCase("button") ||
+            role->equalsIgnoreCase("link")) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
                                          TouchData* touches, size_t count)
 {
@@ -1585,6 +1629,10 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         // Implicit pointer capture release on pointerup.
         m_pointerCaptureTarget = nullptr;
         if (clickableEvent) {
+            if (webView()->linkEffectEnabled() &&
+                isTapSoundFeedbackTarget(starfish(), t)) {
+                playPlatformTapSoundFeedback();
+            }
             name = starfish()->staticStrings()->m_click.localName();
             MouseData clickData(MouseButtonValue::LeftButton,
                                 MouseButtonsValue::LeftButtonDown, targetX,
@@ -1830,6 +1878,10 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
         m_pointerCaptureTarget = nullptr;
 
         if (clickableEvent) {
+            if (webView()->linkEffectEnabled() &&
+                isTapSoundFeedbackTarget(starfish(), t)) {
+                playPlatformTapSoundFeedback();
+            }
             // Dispatch click event
             name = starfish()->staticStrings()->m_click.localName();
             Event* click = createMouseEvent(document(), name, data);

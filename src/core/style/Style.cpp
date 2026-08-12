@@ -1405,6 +1405,9 @@ bool CSSStyleValuePair::valueEquals(const CSSStyleValuePair& src) const
     case PointerEventsValueKind:
         return m_value.m_pointerEventsValue == src.m_value.m_pointerEventsValue;
 
+    case CursorValueKind:
+        return m_value.m_cursorValue == src.m_value.m_cursorValue;
+
     case BlendModeValueKind:
         return m_value.m_blendMode == src.m_value.m_blendMode;
 
@@ -1819,6 +1822,24 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("stroke");
         case PointerEventsAllValue:
             return String::fromUTF8("all");
+        default:
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::ValueKind::CursorValueKind:
+        switch (cursorValue()) {
+        case CursorAutoValue:
+            return String::fromUTF8("auto");
+        case CursorDefaultValue:
+            return String::fromUTF8("default");
+        case CursorPointerValue:
+            return String::fromUTF8("pointer");
+        case CursorNoneValue:
+            return String::fromUTF8("none");
+        case CursorOtherValue:
+            // The concrete keyword is not retained (the engine draws no
+            // cursor); serialize to the initial value.
+            return String::fromUTF8("auto");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -4326,6 +4347,18 @@ void StyleResolver::applyProperty(Element* element,
             style->setPointerEvents(PointerEventsAutoValue);
         } else {
             style->setPointerEvents(newCssValue.pointerEventsValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Cursor:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setCursor(parentStyle->cursor());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->setCursor(CursorAutoValue);
+        } else {
+            style->setCursor(newCssValue.cursorValue());
         }
         break;
     case CSSStyleValuePair::KeyKind::MixBlendMode:
@@ -12206,7 +12239,50 @@ bool CSSStyleValuePair::updateValueCursor(Document* document,
                                           const CSSTokenVector& tokens)
 {
     STARFISH_ASSERT(document != nullptr);
-    STARFISH_UNSUPPORTED("css property: cursor");
+
+    // Keyword-only subset of <'cursor'>: url() image cursors are not
+    // supported (the engine never draws a cursor). The value still needs to
+    // be tracked because a `pointer` cursor is what drives the tap-sound
+    // (link effect) feedback on Tizen, matching the reference webview.
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::CursorValueKind;
+    if (value.equals("auto")) {
+        m_value.m_cursorValue = CursorValue::CursorAutoValue;
+    } else if (value.equals("default")) {
+        m_value.m_cursorValue = CursorValue::CursorDefaultValue;
+    } else if (value.equals("pointer")) {
+        m_value.m_cursorValue = CursorValue::CursorPointerValue;
+    } else if (value.equals("none")) {
+        m_value.m_cursorValue = CursorValue::CursorNoneValue;
+    } else if (value.equals("context-menu") || value.equals("help") ||
+               value.equals("progress") || value.equals("wait") ||
+               value.equals("cell") || value.equals("crosshair") ||
+               value.equals("text") || value.equals("vertical-text") ||
+               value.equals("alias") || value.equals("copy") ||
+               value.equals("move") || value.equals("no-drop") ||
+               value.equals("not-allowed") || value.equals("grab") ||
+               value.equals("grabbing") || value.equals("e-resize") ||
+               value.equals("n-resize") || value.equals("ne-resize") ||
+               value.equals("nw-resize") || value.equals("s-resize") ||
+               value.equals("se-resize") || value.equals("sw-resize") ||
+               value.equals("w-resize") || value.equals("ew-resize") ||
+               value.equals("ns-resize") || value.equals("nesw-resize") ||
+               value.equals("nwse-resize") || value.equals("col-resize") ||
+               value.equals("row-resize") || value.equals("all-scroll") ||
+               value.equals("zoom-in") || value.equals("zoom-out") ||
+               value.equals("-webkit-grab") ||
+               value.equals("-webkit-grabbing") || value.equals("-moz-grab") ||
+               value.equals("-moz-grabbing") ||
+               value.equals("-webkit-zoom-in") ||
+               value.equals("-webkit-zoom-out")) {
+        m_value.m_cursorValue = CursorValue::CursorOtherValue;
+    } else {
+        return false;
+    }
     return true;
 }
 

@@ -1195,6 +1195,12 @@ void WebContainerImpl::SetSettings(const Settings* settings)
             m_webView->setNeedsDownScaleImageResourceLargerThan(
                 settings->NeedsDownScaleImageResourceLargerThan());
             m_webView->setScrollbarVisible(settings->ScrollbarVisible());
+            // Default-on: an absent key (host built against an older
+            // Settings) keeps the default true; ParseBool handles any
+            // casing of "True"/"False" consistently with the other readers.
+            std::string linkEffect = settings->GetSetting("linkEffectEnabled");
+            m_webView->setLinkEffectEnabled(linkEffect.empty() ||
+                                            ParseBool(linkEffect));
             m_webView->setUseExternalPopup(settings->UseExternalPopup());
             m_webView->setUseSpatialNavigation(
                 settings->UseSpatialNavigation());

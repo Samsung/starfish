@@ -2241,12 +2241,10 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::Cursor: {
-        STARFISH_UNIMPLEMENTED();
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::Cursor);
-        // when cursor value type is implemented, add cursor value type instead
-        // of string `auto`
-        p.setKeywordValue(String::createASCIIString("auto"));
+        p.setValueKind(CSSStyleValuePair::ValueKind::CursorValueKind);
+        p.setValue(CSSStyleValuePair::ValueData(style->cursor()));
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::MaskImage: {

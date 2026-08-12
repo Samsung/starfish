@@ -329,6 +329,18 @@ enum PointerEventsValue ENSURE_ENUM_UNSIGNED {
     PointerEventsAllValue,
 };
 
+enum CursorValue ENSURE_ENUM_UNSIGNED {
+    CursorAutoValue,
+    CursorDefaultValue,
+    CursorPointerValue,
+    CursorNoneValue,
+    // Any other valid cursor keyword. The engine draws no cursor, so only
+    // auto/pointer matter behaviorally (tap-sound feedback); the rest are
+    // kept parseable so an author value cleanly overrides an inherited
+    // `pointer` instead of being dropped.
+    CursorOtherValue,
+};
+
 enum BorderImageRepeatValue ENSURE_ENUM_UNSIGNED {
     StretchValue,
     RepeatValue,
@@ -1180,6 +1192,9 @@ public:
         // pointer-events
         PointerEventsValueKind,
 
+        // cursor
+        CursorValueKind,
+
         // mask
         MaskTypeValueKind,
 
@@ -1841,6 +1856,12 @@ public:
         return m_value.m_pointerEventsValue;
     }
 
+    CursorValue cursorValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == CursorValueKind);
+        return m_value.m_cursorValue;
+    }
+
     BlendMode blendModeValue() const
     {
         STARFISH_ASSERT(m_valueKind == BlendModeValueKind);
@@ -1981,6 +2002,7 @@ public:
         CSSGradientValue* m_gradientValue;
         WidthHeightKeywordValue m_widthHeightKeywordValue;
         PointerEventsValue m_pointerEventsValue;
+        CursorValue m_cursorValue;
         BlendMode m_blendMode;
         BoxDecorationBreakValue m_boxDecorationBreakValue;
         TimingFunction* m_timingFunction;
@@ -2314,6 +2336,11 @@ public:
 
         ValueData(PointerEventsValue v)
             : m_pointerEventsValue(v)
+        {
+        }
+
+        ValueData(CursorValue v)
+            : m_cursorValue(v)
         {
         }
 
