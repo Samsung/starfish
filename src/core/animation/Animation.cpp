@@ -26,6 +26,9 @@
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
 #include "core/dom/Event.h"
+#include "core/dom/ExecutionContext.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/page/WebBase.h"
 
 namespace Starfish {
 
@@ -35,6 +38,7 @@ Animation::Animation()
     , m_target(nullptr)
     , m_animationName(nullptr)
     , m_isFinished(false)
+    , m_isCanceled(false)
 {
 }
 
@@ -44,6 +48,7 @@ Animation::Animation(ExecutionContext* executionContext)
     , m_target(nullptr)
     , m_animationName(nullptr)
     , m_isFinished(false)
+    , m_isCanceled(false)
 {
 }
 
@@ -52,32 +57,66 @@ void Animation::cancel()
     // https://drafts.csswg.org/web-animations-1/#canceling-an-animation-section
     // An animation that already finished its active period still holds its
     // filled values, so it has to be dropped here as well.
-    if (!m_target || !m_animationName) {
+    if (!m_target || !m_animationName || m_isCanceled) {
         return;
     }
 
     AnimationExecutor* executor = m_target->document()->animationExecutor();
-    if (!executor->cancelWebAnimation(m_animationName, m_target)) {
-        return;
+    if (executor->cancelWebAnimation(m_animationName, m_target)) {
+        m_target->setNeedsStyleRecalcForAnimation();
     }
 
-    m_target->setNeedsStyleRecalcForAnimation();
-    m_isFinished = false;
-    fireEvent(m_target->starfish()->staticStrings()->m_cancel.localName());
+    // A finished animation is not idle, so the cancel event fires even when
+    // its tasks already left the executor (fill:none past the active period).
+    notifyCanceled();
 }
 
 void Animation::notifyFinished()
 {
-    if (m_isFinished) {
+    if (m_isFinished || m_isCanceled) {
         return;
     }
     m_isFinished = true;
     fireEvent(m_target->starfish()->staticStrings()->m_finish.localName());
 }
 
+void Animation::notifyCanceled()
+{
+    if (m_isCanceled) {
+        return;
+    }
+    m_isCanceled = true;
+    m_isFinished = false;
+    fireEvent(m_target->starfish()->staticStrings()->m_cancel.localName());
+}
+
+void Animation::notifyRemoved()
+{
+    // A replaced animation stops applying its value but stays finished; only
+    // the remove event reports the transition.
+    fireEvent(m_target->starfish()->staticStrings()->m_remove.localName());
+}
+
 void Animation::fireEvent(String* eventType)
 {
     EventInit init(false, false);
-    dispatchEventIdleTimeByUA(new Event(m_executionContext, eventType, init));
+    Event* event = new Event(m_executionContext, eventType, init);
+    // The event is delivered at idle time, so the animation may be canceled
+    // between queueing and dispatch; a canceled animation must not report a
+    // finish anymore.
+    m_executionContext->webBase()->messageLoop()->addIdler(
+        m_executionContext->globalScope(),
+        [](size_t handle, void* data0, void* data1) {
+            Animation* animation = reinterpret_cast<Animation*>(data0);
+            Event* event = reinterpret_cast<Event*>(data1);
+            if (animation->m_isCanceled &&
+                event->type()->equals(animation->m_target->starfish()
+                                          ->staticStrings()
+                                          ->m_finish.localName())) {
+                return;
+            }
+            animation->dispatchEventByUA(animation, event);
+        },
+        this, event);
 }
 } // namespace Starfish

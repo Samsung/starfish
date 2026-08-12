@@ -2624,6 +2624,7 @@ Animation* Element::animate(ExecutionContext* executionContext,
         AnimationExecutor* executor = document()->animationExecutor();
         animation->setEffectTarget(this, options.id());
         executor->attachWebAnimation(options.id(), this, animation);
+        executor->removeReplacedWebAnimations(options.id(), this);
         webView()->updateActiveAnimationExecutorRegistration(executor);
 
         setNeedsStyleRecalcForAnimation();

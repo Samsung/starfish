@@ -274,6 +274,12 @@ public:
     // when at least one task was running.
     bool cancelWebAnimation(String* animationName, Element* element);
 
+    // Drop every finished Web Animation of element whose properties are all
+    // animated by the one named newAnimationName, so repeated calls to
+    // Element.animate() do not pile up filled tasks.
+    void removeReplacedWebAnimations(String* newAnimationName,
+                                     Element* element);
+
     uint64_t transformOpacityAnimationRemainTime();
 
     void checkActiveTransitionsState(ExecutionContext& context);
