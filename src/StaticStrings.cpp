@@ -726,6 +726,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "animationend"));
     m_animationcancel = QualifiedName(
         AtomicString::createAtomicString(starfish, "animationcancel"));
+    m_finish =
+        QualifiedName(AtomicString::createAtomicString(starfish, "finish"));
+    m_cancel =
+        QualifiedName(AtomicString::createAtomicString(starfish, "cancel"));
     m_transitionstart = QualifiedName(
         AtomicString::createAtomicString(starfish, "transitionstart"));
     m_transitionend = QualifiedName(

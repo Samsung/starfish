@@ -18,7 +18,7 @@ interface Animation : EventTarget {
     [Unimplemented] readonly attribute Promise<Animation>       finished;
     [Unimplemented]         attribute EventHandler             onfinish;
     [Unimplemented]         attribute EventHandler             oncancel;
-    [Unimplemented] void cancel ();
+                    void cancel ();
     [Unimplemented] void finish ();
     [Unimplemented] void play ();
     [Unimplemented] void pause ();

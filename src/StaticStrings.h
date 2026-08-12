@@ -702,6 +702,8 @@ public:
     QualifiedName m_animationstart;
     QualifiedName m_animationend;
     QualifiedName m_animationcancel;
+    QualifiedName m_finish;
+    QualifiedName m_cancel;
     QualifiedName m_transitionstart;
     QualifiedName m_transitionend;
     QualifiedName m_transitioncancel;

@@ -1143,6 +1143,10 @@ section are supported.
 | [ElementAnimation](https://www.w3.org/TR/web-animations-1/#extensions-to-the-element-interface) | interface | ElementAnimation | Mixin on `Element`. |
 |  | method | Animation animate(sequence&lt;any&gt;? keyframes, optional KeyframeAnimationOptions options) | Creates and starts an animation; returns an `Animation` object. |
 |  | method | sequence&lt;Animation&gt; getAnimations() | **Not implemented** (returns `undefined`). |
+| [Animation](https://www.w3.org/TR/web-animations-1/#the-animation-interface) | interface | Animation | Returned by `Element.animate()`. An `EventTarget`; not constructible. `KeyframeEffect`, `AnimationEffect`, `AnimationTimeline` and `document.timeline` are not exposed. |
+|  | method | void cancel() | Drops the animation and any value it was filling, then fires `cancel`. |
+|  | misc | `finish` / `cancel` events | Dispatched on the `Animation`; reachable through `addEventListener()` only, as `onfinish`/`oncancel` are unimplemented. |
+|  | misc | **Unsupported in LWE** (IDL `[Unimplemented]` — return `undefined`) | `id`, `effect`, `timeline`, `startTime`, `currentTime`, `playbackRate`, `playState`, `pending`, `ready`, `finished`, `onfinish`, `oncancel`, `finish()`, `play()`, `pause()`, `updatePlaybackRate()`, `reverse()`. |
 | [Range](https://dom.spec.whatwg.org/#interface-range) | interface | Range | Represents a contiguous range of content. Constructor: `new Range()` (range starts collapsed at `(document, 0)`). Also returned by `document.createRange()`. |
 |  | attribute | startContainer / startOffset / endContainer / endOffset | Boundary points of the range. |
 |  | attribute | collapsed | True iff start === end. |
