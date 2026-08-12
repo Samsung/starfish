@@ -99,6 +99,17 @@ IF (${ENABLE_PROFILE} STREQUAL "1")
     )
 ENDIF()
 
+# WebSocket is backed by the libwebsockets sub-build, which only these hosts and
+# profiles ship. Everything that depends on it - the STARFISH_ENABLE_WEBSOCKET
+# define, the sub-build in third_party.cmake, its target dependency in
+# starfish.cmake and the link against websockets_lwe - keys off this single flag,
+# so a profile can never end up compiling WebSocket without its library.
+IF (${HOST} STREQUAL "linux" OR ${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile" OR ${CUSTOM} STREQUAL "unified_wearable" OR ${CUSTOM} STREQUAL "flutter")
+    SET (USE_LIBWEBSOCKETS "1")
+ELSE()
+    SET (USE_LIBWEBSOCKETS "0")
+ENDIF()
+
 IF (${ARCH} STREQUAL "x64")
     SET (LWE_DEFINES_ARCH
         -DSTARFISH_ENABLE_MULTIMEDIA
@@ -115,7 +126,6 @@ IF (${ARCH} STREQUAL "x64")
         -DSTARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX
         -DSTARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX
         -DSTARFISH_ENABLE_ANIMATION
-        -DSTARFISH_ENABLE_WEBSOCKET
         -DSTARFISH_ENABLE_WEBAUDIO
     )
 ELSEIF (${ARCH} STREQUAL "aarch64" OR ${ARCH} STREQUAL "arm" OR ${ARCH} STREQUAL "x86")
@@ -130,6 +140,12 @@ ELSEIF (${ARCH} STREQUAL "aarch64" OR ${ARCH} STREQUAL "arm" OR ${ARCH} STREQUAL
         -DSTARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX
         -DSTARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX
         -DSTARFISH_ENABLE_ANIMATION
+    )
+ENDIF()
+
+IF (${USE_LIBWEBSOCKETS} STREQUAL "1")
+    SET (LWE_DEFINES_ARCH
+        ${LWE_DEFINES_ARCH}
         -DSTARFISH_ENABLE_WEBSOCKET
     )
 ENDIF()
@@ -161,12 +177,6 @@ IF (${HOST} STREQUAL "tizen")
         SET(LWE_DEFINES_HOST
             ${LWE_DEFINES_HOST}
             -DSTARFISH_ENABLE_TEST
-        )
-    ENDIF()
-    IF (${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile")
-        SET(LWE_DEFINES_HOST
-            ${LWE_DEFINES_HOST}
-            -DSTARFISH_ENABLE_WEBSOCKET
         )
     ENDIF()
 ENDIF()
@@ -217,7 +227,6 @@ ELSEIF (${CUSTOM} STREQUAL "prod_tv")
         -DSTARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX
         -DSTARFISH_ENABLE_CSS_WEBKIT_LINE_PREFIX
         -DUSE_PRODUCT_FEATURE
-        -DSTARFISH_ENABLE_WEBSOCKET
         #-DSTARFISH_ENABLE_WEBAUDIO
         -DSTARFISH_TIZEN_USERAPP_SDK_API_ONLY
     )
@@ -308,11 +317,16 @@ ELSEIF ((${CUSTOM} STREQUAL "unified_tv" OR ((${CUSTOM} STREQUAL "prod_tv") AND 
 ENDIF()
 
 IF (${WEBRTC} STREQUAL "1")
+    # WebRTC signaling goes through WebSocket, so it cannot be built on a profile
+    # that has no libwebsockets. Report that here instead of letting the WebSocket
+    # sources fail later on the missing libwebsockets.h.
+    IF (NOT ${USE_LIBWEBSOCKETS} STREQUAL "1")
+        MESSAGE (FATAL_ERROR "WEBRTC=1 requires WebSocket, which is not available for CUSTOM=${CUSTOM} on HOST=${HOST}")
+    ENDIF()
     SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
         -DSTARFISH_ENABLE_WEBRTC
         -DSTARFISH_ENABLE_MULTIMEDIA
         -DSTARFISH_ENABLE_WEBAUDIO
-        -DSTARFISH_ENABLE_WEBSOCKET
         -DSTARFISH_TIZEN_USERAPP_SDK_API_ONLY
         -DWEBRTC_POSIX
         -DWEBRTC_LINUX
@@ -721,7 +735,7 @@ IF (${HOST} STREQUAL "tizen")
     )
 ENDIF()
 
-IF (${HOST} STREQUAL "linux" OR ${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile" OR ${CUSTOM} STREQUAL "unified_wearable")
+IF (${USE_LIBWEBSOCKETS} STREQUAL "1")
     SET (STARFISH_LIBRARIES_HOST ${STARFISH_LIBRARIES_HOST} websockets_lwe)
 ENDIF()
 
@@ -739,8 +753,14 @@ SET (STARFISH_INCLUDE_DIRS_DEFAULT
    ${STARFISH_ROOT}/src
    ${STARFISH_ROOT}/inc
    ${ESCARGOT_THIRD_PARTY_ROOT}/rapidjson/include
-   ${OUTPUT_DIRECTORY}/libwebsockets/include
 )
+
+IF (${USE_LIBWEBSOCKETS} STREQUAL "1")
+    SET (STARFISH_INCLUDE_DIRS_DEFAULT
+        ${STARFISH_INCLUDE_DIRS_DEFAULT}
+        ${OUTPUT_DIRECTORY}/libwebsockets/include
+    )
+ENDIF()
 
 IF (${BACKEND} STREQUAL "glib_cairo_gl")
     SET (STARFISH_EFL_CAIRO_ADDITIONAL_INCLUDE_DIRS)
