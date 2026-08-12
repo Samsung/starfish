@@ -231,7 +231,7 @@ The HTML parser and DOM expose the following tags as well; they were missing fro
 |  [map](https://html.spec.whatwg.org/multipage/image-maps.html#the-map-element) | name | &lt;string&gt; | Maps to HTMLMapElement; image-map hit-testing is layout-only. |
 |  [area](https://html.spec.whatwg.org/multipage/image-maps.html#the-area-element) | href, alt, coords, shape | | Maps to HTMLAreaElement; companion to `<map>`. |
 |  [template](https://html.spec.whatwg.org/multipage/scripting.html#the-template-element) |  |  | Maps to HTMLTemplateElement. The `content` DocumentFragment is exposed; element does not render its children. |
-|  [slot](https://html.spec.whatwg.org/multipage/scripting.html#the-slot-element) | name | &lt;string&gt; | Maps to HTMLSlotElement, but Shadow DOM is not supported, so slotting has no effect. See the stub-only callout under [DOM](#dom). |
+|  [slot](https://html.spec.whatwg.org/multipage/scripting.html#the-slot-element) | name | &lt;string&gt; | Maps to HTMLSlotElement. Slotting works inside a shadow tree: `assignedNodes()`/`assignedElements()` (with `{flatten}`), fallback content, slot reassignment, and the `slotchange` event are implemented. |
 |  [track](https://html.spec.whatwg.org/multipage/media.html#the-track-element) | kind, src, srclang, label, default |  | Maps to HTMLTrackElement. **Build flag:** `STARFISH_ENABLE_MULTIMEDIA`. |
 
 > **Tags accepted but exposed as generic `HTMLElement` (no element-specific DOM API):** `center`, `i`, `s`, `dfn`, `b`, `u`, `mark`, `strong`, `cite`, `em`, `var`, `address`, `article`, `aside`, `details`, `footer`, `header`, `hgroup`, `main`, `nav`, `section`, `summary`, `code`, `dt`, `dd`. (Exact list: search `DEFINE_KNOWN_ELEMENT` in `src/core/dom/HTMLDocument.cpp`.) Layout follows HTML5 defaults; element-specific behaviors (e.g. the `<details>` toggle, `<summary>` activation) are NOT implemented — falling back to a closed `<details>` content region rendering all children. Any other custom or HTML5 tag the parser doesn't recognize (`figure`, `time`, `picture`, `kbd`, `small`, `wbr`, `ruby`, …) becomes `HTMLUnknownElement` — they parse and lay out as inline boxes but expose no element-specific DOM members.
@@ -262,8 +262,13 @@ section are supported.
 >
 > The default `HOST=linux` / `EFL` release build documented at the top of `README.md` ships with `WEBRTC=0`, `WORKER=0`, `SHARED_WORKER=0`, `SERVICE_WORKER=0`, `IDB=0`, `WEBGL=1`, plus TTS/WebAudio/WebSocket on. Other shells/hosts can differ. When in doubt, run a runtime probe (see [Verification & Build-Conditional Surface](#verification--build-conditional-surface)).
 
-> **Interfaces present but stub-only — DO NOT USE.** The following interfaces have IDL exposure (so `typeof X === 'function'`) but their callbacks/observation logic is not wired up; the LWE webapp guide forbids them. Listed here for completeness so authors don't conclude the engine "supports" them based on bare existence:
-> `MutationObserver`, `MutationRecord`, `IntersectionObserver`, `IntersectionObserverEntry`, `ResizeObserver`, `ResizeObserverEntry`, `ResizeObserverSize`, `PerformanceObserver`, `CustomElementRegistry`, `ShadowRoot`, `Slottable`, plus the entire `SVG*` family. See [LWE_WEBAPP_GUIDE.md §2](LWE_WEBAPP_GUIDE.md) for alternatives.
+> **Observers deliver callbacks.** `MutationObserver`/`MutationRecord`, `IntersectionObserver`/`IntersectionObserverEntry`, and `ResizeObserver`/`ResizeObserverEntry`/`ResizeObserverSize` are implemented, not stubs — the observation logic is wired up and invokes the JS callback (`MutationObserver::notify`, `ResizeObserver::notify`, `IntersectionObserverCallback`).
+>
+> **Shadow DOM and Custom Elements are implemented.** `Element.attachShadow()`, `ShadowRoot`, `Slottable.assignedSlot`, and `HTMLSlotElement.assignedNodes()`/`assignedElements()` work, including slot assignment, the `slotchange` event, and spec event retargeting across shadow boundaries (`EventTarget.cpp` `retarget()`). `CustomElementRegistry` implements `define()`, `get()`, `getName()`, `whenDefined()`, and `upgrade()`. See the rows below, and the [Selectors](#selectors) section for `:host`/`::slotted`.
+>
+> **`PerformanceObserver` is not exposed at all** — it has no `.idl` file, so the constructor is `undefined`. There is no entry-buffer observation API; poll `performance.getEntries()` instead.
+>
+> **`SVG*` interfaces are exposed but not rendered** — see the SVG note at the end of the [HTML](#html) section.
 
 > **Frequently used core interfaces also exposed but not row-by-row documented below** (treat as confirmed at the interface level; rely on the WHATWG/W3C spec for member details): `DocumentFragment`, `DOMImplementation`, `DOMTokenList` (`Element.classList`/`relList`), `DOMStringMap` (`HTMLElement.dataset`), `HTMLCollection`, `Range`, `NodeFilter`, `NodeIterator`, `TreeWalker`, `MessageEvent`, `HashChangeEvent`, `PopStateEvent`, `Performance`, `PerformanceEntry`, `Storage`, `URL`, `URLSearchParams`, `TextEncoder`, `TextDecoder`, `Crypto`, `HTMLDialogElement`, `HTMLObjectElement`, `HTMLOutputElement`, `HTMLTitleElement`, `HTMLUnknownElement`. Methods on these mostly follow the standard; if you depend on a non-standard behavior, run a runtime probe.
 
@@ -505,6 +510,9 @@ section are supported.
 | [Document](https://drafts.csswg.org/cssom/#extensions-to-the-document-interface) | attribute | styleSheets | Returns a StyleSheetList collection representing the document CSS style sheets. |
 | [Document](https://www.w3.org/TR/page-visibility/#sec-document-interface) | attribute | hidden | Returns true if the Document contained by the top level browsing context (root window in the browser's viewport) is not visible at all. |
 | | attribute | visibilityState | Returns one of the following strings: "hidden", or "visible" |
+| [Document](https://fullscreen.spec.whatwg.org/#api) | attribute | fullscreenElement | Returns the element currently displayed fullscreen, or null. `webkitFullscreenElement` is an alias. |
+| | attribute | fullscreenEnabled | Returns whether fullscreen is available. `webkitFullscreenEnabled` is an alias. |
+| | method | void exitFullscreen() | Exits fullscreen. `webkitExitFullscreen()` is an alias. |
 | Document (non-standard) | method | (HTMLCollection or Node or null) document._nodeName_ | Returns elements of type a, applet, area, embed, form, frameset, img, or object with name="_nodeName_". Returns an element if there is only one such element. |
 | [VisibilityChange Event](https://www.w3.org/TR/page-visibility/#sec-visibilitychange-event) | Event Handler | visibilitychange | Fire when the content of a tab has become visible or has been hidden. |
 | [DocumentFragment](https://dom.spec.whatwg.org/#interface-documentfragment) | interface | DocumentFragment | A minimal node container; siblings inserted into the live tree via `appendChild` are moved out of the fragment. The `DocumentFragment()` constructor is **not** implemented — calling `new DocumentFragment()` throws `TypeError: Illegal constructor`; use `document.createDocumentFragment()` instead. Implements `NonElementParentNode` + `ParentNode` (so `getElementById`, `children`, `firstElementChild`, `lastElementChild`, `childElementCount`, `prepend`, `append`, `querySelector`, `querySelectorAll`). |
@@ -626,7 +634,7 @@ section are supported.
 |  | method | void insertAdjacentText(DOMString where, DOMString data) | Inserts a Text node at the position given by *where*. |
 |  | attribute | slot | Reflects the `slot` content attribute. |
 |  | method | boolean toggleAttribute(DOMString qualifiedName, optional boolean force) | Toggles the named attribute; with `force` set, conditionally adds or removes it. Returns the new presence state. |
-|  | method | ShadowRoot attachShadow(ShadowRootInit init) | Creates a shadow root for the element. Only `{mode:"open"\|"closed"}` is recognized; advanced fields are ignored. **Note: Shadow DOM is not used by LWE webapps; see [LWE_WEBAPP_GUIDE.md](LWE_WEBAPP_GUIDE.md) §2.** |
+|  | method | ShadowRoot attachShadow(ShadowRootInit init) | Creates a shadow root for the element. `ShadowRootInit` accepts `mode` (required), `delegatesFocus`, `slotAssignment`, `clonable`, and `serializable`. |
 |  | attribute | shadowRoot | Returns the open shadow root attached via `attachShadow({mode:"open"})`, or `null`. |
 |  | method | void setPointerCapture(long pointerId) | Stub: bound but currently a no-op (logs `UNIMPLEMENTED`). |
 |  | method | void releasePointerCapture(long pointerId) | Stub: bound but currently a no-op. |
@@ -733,7 +741,8 @@ section are supported.
 |  | mixin | ElementCSSInlineStyle | Provides `style` (`CSSStyleDeclaration`). |
 |  | mixin | ElementAnimation | Provides `animate()`; `getAnimations()` is unimplemented. |
 |  | misc | **Unsupported in LWE** (IDL `[Unimplemented]` — return `undefined`) | `translate`, `accessKey`, `accessKeyLabel`, `draggable`, `contextMenu`, `spellcheck`, `forceSpellCheck`, `nonce`, `autofocus`. |
-|  | misc | **Not exposed at all** | `requestFullscreen`, `popover`/`togglePopover`/`showPopover`/`hidePopover`, `outerText`, `inert`, `enterKeyHint`, `inputMode`. |
+|  | misc | **Not exposed at all** | `popover`/`togglePopover`/`showPopover`/`hidePopover`, `outerText`, `inert`, `enterKeyHint`, `inputMode`. |
+|  | method | Promise&lt;void&gt; requestFullscreen() | Requests that the element be displayed fullscreen. `webkitRequestFullscreen()`/`webkitRequestFullScreen()` are aliases of the same operation. |
 |  | method | void click() | Acts as if the element was clicked. |
 |  | attribute | tabIndex | Reflects the value of the "tabindex" content attribute of HTMLElement. Its default value is 0 for elements that are focusable and −1 for elements that are not focusable. |
 |  | method | void focus() | This method sets focus on the specified element, if it can be focused. |
@@ -1089,7 +1098,7 @@ section are supported.
 |  | attribute | baseURI | Returns the document base URL (resolved against `<base href>` if present). |
 |  | attribute | isConnected | Returns true if the node is in the document tree. |
 |  | attribute | ownerDocument | Returns the node document. Returns null for documents. |
-|  | method | Node getRootNode(optional GetRootNodeOptions options) | Returns the context object's root. The `composed` option is accepted but LWE has no Shadow DOM, so it has no observable effect. |
+|  | method | Node getRootNode(optional GetRootNodeOptions options) | Returns the context object's root. With `{composed: true}` the shadow-including root is returned; otherwise the walk stops at the containing `ShadowRoot`. |
 |  | attribute | parentNode | Returns the parent. |
 |  | attribute | parentElement | Returns the parent element, or null if the parent is not an Element. |
 |  | method | boolean hasChildNodes() | Returns whether node has children. |
@@ -1119,7 +1128,7 @@ section are supported.
 |  | method | DOMString? lookupPrefix(DOMString? namespace) | Returns the prefix associated with the given namespace, or null. |
 |  | method | DOMString? lookupNamespaceURI(DOMString? prefix) | Returns the namespace URI associated with the given prefix (HTML elements default to `http://www.w3.org/1999/xhtml`). |
 |  | method | boolean isDefaultNamespace(DOMString? namespace) | Returns whether the given namespace is the default namespace at the context node. |
-| [GetRootNodeOptions](https://dom.spec.whatwg.org/#dictdef-getrootnodeoptions) | dictionary | GetRootNodeOptions | `{ boolean composed = false }`. The `composed` flag is a no-op in LWE because Shadow DOM is not implemented. |
+| [GetRootNodeOptions](https://dom.spec.whatwg.org/#dictdef-getrootnodeoptions) | dictionary | GetRootNodeOptions | `{ boolean composed = false }`. With `composed: true`, `getRootNode()` crosses shadow boundaries and returns the shadow-including root. |
 | [NodeList](https://dom.spec.whatwg.org/#nodelist) | interface | NodeList | A `NodeList` object is a collection of nodes. Live for `Node.childNodes`; static for `querySelectorAll`. |
 |  | attribute | length | Returns the number of nodes in the collection. |
 |  | method | Node? item(unsigned long index) | Returns the node at the given tree-ordered index, or null. Indexed access (`list[i]`) is equivalent. |
@@ -1296,7 +1305,7 @@ section are supported.
 |  | attribute | frames | Return Window object's browsing context's WindowProxy object. |
 |  | attribute | length | Return the number of document-tree child browsing contexts of this Window object. |
 |  | attribute | self | Returns window. (Per HTML spec equivalent to `window` and `frames`.) |
-|  | attribute | customElements | Returns the [CustomElementRegistry](https://html.spec.whatwg.org/multipage/custom-elements.html#customelementregistry) for this Window. **Custom Elements are unsupported in LWE webapps**; see LWE_WEBAPP_GUIDE.md. |
+|  | attribute | customElements | Returns the [CustomElementRegistry](https://html.spec.whatwg.org/multipage/custom-elements.html#customelementregistry) for this Window. `define()`, `get()`, `getName()`, `whenDefined()`, and `upgrade()` are implemented, including `[CEReactions]` and the `extends` definition option. |
 |  | method | void alert(optional DOMString message = "") | Displays a modal dialog with the given message. LWE prints the message via TTS instead of opening a real dialog. |
 |  | method | void focus() / void blur() | Callable but a no-op (logs `Unsupported Window function: focus/blur`). |
 |  | method | postMessage(message, targetOrigin, transfer) | Posts a message to the given window. |
@@ -1627,12 +1636,13 @@ section are supported.
 | | align-items | normal &#124; flex-start &#124; flex-end &#124; start &#124; end &#124; center &#124; baseline &#124; stretch | Aligns flex items along the cross axis. | **NOT supported**: `first baseline`, `last baseline`, `self-start`, `self-end` (all parse to `stretch`). `normal` parses to `stretch`. |
 | | align-self | auto &#124; flex-start &#124; flex-end &#124; start &#124; end &#124; center &#124; baseline &#124; stretch | Per-item override of `align-items`. | Same value subset as `align-items`; `auto` resolves to inherited `stretch`. |
 | | align-content | flex-start &#124; flex-end &#124; center &#124; space-between &#124; space-around &#124; stretch | Aligns flex container’s lines along the cross axis. | **NOT supported**: `space-evenly`, `start`, `end`, `normal`, `baseline`/`first baseline`/`last baseline` (all parse to `stretch`). |
-| | row-gap | normal &#124; &lt;length-percentage&gt; | Cross-axis (row-flex) / main-axis (column-flex) line gap. | **PARSED but layout treats as 0** in flex containers; only `column-gap` value is honored as the inline-axis gap regardless of `flex-direction`. Cross-axis gap between wrapped lines is therefore not implemented. Percentage values not accepted (computed `none`). |
-| | column-gap | normal &#124; &lt;length-percentage&gt; | Inline-axis gap. | Used for inline gaps in row-flex and (incorrectly) for cross-axis gap in column-flex. Percentage values rejected (computed `none`). |
-| | gap | &lt;'row-gap'&gt; &lt;'column-gap'&gt;? | Shorthand for `row-gap` and `column-gap`. | Shorthand parses single value into both longhands but the `row-gap` longhand is silently dropped at layout; two-value form (`gap: 10px 20px`) effectively only the second value (`column-gap`) is applied; `calc()` not accepted. |
-| | justify-items / justify-self / place-items / place-content / place-self | — | CSS Box Alignment shorthands. | **NOT supported** — properties unknown to engine; `getComputedStyle` returns `undefined`. |
-| [Grid](https://www.w3.org/TR/css-grid-1/) | grid-template-columns | &lt;number&gt; &#124; &lt;fr&gt; unit | This property defines the track sizing of the grid columns. | '%' unit, line names, and minmax functions are not supported. |
-| | grid-template-rows | &lt;number&gt; &#124; &lt;fr&gt; unit | This property defines the track sizing of the grid rows. | '%' unit, line names, and minmax functions are not supported. |
+| | row-gap | normal &#124; &lt;length-percentage&gt; | Cross-axis (row-flex) / main-axis (column-flex) line gap. | Applied in both flex and grid containers. In flex, `row-gap`/`column-gap` are mapped to the main/cross gap according to `flex-direction`, and a percentage `row-gap` resolves against the block size. In grid, only fixed lengths are honored — a percentage gap computes to 0. |
+| | column-gap | normal &#124; &lt;length-percentage&gt; | Inline-axis gap. | Applied in both flex and grid containers; in a column-direction flex container the inline axis is the cross axis, so it becomes the cross gap there. In flex, percentages resolve against the available inline size; in grid, only fixed lengths are honored. |
+| | gap | &lt;'row-gap'&gt; &lt;'column-gap'&gt;? | Shorthand for `row-gap` and `column-gap`. | Expands to both longhands: one value sets `row-gap` and `column-gap` alike, two values set them in that order. `calc()` is not accepted. |
+| | justify-items / justify-self | normal &#124; stretch &#124; start &#124; end &#124; center &#124; flex-start &#124; flex-end | CSS Box Alignment longhands for the inline axis. | Supported. |
+| | place-items / place-content / place-self | — | CSS Box Alignment shorthands. | **NOT supported** — the shorthands are unknown to the property trie, so the declaration is dropped. Use the `align-*` / `justify-*` longhands. |
+| [Grid](https://www.w3.org/TR/css-grid-1/) | grid-template-columns | &lt;length-percentage&gt; &#124; &lt;fr&gt; &#124; auto &#124; min-content &#124; max-content &#124; minmax() &#124; repeat() | This property defines the track sizing of the grid columns. | `minmax()` and `repeat()` (including `auto-fill`/`auto-fit`) are supported. `fit-content()`, line-name brackets `[name]`, and `subgrid` are not — the whole declaration is dropped. |
+| | grid-template-rows | &lt;length-percentage&gt; &#124; &lt;fr&gt; &#124; auto &#124; min-content &#124; max-content &#124; minmax() &#124; repeat() | This property defines the track sizing of the grid rows. | Same support and same exclusions as `grid-template-columns`. |
 | | grid-column-gap | &lt;number&gt; | This property sets the size of the gap between an element's columns. | '%' unit is not supported. |
 | | grid-row-gap | &lt;number&gt; | This property sets the size of the gap between an element's rows. | '%' unit is not supported. |
 | | grid-gap | &lt;number&gt; | This property specifies the gaps between rows and columns. It is a shorthand for row-gap and column-gap. | '%' unit is not supported. |
@@ -1892,7 +1902,7 @@ This section describes the complete list of supported selectors by LWE.
 | | ':only-of-type' pseudo-class | :only-of-type | p:only-of-type | Selects every \<p\> element that is the only \<p\> element of its parent |
 | [Reference selectors](https://www.w3.org/TR/selectors-4/#scoping) | ':scope' pseudo-class | :scope | :scope > .child | Matches the scoping root (`Element.querySelector(...)` call site, otherwise `documentElement`). |
 | [Custom-element pseudo-classes](https://drafts.csswg.org/selectors-4/#custom-pseudo) | ':defined' pseudo-class | :defined | a:defined | Matches any element the parser maps to a known `HTMLxxxElement` (everything except `HTMLUnknownElement`). LWE has no Custom Elements registry, so this is effectively "is the tag in the parser's known list?". |
-| [Shadow DOM pseudo-classes](https://drafts.csswg.org/css-scoping/#host-selector) | ':host' / ':host()' pseudo-classes | :host, :host(...) | :host(.themed) | Implemented at the matcher level but Shadow DOM is forbidden in LWE webapps; treat as inert (see [LWE_WEBAPP_GUIDE.md](LWE_WEBAPP_GUIDE.md)). |
+| [Shadow DOM pseudo-classes](https://drafts.csswg.org/css-scoping/#host-selector) | ':host' / ':host()' pseudo-classes | :host, :host(...) | :host(.themed) | Matches the shadow host from within a shadow tree, including via `adoptedStyleSheets` on the `ShadowRoot`. |
 | [Combinators](https://www.w3.org/TR/selectors/#combinators) | Descendant combinator ( ) | selector1 selector2 | div p | Selects all \<p\> elements inside \<div\> elements |
 | | Child combinator (>) | selector1 > selector2 | div > p | Selects all \<p\> elements that are immediate children of a \<div\> element |
 | | Next-sibling combinator (+) | selector1 + selector2 | div + p | Selects all \<p\> elements that are placed immediately after \<div\> elements |
@@ -1908,13 +1918,11 @@ The following selectors are **parsed without error but do not actually match any
 
 `:any-link`, `:focus-visible`, `:focus-within`, `:in-range`, `:out-of-range`, `:indeterminate`, `:invalid`, `:valid`, `:optional`, `:required`, `:read-only`, `:read-write`, `:target-within`, `:visited`. Use `:focus` instead of `:focus-visible`/`:focus-within`; for form-validation states, query the underlying state in JS.
 
-The following selectors raise `SyntaxError` at parse time and **must not be used**:
-
-`:has(...)`, `:is(...)`, `:where(...)`. Rewrite using a regular descendant or compound selector.
+`:is(...)` and `:where(...)` are implemented, and `:not(...)` accepts a full selector list. `:has(...)` is **not** implemented and raises `SyntaxError` at parse time — rewrite it using a regular descendant or compound selector.
 
 `:scope` is supported and matches `:root` in document context.
 `:dir(ltr)` matches; `:dir(rtl)` parses but never matches because LWE has only LTR direction infrastructure.
-Shadow-DOM-related selectors (`:host`, `:host(...)`, `:defined`) are present in the implementation but Shadow DOM itself is forbidden in LWE webapps (see [LWE_WEBAPP_GUIDE.md](LWE_WEBAPP_GUIDE.md)).
+Shadow-DOM-related selectors (`:host`, `:host(...)`, `::slotted(...)`, `:defined`) are implemented and match inside shadow trees.
 
 ### @-rules
 
@@ -1927,7 +1935,7 @@ The CSS section above does not enumerate at-rules. Implementation status:
 | `@font-face` | Supported (descriptors `unicode-range` and `font-display` are NOT). |
 | `@keyframes` | Supported. **`@-webkit-keyframes` is NOT recognized** — only the unprefixed `@keyframes` token is in `CSSParser::parseAtRule`. (Earlier docs claiming the prefixed form worked were incorrect.) |
 | `@supports` | Parsed via `parseSupportsRule`. Condition evaluation works for the basic `<feature> := (prop: value)` form (a declaration is "supported" iff `parseDeclaration` produces non-empty `cssText`), and the boolean operators `and` / `or` / `not` plus parenthesized groups are honored (`m_supportOperand`/`m_supportOperator` stacks). **However:** the JS-side `CSS.supports(prop, value)` returns `false` for many valid declarations (already documented under CSS Houdini), so do not assume @supports and `CSS.supports()` agree. The general-enclosed `<supports-feature>` fallback (function syntax: `selector(...)`, `font-tech(...)`, `font-format(...)`) is recognized as the catch-all but does not check actual support. |
-| `@namespace` | Parsed (stored as `StyleRuleNamespace`). XML namespace selectors are not commonly used in HTML stylesheets. |
+| `@namespace` | Implemented. Prefixes declared here are resolved by the parser and drive namespace-aware type selector matching (`ns\|E`, `*\|E`, `\|E`, `ns\|*`), including the default-namespace rule. Placement validity (after `@charset`/`@import`, before style rules) is enforced, and the rule is exposed as a `CSSNamespaceRule`. |
 | `@charset` | Parsed at the top of a stylesheet only; affects byte-level decoding (must be the very first rule, no whitespace before). |
 | `@counter-style` | **Recognized as an at-rule by the dispatcher**, but `parseCounterStyleRule` is a `// TODO` stub returning `nullptr` — the rule is silently dropped. |
 | `@page` | **Not parsed** — falls through `addUnknownAtRule()`. No rendering effect (LWE has no print pipeline). |
@@ -2258,7 +2266,9 @@ CSP is enforced by `src/core/csp/`. The directive parser in `ContentSecurityPoli
 
 | Recognized & enforced | Silently ignored |
 |-----------------------|------------------|
-| `base-uri`, `child-src`, `connect-src`, `default-src`, `form-action`, `frame-src` (deprecated → use `child-src`), `img-src`, `media-src`, `script-src`, `style-src` | `font-src`, `object-src`, `worker-src`, `manifest-src`, `prefetch-src`, `frame-ancestors`, `report-uri`, `report-to`, `require-trusted-types-for`, `trusted-types`, `upgrade-insecure-requests`, `block-all-mixed-content`, `sandbox` |
+| `base-uri`, `child-src`, `connect-src`, `default-src`, `form-action`, `frame-ancestors`, `frame-src` (deprecated → use `child-src`), `img-src`, `media-src`, `script-src`, `style-src` | `font-src`, `object-src`, `worker-src`, `manifest-src`, `prefetch-src`, `report-uri`, `report-to`, `require-trusted-types-for`, `trusted-types`, `upgrade-insecure-requests`, `block-all-mixed-content`, `sandbox` |
+
+`frame-ancestors` is checked against every ancestor URL, has no `default-src` fallback, and is enforced only from a policy delivered with the framed response — where it applies, it overrides `X-Frame-Options`.
 
 Apps relying on the right-hand list get **no protection** — the directive is parsed but no enforcement code path looks at it. The `securitypolicyviolation` event fires correctly on `document` for the recognized set, but the dispatched `SecurityPolicyViolationEvent` only populates `blockedURI` and `violatedDirective`; the other 8 attributes (`documentURI`, `referrer`, `effectiveDirective`, `originalPolicy`, `sourceFile`, `statusCode`, `lineNumber`, `columnNumber`) are `[Unimplemented]` and read back as `undefined`.
 
@@ -2391,27 +2401,29 @@ The existing canvas mixin tables are incomplete. Adding the missing pieces:
 | `justify-content` | `flex-start`, `flex-end`, `start`, `end`, `center`, `space-between`, `space-around`, `stretch`, `normal` | **`space-evenly`, `left`, `right`** parse to `normal` (unsupported). At layout, `start`/`stretch`/`normal` all behave as `flex-start`. |
 | `align-items` / `align-self` | `flex-start`, `flex-end`, `start`, `end`, `center`, `baseline`, `stretch` | **`first baseline`, `last baseline`, `self-start`, `self-end`, `normal`** silently coerced to `stretch` |
 | `align-content` | `flex-start`, `flex-end`, `center`, `space-between`, `space-around`, `stretch` | **`space-evenly`, `start`, `end`, `normal`, baseline variants** coerced to `stretch` |
-| `gap` / `row-gap` / `column-gap` | `<length>` | **`row-gap` is parsed but layout ignores it** (cross-axis gap between wrapped flex lines does not apply). Percentages rejected. `gap: 10px` (one value) does NOT propagate to row-gap; only `column-gap` is set. Always use longhand `row-gap`/`column-gap` separately. |
+| `gap` / `row-gap` / `column-gap` | `<length-percentage>` | Applied. `FlexFormattingContext` maps `row-gap`/`column-gap` onto the main and cross gaps by `flex-direction`, so a wrapped flex container gets its cross-axis line gap. A percentage `row-gap` resolves against the block size. `gap` expands to both longhands. `calc()` is not accepted. |
 | `order` | integer (incl. negative) | — |
-| `place-items` / `place-content` / `place-self` / `justify-items` / `justify-self` | — | **NOT recognized** by the trie — declarations dropped with `Unsupported css property`. |
+| `justify-items` / `justify-self` | — | Recognized (`Style.h`) and applied. |
+| `place-items` / `place-content` / `place-self` | — | **NOT recognized** by the trie — declarations dropped with `Unsupported css property`. |
 
 #### Grid
 
 | Property | Supported | Not supported / partial |
 |----------|-----------|--------------------------|
 | `display: grid` / `inline-grid` | both | — |
-| `grid-template-rows` / `grid-template-columns` | `<length>` (px/em/%/vw/...), `<fr>`, `auto`, `min-content`, `max-content`, `minmax(min, max)`, `repeat(<int>, …)`, `repeat(auto-fill, …)`, `repeat(auto-fit, …)` | **`fit-content(<length>)`, line-name brackets `[name]`, `subgrid`** are not recognized — entire declaration is dropped. (Spec.md previously incorrectly claimed `%` is unsupported and `minmax` is unsupported.) |
+| `grid-template-rows` / `grid-template-columns` | `<length>` (px/em/%/vw/...), `<fr>`, `auto`, `min-content`, `max-content`, `minmax(min, max)`, `repeat(<int>, …)`, `repeat(auto-fill, …)`, `repeat(auto-fit, …)` | **`fit-content(<length>)`, line-name brackets `[name]`, `subgrid`** are not recognized — entire declaration is dropped. |
 | `grid-template-areas` | string syntax | — |
 | `grid-template` (shorthand) | parses but the value setter has **no case** for it — sub-properties are not actually expanded. | **Avoid in production**; use the three sub-properties separately. |
 | `grid-auto-flow` / `grid-auto-rows` / `grid-auto-columns` | — | **NOT recognized.** Auto-placement always uses default `row` flow with `auto` track sizes. |
 | `grid-row-start/end`, `grid-column-start/end` | `auto`, `<integer>`, `<custom-ident>` (named lines), `span <integer>`, `span <custom-ident>` | Negative integers parse but layout effect (counting from end) is not guaranteed — prefer positive. The serialized `*-end` may come back empty in some shorthand expansions (cosmetic bug). |
 | `grid-row` / `grid-column` (shorthand) | `<start> / <end>` | — |
 | `grid-area` | `<name>` or `<line>{1,4}` | — |
-| `gap` / `grid-gap` (single value) | layout uses the value | **Bug:** `getComputedStyle(el).rowGap` returns empty (only `column-gap` is stored). Always use `row-gap` / `column-gap` longhands. |
+| `gap` / `grid-gap` (single value) | layout uses the value | Both longhands are set. Grid honors only fixed-length gaps — a percentage gap computes to 0 (flex resolves it). |
 | `justify-content` (grid) | `normal`, `start`, `center`, `end`, `stretch` | Other values (`space-between`/`space-around`/`space-evenly`/`flex-start`/`flex-end`/`left`/`right`) parse but log `unsupported justify-content value in grid` at layout — **no visual effect**. |
 | `align-content` (grid) | parsed, **never applied** (`GridFormattingContext` has no `applyAlignContent`). | Use `align-items`/`align-self` per-item to position rows. |
 | `align-items` / `align-self` (grid) | `start`, `center`, `end`, `stretch` | Other values emit `STARFISH_UNSUPPORTED` at layout. |
-| `justify-items` / `justify-self` / `place-items` / `place-content` / `place-self` | — | **NOT recognized.** |
+| `justify-items` / `justify-self` | — | Recognized and applied to grid items. |
+| `place-items` / `place-content` / `place-self` | — | **NOT recognized.** |
 
 #### Position / Float / Inset
 
@@ -2494,10 +2506,10 @@ The pseudo-class enum lives in `src/StaticStrings.h:244-308`; the matcher is `St
 
 | Pseudo | Status |
 |--------|--------|
-| `:hover`, `:active`, `:focus`, `:target`, `:link`, `:checked`, `:disabled`, `:enabled`, `:placeholder-shown`, `:root`, `:empty`, `:first-child`, `:last-child`, `:only-child`, `:nth-child(...)`, `:nth-last-child(...)`, `:first-of-type`, `:last-of-type`, `:only-of-type`, `:nth-of-type(...)`, `:nth-last-of-type(...)`, `:scope`, `:lang(...)`, `:dir(ltr|rtl)`, `:defined`, `:host`, `:host(...)` | Implemented. |
-| `:not(<single simple>)` | Works **only with one argument**. `:not(.a, .b)` triggers `STARFISH_ASSERT` (`Style.cpp:8685`). |
-| **Parses but never matches** (silent — always returns `false`; entry exists in the `STARFISH_ENUM_PSEUDO_SELECTORS` list at `src/StaticStrings.h:244` but no `case` in `checkPseudoClass`) | `:focus-visible`, `:focus-within`, `:required`, `:optional`, `:valid`, `:invalid`, `:in-range`, `:out-of-range`, `:read-only`, `:read-write`, `:default`, `:indeterminate`, `:any-link`, `:local-link`, `:visited`, `:target-within`, `:fullscreen`, `:blank`, `:current`, `:drop`, `:future`, `:past`, `:paused`, `:playing`, `:user-invalid`. |
-| **Hard `SyntaxError`** (entire selector dropped at parse) | `:is(...)`, `:where(...)`, `:has(...)`, `:popover-open`, `:modal`, `:nth-child(An+B of <selector>)`. Forgiving-selector-list rules don't apply — these break the whole stylesheet rule. |
+| `:hover`, `:active`, `:focus`, `:target`, `:link`, `:checked`, `:disabled`, `:enabled`, `:placeholder-shown`, `:root`, `:empty`, `:first-child`, `:last-child`, `:only-child`, `:nth-child(...)`, `:nth-last-child(...)`, `:first-of-type`, `:last-of-type`, `:only-of-type`, `:nth-of-type(...)`, `:nth-last-of-type(...)`, `:scope`, `:lang(...)`, `:dir(ltr|rtl)`, `:defined`, `:host`, `:host(...)`, `:fullscreen` | Implemented. |
+| `:not(...)`, `:is(...)`, `:where(...)` | Implemented over a full complex-selector-list. `:not()` matches when no branch matches and is non-forgiving (an invalid branch drops the whole rule); `:is()`/`:where()` match when any branch does and are forgiving. |
+| **Parses but never matches** (silent — always returns `false`; entry exists in the `STARFISH_ENUM_PSEUDO_SELECTORS` list at `src/StaticStrings.h:244` but no `case` in `checkPseudoClass`) | `:focus-visible`, `:focus-within`, `:required`, `:optional`, `:valid`, `:invalid`, `:in-range`, `:out-of-range`, `:read-only`, `:read-write`, `:default`, `:indeterminate`, `:any-link`, `:local-link`, `:visited`, `:target-within`, `:blank`, `:current`, `:drop`, `:future`, `:past`, `:paused`, `:playing`, `:user-invalid`. |
+| **Hard `SyntaxError`** (entire selector dropped at parse) | `:has(...)`, `:popover-open`, `:modal`, `:nth-child(An+B of <selector>)`. Forgiving-selector-list rules don't apply — these break the whole stylesheet rule. |
 | `:scope` | Matches `documentElement` even outside `querySelector(...)` calling context (non-spec). |
 
 ### CSS pseudo-elements — runtime caveats (audit additions)
@@ -2512,7 +2524,8 @@ LWE supports exactly **4** pseudo-elements for *style application*: `::before`, 
 | `::selection` | **NOT implemented** — logs `Unsupported css pseudo-element: 52`. **`tool/lwe_compat/whitelist.json` lists `::selection` as supported but the engine rejects it** — fix needed. |
 | `::marker` | **NOT implemented**. |
 | `::backdrop` | **NOT implemented** (and `<dialog>.showModal()` is also out of scope). |
-| `::file-selector-button`, `::target-text`, `::part(...)`, `::slotted(...)`, `::-webkit-*` | **Token not even in the parser enum** — silently dropped at parse time (no warning). |
+| `::slotted(...)` | **Implemented** — matches a slot's assigned nodes from within the shadow tree that contains the slot. |
+| `::file-selector-button`, `::target-text`, `::part(...)`, `::-webkit-*` | **Token not even in the parser enum** — silently dropped at parse time (no warning). |
 | `::cue`, `::spelling-error`, `::grammar-error` | **NOT implemented** (logged warning). |
 | `getComputedStyle(el, '::pseudo')` | **🐛 Always returns the host's computed style, even for the 4 implemented pseudos.** The Window binding ignores the second argument. Authors that probe pseudo support via CSSOM will get false negatives. |
 
@@ -2888,10 +2901,12 @@ The following font-related CSS properties are **not in the parser trie** at all 
 | Construct | Status |
 |-----------|--------|
 | Standard 3-tuple specificity (ID × 0x10000 + class/attr/pseudo-class × 0x100 + tag/pseudo-element × 1) | Implemented per `Style.cpp::specificityForOneSelector`. |
-| `:host` specificity | **Returns `0`** (not the spec-required pseudo-class weight). Mostly moot since Shadow DOM is forbidden. |
+| `:host` specificity | **Returns `0`** (not the spec-required pseudo-class weight). |
 | `:not(...)` specificity | Equals the highest specificity of its argument (matches spec) — but the engine only accepts a single simple selector inside `:not()`. |
-| `:where(...)` (zero-specificity wrapper) | Selector itself parse-fails (`SyntaxError`), so the specificity-zero behavior is moot. |
-| `:is(...)`, `:has(...)` | Parse-fail. |
+| `:where(...)` (zero-specificity wrapper) | Implemented — contributes zero specificity, per Selectors 4. |
+| `:is(...)`, `:not(...)` | Implemented — contribute the specificity of their most specific branch, per Selectors 4. |
+| `::slotted(...)` | Implemented — contributes its own pseudo-element unit plus its argument compound. |
+| `:has(...)` | Parse-fail. |
 | `<style>` element vs inline `style=""` | Inline declarations win against same-specificity rules per spec. **`!important` from `<style>` elements correctly overrides inline non-important.** |
 | `!important` on a normal property | Honored (`setFlagImportant(true)` on the value pair). |
 | `!important` on a CSS custom property (`--x: 1 !important;`) | **Silently dropped** — `setCustomProperty` has no priority parameter; `getPropertyPriority('--x')` always returns `""`. (Already noted under Custom Properties.) |
@@ -2906,9 +2921,10 @@ The following font-related CSS properties are **not in the parser trie** at all 
 | `CSSStyleDeclaration` | Adds `removeProperty(name)`, `getPropertyPriority(name)`, indexed getter (`style[i]` returns property name), camelCase named getter/setter (`style.color = ...`). CSS custom properties (`--*`) are supported via `setProperty`/`getPropertyValue`. |
 |  | **Quirk:** `getComputedStyle()` returns a writable `CSSStyleDeclaration` (not frozen), `length === 0`, mutations don't throw. Iterate via known property names with `getPropertyValue("…")` instead of indexed `length`. |
 | `CSSRule` | The `cssText` setter is **silently ignored** despite being writable in IDL. |
-| `CSSStyleSheet` | **`new CSSStyleSheet()` throws `TypeError`** — Constructable Stylesheets and `document.adoptedStyleSheets` are not implemented. `rules === cssRules` (legacy alias is the same live list). `insertRule` throws `SyntaxError` on bad text and `IndexSizeError` on out-of-range index; `deleteRule` throws `IndexSizeError` on out-of-range. |
+| `CSSStyleSheet` | **Constructable** — `new CSSStyleSheet(options)` works, with `replace()` (returns a `Promise`) and `replaceSync()`. `adoptedStyleSheets` is exposed on both `Document` and `ShadowRoot` as an observable array. `rules === cssRules` (legacy alias is the same live list). `insertRule` throws `SyntaxError` on bad text and `IndexSizeError` on out-of-range index; `deleteRule` throws `IndexSizeError` on out-of-range. |
 | `CSSFontFaceRule` | The `style` accessor **crashes the engine in debug builds** (`Assertion 'isCSSStyleRule()' failed.`). Treat `CSSFontFaceRule.style` as unsupported. |
-| `CSSPageRule`, `CSSCounterStyleRule`, `CSSNamespaceRule` | The CSSRule-type constants exist but the parser does not produce rules of these types. |
+| `CSSNamespaceRule`, `CSSCounterStyleRule` | Produced by the parser. `CSSNamespaceRule` exposes `prefix` and `namespaceURI`. |
+| `CSSPageRule` | The CSSRule-type constant exists but the parser never produces a rule of this type. |
 | `MediaList` | `mediaText` is also a stringifier (`String(ml)` serializes). Indexed getter `ml[i]` works. `deleteMedium(name)` throws `NotFoundError` if the medium isn't in the list. |
 | `MediaQueryList` | Inherits `EventTarget` (`addEventListener('change', ...)` works). **The engine does NOT auto-dispatch `change` on viewport changes** — listeners only fire if app code calls `dispatchEvent` manually. `matchMedia(invalidQuery)` returns `MediaQueryList` with `media === "not all"`; does not throw. |
 | `StyleSheet` | `href` returns empty string `""` for inline `<style>` sheets (IDL nullable; engine never returns `null`). |
@@ -3101,7 +3117,7 @@ The JS engine is **Escargot** built with `-DESCARGOT_LIBICU_SUPPORT=ON` (the LWE
 | `ReportingObserver`, `Report`, `ReportBody`, `DeprecationReport`, `InterventionReport` | **`undefined`.** No Reporting API. |
 | `navigator.sendBeacon(url, data)` | **`undefined`.** No CrashReporting/beaconing path; use `fetch(url, {keepalive:true})` instead — but note `keepalive` itself is not validated by LWE (see Fetch caveats). |
 | `globalThis.gc()`, `Memory`, `MemoryInfo` constructors | **`undefined`.** Escargot is built without a `--expose-gc` style hook, and BDWGC is not surfaced to JS. |
-| `__DevToolsHost`, `InspectorFrontendHost`, `InspectorBackend`, `CDP` | **`undefined`.** No DevTools/CDP runtime polyfills. |
+| `__DevToolsHost`, `InspectorFrontendHost`, `InspectorBackend`, `CDP` | **`undefined`.** No DevTools/CDP runtime polyfills are exposed to page script. (The engine does ship a CDP *server* under `STARFISH_ENABLE_CDP`, off by default — it is driven out-of-process over a WebSocket, not from the page. See `docs/CDP.md`.) |
 | `debugger;` statement | **No-op** when built with default `-DENABLE_DEBUGGER=0`. Does not throw, does not pause; control flow continues. With `-DENABLE_DEBUGGER=1`, the statement enters Escargot's debugger protocol — see below. |
 | `performance.mark()` / `performance.measure()` / `getEntriesByType('measure')` | **Working** (iter14/§Performance). Verified: `mark a; mark b; measure m,a,b` returns one entry with non-zero `duration`. This is the only timing-instrumentation primitive available; build dashboards on top of `getEntries()`, not on a debugger. |
 
@@ -3110,7 +3126,7 @@ The JS engine is **Escargot** built with `-DESCARGOT_LIBICU_SUPPORT=ON` (the LWE
 LWE exposes Escargot's JS debugger protocol via `cmake -DENABLE_DEBUGGER=1` (defines `STARFISH_ENABLE_DEBUGGER`; see `build/config.cmake:322`). When enabled:
 - `LWEWebView::RegisterDebuggerShouldInitHandler(cb)` and `RegisterDebuggerShouldContinueWaitingHandler(cb)` (declared in `inc/LWEWebView.h:379`/`:866`) let the host decide per-URL whether to start the debug server and whether to keep waiting for a client to attach.
 - The protocol is the one consumed by [escargot-vscode-extension](https://github.com/Samsung/escargot-vscode-extension); CLAUDE.md documents the binding.
-- It is a **JS-source debugger** (breakpoints, step, eval), **not** a DOM/CSS/Network inspector. There is no equivalent of CDP `DOM.*`, `CSS.*`, `Network.*`, `HeapProfiler.*`, or `Profiler.*` domains.
+- It is a **JS-source debugger** (breakpoints, step, eval), **not** a DOM/CSS/Network inspector. The separate CDP server (`STARFISH_ENABLE_CDP`, off by default) does implement `DOM.*`, `CSS.*`, `Network.*`, `Runtime.*`, `Page.*` and `Log.*` for out-of-process clients such as Puppeteer — see `docs/CDP.md` and the per-domain status table in `docs/CDP_DOMAINS.md`. Neither surface is reachable from page script, and `Profiler.*`/`HeapProfiler.*` are stubs there too, because Escargot exposes no CPU sampler or heap-snapshot serializer.
 - The default LWE/Starfish builds (including the `glfw debug` build documented in `memory/project_glfw_debug_build.md`) ship with `ENABLE_DEBUGGER=0`. Webapps must not feature-detect a debugger from JS — the only observable signal is that `debugger;` is a no-op.
 
 **Build-time `STARFISH_ENABLE_INSPECTOR` (not the same thing):**
@@ -3405,10 +3421,10 @@ A final pass of runtime probes (see also [Verification & Build-Conditional Surfa
 
 | Interface.member | Status | Notes |
 |---|---|---|
-| `Event.prototype.composedPath()` | Declared `[Unimplemented]` in `src/core/dom/Event.idl` | Returns `undefined`/throws on call. There is no Shadow DOM, so the only reachable path is the document tree; iterate `event.target.parentNode`/`.parentElement` if needed. |
+| `Event.prototype.composedPath()` | Implemented (`src/core/dom/Event.idl`) | Returns the event path, honoring closed-tree visibility. |
 | `Event.prototype.composed` (attribute) | Supported (read-only, default `false`) | Useful as a no-op flag for code that copies events; no Shadow-DOM observable effect. |
 | `HTMLFormElement.prototype.requestSubmit()` | Not exposed | Use `form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }))` followed by `form.submit()` if the dispatch wasn't cancelled, or wire your own click handler on a `<button type="submit">`. |
-| `Node.prototype.getRootNode()` | Supported (returns `Document`) | The `composed` option is accepted but has no observable effect (no Shadow DOM). |
+| `Node.prototype.getRootNode()` | Supported | Returns the containing `ShadowRoot` inside a shadow tree, or the `Document`; `{composed: true}` returns the shadow-including root. |
 
 **Confirmed working (called out because they're often assumed missing on embedded engines):**
 
