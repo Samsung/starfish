@@ -149,6 +149,8 @@ struct KeyframeAnimationOptions : public KeyframeEffectOptions {
     String* m_id;
 };
 
+class Element;
+
 class Animation : public EventTarget {
 public:
     Animation();
@@ -165,7 +167,28 @@ public:
         return m_executionContext;
     }
 
+    // Element.animate() drives the animation through the CSS animation
+    // machinery, so the effect is identified by its target and by the
+    // generated animation name.
+    void setEffectTarget(Element* target, String* animationName)
+    {
+        m_target = target;
+        m_animationName = animationName;
+    }
+
+    void cancel();
+
+    // Called by the executor when the underlying animation reached its end.
+    void notifyFinished();
+
     ExecutionContext* m_executionContext;
+
+private:
+    void fireEvent(String* eventType);
+
+    Element* m_target;
+    String* m_animationName;
+    bool m_isFinished;
 };
 } // namespace Starfish
 

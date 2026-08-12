@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
+#include "core/animation/Animation.h"
 #include "core/animation/AnimationExecutor.h"
 #include "core/animation/AnimationTask.h"
 #include "core/animation/AnimationApplier.h"
@@ -324,6 +325,49 @@ void AnimationExecutor::registerAnimation(ActiveAnimationTask* task,
     }
 }
 
+void AnimationExecutor::attachWebAnimation(String* animationName,
+                                           Element* element,
+                                           Animation* animation)
+{
+    STARFISH_ASSERT(element != nullptr);
+
+    for (auto& animations : m_activeAnimations) {
+        ActiveElementAnimation* activeElementAnimation = animations.first;
+        if (activeElementAnimation->element() == element &&
+            activeElementAnimation->animationType() ==
+                AnimationType::WebAnimation &&
+            activeElementAnimation->name()->equals(animationName)) {
+            activeElementAnimation->setWebAnimation(animation);
+        }
+    }
+}
+
+bool AnimationExecutor::cancelWebAnimation(String* animationName,
+                                           Element* element)
+{
+    STARFISH_ASSERT(element != nullptr);
+
+    bool canceled = false;
+    for (auto animations = m_activeAnimations.begin();
+         animations != m_activeAnimations.end();) {
+        ActiveElementAnimation* activeElementAnimation = (*animations).first;
+        if (activeElementAnimation->element() != element ||
+            activeElementAnimation->animationType() !=
+                AnimationType::WebAnimation ||
+            !activeElementAnimation->name()->equals(animationName)) {
+            animations++;
+            continue;
+        }
+
+        for (auto& task : (*animations).second) {
+            task->detachFromElement();
+            canceled = true;
+        }
+        animations = m_activeAnimations.erase(animations);
+    }
+    return canceled;
+}
+
 uint64_t AnimationExecutor::transformOpacityAnimationRemainTime()
 {
     uint64_t result = 0;
@@ -589,11 +633,14 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
                     needsToFireAnimationCancelEvent = true;
                 }
 
+                // A Web Animation is not backed by the animation property of
+                // the style, so its absence must not cancel the fill mode.
                 bool animationPropetyHasGone =
-                    !isSVGAnimation && !context.m_toStyle->animation();
+                    !isSVGAnimation &&
+                    task->animationType() != AnimationType::WebAnimation &&
+                    !context.m_toStyle->animation();
 
-                if (task->fillMode() != AnimationFillModeValue::Forwards ||
-                    animationPropetyHasGone) {
+                if (!task->fillsForwards() || animationPropetyHasGone) {
                     task->detachFromElement();
                     animationTasks.erase(i);
                     i--;
@@ -645,6 +692,13 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
                 fireKeyFramesAnimationEvent(
                     KeyFramesAnimationEventType::AnimationEnd,
                     context.m_element, activeElementAnimation->name(), endTick);
+            }
+
+            // An animation started by Element.animate() also reports its end
+            // through the Animation object it returned.
+            if (needsToFireAnimationEndEvent &&
+                activeElementAnimation->webAnimation()) {
+                activeElementAnimation->webAnimation()->notifyFinished();
             }
         }
 

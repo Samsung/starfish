@@ -2613,19 +2613,22 @@ Animation* Element::animate(ExecutionContext* executionContext,
                                      keyframeRules);
     }
 
+    Animation* animation = new Animation(executionContext);
     if (style()->display() != DisplayValue::NoneDisplayValue &&
         style()->animation()) {
         AnimationApplier animationApplier(this, AnimationType::WebAnimation,
                                           style());
         if (!animationApplier.apply()) {
-            return new Animation(executionContext);
+            return animation;
         }
-        webView()->updateActiveAnimationExecutorRegistration(
-            document()->animationExecutor());
+        AnimationExecutor* executor = document()->animationExecutor();
+        animation->setEffectTarget(this, options.id());
+        executor->attachWebAnimation(options.id(), this, animation);
+        webView()->updateActiveAnimationExecutorRegistration(executor);
 
         setNeedsStyleRecalcForAnimation();
     }
-    return new Animation(executionContext);
+    return animation;
 }
 
 Animation* Element::animate(ExecutionContext* executionContext,

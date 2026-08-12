@@ -231,7 +231,7 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
         }
 
         if (!std::isinf(m_iterationCount) && m_gapTimeMs == 0 &&
-            m_fillMode == AnimationFillModeValue::Forwards) {
+            fillsForwards()) {
             return;
         }
     }

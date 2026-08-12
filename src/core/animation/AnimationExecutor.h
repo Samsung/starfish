@@ -35,6 +35,7 @@ enum class AnimationType ENSURE_ENUM_UNSIGNED;
 
 class String;
 class Element;
+class Animation;
 class ActiveAnimationTask;
 
 class ActiveElementAnimation : public gc {
@@ -54,9 +55,22 @@ public:
         , m_iterationCount(iterationCount)
         , m_direction(direction)
         , m_playState(playState)
+        , m_webAnimation(nullptr)
     {
         STARFISH_ASSERT(name != nullptr);
         STARFISH_ASSERT(element != nullptr);
+    }
+
+    // The script visible Animation object when this animation was started by
+    // Element.animate(). Null for CSS and SVG animations.
+    Animation* webAnimation() const
+    {
+        return m_webAnimation;
+    }
+
+    void setWebAnimation(Animation* animation)
+    {
+        m_webAnimation = animation;
     }
 
     String* name() const
@@ -129,6 +143,7 @@ private:
     float m_iterationCount;
     AnimationDirectionValue m_direction;
     AnimationPlayStateValue m_playState;
+    Animation* m_webAnimation;
 };
 } // namespace Starfish
 
@@ -249,6 +264,15 @@ public:
                            AnimationDirectionValue direction,
                            AnimationPlayStateValue playState,
                            AnimationType animationType);
+
+    // Bind the script visible Animation object to the tasks that
+    // Element.animate() has just registered under animationName.
+    void attachWebAnimation(String* animationName, Element* element,
+                            Animation* animation);
+
+    // Drop every task of the Web Animation named animationName. Returns true
+    // when at least one task was running.
+    bool cancelWebAnimation(String* animationName, Element* element);
 
     uint64_t transformOpacityAnimationRemainTime();
 

@@ -263,6 +263,14 @@ public:
         m_fillMode = v;
     }
 
+    // Whether the animated values have to be kept after the active period
+    // ends. Both "forwards" and "both" fill the end of the animation.
+    bool fillsForwards() const
+    {
+        return m_fillMode == AnimationFillModeValue::Forwards ||
+               m_fillMode == AnimationFillModeValue::Both;
+    }
+
     size_t currentAnimatedFromFrameIndex()
     {
         return m_frameIdx;

@@ -551,6 +551,7 @@ test/cairo/internal-test/animation/animation_svg_rx_ry.html
 test/cairo/internal-test/animation/animation_svg_cx_cy.html
 test/cairo/internal-test/animation/animation_transform-origin.html
 test/cairo/internal-test/animation/check-frame-exist.html
+test/cairo/internal-test/web-animation/element_animate_fill_mode.html
 test/cairo/internal-test/css/transition/parse-transition.html
 test/cairo/internal-test/css/transition/parse-transition01.html
 test/cairo/internal-test/css/transition/transition_background_shorthand.html
