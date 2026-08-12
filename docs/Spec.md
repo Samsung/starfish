@@ -101,7 +101,7 @@ The compile-time flags that gate large chunks of this spec. "Default" is for the
 | [Obsolete](#obsolete) / [Obsolete CSS](#obsolete-css) | `STARFISH_ENABLE_OBSOLETE_SPEC` | on (every `ARCH`) | `Document.width`/`height`, `Window.event`, `Navigator.battery` and the obsolete CSS properties are absent. |
 | WebAssembly (`WebAssembly` global) | `ENABLE_WASM=1` | off | `WebAssembly` undefined. |
 | `Intl`, locale-sensitive formatting | `RUNTIME_ICU=1` (→ `STARFISH_ENABLE_RUNTIME_ICU_BINDER`) | on | ICU is linked directly (`icu-uc`/`icu-i18n` become build dependencies) instead of being bound at runtime. The JS-visible `Intl` surface is the same either way. |
-| Battery Status | `STARFISH_ENABLE_BATTERY_STATUS` | off (`HOST=tizen` + `CUSTOM=wearable_widget` only) | `BatteryManager`, `navigator.getBattery` undefined. |
+| Battery Status | `STARFISH_ENABLE_BATTERY_STATUS` | off (`HOST=tizen` + `CUSTOM=unified_wearable` only) | `BatteryManager`, `navigator.getBattery` undefined. |
 | Web Device API (`window.tizen`) | `HOST=tizen` + `TIZEN_DEVICE_API` | off (linux/windows/android) | `window.tizen` undefined. |
 | MSE playback backend | `ENABLE_ESPLUSPLAYER=1` | off; auto-enabled on `HOST=tizen` with `TIZEN_MAJOR_VERSION >= 10`. Requires `HOST=tizen` | Media Source playback uses the platform-default media path. |
 | ffmpeg media player | `USE_FFMPEG_MEDIA_PLAYER=1` | off | `<video>`/`<audio>` use the platform-default media path. |
@@ -2911,7 +2911,6 @@ The following font-related CSS properties are **not in the parser trie** at all 
 |-----------|--------|
 | Standard 3-tuple specificity (ID × 0x10000 + class/attr/pseudo-class × 0x100 + tag/pseudo-element × 1) | Implemented per `Style.cpp::specificityForOneSelector`. |
 | `:host` specificity | **Returns `0`** (not the spec-required pseudo-class weight). |
-| `:not(...)` specificity | Equals the highest specificity of its argument (matches spec) — but the engine only accepts a single simple selector inside `:not()`. |
 | `:where(...)` (zero-specificity wrapper) | Implemented — contributes zero specificity, per Selectors 4. |
 | `:is(...)`, `:not(...)` | Implemented — contribute the specificity of their most specific branch, per Selectors 4. |
 | `::slotted(...)` | Implemented — contributes its own pseudo-element unit plus its argument compound. |
