@@ -80,23 +80,32 @@ Probe artifacts from the latest audit run live under `/tmp/lwe_audit_{html,dom,c
 
 ### Build-conditional flags table
 
-The compile-time flags that gate large chunks of this spec, with their default values on the `HOST=linux` `BACKEND=efl_cairo_gl` release build (the one shown at the top of `README.md`):
+The compile-time flags that gate large chunks of this spec. "Default" is for the `HOST=linux ARCH=x64 MODE=release` build that `README.md` builds under **Compile Starfish**. Two kinds of flag appear here: `SET(... CACHE STRING ...)` options in `CMakeLists.txt`, which you pass as `-DNAME=1`, and `STARFISH_ENABLE_*` macros that `build/config.cmake` derives from `ARCH`/`HOST`/`CUSTOM` and that have no `-D` option of their own.
+
+> Note: `CMakeLists.txt` still defaults `BACKEND` to `efl_cairo_gl`, but `README.md` builds with `-DBACKEND=glib_cairo_gl -DSHELL=x11`. Backend choice does not change any row below.
 
 | Spec section | CMake flag (or `STARFISH_ENABLE_*` macro) | Default | Effect when off |
 |--------------|-------------------------------------------|---------|-----------------|
-| HTML (`<canvas>`, `CanvasRenderingContext2D`) | `STARFISH_ENABLE_CANVAS` | on | `<canvas>` parses but `getContext('2d')` returns null. |
-| HTML (`<video>`, `<audio>`, `<source>`, `<track>`) | `STARFISH_ENABLE_MULTIMEDIA` | on (extra build deps for ffmpeg path) | Tags fall back to `HTMLUnknownElement`. |
-| WebGL (`WebGL*` interfaces) | `WEBGL=1` | on | `getContext('webgl')` returns null. |
-| Workers | `WORKER=1`, `SHARED_WORKER=1`, `SERVICE_WORKER=1` | off, off, off | Worker globals undefined. |
+| HTML (`<canvas>`, `CanvasRenderingContext2D`) | `STARFISH_ENABLE_CANVAS` | on (every `ARCH`) | `<canvas>` parses but `getContext('2d')` returns null. |
+| HTML (`<video>`, `<audio>`, `<source>`, `<track>`) | `STARFISH_ENABLE_MULTIMEDIA` | on (every `ARCH`) | Tags fall back to `HTMLUnknownElement`. |
+| WebGL (`WebGL*` interfaces) | `WEBGL=1` | **off** | `getContext('webgl')` returns null. |
+| Workers | `WORKER=1`, `SHARED_WORKER=1`, `SERVICE_WORKER=1` | off, off, off | Worker globals undefined. Setting `SHARED_WORKER` or `SERVICE_WORKER` forces `WORKER=1`. |
 | IndexedDB | `IDB=1` | off | `indexedDB` undefined. |
 | WebRTC, MediaStream | `WEBRTC=1` (→ `STARFISH_ENABLE_WEBRTC`/`MULTIMEDIA`/`WEBSOCKET`/`WEBAUDIO`) | off | All `RTC*`/`MediaStream*` interfaces undefined. |
-| WebAudio | `STARFISH_ENABLE_WEBAUDIO` | on (`ARCH=x64`; also implied by `WEBRTC=1`) | `AudioContext` etc. undefined. |
-| WebSocket | `STARFISH_ENABLE_WEBSOCKET` | on (`ARCH=x64`) | `WebSocket` undefined. |
-| Web Speech (TTS) | `STARFISH_ENABLE_TTS` | on (`ARCH=x64`) | `SpeechSynthesis*` undefined. |
-| Battery Status | `STARFISH_ENABLE_BATTERY_STATUS` | off (Tizen wearable only) | `BatteryManager`, `navigator.getBattery` undefined. |
+| WebAudio | `STARFISH_ENABLE_WEBAUDIO` | on for `ARCH=x64` only; also implied by `WEBRTC=1` | `AudioContext` etc. undefined. |
+| WebSocket | `STARFISH_ENABLE_WEBSOCKET` | on (every `ARCH`) | `WebSocket` undefined. |
+| Web Speech (TTS) | `STARFISH_ENABLE_TTS` | on for `ARCH=x64` only | `SpeechSynthesis*` undefined. |
+| [WAI-ARIA](#accessible-rich-internet-applications-wai-aria) touch exploration | `STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION` (from `ENABLE_A11Y_TOUCH=1`) | on for `ARCH=x64`; on `HOST=tizen` it needs `-DENABLE_A11Y_TOUCH=1` and is force-disabled on TV profiles | Tap-to-speak / double-tap-activate / swipe navigation absent; ARIA attributes still reflect. |
+| CSS transitions & animations | `STARFISH_ENABLE_ANIMATION` | on (every `ARCH`) | `@keyframes`, `transition`, and the Web Animations entry points do not run. |
+| CSS legacy `-webkit-*` aliases | `STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX`, `…_BOX_PREFIX`, `…_LINE_PREFIX`, `…_TRANSFORM_PREFIX`, `…_TRANSITION_PREFIX` | on (every `ARCH`, all five) | Aliases not parsed; use unprefixed forms. |
+| [Obsolete](#obsolete) / [Obsolete CSS](#obsolete-css) | `STARFISH_ENABLE_OBSOLETE_SPEC` | on (every `ARCH`) | `Document.width`/`height`, `Window.event`, `Navigator.battery` and the obsolete CSS properties are absent. |
+| WebAssembly (`WebAssembly` global) | `ENABLE_WASM=1` | off | `WebAssembly` undefined. |
+| `Intl`, locale-sensitive formatting | `RUNTIME_ICU=1` (→ `STARFISH_ENABLE_RUNTIME_ICU_BINDER`) | on | ICU is linked directly (`icu-uc`/`icu-i18n` become build dependencies) instead of being bound at runtime. The JS-visible `Intl` surface is the same either way. |
+| Battery Status | `STARFISH_ENABLE_BATTERY_STATUS` | off (`HOST=tizen` + `CUSTOM=wearable_widget` only) | `BatteryManager`, `navigator.getBattery` undefined. |
 | Web Device API (`window.tizen`) | `HOST=tizen` + `TIZEN_DEVICE_API` | off (linux/windows/android) | `window.tizen` undefined. |
+| MSE playback backend | `ENABLE_ESPLUSPLAYER=1` | off; auto-enabled on `HOST=tizen` with `TIZEN_MAJOR_VERSION >= 10`. Requires `HOST=tizen` | Media Source playback uses the platform-default media path. |
 | ffmpeg media player | `USE_FFMPEG_MEDIA_PLAYER=1` | off | `<video>`/`<audio>` use the platform-default media path. |
-| CSS legacy `-webkit-*` aliases | `STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX`, `…_TRANSFORM_PREFIX`, `…_TRANSITION_PREFIX` | varies | Aliases not parsed; use unprefixed forms. |
+| Chrome DevTools Protocol server | `STARFISH_ENABLE_CDP=1` | off | No CDP endpoint. This surface is never visible to page script either way — see `docs/CDP.md`. |
 
 When you read a row in the tables below, assume the corresponding flag in this table is on unless the row's "Note" column says otherwise.
 
@@ -260,7 +269,7 @@ section are supported.
 > - `SpeechSynthesis`, `SpeechSynthesisUtterance`, `SpeechSynthesisVoice`, `SpeechSynthesisEvent` — `STARFISH_ENABLE_TTS` (default on for `ARCH=x64`)
 > - `BatteryManager`, `navigator.getBattery()` — `STARFISH_ENABLE_BATTERY_STATUS` (Tizen wearable only)
 >
-> The default `HOST=linux` / `EFL` release build documented at the top of `README.md` ships with `WEBRTC=0`, `WORKER=0`, `SHARED_WORKER=0`, `SERVICE_WORKER=0`, `IDB=0`, `WEBGL=1`, plus TTS/WebAudio/WebSocket on. Other shells/hosts can differ. When in doubt, run a runtime probe (see [Verification & Build-Conditional Surface](#verification--build-conditional-surface)).
+> The `HOST=linux ARCH=x64` release build that `README.md` builds ships with `WEBGL=0`, `WEBRTC=0`, `WORKER=0`, `SHARED_WORKER=0`, `SERVICE_WORKER=0`, `IDB=0`, plus TTS/WebAudio/WebSocket on. Other hosts and arches differ — see [Verification & Build-Conditional Surface](#verification--build-conditional-surface) for the full table.
 
 > **Observers deliver callbacks.** `MutationObserver`/`MutationRecord`, `IntersectionObserver`/`IntersectionObserverEntry`, and `ResizeObserver`/`ResizeObserverEntry`/`ResizeObserverSize` are implemented, not stubs — the observation logic is wired up and invokes the JS callback (`MutationObserver::notify`, `ResizeObserver::notify`, `IntersectionObserverCallback`).
 >
@@ -2274,7 +2283,7 @@ Apps relying on the right-hand list get **no protection** — the directive is p
 
 ### WebGL
 
-> **Build flag:** WebGL is gated by `-DWEBGL=1` (also requires `BACKEND=*_cairo_gl`). Headless backends without GL return `null` from `canvas.getContext('webgl')`. The default Linux/EFL release build ships with `WEBGL=1`.
+> **Build flag:** WebGL is gated by `-DWEBGL=1` (also requires `BACKEND=*_cairo_gl`) and is **off by default** — pass `-DWEBGL=1` at configure time. Headless backends without GL return `null` from `canvas.getContext('webgl')`.
 
 | Interface | Notes |
 |-----------|-------|
@@ -3041,7 +3050,9 @@ The JavaScript runtime is [Escargot](https://github.com/Samsung/escargot). Verif
 | `Array.prototype.group` | **Not implemented** (replaced by `Object.groupBy`/`Map.groupBy` which both work). |
 | `<script type="module">` and dynamic `import()` | **Not wired into LWE.** Author code as classic scripts only. Top-level `await` is therefore unavailable (it requires modules). |
 
-**Built-ins verified present:** `BigInt`, `BigInt64Array`, `BigUint64Array`, `WeakRef`, `FinalizationRegistry`, `Atomics`, `SharedArrayBuffer`, `Proxy`, `Reflect`, `Symbol` (incl. `iterator`/`asyncIterator`/`hasInstance`), `globalThis`, `structuredClone`, `queueMicrotask`, `Iterator` (with helpers). `Promise.allSettled`/`any`/`finally`/`try`/`withResolvers`. Array `at`/`flat`/`flatMap`/`findLast`/`findLastIndex`/`toSorted`/`toReversed`/`toSpliced`/`with`. `Object.groupBy`, `Map.groupBy`, `Object.fromEntries`/`hasOwn`. `Set.prototype.union`/`intersection`/`difference`/`isSubsetOf`. `Math.f16round`, `Math.sumPrecise`. `WebAssembly` is exposed as `object` in the default build (despite some docs saying `ESCARGOT_WASM=OFF`).
+**Built-ins verified present:** `BigInt`, `BigInt64Array`, `BigUint64Array`, `WeakRef`, `FinalizationRegistry`, `Atomics`, `SharedArrayBuffer`, `Proxy`, `Reflect`, `Symbol` (incl. `iterator`/`asyncIterator`/`hasInstance`), `globalThis`, `structuredClone`, `queueMicrotask`, `Iterator` (with helpers). `Promise.allSettled`/`any`/`finally`/`try`/`withResolvers`. Array `at`/`flat`/`flatMap`/`findLast`/`findLastIndex`/`toSorted`/`toReversed`/`toSpliced`/`with`. `Object.groupBy`, `Map.groupBy`, `Object.fromEntries`/`hasOwn`. `Set.prototype.union`/`intersection`/`difference`/`isSubsetOf`. `Math.f16round`, `Math.sumPrecise`.
+
+`WebAssembly` is **not** part of that list: it is gated by `ENABLE_WASM=1`, which is off by default and is what turns on Escargot's `ESCARGOT_WASM` (`build/third_party.cmake`). Check `typeof WebAssembly` against your own build before depending on it.
 
 ### Media — additional details (audit additions)
 
