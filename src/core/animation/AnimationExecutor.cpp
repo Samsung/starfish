@@ -338,6 +338,9 @@ void AnimationExecutor::attachWebAnimation(String* animationName,
                 AnimationType::WebAnimation &&
             activeElementAnimation->name()->equals(animationName)) {
             activeElementAnimation->setWebAnimation(animation);
+            // The generated animation name is unique, so at most one entry
+            // can match.
+            return;
         }
     }
 }
@@ -366,6 +369,76 @@ bool AnimationExecutor::cancelWebAnimation(String* animationName,
         animations = m_activeAnimations.erase(animations);
     }
     return canceled;
+}
+
+void AnimationExecutor::removeReplacedWebAnimations(String* newAnimationName,
+                                                    Element* element)
+{
+    STARFISH_ASSERT(element != nullptr);
+
+    // https://drafts.csswg.org/web-animations-1/#replacing-animations
+    // A Web Animation past its active period keeps a task per filled
+    // property, so a page that keeps calling Element.animate() would pile
+    // them up forever. Once the animation named newAnimationName animates
+    // every property such a finished animation still fills, the old one no
+    // longer contributes anything and is removed.
+    GCVector<CSSStyleValuePair::KeyKind> replacingProperties;
+    for (auto& animations : m_activeAnimations) {
+        ActiveElementAnimation* activeElementAnimation = animations.first;
+        if (activeElementAnimation->element() == element &&
+            activeElementAnimation->animationType() ==
+                AnimationType::WebAnimation &&
+            activeElementAnimation->name()->equals(newAnimationName)) {
+            for (auto& task : animations.second) {
+                replacingProperties.push_back(task->property());
+            }
+            break;
+        }
+    }
+    if (replacingProperties.empty()) {
+        return;
+    }
+
+    for (auto animations = m_activeAnimations.begin();
+         animations != m_activeAnimations.end();) {
+        ActiveElementAnimation* activeElementAnimation = (*animations).first;
+        if (activeElementAnimation->element() != element ||
+            activeElementAnimation->animationType() !=
+                AnimationType::WebAnimation ||
+            activeElementAnimation->name()->equals(newAnimationName)) {
+            animations++;
+            continue;
+        }
+
+        // Only a finished animation is replaceable; a task filling forwards
+        // after its active period marks exactly that state.
+        bool replaced = !(*animations).second.empty();
+        for (auto& task : (*animations).second) {
+            bool covered = false;
+            for (auto& property : replacingProperties) {
+                if (property == task->property()) {
+                    covered = true;
+                    break;
+                }
+            }
+            if (!task->isInForwardsFillMode() || !covered) {
+                replaced = false;
+                break;
+            }
+        }
+        if (!replaced) {
+            animations++;
+            continue;
+        }
+
+        for (auto& task : (*animations).second) {
+            task->detachFromElement();
+        }
+        if (activeElementAnimation->webAnimation()) {
+            activeElementAnimation->webAnimation()->notifyRemoved();
+        }
+        animations = m_activeAnimations.erase(animations);
+    }
 }
 
 uint64_t AnimationExecutor::transformOpacityAnimationRemainTime()
@@ -695,10 +768,13 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
             }
 
             // An animation started by Element.animate() also reports its end
-            // through the Animation object it returned.
-            if (needsToFireAnimationEndEvent &&
-                activeElementAnimation->webAnimation()) {
-                activeElementAnimation->webAnimation()->notifyFinished();
+            // or its cancellation through the Animation object it returned.
+            if (activeElementAnimation->webAnimation()) {
+                if (needsToFireAnimationCancelEvent) {
+                    activeElementAnimation->webAnimation()->notifyCanceled();
+                } else if (needsToFireAnimationEndEvent) {
+                    activeElementAnimation->webAnimation()->notifyFinished();
+                }
             }
         }
 

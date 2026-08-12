@@ -181,6 +181,14 @@ public:
     // Called by the executor when the underlying animation reached its end.
     void notifyFinished();
 
+    // Called by the executor when it dropped the animation itself, e.g. when
+    // the target went display:none.
+    void notifyCanceled();
+
+    // Called by the executor when a later animation replaced this one and its
+    // filled values were removed.
+    void notifyRemoved();
+
     ExecutionContext* m_executionContext;
 
 private:
@@ -189,6 +197,7 @@ private:
     Element* m_target;
     String* m_animationName;
     bool m_isFinished;
+    bool m_isCanceled;
 };
 } // namespace Starfish
 
