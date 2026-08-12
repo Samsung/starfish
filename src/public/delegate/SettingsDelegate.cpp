@@ -123,6 +123,9 @@ SettingsImpl::SettingsImpl(const std::string& default_ua, const std::string& ua)
     UpdateSetting("useSpatialNavigation", ToBoolString(false));
     UpdateSetting("showLoadFailMsg", ToBoolString(true));
     UpdateSetting("--show-fps", ToBoolString(false));
+    // Tap-sound (link effect) feedback on interactive targets; same default
+    // as the reference webview's ewk_settings_link_effect_enabled.
+    UpdateSetting("linkEffectEnabled", ToBoolString(true));
 }
 
 SettingsImpl::SettingsImpl(SettingsImpl* other)

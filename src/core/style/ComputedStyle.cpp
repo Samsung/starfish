@@ -2644,6 +2644,11 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         damage = static_cast<ComputedStyleDamage>(
             ComputedStyleDamage::ComputedStyleDamageInherited | damage);
     }
+    if (newStyle->cursor() != oldStyle->cursor()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Cursor] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageInherited | damage);
+    }
     if (newStyle->rx() != oldStyle->rx()) {
         damagedKeys[CSSStyleValuePair::KeyKind::RX] = true;
         damage = static_cast<ComputedStyleDamage>(

@@ -318,6 +318,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_idleCheckTimerID(TimerInvalidID)
     , m_needsDownloadWebFontsEarly(false)
     , m_scrollbarVisible(true)
+    , m_linkEffectEnabled(true)
     , m_scrollOccurredDuringGesture(false)
     , m_useExternalPopup(false)
     , m_useSpatialNavigation(false)

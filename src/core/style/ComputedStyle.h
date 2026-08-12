@@ -812,6 +812,7 @@ class ComputedStyle : public gc {
         WordBreakValue m_wordBreak : 3;
         TextUnderlinePositionValue m_textUnderlinePosition : 3;
         PointerEventsValue m_pointerEventsValue : 4;
+        CursorValue m_cursorValue : 3;
 
         Length m_letterSpacing;
         Length m_textIndent;
@@ -864,6 +865,7 @@ class ComputedStyle : public gc {
             m_textUnderlinePosition =
                 TextUnderlinePositionValue::AutoTextUnderlinePositionValue;
             m_pointerEventsValue = PointerEventsValue::PointerEventsAutoValue;
+            m_cursorValue = CursorValue::CursorAutoValue;
         }
 
         void* operator new(size_t size);
@@ -1452,6 +1454,19 @@ public:
     void setPointerEvents(PointerEventsValue v)
     {
         ensureInheritedRareData()->m_pointerEventsValue = v;
+    }
+
+    CursorValue cursor()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_cursorValue;
+        }
+        return CursorValue::CursorAutoValue;
+    }
+
+    void setCursor(CursorValue v)
+    {
+        ensureInheritedRareData()->m_cursorValue = v;
     }
 
     ResizeValue resize()
