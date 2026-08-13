@@ -5,7 +5,7 @@ lightweight Web engine (LWE).
 
 ## Table of Contents
 
-- [Verification & Build-Conditional Surface](#verification--build-conditional-surface)
+- [Build-Conditional Surface](#build-conditional-surface)
 - [HTML](#html)
 - [DOM](#dom)
 - [Events](#events)
@@ -29,54 +29,9 @@ lightweight Web engine (LWE).
     - [WebAudio](#webaudio)
     - [WebSocket](#websocket)
 
-## Verification & Build-Conditional Surface
+## Build-Conditional Surface
 
-This spec is a **manually curated** description of the engine's web surface. The numbers and the implementation drift over time, so the entries below were last cross-checked against the live `src/` tree using the procedure described here. If you change a feature, re-run the verifiers and update the table you touched.
-
-### Sources of truth
-
-The implementation contains three machine-readable surfaces; the spec must be consistent with all of them:
-
-| Source | What it covers | How to consult |
-|--------|----------------|----------------|
-| `src/**/*.idl` (~417 files) | Interface/method/attribute exposure to JS, plus `[Unimplemented]`, `[NoInterfaceObject]`, `[STARFISH_ENABLE_*]` extended attributes. | `find src -name '*.idl'`, then `grep` for the interface name. |
-| `src/core/style/Style.h` `FOR_EACH_STYLE_ATTRIBUTE_*` macros + `Style.cpp:applyProperty` | Exhaustive list of CSS properties and the values each property actually accepts. | `grep -n FOR_EACH_STYLE_ATTRIBUTE_ src/core/style/Style.h` |
-| `src/core/dom/HTMLDocument.cpp` `createHTMLElement` switch | Every HTML tag the parser maps to a dedicated `HTMLxxxElement` subclass (vs. generic `HTMLElement` / `HTMLUnknownElement`). | `grep -n DEFINE_KNOWN_ELEMENT\|m_.*TagName src/core/dom/HTMLDocument.cpp` |
-
-Two derived references summarize the above:
-
-- `docs/lwe_compat/{idl_interfaces,html_dom,css_features,javascript_engine}.md` — human-readable extraction.
-- `tool/lwe_compat/whitelist.json` — machine-readable index used by the static checker.
-
-When this spec disagrees with those files, **the IDL/source wins**. Update the spec, not the code.
-
-### Verification tooling
-
-Two tools live under `tool/lwe_compat/` and are wired into the LWE webapp guide:
-
-```sh
-# 1. Static check — grep-based scan that flags identifiers/HTML tags/CSS props
-#    not in whitelist.json. Fast, false-positive-prone for dynamic identifiers.
-tool/lwe_compat/check_static.py path/to/page-or-dir
-
-# 2. Runtime check — boots ./Starfish on the page and inspects console output
-#    for JS errors and engine warnings ("Unsupported css property: X",
-#    "invalid (or unsupported) element", "UNIMPLEMENTED:", ...).
-tool/lwe_compat/check_runtime.sh path/to/index.html --timeout=10
-```
-
-Exit codes are documented in `tool/lwe_compat/README.md`. The runtime check requires a built `./Starfish` (the symlink at the repo root, or `STARFISH_BIN=...`).
-
-### Procedure used to verify this spec
-
-The current revision of this document was audited by four parallel passes (HTML / DOM / CSS / Events+misc), each combining IDL/source inspection with runtime probes:
-
-1. **Inventory diff.** For each section, list claimed identifiers; intersect with `whitelist.json` and the relevant IDL files. Anything in the spec but not in IDL becomes a **stale** candidate; anything in IDL but not in the spec becomes a **missing** candidate.
-2. **Member-level spot checks.** For ~10 frequently-used interfaces (`Document`, `Element`, `Node`, `Window`, `Storage`, `XMLHttpRequest`, `CanvasRenderingContext2D`, `History`, `EventTarget`, `HTMLElement`), pick 2-3 attributes/methods claimed in the spec and verify directly against the IDL file (look for `[Unimplemented]`).
-3. **Runtime probes.** Generate small probe HTMLs that emit `console.log('[PROBE]', name, value)` lines for the suspect identifier(s). Run `tool/lwe_compat/check_runtime.sh --timeout=5` on each and grep the output. Use the *engine's own warning logs* as ground truth: `Unsupported css property: <name>` from `Style.cpp:updateValue*` flags a CSS property that the parser accepts but the resolver no-ops; `[Unimplemented]` IDL attributes return `undefined` at runtime.
-4. **Build-flag bucket.** Anything that probes "absent" gets cross-checked against extended attributes like `[STARFISH_ENABLE_WEBRTC]` in the IDL — if found, the entry is *build-conditional*, not stale, and gets a build-flag note rather than a deletion.
-
-Probe artifacts from the latest audit run live under `/tmp/lwe_audit_{html,dom,css,misc}/` (regenerated each run; do not commit).
+This spec is a **manually curated** description of the engine's web surface, and drifts from the implementation over time. The spec must stay consistent with three machine-readable sources: `src/**/*.idl` (interface/method/attribute exposure, plus `[Unimplemented]`, `[NoInterfaceObject]`, `[STARFISH_ENABLE_*]` extended attributes), `src/core/style/Style.h`'s `FOR_EACH_STYLE_ATTRIBUTE_*` macros (the exhaustive CSS property list), and the tag-mapping `if`/`else if` chain in `src/core/dom/HTMLDocument.cpp::createHTMLElement` (every HTML tag mapped to a dedicated `HTMLxxxElement` subclass vs. generic `HTMLElement`/`HTMLUnknownElement`, via `DEFINE_KNOWN_ELEMENT`). When this spec disagrees with those, **the IDL/source wins** — update the spec, not the code.
 
 ### Build-conditional flags table
 
@@ -247,7 +202,7 @@ The HTML parser and DOM expose the following tags as well; they were missing fro
 
 > **Build flags:** `<canvas>` is conditional on `STARFISH_ENABLE_CANVAS`. `<video>`, `<audio>`, `<source>`, `<track>` are conditional on `STARFISH_ENABLE_MULTIMEDIA`. With those flags off, the elements fall through to `HTMLUnknownElement`.
 
-> **SVG:** All `<svg>` and SVG child elements (`<circle>`, `<rect>`, `<path>`, `<g>`, …) are accepted by the parser and IDL interfaces (`SVGSVGElement`, `SVGRectElement`, …) are exposed, but rendering is **not implemented** for embedded webapps. Treat SVG as out-of-scope and use `<canvas>` 2D drawing or PNG icons instead — this matches the policy in [LWE_WEBAPP_GUIDE.md](LWE_WEBAPP_GUIDE.md) §2.
+> **SVG:** All `<svg>` and SVG child elements (`<circle>`, `<rect>`, `<path>`, `<g>`, …) are accepted by the parser and IDL interfaces (`SVGSVGElement`, `SVGRectElement`, …) are exposed, but rendering is **not implemented** for embedded webapps. Treat SVG as out-of-scope and use `<canvas>` 2D drawing or PNG icons instead.
 
 ## DOM
 
@@ -269,7 +224,7 @@ section are supported.
 > - `SpeechSynthesis`, `SpeechSynthesisUtterance`, `SpeechSynthesisVoice`, `SpeechSynthesisEvent` — `STARFISH_ENABLE_TTS` (default on for `ARCH=x64`)
 > - `BatteryManager`, `navigator.getBattery()` — `STARFISH_ENABLE_BATTERY_STATUS` (Tizen wearable only)
 >
-> The `HOST=linux ARCH=x64` release build that `README.md` builds ships with `WEBGL=0`, `WEBRTC=0`, `WORKER=0`, `SHARED_WORKER=0`, `SERVICE_WORKER=0`, `IDB=0`, plus TTS/WebAudio/WebSocket on. Other hosts and arches differ — see [Verification & Build-Conditional Surface](#verification--build-conditional-surface) for the full table.
+> The `HOST=linux ARCH=x64` release build that `README.md` builds ships with `WEBGL=0`, `WEBRTC=0`, `WORKER=0`, `SHARED_WORKER=0`, `SERVICE_WORKER=0`, `IDB=0`, plus TTS/WebAudio/WebSocket on. Other hosts and arches differ — see [Build-Conditional Surface](#build-conditional-surface) for the full table.
 
 > **Observers deliver callbacks.** `MutationObserver`/`MutationRecord`, `IntersectionObserver`/`IntersectionObserverEntry`, and `ResizeObserver`/`ResizeObserverEntry`/`ResizeObserverSize` are implemented, not stubs — the observation logic is wired up and invokes the JS callback (`MutationObserver::notify`, `ResizeObserver::notify`, `IntersectionObserverCallback`).
 >
@@ -1147,7 +1102,7 @@ section are supported.
 |  | attribute | nextElementSibling | Returns the Element immediately following this node in its parent's children list, or null if there is no Element in the list following this node. |
 | [NonElementParentNode](https://www.w3.org/TR/dom/#interface-nonelementparentnode) | interface | NonElementParentNode |  |
 |  | method | Element? getElementById(DOMString elementId) | Returns the first element within node's descendants whose ID is elementId. |
-| [ParentNode](none) | interface | ParentNode | The ParentNode interface contains methods that are particular to Node objects that can have children. |
+| ParentNode | interface | ParentNode | The ParentNode interface contains methods that are particular to Node objects that can have children. |
 |  | attribute | firstElementChild | Returns the Element that is the first child of this ParentNode, or null if there is none. |
 |  | attribute | lastElementChild | Returns the Element that is the last child of this ParentNode, or null if there is none. |
 |  | attribute | childElementCount | Returns an unsigned long giving the amount of children that the object has. |
@@ -1719,7 +1674,7 @@ section are supported.
 | | transform-origin | &lt;percentage&gt; &#124; &lt;length&gt; &#124; top &#124; right &#124; bottom &#124; left &#124; center | Changes the position of transformed elements | |
 | [User Interface](https://www.w3.org/TR/css-ui-4/) | user-select | none &#124; auto  | The user-select property enables authors to specify which elements in the document can be selected by the user and how. |  |
 | | caret-color | auto &#124; transparent &#124; currentColor &#124; &lt;color&gt; | The caret-color CSS property sets the color of the insertion caret. | |
-| [Functional Notations](https://www.w3.org/TR/css3-values/#functional-notations) | calc / min / max / clamp | refer to spec | Mathematical expressions with `+`, `-`, `*`, `/`, plus `min()`, `max()`, `clamp()`. | Supported on length, time, and angle (and inside `var()` substitution). Confirmed by `tool/lwe_compat`-style runtime probe (see "CSS units & functional notations" section below). |
+| [Functional Notations](https://www.w3.org/TR/css3-values/#functional-notations) | calc / min / max / clamp | refer to spec | Mathematical expressions with `+`, `-`, `*`, `/`, plus `min()`, `max()`, `clamp()`. | Supported on length, time, and angle (and inside `var()` substitution). See "CSS units & functional notations" section below. |
 | | var(--name, fallback) | `var(--x [, fallback])` | CSS Custom Properties + `var()` substitution. Nested fallbacks (`var(--a, var(--b, 19px))`) are honored. | Implemented in `src/core/style/CSSVariableSyntaxTreeBuilder.cpp`; combines with `calc()` (e.g. `calc(var(--w) * 2 + 3px)`). |
 | | env(name [, fallback]) | — | **NOT supported.** The whole declaration containing `env(...)` is dropped at parse time — even when a literal fallback is supplied. There is no implementation of env() / safe-area-inset-* / titlebar-area-* in `src/core/style/`. | Use a static value or feed the inset via `--my-safe-area: 20px;` at runtime instead of `env(safe-area-inset-top)`. |
 | [Media Queries - Media Types](https://www.w3.org/TR/css3-mediaqueries/) | all &#124; screen | all &#124; screen | Describes media types supported by lightweight web engine. | ‘all’ means suitable for all supported devices. |
@@ -1800,7 +1755,7 @@ The following properties are also implemented but were missing from earlier revi
 
 ### CSS Scrolling / Overflow (audit results)
 
-Verified against `src/core/style/CSSStyleLookupTrie.cpp`, `src/core/style/Style.cpp::updateValueOverflowX/Y`, `src/core/dom/Element.cpp` (programmatic scroll APIs), and runtime probes (`getComputedStyle` + `scrollTo`/`scrollIntoView` round-trip). Probe page: `/tmp/lwe_audit_iter50/scroll_overflow_probes.html`.
+Verified against `src/core/style/CSSStyleLookupTrie.cpp`, `src/core/style/Style.cpp::updateValueOverflowX/Y`, `src/core/dom/Element.cpp` (programmatic scroll APIs), and runtime probes (`getComputedStyle` + `scrollTo`/`scrollIntoView` round-trip).
 
 **Supported overflow keywords.** `overflow`, `overflow-x`, `overflow-y` accept `visible`, `hidden`, `auto`, `scroll`. Per-axis values round-trip through inline style and `getComputedStyle`. When one axis is set to `visible` while the other is non-`visible`, the non-`visible` axis correctly remaps the `visible` axis to `auto` at computed-style time (per CSS Overflow 3 §3).
 
@@ -1821,11 +1776,11 @@ Verified against `src/core/style/CSSStyleLookupTrie.cpp`, `src/core/style/Style.
 
 **Programmatic scrolling — APIs work, `behavior:'smooth'` is instant.** `Element.scrollTop`, `scrollLeft`, `scrollWidth`, `scrollHeight` are reflected. `Element.scroll(...)`, `scrollTo(...)`, `scrollBy(...)`, `scrollIntoView(...)` accept both numeric and `ScrollOptions`/`ScrollIntoViewOptions` dictionary forms (`behavior`, `block`, `inline`, `top`, `left`). The `Window` equivalents (`scroll`, `scrollTo`, `scrollBy`) likewise work. **However** `behavior: 'smooth'` is treated as `'instant'` — the scroll position jumps to the target on the same tick (verified by reading `scrollTop` immediately after the call). The `ScrollBehavior::Smooth` enum exists in `src/core/page/ScrollOptions.h` but no animator is wired up in `Element.cpp` / `Window.cpp`. Web apps that require visible easing must implement their own `requestAnimationFrame` loop on `scrollTop`.
 
-**`scroll` event fires.** Both `addEventListener('scroll', ...)` on the scrolling element and on `window` are dispatched after `scrollTo`/`scrollBy`/`scrollIntoView`/manual user scroll. The probe records 6 `scroll` events for 6 programmatic scroll calls.
+**`scroll` event fires.** Both `addEventListener('scroll', ...)` on the scrolling element and on `window` are dispatched after `scrollTo`/`scrollBy`/`scrollIntoView`/manual user scroll — one `scroll` event per programmatic scroll call.
 
 ### CSS units & functional notations (audit results)
 
-Verified against `src/core/style/CSSStyleLookupTrie.cpp::lookupUnitType`, `src/core/style/CSSParser.h::parseNonNamedColor`, and runtime probes (`getComputedStyle` + style-rule round-trip). Probe pages: `/tmp/lwe_audit_iter28/css_units_probes{,2,3}.html`.
+Verified against `src/core/style/CSSStyleLookupTrie.cpp::lookupUnitType`, `src/core/style/CSSParser.h::parseNonNamedColor`, and runtime probes (`getComputedStyle` + style-rule round-trip).
 
 **Length / size units.** Supported: `px`, `em`, `rem`, `ex`, `ch`, `pt`, `pc`, `cm`, `mm`, `in`, `vw`, `vh`, `vmin`, `vmax`, `%`, `fr` (grid-tracks only). NOT supported: `q`/`Q` (quarter-millimeter) — the trie has no entry for `q`, so the entire declaration is silently dropped (the rule serializes back as empty). New viewport units `svw`/`lvw`/`dvw`/`svh`/… and container units (`cqw`, `cqi`, `cqb`, …) are likewise absent.
 
@@ -1837,7 +1792,7 @@ Verified against `src/core/style/CSSStyleLookupTrie.cpp::lookupUnitType`, `src/c
 
 **`calc()` / `min()` / `max()` / `clamp()`.** All four function names are accepted (`Style.cpp::updateValueUnitCalc`). Mixed-unit `calc(50% - 10px)` resolves correctly; nested `calc(calc(10px+5px)*2)` resolves to 30px; `calc(var(--len) * 2 + 3px)` resolves correctly through `var()` substitution.
 
-**`var()`.** Custom properties + fallback work, including nested fallback (`var(--a, var(--b, 19px))`). Combination with `calc()` works. The LWE_WEBAPP_GUIDE wording "partial — cascade may be inconsistent" still applies for complex cascade scenarios but the primary substitution path is reliable.
+**`var()`.** Custom properties + fallback work, including nested fallback (`var(--a, var(--b, 19px))`). Combination with `calc()` works. The primary substitution path is reliable; see "CSS Custom Properties (`--*` / `var()`) — runtime caveats" below for the cascade edge cases that aren't (indirect-cycle hangs, dropped `!important`, empty `cssText`).
 
 **`env()`.** **Completely unimplemented.** `env(safe-area-inset-top)` is stripped during parsing — the rule body is left empty (`#x { }`). The literal fallback (`env(safe-area-inset-top, 11px)`) is also discarded; the engine does *not* fall back to it. There is no `env()` token consumer anywhere in `src/core/style/`. Webapps must avoid `env()` entirely and inline the safe-area inset (e.g. via a CSS Custom Property the host app injects).
 
@@ -1923,7 +1878,7 @@ This section describes the complete list of supported selectors by LWE.
 
 ### Selector caveats (audit results)
 
-The following selectors are **parsed without error but do not actually match anything** at style time (the runtime emits `Style.cpp: checkPseudoClass: Unsupported css pseudo-element: <N>`). They appear as identifiers in the whitelist but should NOT be relied on:
+The following selectors are **parsed without error but do not actually match anything** at style time (the runtime emits `Style.cpp: checkPseudoClass: Unsupported css pseudo-element: <N>`). They should NOT be relied on:
 
 `:any-link`, `:focus-visible`, `:focus-within`, `:in-range`, `:out-of-range`, `:indeterminate`, `:invalid`, `:valid`, `:optional`, `:required`, `:read-only`, `:read-write`, `:target-within`, `:visited`. Use `:focus` instead of `:focus-visible`/`:focus-within`; for form-validation states, query the underlying state in JS.
 
@@ -2207,7 +2162,7 @@ Extensions to the Navigator Object: The navigator is extended by the following a
 | | attribute |  altitudeAccuracy |	 Not supported by the lightweight web engine. Always returns null.|
 | | attribute |	 heading | The heading attribute denotes the direction of travel of the hosting device and is specified in degrees, where 0° ≤ heading < 360°, counting clockwise relative to the true north.|
 | | attribute |	 speed | The speed attribute denotes the magnitude of the horizontal component of the hosting device's current velocity and is specified in meters per second. The value of the speed attribute is a non-negative real number.|
-| [Geoposition](none)	| interface	| Geoposition	| The Geoposition interface represents the position of the concerned device at a given time |
+| Geoposition	| interface	| Geoposition	| The Geoposition interface represents the position of the concerned device at a given time |
 | | attribute	| coords | Returns a Coordinates object defining the current location. |
 | |	attribute	| timestamp | Returns a DOMTimeStamp representing the time at which the location was retrieved. |
 | [PositionError](https://dev.w3.org/geo/api/spec-source.html#position_error_interface) | attribute | code* |	 Returns the appropriate position error code |
@@ -2529,8 +2484,8 @@ LWE supports exactly **4** pseudo-elements for *style application*: `::before`, 
 |--------|--------|
 | `::before`, `::after` | OK. `content: "string"`, `content: counter()`, `content: attr(x)`, `content: url()`, `content: ""` all work. |
 | `::first-line`, `::first-letter` | OK at render time. |
-| `::placeholder` | **NOT implemented** — logs `Unsupported css pseudo-element: 60`. (Whitelist may erroneously list it as supported.) |
-| `::selection` | **NOT implemented** — logs `Unsupported css pseudo-element: 52`. **`tool/lwe_compat/whitelist.json` lists `::selection` as supported but the engine rejects it** — fix needed. |
+| `::placeholder` | **NOT implemented** — logs `Unsupported css pseudo-element: 60`. |
+| `::selection` | **NOT implemented** — logs `Unsupported css pseudo-element: 52`. |
 | `::marker` | **NOT implemented**. |
 | `::backdrop` | **NOT implemented** (and `<dialog>.showModal()` is also out of scope). |
 | `::slotted(...)` | **Implemented** — matches a slot's assigned nodes from within the shadow tree that contains the slot. |
@@ -2757,7 +2712,7 @@ The CSS Text Module Level 4 wrapping/whitespace shorthands are unavailable. Stic
 
 ### SVG presentation properties — runtime caveats (audit additions)
 
-The following CSS properties are recognized by the parser (entries exist in `CSSStyleLookupTrie` and `Style.h:FOR_EACH_STYLE_ATTRIBUTE_BASIC`) and have full `updateValue*` implementations. They are **valid CSS** at the cascade and computed-style level and round-trip through `getComputedStyle`. However, **LWE does not paint SVG embedded in HTML for webapps** ([LWE_WEBAPP_GUIDE.md](LWE_WEBAPP_GUIDE.md) §2), so these properties have no visible effect on the kinds of pages LWE webapps ship.
+The following CSS properties are recognized by the parser (entries exist in `CSSStyleLookupTrie` and `Style.h:FOR_EACH_STYLE_ATTRIBUTE_BASIC`) and have full `updateValue*` implementations. They are **valid CSS** at the cascade and computed-style level and round-trip through `getComputedStyle`. However, **LWE does not paint SVG embedded in HTML for webapps**, so these properties have no visible effect on the kinds of pages LWE webapps ship.
 
 | Property | Parsed values | Note |
 |----------|--------------|------|
@@ -3031,8 +2986,6 @@ The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` 
 | `SVGSVGElement.createSVGRect()` / `createSVGPoint()` / `createSVGMatrix()` | Throw `TypeError` (`[Unimplemented]`). `createSVGLength()`, `createSVGNumber()`, `createSVGAngle()`, `createSVGTransform()` work. |
 | `<foreignObject>` | Falls through to the generic `SVGElement` base (no `SVGForeignObjectElement` class). |
 
-Treat SVG as out-of-scope for LWE webapps per [LWE_WEBAPP_GUIDE.md](LWE_WEBAPP_GUIDE.md) §2.
-
 ### ECMAScript engine (Escargot) — additional details (audit additions)
 
 The JavaScript runtime is [Escargot](https://github.com/Samsung/escargot). Verified surface (against `./Starfish` glfw debug build):
@@ -3076,7 +3029,7 @@ The JavaScript runtime is [Escargot](https://github.com/Samsung/escargot). Verif
 
 The JS engine is **Escargot** built with `-DESCARGOT_LIBICU_SUPPORT=ON` (the LWE default). On the verified Linux/x64/EFL release build the full ES2020+ `Intl` namespace is present and locale-aware prototype methods on `String`/`Date`/`Number`/`Array`/`BigInt` work. None of this is gated by a Starfish IDL or a `STARFISH_*` macro — it is purely a property of how Escargot was compiled. Webapps may rely on it on stock LWE builds; if a downstream variant ships Escargot with `LIBICU_SUPPORT=OFF`, every API in the table below disappears or degrades to a "C" locale.
 
-| `Intl` member | Status on stock LWE | Verified call (probe `/tmp/lwe_audit_iter21/intl_probes.html`) |
+| `Intl` member | Status on stock LWE | Verified call |
 |---------------|---------------------|-----------------------------------------------------------------|
 | `Intl` (namespace object) | `typeof Intl === 'object'` | — |
 | `Intl.Collator` | constructor exposed | `new Intl.Collator('ko').compare('가','나')` → `-1` |
@@ -3091,8 +3044,6 @@ The JS engine is **Escargot** built with `-DESCARGOT_LIBICU_SUPPORT=ON` (the LWE
 | `Intl.DurationFormat` | **constructor exposed** (Stage-4 / ES2025; bonus on top of Spec.md's old Intl coverage) | — |
 | `Intl.getCanonicalLocales` | function exposed | `Intl.getCanonicalLocales(['EN-us','Ko-kr'])` → `['en-US','ko-KR']` |
 | `Intl.supportedValuesOf` | function exposed | `Intl.supportedValuesOf('calendar').slice(0,5)` → `['buddhist','chinese','coptic','dangi','ethioaa']` |
-
-`docs/lwe_compat/javascript_engine.md` line 46 currently advertises only `Collator`/`DateTimeFormat`/`NumberFormat`/`PluralRules`. That list is **outdated** — it reflects pre-2021 Escargot; the current build also exposes `RelativeTimeFormat`, `ListFormat`, `Locale`, `Segmenter`, `DisplayNames`, `DurationFormat`, `getCanonicalLocales`, and `supportedValuesOf`.
 
 **Locale-aware prototype methods** — all `function`, all spec-conformant on the verified build:
 
@@ -3109,11 +3060,9 @@ The JS engine is **Escargot** built with `-DESCARGOT_LIBICU_SUPPORT=ON` (the LWE
 
 > **Caveat — locale data weight:** the full ICU data file (`icudt*.dat`) is ~10 MB and is linked into Escargot. Wearable/`SMALL_CONFIG` Escargot builds may strip locale data; if you ship LWE with `-DESCARGOT_SMALL_CONFIG=ON` re-run the iter21 probe before relying on any of the above.
 
-> **Static-checker false-positive (verifier bug):** `tool/lwe_compat/check_static.py` currently lists `Intl` and `BigInt` in `KNOWN_GLOBAL_INTERFACES` while neither is in `idl_interfaces` (they are ECMAScript globals, not WebIDL), so any code that mentions either is reported as `js.unknown-global`. Tracked as a verifier bug — Intl/BigInt are *supported*, the whitelist scheme just doesn't model ES globals separately yet. Until fixed, suppress with `// lwe-compat: js-ok` in offending lines or pre-strip them from probe sources.
-
 ### Inspector / Debugger / Profiler / Memory APIs — runtime caveats (audit additions)
 
-**Bottom line:** LWE has no DevTools-style introspection surface available to JavaScript. The C++ `Inspector` class (`src/core/inspector/Inspector.{h,cpp}`) is a build-conditional **out-of-process console-message bridge** (nanomsg pair socket on `ws://0.0.0.0:23888`) — *not* a Chrome DevTools Protocol implementation, *not* attached to a JS interface, and *not* a heap/CPU profiler. Web pages cannot detect it, drive it, or observe a debugger. JS-side memory introspection (`performance.memory`, `measureUserAgentSpecificMemory`, `console.profile`, etc.) is entirely absent. Verified against `/tmp/lwe_audit_iter26/inspector_probes.html` on the glfw debug build.
+**Bottom line:** LWE has no DevTools-style introspection surface available to JavaScript. The C++ `Inspector` class (`src/core/inspector/Inspector.{h,cpp}`) is a build-conditional **out-of-process console-message bridge** (nanomsg pair socket on `ws://0.0.0.0:23888`) — *not* a Chrome DevTools Protocol implementation, *not* attached to a JS interface, and *not* a heap/CPU profiler. Web pages cannot detect it, drive it, or observe a debugger. JS-side memory introspection (`performance.memory`, `measureUserAgentSpecificMemory`, `console.profile`, etc.) is entirely absent.
 
 | Surface | Status (verified) |
 |---------|-------------------|
@@ -3135,9 +3084,9 @@ The JS engine is **Escargot** built with `-DESCARGOT_LIBICU_SUPPORT=ON` (the LWE
 
 LWE exposes Escargot's JS debugger protocol via `cmake -DENABLE_DEBUGGER=1` (defines `STARFISH_ENABLE_DEBUGGER`; see `build/config.cmake:322`). When enabled:
 - `LWEWebView::RegisterDebuggerShouldInitHandler(cb)` and `RegisterDebuggerShouldContinueWaitingHandler(cb)` (declared in `inc/LWEWebView.h:379`/`:866`) let the host decide per-URL whether to start the debug server and whether to keep waiting for a client to attach.
-- The protocol is the one consumed by [escargot-vscode-extension](https://github.com/Samsung/escargot-vscode-extension); CLAUDE.md documents the binding.
+- The protocol is the one consumed by [escargot-vscode-extension](https://github.com/Samsung/escargot-vscode-extension).
 - It is a **JS-source debugger** (breakpoints, step, eval), **not** a DOM/CSS/Network inspector. The separate CDP server (`STARFISH_ENABLE_CDP`, off by default) does implement `DOM.*`, `CSS.*`, `Network.*`, `Runtime.*`, `Page.*` and `Log.*` for out-of-process clients such as Puppeteer — see `docs/CDP.md` and the per-domain status table in `docs/CDP_DOMAINS.md`. Neither surface is reachable from page script, and `Profiler.*`/`HeapProfiler.*` are stubs there too, because Escargot exposes no CPU sampler or heap-snapshot serializer.
-- The default LWE/Starfish builds (including the `glfw debug` build documented in `memory/project_glfw_debug_build.md`) ship with `ENABLE_DEBUGGER=0`. Webapps must not feature-detect a debugger from JS — the only observable signal is that `debugger;` is a no-op.
+- The default LWE/Starfish builds ship with `ENABLE_DEBUGGER=0`. Webapps must not feature-detect a debugger from JS — the only observable signal is that `debugger;` is a no-op.
 
 **Build-time `STARFISH_ENABLE_INSPECTOR` (not the same thing):**
 
@@ -3153,7 +3102,6 @@ LWE exposes Escargot's JS debugger protocol via `cmake -DENABLE_DEBUGGER=1` (def
 - For perf timing, stick to `performance.now()` + `performance.mark()` / `performance.measure()`. They are the only primitives that exist.
 - For "is a debugger attached?" feature detection: there is no reliable signal. Apps that gate behavior on devtools presence should treat LWE as "always production".
 - `console.profile()`, `console.timeStamp()`, `console.count()` calls **throw `TypeError: Callee is not a function object`** (per iter14 §Console). Feature-detect with `typeof console.profile === 'function'`.
-- The static checker (`tool/lwe_compat/check_static.py`) and runtime checker (`tool/lwe_compat/check_runtime.sh`) do not flag inspector-namespace identifiers — `whitelist.json` does not include `Inspector`/`Debugger`/`Profiler` IDLs (because none exist), so callers that reference them will be caught only by the generic `js.unknown-global` rule.
 
 ## Web Device API
 The following describes Web device APIs supported by lightweight web engine. Supported interfaces and methods are generally the same as the interfaces and methods supported by Tizen API, respectively. If there are exceptions, they are explicitly mentioned below.
@@ -3221,7 +3169,7 @@ The following describes Web Speech APIs supported by lightweight web engine. Ple
 The following describes WebRTC APIs supported by lightweight web engine. Please, see [WebRTC Spec](https://w3c.github.io/webrtc-pc/) for more information.
 The WebRTC support is in an early stage.
 
-> **Build flag:** WebRTC is gated by `-DWEBRTC=1` (which also turns on `STARFISH_ENABLE_WEBRTC`/`STARFISH_ENABLE_WEBAUDIO`/`STARFISH_ENABLE_WEBSOCKET`/`STARFISH_ENABLE_MULTIMEDIA`). The default Linux/EFL release build ships with `-DWEBRTC=0`, so `RTCPeerConnection`, `MediaStream`, `MediaStreamTrack`, `navigator.mediaDevices`, and the rest of the interfaces in this section are absent at runtime. Verified by IDL inspection (`[STARFISH_ENABLE_WEBRTC]` extended attributes) and runtime probe in [Verification & Build-Conditional Surface](#verification--build-conditional-surface).
+> **Build flag:** WebRTC is gated by `-DWEBRTC=1` (which also turns on `STARFISH_ENABLE_WEBRTC`/`STARFISH_ENABLE_WEBAUDIO`/`STARFISH_ENABLE_WEBSOCKET`/`STARFISH_ENABLE_MULTIMEDIA`). The default Linux/EFL release build ships with `-DWEBRTC=0`, so `RTCPeerConnection`, `MediaStream`, `MediaStreamTrack`, `navigator.mediaDevices`, and the rest of the interfaces in this section are absent at runtime. Verified by IDL inspection (`[STARFISH_ENABLE_WEBRTC]` extended attributes) — see [Build-Conditional Surface](#build-conditional-surface).
 
 | Interface | Type | Name | Description | Note |
 |-----------|------|------|-------------|------|
@@ -3337,7 +3285,7 @@ The WebRTC support is in an early stage.
 The following describes WebAudio APIs supported by lightweight web engine. Please, see [WebAudio Spec](https://webaudio.github.io/web-audio-api/) for more information.
 The WebAudio support is in an early stage.
 
-> **Build flag:** WebAudio is gated by `STARFISH_ENABLE_WEBAUDIO` (default on for `ARCH=x64`; also implicitly enabled when `WEBRTC=1`). Without it, `AudioContext`/`BaseAudioContext`/`AudioBuffer*`/`AudioNode` globals are not exposed. See [Verification & Build-Conditional Surface](#verification--build-conditional-surface).
+> **Build flag:** WebAudio is gated by `STARFISH_ENABLE_WEBAUDIO` (default on for `ARCH=x64`; also implicitly enabled when `WEBRTC=1`). Without it, `AudioContext`/`BaseAudioContext`/`AudioBuffer*`/`AudioNode` globals are not exposed. See [Build-Conditional Surface](#build-conditional-surface).
 
 | Interface | Type | Name | Description | Note |
 |-----------|------|------|-------------|------|
@@ -3386,7 +3334,7 @@ The WebAudio support is in an early stage.
 The following describes WebSocket APIs supported by lightweight web engine. Please, see [WebSocket Spec](https://html.spec.whatwg.org/multipage/web-sockets.html/) for more information.
 The Websocket is limitedly supported.
 
-> **Build flag:** WebSocket is gated by `STARFISH_ENABLE_WEBSOCKET` (turned on automatically for `ARCH=x64` and whenever `WEBRTC=1`). Builds without it will not expose the `WebSocket` global. See the [Verification & Build-Conditional Surface](#verification--build-conditional-surface) section.
+> **Build flag:** WebSocket is gated by `STARFISH_ENABLE_WEBSOCKET` (turned on automatically for `ARCH=x64` and whenever `WEBRTC=1`). Builds without it will not expose the `WebSocket` global. See the [Build-Conditional Surface](#build-conditional-surface) section.
 
 | Interface | Type | Name | Description | Note |
 |-----------|------|------|-------------|------|
@@ -3411,7 +3359,7 @@ The Websocket is limitedly supported.
 
 ### Final cleanup — remaining surfaces (audit additions)
 
-A final pass of runtime probes (see also [Verification & Build-Conditional Surface](#verification--build-conditional-surface)) on a default-flagged build (`HOST=linux SHELL=glfw BACKEND=uv_cairo_gl WEBGL=1`, all other features off) confirmed the following gaps. None are tracked elsewhere in this document at the API-shape level.
+A final pass of runtime probes (see also [Build-Conditional Surface](#build-conditional-surface)) on a default-flagged build (`HOST=linux SHELL=glfw BACKEND=uv_cairo_gl WEBGL=1`, all other features off) confirmed the following gaps. None are tracked elsewhere in this document at the API-shape level.
 
 **Not exposed as globals (constructor / namespace returns `undefined`):**
 
