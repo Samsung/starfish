@@ -267,7 +267,7 @@ void MiniBrowser::setSettings(const Settings& settings)
     }
 
     if (settings.showFps) {
-        lweSettings.UpdateSetting("--show-fps", "true");
+        lweSettings.UpdateSetting("--show-fps", "True");
     }
 
     if (settings.videoOverlayEnabled) {

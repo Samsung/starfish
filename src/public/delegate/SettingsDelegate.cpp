@@ -19,6 +19,8 @@
 
 #include "SettingsDelegate.h"
 
+#include "SettingsBoolean.h"
+
 #include <sstream>
 
 #define STR_INDIR(x) #x
@@ -112,14 +114,15 @@ SettingsImpl::SettingsImpl(const std::string& default_ua, const std::string& ua)
         std::to_string((unsigned)::LWE::IdleModeJob::IdleModeDefault));
     UpdateSetting("idleModeCheckIntervalInMS",
                   std::to_string(::LWE::IdleModeCheckDefaultIntervalInMS));
-    UpdateSetting("needsDownloadWebFontsEarly", "False");
-    UpdateSetting("useHttp2", "False");
-    UpdateSetting("videoOverlayEnabled", "False");
+    UpdateSetting("needsDownloadWebFontsEarly", ToBoolString(false));
+    UpdateSetting("useHttp2", ToBoolString(false));
+    UpdateSetting("videoOverlayEnabled", ToBoolString(false));
     UpdateSetting("needsDownScaleImageResourceLargerThan", "0");
-    UpdateSetting("scrollbarVisible", "True");
-    UpdateSetting("useExternalPopup", "False");
-    UpdateSetting("useSpatialNavigation", "False");
-    UpdateSetting("showLoadFailMsg", "true");
+    UpdateSetting("scrollbarVisible", ToBoolString(true));
+    UpdateSetting("useExternalPopup", ToBoolString(false));
+    UpdateSetting("useSpatialNavigation", ToBoolString(false));
+    UpdateSetting("showLoadFailMsg", ToBoolString(true));
+    UpdateSetting("--show-fps", ToBoolString(false));
 }
 
 SettingsImpl::SettingsImpl(SettingsImpl* other)
@@ -267,20 +270,12 @@ void SettingsImpl::GetBaseForegroundColor(unsigned char& r, unsigned char& g,
 
 bool SettingsImpl::NeedsDownloadWebFontsEarly() const
 {
-    std::string value = GetSetting("needsDownloadWebFontsEarly");
-    if (value.compare("True") == 0) {
-        return true;
-    }
-    return false;
+    return ParseBool(GetSetting("needsDownloadWebFontsEarly"));
 }
 
 bool SettingsImpl::UseHttp2() const
 {
-    std::string value = GetSetting("useHttp2");
-    if (value.compare("True") == 0) {
-        return true;
-    }
-    return false;
+    return ParseBool(GetSetting("useHttp2"));
 }
 
 uint32_t SettingsImpl::NeedsDownScaleImageResourceLargerThan() const
@@ -294,29 +289,17 @@ uint32_t SettingsImpl::NeedsDownScaleImageResourceLargerThan() const
 
 bool SettingsImpl::ScrollbarVisible() const
 {
-    std::string value = GetSetting("scrollbarVisible");
-    if (value.compare("True") == 0) {
-        return true;
-    }
-    return false;
+    return ParseBool(GetSetting("scrollbarVisible"));
 }
 
 bool SettingsImpl::UseExternalPopup() const
 {
-    std::string value = GetSetting("useExternalPopup");
-    if (value.compare("True") == 0) {
-        return true;
-    }
-    return false;
+    return ParseBool(GetSetting("useExternalPopup"));
 }
 
 bool SettingsImpl::UseSpatialNavigation() const
 {
-    std::string value = GetSetting("useSpatialNavigation");
-    if (value.compare("True") == 0) {
-        return true;
-    }
-    return false;
+    return ParseBool(GetSetting("useSpatialNavigation"));
 }
 
 void SettingsImpl::SetUserAgentString(const std::string& ua)
@@ -375,7 +358,7 @@ void SettingsImpl::SetBaseBackgroundColor(unsigned char r, unsigned char g,
                                           unsigned char b, unsigned char a)
 {
     char color[50];
-    sprintf(color, "%d, %d, %d ,%d", r, g, b, a);
+    sprintf(color, "%d, %d, %d, %d", r, g, b, a);
     UpdateSetting("backgroundColor", color);
 }
 
@@ -383,7 +366,7 @@ void SettingsImpl::SetBaseForegroundColor(unsigned char r, unsigned char g,
                                           unsigned char b, unsigned char a)
 {
     char color[50];
-    sprintf(color, "%d, %d, %d ,%d", r, g, b, a);
+    sprintf(color, "%d, %d, %d, %d", r, g, b, a);
     UpdateSetting("foregroundColor", color);
 }
 
@@ -408,20 +391,12 @@ void SettingsImpl::SetIdleModeCheckIntervalInMS(uint32_t intervalInMS)
 
 void SettingsImpl::SetNeedsDownloadWebFontsEarly(bool b)
 {
-    if (b) {
-        UpdateSetting("needsDownloadWebFontsEarly", "True");
-    } else {
-        UpdateSetting("needsDownloadWebFontsEarly", "False");
-    }
+    UpdateSetting("needsDownloadWebFontsEarly", ToBoolString(b));
 }
 
 void SettingsImpl::SetUseHttp2(bool b)
 {
-    if (b) {
-        UpdateSetting("useHttp2", "True");
-    } else {
-        UpdateSetting("useHttp2", "False");
-    }
+    UpdateSetting("useHttp2", ToBoolString(b));
 }
 
 void SettingsImpl::SetNeedsDownScaleImageResourceLargerThan(
@@ -433,29 +408,17 @@ void SettingsImpl::SetNeedsDownScaleImageResourceLargerThan(
 
 void SettingsImpl::SetScrollbarVisible(bool visible)
 {
-    if (visible) {
-        UpdateSetting("scrollbarVisible", "True");
-    } else {
-        UpdateSetting("scrollbarVisible", "False");
-    }
+    UpdateSetting("scrollbarVisible", ToBoolString(visible));
 }
 
 void SettingsImpl::SetUseExternalPopup(bool useExternalPopup)
 {
-    if (useExternalPopup) {
-        UpdateSetting("useExternalPopup", "True");
-    } else {
-        UpdateSetting("useExternalPopup", "False");
-    }
+    UpdateSetting("useExternalPopup", ToBoolString(useExternalPopup));
 }
 
 void SettingsImpl::SetUseSpatialNavigation(bool useSpatialNavigation)
 {
-    if (useSpatialNavigation) {
-        UpdateSetting("useSpatialNavigation", "True");
-    } else {
-        UpdateSetting("useSpatialNavigation", "False");
-    }
+    UpdateSetting("useSpatialNavigation", ToBoolString(useSpatialNavigation));
 }
 
 void SettingsImpl::IterateSettings(

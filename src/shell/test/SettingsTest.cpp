@@ -199,7 +199,7 @@ TEST_F(SettingsTest, ScrollbarVisible)
     EXPECT_TRUE(settings.ScrollbarVisible() == true);
 
     settings.SetScrollbarVisible(false);
-    EXPECT_TRUE(settings.NeedsDownScaleImageResourceLargerThan() == false);
+    EXPECT_TRUE(settings.ScrollbarVisible() == false);
 }
 
 TEST_F(SettingsTest, UseExternalPopup)
@@ -228,6 +228,38 @@ TEST_F(SettingsTest, UpdateSetting)
 
     settings.UpdateSetting("key", "value");
     EXPECT_TRUE(settings.GetSetting("key") == "value");
+}
+
+TEST_F(SettingsTest, BooleanSpelling)
+{
+    LWE::Settings settings(kDefaultUA, kUA);
+
+    // Writers emit one spelling.
+    settings.SetUseHttp2(true);
+    EXPECT_TRUE(settings.GetSetting("useHttp2") == "True");
+    settings.SetUseHttp2(false);
+    EXPECT_TRUE(settings.GetSetting("useHttp2") == "False");
+    settings.SetScrollbarVisible(true);
+    EXPECT_TRUE(settings.GetSetting("scrollbarVisible") == "True");
+
+    // UpdateSetting() is public API and takes a raw string, so embedders spell
+    // boolean values by hand. Readers take whichever spelling they picked.
+    settings.UpdateSetting("useHttp2", "true");
+    EXPECT_TRUE(settings.UseHttp2() == true);
+    settings.UpdateSetting("needsDownloadWebFontsEarly", "tRuE");
+    EXPECT_TRUE(settings.NeedsDownloadWebFontsEarly() == true);
+    settings.UpdateSetting("scrollbarVisible", "FALSE");
+    EXPECT_TRUE(settings.ScrollbarVisible() == false);
+    settings.UpdateSetting("useExternalPopup", "TRUE");
+    EXPECT_TRUE(settings.UseExternalPopup() == true);
+
+    // Anything that is not a spelling of true is false.
+    settings.UpdateSetting("useSpatialNavigation", "yes");
+    EXPECT_TRUE(settings.UseSpatialNavigation() == false);
+
+    // An absent key stays false.
+    LWE::Settings empty;
+    EXPECT_TRUE(empty.UseHttp2() == false);
 }
 
 TEST_F(SettingsTest, IterateSettings)
