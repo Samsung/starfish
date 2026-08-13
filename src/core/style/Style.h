@@ -2759,6 +2759,7 @@ public:
         for (size_t i = 0; i < m_data.size(); i++) {
             CSSStyleValuePair v = m_data[i];
             if (v.keyKind() == p.keyKind()) {
+                unrootPointer(v);
                 m_data[i] = p;
                 rootPointer(p);
                 return;
@@ -2782,6 +2783,10 @@ protected:
     void rootPointer(const CSSStyleValuePair& v)
     {
         v.rootPointerValue(m_pointerRooter);
+    }
+    void unrootPointer(const CSSStyleValuePair& v)
+    {
+        v.unrootPointerValue(m_pointerRooter);
     }
     GCAtomicVector<CSSStyleValuePair> m_data;
     GCVector<void*> m_pointerRooter;
@@ -2874,8 +2879,8 @@ public:
     template <class... Args>
     void emplace_back(Args&&... args)
     {
+        // pushBack() already roots the new value.
         pushBack(CSSStyleValuePair(args...));
-        rootPointer(back());
     }
 
     size_t size() const

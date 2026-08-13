@@ -1379,6 +1379,7 @@ CSSStyleDeclaration* CSSStyleDeclaration::clone(Element* element)
 {
     CSSStyleDeclaration* newStyle = new CSSStyleDeclaration(element);
     newStyle->m_cssValues = m_cssValues;
+    newStyle->m_pointerRooter = m_pointerRooter;
     if (m_cssCustomValues) {
         newStyle->m_cssCustomValues =
             new MutablePropertyValueList(*m_cssCustomValues);
@@ -1564,6 +1565,7 @@ void CSSStyleDeclaration::removeCSSValuePair(CSSStyleValuePair::KeyKind keyKind)
     unsigned len = m_cssValues.size();
     for (unsigned i = 0; i < len; i++) {
         if (m_cssValues[i].keyKind() == keyKind) {
+            removeRootPointerValue(m_cssValues[i]);
             m_cssValues.erase(m_cssValues.begin() + i);
             notifyNeedsStyleRecalc(keyKind);
             return;
