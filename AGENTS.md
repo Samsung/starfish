@@ -41,7 +41,8 @@ comments they point to.
    supports, so surface changes update it in the same change — a newly
    exposed interface or member, an HTML tag or attribute, a CSS property or
    accepted value, a new or re-defaulted build flag (see that file's
-   verification procedure for how each table is derived).
+   "Build-Conditional Surface" section for the sources of truth each table
+   is checked against).
 
 ## Coding rules
 
