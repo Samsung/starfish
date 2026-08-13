@@ -24,6 +24,7 @@
 #include "ThreadedCallHelper.h"
 
 #include "LWEDelegate.h"
+#include "SettingsBoolean.h"
 #include "SettingsDelegate.h"
 #include "ResourceErrorDelegate.h"
 
@@ -1187,21 +1188,20 @@ void WebContainerImpl::SetSettings(const Settings* settings)
             m_webView->setNeedsDownloadWebFontsEarly(
                 settings->NeedsDownloadWebFontsEarly());
             m_webView->setUseHttp2(settings->UseHttp2());
+            // These three have no typed accessor on Settings, so they are read
+            // straight out of the map.
             m_webView->setVideoOverlayEnabled(
-                settings->GetSetting("videoOverlayEnabled").compare("True") ==
-                0);
+                ParseBool(settings->GetSetting("videoOverlayEnabled")));
             m_webView->setNeedsDownScaleImageResourceLargerThan(
                 settings->NeedsDownScaleImageResourceLargerThan());
             m_webView->setScrollbarVisible(settings->ScrollbarVisible());
             m_webView->setUseExternalPopup(settings->UseExternalPopup());
             m_webView->setUseSpatialNavigation(
                 settings->UseSpatialNavigation());
-            std::string showFPS = settings->GetSetting("--show-fps");
-            m_webView->setShowFps(showFPS == "true" ? true : false);
-            std::string showLoadFailMsg =
-                settings->GetSetting("showLoadFailMsg");
-            m_webView->setShowLoadFailMsg(showLoadFailMsg == "true" ? true
-                                                                    : false);
+            m_webView->setShowFps(
+                ParseBool(settings->GetSetting("--show-fps")));
+            m_webView->setShowLoadFailMsg(
+                ParseBool(settings->GetSetting("showLoadFailMsg")));
 
             delete settings;
         });
