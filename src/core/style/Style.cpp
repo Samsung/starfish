@@ -11038,6 +11038,16 @@ bool CSSStyleValuePair::updateValueBorderRadius(const CSSTokenVector& tokens)
             if (!ret) {
                 return false;
             }
+            if (pair.valueKind() ==
+                CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
+                // A calc() containing a var() parses with resolution deferred
+                // (VarFunctionValueKind holding the original String*). Storing
+                // it inside this ValueList would let toLengthValue() later read
+                // that String* as a CalcData*. Fail here so the caller falls
+                // back to the var-resolution path, which reparses the value
+                // into a real CalcData once the var() is substituted.
+                return false;
+            }
         }
         list->push_back(pair);
     }

@@ -1431,9 +1431,14 @@ public:
         } else if (m_valueKind == Percentage) {
             return ::Starfish::Length(::Starfish::Length::Percent,
                                       percentageValue());
-        } else {
-            STARFISH_ASSERT(m_valueKind == CalcValueKind);
+        } else if (m_valueKind == CalcValueKind) {
             return ::Starfish::Length(calcValue());
+        } else {
+            // Defensive: an unresolved value (e.g. VarFunctionValueKind still
+            // holding a String*) must never be read as a CalcData*. Callers
+            // should resolve var()/calc() before reaching here.
+            STARFISH_ASSERT(m_valueKind == CalcValueKind);
+            return ::Starfish::Length(::Starfish::Length::Fixed, 0);
         }
     }
 
