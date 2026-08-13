@@ -18,7 +18,7 @@
 
 Name:          lightweight-web-engine
 Summary:       Lightweight Web Engine for Tizen
-Version:       1.5.1
+Version:       1.5.2
 Release:       1
 Group:         Development/Libraries
 License:       LGPL-2.1+ and BSD-2-Clause and BSD-3-Clause and BSL-1.0 and MIT and ISC and Zlib and BOEHM-GC and ICU
