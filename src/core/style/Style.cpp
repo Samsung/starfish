@@ -1530,9 +1530,13 @@ void CSSStyleValuePair::unrootPointerValue(GCVector<void*>& rooter) const
     }
 
     if (ptr) {
-        rooter.erase(std::remove_if(rooter.begin(), rooter.end(),
-                                    [ptr](void* p) { return ptr == p; }),
-                     rooter.end());
+        // The same pointer can be rooted once per referencing value (e.g. a
+        // four-sided shorthand stores one parsed value under four keys), so
+        // unroot only a single entry to keep the remaining references alive.
+        auto it = std::find(rooter.begin(), rooter.end(), ptr);
+        if (it != rooter.end()) {
+            rooter.erase(it);
+        }
     }
 }
 
