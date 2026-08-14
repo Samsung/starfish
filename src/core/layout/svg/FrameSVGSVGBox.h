@@ -59,6 +59,11 @@ public:
 
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
+    // Lays out the SVG content of this viewport, taking the viewport size as
+    // already computed. Runs as part of layout(), and on its own when only the
+    // geometry inside the viewport changed (see
+    // BrowsingContext::layoutSVGViewportsNeedingContentLayout).
+    void layoutSVGContent(LayoutContext& ctx);
     virtual IntrinsicSize intrinsicSize() override;
     static IntrinsicSize intrinsicSize(SVGElement* element,
                                        LayoutSize defaultSize);

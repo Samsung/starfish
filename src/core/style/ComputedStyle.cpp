@@ -2138,7 +2138,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         damagedKeys[CSSStyleValuePair::KeyKind::Transform] = true;
         if (UNLIKELY(isSVGDescendant)) {
             damage = static_cast<ComputedStyleDamage>(
-                ComputedStyleDamage::ComputedStyleDamageLayout |
+                ComputedStyleDamage::ComputedStyleDamageSVGViewportContent |
                 ComputedStyleDamage::ComputedStyleDamagePainting | damage);
         } else {
             damage = static_cast<ComputedStyleDamage>(
@@ -2153,7 +2153,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         damagedKeys[CSSStyleValuePair::KeyKind::Transform] = true;
         if (UNLIKELY(isSVGDescendant)) {
             damage = static_cast<ComputedStyleDamage>(
-                ComputedStyleDamage::ComputedStyleDamageLayout |
+                ComputedStyleDamage::ComputedStyleDamageSVGViewportContent |
                 ComputedStyleDamage::ComputedStyleDamagePainting | damage);
         } else {
             damage = static_cast<ComputedStyleDamage>(
@@ -2166,7 +2166,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             damagedKeys[CSSStyleValuePair::KeyKind::Transform] = true;
             if (UNLIKELY(isSVGDescendant)) {
                 damage = static_cast<ComputedStyleDamage>(
-                    ComputedStyleDamage::ComputedStyleDamageLayout |
+                    ComputedStyleDamage::ComputedStyleDamageSVGViewportContent |
                     ComputedStyleDamage::ComputedStyleDamagePainting | damage);
             } else {
                 damage = static_cast<ComputedStyleDamage>(

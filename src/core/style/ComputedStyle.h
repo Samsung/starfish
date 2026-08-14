@@ -62,7 +62,11 @@ enum ComputedStyleDamage {
     ComputedStyleDamageComputeStackingContextProperties = 1 << 4,
     ComputedStyleDamagePainting = 1 << 5,
     ComputedStyleDamageComposite = 1 << 6,
-    ComputedStyleDamageAnimation = 1 << 7
+    ComputedStyleDamageAnimation = 1 << 7,
+    // The geometry inside an <svg> viewport changed. An SVG box folds its
+    // transform into its frame rect, so this still needs a layout pass - but
+    // only of that viewport's content, not of the whole document.
+    ComputedStyleDamageSVGViewportContent = 1 << 8
 };
 
 union FontFamilyData {

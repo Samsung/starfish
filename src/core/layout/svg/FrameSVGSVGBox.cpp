@@ -245,23 +245,28 @@ void FrameSVGSVGBox::layout(LayoutContext& ctx,
         setContentWidth(orgWidth);
         setContentHeight(orgHeight);
 
-        std::vector<LayoutRect> clippedRects;
-        std::map<void*, LayoutRect> fillRects;
-        FrameSVGBox::SVGLayoutContext svgLayoutContext = {
-            ctx, m_viewport, normalizedDiagonalViewportLength(), clippedRects,
-            fillRects
-        };
+        layoutSVGContent(ctx);
+    }
+}
 
-        SkMatrix matrix = SkMatrix::I();
-        matrix.postConcat(computeTranlateScaleOnPaint().second);
+void FrameSVGSVGBox::layoutSVGContent(LayoutContext& ctx)
+{
+    std::vector<LayoutRect> clippedRects;
+    std::map<void*, LayoutRect> fillRects;
+    FrameSVGBox::SVGLayoutContext svgLayoutContext = {
+        ctx, m_viewport, normalizedDiagonalViewportLength(), clippedRects,
+        fillRects
+    };
 
-        Frame* f = firstChild();
-        while (f) {
-            f->asFrameSVGBox()->layout(svgLayoutContext, matrix);
-            f->asFrameSVGBox()->moveX(borderLeft() + paddingLeft());
-            f->asFrameSVGBox()->moveY(borderTop() + paddingTop());
-            f = f->next();
-        }
+    SkMatrix matrix = SkMatrix::I();
+    matrix.postConcat(computeTranlateScaleOnPaint().second);
+
+    Frame* f = firstChild();
+    while (f) {
+        f->asFrameSVGBox()->layout(svgLayoutContext, matrix);
+        f->asFrameSVGBox()->moveX(borderLeft() + paddingLeft());
+        f->asFrameSVGBox()->moveY(borderTop() + paddingTop());
+        f = f->next();
     }
 }
 
