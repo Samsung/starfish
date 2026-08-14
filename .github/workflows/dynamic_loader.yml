@@ -39,3 +39,5 @@ jobs:
         run: ninja -C uv_cairo_gl/debug starfish.executable
       - name: Execution test
         run: xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/execution_test.py
+      - name: UWE loader test
+        run: xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/uwe_loader_test.py
