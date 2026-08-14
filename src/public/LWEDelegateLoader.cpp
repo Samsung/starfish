@@ -90,12 +90,19 @@ bool LWEDelegateLoader::isLoaded()
     return m_handle != nullptr;
 }
 
+// Every dlsym cast below names its ProcTable member's own type rather than
+// respelling the signature: the typedef in the contract header is the one
+// place that has to agree with the impl, and respelling it here silently
+// diverged once already (CreateWithBuffer was dlsym'ing the wrong symbol,
+// with a signature that didn't match it either).
 bool LWEDelegateLoader::loadCookieManagerProcTable()
 {
-    kCookieManagerProcTable.GetInstance = reinterpret_cast<uintptr_t (*)()>(
-        dlsym(m_handle, "LWEDelegate_CookieManager_GetInstance"));
-    kCookieManagerProcTable.Destroy = reinterpret_cast<void (*)()>(
-        dlsym(m_handle, "LWEDelegate_CookieManager_Destroy"));
+    kCookieManagerProcTable.GetInstance =
+        reinterpret_cast<decltype(CookieManagerProcTable::GetInstance)>(
+            dlsym(m_handle, "LWEDelegate_CookieManager_GetInstance"));
+    kCookieManagerProcTable.Destroy =
+        reinterpret_cast<decltype(CookieManagerProcTable::Destroy)>(
+            dlsym(m_handle, "LWEDelegate_CookieManager_Destroy"));
     return kCookieManagerProcTable.GetInstance &&
            kCookieManagerProcTable.Destroy;
 }
@@ -103,21 +110,25 @@ bool LWEDelegateLoader::loadCookieManagerProcTable()
 bool LWEDelegateLoader::loadLWEProcTable()
 {
     kLWEProcTable.Initialize =
-        reinterpret_cast<void (*)(const char*, uint32_t)>(
+        reinterpret_cast<decltype(LWEProcTable::Initialize)>(
             dlsym(m_handle, "LWEDelegate_LWE_Initialize"));
-    kLWEProcTable.IsInitialized = reinterpret_cast<bool (*)()>(
-        dlsym(m_handle, "LWEDelegate_LWE_IsInitialized"));
-    kLWEProcTable.Finalize = reinterpret_cast<void (*)()>(
+    kLWEProcTable.IsInitialized =
+        reinterpret_cast<decltype(LWEProcTable::IsInitialized)>(
+            dlsym(m_handle, "LWEDelegate_LWE_IsInitialized"));
+    kLWEProcTable.Finalize = reinterpret_cast<decltype(LWEProcTable::Finalize)>(
         dlsym(m_handle, "LWEDelegate_LWE_Finalize"));
-    kLWEProcTable.GetGCFrequency = reinterpret_cast<unsigned char (*)()>(
-        dlsym(m_handle, "LWEDelegate_LWE_GetGCFrequency"));
+    kLWEProcTable.GetGCFrequency =
+        reinterpret_cast<decltype(LWEProcTable::GetGCFrequency)>(
+            dlsym(m_handle, "LWEDelegate_LWE_GetGCFrequency"));
     kLWEProcTable.SetGCFrequency =
-        reinterpret_cast<void (*)(unsigned char freq)>(
+        reinterpret_cast<decltype(LWEProcTable::SetGCFrequency)>(
             dlsym(m_handle, "LWEDelegate_LWE_SetGCFrequency"));
-    kLWEProcTable.GetVersion = reinterpret_cast<void (*)(int*, int*, int*)>(
-        dlsym(m_handle, "LWEDelegate_LWE_GetVersion"));
-    kLWEProcTable.IsUsingSeparateThread = reinterpret_cast<bool (*)()>(
-        dlsym(m_handle, "LWEDelegate_LWE_IsUsingSeparateThread"));
+    kLWEProcTable.GetVersion =
+        reinterpret_cast<decltype(LWEProcTable::GetVersion)>(
+            dlsym(m_handle, "LWEDelegate_LWE_GetVersion"));
+    kLWEProcTable.IsUsingSeparateThread =
+        reinterpret_cast<decltype(LWEProcTable::IsUsingSeparateThread)>(
+            dlsym(m_handle, "LWEDelegate_LWE_IsUsingSeparateThread"));
     return kLWEProcTable.Initialize && kLWEProcTable.IsInitialized &&
            kLWEProcTable.Finalize && kLWEProcTable.GetGCFrequency &&
            kLWEProcTable.SetGCFrequency && kLWEProcTable.GetVersion &&
@@ -127,7 +138,7 @@ bool LWEDelegateLoader::loadLWEProcTable()
 bool LWEDelegateLoader::loadResourceErrorProcTable()
 {
     kResourceErrorProcTable.Create =
-        reinterpret_cast<uintptr_t (*)(int, const char*, const char*)>(
+        reinterpret_cast<decltype(ResourceErrorProcTable::Create)>(
             dlsym(m_handle, "LWEDelegate_ResourceError_Create"));
     return kResourceErrorProcTable.Create;
 }
@@ -135,36 +146,38 @@ bool LWEDelegateLoader::loadResourceErrorProcTable()
 bool LWEDelegateLoader::loadSettingsProcTable()
 {
     kSettingsProcTable.Create =
-        reinterpret_cast<uintptr_t (*)(const char* defaultUA, const char* ua)>(
+        reinterpret_cast<decltype(SettingsProcTable::Create)>(
             dlsym(m_handle, "LWEDelegate_Settings_Create"));
-    kSettingsProcTable.CreateEmpty = reinterpret_cast<uintptr_t (*)()>(
-        dlsym(m_handle, "LWEDelegate_Settings_Create_Empty"));
-    kSettingsProcTable.CreateFromOther = reinterpret_cast<uintptr_t (*)(void*)>(
-        dlsym(m_handle, "LWEDelegate_Settings_Create_From_Other"));
+    kSettingsProcTable.CreateEmpty =
+        reinterpret_cast<decltype(SettingsProcTable::CreateEmpty)>(
+            dlsym(m_handle, "LWEDelegate_Settings_Create_Empty"));
+    kSettingsProcTable.CreateFromOther =
+        reinterpret_cast<decltype(SettingsProcTable::CreateFromOther)>(
+            dlsym(m_handle, "LWEDelegate_Settings_Create_From_Other"));
     return kSettingsProcTable.Create && kSettingsProcTable.CreateEmpty &&
            kSettingsProcTable.CreateFromOther;
 }
 
 bool LWEDelegateLoader::loadWebContainerProcTable()
 {
-    kWebContainerProcTable.Create = reinterpret_cast<uintptr_t (*)(
-        unsigned, unsigned, float, const char*, const char*, const char*)>(
-        dlsym(m_handle, "LWEDelegate_WebContainer_Create"));
-    kWebContainerProcTable.CreateWithBuffer = reinterpret_cast<uintptr_t (*)(
-        void*, unsigned, unsigned, unsigned, float, const char*, const char*,
-        const char*)>(dlsym(m_handle, "LWEDelegate_WebContainer_Create"));
-    kWebContainerProcTable.CreateWithPlatformImage =
-        reinterpret_cast<uintptr_t (*)(uintptr_t, uintptr_t, uintptr_t)>(dlsym(
-            m_handle, "LWEDelegate_WebContainer_Create_With_PlatformImage"));
+    kWebContainerProcTable.Create =
+        reinterpret_cast<decltype(WebContainerProcTable::Create)>(
+            dlsym(m_handle, "LWEDelegate_WebContainer_Create"));
+    kWebContainerProcTable.CreateWithBuffer =
+        reinterpret_cast<decltype(WebContainerProcTable::CreateWithBuffer)>(
+            dlsym(m_handle, "LWEDelegate_WebContainer_CreateWithBuffer"));
+    kWebContainerProcTable.CreateWithPlatformImage = reinterpret_cast<
+        decltype(WebContainerProcTable::CreateWithPlatformImage)>(
+        dlsym(m_handle, "LWEDelegate_WebContainer_Create_With_PlatformImage"));
     kWebContainerProcTable.CreateGL =
-        reinterpret_cast<uintptr_t (*)(uintptr_t, uintptr_t)>(
+        reinterpret_cast<decltype(WebContainerProcTable::CreateGL)>(
             dlsym(m_handle, "LWEDelegate_WebContainer_CreateGL"));
     kWebContainerProcTable.CreateGLWithPlatformImage = reinterpret_cast<
-        uintptr_t (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t)>(
+        decltype(WebContainerProcTable::CreateGLWithPlatformImage)>(
         dlsym(m_handle, "LWEDelegate_WebContainer_CreateGLWithPlatformImage"));
-    kWebContainerProcTable.CreateHeadless = reinterpret_cast<uintptr_t (*)(
-        unsigned, unsigned, float, const char*, const char*, const char*)>(
-        dlsym(m_handle, "LWEDelegate_WebContainer_CreateHeadless"));
+    kWebContainerProcTable.CreateHeadless =
+        reinterpret_cast<decltype(WebContainerProcTable::CreateHeadless)>(
+            dlsym(m_handle, "LWEDelegate_WebContainer_CreateHeadless"));
 
     return kWebContainerProcTable.Create &&
            kWebContainerProcTable.CreateWithBuffer &&
@@ -175,10 +188,9 @@ bool LWEDelegateLoader::loadWebContainerProcTable()
 }
 bool LWEDelegateLoader::loadWebViewProcTable()
 {
-    kWebViewProcTable.Create = reinterpret_cast<uintptr_t (*)(
-        void*, unsigned, unsigned, unsigned, unsigned, float, const char*,
-        const char*, const char*)>(
-        dlsym(m_handle, "LWEDelegate_WebView_Create"));
+    kWebViewProcTable.Create =
+        reinterpret_cast<decltype(WebViewProcTable::Create)>(
+            dlsym(m_handle, "LWEDelegate_WebView_Create"));
     return kWebViewProcTable.Create;
 }
 

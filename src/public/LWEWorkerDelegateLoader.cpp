@@ -77,17 +77,20 @@ void LWEWorkerDelegateLoader::unload()
     unloadLWEWorkerProcTable();
 }
 
+// Casts name their ProcTable member's own type rather than respelling the
+// signature -- see the same note in LWEDelegateLoader.cpp.
 bool LWEWorkerDelegateLoader::loadLWEWorkerProcTable()
 {
     kLWEWorkerProcTable.Initialize =
-        reinterpret_cast<void (*)(const std::string&)>(
+        reinterpret_cast<decltype(LWEWorkerProcTable::Initialize)>(
             dlsym(m_handle, "LWEWorkerDelegate_LWEWorker_Initialize"));
     kLWEWorkerProcTable.RegisterOnStatusChangedHandler = reinterpret_cast<
-        void (*)(const std::function<void(::LWE::WorkerProcessState)>&)>(
+        decltype(LWEWorkerProcTable::RegisterOnStatusChangedHandler)>(
         dlsym(m_handle,
               "LWEWorkerDelegate_LWEWorker_RegisterOnStatusChangedHandler"));
-    kLWEWorkerProcTable.Finalize = reinterpret_cast<void (*)()>(
-        dlsym(m_handle, "LWEWorkerDelegate_LWEWorker_Finalize"));
+    kLWEWorkerProcTable.Finalize =
+        reinterpret_cast<decltype(LWEWorkerProcTable::Finalize)>(
+            dlsym(m_handle, "LWEWorkerDelegate_LWEWorker_Finalize"));
 
     return kLWEWorkerProcTable.Initialize &&
            kLWEWorkerProcTable.RegisterOnStatusChangedHandler &&
