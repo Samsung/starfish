@@ -72,6 +72,19 @@ public:
     void* operator new(size_t size) = delete;
     void* operator new[](size_t size) = delete;
 
+    // These objects are allocated with a GC disclaim proc
+    // (bufferedNativeImageDataClear) that a later reclaim sweep runs on this
+    // slot. GC_FREE()ing here would poison the slot (GC_FREED_MEM_MARKER, or a
+    // free-list link in a non-debug collector), and the disclaim proc would
+    // then dereference that garbage as a vtable and crash. The destructor above
+    // has already disposed the decoded buffer, so instead of freeing, clear the
+    // vtable slot -- the "already disposed" sentinel the disclaim proc checks
+    // -- and let GC reclaim the small object shell.
+    void operator delete(void* ptr)
+    {
+        *reinterpret_cast<size_t*>(ptr) = 0;
+    }
+
 #ifdef STARFISH_ENABLE_TEST
     virtual void dumpImage(const char* path)
     {
