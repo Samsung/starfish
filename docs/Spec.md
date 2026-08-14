@@ -156,7 +156,7 @@ explicitly specified.
 |  [legend](https://www.w3.org/TR/html5/forms.html#the-legend-elementT) |  |  |  |
 |  [DOCTYPE](https://www.w3.org/TR/html5/syntax.html#the-doctype)  |  | html | The DOCTYPE declaration must be the first tag in your HTML document. The lightweight web engine supports HTML5 only. Other versions of HTMLs and HTML modes (such as quirks mode) are not supported.|
 
-### Additional supported tags (audit additions)
+### Additional supported tags
 
 The HTML parser and DOM expose the following tags as well; they were missing from the table above. Verified by runtime probe (each tag returns its dedicated `HTMLxxxElement` constructor at runtime).
 
@@ -1753,7 +1753,7 @@ The following properties are also implemented but were missing from earlier revi
 
 > **Note on `cursor`:** The `cursor` property is parsed (and applied via the user-agent stylesheet's `cursor: default;` rule) but the value resolver is currently a stub — no actual cursor styling is rendered. Every page load logs `Unsupported css property: cursor` once.
 
-### CSS Scrolling / Overflow (audit results)
+### CSS Scrolling / Overflow
 
 Verified against `src/core/style/CSSStyleLookupTrie.cpp`, `src/core/style/Style.cpp::updateValueOverflowX/Y`, `src/core/dom/Element.cpp` (programmatic scroll APIs), and runtime probes (`getComputedStyle` + `scrollTo`/`scrollIntoView` round-trip).
 
@@ -1778,7 +1778,7 @@ Verified against `src/core/style/CSSStyleLookupTrie.cpp`, `src/core/style/Style.
 
 **`scroll` event fires.** Both `addEventListener('scroll', ...)` on the scrolling element and on `window` are dispatched after `scrollTo`/`scrollBy`/`scrollIntoView`/manual user scroll — one `scroll` event per programmatic scroll call.
 
-### CSS units & functional notations (audit results)
+### CSS units & functional notations
 
 Verified against `src/core/style/CSSStyleLookupTrie.cpp::lookupUnitType`, `src/core/style/CSSParser.h::parseNonNamedColor`, and runtime probes (`getComputedStyle` + style-rule round-trip).
 
@@ -1876,7 +1876,7 @@ This section describes the complete list of supported selectors by LWE.
 | [Tree-Abiding Pseudo-elements](https://www.w3.org/TR/css-pseudo-4/#treelike) | Generated Content Pseudo-elements: '::before' | ::before | p::before | Insert something before the content of each \<p\> element |
 | | Generated Content Pseudo-elements: '::after' | ::after | p::after | Insert something after the content of each \<p\> element |
 
-### Selector caveats (audit results)
+### Selector caveats
 
 The following selectors are **parsed without error but do not actually match anything** at style time (the runtime emits `Style.cpp: checkPseudoClass: Unsupported css pseudo-element: <N>`). They should NOT be relied on:
 
@@ -1905,7 +1905,7 @@ The CSS section above does not enumerate at-rules. Implementation status:
 | `@page` | **Not parsed** — falls through `addUnknownAtRule()`. No rendering effect (LWE has no print pipeline). |
 | `@layer`, `@container`, `@scope`, `@viewport`, `@document`, `@font-feature-values`, `@color-profile`, `@property`, `@view-transition`, `@position-try`, `@starting-style`, `@nest` | **Not supported.** Silently skipped by the parser (`addUnknownAtRule()`). |
 
-### @media query features (audit additions)
+### @media query features
 
 `window.matchMedia(query)` and `<style>@media (...) { ... }</style>` use the same evaluator. Recognized features (parser table at `src/core/style/CSSParser.h:1598`):
 
@@ -1927,7 +1927,7 @@ The CSS section above does not enumerate at-rules. Implementation status:
 
 > **Footgun:** since the missing `prefers-*` features are silently dropped, `if (matchMedia('(prefers-reduced-motion: no-preference)').matches)` returns `false` on LWE — feature-detection patterns that gate behavior on the spec-default sentinel will silently disable themselves. Either (a) treat `matches === false` as "no preference / proceed" instead of "user opted out," or (b) feature-detect via something else.
 
-### CSS units & functional notations (audit additions)
+### CSS units & functional notations (quick reference)
 
 | Category | Supported | Not supported |
 |----------|-----------|---------------|
@@ -2275,7 +2275,7 @@ Apps relying on the right-hand list get **no protection** — the directive is p
 | `crypto.subtle` | **`[Unimplemented]`** — `undefined`. **The entire WebCrypto algorithm surface is missing**: `encrypt`, `decrypt`, `sign`, `verify`, `digest`, `generateKey`, `deriveKey`, `deriveBits`, `importKey`, `exportKey`, `wrapKey`, `unwrapKey` are all unavailable. |
 | **Not exposed** | `SubtleCrypto`, `CryptoKey`, `CryptoKeyPair` constructors. Apps needing SHA-256, AES, HMAC, ECDSA, etc. must ship a JS polyfill. |
 
-### Forms — runtime caveats (audit additions)
+### Forms — runtime caveats
 
 The HTML form-control IDLs in `src/core/dom/HTMLFormElement.idl`, `HTMLInputElement.idl`, etc. expose far less than the spec implies. Listing the **unimplemented surface** so authors don't reach for it:
 
@@ -2292,7 +2292,7 @@ The HTML form-control IDLs in `src/core/dom/HTMLFormElement.idl`, `HTMLInputElem
 | `FormData` iteration | **`fd.entries`, `keys`, `values`, `forEach`, `[Symbol.iterator]` are all `undefined`** (IDL `iterable<>` is commented out). `for..of fd`, `Array.from(fd)`, `[...fd]` will throw or yield nothing. |
 | `FormData` Blob/File overloads | `append(name, Blob, filename)` / `set(name, Blob, filename)` are not exposed; `FormDataEntryValue` is `USVString` only. |
 
-### Selection API and editing — not available (audit additions)
+### Selection API and editing — not available
 
 The W3C Selection API and `document.execCommand` editing pipeline are entirely absent. There is no in-engine way to read, programmatically modify, or observe the user's selection. Authors who need a "selection" must implement it themselves using `Range` plus their own visual highlighting (e.g. wrap with `<span class="hl">`).
 
@@ -2318,7 +2318,7 @@ function highlight(range, cls) {
 }
 ```
 
-### Range edge cases (audit additions)
+### Range edge cases
 
 The Range table above (rows around line 1137) is correct at the interface level, but the runtime has these caveats authors should know:
 
@@ -2333,7 +2333,7 @@ The Range table above (rows around line 1137) is correct at the interface level,
 | `range.expand(unit)` | **`[Unimplemented]`** (non-standard WebKit-ism). Not available. |
 | `range.getClientRects()` / `getBoundingClientRect()` | Implemented and return per-fragment rects. Verified across multi-line text. |
 
-### Canvas 2D — additional details (audit additions)
+### Canvas 2D — additional details
 
 The existing canvas mixin tables are incomplete. Adding the missing pieces:
 
@@ -2351,7 +2351,7 @@ The existing canvas mixin tables are incomplete. Adding the missing pieces:
 | `ImageBitmap` | `close()` is implemented (releases the bitmap). |
 | Additional enum values | `CanvasTextBaseline` accepts `"ideographic"` (in addition to the values listed earlier). `ImageSmoothingQuality` enum: `"low"|"medium"|"high"`. `CanvasFillRule`: `"nonzero"|"evenodd"`. |
 
-### CSS Layout — Flexbox / Grid / Position runtime caveats (audit additions)
+### CSS Layout — Flexbox / Grid / Position runtime caveats
 
 #### Flexbox
 
@@ -2403,7 +2403,7 @@ The existing canvas mixin tables are incomplete. Adding the missing pieces:
 
 > **Containing block & stacking context rules (audit-confirmed):** only an ancestor with `position != static` **OR** with `transform != none` establishes a containing block for absolutely-positioned descendants. **`will-change`, `filter`, `contain`, `perspective` do NOT establish a containing block in LWE.** Stacking contexts are created only by `position` + `z-index` (other than `auto`); `opacity < 1`, `transform`, `will-change`, `filter`, `mix-blend-mode`, and `isolation` do NOT create stacking contexts.
 
-### CSS `display` and `visibility` — runtime caveats (audit additions)
+### CSS `display` and `visibility` — runtime caveats
 
 | `display` value | Status |
 |-----------------|--------|
@@ -2423,7 +2423,7 @@ The existing canvas mixin tables are incomplete. Adding the missing pieces:
 | `visible`, `hidden` | Supported. |
 | `collapse` | Parses; on non-table elements **computes to `hidden`** (per spec). On `<tr>`/`<tbody>` it parses but **does NOT actually collapse the row** — the row is hidden in place, height unchanged. Use `display: none` to actually remove rows. |
 
-### CSS @keyframes / animations — runtime caveats (audit additions)
+### CSS @keyframes / animations — runtime caveats
 
 | Construct | Status |
 |-----------|--------|
@@ -2464,7 +2464,7 @@ The existing canvas mixin tables are incomplete. Adding the missing pieces:
 >
 > **Safe-to-animate property whitelist** (verified via `AnimatedValue::create` switch): `color`, `background-color`, `border-*-color`, `caret-color`, `outline-color`, `text-decoration-color`, `width` / `min-width` / `max-width`, `height` / `min-height` / `max-height`, `margin-*`, `padding-*`, `border-*-width`, `left` / `right` / `top` / `bottom`, `font-size`, `background-position-x/y`, `background-size`, `opacity`, `transform`, `transform-origin`. **Anything else may abort the engine.**
 
-### CSS pseudo-classes — runtime caveats (audit additions)
+### CSS pseudo-classes — runtime caveats
 
 The pseudo-class enum lives in `src/StaticStrings.h:244-308`; the matcher is `StyleResolver::checkPseudoClass` (`Style.cpp:8504-8778`). Anything that hits `default:` logs `Unsupported css pseudo-element: <id>` and returns `false`.
 
@@ -2476,7 +2476,7 @@ The pseudo-class enum lives in `src/StaticStrings.h:244-308`; the matcher is `St
 | **Hard `SyntaxError`** (entire selector dropped at parse) | `:has(...)`, `:popover-open`, `:modal`, `:nth-child(An+B of <selector>)`. Forgiving-selector-list rules don't apply — these break the whole stylesheet rule. |
 | `:scope` | Matches `documentElement` even outside `querySelector(...)` calling context (non-spec). |
 
-### CSS pseudo-elements — runtime caveats (audit additions)
+### CSS pseudo-elements — runtime caveats
 
 LWE supports exactly **4** pseudo-elements for *style application*: `::before`, `::after`, `::first-line`, `::first-letter`. The `PseudoElementType` enum (`Style.h:3285-3297`) only has slots for those four (plus internal `FirstLineInherited`).
 
@@ -2493,7 +2493,7 @@ LWE supports exactly **4** pseudo-elements for *style application*: `::before`, 
 | `::cue`, `::spelling-error`, `::grammar-error` | **NOT implemented** (logged warning). |
 | `getComputedStyle(el, '::pseudo')` | **🐛 Always returns the host's computed style, even for the 4 implemented pseudos.** The Window binding ignores the second argument. Authors that probe pseudo support via CSSOM will get false negatives. |
 
-### CSS Custom Properties (`--*` / `var()`) — runtime caveats (audit additions)
+### CSS Custom Properties (`--*` / `var()`) — runtime caveats
 
 | Construct | Status |
 |-----------|--------|
@@ -2511,7 +2511,7 @@ LWE supports exactly **4** pseudo-elements for *style application*: `::before`, 
 | `@property { ... }` at-rule | **Not parsed** — silently dropped. |
 | `CSS.registerProperty(...)` | **Not exposed** — `undefined`. No typed custom properties. |
 
-### Tables — runtime caveats (audit additions)
+### Tables — runtime caveats
 
 | Property/Construct | Status |
 |--------------------|--------|
@@ -2521,13 +2521,13 @@ LWE supports exactly **4** pseudo-elements for *style application*: `::before`, 
 | `<caption>` without an explicit CSS `width` | Hits `STARFISH_UNIMPLEMENTED` (`FrameTableBox.cpp:1336`); in debug this floods logs every layout pass and may abort. **Always set `width` on `<caption>`.** |
 | `table-layout: fixed` with inline `<td width=>` | Does NOT actually constrain column widths — falls back to `auto` layout. If you need fixed table layout, use `<col>` with explicit widths. |
 
-### Multi-column — runtime caveats (audit additions)
+### Multi-column — runtime caveats
 
 `column-count`, `column-width`, `columns` (shorthand), `column-rule[-style|-width|-color]`, `column-span`, `column-fill`, `break-before`/`-after`/`-inside` are **entirely unsupported** — none of these properties are in the parser's lookup trie, and there is no `FrameMultiColumnBox` / fragmentation engine. Each declaration logs `Unsupported css property:` and is dropped.
 
 `column-gap` IS recognized but only as the **unified flex/grid `gap` property** — it has no effect on a non-flex/non-grid container. To emulate columns, use `display: grid; grid-template-columns: repeat(N, 1fr); gap: <length>`.
 
-### Page / Print / Break — runtime caveats (audit additions)
+### Page / Print / Break — runtime caveats
 
 LWE has **zero** support for CSS Paged Media:
 
@@ -2541,7 +2541,7 @@ LWE has **zero** support for CSS Paged Media:
 | `@media print` | The engine's `MediaQueryEvaluator` is permanently `"screen"` (`Style.cpp:10271-10277`). `matchMedia('print').matches === false` always. **Rules inside `@media print` are statically unreachable.** |
 | `window.print()` | **Not exposed** (`undefined`). No print pipeline of any kind. |
 
-### Containment / will-change / @container — runtime caveats (audit additions)
+### Containment / will-change / @container — runtime caveats
 
 | Construct | Status |
 |-----------|--------|
@@ -2553,7 +2553,7 @@ LWE has **zero** support for CSS Paged Media:
 | `@container` at-rule | **Not parsed** — entire rule silently discarded. **Container Queries do not work at all.** Use `@media` (viewport) + JS `resize` polling for width-based logic. |
 | `@starting-style` at-rule | **Not parsed** — silently discarded. Workaround: set the starting value, force layout (`offsetHeight`), then change to the end value, OR use double `requestAnimationFrame`. |
 
-### CSS-wide keywords / `all` shorthand — runtime caveats (audit additions)
+### CSS-wide keywords / `all` shorthand — runtime caveats
 
 | Construct | Status |
 |-----------|--------|
@@ -2562,7 +2562,7 @@ LWE has **zero** support for CSS Paged Media:
 | Per-property `<prop>: inherit` | Works for inheritable properties (and at the cascade level for non-inheritable). |
 | Per-property `<prop>: unset` / `revert` / `revert-layer` | Behavior is partial — `unset` is interpreted as either `initial` or `inherit` per spec for known properties, but `revert` and `revert-layer` are NOT understood by `applyProperty` and may fall back silently. |
 
-### CSS Houdini — runtime caveats (audit additions)
+### CSS Houdini — runtime caveats
 
 CSS Houdini support is **essentially absent**. Only a cosmetic Typed-OM façade is exposed.
 
@@ -2578,7 +2578,7 @@ CSS Houdini support is **essentially absent**. Only a cosmetic Typed-OM façade 
 | `CSS.escape(ident)` | **`undefined`** (declared `[Unimplemented]`). Use a polyfill or manual `\` escaping. |
 | `CSS.supports(prop, value)` / `CSS.supports(condition)` | Function exists but **returns `false` for valid declarations** including `color: red`, `display: grid`, `aspect-ratio: 1`, `--x: 1`, all gradient functions including the working `linear-gradient`. **Treat negative results as inconclusive** — feature-detect via setting an inline value and reading `getComputedStyle` instead. |
 
-### CSS Image functions — runtime caveats (audit additions)
+### CSS Image functions — runtime caveats
 
 Of the function set in CSS Images L4, only `linear-gradient(...)` and `radial-gradient(...)` work. Everything else silently resolves the entire declaration to `none` (no warning, no comma-list fallback).
 
@@ -2595,7 +2595,7 @@ Of the function set in CSS Images L4, only `linear-gradient(...)` and `radial-gr
 
 > **Trap:** an unsupported function in a comma-list of background-images fails the **entire** declaration. `background-image: image-set(...), url('fallback.png')` produces `none`, not the fallback. Put fallbacks in a separate earlier rule (cascade) instead.
 
-### Gradient syntax detail — runtime caveats (audit additions)
+### Gradient syntax detail — runtime caveats
 
 `linear-gradient(...)` and `radial-gradient(...)` are the only gradient functions parsed. Within them:
 
@@ -2612,7 +2612,7 @@ Of the function set in CSS Images L4, only `linear-gradient(...)` and `radial-gr
 | Modern color spaces in stops (`linear-gradient(in oklch, ...)`) | **NOT supported** — `in <colorspace>` clause is not recognized; the `in` token aborts gradient parsing. |
 | `conic-gradient(...)`, `repeating-linear-gradient(...)`, `repeating-radial-gradient(...)` | **Silently → `none`** (already documented). |
 
-### Writing-mode + isolation — runtime caveats (audit additions)
+### Writing-mode + isolation — runtime caveats
 
 | Property | Status |
 |----------|--------|
@@ -2622,7 +2622,7 @@ Of the function set in CSS Images L4, only `linear-gradient(...)` and `radial-gr
 | `image-orientation` | **NOT recognized** (already documented). |
 | `background-blend-mode` | **NOT recognized** (already documented in main background row). |
 
-### 3D transform context — runtime caveats (audit additions)
+### 3D transform context — runtime caveats
 
 3D transform functions (`matrix3d`, `translate3d`, `translateZ`, `scale3d`, `scaleZ`, `rotate3d`, `perspective`) parse via the `transform` property (already documented in the main table). However, the CSS properties that establish or control the 3D rendering context are **not** in the parser trie:
 
@@ -2636,7 +2636,7 @@ Of the function set in CSS Images L4, only `linear-gradient(...)` and `radial-gr
 
 > **Practical guidance:** treat all 3D transforms as best-effort 2D-projection cosmetic effects. Cards that flip/spin in 3D will work for simple single-element rotations but cascading 3D layouts (parent perspective, preserved-3d nested children, hidden back faces) are not available.
 
-### Logical sizing properties — runtime caveats (audit additions)
+### Logical sizing properties — runtime caveats
 
 The logical-direction sizing properties from CSS Logical Properties 1 are **not** in the parser trie:
 
@@ -2652,7 +2652,7 @@ The logical-direction sizing properties from CSS Logical Properties 1 are **not*
 
 > **Practical guidance:** physical longhands cover the typical needs. The audit-added logical entries are mostly margin/padding/border shorthands; modern `inline-size`/`block-size` and `inset-*-*` longhands are absent.
 
-### CSS Text 4 wrapping — modern surface absent (audit additions)
+### CSS Text 4 wrapping — modern surface absent
 
 The CSS Text Module Level 4 wrapping/whitespace shorthands are unavailable. Stick to `white-space` + `word-break` + `overflow-wrap`/`word-wrap`.
 
@@ -2666,7 +2666,7 @@ The CSS Text Module Level 4 wrapping/whitespace shorthands are unavailable. Stic
 | `line-clamp` (unprefixed) | NOT recognized — use `-webkit-line-clamp` (already documented). |
 | `text-spacing` | NOT recognized. |
 
-### Text properties — modern surface gaps (audit additions)
+### Text properties — modern surface gaps
 
 | Property | Status |
 |----------|--------|
@@ -2680,7 +2680,7 @@ The CSS Text Module Level 4 wrapping/whitespace shorthands are unavailable. Stic
 | `text-decoration-thickness`, `text-underline-offset` | NOT recognized — only `text-decoration-line/style/color` and `text-underline-position` parse. |
 | `text-emphasis-skip`, `text-skip-ink` | NOT recognized. |
 
-### Aspect-ratio + intrinsic sizing — runtime caveats (audit additions)
+### Aspect-ratio + intrinsic sizing — runtime caveats
 
 | Construct | Status |
 |-----------|--------|
@@ -2690,7 +2690,7 @@ The CSS Text Module Level 4 wrapping/whitespace shorthands are unavailable. Stic
 | `width: min-content`/`max-content`/`fit-content`/`available` | Parsed (already documented in main width/height table); honored by layout. **`fit-content(<length>)` function form is NOT recognized** — only the bare keyword. |
 | `contain-intrinsic-size` | NOT recognized (already documented under containment). |
 
-### Object-fit / Object-position / Image rendering — runtime caveats (audit additions)
+### Object-fit / Object-position / Image rendering — runtime caveats
 
 | Property | Status |
 |----------|--------|
@@ -2699,7 +2699,7 @@ The CSS Text Module Level 4 wrapping/whitespace shorthands are unavailable. Stic
 | `image-rendering` | Only **`auto`**, **`crisp-edges`**, **`pixelated`** parse. **`smooth`, `high-quality`, `optimizeSpeed`, `optimizeQuality`, `-webkit-optimize-contrast`** are silently rejected at value parse. |
 | `image-orientation` | **NOT in the CSS trie at all** — every value silently dropped (incl. `from-image`, `none`, angles, `<angle> flip`). EXIF auto-rotation is NOT honored on `<img>`. (`ImageBitmapOptions.imageOrientation` for `createImageBitmap()` is a separate API and is supported with `none`/`flipY`.) |
 
-### Line clamp — runtime caveats (audit additions)
+### Line clamp — runtime caveats
 
 | Construct | Status |
 |-----------|--------|
@@ -2710,7 +2710,7 @@ The CSS Text Module Level 4 wrapping/whitespace shorthands are unavailable. Stic
 | `-webkit-line-clamp` with `direction: rtl` | **Silently skipped** — `FrameFlexibleBox.cpp:1643` excludes RTL. |
 | `getComputedStyle(el).webkitLineClamp` | **Always `undefined`** (bug — `ComputedStyleCSSStyleDeclaration.cpp:918-922` builds the value but never calls `addValuePair`). JS introspection unreliable until fixed. |
 
-### SVG presentation properties — runtime caveats (audit additions)
+### SVG presentation properties — runtime caveats
 
 The following CSS properties are recognized by the parser (entries exist in `CSSStyleLookupTrie` and `Style.h:FOR_EACH_STYLE_ATTRIBUTE_BASIC`) and have full `updateValue*` implementations. They are **valid CSS** at the cascade and computed-style level and round-trip through `getComputedStyle`. However, **LWE does not paint SVG embedded in HTML for webapps**, so these properties have no visible effect on the kinds of pages LWE webapps ship.
 
@@ -2725,7 +2725,7 @@ The following CSS properties are recognized by the parser (entries exist in `CSS
 
 > **Practical guidance:** treat these as no-ops in webapp CSS and prefer `<canvas>` 2D drawing for vector visuals.
 
-### CSS Shapes — runtime caveats (audit additions)
+### CSS Shapes — runtime caveats
 
 | Construct | Status |
 |-----------|--------|
@@ -2733,7 +2733,7 @@ The following CSS properties are recognized by the parser (entries exist in `CSS
 | `clip-path: url(#id)` | Parses, **but applied only on SVG elements** (`SVGElement::clipPathElement` is the sole consumer). On HTML boxes the value is parsed but never used during paint. |
 | `clip-path: inset() / circle() / ellipse() / polygon() / path() / shape()` | **Silently rejected by `updateValueClipPath`** (which accepts only `url(...)`). `getComputedStyle().clipPath` returns `url("")`. Earlier audit (Iter 41) was incorrect — basic-shape clip-paths do NOT work on HTML elements. |
 
-### CSS Anchor Positioning + View Transitions — runtime caveats (audit additions)
+### CSS Anchor Positioning + View Transitions — runtime caveats
 
 **Both feature sets are ENTIRELY unsupported.**
 
@@ -2747,7 +2747,7 @@ The following CSS properties are recognized by the parser (entries exist in `CSS
 | `::view-transition`, `::view-transition-group`, `::view-transition-image-pair`, `::view-transition-old`, `::view-transition-new` | **Not in pseudo-element enum** — silently dropped. |
 | `document.startViewTransition(callback)` | **`undefined`** — not even a stub. |
 
-### Modern color functions — runtime caveats (audit additions)
+### Modern color functions — runtime caveats
 
 The color parser (`CSSPropertyParser::parseNonNamedColor`) recognizes only legacy notations: `#hex` (3/4/6/8), `rgb()`/`rgba()`, `hsl()`/`hsla()`, named colors, `transparent`, `currentColor`. Everything else is **silently dropped at parse time** — the entire declaration is rejected (the resulting fallback is the *initial* value of the property, NOT `rgb(0,0,0)` as previously stated).
 
@@ -2764,7 +2764,7 @@ The color parser (`CSSPropertyParser::parseNonNamedColor`) recognizes only legac
 
 > No `Unsupported css ...` warning fires for unknown color *values* (the warning only fires for unknown *property names*). Authors get no diagnostic; the only signal is that the property reverts to its initial value.
 
-### CSS Math functions — runtime caveats (audit additions)
+### CSS Math functions — runtime caveats
 
 | Function | Status |
 |----------|--------|
@@ -2784,7 +2784,7 @@ The color parser (`CSSPropertyParser::parseNonNamedColor`) recognizes only legac
 
 > ⚠️ **The silent-success failure mode is the worst trap.** The engine accepts `sqrt`/`pow`/`sin`/`abs` syntax inside `calc()` and returns numerically wrong values — no warning, no error. Static lint is the only practical guard.
 
-### Font properties — modern surface absent (audit additions)
+### Font properties — modern surface absent
 
 The following font-related CSS properties are **not in the parser trie** at all (`CSSStyleLookupTrie.cpp` has no entry; declarations log `Unsupported css property: <name>` and are dropped). All variable-font / OpenType / locale-extension surfaces are unavailable:
 
@@ -2806,7 +2806,7 @@ The following font-related CSS properties are **not in the parser trie** at all 
 
 > **Practical guidance:** authors targeting LWE should not assume any modern OpenType feature/variation control is available. Pre-pick a fixed family + weight stack and ship a separate `@font-face` per weight/style if needed.
 
-### Form-control styling — runtime caveats (audit additions)
+### Form-control styling — runtime caveats
 
 | Property/Pseudo | Status |
 |-----------------|--------|
@@ -2818,7 +2818,7 @@ The following font-related CSS properties are **not in the parser trie** at all 
 | `::placeholder` (pseudo-element) | **NOT supported** — `checkPseudoElement` lacks the case (logs `Unsupported css pseudo-element: 60`). Style placeholder color via `:placeholder-shown { color: ... }` on the input itself. |
 | Native `<input type=checkbox/radio>` chrome | LWE has no native checkbox/radio painter; `appearance: none` does NOT change the box dimensions. |
 
-### Scroll-driven animations — runtime caveats (audit additions)
+### Scroll-driven animations — runtime caveats
 
 **Entirely absent** in LWE — both CSS surface and JS surface.
 
@@ -2830,7 +2830,7 @@ The following font-related CSS properties are **not in the parser trie** at all 
 | `CSS.supports(...)` for any timeline property | Returns `false`. |
 | **Workaround** | Drive via `scroll` event + `requestAnimationFrame` + manual `transform` updates. |
 
-### CSS Nesting (`&` selector) — runtime caveats (audit additions)
+### CSS Nesting (`&` selector) — runtime caveats
 
 **Entirely unsupported.** No `&` selector handler in `CSSParser::getSimpleSelector` (falls into `m_failedParsing = true`). No nested-rule entry in `parseStyleRule`. No `@nest` at-rule branch. `CSSStyleRule.cssRules` getter doesn't exist.
 
@@ -2844,7 +2844,7 @@ The following font-related CSS properties are **not in the parser trie** at all 
 | Multi-level nesting (`.a { .b { .c { … } } }`) | Entire outer rule emptied. |
 | **Workaround** | Use a build-time preprocessor (PostCSS-nesting / Sass / Lightning CSS) to flatten nested rules to plain CSS before shipping to LWE. |
 
-### UI properties — runtime caveats (audit additions)
+### UI properties — runtime caveats
 
 | Property | Status |
 |----------|--------|
@@ -2860,7 +2860,7 @@ The following font-related CSS properties are **not in the parser trie** at all 
 | `caret-shape` | **NOT recognized.** |
 | `accent-color` | **NOT recognized.** |
 
-### Cascade & specificity — runtime caveats (audit additions)
+### Cascade & specificity — runtime caveats
 
 | Construct | Status |
 |-----------|--------|
@@ -2877,7 +2877,7 @@ The following font-related CSS properties are **not in the parser trie** at all 
 | Computed-style `revert` / `revert-layer` reduction | **Not implemented** — falls through `applyProperty`'s `default:` and may behave like `unset`. |
 | `@import` cascade ordering | `@import` rules are parsed and inlined; resulting cascade is in source order. **Cyclic `@import` detection is partial** — a stylesheet that imports itself triggers an infinite-load attempt that is bounded by the network layer's redirect/depth limit. |
 
-### CSSOM — additional details (audit additions)
+### CSSOM — additional details
 
 | Interface | Detail |
 |-----------|--------|
@@ -2895,7 +2895,7 @@ The following font-related CSS properties are **not in the parser trie** at all 
 | `CSS` namespace | `CSS.supports(...)` is implemented. **`CSS.escape` is NOT implemented** — `undefined`. |
 | CSS Typed OM | `CSSStyleValue`, `CSSKeywordValue`, `CSSUnitValue`, `CSSNumericValue` constructors exposed but the API surface is essentially empty (most operations are commented out in IDL). Treat as experimental — do not use in webapps. |
 
-### HTML head & embedded elements — runtime caveats (audit additions)
+### HTML head & embedded elements — runtime caveats
 
 | Element | Detail |
 |---------|--------|
@@ -2911,7 +2911,7 @@ The following font-related CSS properties are **not in the parser trie** at all 
 | `HTMLObjectElement` | **Only legacy reflectors implemented**: `align`, `archive`, `code`, `declare`, `standby`, `codeBase`, `codeType`, `border`. **All modern surface `[Unimplemented]`:** `data`, `type`, `name`, `typeMustMatch`, `useMap`, `width`, `height`, `form`, `contentDocument`, `contentWindow`, validation API. `<object>` renders as a sized blank box; resource loading happens only on `STARFISH_ENABLE_AVPLAY` builds via `type="application/avplayer"`. |
 | `<embed>`, `<frame>`, `<frameset>` | **NOT registered with `HTMLDocument::createHTMLElement`** — all three become `HTMLUnknownElement`. The constructors `HTMLFrameElement` / `HTMLFrameSetElement` exist but `new` throws `"Illegal constructor"`; no `HTMLEmbedElement` IDL exists at all. Treat the entire frame-family as unsupported. |
 
-### Console & error handling — runtime caveats (audit additions)
+### Console & error handling — runtime caveats
 
 The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` X-macro at `src/core/extra/Console.h` fixes the method set:
 
@@ -2930,7 +2930,7 @@ The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` 
 | `addEventListener('error', fn)` | Receives a single `ErrorEvent` argument. Spec-compliant. |
 | `unhandledrejection` / `rejectionhandled` events | **Not implemented.** `PromiseRejectionEvent` constructor not exposed (`undefined`). `Promise.reject(...)` with no `.catch` is silently dropped — there is no `HostPromiseRejectionTracker` wiring. Always attach a `.catch` to top-level promise chains in LWE webapps. |
 
-### Pointer / Keyboard / Touch / Drag events — runtime caveats (audit additions)
+### Pointer / Keyboard / Touch / Drag events — runtime caveats
 
 | Event interface | Detail |
 |-----------------|--------|
@@ -2943,7 +2943,7 @@ The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` 
 | `InputEvent` | Constructible. Implements `data`, **`inputType`** (Spec.md previously didn't list this). **`[Unimplemented]`:** `dataTransfer`, `isComposing`, `getTargetRanges()`. |
 | `CompositionEvent` | Constructible. Implements `data` only. **Not in IDL:** `locale`. `initCompositionEvent()` is `[Unimplemented]`. |
 
-### Animation / Transition events — runtime caveats (audit additions)
+### Animation / Transition events — runtime caveats
 
 | Surface | Status |
 |---------|--------|
@@ -2959,7 +2959,7 @@ The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` 
 | On-handler attributes (`onanimationstart`/`end`/`iteration`/`cancel`, `ontransitionstart`/`end`/`run`/`cancel`) | **None exist** as IDL attributes. Use `addEventListener` for all animation/transition events. |
 | `getComputedStyle(el).opacity` during a running keyframe animation | Returns the **declared** value, not the interpolated value. The render output animates correctly but `getComputedStyle` is not animation-aware. |
 
-### Web Animations API — runtime caveats (audit additions)
+### Web Animations API — runtime caveats
 
 | Surface | Status |
 |---------|--------|
@@ -2972,7 +2972,7 @@ The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` 
 | `KeyframeEffect`, `AnimationEffect`, `AnimationTimeline`, `DocumentTimeline`, `AnimationPlaybackEvent` | **All `undefined`** — no IDL, no constructor exposed. |
 | **Recommended LWE pattern** | Use `el.animate(...)` for one-shot effects, or define CSS `@keyframes` and toggle the `animation` shorthand. For controllable animation, drive via `requestAnimationFrame` + inline-style writes. |
 
-### SVG family — runtime caveats (audit additions)
+### SVG family — runtime caveats
 
 64 `SVG*.idl` files exist under `src/core/dom/svg/`; 45 element subclasses are registered in `SVGDocument::createSVGElement`. Inline `<svg>...</svg>` and `createElementNS('http://www.w3.org/2000/svg', tag)` produce correctly namespaced `SVG*Element` instances (NOT `HTMLUnknownElement`). `SVGAnimatedLength.baseVal.value` reads parsed attribute values; presentation attributes map to CSS (`getComputedStyle(rect).fill === 'rgb(255,0,0)'`); `<svg width/height>` allocates a real layout box (`getBoundingClientRect()` returns it).
 
@@ -2986,7 +2986,7 @@ The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` 
 | `SVGSVGElement.createSVGRect()` / `createSVGPoint()` / `createSVGMatrix()` | Throw `TypeError` (`[Unimplemented]`). `createSVGLength()`, `createSVGNumber()`, `createSVGAngle()`, `createSVGTransform()` work. |
 | `<foreignObject>` | Falls through to the generic `SVGElement` base (no `SVGForeignObjectElement` class). |
 
-### ECMAScript engine (Escargot) — additional details (audit additions)
+### ECMAScript engine (Escargot) — additional details
 
 The JavaScript runtime is [Escargot](https://github.com/Samsung/escargot). Verified surface (against `./Starfish` glfw debug build):
 
@@ -3006,7 +3006,7 @@ The JavaScript runtime is [Escargot](https://github.com/Samsung/escargot). Verif
 
 `WebAssembly` is **not** part of that list: it is gated by `ENABLE_WASM=1`, which is off by default and is what turns on Escargot's `ESCARGOT_WASM` (`build/third_party.cmake`). Check `typeof WebAssembly` against your own build before depending on it.
 
-### Media — additional details (audit additions)
+### Media — additional details
 
 | Interface | Detail |
 |-----------|--------|
@@ -3025,7 +3025,7 @@ The JavaScript runtime is [Escargot](https://github.com/Samsung/escargot). Verif
 | `MediaSource` | Adds: static `MediaSource.isTypeSupported(type)`, `addSourceBuffer(type)`, `removeSourceBuffer(buffer)`. `onsourceopen`/`onsourceended`/`onsourceclose`, `setLiveSeekableRange`/`clearLiveSeekableRange` are `[Unimplemented]`. |
 | `SourceBuffer` | Adds: `timestampOffset` (R/W, throws on bad input), `abort()`, `changeType(type)`. `audioTracks`/`videoTracks` are `[Unimplemented]`. |
 
-### JavaScript engine — Intl & locale (audit additions)
+### JavaScript engine — Intl & locale
 
 The JS engine is **Escargot** built with `-DESCARGOT_LIBICU_SUPPORT=ON` (the LWE default). On the verified Linux/x64/EFL release build the full ES2020+ `Intl` namespace is present and locale-aware prototype methods on `String`/`Date`/`Number`/`Array`/`BigInt` work. None of this is gated by a Starfish IDL or a `STARFISH_*` macro — it is purely a property of how Escargot was compiled. Webapps may rely on it on stock LWE builds; if a downstream variant ships Escargot with `LIBICU_SUPPORT=OFF`, every API in the table below disappears or degrades to a "C" locale.
 
@@ -3058,9 +3058,9 @@ The JS engine is **Escargot** built with `-DESCARGOT_LIBICU_SUPPORT=ON` (the LWE
 
 > **Caveat — TZ data:** `Date.prototype.toLocaleString` uses the host's IANA TZ via libICU; on a TV/STB without a configured TZ the output may differ from a desktop dev box.
 
-> **Caveat — locale data weight:** the full ICU data file (`icudt*.dat`) is ~10 MB and is linked into Escargot. Wearable/`SMALL_CONFIG` Escargot builds may strip locale data; if you ship LWE with `-DESCARGOT_SMALL_CONFIG=ON` re-run the iter21 probe before relying on any of the above.
+> **Caveat — locale data weight:** the full ICU data file (`icudt*.dat`) is ~10 MB and is linked into Escargot. Wearable/`SMALL_CONFIG` Escargot builds may strip locale data; if you ship LWE with `-DESCARGOT_SMALL_CONFIG=ON` re-verify the table above before relying on it.
 
-### Inspector / Debugger / Profiler / Memory APIs — runtime caveats (audit additions)
+### Inspector / Debugger / Profiler / Memory APIs — runtime caveats
 
 **Bottom line:** LWE has no DevTools-style introspection surface available to JavaScript. The C++ `Inspector` class (`src/core/inspector/Inspector.{h,cpp}`) is a build-conditional **out-of-process console-message bridge** (nanomsg pair socket on `ws://0.0.0.0:23888`) — *not* a Chrome DevTools Protocol implementation, *not* attached to a JS interface, and *not* a heap/CPU profiler. Web pages cannot detect it, drive it, or observe a debugger. JS-side memory introspection (`performance.memory`, `measureUserAgentSpecificMemory`, `console.profile`, etc.) is entirely absent.
 
@@ -3068,17 +3068,17 @@ The JS engine is **Escargot** built with `-DESCARGOT_LIBICU_SUPPORT=ON` (the LWE
 |---------|-------------------|
 | `Inspector`, `Debugger`, `Profiler` JS globals | **All `undefined`.** No IDL exists; the C++ `Starfish::Inspector` class is not exposed to script. |
 | `console.profile`, `console.profileEnd`, `console.timeStamp` | **`undefined`.** Not in the `CONSOLE_APIS` X-macro. |
-| `console.count`, `countReset`, `trace`, `dir`, `dirxml`, `table`, `clear`, `context` | **`undefined`** (re-confirming iter14 — there is no profiler-flavored console method either). |
+| `console.count`, `countReset`, `trace`, `dir`, `dirxml`, `table`, `clear`, `context` | **`undefined`** — there is no profiler-flavored console method either. |
 | `performance.memory` (Chrome `MemoryInfo`) | **`undefined`.** Already documented in §Performance; re-confirmed. |
 | `performance.measureUserAgentSpecificMemory()` | **`undefined`.** No IDL, no C++. |
-| `performance.navigation` | **`undefined`** (iter25 / §Performance). |
+| `performance.navigation` | **`undefined`** (§Performance). |
 | `PerformanceObserver`, `PerformanceObserverEntryList` | **`undefined`** — long-tasks / paint-timing observation impossible. |
 | `ReportingObserver`, `Report`, `ReportBody`, `DeprecationReport`, `InterventionReport` | **`undefined`.** No Reporting API. |
 | `navigator.sendBeacon(url, data)` | **`undefined`.** No CrashReporting/beaconing path; use `fetch(url, {keepalive:true})` instead — but note `keepalive` itself is not validated by LWE (see Fetch caveats). |
 | `globalThis.gc()`, `Memory`, `MemoryInfo` constructors | **`undefined`.** Escargot is built without a `--expose-gc` style hook, and BDWGC is not surfaced to JS. |
 | `__DevToolsHost`, `InspectorFrontendHost`, `InspectorBackend`, `CDP` | **`undefined`.** No DevTools/CDP runtime polyfills are exposed to page script. (The engine does ship a CDP *server* under `STARFISH_ENABLE_CDP`, off by default — it is driven out-of-process over a WebSocket, not from the page. See `docs/CDP.md`.) |
 | `debugger;` statement | **No-op** when built with default `-DENABLE_DEBUGGER=0`. Does not throw, does not pause; control flow continues. With `-DENABLE_DEBUGGER=1`, the statement enters Escargot's debugger protocol — see below. |
-| `performance.mark()` / `performance.measure()` / `getEntriesByType('measure')` | **Working** (iter14/§Performance). Verified: `mark a; mark b; measure m,a,b` returns one entry with non-zero `duration`. This is the only timing-instrumentation primitive available; build dashboards on top of `getEntries()`, not on a debugger. |
+| `performance.mark()` / `performance.measure()` / `getEntriesByType('measure')` | **Working** (§Performance). Verified: `mark a; mark b; measure m,a,b` returns one entry with non-zero `duration`. This is the only timing-instrumentation primitive available; build dashboards on top of `getEntries()`, not on a debugger. |
 
 **Build-time debugger (Escargot, not Inspector):**
 
@@ -3101,7 +3101,7 @@ LWE exposes Escargot's JS debugger protocol via `cmake -DENABLE_DEBUGGER=1` (def
 - Do not write code that reads `performance.memory.usedJSHeapSize` / `…jsHeapSizeLimit`. There is no fallback — guard with `if (performance && performance.memory) { … }`.
 - For perf timing, stick to `performance.now()` + `performance.mark()` / `performance.measure()`. They are the only primitives that exist.
 - For "is a debugger attached?" feature detection: there is no reliable signal. Apps that gate behavior on devtools presence should treat LWE as "always production".
-- `console.profile()`, `console.timeStamp()`, `console.count()` calls **throw `TypeError: Callee is not a function object`** (per iter14 §Console). Feature-detect with `typeof console.profile === 'function'`.
+- `console.profile()`, `console.timeStamp()`, `console.count()` calls **throw `TypeError: Callee is not a function object`** (§Console). Feature-detect with `typeof console.profile === 'function'`.
 
 ## Web Device API
 The following describes Web device APIs supported by lightweight web engine. Supported interfaces and methods are generally the same as the interfaces and methods supported by Tizen API, respectively. If there are exceptions, they are explicitly mentioned below.
@@ -3357,7 +3357,7 @@ The Websocket is limitedly supported.
 | | method | send(Blob data); | Transmits Blob data using the WebSocket connection. | |
 | | method | send(ArrayBuffer data); | Transmits ArrayBuffer data using the WebSocket connection. | |
 
-### Final cleanup — remaining surfaces (audit additions)
+### Final cleanup — remaining surfaces
 
 A final pass of runtime probes (see also [Build-Conditional Surface](#build-conditional-surface)) on a default-flagged build (`HOST=linux SHELL=glfw BACKEND=uv_cairo_gl WEBGL=1`, all other features off) confirmed the following gaps. None are tracked elsewhere in this document at the API-shape level.
 
