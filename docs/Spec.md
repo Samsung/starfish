@@ -2059,7 +2059,6 @@ C++ class and a corresponding `FrameSVG*Box` layout box. Please see
 | [image](https://www.w3.org/TR/SVG2/embedded.html#ImageElement) | Embeds raster image via `href`/`xlink:href`. |
 | [text](https://www.w3.org/TR/SVG2/text.html#TextElement) | Supports `x`, `y`, `dx`, `dy`, `fill`, `font-*`. |
 | [tspan](https://www.w3.org/TR/SVG2/text.html#TextElement) | Sub-text within `<text>`. |
-| [a](https://www.w3.org/TR/SVG2/linking.html#Links) | Hyperlink in SVG. |
 | [linearGradient](https://www.w3.org/TR/SVG2/pservers.html#LinearGradients) | Supports `x1`, `y1`, `x2`, `y2`, `gradientUnits`, `gradientTransform`, `spreadMethod`. |
 | [radialGradient](https://www.w3.org/TR/SVG2/pservers.html#RadialGradients) | Supports `cx`, `cy`, `r`, `fx`, `fy`, `fr`, `gradientUnits`. |
 | [stop](https://www.w3.org/TR/SVG2/pservers.html#GradientStops) | Gradient stop with `offset`, `stop-color`, `stop-opacity`. |
@@ -2099,13 +2098,13 @@ timing onto the engine's CSS animation pipeline.
 | [animate](https://www.w3.org/TR/SVG2/animate.html#AnimateElement) | `attributeName`, `begin`, `dur`, `end`, `repeatCount`, `fill`, `calcMode`, `values`, `keyTimes`, `keySplines`, `from`, `to`, `by` | Animates SVG presentation attributes and geometry properties. |
 | [animateTransform](https://www.w3.org/TR/SVG2/animate.html#AnimateTransformElement) | Same timing attrs + `type` (`translate`/`scale`/`rotate`/`skewX`/`skewY`) | Supports `transform-origin`. |
 | [animateMotion](https://www.w3.org/TR/SVG2/animate.html#AnimateMotionElement) | Same timing attrs + `path`, `keyPoints`, `rotate`, `mpath` | Moves an element along a path. |
-| [set](https://www.w3.org/TR/SVG2/animate.html#SetElement) | `to`, `begin`, `dur`, `fill` | Applies a discrete value for a duration. |
 | [mpath](https://www.w3.org/TR/SVG2/animate.html#MPathElement) | `href`/`xlink:href` | References a `<path>` for `<animateMotion>`. |
 
 Animation events `beginEvent`, `endEvent`, and `repeatEvent` are
-dispatched. Programmatic control via `beginElement()` and `endElement()`
-is supported. `pauseAnimations()` / `setCurrentTime()` /
-`unpauseAnimations()` on the `<svg>` root element are supported.
+dispatched. Programmatic control via `beginElement()` is supported
+(`endElement()` is `[Unimplemented]`). `pauseAnimations()` and
+`unpauseAnimations()` on the `<svg>` root element are supported;
+`setCurrentTime()` and `getCurrentTime()` are `[Unimplemented]`.
 
 ### CSS presentation properties
 
