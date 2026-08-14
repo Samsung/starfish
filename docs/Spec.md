@@ -1608,16 +1608,18 @@ section are supported.
 | | place-items / place-content / place-self | — | CSS Box Alignment shorthands. | **NOT supported** — the shorthands are unknown to the property trie, so the declaration is dropped. Use the `align-*` / `justify-*` longhands. |
 | [Grid](https://www.w3.org/TR/css-grid-1/) | grid-template-columns | &lt;length-percentage&gt; &#124; &lt;fr&gt; &#124; auto &#124; min-content &#124; max-content &#124; minmax() &#124; repeat() | This property defines the track sizing of the grid columns. | `minmax()` and `repeat()` (including `auto-fill`/`auto-fit`) are supported. `fit-content()`, line-name brackets `[name]`, and `subgrid` are not — the whole declaration is dropped. |
 | | grid-template-rows | &lt;length-percentage&gt; &#124; &lt;fr&gt; &#124; auto &#124; min-content &#124; max-content &#124; minmax() &#124; repeat() | This property defines the track sizing of the grid rows. | Same support and same exclusions as `grid-template-columns`. |
-| | grid-column-gap | &lt;number&gt; | This property sets the size of the gap between an element's columns. | '%' unit is not supported. |
-| | grid-row-gap | &lt;number&gt; | This property sets the size of the gap between an element's rows. | '%' unit is not supported. |
-| | grid-gap | &lt;number&gt; | This property specifies the gaps between rows and columns. It is a shorthand for row-gap and column-gap. | '%' unit is not supported. |
-| | grid-column-start | &lt;number&gt; | This property specifies a grid item's start position within the grid column. | A negative number and a line name are not supported. |
-| | grid-column-end | &lt;number&gt; | This property specifies a grid item's end position within the grid column.| A negative number and a line name are not supported. |
-| | grid-row-start | &lt;number&gt; | This property specifies a grid item's start position within the grid row. | A negative number and a line name are not supported. |
-| | grid-row-end | &lt;number&gt; | This property specifies a grid item's end position within the grid row. | A negative number and a line name are not supported. |
-| | grid-row | &lt;number&gt; | This property is a shorthand property for grid-row-start and grid-row-end. | Negative numbers and line names are not supported. |
-| | grid-column | &lt;number&gt; | This property is a shorthand property for grid-column-start and grid-column-end. | Negative numbers and line names are not supported. |
-| | grid-template-areas | &lt;string&gt;+ | This property specifies named grid areas. | |
+| | grid-column-gap | &lt;length&gt; | Legacy alias for `column-gap`. | Mapped to `column-gap`; percentage values are not supported in grid (compute to 0). |
+| | grid-row-gap | &lt;length&gt; | Legacy alias for `row-gap`. | Mapped to `row-gap`; percentage values are not supported in grid (compute to 0). |
+| | grid-gap | &lt;length&gt; | Legacy shorthand for `row-gap` and `column-gap`. | Expands to both longhands; percentage values are not supported in grid (compute to 0). |
+| | grid-column-start | auto &#124; &lt;integer&gt; &#124; &lt;custom-ident&gt; &#124; span &lt;integer&gt; &#124; span &lt;custom-ident&gt; | Specifies a grid item's start position within the grid column. | Negative integers parse but layout effect (counting from end) is not guaranteed. |
+| | grid-column-end | auto &#124; &lt;integer&gt; &#124; &lt;custom-ident&gt; &#124; span &lt;integer&gt; &#124; span &lt;custom-ident&gt; | Specifies a grid item's end position within the grid column. | Same support and exclusions as `grid-column-start`. |
+| | grid-row-start | auto &#124; &lt;integer&gt; &#124; &lt;custom-ident&gt; &#124; span &lt;integer&gt; &#124; span &lt;custom-ident&gt; | Specifies a grid item's start position within the grid row. | Same support and exclusions as `grid-column-start`. |
+| | grid-row-end | auto &#124; &lt;integer&gt; &#124; &lt;custom-ident&gt; &#124; span &lt;integer&gt; &#124; span &lt;custom-ident&gt; | Specifies a grid item's end position within the grid row. | Same support and exclusions as `grid-column-start`. |
+| | grid-row | &lt;grid-row-start&gt; / &lt;grid-row-end&gt; | Shorthand for `grid-row-start` and `grid-row-end`. | Same value support as the longhands. |
+| | grid-column | &lt;grid-column-start&gt; / &lt;grid-column-end&gt; | Shorthand for `grid-column-start` and `grid-column-end`. | Same value support as the longhands. |
+| | grid-template-areas | &lt;string&gt;+ | Specifies named grid areas. | |
+| | grid-template | &lt;grid-template-rows&gt; / &lt;grid-template-columns&gt; &#124; [ &lt;string&gt; &lt;track-size&gt;? ]+ / &lt;grid-template-columns&gt; | Shorthand for `grid-template-rows`, `grid-template-columns`, and `grid-template-areas`. | Expands to all three sub-properties. |
+| | grid-area | &lt;grid-row-start&gt; / &lt;grid-column-start&gt; / &lt;grid-row-end&gt; / &lt;grid-column-end&gt; &#124; &lt;custom-ident&gt; | Shorthand for `grid-row-start`/`grid-column-start`/`grid-row-end`/`grid-column-end`, or a named area. | |
 | [Layered presentation](https://www.w3.org/TR/2011/REC-CSS2-20110607/visuren.html#layers) | z-index | auto &#124; &lt;integer&gt; | Specifies the stack order of an element. | |
 | [Text direction](https://www.w3.org/TR/2011/REC-CSS2-20110607/visuren.html#direction) | direction | ltr &#124; rtl | Specifies the text direction. **Both `ltr` and `rtl` PARSE**, but layout/selectors honor only `ltr` (the `:dir(rtl)` selector parses but never matches). For RTL content prefer the HTML attribute `<html dir="rtl">`, which is honored by the line-break/bidi pipeline. | Development status: experimental |
 | | unicode-bidi | normal &#124; embed &#124; isolate | Together with `direction`, controls handling of bidirectional text. **`bidi-override`, `isolate-override`, `plaintext` are NOT recognized.** | Development status: experimental |
@@ -2475,7 +2477,7 @@ The existing canvas mixin tables are incomplete. Adding the missing pieces:
 | `display: grid` / `inline-grid` | both | — |
 | `grid-template-rows` / `grid-template-columns` | `<length>` (px/em/%/vw/...), `<fr>`, `auto`, `min-content`, `max-content`, `minmax(min, max)`, `repeat(<int>, …)`, `repeat(auto-fill, …)`, `repeat(auto-fit, …)` | **`fit-content(<length>)`, line-name brackets `[name]`, `subgrid`** are not recognized — entire declaration is dropped. |
 | `grid-template-areas` | string syntax | — |
-| `grid-template` (shorthand) | parses but the value setter has **no case** for it — sub-properties are not actually expanded. | **Avoid in production**; use the three sub-properties separately. |
+| `grid-template` (shorthand) | Expands to `grid-template-rows`, `grid-template-columns`, and `grid-template-areas`. Supports `[ <string> <track-size>? ]+ / <track-list>` and `<track-list> / <track-list>` forms. | — |
 | `grid-auto-flow` / `grid-auto-rows` / `grid-auto-columns` | — | **NOT recognized.** Auto-placement always uses default `row` flow with `auto` track sizes. |
 | `grid-row-start/end`, `grid-column-start/end` | `auto`, `<integer>`, `<custom-ident>` (named lines), `span <integer>`, `span <custom-ident>` | Negative integers parse but layout effect (counting from end) is not guaranteed — prefer positive. The serialized `*-end` may come back empty in some shorthand expansions (cosmetic bug). |
 | `grid-row` / `grid-column` (shorthand) | `<start> / <end>` | — |
