@@ -871,6 +871,136 @@ inline void boxBlur(uint8_t* srcData, uint8_t* dstData, unsigned dx, int dxLeft,
 #endif
 }
 
+// Box-average |factor| x |factor| source pixels into one destination pixel.
+// The buffers hold premultiplied RGBA, where a component-wise average is a
+// valid downscale.
+static void downsampleRGBA(const uint8_t* src, int srcWidth, int srcHeight,
+                           int srcStride, uint8_t* dst, int dstWidth,
+                           int dstHeight, int dstStride, int factor)
+{
+    for (int y = 0; y < dstHeight; ++y) {
+        uint8_t* dstRow = dst + y * dstStride;
+        int sourceYBegin = y * factor;
+        int sourceYEnd = std::min(sourceYBegin + factor, srcHeight);
+        for (int x = 0; x < dstWidth; ++x) {
+            int sourceXBegin = x * factor;
+            int sourceXEnd = std::min(sourceXBegin + factor, srcWidth);
+            unsigned sum[4] = { 0, 0, 0, 0 };
+            unsigned count = 0;
+            for (int sy = sourceYBegin; sy < sourceYEnd; ++sy) {
+                const uint8_t* srcPixel =
+                    src + sy * srcStride + sourceXBegin * 4;
+                for (int sx = sourceXBegin; sx < sourceXEnd;
+                     ++sx, srcPixel += 4) {
+                    sum[0] += srcPixel[0];
+                    sum[1] += srcPixel[1];
+                    sum[2] += srcPixel[2];
+                    sum[3] += srcPixel[3];
+                    count++;
+                }
+            }
+            uint8_t* dstPixel = dstRow + x * 4;
+            if (!count) {
+                dstPixel[0] = dstPixel[1] = dstPixel[2] = dstPixel[3] = 0;
+                continue;
+            }
+            dstPixel[0] = static_cast<uint8_t>(sum[0] / count);
+            dstPixel[1] = static_cast<uint8_t>(sum[1] / count);
+            dstPixel[2] = static_cast<uint8_t>(sum[2] / count);
+            dstPixel[3] = static_cast<uint8_t>(sum[3] / count);
+        }
+    }
+}
+
+// Bilinear expansion back to the full resolution. The source is already
+// blurred, so interpolating between its samples reproduces a smooth gradient
+// rather than the reduced sampling grid.
+static void upsampleRGBA(const uint8_t* src, int srcWidth, int srcHeight,
+                         int srcStride, uint8_t* dst, int dstWidth,
+                         int dstHeight, int dstStride, int factor)
+{
+    const int fixedOne = 256;
+    for (int y = 0; y < dstHeight; ++y) {
+        // Sample at the center of the source texel covering this row.
+        int sourceYFixed =
+            ((y * 2 + 1) * fixedOne) / (2 * factor) - fixedOne / 2;
+        if (sourceYFixed < 0) {
+            sourceYFixed = 0;
+        }
+        int sourceY = sourceYFixed / fixedOne;
+        int weightY = sourceYFixed - sourceY * fixedOne;
+        if (sourceY >= srcHeight - 1) {
+            sourceY = srcHeight - 1;
+            weightY = 0;
+        }
+        const uint8_t* sourceRowTop = src + sourceY * srcStride;
+        const uint8_t* sourceRowBottom =
+            src + std::min(sourceY + 1, srcHeight - 1) * srcStride;
+        uint8_t* dstRow = dst + y * dstStride;
+        for (int x = 0; x < dstWidth; ++x) {
+            int sourceXFixed =
+                ((x * 2 + 1) * fixedOne) / (2 * factor) - fixedOne / 2;
+            if (sourceXFixed < 0) {
+                sourceXFixed = 0;
+            }
+            int sourceX = sourceXFixed / fixedOne;
+            int weightX = sourceXFixed - sourceX * fixedOne;
+            if (sourceX >= srcWidth - 1) {
+                sourceX = srcWidth - 1;
+                weightX = 0;
+            }
+            int sourceXNext = std::min(sourceX + 1, srcWidth - 1);
+            uint8_t* dstPixel = dstRow + x * 4;
+            for (int channel = 0; channel < 4; ++channel) {
+                int topLeft = sourceRowTop[sourceX * 4 + channel];
+                int topRight = sourceRowTop[sourceXNext * 4 + channel];
+                int bottomLeft = sourceRowBottom[sourceX * 4 + channel];
+                int bottomRight = sourceRowBottom[sourceXNext * 4 + channel];
+                int top = topLeft * (fixedOne - weightX) + topRight * weightX;
+                int bottom =
+                    bottomLeft * (fixedOne - weightX) + bottomRight * weightX;
+                dstPixel[channel] = static_cast<uint8_t>(
+                    (top * (fixedOne - weightY) + bottom * weightY) /
+                    (fixedOne * fixedOne));
+            }
+        }
+    }
+}
+
+// A blur wide enough to average many source pixels into each output pixel can
+// be computed on a downscaled copy: the detail the downscale throws away is
+// detail the blur would have erased anyway. Each doubling of the factor cuts
+// the work by 4x, which is what makes large decorative blurs affordable on a
+// device - on a Family Hub the glow behind the Bixby prompt costs ~59 ms per
+// frame at full resolution.
+static int computeDownsampleFactor(unsigned kernelSizeX, unsigned kernelSizeY,
+                                   int width, int height)
+{
+    // Keep this many samples across the kernel after downscaling, so the blur
+    // still has a smooth profile, and keep the reduced image big enough that
+    // its edges stay meaningful.
+    const unsigned minKernelSizeAfterScale = 8;
+    const int minDimensionAfterScale = 16;
+    const int maxFactor = 4;
+
+    // A zero kernel size means "do not blur along this axis"; it must not
+    // decide the factor.
+    unsigned kernelSize = std::min(kernelSizeX ? kernelSizeX : kernelSizeY,
+                                   kernelSizeY ? kernelSizeY : kernelSizeX);
+    if (!kernelSize) {
+        return 1;
+    }
+
+    int factor = 1;
+    while (factor < maxFactor &&
+           kernelSize / (unsigned)(factor * 2) >= minKernelSizeAfterScale &&
+           width / (factor * 2) >= minDimensionAfterScale &&
+           height / (factor * 2) >= minDimensionAfterScale) {
+        factor *= 2;
+    }
+    return factor;
+}
+
 inline void standardBoxBlur(uint8_t* fromBuffer, uint8_t* toBuffer,
                             unsigned kernelSizeX, unsigned kernelSizeY,
                             int stride, int imageWidth, int imageHeight,
@@ -1040,10 +1170,33 @@ void FilterGaussianBlur::apply(const Unit::Rect& subRegionInFloat,
     std::shared_ptr<Filter::FilterSourceBuffer> outputBuffer(
         new Filter::FilterSourceBuffer(ctx.src, ctx.stride * ctx.height, true));
 
-    standardBoxBlur(
-        inputSource->data(), outputBuffer->data(), kernelSize.first,
-        kernelSize.second, ctx.stride, ctx.width, ctx.height, ctx.isAlphaImage,
-        (SVGFEGaussianBlurElement::EdgeMode)ele->edgeMode()->baseVal());
+    auto edgeMode =
+        (SVGFEGaussianBlurElement::EdgeMode)ele->edgeMode()->baseVal();
+    int factor = computeDownsampleFactor(kernelSize.first, kernelSize.second,
+                                         ctx.width, ctx.height);
+    if (factor > 1) {
+        int reducedWidth = ((int)ctx.width + factor - 1) / factor;
+        int reducedHeight = ((int)ctx.height + factor - 1) / factor;
+        size_t reducedStride = (size_t)reducedWidth * 4;
+        size_t reducedSize = reducedStride * reducedHeight;
+        Filter::FilterSourceBuffer reducedInput(nullptr, reducedSize, true);
+        Filter::FilterSourceBuffer reducedOutput(nullptr, reducedSize, true);
+
+        downsampleRGBA(inputSource->data(), ctx.width, ctx.height, ctx.stride,
+                       reducedInput.data(), reducedWidth, reducedHeight,
+                       reducedStride, factor);
+        standardBoxBlur(reducedInput.data(), reducedOutput.data(),
+                        kernelSize.first / factor, kernelSize.second / factor,
+                        reducedStride, reducedWidth, reducedHeight,
+                        ctx.isAlphaImage, edgeMode);
+        upsampleRGBA(reducedOutput.data(), reducedWidth, reducedHeight,
+                     reducedStride, outputBuffer->data(), ctx.width, ctx.height,
+                     ctx.stride, factor);
+    } else {
+        standardBoxBlur(inputSource->data(), outputBuffer->data(),
+                        kernelSize.first, kernelSize.second, ctx.stride,
+                        ctx.width, ctx.height, ctx.isAlphaImage, edgeMode);
+    }
 
     auto normalizedSubRegion = normalizeSubRegion(subRegionInFloat);
 
