@@ -13,6 +13,7 @@ lightweight Web engine (LWE).
 - [CSS](#css)
 - [Obsolete CSS](#obsolete-css)
 - [Selectors](#selectors)
+- [SVG](#svg)
 - [Cross-origin script API accessSection](#cross-origin-script-api-accesssection)
 - [HTTP](#http)
     - [Cross-Origin Resource Sharing](#cross-origin-resource-sharing)
@@ -202,7 +203,7 @@ The HTML parser and DOM expose the following tags as well; they were missing fro
 
 > **Build flags:** `<canvas>` is conditional on `STARFISH_ENABLE_CANVAS`. `<video>`, `<audio>`, `<source>`, `<track>` are conditional on `STARFISH_ENABLE_MULTIMEDIA`. With those flags off, the elements fall through to `HTMLUnknownElement`.
 
-> **SVG:** All `<svg>` and SVG child elements (`<circle>`, `<rect>`, `<path>`, `<g>`, …) are accepted by the parser and IDL interfaces (`SVGSVGElement`, `SVGRectElement`, …) are exposed, but rendering is **not implemented** for embedded webapps. Treat SVG as out-of-scope and use `<canvas>` 2D drawing or PNG icons instead.
+> **SVG:** All `<svg>` and SVG child elements (`<circle>`, `<rect>`, `<path>`, `<g>`, …) are accepted by the parser, IDL interfaces (`SVGSVGElement`, `SVGRectElement`, …) are exposed, and **rendering is implemented** — shapes, gradients, filters, masks, clipping, markers, text, and SMIL animation are all painted. See the [SVG](#svg) section for the full supported surface.
 
 ## DOM
 
@@ -232,7 +233,7 @@ section are supported.
 >
 > **`PerformanceObserver` is not exposed at all** — it has no `.idl` file, so the constructor is `undefined`. There is no entry-buffer observation API; poll `performance.getEntries()` instead.
 >
-> **`SVG*` interfaces are exposed but not rendered** — see the SVG note at the end of the [HTML](#html) section.
+> **`SVG*` interfaces are exposed and rendered** — see the [SVG](#svg) section for the full supported surface.
 
 > **Frequently used core interfaces also exposed but not row-by-row documented below** (treat as confirmed at the interface level; rely on the WHATWG/W3C spec for member details): `DocumentFragment`, `DOMImplementation`, `DOMTokenList` (`Element.classList`/`relList`), `DOMStringMap` (`HTMLElement.dataset`), `HTMLCollection`, `Range`, `NodeFilter`, `NodeIterator`, `TreeWalker`, `MessageEvent`, `HashChangeEvent`, `PopStateEvent`, `Performance`, `PerformanceEntry`, `Storage`, `URL`, `URLSearchParams`, `TextEncoder`, `TextDecoder`, `Crypto`, `HTMLDialogElement`, `HTMLObjectElement`, `HTMLOutputElement`, `HTMLTitleElement`, `HTMLUnknownElement`. Methods on these mostly follow the standard; if you depend on a non-standard behavior, run a runtime probe.
 
@@ -2027,6 +2028,103 @@ This section describes the list of supported `Directives` and their correspondin
 | ['nonce-\<base64-value\>'](https://www.w3.org/TR/CSP2/#source-list-syntax) | A whitelist for specific inline scripts using a cryptographic nonce. Specifying nonce will ignore 'unsafe-inline'. | |
 | ['\<hash-algorithm\>-\<base64-value\>'](https://www.w3.org/TR/CSP2/#source-list-syntax) | A sha256, sha384 or sha512 hash of scripts or styles. The use of this source consists of two portions separated by a dash: the encryption algorithm used to create the hash and the base64-encoded hash of the script or style. | |
 
+## SVG
+This section describes SVG support in LWE. Inline `<svg>...</svg>` in
+HTML, standalone `.svg` documents (`image/svg+xml`), and SVG-as-image
+(`<img src="*.svg">`, CSS `background-image: url(*.svg)`) are all
+rendered. 45 element subclasses are registered in
+`SVGDocument::createSVGElement`, each with a dedicated `SVG*Element`
+C++ class and a corresponding `FrameSVG*Box` layout box. Please see
+[SVG 2 Spec](https://www.w3.org/TR/SVG2/) for more information.
+
+### Supported elements
+
+| Element | Note |
+|---------|------|
+| [svg](https://www.w3.org/TR/SVG2/struct.html#NewDocument) | Root element. Supports `width`, `height`, `viewBox`, `preserveAspectRatio`. Nested `<svg>` creates a new viewport context. |
+| [g](https://www.w3.org/TR/SVG2/struct.html#Groups) | Grouping element. |
+| [defs](https://www.w3.org/TR/SVG2/struct.html#Head) | Non-rendered container for reusable definitions. |
+| [use](https://www.w3.org/TR/SVG2/struct.html#UseElement) | Clones a referenced element via `href`/`xlink:href`. Resolved through an internal shadow root. |
+| [symbol](https://www.w3.org/TR/SVG2/struct.html#SymbolElement) | Defines a reusable graphic, instantiated by `<use>`. |
+| [switch](https://www.w3.org/TR/SVG2/struct.html#SwitchElement) | Conditional rendering of child elements. |
+| [rect](https://www.w3.org/TR/SVG2/shapes.html#RectElement) | Supports `x`, `y`, `width`, `height`, `rx`, `ry`. |
+| [circle](https://www.w3.org/TR/SVG2/shapes.html#CircleElement) | Supports `cx`, `cy`, `r`. |
+| [ellipse](https://www.w3.org/TR/SVG2/shapes.html#EllipseElement) | Supports `cx`, `cy`, `rx`, `ry`. |
+| [line](https://www.w3.org/TR/SVG2/shapes.html#LineElement) | Supports `x1`, `y1`, `x2`, `y2`. |
+| [polyline](https://www.w3.org/TR/SVG2/shapes.html#PolylineElement) | Supports `points`. |
+| [polygon](https://www.w3.org/TR/SVG2/shapes.html#PolygonElement) | Supports `points`. |
+| [path](https://www.w3.org/TR/SVG2/shapes.html#PathElement) | Full path data (`M`, `L`, `C`, `Q`, `A`, `Z`, etc.). |
+| [image](https://www.w3.org/TR/SVG2/embedded.html#ImageElement) | Embeds raster image via `href`/`xlink:href`. |
+| [text](https://www.w3.org/TR/SVG2/text.html#TextElement) | Supports `x`, `y`, `dx`, `dy`, `fill`, `font-*`. |
+| [tspan](https://www.w3.org/TR/SVG2/text.html#TextElement) | Sub-text within `<text>`. |
+| [a](https://www.w3.org/TR/SVG2/linking.html#Links) | Hyperlink in SVG. |
+| [linearGradient](https://www.w3.org/TR/SVG2/pservers.html#LinearGradients) | Supports `x1`, `y1`, `x2`, `y2`, `gradientUnits`, `gradientTransform`, `spreadMethod`. |
+| [radialGradient](https://www.w3.org/TR/SVG2/pservers.html#RadialGradients) | Supports `cx`, `cy`, `r`, `fx`, `fy`, `fr`, `gradientUnits`. |
+| [stop](https://www.w3.org/TR/SVG2/pservers.html#GradientStops) | Gradient stop with `offset`, `stop-color`, `stop-opacity`. |
+| [clipPath](https://www.w3.org/TR/SVG2/paths.html#ClippingPaths) | Clipping path. Supports `clipPathUnits`. |
+| [mask](https://www.w3.org/TR/SVG2/masking.html#MaskElement) | Supports `maskUnits`, `maskContentUnits`, `x`, `y`, `width`, `height`. |
+| [marker](https://www.w3.org/TR/SVG2/painting.html#MarkerElement) | Supports `markerWidth`, `markerHeight`, `refX`, `refY`, `orient`, `markerUnits`. |
+| [script](https://www.w3.org/TR/SVG2/interact.html#ScriptElement) | Executes script within SVG context. |
+| [style](https://www.w3.org/TR/SVG2/styling.html#StyleElement) | Embedded CSS within SVG. |
+
+### Filter primitives
+
+SVG filter elements are registered with dedicated IDL interfaces and
+rendered. The `<filter>` container supports `filterUnits`,
+`primitiveUnits`, `x`, `y`, `width`, `height`.
+
+| Element | Note |
+|---------|------|
+| [feGaussianBlur](https://drafts.csswg.org/filter-effects-1/#feGaussianBlurElement) | `stdDeviation`, `edgeMode` (`duplicate`/`wrap`/`none`). |
+| [feColorMatrix](https://drafts.csswg.org/filter-effects-1/#feColorMatrixElement) | `type` (`matrix`/`saturate`/`hueRotate`/`luminanceToAlpha`), `values`. |
+| [feComponentTransfer](https://drafts.csswg.org/filter-effects-1/#feComponentTransferElement) | With `<feFuncR>`, `<feFuncG>`, `<feFuncB>`, `<feFuncA>` children. |
+| [feComposite](https://drafts.csswg.org/filter-effects-1/#feCompositeElement) | `operator` (`over`/`in`/`out`/`atop`/`xor`/`arithmetic`), `k1`–`k4`. |
+| [feFlood](https://drafts.csswg.org/filter-effects-1/#feFloodElement) | `flood-color`, `flood-opacity`. |
+| [feMerge](https://drafts.csswg.org/filter-effects-1/#feMergeElement) | With `<feMergeNode>` children referencing filter results. |
+| [feMorphology](https://drafts.csswg.org/filter-effects-1/#feMorphologyElement) | `operator` (`erode`/`dilate`), `radius`. |
+| [feOffset](https://drafts.csswg.org/filter-effects-1/#feOffsetElement) | `dx`, `dy`. |
+| [feTurbulence](https://drafts.csswg.org/filter-effects-1/#feTurbulenceElement) | `baseFrequency`, `numOctaves`, `seed`, `stitchTiles`, `type` (`fractalNoise`/`turbulence`). |
+| [feDisplacementMap](https://drafts.csswg.org/filter-effects-1/#feDisplacementMapElement) | `in`, `in2`, `scale`, `xChannelSelector`, `yChannelSelector`. |
+
+### SMIL animation
+
+SVG SMIL animation is implemented via `SVGAnimationApplier`
+(`src/core/animation/SVGAnimationApplier.cpp`), which bridges SMIL
+timing onto the engine's CSS animation pipeline.
+
+| Element | Supported attributes | Note |
+|---------|---------------------|------|
+| [animate](https://www.w3.org/TR/SVG2/animate.html#AnimateElement) | `attributeName`, `begin`, `dur`, `end`, `repeatCount`, `fill`, `calcMode`, `values`, `keyTimes`, `keySplines`, `from`, `to`, `by` | Animates SVG presentation attributes and geometry properties. |
+| [animateTransform](https://www.w3.org/TR/SVG2/animate.html#AnimateTransformElement) | Same timing attrs + `type` (`translate`/`scale`/`rotate`/`skewX`/`skewY`) | Supports `transform-origin`. |
+| [animateMotion](https://www.w3.org/TR/SVG2/animate.html#AnimateMotionElement) | Same timing attrs + `path`, `keyPoints`, `rotate`, `mpath` | Moves an element along a path. |
+| [set](https://www.w3.org/TR/SVG2/animate.html#SetElement) | `to`, `begin`, `dur`, `fill` | Applies a discrete value for a duration. |
+| [mpath](https://www.w3.org/TR/SVG2/animate.html#MPathElement) | `href`/`xlink:href` | References a `<path>` for `<animateMotion>`. |
+
+Animation events `beginEvent`, `endEvent`, and `repeatEvent` are
+dispatched. Programmatic control via `beginElement()` and `endElement()`
+is supported. `pauseAnimations()` / `setCurrentTime()` /
+`unpauseAnimations()` on the `<svg>` root element are supported.
+
+### CSS presentation properties
+
+SVG presentation attributes (`fill`, `stroke`, `opacity`, etc.) are
+mapped to CSS and participate in the cascade. Both attribute form
+(`<rect fill="red">`) and CSS form (`rect { fill: red; }`) are
+supported. See the [SVG presentation properties](#svg-presentation-properties)
+subsection under CSS for the property list.
+
+### Known limitations
+
+| Surface | Status |
+|---------|--------|
+| `getBBox()`, `getCTM()`, `getScreenCTM()`, `getTotalLength()`, `getPointAtLength()`, `pathLength` | Not on the prototype — calling throws `TypeError`. |
+| `SVGPoint`, `SVGRect`, `SVGMatrix` | Not exposed as constructable globals. |
+| `SVGGraphicsElement`, `SVGGeometryElement` | Not exposed — elements inherit directly from `SVGElement` without the SVG2 graphics-element layer. |
+| `SVGSVGElement.createSVGRect/Point/Matrix()` | Throw `TypeError` (`[Unimplemented]`). `createSVGLength/Number/Angle/Transform()` work. |
+| `<foreignObject>` | No dedicated `SVGForeignObjectElement` class — falls through to generic `SVGElement`. |
+| `<pattern>` | IDL registered but no dedicated layout box — not rendered. |
+| SVG fonts | Not supported. |
+
 ## Additional Supported APIs
 
 ### XMLHttpRequest
@@ -2710,9 +2808,9 @@ The CSS Text Module Level 4 wrapping/whitespace shorthands are unavailable. Stic
 | `-webkit-line-clamp` with `direction: rtl` | **Silently skipped** — `FrameFlexibleBox.cpp:1643` excludes RTL. |
 | `getComputedStyle(el).webkitLineClamp` | **Always `undefined`** (bug — `ComputedStyleCSSStyleDeclaration.cpp:918-922` builds the value but never calls `addValuePair`). JS introspection unreliable until fixed. |
 
-### SVG presentation properties — runtime caveats
+### SVG presentation properties
 
-The following CSS properties are recognized by the parser (entries exist in `CSSStyleLookupTrie` and `Style.h:FOR_EACH_STYLE_ATTRIBUTE_BASIC`) and have full `updateValue*` implementations. They are **valid CSS** at the cascade and computed-style level and round-trip through `getComputedStyle`. However, **LWE does not paint SVG embedded in HTML for webapps**, so these properties have no visible effect on the kinds of pages LWE webapps ship.
+The following CSS properties are recognized by the parser (entries exist in `CSSStyleLookupTrie` and `Style.h:FOR_EACH_STYLE_ATTRIBUTE_BASIC`) and have full `updateValue*` implementations. They are **valid CSS** at the cascade and computed-style level, round-trip through `getComputedStyle`, and **are painted** on SVG elements. See the [SVG](#svg) section for the full SVG rendering surface.
 
 | Property | Parsed values | Note |
 |----------|--------------|------|
@@ -2722,8 +2820,6 @@ The following CSS properties are recognized by the parser (entries exist in `CSS
 | `stroke-linecap`, `stroke-linejoin`, `stroke-miterlimit` | `butt`/`round`/`square`; `miter`/`round`/`bevel`; `<number>` | |
 | `stroke-dasharray`, `stroke-dashoffset` | `<dasharray>`; `<length>` | |
 | `stop-color`, `stop-opacity` | `<color>`; `<number>` | For SVG `<stop>`. |
-
-> **Practical guidance:** treat these as no-ops in webapp CSS and prefer `<canvas>` 2D drawing for vector visuals.
 
 ### CSS Shapes — runtime caveats
 
@@ -2974,9 +3070,9 @@ The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` 
 
 ### SVG family — runtime caveats
 
-64 `SVG*.idl` files exist under `src/core/dom/svg/`; 45 element subclasses are registered in `SVGDocument::createSVGElement`. Inline `<svg>...</svg>` and `createElementNS('http://www.w3.org/2000/svg', tag)` produce correctly namespaced `SVG*Element` instances (NOT `HTMLUnknownElement`). `SVGAnimatedLength.baseVal.value` reads parsed attribute values; presentation attributes map to CSS (`getComputedStyle(rect).fill === 'rgb(255,0,0)'`); `<svg width/height>` allocates a real layout box (`getBoundingClientRect()` returns it).
+64 `SVG*.idl` files exist under `src/core/dom/svg/`; 45 element subclasses are registered in `SVGDocument::createSVGElement`. Inline `<svg>...</svg>` and `createElementNS('http://www.w3.org/2000/svg', tag)` produce correctly namespaced `SVG*Element` instances (NOT `HTMLUnknownElement`). `SVGAnimatedLength.baseVal.value` reads parsed attribute values; presentation attributes map to CSS (`getComputedStyle(rect).fill === 'rgb(255,0,0)'`); `<svg width/height>` allocates a real layout box (`getBoundingClientRect()` returns it). SVG elements are rendered — see the [SVG](#svg) section for the full supported surface.
 
-**However** the methods authors typically expect are missing:
+**Known limitations** (methods authors typically expect but are missing):
 
 | Surface | Status |
 |---------|--------|
@@ -2984,7 +3080,7 @@ The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` 
 | `SVGPoint`, `SVGRect`, `SVGMatrix` | **Not exposed** as constructable globals. |
 | `SVGGraphicsElement`, `SVGGeometryElement` | **Not exposed** — every SVG element inherits directly from `SVGElement` without the SVG2 graphics-element layer. |
 | `SVGSVGElement.createSVGRect()` / `createSVGPoint()` / `createSVGMatrix()` | Throw `TypeError` (`[Unimplemented]`). `createSVGLength()`, `createSVGNumber()`, `createSVGAngle()`, `createSVGTransform()` work. |
-| `<foreignObject>` | Falls through to the generic `SVGElement` base (no `SVGForeignObjectElement` class). |
+| `<foreignObject>` | Falls through to the generic `SVGElement` base (no `SVGForeignObjectElement` class). Crash-safety is covered by WPT crashtests, but no dedicated rendering. |
 
 ### ECMAScript engine (Escargot) — additional details
 
