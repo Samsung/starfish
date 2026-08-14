@@ -1869,7 +1869,26 @@ void ActiveSVGLengthAnimationTask::execute(double progress)
                 ->staticStrings()
                 ->m_dy.localNameAtomic(),
             Length(Length::Fixed, pt.y()), NullOption, this);
-        m_targetElement->setNeedsLayout();
+        // animateMotion is consumed at paint time (motionTransformedPath /
+        // motionTransformedPoint read the animated dx/dy), so a whole
+        // browsing-context relayout per animation tick is not needed.
+        // Repaint the outermost <svg> viewport so both the old and the new
+        // motion position are covered even though the shape's frameRect
+        // still reflects the position of the last real layout. (Limitation:
+        // an objectBoundingBox-unit filter region on the moving shape keeps
+        // the stale position until the next layout.)
+        m_targetElement->setNeedsPainting();
+        Element* outermostSVG = nullptr;
+        Element* ancestor = m_targetElement->parentElement();
+        while (ancestor && ancestor->isSVGElement()) {
+            if (ancestor->isSVGSVGElement()) {
+                outermostSVG = ancestor;
+            }
+            ancestor = ancestor->parentElement();
+        }
+        if (outermostSVG) {
+            outermostSVG->setNeedsPainting();
+        }
         return;
     }
 
