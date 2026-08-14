@@ -47,6 +47,8 @@
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/StackingContext.h"
+#include "core/layout/svg/FrameSVGBox.h"
+#include "core/layout/svg/FrameSVGSVGBox.h"
 #include "core/page/Window.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
@@ -2498,6 +2500,33 @@ void Node::setNeedsLayout(Optional<ComputedStyle*> newStyle)
     if (frame) {
         frame->propagateMarkNeedsLayout(newStyle);
     }
+}
+
+void Node::setNeedsSVGViewportContentLayout()
+{
+    if (!isInDocumentScopeAndDocumentParticipateInRendering()) {
+        return;
+    }
+
+    Frame* frame = this->frame();
+    if (!frame || !frame->isFrameSVGBox()) {
+        // No SVG box to scope the layout to (the frame tree may not be built
+        // yet, or this is the <svg> element itself, whose own box is laid out
+        // by the surrounding flow).
+        setNeedsLayout();
+        return;
+    }
+
+    FrameSVGSVGBox* viewport = frame->asFrameSVGBox()->outmostSVGViewportBox();
+    if (!viewport || !viewport->node()) {
+        setNeedsLayout();
+        return;
+    }
+
+    // No propagateMarkNeedsLayout(): the queued pass lays out the viewport's
+    // whole content, and leaving per-frame layout bits set for a layout that
+    // never runs would outlive this change.
+    window()->browsingContext()->addSVGViewportNeedingContentLayout(viewport);
 }
 
 void Node::setNeedsPainting()

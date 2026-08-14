@@ -59,6 +59,7 @@
 #include "core/layout/FrameDocument.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/StackingContext.h"
+#include "core/layout/svg/FrameSVGSVGBox.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/message_loop/Timer.h"
@@ -386,6 +387,50 @@ void BrowsingContext::computeLayoutPaintingDirty()
     }
 }
 
+void BrowsingContext::addSVGViewportNeedingContentLayout(
+    FrameSVGSVGBox* viewport)
+{
+    for (auto* queued : m_svgViewportsNeedingContentLayout) {
+        if (queued == viewport) {
+            return;
+        }
+    }
+    m_svgViewportsNeedingContentLayout.push_back(viewport);
+    setNeedsRendering();
+    registerNeedsLayoutInWebView();
+}
+
+void BrowsingContext::layoutSVGViewportsNeedingContentLayout()
+{
+    if (!m_svgViewportsNeedingContentLayout.size()) {
+        return;
+    }
+
+    auto viewports(std::move(m_svgViewportsNeedingContentLayout));
+    m_svgViewportsNeedingContentLayout.clear();
+
+    if (!document()->frame()) {
+        return;
+    }
+
+    INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kLayout,
+                                     "layout svg viewport content");
+
+    LayoutContext ctx(starfish(),
+                      document()->frame()->asFrameBox()->asFrameBlockBox()
+                          ->asFrameDocument());
+    for (auto* viewport : viewports) {
+        // The frame tree may have been rebuilt since the request, dropping
+        // this box.
+        if (!viewport->node() || !viewport->node()->isInDocumentScope() ||
+            viewport->node()->frame() != viewport) {
+            continue;
+        }
+        viewport->layoutSVGContent(ctx);
+        viewport->node()->setNeedsPainting();
+    }
+}
+
 bool BrowsingContext::layoutIfNeeded()
 {
     buildFrameTreeIfNeeds();
@@ -430,6 +475,10 @@ bool BrowsingContext::layoutIfNeeded()
 
         m_needsLayout = false;
         ret = true;
+        // A full layout covers every SVG viewport as well.
+        m_svgViewportsNeedingContentLayout.clear();
+    } else {
+        layoutSVGViewportsNeedingContentLayout();
     }
 
     if (document()->animationExecutor()->activeAnimations().size() != 0) {

@@ -635,6 +635,10 @@ public:
 
     void propagateMarkChildNeedsFrameTreeBuild();
     void setNeedsLayout(Optional<ComputedStyle*> newStyle = NullOption);
+    // Requests a layout of the content of the <svg> viewport this node lives
+    // in, instead of a layout of the whole browsing context. Only valid for
+    // nodes inside an SVG viewport; falls back to setNeedsLayout() otherwise.
+    void setNeedsSVGViewportContentLayout();
     void setNeedsPainting();
     void setNeedsComposite();
 

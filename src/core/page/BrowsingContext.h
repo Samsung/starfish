@@ -33,6 +33,7 @@ class Starfish;
 class StackingContext;
 class CanvasSurface;
 class Renderer;
+class FrameSVGSVGBox;
 class Window;
 class HTMLIFrameElement;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
@@ -150,6 +151,14 @@ public:
             registerNeedsLayoutInWebView();
         }
     }
+
+    // Queues an <svg> viewport whose content geometry changed. Processed in
+    // layoutIfNeeded(), which lays out that viewport's content instead of the
+    // whole document - an SVG box folds its transform into its frame rect, so
+    // a transform animation inside an icon would otherwise relayout every box
+    // on the page on every tick.
+    void addSVGViewportNeedingContentLayout(FrameSVGSVGBox* viewport);
+    void layoutSVGViewportsNeedingContentLayout();
 
     void setNeedsFullLayout();
     void setNeedsPainting();
@@ -401,6 +410,8 @@ private:
     String* m_name;
 
     uint64_t m_styleResolveStartTick;
+
+    GCVector<FrameSVGSVGBox*> m_svgViewportsNeedingContentLayout;
 
     LayoutRepaintTracker m_layoutRepaintTracker;
 };

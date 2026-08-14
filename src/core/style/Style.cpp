@@ -9866,6 +9866,9 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
 
     if (damage & ComputedStyleDamage::ComputedStyleDamageLayout) {
         element->setNeedsLayout(style);
+    } else if (damage &
+               ComputedStyleDamage::ComputedStyleDamageSVGViewportContent) {
+        element->setNeedsSVGViewportContentLayout();
     }
 
     if (damage &
