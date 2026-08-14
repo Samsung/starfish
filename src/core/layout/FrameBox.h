@@ -915,7 +915,7 @@ public:
                 childFrameBoxIterator(alloca(maxChildFrameBoxIteratorSize));
             while (iter->hasNext()) {
                 auto box = iter->next();
-                box->iterateChildFrameBox(fn);
+                box->iterateChildFrameBoxOnCondition(fn);
             }
         }
     }
