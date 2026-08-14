@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "SettingsDelegate.h"
+#include "public/contract/SettingsDelegate.h"
 
 #include "SettingsBoolean.h"
 

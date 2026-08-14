@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "ResourceErrorDelegate.h"
+#include "public/contract/ResourceErrorDelegate.h"
 
 namespace LWEDelegate {
 

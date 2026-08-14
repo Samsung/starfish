@@ -33,7 +33,7 @@ public:
 #include "StarfishConfig.h"
 #include "PlatformIntegrationData.h"
 #include "public/delegate/LWEWebViewDelegateImpl.h"
-#include "public/delegate/LWEWebContainerDelegate.h"
+#include "public/contract/LWEWebContainerDelegate.h"
 #include "LWEWebView.h"
 
 void* gc::operator new(size_t n)

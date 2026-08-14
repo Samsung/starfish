@@ -19,7 +19,7 @@
 #ifndef __LWEWebViewDelegateImpl__
 #define __LWEWebViewDelegateImpl__
 
-#include "LWEWebViewDelegate.h"
+#include "public/contract/LWEWebViewDelegate.h"
 
 namespace LWEDelegate {
 

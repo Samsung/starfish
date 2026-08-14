@@ -21,12 +21,12 @@
 #ifdef STARFISH_API_ENABLE_LOADER
 #include "LWEDelegateLoader.h"
 #else
-#include "public/delegate/LWEDelegate.h"
-#include "public/delegate/ResourceErrorDelegate.h"
-#include "public/delegate/SettingsDelegate.h"
-#include "public/delegate/CookieManagerDelegate.h"
-#include "public/delegate/LWEWebContainerDelegate.h"
-#include "public/delegate/LWEWebViewDelegate.h"
+#include "public/contract/LWEDelegate.h"
+#include "public/contract/ResourceErrorDelegate.h"
+#include "public/contract/SettingsDelegate.h"
+#include "public/contract/CookieManagerDelegate.h"
+#include "public/contract/LWEWebContainerDelegate.h"
+#include "public/contract/LWEWebViewDelegate.h"
 #endif
 
 #include "APIRecorder.h"
