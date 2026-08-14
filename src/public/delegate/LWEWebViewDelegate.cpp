@@ -19,7 +19,7 @@
 
 #include "StarfishConfig.h"
 
-#include "LWEWebViewDelegate.h"
+#include "public/contract/LWEWebViewDelegate.h"
 
 #if defined(STARFISH_WINDOWS) || defined(STARFISH_ANDROID) || \
     defined(STARFISH_GLIB_HEADLESS) ||                        \

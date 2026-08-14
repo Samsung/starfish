@@ -21,9 +21,9 @@
 
 #include "LWEWebViewDelegateImpl.h"
 
-#include "SettingsDelegate.h"
-#include "ResourceErrorDelegate.h"
-#include "LWEWebContainerDelegate.h"
+#include "public/contract/SettingsDelegate.h"
+#include "public/contract/ResourceErrorDelegate.h"
+#include "public/contract/LWEWebContainerDelegate.h"
 
 namespace LWEDelegate {
 

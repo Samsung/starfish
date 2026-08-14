@@ -26,7 +26,7 @@
 #ifdef STARFISH_API_ENABLE_LOADER
 #include "LWEWorkerDelegateLoader.h"
 #else
-#include "public/delegate/LWEWorkerDelegate.h"
+#include "public/contract/LWEWorkerDelegate.h"
 #endif
 
 #if defined(NDEBUG)

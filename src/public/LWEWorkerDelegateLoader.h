@@ -24,7 +24,7 @@
 
 #include <string>
 
-#include "public/delegate/LWEWorkerDelegate.h"
+#include "public/contract/LWEWorkerDelegate.h"
 
 namespace LWE {
 

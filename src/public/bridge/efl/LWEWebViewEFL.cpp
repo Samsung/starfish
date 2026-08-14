@@ -20,7 +20,7 @@
 #include "StarfishConfig.h"
 #include "PlatformIntegrationData.h"
 #include "public/delegate/LWEWebViewDelegateImpl.h"
-#include "public/delegate/LWEWebContainerDelegate.h"
+#include "public/contract/LWEWebContainerDelegate.h"
 #include "public/delegate/ThreadedCallHelper.h"
 
 #if defined(STARFISH_SHELL_EFL)

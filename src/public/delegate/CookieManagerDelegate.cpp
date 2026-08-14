@@ -19,9 +19,9 @@
 
 #include "StarfishConfig.h"
 
-#include "CookieManagerDelegate.h"
+#include "public/contract/CookieManagerDelegate.h"
 
-#include "LWEDelegate.h"
+#include "public/contract/LWEDelegate.h"
 #include "ThreadedCallHelper.h"
 #include "platform/network/curl/NetworkSharedResourceManager.h"
 

@@ -20,13 +20,13 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
-#include "LWEWebContainerDelegate.h"
+#include "public/contract/LWEWebContainerDelegate.h"
 #include "ThreadedCallHelper.h"
 
-#include "LWEDelegate.h"
+#include "public/contract/LWEDelegate.h"
 #include "SettingsBoolean.h"
-#include "SettingsDelegate.h"
-#include "ResourceErrorDelegate.h"
+#include "public/contract/SettingsDelegate.h"
+#include "public/contract/ResourceErrorDelegate.h"
 
 #include "core/modules/renderer/Renderer.h"
 #include "core/dom/Touch.h"

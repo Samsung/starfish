@@ -23,8 +23,8 @@
 #include "Starfish.h"
 
 #include "LWEWorker.h"
-#include "LWEDelegate.h"
-#include "LWEWorkerDelegate.h"
+#include "public/contract/LWEDelegate.h"
+#include "public/contract/LWEWorkerDelegate.h"
 
 #include "ThreadedCallHelper.h"
 

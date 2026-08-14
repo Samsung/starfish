@@ -20,7 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
-#include "LWEDelegate.h"
+#include "public/contract/LWEDelegate.h"
 #include "ThreadedCallHelper.h"
 
 #include "core/page/WebBase.h"
