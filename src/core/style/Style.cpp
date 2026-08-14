@@ -9636,6 +9636,35 @@ static ComputedStyleDamage DamageComputedStyleDamageForBeginAnimation(
     return ComputedStyleDamage::ComputedStyleDamageNone;
 }
 
+// True for SVG elements FrameTreeBuilder::buildSVGFrameTree never creates a
+// frame for (paint servers, their stops, filters and filter primitives,
+// mpath, and animation elements under such a frameless parent). Style
+// recalcs on a frameless element report ComputedStyleDamageRebuildFrame, but
+// requesting a frame-tree rebuild for these loops forever: the rebuild leaves
+// them frameless again, and with a SMIL animation re-dirtying their style
+// every tick this turns into a whole-document rebuild + relayout per frame.
+// Their visual invalidation is delivered to client elements through
+// attributeOfPaintServerLikeUpdated instead.
+static bool isSVGElementFrameTreeBuilderNeverFrames(Element* element)
+{
+    if (!element->isSVGElement()) {
+        return false;
+    }
+    if (element->isSVGGradientElement() || element->isSVGStopElement() ||
+        element->isSVGFilterElement() ||
+        element->isSVGFilterPrimitiveStandardAttributes() ||
+        element->isSVGMPathElement()) {
+        return true;
+    }
+    if (element->asSVGElement()->isSVGAnimationElement()) {
+        // Animation elements get a placeholder frame only when their parent
+        // participates in the frame tree.
+        Element* parent = element->renderingParentElement();
+        return parent && parent->isSVGElement() && !parent->frame();
+    }
+    return false;
+}
+
 static ComputedStyleDamage applyStyleToElement(Element* element,
                                                ComputedStyle* style,
                                                StyleResolveContext& ctx)
@@ -9722,8 +9751,24 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
     }
 
     if (damage & ComputedStyleDamage::ComputedStyleDamageRebuildFrame) {
-        if (style->display() != DisplayValue::NoneDisplayValue &&
-            element->frame() == nullptr && element->renderingParentElement()) {
+        if (isSVGElementFrameTreeBuilderNeverFrames(element)) {
+            // No frame will ever be built for this element, so a frame-tree
+            // rebuild cannot deliver this style change. Repaint the paint
+            // server's client elements instead (covers e.g. a CSS-driven
+            // stop-color change, which previously reached the screen only as
+            // a side effect of the full rebuild).
+            Element* paintServer = element;
+            while (paintServer && paintServer->isSVGElement()) {
+                if (paintServer->asSVGElement()->isPaintServerLikeElement()) {
+                    paintServer->asSVGElement()
+                        ->attributeOfPaintServerLikeUpdated(false);
+                    break;
+                }
+                paintServer = paintServer->renderingParentElement();
+            }
+        } else if (style->display() != DisplayValue::NoneDisplayValue &&
+                   element->frame() == nullptr &&
+                   element->renderingParentElement()) {
             // special path for Node::appendChild
 
             Element* e = element->renderingParentElement();
