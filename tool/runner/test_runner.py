@@ -30,7 +30,7 @@ sys.path.insert(0, os.path.dirname(_HERE))  # tool/ for drivers.basics, repo_pat
 sys.path.insert(0, os.path.join(os.path.dirname(_HERE), "wpt", "scripts"))
 
 from repo_paths import REPO_ROOT
-from drivers.basics.constants import ENVOPTS, ERRORCODE
+from drivers.basics.constants import ENVOPTS, ERRORCODE, DEFAULT_TC_TIMEOUT_SEC
 from execution_worker import WorkerRunner
 
 script_path = "./tool/drivers/run_test.py"
@@ -473,8 +473,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "-t", "--timeout",
         type=int,
-        default=0,
-        help="Set timeout in seconds to individual tests",
+        default=None,
+        help="Per-test-case timeout in seconds; a test that outlives it is "
+             "SIGKILLed and marked FAIL instead of blocking its parallel "
+             "worker (and therefore the whole batch) forever. If omitted, "
+             f"a fail-safe default ({DEFAULT_TC_TIMEOUT_SEC}s) is still "
+             "applied -- pass --timeout 0 to disable it entirely (e.g. for "
+             "interactive debugging).",
     )
     parser.add_argument(
         "-f", "--force", action="store_true", help="Force commented tests to run"
@@ -492,7 +497,10 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if args.timeout > 0:
+    if args.timeout is not None:
+        # Setting it to "0" here is intentional: it's how resolve_tc_timeout()
+        # distinguishes "explicitly disabled" from "not specified" (which
+        # falls back to DEFAULT_TC_TIMEOUT_SEC).
         os.environ[ENVOPTS.TIMEOUT] = str(args.timeout)
 
     if args.force == True:
