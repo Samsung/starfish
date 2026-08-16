@@ -175,8 +175,7 @@ void WorkerGlobalScope::importScript(ResourceURL* url)
         } else if (result == ScriptLoadResult::ScriptError) {
             errorCode = DOMException::SCRIPT_ERROR;
         }
-        throw new DOMException(executionContext(),
-                               DOMException::Code::DOM_EXCEPTION,
+        throw new DOMException(executionContext(), errorCode,
                                "Failed to execute 'importScript'");
     }
 }
