@@ -1,11 +1,12 @@
 #!/usr/bin/env python
+import math
 import signal
 import sys
 import types
 import multiprocessing
 import os
 from abc import ABC, abstractclassmethod
-from basics.constants import ENVOPTS
+from basics.constants import ENVOPTS, resolve_tc_timeout
 
 class StringEditor(ABC):
     @abstractclassmethod
@@ -77,13 +78,48 @@ def run_test_pool(case_runner, in_path, nproc,
         nproc = max_nproc
     print("Running " + str(nproc) + " jobs in parallel")
 
+    # Bound how long we ever wait for the whole batch. Each individual test
+    # case is already bounded by its own per-test-case timeout (see
+    # resolve_tc_timeout()/case_runner) -- that is the real fix for a single
+    # hung Starfish process. This is a second, independent safety net against
+    # a Pool/OS-level hang (e.g. a worker that never gets scheduled).
+    # It is deliberately kept *below* typical CI job timeouts (e.g. GitHub
+    # Actions' 60-minute default) so that if it ever fires, the suite fails
+    # fast with a clear diagnostic instead of being silently killed by the CI
+    # runner with zero output -- which is exactly the bug this fixes. (The
+    # previous flat 0xfff/4095s bound was *longer* than the 60-minute CI job
+    # timeout, so it could structurally never fire in time -- and even if it
+    # had, multiprocessing.TimeoutError wasn't caught here at all.)
+    per_tc_timeout = resolve_tc_timeout()
+    if per_tc_timeout is None:
+        # Explicit opt-out (TC_TIMEOUT=0): keep the old, effectively-unbounded
+        # wait for interactive/debug use.
+        pool_get_timeout = 0xfff
+    else:
+        rounds = math.ceil(len(tcs) / nproc) if tcs else 1
+        # 2x safety margin over the worst-case serial time this worker's
+        # queue could take, plus fixed slack for process spawn/collection.
+        pool_get_timeout = max(300, min(3300, int(rounds * per_tc_timeout * 2) + 300))
+
     p = multiprocessing.Pool(nproc, init_worker)
     try:
-        itr = p.map_async(case_runner, tcs, chunksize=1).get(0xfff)
+        itr = p.map_async(case_runner, tcs, chunksize=1).get(pool_get_timeout)
 
     except KeyboardInterrupt:
         print("Terminate (KeyboardInterrupt)")
         p.terminate()
+        p.join()
+        sys.exit(1)
+
+    except multiprocessing.TimeoutError:
+        print("ERROR : test pool did not finish within %ds (%d workers, "
+              "%d test cases, %s sec/test-case) -- a worker is stuck well "
+              "beyond its own per-test-case timeout (Pool/OS-level hang, "
+              "not just a slow test). Terminating so the failure is visible "
+              "instead of stalling until the outer CI job timeout." %
+              (pool_get_timeout, nproc, len(tcs), per_tc_timeout))
+        p.terminate()
+        p.join()
         sys.exit(1)
 
     if out_path is not None:

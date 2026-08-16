@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 import os
 import re
-import subprocess
 from . import utils
-from subprocess import Popen, PIPE
-import time
 import fcntl
-import signal
-from basics.constants import ENVOPTS
+from basics.constants import ENVOPTS, resolve_tc_timeout
+from basics.subprocess_timeout import run_subprocess_with_timeout
 
 try:
   FNULL
@@ -56,29 +53,10 @@ class __BasicTestOpts():
 
 
 def open_subprocess(command, timeout=None):
-    start_time = time.time()
-
-    # Own a process group only when a timeout is set: that is the only path that
-    # may need to SIGKILL the whole tree Starfish spawns. Without a timeout the
-    # call behaves exactly as before (no session change), so the common,
-    # no-timeout path used by almost every test is untouched.
-    process = Popen(command, stdout=PIPE, stderr=PIPE,
-                    start_new_session=bool(timeout))
-    try:
-        stdout, stderr = process.communicate(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        # SIGKILL the entire process group, then reap to release the pipes.
-        # The second communicate() returns immediately since the tree is dead.
-        # ProcessLookupError: the tree already exited in the timeout race; the
-        # pipes are then already closed, so just reap and report the timeout.
-        try:
-            os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        process.communicate()
-        raise TimeoutError
-
-    return stdout, stderr, time.time() - start_time
+    # Delegates to the shared helper (also used by starfish_pixel_test.py) so
+    # both test styles get identical hang protection: SIGKILL the whole
+    # process group and raise TimeoutError if `command` outlives `timeout`.
+    return run_subprocess_with_timeout(command, timeout)
 
 
 def case_runner(tc):
@@ -88,9 +66,13 @@ def case_runner(tc):
         print("ERROR : TC file does not exist - " + tc_file)
         return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
 
-    timeout = None
-    if os.environ.get(ENVOPTS.TIMEOUT):
-        timeout = float(os.environ.get(ENVOPTS.TIMEOUT))
+    # Fails safe: resolve_tc_timeout() returns a default (currently 60s) when
+    # TC_TIMEOUT isn't set at all, rather than "wait forever". Every CI job
+    # today invokes test_runner.py without --timeout, so without this default
+    # a single hung Starfish process previously blocked its whole parallel
+    # batch (and thus the CI job) until the outer 60-minute job timeout fired
+    # with zero diagnostic output.
+    timeout = resolve_tc_timeout()
 
     # Run starfish
     starfish_command = ["./Starfish", tc_file, "--hide-window", __opts.width, __opts.height, __opts.regression, "--disable-console"]
