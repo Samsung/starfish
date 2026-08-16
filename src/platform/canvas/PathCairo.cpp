@@ -72,7 +72,21 @@ static void pathCairoClear(void* obj, void* cd)
 void* PathCairo::operator new(size_t size)
 {
     constexpr static GC_finalizer_closure data = { pathCairoClear, nullptr };
-    return GC_finalized_atomic_malloc(size, &data);
+    // PathCairo embeds a StrokeStyle (m_needsComputeStrokeBoundingRect),
+    // whose strokeDasharray is a GCAtomicVector<double> holding a live pointer
+    // into the GC heap. GC_finalized_atomic_malloc tells the collector this
+    // block contains no pointers to trace, so that dasharray buffer could be
+    // (and intermittently was) collected out from under a still-live
+    // PathCairo, later crashing with "Invalid pointer passed to free()" when
+    // Vector::operator= tried to free the now-stale/reused buffer (e.g.
+    // wpt/svg/painting/negative-dashoffset-odd-dasharray.html under memory
+    // pressure). Cairo's own native handles (m_cairoContext,
+    // m_dumyCairoSurface) don't need tracing -- they're external resources
+    // cleaned up by the finalizer below -- but the embedded GC pointer does,
+    // so this must be the non-atomic (pointer-scanning) finalized allocator,
+    // same as every other finalized GC type in this codebase that holds a
+    // real GC pointer (see ResourceRequest, CanvasGradient, etc.).
+    return GC_finalized_malloc(size, &data);
 }
 
 void PathCairo::clearNativeResources()
