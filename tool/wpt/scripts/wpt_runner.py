@@ -121,13 +121,48 @@ def collect(path, force):
     return items
 
 
-def run_one(url, timeout):
+# Fingerprint of the local wpt-serve HTTP server's own connection-accept path
+# starving under host CPU contention: Starfish's initial navigation itself
+# fails with libcurl error 7 (CURLE_COULDNT_CONNECT) -- see
+# src/platform/network/http -- so the page body never arrives, testharness.js
+# never runs, and the shell just idles (no WPTR output at all) until this
+# module's own external subprocess timeout kills it. Confirmed by direct
+# reproduction: pinning the whole suite to 2 cores plus CPU-burner processes
+# on those same cores reproduces this exact "failed to open[7] <url>" line,
+# with no WPTR anywhere in the capture, on an otherwise-passing test's own
+# page fetch -- indiscriminately, on whichever test's process happens to race
+# a starved wpt-serve accept() that run. Not an engine hang (those don't
+# print this), so retrying is safe: it can only mask this one specific,
+# already-transient infra hiccup, never a real timeout/deadlock in Starfish.
+RE_CONNECT_REFUSED = re.compile(r"failed to open\[7\] (\S+)")
+
+# Small bounded retry (not infinite) for the hiccup above -- see
+# RE_CONNECT_REFUSED and _is_connect_refused_on_navigation.
+CONNECT_REFUSED_RETRIES = 2
+
+
+def _is_connect_refused_on_navigation(log, url):
+    """True if `log` shows the *top-level* navigation to `url` itself failed
+    with CURLE_COULDNT_CONNECT and the page never got far enough to run
+    testharness.js at all (no WPTR output whatsoever). See
+    RE_CONNECT_REFUSED's comment for why this is safe to retry.
+    """
+    if "WPTR" in log:
+        return False
+    m = RE_CONNECT_REFUSED.search(log)
+    return m is not None and m.group(1) == url
+
+
+def run_one(url, timeout, _retries=CONNECT_REFUSED_RETRIES):
     """Return (ok, reason, npass_subtests, nfail_subtests, log).
 
     log carries the captured Starfish stdout+stderr (crash backtraces print
     to stdout, see src/shell/Shell.cpp) for the crash-ish reasons (NO_COMPLETION,
     TIMEOUT, SHELL_ERROR); it is None for the logical HARNESS_STATUS_*/
     NO_SUBTESTS/SUBTESTS_FAILED/OK outcomes, which have no crash to show.
+
+    _retries: bounded retries left for the connect-refused-on-navigation
+    infra hiccup (RE_CONNECT_REFUSED); 0 disables retrying.
     """
     cmd = [STARFISH, url, "--hide-window", "--width=800", "--height=600"]
     env = dict(os.environ)
@@ -140,7 +175,12 @@ def run_one(url, timeout):
         out = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                              env=env, timeout=timeout).stdout.decode("utf-8", "replace")
     except subprocess.TimeoutExpired as e:
-        return False, "TIMEOUT", 0, 0, (e.output or b"").decode("utf-8", "replace")
+        log = (e.output or b"").decode("utf-8", "replace")
+        if _retries > 0 and _is_connect_refused_on_navigation(log, url):
+            print("  %s[RETRY]%s %s (connect refused on navigation, "
+                  "%d retries left)" % (YEL, RST, url, _retries))
+            return run_one(url, timeout, _retries - 1)
+        return False, "TIMEOUT", 0, 0, log
     except OSError:
         return False, "SHELL_ERROR", 0, 0, None
 
