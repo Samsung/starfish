@@ -1,0 +1,268 @@
+name: Build Starfish (android)
+
+# Builds the real Android target: lws/lwe_android_rel (a separate repo on this
+# same GHE instance) is the actual consumer of build/android.cmake --
+# confirmed by reading its library/build.gradle + library/src/main/cpp/CMakeLists.txt,
+# which does `INCLUDE(starfish/build/android.cmake)` with `starfish` as a git
+# submodule. The in-repo build/android/{apk,apk_root,aar} Gradle projects use
+# a different, independent build.cmake and are NOT exercised by this job.
+#
+# Like windows.yml/worker.yml/etc., this depends on squash_thirdparty --
+# but only for its cache, not a checked-out repo. squash_thirdparty
+# materializes starfish's own third_party/binding_generator submodules once
+# (it's the only job with a proxy path to github.sec.samsung.net; this job's
+# own runner pool, code-linux/code-2xlarge, has none, and a direct `git
+# submodule update` here previously failed with an SSH host-key mismatch)
+# and caches them keyed on submodule pins. This job restores that same cache
+# directly onto a plain PR checkout instead of overlaying a second checkout
+# of a separately-hosted squashed repo.
+#
+# NEEDS REVIEW before relying on this in CI -- unverified in this environment:
+#  - Cross-repo checkout of lws/lwe_android_rel via CODE-Actions/checkout has
+#    not been exercised anywhere else in this repo's workflows. Confirm the
+#    default GITHUB_TOKEN has read access to it, or wire in an equivalent
+#    secret if not.
+#
+# Used to run on the stock circleci/android:api-30-ndk image with the
+# apt/pip/sdkmanager steps from lwe_android_rel/.circleci/config.yml
+# translated as-is into per-run steps here. That image only ships SDK
+# platform 30 + NDK r21e (21.4.7075529), while lwe_android_rel/library/
+# build.gradle pins compileSdkVersion 33 and ndkVersion 21.0.6113669 --
+# neither matches what's preinstalled, so the Android Gradle Plugin
+# re-downloaded the SDK platform + that exact NDK revision from
+# dl.google.com on every single PR run. Our own starfish-android-build
+# image (docker/Dockerfile.android-build) bakes in the exact versions
+# lwe_android_rel actually requires, so that download now happens once,
+# when the image itself is rebuilt, not on every PR -- and since it's
+# hosted on BART like every other job's image here, this no longer
+# depends on Docker Hub being reachable/pullable from this runner pool
+# either.
+
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        description: 'PR Number'
+        default: 'master'
+        required: true
+        type: string
+      thirdparty_key:
+        description: 'squash_thirdparty cache id (starfish-thirdparty-<key> under BART''s starfish-ci-cache/, see tool/ci/lib_submodule_cache.sh)'
+        required: true
+        type: string
+
+jobs:
+  build_android:
+    # Used to run on circleci/android:api-30-ndk (needed code-linux/
+    # code-2xlarge -- the only runner pool here that can pull public Docker
+    # Hub images at all). Replaced by our own starfish-android-build image on
+    # BART (see docker/Dockerfile.android-build + docker_build_push.yml) --
+    # same runner pool every other BART-image job here already uses.
+    runs-on: [self-hosted, linux]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-android-build:latest
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # circleci/android's base image defaults to a non-root `circleci`
+      # user, which can't write to the runner-mounted /__w/_temp dir the
+      # checkout action uses for its save-state file (EACCES). Our image
+      # inherits that same base/user, so keep this.
+      options: --user root
+    timeout-minutes: 60
+    env:
+      # Same OOM guards as the reference job -- lwe_android_rel's own
+      # .circleci/config.yml runs this on resource_class: xlarge with
+      # JVM_OPTS: -Xmx8192m for the same reason.
+      _JAVA_OPTIONS: "-Xmx3g"
+      GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx4096m -XX:+HeapDumpOnOutOfMemoryError"'
+    steps:
+      - name: Checkout Starfish (this PR)
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          allow-unsafe-pr-checkout: true
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: starfish
+
+      # actions/setup-java downloads the Temurin JDK from a remote endpoint
+      # on every run -- confirmed on a real run: "Error: unable to verify
+      # the first certificate". This is our self-hosted runner's corporate
+      # proxy doing TLS interception (re-signing with its own CA, which
+      # this container's Node trust store doesn't have) -- not a transient
+      # handshake glitch, so it can reproduce on every attempt, not just
+      # occasionally. NODE_TLS_REJECT_UNAUTHORIZED=0 disables Node's cert
+      # verification for this step's process only (setup-java is a Node
+      # action; nothing outside it is affected) to unblock the download.
+      # Keep the up-to-3-attempts retry as well, since GitHub Actions has no
+      # native step-level retry and this repo's usual wrapper
+      # (CODE-Actions/nick-fields-retry@v3, see x64_test.yml) only retries a
+      # shell `command:`, not a `uses:` action step -- genuinely transient
+      # network blips (unrelated to the proxy cert) can still happen.
+      - name: Set up Java (attempt 1)
+        id: setup_java_1
+        continue-on-error: true
+        uses: actions/setup-java@v3
+        env:
+          NODE_TLS_REJECT_UNAUTHORIZED: "0"
+        with:
+          java-version: 17
+          distribution: "temurin"
+      - name: Set up Java (attempt 2)
+        id: setup_java_2
+        if: steps.setup_java_1.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/setup-java@v3
+        env:
+          NODE_TLS_REJECT_UNAUTHORIZED: "0"
+        with:
+          java-version: 17
+          distribution: "temurin"
+      - name: Set up Java (attempt 3)
+        if: steps.setup_java_1.outcome == 'failure' && steps.setup_java_2.outcome == 'failure'
+        uses: actions/setup-java@v3
+        env:
+          NODE_TLS_REJECT_UNAUTHORIZED: "0"
+        with:
+          java-version: 17
+          distribution: "temurin"
+
+      # SDK licenses, the SDK-managed CMake 3.10.2 package
+      # (library/build.gradle pins externalNativeBuild.cmake.version
+      # "3.10.2" -- AGP only accepts the SDK-managed package for that, not
+      # an apt-installed cmake on PATH no matter its version), platform 33,
+      # and NDK 21.0.6113669 are all baked into starfish-android-build (see
+      # docker/Dockerfile.android-build) -- no per-run sdkmanager calls
+      # needed anymore.
+
+      # This job's own git commands (both here on the "starfish" checkout and
+      # later on "lwe_android_rel", via cache_android_lwe_submodules.sh) run
+      # against two different nested checkout paths under the runner-mounted
+      # workspace -- unlike the other single-checkout jobs, a single
+      # exact-path safe.directory entry doesn't cover both. Wildcard instead
+      # of listing each path.
+      - name: Add safe directory
+        run: git config --global --add safe.directory '*'
+
+      # squash_thirdparty already published (or found already published)
+      # this exact submodule content as a tarball on BART (see
+      # lib_submodule_cache.sh) before this job's `needs:` let it start.
+      # third_party/android isn't a submodule, so it's already present from
+      # the plain PR checkout above and this extraction doesn't touch it.
+      # See tool/ci/lib_submodule_cache.sh for the mechanism.
+      - name: Fetch thirdparty submodule cache
+        working-directory: starfish
+        shell: bash
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: |
+          source tool/ci/lib_submodule_cache.sh
+          submodule_cache_fetch "${{ inputs.thirdparty_key }}" cache.tar.gz thirdparty.tar.gz
+
+      - name: Extract thirdparty submodules
+        working-directory: starfish
+        run: tar xzf thirdparty.tar.gz
+
+      # Fail loudly here instead of several steps later as a confusing
+      # "CMakeLists.txt not found" / "No such file" error -- this exact
+      # failure mode already happened once (cache restore silently didn't
+      # populate anything).
+      - name: Verify thirdparty submodules were restored
+        run: |
+          test -f starfish/third_party/escargot/CMakeLists.txt || (echo "::error::third_party/escargot missing after cache restore -- check squash_thirdparty's cache push" && exit 1)
+          test -f starfish/binding_generator/scripts/starfish_code_generator.py || (echo "::error::binding_generator missing after cache restore -- check squash_thirdparty's cache push" && exit 1)
+
+      - name: Checkout lwe_android_rel
+        uses: CODE-Actions/checkout@v2
+        with:
+          repository: lws/lwe_android_rel
+          submodules: false
+          path: lwe_android_rel
+
+      - name: Overlay this PR's starfish into lwe_android_rel
+        run: |
+          rm -rf lwe_android_rel/library/src/main/cpp/starfish
+          cp -a starfish lwe_android_rel/library/src/main/cpp/starfish
+          rm -rf lwe_android_rel/library/src/main/cpp/starfish/.git
+
+      # library/build.gradle's ndk.abiFilters lists all 4 ABIs
+      # (armeabi-v7a, arm64-v8a, x86, x86_64) -- externalNativeBuild runs a
+      # full separate CMake+ninja C++ configure/build per ABI, so this job
+      # was doing ~4x the native compile work every PR run. This CI job only
+      # needs to prove the C++ still compiles against lwe_android_rel; the
+      # real per-ABI release build lives in lwe_android_rel's own CI. Patch
+      # the checked-out (job-local, not the upstream repo) build.gradle down
+      # to arm64-v8a only.
+      - name: Restrict native build to arm64-v8a only (this job just needs a compile check, not all 4 ABIs)
+        run: |
+          sed -i 's/abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"/abiFilters "arm64-v8a"/' lwe_android_rel/library/build.gradle
+          grep -n abiFilters lwe_android_rel/library/build.gradle
+
+      # Self-heals + publishes lwe_android_rel's own third-party submodules
+      # (library/src/main/cpp/*) as a cache tarball on BART, same
+      # mechanism/reasons as starfish's own thirdparty cache (see pr_ci.yml
+      # and tool/ci/lib_submodule_cache.sh). Invoked from inside the
+      # starfish checkout (this job's proven-working path to
+      # github.sec.samsung.net) with cwd set to lwe_android_rel so the
+      # script's own `git submodule` calls operate on the right repo.
+      #
+      # NOTE: this runner pool (code-linux/code-2xlarge, picked above
+      # specifically because it CAN pull public Docker images directly)
+      # already has direct internet access for these public vendored-library
+      # remotes -- unlike runner-type1, which needs squash_thirdparty's
+      # internal proxy to reach external git hosts at all. The script does
+      # NOT set that proxy for this reason.
+      - name: Build or reuse lwe_android_rel submodule cache
+        working-directory: lwe_android_rel
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: ../starfish/tool/ci/cache_android_lwe_submodules.sh
+
+      # Ninja/cmake/autotools/pkg-config, the apt-sources-EOL fix (base is
+      # Debian Buster -- archive.debian.org + Valid-Until skip), and the
+      # Jinja2/ply python3 deps the binding generator needs (a plain
+      # EXECUTE_PROCESS at CMake-configure time with no exit-code check --
+      # missing them silently leaves starfish_generated/binding/generated/
+      # empty, only surfacing later as a confusing "Interfaces.h file not
+      # found" compile error) are all baked into starfish-android-build
+      # (see docker/Dockerfile.android-build).
+
+      # The Gradle *distribution itself* (gradle-wrapper.properties'
+      # distributionUrl, e.g. gradle-7.6.1-bin.zip) is not baked into
+      # starfish-android-build -- gradlew downloads it straight from
+      # services.gradle.org on first use in each fresh container. Confirmed
+      # on real runs: that download intermittently dies mid-SSL-handshake
+      # ("SocketException: Connection reset"), failing the whole job in a
+      # few seconds (not a build failure, never gets to the actual build).
+      # This runner pool has no proxy route configured (see the comment
+      # above "Build or reuse lwe_android_rel submodule cache") so there's
+      # no proxy misconfiguration to fix here -- it reads as plain
+      # transient flakiness on this specific large HTTPS download, not a
+      # hard block (retrying the same job by hand has been observed to
+      # succeed). Wrap with this repo's usual shell-command retry action
+      # (CODE-Actions/nick-fields-retry@v3, see x64_test.yml) rather than
+      # investigate further -- if this keeps failing even with retries,
+      # that would point at a real block and the next step would be baking
+      # the distribution into starfish-android-build instead, the same way
+      # the SDK platform/NDK downloads were eliminated (see this job's
+      # earlier comments).
+      - name: Build
+        uses: CODE-Actions/nick-fields-retry@v3
+        with:
+          timeout_minutes: 20
+          max_attempts: 3
+          command: |
+            cd lwe_android_rel
+            # Some SDK-bundled prebuilts (e.g. 32-bit aapt2/qemu tools) still link
+            # against the old libncurses5/libtinfo5 names; the image only ships
+            # the .so.6 versions. Same workaround as the reference job.
+            sudo ln -sf /lib/x86_64-linux-gnu/libncurses.so.6 /usr/lib/libncurses.so.5
+            sudo ln -sf /lib/x86_64-linux-gnu/libncursesw.so.6 /usr/lib/libtinfo.so.5
+            ./gradlew assembleRelease --no-daemon --parallel --configure-on-demand
+
+      # This job used to also upload the built .aar (name: android_build_pr)
+      # and a Gradle/SDK cache artifact -- both dropped: nothing in this
+      # repo's workflows downloads the .aar (and the native build above is
+      # arm64-v8a-only, a compile check, not the real release artifact
+      # anyway), and the Gradle/SDK cache cost ~10 min to save a ~10s
+      # redownload (see the comment above the Build step).

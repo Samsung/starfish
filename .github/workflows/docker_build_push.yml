@@ -1,12 +1,14 @@
 # =============================================================================
-# Build and push the starfish-build Docker image to the bart registry.
+# Build and push this repo's Docker images to the bart registry.
 #
 # Triggers:
 #   - Manual (workflow_dispatch)
 #   - Push to docker/ directory on master
 #
-# The image is tagged with :24.04 and also :latest for the default tag.
-# CI workflows reference starfish-build:24.04 after migration.
+# starfish-build is tagged with :24.04 and also :latest for the default tag;
+# CI workflows reference starfish-build:24.04. starfish-android-build (see
+# docker/Dockerfile.android-build) only has a :latest tag; android.yml
+# references that.
 # =============================================================================
 name: Build & Push Docker Image
 
@@ -51,6 +53,44 @@ jobs:
         run: |
           docker push lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
           docker push lws-docker-local.bart.sec.samsung.net/starfish-build:latest
+
+      - name: Logout from bart registry
+        if: always()
+        run: docker logout lws-docker-local.bart.sec.samsung.net
+
+  build-and-push-android:
+    # Dockerfile.android-build's FROM is circleci/android:api-30-ndk, a
+    # public Docker Hub image -- needs the same runner pool android.yml
+    # itself used to need for that reason (see there), unlike
+    # build-and-push above whose base (ubuntu:24.04) is mirrored/reachable
+    # from every pool here.
+    runs-on: [code-linux, code-2xlarge]
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout source
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
+      - name: Login to bart registry
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | \
+            docker login lws-docker-local.bart.sec.samsung.net \
+            -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build image
+        run: |
+          docker build \
+            -f docker/Dockerfile.android-build \
+            -t lws-docker-local.bart.sec.samsung.net/starfish-android-build:latest \
+            .
+
+      - name: Push image
+        run: docker push lws-docker-local.bart.sec.samsung.net/starfish-android-build:latest
 
       - name: Logout from bart registry
         if: always()

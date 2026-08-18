@@ -8,6 +8,10 @@ on:
         default: 'master'
         required: true
         type: string
+      thirdparty_key:
+        description: 'squash_thirdparty cache id (starfish-thirdparty-<key> under BART''s starfish-ci-cache/, see tool/ci/lib_submodule_cache.sh)'
+        required: true
+        type: string
 
 jobs:
   build_x64_clang:
@@ -30,8 +34,8 @@ jobs:
         uses: CODE-Actions/checkout@v2
         with:
           submodules: false
-          repository: mh-byun/starfish_window_build
-          ref: ${{ inputs.pr_number }}
+          allow-unsafe-pr-checkout: true
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Add safe directory
         run: git config --global --add safe.directory /__w/starfish/starfish
@@ -39,6 +43,26 @@ jobs:
       - name: Clean workspace
         run: |
             git clean -xdf
+      # squash_thirdparty already published (or found already published)
+      # this exact submodule content as a tarball on BART (this org's
+      # internal Artifactory instance) before this job's `needs:` let it
+      # start -- reachable directly from every runner pool here, no git
+      # blob-size chunking, no Actions cache (unsupported on this GHES
+      # instance) or artifact reuse (slow/unreliable here). See
+      # tool/ci/lib_submodule_cache.sh for the mechanism.
+      - name: Fetch thirdparty submodule cache
+        shell: bash
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: |
+          source tool/ci/lib_submodule_cache.sh
+          submodule_cache_fetch "${{ inputs.thirdparty_key }}" cache.tar.gz thirdparty.tar.gz
+      - name: Extract thirdparty submodules
+        run: tar xzf thirdparty.tar.gz
+      - name: Verify thirdparty submodules were restored
+        run: |
+          test -f third_party/escargot/CMakeLists.txt || (echo "::error::third_party/escargot missing after cache restore -- check squash_thirdparty's cache push" && exit 1)
+          test -f binding_generator/scripts/starfish_code_generator.py || (echo "::error::binding_generator missing after cache restore -- check squash_thirdparty's cache push" && exit 1)
       - name: Build Starfish
         run: |
           cmake CMakeLists.txt -G Ninja -DDOCKER=1 \

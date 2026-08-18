@@ -25,6 +25,42 @@ jobs:
         run: ./tool/lint/check_tidy.py
 
   squash_thirdparty:
+    # NOTE: despite the job name (kept so `needs: [squash_thirdparty]` in every
+    # downstream workflow doesn't need touching), this no longer squashes
+    # anything into a separate repo. It used to flatten this PR's whole tree
+    # (submodules materialized + rsync-filtered + version-stamped) and force-
+    # push it to a specific person's external GHE repo
+    # (mh-byun/starfish_window_build) for every downstream job to check out --
+    # that meant depending on one individual's personal repo staying around,
+    # and a PR-numbered branch getting force-pushed made concurrent re-runs of
+    # the same PR racy.
+    #
+    # Second attempt (CODE-Actions/cache@v2, then GitHub Actions
+    # upload-artifact/download-artifact with cross-run REST-API reuse) --
+    # cache doesn't work at all on this GHES instance (no storage backend
+    # configured, silently no-ops on save/restore), and the artifact-based
+    # replacement turned out slow/unreliable in practice too.
+    #
+    # Third attempt: a branch on this same repo (self-referential git
+    # commits, see git history) -- worked, but every consumer paid for
+    # git's 100MB-per-blob limit (tarball chunked + reassembled with a
+    # `git show` per chunk) and for GHES rebuilding its pack from scratch on
+    # every fetch of an orphan ref (no bitmap reuse against unrelated
+    # history) -- confirmed on a real run taking 8+ minutes for a ~150MB
+    # tarball.
+    #
+    # Now: materialize starfish's own third_party/binding_generator here
+    # (still the only job with the internal-proxy path to
+    # github.sec.samsung.net -- every other runner pool either can't reach
+    # it at all, or would need its own proxy+deploy-key setup duplicated
+    # everywhere), and publish it as a tarball on BART (this org's internal
+    # Artifactory instance, already reachable directly from every runner
+    # pool here -- same host these workflows pull Docker images from)
+    # instead of a git branch or an artifact -- downstream jobs get it with
+    # a plain HTTPS GET, no chunking, no git pack machinery, no REST API.
+    # See tool/ci/lib_submodule_cache.sh for the mechanism and
+    # cache_cleanup.yml for the weekly prune+rebuild that keeps BART's
+    # starfish-ci-cache/ folder from accumulating forever.
     needs: check_source
     runs-on: [ runner-type1 ]
     container:
@@ -33,6 +69,9 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
       options: --user root
+    outputs:
+      thirdparty_key: ${{ steps.cache.outputs.branch }}
+      windows_thirdparty_key: ${{ steps.cache_windows.outputs.id }}
     steps:
       - name: Checkout source..
         uses: CODE-Actions/checkout@v2
@@ -41,60 +80,46 @@ jobs:
           allow-unsafe-pr-checkout: true
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Update submodules with proxy
-        run: |
-            export https_proxy=http://10.112.1.184:8080
-            export http_proxy=http://10.112.1.184:8080
-            git config --global http.sslVerify false
-            git config --global --add safe.directory /__w/starfish/starfish
-            git config submodule.third_party/wpt.update none
-            git submodule update --init binding_generator third_party
-            cd third_party/escargot
-            git submodule update --init third_party
-            cd third_party/walrus
-            git submodule update --init third_party/sljit
-            cd ../../../../
-            git config --unset submodule.third_party/wpt.update
-
       - name: Add safe directory
-        run: |
-              mkdir -p /__w/starfish/lwe_rel_tmp
-              git config --global --add safe.directory /__w/starfish/lwe_rel_tmp
+        run: git config --global --add safe.directory /__w/starfish/starfish
 
-      - name: Reset Submodule
-        run: git submodule foreach --recursive git reset --hard
-
-      - name: Make source for Windows
+      # NOTE: was `echo "branch=$(./tool/ci/cache_starfish_thirdparty.sh)" >>
+      # $GITHUB_OUTPUT` -- a real bug: bash's `set -e` (GH Actions' default
+      # for `run:`) does NOT propagate a failing command substitution when
+      # it's embedded inside another command like `echo "...$(cmd)..."` --
+      # only `echo`'s own (always-zero) exit status is checked. That masked
+      # a real submodule-fetch failure as a green/successful step with an
+      # empty `branch` output. Assigning to a bare variable first does
+      # propagate correctly (`var=$(cmd)` on its own line IS a simple
+      # command whose exit status is the substitution's).
+      - name: Build or reuse thirdparty submodule cache
+        id: cache
         env:
-          DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_SSH_KEY }}
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
         run: |
-              # NOTE: the container runs with HOME=/github/home, but the ssh
-              # client resolves the default identity path (~/.ssh/id_rsa) from
-              # the passwd home of the running user (root -> /root), NOT from
-              # $HOME. Writing to $HOME/.ssh would leave the key where ssh never
-              # looks, causing "Permission denied (publickey)". Write to an
-              # explicit path and point git at it via GIT_SSH_COMMAND.
-              KEY_FILE=/root/.ssh/id_rsa
-              install -m 700 -d /root/.ssh
-              printf '%s\n' "$DEPLOY_KEY" > "$KEY_FILE"
-              chmod 600 "$KEY_FILE"
-              export GIT_SSH_COMMAND="ssh -i $KEY_FILE -o IdentitiesOnly=yes"
-              git config --global user.email "github-actions[bot]@users.noreply.github.com"
-              git config --global user.name "github-actions[bot]"
-              tool/release/prepare_source_without_thirdparty.sh
-              cd ../lwe_rel_tmp
-              git remote add origin git@github.sec.samsung.net:mh-byun/starfish_window_build.git
-              git fetch origin
-              git push origin HEAD:${{ github.event.pull_request.number }} -f
-              cd ../starfish
-              rm -rf ../lwe_rel_tmp
-              rm -f "$KEY_FILE"
+          branch=$(./tool/ci/cache_starfish_thirdparty.sh)
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+      # windows.yml only ever reads a fraction of the general thirdparty
+      # cache above (see cache_starfish_thirdparty_windows.sh) -- packing
+      # the full one into it wasted both fetch and Windows-side extraction
+      # time on content it never touches. Must run after the step above:
+      # it only reads what that step already fetched/self-healed into this
+      # same checkout, no fetching of its own.
+      - name: Build or reuse windows thirdparty submodule cache
+        id: cache_windows
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: |
+          id=$(./tool/ci/cache_starfish_thirdparty_windows.sh)
+          echo "id=$id" >> "$GITHUB_OUTPUT"
 
   x64_test:
     needs: [ squash_thirdparty ]
     uses: ./.github/workflows/x64_test.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
+      thirdparty_key: ${{ needs.squash_thirdparty.outputs.thirdparty_key }}
     secrets: inherit
 
   x64_test_clang:
@@ -102,6 +127,7 @@ jobs:
     uses: ./.github/workflows/x64_test_clang.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
+      thirdparty_key: ${{ needs.squash_thirdparty.outputs.thirdparty_key }}
     secrets: inherit
 
   windows:
@@ -109,6 +135,7 @@ jobs:
     uses: ./.github/workflows/windows.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
+      windows_thirdparty_key: ${{ needs.squash_thirdparty.outputs.windows_thirdparty_key }}
     secrets: inherit
 
   worker:
@@ -116,6 +143,7 @@ jobs:
     uses: ./.github/workflows/worker.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
+      thirdparty_key: ${{ needs.squash_thirdparty.outputs.thirdparty_key }}
     secrets: inherit
 
   gl_backend:
@@ -123,6 +151,7 @@ jobs:
     uses: ./.github/workflows/gl_backend.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
+      thirdparty_key: ${{ needs.squash_thirdparty.outputs.thirdparty_key }}
     secrets: inherit
 
   dynamic_loader:
@@ -130,6 +159,7 @@ jobs:
     uses: ./.github/workflows/dynamic_loader.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
+      thirdparty_key: ${{ needs.squash_thirdparty.outputs.thirdparty_key }}
     secrets: inherit
 
   minor_port:
@@ -137,4 +167,13 @@ jobs:
     uses: ./.github/workflows/minor.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
+      thirdparty_key: ${{ needs.squash_thirdparty.outputs.thirdparty_key }}
+    secrets: inherit
+
+  android:
+    needs: [ squash_thirdparty ]
+    uses: ./.github/workflows/android.yml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      thirdparty_key: ${{ needs.squash_thirdparty.outputs.thirdparty_key }}
     secrets: inherit

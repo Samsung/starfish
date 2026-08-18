@@ -1,0 +1,112 @@
+# =============================================================================
+# Starfish Android CI Build Image
+#
+# Built FROM circleci/android:api-30-ndk (Debian Buster) with the exact
+# SDK platform / NDK revision / build tools lwe_android_rel's
+# library/build.gradle actually pins baked in, plus the apt/pip deps
+# android.yml used to install on every single PR run. See android.yml's
+# header comment for the full "why" -- short version: the base image only
+# ships SDK platform 30 + NDK r21e (21.4.7075529), while build.gradle pins
+# compileSdkVersion 33 and ndkVersion 21.0.6113669 -- neither matches, so
+# the Android Gradle Plugin re-downloaded both from dl.google.com on every
+# PR. Baking them in here means that download happens once, when this
+# image is rebuilt, not on every PR.
+#
+# Build:
+#   docker build -f docker/Dockerfile.android-build \
+#     -t lws-docker-local.bart.sec.samsung.net/starfish-android-build:latest .
+#
+# Push to bart registry:
+#   docker push lws-docker-local.bart.sec.samsung.net/starfish-android-build:latest
+# =============================================================================
+
+FROM circleci/android:api-30-ndk
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# ---------------------------------------------------------------------------
+# api-30-ndk is Debian Buster, which is EOL -- deb.debian.org/
+# security.debian.org 404 on it now (moved to archive.debian.org, which
+# also needs Valid-Until checking disabled since its Release files are
+# intentionally left to expire). The image's pre-baked Google Cloud SDK
+# apt repo is unrelated to this build and its signing key is unreachable
+# here, so drop it instead of fixing the key.
+# ---------------------------------------------------------------------------
+RUN sudo rm -f /etc/apt/sources.list.d/*cloud-sdk*.list && \
+    sudo sed -i -e 's|deb.debian.org|archive.debian.org|g' -e 's|security.debian.org|archive.debian.org|g' /etc/apt/sources.list && \
+    echo 'Acquire::Check-Valid-Until "false";' | sudo tee /etc/apt/apt.conf.d/99no-check-valid-until
+
+# ---------------------------------------------------------------------------
+# Native build toolchain + the binding generator's python3 deps
+# ---------------------------------------------------------------------------
+# android.cmake generates JS binding code with `python3
+# binding_generator/scripts/starfish_code_generator.py` (a plain
+# EXECUTE_PROCESS at CMake-configure time with no exit-code check -- a
+# failure here leaves starfish_generated/binding/generated/ empty and
+# CMake carries on regardless, only surfacing later as a confusing
+# "Interfaces.h file not found" compile error). That script needs Jinja2
+# *and* ply (transitively, via starfish_idl_lexer/starfish_idl_parser)
+# under python3 specifically -- bare `pip` on this image is python2's pip.
+#
+# python3-setuptools: this Buster image's python3-pip is 18.1 (2018), old
+# enough that it has no build-isolation (PEP 517) support -- installing
+# any sdist-only package (no prebuilt wheel for this pip/python
+# combination) shells out to a bare `python setup.py egg_info` and expects
+# setuptools to already be importable. Confirmed on a real image build:
+# pip fell back to Jinja2's transitive MarkupSafe dependency's *source*
+# tarball (no wheel this old pip's resolver would accept) and that failed
+# outright with "ModuleNotFoundError: No module named 'setuptools'" --
+# apt's python3-setuptools provides it without needing pip to bootstrap
+# itself.
+RUN sudo apt-get update && \
+    sudo apt-get install -y --no-install-recommends \
+        ninja-build cmake libtool autoconf automake gperf gettext autopoint pkg-config python3-pip python3-setuptools curl && \
+    sudo rm -rf /var/lib/apt/lists/* && \
+    sudo python3 -m pip install Jinja2 ply
+
+# ---------------------------------------------------------------------------
+# SDK components lwe_android_rel/library/build.gradle actually pins:
+# compileSdkVersion 33, ndkVersion 21.0.6113669, and
+# externalNativeBuild.cmake.version "3.10.2" (AGP only accepts the
+# SDK-managed CMake package for that, not an apt-installed cmake on PATH
+# no matter its version: "[CXX1300] CMake '3.10.2' was not found in SDK,
+# PATH, or by cmake.dir property"). buildToolsVersion 30.0.3 is already
+# present in the base image.
+# ---------------------------------------------------------------------------
+RUN yes | sdkmanager --licenses >/dev/null && \
+    yes | sdkmanager --install "platforms;android-33" "ndk;21.0.6113669" "cmake;3.10.2.4988404"
+
+# ---------------------------------------------------------------------------
+# Bake in the exact Gradle distribution lwe_android_rel's own
+# gradle-wrapper.properties currently pins (7.6.1), so gradlew never touches
+# services.gradle.org at CI runtime. Confirmed on real runs: that download
+# intermittently dies mid-SSL-handshake ("SocketException: Connection
+# reset"), failing the whole job in a few seconds before the actual build
+# even starts (see android.yml's Build step comment) -- the same class of
+# problem the SDK platform/NDK bake-in above already solved for
+# dl.google.com.
+#
+# GRADLE_USER_HOME is pinned to a fixed, user-independent path rather than
+# left at the wrapper's default ~/.gradle: android.yml runs this image's
+# container with `--user root`, a *different* user than whatever this
+# Dockerfile build stage runs as (this base image's default, non-root
+# `circleci`) -- a $HOME-relative cache warmed at build time would silently
+# miss at runtime under a different $HOME. World-writable so it's readable
+# regardless of the exact UID either side lands on.
+#
+# NOTE: if lwe_android_rel ever bumps its pinned Gradle version, this only
+# goes stale, not broken -- gradlew falls back to its normal network
+# download for the new version (i.e. back to today's status quo for that
+# version until this Dockerfile is updated to match and the image rebuilt).
+# ---------------------------------------------------------------------------
+ENV GRADLE_USER_HOME=/opt/gradle-home
+RUN GRADLE_VERSION=7.6.1 && \
+    mkdir -p /tmp/gradle-warm/gradle/wrapper && cd /tmp/gradle-warm && \
+    printf 'distributionBase=GRADLE_USER_HOME\ndistributionPath=wrapper/dists\nzipStoreBase=GRADLE_USER_HOME\nzipStorePath=wrapper/dists\ndistributionUrl=https\\://services.gradle.org/distributions/gradle-%s-bin.zip\n' "$GRADLE_VERSION" > gradle/wrapper/gradle-wrapper.properties && \
+    curl -fsSL -o gradle/wrapper/gradle-wrapper.jar "https://raw.githubusercontent.com/gradle/gradle/v${GRADLE_VERSION}/gradle/wrapper/gradle-wrapper.jar" && \
+    printf '#!/bin/sh\nexec java -jar "$(cd "$(dirname "$0")" && pwd)/gradle/wrapper/gradle-wrapper.jar" "$@"\n' > gradlew && \
+    chmod +x gradlew && \
+    sudo mkdir -p "$GRADLE_USER_HOME" && \
+    ./gradlew --version && \
+    sudo chmod -R a+rwX "$GRADLE_USER_HOME" && \
+    cd / && rm -rf /tmp/gradle-warm

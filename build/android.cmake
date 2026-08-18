@@ -1,5 +1,5 @@
 SET (OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-MESSAGE(VERBOSE ${OUTPUT_DIRECTORY})
+MESSAGE(VERBOSE "${OUTPUT_DIRECTORY}")
 
 set (STARFISH_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/starfish)
 set (THIRD_PARTY_ROOT ${STARFISH_ROOT}/third_party)
@@ -23,50 +23,84 @@ CONFIGURE_FILE (${ESCARGOT_ROOT}/src/EscargotInfo.h.in ${OUTPUT_DIRECTORY}/escar
 
 # JS BINDING
 # Generate binding code first
+#
+# Two separate EXECUTE_PROCESS calls, not one with two COMMANDs: multiple
+# COMMANDs in a single execute_process() are chained via a pipe (stdout of
+# the first feeds stdin of the second), not run sequentially -- harmless
+# here since make_directory prints nothing, but the real reason for the
+# split is RESULT_VARIABLE below. Without it, a codegen failure (e.g. a
+# missing python3 module) left the generated dir empty and CMake carried
+# on regardless, only surfacing as a confusing "binding/generated/
+# Interfaces.h file not found" compile error much later.
 EXECUTE_PROCESS(
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIRECTORY}/starfish_generated/binding/generated/
-        COMMAND python3 ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${OUTPUT_DIRECTORY}/starfish_generated/binding/generated/
 )
-
-IF (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-    SET(LWE_CFLAGS -DGC_DEBUG -g3)
-    SET(LWE_CXXFLAGS -DGC_DEBUG -g3)
-ELSEIF (${CMAKE_BUILD_TYPE} STREQUAL "Release")
-    SET(LWE_CFLAGS -DNDEBUG -O1 -g3)
-    SET(LWE_CXXFLAGS -DNDEBUG -O1 -g3)
+EXECUTE_PROCESS(
+        COMMAND python3 ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${OUTPUT_DIRECTORY}/starfish_generated/binding/generated/
+        RESULT_VARIABLE STARFISH_BINDING_GEN_RESULT
+)
+IF (NOT STARFISH_BINDING_GEN_RESULT EQUAL 0)
+    MESSAGE(FATAL_ERROR "starfish_code_generator.py failed (exit code ${STARFISH_BINDING_GEN_RESULT}) -- see its output above for the actual error.")
 ENDIF()
+
+# (Removed: an early debug/release IF(CMAKE_BUILD_TYPE STREQUAL ...) block
+# used to set LWE_CFLAGS/LWE_CXXFLAGS here. Dead regardless of whether
+# CMAKE_BUILD_TYPE is set by the caller's build.gradle: LWE_CXXFLAGS gets
+# fully reassigned -- not appended to -- further down, and LWE_CFLAGS is
+# never consumed by any target_compile_options/definitions call in this file.)
 
 #######################################################
-# GCUTIL
+# ESCARGOT (+ GCutil, libbf, libsimdutf, runtime_icu_binder)
 #######################################################
-
-FILE(GLOB GCUTIL_BDWGC_SRC ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/*.c)
-FILE(GLOB GCUTIL_SRC ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/*.cpp)
-
-SET (GCUTIL_CFLAGS_INTERNAL ${NDK_CFLAGS})
-SEPARATE_ARGUMENTS(GCUTIL_CFLAGS_INTERNAL)
-
-SET (GCUTIL_CFLAGS_INTERNAL ${GCUTIL_CFLAGS_INTERNAL} -g3 -fdata-sections -ffunction-sections -DESCARGOT -fno-strict-aliasing -DGC_DLL=1 -fvisibility=hidden -Wno-unused-variable)
-SET (GCUTIL_CFLAGS_INTERNAL ${GCUTIL_CFLAGS_INTERNAL} -DENABLE_DISCLAIM=1 -DGC_ATOMIC_UNCOLLECTABLE=1 -DGC_DONT_REGISTER_MAIN_STATIC_DATA=1 -DGC_ENABLE_SUSPEND_THREAD=1 -DGC_BUILD=1 -DGC_VISIBILITY_HIDDEN_SET=1)
-SET (GCUTIL_CFLAGS_INTERNAL ${GCUTIL_CFLAGS_INTERNAL} -DGC_NO_THREADS_DISCOVERY=1 -DGC_VERSION_MAJOR=8 -DGC_VERSION_MICRO=0 -DGC_VERSION_MINOR=3)
-SET (GCUTIL_CFLAGS_INTERNAL ${GCUTIL_CFLAGS_INTERNAL} -DHAVE_DLADDR=1 -DHAVE_DLFCN_H=1 -DHAVE_DL_ITERATE_PHDR=1 -DHAVE_INTTYPES_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STDINT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRINGS_H=1)
-SET (GCUTIL_CFLAGS_INTERNAL ${GCUTIL_CFLAGS_INTERNAL} -DHAVE_STRING_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_UNISTD_H=1)
-SET (GCUTIL_CFLAGS_INTERNAL ${GCUTIL_CFLAGS_INTERNAL} -DIGNORE_DYNAMIC_LOADING=1 -DJAVA_FINALIZATION=1 -DMUNMAP_THRESHOLD=1 -DNO_EXECUTE_PERMISSION=1 -DSTDC_HEADERS=1 -DUSE_MMAP=1 -DUSE_MUNMAP=1)
-SET (GCUTIL_CFLAGS_INTERNAL ${GCUTIL_CFLAGS_INTERNAL} -DHAVE_PTHREAD_GETATTR_NP=1 -DUSE_GET_STACKBASE_FOR_MAIN=1)
-
-IF (${ANDROID_SYSROOT_ABI} STREQUAL "arm64" OR ${ANDROID_SYSROOT_ABI} STREQUAL "x86_64")
-    SET (GCUTIL_CFLAGS_INTERNAL ${GCUTIL_CFLAGS_INTERNAL} -DESCARGOT_USE_32BIT_IN_64BIT=1)
+# Previously this file hand-reimplemented escargot's build: it globbed
+# escargot's own src/**/*.cpp directly into the `lwe` SHARED library's source
+# list, ran escargot's codegen scripts (UnicodeIdentifierTables.cpp,
+# YarrCanonicalizeUnicode.cpp, UnicodePatternTables.h, YarrCanonicalizeUCS2.cpp)
+# by hand, and hand-rolled a `gcutil` STATIC target with a manually-maintained
+# ~20-define GCUTIL_CFLAGS_INTERNAL list -- all duplicating (and silently
+# drifting from) what third_party/escargot's own CMakeLists.txt already does,
+# the same way linux/tizen (third_party.cmake) and windows (windows.cmake)
+# consume it via ADD_SUBDIRECTORY. escargot's CMakeLists.txt already has
+# first-class ESCARGOT_HOST=android support (TLS-by-pthread-key selection,
+# -DANDROID=1/-DESCARGOT_ANDROID=1, -mstackrealign, per-ESCARGOT_ARCH 32/64-bit
+# flags -- see third_party/escargot/CMakeLists.txt and build/target.cmake), so
+# delegate to it the same way every other platform does.
+#
+# ESCARGOT_THREADING is explicitly OFF here (unlike third_party.cmake/
+# windows.cmake, which turn it ON) to preserve this file's previous behavior:
+# the hand-rolled gcutil build never defined GC_THREAD_ISOLATE/_REENTRANT or
+# linked libatomic, i.e. Android has never shipped with Atomics/
+# SharedArrayBuffer. Flip this on deliberately (and add `atomic` to
+# LWE_LINK_LIBRARIES, which escargot's target.cmake requests via
+# ESCARGOT_LIBRARIES when ESCARGOT_THREADING is ON) if that's ever wanted.
+IF (${ANDROID_SYSROOT_ABI} STREQUAL "arm64")
+    SET (ESCARGOT_ARCH aarch64)
+ELSEIF (${ANDROID_SYSROOT_ABI} STREQUAL "arm")
+    SET (ESCARGOT_ARCH arm)
+ELSEIF (${ANDROID_SYSROOT_ABI} STREQUAL "x86_64")
+    SET (ESCARGOT_ARCH x64)
+ELSEIF (${ANDROID_SYSROOT_ABI} STREQUAL "x86")
+    SET (ESCARGOT_ARCH x86)
+ENDIF()
+SET (ESCARGOT_HOST android)
+STRING (TOLOWER "${CMAKE_BUILD_TYPE}" ESCARGOT_MODE)
+SET (ESCARGOT_BUILD_SHARED_LIBS OFF)
+SET (ESCARGOT_ENABLE_SHELL OFF)
+SET (ESCARGOT_THREADING OFF)
+SET (ESCARGOT_USE_CUSTOM_LOGGING ON)
+IF (ENABLE_RUNTIME_ICU_BINDER)
+    SET (ESCARGOT_LIBICU_SUPPORT ON)
+    SET (ESCARGOT_LIBICU_SUPPORT_WITH_DLOPEN ON)
 ENDIF()
 
-IF (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-    SET (GCUTIL_CFLAGS_INTERNAL ${GCUTIL_CFLAGS_INTERNAL} -DGC_DEBUG -O0)
-ELSEIF (${CMAKE_BUILD_TYPE} MATCHES "Rel")
-    SET (GCUTIL_CFLAGS_INTERNAL ${GCUTIL_CFLAGS_INTERNAL} -DNO_DEBUGGING=1 -O2)
-ENDIF()
-
-ADD_LIBRARY (gcutil STATIC ${GCUTIL_BDWGC_SRC} ${GCUTIL_SRC})
-TARGET_COMPILE_OPTIONS (gcutil PRIVATE ${GCUTIL_CFLAGS_INTERNAL})
-TARGET_INCLUDE_DIRECTORIES (gcutil PRIVATE ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/include ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/include/gc)
+# Unlike linux/tizen (third_party.cmake) and windows (windows.cmake), this
+# file is INCLUDE()'d from lwe_android_rel's own CMakeLists.txt (a different
+# repo, where starfish is checked out as a subdirectory rather than being the
+# project root) -- so CMAKE_CURRENT_SOURCE_DIR there is NOT the starfish repo
+# root, and a bare relative "third_party/escargot" resolves to the wrong
+# path. Use the absolute ESCARGOT_ROOT instead; CMake then requires an
+# explicit binary dir since the source dir isn't under CMAKE_CURRENT_SOURCE_DIR.
+ADD_SUBDIRECTORY (${ESCARGOT_ROOT} ${OUTPUT_DIRECTORY}/escargot)
 
 #######################################################
 # SOURCE FILES
@@ -80,55 +114,6 @@ FILE (GLOB_RECURSE STARFISH_SHELL_SRC ${STARFISH_ROOT}/src/shell/*.cpp)
 LIST (REMOVE_ITEM STARFISH_SUB_SRC
         ${STARFISH_SHELL_SRC}
         )
-
-file(GLOB DOUBLEC_SRC "${STARFISH_ROOT}/third_party/escargot/third_party/double_conversion/*.cc" )
-file(GLOB YARR_SRC "${STARFISH_ROOT}/third_party/escargot/third_party/yarr/*.cpp" )
-file(GLOB XSUM_SRC "${STARFISH_ROOT}/third_party/escargot/third_party/xsum/*.cpp" )
-file(GLOB SIMDUTF_SRC "${STARFISH_ROOT}/third_party/escargot/third_party/simdutf/*.cpp" )
-IF (ENABLE_RUNTIME_ICU_BINDER)
-    file(GLOB RUNTIME_ICU_BINDER_SRC "${STARFISH_ROOT}/third_party/escargot/third_party/runtime_icu_binder/*.cpp" )
-ELSE()
-    set(RUNTIME_ICU_BINDER_SRC)
-ENDIF()
-file(GLOB_RECURSE ESCARGOT_SRC "${STARFISH_ROOT}/third_party/escargot/src/**/*.cpp" )
-list(REMOVE_ITEM ESCARGOT_SRC "${STARFISH_ROOT}/third_party/escargot/src/shell/Shell.cpp")
-
-# Generate UnicodeIdentifierTables.cpp
-MAKE_DIRECTORY(${OUTPUT_DIRECTORY}/escargot_generated/parser)
-EXECUTE_PROCESS(
-    COMMAND python3 ${ESCARGOT_ROOT}/tools/code_generators/gen_unicode.py --derived_core_properties ${ESCARGOT_ROOT}/tools/unicode_data/DerivedCoreProperties.txt --dst ${OUTPUT_DIRECTORY}/escargot_generated/parser/UnicodeIdentifierTables.cpp
-)
-SET (ESCARGOT_SRC ${ESCARGOT_SRC} ${OUTPUT_DIRECTORY}/escargot_generated/parser/UnicodeIdentifierTables.cpp)
-
-# Generate YarrCanonicalizeUnicode.cpp
-MAKE_DIRECTORY(${OUTPUT_DIRECTORY}/escargot_generated/yarr)
-EXECUTE_PROCESS(
-    COMMAND python3 ${ESCARGOT_ROOT}/tools/code_generators/generateYarrCanonicalizeUnicode.py ${ESCARGOT_ROOT}/tools/unicode_data/CaseFolding.txt ${OUTPUT_DIRECTORY}/escargot_generated/yarr/YarrCanonicalizeUnicode.cpp
-)
-
-FILE(READ ${OUTPUT_DIRECTORY}/escargot_generated/yarr/YarrCanonicalizeUnicode.cpp UNICODE_FILE_CONTENTS)
-STRING(REPLACE "config.h" "WTFBridge.h" UNICODE_FILE_CONTENTS "${UNICODE_FILE_CONTENTS}")
-STRING(REPLACE "constexpr const" "const" UNICODE_FILE_CONTENTS "${UNICODE_FILE_CONTENTS}")
-STRING(REPLACE "constexpr size_t UNICODE" "const size_t UNICODE" UNICODE_FILE_CONTENTS "${UNICODE_FILE_CONTENTS}")
-STRING(REPLACE "constexpr CanonicalizationRange unicodeRangeInfo" "const CanonicalizationRange unicodeRangeInfo" UNICODE_FILE_CONTENTS "${UNICODE_FILE_CONTENTS}")
-FILE(WRITE ${OUTPUT_DIRECTORY}/escargot_generated/yarr/YarrCanonicalizeUnicode.cpp "${UNICODE_FILE_CONTENTS}")
-
-SET(ESCARGOT_SRC ${ESCARGOT_SRC} ${OUTPUT_DIRECTORY}/escargot_generated/yarr/YarrCanonicalizeUnicode.cpp)
-
-# yarr/UnicodePatternTables.h
-EXECUTE_PROCESS(
-    COMMAND python3 ${ESCARGOT_ROOT}/tools/code_generators/generateYarrUnicodePropertyTables.py ${ESCARGOT_ROOT}/tools/unicode_data ${OUTPUT_DIRECTORY}/escargot_generated/yarr/UnicodePatternTables.h
-)
-
-# YarrCanonicalizeUCS2.cpp
-EXECUTE_PROCESS(
-    COMMAND python3 ${ESCARGOT_ROOT}/tools/code_generators/generateYarrCanonicalizeUCS2.py ${ESCARGOT_ROOT}/tools/unicode_data/UnicodeData.txt ${OUTPUT_DIRECTORY}/escargot_generated/yarr/YarrCanonicalizeUCS2.cpp
-    RESULT_VARIABLE GENERATE_RESULT
-    OUTPUT_VARIABLE GENERATE_OUTPUT
-    ERROR_VARIABLE GENERATE_ERROR
-)
-
-SET(ESCARGOT_SRC ${ESCARGOT_SRC} ${OUTPUT_DIRECTORY}/escargot_generated/yarr/YarrCanonicalizeUCS2.cpp)
 
 #######################################################
 # INCLUDE DIRS
@@ -265,13 +250,20 @@ set(LWE_CXXFLAGS
         -fdenormal-fp-math=ieee
         )
 
-IF (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-    SET(LWE_CFLAGS ${LWE_CFLAGS} -DGC_DEBUG -g3)
-    SET(LWE_CXXFLAGS ${LWE_CXXFLAGS} -DGC_DEBUG -g3)
-ELSEIF (${CMAKE_BUILD_TYPE} MATCHES "Rel")
-    SET(LWE_CFLAGS  ${LWE_CFLAGS} -DNDEBUG -Oz -g3)
-    SET(LWE_CXXFLAGS  ${LWE_CXXFLAGS} -DNDEBUG -Oz -g3)
-ENDIF()
+# Generator expressions instead of a configure-time IF(CMAKE_BUILD_TYPE ...):
+# this is a single-config-per-variant CMake invocation (Gradle reconfigures
+# separately per Debug/Release build type), so $<CONFIG:Debug> resolves
+# correctly whether or not CMAKE_BUILD_TYPE happens to be set by the time
+# this line runs -- a plain IF() would silently no-op if it weren't yet.
+# (The matching LWE_CFLAGS append was dropped: LWE_CFLAGS is never consumed
+# by any target_compile_options/definitions call in this file.)
+SET(LWE_CXXFLAGS ${LWE_CXXFLAGS}
+    $<$<CONFIG:Debug>:-DGC_DEBUG>
+    $<$<CONFIG:Debug>:-g3>
+    $<$<NOT:$<CONFIG:Debug>>:-DNDEBUG>
+    $<$<NOT:$<CONFIG:Debug>>:-Oz>
+    $<$<NOT:$<CONFIG:Debug>>:-g3>
+)
 
 set(LWE_LDFLAGS ${NDK_LDFLAGS_SHARED})
 
@@ -415,30 +407,21 @@ ADD_CUSTOM_TARGET (libwebsockets
 SET(LWE_INCLUDE_DIRS ${LWE_INCLUDE_DIRS} ${LIBWEBSOCKETS_BUILD_OUTDIR}/include)
 
 #######################################################
-# LIBBF
-#######################################################
-file(GLOB LIBBF_SRC "${STARFISH_ROOT}/third_party/escargot/third_party/libbf/*.c" )
-ADD_LIBRARY (bf STATIC ${LIBBF_SRC})
-
-#######################################################
 # BUILD TARGET
 #######################################################
+# (libbf/libsimdutf/runtime-icu-binder-static/gc-lib are no longer built or
+# globbed here -- they're built by third_party/escargot's own CMakeLists.txt
+# via ADD_SUBDIRECTORY above, and PUBLIC-linked into the `escargot` target,
+# so linking `escargot` below pulls them in transitively.)
 
 add_library(lwe
         SHARED
         ${STARFISH_SRC}
         ${STARFISH_GEN_SRC}
         ${STARFISH_SUB_SRC}
-        ${DOUBLEC_SRC}
-        ${YARR_SRC}
-        ${XSUM_SRC}
-        ${SIMDUTF_SRC}
-        ${RUNTIME_ICU_BINDER_SRC}
-        ${ESCARGOT_SRC}
         )
 
 target_compile_definitions(lwe PRIVATE ${LWE_DEFINITIONS})
-message(fatal_error ${LWE_CXXFLAGS})
 target_compile_options(lwe PRIVATE ${LWE_CXXFLAGS})
 target_include_directories(lwe PRIVATE ${LWE_INCLUDE_DIRS})
 target_link_libraries(lwe ${LWE_LDFLAGS})
@@ -462,7 +445,7 @@ IF (NOT ENABLE_RUNTIME_ICU_BINDER)
 ENDIF()
 
 SET(LWE_LINK_LIBRARIES
-        gcutil
+        escargot
         skia_matrix
         clipper
         mp4parse
@@ -481,7 +464,6 @@ SET(LWE_LINK_LIBRARIES
         cairo
         tuv
         GLESv3
-        bf
         EGL
 )
 
