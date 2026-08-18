@@ -7,6 +7,8 @@ from subprocess import Popen, PIPE
 import time
 import fcntl
 import signal
+import shutil
+import tempfile
 from basics.constants import ENVOPTS
 
 try:
@@ -22,6 +24,18 @@ DEFAULT_WIDTH_OPT = WIDTH_OPT_PREFIX + "800"
 DEFAULT_HEIGHT_OPT = HEIGHT_OPT_PREFIX + "600"
 DEFAULT_REGRESSION_OPT = NON_REGRESSION_OPT
 TEST_RESULT_PASS_FILE = TEST_RESULT_FAIL_FILE = None
+TIMEOUT_OPT_PREFIX = "--timeout="
+# Starfish's own AppLoop can end up idle forever if a test's JS never reaches
+# the native testEnd()/wptTestEnd() binding that is the only thing able to
+# call AppLoop::stop() on this driver path (see CI_UPGRADE.md:
+# vec_009_to_016.html -- gdb-confirmed genuinely idle glib main loop, parked
+# in poll() inside g_main_loop_run(), not a JS busy-loop). This is a native
+# engine watchdog, independent of the optional TC_TIMEOUT-driven python-side
+# subprocess kill below, so the process always exits on its own (clean exit,
+# whatever PASS/FAIL text was already printed stays correct) instead of
+# hanging the whole test run. Generous on purpose -- this must only ever
+# catch genuine hangs, not slow-but-passing tests.
+DEFAULT_NATIVE_TIMEOUT_SEC = 180
 
 RE_PASS = re.compile(r"PASS")
 RE_FAIL = re.compile(r"FAIL")
@@ -92,28 +106,51 @@ def case_runner(tc):
     if os.environ.get(ENVOPTS.TIMEOUT):
         timeout = float(os.environ.get(ENVOPTS.TIMEOUT))
 
-    # Run starfish
-    starfish_command = ["./Starfish", tc_file, "--hide-window", __opts.width, __opts.height, __opts.regression, "--disable-console"]
-    # Bind before the try so the except handler stays safe even when
-    # open_subprocess raises before returning (e.g. Popen fails to launch).
-    starfish_output = starfish_err = b""
+    # Native watchdog seconds for AppLoopGlib (see DEFAULT_NATIVE_TIMEOUT_SEC
+    # above). Reuse TC_TIMEOUT when it's set so the native watchdog and the
+    # python-side kill (if any) agree; otherwise fall back to the generous
+    # default so this is armed even when TC_TIMEOUT isn't configured at all.
+    native_timeout = int(timeout) if timeout else DEFAULT_NATIVE_TIMEOUT_SEC
+
+    # Give every test its own throwaway localStorage/cookies/HTTP-cache dir
+    # instead of Starfish's default $HOME/Starfish-storage. That default is
+    # shared by every Starfish process on the machine -- including a real
+    # user's own browsing profile -- so without this, a test that seeds its
+    # state from localStorage (e.g. a TodoMVC app restoring saved todos) can
+    # accumulate state across repeated runs and start failing permanently
+    # (root-caused live: vue-3-2-todo-dist/index.html's `r.length == 2`
+    # assertion kept failing because 12+ stale todos had piled up in
+    # $HOME/Starfish-storage/localStorage.txt from earlier runs -- the app
+    # code was fine, the shared profile wasn't). A fresh directory per test
+    # also means CI runs (especially on persistent self-hosted runners,
+    # which don't get a clean $HOME every job) can't cross-contaminate.
+    storage_dir = tempfile.mkdtemp(prefix="starfish-storage-")
     try:
-        starfish_output, starfish_err, elapsed_time = open_subprocess(starfish_command, timeout)
-        starfish_output = str(starfish_output, 'utf-8')
-        starfish_err = str(starfish_err, 'utf-8')
-        if "[STARFISH_TEST] Got signal" in starfish_output :
-            raise Exception("Starfish Got signal")
-    except TimeoutError:
-        print(f"ERROR : Timeout ({timeout} sec.) - {tc_file}")
-        return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
-    except:
-        print("ERROR : Crash - " + tc_file)
-        print("stdout=>")
-        print(starfish_output)
-        print("stderr=>")
-        print(starfish_err)
-        return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
-    return __opts.tc_handler(tc_file, starfish_output, starfish_err, __opts.show_progress, elapsed_time=elapsed_time)
+        # Run starfish
+        starfish_command = ["./Starfish", tc_file, "--hide-window", __opts.width, __opts.height, __opts.regression, "--disable-console",
+                            TIMEOUT_OPT_PREFIX + str(native_timeout), "--storage-dir=" + storage_dir]
+        # Bind before the try so the except handler stays safe even when
+        # open_subprocess raises before returning (e.g. Popen fails to launch).
+        starfish_output = starfish_err = b""
+        try:
+            starfish_output, starfish_err, elapsed_time = open_subprocess(starfish_command, timeout)
+            starfish_output = str(starfish_output, 'utf-8')
+            starfish_err = str(starfish_err, 'utf-8')
+            if "[STARFISH_TEST] Got signal" in starfish_output :
+                raise Exception("Starfish Got signal")
+        except TimeoutError:
+            print(f"ERROR : Timeout ({timeout} sec.) - {tc_file}")
+            return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
+        except:
+            print("ERROR : Crash - " + tc_file)
+            print("stdout=>")
+            print(starfish_output)
+            print("stderr=>")
+            print(starfish_err)
+            return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
+        return __opts.tc_handler(tc_file, starfish_output, starfish_err, __opts.show_progress, elapsed_time=elapsed_time)
+    finally:
+        shutil.rmtree(storage_dir, ignore_errors=True)
 
 
 def run_parallel(list_file, nproc=None, width=None, height=None, regression=None,

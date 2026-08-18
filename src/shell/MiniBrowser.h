@@ -100,6 +100,15 @@ public:
         bool preferIsolatedThread = true;
         bool preferIncrementalGC = false;
         double timeout = 0; // seconds, 0 means no timeout.
+        // Overrides the localStorage/cookies/HTTP-cache/worker-storage
+        // directory (default: $HOME/Starfish-storage, shared by every
+        // Starfish process on the machine -- including a real user's
+        // browsing profile). Test drivers should always set this to a
+        // fresh throwaway directory per run so tests never read/write
+        // stale state left behind by a previous run (or the user's own
+        // profile), and never pollute either one. Empty means "use the
+        // default".
+        std::string storageDir;
     };
 
     static void parseArgs(int argc, char* argv[],
@@ -115,6 +124,12 @@ public:
     bool init(
         const InitOption& initOption,
         LWE::InitializeOption initializeOption = LWE::InitializeOption::None);
+    // Must be called before init() to take effect (init() is what reads
+    // storageDir()). See OtherOptions::storageDir.
+    void setStorageDirOverride(const std::string& dir)
+    {
+        m_storageDirOverride = dir;
+    }
     void setSettings(const Settings& settings);
 
     void loadURL(const std::string& url);
@@ -143,6 +158,8 @@ private:
     bool createLWE(const InitOption& initOption);
 
     std::string storageDir();
+
+    std::string m_storageDirOverride;
 
     InitOption m_initOption;
 

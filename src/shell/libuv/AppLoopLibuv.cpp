@@ -36,13 +36,6 @@ namespace {
 
 volatile sig_atomic_t doneFlag = 0;
 
-void updateDoneFlagFromENV()
-{
-    if (getenv("SHELL_DONE_FLAG") && (atoi(getenv("SHELL_DONE_FLAG")) == 1)) {
-        doneFlag = 1;
-    }
-}
-
 void setDoneFlag(int sig, siginfo_t* siginfo, void* context)
 {
     _exit(0);
@@ -95,7 +88,6 @@ int AppLoopSimple::start(double timeoutInSec)
     m_timeoutInMs = 0;
     m_startTimeInMs = 0;
 
-    setenv("SHELL_DONE_FLAG", "0", 1);
     if (timeoutInSec > 0) {
         m_timeoutInMs = static_cast<uint64_t>(timeoutInSec) * 1000;
         m_startTimeInMs = timestamp();
@@ -113,7 +105,6 @@ int AppLoopSimple::start(double timeoutInSec)
 
     while (!doneFlag) {
         usleep(100);
-        updateDoneFlagFromENV();
         if (m_timeoutInMs > 0) {
             uint64_t current = timestamp();
             if (current - m_startTimeInMs >= m_timeoutInMs) {
