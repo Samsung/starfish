@@ -30,7 +30,7 @@ sys.path.insert(0, os.path.dirname(_HERE))  # tool/ for drivers.basics, repo_pat
 sys.path.insert(0, os.path.join(os.path.dirname(_HERE), "wpt", "scripts"))
 
 from repo_paths import REPO_ROOT
-from drivers.basics.constants import ENVOPTS, ERRORCODE, DEFAULT_TC_TIMEOUT_SEC
+from drivers.basics.constants import ENVOPTS, ERRORCODE
 from execution_worker import WorkerRunner
 
 script_path = "./tool/drivers/run_test.py"
@@ -125,6 +125,18 @@ def vendor_test_webkit():
     run_test(["vendor_pixel", "tool/reftest/cairo/webkit_fast_etc_manual.res", "cairo", "--font-dep"])
 
 
+# Unlike the other run_test() call sites in this file, the Khronos WebGL
+# conformance suite is not capped by -p and so runs at full
+# multiprocessing.cpu_count() parallelism (e.g. 56 on this CI host). Each
+# worker is a full Starfish process driving its own GL context; on this
+# host's software Mesa (llvmpipe) driver, dozens of those running at once
+# oversubscribe the CPU (llvmpipe itself spawns a rasterizer thread pool
+# per context) badly enough that individual tests that pass fine in
+# isolation start hanging/timing out under full-width parallel load. Cap
+# this suite specifically -- the other vendor suites (blink/gecko/webkit)
+# are plain DOM/CSS tests with no GL driver involved and don't need this.
+KHRONOS_WEBGL_JOBS = 4
+
 def run_vendor_test_khronos(root, name):
     from http_server import popen_server
 
@@ -139,7 +151,7 @@ def run_vendor_test_khronos(root, name):
         env[ENVOPTS.REPLACE_STR] = f"{ROOT}/\\http://{ADDRESS}:{PORT}/"
 
     with popen_server(ROOT, DIR, ADDRESS, port=PORT, silent=True):
-        run_test(["basic", name, "common"], env)
+        run_test(["basic", name, "common", f"-p{KHRONOS_WEBGL_JOBS}"], env)
 
 
 def vendor_test_khronos():
@@ -473,13 +485,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "-t", "--timeout",
         type=int,
-        default=None,
-        help="Per-test-case timeout in seconds; a test that outlives it is "
-             "SIGKILLed and marked FAIL instead of blocking its parallel "
-             "worker (and therefore the whole batch) forever. If omitted, "
-             f"a fail-safe default ({DEFAULT_TC_TIMEOUT_SEC}s) is still "
-             "applied -- pass --timeout 0 to disable it entirely (e.g. for "
-             "interactive debugging).",
+        default=0,
+        help="Set timeout in seconds to individual tests",
     )
     parser.add_argument(
         "-f", "--force", action="store_true", help="Force commented tests to run"
@@ -497,10 +504,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if args.timeout is not None:
-        # Setting it to "0" here is intentional: it's how resolve_tc_timeout()
-        # distinguishes "explicitly disabled" from "not specified" (which
-        # falls back to DEFAULT_TC_TIMEOUT_SEC).
+    if args.timeout > 0:
         os.environ[ENVOPTS.TIMEOUT] = str(args.timeout)
 
     if args.force == True:

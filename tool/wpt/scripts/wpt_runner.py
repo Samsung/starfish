@@ -56,6 +56,16 @@ from wpt_reftest import (run_reftest, load_manifest, ensure_manifest,  # noqa: E
 STARFISH = os.path.join(REPO_ROOT, "Starfish")
 TMP_DIR = "/tmp"
 
+# glibc's stdio is fully block-buffered (not line-buffered) whenever stdout
+# isn't a tty -- true for every subprocess.PIPE capture here. On a hang, the
+# tail of Starfish's own output (often the one line that would explain the
+# hang, e.g. the exact curl error right before it stalls) can sit in that
+# unflushed buffer and be lost entirely when the process is SIGKILLed on
+# timeout, leaving a captured log that looks like it just stops for no
+# reason. `stdbuf -oL -eL` forces line buffering from the outside with no
+# Starfish source change needed.
+STARFISH_CMD_PREFIX = ["stdbuf", "-oL", "-eL"]
+
 RE_PASS = re.compile(r"WPTR PASS (.*)")
 RE_FAIL = re.compile(r"WPTR FAIL (.*)")
 RE_DONE = re.compile(r"WPTR DONE status=(\d+) count=(\d+)")
@@ -137,8 +147,11 @@ def collect(path, force):
 RE_CONNECT_REFUSED = re.compile(r"failed to open\[7\] (\S+)")
 
 # Small bounded retry (not infinite) for the hiccup above -- see
-# RE_CONNECT_REFUSED and _is_connect_refused_on_navigation.
-CONNECT_REFUSED_RETRIES = 2
+# RE_CONNECT_REFUSED and _is_connect_refused_on_navigation. Raised from the
+# original 2 -- under heavier host contention than the original fix was
+# tuned against, 2 retries wasn't always enough to outlast the wpt-serve
+# accept() starvation window.
+CONNECT_REFUSED_RETRIES = 5
 
 
 def _is_connect_refused_on_navigation(log, url):
@@ -164,7 +177,7 @@ def run_one(url, timeout, _retries=CONNECT_REFUSED_RETRIES):
     _retries: bounded retries left for the connect-refused-on-navigation
     infra hiccup (RE_CONNECT_REFUSED); 0 disables retrying.
     """
-    cmd = [STARFISH, url, "--hide-window", "--width=800", "--height=600"]
+    cmd = STARFISH_CMD_PREFIX + [STARFISH, url, "--hide-window", "--width=800", "--height=600"]
     env = dict(os.environ)
     env["HIDE_WINDOW"] = "1"
     wpt_domains = ".web-platform.test,.not-web-platform.test"
@@ -235,7 +248,7 @@ def run_one_crashtest(url, timeout):
     to stdout, see src/shell/Shell.cpp) for the crash-ish reasons; None for OK.
     """
     gated_url = _with_crashtest_marker(url)
-    cmd = [STARFISH, gated_url, "--hide-window", "--width=800", "--height=600"]
+    cmd = STARFISH_CMD_PREFIX + [STARFISH, gated_url, "--hide-window", "--width=800", "--height=600"]
     env = dict(os.environ)
     env["HIDE_WINDOW"] = "1"
     wpt_domains = ".web-platform.test,.not-web-platform.test"
