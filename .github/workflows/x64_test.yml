@@ -251,6 +251,8 @@ jobs:
           ninja install_pixel_test_dep
 
       - name: Run reftest_all
+        env:
+          LP_NUM_THREADS: "4"
         run: |
           xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py reftest_all || exit 1
 
