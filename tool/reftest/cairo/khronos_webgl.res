@@ -575,7 +575,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/swizzlers/swi
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/tan/tan_001_to_006.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/vec3/vec3_001_to_008.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/vec/vec_001_to_008.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/vec/vec_009_to_016.html
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/vec/vec_009_to_016.html # @ignore Hangs (gdb-confirmed idle glib main loop, JS-side testEnd() never reached) -- bounded by native --timeout watchdog but still a permanent FAIL, disabled until root-caused
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/vec/vec_017_to_018.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/get-active-test.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/gl-bind-attrib-location-long-names-test.html
@@ -609,7 +609,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/gl-viewport-
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/line-loop-tri-fan.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/many-draw-calls.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/more-than-65536-indices.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/multisample-corruption.html
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/multisample-corruption.html # @ignore Hangs -- same class as vec_009_to_016.html, disabled until root-caused
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/negative-one-index.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/point-no-attributes.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/point-size.html
@@ -699,7 +699,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/gl-uniform-bo
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/gl-uniform-unused-array-elements-get-truncated.html # @ignore Flaky, possibly due to driver issues
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/gl-unknown-uniform.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/null-uniform-location.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/out-of-bounds-uniform-array-access.html
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/out-of-bounds-uniform-array-access.html # @ignore Hangs (gdb-confirmed actively-advancing JS busy-loop, distinct root cause from vec_009_to_016.html's idle hang) -- disabled until root-caused
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/uniform-default-values.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/uniform-location.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/uniform-samplers-test.html

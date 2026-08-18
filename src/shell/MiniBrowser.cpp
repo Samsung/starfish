@@ -137,6 +137,8 @@ void MiniBrowser::parseArgs(int argc, char* argv[],
             settings.videoOverlayEnabled = true;
         } else if (strstr(argv[i], "--timeout=") == argv[i]) {
             others.timeout = std::atoi(argv[i] + strlen("--timeout="));
+        } else if (strstr(argv[i], "--storage-dir=") == argv[i]) {
+            others.storageDir = argv[i] + strlen("--storage-dir=");
         } else if (strcmp(argv[i], "--prefer-isolated-thread") == 0) {
             others.preferIsolatedThread = false;
         } else if (strcmp(argv[i], "--prefer-incremental-gc") == 0) {
@@ -188,7 +190,6 @@ void MiniBrowser::setEnvironmentValues(const EnvironmentValues& env)
 
     std::string startUpFlag = std::to_string(env.flag);
     setenv("START_UP_FLAG", startUpFlag.c_str(), 1);
-    setenv("SHELL_DONE_FLAG", "0", 1);
     setenv("EXIT_CODE", "0", 1);
 }
 
@@ -438,7 +439,6 @@ bool MiniBrowser::createLWE(const InitOption& initOption)
 
     m_window->setExitEventHandler([this]() {
         printf("Exit\n");
-        setenv("SHELL_DONE_FLAG", "1", 1);
         m_window->appLoop()->stop();
     });
 
@@ -517,6 +517,10 @@ bool MiniBrowser::createLWE(const InitOption& initOption)
 
 std::string MiniBrowser::storageDir()
 {
+    if (!m_storageDirOverride.empty()) {
+        return m_storageDirOverride;
+    }
+
     std::string cacheDir = "/tmp";
     const char* homeDir = getenv("HOME");
     if (homeDir && strlen(homeDir)) {

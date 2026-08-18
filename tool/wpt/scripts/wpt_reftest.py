@@ -47,11 +47,14 @@ References are resolved relative to the manifest's own url_base, not to the
 running test's URL.
 """
 
+import contextlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -62,6 +65,22 @@ from wpt_server import DEFAULT_WPT_ROOT  # noqa: E402
 
 STARFISH = os.path.join(REPO_ROOT, "Starfish")
 IMGDIFF = os.path.join(REPO_ROOT, "tool", "imgdiff", "imgdiff")
+
+
+@contextlib.contextmanager
+def _isolated_storage_dir():
+    """See wpt_runner.py's isolated_storage_dir() for why: give this one
+    Starfish invocation its own localStorage/cookies/HTTP-cache directory
+    instead of the shared default, so parallel workers don't fight over the
+    same on-disk cache dir lock. Duplicated here (rather than imported) to
+    avoid a circular import -- wpt_runner.py already imports from this
+    module.
+    """
+    d = tempfile.mkdtemp(prefix="starfish-storage-")
+    try:
+        yield d
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
 SERVER = "http://web-platform.test:8000"
 
 # See wpt_runner.py's STARFISH_CMD_PREFIX: forces line buffering so a
@@ -206,8 +225,6 @@ def _screenshot(url, out_path, timeout, width=800, height=600):
     to stdout, see src/shell/Shell.cpp) on any failure path, so a caller can
     surface it (e.g. wpt_runner.py's --verbose); it is None on success.
     """
-    cmd = STARFISH_CMD_PREFIX + [STARFISH, url, "--hide-window", "--screen-shot=" + out_path,
-          "--width=%d" % width, "--height=%d" % height]
     env = dict(os.environ)
     env["HIDE_WINDOW"] = "1"
     wpt_domains = ".web-platform.test,.not-web-platform.test"
@@ -215,8 +232,11 @@ def _screenshot(url, out_path, timeout, width=800, height=600):
         existing = env.get(key, "")
         env[key] = (existing + "," + wpt_domains) if existing else wpt_domains
     try:
-        r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                           env=env, timeout=timeout)
+        with _isolated_storage_dir() as storage_dir:
+            cmd = STARFISH_CMD_PREFIX + [STARFISH, url, "--hide-window", "--screen-shot=" + out_path,
+                  "--width=%d" % width, "--height=%d" % height, "--storage-dir=" + storage_dir]
+            r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                               env=env, timeout=timeout)
     except subprocess.TimeoutExpired as e:
         # e.output holds whatever the process wrote before being killed.
         return False, "TIMEOUT", (e.output or b"").decode("utf-8", "replace")

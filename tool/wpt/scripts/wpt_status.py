@@ -58,7 +58,7 @@ sys.path.insert(0, _HERE)                                      # sibling wpt_*
 sys.path.insert(0, os.path.join(_HERE, os.pardir, os.pardir))  # tool/
 from wpt_server import wpt_serve, DEFAULT_WPT_ROOT  # noqa: E402
 from wpt_runner import (RE_PASS, RE_FAIL, RE_DONE, STARFISH,  # noqa: E402
-                        run_one_reftest, run_one_crashtest)
+                        run_one_reftest, run_one_crashtest, isolated_storage_dir)
 # ensure_manifest is re-exported for existing callers (wpt_manifest_lists.py,
 # test_runner.py); actually defined in wpt_reftest.py, the lowest-level module
 # that needs it, so no module here needs a deferred/circular-avoiding import
@@ -197,7 +197,6 @@ def run_test(url, timeout, test_type="testharness", manifest=None):
         return {"status": "OK" if ok else reason, "subtests": [],
                 "message": None if ok else reason}
 
-    cmd = [STARFISH, url, "--hide-window", "--width=800", "--height=600"]
     env = dict(os.environ)
     env["HIDE_WINDOW"] = "1"
     wpt_domains = ".web-platform.test,.not-web-platform.test"
@@ -205,9 +204,12 @@ def run_test(url, timeout, test_type="testharness", manifest=None):
         existing = env.get(key, "")
         env[key] = (existing + "," + wpt_domains) if existing else wpt_domains
     try:
-        out = subprocess.run(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            env=env, timeout=timeout).stdout.decode("utf-8", "replace")
+        with isolated_storage_dir() as storage_dir:
+            cmd = [STARFISH, url, "--hide-window", "--width=800", "--height=600",
+                  "--storage-dir=" + storage_dir]
+            out = subprocess.run(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                env=env, timeout=timeout).stdout.decode("utf-8", "replace")
     except subprocess.TimeoutExpired:
         return {"status": "TIMEOUT", "subtests": [], "message": "shell timeout"}
     except OSError as e:

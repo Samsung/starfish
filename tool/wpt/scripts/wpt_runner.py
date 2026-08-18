@@ -36,10 +36,13 @@ Needs no stored expected `.txt` files, so it works without the internal
         tool/wpt/testharness_lists/dom_basic.res -j8
 """
 
+import contextlib
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 from argparse import ArgumentParser
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
@@ -65,6 +68,30 @@ TMP_DIR = "/tmp"
 # reason. `stdbuf -oL -eL` forces line buffering from the outside with no
 # Starfish source change needed.
 STARFISH_CMD_PREFIX = ["stdbuf", "-oL", "-eL"]
+
+
+@contextlib.contextmanager
+def isolated_storage_dir():
+    """Give one Starfish invocation its own private localStorage/cookies/
+    HTTP-cache directory instead of the default $HOME/Starfish-storage.
+
+    Without this, every parallel worker (this suite runs with jobs=8, see
+    _wpt_serve_run's default) fights over the same on-disk cache dir lock
+    ("HTTPCache.cpp: Failed to lock cache dir" / "Failed to create(or open)
+    cache dir"). A worker that loses the race just falls back to running
+    with caching disabled for that one page load -- usually harmless -- but
+    under enough contention it can also leave a page stuck mid-navigation
+    with no WPTR output at all, which surfaces here as an unrelated-looking
+    flaky TIMEOUT (root-caused live: workers/interfaces/WorkerUtils/
+    navigator/007.html). A fresh directory per invocation removes the lock
+    contention entirely instead of chasing the exact wedge it causes.
+    """
+    d = tempfile.mkdtemp(prefix="starfish-storage-")
+    try:
+        yield d
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
 
 RE_PASS = re.compile(r"WPTR PASS (.*)")
 RE_FAIL = re.compile(r"WPTR FAIL (.*)")
@@ -177,7 +204,6 @@ def run_one(url, timeout, _retries=CONNECT_REFUSED_RETRIES):
     _retries: bounded retries left for the connect-refused-on-navigation
     infra hiccup (RE_CONNECT_REFUSED); 0 disables retrying.
     """
-    cmd = STARFISH_CMD_PREFIX + [STARFISH, url, "--hide-window", "--width=800", "--height=600"]
     env = dict(os.environ)
     env["HIDE_WINDOW"] = "1"
     wpt_domains = ".web-platform.test,.not-web-platform.test"
@@ -185,8 +211,11 @@ def run_one(url, timeout, _retries=CONNECT_REFUSED_RETRIES):
         existing = env.get(key, "")
         env[key] = (existing + "," + wpt_domains) if existing else wpt_domains
     try:
-        out = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                             env=env, timeout=timeout).stdout.decode("utf-8", "replace")
+        with isolated_storage_dir() as storage_dir:
+            cmd = STARFISH_CMD_PREFIX + [STARFISH, url, "--hide-window", "--width=800", "--height=600",
+                                         "--storage-dir=" + storage_dir]
+            out = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                 env=env, timeout=timeout).stdout.decode("utf-8", "replace")
     except subprocess.TimeoutExpired as e:
         log = (e.output or b"").decode("utf-8", "replace")
         if _retries > 0 and _is_connect_refused_on_navigation(log, url):
@@ -248,7 +277,6 @@ def run_one_crashtest(url, timeout):
     to stdout, see src/shell/Shell.cpp) for the crash-ish reasons; None for OK.
     """
     gated_url = _with_crashtest_marker(url)
-    cmd = STARFISH_CMD_PREFIX + [STARFISH, gated_url, "--hide-window", "--width=800", "--height=600"]
     env = dict(os.environ)
     env["HIDE_WINDOW"] = "1"
     wpt_domains = ".web-platform.test,.not-web-platform.test"
@@ -256,8 +284,11 @@ def run_one_crashtest(url, timeout):
         existing = env.get(key, "")
         env[key] = (existing + "," + wpt_domains) if existing else wpt_domains
     try:
-        r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                           env=env, timeout=timeout)
+        with isolated_storage_dir() as storage_dir:
+            cmd = STARFISH_CMD_PREFIX + [STARFISH, gated_url, "--hide-window", "--width=800", "--height=600",
+                                         "--storage-dir=" + storage_dir]
+            r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                               env=env, timeout=timeout)
     except subprocess.TimeoutExpired as e:
         return False, "TIMEOUT", 0, 0, (e.output or b"").decode("utf-8", "replace")
     except OSError:

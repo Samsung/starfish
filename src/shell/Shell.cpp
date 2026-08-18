@@ -154,6 +154,7 @@ int Shell::runMiniBrowser(int argc, char* argv[])
     if (others.preferIncrementalGC) {
         initOption = initOption | LWE::InitializeOption::PreferIncrementalGC;
     }
+    browser->setStorageDirOverride(others.storageDir);
     if (!browser->init(init, initOption)) {
         return false;
     }

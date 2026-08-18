@@ -2,9 +2,10 @@
 import os
 import sys
 import subprocess
+import tempfile
 from . import utils
 from urllib.parse import urlparse
-from shutil import copyfile
+from shutil import copyfile, rmtree
 from subprocess import Popen, PIPE
 
 try:
@@ -105,34 +106,45 @@ def case_runner(tc):
         print("ERROR : Expected file does not exist - " + tc_expected_png)
         return __opts.tc_handler(tc_file, ERRSTR)
 
-    # Create screen-shot image using Starfish
-    starfish_command = ["./Starfish", tc_file, HIDE_WINDOW_OPT,
-                        __opts.font_opt, __opts.width, __opts.height,
-                        SCREENSHOT_OPT_PREFIX + tc_result_png, "--disable-console"]
-    starfish_output = ""
-    starfish_err = ""
+    # Give every test its own throwaway localStorage/cookies/HTTP-cache dir
+    # instead of Starfish's default $HOME/Starfish-storage (shared by every
+    # Starfish process on the machine, including a real user's own browsing
+    # profile). See starfish_basic_test.py's case_runner for the live repro
+    # that root-caused this: a test seeding state from localStorage kept
+    # accumulating stale data across runs and started failing permanently.
+    storage_dir = tempfile.mkdtemp(prefix="starfish-storage-")
     try:
-        p = Popen(starfish_command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        starfish_output, starfish_err = p.communicate("")
-        starfish_output = str(starfish_output, 'utf-8')
-        starfish_err = str(starfish_err, 'utf-8')
-        if not os.path.isfile(tc_result_png):
-            print("ERROR : Starfish error - " + tc_file)
-            print("Starfish output=>")
-            print(starfish_output)
-            print("Starfish stderr=>")
-            print(starfish_err)
+        # Create screen-shot image using Starfish
+        starfish_command = ["./Starfish", tc_file, HIDE_WINDOW_OPT,
+                            __opts.font_opt, __opts.width, __opts.height,
+                            SCREENSHOT_OPT_PREFIX + tc_result_png, "--disable-console",
+                            "--storage-dir=" + storage_dir]
+        starfish_output = ""
+        starfish_err = ""
+        try:
+            p = Popen(starfish_command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            starfish_output, starfish_err = p.communicate("")
+            starfish_output = str(starfish_output, 'utf-8')
+            starfish_err = str(starfish_err, 'utf-8')
+            if not os.path.isfile(tc_result_png):
+                print("ERROR : Starfish error - " + tc_file)
+                print("Starfish output=>")
+                print(starfish_output)
+                print("Starfish stderr=>")
+                print(starfish_err)
+                return __opts.tc_handler(tc_file, ERRSTR)
+
+            # Diff
+            return pixel_diff(tc_file, tc_result_png, tc_expected_png,
+                              __opts.tc_handler)
+
+        except subprocess.CalledProcessError:
             return __opts.tc_handler(tc_file, ERRSTR)
-
-        # Diff
-        return pixel_diff(tc_file, tc_result_png, tc_expected_png,
-                          __opts.tc_handler)
-
-    except subprocess.CalledProcessError:
-        return __opts.tc_handler(tc_file, ERRSTR)
-    except OSError as e:
-        if e.errno != 17:
-            raise
+        except OSError as e:
+            if e.errno != 17:
+                raise
+    finally:
+        rmtree(storage_dir, ignore_errors=True)
 
 
 

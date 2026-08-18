@@ -942,4 +942,4 @@ test/cairo/internal-test/form/input-checkbox-click.html
 test/cairo/internal-test/fe-framework-test/react-19-1-releasebuild/index.html
 #test/cairo/internal-test/fe-framework-test/react-19-1-w-babel/index.html
 test/cairo/internal-test/fe-framework-test/angular-v19-app-dist/index.html
-test/cairo/internal-test/fe-framework-test/vue-3-2-todo-dist/index.html
+#test/cairo/internal-test/fe-framework-test/vue-3-2-todo-dist/index.html // @ignore Hangs -- its vendored css/app.*.css starts with @import url(https://unpkg.com/...), which window.onload waits on; fails fast on some networks but appears to hang (silently-dropped connection, slow TCP timeout) on isolated CI runners, consuming the whole native --timeout budget. Root fix belongs in the test submodule (test/, lws-test/web_tc_new.git) -- strip the external @import there. Disabled here until that lands.
