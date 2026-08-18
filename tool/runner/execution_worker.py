@@ -27,10 +27,24 @@ class WorkerRunner:
         self.working_directory = REPO_ROOT
         self.worker = None
 
-    def run(self):
+    def run(self, data_dir=None):
+        """data_dir: passed through as --data-dir=<data_dir> (the daemon
+        binary's own flag, src/launcher/SharedWorkerEntry.cpp /
+        ServiceWorkerEntry.cpp -- distinct from Starfish's --storage-dir=).
+        None (default) leaves the daemon on its own default
+        $HOME/Starfish-storage. Callers that also give client Starfish
+        invocations their own --storage-dir= MUST pass the same directory
+        here, or the daemon and its clients disagree on where the
+        SharedWorker/ServiceWorker IPC socket lives (WorkerIPCAddress
+        derives it from this same directory) and every test that actually
+        round-trips through the daemon times out / fails.
+        """
         print("run " + self.target_name)
+        cmd = ["./" + self.target_name]
+        if data_dir:
+            cmd.append("--data-dir=" + data_dir)
         self.worker = Popen(
-            ["./" + self.target_name],
+            cmd,
             cwd=self.working_directory,
             start_new_session=True,
         )

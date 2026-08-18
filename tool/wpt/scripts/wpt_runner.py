@@ -93,6 +93,37 @@ def isolated_storage_dir():
         shutil.rmtree(d, ignore_errors=True)
 
 
+@contextlib.contextmanager
+def _storage_dir_scope(storage_dir):
+    """Yield `storage_dir` unchanged if given, else fall back to a fresh
+    isolated_storage_dir() for the duration of the call.
+
+    Pass a fixed `storage_dir` when the caller owns one directory shared
+    across a whole batch of invocations instead of a private one per
+    invocation -- namely the SharedWorker/ServiceWorker daemon suites (see
+    run_all's storage_dir param and _wpt_serve_run in test_runner.py).
+    WorkerIPCAddress (src/core/modules/worker/WorkerIPCAddress.cpp) derives
+    its ipc:// socket path from this same storage dir, and that socket is
+    created once by the long-lived daemon process (execution_worker.py's
+    WorkerRunner) and must be found by every client Starfish invocation
+    that talks to it for the rest of the run. Giving each client its own
+    private isolated_storage_dir() -- correct for every other suite --
+    would put that socket lookup under a different, non-existent path on
+    every single invocation, so any test that actually round-trips through
+    the daemon (as opposed to just touching surface constructor properties)
+    times out or gets a non-zero harness status. Confirmed live: WPT's
+    workers/constructors/SharedWorker/{empty-name,name,port-onmessage,
+    unexpected-global-properties}.html all broke this way (100% reproducible,
+    not flaky) the moment run_one/run_one_crashtest started giving every
+    invocation its own private storage_dir.
+    """
+    if storage_dir is not None:
+        yield storage_dir
+    else:
+        with isolated_storage_dir() as d:
+            yield d
+
+
 RE_PASS = re.compile(r"WPTR PASS (.*)")
 RE_FAIL = re.compile(r"WPTR FAIL (.*)")
 RE_DONE = re.compile(r"WPTR DONE status=(\d+) count=(\d+)")
@@ -193,13 +224,17 @@ def _is_connect_refused_on_navigation(log, url):
     return m is not None and m.group(1) == url
 
 
-def run_one(url, timeout, _retries=CONNECT_REFUSED_RETRIES):
+def run_one(url, timeout, storage_dir=None, _retries=CONNECT_REFUSED_RETRIES):
     """Return (ok, reason, npass_subtests, nfail_subtests, log).
 
     log carries the captured Starfish stdout+stderr (crash backtraces print
     to stdout, see src/shell/Shell.cpp) for the crash-ish reasons (NO_COMPLETION,
     TIMEOUT, SHELL_ERROR); it is None for the logical HARNESS_STATUS_*/
     NO_SUBTESTS/SUBTESTS_FAILED/OK outcomes, which have no crash to show.
+
+    storage_dir: see _storage_dir_scope -- None (default) gives this one
+    invocation its own private isolated_storage_dir(); pass a fixed path to
+    share it across a whole daemon-suite run instead.
 
     _retries: bounded retries left for the connect-refused-on-navigation
     infra hiccup (RE_CONNECT_REFUSED); 0 disables retrying.
@@ -211,9 +246,9 @@ def run_one(url, timeout, _retries=CONNECT_REFUSED_RETRIES):
         existing = env.get(key, "")
         env[key] = (existing + "," + wpt_domains) if existing else wpt_domains
     try:
-        with isolated_storage_dir() as storage_dir:
+        with _storage_dir_scope(storage_dir) as d:
             cmd = STARFISH_CMD_PREFIX + [STARFISH, url, "--hide-window", "--width=800", "--height=600",
-                                         "--storage-dir=" + storage_dir]
+                                         "--storage-dir=" + d]
             out = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                  env=env, timeout=timeout).stdout.decode("utf-8", "replace")
     except subprocess.TimeoutExpired as e:
@@ -221,7 +256,7 @@ def run_one(url, timeout, _retries=CONNECT_REFUSED_RETRIES):
         if _retries > 0 and _is_connect_refused_on_navigation(log, url):
             print("  %s[RETRY]%s %s (connect refused on navigation, "
                   "%d retries left)" % (YEL, RST, url, _retries))
-            return run_one(url, timeout, _retries - 1)
+            return run_one(url, timeout, storage_dir, _retries - 1)
         return False, "TIMEOUT", 0, 0, log
     except OSError:
         return False, "SHELL_ERROR", 0, 0, None
@@ -346,7 +381,8 @@ def load_done(results_path):
 
 
 def run_all(items, jobs, timeout, results_path, append=False,
-           mode="testharness", manifest=None, verbose=False, log_lines=100):
+           mode="testharness", manifest=None, verbose=False, log_lines=100,
+           storage_dir=None):
     """Run items and print verdicts.
 
     verbose: also print the captured Starfish output (tail-bound to
@@ -355,6 +391,10 @@ def run_all(items, jobs, timeout, results_path, append=False,
     otherwise be silently discarded. Off by default so a clean gating run
     stays as quiet as before; --results is unaffected either way (still the
     plain 3-column PASS/FAIL\treason\turl format wpt_annotate.py expects).
+
+    storage_dir: forwarded to run_one (testharness mode only -- reftest and
+    crashtest items never share a daemon, so they always get their own
+    private isolated_storage_dir() regardless). See _storage_dir_scope.
     """
     total = len(items)
     npass = 0
@@ -373,7 +413,7 @@ def run_all(items, jobs, timeout, results_path, append=False,
             elif mode == "crashtest":
                 ok, reason, np, nf, log = run_one_crashtest(url, timeout)
             else:
-                ok, reason, np, nf, log = run_one(url, timeout)
+                ok, reason, np, nf, log = run_one(url, timeout, storage_dir)
         except Exception as e:
             # Backstop: ThreadPoolExecutor.map() re-raises a worker exception
             # when its result is consumed, which would abort this whole

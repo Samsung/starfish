@@ -243,6 +243,8 @@ _WPT_TESTHARNESS_LISTS_DIR = os.path.join(working_directory, "tool/wpt/testharne
 
 def _wpt_serve_run(*patterns, jobs=8, timeout=20, daemons=(), exclude=()):
     import glob
+    import shutil
+    import tempfile
     import wpt_runner
     from wpt_server import wpt_serve, DEFAULT_WPT_ROOT, WptServerError
 
@@ -262,24 +264,41 @@ def _wpt_serve_run(*patterns, jobs=8, timeout=20, daemons=(), exclude=()):
     label = ", ".join(patterns) if patterns else "all"
     print_table("Running WPT (on-demand)", "%d tests [%s]" % (len(items), label))
     runners = [WorkerRunner(name) for name in daemons]
+    # daemons (SharedWorker/ServiceWorker) are one long-lived process shared
+    # by every job in this run, so every client Starfish invocation must
+    # agree with it on where its worker IPC socket lives (WorkerIPCAddress
+    # derives that path from the storage dir) -- give the daemon and all
+    # jobs THIS one shared directory instead of wpt_runner's usual per-
+    # invocation isolated_storage_dir(). Otherwise every test that actually
+    # round-trips through the daemon (as opposed to just touching surface
+    # constructor properties) times out or gets a non-zero harness status,
+    # 100% reproducibly -- confirmed live on WPT's
+    # workers/constructors/SharedWorker/{empty-name,name,port-onmessage,
+    # unexpected-global-properties}.html. See wpt_runner._storage_dir_scope.
+    shared_storage_dir = tempfile.mkdtemp(prefix="starfish-storage-") if runners else None
     try:
-        with wpt_serve(DEFAULT_WPT_ROOT, verbose=True):
-            try:
-                for r in runners:
-                    r.run()
-                # verbose=True: this suite gates CI, so a crash here means a
-                # crash on the CI machine -- surface the captured backtrace
-                # in the (only) log we get, the CI job's own live stdout.
-                npass, reasons, per_list = wpt_runner.run_all(
-                    items, jobs, timeout, None, verbose=True)
-            finally:
-                for r in runners:
-                    r.terminate()
-    except WptServerError as e:
-        print("wpt serve failed: %s" % e)
-        print("hosts not set? run: "
-              "python3 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts")
-        sys.exit(ERRORCODE.TEST_STOPPED)
+        try:
+            with wpt_serve(DEFAULT_WPT_ROOT, verbose=True):
+                try:
+                    for r in runners:
+                        r.run(shared_storage_dir)
+                    # verbose=True: this suite gates CI, so a crash here means a
+                    # crash on the CI machine -- surface the captured backtrace
+                    # in the (only) log we get, the CI job's own live stdout.
+                    npass, reasons, per_list = wpt_runner.run_all(
+                        items, jobs, timeout, None, verbose=True,
+                        storage_dir=shared_storage_dir)
+                finally:
+                    for r in runners:
+                        r.terminate()
+        except WptServerError as e:
+            print("wpt serve failed: %s" % e)
+            print("hosts not set? run: "
+                  "python3 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts")
+            sys.exit(ERRORCODE.TEST_STOPPED)
+    finally:
+        if shared_storage_dir:
+            shutil.rmtree(shared_storage_dir, ignore_errors=True)
 
     global ran_test_count
     ran_test_count += len(items)
