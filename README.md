@@ -48,7 +48,7 @@ git submodule update
 ### Compile Starfish
 
 ```sh
-cmake -Bout/release -DMODE=release -DHOST=linux -DARCH=x64 -DBACKEND=glib_cairo_gl -DSHELL=x11 -DTARGETNAME=Starfish -G Ninja
+cmake -Bout/release -DCMAKE_BUILD_TYPE=Release -DBACKEND=glib_cairo_gl -DSHELL=x11 -DTARGETNAME=Starfish -G Ninja
 ninja -C out/release starfish.executable
 ```
 
@@ -80,14 +80,15 @@ ninja starfish.static_library
 The following build options are supported when generating ninja script using cmake.
 Default values are in **bold**.
 
-* -DHOST=[ **linux** | tizen ]<br>
-  Compile Starfish for either Linux or Tizen platform
-* -DMODE=[ debug | **release** ]<br>
+* -DCMAKE_SYSTEM_NAME=[ **(native)** | Tizen | Windows ]<br>
+  Compile Starfish for either Linux (leave unset, CMake auto-detects it natively),
+  Tizen, or Windows platform
+* -DCMAKE_BUILD_TYPE=[ Debug | **Release** ]<br>
   Compile Starfish for either release or debug mode
 * -DBACKEND=[ **glib_cairo_gl** | uv_cairo_gl ]<br>
   Use either cairo or cairo_gl as the backend graphics library
-* -DARCH=[ **x64** | aarch64 | arm | x86 ]<br>
-  Target architecture. `x64` is native; `aarch64` / `arm` (armhf) / `x86` (i386) are
+* -DCMAKE_SYSTEM_PROCESSOR=[ **x86_64** | aarch64 | arm | x86 ]<br>
+  Target architecture. Native `x86_64` needs no flag; `aarch64` / `arm` (armhf) / `x86` (i386) are
   cross targets (see "How to Cross-Compile: Linux").
 * -DLTO=[ **0** | 1 ]<br>
   Enable complier link time optimization
@@ -166,7 +167,7 @@ export PKG_CONFIG_LIBDIR="$SYSROOT/usr/lib/$T/pkgconfig:$SYSROOT/usr/share/pkgco
 export PKG_CONFIG_SYSROOT_DIR="$SYSROOT"
 
 cmake CMakeLists.txt -G Ninja -Bout/rpi5 -DTARGETNAME=Starfish \
-  -DMODE=release -DHOST=linux -DARCH=aarch64 -DBACKEND=glib_cairo_gl -DSHELL=x11 -DWEBGL=0 \
+  -DCMAKE_BUILD_TYPE=Release -DBACKEND=glib_cairo_gl -DSHELL=x11 -DWEBGL=0 \
   -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
   -DCMAKE_C_COMPILER=$T-gcc -DCMAKE_CXX_COMPILER=$T-g++ \
   -DCMAKE_SYSROOT=$SYSROOT -DCMAKE_FIND_ROOT_PATH=$SYSROOT \
@@ -176,7 +177,7 @@ cmake CMakeLists.txt -G Ninja -Bout/rpi5 -DTARGETNAME=Starfish \
 ninja -C out/rpi5 starfish.executable
 ```
 
-`ARCH`/`CMAKE_SYSTEM_PROCESSOR` values per target: `aarch64`, `arm` (armhf, also add `-msse2`-free
+`CMAKE_SYSTEM_PROCESSOR` values per target: `aarch64`, `arm` (armhf, also add `-msse2`-free
 default flags), `x86` (i386, compiler `i686-linux-gnu-gcc`, add `-msse2`). `cmake.sh` contains the
 canonical per-target env blocks.
 
@@ -205,7 +206,7 @@ Default values are in **bold**.
 ### How to Compile: Windows x86
 Open Visual Studio x86 Command tools prompt
 ```sh
-cmake -G "Visual Studio 16 2019" -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_VERSION:STRING="10.0" -DCMAKE_SYSTEM_PROCESSOR=x86 -DCMAKE_GENERATOR_PLATFORM=Win32,version=10.0.18362.0 -DARCH=x86 -DMODE=release -Bout_windows/ -DHOST=windows
+cmake -G "Visual Studio 16 2019" -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_VERSION:STRING="10.0" -DCMAKE_SYSTEM_PROCESSOR=x86 -DCMAKE_GENERATOR_PLATFORM=Win32,version=10.0.18362.0 -DCMAKE_BUILD_TYPE=Release -Bout_windows/
 cmake --build out_windows --config Release -j
 msbuild build/windows/winform_shell/StarfishWinformShell/StarfishWinformShell.sln /p:Platform="Any CPU"
 ```

@@ -40,7 +40,7 @@ jobs:
       - name: Configuration
         run: |
           cmake CMakeLists.txt -G Ninja -DTARGETNAME=Starfish \
-            -DHOST=linux -DARCH=x64 -DDOCKER=1 -DWEBGL=1 \
-            -DMODE=debug -DBACKEND=${{ matrix.config.backend }} -DSHELL=${{ matrix.config.shell }}
+            -DDOCKER=1 -DWEBGL=1 \
+            -DCMAKE_BUILD_TYPE=Debug -DBACKEND=${{ matrix.config.backend }} -DSHELL=${{ matrix.config.shell }}
       - name: Build
         run: ninja starfish.executable

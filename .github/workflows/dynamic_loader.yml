@@ -32,8 +32,8 @@ jobs:
       - name: Configuration
         run: |
           cmake CMakeLists.txt -Buv_cairo_gl/debug -G Ninja -DTARGETNAME=Starfish \
-            -DHOST=linux -DARCH=x64 -DDOCKER=1 \
-            -DMODE=debug -DBACKEND=uv_cairo_gl \
+            -DDOCKER=1 \
+            -DCMAKE_BUILD_TYPE=Debug -DBACKEND=uv_cairo_gl \
             -DENABLE_DYNAMIC_LOADER=1 -DSHELL=x11
       - name: Build
         run: ninja -C uv_cairo_gl/debug starfish.executable

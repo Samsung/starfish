@@ -99,10 +99,11 @@ Requires(postun): /sbin/ldconfig
 %endif
 %endif
 
-%if 0%{?tizen_version_major} >= 9
-%define enable_tls_access_by_address 1
+# Untested below Tizen 9 -- off there, on (default) everywhere else.
+%if 0%{?tizen_version_major} <= 8
+%define enable_tls_access_by_pthread_key 0
 %else
-%define enable_tls_access_by_address 0
+%define enable_tls_access_by_pthread_key 1
 %endif
 
 %if 0%{?enable_codecache:1}
@@ -587,7 +588,7 @@ CFLAGS+=' -DNO_UFFDWP_VDB '
 # Variables for build
 # This features_config values are used in cmake command.
 %define features_config -DWORKER='%{enable_worker}' -DSHARED_WORKER='%{enable_sharedworker}' \\\
-  -DSERVICE_WORKER='%{enable_serviceworker}' -DENABLE_TLS_ACCESS_BY_ADDRESS='%{enable_tls_access_by_address}' \\\
+  -DSERVICE_WORKER='%{enable_serviceworker}' -DENABLE_TLS_ACCESS_BY_PTHREAD_KEY='%{enable_tls_access_by_pthread_key}' \\\
   -DWEBRTC='%{enable_webrtc}' -DWEBGL='%{enable_webgl}' \\\
   -DENABLE_ESPLUSPLAYER='%{enable_esplusplayer}'
 
@@ -597,8 +598,8 @@ CFLAGS+=' -DNO_UFFDWP_VDB '
 # For Cairo
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
-  -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DMODE=release -DHOST=tizen \
-  -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_tv -DBACKEND='%{lwe_backend}' \
+  -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_SYSTEM_NAME=Tizen \
+  -DCMAKE_SYSTEM_PROCESSOR='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_tv -DBACKEND='%{lwe_backend}' \
   -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.tv \
   -DSHELL='%{lwe_shell_type}' -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' \
   -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
@@ -633,7 +634,7 @@ ninja -C %{out_tizen} starfish.executable.tpk
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
   -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' \
-  -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' \
+  -DENABLE_CODECACHE='%{enable_codecache}' -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_SYSTEM_NAME=Tizen -DCMAKE_SYSTEM_PROCESSOR='%{tizen_arch}' \
   -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND='%{lwe_backend}' -DLTO='%{using_lto}' \
   -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv \
   -DSHELL='%{lwe_shell_type}' -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}'\
@@ -644,7 +645,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
   -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' \
-  -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' \
+  -DENABLE_CODECACHE='%{enable_codecache}' -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_SYSTEM_NAME=Tizen -DCMAKE_SYSTEM_PROCESSOR='%{tizen_arch}' \
   -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND='%{lwe_backend}' -DLTO='%{using_lto}' \
   -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv \
   -DSHELL='%{lwe_shell_type}' -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' \
@@ -690,7 +691,7 @@ ninja -C %{out_tizen} install_pixel_test_dep
 
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
-  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=headless \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_SYSTEM_NAME=Tizen -DCMAKE_SYSTEM_PROCESSOR='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=headless \
   -DBACKEND='%{lwe_headless_backend}' -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DSHELL='%{lwe_headless_shell_type}' -DTARGETNAME=lightweight-web-engine.headless \
   -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' \
@@ -725,7 +726,7 @@ ninja -C %{out_tizen} starfish.executable.tpk
 # For Cairo
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
-  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_mobile \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_SYSTEM_NAME=Tizen -DCMAKE_SYSTEM_PROCESSOR='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_mobile \
   -DBACKEND='%{lwe_backend}' -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DSHELL='%{lwe_shell_type}' -DTARGETNAME=lightweight-web-engine.mobile \
   -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
@@ -763,7 +764,7 @@ CXXFLAGS+=' -Os '
 # For Cairo
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
-  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_wearable \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_SYSTEM_NAME=Tizen -DCMAKE_SYSTEM_PROCESSOR='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_wearable \
   -DBACKEND='%{lwe_backend}' -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DSHELL='%{lwe_shell_type}' -DTARGETNAME=lightweight-web-engine.wearable \
   -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' \
@@ -796,7 +797,7 @@ ninja -C %{out_tizen} starfish.executable.tpk
 # For Cairo
 cmake CMakeLists.txt -B%{out_tizen} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' \
   -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' \
-  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=flutter \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_SYSTEM_NAME=Tizen -DCMAKE_SYSTEM_PROCESSOR='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=flutter \
   -DBACKEND=flutter -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DTARGETNAME=lightweight-web-engine.flutter -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
   -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \

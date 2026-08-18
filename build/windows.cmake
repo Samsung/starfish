@@ -12,13 +12,13 @@ SET (TOOL_ROOT ${STARFISH_ROOT}/tool)
 #######################################################
 # GLOBAL VARIABLES
 #######################################################
-IF (${ARCH} STREQUAL "x86")
+IF (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
     SET(WINDOWS_ARCH "Win32")
 ELSE()
     MESSAGE(FATAL_ERROR "Unsupported arch")
 ENDIF()
 
-IF (${MODE} STREQUAL "debug")
+IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     SET(WINDOWS_MODE "Debug")
 ELSE()
     SET(WINDOWS_MODE "Release")
@@ -42,13 +42,13 @@ SET(STARFISH_CXXFLAGS
         /wd4251
     )
 
-IF (${ARCH} STREQUAL "x86")
+IF (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
     SET(STARFISH_CXXFLAGS_ARCH /arch:SSE2)
 ELSE()
     SET(STARFISH_CXXFLAGS_ARCH)
 ENDIF()
 
-IF (${MODE} STREQUAL "debug")
+IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     SET(STARFISH_CXXFLAGS_MODE /Od /MDd)
 ELSE()
     SET(STARFISH_CXXFLAGS_MODE /O2 /MD)
@@ -79,13 +79,13 @@ SET(STARFISH_DEFINES
         -DSTARFISH_BACKEND_STR="windows"
     )
 
-IF (${MODE} STREQUAL "debug")
+IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     SET (STARFISH_DEFINES_MODE
         -DGC_DEBUG # bdwgc
         -D_GLIBCXX_DEBUG
         -DSTARFISH_ENABLE_TEST
     )
-ELSEIF (${MODE} STREQUAL "release")
+ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release")
     SET (STARFISH_DEFINES_MODE -DNDEBUG)
 ELSE()
     MESSAGE (FATAL_ERROR "Release/Debug is NOT SET")
@@ -145,18 +145,12 @@ SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/${WINDOWS_MODE})
 #######################################################
 # ESCARGOT
 #######################################################
-SET (ESCARGOT_MODE ${MODE})
-SET (ESCARGOT_ARCH ${ARCH})
-SET (ESCARGOT_OUTPUT static_lib)
-
 IF (${ENABLE_WASM} STREQUAL "1")
     SET (ESCARGOT_WASM ON)
 ENDIF()
 IF (${ENABLE_CODECACHE} STREQUAL "1")
     SET (ESCARGOT_CODE_CACHE ON)
 ENDIF()
-
-SET (ESCARGOT_HOST ${HOST})
 
 IF (${ENABLE_DEBUGGER} STREQUAL "1")
     SET (ESCARGOT_DEBUGGER ON)
@@ -167,13 +161,28 @@ SET (ESCARGOT_THREADING ON)
 SET (ESCARGOT_LIBICU_SUPPORT ON)
 SET (ESCARGOT_LIBICU_SUPPORT_WITH_DLOPEN ON)
 
-# ESCARGOT INTERNAL COMPILE OPTION
-add_compile_options("-DSCRIPT_FUNCTION_OBJECT_BYTECODE_SIZE_MAX=4194304")
-add_compile_options("-DESCARGOT_OBJECT_STRUCTURE_ACCESS_CACHE_BUILD_MIN_SIZE=32")
-add_compile_options("-DESCARGOT_OBJECT_STRUCTURE_TRANSITION_MODE_MAX_SIZE=36")
+# /MP (MSVC parallel compilation) stays global and BEFORE add_subdirectory so
+# it still reaches escargot's own targets too: it only affects build
+# parallelism, never object code/behavior, so the target-scoping rule's
+# purpose (avoid silently-changed behavior leaking across targets) doesn't
+# apply to it.
 add_compile_options("/MP")
 
 ADD_SUBDIRECTORY (third_party/escargot)
+
+# ESCARGOT INTERNAL COMPILE OPTION -- only escargot's own sources read these
+# (Escargot.h/VMInstance.cpp/ByteCode.cpp/ObjectStructure*), so scope them to
+# the escargot target (post-hoc, after add_subdirectory creates it -- CMake
+# resolves target_compile_definitions at generate time, so this still applies)
+# instead of leaking into every target in this directory via global
+# add_compile_options.
+IF (TARGET escargot)
+    target_compile_definitions (escargot PRIVATE
+        SCRIPT_FUNCTION_OBJECT_BYTECODE_SIZE_MAX=4194304
+        ESCARGOT_OBJECT_STRUCTURE_ACCESS_CACHE_BUILD_MIN_SIZE=32
+        ESCARGOT_OBJECT_STRUCTURE_TRANSITION_MODE_MAX_SIZE=36
+    )
+ENDIF()
 
 SET (STARFISH_DEPENDENCIES
     ${STARFISH_DEPENDENCIES}
@@ -206,7 +215,7 @@ SET (LIBPNG_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libpng.lib ${CMAKE_LIBRARY_
 ADD_CUSTOM_COMMAND (OUTPUT ${LIBPNG_TARGET}
                     WORKING_DIRECTORY ${THIRD_PARTY_ROOT}/windows/libpng/projects/visualc71/
                     COMMENT "BUILD libpng"
-                    COMMAND msbuild libpng.sln /t:libpng  /p:Platform=${ARCH} /p:OutDir=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} /p:IntermediateOutputPath=${OUTPUT_DIRECTORY}/libpng/ /p:Configuration=\"DLL Release\"
+                    COMMAND msbuild libpng.sln /t:libpng  /p:Platform=${CMAKE_SYSTEM_PROCESSOR} /p:OutDir=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} /p:IntermediateOutputPath=${OUTPUT_DIRECTORY}/libpng/ /p:Configuration=\"DLL Release\"
 )
 ADD_CUSTOM_TARGET (libpng
                     DEPENDS ${LIBPNG_TARGET}
@@ -233,7 +242,7 @@ SET (GIFLIB_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/giflib.lib)
 ADD_CUSTOM_COMMAND (OUTPUT ${GIFLIB_TARGET}
                     WORKING_DIRECTORY ${THIRD_PARTY_ROOT}/windows/giflib/build/windows/giflib
                     COMMENT "BUILD giflib"
-                    COMMAND msbuild giflib.sln /t:giflib /p:Platform=${ARCH} /p:OutDir=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} /p:IntermediateOutputPath=${OUTPUT_DIRECTORY}/giflib/ /p:Configuration=Release
+                    COMMAND msbuild giflib.sln /t:giflib /p:Platform=${CMAKE_SYSTEM_PROCESSOR} /p:OutDir=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} /p:IntermediateOutputPath=${OUTPUT_DIRECTORY}/giflib/ /p:Configuration=Release
 )
 ADD_CUSTOM_TARGET (giflib
                     DEPENDS ${GIFLIB_TARGET}
@@ -261,7 +270,7 @@ ADD_CUSTOM_COMMAND (OUTPUT ${CAIRO_TARGET}
                     DEPENDS harfbuzz
                     WORKING_DIRECTORY ${THIRD_PARTY_ROOT}/windows/cairo/build/windows/cairo
                     COMMENT "BUILD cairo"
-                    COMMAND msbuild cairo.sln /t:cairo /p:Platform=${ARCH} /p:OutDir=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} /p:IntermediateOutputPath=${OUTPUT_DIRECTORY}/cairo/ /p:Configuration=Release
+                    COMMAND msbuild cairo.sln /t:cairo /p:Platform=${CMAKE_SYSTEM_PROCESSOR} /p:OutDir=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} /p:IntermediateOutputPath=${OUTPUT_DIRECTORY}/cairo/ /p:Configuration=Release
 )
 ADD_CUSTOM_TARGET (cairo
                     DEPENDS ${CAIRO_TARGET}
@@ -309,14 +318,14 @@ SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} 
 SET (PTHREAD_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pthreadVC2.dll)
 ADD_CUSTOM_COMMAND (OUTPUT ${PTHREAD_TARGET}
                     COMMENT "COPY PTHREAD"
-                    COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/windows/windows_pthread/dll/${ARCH}/pthreadVC2.dll ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-                    COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/windows/windows_pthread/lib/${ARCH}/pthreadVC2.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
+                    COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/windows/windows_pthread/dll/${CMAKE_SYSTEM_PROCESSOR}/pthreadVC2.dll ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
+                    COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/windows/windows_pthread/lib/${CMAKE_SYSTEM_PROCESSOR}/pthreadVC2.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
 )
 ADD_CUSTOM_TARGET (windows_pthread
                     DEPENDS ${PTHREAD_TARGET}
 )
 SET (STARFISH_THIRD_PARTY_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_INCLUDE_DIRS} ${THIRD_PARTY_ROOT}/windows/windows_pthread/include/)
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ${THIRD_PARTY_ROOT}/windows/windows_pthread/lib/${ARCH}/pthreadVC2.lib)
+SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ${THIRD_PARTY_ROOT}/windows/windows_pthread/lib/${CMAKE_SYSTEM_PROCESSOR}/pthreadVC2.lib)
 
 # glew
 SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES}

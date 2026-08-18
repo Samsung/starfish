@@ -145,7 +145,7 @@ session.
 ### Google Test (unit-test)
 
 ```bash
-cmake CMakeLists.txt -DMODE=debug -DBACKEND=glib_headless -DSHELL=glib_headless -DENABLE_TEST=1 -G Ninja
+cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=Debug -DBACKEND=glib_headless -DSHELL=glib_headless -DENABLE_TEST=1 -G Ninja
 ninja starfish.executable
 ./Starfish unit-test
 ```

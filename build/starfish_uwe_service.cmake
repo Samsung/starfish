@@ -8,7 +8,7 @@ MESSAGE (STATUS "Create lightweight-web-engine-update.service...")
 
 CONFIGURE_FILE (build/tizen/systemd/lightweight-web-engine-update.service.in ${OUTPUT_DIRECTORY}/lightweight-web-engine-update.service)
 
-IF (${HOST} STREQUAL "tizen" AND ${CUSTOM} STREQUAL "prod_tv")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen" AND ${CUSTOM} STREQUAL "prod_tv")
     FILE(READ build/tizen/systemd/path-hash-sign hash)
     FILE(READ ${OUTPUT_DIRECTORY}/lightweight-web-engine-update.service content)
     SET(content "${hash}\n${content}")
