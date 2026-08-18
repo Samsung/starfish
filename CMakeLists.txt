@@ -2,10 +2,7 @@ CMAKE_MINIMUM_REQUIRED (VERSION 2.8.12 FATAL_ERROR)
 PROJECT (STARFISH)
 
 SET (BACKEND "efl_cairo_gl" CACHE STRING "BACKEND")
-SET (HOST "linux" CACHE STRING "HOST")
 SET (CUSTOM "none" CACHE STRING "CUSTOM")
-SET (MODE "release" CACHE STRING "MODE")
-SET (ARCH "x64" CACHE STRING "ARCH")
 SET (LTO "0" CACHE STRING "LTO")
 SET (COVERAGE "0" CACHE STRING "COVERAGE")
 SET (WEBGL "0" CACHE STRING "WEBGL")
@@ -29,7 +26,7 @@ SET (ENABLE_WASM "0" CACHE STRING "WEBASSEMBLY")
 SET (ENABLE_DEBUGGER "0" CACHE STRING "DEBUGGER")
 SET (ENABLE_TEST "0" CACHE STRING "ENABLE_TEST")
 SET (ENABLE_PROFILE "0" CACHE STRING "ENABLE_PROFILE")
-SET (ENABLE_TLS_ACCESS_BY_ADDRESS "0" CACHE STRING "ENABLE_TLS_ACCESS_BY_ADDRESS")
+SET (ENABLE_TLS_ACCESS_BY_PTHREAD_KEY "1" CACHE STRING "ENABLE_TLS_ACCESS_BY_PTHREAD_KEY")
 SET (TIZEN_RW_APP_DIR "./" CACHE STRING "TIZEN_RW_APP_DIR")
 SET (TIZEN_DATA_DIR "./" CACHE STRING "TIZEN_DATA_ROOT_DIR")
 SET (USE_FFMPEG_MEDIA_PLAYER "0" CACHE STRING "USE_FFMPEG_MEDIA_PLAYER")
@@ -41,9 +38,28 @@ SET (ENABLE_MULTI_BACKEND "0" CACHE STRING "ENABLE_MULTI_BACKEND")
 INCLUDE (ProcessorCount)
 PROCESSORCOUNT (NPROCS)
 
+# Starfish no longer has its own MODE/HOST/ARCH cache variables -- every build
+# invocation (build.sh, gbs spec, CI) MUST now pass the standard CMake
+# equivalents directly: -DCMAKE_BUILD_TYPE=Debug|Release,
+# -DCMAKE_SYSTEM_NAME=Linux|Tizen|Windows, -DCMAKE_SYSTEM_PROCESSOR=....
+# CMAKE_SYSTEM_NAME/CMAKE_SYSTEM_PROCESSOR are auto-populated by CMake itself
+# for native (non-cross) builds, so only cross/Tizen/Windows configs need to
+# pass them explicitly. CMAKE_BUILD_TYPE has no such default, so it is
+# required here, same as this project always required MODE to be one of
+# debug/release.
+#
+# third_party/escargot (post PR#1625 standardization) itself now selects its
+# own CXXFLAGS/LDFLAGS/DEFINITIONS for Debug vs Release purely via
+# $<CONFIG:Debug> generator expressions resolved from CMAKE_BUILD_TYPE -- so
+# this is required for escargot's own build to behave correctly too, not just
+# starfish's.
+IF (NOT CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT CMAKE_BUILD_TYPE STREQUAL "Release" AND NOT CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    MESSAGE (FATAL_ERROR "-DCMAKE_BUILD_TYPE=Debug, Release, or RelWithDebInfo is required (got: '${CMAKE_BUILD_TYPE}')")
+ENDIF ()
+
 # INCLUDE CMAKE FILES
 
-IF (${HOST} MATCHES "windows")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     INCLUDE (build/version.cmake)
     INCLUDE (build/windows.cmake)
 ELSE ()
@@ -52,7 +68,7 @@ ELSE ()
     INCLUDE (build/third_party.cmake)
     INCLUDE (build/starfish.cmake)
     INCLUDE (build/starfish_public_api.cmake)
-    IF (${HOST} STREQUAL "linux" OR ${ENABLE_TEST} STREQUAL "1")
+    IF (CMAKE_SYSTEM_NAME STREQUAL "Linux" OR ${ENABLE_TEST} STREQUAL "1")
         INCLUDE (build/test/prepare_test.cmake)
     ENDIF()
 
@@ -60,7 +76,7 @@ ELSE ()
         INCLUDE (build/starfish_shell.cmake)
     ENDIF ()
 
-    IF (${HOST} STREQUAL "tizen")
+    IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
         INCLUDE (build/starfish_shell_tpk.cmake)
         SET(UWE_PACKAGE_ID "org.tizen.lightweight-web-engine")
         INCLUDE (build/starfish_uwe_tpk.cmake)

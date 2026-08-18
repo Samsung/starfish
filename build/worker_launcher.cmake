@@ -8,7 +8,7 @@ SET (STARFISH_SHARED_WORKER_ENTRY ${STARFISH_ROOT}/src/launcher/SharedWorkerEntr
 SET (STARFISH_SERVICE_WORKER_ENTRY ${STARFISH_ROOT}/src/launcher/ServiceWorkerEntry.cpp)
 
 SET (STARFISH_WORKER_LAUNCHER_LDFLAGS "")
-IF (${HOST} STREQUAL "tizen")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     SET (STARFISH_WORKER_LAUNCHER_LDFLAGS -Wl,-rpath='\$\$ORIGIN/../lib')
 ENDIF()
 
@@ -32,7 +32,7 @@ MACRO (add_worker_launcher file_name variable_name)
 
     SET_TARGET_PROPERTIES (starfish.${file_name}.executable PROPERTIES OUTPUT_NAME ${TARGETNAME}-${file_name})
 
-    IF (${HOST} STREQUAL "linux")
+    IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
         ADD_CUSTOM_COMMAND (TARGET starfish.${file_name}.executable POST_BUILD
             COMMAND ln -fs ${OUTPUT_DIRECTORY}/bin/${TARGETNAME}-${file_name} ${STARFISH_ROOT}/Starfish-${file_name}
         )

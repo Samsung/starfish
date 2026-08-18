@@ -34,7 +34,7 @@ jobs:
             git clean -xdf
       - name: Build Starfish
         run: |
-            cmake CMakeLists.txt -DMODE=debug -DBACKEND=uv_cairo_gl -DSHELL=x11 -DDOCKER=1 -DENABLE_WASM=1 -G Ninja
+            cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=Debug -DBACKEND=uv_cairo_gl -DSHELL=x11 -DDOCKER=1 -DENABLE_WASM=1 -G Ninja
             ninja starfish.executable
 
   build_x64_x11_release:
@@ -60,7 +60,7 @@ jobs:
             git clean -xdf
       - name: Build Starfish
         run: |
-            cmake CMakeLists.txt -DMODE=release -DBACKEND=uv_cairo_gl -DSHELL=x11 -DDOCKER=1 -G Ninja
+            cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=Release -DBACKEND=uv_cairo_gl -DSHELL=x11 -DDOCKER=1 -G Ninja
             ninja starfish.executable
       - name: Run crash test
         run: |
@@ -92,7 +92,7 @@ jobs:
             git clean -xdf
       - name: Build Starfish
         run: |
-            cmake CMakeLists.txt -DMODE=debug -DBACKEND=glib_cairo_gl -DSHELL=x11_webcontainer -DDOCKER=1 -G Ninja
+            cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=Debug -DBACKEND=glib_cairo_gl -DSHELL=x11_webcontainer -DDOCKER=1 -G Ninja
             ninja starfish.executable
             xvfb-run -s '-screen 0 1920x1080x24' -a ./Starfish https://github.com/Samsung/escargot --crash-test --disable-console || exit 1
   x64_glib_headless:
@@ -119,7 +119,7 @@ jobs:
             git clean -xdf
       - name: Build Starfish
         run: |
-            cmake CMakeLists.txt -DMODE=debug -DBACKEND=glib_headless -DSHELL=glib_headless -DDOCKER=1 -G Ninja
+            cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=Debug -DBACKEND=glib_headless -DSHELL=glib_headless -DDOCKER=1 -G Ninja
             ninja starfish.executable
             ./Starfish https://github.com/Samsung/escargot --crash-test --disable-console || exit 1
 
@@ -157,7 +157,7 @@ jobs:
       - name: Build (glib_headless + ENABLE_TEST)
         run: |
             cmake CMakeLists.txt \
-              -DMODE=debug -DBACKEND=glib_headless -DSHELL=glib_headless \
+              -DCMAKE_BUILD_TYPE=Debug -DBACKEND=glib_headless -DSHELL=glib_headless \
               -DDOCKER=1 -DENABLE_TEST=1 -G Ninja
             ninja starfish.executable
 
@@ -240,7 +240,7 @@ jobs:
             export PKG_CONFIG_LIBDIR="$S/usr/lib/$T/pkgconfig:$S/usr/share/pkgconfig"
             export PKG_CONFIG_SYSROOT_DIR="$S"
             cmake CMakeLists.txt -G Ninja -DTARGETNAME=Starfish \
-              -DMODE=release -DHOST=linux -DARCH=aarch64 -DBACKEND=glib_cairo_gl -DSHELL=x11 -DDOCKER=1 -DWEBGL=0 \
+              -DCMAKE_BUILD_TYPE=Release -DBACKEND=glib_cairo_gl -DSHELL=x11 -DDOCKER=1 -DWEBGL=0 \
               -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
               -DCMAKE_C_COMPILER=$T-gcc -DCMAKE_CXX_COMPILER=$T-g++ \
               -DCMAKE_SYSROOT=$S -DCMAKE_FIND_ROOT_PATH=$S \
@@ -281,7 +281,7 @@ jobs:
             export PKG_CONFIG_LIBDIR="$S/usr/lib/$T/pkgconfig:$S/usr/share/pkgconfig"
             export PKG_CONFIG_SYSROOT_DIR="$S"
             cmake CMakeLists.txt -G Ninja -DTARGETNAME=Starfish \
-              -DMODE=release -DHOST=linux -DARCH=arm -DBACKEND=glib_cairo_gl -DSHELL=x11 -DDOCKER=1 -DWEBGL=0 \
+              -DCMAKE_BUILD_TYPE=Release -DBACKEND=glib_cairo_gl -DSHELL=x11 -DDOCKER=1 -DWEBGL=0 \
               -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=arm \
               -DCMAKE_C_COMPILER=$T-gcc -DCMAKE_CXX_COMPILER=$T-g++ \
               -DCMAKE_SYSROOT=$S -DCMAKE_FIND_ROOT_PATH=$S \
@@ -322,7 +322,7 @@ jobs:
             export PKG_CONFIG_LIBDIR="$S/usr/lib/$T/pkgconfig:$S/usr/share/pkgconfig"
             export PKG_CONFIG_SYSROOT_DIR="$S"
             cmake CMakeLists.txt -G Ninja -DTARGETNAME=Starfish \
-              -DMODE=release -DHOST=linux -DARCH=x86 -DBACKEND=glib_cairo_gl -DSHELL=x11 -DDOCKER=1 -DWEBGL=0 \
+              -DCMAKE_BUILD_TYPE=Release -DBACKEND=glib_cairo_gl -DSHELL=x11 -DDOCKER=1 -DWEBGL=0 \
               -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=x86 \
               -DCMAKE_C_COMPILER=i686-linux-gnu-gcc -DCMAKE_CXX_COMPILER=i686-linux-gnu-g++ \
               -DCMAKE_SYSROOT=$S -DCMAKE_FIND_ROOT_PATH=$S \

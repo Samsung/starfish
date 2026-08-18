@@ -1,11 +1,10 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 
 INCLUDE(${STARFISH_ROOT}/build/starfish_shell_defines.cmake)
+# SET_STARFISH_SHELL_DEFINES() now correctly returns LWE_DEFINITIONS plus the
+# -DSTARFISH_SHELL_* flag for ${SHELL} (see starfish_shell_defines.cmake) --
+# don't re-append LWE_DEFINITIONS here too, or it ends up duplicated.
 SET_STARFISH_SHELL_DEFINES()
-SET (STARFISH_SHELL_DEFINES
-    ${STARFISH_SHELL_DEFINES}
-    ${LWE_DEFINITIONS}
-)
 
 
 SET (STARFISH_SHELL_INCLUDE_DIRS
@@ -69,14 +68,14 @@ ELSEIF (${SHELL} STREQUAL "tcore_wl")
 ENDIF()
 
 SET(STARFISH_SHELL_LDFLAGS "")
-IF (${HOST} STREQUAL "tizen")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     SET(STARFISH_SHELL_LDFLAGS -Wl,-rpath='\$\$ORIGIN/../lib')
 ENDIF()
 
 FILE (GLOB_RECURSE STARFISH_SHELL_SRC ${STARFISH_ROOT}/src/shell/*.cpp)
 
 # backtrace
-IF(${ARCH} STREQUAL "x64" AND ${HOST} STREQUAL "linux")
+IF(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
     SET(ENABLE_BACKTRACE "TRUE")
     IF(${CMAKE_CXX_COMPILER} MATCHES "clang")
         EXECUTE_PROCESS(
@@ -135,30 +134,38 @@ IF (CMAKE_VERSION VERSION_LESS 3.5)
 ELSE ()
     SET (BUILD_GMOCK OFF)
     SET (INSTALL_GTEST OFF)
+    ADD_SUBDIRECTORY (third_party/googletest)
     # Build gtest without LTO. On Tizen the shell is force-linked with -fno-lto
     # (see LWE_*_FORCE_NOLTO in config.cmake), so LTO objects inside libgtest.a
     # cannot be consumed by ld at link time (gcc14/binutils: "plugin needed to
-    # handle lto object") and produce undefined references. Append -fno-lto so it
-    # overrides any -flto coming from the environment/LTO flags, then restore.
-    SET (STARFISH_SAVED_C_FLAGS "${CMAKE_C_FLAGS}")
-    SET (STARFISH_SAVED_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-lto")
-    SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-lto")
-    ADD_SUBDIRECTORY (third_party/googletest)
-    SET (CMAKE_C_FLAGS "${STARFISH_SAVED_C_FLAGS}")
-    SET (CMAKE_CXX_FLAGS "${STARFISH_SAVED_CXX_FLAGS}")
+    # handle lto object") and produce undefined references. Scope -fno-lto to
+    # the actual gtest targets (post-hoc, after add_subdirectory creates them --
+    # CMake resolves target_compile_options at generate time, so this still
+    # applies) instead of a global CMAKE_C_FLAGS/CMAKE_CXX_FLAGS save/restore
+    # around add_subdirectory, which would affect every target googletest's own
+    # CMakeLists happens to create, not just the ones actually linked in.
+    FOREACH (GTEST_TARGET gtest gtest_main)
+        IF (TARGET ${GTEST_TARGET})
+            TARGET_COMPILE_OPTIONS (${GTEST_TARGET} PRIVATE -fno-lto)
+        ENDIF()
+    ENDFOREACH()
     SET (STARFISH_SHELL_LINK_LIBRARIES ${STARFISH_SHELL_LINK_LIBRARIES} gtest)
 ENDIF ()
 
 ADD_EXECUTABLE (starfish.executable ${STARFISH_SHELL_SRC})
 ADD_DEPENDENCIES (starfish.executable starfish_api.shared_library ${STARFISH_SHELL_DEPENDENCIES})
 
+STRING (REPLACE ";" " " STARFISH_SHELL_CXXFLAGS_PRINT "${LWE_CXXFLAGS}")
+STRING (REPLACE ";" " " STARFISH_SHELL_LIBRARIES_PRINT "${STARFISH_SHELL_LINK_LIBRARIES} ${STARFISH_SHELL_LIBRARIES}")
+STRING (REPLACE ";" " " STARFISH_SHELL_DEFINES_PRINT "${STARFISH_SHELL_DEFINES}")
+STRING (REPLACE ";" " " STARFISH_SHELL_LDFLAGS_PRINT "${STARFISH_SHELL_LDFLAGS} ${LWE_LDFLAGS}")
+STRING (REPLACE ";" " " STARFISH_SHELL_INCLUDE_DIRS_PRINT "${STARFISH_SHELL_INCLUDE_DIRS}")
 MESSAGE (STATUS "Shell(${SHELL})")
-MESSAGE (STATUS "FLAGS: " "${LWE_CXXFLAGS}")
-MESSAGE (STATUS "LIBRARIES: " "${STARFISH_SHELL_LINK_LIBRARIES} ${STARFISH_SHELL_LIBRARIES}")
-MESSAGE (STATUS "DEFINITIONS: " "${STARFISH_SHELL_DEFINES}")
-MESSAGE (STATUS "LDFLAGS: " "${STARFISH_SHELL_LDFLAGS} ${LWE_LDFLAGS}")
-MESSAGE (STATUS "INCLUDE_DIRS: " "${STARFISH_SHELL_INCLUDE_DIRS}")
+MESSAGE (STATUS "FLAGS: ${STARFISH_SHELL_CXXFLAGS_PRINT}")
+MESSAGE (STATUS "LIBRARIES: ${STARFISH_SHELL_LIBRARIES_PRINT}")
+MESSAGE (STATUS "DEFINITIONS: ${STARFISH_SHELL_DEFINES_PRINT}")
+MESSAGE (STATUS "LDFLAGS: ${STARFISH_SHELL_LDFLAGS_PRINT}")
+MESSAGE (STATUS "INCLUDE_DIRS: ${STARFISH_SHELL_INCLUDE_DIRS_PRINT}")
 
 TARGET_INCLUDE_DIRECTORIES (starfish.executable PUBLIC ${STARFISH_SHELL_INCLUDE_DIRS})
 TARGET_COMPILE_OPTIONS (starfish.executable PUBLIC ${LWE_CXXFLAGS} ${STARFISH_SHELL_DEFINES})
@@ -171,7 +178,7 @@ TARGET_LINK_LIBRARIES (starfish.executable
 )
 SET_TARGET_PROPERTIES (starfish.executable PROPERTIES OUTPUT_NAME ${TARGETNAME})
 
-IF (${HOST} STREQUAL "linux")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     ADD_CUSTOM_COMMAND (TARGET starfish.executable POST_BUILD
         COMMAND ln -fs ${OUTPUT_DIRECTORY}/bin/${TARGETNAME} ${STARFISH_ROOT}/Starfish
     )

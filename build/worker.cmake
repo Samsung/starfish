@@ -84,7 +84,7 @@ SET (STARFISH_SERVICE_WORKER_DEPENDENCIES ${STARFISH_DEPENDENCIES})
 # PACKAGE
 #######################################################
 
-IF (${HOST} STREQUAL "tizen")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     pkg_check_modules (STARFISH_WORKER_TIZEN_PACKAGE REQUIRED dlog capi-appfw-app-common)
 ENDIF()
 

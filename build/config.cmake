@@ -12,12 +12,20 @@ SET (ESCARGOT_THIRD_PARTY_ROOT ${ESCARGOT_ROOT}/third_party)
 SET (GCUTIL_ROOT ${ESCARGOT_THIRD_PARTY_ROOT}/GCutil)
 SET (TOOL_ROOT ${STARFISH_ROOT}/tool)
 
+STRING(TOLOWER "${CMAKE_SYSTEM_NAME}" HOST_LOWER)
+STRING(TOLOWER "${CMAKE_BUILD_TYPE}" MODE_LOWER)
+IF (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+    SET(ARCH_LOWER "x64")
+ELSE()
+    SET(ARCH_LOWER "${CMAKE_SYSTEM_PROCESSOR}")
+ENDIF()
+
 #######################################################
 # OUTPUT PATH
 #######################################################
 
 IF (${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
-    SET (OUTPUT_DIRECTORY ${OUTPUT_DIR}/out/${MODE})
+    SET (OUTPUT_DIRECTORY ${OUTPUT_DIR}/out/${MODE_LOWER})
 ELSE()
     SET (OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 ENDIF()
@@ -25,7 +33,7 @@ ENDIF()
 SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/lib)
 SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/lib)
 
-IF (${HOST} STREQUAL "tizen") # this needs for gbs build
+IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen") # this needs for gbs build
     SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY})
 ELSE()
     SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/bin)
@@ -104,13 +112,13 @@ ENDIF()
 # define, the sub-build in third_party.cmake, its target dependency in
 # starfish.cmake and the link against websockets_lwe - keys off this single flag,
 # so a profile can never end up compiling WebSocket without its library.
-IF (${HOST} STREQUAL "linux" OR ${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile" OR ${CUSTOM} STREQUAL "unified_wearable" OR ${CUSTOM} STREQUAL "flutter")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Linux" OR ${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile" OR ${CUSTOM} STREQUAL "unified_wearable" OR ${CUSTOM} STREQUAL "flutter")
     SET (USE_LIBWEBSOCKETS "1")
 ELSE()
     SET (USE_LIBWEBSOCKETS "0")
 ENDIF()
 
-IF (${ARCH} STREQUAL "x64")
+IF (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
     SET (LWE_DEFINES_ARCH
         -DSTARFISH_ENABLE_MULTIMEDIA
         -DSTARFISH_ENABLE_INSPECTOR
@@ -128,7 +136,7 @@ IF (${ARCH} STREQUAL "x64")
         -DSTARFISH_ENABLE_ANIMATION
         -DSTARFISH_ENABLE_WEBAUDIO
     )
-ELSEIF (${ARCH} STREQUAL "aarch64" OR ${ARCH} STREQUAL "arm" OR ${ARCH} STREQUAL "x86")
+ELSEIF (CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm|x86)$")
     SET (LWE_DEFINES_ARCH
         -DSTARFISH_ENABLE_MULTIMEDIA
         -DSTARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING
@@ -159,13 +167,13 @@ IF (STARFISH_ENABLE_CDP)
     )
 ENDIF()
 
-IF (${HOST} STREQUAL "linux")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     SET(LWE_DEFINES_HOST
         -DSTARFISH_LINUX
     )
 ENDIF()
 
-IF (${HOST} STREQUAL "tizen")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     SET(LWE_DEFINES_HOST
         -DSTARFISH_TIZEN
         -DSTARFISH_TIZEN_OBS
@@ -251,7 +259,7 @@ ENDIF()
 
 # Touch-exploration accessibility for non-TV Tizen profiles. TV profiles keep
 # their existing behavior untouched (macro stays undefined there).
-IF (${ENABLE_A11Y_TOUCH} STREQUAL "1" AND ${HOST} STREQUAL "tizen")
+IF (${ENABLE_A11Y_TOUCH} STREQUAL "1" AND CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     IF (${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "prod_tv")
         MESSAGE (WARNING "ENABLE_A11Y_TOUCH ignored on TV profiles (${CUSTOM})")
     ELSE()
@@ -263,13 +271,13 @@ IF (${ENABLE_A11Y_TOUCH} STREQUAL "1" AND ${HOST} STREQUAL "tizen")
     ENDIF()
 ENDIF()
 
-IF (${MODE} STREQUAL "debug")
+IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     SET (LWE_DEFINES_MODE
         -DGC_DEBUG # bdwgc
         -D_GLIBCXX_DEBUG
         -DSTARFISH_ENABLE_TEST
     )
-ELSEIF (${MODE} STREQUAL "release")
+ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     SET (LWE_DEFINES_MODE -DNDEBUG)
     IF (${ENABLE_TEST} STREQUAL "1")
         SET(LWE_DEFINES_MODE ${LWE_DEFINES_MODE} -DSTARFISH_ENABLE_TEST)
@@ -279,7 +287,7 @@ ELSE()
 ENDIF()
 
 IF (${BACKEND} STREQUAL "flutter")
-    IF (${HOST} STREQUAL "tizen")
+    IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
         SET (USE_CUSTOM_WEBP "1")
         SET (LWE_DEFINES_BACKEND
             -DSTARFISH_FLUTTER
@@ -311,7 +319,7 @@ INCLUDE(${STARFISH_ROOT}/build/starfish_shell_defines.cmake)
 SET_STARFISH_SHELL_DEFINES()
 
 # Tmp disable WebRTC on Linux until openssl1.1 is installed on all dev machines
-IF (${HOST} STREQUAL "linux")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     # SET (WEBRTC "1")
 ELSEIF ((${CUSTOM} STREQUAL "unified_tv" OR ((${CUSTOM} STREQUAL "prod_tv") AND (${ENABLE_TEST} STREQUAL "1"))) AND ((${TIZEN_MAJOR_VERSION} GREATER 6) OR (${TIZEN_MAJOR_VERSION} EQUAL 6)))
 ENDIF()
@@ -321,7 +329,7 @@ IF (${WEBRTC} STREQUAL "1")
     # that has no libwebsockets. Report that here instead of letting the WebSocket
     # sources fail later on the missing libwebsockets.h.
     IF (NOT ${USE_LIBWEBSOCKETS} STREQUAL "1")
-        MESSAGE (FATAL_ERROR "WEBRTC=1 requires WebSocket, which is not available for CUSTOM=${CUSTOM} on HOST=${HOST}")
+        MESSAGE (FATAL_ERROR "WEBRTC=1 requires WebSocket, which is not available for CUSTOM=${CUSTOM} on CMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}")
     ENDIF()
     SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
         -DSTARFISH_ENABLE_WEBRTC
@@ -336,8 +344,8 @@ ENDIF()
 IF ("${ENABLE_ESPLUSPLAYER}" STREQUAL "1")
     # esplusplayer is a platform-internal Tizen package (Tizen 10+, not in
     # the public app SDK); only meaningful on Tizen platform builds.
-    IF (NOT ${HOST} STREQUAL "tizen")
-        MESSAGE (FATAL_ERROR "ENABLE_ESPLUSPLAYER requires HOST=tizen")
+    IF (NOT CMAKE_SYSTEM_NAME STREQUAL "Tizen")
+        MESSAGE (FATAL_ERROR "ENABLE_ESPLUSPLAYER requires CMAKE_SYSTEM_NAME=Tizen")
     ENDIF()
     MESSAGE (STATUS "esplusplayer MSE backend enabled")
     SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
@@ -394,8 +402,8 @@ IF (${IDB} STREQUAL "1")
 ENDIF()
 
 IF (${BUILD_CAIRO} STREQUAL "1")
-    SET (STARFISH_CAIRO_ADDITIONAL_INCLUDE_DIRS ${THIRD_PARTY_ROOT}/cairo/out/${HOST}/${ARCH}/${MODE}/include/cairo)
-    SET (STARFISH_CAIRO_ADDITIONAL_INCLUDE_DIRS ${STARFISH_CAIRO_ADDITIONAL_INCLUDE_DIRS} ${THIRD_PARTY_ROOT}/cairo/out/${HOST}/${ARCH}/${MODE}/include)
+    SET (STARFISH_CAIRO_ADDITIONAL_INCLUDE_DIRS ${THIRD_PARTY_ROOT}/cairo/out/${HOST_LOWER}/${ARCH_LOWER}/${MODE_LOWER}/include/cairo)
+    SET (STARFISH_CAIRO_ADDITIONAL_INCLUDE_DIRS ${STARFISH_CAIRO_ADDITIONAL_INCLUDE_DIRS} ${THIRD_PARTY_ROOT}/cairo/out/${HOST_LOWER}/${ARCH_LOWER}/${MODE_LOWER}/include)
 ELSE()
     SET (STARFISH_CAIRO_ADDITIONAL_INCLUDE_DIRS)
 ENDIF()
@@ -409,12 +417,12 @@ IF (${ENABLE_DEBUGGER} STREQUAL "1")
 ENDIF()
 
 
-IF (${USE_FFMPEG_MEDIA_PLAYER} STREQUAL "1" AND ${HOST} STREQUAL "linux")
+IF (${USE_FFMPEG_MEDIA_PLAYER} STREQUAL "1" AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
     SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
         -DSTARFISH_ENABLE_WEBAUDIO
         -DSTARFISH_USE_FFMPEG_MEDIAPLAYER
     )
-ELSEIF (NOT ${HOST} STREQUAL "tizen")
+ELSEIF (NOT CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
         -DSTARFISH_USE_MOCK_MEDIAPLAYER
     )
@@ -444,12 +452,12 @@ if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9)
     SET (LWE_CXXFLAGS_COMPILER ${LWE_CXXFLAGS_COMPILER} -Wno-attributes -Wno-deprecated-copy -Wno-cast-function-type -Wno-pessimizing-move -Wno-strict-aliasing -Wno-overloaded-virtual -Wno-mismatched-new-delete -Wno-builtin-macro-redefined)
 endif()
 
-#IF (${HOST} STREQUAL "tizen" AND (${CUSTOM} STREQUAL "unified_wearable" OR ${CUSTOM} STREQUAL "prod_wearable"))
+#IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen" AND (${CUSTOM} STREQUAL "unified_wearable" OR ${CUSTOM} STREQUAL "prod_wearable"))
 #    SET (LWE_CXXFLAGS_MODE -Os)
 #ELSE
-IF (${MODE} STREQUAL "debug" OR "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     SET (LWE_CXXFLAGS_MODE -O0)
-ELSEIF (${MODE} STREQUAL "release" OR "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     SET (LWE_CXXFLAGS_MODE -O2)
 ENDIF()
 
@@ -470,7 +478,7 @@ IF (${COVERAGE} STREQUAL "1")
     SET (LWE_LDFLAGS_COVERAGE --coverage -lgcov)
 ENDIF()
 
-IF (${HOST} STREQUAL "tizen")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     IF (${BACKEND} STREQUAL "glib_cairo_gl")
         SET (LWE_CXXFLAGS_HOST -Wno-format-nonliteral)
     ENDIF()
@@ -497,9 +505,9 @@ SET (LDFLAGS_FROM_ENV $ENV{LDFLAGS})
 SEPARATE_ARGUMENTS(LDFLAGS_FROM_ENV)
 
 SET (LWE_LDFLAGS_DEFAULT -Wl,--gc-sections -Wl,-rpath=/usr/local/lib -Wl,-rpath='\$\$ORIGIN')
-IF (${HOST} STREQUAL "linux")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     SET (LWE_LDFLAGS_HOST -L/usr/local/lib -Wl,-rpath=\$$ORIGIN/lib -Wl,-rpath-link=lib)
-ELSEIF (${HOST} STREQUAL "tizen")
+ELSEIF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     SET (LWE_LDFLAGS_HOST -L/usr/local/lib -Wl,-rpath=${LIBDIR}/lwe)
 ENDIF()
 
@@ -524,7 +532,7 @@ find_package (PkgConfig REQUIRED)
 # /usr/lib/lib{ssl,crypto}.so, so the module picked here matches the BuildRequires
 # in the spec and is also what the libwebsockets sub-build is told to use
 # (see third_party.cmake). Older Tizen versions keep their previous behaviour.
-IF (${HOST} STREQUAL "tizen")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     IF ((${TIZEN_MAJOR_VERSION} GREATER 10) OR ((${TIZEN_MAJOR_VERSION} EQUAL 10) AND (${TIZEN_MINOR_VERSION} GREATER 0)))
         SET (STARFISH_OPENSSL_MODULE openssl3)
     ELSEIF ((${TIZEN_MAJOR_VERSION} GREATER 6) OR (${TIZEN_MAJOR_VERSION} EQUAL 6))
@@ -549,11 +557,11 @@ ELSE()
     SET (LWE_DEFINES_ICU -DSTARFISH_ENABLE_RUNTIME_ICU_BINDER)
 ENDIF()
 
-IF (${WEBRTC} STREQUAL "1" AND ${HOST} STREQUAL "linux")
+IF (${WEBRTC} STREQUAL "1" AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
     pkg_check_modules (STARFISH_THIRD_PARTY_LIBS REQUIRED alsa)
 ENDIF()
 
-IF (${BACKEND} STREQUAL "glib_cairo_gl" AND ${ARCH} STREQUAL "x64")
+IF (${BACKEND} STREQUAL "glib_cairo_gl" AND CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
     # EFL libs are only used by EFL-based shells (sources guarded by
     # STARFISH_SHELL_EFL / STARFISH_SHELL_ECORE_X). Non-EFL shells (e.g. x11)
     # must not require them.
@@ -567,7 +575,7 @@ IF (${BACKEND} STREQUAL "glib_cairo_gl" AND ${ARCH} STREQUAL "x64")
     ENDIF()
 ELSEIF (${BACKEND} STREQUAL "glib_headless")
     pkg_check_modules (STARFISH_BACKEND REQUIRED glib-2.0)
-ELSEIF (${BACKEND} STREQUAL "glib_cairo_gl" AND ${HOST} STREQUAL "tizen")
+ELSEIF (${BACKEND} STREQUAL "glib_cairo_gl" AND CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     pkg_check_modules (STARFISH_BACKEND REQUIRED freetype2 fontconfig harfbuzz elementary ecore ecore-imf)
     pkg_check_modules (STARFISH_BACKEND_ECORE_IMF_EVAS REQUIRED ecore-imf-evas)
     pkg_check_modules (STARFISH_BACKEND_LIBTBM REQUIRED libtbm)
@@ -581,7 +589,7 @@ ELSEIF (${BACKEND} STREQUAL "uv_cairo_gl")
     ENDIF()
 ELSEIF (${BACKEND} STREQUAL "glib_cairo_gl")
     pkg_check_modules (STARFISH_BACKEND REQUIRED freetype2 fontconfig harfbuzz glib-2.0)
-    IF (${HOST} STREQUAL "linux")
+    IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
         pkg_check_modules (STARFISH_BACKEND_EGL REQUIRED egl glesv2)
     ELSE()
         pkg_check_modules (STARFISH_BACKEND_EGL REQUIRED egl gles20)
@@ -589,7 +597,7 @@ ELSEIF (${BACKEND} STREQUAL "glib_cairo_gl")
     IF (${BUILD_CAIRO} STREQUAL "0")
         pkg_check_modules (STARFISH_BACKEND_CAIRO REQUIRED cairo)
     ENDIF()
-ELSEIF (${BACKEND} STREQUAL "flutter" AND ${HOST} STREQUAL "tizen")
+ELSEIF (${BACKEND} STREQUAL "flutter" AND CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     pkg_check_modules (STARFISH_BACKEND REQUIRED capi-media-player capi-media-sound-manager freetype2 fontconfig harfbuzz elementary ecore ecore-imf ecore-wl2 wayland-client egl gles20 )
     pkg_check_modules (STARFISH_BACKEND_EGL REQUIRED wayland-client egl)
     pkg_check_modules (STARFISH_BACKEND_ECORE_IMF_EVAS REQUIRED ecore-imf-evas)
@@ -601,7 +609,7 @@ IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "0")
     pkg_check_modules (STARFISH_BACKEND_IMAGE REQUIRED libpng)
 ENDIF()
 
-IF (${HOST} STREQUAL "tizen")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     pkg_check_modules (STARFISH_BACKEND_GLES REQUIRED gles20)
     IF (${CUSTOM} STREQUAL "unified_common")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog capi-appfw-app-common capi-media-player capi-network-connection)
@@ -696,7 +704,7 @@ IF (${BACKEND} STREQUAL "glib_cairo_gl" OR ${BACKEND} STREQUAL "flutter" OR ${BA
     IF (${USE_CUSTOM_WEBP} STREQUAL "1")
         SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} webp_lwe)
     ELSE()
-        IF (${HOST} STREQUAL "tizen")
+        IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
             IF ((${TIZEN_MAJOR_VERSION} GREATER 6) OR (${TIZEN_MAJOR_VERSION} EQUAL 6))
                 SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} webp)
             ENDIF()
@@ -719,7 +727,7 @@ IF (${BACKEND} STREQUAL "glib_cairo_gl" OR ${BACKEND} STREQUAL "flutter" OR ${BA
             SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} turbojpeg)
         ENDIF()
         SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} glib-2.0)
-    ELSEIF (${BACKEND} STREQUAL "flutter" AND ${HOST} STREQUAL "tizen")
+    ELSEIF (${BACKEND} STREQUAL "flutter" AND CMAKE_SYSTEM_NAME STREQUAL "Tizen")
         IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "0")
             SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} turbojpeg)
         ENDIF()
@@ -727,7 +735,7 @@ IF (${BACKEND} STREQUAL "glib_cairo_gl" OR ${BACKEND} STREQUAL "flutter" OR ${BA
     ENDIF()
 ENDIF()
 
-IF (${HOST} STREQUAL "tizen")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     SET (STARFISH_LIBRARIES_HOST
         rt
         dl
@@ -739,7 +747,7 @@ IF (${USE_LIBWEBSOCKETS} STREQUAL "1")
     SET (STARFISH_LIBRARIES_HOST ${STARFISH_LIBRARIES_HOST} websockets_lwe)
 ENDIF()
 
-IF (${HOST} STREQUAL "linux")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     LINK_DIRECTORIES (/usr/local/lib ${OUTPUT_DIRECTORY}/lib)
 ELSE()
     LINK_DIRECTORIES (${OUTPUT_DIRECTORY}/lib)
@@ -764,7 +772,7 @@ ENDIF()
 
 IF (${BACKEND} STREQUAL "glib_cairo_gl")
     SET (STARFISH_EFL_CAIRO_ADDITIONAL_INCLUDE_DIRS)
-ELSEIF (${BACKEND} STREQUAL "flutter" AND ${HOST} STREQUAL "tizen")
+ELSEIF (${BACKEND} STREQUAL "flutter" AND CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     SET (STARFISH_EFL_CAIRO_ADDITIONAL_INCLUDE_DIRS)
 ENDIF()
 
@@ -786,7 +794,7 @@ IF (${WORKER} STREQUAL "1")
     )
 ENDIF()
 
-IF (${HOST} STREQUAL "tizen")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     SET (STARFISH_TIZEN_INCLUDE_DIRS
         ${THIRD_PARTY_ROOT}/deviceapi/src/
         /usr/include/dlog

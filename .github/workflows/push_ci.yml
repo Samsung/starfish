@@ -49,7 +49,7 @@ jobs:
       - name: Build Starfish
         run: |
           cmake CMakeLists.txt -G Ninja -DDOCKER=1 \
-            -DMODE=debug -DBACKEND=uv_cairo_gl -DSHELL=x11 -DENABLE_DYNAMIC_LOADER=1 \
+            -DCMAKE_BUILD_TYPE=Debug -DBACKEND=uv_cairo_gl -DSHELL=x11 -DENABLE_DYNAMIC_LOADER=1 \
             ${{ matrix.options }}
           ninja starfish.executable
 

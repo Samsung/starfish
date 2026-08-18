@@ -4,14 +4,14 @@ SET (STARFISH_WORKER_API_INCLUDE_DIRS ${STARFISH_API_INCLUDE_DIRS})
 
 SET (STARFISH_WORKER_API_DEFINES -DSTARFISH_WEBWORKER_HOST)
 
-IF (${MODE} STREQUAL "debug")
+IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     SET (STARFISH_WORKER_API_DEFINES
         ${STARFISH_WORKER_API_DEFINES}
         -D_GLIBCXX_DEBUG
     )
-ELSEIF (${MODE} STREQUAL "release")
+ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     SET (STARFISH_WORKER_API_DEFINES
-        ${STARFISH_WORKER_API_DEFINES} 
+        ${STARFISH_WORKER_API_DEFINES}
         -DNDEBUG
     )
 ENDIF()
@@ -42,7 +42,7 @@ MACRO (add_worker_api_taget file_name variable_name)
     # FIXME:
     # This block came from config.cmake. please remove this and enable SOVERSION and VERSION properties.
     # The spec file will also need to be modified.
-    IF (${HOST} STREQUAL "tizen")
+    IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
         IF (${BACKEND} STREQUAL "glib_cairo_gl")
             SET (STARFISH_${variable_name}_API_LDFLAGS ${STARFISH_WORKER_API_LDFLAGS} -Wl,-soname,liblightweight-web-engine-${file_name}.so.1)
         ENDIF()

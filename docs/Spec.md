@@ -36,30 +36,30 @@ This spec is a **manually curated** description of the engine's web surface, and
 
 ### Build-conditional flags table
 
-The compile-time flags that gate large chunks of this spec. "Default" is for the `HOST=linux ARCH=x64 MODE=release` build that `README.md` builds under **Compile Starfish**. Two kinds of flag appear here: `SET(... CACHE STRING ...)` options in `CMakeLists.txt`, which you pass as `-DNAME=1`, and `STARFISH_ENABLE_*` macros that `build/config.cmake` derives from `ARCH`/`HOST`/`CUSTOM` and that have no `-D` option of their own.
+The compile-time flags that gate large chunks of this spec. "Default" is for the `CMAKE_SYSTEM_NAME=Linux CMAKE_SYSTEM_PROCESSOR=x86_64 CMAKE_BUILD_TYPE=Release` build that `README.md` builds under **Compile Starfish**. Two kinds of flag appear here: `SET(... CACHE STRING ...)` options in `CMakeLists.txt`, which you pass as `-DNAME=1`, and `STARFISH_ENABLE_*` macros that `build/config.cmake` derives from `CMAKE_SYSTEM_PROCESSOR`/`CMAKE_SYSTEM_NAME`/`CUSTOM` and that have no `-D` option of their own.
 
 > Note: `CMakeLists.txt` still defaults `BACKEND` to `efl_cairo_gl`, but `README.md` builds with `-DBACKEND=glib_cairo_gl -DSHELL=x11`. Backend choice does not change any row below.
 
 | Spec section | CMake flag (or `STARFISH_ENABLE_*` macro) | Default | Effect when off |
 |--------------|-------------------------------------------|---------|-----------------|
-| HTML (`<canvas>`, `CanvasRenderingContext2D`) | `STARFISH_ENABLE_CANVAS` | on (every `ARCH`) | `<canvas>` parses but `getContext('2d')` returns null. |
-| HTML (`<video>`, `<audio>`, `<source>`, `<track>`) | `STARFISH_ENABLE_MULTIMEDIA` | on (every `ARCH`) | Tags fall back to `HTMLUnknownElement`. |
+| HTML (`<canvas>`, `CanvasRenderingContext2D`) | `STARFISH_ENABLE_CANVAS` | on (every `CMAKE_SYSTEM_PROCESSOR`) | `<canvas>` parses but `getContext('2d')` returns null. |
+| HTML (`<video>`, `<audio>`, `<source>`, `<track>`) | `STARFISH_ENABLE_MULTIMEDIA` | on (every `CMAKE_SYSTEM_PROCESSOR`) | Tags fall back to `HTMLUnknownElement`. |
 | WebGL (`WebGL*` interfaces) | `WEBGL=1` | **off** | `getContext('webgl')` returns null. |
 | Workers | `WORKER=1`, `SHARED_WORKER=1`, `SERVICE_WORKER=1` | off, off, off | Worker globals undefined. Setting `SHARED_WORKER` or `SERVICE_WORKER` forces `WORKER=1`. |
 | IndexedDB | `IDB=1` | off | `indexedDB` undefined. |
 | WebRTC, MediaStream | `WEBRTC=1` (→ `STARFISH_ENABLE_WEBRTC`/`MULTIMEDIA`/`WEBSOCKET`/`WEBAUDIO`) | off | All `RTC*`/`MediaStream*` interfaces undefined. |
-| WebAudio | `STARFISH_ENABLE_WEBAUDIO` | on for `ARCH=x64` only; also implied by `WEBRTC=1` | `AudioContext` etc. undefined. |
-| WebSocket | `STARFISH_ENABLE_WEBSOCKET` | on (every `ARCH`) | `WebSocket` undefined. |
-| Web Speech (TTS) | `STARFISH_ENABLE_TTS` | on for `ARCH=x64` only | `SpeechSynthesis*` undefined. |
-| [WAI-ARIA](#accessible-rich-internet-applications-wai-aria) touch exploration | `STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION` (from `ENABLE_A11Y_TOUCH=1`) | on for `ARCH=x64`; on `HOST=tizen` it needs `-DENABLE_A11Y_TOUCH=1` and is force-disabled on TV profiles | Tap-to-speak / double-tap-activate / swipe navigation absent; ARIA attributes still reflect. |
-| CSS transitions & animations | `STARFISH_ENABLE_ANIMATION` | on (every `ARCH`) | `@keyframes`, `transition`, and the Web Animations entry points do not run. |
-| CSS legacy `-webkit-*` aliases | `STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX`, `…_BOX_PREFIX`, `…_LINE_PREFIX`, `…_TRANSFORM_PREFIX`, `…_TRANSITION_PREFIX` | on (every `ARCH`, all five) | Aliases not parsed; use unprefixed forms. |
-| [Obsolete](#obsolete) / [Obsolete CSS](#obsolete-css) | `STARFISH_ENABLE_OBSOLETE_SPEC` | on (every `ARCH`) | `Document.width`/`height`, `Window.event`, `Navigator.battery` and the obsolete CSS properties are absent. |
+| WebAudio | `STARFISH_ENABLE_WEBAUDIO` | on for `CMAKE_SYSTEM_PROCESSOR=x86_64` only; also implied by `WEBRTC=1` | `AudioContext` etc. undefined. |
+| WebSocket | `STARFISH_ENABLE_WEBSOCKET` | on (every `CMAKE_SYSTEM_PROCESSOR`) | `WebSocket` undefined. |
+| Web Speech (TTS) | `STARFISH_ENABLE_TTS` | on for `CMAKE_SYSTEM_PROCESSOR=x86_64` only | `SpeechSynthesis*` undefined. |
+| [WAI-ARIA](#accessible-rich-internet-applications-wai-aria) touch exploration | `STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION` (from `ENABLE_A11Y_TOUCH=1`) | on for `CMAKE_SYSTEM_PROCESSOR=x86_64`; on `CMAKE_SYSTEM_NAME=Tizen` it needs `-DENABLE_A11Y_TOUCH=1` and is force-disabled on TV profiles | Tap-to-speak / double-tap-activate / swipe navigation absent; ARIA attributes still reflect. |
+| CSS transitions & animations | `STARFISH_ENABLE_ANIMATION` | on (every `CMAKE_SYSTEM_PROCESSOR`) | `@keyframes`, `transition`, and the Web Animations entry points do not run. |
+| CSS legacy `-webkit-*` aliases | `STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX`, `…_BOX_PREFIX`, `…_LINE_PREFIX`, `…_TRANSFORM_PREFIX`, `…_TRANSITION_PREFIX` | on (every `CMAKE_SYSTEM_PROCESSOR`, all five) | Aliases not parsed; use unprefixed forms. |
+| [Obsolete](#obsolete) / [Obsolete CSS](#obsolete-css) | `STARFISH_ENABLE_OBSOLETE_SPEC` | on (every `CMAKE_SYSTEM_PROCESSOR`) | `Document.width`/`height`, `Window.event`, `Navigator.battery` and the obsolete CSS properties are absent. |
 | WebAssembly (`WebAssembly` global) | `ENABLE_WASM=1` | off | `WebAssembly` undefined. |
 | `Intl`, locale-sensitive formatting | `RUNTIME_ICU=1` (→ `STARFISH_ENABLE_RUNTIME_ICU_BINDER`) | on | ICU is linked directly (`icu-uc`/`icu-i18n` become build dependencies) instead of being bound at runtime. The JS-visible `Intl` surface is the same either way. |
-| Battery Status | `STARFISH_ENABLE_BATTERY_STATUS` | off (`HOST=tizen` + `CUSTOM=unified_wearable` only) | `BatteryManager`, `navigator.getBattery` undefined. |
-| Web Device API (`window.tizen`) | `HOST=tizen` + `TIZEN_DEVICE_API` | off (linux/windows/android) | `window.tizen` undefined. |
-| MSE playback backend | `ENABLE_ESPLUSPLAYER=1` | off; auto-enabled on `HOST=tizen` with `TIZEN_MAJOR_VERSION >= 10`. Requires `HOST=tizen` | Media Source playback uses the platform-default media path. |
+| Battery Status | `STARFISH_ENABLE_BATTERY_STATUS` | off (`CMAKE_SYSTEM_NAME=Tizen` + `CUSTOM=unified_wearable` only) | `BatteryManager`, `navigator.getBattery` undefined. |
+| Web Device API (`window.tizen`) | `CMAKE_SYSTEM_NAME=Tizen` + `TIZEN_DEVICE_API` | off (linux/windows/android) | `window.tizen` undefined. |
+| MSE playback backend | `ENABLE_ESPLUSPLAYER=1` | off; auto-enabled on `CMAKE_SYSTEM_NAME=Tizen` with `TIZEN_MAJOR_VERSION >= 10`. Requires `CMAKE_SYSTEM_NAME=Tizen` | Media Source playback uses the platform-default media path. |
 | ffmpeg media player | `USE_FFMPEG_MEDIA_PLAYER=1` | off | `<video>`/`<audio>` use the platform-default media path. |
 | Chrome DevTools Protocol server | `STARFISH_ENABLE_CDP=1` | off | No CDP endpoint. This surface is never visible to page script either way — see `docs/CDP.md`. |
 
@@ -215,17 +215,17 @@ section are supported.
 
 > **Build-conditional interfaces.** The following classes of IDL interfaces are only exposed when their build flag is on; when off, the constructor is `undefined` at runtime:
 > - `RTC*`, `MediaStream`, `MediaStreamTrack`, `MediaDevices` — `WEBRTC=1` (`STARFISH_ENABLE_WEBRTC`)
-> - `AudioContext`, `BaseAudioContext`, `AudioBuffer*`, `AudioNode*` — `STARFISH_ENABLE_WEBAUDIO` (default on for `ARCH=x64`)
-> - `WebSocket` — `STARFISH_ENABLE_WEBSOCKET` (default on for `ARCH=x64`)
+> - `AudioContext`, `BaseAudioContext`, `AudioBuffer*`, `AudioNode*` — `STARFISH_ENABLE_WEBAUDIO` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64`)
+> - `WebSocket` — `STARFISH_ENABLE_WEBSOCKET` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64`)
 > - `WebGL*`, `EXT_*`, `OES_*`, `WEBGL_*` — `WEBGL=1`
 > - `Worker`, `WorkerGlobalScope`, `DedicatedWorkerGlobalScope` — `WORKER=1`
 > - `SharedWorker`, `SharedWorkerGlobalScope` — `SHARED_WORKER=1`
 > - `ServiceWorker`, `ServiceWorkerRegistration`, `Notification`, `PushManager`, `Cache`, `caches`, `FetchEvent`, `ExtendableEvent` — `SERVICE_WORKER=1`
 > - `IDBFactory`, `IDBDatabase`, `IDBObjectStore`, … — `IDB=1`
-> - `SpeechSynthesis`, `SpeechSynthesisUtterance`, `SpeechSynthesisVoice`, `SpeechSynthesisEvent` — `STARFISH_ENABLE_TTS` (default on for `ARCH=x64`)
+> - `SpeechSynthesis`, `SpeechSynthesisUtterance`, `SpeechSynthesisVoice`, `SpeechSynthesisEvent` — `STARFISH_ENABLE_TTS` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64`)
 > - `BatteryManager`, `navigator.getBattery()` — `STARFISH_ENABLE_BATTERY_STATUS` (Tizen wearable only)
 >
-> The `HOST=linux ARCH=x64` release build that `README.md` builds ships with `WEBGL=0`, `WEBRTC=0`, `WORKER=0`, `SHARED_WORKER=0`, `SERVICE_WORKER=0`, `IDB=0`, plus TTS/WebAudio/WebSocket on. Other hosts and arches differ — see [Build-Conditional Surface](#build-conditional-surface) for the full table.
+> The `CMAKE_SYSTEM_NAME=Linux CMAKE_SYSTEM_PROCESSOR=x86_64` release build that `README.md` builds ships with `WEBGL=0`, `WEBRTC=0`, `WORKER=0`, `SHARED_WORKER=0`, `SERVICE_WORKER=0`, `IDB=0`, plus TTS/WebAudio/WebSocket on. Other hosts and arches differ — see [Build-Conditional Surface](#build-conditional-surface) for the full table.
 
 > **Observers deliver callbacks.** `MutationObserver`/`MutationRecord`, `IntersectionObserver`/`IntersectionObserverEntry`, and `ResizeObserver`/`ResizeObserverEntry`/`ResizeObserverSize` are implemented, not stubs — the observation logic is wired up and invokes the JS callback (`MutationObserver::notify`, `ResizeObserver::notify`, `IntersectionObserverCallback`).
 >
@@ -3190,7 +3190,7 @@ LWE exposes Escargot's JS debugger protocol via `cmake -DENABLE_DEBUGGER=1` (def
 
 **`StarfishGCMemoryLogger` log spam:**
 
-`src/public/delegate/LWEDelegate.cpp:52` registers `StarfishGCMemoryLogger` as a `RECLAIM_END` listener on `Escargot::Memory`. This emits `LWEDelegate.cpp: StarfishGCMemoryLogger(54) > Done GC: HeapSize: [<used MB>, <heap MB>]` to stderr (via `STARFISH_LOG_INFO`) on **every** BDWGC sweep, regardless of build flags or `-DMODE`. There is no JS, public-API, or env-var off-switch in the engine source — the listener is unconditionally added in `LWE::Initialize` after a defensive `removeGCEventListener`. Embedders who want quiet stderr must filter the prefix downstream. The output is the only memory-usage signal a host can observe without a debugger, and matches BDWGC's `GC_get_memory_use()` (live) and `GC_get_heap_size()` (committed).
+`src/public/delegate/LWEDelegate.cpp:52` registers `StarfishGCMemoryLogger` as a `RECLAIM_END` listener on `Escargot::Memory`. This emits `LWEDelegate.cpp: StarfishGCMemoryLogger(54) > Done GC: HeapSize: [<used MB>, <heap MB>]` to stderr (via `STARFISH_LOG_INFO`) on **every** BDWGC sweep, regardless of build flags or `-DCMAKE_BUILD_TYPE`. There is no JS, public-API, or env-var off-switch in the engine source — the listener is unconditionally added in `LWE::Initialize` after a defensive `removeGCEventListener`. Embedders who want quiet stderr must filter the prefix downstream. The output is the only memory-usage signal a host can observe without a debugger, and matches BDWGC's `GC_get_memory_use()` (live) and `GC_get_heap_size()` (committed).
 
 **Authoring guidance for LWE webapps:**
 
@@ -3202,7 +3202,7 @@ LWE exposes Escargot's JS debugger protocol via `cmake -DENABLE_DEBUGGER=1` (def
 ## Web Device API
 The following describes Web device APIs supported by lightweight web engine. Supported interfaces and methods are generally the same as the interfaces and methods supported by Tizen API, respectively. If there are exceptions, they are explicitly mentioned below.
 
-> **Build flag:** the Web Device API (`window.tizen`) is exposed only when `HOST=tizen` and the `TIZEN_DEVICE_API` macro is defined. On `HOST=linux`/`HOST=windows`/`HOST=android` builds `window.tizen` is `undefined`.
+> **Build flag:** the Web Device API (`window.tizen`) is exposed only when `CMAKE_SYSTEM_NAME=Tizen` and the `TIZEN_DEVICE_API` macro is defined. On `CMAKE_SYSTEM_NAME=Linux`/`CMAKE_SYSTEM_NAME=Windows`/the Android build `window.tizen` is `undefined`.
 
 | API            | Description | Note |
 |----------------|-------------|------|
@@ -3381,7 +3381,7 @@ The WebRTC support is in an early stage.
 The following describes WebAudio APIs supported by lightweight web engine. Please, see [WebAudio Spec](https://webaudio.github.io/web-audio-api/) for more information.
 The WebAudio support is in an early stage.
 
-> **Build flag:** WebAudio is gated by `STARFISH_ENABLE_WEBAUDIO` (default on for `ARCH=x64`; also implicitly enabled when `WEBRTC=1`). Without it, `AudioContext`/`BaseAudioContext`/`AudioBuffer*`/`AudioNode` globals are not exposed. See [Build-Conditional Surface](#build-conditional-surface).
+> **Build flag:** WebAudio is gated by `STARFISH_ENABLE_WEBAUDIO` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64`; also implicitly enabled when `WEBRTC=1`). Without it, `AudioContext`/`BaseAudioContext`/`AudioBuffer*`/`AudioNode` globals are not exposed. See [Build-Conditional Surface](#build-conditional-surface).
 
 | Interface | Type | Name | Description | Note |
 |-----------|------|------|-------------|------|
@@ -3430,7 +3430,7 @@ The WebAudio support is in an early stage.
 The following describes WebSocket APIs supported by lightweight web engine. Please, see [WebSocket Spec](https://html.spec.whatwg.org/multipage/web-sockets.html/) for more information.
 The Websocket is limitedly supported.
 
-> **Build flag:** WebSocket is gated by `STARFISH_ENABLE_WEBSOCKET` (turned on automatically for `ARCH=x64` and whenever `WEBRTC=1`). Builds without it will not expose the `WebSocket` global. See the [Build-Conditional Surface](#build-conditional-surface) section.
+> **Build flag:** WebSocket is gated by `STARFISH_ENABLE_WEBSOCKET` (turned on automatically for `CMAKE_SYSTEM_PROCESSOR=x86_64` and whenever `WEBRTC=1`). Builds without it will not expose the `WebSocket` global. See the [Build-Conditional Surface](#build-conditional-surface) section.
 
 | Interface | Type | Name | Description | Note |
 |-----------|------|------|-------------|------|
@@ -3455,7 +3455,7 @@ The Websocket is limitedly supported.
 
 ### Final cleanup — remaining surfaces
 
-A final pass of runtime probes (see also [Build-Conditional Surface](#build-conditional-surface)) on a default-flagged build (`HOST=linux SHELL=glfw BACKEND=uv_cairo_gl WEBGL=1`, all other features off) confirmed the following gaps. None are tracked elsewhere in this document at the API-shape level.
+A final pass of runtime probes (see also [Build-Conditional Surface](#build-conditional-surface)) on a default-flagged build (`CMAKE_SYSTEM_NAME=Linux SHELL=glfw BACKEND=uv_cairo_gl WEBGL=1`, all other features off) confirmed the following gaps. None are tracked elsewhere in this document at the API-shape level.
 
 **Not exposed as globals (constructor / namespace returns `undefined`):**
 

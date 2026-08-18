@@ -22,7 +22,7 @@ CDP is gated behind the `STARFISH_ENABLE_CDP` CMake option (off by default).
 
 ```sh
 cmake -Bout/headless \
-  -DMODE=debug -DHOST=linux -DARCH=x64 \
+  -DCMAKE_BUILD_TYPE=Debug \
   -DBACKEND=glib_headless -DSHELL=glib_headless \
   -DTARGETNAME=Starfish -DSTARFISH_ENABLE_CDP=1 -G Ninja
 
@@ -307,7 +307,7 @@ signatures.
 
 ```sh
 # 1. build
-cmake -Bout/headless -DMODE=debug -DHOST=linux -DARCH=x64 \
+cmake -Bout/headless -DCMAKE_BUILD_TYPE=Debug \
   -DBACKEND=glib_headless -DSHELL=glib_headless \
   -DTARGETNAME=Starfish -DSTARFISH_ENABLE_CDP=1 -G Ninja
 ninja -C out/headless
