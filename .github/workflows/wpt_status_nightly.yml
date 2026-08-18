@@ -85,10 +85,14 @@ jobs:
       - name: Add safe directory
         run: git config --global --add safe.directory /__w/starfish/starfish
 
+      # Cached separately from the rest of third_party (~940MB, and most
+      # other jobs never need it) -- see tool/ci/cache_wpt.sh and
+      # worker.yml's "Checkout Testcase.." step for why this replaced a
+      # plain `git submodule update third_party/wpt` here.
       - name: Checkout WPT submodule
-        run: |
-          git submodule init
-          git submodule update third_party/wpt
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: ./tool/ci/cache_wpt.sh
 
       - name: Download build artifact
         uses: CODE-Actions/download-artifact@v2

@@ -8,6 +8,10 @@ on:
         default: 'master'
         required: true
         type: string
+      windows_thirdparty_key:
+        description: 'squash_thirdparty cache id (starfish-thirdparty-windows-<key> under BART''s starfish-ci-cache/, see tool/ci/cache_starfish_thirdparty_windows.sh) -- a windows.cmake-specific SUBSET of the general thirdparty_key cache, not that cache itself'
+        required: true
+        type: string
 
 jobs:
   build_x64:
@@ -21,12 +25,59 @@ jobs:
         uses: CODE-Actions/checkout@v2
         with:
           submodules: false
-          repository: mh-byun/starfish_window_build
-          ref: ${{ inputs.pr_number }}
+          allow-unsafe-pr-checkout: true
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Clean workspace
         continue-on-error: true
         run: |
             git clean -xdf
+      # squash_thirdparty already published (or found already published) a
+      # windows.cmake-specific SUBSET of the general thirdparty cache as a
+      # cache.zip on BART (this org's internal Artifactory instance -- see
+      # tool/ci/cache_starfish_thirdparty_windows.sh + lib_submodule_cache.sh)
+      # before this job's `needs:` let it start. A single Invoke-WebRequest
+      # straight to a file, no chunking, no git at all.
+      #
+      # $ProgressPreference = 'SilentlyContinue': PowerShell's default
+      # progress-bar rendering for Invoke-WebRequest updates on every
+      # buffer chunk -- confirmed on a real run: fetching an 830MB cache.zip
+      # this way took 15 minutes (vs. seconds of actual transfer time for
+      # that size). This is a well-known PowerShell issue, not a network or
+      # BART problem; suppressing the progress stream is the documented
+      # workaround and costs nothing here since no one watches this step
+      # live.
+      - name: Fetch thirdparty submodule cache
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest -Uri "https://bart.sec.samsung.net/artifactory/escargot-generic-local/starfish-ci-cache/${{ inputs.windows_thirdparty_key }}/cache.zip" `
+            -Headers @{ "X-JFrog-Art-Api" = $env:BART_API_KEY } -OutFile thirdparty.zip
+      # Used to be a cache.tar.gz extracted with Python's tarfile module
+      # (Windows's built-in bsdtar/`tar xzf` failed outright on a real run
+      # against non-ASCII filenames -- escargot's own test fixtures include
+      # Korean-named files: "Invalid empty pathname: Unknown error", a
+      # known bsdtar/libarchive issue decoding UTF-8 tar headers unless the
+      # system codepage is itself UTF-8). cache.zip's entries are written
+      # by Python's zipfile module, which sets the UTF-8 flag bit on any
+      # non-ASCII filename (see cache_starfish_thirdparty_windows.sh) --
+      # PowerShell's own native Expand-Archive (.NET's
+      # System.IO.Compression) honors that flag correctly on read, so
+      # extraction no longer needs Python's own (interpreted, one call per
+      # file) tarfile loop at all.
+      #
+      # $ProgressPreference here too: Expand-Archive reports per-entry
+      # progress by default, same throttling class as Invoke-WebRequest
+      # above -- confirmed on a real run taking 6 minutes to unpack this
+      # same 830MB archive.
+      - name: Extract thirdparty submodules
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          Expand-Archive -Path thirdparty.zip -DestinationPath . -Force
+      - name: Verify thirdparty submodules were restored
+        run: |
+          if (-not (Test-Path third_party/escargot/CMakeLists.txt)) { Write-Error "third_party/escargot missing after cache restore -- check squash_thirdparty's cache save"; exit 1 }
+          if (-not (Test-Path binding_generator/scripts/starfish_code_generator.py)) { Write-Error "binding_generator missing after cache restore -- check squash_thirdparty's cache save"; exit 1 }
       - name: Build
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars32.bat"

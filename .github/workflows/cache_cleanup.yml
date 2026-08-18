@@ -1,0 +1,126 @@
+name: Weekly submodule cache cleanup + rebuild
+# Every Sunday: delete everything under BART's starfish-ci-cache/ folder
+# (see tool/ci/lib_submodule_cache.sh), then immediately republish fresh
+# tarballs for master's current submodule pins -- the common case for the
+# following week's PRs. Without this, starfish-ci-cache/ accumulates
+# forever (a new path per distinct pin set ever seen); overwriting a path
+# with the same content again is a no-op, but it doesn't expire old keys on
+# its own.
+#
+# Rebuild is split into the same scripts squash_thirdparty/android.yml/the
+# WPT test jobs call directly (tool/ci/cache_starfish_thirdparty.sh,
+# tool/ci/cache_starfish_thirdparty_windows.sh,
+# tool/ci/cache_android_lwe_submodules.sh, tool/ci/cache_wpt.sh) -- each run
+# on the runner pool its own submodule remotes actually need (proxied vs.
+# direct internet), so this workflow doesn't duplicate that logic, just
+# re-invokes it.
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Sunday 00:00 UTC
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: [ runner-type1 ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    timeout-minutes: 15
+    steps:
+      - name: Delete everything under BART's starfish-ci-cache/ folder
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: |
+          curl -sS --fail -H "X-JFrog-Art-Api: ${BART_API_KEY}" -X DELETE \
+            "https://bart.sec.samsung.net/artifactory/escargot-generic-local/starfish-ci-cache/" || true
+
+  rebuild_starfish_thirdparty:
+    needs: cleanup
+    runs-on: [ runner-type1 ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    timeout-minutes: 30
+    steps:
+      - name: Checkout source (master)
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
+      - name: Rebuild starfish thirdparty cache
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: ./tool/ci/cache_starfish_thirdparty.sh
+
+      # Must run after the step above in this same checkout -- see
+      # cache_starfish_thirdparty_windows.sh's own comment.
+      - name: Rebuild windows thirdparty cache
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: ./tool/ci/cache_starfish_thirdparty_windows.sh
+
+  rebuild_android_lwe_submodules:
+    needs: cleanup
+    # Same runner-pool reasoning as android.yml's build_android job: this
+    # pool has direct internet access to the public vendored-library
+    # remotes lwe_android_rel's submodules point at; the starfish-thirdparty
+    # proxy is neither needed nor reachable here.
+    runs-on: [ code-linux, code-2xlarge ]
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Starfish (master)
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          path: starfish
+
+      - name: Checkout lwe_android_rel
+        uses: CODE-Actions/checkout@v2
+        with:
+          repository: lws/lwe_android_rel
+          submodules: false
+          path: lwe_android_rel
+
+      - name: Rebuild lwe_android_rel submodule cache
+        working-directory: lwe_android_rel
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: ../starfish/tool/ci/cache_android_lwe_submodules.sh
+
+  rebuild_wpt:
+    needs: cleanup
+    # Matches the WPT test jobs' own pool (worker.yml/x64_test.yml) -- no
+    # proxy needed either way (wpt is plain public github.com), this just
+    # rebuilds under the same network conditions those jobs will restore
+    # into.
+    runs-on: [ self-hosted, linux ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    timeout-minutes: 30
+    steps:
+      - name: Checkout source (master)
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
+      - name: Rebuild wpt cache
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: ./tool/ci/cache_wpt.sh
