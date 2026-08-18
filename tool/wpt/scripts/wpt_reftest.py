@@ -64,6 +64,12 @@ STARFISH = os.path.join(REPO_ROOT, "Starfish")
 IMGDIFF = os.path.join(REPO_ROOT, "tool", "imgdiff", "imgdiff")
 SERVER = "http://web-platform.test:8000"
 
+# See wpt_runner.py's STARFISH_CMD_PREFIX: forces line buffering so a
+# SIGKILL-on-timeout can't silently drop the last (often most telling)
+# lines of Starfish's own output that were sitting in an unflushed
+# block-buffer.
+STARFISH_CMD_PREFIX = ["stdbuf", "-oL", "-eL"]
+
 
 def _manifest_path(wpt_root):
     return os.path.join(wpt_root, "MANIFEST.json")
@@ -200,7 +206,7 @@ def _screenshot(url, out_path, timeout, width=800, height=600):
     to stdout, see src/shell/Shell.cpp) on any failure path, so a caller can
     surface it (e.g. wpt_runner.py's --verbose); it is None on success.
     """
-    cmd = [STARFISH, url, "--hide-window", "--screen-shot=" + out_path,
+    cmd = STARFISH_CMD_PREFIX + [STARFISH, url, "--hide-window", "--screen-shot=" + out_path,
           "--width=%d" % width, "--height=%d" % height]
     env = dict(os.environ)
     env["HIDE_WINDOW"] = "1"

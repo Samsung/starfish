@@ -5,8 +5,7 @@ import subprocess
 from . import utils
 from urllib.parse import urlparse
 from shutil import copyfile
-from basics.constants import resolve_tc_timeout
-from basics.subprocess_timeout import run_subprocess_with_timeout
+from subprocess import Popen, PIPE
 
 try:
     FNULL
@@ -112,16 +111,9 @@ def case_runner(tc):
                         SCREENSHOT_OPT_PREFIX + tc_result_png, "--disable-console"]
     starfish_output = ""
     starfish_err = ""
-    # Fails safe: resolve_tc_timeout() returns a default (currently 60s) when
-    # TC_TIMEOUT isn't set at all, rather than "wait forever". Without this,
-    # a single hung Starfish process here (this case_runner previously had
-    # *no* timeout mechanism at all, unlike starfish_basic_test.py) blocks
-    # its multiprocessing.Pool worker forever, stalling the entire parallel
-    # batch until the outer CI job timeout kills it with zero output.
-    timeout = resolve_tc_timeout()
     try:
-        starfish_output, starfish_err, _ = run_subprocess_with_timeout(
-            starfish_command, timeout, stdin="")
+        p = Popen(starfish_command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        starfish_output, starfish_err = p.communicate("")
         starfish_output = str(starfish_output, 'utf-8')
         starfish_err = str(starfish_err, 'utf-8')
         if not os.path.isfile(tc_result_png):
@@ -136,9 +128,6 @@ def case_runner(tc):
         return pixel_diff(tc_file, tc_result_png, tc_expected_png,
                           __opts.tc_handler)
 
-    except TimeoutError:
-        print(f"ERROR : Timeout ({timeout} sec.) - {tc_file}")
-        return __opts.tc_handler(tc_file, ERRSTR)
     except subprocess.CalledProcessError:
         return __opts.tc_handler(tc_file, ERRSTR)
     except OSError as e:
