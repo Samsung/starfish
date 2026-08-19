@@ -59,20 +59,22 @@ void SVGFETurbulenceElement::computeAttributeChangeDamage(AtomicString name)
     SVGFilterPrimitiveStandardAttributes::computeAttributeChangeDamage(name);
 
     StaticStrings* ss = starfish()->staticStrings();
+    // Turbulence parameters only change the generated pixels, never the
+    // filter region geometry, so the clients need repainting only.
     if (ss->m_baseFrequency == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
+        notifyAttributeOfPaintServerLikeUpdated(false);
     } else if (ss->m_baseFrequencyX == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
+        notifyAttributeOfPaintServerLikeUpdated(false);
     } else if (ss->m_baseFrequencyY == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
+        notifyAttributeOfPaintServerLikeUpdated(false);
     } else if (ss->m_seed == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
+        notifyAttributeOfPaintServerLikeUpdated(false);
     } else if (ss->m_numOctaves == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
+        notifyAttributeOfPaintServerLikeUpdated(false);
     } else if (ss->m_type == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
+        notifyAttributeOfPaintServerLikeUpdated(false);
     } else if (ss->m_stitchTiles == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
+        notifyAttributeOfPaintServerLikeUpdated(false);
     }
 }
 
