@@ -21,6 +21,8 @@ ENV TZ=Asia/Seoul
 # ---------------------------------------------------------------------------
 # Core build toolchain
 # ---------------------------------------------------------------------------
+# abigail-tools: abidw/abidiff, for detecting ABI breaks in binaries built
+# from this tree.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         cmake \
@@ -38,6 +40,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         clang-format \
         rsync \
         openssh-client \
+        abigail-tools \
     && rm -rf /var/lib/apt/lists/*
 
 # squash_thirdparty (tool/release/prepare_source_without_thirdparty.sh) pushes
