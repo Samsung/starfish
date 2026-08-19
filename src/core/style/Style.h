@@ -3439,6 +3439,10 @@ public:
     void addSheet(CSSStyleSheet* sheet);
     void removeSheet(CSSStyleSheet* sheet);
 
+    // Marks everything a shadow root's sheets can style after that sheet set
+    // changed. Shadow-resolver only.
+    void invalidateShadowScopeForSheetChange();
+
     // Constructable style sheets adopted via
     // DocumentOrShadowRoot.adoptedStyleSheets. Kept apart from m_sheets (which
     // holds <style>/<link> sheets in tree order) and folded into the rule set

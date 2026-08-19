@@ -10179,6 +10179,42 @@ bool StyleResolver::traverseAndTryAddSheet(Node* parent, CSSStyleSheet* sheet,
     return false;
 }
 
+static void markRenderingSubtreeNeedsStyleRecalc(Node* node)
+{
+    RenderingSiblingIterator iter(node->firstRenderingChild());
+    while (true) {
+        Optional<Node*> child = iter.next();
+        if (!child) {
+            break;
+        }
+        if (child->isElement()) {
+            child->setNeedsStyleRecalc();
+        }
+        markRenderingSubtreeNeedsStyleRecalc(child.value());
+    }
+}
+
+void StyleResolver::invalidateShadowScopeForSheetChange()
+{
+    STARFISH_ASSERT(isShadowResolver());
+
+    Element* host = ownerHost();
+    if (host == nullptr) {
+        return;
+    }
+
+    // Nothing in the DOM mutation that changed this sheet reaches the elements
+    // its rules can style, so mark them explicitly -- the same reasoning as
+    // AdoptedStyleSheets' syncAdoptedSheetsToCascade(). The host's rendering
+    // subtree is the flat tree, which covers all three targets in one walk: the
+    // host itself (`:host`), the shadow content, and the light-DOM children
+    // distributed into its slots (`::slotted()`). A `:host` rule can change the
+    // host's display, hence its box type, so its frame tree is rebuilt too.
+    host->setNeedsStyleRecalc();
+    host->setNeedsFrameTreeBuild();
+    markRenderingSubtreeNeedsStyleRecalc(host);
+}
+
 void StyleResolver::addSheet(CSSStyleSheet* sheet)
 {
     bool originFound = false;
@@ -10191,10 +10227,23 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
         oldSize + 1 == m_sheets.size() && m_sheets.back() == sheet;
     if (addedAtLast && !m_needsRecalcRuleSet) {
         LongTaskFinder t("StyleResolver::addSheet at last", 1);
+        // Promoting this one sheet's `:host`/`::slotted` rules appends to the
+        // document resolver's promoted lists, which is already the right result
+        // -- no document rebuild needed on this path.
         addToRuleSet(sheet);
         recalcWebFonts();
+        if (isShadowResolver()) {
+            invalidateShadowScopeForSheetChange();
+        }
     } else {
         m_needsRecalcRuleSet = true;
+        // The pending rebuild re-promotes every rule of this resolver, so the
+        // document resolver has to drop the previous promotions first or they
+        // are duplicated. See setAdoptedSheets() for the promotion rationale.
+        if (isShadowResolver()) {
+            document()->styleResolver().setNeedsRecalcRuleSet();
+            invalidateShadowScopeForSheetChange();
+        }
         document()->browsingContext()->setNeedsStyleSheetsRecalc();
     }
 }
@@ -10202,6 +10251,14 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
 void StyleResolver::removeSheet(CSSStyleSheet* sheet)
 {
     m_needsRecalcRuleSet = true;
+    // A removed shadow sheet's `:host`/`::slotted` rules live in the document
+    // resolver, which only drops them when it rebuilds -- otherwise they keep
+    // styling the host and its slotted children after the sheet is gone. See
+    // setAdoptedSheets() for the promotion rationale.
+    if (isShadowResolver()) {
+        document()->styleResolver().setNeedsRecalcRuleSet();
+        invalidateShadowScopeForSheetChange();
+    }
     document()->browsingContext()->setNeedsStyleSheetsRecalc();
 
     auto iter = std::find(m_sheets.begin(), m_sheets.end(), sheet);
