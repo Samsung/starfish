@@ -86,6 +86,7 @@ After a change, run the closest suites first:
 | Touched | Run | Notes |
 |---|---|---|
 | Any C++ | `./tool/lint/check_tidy.py` | Same check as the PR CI `check_source` job |
+| `src/public/contract/**`, `inc/PlatformIntegrationData.h`, `inc/LWEWorker.h` | `./tool/lint/check_contract_abi.py` | Gates UWE delegate contract ABI breaks; same check as the PR CI `check_contract_abi` job |
 | `core/dom`, DOM APIs | `./tool/runner/test_runner.py wpt_serve_dom internal_test` | Fast |
 | `core/style`, CSS/selectors | `./tool/runner/test_runner.py wpt_serve_css` | |
 | HTML parsing/elements | `./tool/runner/test_runner.py wpt_serve_html` | |
