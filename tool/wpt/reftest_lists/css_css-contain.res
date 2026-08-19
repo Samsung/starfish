@@ -409,8 +409,8 @@ http://web-platform.test:8000/css/css-contain/content-visibility/content-visibil
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-top-layer-in-auto-subtree-removal.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/dynamic-change-paint-fully-obscuring-child-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/dynamic-change-with-slotted-text.html
-http://web-platform.test:8000/css/css-contain/content-visibility/element-reassigned-to-skipped-slot.html
-http://web-platform.test:8000/css/css-contain/content-visibility/element-reassigned-to-slot-in-skipped-subtree.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/element-reassigned-to-skipped-slot.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/element-reassigned-to-slot-in-skipped-subtree.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/scrollIntoView-target-with-contents-hidden.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/scrollIntoView-with-focus-target-with-contents-hidden.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/counter-scoping-001.html

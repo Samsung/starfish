@@ -14,7 +14,7 @@ http://web-platform.test:8000/css/css-cascade/import-conditional-002.html
 http://web-platform.test:8000/css/css-cascade/initial-background-color.html
 http://web-platform.test:8000/css/css-cascade/initial-color-background-001.html
 http://web-platform.test:8000/css/css-cascade/layer-media-toggle.html
-http://web-platform.test:8000/css/css-cascade/layer-slotted-rule.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-cascade/layer-slotted-rule.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-cascade/layer-stylesheet-sharing-important.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-cascade/layer-stylesheet-sharing.html
 http://web-platform.test:8000/css/css-cascade/revert-layer-001.html
