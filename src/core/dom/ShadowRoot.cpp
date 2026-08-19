@@ -201,6 +201,15 @@ void ShadowRoot::connectSlotWithSlottables()
         node = node->nextSibling();
     }
 
+    auto contains = [](const GCVector<Node*>& nodes, Node* node) -> bool {
+        for (size_t i = 0; i < nodes.size(); i++) {
+            if (nodes[i] == node) {
+                return true;
+            }
+        }
+        return false;
+    };
+
     // Signal a slot change for each slot whose assignment differs from before.
     for (size_t i = 0; i < slots.size(); i++) {
         const GCVector<Node*>& oldNodes = oldAssignedNodes[i];
@@ -213,6 +222,21 @@ void ShadowRoot::connectSlotWithSlottables()
         }
         if (changed) {
             document()->signalSlotChange(slots[i]);
+        }
+
+        // Gaining, losing or switching a slot moves a light-DOM node in the
+        // flat tree and changes whether this tree's `::slotted()` rules reach
+        // it, yet the mutation that triggered reassignment never touches the
+        // node itself -- so mark it for restyle here.
+        for (size_t j = 0; j < oldNodes.size(); j++) {
+            if (!contains(newNodes, oldNodes[j])) {
+                oldNodes[j]->setNeedsStyleRecalc();
+            }
+        }
+        for (size_t j = 0; j < newNodes.size(); j++) {
+            if (!contains(oldNodes, newNodes[j])) {
+                newNodes[j]->setNeedsStyleRecalc();
+            }
         }
     }
 }
