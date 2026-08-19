@@ -710,7 +710,7 @@ section are supported.
 |  | method | Promise&lt;void&gt; requestFullscreen() | Requests that the element be displayed fullscreen. `webkitRequestFullscreen()`/`webkitRequestFullScreen()` are aliases of the same operation. |
 |  | method | void click() | Acts as if the element was clicked. |
 |  | attribute | tabIndex | Reflects the value of the "tabindex" content attribute of HTMLElement. Its default value is 0 for elements that are focusable and −1 for elements that are not focusable. |
-|  | method | void focus() | This method sets focus on the specified element, if it can be focused. |
+|  | method | void focus(optional FocusOptions options) | This method sets focus on the specified element, if it can be focused. `FocusOptions` accepts `preventScroll` (default `false`) and `focusVisible`. |
 |  | method | void blur() | This method removes focus from the current element. |
 | [HTMLElement 2](https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface) | attribute | offsetParent | Returns a reference to the object which is the closest (nearest in the containment hierarchy) positioned containing element. |
 | | attribute | offsetTop | Returns the distance of the current element relative to the top of the offsetParent node. |
