@@ -8,6 +8,11 @@ interface ShadowRoot : DocumentFragment {
   readonly attribute boolean serializable;
   readonly attribute Element host;
   attribute EventHandler onslotchange;
+
+  // The HTML spec exposes innerHTML through the `InnerHTML` mixin, which both
+  // Element and ShadowRoot include:
+  // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-innerhtml
+  [CEReactions, TreatNullAs=EmptyString] attribute DOMString innerHTML;
 };
 
 enum ShadowRootMode { "open", "closed" };
