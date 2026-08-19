@@ -23,7 +23,7 @@ http://web-platform.test:8000/css/css-pseudo/before-after-dynamic-custom-propert
 http://web-platform.test:8000/css/css-pseudo/before-dynamic-display-none.html
 http://web-platform.test:8000/css/css-pseudo/before-preceding-whitespace-dynamic.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-pseudo/file-selector-button-001.html
-http://web-platform.test:8000/css/css-pseudo/file-selector-button-after-part.html
+# [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-pseudo/file-selector-button-after-part.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-pseudo/file-selector-button-float.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-pseudo/first-letter-001.html
 http://web-platform.test:8000/css/css-pseudo/first-letter-002.html
