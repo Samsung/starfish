@@ -13,9 +13,9 @@
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/has-slotted-manual-assignment.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/has-slotted-query-selector.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/host-context-parsing.html
-# [auto-fail] http://web-platform.test:8000/css/css-shadow/host-descendant-invalidation.html
+http://web-platform.test:8000/css/css-shadow/host-descendant-invalidation.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/host-dom-001.html
-# [auto-fail] http://web-platform.test:8000/css/css-shadow/host-functional-descendant-invalidation.html
+http://web-platform.test:8000/css/css-shadow/host-functional-descendant-invalidation.html
 http://web-platform.test:8000/css/css-shadow/host-in-host-context-selector.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/host-in-host-selector.html
 http://web-platform.test:8000/css/css-shadow/host-is-featureless.html
@@ -29,19 +29,19 @@ http://web-platform.test:8000/css/css-shadow/host-is-featureless.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/keyframes-006.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/all-hosts.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/both-part-and-exportparts.html
-# [auto-fail] http://web-platform.test:8000/css/css-shadow/part/chaining-invalid-selector.html
+http://web-platform.test:8000/css/css-shadow/part/chaining-invalid-selector.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/complex-matching.html
-# [auto-fail] http://web-platform.test:8000/css/css-shadow/part/complex-non-matching.html
-# [auto-fail] http://web-platform.test:8000/css/css-shadow/part/different-host.html
+http://web-platform.test:8000/css/css-shadow/part/complex-non-matching.html
+http://web-platform.test:8000/css/css-shadow/part/different-host.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/double-forward.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/exportparts-multiple.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/grouping-with-checked.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/grouping-with-disabled.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/host-part-001.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/host-part-002.html
-# [auto-fail] http://web-platform.test:8000/css/css-shadow/part/host-part-003.html
+http://web-platform.test:8000/css/css-shadow/part/host-part-003.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/host-part-nesting.html
-# [auto-fail] http://web-platform.test:8000/css/css-shadow/part/host-stylesheet.html
+http://web-platform.test:8000/css/css-shadow/part/host-stylesheet.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/inner-host.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/interaction-with-pseudo-elements.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/invalidation-change-exportparts-forward.html
@@ -63,21 +63,21 @@ http://web-platform.test:8000/css/css-shadow/host-is-featureless.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/simple-forward.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/simple-forward-shorthand.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/simple.html
-# [auto-fail] http://web-platform.test:8000/css/css-shadow/part/simple-important.html
-# [auto-fail] http://web-platform.test:8000/css/css-shadow/part/simple-important-important.html
+http://web-platform.test:8000/css/css-shadow/part/simple-important.html
+http://web-platform.test:8000/css/css-shadow/part/simple-important-important.html
 http://web-platform.test:8000/css/css-shadow/part/simple-important-inline.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/simple-inline.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/part/style-sharing.html
-# [auto-fail] http://web-platform.test:8000/css/css-shadow/scope-pseudo-in-shadow.html
+http://web-platform.test:8000/css/css-shadow/scope-pseudo-in-shadow.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/shadow-cascade-order-001.html
-# [auto-fail] http://web-platform.test:8000/css/css-shadow/shadow-host-removal-invalidation.html
+http://web-platform.test:8000/css/css-shadow/shadow-host-removal-invalidation.html
 http://web-platform.test:8000/css/css-shadow/shadow-host-style-sharing.html
 http://web-platform.test:8000/css/css-shadow/shadow-multiple-links.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/shadow-reassign-dynamic-003.html
-# [auto-fail] http://web-platform.test:8000/css/css-shadow/shadow-shared-style-cache-001.html
+http://web-platform.test:8000/css/css-shadow/shadow-shared-style-cache-001.html
 http://web-platform.test:8000/css/css-shadow/slot-non-html-display-value.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/slotted-invalidation.html
-# [auto-fail] http://web-platform.test:8000/css/css-shadow/slotted-link.html
+http://web-platform.test:8000/css/css-shadow/slotted-link.html
 http://web-platform.test:8000/css/css-shadow/slotted-matches.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/slotted-nested.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/slotted-parsing.html

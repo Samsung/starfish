@@ -22,7 +22,7 @@ http://web-platform.test:8000/shadow-dom/event-composed.html
 http://web-platform.test:8000/shadow-dom/event-composed-path-after-dom-mutation.html
 http://web-platform.test:8000/shadow-dom/event-composed-path.html
 http://web-platform.test:8000/shadow-dom/event-composed-path-with-related-target.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/event-dispatch-order.tentative.html
+http://web-platform.test:8000/shadow-dom/event-dispatch-order.tentative.html
 http://web-platform.test:8000/shadow-dom/event-inside-shadow-tree.html
 http://web-platform.test:8000/shadow-dom/event-inside-slotted-node.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/event-on-pseudo-element-crash.html
@@ -33,21 +33,21 @@ http://web-platform.test:8000/shadow-dom/event-with-related-target.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/Extensions-to-Event-Interface.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/focus-within-shadow.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/form-control-form-attribute.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/getElementById-dynamic-001.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/getElementById-dynamic-002.html
+http://web-platform.test:8000/shadow-dom/getElementById-dynamic-001.html
+http://web-platform.test:8000/shadow-dom/getElementById-dynamic-002.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/HighlightRegistry-highlightsFromPoint.html
 http://web-platform.test:8000/shadow-dom/historical.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/HTMLSlotElement-interface.html
+http://web-platform.test:8000/shadow-dom/HTMLSlotElement-interface.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/imperative-slot-api-crash.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/imperative-slot-api.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/imperative-slot-api-slotchange.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/imperative-slot-assign-not-slotable-crash.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/imperative-slot-fallback-clear.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/imperative-slot-initial-fallback.html
+http://web-platform.test:8000/shadow-dom/imperative-slot-initial-fallback.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/imperative-slot-layout-invalidation-001.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/input-element-list.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/input-type-radio.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/inserting-fragment-under-shadow-host.html
+http://web-platform.test:8000/shadow-dom/inserting-fragment-under-shadow-host.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/invalidate-shadow-dom-crash.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/invalidate-sibling-different-slots.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/layout-slot-no-longer-assigned.html
@@ -66,7 +66,7 @@ http://web-platform.test:8000/shadow-dom/Range-prototype-insertNode.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/shadow-root-clonable.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/ShadowRoot-interface.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/shadow-style-invalidation-vw-units.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/slotchange-customelements.html
+http://web-platform.test:8000/shadow-dom/slotchange-customelements.html
 http://web-platform.test:8000/shadow-dom/slotchange-event.html
 http://web-platform.test:8000/shadow-dom/slotchange.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/slot-dir-attach-child-crash.html
@@ -87,7 +87,7 @@ http://web-platform.test:8000/shadow-dom/slots-fallback.html
 http://web-platform.test:8000/shadow-dom/slots-fallback-in-document.html
 http://web-platform.test:8000/shadow-dom/slots.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/slots-outside-shadow-dom.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/Slottable-mixin.html
+http://web-platform.test:8000/shadow-dom/Slottable-mixin.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/touch-event-retargeting-leak.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/user-agent-shadow-root-crash.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/wheel-event-related-target.html
