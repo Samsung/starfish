@@ -100,7 +100,7 @@ def case_runner(tc):
     # Assure TC exist
     if not (tc_file.startswith("http") or os.path.isfile(tc_file)):
         print("ERROR : TC file does not exist - " + tc_file)
-        return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
+        return __opts.tc_handler(tc_file, "FAIL", "", __opts.show_progress)
 
     timeout = None
     if os.environ.get(ENVOPTS.TIMEOUT):
@@ -140,14 +140,14 @@ def case_runner(tc):
                 raise Exception("Starfish Got signal")
         except TimeoutError:
             print(f"ERROR : Timeout ({timeout} sec.) - {tc_file}")
-            return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
+            return __opts.tc_handler(tc_file, "FAIL", "", __opts.show_progress)
         except:
             print("ERROR : Crash - " + tc_file)
             print("stdout=>")
             print(starfish_output)
             print("stderr=>")
             print(starfish_err)
-            return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
+            return __opts.tc_handler(tc_file, "FAIL", "", __opts.show_progress)
         return __opts.tc_handler(tc_file, starfish_output, starfish_err, __opts.show_progress, elapsed_time=elapsed_time)
     finally:
         shutil.rmtree(storage_dir, ignore_errors=True)
@@ -204,6 +204,9 @@ def default_tc_handler(tc_file, output, err, show_progress=True, **kwargs):
             print(utils.Strings.FAIL_SIGN + tc_file)
             print("starfish output  =>")
             print(output)
+            if err:
+                print("starfish stderr  =>")
+                print(err)
         if TEST_RESULT_FAIL_FILE:
             with open(TEST_RESULT_FAIL_FILE, 'a') as file:
                 fcntl.flock(file, fcntl.LOCK_EX)
