@@ -1559,6 +1559,19 @@ static void notifyNodeInsertedToDocumentTree(Node* head, Node* node)
         notifyNodeInsertedToDocumentTree(head, child);
         child = child->nextSibling();
     }
+
+    // A shadow tree is in its host's document scope, but it does not hang off
+    // firstChild() -- so it has to be walked explicitly. Without this, a tree
+    // populated while its host was still detached never gets the notification:
+    // a <style> in it would never register its sheet, which is the order a
+    // custom element uses when it attaches its shadow root in the constructor.
+    if (node->isElement()) {
+        Optional<ShadowRoot*> shadowRoot =
+            node->asElement()->internalShadowRoot();
+        if (shadowRoot) {
+            notifyNodeInsertedToDocumentTree(head, shadowRoot.value());
+        }
+    }
 }
 
 static void setChildrenNeedsStyleRecalc(Node* node)
@@ -1865,6 +1878,17 @@ void notifyNodeRemoveFromDocumentTree(Node* node)
     while (child) {
         notifyNodeRemoveFromDocumentTree(child);
         child = child->nextSibling();
+    }
+
+    // Mirror of the insertion walk: the shadow tree leaves document scope with
+    // its host, so its <style> sheets must be unregistered too -- otherwise the
+    // shadow resolver keeps a sheet whose element is gone.
+    if (node->isElement()) {
+        Optional<ShadowRoot*> shadowRoot =
+            node->asElement()->internalShadowRoot();
+        if (shadowRoot) {
+            notifyNodeRemoveFromDocumentTree(shadowRoot.value());
+        }
     }
 }
 
