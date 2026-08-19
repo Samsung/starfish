@@ -139,6 +139,10 @@ public:
         return m_host;
     }
 
+    // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-innerhtml
+    String* innerHTML();
+    void setInnerHTML(String* html);
+
     StyleResolver& styleResolver()
     {
         return *m_styleResolver;

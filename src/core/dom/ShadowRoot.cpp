@@ -23,7 +23,10 @@
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLSlotElement.h"
+#include "core/dom/MutationObservationScope.h"
 #include "core/dom/Traverse.h"
+#include "core/dom/parser/HTMLParser.h"
+#include "core/dom/xml/XMLSerializer.h"
 #include "core/style/AdoptedStyleSheets.h"
 
 namespace Starfish {
@@ -45,6 +48,27 @@ ShadowRoot::ShadowRoot(Document* document, ShadowRootMode mode, Element* host)
 {
     // add ua sheet
     m_styleResolver->addSheet(document->styleResolver().sheets()[0]);
+}
+
+String* ShadowRoot::innerHTML()
+{
+    return XMLSerializer::serializeToXML(this, false);
+}
+
+void ShadowRoot::setInnerHTML(String* html)
+{
+    ChildListMutationObservationScope scope;
+    scope.startChildListMutationScope(this);
+    while (firstChild()) {
+        removeChild(firstChild());
+    }
+
+    // The fragment parsing algorithm takes an *element* as its context, and the
+    // spec picks the shadow host for a ShadowRoot -- markup like <td> must be
+    // parsed as if it were written inside the host, not inside a fragment with
+    // no element context at all.
+    DocumentFragment* df = fragmentParsingAlgorithm(document(), html, host());
+    appendChild(df);
 }
 
 ScriptProxyObject ShadowRoot::adoptedStyleSheetsObservableArray(

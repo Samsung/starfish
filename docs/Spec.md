@@ -229,7 +229,7 @@ section are supported.
 
 > **Observers deliver callbacks.** `MutationObserver`/`MutationRecord`, `IntersectionObserver`/`IntersectionObserverEntry`, and `ResizeObserver`/`ResizeObserverEntry`/`ResizeObserverSize` are implemented, not stubs — the observation logic is wired up and invokes the JS callback (`MutationObserver::notify`, `ResizeObserver::notify`, `IntersectionObserverCallback`).
 >
-> **Shadow DOM and Custom Elements are implemented.** `Element.attachShadow()`, `ShadowRoot`, `Slottable.assignedSlot`, and `HTMLSlotElement.assignedNodes()`/`assignedElements()` work, including slot assignment, the `slotchange` event, and spec event retargeting across shadow boundaries (`EventTarget.cpp` `retarget()`). `CustomElementRegistry` implements `define()`, `get()`, `getName()`, `whenDefined()`, and `upgrade()`. See the rows below, and the [Selectors](#selectors) section for `:host`/`::slotted`.
+> **Shadow DOM and Custom Elements are implemented.** `Element.attachShadow()`, `ShadowRoot`, `Slottable.assignedSlot`, and `HTMLSlotElement.assignedNodes()`/`assignedElements()` work, including slot assignment, the `slotchange` event, and spec event retargeting across shadow boundaries (`EventTarget.cpp` `retarget()`). `CustomElementRegistry` implements `define()`, `get()`, `getName()`, `whenDefined()`, and `upgrade()`. A shadow tree can be built imperatively (`createElement` + `appendChild`), from markup (`ShadowRoot.innerHTML`), or styled through `adoptedStyleSheets`. See the rows below, and the [Selectors](#selectors) section for `:host`/`::slotted`.
 >
 > **`PerformanceObserver` is not exposed at all** — it has no `.idl` file, so the constructor is `undefined`. There is no entry-buffer observation API; poll `performance.getEntries()` instead.
 >
@@ -607,6 +607,7 @@ section are supported.
 | [Element](https://w3c.github.io/DOM-Parsing/#extensions-to-the-element-interface) | attribute | innerHTML | Return a fragment of HTML or XML that represents the element's contents.|
 || attribute | outerHTML | Return a fragment of HTML or XML that represents the element|
 || method | insertAdjacentHTML | Parses the given string text as HTML or XML and inserts the resulting nodes into the tree in the position given by the position argument |
+| [ShadowRoot](https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-innerhtml) | attribute | innerHTML | Same `InnerHTML` mixin member as on `Element`, exposed on `ShadowRoot` too: builds the shadow tree from markup (parsed with the shadow host as the context element) and serializes it back. `outerHTML`/`insertAdjacentHTML` are Element-only per spec. |
 | [Element](https://drafts.csswg.org/cssom-view/#extension-to-the-element-interface) | method | getClientRects | Return a collection of rectangles that indicate the bounding rectangles for each box in a client. (Note: This API is supported only in case of that display property is `BLOCK`.)|
 |  | method | getBoundingClientRect | Return the size of an element and its position relative to the viewport. (Note: This API is supported only in case of that display property is `BLOCK`.)|
 |  | attribute | clientTop | Return the width of the top border of an element in pixels. |
