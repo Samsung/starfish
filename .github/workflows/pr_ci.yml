@@ -24,6 +24,76 @@ jobs:
       - name: Check tidy
         run: ./tool/lint/check_tidy.py
 
+  # Gates ABI breaks in the UWE delegate contract (src/public/contract/*.h):
+  # an old, already-installed API .so and a newly built impl .so are never
+  # compiled together, so a reordered virtual method or a changed wrapper
+  # signature compiles clean and passes every other test here, then crashes
+  # in the field the first time a UWE update pairs the two. See
+  # tool/lint/check_contract_abi.py's module docstring for the full design.
+  #
+  # A separate job rather than a step in check_source above: check_source is
+  # the one job with neither `--user root` nor a `safe.directory` step
+  # (nothing in it has ever needed git), and check_tidy.py's clang-format
+  # pass has no exclusion for a second checked-out tree, so either ordering
+  # would either break check_tidy or leave this gate unverified in that
+  # environment. Never add a `paths:` filter to this job -- that would let a
+  # PR that edits only contract_shim.cpp or this checker skip the gate
+  # meant to protect exactly those files.
+  check_contract_abi:
+    runs-on: [ runner-type1 ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout source..
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          allow-unsafe-pr-checkout: true
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
+      # No workflow here sets fetch-depth, so this checkout has only the PR
+      # head commit -- comparing against the PR's *merge-base* with its base
+      # branch (not the base branch's current tip) needs that one extra
+      # commit fetched by SHA. Merge-base, not tip: if master gained a
+      # legitimate contract append after this PR branched, tip-comparison
+      # would misreport it as a removal on this PR, and the only documented
+      # remedy for that verdict is adding a waiver -- training people to
+      # waive a false positive is worse than asking for a rebase. The
+      # compare API call can itself fail (rate limit, network); the fallback
+      # is base tip, which is strictly stricter and so can only ever turn a
+      # pass into a false BREAKING, never the reverse -- it must never
+      # silently pass.
+      - name: Resolve contract ABI base commit
+        id: abi_base
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eu
+          api="${{ github.api_url }}/repos/${{ github.repository }}/compare/${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}"
+          if sha=$(curl -sfSL -H "Accept: application/vnd.github+json" \
+                        -H "Authorization: Bearer ${GH_TOKEN}" "$api" \
+                   | python3 -c 'import json,sys; print(json.load(sys.stdin)["merge_base_commit"]["sha"])'); then
+            echo "contract-abi: merge-base = $sha"
+          else
+            echo "::warning::contract-abi: compare API failed, falling back to base branch tip (stricter, never a silent pass)"
+            sha="${{ github.event.pull_request.base.sha }}"
+          fi
+          git fetch --depth=1 origin "$sha"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Check contract ABI
+        run: ./tool/lint/check_contract_abi.py --base ${{ steps.abi_base.outputs.sha }}
+
   squash_thirdparty:
     # NOTE: despite the job name (kept so `needs: [squash_thirdparty]` in every
     # downstream workflow doesn't need touching), this no longer squashes
@@ -61,7 +131,7 @@ jobs:
     # See tool/ci/lib_submodule_cache.sh for the mechanism and
     # cache_cleanup.yml for the weekly prune+rebuild that keeps BART's
     # starfish-ci-cache/ folder from accumulating forever.
-    needs: check_source
+    needs: [ check_source, check_contract_abi ]
     runs-on: [ runner-type1 ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
