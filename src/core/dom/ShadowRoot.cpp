@@ -224,15 +224,15 @@ void ShadowRoot::connectSlotWithSlottables()
             document()->signalSlotChange(slots[i]);
         }
 
-        // Gaining, losing or switching a slot moves a light-DOM node in the
-        // flat tree and changes whether this tree's `::slotted()` rules reach
-        // it, yet the mutation that triggered reassignment never touches the
-        // node itself -- so mark it for restyle here.
-        for (size_t j = 0; j < oldNodes.size(); j++) {
-            if (!contains(newNodes, oldNodes[j])) {
-                oldNodes[j]->setNeedsStyleRecalc();
-            }
-        }
+        // A node newly assigned here (whether it had no slot before, or a
+        // different one) may now be reached by this tree's `::slotted()`
+        // rules, yet the mutation that caused the reassignment -- a change
+        // elsewhere in the shadow tree, not on the node itself -- never marks
+        // it dirty on its own. The reverse direction (a node that loses its
+        // assignment here) needs no such call: once unassigned it drops out
+        // of the flat tree and every future style-recalc walk skips it
+        // entirely (Node::renderingParentNode()), so there is nothing further
+        // restyling could reach or change.
         for (size_t j = 0; j < newNodes.size(); j++) {
             if (!contains(oldNodes, newNodes[j])) {
                 newNodes[j]->setNeedsStyleRecalc();
