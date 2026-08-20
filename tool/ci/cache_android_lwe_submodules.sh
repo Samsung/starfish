@@ -68,6 +68,7 @@ done
 # needed here, unlike starfish's own third_party), so the plain form is
 # enough.
 submodule_make_standalone "${PATHS[@]}"
+submodule_sync_standalone "${PATHS[@]}"
 
 tarball=$(mktemp)
 tar czf "$tarball" "${PATHS[@]}"

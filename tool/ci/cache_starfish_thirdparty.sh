@@ -73,6 +73,23 @@ unset https_proxy http_proxy
 # third_party, walrus's sljit), in one call.
 submodule_make_all_standalone "${PATHS[@]}"
 
+# nanomsg's own CMakeLists.txt runs `git describe`/`git diff` against its
+# own submodule dir at configure time purely to compose a version string
+# -- confirmed on a real consumer-job run: `tar xzf` restores this dir
+# owned by whatever UID the tarball recorded, which doesn't match the
+# consuming container's user, and git refuses to touch a repo it doesn't
+# recognize as owned by the current user ("fatal: detected dubious
+# ownership"). Rather than teach every consumer job about safe.directory
+# for this one nested path, just drop the standalone .git entirely here:
+# nanomsg's own CMakeLists already falls back cleanly to its checked-in
+# third_party/nanomsg/.version file when `.git` doesn't exist (confirmed
+# that file is present), and an unpopulated submodule (no .git at all, not
+# even a dangling gitlink) is exactly what CODE-Actions/checkout's
+# unconditional post-job `git submodule foreach --recursive` cleanup
+# already silently skips -- confirmed on a throwaway repo: exit 0, no
+# attempt to even enter the path.
+rm -rf third_party/nanomsg/.git
+
 tarball=$(mktemp)
 # --exclude=third_party/wpt: wpt is deliberately excluded from git management
 # here (update=none above), but that only stops *git* from touching it --

@@ -46,4 +46,16 @@ ScriptBindingInstance* MediaError::scriptBindingInstance()
 {
     return m_scriptBindingInstance;
 }
+
+#if !defined(STARFISH_ENABLE_MULTIMEDIA)
+void MediaError::init(ScriptBindingInstance* instance, void* domObjectPointer)
+{
+    STARFISH_ASSERT_NOT_REACHED();
+}
+
+bool MediaError::isMediaError() const
+{
+    return true;
+}
+#endif
 } // namespace Starfish
