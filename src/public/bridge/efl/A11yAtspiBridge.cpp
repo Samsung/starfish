@@ -93,6 +93,8 @@ static void* g_highlightedHandle = nullptr;
 // engine paints no ring; draw one as Evas rectangles over the webview
 // instead, the same way elm/dali toolkits render the screen-reader
 // highlight themselves. Four edge bars forming a frame.
+// DA LCD Design Principle "Highlight box": 1-unit (4px) inner line within
+// the focused component's area (same as touch target), #0381FE at 90%.
 static Evas_Object* g_focusRing[4] = { nullptr, nullptr, nullptr, nullptr };
 static const int kFocusRingThickness = 4;
 
@@ -117,17 +119,23 @@ static void focusRingShowAt(double x, double y, double width, double height)
     for (int i = 0; i < 4; i++) {
         if (!g_focusRing[i]) {
             g_focusRing[i] = evas_object_rectangle_add(evas);
-            // UA focus color (229, 151, 0), fully opaque.
-            evas_object_color_set(g_focusRing[i], 229, 151, 0, 255);
+            // #0381FE at 90% opacity; Evas takes premultiplied RGBA.
+            evas_object_color_set(g_focusRing[i], 3, 116, 229, 230);
             evas_object_pass_events_set(g_focusRing[i], EINA_TRUE);
         }
     }
     int t = kFocusRingThickness;
     int ix = (int)x, iy = (int)y, iw = (int)width, ih = (int)height;
-    evas_object_geometry_set(g_focusRing[0], ix - t, iy - t, iw + 2 * t, t);
-    evas_object_geometry_set(g_focusRing[1], ix - t, iy + ih, iw + 2 * t, t);
-    evas_object_geometry_set(g_focusRing[2], ix - t, iy, t, ih);
-    evas_object_geometry_set(g_focusRing[3], ix + iw, iy, t, ih);
+    // Inner line: bars sit inside the target bounds, side bars shortened so
+    // the translucent corners don't double-blend.
+    int vh = ih - 2 * t;
+    if (vh < 0) {
+        vh = 0;
+    }
+    evas_object_geometry_set(g_focusRing[0], ix, iy, iw, t);
+    evas_object_geometry_set(g_focusRing[1], ix, iy + ih - t, iw, t);
+    evas_object_geometry_set(g_focusRing[2], ix, iy + t, t, vh);
+    evas_object_geometry_set(g_focusRing[3], ix + iw - t, iy + t, t, vh);
     for (int i = 0; i < 4; i++) {
         evas_object_raise(g_focusRing[i]);
         evas_object_show(g_focusRing[i]);
