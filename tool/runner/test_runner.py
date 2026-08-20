@@ -137,6 +137,16 @@ def vendor_test_webkit():
 # are plain DOM/CSS tests with no GL driver involved and don't need this.
 KHRONOS_WEBGL_JOBS = 4
 
+# Per-test timeout (seconds) for the Khronos WebGL suites only. The basic
+# driver's default watchdog (DEFAULT_NATIVE_TIMEOUT_SEC, 180s) is meant to
+# catch genuine hangs, never slow-but-passing tests -- but this suite has
+# legitimately slow tests: multisample-corruption.html takes ~160s on a fast
+# 32-core dev machine (2048x2048 readbacks verified in interpreted JS, x25
+# iterations), leaving no margin for a slower or loaded CI host. Give the
+# suite enough headroom that only real hangs trip the watchdog; the other
+# (DOM/CSS) suites keep the tighter default.
+KHRONOS_WEBGL_TIMEOUT_SEC = 480
+
 def run_vendor_test_khronos(root, name):
     from http_server import popen_server
 
@@ -149,6 +159,9 @@ def run_vendor_test_khronos(root, name):
 
     if not env.get(ENVOPTS.REPLACE_STR):
         env[ENVOPTS.REPLACE_STR] = f"{ROOT}/\\http://{ADDRESS}:{PORT}/"
+
+    if not env.get(ENVOPTS.TIMEOUT):
+        env[ENVOPTS.TIMEOUT] = str(KHRONOS_WEBGL_TIMEOUT_SEC)
 
     with popen_server(ROOT, DIR, ADDRESS, port=PORT, silent=True):
         run_test(["basic", name, "common", f"-p{KHRONOS_WEBGL_JOBS}"], env)
