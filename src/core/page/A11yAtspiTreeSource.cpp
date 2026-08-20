@@ -178,7 +178,13 @@ static bool isInteractiveTarget(WebView* webView, Element* element)
     if (element->tabIndexSetExplicitly() && element->tabIndex() >= 0) {
         return true;
     }
-    return role->equals("button") || role->equalsIgnoreCase("link");
+    // Value widgets are readable targets even when not focusable: the DA
+    // use cases require progress bars to be announced on swipe.
+    if (element->localName()->equals("progress")) {
+        return true;
+    }
+    return role->equals("button") || role->equalsIgnoreCase("link") ||
+        role->equalsIgnoreCase("progressbar") || role->equalsIgnoreCase("slider");
 }
 
 // Explicit accessible name on the element itself (alt counts for images).
@@ -518,9 +524,11 @@ A11yAtspiTreeSource::Role A11yAtspiTreeSource::roleOf(void* handle)
     if (ownerDocument && ownerDocument->documentElement() == element) {
         return Role::Document;
     }
-    if (!m_isTarget[index]) {
-        return Role::Section;
-    }
+    // ARIA role first (as in chromium, the author's role wins over the
+    // native tag), then native element mapping. Containers keep their
+    // structural roles (List/ListItem/Dialog read better than Section for
+    // the daemon's context announcements); everything else falls back to
+    // Section for containers and Label for targets.
     StaticStrings* ss = webView()->starfish()->staticStrings();
     String* role = element->getAttributeOrEmpty(ss->m_role);
     if (role->equals("button")) {
@@ -535,6 +543,28 @@ A11yAtspiTreeSource::Role A11yAtspiTreeSource::roleOf(void* handle)
     if (role->equalsIgnoreCase("radio")) {
         return Role::RadioButton;
     }
+    if (role->equalsIgnoreCase("switch")) {
+        return Role::ToggleButton;
+    }
+    if (role->equalsIgnoreCase("heading")) {
+        return Role::Heading;
+    }
+    if (role->equalsIgnoreCase("list")) {
+        return Role::List;
+    }
+    if (role->equalsIgnoreCase("listitem")) {
+        return Role::ListItem;
+    }
+    if (role->equalsIgnoreCase("dialog") ||
+        role->equalsIgnoreCase("alertdialog")) {
+        return Role::Dialog;
+    }
+    if (role->equalsIgnoreCase("progressbar")) {
+        return Role::ProgressBar;
+    }
+    if (role->equalsIgnoreCase("slider")) {
+        return Role::Slider;
+    }
     if (element->isHTMLButtonElement()) {
         return Role::Button;
     }
@@ -548,6 +578,9 @@ A11yAtspiTreeSource::Role A11yAtspiTreeSource::roleOf(void* handle)
         }
         if (type->equals("radio")) {
             return Role::RadioButton;
+        }
+        if (type->equals("range")) {
+            return Role::Slider;
         }
         if (type->equals("button") || type->equals("submit") ||
             type->equals("reset") || type->equals("image")) {
@@ -564,12 +597,125 @@ A11yAtspiTreeSource::Role A11yAtspiTreeSource::roleOf(void* handle)
     if (element->isHTMLImageElement()) {
         return Role::Image;
     }
+    if (element->isHTMLUListElement() || element->isHTMLOListElement()) {
+        return Role::List;
+    }
+    if (element->isHTMLLIElement()) {
+        return Role::ListItem;
+    }
+    if (element->isHTMLDialogElement()) {
+        return Role::Dialog;
+    }
     String* local = element->localName();
+    if (local->equals("progress")) {
+        return Role::ProgressBar;
+    }
     if (local->equals("h1") || local->equals("h2") || local->equals("h3") ||
         local->equals("h4") || local->equals("h5") || local->equals("h6")) {
         return Role::Heading;
     }
-    return Role::Label;
+    return m_isTarget[index] ? Role::Label : Role::Section;
+}
+
+int A11yAtspiTreeSource::headingLevelOf(void* handle)
+{
+    Element* element = toElement(handle);
+    if (!element || roleOf(handle) != Role::Heading) {
+        return 0;
+    }
+    StaticStrings* ss = webView()->starfish()->staticStrings();
+    String* ariaLevel = element->getAttributeOrEmpty(ss->m_ariaLevel);
+    if (!ariaLevel->isEmpty()) {
+        int level = String::parseInt(ariaLevel);
+        if (level >= 1) {
+            return level;
+        }
+    }
+    String* local = element->localName();
+    if (local->length() == 2 && local->charAt(0) == 'h' &&
+        local->charAt(1) >= '1' && local->charAt(1) <= '6') {
+        return local->charAt(1) - '0';
+    }
+    // role="heading" without aria-level: chromium's default level.
+    return 2;
+}
+
+void A11yAtspiTreeSource::posInSetOf(void* handle, int& position, int& setSize)
+{
+    position = 0;
+    setSize = 0;
+    Element* element = toElement(handle);
+    if (!element || roleOf(handle) != Role::ListItem) {
+        return;
+    }
+    StaticStrings* ss = webView()->starfish()->staticStrings();
+    int ariaPos = String::parseInt(
+        element->getAttributeOrEmpty(ss->m_ariaPosinset));
+    int ariaSize = String::parseInt(
+        element->getAttributeOrEmpty(ss->m_ariaSetsize));
+    // DOM ordinal among the parent's list item children (chromium computes
+    // the same when aria-posinset/aria-setsize are absent).
+    int ordinal = 0, count = 0;
+    Element* parent = element->parentElement();
+    if (parent) {
+        for (Node* child = parent->firstChild(); child;
+             child = child->nextSibling()) {
+            if (!child->isElement()) {
+                continue;
+            }
+            Element* sibling = child->asElement();
+            if (sibling->isHTMLLIElement() ||
+                sibling->getAttributeOrEmpty(ss->m_role)
+                    ->equalsIgnoreCase("listitem")) {
+                count++;
+                if (sibling == element) {
+                    ordinal = count;
+                }
+            }
+        }
+    }
+    position = ariaPos >= 1 ? ariaPos : ordinal;
+    setSize = ariaSize >= 1 ? ariaSize : count;
+}
+
+bool A11yAtspiTreeSource::valueOf(void* handle, double& current,
+                                  double& minimum, double& maximum)
+{
+    Element* element = toElement(handle);
+    if (!element) {
+        return false;
+    }
+    Role role = roleOf(handle);
+    if (role != Role::Slider && role != Role::ProgressBar) {
+        return false;
+    }
+    StaticStrings* ss = webView()->starfish()->staticStrings();
+    auto attrDouble = [&](const QualifiedName& name, double fallback) {
+        String* value = element->getAttributeOrEmpty(name);
+        return String::validDouble(value) ? String::parseDouble(value)
+                                          : fallback;
+    };
+    if (element->isHTMLInputElement()) {
+        // input[type=range]: the control sanitizes its own value; min/max
+        // follow the HTML defaults (0..100).
+        minimum = attrDouble(ss->m_min, 0);
+        maximum = attrDouble(ss->m_max, 100);
+        String* value = element->asHTMLInputElement()->value();
+        current = String::validDouble(value) ? String::parseDouble(value)
+                                             : minimum;
+        return true;
+    }
+    if (element->localName()->equals("progress")) {
+        minimum = 0;
+        maximum = attrDouble(ss->m_max, 1);
+        current = attrDouble(ss->m_value, 0);
+        return true;
+    }
+    // ARIA slider/progressbar: spec defaults min 0, max 100.
+    minimum = attrDouble(ss->m_ariaValuemin, 0);
+    maximum = attrDouble(ss->m_ariaValuemax, 100);
+    current = attrDouble(ss->m_ariaValuenow, minimum);
+    return true;
 }
 
 UTF8StringDataNonGCStd A11yAtspiTreeSource::textOf(void* handle)
@@ -644,6 +790,9 @@ A11yAtspiTreeSource::States A11yAtspiTreeSource::statesOf(void* handle)
         states.selectable = true;
         states.selected = ariaSelected->equalsIgnoreCase("true");
     }
+
+    states.modal = element->getAttributeOrEmpty(ss->m_ariaModal)
+                       ->equalsIgnoreCase("true");
 
     double x = 0, y = 0, width = 0, height = 0;
     clippedBorderBox(element, x, y, width, height);
