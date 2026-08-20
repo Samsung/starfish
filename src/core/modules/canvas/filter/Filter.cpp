@@ -30,6 +30,7 @@
 #include "core/modules/canvas/filter/FilterTurbulence.h"
 #include "core/modules/canvas/filter/FilterDisplacementMap.h"
 #include "core/dom/svg/SVGElement.h"
+#include "core/page/WebView.h"
 #include "core/dom/svg/SVGFilterElement.h"
 #include "core/dom/svg/SVGFilterPrimitiveStandardAttributes.h"
 #include "core/layout/svg/FrameSVGBox.h"
@@ -233,18 +234,112 @@ Unit::Rect Filter::computeSubRegion(
     return subRegionInFloat;
 }
 
+// A chain that ends in a wide Gaussian blur can run every primitive on a
+// downscaled copy: whatever detail the reduced resolution loses is detail the
+// final blur would have erased anyway. This is the same trade
+// FilterGaussianBlur already makes internally, extended to the primitives
+// before it — for the Bixby glow (feTurbulence -> feDisplacementMap ->
+// feGaussianBlur) the turbulence and displacement passes are the bulk of the
+// per-frame filter cost and they scale with the pixel count.
+int Filter::chainDownsampleFactor(FilterApplyContext& ctx)
+{
+    if (m_filterPrimitives.empty()) {
+        return 1;
+    }
+
+    for (auto* primitive : m_filterPrimitives) {
+        // Every op here is resolution-independent given the scaled
+        // FilterApplyContext (their geometry all derives from
+        // viewportScale). feMorphology is excluded: a structuring element
+        // eroded at half resolution is not half an erosion.
+        auto* e = primitive->element();
+        if (!(e->isSVGFEGaussianBlurElement() ||
+              e->isSVGFEColorMatrixElement() ||
+              e->isSVGFEComponentTransferElement() ||
+              e->isSVGFEMergeElement() || e->isSVGFECompositeElement() ||
+              e->isSVGFEOffsetElement() || e->isSVGFEFloodElement() ||
+              e->isSVGFETurbulenceElement() ||
+              e->isSVGFEDisplacementMapElement())) {
+            return 1;
+        }
+    }
+
+    auto* last = m_filterPrimitives.back();
+    if (!last->element()->isSVGFEGaussianBlurElement()) {
+        return 1;
+    }
+
+    FilterGaussianBlur* blur = static_cast<FilterGaussianBlur*>(last);
+    auto vm =
+        ctx.target->outmostSVGViewportBox()->computeTranlateScaleOnPaint()
+            .second;
+    auto stdXY =
+        blur->computeStdXY(ctx.target->unadjustedFrameRectByFilter()->size(),
+                           std::make_pair(vm.getScaleX(), vm.getScaleY()));
+    if (stdXY.first <= 0 || stdXY.second <= 0) {
+        return 1;
+    }
+    auto kernel = FilterGaussianBlur::computeKernelSize(
+        stdXY.first * ctx.viewportScaleX, stdXY.second * ctx.viewportScaleY);
+    float dpr = owner()->webView()->screenInfo().devicePixelRatio;
+    unsigned kernelX = (unsigned)(kernel.first * dpr);
+    unsigned kernelY = (unsigned)(kernel.second * dpr);
+    unsigned kernelMin = std::min(kernelX ? kernelX : kernelY,
+                                  kernelY ? kernelY : kernelX);
+
+    // Mirror FilterGaussianBlur::computeDownsampleFactor's guards: keep >= 8
+    // samples across the kernel and >= 16 px per reduced dimension.
+    const int factor = 2;
+    if (kernelMin / (unsigned)factor < 8 || (int)ctx.width / factor < 16 ||
+        (int)ctx.height / factor < 16) {
+        return 1;
+    }
+    return factor;
+}
+
 void Filter::applyFilter(FilterApplyContext& ctx)
 {
     updateIfNeeds();
 
     FrameSVGSVGBox* viewportBox = ctx.target->outmostSVGViewportBox();
     auto transScale = viewportBox->computeTranlateScaleOnPaint();
+    auto subRegionScale = std::make_pair(transScale.second.getScaleX(),
+                                         transScale.second.getScaleY());
+
+    int factor = chainDownsampleFactor(ctx);
+    if (factor > 1) {
+        int reducedWidth = ((int)ctx.width + factor - 1) / factor;
+        int reducedHeight = ((int)ctx.height + factor - 1) / factor;
+        size_t reducedStride = (size_t)reducedWidth * 4;
+        FilterSourceBuffer reduced(nullptr, reducedStride * reducedHeight,
+                                   true);
+        filterDownsampleRGBA(ctx.src, ctx.width, ctx.height, ctx.stride,
+                             reduced.data(), reducedWidth, reducedHeight,
+                             reducedStride, factor);
+
+        FilterApplyContext reducedCtx(
+            ctx.target, reducedWidth, reducedStride, reducedHeight,
+            reduced.data(), ctx.viewportScaleX / factor,
+            ctx.viewportScaleY / factor, ctx.isAlphaImage);
+        for (auto* primitive : m_filterPrimitives) {
+            primitive->apply(computeSubRegion(primitive, owner(), ctx.target,
+                                              subRegionScale),
+                             reducedCtx);
+        }
+
+        std::shared_ptr<FilterSourceBuffer> full(new FilterSourceBuffer(
+            nullptr, ctx.stride * ctx.height, true));
+        filterUpsampleRGBA(reducedCtx.output->data(), reducedWidth,
+                           reducedHeight, reducedStride, full->data(),
+                           ctx.width, ctx.height, ctx.stride, factor);
+        ctx.output = full;
+        return;
+    }
+
     for (auto* primitive : m_filterPrimitives) {
-        primitive->apply(
-            computeSubRegion(primitive, owner(), ctx.target,
-                             std::make_pair(transScale.second.getScaleX(),
-                                            transScale.second.getScaleY())),
-            ctx);
+        primitive->apply(computeSubRegion(primitive, owner(), ctx.target,
+                                          subRegionScale),
+                         ctx);
     }
 }
 
