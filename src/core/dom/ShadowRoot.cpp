@@ -228,11 +228,23 @@ void ShadowRoot::connectSlotWithSlottables()
         // different one) may now be reached by this tree's `::slotted()`
         // rules, yet the mutation that caused the reassignment -- a change
         // elsewhere in the shadow tree, not on the node itself -- never marks
-        // it dirty on its own. The reverse direction (a node that loses its
-        // assignment here) needs no such call: once unassigned it drops out
-        // of the flat tree and every future style-recalc walk skips it
-        // entirely (Node::renderingParentNode()), so there is nothing further
-        // restyling could reach or change.
+        // it dirty on its own.
+        //
+        // A node that loses its assignment here needs the same call for a
+        // different reason: once unassigned, Node::renderingParentNode()
+        // resolves straight to the host (assignedSlotInternal() no longer
+        // finds a slot for it), so setNeedsStyleRecalc() propagates the
+        // "child needs recalc" bit up through the host and its ancestors --
+        // the only thing that makes the top-down style-recalc walk redescend
+        // into this shadow tree. Skipping that call left a slot that just
+        // lost its last assigned node (and so started rendering its fallback
+        // content) unvisited: the fallback content kept a null ComputedStyle,
+        // and FrameTreeBuilder crashed dereferencing it.
+        for (size_t j = 0; j < oldNodes.size(); j++) {
+            if (!contains(newNodes, oldNodes[j])) {
+                oldNodes[j]->setNeedsStyleRecalc();
+            }
+        }
         for (size_t j = 0; j < newNodes.size(); j++) {
             if (!contains(oldNodes, newNodes[j])) {
                 newNodes[j]->setNeedsStyleRecalc();
