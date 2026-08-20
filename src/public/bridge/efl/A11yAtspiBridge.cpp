@@ -45,6 +45,7 @@ extern "C" DBusConnection* atspi_get_a11y_bus(void);
 #include <algorithm>
 #include <map>
 #include <set>
+#include <string>
 #include <vector>
 
 // The accessibility TTS key lives in vconf-internal-setting-keys.h, which is
@@ -1061,6 +1062,30 @@ static gboolean flushTreeEvents(gpointer)
     // Keep the focus ring glued to the highlighted target across layout and
     // scroll changes.
     updateFocusRing();
+
+    // Content that updates while it stays highlighted (stopwatch/timer per
+    // the DA principle) must be re-read: re-emit accessible-name when the
+    // highlighted target's computed name changes, the same name-changed
+    // event chromium fires, so the daemon re-announces it.
+    static void* lastNamedHandle = nullptr;
+    static std::string lastName;
+    if (g_highlightedHandle && source->isValid(g_highlightedHandle)) {
+        auto name = source->nameOf(g_highlightedHandle);
+        if (lastNamedHandle == g_highlightedHandle &&
+            lastName.compare(name.data()) != 0) {
+            STARFISH_LOG_INFO(
+                "A11yAtspiBridge: accessible-name changed on highlighted "
+                "%p\n",
+                g_highlightedHandle);
+            g_object_notify(G_OBJECT(lookupNode(g_highlightedHandle)),
+                            "accessible-name");
+        }
+        lastNamedHandle = g_highlightedHandle;
+        lastName.assign(name.data(), name.size());
+    } else {
+        lastNamedHandle = nullptr;
+        lastName.clear();
+    }
 
     if (!g_lastTree) {
         // First flush after enabling: seed only, nothing to diff against.
