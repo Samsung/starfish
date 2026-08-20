@@ -58,6 +58,7 @@ retry_submodule_update 3 -- --init "${PATHS[@]}"
 # self-contained before archiving so it survives being extracted into a
 # completely different checkout by whichever job hits the cache next.
 submodule_make_standalone "${PATHS[@]}"
+submodule_sync_standalone "${PATHS[@]}"
 
 tarball=$(mktemp)
 tar czf "$tarball" "${PATHS[@]}"

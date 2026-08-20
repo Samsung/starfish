@@ -101,9 +101,9 @@ Requires(postun): /sbin/ldconfig
 
 # Untested below Tizen 9 -- off there, on (default) everywhere else.
 %if 0%{?tizen_version_major} <= 8
-%define enable_tls_access_by_pthread_key 0
+%define enable_tls_access_by_address 0
 %else
-%define enable_tls_access_by_pthread_key 1
+%define enable_tls_access_by_address 1
 %endif
 
 %if 0%{?enable_codecache:1}
