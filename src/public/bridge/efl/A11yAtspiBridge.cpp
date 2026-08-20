@@ -128,16 +128,20 @@ static void focusRingShowAt(double x, double y, double width, double height)
     }
     int t = kFocusRingThickness;
     int ix = (int)x, iy = (int)y, iw = (int)width, ih = (int)height;
-    // Inner line: bars sit inside the target bounds, side bars shortened so
-    // the translucent corners don't double-blend.
-    int vh = ih - 2 * t;
-    if (vh < 0) {
-        vh = 0;
-    }
-    evas_object_geometry_set(g_focusRing[0], ix, iy, iw, t);
-    evas_object_geometry_set(g_focusRing[1], ix, iy + ih - t, iw, t);
-    evas_object_geometry_set(g_focusRing[2], ix, iy + t, t, vh);
-    evas_object_geometry_set(g_focusRing[3], ix + iw - t, iy + t, t, vh);
+    // Inner line: bars sit inside the target bounds and shrink on tiny
+    // targets instead of overlapping, so the translucent color never
+    // double-blends.
+    int topH = std::min(t, ih);
+    int bottomH = std::max(0, std::min(t, ih - topH));
+    int sideH = ih - topH - bottomH;
+    int leftW = std::min(t, iw);
+    int rightW = std::max(0, std::min(t, iw - leftW));
+    evas_object_geometry_set(g_focusRing[0], ix, iy, iw, topH);
+    evas_object_geometry_set(g_focusRing[1], ix, iy + ih - bottomH, iw,
+                             bottomH);
+    evas_object_geometry_set(g_focusRing[2], ix, iy + topH, leftW, sideH);
+    evas_object_geometry_set(g_focusRing[3], ix + iw - rightW, iy + topH,
+                             rightW, sideH);
     for (int i = 0; i < 4; i++) {
         evas_object_raise(g_focusRing[i]);
         evas_object_show(g_focusRing[i]);
