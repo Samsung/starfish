@@ -10194,14 +10194,24 @@ static void markRenderingSubtreeNeedsStyleRecalc(Node* node)
     }
 }
 
+static bool sheetHasPromotableSelector(CSSStyleSheet* sheet)
+{
+    auto& rules = sheet->styleRules();
+    for (size_t i = 0; i < rules.size(); i++) {
+        StyleRule* rule = rules[i].first;
+        if (rule->isSimplePseudoClassHostSelector() ||
+            rule->hasSlottedSelector()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void StyleResolver::invalidateShadowScopeForSheetChange()
 {
     STARFISH_ASSERT(isShadowResolver());
 
     Element* host = ownerHost();
-    if (host == nullptr) {
-        return;
-    }
 
     // Nothing in the DOM mutation that changed this sheet reaches the elements
     // its rules can style, so mark them explicitly -- the same reasoning as
@@ -10232,7 +10242,9 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
         // -- no document rebuild needed on this path.
         addToRuleSet(sheet);
         recalcWebFonts();
-        if (isShadowResolver()) {
+        // A sheet with no `:host`/`::slotted` rule cannot change anything
+        // outside this resolver's own tree, so skip the flat-tree walk below.
+        if (isShadowResolver() && sheetHasPromotableSelector(sheet)) {
             invalidateShadowScopeForSheetChange();
         }
     } else {

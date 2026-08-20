@@ -23,7 +23,6 @@
 #include "binding/ObservableArray.h"
 #include "core/dom/Document.h"
 #include "core/dom/ShadowRoot.h"
-#include "core/dom/Traverse.h"
 #include "core/page/BrowsingContext.h"
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/Style.h"
@@ -56,12 +55,9 @@ namespace {
 
     // Push the current backing list into the host's style resolver and request
     // a restyle. There is no DOM mutation to drive the cascade as with <style>
-    // insertion, so the affected scope is marked dirty explicitly. The scope is
-    // kept as narrow as the sheets can affect: a document's adopted sheets
-    // apply document-wide, while a shadow root's apply only to its host (via
-    // `:host`) and the shadow tree, so only the host subtree is invalidated. A
-    // `:host` rule can change the host's display (hence its box type), so the
-    // host subtree's frame tree is rebuilt as well.
+    // insertion, so the affected scope is marked dirty explicitly: a
+    // document's adopted sheets apply document-wide, while a shadow root's
+    // apply only within its host's flat tree.
     void syncAdoptedSheetsToCascade(ScriptWrappable* host)
     {
         Node* node = static_cast<Node*>(host);
@@ -75,21 +71,14 @@ namespace {
             return;
         }
 
-        // Shadow root: restyle just the host and its shadow subtree. The host
-        // matches `:host`; the shadow content matches the rest of the adopted
-        // rules. Mark each affected element with the default reason so its
-        // style is unconditionally re-resolved (the same primitive the <style>
-        // path uses), instead of forcing a whole-document recalc.
+        // Shadow root: restyle the host's flat tree, matching StyleResolver's
+        // own reasoning for a `<style>`/`<link>` sheet change (see
+        // invalidateShadowScopeForSheetChange()) -- adopted `:host`/`::slotted`
+        // rules reach the same three targets (host, shadow content, and
+        // slotted light-DOM children) via the same promotion path.
         ShadowRoot* shadowRoot = static_cast<ShadowRoot*>(node);
-        Element* shadowHost = shadowRoot->host();
-        if (shadowHost != nullptr) {
-            shadowHost->setNeedsStyleRecalc();
-            shadowHost->setNeedsFrameTreeBuild();
-            Traverse::traverse(shadowRoot, [](Node* n) {
-                if (n->isElement()) {
-                    n->setNeedsStyleRecalc();
-                }
-            });
+        if (shadowRoot->host() != nullptr) {
+            shadowRoot->styleResolver().invalidateShadowScopeForSheetChange();
         }
     }
 
