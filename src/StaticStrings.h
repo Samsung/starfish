@@ -638,6 +638,13 @@ public:
     QualifiedName m_ariaLive;
     QualifiedName m_ariaAtomic;
     QualifiedName m_ariaBusy;
+    QualifiedName m_ariaLevel;
+    QualifiedName m_ariaPosinset;
+    QualifiedName m_ariaSetsize;
+    QualifiedName m_ariaValuenow;
+    QualifiedName m_ariaValuemin;
+    QualifiedName m_ariaValuemax;
+    QualifiedName m_ariaModal;
     // Event Names
     QualifiedName m_click;
     QualifiedName m_onclick;

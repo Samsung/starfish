@@ -406,6 +406,7 @@ typedef struct _StarfishAtkNodeClass {
 static void starfish_atk_node_component_iface_init(AtkComponentIface* iface);
 static void starfish_atk_node_action_iface_init(AtkActionIface* iface);
 static void starfish_atk_node_text_iface_init(AtkTextIface* iface);
+static void starfish_atk_node_value_iface_init(AtkValueIface* iface);
 
 G_DEFINE_TYPE_WITH_CODE(
     StarfishAtkNode, starfish_atk_node, ATK_TYPE_OBJECT,
@@ -414,7 +415,9 @@ G_DEFINE_TYPE_WITH_CODE(
         G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION,
                               starfish_atk_node_action_iface_init)
             G_IMPLEMENT_INTERFACE(ATK_TYPE_TEXT,
-                                  starfish_atk_node_text_iface_init))
+                                  starfish_atk_node_text_iface_init)
+                G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE,
+                                      starfish_atk_node_value_iface_init))
 
 static void starfish_atk_node_init(StarfishAtkNode* node)
 {
@@ -471,6 +474,18 @@ static AtkRole starfish_atk_node_get_role(AtkObject* atkObject)
         return ATK_ROLE_IMAGE;
     case Role::Heading:
         return ATK_ROLE_HEADING;
+    case Role::List:
+        return ATK_ROLE_LIST;
+    case Role::ListItem:
+        return ATK_ROLE_LIST_ITEM;
+    case Role::Dialog:
+        return ATK_ROLE_DIALOG;
+    case Role::ProgressBar:
+        return ATK_ROLE_PROGRESS_BAR;
+    case Role::Slider:
+        return ATK_ROLE_SLIDER;
+    case Role::ToggleButton:
+        return ATK_ROLE_TOGGLE_BUTTON;
     case Role::Section:
         return ATK_ROLE_SECTION;
     case Role::Document:
@@ -578,7 +593,42 @@ static AtkStateSet* starfish_atk_node_ref_state_set(AtkObject* atkObject)
             atk_state_set_add_state(stateSet, ATK_STATE_SELECTED);
         }
     }
+    if (states.modal) {
+        atk_state_set_add_state(stateSet, ATK_STATE_MODAL);
+    }
     return stateSet;
+}
+
+// Object attributes (heading level, list posinset/setsize) - the same
+// AT-SPI attribute names chromium exposes; Talkback-style daemons derive
+// "heading" and "x of n" announcements from them.
+static AtkAttributeSet* starfish_atk_node_get_attributes(AtkObject* atkObject)
+{
+    StarfishAtkNode* node = STARFISH_ATK_NODE(atkObject);
+    AtkAttributeSet* attributes = nullptr;
+    Starfish::A11yAtspiTreeSource* source = treeSource();
+    if (!source || !source->isValid(node->handle)) {
+        return attributes;
+    }
+    auto add = [&attributes](const char* name, int value) {
+        AtkAttribute* attribute = g_new(AtkAttribute, 1);
+        attribute->name = g_strdup(name);
+        attribute->value = g_strdup_printf("%d", value);
+        attributes = g_slist_prepend(attributes, attribute);
+    };
+    int level = source->headingLevelOf(node->handle);
+    if (level > 0) {
+        add("level", level);
+    }
+    int position = 0, setSize = 0;
+    source->posInSetOf(node->handle, position, setSize);
+    if (position > 0) {
+        add("posinset", position);
+    }
+    if (setSize > 0) {
+        add("setsize", setSize);
+    }
+    return attributes;
 }
 
 // aria-labelledby / aria-describedby as ATK relations (chromium exposes
@@ -634,6 +684,7 @@ static void starfish_atk_node_class_init(StarfishAtkNodeClass* klass)
     atkObjectClass->get_index_in_parent = starfish_atk_node_get_index_in_parent;
     atkObjectClass->ref_state_set = starfish_atk_node_ref_state_set;
     atkObjectClass->ref_relation_set = starfish_atk_node_ref_relation_set;
+    atkObjectClass->get_attributes = starfish_atk_node_get_attributes;
 }
 
 // Border box in window px (window-relative device px); false if stale.
@@ -870,6 +921,45 @@ static void starfish_atk_node_text_iface_init(AtkTextIface* iface)
     iface->get_caret_offset = starfish_atk_node_text_get_caret_offset;
 }
 
+// AtkValue over range widgets (slider / progress bar), so the daemon can
+// announce the current value and percentage. Non-range nodes report zeros
+// (the interface is registered type-wide, as chromium does).
+static void nodeValue(AtkValue* atkValue, GValue* gValue, int which)
+{
+    StarfishAtkNode* node = STARFISH_ATK_NODE(atkValue);
+    double current = 0, minimum = 0, maximum = 0;
+    Starfish::A11yAtspiTreeSource* source = treeSource();
+    if (source) {
+        source->valueOf(node->handle, current, minimum, maximum);
+    }
+    memset(gValue, 0, sizeof(GValue));
+    g_value_init(gValue, G_TYPE_DOUBLE);
+    g_value_set_double(gValue,
+                       which == 0 ? current : (which == 1 ? minimum : maximum));
+}
+
+static void starfish_atk_node_get_current_value(AtkValue* value, GValue* out)
+{
+    nodeValue(value, out, 0);
+}
+
+static void starfish_atk_node_get_minimum_value(AtkValue* value, GValue* out)
+{
+    nodeValue(value, out, 1);
+}
+
+static void starfish_atk_node_get_maximum_value(AtkValue* value, GValue* out)
+{
+    nodeValue(value, out, 2);
+}
+
+static void starfish_atk_node_value_iface_init(AtkValueIface* iface)
+{
+    iface->get_current_value = starfish_atk_node_get_current_value;
+    iface->get_minimum_value = starfish_atk_node_get_minimum_value;
+    iface->get_maximum_value = starfish_atk_node_get_maximum_value;
+}
+
 // Cache-owned (borrowed) wrapper; the same handle always maps to the same
 // AtkObject so the daemon sees stable identities across tree updates.
 static AtkObject* lookupNode(void* handle)
@@ -931,6 +1021,8 @@ static guint g_flushTimer = 0;
 struct TreeSnapshotData {
     std::map<void*, std::vector<void*>> children;
     std::map<void*, Starfish::A11yAtspiTreeSource::States> states;
+    // Range widget values, for property-change::accessible-value events.
+    std::map<void*, double> values;
 };
 static TreeSnapshotData* g_lastTree = nullptr;
 
@@ -948,6 +1040,10 @@ static void captureChildren(Starfish::A11yAtspiTreeSource* source, void* handle,
         }
         list.push_back(child);
         out.states[child] = source->statesOf(child);
+        double current = 0, minimum = 0, maximum = 0;
+        if (source->valueOf(child, current, minimum, maximum)) {
+            out.values[child] = current;
+        }
         captureChildren(source, child, out);
     }
 }
@@ -1101,6 +1197,19 @@ static gboolean flushTreeEvents(gpointer)
                 (int)t.state, entry.first, t.after ? 1 : 0);
             atk_object_notify_state_change(obj, t.state,
                                            t.after ? TRUE : FALSE);
+        }
+    }
+    // Value transitions on surviving range widgets; the notify is re-emitted
+    // by ATK as property-change::accessible-value (chromium does the same
+    // for slider/progress updates).
+    for (const auto& entry : current.values) {
+        auto oldIt = previous.values.find(entry.first);
+        if (oldIt != previous.values.end() && oldIt->second != entry.second) {
+            STARFISH_LOG_INFO(
+                "A11yAtspiBridge: accessible-value %p -> %f\n", entry.first,
+                entry.second);
+            g_object_notify(G_OBJECT(lookupNode(entry.first)),
+                            "accessible-value");
         }
     }
 

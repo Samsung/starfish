@@ -451,6 +451,20 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "aria-atomic"));
     m_ariaBusy =
         QualifiedName(AtomicString::createAtomicString(starfish, "aria-busy"));
+    m_ariaLevel = QualifiedName(
+        AtomicString::createAtomicString(starfish, "aria-level"));
+    m_ariaPosinset = QualifiedName(
+        AtomicString::createAtomicString(starfish, "aria-posinset"));
+    m_ariaSetsize = QualifiedName(
+        AtomicString::createAtomicString(starfish, "aria-setsize"));
+    m_ariaValuenow = QualifiedName(
+        AtomicString::createAtomicString(starfish, "aria-valuenow"));
+    m_ariaValuemin = QualifiedName(
+        AtomicString::createAtomicString(starfish, "aria-valuemin"));
+    m_ariaValuemax = QualifiedName(
+        AtomicString::createAtomicString(starfish, "aria-valuemax"));
+    m_ariaModal = QualifiedName(
+        AtomicString::createAtomicString(starfish, "aria-modal"));
 
     m_click =
         QualifiedName(AtomicString::createAtomicString(starfish, "click"));

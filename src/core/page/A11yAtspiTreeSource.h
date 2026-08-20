@@ -108,10 +108,29 @@ public:
         ComboBox,
         Image,
         Heading,
+        List,
+        ListItem,
+        Dialog,
+        ProgressBar,
+        Slider,
+        ToggleButton,
         Section,
         Document,
     };
     Role roleOf(void* handle);
+
+    // Heading level (1-6): aria-level wins, else the h1-h6 tag digit, else 2
+    // for a bare role="heading" (chromium's default). 0 for non-headings.
+    int headingLevelOf(void* handle);
+    // List item position within its list (1-based) and the list size, for
+    // the daemon's "x of n" announcements. aria-posinset/aria-setsize win
+    // over the DOM sibling ordinal. Both 0 when not a list item.
+    void posInSetOf(void* handle, int& position, int& setSize);
+    // Range widget value (slider / progress bar): aria-valuenow/min/max for
+    // ARIA widgets, the control's own value/min/max for input[type=range]
+    // and <progress>. False when the node has no value semantics.
+    bool valueOf(void* handle, double& current, double& minimum,
+                 double& maximum);
 
     // Live widget states: native control state plus the ARIA state
     // attributes (aria-checked/disabled/expanded/selected), the same subset
@@ -129,6 +148,9 @@ public:
         // Fully scrolled/clipped out of view (drops SHOWING, as chromium
         // marks offscreen objects).
         bool offscreen{ false };
+        // aria-modal="true" (Dialog role): the daemon confines navigation
+        // to the modal subtree, per the DA popup/scrim principle.
+        bool modal{ false };
     };
     States statesOf(void* handle);
 
