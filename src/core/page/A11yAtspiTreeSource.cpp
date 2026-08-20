@@ -706,15 +706,31 @@ bool A11yAtspiTreeSource::valueOf(void* handle, double& current,
         return true;
     }
     if (element->localName()->equals("progress")) {
+        // <progress> without a value attribute is indeterminate: expose no
+        // value at all (as chromium does).
+        String* value = element->getAttributeOrEmpty(ss->m_value);
+        if (!String::validDouble(value)) {
+            return false;
+        }
         minimum = 0;
         maximum = attrDouble(ss->m_max, 1);
-        current = attrDouble(ss->m_value, 0);
+        current = String::parseDouble(value);
         return true;
     }
     // ARIA slider/progressbar: spec defaults min 0, max 100.
     minimum = attrDouble(ss->m_ariaValuemin, 0);
     maximum = attrDouble(ss->m_ariaValuemax, 100);
-    current = attrDouble(ss->m_ariaValuenow, minimum);
+    String* valuenow = element->getAttributeOrEmpty(ss->m_ariaValuenow);
+    if (!String::validDouble(valuenow)) {
+        // No aria-valuenow: a progress bar is indeterminate; a slider
+        // defaults to the midpoint (WAI-ARIA missing-value default).
+        if (role == Role::ProgressBar) {
+            return false;
+        }
+        current = (minimum + maximum) / 2;
+        return true;
+    }
+    current = String::parseDouble(valuenow);
     return true;
 }
 
