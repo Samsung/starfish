@@ -874,9 +874,9 @@ inline void boxBlur(uint8_t* srcData, uint8_t* dstData, unsigned dx, int dxLeft,
 // Box-average |factor| x |factor| source pixels into one destination pixel.
 // The buffers hold premultiplied RGBA, where a component-wise average is a
 // valid downscale.
-static void downsampleRGBA(const uint8_t* src, int srcWidth, int srcHeight,
-                           int srcStride, uint8_t* dst, int dstWidth,
-                           int dstHeight, int dstStride, int factor)
+void filterDownsampleRGBA(const uint8_t* src, int srcWidth, int srcHeight,
+                          int srcStride, uint8_t* dst, int dstWidth,
+                          int dstHeight, int dstStride, int factor)
 {
     for (int y = 0; y < dstHeight; ++y) {
         uint8_t* dstRow = dst + y * dstStride;
@@ -915,9 +915,9 @@ static void downsampleRGBA(const uint8_t* src, int srcWidth, int srcHeight,
 // Bilinear expansion back to the full resolution. The source is already
 // blurred, so interpolating between its samples reproduces a smooth gradient
 // rather than the reduced sampling grid.
-static void upsampleRGBA(const uint8_t* src, int srcWidth, int srcHeight,
-                         int srcStride, uint8_t* dst, int dstWidth,
-                         int dstHeight, int dstStride, int factor)
+void filterUpsampleRGBA(const uint8_t* src, int srcWidth, int srcHeight,
+                        int srcStride, uint8_t* dst, int dstWidth,
+                        int dstHeight, int dstStride, int factor)
 {
     const int fixedOne = 256;
     for (int y = 0; y < dstHeight; ++y) {
@@ -1182,14 +1182,14 @@ void FilterGaussianBlur::apply(const Unit::Rect& subRegionInFloat,
         Filter::FilterSourceBuffer reducedInput(nullptr, reducedSize, true);
         Filter::FilterSourceBuffer reducedOutput(nullptr, reducedSize, true);
 
-        downsampleRGBA(inputSource->data(), ctx.width, ctx.height, ctx.stride,
+        filterDownsampleRGBA(inputSource->data(), ctx.width, ctx.height, ctx.stride,
                        reducedInput.data(), reducedWidth, reducedHeight,
                        reducedStride, factor);
         standardBoxBlur(reducedInput.data(), reducedOutput.data(),
                         kernelSize.first / factor, kernelSize.second / factor,
                         reducedStride, reducedWidth, reducedHeight,
                         ctx.isAlphaImage, edgeMode);
-        upsampleRGBA(reducedOutput.data(), reducedWidth, reducedHeight,
+        filterUpsampleRGBA(reducedOutput.data(), reducedWidth, reducedHeight,
                      reducedStride, outputBuffer->data(), ctx.width, ctx.height,
                      ctx.stride, factor);
     } else {

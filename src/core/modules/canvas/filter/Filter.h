@@ -28,6 +28,15 @@ namespace Starfish {
 class FilterPrimitive;
 class SVGFilterElement;
 
+// Shared with FilterGaussianBlur: box-average downscale / bilinear upscale
+// used both for the blur's own reduced pass and for whole-chain reduction.
+void filterDownsampleRGBA(const uint8_t* src, int srcWidth, int srcHeight,
+                          int srcStride, uint8_t* dst, int dstWidth,
+                          int dstHeight, int dstStride, int factor);
+void filterUpsampleRGBA(const uint8_t* src, int srcWidth, int srcHeight,
+                        int srcStride, uint8_t* dst, int dstWidth,
+                        int dstHeight, int dstStride, int factor);
+
 class Filter : public gc {
 public:
     Filter(SVGFilterElement* owner);
@@ -122,6 +131,7 @@ public:
     };
 
     void applyFilter(FilterApplyContext& ctx);
+    int chainDownsampleFactor(FilterApplyContext& ctx);
     std::shared_ptr<FilterSourceBuffer> fetchInputSource(
         FilterApplyContext& ctx, FilterPrimitive* f);
     std::shared_ptr<FilterSourceBuffer> fetchInputSource2(
