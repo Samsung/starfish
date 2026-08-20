@@ -10213,6 +10213,19 @@ void StyleResolver::invalidateShadowScopeForSheetChange()
 
     Element* host = ownerHost();
 
+    // During ShadowRoot construction the host does not yet point back at this
+    // shadow root -- Element::attachShadow() installs it only after the
+    // constructor returns -- so firstRenderingChild() below would walk the
+    // host's light DOM instead, a tree this resolver's sheets cannot style.
+    // Nothing renders from this shadow root yet either, so there is nothing to
+    // invalidate; bail out instead of dirtying the host's light-DOM subtree
+    // for no reason.
+    Optional<ShadowRoot*> installedShadowRoot = host->internalShadowRoot();
+    if (!installedShadowRoot ||
+        installedShadowRoot.value() != m_ownerShadowRoot.value()) {
+        return;
+    }
+
     // Nothing in the DOM mutation that changed this sheet reaches the elements
     // its rules can style, so mark them explicitly -- the same reasoning as
     // AdoptedStyleSheets' syncAdoptedSheetsToCascade(). The host's rendering
@@ -10243,7 +10256,10 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
         addToRuleSet(sheet);
         recalcWebFonts();
         // A sheet with no `:host`/`::slotted` rule cannot change anything
-        // outside this resolver's own tree, so skip the flat-tree walk below.
+        // outside this resolver's own tree (shadow tree content is already
+        // invalidated by CSSStyleSheet::willAddToDocument()'s per-element
+        // rule matching, which runs regardless of this gate), so skip the
+        // host/light-DOM flat-tree walk below.
         if (isShadowResolver() && sheetHasPromotableSelector(sheet)) {
             invalidateShadowScopeForSheetChange();
         }
@@ -10252,6 +10268,12 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
         // The pending rebuild re-promotes every rule of this resolver, so the
         // document resolver has to drop the previous promotions first or they
         // are duplicated. See setAdoptedSheets() for the promotion rationale.
+        //
+        // No sheetHasPromotableSelector() gate here (unlike the fast path
+        // above): this path is taken before addToRuleSet() runs for this
+        // sheet, so its styleRules() may still be empty -- reading that as
+        // "no promotable rule" would wrongly skip invalidating a `:host`
+        // sheet's host and slotted light DOM.
         if (isShadowResolver()) {
             document()->styleResolver().setNeedsRecalcRuleSet();
             invalidateShadowScopeForSheetChange();
