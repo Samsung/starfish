@@ -10194,6 +10194,18 @@ static void markRenderingSubtreeNeedsStyleRecalc(Node* node)
     }
 }
 
+// True when any of the sheet's rules is one that addToRuleSet(CSSStyleSheet*)
+// promotes out of a shadow resolver and into the document resolver's
+// host-/slotted-scoped lists -- i.e. a rule whose subject lives outside the
+// shadow tree that owns the sheet, so only the document resolver ever styles
+// it. That is why `:host` requires the "simple" (combinator-free) form while
+// `::slotted()` does not: `:host .child` has an in-tree subject and stays
+// local, whereas `::slotted()` is always the rightmost compound.
+//
+// This predicate MUST stay in sync with that promotion branch: it duplicates
+// the branch's conditions by hand, and a promoting selector added there but
+// missed here would silently skip the host/slotted invalidation its callers
+// gate on. Keep both in step, or better, give them a shared source of truth.
 static bool sheetHasPromotableSelector(CSSStyleSheet* sheet)
 {
     auto& rules = sheet->styleRules();
