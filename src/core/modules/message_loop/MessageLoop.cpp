@@ -20,7 +20,6 @@
 #include "StarfishConfig.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/message_loop/MessageLoopLibUV.h"
-#include "platform/message_loop/MessageLoopWindows.h"
 #include "platform/message_loop/MessageLoopGLib.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
@@ -34,8 +33,6 @@ MessageLoop* MessageLoop::create()
 {
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     return new MessageLoopLibUV();
-#elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
-    return new MessageLoopWindows();
 #elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
     return new MessageLoopGLib();
 #else
@@ -59,8 +56,6 @@ void MessageLoop::init()
     registerMainThread();
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     MessageLoopLibUV::init();
-#elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
-    MessageLoopWindows::init();
 #elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
     MessageLoopGLib::init();
 #else
@@ -72,8 +67,6 @@ void MessageLoop::run()
 {
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     MessageLoopLibUV::run();
-#elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
-    MessageLoopWindows::run();
 #elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
     MessageLoopGLib::run();
 #else
@@ -85,8 +78,6 @@ void MessageLoop::stop()
 {
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     MessageLoopLibUV::stop();
-#elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
-    MessageLoopWindows::stop();
 #elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
     MessageLoopGLib::stop();
 #else
@@ -98,8 +89,6 @@ void MessageLoop::runOnMainThreadSync(const std::function<void()>& functor)
 {
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     MessageLoopLibUV::runOnMainThreadSync(functor);
-#elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
-    MessageLoopWindows::runOnMainThreadSync(functor);
 #elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
     MessageLoopGLib::runOnMainThreadSync(functor);
 #else
@@ -112,8 +101,6 @@ void MessageLoop::runWithProcessMainThreadPausedSync(
 {
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     MessageLoopLibUV::runWithProcessMainThreadPausedSync(functor);
-#elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
-    MessageLoopWindows::runWithProcessMainThreadPausedSync(functor);
 #elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
     MessageLoopGLib::runWithProcessMainThreadPausedSync(functor);
 #else
@@ -125,8 +112,6 @@ bool MessageLoop::isCallerInsideBackendEventLoop()
 {
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     return MessageLoopLibUV::isCallerInsideBackendEventLoop();
-#elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
-    return MessageLoopWindows::isCallerInsideBackendEventLoop();
 #elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
     return MessageLoopGLib::isCallerInsideBackendEventLoop();
 #else

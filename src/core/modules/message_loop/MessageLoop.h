@@ -38,7 +38,6 @@ class MessageLoop : public gc, public IMessageLoop {
     friend class MessageLoopMixin;
     friend class TimerEFL;
     friend class TimerLibUV;
-    friend class TimerWindows;
 
 public:
     static MessageLoop* create();
