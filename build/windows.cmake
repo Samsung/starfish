@@ -13,9 +13,11 @@ SET (TOOL_ROOT ${STARFISH_ROOT}/tool)
 # GLOBAL VARIABLES
 #######################################################
 IF (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
-    SET(WINDOWS_ARCH "Win32")
+    SET (WINDOWS_ARCH "Win32")
+ELSEIF (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "x64")
+    SET (WINDOWS_ARCH "x64")
 ELSE()
-    MESSAGE(FATAL_ERROR "Unsupported arch")
+    MESSAGE (FATAL_ERROR "Windows supports only Intel x86 and x86_64")
 ENDIF()
 
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -31,6 +33,7 @@ SET(STARFISH_CXXFLAGS
         /Zc:__cplusplus
         /EHs
         /source-charset:utf-8
+        /execution-charset:utf-8
         /MP
         /wd4244
         /wd4267
@@ -64,7 +67,6 @@ SET(STARFISH_DEFINES
         -D_USRDLL
         -D_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING
         -D_CRT_SECURE_NO_WARNINGS
-        -DSTARFISH_ENABLE_MULTIMEDIA
         -DSTARFISH_ENABLE_CANVAS
         -DSTARFISH_ENABLE_OBSOLETE_SPEC
         -DSTARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX
@@ -78,6 +80,10 @@ SET(STARFISH_DEFINES
         -DSTARFISH_IGNORE_SSL_VERIFYPEER
         -DSTARFISH_BACKEND_STR="windows"
     )
+
+IF (STARFISH_WINDOWS_ENABLE_MULTIMEDIA)
+    LIST (APPEND STARFISH_DEFINES -DSTARFISH_ENABLE_MULTIMEDIA)
+ENDIF()
 
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     SET (STARFISH_DEFINES_MODE
@@ -105,23 +111,11 @@ SET (STARFISH_INCLUDE_DIRS
     ${THIRD_PARTY_ROOT}/earcut.hpp/include/mapbox
     ${THIRD_PARTY_ROOT}/MP4Parse/source/include
     ${THIRD_PARTY_ROOT}/escargot/third_party/windows/icu/include
-    ${THIRD_PARTY_ROOT}/windows/windows_pthread/include
-    ${THIRD_PARTY_ROOT}/windows/curl/include
-    ${THIRD_PARTY_ROOT}/windows/cairo/src
-    ${THIRD_PARTY_ROOT}/windows/cairo/build/windows/cairo/cairo
-    ${THIRD_PARTY_ROOT}/windows/fontconfig
-    ${THIRD_PARTY_ROOT}/windows/freetype2/include
-    ${THIRD_PARTY_ROOT}/windows/giflib/lib
-    ${THIRD_PARTY_ROOT}/windows/libpng
-    ${THIRD_PARTY_ROOT}/windows/openssl/win32/include
     ${THIRD_PARTY_ROOT}/escargot/third_party/rapidjson/include
     ${THIRD_PARTY_ROOT}/rapidxml
     ${THIRD_PARTY_ROOT}/robin_map/include
-    ${THIRD_PARTY_ROOT}/windows/harfbuzz/src
     ${THIRD_PARTY_ROOT}/webm
     ${THIRD_PARTY_ROOT}/MP4Parse/source
-    ${THIRD_PARTY_ROOT}/windows/libwebsockets/build/win32/include
-    ${THIRD_PARTY_ROOT}/windows/glew/include
     )
 
 SET (STARFISH_DEPENDENCIES)
@@ -160,6 +154,8 @@ SET (ESCARGOT_USE_CUSTOM_LOGGING ON)
 SET (ESCARGOT_THREADING ON)
 SET (ESCARGOT_LIBICU_SUPPORT ON)
 SET (ESCARGOT_LIBICU_SUPPORT_WITH_DLOPEN ON)
+SET (GCUTIL_WINDOWS_EXPORT_NORMALIZER
+     ${STARFISH_ROOT}/build/windows_normalize_exports.cmake)
 
 # /MP (MSVC parallel compilation) stays global and BEFORE add_subdirectory so
 # it still reaches escargot's own targets too: it only affects build
@@ -168,7 +164,13 @@ SET (ESCARGOT_LIBICU_SUPPORT_WITH_DLOPEN ON)
 # apply to it.
 add_compile_options("/MP")
 
+SET (ESCARGOT_BUILD_SHARED_LIBS ON CACHE BOOL "Build Escargot as a Windows DLL" FORCE)
+SET (ESCARGOT_BUILD_GC_SHARED_LIBS ON CACHE BOOL "Build GCutil as a shared library" FORCE)
+SET (ESCARGOT_ENABLE_SHELL OFF CACHE BOOL "Do not build the Escargot shell for Starfish" FORCE)
 ADD_SUBDIRECTORY (third_party/escargot)
+
+SET_TARGET_PROPERTIES (escargot gc-lib PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 # ESCARGOT INTERNAL COMPILE OPTION -- only escargot's own sources read these
 # (Escargot.h/VMInstance.cpp/ByteCode.cpp/ObjectStructure*), so scope them to
@@ -189,175 +191,33 @@ SET (STARFISH_DEPENDENCIES
     escargot
 )
 
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES}
-    ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/gc-lib.lib
-    ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libbf.lib
-    ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/runtime-icu-binder-static.lib
-    ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libsimdutf.lib
-    ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/escargot.lib)
+SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} escargot)
 
 #######################################################
 # JS BINDING
 #######################################################
-EXECUTE_PROCESS (
-    COMMAND python ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${OUTPUT_DIRECTORY}/starfish_generated/binding/generated/
-)
+INCLUDE (${STARFISH_ROOT}/build/binding.cmake)
 SET (STARFISH_INCLUDE_DIRS
     ${STARFISH_INCLUDE_DIRS}
-    ${OUTPUT_DIRECTORY}/starfish_generated/)
+    ${STARFISH_BINDING_INCLUDE_DIR})
 
 #######################################################
 # THIRD_PARTY (build outside)
 #######################################################
 
-# libpng
-SET (LIBPNG_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libpng.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libpng16.dll ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/zlib1.dll)
-ADD_CUSTOM_COMMAND (OUTPUT ${LIBPNG_TARGET}
-                    WORKING_DIRECTORY ${THIRD_PARTY_ROOT}/windows/libpng/projects/visualc71/
-                    COMMENT "BUILD libpng"
-                    COMMAND msbuild libpng.sln /t:libpng  /p:Platform=${CMAKE_SYSTEM_PROCESSOR} /p:OutDir=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} /p:IntermediateOutputPath=${OUTPUT_DIRECTORY}/libpng/ /p:Configuration=\"DLL Release\"
-)
-ADD_CUSTOM_TARGET (libpng
-                    DEPENDS ${LIBPNG_TARGET}
-)
-SET (STARFISH_THIRD_PARTY_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_INCLUDE_DIRS} ${THIRD_PARTY_ROOT}/windows/libpng/)
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libpng.lib)
-
-# libcurl
-SET (LIBCURL_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcurl.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcurl.dll)
-ADD_CUSTOM_COMMAND (OUTPUT ${LIBCURL_TARGET}
-                    WORKING_DIRECTORY ${THIRD_PARTY_ROOT}/windows/curl/projects/Windows/VC15
-                    COMMENT "BUILD libcurl"
-                    COMMAND msbuild curl-all.sln /t:libcurl /p:Platform=${WINDOWS_ARCH} /p:OutDir=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} /p:IntermediateOutputPath=${OUTPUT_DIRECTORY}/libcurl/ /p:Configuration=\"DLL Release - DLL Windows SSPI\"
-)
-ADD_CUSTOM_TARGET (libcurl
-                    DEPENDS ${LIBCURL_TARGET}
-)
-SET (STARFISH_THIRD_PARTY_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_INCLUDE_DIRS} ${THIRD_PARTY_ROOT}/windows/curl/include/)
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcurl.lib)
-
-# giflib
-# TODO make this shared
-SET (GIFLIB_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/giflib.lib)
-ADD_CUSTOM_COMMAND (OUTPUT ${GIFLIB_TARGET}
-                    WORKING_DIRECTORY ${THIRD_PARTY_ROOT}/windows/giflib/build/windows/giflib
-                    COMMENT "BUILD giflib"
-                    COMMAND msbuild giflib.sln /t:giflib /p:Platform=${CMAKE_SYSTEM_PROCESSOR} /p:OutDir=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} /p:IntermediateOutputPath=${OUTPUT_DIRECTORY}/giflib/ /p:Configuration=Release
-)
-ADD_CUSTOM_TARGET (giflib
-                    DEPENDS ${GIFLIB_TARGET}
-)
-SET (STARFISH_THIRD_PARTY_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_INCLUDE_DIRS} ${THIRD_PARTY_ROOT}/windows/giflib/lib/)
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/giflib.lib)
-
-# harfbuzz
-# TODO make this shared
-SET (HARFBUZZ_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/harfbuzz.lib)
-ADD_CUSTOM_COMMAND (OUTPUT ${HARFBUZZ_TARGET}
-                    WORKING_DIRECTORY ${THIRD_PARTY_ROOT}/windows/harfbuzz/build/windows/harfbuzz
-                    COMMENT "BUILD harfbuzz"
-                    COMMAND msbuild harfbuzz.sln /t:harfbuzz /p:Platform=${WINDOWS_ARCH} /p:OutDir=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} /p:IntermediateOutputPath=${OUTPUT_DIRECTORY}/giflib/ /p:Configuration=Release
-)
-ADD_CUSTOM_TARGET (harfbuzz
-                    DEPENDS ${HARFBUZZ_TARGET}
-)
-SET (STARFISH_THIRD_PARTY_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_INCLUDE_DIRS} ${THIRD_PARTY_ROOT}/windows/harfbuzz/src/)
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/harfbuzz.lib)
-
-# cairo(contains freetype, libiconv, fontconfig)
-SET (CAIRO_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cairo.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libfontconfig.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/freetype.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libiconv.dll ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/freetype.dll ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libfontconfig.dll ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cairo.dll)
-ADD_CUSTOM_COMMAND (OUTPUT ${CAIRO_TARGET}
-                    DEPENDS harfbuzz
-                    WORKING_DIRECTORY ${THIRD_PARTY_ROOT}/windows/cairo/build/windows/cairo
-                    COMMENT "BUILD cairo"
-                    COMMAND msbuild cairo.sln /t:cairo /p:Platform=${CMAKE_SYSTEM_PROCESSOR} /p:OutDir=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} /p:IntermediateOutputPath=${OUTPUT_DIRECTORY}/cairo/ /p:Configuration=Release
-)
-ADD_CUSTOM_TARGET (cairo
-                    DEPENDS ${CAIRO_TARGET}
-)
-SET (STARFISH_THIRD_PARTY_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_INCLUDE_DIRS} ${THIRD_PARTY_ROOT}/windows/fontconfig/)
-SET (STARFISH_THIRD_PARTY_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_INCLUDE_DIRS} ${THIRD_PARTY_ROOT}/windows/freetype2/include/)
-SET (STARFISH_THIRD_PARTY_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_INCLUDE_DIRS} ${THIRD_PARTY_ROOT}/windows/cairo/src/)
-SET (STARFISH_THIRD_PARTY_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_INCLUDE_DIRS} ${THIRD_PARTY_ROOT}/windows/cairo/build/windows/cairo/cairo/)
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libfontconfig.lib)
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/freetype.lib)
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cairo.lib)
-
-# libwebsockets
-# TODO make this shared
-SET (LIBWEBSOCKETS_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/websockets_static.lib)
-ADD_CUSTOM_COMMAND (OUTPUT ${LIBWEBSOCKETS_TARGET}
-                    WORKING_DIRECTORY ${THIRD_PARTY_ROOT}/windows/libwebsockets/build/${WINDOWS_ARCH}/lib/Release
-                    COMMENT "COPY LIBWEBSOCKETS"
-                    COMMAND ${CMAKE_COMMAND} -E copy websockets_static.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-)
-ADD_CUSTOM_TARGET (libwebsockets
-                    DEPENDS ${LIBWEBSOCKETS_TARGET}
-)
-SET (STARFISH_THIRD_PARTY_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_INCLUDE_DIRS} ${THIRD_PARTY_ROOT}/windows/libwebsockets/build/${WINDOWS_ARCH}/include/)
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/websockets_static.lib)
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ws2_32.lib)
-
-# openssl
-SET (OPENSSL_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto-1_1.dll ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl-1_1.dll)
-ADD_CUSTOM_COMMAND (OUTPUT ${OPENSSL_TARGET}
-                    COMMENT "COPY OPENSSL"
-                    COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/windows/openssl/${WINDOWS_ARCH}/bin/libcrypto-1_1.dll ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-                    COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/windows/openssl/${WINDOWS_ARCH}/bin/libssl-1_1.dll ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-                    COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/windows/openssl/${WINDOWS_ARCH}/lib/libcrypto.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-                    COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/windows/openssl/${WINDOWS_ARCH}/lib/libssl.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-)
-ADD_CUSTOM_TARGET (openssl
-                    DEPENDS ${OPENSSL_TARGET}
-)
-SET (STARFISH_THIRD_PARTY_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_INCLUDE_DIRS} ${THIRD_PARTY_ROOT}/windows/openssl/${WINDOWS_ARCH}/include/)
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.lib)
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.lib)
-
-# windows_pthread
-SET (PTHREAD_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pthreadVC2.dll)
-ADD_CUSTOM_COMMAND (OUTPUT ${PTHREAD_TARGET}
-                    COMMENT "COPY PTHREAD"
-                    COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/windows/windows_pthread/dll/${CMAKE_SYSTEM_PROCESSOR}/pthreadVC2.dll ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-                    COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/windows/windows_pthread/lib/${CMAKE_SYSTEM_PROCESSOR}/pthreadVC2.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-)
-ADD_CUSTOM_TARGET (windows_pthread
-                    DEPENDS ${PTHREAD_TARGET}
-)
-SET (STARFISH_THIRD_PARTY_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_INCLUDE_DIRS} ${THIRD_PARTY_ROOT}/windows/windows_pthread/include/)
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ${THIRD_PARTY_ROOT}/windows/windows_pthread/lib/${CMAKE_SYSTEM_PROCESSOR}/pthreadVC2.lib)
-
-# glew
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES}
-    ${THIRD_PARTY_ROOT}/windows/glew/lib/${WINDOWS_ARCH}/Release/glew32s.lib
-    ${THIRD_PARTY_ROOT}/windows/glew/lib/${WINDOWS_ARCH}/Release/glew.lib)
-
-ADD_CUSTOM_COMMAND(OUTPUT ${THIRD_PARTY_ROOT}/windows/glew/lib/${WINDOWS_ARCH}/Release/glew.dll
-    COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/windows/glew/lib/${WINDOWS_ARCH}/Release/glew.dll ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-)
-ADD_CUSTOM_TARGET(copy_glewdll
-                  COMMENT "COPY glew"
-                  DEPENDS ${THIRD_PARTY_ROOT}/windows/glew/lib/${WINDOWS_ARCH}/Release/glew.dll
-                  )
-
-SET (STARFISH_DEPENDENCIES
-    ${STARFISH_DEPENDENCIES}
-    libcurl
-    libpng
-    giflib
-    cairo
-    harfbuzz
-    libwebsockets
-    openssl
-    windows_pthread
-    copy_glewdll
-)
+INCLUDE (${STARFISH_ROOT}/build/windows_vcpkg.cmake)
 
 #######################################################
 # THIRD_PARTY (build here)
 #######################################################
+# ${STARFISH_CXXFLAGS_MODE} rather than a hardcoded /O2: it also carries
+# /MD vs /MDd, so a Debug build would otherwise link these third-party targets
+# against a different CRT than the engine.
 SET (THIRD_PARTY_CXXFLAGS
- /std:c++14 /O2 /Oy- /fp:strict /Zc:__cplusplus /EHs /source-charset:utf-8 /D_CRT_SECURE_NO_WARNINGS /DGC_NOT_DLL /D_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING /wd4244 /wd4267 /wd4805 /wd4018 /wd4172
+ /std:c++14 ${STARFISH_CXXFLAGS_MODE} /Oy- /fp:strict /Zc:__cplusplus /EHs /source-charset:utf-8 /D_CRT_SECURE_NO_WARNINGS /DGC_NOT_DLL /D_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING /wd4244 /wd4267 /wd4805 /wd4018 /wd4172
+ ${STARFISH_CXXFLAGS_ARCH})
+SET (THIRD_PARTY_CFLAGS
+ ${STARFISH_CXXFLAGS_MODE} /Oy- /fp:strict /source-charset:utf-8 /D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_DEPRECATE /wd4244 /wd4267 /wd4018 /wd4101
  ${STARFISH_CXXFLAGS_ARCH})
 SET (THIRD_PARTY_DEFINITIONS ${STARFISH_DEFINES_MODE})
 
@@ -366,93 +226,81 @@ SET (THIRD_PARTY_DEFINITIONS ${STARFISH_DEFINES_MODE})
 #######################################################
 FILE (GLOB_RECURSE SKIA_MATRIX_SRC_CORE ${THIRD_PARTY_ROOT}/skia_matrix/src/core/*.cpp)
 FILE (GLOB_RECURSE SKIA_MATRIX_SRC_PORTS ${THIRD_PARTY_ROOT}/skia_matrix/src/ports/*.cpp)
-# TODO make this shared by adding __declspec(dllexport) in third-party source
-ADD_LIBRARY (skia_matrix STATIC ${SKIA_MATRIX_SRC_CORE} ${SKIA_MATRIX_SRC_PORTS})
+ADD_LIBRARY (skia_matrix SHARED ${SKIA_MATRIX_SRC_CORE} ${SKIA_MATRIX_SRC_PORTS})
 TARGET_INCLUDE_DIRECTORIES (skia_matrix PUBLIC ${THIRD_PARTY_ROOT}/skia_matrix ${THIRD_PARTY_ROOT}/skia_matrix/include/core ${THIRD_PARTY_ROOT}/skia_matrix/include/private)
-TARGET_COMPILE_DEFINITIONS (skia_matrix PRIVATE ${THIRD_PARTY_DEFINITIONS})
+TARGET_COMPILE_DEFINITIONS (skia_matrix PRIVATE ${THIRD_PARTY_DEFINITIONS} SKIA_DLL SKIA_IMPLEMENTATION=1)
 TARGET_COMPILE_OPTIONS (skia_matrix PRIVATE ${THIRD_PARTY_CXXFLAGS})
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/skia_matrix.lib)
+SET_TARGET_PROPERTIES (skia_matrix PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+SET_TARGET_PROPERTIES (skia_matrix PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} skia_matrix)
+
+#######################################################
+# LIBTUV
+#######################################################
+# The event-loop backend (PORT_EVENTLOOP_BACKEND_LIBUV). libtuv's own CMake
+# graph is driven by its cross-build option/config files, so -- as with
+# skia_matrix -- the Windows build file is kept here instead: the sources are
+# exactly the ones libtuv's cmake/option/option_windows_common.cmake lists.
+FILE (GLOB TUV_SRC_COMMON ${THIRD_PARTY_ROOT}/libtuv/src/*.c)
+FILE (GLOB TUV_SRC_WIN ${THIRD_PARTY_ROOT}/libtuv/src/win/*.c)
+ADD_LIBRARY (tuv SHARED ${TUV_SRC_COMMON} ${TUV_SRC_WIN})
+TARGET_INCLUDE_DIRECTORIES (tuv PUBLIC ${THIRD_PARTY_ROOT}/libtuv/include ${THIRD_PARTY_ROOT}/libtuv/src)
+# uv.h switches UV_EXTERN on these: dllexport while building the DLL,
+# dllimport for everything that links it.
+TARGET_COMPILE_DEFINITIONS (tuv
+    PRIVATE ${THIRD_PARTY_DEFINITIONS} BUILDING_UV_SHARED _WINSOCK_DEPRECATED_NO_WARNINGS
+    INTERFACE USING_UV_SHARED)
+TARGET_COMPILE_OPTIONS (tuv PRIVATE ${THIRD_PARTY_CFLAGS})
+TARGET_LINK_LIBRARIES (tuv PRIVATE ws2_32 psapi iphlpapi userenv advapi32 shell32 user32)
+SET_TARGET_PROPERTIES (tuv PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+SET_TARGET_PROPERTIES (tuv PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} tuv)
 
 #######################################################
 # CLIPPER
 #######################################################
-# TODO make this shared by adding __declspec(dllexport) in third-party source
 FILE (GLOB CLIPPER_SRC ${THIRD_PARTY_ROOT}/clipper/cpp/*.cpp)
-ADD_LIBRARY (clipper STATIC ${CLIPPER_SRC})
+ADD_LIBRARY (clipper SHARED ${CLIPPER_SRC})
 TARGET_INCLUDE_DIRECTORIES (clipper PUBLIC ${THIRD_PARTY_ROOT}/clipper/cpp/)
-TARGET_COMPILE_DEFINITIONS (clipper PRIVATE ${THIRD_PARTY_DEFINITIONS})
+TARGET_COMPILE_DEFINITIONS (clipper PRIVATE ${THIRD_PARTY_DEFINITIONS} "CLIPPER_EXPORT=__declspec(dllexport)")
 TARGET_COMPILE_OPTIONS (clipper PRIVATE ${THIRD_PARTY_CXXFLAGS})
 SET_TARGET_PROPERTIES (clipper PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+SET_TARGET_PROPERTIES (clipper PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 SET_TARGET_PROPERTIES (clipper PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/clipper.lib)
+SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} clipper)
 
-#######################################################
-# MP4PARSE
-#######################################################
-FILE (GLOB MP4PARSE_LIST ${THIRD_PARTY_ROOT}/MP4Parse/source/MP4*.cpp)
-# TODO make this shared by adding __declspec(dllexport) in third-party source
-ADD_LIBRARY (mp4parse STATIC ${MP4PARSE_LIST})
-TARGET_INCLUDE_DIRECTORIES (mp4parse PUBLIC ${THIRD_PARTY_ROOT}/MP4Parse/source/include)
-TARGET_COMPILE_DEFINITIONS (mp4parse PRIVATE ${THIRD_PARTY_DEFINITIONS})
-TARGET_COMPILE_OPTIONS (mp4parse PRIVATE ${THIRD_PARTY_CXXFLAGS})
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/mp4parse.lib)
+IF (STARFISH_WINDOWS_ENABLE_MULTIMEDIA)
+    #######################################################
+    # MP4PARSE
+    #######################################################
+    FILE (GLOB MP4PARSE_LIST ${THIRD_PARTY_ROOT}/MP4Parse/source/MP4*.cpp)
+    ADD_LIBRARY (mp4parse SHARED ${MP4PARSE_LIST})
+    TARGET_INCLUDE_DIRECTORIES (mp4parse PUBLIC ${THIRD_PARTY_ROOT}/MP4Parse/source/include)
+    TARGET_COMPILE_DEFINITIONS (mp4parse PRIVATE ${THIRD_PARTY_DEFINITIONS})
+    TARGET_COMPILE_OPTIONS (mp4parse PRIVATE ${THIRD_PARTY_CXXFLAGS})
+    SET_TARGET_PROPERTIES (mp4parse PROPERTIES
+        WINDOWS_EXPORT_ALL_SYMBOLS ON
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+    SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} mp4parse)
 
-#######################################################
-# WEBM
-#######################################################
-# TODO make this shared by adding __declspec(dllexport) in third-party source
-ADD_LIBRARY (webm STATIC
-    ${THIRD_PARTY_ROOT}/webm/mkvparser/mkvparser.cc
-    ${THIRD_PARTY_ROOT}/webm/webvtt/webvttparser.cc
-)
-TARGET_INCLUDE_DIRECTORIES (webm PUBLIC ${THIRD_PARTY_ROOT}/webm/)
-TARGET_COMPILE_DEFINITIONS (webm PRIVATE ${THIRD_PARTY_DEFINITIONS})
-TARGET_COMPILE_OPTIONS (webm PRIVATE ${THIRD_PARTY_CXXFLAGS})
-SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/webm.lib)
-
-
-#######################################################
-# Copy libs for MSBuild & link
-#######################################################
-
-ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/copy_ok.stamp
-    DEPENDS third_party/escargot/escargot
-    DEPENDS clipper
-    DEPENDS mp4parse
-    DEPENDS skia_matrix
-    DEPENDS webm
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${WINDOWS_MODE}/gc-lib.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${WINDOWS_MODE}/libbf.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${WINDOWS_MODE}/escargot.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${WINDOWS_MODE}/clipper.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${WINDOWS_MODE}/mp4parse.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${WINDOWS_MODE}/skia_matrix.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${WINDOWS_MODE}/webm.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${WINDOWS_MODE}/runtime-icu-binder-static.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${WINDOWS_MODE}/libsimdutf.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${WINDOWS_MODE}/libbf.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/copy_ok.stamp
-)
-
-ADD_CUSTOM_TARGET(copy_libs
-                  COMMENT "COPY LIBS"
-                  DEPENDS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/copy_ok.stamp
-                  )
-
-SET (STARFISH_DEPENDENCIES
-    ${STARFISH_DEPENDENCIES}
-    skia_matrix
-    clipper
-    mp4parse
-    webm
-    escargot
-)
-
-if (CMAKE_GENERATOR MATCHES "Visual Studio")
-    SET (STARFISH_DEPENDENCIES
-        ${STARFISH_DEPENDENCIES}
-        copy_libs
+    #######################################################
+    # WEBM
+    #######################################################
+    ADD_LIBRARY (webm SHARED
+        ${THIRD_PARTY_ROOT}/webm/mkvparser/mkvparser.cc
+        ${THIRD_PARTY_ROOT}/webm/webvtt/webvttparser.cc
     )
-endif()
+    TARGET_INCLUDE_DIRECTORIES (webm PUBLIC ${THIRD_PARTY_ROOT}/webm/)
+    TARGET_COMPILE_DEFINITIONS (webm PRIVATE ${THIRD_PARTY_DEFINITIONS})
+    TARGET_COMPILE_OPTIONS (webm PRIVATE ${THIRD_PARTY_CXXFLAGS})
+    SET_TARGET_PROPERTIES (webm PROPERTIES
+        WINDOWS_EXPORT_ALL_SYMBOLS ON
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+    SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} webm)
+ENDIF()
+
 
 
 #######################################################
@@ -471,25 +319,55 @@ FILE (GLOB STARFISH_SRC_GENRATED_BINDING ${OUTPUT_DIRECTORY}/starfish_generated/
 SET (STARFISH_SRC_LIST
     ${STARFISH_SRC}
     ${STARFISH_SRC_GENRATED_BINDING}
-    ${STARFISH_ROOT}/build/windows/winform_bridge/StarFishLoggingAndConsoleBridge.cpp
-    ${STARFISH_ROOT}/build/windows/winform_bridge/StarFishWinformBridge.cpp
 )
 
-SET (STARFISH_LINK_LIBRARIES clipper escargot mp4parse webm skia_matrix)
 SET (STARFISH_LINK_LIBRARIES icu.lib ${STARFISH_THIRD_PARTY_LINK_LIBRARIES})
 
 ADD_LIBRARY (starfish.shared_library SHARED ${STARFISH_SRC_LIST})
 SET_TARGET_PROPERTIES (starfish.shared_library PROPERTIES OUTPUT_NAME "Starfish")
 SET_TARGET_PROPERTIES (starfish.shared_library PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 SET_TARGET_PROPERTIES (starfish.shared_library PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+SET_TARGET_PROPERTIES (starfish.shared_library PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 TARGET_LINK_LIBRARIES (starfish.shared_library ${STARFISH_LINK_LIBRARIES})
 TARGET_INCLUDE_DIRECTORIES (starfish.shared_library PRIVATE ${STARFISH_INCLUDE_DIRS})
 TARGET_COMPILE_OPTIONS (starfish.shared_library PRIVATE ${STARFISH_CXXFLAGS} ${STARFISH_CXXFLAGS_MODE} ${STARFISH_CXXFLAGS_ARCH})
-TARGET_COMPILE_DEFINITIONS (starfish.shared_library PRIVATE ${STARFISH_DEFINES} ${STARFISH_DEFINES_MODE})
+TARGET_COMPILE_DEFINITIONS (starfish.shared_library PRIVATE ${STARFISH_DEFINES} ${STARFISH_DEFINES_MODE} SKIA_DLL SKIA_IMPLEMENTATION=0 "CLIPPER_EXPORT=__declspec(dllimport)")
 ADD_DEPENDENCIES (starfish.shared_library ${STARFISH_DEPENDENCIES})
 
-IF (CMAKE_GENERATOR MATCHES "Visual Studio")
-    ADD_CUSTOM_COMMAND(TARGET starfish.shared_library POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${WINDOWS_MODE}/Starfish.dll ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/
-    )
+ADD_CUSTOM_COMMAND (TARGET starfish.shared_library POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${STARFISH_WINDOWS_VCPKG_RUNTIME_DIR}"
+        "$<TARGET_FILE_DIR:starfish.shared_library>"
+    COMMENT "Deploy vcpkg runtime DLLs"
+)
+
+IF (STARFISH_WINDOWS_BUILD_SHELL)
+    FILE (GLOB STARFISH_WINDOWS_SHELL_SRC
+        ${STARFISH_ROOT}/src/shell/windows/*.cpp)
+    ADD_EXECUTABLE (starfish.windows_shell ${STARFISH_WINDOWS_SHELL_SRC})
+    SET_TARGET_PROPERTIES (starfish.windows_shell PROPERTIES
+        OUTPUT_NAME "StarfishShell"
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    TARGET_INCLUDE_DIRECTORIES (starfish.windows_shell PRIVATE
+        ${STARFISH_ROOT}/inc
+        ${STARFISH_ROOT}/src/shell/windows)
+    TARGET_COMPILE_OPTIONS (starfish.windows_shell PRIVATE
+        ${STARFISH_CXXFLAGS}
+        ${STARFISH_CXXFLAGS_MODE}
+        ${STARFISH_CXXFLAGS_ARCH})
+    # STARFISH_WINDOWS gates the shell sources themselves. STARFISH_EXPORTS is
+    # deliberately NOT defined here: the shell is an embedder, so LWE_EXPORT
+    # must resolve to dllimport against Starfish.dll.
+    TARGET_COMPILE_DEFINITIONS (starfish.windows_shell PRIVATE
+        STARFISH_WINDOWS _CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN)
+    # gdi32: ChoosePixelFormat/SetPixelFormat/SwapBuffers. opengl32: wgl* and
+    # the OpenGL 1.1 entry points RendererWGL falls back to.
+    TARGET_LINK_LIBRARIES (starfish.windows_shell PRIVATE
+        starfish.shared_library user32 imm32 gdi32 opengl32)
+    # The shell's entry point is wmain (wide argv, for URL/file arguments with
+    # non-ASCII paths). CMake links the executable with an explicit
+    # /subsystem:console, and link.exe then defaults to mainCRTStartup --
+    # MSVCRT's exe_main.obj, which references a narrow main that does not
+    # exist here (LNK2019). Name the wide startup object explicitly.
+    TARGET_LINK_OPTIONS (starfish.windows_shell PRIVATE /ENTRY:wmainCRTStartup)
 ENDIF()

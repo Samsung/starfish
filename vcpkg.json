@@ -1,0 +1,27 @@
+{
+  "name": "starfish-windows",
+  "version-string": "0.0.0",
+  "description": "Windows x86/x64 native dependency graph for Starfish",
+  "dependencies": [
+    {
+      "name": "curl",
+      "default-features": false,
+      "features": ["ssl", "sspi"]
+    },
+    "libwebsockets",
+    {
+      "name": "cairo",
+      "features": ["fontconfig", "freetype"]
+    },
+    {
+      "name": "harfbuzz",
+      "features": ["freetype"]
+    },
+    "fontconfig",
+    "freetype",
+    "giflib",
+    "glew",
+    "libpng",
+    "pthreads"
+  ]
+}

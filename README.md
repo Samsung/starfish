@@ -53,7 +53,7 @@ ninja -C out/release starfish.executable
 ```
 
 > Note: JS bindings for spec-defined interfaces are generated from `src/**/*.idl`
-> at cmake configure time (see `build/starfish.cmake`). After adding, editing or
+> at cmake configure time (see `build/binding.cmake`). After adding, editing or
 > deleting any `.idl`, re-run the cmake command above — an incremental `ninja`
 > alone will not regenerate the bindings.
 
@@ -203,12 +203,80 @@ Default values are in **bold**.
 * --define 'build_profile [ tv | mobile | headless | wearable | **all** ]'<br>
   Genereate RPMs for TV, mobile, headless and wearable platforms.
 
-### How to Compile: Windows x86
-Open Visual Studio x86 Command tools prompt
-```sh
-cmake -G "Visual Studio 16 2019" -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_VERSION:STRING="10.0" -DCMAKE_SYSTEM_PROCESSOR=x86 -DCMAKE_GENERATOR_PLATFORM=Win32,version=10.0.18362.0 -DCMAKE_BUILD_TYPE=Release -Bout_windows/
-cmake --build out_windows --config Release -j
-msbuild build/windows/winform_shell/StarfishWinformShell/StarfishWinformShell.sln /p:Platform="Any CPU"
+### How to Compile: Windows x86/x64
+
+Windows supports Intel x86 and x64 only. ARM/ARM64 is intentionally rejected.
+
+On a Windows 10/11 host, install the matching MSVC Build Tools and Windows SDK,
+CMake 3.18 or newer, Ninja, Python 3 with Jinja2 and ply, and vcpkg. Run the
+appropriate Visual Studio Native Tools Command Prompt first: CMake coordinates
+the build, while MSVC supplies the compiler and Windows SDK.
+
+vcpkg works like a native package manager in manifest mode. The first CMake
+configure installs the dependencies in `vcpkg.json` at the registry baseline
+pinned by `vcpkg-configuration.json`. That same file registers
+`vcpkg/ports-public` as an overlay, so the repository's patched ports (cairo,
+libwebsockets) are picked up by every build -- native or Docker -- without a
+command line flag. No checked-in prebuilt third-party directory is required.
+
+```bat
+git clone https://github.com/microsoft/vcpkg C:\src\vcpkg
+C:\src\vcpkg\bootstrap-vcpkg.bat
+set VCPKG_ROOT=C:\src\vcpkg
+```
+
+For x86, use an x86 Native Tools prompt:
+
+```bat
+cmake -S . -B build\windows-x86 -G Ninja ^
+  -DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_PROCESSOR=x86 ^
+  -DSTARFISH_WINDOWS_ENABLE_MULTIMEDIA=ON ^
+  -DSTARFISH_WINDOWS_BUILD_SHELL=ON ^
+  -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" ^
+  -DVCPKG_TARGET_TRIPLET=x86-windows
+cmake --build build\windows-x86 --target starfish.windows_shell --parallel
+```
+
+For x64, use an x64 Native Tools prompt:
+
+```bat
+cmake -S . -B build\windows-x64 -G Ninja ^
+  -DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_PROCESSOR=AMD64 ^
+  -DSTARFISH_WINDOWS_ENABLE_MULTIMEDIA=ON ^
+  -DSTARFISH_WINDOWS_BUILD_SHELL=ON ^
+  -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" ^
+  -DVCPKG_TARGET_TRIPLET=x64-windows
+cmake --build build\windows-x64 --target starfish.windows_shell --parallel
+```
+
+Building `starfish.windows_shell` also builds `Starfish.dll`. Run
+`Release\StarfishShell.exe [URL-or-HTML-file]`; with no argument it opens a
+built-in smoke page. The pure Win32 shell uses no .NET, WinForms, or MSBuild,
+and no Windows-specific bridge inside the engine: like the other ports it drives
+`LWE::WebContainer` through the public `inc/LWEWebView.h` API only. Its UI
+thread owns the native window, WGL presentation, input, and IME; the engine runs
+on the LWE thread that `LWE::LWE::Initialize` starts inside the DLL
+(`InitializeOption::PreferSeparateThread`), and the embedding API marshals every
+call there. Set
+`STARFISH_WINDOWS_BUILD_SHELL=OFF` (the default) when only the DLL is needed.
+
+Multimedia is on by default for both x86 and x64. MP4Parser and WebM are emitted
+as `mp4parse.dll` and `webm.dll`; set
+`STARFISH_WINDOWS_ENABLE_MULTIMEDIA=OFF` for an engine-only build. Escargot,
+gc-lib, Clipper, skia_matrix, and libtuv are also separate DLLs. vcpkg uses
+dynamic triplets and CMake copies their runtime DLLs and Fontconfig
+configuration beside `Starfish.dll`. libtuv (`tuv.dll`) supplies the engine
+idler/timer loop and is built from `third_party/libtuv` by this repository's own
+CMake target, the same way skia_matrix is. The official
+PThreads4W port is built from source with the
+active MSVC toolchain and deployed as `pthreadVC3.dll`; the vcpkg path does
+not use the checked-in VC2010-era `pthreadVC2.dll`. A target Windows system
+must provide the Visual C++ runtime and the Windows system `icu.dll` API.
+
+For repeated builds, enable a vcpkg binary cache, for example:
+
+```bat
+set "VCPKG_BINARY_SOURCES=clear;files,C:\vcpkg-cache,readwrite"
 ```
 
 ## How to Compile: Android
