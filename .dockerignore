@@ -1,0 +1,9 @@
+# Dockerfile.starfish-build and Dockerfile.android-build are built with the
+# repository root as their context so that COPY paths stay repo-relative, but a
+# working tree carries tens of gigabytes of build output. Ship only what they
+# actually COPY: docker/, a few hundred kilobytes.
+#
+# The Windows MSVC-on-Wine cross-build image is not built from this repository
+# at all -- it lives in the separate internal starfish_build_on_docker repo.
+*
+!docker

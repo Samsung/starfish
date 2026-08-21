@@ -9,6 +9,10 @@
 # CI workflows reference starfish-build:24.04. starfish-android-build (see
 # docker/Dockerfile.android-build) only has a :latest tag; android.yml
 # references that.
+#
+# The Windows MSVC-on-Wine cross-build image is NOT built here: its recipe
+# acquires Microsoft-licensed material and lives in the separate internal
+# starfish_build_on_docker repository, which pushes it to the same registry.
 # =============================================================================
 name: Build & Push Docker Image
 
