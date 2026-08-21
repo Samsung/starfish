@@ -1,0 +1,38 @@
+Do not probe GCC-only macros to decide the float word order.
+
+`__FLOAT_WORD_ORDER__` and `__ORDER_BIG_ENDIAN__` are GCC/Clang predefined
+macros. With MSVC neither exists, and cairo's probe cannot tell "both
+undefined" from "both big endian", so configure defined FLOAT_WORDS_BIGENDIAN
+on little-endian x86/x64 targets (confirmed in
+build/vcpkg-buildtrees/cairo/x64-windows-rel/config.h). That makes
+_cairo_fixed_from_double() return the *high* word of its magic-number union --
+a constant 0x42B80000 -- instead of the low word, so every coordinate cairo
+receives collapses to a single point: paths become degenerate, clips become
+empty, and nothing is ever painted, with no cairo error status anywhere.
+
+--- a/meson.build
++++ b/meson.build
+@@ -187,16 +187,13 @@
+   conf.set('WORDS_BIGENDIAN', 1)
+ endif
+ 
+-float_order = cc.get_define('__FLOAT_WORD_ORDER__')
+-if float_order != ''
+-  if float_order == cc.get_define('__ORDER_BIG_ENDIAN__')
+-    conf.set('FLOAT_WORDS_BIGENDIAN', 1)
+-  endif
+-else
+-  # Assume same as platform endian
+-  if host_machine.endian() == 'big'
+-    conf.set('FLOAT_WORDS_BIGENDIAN', 1)
+-  endif
++# The float word order matches the integer word order on every target cairo
++# supports. Do not probe __FLOAT_WORD_ORDER__/__ORDER_BIG_ENDIAN__: those are
++# GCC/Clang-only, and with MSVC the probe cannot tell "both undefined" from
++# "both big endian", which defined FLOAT_WORDS_BIGENDIAN on little-endian
++# x86/x64 builds.
++if host_machine.endian() == 'big'
++  conf.set('FLOAT_WORDS_BIGENDIAN', 1)
+ endif
+ 
+ lzo_dep = dependency('lzo2', required: get_option('lzo'))
