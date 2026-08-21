@@ -43,7 +43,7 @@ The compile-time flags that gate large chunks of this spec. "Default" is for the
 | Spec section | CMake flag (or `STARFISH_ENABLE_*` macro) | Default | Effect when off |
 |--------------|-------------------------------------------|---------|-----------------|
 | HTML (`<canvas>`, `CanvasRenderingContext2D`) | `STARFISH_ENABLE_CANVAS` | on (every `CMAKE_SYSTEM_PROCESSOR`) | `<canvas>` parses but `getContext('2d')` returns null. |
-| HTML (`<video>`, `<audio>`, `<source>`, `<track>`) | `STARFISH_ENABLE_MULTIMEDIA` | on (every `CMAKE_SYSTEM_PROCESSOR`) | Tags fall back to `HTMLUnknownElement`. |
+| HTML (`<video>`, `<audio>`, `<source>`, `<track>`) | `STARFISH_ENABLE_MULTIMEDIA` (`STARFISH_WINDOWS_ENABLE_MULTIMEDIA=ON` on Windows) | on for the documented Linux and Windows builds | Tags fall back to `HTMLUnknownElement`. |
 | WebGL (`WebGL*` interfaces) | `WEBGL=1` | **off** | `getContext('webgl')` returns null. |
 | Workers | `WORKER=1`, `SHARED_WORKER=1`, `SERVICE_WORKER=1` | off, off, off | Worker globals undefined. Setting `SHARED_WORKER` or `SERVICE_WORKER` forces `WORKER=1`. |
 | IndexedDB | `IDB=1` | off | `indexedDB` undefined. |
