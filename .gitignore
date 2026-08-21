@@ -58,6 +58,9 @@ cscope.out
 core # dump
 !src/core
 .*
+# Keeps the Docker build context off the multi-gigabyte working tree; it has to
+# be committed to take effect for anyone else, so exempt it from the .* rule.
+!.dockerignore
 autogen_*.html
 third_party/libtuv/build/
 third_party/libtuv/include/tuv__config.h
