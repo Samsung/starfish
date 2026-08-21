@@ -327,6 +327,14 @@ SocketLWS::SocketLWS(WebSocket* socket)
     }
     if (useSSL &&
         webBase->getWebSecurityMode() == LWE::WebSecurityMode::Disable) {
+        // On Windows (libwebsockets built with LWS_WITH_SCHANNEL) only
+        // LCCSCF_ALLOW_SELFSIGNED is actually honored by the schannel TLS
+        // backend -- LCCSCF_ALLOW_EXPIRED/_SKIP_SERVER_CERT_HOSTNAME_CHECK/
+        // _ALLOW_INSECURE are OpenSSL-backend-only. client_ssl_ca_filepath
+        // above is likewise ignored there; schannel always validates against
+        // the Windows system certificate store. So this dev-only insecure
+        // mode is weaker on Windows than on other platforms: expired/
+        // hostname-mismatched wss:// servers can still fail to connect.
         useSSL = useSSL | LCCSCF_ALLOW_SELFSIGNED | LCCSCF_ALLOW_EXPIRED |
                  LCCSCF_SKIP_SERVER_CERT_HOSTNAME_CHECK |
                  LCCSCF_ALLOW_INSECURE | LCCSCF_PIPELINE;

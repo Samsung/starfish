@@ -62,3 +62,32 @@ the GL compositor still draws its own quads, which is why this took a long time
 to find. The patch uses the machine endianness meson already knows.
 
 Drop this when the fix is available upstream.
+
+## libwebsockets -- `export-include-path.patch`, `msvc-warnings.patch`
+
+Pinned at 5.0.0 (bumped from 4.5.8 so the port can build with
+`LWS_WITH_SCHANNEL`, native Windows SChannel/SSPI TLS -- 4.5.8 only offered
+OpenSSL-family backends or mbedTLS on Windows). The portfile forces
+`-DLWS_WITH_SCHANNEL=ON` explicitly on Windows rather than relying on
+upstream's default so a future upstream default change fails configure
+loudly instead of silently trying to link OpenSSL, which this port's
+`vcpkg.json` no longer depends on there (`"platform": "!windows"` on the
+`openssl` dependency). Known gap: the schannel TLS backend only implements
+`LCCSCF_ALLOW_SELFSIGNED` of the flags Starfish's `WebSecurityMode::Disable`
+path sets (see `SocketLWS.cpp`) and ignores `client_ssl_ca_filepath`, so that
+dev-only insecure mode is weaker on Windows than elsewhere.
+
+`export-include-path` makes the installed CMake config point at its own
+`../include` instead of a relative path that does not survive vcpkg's layout.
+`msvc-warnings` keeps libwebsockets' `/W3 /WX` but suppresses C4018, C4133,
+C4142, C4267 and C4996, which it otherwise fails the build on (C4018/C4133 only
+fire on `x86-windows`, in the schannel backend files, which upstream evidently
+never build-tested under `/WX` on 32-bit). The portfile also passes
+`-DLWS_WITH_HTTP3=OFF -DLWS_ROLE_QUIC=OFF`: QUIC defaults on together with
+schannel, its role files are riddled with more `x86-windows`-only `/WX` trips
+(`C4244`, `uint64_t` truncating to a 32-bit `size_t`) than are worth
+individually suppressing, and Starfish only ever speaks plain `ws(s)://`
+(the H1/WS roles), never HTTP/3; and `-DLWS_WITH_LIBUV=OFF
+-DLWS_WITH_EXTERNAL_POLL=OFF`: Starfish already calls `lws_service()` from
+its own service thread, and taking the dependency would put a second `uv_*`
+implementation in the process next to libtuv.
