@@ -1,0 +1,125 @@
+# =============================================================================
+# Answer one question about the Windows runner pool, cheaply: can it reach the
+# things windows.yml needs?
+#
+# The proxy question is settled: 10.112.1.184:8080 (the old [self-hosted,
+# Windows] machine's egress proxy) is unreachable from this pool, same as
+# every other pool's own runs into it -- windows.yml no longer uses it at
+# all. What's left to confirm here is that this pool actually has the direct
+# internet access windows.yml now assumes instead.
+#
+# Manual dispatch only. Delete this workflow once windows.yml has passed.
+# =============================================================================
+name: Probe Windows runner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    # See windows.yml's build_x64 job: this pool is a runner GROUP
+    # (`group: code-windows`), not a label list.
+    runs-on:
+      group: code-windows
+      labels: [code-win-2xlarge]
+    timeout-minutes: 15
+
+    steps:
+      - name: Toolchain and interpreters
+        shell: cmd
+        run: |
+          echo === vswhere ===
+          set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
+          if not exist "%VSWHERE%" set "VSWHERE=%ProgramFiles%\Microsoft Visual Studio\Installer\vswhere.exe"
+          if not exist "%VSWHERE%" (echo MISSING vswhere.exe) else ("%VSWHERE%" -latest -products * -property installationPath)
+          echo === python / git / cmake / ninja ===
+          where python & python --version
+          where git & git --version
+          where cmake & cmake --version
+          where ninja & ninja --version
+
+      - name: BART reachability (no proxy expected)
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          try {
+            $r = Invoke-WebRequest -Method Head -Uri "https://bart.sec.samsung.net/artifactory/api/system/ping" `
+                   -Headers @{ "X-JFrog-Art-Api" = $env:BART_API_KEY } -TimeoutSec 30
+            echo "BART reachable: HTTP $($r.StatusCode)"
+          } catch {
+            echo "BART UNREACHABLE: $($_.Exception.Message)"
+          }
+
+      # The decisive one. vcpkg needs both: a clone of its registry, and plain
+      # HTTPS for every dependency's source archive -- both direct now, no
+      # proxy (confirmed unreachable from this pool).
+      - name: github.com direct
+        run: |
+          $env:GIT_TERMINAL_PROMPT = '0'
+          git ls-remote --heads https://github.com/microsoft/vcpkg.git HEAD
+          if ($LASTEXITCODE -eq 0) { echo "git direct: OK" } else { echo "git direct: FAILED" }
+
+          try {
+            $r = Invoke-WebRequest -Method Head -Uri "https://github.com/microsoft/vcpkg/archive/refs/heads/master.tar.gz" -TimeoutSec 30
+            echo "https direct: HTTP $($r.StatusCode)"
+          } catch {
+            echo "https direct FAILED: $($_.Exception.Message)"
+          }
+
+      # Reproduces windows.yml's actual zlib-port failure cheaply: vcpkg's
+      # own download of https://github.com/madler/zlib/archive/v1.3.2.tar.gz
+      # died with "curl error 35 (SSL connect error)" even though git and
+      # Invoke-WebRequest above reach plain github.com fine. A first run of
+      # this step found the real cause -- not certs, not a network block:
+      # curl -v showed the proxy tunnel to github.com:443 established fine
+      # (this pool has https_proxy=10.112.1.184:8080 set at the OS level,
+      # independent of anything windows.yml sets), then schannel failed
+      # with CRYPT_E_NO_REVOCATION_CHECK -- the cert's own OCSP/CRL
+      # revocation check couldn't complete through that tunnel, and curl's
+      # schannel backend hard-fails on that by default. --ssl-no-revoke (or
+      # `ssl-no-revoke` in a config file) is curl's documented, targeted fix
+      # for exactly this -- unlike --insecure, it skips only the revocation
+      # check and still validates the rest of the chain.
+      #
+      # Every curl call below is followed by `|| echo ... (nonzero exit,
+      # continuing)`: cmd steps here abort the whole step at the first
+      # nonzero exit code (the runner checks errorlevel after every line),
+      # so a `||` fallback is required for a later section to ever run at
+      # all -- confirmed on a real run, the .curlrc/CURL_CA_BUNDLE sections
+      # never printed anything because the first (expected-to-fail) curl
+      # call killed the step right there.
+      - name: Reproduce vcpkg's zlib download with system curl
+        shell: cmd
+        continue-on-error: true
+        run: |
+          echo === curl version ===
+          where curl & curl --version
+          echo === without a config file (expected to fail like windows.yml did) ===
+          curl -v -o zlib.tar.gz "https://github.com/madler/zlib/archive/v1.3.2.tar.gz" 2>&1 || echo (nonzero exit, continuing)
+          del zlib.tar.gz 2>nul
+          echo === with --ssl-no-revoke on the command line ===
+          curl -v --ssl-no-revoke -o zlib.tar.gz "https://github.com/madler/zlib/archive/v1.3.2.tar.gz" 2>&1 || echo (nonzero exit, continuing)
+          del zlib.tar.gz 2>nul
+          echo === with ssl-no-revoke in %%USERPROFILE%%\.curlrc (what vcpkg's own downloader would pick up) ===
+          echo ssl-no-revoke >> "%USERPROFILE%\.curlrc"
+          curl -v -o zlib.tar.gz "https://github.com/madler/zlib/archive/v1.3.2.tar.gz" 2>&1 || echo (nonzero exit, continuing)
+          del "%USERPROFILE%\.curlrc"
+          del zlib.tar.gz 2>nul
+          echo === with insecure in %%USERPROFILE%%\.curlrc ===
+          echo insecure >> "%USERPROFILE%\.curlrc"
+          curl -v -o zlib.tar.gz "https://github.com/madler/zlib/archive/v1.3.2.tar.gz" 2>&1 || echo (nonzero exit, continuing)
+          del "%USERPROFILE%\.curlrc"
+          del zlib.tar.gz 2>nul
+          echo === with CURL_CA_BUNDLE set empty ===
+          set "CURL_CA_BUNDLE="
+          curl -v -o zlib.tar.gz "https://github.com/madler/zlib/archive/v1.3.2.tar.gz" 2>&1 || echo (nonzero exit, continuing)
+          del zlib.tar.gz 2>nul
+
+      # Reported, not asserted: the point is to read the numbers, and a job
+      # that fails here would tell us less than one that prints them.
+      - name: Disk space
+        run: |
+          Get-PSDrive -PSProvider FileSystem |
+            Select-Object Name, @{n='FreeGB';e={[math]::Round($_.Free/1GB,1)}} |
+            Format-Table

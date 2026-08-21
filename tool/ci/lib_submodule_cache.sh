@@ -32,6 +32,24 @@
 # prefer bearer access tokens instead, but this org's key is the older
 # format).
 : "${BART_API_KEY:?lib_submodule_cache.sh needs BART_API_KEY in env -- add \`env: BART_API_KEY: \${{ secrets.BART_API_KEY }}\` to the calling step}"
+
+# Self-hosted runners reuse the same on-disk workspace across unrelated
+# jobs/PRs (the recurring theme of every leftover-state comment in this
+# file), and each submodule is its OWN separate git repository from git's
+# ownership-check point of view -- confirmed on a real run: plain `git
+# submodule update --init` itself refusing to touch third_party/escargot
+# with "fatal: detected dubious ownership in repository at
+# '.../third_party/escargot'", i.e. this bites during the very FIRST
+# populate, before any build/cmake step exists to work around it in.
+# Every calling workflow's own "Add safe directory" YAML step only
+# registers the ONE exact top-level checkout path, which doesn't cover
+# this. Registering a wildcard here instead (in this shared, sourced-by-
+# every-cache-script file, not per-workflow YAML) covers every submodule
+# path any of these scripts touches, uniformly, with no YAML changes
+# needed. Safe: every path under this workspace is this repo's own
+# trusted content, never attacker-controlled.
+git config --global --add safe.directory '*'
+
 BART_BASE_URL="https://bart.sec.samsung.net/artifactory/starfish-git-cache-service-generic-local/starfish-ci-cache"
 # --retry: BART is an internal host reachable directly from every runner
 # pool here (no corporate egress proxy in the way, unlike the actual
@@ -153,6 +171,55 @@ submodule_make_standalone() {
   done
 }
 
+# submodule_sync_standalone <path...> -- MUST be called after
+# submodule_make_standalone / submodule_make_all_standalone, with the SAME
+# top-level pathspec (not the recursively-expanded per-submodule list --
+# `git submodule sync`'s own pathspec matching only resolves DIRECT
+# children of the level it's run from; confirmed on a real checkout:
+# `git submodule sync -- third_party/escargot/third_party/walrus` from the
+# repo root errors "pathspec ... did not match any file(s) known to git",
+# while `git submodule sync --recursive -- third_party` succeeds and walks
+# the whole nested tree itself).
+#
+# The local clone in submodule_make_standalone leaves each submodule's own
+# "origin" pointed at file://<this checkout's .git/modules/path> -- a
+# local path with no meaning once this workspace is reused by a later job.
+# Self-hosted runners reuse the same on-disk workspace/.git across
+# unrelated jobs (same theme as every other leftover-state bug documented
+# in this file), so that bogus origin silently survives into the NEXT
+# job's plain `git submodule update`. That's harmless until the
+# superproject bumps this submodule's pin to a commit the (depth-1,
+# now-detached) local history doesn't have: update falls back to fetching
+# from the submodule's configured origin -- confirmed on a real run:
+# `fatal: transport 'file' not allowed` (git blocks the file transport for
+# submodule fetches by default, CVE-2022-39253), even though the pinned
+# commit fetches fine from the real upstream and the job's own checkout is
+# otherwise unrelated to any of this.
+#
+# `git submodule sync` restores each path's origin from .gitmodules (the
+# working-tree file, never touched by the clone above), not from any
+# possibly-already-contaminated .git state -- safe to call unconditionally.
+#
+# `sync` alone is NOT enough for anything below the first swapped level,
+# though: it only touches submodules already *registered* (a
+# submodule.<name>.url entry in the parent's own .git/config, normally
+# written by `submodule init`/`update --init`) -- and the swap's plain
+# `git clone` produces a fresh .git with no such entries at all (clone
+# doesn't carry them; only .gitmodules + an explicit init does). So for a
+# submodule-of-a-submodule (e.g. mid/leaf), the very swap that just ran on
+# "mid" wiped out mid's own registration of "leaf" in the same step --
+# confirmed on a real test: `git submodule sync --recursive` on a freshly
+# swapped tree silently synced only the top level and printed nothing for
+# the nested one, no error either. `update --init --recursive` first
+# re-registers every level from each level's own (untouched) .gitmodules;
+# since the working tree is already checked out at the exact pinned commit
+# (the swap only replaced .git metadata, not files), this is a pure
+# no-op checkout with no network access -- confirmed no fetch/clone output.
+submodule_sync_standalone() {
+  git submodule update --init --recursive -- "$@" >&2
+  git submodule sync --recursive -- "$@" >&2
+}
+
 # submodule_make_all_standalone <path...> -- submodule_make_standalone for
 # every submodule registered under the given path(s), recursively -- so a
 # directory-prefix pathspec like "third_party" (which isn't itself a
@@ -161,12 +228,13 @@ submodule_make_standalone() {
 # in one call.
 submodule_make_all_standalone() {
   submodule_make_standalone $(git submodule status --recursive -- "$@" | awk '{print $2}')
+  submodule_sync_standalone "$@"
 }
 
 # submodule_cache_key <path...> -- sha256 of the recorded gitlink pins under
 # the given paths. Reads straight from the tree (`ls-tree -r` + filter down
 # to gitlink/commit entries, i.e. actual submodules -- excludes plain files
-# that happen to live alongside them, e.g. third_party/windows), NOT
+# that happen to live alongside them), NOT
 # `git submodule status`: that command reports whatever commit is actually
 # checked out on disk for an already-initialized submodule (a "+<sha>" line
 # with the on-disk HEAD, not the superproject's pinned one), plus a
@@ -199,8 +267,8 @@ submodule_cache_exists() {
 
 # submodule_cache_fetch <id> <filename> <out-file> -- downloads this id's
 # <filename> to <out-file>. <filename> is an explicit argument (not always
-# "cache.tar.gz") because cache_starfish_thirdparty_windows.sh's cache is a
-# cache.zip, not a tarball -- see its own comment for why.
+# "cache.tar.gz") so a caller can publish/consume a different archive format
+# for the same mechanism.
 submodule_cache_fetch() {
   "${CACHE_CURL[@]}" -o "$3" "${BART_BASE_URL}/$1/$2"
 }

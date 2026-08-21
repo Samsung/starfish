@@ -136,6 +136,20 @@ SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/${WINDOWS_MODE})
 SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/${WINDOWS_MODE})
 SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/${WINDOWS_MODE})
 
+# Multi-config generators (Visual Studio) append their own <Config>
+# subdirectory on top of CMAKE_*_OUTPUT_DIRECTORY unless the matching
+# per-config _<CONFIG> variable is set too -- without this, x64's VS
+# generator built output lands in .../${WINDOWS_MODE}/${WINDOWS_MODE}/,
+# not .../${WINDOWS_MODE}/, breaking every path CI (and a dev) expects.
+# Single-config generators (Ninja) simply ignore the unused variant.
+# This pins it to WINDOWS_MODE for every config rather than genuinely
+# supporting Debug+Release from one multi-config build tree; that is
+# follow-up work, not done here.
+STRING (TOUPPER ${WINDOWS_MODE} WINDOWS_MODE_UPPER)
+SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY_${WINDOWS_MODE_UPPER} ${OUTPUT_DIRECTORY}/${WINDOWS_MODE})
+SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${WINDOWS_MODE_UPPER} ${OUTPUT_DIRECTORY}/${WINDOWS_MODE})
+SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY_${WINDOWS_MODE_UPPER} ${OUTPUT_DIRECTORY}/${WINDOWS_MODE})
+
 #######################################################
 # ESCARGOT
 #######################################################
