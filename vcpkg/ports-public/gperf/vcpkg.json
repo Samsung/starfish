@@ -1,0 +1,15 @@
+{
+  "name": "gperf",
+  "version": "3.3",
+  "description": "GNU perfect hash function generator -- overlay: on Windows, a prebuilt GnuWin32 3.0.1 binary instead of an autotools build; elsewhere (e.g. an x64-linux host building gperf as a cross-build host tool), upstream's normal autotools recipe unchanged (see this port's portfile.cmake comment and ports-public/README.md)",
+  "homepage": "https://www.gnu.org/software/gperf/",
+  "license": "GPL-2.0-or-later OR GPL-3.0-or-later",
+  "supports": "!uwp",
+  "dependencies": [
+    {
+      "name": "vcpkg-make",
+      "host": true,
+      "platform": "!windows"
+    }
+  ]
+}
