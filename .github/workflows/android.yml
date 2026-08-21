@@ -58,7 +58,7 @@ jobs:
     # Hub images at all). Replaced by our own starfish-android-build image on
     # BART (see docker/Dockerfile.android-build + docker_build_push.yml) --
     # same runner pool every other BART-image job here already uses.
-    runs-on: [self-hosted, linux]
+    runs-on: [code-linux, code-2xlarge]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-android-build:latest
       credentials:
@@ -77,13 +77,32 @@ jobs:
       _JAVA_OPTIONS: "-Xmx3g"
       GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx4096m -XX:+HeapDumpOnOutOfMemoryError"'
     steps:
-      - name: Checkout Starfish (this PR)
-        uses: CODE-Actions/checkout@v2
+      # Deliberately not CODE-Actions/checkout: its own internal auth-setup
+      # step runs `git submodule foreach --recursive` unconditionally
+      # (regardless of `submodules: false`), and this runner pool reuses its
+      # on-disk workspace across jobs -- a workspace whose local HEAD is
+      # stuck on an old commit with a broken gitlink/.gitmodules pairing
+      # made that internal step fail outright before this job's own steps
+      # ever ran (confirmed on a real run: "fatal: No url found for
+      # submodule path 'third_party/windows/cairo' in .gitmodules"), even
+      # though this job never asks for any submodule content itself (this
+      # job's own `rm -rf .../starfish/.git` a few steps down makes that
+      # doubly true -- nothing here has ever needed starfish's own .git).
+      # Take the source tree from squash_thirdparty's plain artifact instead
+      # -- no checkout, nothing for that bug to run against. See pr_ci.yml's
+      # "Publish this checkout as a source artifact" step.
+      - name: Clean workspace
+        run: find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+
+      - name: Download source artifact
+        uses: CODE-Actions/download-artifact@v2
         with:
-          submodules: false
-          allow-unsafe-pr-checkout: true
-          ref: ${{ github.event.pull_request.head.sha }}
-          path: starfish
+          name: starfish-source
+
+      - name: Extract source
+        run: |
+          mkdir -p starfish
+          tar xzf starfish-source.tar.gz -C starfish
 
       # actions/setup-java downloads the Temurin JDK from a remote endpoint
       # on every run -- confirmed on a real run: "Error: unable to verify

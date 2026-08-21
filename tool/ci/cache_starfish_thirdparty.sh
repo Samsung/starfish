@@ -27,13 +27,12 @@ if submodule_cache_exists "$id" cache.tar.gz; then
   exit 0
 fi
 
-# Miss: this is (so far) the only job with a proxy path to the actual
-# third-party submodule remotes -- every other runner pool either can't
-# reach them at all, or would need its own proxy+deploy-key setup
-# duplicated everywhere.
-export https_proxy=http://10.112.1.184:8080
-export http_proxy=http://10.112.1.184:8080
-git config --global http.sslVerify false
+# Miss: fetch the submodule remotes directly. This job now runs on the
+# shared public pool, which has no route to the old internal egress proxy
+# (10.112.1.184:8080) -- confirmed on a real run, connect times out -- so
+# there's nothing to route through here any more. http.sslVerify=false went
+# with it: it was only ever needed to tolerate the proxy's own certificate,
+# not github.com's or github.sec.samsung.net's.
 git config submodule.third_party/wpt.update none
 retry_submodule_update 3 -- --init "${PATHS[@]}"
 (cd third_party/escargot && retry_submodule_update 3 -- --init third_party)
@@ -54,12 +53,6 @@ retry_submodule_update 3 -- --init "${PATHS[@]}"
 # before this job ends, same as the old prepare_source_without_thirdparty.sh
 # used to.
 git config --unset submodule.third_party/wpt.update
-
-# The proxy above is only for the actual third-party submodule remotes --
-# unset it before touching BART (reachable directly from this runner pool;
-# routing it through this proxy too is unnecessary at best and can hang/
-# fail at worst).
-unset https_proxy http_proxy
 
 # Each submodule's .git is a thin gitlink FILE pointing at this checkout's
 # own .git/modules/<path> -- meaningless once tarred and extracted into a

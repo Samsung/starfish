@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Starfish Windows render check</title>
+<!--
+  Checked by tool/ci/check_render_bmp.py against a StarfishShell --screenshot
+  capture. Every colour below is load-bearing: the checker looks for these
+  exact values, so do not restyle this page without updating that script.
+
+    #1040c0  a painted fill        -> the compositor/cairo path draws at all
+    #ffd000  only in the PNG below -> the image decoder ran and its output
+                                      reached the screen
+    near-black ink on #f0f0f0     -> glyphs actually rasterised
+
+  Self-contained on purpose: the shell is given this one file and no server,
+  so the image is a data URI rather than a sibling file.
+-->
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: #ffffff;
+    font: 28px/1.4 sans-serif;
+    display: flex;
+    flex-direction: column;
+  }
+  section { flex: 1; display: flex; align-items: center; gap: 32px; padding: 0 32px; }
+  /* Painting: a flat fill, a border-only box, a rounded box and an alpha
+     overlap -- the four things the blank-render bug silently dropped. */
+  .fill   { width: 220px; height: 120px; background: #1040c0; }
+  .border { width: 220px; height: 120px; border: 8px solid #1040c0; box-sizing: border-box; }
+  .round  { width: 220px; height: 120px; background: #1040c0; border-radius: 32px; }
+  .alpha  { width: 220px; height: 120px; background: #1040c0; opacity: 0.5; }
+  /* Font: dark ink on a light band, so the checker can count glyph pixels. */
+  .text   { background: #f0f0f0; color: #101010; }
+  /* Image: natural size and scaled up, to exercise both paths. */
+  img.big { width: 192px; height: 192px; image-rendering: pixelated; }
+</style>
+
+<section>
+  <div class="fill"></div>
+  <div class="border"></div>
+  <div class="round"></div>
+  <div class="alpha"></div>
+</section>
+
+<section class="text">
+  <div>
+    <div style="font-weight: 700">Starfish render check</div>
+    <div style="font-size: 18px">abcdefghijklmnopqrstuvwxyz 0123456789 &amp;#?!</div>
+  </div>
+</section>
+
+<section>
+  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAIAAADYYG7QAAAA2klEQVR42s3XsRHDMAxDUe4/lUfIRkqXixNbEkEA9B0aNrzX/ogYn43vI7sXZ/Hz9nEg3KQDgSYWaLBMRBDHxAURTHRQ1aQAlUwiEG7SgUCTFISY1KC0yQDKmTyghMkG2jU5QVsmM2ht8oMWphbQzNQFujU1gqQmPDNEphgPM9Uj4Yp6BD5GuFBNpJjimXiBRzLRQAfJxARRTGRQ3cQHFU0SUMWkAsEmIQgzaUGASQ7KmhyglMkE2jf5QJsmK2jH5AYtTQ2guakHNDG1ge5MnaBLUzPo39QPOpveqkEumUF1320AAAAASUVORK5CYII=" alt="probe">
+  <img class="big" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAIAAADYYG7QAAAA2klEQVR42s3XsRHDMAxDUe4/lUfIRkqXixNbEkEA9B0aNrzX/ogYn43vI7sXZ/Hz9nEg3KQDgSYWaLBMRBDHxAURTHRQ1aQAlUwiEG7SgUCTFISY1KC0yQDKmTyghMkG2jU5QVsmM2ht8oMWphbQzNQFujU1gqQmPDNEphgPM9Uj4Yp6BD5GuFBNpJjimXiBRzLRQAfJxARRTGRQ3cQHFU0SUMWkAsEmIQgzaUGASQ7KmhyglMkE2jf5QJsmK2jH5AYtTQ2guakHNDG1ge5MnaBLUzPo39QPOpveqkEumUF1320AAAAASUVORK5CYII=" alt="probe scaled">
+</section>

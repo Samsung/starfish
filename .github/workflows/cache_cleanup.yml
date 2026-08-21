@@ -9,7 +9,6 @@ name: Weekly submodule cache cleanup + rebuild
 #
 # Rebuild is split into the same scripts squash_thirdparty/android.yml/the
 # WPT test jobs call directly (tool/ci/cache_starfish_thirdparty.sh,
-# tool/ci/cache_starfish_thirdparty_windows.sh,
 # tool/ci/cache_android_lwe_submodules.sh, tool/ci/cache_wpt.sh) -- each run
 # on the runner pool its own submodule remotes actually need (proxied vs.
 # direct internet), so this workflow doesn't duplicate that logic, just
@@ -31,12 +30,51 @@ jobs:
       options: --user root
     timeout-minutes: 15
     steps:
-      - name: Delete everything under BART's starfish-ci-cache/ folder
+      # Individually, not one DELETE on the whole folder: windows.yml's own
+      # vcpkg binary cache (starfish-vcpkg-windows-<arch>-<hash>, one per
+      # matrix.arch) and its vcpkg-assets/ source-tarball mirror
+      # (fetch_vcpkg_asset.ps1) both
+      # live under this same folder, but nothing in this workflow rebuilds
+      # either the way rebuild_starfish_thirdparty/rebuild_wpt/
+      # rebuild_android_lwe_submodules do for their own caches -- wiping
+      # the binary cache would force the next Windows PR to rebuild
+      # vcpkg's entire dependency graph from source, hitting the fragile
+      # direct-access download path windows.yml already works around (see
+      # its env: block's comment); wiping vcpkg-assets/ would lose assets
+      # that needed a one-time manual seed because their origin is
+      # unreachable from this network at all (see git history for how
+      # automake-1.17.tar.gz was seeded). Repo is
+      # starfish-git-cache-service-generic-local, not the old shared
+      # escargot-generic-local one this step pointed at before -- see
+      # 065b9ebe2, which moved the cache but never updated this step. That
+      # was fixed, but the listing call below still used `?list&deep=0`,
+      # which only enumerates *files* directly under a folder --
+      # starfish-ci-cache/ has zero files at its top level (every cache is
+      # one level down inside its own subfolder), so that call has always
+      # returned `files: []` and this delete has been a complete no-op
+      # ever since, regardless of the repo-name fix. Verified directly
+      # against BART on 2026-08-21: `?list&deep=0` on starfish-ci-cache/
+      # returns files: [], while the plain storage API (no `?list`) returns
+      # the real top-level subfolders via its `children` field -- use that
+      # instead.
+      - name: Delete everything under BART's starfish-ci-cache/ folder except the Windows vcpkg cache and asset mirror
         env:
           BART_API_KEY: ${{ secrets.BART_API_KEY }}
         run: |
-          curl -sS --fail -H "X-JFrog-Art-Api: ${BART_API_KEY}" -X DELETE \
-            "https://bart.sec.samsung.net/artifactory/escargot-generic-local/starfish-ci-cache/" || true
+          entries=$(curl -sS --fail -H "X-JFrog-Art-Api: ${BART_API_KEY}" \
+            "https://bart.sec.samsung.net/artifactory/api/storage/starfish-git-cache-service-generic-local/starfish-ci-cache" \
+            | python3 -c "import json,sys; print('\n'.join(c['uri'].lstrip('/') for c in json.load(sys.stdin)['children']))") || entries=""
+          for entry in $entries; do
+            case "$entry" in
+              starfish-vcpkg-windows-*|vcpkg-assets)
+                echo "keeping $entry (Windows vcpkg cache/asset mirror -- not rebuilt by this workflow)"
+                continue
+                ;;
+            esac
+            echo "deleting $entry"
+            curl -sS --fail -H "X-JFrog-Art-Api: ${BART_API_KEY}" -X DELETE \
+              "https://bart.sec.samsung.net/artifactory/starfish-git-cache-service-generic-local/starfish-ci-cache/${entry}/" || true
+          done
 
   rebuild_starfish_thirdparty:
     needs: cleanup
@@ -49,6 +87,20 @@ jobs:
       options: --user root
     timeout-minutes: 30
     steps:
+      # This pool reuses its on-disk checkout across runs, and CODE-Actions/
+      # checkout's own internal auth-setup step runs `git submodule foreach
+      # --recursive` unconditionally regardless of `submodules: false` -- a
+      # workspace whose local HEAD is stuck on an old commit with a broken
+      # gitlink/.gitmodules pairing (see the git history around the
+      # third_party/windows removal) makes that fail before this job's own
+      # steps ever run. A symptom-based check (only wipe .git if `git
+      # submodule foreach` currently fails) was tried for this exact class
+      # of failure before and proved unreliable in practice; this job only
+      # runs weekly (cron) plus on manual dispatch, so an unconditional
+      # fresh clone every time costs nothing that matters.
+      - name: Force a fresh clone
+        run: cd /__w/starfish/starfish 2>/dev/null && rm -rf .git || true
+
       - name: Checkout source (master)
         uses: CODE-Actions/checkout@v2
         with:
@@ -61,13 +113,6 @@ jobs:
         env:
           BART_API_KEY: ${{ secrets.BART_API_KEY }}
         run: ./tool/ci/cache_starfish_thirdparty.sh
-
-      # Must run after the step above in this same checkout -- see
-      # cache_starfish_thirdparty_windows.sh's own comment.
-      - name: Rebuild windows thirdparty cache
-        env:
-          BART_API_KEY: ${{ secrets.BART_API_KEY }}
-        run: ./tool/ci/cache_starfish_thirdparty_windows.sh
 
   rebuild_android_lwe_submodules:
     needs: cleanup
@@ -112,6 +157,13 @@ jobs:
       options: --user root
     timeout-minutes: 30
     steps:
+      # Same reasoning as rebuild_starfish_thirdparty above: this pool
+      # reuses its on-disk checkout across runs and is exposed to the same
+      # checkout-internal submodule-foreach failure on a stuck HEAD; an
+      # unconditional fresh clone is cheap enough for a weekly/manual job.
+      - name: Force a fresh clone
+        run: cd /__w/starfish/starfish 2>/dev/null && rm -rf .git || true
+
       - name: Checkout source (master)
         uses: CODE-Actions/checkout@v2
         with:

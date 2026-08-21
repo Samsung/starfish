@@ -3,13 +3,35 @@ name: Run PR
 on: [pull_request_target]
 
 jobs:
-  check_source:
-    runs-on: [ runner-type1 ]
+  # check_tidy and the ABI check run before anything below touches
+  # third_party/BART: both are fast, fail-fast gates on a plain checkout,
+  # and a failure at either step ends the job right there -- squash_
+  # thirdparty's heavier steps (cache build, deploy key, source-artifact
+  # publish) below them never run for a PR that just has a formatting or
+  # ABI problem. Never add a `paths:` filter to the ABI step -- that would
+  # let a PR that edits only contract_shim.cpp or the ABI checker itself
+  # skip the gate meant to protect exactly those files.
+  #
+  # check_source and check_contract_abi used to be separate jobs, and
+  # squash_thirdparty needed both -- all three folded into this one job
+  # instead (renamed to prepare_source, since it now does far more than a
+  # source check), since squash_thirdparty already only ever started after
+  # both passed anyway (no parallelism lost) and this saves two extra full
+  # checkouts of the same tree. Every downstream workflow's `needs:` /
+  # output reference now points at prepare_source instead of
+  # squash_thirdparty. runs-on code-large (not check_tidy/the ABI check's
+  # own code-default): this job now also does squash_thirdparty's heavier
+  # work.
+  prepare_source:
+    runs-on: [ code-linux, code-large ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
       credentials:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    outputs:
+      thirdparty_key: ${{ steps.cache.outputs.branch }}
 
     # Set reasonable timeout value.
     timeout-minutes: 30
@@ -18,49 +40,24 @@ jobs:
       - name: Checkout source..
         uses: CODE-Actions/checkout@v2
         with:
-          submodules: false
           allow-unsafe-pr-checkout: true
           ref: ${{ github.event.pull_request.head.sha }}
+
       - name: Check tidy
         run: ./tool/lint/check_tidy.py
-
-  # Gates ABI breaks in the UWE delegate contract (src/public/contract/*.h):
-  # an old, already-installed API .so and a newly built impl .so are never
-  # compiled together, so a reordered virtual method or a changed wrapper
-  # signature compiles clean and passes every other test here, then crashes
-  # in the field the first time a UWE update pairs the two. See
-  # tool/lint/check_contract_abi.py's module docstring for the full design.
-  #
-  # A separate job rather than a step in check_source above: check_source is
-  # the one job with neither `--user root` nor a `safe.directory` step
-  # (nothing in it has ever needed git), and check_tidy.py's clang-format
-  # pass has no exclusion for a second checked-out tree, so either ordering
-  # would either break check_tidy or leave this gate unverified in that
-  # environment. Never add a `paths:` filter to this job -- that would let a
-  # PR that edits only contract_shim.cpp or this checker skip the gate
-  # meant to protect exactly those files.
-  check_contract_abi:
-    runs-on: [ runner-type1 ]
-    container:
-      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
-      credentials:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-      options: --user root
-
-    timeout-minutes: 15
-
-    steps:
-      - name: Checkout source..
-        uses: CODE-Actions/checkout@v2
-        with:
-          submodules: false
-          allow-unsafe-pr-checkout: true
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Add safe directory
         run: git config --global --add safe.directory /__w/starfish/starfish
 
+      # Gates ABI breaks in the UWE delegate contract
+      # (src/public/contract/*.h): an old, already-installed API .so and a
+      # newly built impl .so are never compiled together, so a reordered
+      # virtual method or a changed wrapper signature compiles clean and
+      # passes every other test here, then crashes in the field the first
+      # time a UWE update pairs the two. See
+      # tool/lint/check_contract_abi.py's module docstring for the full
+      # design.
+      #
       # No workflow here sets fetch-depth, so this checkout has only the PR
       # head commit -- comparing against the PR's *merge-base* with its base
       # branch (not the base branch's current tip) needs that one extra
@@ -94,64 +91,66 @@ jobs:
       - name: Check contract ABI
         run: ./tool/lint/check_contract_abi.py --base ${{ steps.abi_base.outputs.sha }}
 
-  squash_thirdparty:
-    # NOTE: despite the job name (kept so `needs: [squash_thirdparty]` in every
-    # downstream workflow doesn't need touching), this no longer squashes
-    # anything into a separate repo. It used to flatten this PR's whole tree
-    # (submodules materialized + rsync-filtered + version-stamped) and force-
-    # push it to a specific person's external GHE repo
-    # (mh-byun/starfish_window_build) for every downstream job to check out --
-    # that meant depending on one individual's personal repo staying around,
-    # and a PR-numbered branch getting force-pushed made concurrent re-runs of
-    # the same PR racy.
-    #
-    # Second attempt (CODE-Actions/cache@v2, then GitHub Actions
-    # upload-artifact/download-artifact with cross-run REST-API reuse) --
-    # cache doesn't work at all on this GHES instance (no storage backend
-    # configured, silently no-ops on save/restore), and the artifact-based
-    # replacement turned out slow/unreliable in practice too.
-    #
-    # Third attempt: a branch on this same repo (self-referential git
-    # commits, see git history) -- worked, but every consumer paid for
-    # git's 100MB-per-blob limit (tarball chunked + reassembled with a
-    # `git show` per chunk) and for GHES rebuilding its pack from scratch on
-    # every fetch of an orphan ref (no bitmap reuse against unrelated
-    # history) -- confirmed on a real run taking 8+ minutes for a ~150MB
-    # tarball.
-    #
-    # Now: materialize starfish's own third_party/binding_generator here
-    # (still the only job with the internal-proxy path to
-    # github.sec.samsung.net -- every other runner pool either can't reach
-    # it at all, or would need its own proxy+deploy-key setup duplicated
-    # everywhere), and publish it as a tarball on BART (this org's internal
-    # Artifactory instance, already reachable directly from every runner
-    # pool here -- same host these workflows pull Docker images from)
-    # instead of a git branch or an artifact -- downstream jobs get it with
-    # a plain HTTPS GET, no chunking, no git pack machinery, no REST API.
-    # See tool/ci/lib_submodule_cache.sh for the mechanism and
-    # cache_cleanup.yml for the weekly prune+rebuild that keeps BART's
-    # starfish-ci-cache/ folder from accumulating forever.
-    needs: [ check_source, check_contract_abi ]
-    runs-on: [ runner-type1 ]
-    container:
-      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
-      credentials:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-      options: --user root
-    outputs:
-      thirdparty_key: ${{ steps.cache.outputs.branch }}
-      windows_thirdparty_key: ${{ steps.cache_windows.outputs.id }}
-    steps:
-      - name: Checkout source..
-        uses: CODE-Actions/checkout@v2
-        with:
-          submodules: false
-          allow-unsafe-pr-checkout: true
-          ref: ${{ github.event.pull_request.head.sha }}
+      # squash_thirdparty's own steps from here down (see the job-level
+      # comment above for why this used to be, and no longer is, a separate
+      # job). NOTE on the name (kept in the cache-id string / step id below
+      # so BART's existing starfish-ci-cache/ paths and cache_cleanup.yml
+      # don't need touching): this no longer squashes anything into a
+      # separate repo. It used to flatten this PR's whole tree (submodules
+      # materialized + rsync-filtered + version-stamped) and force-push it
+      # to a specific person's external GHE repo
+      # (mh-byun/starfish_window_build) for every downstream job to check
+      # out -- that meant depending on one individual's personal repo
+      # staying around, and a PR-numbered branch getting force-pushed made
+      # concurrent re-runs of the same PR racy.
+      #
+      # Second attempt (CODE-Actions/cache@v2, then GitHub Actions
+      # upload-artifact/download-artifact with cross-run REST-API reuse) --
+      # cache doesn't work at all on this GHES instance (no storage backend
+      # configured, silently no-ops on save/restore), and the artifact-based
+      # replacement turned out slow/unreliable in practice too.
+      #
+      # Third attempt: a branch on this same repo (self-referential git
+      # commits, see git history) -- worked, but every consumer paid for
+      # git's 100MB-per-blob limit (tarball chunked + reassembled with a
+      # `git show` per chunk) and for GHES rebuilding its pack from scratch on
+      # every fetch of an orphan ref (no bitmap reuse against unrelated
+      # history) -- confirmed on a real run taking 8+ minutes for a ~150MB
+      # tarball.
+      #
+      # Now: materialize starfish's own third_party/binding_generator here and
+      # publish it as a tarball on BART (this org's internal Artifactory
+      # instance, already reachable directly from every runner pool here --
+      # same host these workflows pull Docker images from) instead of a git
+      # branch or an artifact -- downstream jobs get it with a plain HTTPS GET,
+      # no chunking, no git pack machinery, no REST API. See
+      # tool/ci/lib_submodule_cache.sh for the mechanism and cache_cleanup.yml
+      # for the weekly prune+rebuild that keeps BART's starfish-ci-cache/
+      # folder from accumulating forever.
+      #
+      # A cache hit (the common case) only talks to BART, same as every
+      # downstream job. A miss falls back to cache_starfish_thirdparty.sh
+      # cloning the actual submodule remotes directly: escargot/googletest/
+      # wpt are plain public github.com, but everything else is
+      # git@github.sec.samsung.net over SSH, which needs the same deploy key
+      # setup as x64_test.yml/x64_test_clang.yml/push_ci.yml/
+      # wpt_status_nightly.yml use on this same pool -- see the "Setup
+      # deploy key" step below.
 
-      - name: Add safe directory
-        run: git config --global --add safe.directory /__w/starfish/starfish
+      # Only exercised on a cache miss (cache_starfish_thirdparty.sh's SSH
+      # clones of the git@github.sec.samsung.net submodule remotes), but
+      # cheap enough to always set up rather than gate on the cache lookup.
+      # ssh resolves ~/.ssh from the passwd home (root -> /root), not $HOME
+      # (the runner sets HOME=/github/home); write the key where ssh looks.
+      # Same key/pattern as x64_test.yml/x64_test_clang.yml/push_ci.yml/
+      # wpt_status_nightly.yml.
+      - name: Setup deploy key
+        env:
+          DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d /root/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > /root/.ssh/id_rsa
+          chmod 600 /root/.ssh/id_rsa
 
       # NOTE: was `echo "branch=$(./tool/ci/cache_starfish_thirdparty.sh)" >>
       # $GITHUB_OUTPUT` -- a real bug: bash's `set -e` (GH Actions' default
@@ -170,80 +169,106 @@ jobs:
           branch=$(./tool/ci/cache_starfish_thirdparty.sh)
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
 
-      # windows.yml only ever reads a fraction of the general thirdparty
-      # cache above (see cache_starfish_thirdparty_windows.sh) -- packing
-      # the full one into it wasted both fetch and Windows-side extraction
-      # time on content it never touches. Must run after the step above:
-      # it only reads what that step already fetched/self-healed into this
-      # same checkout, no fetching of its own.
-      - name: Build or reuse windows thirdparty submodule cache
-        id: cache_windows
-        env:
-          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+      # Every job downstream of this one that still runs on a reused-
+      # workspace self-hosted pool (test_clang_reftest_all, test_reftest_all,
+      # android.yml's build_android) used to run its own CODE-Actions/
+      # checkout -- but checkout's own internal auth-setup step runs `git
+      # submodule foreach --recursive` unconditionally, regardless of
+      # `submodules: false`, and a workspace whose local HEAD is stuck on an
+      # old commit with a broken gitlink/.gitmodules pairing (see the git
+      # history around the third_party/windows removal) makes that internal
+      # step fail before the job's own steps ever run -- confirmed on a real
+      # run: "fatal: No url found for submodule path 'third_party/windows/
+      # cairo' in .gitmodules", on a job that never asked for any submodule
+      # content itself.
+      #
+      # Publishing this checkout's own tracked tree as a plain artifact lets
+      # those jobs skip CODE-Actions/checkout entirely, so that internal bug
+      # has nothing to run against there any more. `git archive` only walks
+      # files tracked by THIS repo's own index -- a submodule (mode 160000)
+      # entry has no blob, so archive silently skips it rather than
+      # recursing in, meaning this is naturally tiny regardless of
+      # third_party's own size and needs no exclude list.
+      #
+      # The one thing archive can't carry is a submodule's pinned commit --
+      # test/ is the only submodule any of those consumer jobs still fetch
+      # for themselves (see the "Checkout Testcase.." steps in x64_test.yml/
+      # x64_test_clang.yml), so record its pin here too, for them to `git
+      # clone` directly instead of going through `git submodule` (which
+      # needs a real superproject .git this artifact deliberately doesn't
+      # carry).
+      - name: Publish this checkout as a source artifact
         run: |
-          id=$(./tool/ci/cache_starfish_thirdparty_windows.sh)
-          echo "id=$id" >> "$GITHUB_OUTPUT"
+          git archive --format=tar.gz -o starfish-source.tar.gz HEAD
+          git rev-parse HEAD:test > test.pin.sha
+
+      - uses: CODE-Actions/upload-artifact@v2
+        with:
+          name: starfish-source
+          path: |
+            starfish-source.tar.gz
+            test.pin.sha
 
   x64_test:
-    needs: [ squash_thirdparty ]
+    needs: [ prepare_source ]
     uses: ./.github/workflows/x64_test.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
-      thirdparty_key: ${{ needs.squash_thirdparty.outputs.thirdparty_key }}
+      thirdparty_key: ${{ needs.prepare_source.outputs.thirdparty_key }}
     secrets: inherit
 
   x64_test_clang:
-    needs: [ squash_thirdparty ]
+    needs: [ prepare_source ]
     uses: ./.github/workflows/x64_test_clang.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
-      thirdparty_key: ${{ needs.squash_thirdparty.outputs.thirdparty_key }}
-    secrets: inherit
-
-  windows:
-    needs: [ squash_thirdparty ]
-    uses: ./.github/workflows/windows.yml
-    with:
-      pr_number: ${{ github.event.pull_request.number }}
-      windows_thirdparty_key: ${{ needs.squash_thirdparty.outputs.windows_thirdparty_key }}
+      thirdparty_key: ${{ needs.prepare_source.outputs.thirdparty_key }}
     secrets: inherit
 
   worker:
-    needs: [ squash_thirdparty ]
+    needs: [ prepare_source ]
     uses: ./.github/workflows/worker.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
-      thirdparty_key: ${{ needs.squash_thirdparty.outputs.thirdparty_key }}
+      thirdparty_key: ${{ needs.prepare_source.outputs.thirdparty_key }}
     secrets: inherit
 
   gl_backend:
-    needs: [ squash_thirdparty ]
+    needs: [ prepare_source ]
     uses: ./.github/workflows/gl_backend.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
-      thirdparty_key: ${{ needs.squash_thirdparty.outputs.thirdparty_key }}
+      thirdparty_key: ${{ needs.prepare_source.outputs.thirdparty_key }}
     secrets: inherit
 
   dynamic_loader:
-    needs: [ squash_thirdparty ]
+    needs: [ prepare_source ]
     uses: ./.github/workflows/dynamic_loader.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
-      thirdparty_key: ${{ needs.squash_thirdparty.outputs.thirdparty_key }}
+      thirdparty_key: ${{ needs.prepare_source.outputs.thirdparty_key }}
     secrets: inherit
 
   minor_port:
-    needs: [ squash_thirdparty ]
+    needs: [ prepare_source ]
     uses: ./.github/workflows/minor.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
-      thirdparty_key: ${{ needs.squash_thirdparty.outputs.thirdparty_key }}
+      thirdparty_key: ${{ needs.prepare_source.outputs.thirdparty_key }}
+    secrets: inherit
+
+  windows:
+    needs: [ prepare_source ]
+    uses: ./.github/workflows/windows.yml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      thirdparty_key: ${{ needs.prepare_source.outputs.thirdparty_key }}
     secrets: inherit
 
   android:
-    needs: [ squash_thirdparty ]
+    needs: [ prepare_source ]
     uses: ./.github/workflows/android.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
-      thirdparty_key: ${{ needs.squash_thirdparty.outputs.thirdparty_key }}
+      thirdparty_key: ${{ needs.prepare_source.outputs.thirdparty_key }}
     secrets: inherit

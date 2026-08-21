@@ -1,3 +1,25 @@
+# =============================================================================
+# Build the Windows port natively, on Windows, and prove it still renders.
+#
+# The old checked-in-prebuilts MSBuild job is gone (see git history); this
+# configures the same CMake graph a developer does -- manifest-mode vcpkg --
+# and then runs StarfishShell.exe once with --screenshot, which is the only
+# step that can catch a rendering regression like the cairo float-word-order
+# bug (it compiled, linked and ran clean while painting nothing).
+#
+# Two generators, one per architecture, not two redundant legs of the same
+# thing: Ninja (x86) is the fast path already proven by the Docker/Wine
+# cross-build, and the Visual Studio/MSBuild generator (x64) is what actual
+# developers on this project build with day to day -- and it has already
+# caught two real bugs (a wrong exports.def path assumption and a parallel
+# custom-build-step race in escargot's own header generation) that the
+# Ninja-only path never exercised.
+#
+# The Linux MSVC-on-Wine cross-build is deliberately NOT what runs here: its
+# image acquires Microsoft-licensed material and lives in a separate internal
+# repository. Building on a real Windows host is also the only way the
+# screenshot means anything.
+# =============================================================================
 name: Build Starfish (windows)
 
 on:
@@ -8,86 +30,415 @@ on:
         default: 'master'
         required: true
         type: string
-      windows_thirdparty_key:
-        description: 'squash_thirdparty cache id (starfish-thirdparty-windows-<key> under BART''s starfish-ci-cache/, see tool/ci/cache_starfish_thirdparty_windows.sh) -- a windows.cmake-specific SUBSET of the general thirdparty_key cache, not that cache itself'
+      thirdparty_key:
+        description: 'squash_thirdparty cache id (starfish-thirdparty-<key> under BART''s starfish-ci-cache/, see tool/ci/lib_submodule_cache.sh)'
         required: true
         type: string
 
+env:
+  # 10.112.1.184:8080 (this pool's egress proxy) is deliberately NOT used
+  # anywhere in this job -- confirmed on real runs, forcing it makes things
+  # worse, not better: git clone through it has timed out establishing the
+  # CONNECT tunnel outright, and forcing HTTP_PROXY/HTTPS_PROXY onto
+  # fetch_vcpkg_asset.ps1's curl.exe below turned a fixable SSL error into
+  # an unfixable "Connection timed out" one. Direct github.com access is
+  # what's actually been observed to work for git and for
+  # bootstrap-vcpkg.bat's own vcpkg.exe download; the one remaining direct-
+  # access problem (see VCPKG_COMMIT below) is fixed a different way.
+  BART_CACHE_URL: https://bart.sec.samsung.net/artifactory/starfish-git-cache-service-generic-local/starfish-ci-cache
+  # Must match vcpkg-configuration.json's baseline: the overlay ports in
+  # vcpkg/ports-public are verbatim copies of the ports at that commit, and a
+  # newer registry underneath them is exactly the drift that breaks them.
+  VCPKG_COMMIT: 06d00ffa491e4668627728f14b891d22c6fea146
+  # vcpkg's own port-source downloads (vcpkg_download_distfile, e.g. zlib's
+  # github.com/madler/zlib archive) die with "curl error 35 (SSL connect
+  # error)" over direct access -- confirmed on a real run: schannel fails
+  # with CRYPT_E_NO_REVOCATION_CHECK, the certificate's own OCSP/CRL
+  # revocation check not completing. CURL_SSLBACKEND=schannel and
+  # ssl-no-revoke (via %USERPROFILE%\.curlrc) both had zero effect --
+  # vcpkg-tool links libcurl straight into vcpkg.exe and calls it from C++
+  # rather than shelling out to curl.exe, so none of curl's CLI-only knobs
+  # (env vars/config files only its own main() reads) ever reach it, and
+  # CURLOPT_SSL_OPTIONS/CURLSSLOPT_NO_REVOKE has no environment variable at
+  # all. Fixed instead in "Configure and build" via
+  # X_VCPKG_ASSET_SOURCES=x-script, which hands these downloads to a real
+  # curl.exe subprocess that --ssl-no-revoke actually reaches.
+
 jobs:
-  build_x64:
-    runs-on: [self-hosted, Windows]
-    timeout-minutes: 60
+  build:
+    name: Build Starfish (windows, ${{ matrix.arch }})
+    strategy:
+      # One arch's failure (e.g. a generator-specific bug like the two
+      # exports.def/header-generation ones below) shouldn't hide the other
+      # arch's result.
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86
+            vcpkg_triplet: x86-windows
+            cmake_processor: x86
+            # amd64_x86: cross tools (x64 host, x86 target), not vcvars32.bat
+            # (native x86 host under WOW64) -- this pool's hardware is x64,
+            # and Microsoft's own vcvars docs recommend the cross toolset in
+            # that case.
+            vcvars_bat: vcvarsamd64_x86.bat
+            cmake_generator_args: '-G,Ninja,-DCMAKE_BUILD_TYPE=Release'
+          - arch: x64
+            vcpkg_triplet: x64-windows
+            cmake_processor: AMD64
+            vcvars_bat: vcvars64.bat
+            # windows.cmake's Release/Debug check runs at configure time and
+            # only reads CMAKE_BUILD_TYPE, which multi-config generators
+            # (Visual Studio) never set on their own -- they pick the
+            # configuration at build time via --config instead. Passing it
+            # here anyway is harmless (VS ignores it) and satisfies that
+            # check; the generator still produces both configs and a
+            # Release/ output subfolder either way. Making that check (and
+            # the output paths downstream) properly multi-config-aware is
+            # follow-up work, not done here.
+            cmake_generator_args: '-G,Visual Studio 17 2022,-A,x64,-DCMAKE_BUILD_TYPE=Release'
+    # `runs-on: [code-windows, code-win-2xlarge]` (a label list) never
+    # attached a runner -- confirmed against NUI/dali-ui's own working
+    # windows-build.yml on this same GHES instance, which addresses this
+    # pool as a runner GROUP (`runs-on: { group: code-windows }`), not a
+    # label list.
+    #
+    # Size tiers here: code-win-default (4/8GB/80GB), code-win-large
+    # (8/16GB/120GB), code-win-xlarge (12/24GB/180GB), code-win-2xlarge
+    # (20/36GB/320GB) -- one label per machine, no cumulative labeling, and
+    # runs-on has no OR, so this has to commit to exactly one tier rather
+    # than "large or above". Picked code-win-2xlarge: the biggest, for this
+    # 180-minute vcpkg-from-source build.
+    runs-on:
+      group: code-windows
+      labels: [code-win-2xlarge]
+    # vcpkg builds the whole dependency graph from source on a cache miss.
+    timeout-minutes: 180
+
     steps:
+      # ninja/cmake via pip, not vcpkg's own downloader: vcpkg builds its
+      # dependency ports (cairo, curl, ...) with its own internally-managed
+      # cmake/ninja, independent of whatever generator drives starfish's own
+      # build below -- confirmed on a real run, it wanted cmake 4.4.0 (the VS
+      # install here only bundles 3.31) and tried to fetch it straight from
+      # GitHub's release CDN, which failed with "curl error 35 (SSL connect
+      # error)". That's a different domain than plain github.com (which
+      # windows_runner_probe.yml already confirmed reachable), so it's not
+      # necessarily the same class of problem -- but pip already works in
+      # this exact job (installs Jinja2/ply below), so getting a current
+      # cmake + ninja from PyPI instead sidesteps that download path
+      # entirely rather than debugging it. VCPKG_FORCE_SYSTEM_BINARIES below
+      # tells vcpkg to trust these instead of fetching its own.
       - name: Python setup
         run: |
-            pip install Jinja2 ply --trusted-host=pypi.org --trusted-host=pypi.python.org --trusted-host=files.pythonhosted.org --proxy=http://10.112.1.184:8080
+          pip install Jinja2 ply ninja cmake --trusted-host=pypi.org --trusted-host=pypi.python.org --trusted-host=files.pythonhosted.org
+
       - name: Checkout
         uses: CODE-Actions/checkout@v2
         with:
           submodules: false
           allow-unsafe-pr-checkout: true
           ref: ${{ github.event.pull_request.head.sha }}
+
+      # Cheap insurance either way: harmless on a clean pool runner, and
+      # necessary if this pool turns out to reuse a workspace across jobs the
+      # way the self-hosted machines do.
       - name: Clean workspace
         continue-on-error: true
-        run: |
-            git clean -xdf
-      # squash_thirdparty already published (or found already published) a
-      # windows.cmake-specific SUBSET of the general thirdparty cache as a
-      # cache.zip on BART (this org's internal Artifactory instance -- see
-      # tool/ci/cache_starfish_thirdparty_windows.sh + lib_submodule_cache.sh)
-      # before this job's `needs:` let it start. A single Invoke-WebRequest
-      # straight to a file, no chunking, no git at all.
-      #
-      # $ProgressPreference = 'SilentlyContinue': PowerShell's default
-      # progress-bar rendering for Invoke-WebRequest updates on every
-      # buffer chunk -- confirmed on a real run: fetching an 830MB cache.zip
-      # this way took 15 minutes (vs. seconds of actual transfer time for
-      # that size). This is a well-known PowerShell issue, not a network or
-      # BART problem; suppressing the progress stream is the documented
-      # workaround and costs nothing here since no one watches this step
-      # live.
+        run: git clean -xdf
+
+      # $ProgressPreference: PowerShell renders Invoke-WebRequest's progress bar
+      # on every buffer chunk -- confirmed on a real run of the old windows.yml,
+      # 15 minutes for an 830MB download whose transfer time was seconds. Same
+      # class of problem for Expand-Archive below.
       - name: Fetch thirdparty submodule cache
         env:
           BART_API_KEY: ${{ secrets.BART_API_KEY }}
         run: |
           $ProgressPreference = 'SilentlyContinue'
-          Invoke-WebRequest -Uri "https://bart.sec.samsung.net/artifactory/escargot-generic-local/starfish-ci-cache/${{ inputs.windows_thirdparty_key }}/cache.zip" `
-            -Headers @{ "X-JFrog-Art-Api" = $env:BART_API_KEY } -OutFile thirdparty.zip
-      # Used to be a cache.tar.gz extracted with Python's tarfile module
-      # (Windows's built-in bsdtar/`tar xzf` failed outright on a real run
-      # against non-ASCII filenames -- escargot's own test fixtures include
-      # Korean-named files: "Invalid empty pathname: Unknown error", a
-      # known bsdtar/libarchive issue decoding UTF-8 tar headers unless the
-      # system codepage is itself UTF-8). cache.zip's entries are written
-      # by Python's zipfile module, which sets the UTF-8 flag bit on any
-      # non-ASCII filename (see cache_starfish_thirdparty_windows.sh) --
-      # PowerShell's own native Expand-Archive (.NET's
-      # System.IO.Compression) honors that flag correctly on read, so
-      # extraction no longer needs Python's own (interpreted, one call per
-      # file) tarfile loop at all.
-      #
-      # $ProgressPreference here too: Expand-Archive reports per-entry
-      # progress by default, same throttling class as Invoke-WebRequest
-      # above -- confirmed on a real run taking 6 minutes to unpack this
-      # same 830MB archive.
+          Invoke-WebRequest -Uri "$env:BART_CACHE_URL/${{ inputs.thirdparty_key }}/cache.tar.gz" `
+            -Headers @{ "X-JFrog-Art-Api" = $env:BART_API_KEY } -OutFile thirdparty.tar.gz
+
+      # Not `tar xzf`: Windows's bundled bsdtar fails outright on the non-ASCII
+      # filenames in escargot's test fixtures ("Invalid empty pathname"), a
+      # known libarchive UTF-8 tar-header issue unless the system codepage is
+      # itself UTF-8. Python's tarfile decodes them correctly. The producer
+      # excludes third_party/wpt, whose leftover venv symlink would otherwise
+      # trip 3.12+'s extraction filter.
       - name: Extract thirdparty submodules
         run: |
-          $ProgressPreference = 'SilentlyContinue'
-          Expand-Archive -Path thirdparty.zip -DestinationPath . -Force
+          python -c "import tarfile; tarfile.open('thirdparty.tar.gz').extractall('.', filter='tar')"
+
       - name: Verify thirdparty submodules were restored
         run: |
-          if (-not (Test-Path third_party/escargot/CMakeLists.txt)) { Write-Error "third_party/escargot missing after cache restore -- check squash_thirdparty's cache save"; exit 1 }
-          if (-not (Test-Path binding_generator/scripts/starfish_code_generator.py)) { Write-Error "binding_generator missing after cache restore -- check squash_thirdparty's cache save"; exit 1 }
-      - name: Build
+          if (-not (Test-Path third_party/escargot/CMakeLists.txt)) { Write-Error "third_party/escargot missing after cache restore -- check squash_thirdparty's cache push"; exit 1 }
+          if (-not (Test-Path third_party/libtuv/include/uv.h)) { Write-Error "third_party/libtuv missing after cache restore -- the Windows event loop needs it"; exit 1 }
+          if (-not (Test-Path binding_generator/scripts/starfish_code_generator.py)) { Write-Error "binding_generator missing after cache restore -- check squash_thirdparty's cache push"; exit 1 }
+
+      # The key covers everything that determines the package set: the manifest,
+      # the pinned baseline, and the overlay ports (a patch edit there must
+      # invalidate the cache, or the fix silently does not reach the build).
+      - name: Compute vcpkg cache key
+        id: vcpkg_key
         run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars32.bat"
-          msbuild build/windows/winform_shell/StarfishWinformShell/StarfishWinformShell.sln /p:Platform="Any CPU"
-          cmake -G "Visual Studio 17 2022" -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_VERSION:STRING="10.0" -DCMAKE_SYSTEM_PROCESSOR=x86 -DCMAKE_GENERATOR_PLATFORM=Win32,version=10.0.26100.0 -DCMAKE_BUILD_TYPE=Release -Bout_windows/
-          msbuild ./out_windows/STARFISH.sln /p:Platform=Win32 /p:Configuration=Release /m
+          $files = @('vcpkg.json', 'vcpkg-configuration.json') +
+                   (Get-ChildItem -Recurse -File vcpkg/ports-public | Sort-Object FullName | ForEach-Object { $_.FullName })
+          $sha = [System.Security.Cryptography.SHA256]::Create()
+          $stream = New-Object System.IO.MemoryStream
+          foreach ($f in $files) { $bytes = [System.IO.File]::ReadAllBytes($f); $stream.Write($bytes, 0, $bytes.Length) }
+          $stream.Position = 0
+          $key = ($sha.ComputeHash($stream) | ForEach-Object { $_.ToString('x2') }) -join ''
+          $key = $key.Substring(0, 16)
+          echo "id=starfish-vcpkg-windows-${{ matrix.arch }}-$key" >> $env:GITHUB_OUTPUT
+          echo "vcpkg cache id: starfish-vcpkg-windows-${{ matrix.arch }}-$key"
+
+      - name: Bootstrap vcpkg
+        run: |
+          . (Join-Path $PWD 'tool\windows\lib_retry.ps1')
+          # Direct (no proxy): confirmed on a real run, this clone and
+          # bootstrap-vcpkg.bat's own vcpkg.exe download both succeed fine
+          # this way -- it's specifically vcpkg's own internal libcurl-based
+          # asset downloader (see the "Configure and build" step's
+          # X_VCPKG_ASSET_SOURCES comment) that can't get past this
+          # network's schannel revocation-check behaviour, not git or a
+          # plain HTTPS download. Retried anyway: this pool's outbound
+          # connectivity is intermittently flaky in both directions
+          # (direct and proxied), confirmed on separate real runs.
+          if (-not (Test-Path vcpkg-root/.git)) {
+            Invoke-GitRetry -GitArgs @('clone', 'https://github.com/microsoft/vcpkg.git', 'vcpkg-root')
+          }
+          Invoke-GitRetry -GitArgs @('-C', 'vcpkg-root', 'fetch', '--depth=1', 'origin', $env:VCPKG_COMMIT)
+          git -C vcpkg-root checkout --force FETCH_HEAD
+          if ($LASTEXITCODE -ne 0) { throw "git checkout FETCH_HEAD failed" }
+          & ./vcpkg-root/bootstrap-vcpkg.bat -disableMetrics
+
+      # A hit here is the difference between minutes and an hour: it skips
+      # compiling curl, cairo, freetype, harfbuzz, libwebsockets and the rest.
+      # A miss is not an error -- the build below just populates the cache and
+      # the next step publishes it.
+      - name: Restore vcpkg binary cache
+        id: vcpkg_cache
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          New-Item -ItemType Directory -Force -Path vcpkg-cache | Out-Null
+          $uri = "$env:BART_CACHE_URL/${{ steps.vcpkg_key.outputs.id }}/cache.zip"
+          try {
+            Invoke-WebRequest -Uri $uri -Headers @{ "X-JFrog-Art-Api" = $env:BART_API_KEY } -OutFile vcpkg-cache.zip
+            Expand-Archive -Path vcpkg-cache.zip -DestinationPath vcpkg-cache -Force
+            echo "hit=true" >> $env:GITHUB_OUTPUT
+            echo "vcpkg binary cache restored"
+          } catch {
+            echo "hit=false" >> $env:GITHUB_OUTPUT
+            echo "vcpkg binary cache miss -- dependencies will be built from source"
+          }
+
+      # vcvars*.bat exports the MSVC/SDK environment that cl.exe and link.exe
+      # need; it only takes effect for the rest of the same shell, so
+      # configure and build run in one cmd step.
+      #
+      # Located with vswhere rather than hardcoded: the old job ran on a
+      # specific self-hosted machine with VS 2022 Professional, but this is a
+      # managed pool whose edition, install path and version are not ours to
+      # assume. vswhere ships with every VS installer and is the supported way
+      # to ask.
+      - name: Configure and build
+        env:
+          # For fetch_vcpkg_asset.ps1's BART asset-mirror check/publish --
+          # see its own comment for why.
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          if (-not (Test-Path $vswhere)) { $vswhere = "$env:ProgramFiles\Microsoft Visual Studio\Installer\vswhere.exe" }
+          if (-not (Test-Path $vswhere)) { throw "vswhere.exe not found -- is MSVC installed on this runner?" }
+          # VC.Tools.x86.x64 bundles both the x86 and x64 host/target
+          # toolsets together (it's one component regardless of which of
+          # the two this run targets), so the same -requires works for
+          # both matrix legs.
+          $vsdir = (& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath) | Select-Object -First 1
+          if (-not $vsdir) { throw "no MSVC x86/x64 toolset found by vswhere" }
+          Write-Host "using MSVC at $vsdir"
+
+          # vcvars*.bat only exports its environment into the cmd session
+          # that calls it -- capture that session's resulting env block as
+          # text and apply it to this PowerShell process instead.
+          $vcvars = Join-Path $vsdir 'VC\Auxiliary\Build\${{ matrix.vcvars_bat }}'
+          $envDump = cmd /c "`"$vcvars`" && set"
+          if ($LASTEXITCODE -ne 0) { throw "${{ matrix.vcvars_bat }} failed" }
+          foreach ($line in $envDump) {
+            if ($line -match '^([^=]+)=(.*)$') {
+              Set-Item -Path "env:$($matches[1])" -Value $matches[2]
+            }
+          }
+
+          # vcvars*.bat can itself prepend VS's own bundled (older) cmake
+          # directory onto PATH -- put the pip-installed cmake/ninja ahead
+          # of that explicitly, or plain `cmake` could still resolve to the
+          # one VCPKG_FORCE_SYSTEM_BINARIES below was meant to avoid.
+          $pyScripts = python -c "import sysconfig; print(sysconfig.get_path('scripts'))"
+          $env:PATH = "$pyScripts;$env:PATH"
+          Write-Host (Get-Command cmake).Source
+          # ninja is pip-installed regardless of which generator this leg
+          # uses (see the "Python setup" step), but only actually invoked
+          # for the x86/Ninja leg -- don't fail the x64/MSBuild leg over it.
+          Get-Command ninja -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.Source }
+
+          $env:VCPKG_ROOT = "$PWD\vcpkg-root"
+          # Pre-populate vcpkg's downloads/ folder from BART in one bulk
+          # pass instead of leaving every asset to race BART individually
+          # at install time -- see the script's own comment.
+          & (Join-Path $PWD 'tool\windows\prefetch_vcpkg_assets.ps1') -VcpkgRoot $env:VCPKG_ROOT
+          $env:VCPKG_DEFAULT_BINARY_CACHE = "$PWD\vcpkg-cache"
+          $env:VCPKG_BINARY_SOURCES = "clear;files,$PWD\vcpkg-cache,readwrite"
+          # Use the pip-installed cmake/ninja (see the "Python setup" step)
+          # instead of letting vcpkg fetch its own pinned copies from
+          # GitHub's release CDN.
+          $env:VCPKG_FORCE_SYSTEM_BINARIES = '1'
+
+          # cmake_generator_args is a comma-separated list, not YAML list,
+          # because it's spliced into this PowerShell string directly by
+          # GitHub Actions' own expression substitution -- a real YAML list
+          # here would paste in as "arg1 arg2" (space-joined), losing the
+          # separation between e.g. '-A' and 'x64'. "Visual Studio 17 2022"
+          # itself has no comma, so it survives the Split(',') as one token.
+          $genArgs = "${{ matrix.cmake_generator_args }}".Split(',')
+          $configureArgs = @('-S', '.', '-B', 'out_windows') + $genArgs + @(
+            # Needed so CMake recognizes this as cross-compiling and
+            # actually honors CMAKE_SYSTEM_PROCESSOR below for the x86 leg
+            # (otherwise it silently overwrites it with the host's AMD64).
+            '-DCMAKE_SYSTEM_NAME=Windows',
+            '-DCMAKE_SYSTEM_PROCESSOR=${{ matrix.cmake_processor }}',
+            '-DSTARFISH_WINDOWS_ENABLE_MULTIMEDIA=ON',
+            '-DSTARFISH_WINDOWS_BUILD_SHELL=ON',
+            "-DCMAKE_TOOLCHAIN_FILE=$PWD\vcpkg-root\scripts\buildsystems\vcpkg.cmake",
+            '-DVCPKG_TARGET_TRIPLET=${{ matrix.vcpkg_triplet }}'
+          )
+
+          # vcpkg's own downloader (libcurl linked straight into vcpkg.exe,
+          # not a curl.exe subprocess it shells out to) can't get past
+          # direct access's schannel CRYPT_E_NO_REVOCATION_CHECK for port
+          # source archives -- see the env: block's comment above, and can
+          # never be handed --ssl-no-revoke to fix that, since that flag
+          # only exists on curl.exe's own CLI. X_VCPKG_ASSET_SOURCES=x-script
+          # hands every asset download to fetch_vcpkg_asset.ps1 instead,
+          # which shells out to a real curl.exe (with retries -- direct
+          # access is intermittently flaky too, see the Bootstrap vcpkg step
+          # above; do NOT force the proxy back on here, see the env: block's
+          # comment -- it turns this into an unfixable connect timeout).
+          . (Join-Path $PWD 'tool\windows\lib_retry.ps1')
+          $fetchScript = Join-Path $PWD 'tool\windows\fetch_vcpkg_asset.ps1'
+          # vcpkg calls this via CreateProcessW directly, not a shell -- a
+          # bare "pwsh" it can't find on PATH fails silently into vcpkg's
+          # own broken downloader instead (confirmed on a machine with no
+          # PowerShell 7 installed). Resolve the exact interpreter this
+          # step is already running under and hand vcpkg its full path.
+          $psCmd = Get-Command pwsh -ErrorAction SilentlyContinue
+          if (-not $psCmd) { $psCmd = Get-Command powershell -ErrorAction SilentlyContinue }
+          if (-not $psCmd) { throw "neither pwsh.exe nor powershell.exe found on PATH" }
+          $env:X_VCPKG_ASSET_SOURCES = "x-script,`"$($psCmd.Source)`" -NoProfile -ExecutionPolicy Bypass -File `"$fetchScript`" {url} {sha512} {dst}"
+
+          & cmake @configureArgs
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+          # --config Release: Ninja is a single-config generator (Release was
+          # already fixed at configure time via CMAKE_BUILD_TYPE above), but
+          # the Visual Studio generator is multi-config and ignores that --
+          # it needs the config named again at build time instead.
+          cmake --build out_windows --target starfish.windows_shell --config Release --parallel
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      # Publish only on a miss: overwriting an identical key with identical
+      # content is a no-op on BART, but re-uploading hundreds of megabytes for
+      # nothing is not. BART is a cache, pruned on a schedule -- never the
+      # system of record for anything.
+      - name: Publish vcpkg binary cache
+        if: steps.vcpkg_cache.outputs.hit != 'true'
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          Compress-Archive -Path vcpkg-cache/* -DestinationPath vcpkg-cache-new.zip -Force
+          Invoke-WebRequest -Method Put -Uri "$env:BART_CACHE_URL/${{ steps.vcpkg_key.outputs.id }}/cache.zip" `
+            -Headers @{ "X-JFrog-Art-Api" = $env:BART_API_KEY } -InFile vcpkg-cache-new.zip | Out-Null
+          echo "vcpkg binary cache published as ${{ steps.vcpkg_key.outputs.id }}"
+
+      # A CI VM has no GPU, and Windows's own opengl32.dll then offers only a
+      # software GL 1.1 -- far below what the engine's GLEW path needs, so the
+      # shell would fail before painting anything. Mesa is an app-local drop-in
+      # that gives a real GL 4.6, and its llvmpipe backend (selected by
+      # GALLIUM_DRIVER in the capture step below, not by default) renders on the
+      # CPU deterministically, which is what makes a screenshot comparable at
+      # all.
+      #
+      # It lives on an orphan branch of this repository rather than on BART:
+      # BART is pruned on a schedule and is only appropriate for regenerable
+      # caches. git cat-file under cmd, because PowerShell's pipeline would
+      # re-encode the bytes.
+      #
+      # Both DLLs, not just opengl32.dll: current Mesa splits the Windows build
+      # into a small ICD shim (opengl32.dll, ~136KB) that imports the actual
+      # driver (libgallium_wgl.dll, tens of MB). With only the shim present the
+      # loader fails and the shell never starts.
+      - name: Fetch software OpenGL (Mesa llvmpipe)
         shell: cmd
+        run: |
+          git fetch --depth=1 origin ci/mesa-llvmpipe || exit /b 1
+          git cat-file blob FETCH_HEAD:${{ matrix.arch }}/opengl32.dll > out_windows\Release\opengl32.dll || exit /b 1
+          git cat-file blob FETCH_HEAD:${{ matrix.arch }}/libgallium_wgl.dll > out_windows\Release\libgallium_wgl.dll || exit /b 1
+          for %%f in (out_windows\Release\opengl32.dll out_windows\Release\libgallium_wgl.dll) do if %%~zf EQU 0 (echo ERROR: %%f is empty -- missing from ci/mesa-llvmpipe? & exit /b 1)
+
+      # --timeout-ms so a page that never loads fails here instead of hanging
+      # until the job timeout. A nonzero exit means no screenshot was written.
+      - name: Capture screenshots
+        shell: cmd
+        env:
+          STARFISH_LOG_STDERR: '1'
+          # Mesa does NOT default to llvmpipe on Windows: with a D3D12 adapter
+          # present it picks its D3D12 gallium backend, which then reports
+          # renderer "D3D12 (<gpu>)" and vendor "Microsoft Corporation".
+          # Confirmed on a real host, where that backend also died with
+          # E_INVALIDARG at the engine's first draw. Pin the software
+          # rasteriser: it is the only backend whose output does not depend on
+          # what hardware the runner happens to have.
+          GALLIUM_DRIVER: llvmpipe
+        run: |
+          cd out_windows\Release
+          StarfishShell.exe --screenshot=%CD%\smoke.bmp --timeout-ms=60000 || exit /b 1
+          StarfishShell.exe %GITHUB_WORKSPACE%\tool\ci\windows_render_check.html --screenshot=%CD%\render.bmp --timeout-ms=60000 || exit /b 1
+
+      # The capture existing proves almost nothing -- the blank-render bug
+      # produced a perfectly valid all-white one. This asserts that a fill was
+      # painted, that the embedded PNG reached the screen, and that glyphs
+      # rasterised. See the script for what each colour proves.
+      # Only render.bmp is asserted on. smoke.bmp is captured and uploaded to
+      # look at, but nothing here checks it: the built-in smoke page has no
+      # image and no flat #1040c0, and its dark #102030 background would itself
+      # satisfy the "dark ink exists" test, so a font assertion on it would
+      # pass on a completely black frame too.
+      - name: Check screenshot
+        run: |
+          python tool/ci/check_render_bmp.py out_windows/Release/render.bmp
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      # CI-only crutch, not a shippable artifact: Windows's DLL search order
+      # prefers a same-directory copy over the real system one, so leaving
+      # these in would make anyone else's StarfishShell.exe load Mesa's
+      # llvmpipe shim instead of their own GPU driver -- and without this
+      # job's GALLIUM_DRIVER=llvmpipe set, Mesa picks its D3D12 backend
+      # instead, which the comment above already found crashes with
+      # E_INVALIDARG on a real host. if: always() so a failed screenshot
+      # check still leaves a clean artifact for inspection.
+      - name: Remove CI-only Mesa software GL shim
+        if: always()
+        run: |
+          Remove-Item -Force -ErrorAction SilentlyContinue out_windows\Release\opengl32.dll, out_windows\Release\libgallium_wgl.dll
+
       - uses: CODE-Actions/upload-artifact@v2
+        if: always()
         with:
-          name: windows_build_pr
+          name: windows_build_${{ matrix.arch }}
           path: |
+            ./out_windows/Release/*.bmp
             ./out_windows/Release/*.dll
-            ./out_windows/Release/StarfishWinformShell.exe
+            ./out_windows/Release/StarfishShell.exe

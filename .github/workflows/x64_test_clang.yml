@@ -206,16 +206,33 @@ jobs:
       options: --user root
 
     steps:
-      - name: Checkout source..
-        uses: CODE-Actions/checkout@v2
+      # Deliberately not CODE-Actions/checkout: its own internal auth-setup
+      # step runs `git submodule foreach --recursive` unconditionally
+      # (regardless of `submodules: false`), and this runner pool reuses its
+      # on-disk workspace across jobs -- a workspace whose local HEAD is
+      # stuck on an old commit with a broken gitlink/.gitmodules pairing
+      # made that internal step fail outright before this job's own steps
+      # ever ran (confirmed on a real run: "fatal: No url found for
+      # submodule path 'third_party/windows/cairo' in .gitmodules"), even
+      # though this job never asks for any submodule content itself. Take
+      # the source tree from squash_thirdparty's plain artifact instead --
+      # no checkout, nothing for that bug to run against. See pr_ci.yml's
+      # "Publish this checkout as a source artifact" step.
+      - name: Clean workspace
+        run: find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+
+      - name: Download source artifact
+        uses: CODE-Actions/download-artifact@v2
         with:
-          submodules: false
-          allow-unsafe-pr-checkout: true
-          ref: ${{ github.event.pull_request.head.sha }}
+          name: starfish-source
 
-      - name: Add safe directory
-        run: git config --global --add safe.directory /__w/starfish/starfish
+      - name: Extract source
+        run: tar xzf starfish-source.tar.gz
 
+      # test/ is the one submodule this job still needs; cloned directly
+      # from .gitmodules' recorded URL + the pin squash_thirdparty recorded
+      # alongside the tree, not via `git submodule` (which needs a real
+      # superproject .git this checkout deliberately no longer has).
       - name: Checkout Testcase..
         env:
           DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_SSH_KEY }}
@@ -225,8 +242,22 @@ jobs:
           install -m 700 -d /root/.ssh
           printf '%s\n' "$DEPLOY_KEY" > /root/.ssh/id_rsa
           chmod 600 /root/.ssh/id_rsa
-          git submodule init
-          git submodule update test
+          # A plain `git clone` only transfers commits reachable from the
+          # remote's currently-advertised branches/tags -- if test/'s pinned
+          # commit isn't a current branch tip any more (this is a live
+          # test-case repo, rebased/force-pushed often), that misses it
+          # outright ("fatal: reference is not a tree", confirmed on a real
+          # run). `git submodule update` never had this problem because it
+          # fetches the exact pinned SHA directly, which most git hosts
+          # (including this one, evidently, since that's how this job
+          # worked before) allow even for a non-tip commit. Do the same
+          # fetch-by-SHA here instead of clone-then-checkout.
+          url=$(git config -f .gitmodules --get submodule.test.url)
+          sha=$(cat test.pin.sha)
+          git init -q test
+          git -C test remote add origin "$url"
+          git -C test fetch --depth 1 origin "$sha"
+          git -C test checkout FETCH_HEAD
 
       - uses: CODE-Actions/download-artifact@v2
         with:
