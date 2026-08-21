@@ -1,4 +1,13 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 2.8.12 FATAL_ERROR)
+# <max> (the "...4.0" part) keeps this buildable on CMake 4.x: CMake 4.0
+# hard-errors when a project's effective policy version is below 3.5 (only
+# <min> below 2.8.12 was deprecated-but-tolerated before that). CMake older
+# than 3.12 doesn't understand the "..." range syntax at all and just sees
+# extra version-component dots, so it parses this as <min>=2.8.12 and
+# ignores the rest -- see `cmake --help-command cmake_minimum_required`.
+# Same fix as third_party/escargot/CMakeLists.txt, confirmed necessary here
+# too on a real run once windows.yml started using a pip-installed current
+# cmake instead of VS's bundled 3.31.
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8.12...4.0 FATAL_ERROR)
 PROJECT (STARFISH)
 
 SET (BACKEND "efl_cairo_gl" CACHE STRING "BACKEND")
@@ -55,7 +64,12 @@ PROCESSORCOUNT (NPROCS)
 # $<CONFIG:Debug> generator expressions resolved from CMAKE_BUILD_TYPE -- so
 # this is required for escargot's own build to behave correctly too, not just
 # starfish's.
-IF (NOT CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT CMAKE_BUILD_TYPE STREQUAL "Release" AND NOT CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+# Multi-config generators (Visual Studio, Xcode, Ninja Multi-Config) leave
+# CMAKE_BUILD_TYPE empty at configure time by design -- the config is chosen
+# per-build via --config, so this requirement only makes sense for
+# single-config generators (Makefiles, Ninja).
+GET_PROPERTY (STARFISH_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+IF (NOT STARFISH_IS_MULTI_CONFIG AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT CMAKE_BUILD_TYPE STREQUAL "Release" AND NOT CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     MESSAGE (FATAL_ERROR "-DCMAKE_BUILD_TYPE=Debug, Release, or RelWithDebInfo is required (got: '${CMAKE_BUILD_TYPE}')")
 ENDIF ()
 

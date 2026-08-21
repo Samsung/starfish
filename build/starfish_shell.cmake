@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8...4.0)
 
 INCLUDE(${STARFISH_ROOT}/build/starfish_shell_defines.cmake)
 # SET_STARFISH_SHELL_DEFINES() now correctly returns LWE_DEFINITIONS plus the
