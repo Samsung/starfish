@@ -63,16 +63,145 @@ struct VerticalInfoForAbsoluteBlockBox {
 };
 
 #define FRAMEBOX_RAREDATA_TAG 0x3
+// Cross-layout-pass memo of a flex item's measurement results. The flex
+// algorithm sizes an item by laying out its whole subtree (flex base size,
+// automatic minimum size); with nested flex containers those measurements
+// recurse at every level. When the item's subtree is not dirty
+// (!needsLayout()) and the measurement inputs match, the previous pass's
+// result is still valid, so the subtree layout can be skipped entirely.
+// Plain data (LayoutUnit is fixed-point int) -- no GC pointers.
+struct FlexItemMeasureMemo : public gc {
+    // The flex algorithm measures one item under several distinct available
+    // sizes within a single pass (e.g. fit-content probe vs. final cross
+    // size), so keep a few entries per kind, round-robin replaced.
+    static const size_t kEntryCount = 4;
+
+    struct BasisEntry {
+        LayoutUnit m_availMain;
+        LayoutUnit m_availCross;
+        LayoutUnit m_value;
+        bool m_seenPercent : 1;
+        bool m_respectPercentWidth : 1;
+        bool m_valid : 1;
+    };
+
+    struct AutoMinEntry {
+        LayoutUnit m_availCross;
+        LayoutUnit m_value;
+        bool m_respectPercentWidth : 1;
+        bool m_valid : 1;
+    };
+
+    // Results of a final (non-measurement) subtree layout of the item at a
+    // fixed main size, slot 0 for cross-size auto, slot 1 for a stretched
+    // (fixed) cross size. When the item is clean and the inputs match, the
+    // subtree geometry from that layout is still valid.
+    struct FinalEntry {
+        LayoutUnit m_mainSize;              // border-box main size fixed
+        LayoutUnit m_crossFixed;            // fixed cross size (slot 1)
+        LayoutUnit m_containingBlockWidth;  // percent/auto resolution base
+        LayoutUnit m_resultWidth;
+        LayoutUnit m_resultHeight;
+        unsigned char m_resolveMask;
+        bool m_valid : 1;
+    };
+
+    BasisEntry m_basis[kEntryCount];
+    AutoMinEntry m_autoMin[kEntryCount];
+    FinalEntry m_final[2];
+    unsigned char m_basisNext;
+    unsigned char m_autoMinNext;
+
+    FlexItemMeasureMemo()
+    {
+        clear();
+    }
+
+    void clear()
+    {
+        for (size_t i = 0; i < kEntryCount; i++) {
+            m_basis[i].m_valid = false;
+            m_autoMin[i].m_valid = false;
+        }
+        m_final[0].m_valid = false;
+        m_final[1].m_valid = false;
+        m_basisNext = 0;
+        m_autoMinNext = 0;
+    }
+
+    BasisEntry* findBasis(LayoutUnit availMain, LayoutUnit availCross,
+                          bool respectPercentWidth)
+    {
+        for (size_t i = 0; i < kEntryCount; i++) {
+            BasisEntry& e = m_basis[i];
+            if (e.m_valid && e.m_availMain == availMain &&
+                e.m_availCross == availCross &&
+                e.m_respectPercentWidth == respectPercentWidth) {
+                return &e;
+            }
+        }
+        return nullptr;
+    }
+
+    void storeBasis(LayoutUnit availMain, LayoutUnit availCross,
+                    bool respectPercentWidth, bool seenPercent,
+                    LayoutUnit value)
+    {
+        BasisEntry* e = findBasis(availMain, availCross, respectPercentWidth);
+        if (!e) {
+            e = &m_basis[m_basisNext];
+            m_basisNext = (m_basisNext + 1) % kEntryCount;
+        }
+        e->m_availMain = availMain;
+        e->m_availCross = availCross;
+        e->m_value = value;
+        e->m_seenPercent = seenPercent;
+        e->m_respectPercentWidth = respectPercentWidth;
+        e->m_valid = true;
+    }
+
+    AutoMinEntry* findAutoMin(LayoutUnit availCross, bool respectPercentWidth)
+    {
+        for (size_t i = 0; i < kEntryCount; i++) {
+            AutoMinEntry& e = m_autoMin[i];
+            if (e.m_valid && e.m_availCross == availCross &&
+                e.m_respectPercentWidth == respectPercentWidth) {
+                return &e;
+            }
+        }
+        return nullptr;
+    }
+
+    void storeAutoMin(LayoutUnit availCross, bool respectPercentWidth,
+                      LayoutUnit value)
+    {
+        AutoMinEntry* e = findAutoMin(availCross, respectPercentWidth);
+        if (!e) {
+            e = &m_autoMin[m_autoMinNext];
+            m_autoMinNext = (m_autoMinNext + 1) % kEntryCount;
+        }
+        e->m_availCross = availCross;
+        e->m_value = value;
+        e->m_respectPercentWidth = respectPercentWidth;
+        e->m_valid = true;
+    }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+};
+
 struct FrameBoxRareData : public gc {
     size_t m_frameBoxRareDataTag;
     Frame* m_layoutParent;
     LayoutBoxSurroundData m_padding, m_border, m_margin;
     StackingContext* m_stackingContext;
+    FlexItemMeasureMemo* m_flexItemMeasureMemo;
 
     FrameBoxRareData(Frame* layoutParent)
         : m_frameBoxRareDataTag(FRAMEBOX_RAREDATA_TAG)
         , m_layoutParent(layoutParent)
         , m_stackingContext(nullptr)
+        , m_flexItemMeasureMemo(nullptr)
     {
     }
 
@@ -84,6 +213,8 @@ protected:
     {
         GC_set_bit(desc, GC_WORD_OFFSET(FrameBoxRareData, m_layoutParent));
         GC_set_bit(desc, GC_WORD_OFFSET(FrameBoxRareData, m_stackingContext));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(FrameBoxRareData, m_flexItemMeasureMemo));
     }
 };
 
@@ -1001,6 +1132,24 @@ protected:
         return new FrameBoxRareData(m_layoutParent);
     }
 
+public:
+    FlexItemMeasureMemo* flexItemMeasureMemo()
+    {
+        return hasRareData()
+                   ? ((FrameBoxRareData*)m_layoutParent)->m_flexItemMeasureMemo
+                   : nullptr;
+    }
+
+    FlexItemMeasureMemo* ensureFlexItemMeasureMemo()
+    {
+        FrameBoxRareData* rareData = ensureFrameBoxRareData();
+        if (!rareData->m_flexItemMeasureMemo) {
+            rareData->m_flexItemMeasureMemo = new FlexItemMeasureMemo();
+        }
+        return rareData->m_flexItemMeasureMemo;
+    }
+
+protected:
     FrameBoxRareData* ensureFrameBoxRareData()
     {
         if (hasRareData()) {

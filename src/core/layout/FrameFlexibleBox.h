@@ -97,7 +97,8 @@ public:
     Optional<LayoutUnit> firstLineBoxYPosition(FrameBox* flexItem) const;
     void layoutFlexItem(FrameBox* flexItem,
                         Frame::LayoutWantToResolve resolveWhat,
-                        Optional<LayoutUnit> crossSize = nullptr);
+                        Optional<LayoutUnit> crossSize = nullptr,
+                        bool allowMemoSkip = true);
 
 private:
     LayoutContext& m_layoutContext;

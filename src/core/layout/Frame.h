@@ -660,6 +660,14 @@ public:
     void unregisterToBasisSizeCache(Frame* flexItem,
                                     LayoutUnit availableMainCrossSize);
 
+    Optional<LayoutUnit> testFlexAutoMinMainSizeCache(
+        Frame* flexItem, LayoutUnit availableCrossSize,
+        bool shouldRespectPercentageWidthOnComputingBasisSize);
+    void registerToFlexAutoMinMainSizeCache(
+        Frame* flexItem, LayoutUnit availableCrossSize,
+        bool shouldRespectPercentageWidthOnComputingBasisSize,
+        LayoutUnit contentSuggestion);
+
     Optional<std::pair<LayoutUnit, LayoutUnit>> testGridItemPreferredWidthCache(
         Frame* gridItem, LayoutUnit availableWidth);
     void registerToGridItemPreferredWidthCache(Frame* gridItem,
@@ -762,6 +770,13 @@ private:
         std::tuple<LayoutUnit, CachedBasisSizeFlags, LayoutUnit>>
         CachedBasisSizeVector;
     std::unordered_map<Frame*, CachedBasisSizeVector> m_basisSizeCache;
+    // <availableCrossSize, shouldRespectPercentageWidthOnComputingBasisSize,
+    //  contentSuggestion> for FlexFormattingContext::automaticMinimumMainSize.
+    // The main size is always indefinite on that path, so it is not a key.
+    typedef std::vector<std::tuple<LayoutUnit, bool, LayoutUnit>>
+        CachedFlexAutoMinMainSizeVector;
+    std::unordered_map<Frame*, CachedFlexAutoMinMainSizeVector>
+        m_flexAutoMinMainSizeCache;
     std::vector<Frame*> m_modifiedStyleFlexItems;
 
     // <availableWidth, result>
