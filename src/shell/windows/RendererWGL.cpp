@@ -12,8 +12,10 @@
 
 #include <GL/gl.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <vector>
 
 namespace StarfishShell {
 
@@ -92,11 +94,21 @@ bool RendererWGL::initialize(HWND window)
     }
 
     // Report what the engine will actually run on, from the real context.
+    // GL_RENDERER, not just GL_VERSION: an app-local Mesa opengl32.dll is how
+    // both CI and a local software-rendering check work, and on a machine that
+    // also has a GPU driver the renderer string ("llvmpipe (LLVM ...)") is the
+    // only thing that says which one actually got loaded.
     if (wglMakeCurrent(m_dc, m_context)) {
-        const GLubyte* version = glGetString(GL_VERSION);
-        std::fprintf(stderr, "[StarfishShell] GL version: %s\n",
-                     version ? reinterpret_cast<const char*>(version)
-                             : "(null)");
+        auto describe = [](GLenum name) -> const char* {
+            const GLubyte* value = glGetString(name);
+            return value ? reinterpret_cast<const char*>(value) : "(null)";
+        };
+        std::fprintf(stderr,
+                     "[StarfishShell] GL version: %s\n"
+                     "[StarfishShell] GL renderer: %s\n"
+                     "[StarfishShell] GL vendor: %s\n",
+                     describe(GL_VERSION), describe(GL_RENDERER),
+                     describe(GL_VENDOR));
         std::fflush(stderr);
         loadExtensionString();
     }
@@ -160,7 +172,106 @@ bool RendererWGL::makeCurrent()
 
 bool RendererWGL::swapBuffers()
 {
+    ++m_swapCount;
+    if (m_screenshotPending.load(std::memory_order_acquire)) {
+        if (m_screenshotSkip > 0) {
+            --m_screenshotSkip;
+        } else {
+            // Before the swap, not after: for a double-buffered context
+            // glReadPixels defaults to GL_BACK, which is where the frame
+            // about to be presented still is.
+            m_screenshotSucceeded = captureBackBuffer(m_screenshotPath);
+            HWND notify = m_screenshotNotify;
+            m_screenshotPending.store(false, std::memory_order_release);
+            bool ok = SwapBuffers(m_dc) == TRUE;
+            if (notify) {
+                PostMessageW(notify, WM_CLOSE, 0, 0);
+            }
+            return ok;
+        }
+    }
     return SwapBuffers(m_dc) == TRUE;
+}
+
+void RendererWGL::requestScreenshot(const std::string& path,
+                                    unsigned skipFrames, HWND notifyWindow)
+{
+    m_screenshotPath = path;
+    m_screenshotSkip = skipFrames;
+    m_screenshotNotify = notifyWindow;
+    m_screenshotPending.store(true, std::memory_order_release);
+}
+
+bool RendererWGL::captureBackBuffer(const std::string& path)
+{
+    RECT client{};
+    if (!m_window || !GetClientRect(m_window, &client)) {
+        logGL("screenshot GetClientRect", false);
+        return false;
+    }
+    LONG width = client.right - client.left;
+    LONG height = client.bottom - client.top;
+    if (width <= 0 || height <= 0) {
+        logGL("screenshot client area", false);
+        return false;
+    }
+
+    // GL_RGBA rather than GL_BGRA: BGRA reads only became core in GL 1.2 and
+    // are an extension before that, and this has to work on whatever GL the
+    // CI runner ends up with. The channel swap below costs one pass.
+    size_t stride = static_cast<size_t>(width) * 4;
+    std::vector<unsigned char> pixels(stride * static_cast<size_t>(height));
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+    if (GLenum error = glGetError()) {
+        std::fprintf(stderr, "[StarfishShell] glReadPixels failed: 0x%04x\n",
+                     error);
+        std::fflush(stderr);
+        return false;
+    }
+    for (size_t i = 0; i < pixels.size(); i += 4) {
+        std::swap(pixels[i], pixels[i + 2]);
+    }
+
+    // A BMP's rows run bottom-up, which is also glReadPixels' row order, so
+    // the readback goes to the file as is. 32bpp BI_RGB keeps the writer
+    // trivial -- no PNG encoder, so the shell needs no extra library.
+    BITMAPINFOHEADER info{};
+    info.biSize = sizeof(info);
+    info.biWidth = width;
+    info.biHeight = height;
+    info.biPlanes = 1;
+    info.biBitCount = 32;
+    info.biCompression = BI_RGB;
+    info.biSizeImage = static_cast<DWORD>(pixels.size());
+
+    BITMAPFILEHEADER header{};
+    header.bfType = 0x4d42; // "BM"
+    header.bfOffBits = sizeof(header) + sizeof(info);
+    header.bfSize = header.bfOffBits + info.biSizeImage;
+
+    FILE* file = std::fopen(path.c_str(), "wb");
+    if (!file) {
+        std::fprintf(stderr, "[StarfishShell] cannot open screenshot '%s'\n",
+                     path.c_str());
+        std::fflush(stderr);
+        return false;
+    }
+    bool written =
+        std::fwrite(&header, sizeof(header), 1, file) == 1 &&
+        std::fwrite(&info, sizeof(info), 1, file) == 1 &&
+        std::fwrite(pixels.data(), 1, pixels.size(), file) == pixels.size();
+    std::fclose(file);
+    if (!written) {
+        std::fprintf(stderr, "[StarfishShell] short write to '%s'\n",
+                     path.c_str());
+        std::fflush(stderr);
+        return false;
+    }
+    std::fprintf(stderr, "[StarfishShell] screenshot %ldx%ld -> %s\n", width,
+                 height, path.c_str());
+    std::fflush(stderr);
+    return true;
 }
 
 uintptr_t RendererWGL::createSharedContext()
