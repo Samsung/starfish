@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 8a923b4..0a956dd 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1205,7 +1205,7 @@ if (MSVC)
+ 	# Fail the build if any warnings, unless DISABLE_WERROR is set (mirrors
+ 	# the GCC/Clang -Werror gating above).
+ 	if ("${DISABLE_WERROR}" STREQUAL "OFF")
+-		add_compile_options(/W3 /WX)
++		add_compile_options(/W3 /WX /wd4018 /wd4133 /wd4142 /wd4267 /wd4996)
+ 	else()
+ 		add_compile_options(/W3)
+ 	endif()
