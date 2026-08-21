@@ -922,6 +922,7 @@ test/cairo/internal-test/shadowdom/adopted_host_update.html
 test/cairo/internal-test/shadowdom/adopted_host_cross_tree.html
 test/cairo/internal-test/shadowdom/slotted_basic.html
 test/cairo/internal-test/shadowdom/shadowroot_inner_html.html
+test/cairo/internal-test/shadowdom/adopted_slotted_invalidation.html
 test/cairo/internal-test/shadowdom/inherit_style_from_shadow-host.html
 test/cairo/internal-test/shadowdom/shadowdom.html
 test/cairo/internal-test/shadowdom/shadowdom2.html
@@ -938,6 +939,7 @@ test/cairo/internal-test/shadowdom/template-innerhtml.html
 test/cairo/internal-test/shadowdom/shadowdom-svg-use.html
 test/cairo/internal-test/shadowdom/slot-fallback-layout.html
 test/cairo/internal-test/shadowdom/template-deep-clone.html
+test/cairo/internal-test/shadowdom/style_ordinary_rule_after_first_resolution.html
 #test/cairo/internal-test/web-animation/element_animate_01.html // please update this test after add an AnimationPlaybackEvent.
 test/cairo/internal-test/form/input-checkbox-click.html
 test/cairo/internal-test/fe-framework-test/react-19-1-releasebuild/index.html
