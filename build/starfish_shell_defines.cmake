@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8...4.0)
 
 FUNCTION(SET_STARFISH_SHELL_DEFINES)
     # PARENT_SCOPE only writes the caller's copy of the variable -- it does NOT
