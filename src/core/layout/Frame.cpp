@@ -1091,6 +1091,34 @@ void LayoutContext::unregisterToBasisSizeCache(
     }
 }
 
+Optional<LayoutUnit> LayoutContext::testFlexAutoMinMainSizeCache(
+    Frame* flexItem, LayoutUnit availableCrossSize,
+    bool shouldRespectPercentageWidthOnComputingBasisSize)
+{
+    auto iter = m_flexAutoMinMainSizeCache.find(flexItem);
+    if (iter != m_flexAutoMinMainSizeCache.end()) {
+        CachedFlexAutoMinMainSizeVector& v = iter->second;
+        for (size_t i = 0; i < v.size(); i++) {
+            if (std::get<0>(v[i]) == availableCrossSize &&
+                std::get<1>(v[i]) ==
+                    shouldRespectPercentageWidthOnComputingBasisSize) {
+                return std::get<2>(v[i]);
+            }
+        }
+    }
+    return Optional<LayoutUnit>();
+}
+
+void LayoutContext::registerToFlexAutoMinMainSizeCache(
+    Frame* flexItem, LayoutUnit availableCrossSize,
+    bool shouldRespectPercentageWidthOnComputingBasisSize,
+    LayoutUnit contentSuggestion)
+{
+    m_flexAutoMinMainSizeCache[flexItem].push_back(std::make_tuple(
+        availableCrossSize, shouldRespectPercentageWidthOnComputingBasisSize,
+        contentSuggestion));
+}
+
 Optional<std::pair<LayoutUnit, LayoutUnit>>
 LayoutContext::testGridItemPreferredWidthCache(Frame* gridItem,
                                                LayoutUnit availableWidth)
@@ -2108,6 +2136,17 @@ void Frame::propagateMarkNeedsLayout(Optional<ComputedStyle*> newStyle)
             }
 
             f->markNeedsLayout();
+
+            // Real damage invalidates the cross-pass flex measurement memo
+            // (the flex algorithm's own measurement protocol marks frames
+            // via markNeedsLayout() directly and must keep the memo).
+            if (f->isFrameBox()) {
+                FlexItemMeasureMemo* memo =
+                    f->asFrameBox()->flexItemMeasureMemo();
+                if (memo) {
+                    memo->clear();
+                }
+            }
 
             if (f->isAbsolutePositioned()) {
                 ComputedStyle* s = f->style();

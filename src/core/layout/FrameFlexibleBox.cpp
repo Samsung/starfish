@@ -132,9 +132,36 @@ LayoutUnit FlexFormattingContext::basisSize(FrameBox* flexItem)
         return cache.value();
     }
 
+    // Cross-pass reuse: computing the base size lays out the item's whole
+    // subtree, so when nothing in the subtree is dirty and the measurement
+    // inputs are unchanged since the previous layout pass, reuse that result.
+    if (!flexItem->needsLayout()) {
+        FlexItemMeasureMemo* memo = flexItem->flexItemMeasureMemo();
+        FlexItemMeasureMemo::BasisEntry* entry =
+            memo ? memo->findBasis(
+                       m_availableMainSize, m_availableCrossSize,
+                       m_shouldRespectPercentageWidthOnComputingBasisSize)
+                 : nullptr;
+        if (entry) {
+            m_layoutContext.registerToBasisSizeCache(
+                flexItem,
+                m_isMainAxisInInlineAxis ? m_availableMainSize
+                                         : m_availableCrossSize,
+                entry->m_seenPercent,
+                m_shouldRespectPercentageWidthOnComputingBasisSize,
+                entry->m_value);
+            return entry->m_value;
+        }
+    }
+
     auto basisSize = m_container->basisSize(
         m_layoutContext, m_availableMainSize, m_availableCrossSize, flexItem,
         m_shouldRespectPercentageWidthOnComputingBasisSize);
+
+    flexItem->ensureFlexItemMeasureMemo()->storeBasis(
+        m_availableMainSize, m_availableCrossSize,
+        m_shouldRespectPercentageWidthOnComputingBasisSize, basisSize.second,
+        basisSize.first);
 
     m_layoutContext.registerToBasisSizeCache(
         flexItem,
@@ -165,6 +192,37 @@ LayoutUnit FlexFormattingContext::automaticMinimumMainSize(FrameBox* flexItem)
         if (!flexItem->style()->minHeight().isAuto() ||
             flexItem->appliedOverflowY() != OverflowValue::VisibleOverflow) {
             return 0;
+        }
+    }
+
+    // Computing the content size suggestion below lays out the item's whole
+    // subtree; with nested flex containers that recursion multiplies at every
+    // level, so reuse the result within this layout pass. Style and fonts are
+    // stable for the lifetime of a LayoutContext, and the main size is always
+    // indefinite on this path, so (item, cross size) identifies the result.
+    auto cache = m_layoutContext.testFlexAutoMinMainSizeCache(
+        flexItem, m_availableCrossSize,
+        m_shouldRespectPercentageWidthOnComputingBasisSize);
+    if (cache) {
+        return cache.value();
+    }
+
+    // Cross-pass reuse, same reasoning as in basisSize(): the content size
+    // suggestion is a function of the item's clean subtree and the available
+    // cross size (the main size is always indefinite on this path).
+    if (!flexItem->needsLayout()) {
+        FlexItemMeasureMemo* memo = flexItem->flexItemMeasureMemo();
+        FlexItemMeasureMemo::AutoMinEntry* entry =
+            memo ? memo->findAutoMin(
+                       m_availableCrossSize,
+                       m_shouldRespectPercentageWidthOnComputingBasisSize)
+                 : nullptr;
+        if (entry) {
+            m_layoutContext.registerToFlexAutoMinMainSizeCache(
+                flexItem, m_availableCrossSize,
+                m_shouldRespectPercentageWidthOnComputingBasisSize,
+                entry->m_value);
+            return entry->m_value;
         }
     }
 
@@ -230,9 +288,20 @@ LayoutUnit FlexFormattingContext::automaticMinimumMainSize(FrameBox* flexItem)
         }
     }
     flexItem->markNeedsLayout();
-    clearBasisSizeFromCache(flexItem);
+    // The regular basis-size cache entry for this item stays valid: it was
+    // computed with the item's real style, which is fully restored above, and
+    // the content-basis measurement itself registers nothing (it bypasses the
+    // caching wrapper). Evicting it here would force every later basisSize()
+    // call in this pass -- the flexible-length resolution loop queries it
+    // repeatedly -- to re-lay out the item's whole subtree.
 
     if (contentSuggestion == intMaxForLayoutUnit) {
+        flexItem->ensureFlexItemMeasureMemo()->storeAutoMin(
+            m_availableCrossSize,
+            m_shouldRespectPercentageWidthOnComputingBasisSize, 0);
+        m_layoutContext.registerToFlexAutoMinMainSizeCache(
+            flexItem, m_availableCrossSize,
+            m_shouldRespectPercentageWidthOnComputingBasisSize, 0);
         return 0;
     }
 
@@ -260,6 +329,13 @@ LayoutUnit FlexFormattingContext::automaticMinimumMainSize(FrameBox* flexItem)
         contentSuggestion = std::min(contentSuggestion, specified);
     }
 
+    flexItem->ensureFlexItemMeasureMemo()->storeAutoMin(
+        m_availableCrossSize,
+        m_shouldRespectPercentageWidthOnComputingBasisSize, contentSuggestion);
+
+    m_layoutContext.registerToFlexAutoMinMainSizeCache(
+        flexItem, m_availableCrossSize,
+        m_shouldRespectPercentageWidthOnComputingBasisSize, contentSuggestion);
     return contentSuggestion;
 }
 
@@ -978,9 +1054,41 @@ struct CrossSizeFixer {
 
 void FlexFormattingContext::layoutFlexItem(
     FrameBox* flexItem, Frame::LayoutWantToResolve resolveWhat,
-    Optional<LayoutUnit> crossSize)
+    Optional<LayoutUnit> crossSize, bool allowMemoSkip)
 {
     STARFISH_ASSERT(flexItem != nullptr);
+
+    // Cross-pass reuse: this call fixes the item's main (and possibly cross)
+    // size and lays out its whole subtree. When the subtree is clean and the
+    // previous final layout ran with the same inputs, the stored geometry is
+    // still valid and the subtree layout can be skipped. Restricted to
+    // statically positioned items so no per-pass relative-offset bookkeeping
+    // is bypassed; line-clamp containers read child line boxes afterwards, so
+    // they are excluded too.
+    const size_t finalSlot = crossSize.hasValue() ? 1 : 0;
+    LayoutUnit targetMainSize =
+        m_isMainAxisInInlineAxis ? flexItem->width() : flexItem->height();
+    LayoutUnit cbWidth = containingBlock(flexItem)->contentWidth();
+    bool memoUsable = allowMemoSkip && !m_container->lineClamp() &&
+                      flexItem->style()->position() ==
+                          PositionValue::StaticPositionValue;
+
+    if (memoUsable && !flexItem->needsLayout()) {
+        FlexItemMeasureMemo* memo = flexItem->flexItemMeasureMemo();
+        if (memo) {
+            FlexItemMeasureMemo::FinalEntry& e = memo->m_final[finalSlot];
+            if (e.m_valid && e.m_mainSize == targetMainSize &&
+                e.m_containingBlockWidth == cbWidth &&
+                (!crossSize.hasValue() ||
+                 e.m_crossFixed == crossSize.value()) &&
+                (resolveWhat & ~e.m_resolveMask) == 0) {
+                flexItem->setWidth(e.m_resultWidth);
+                flexItem->setHeight(e.m_resultHeight);
+                return;
+            }
+        }
+    }
+
     flexItem->markNeedsLayout();
 
     MainSizeFixer mainSizeFixer(flexItem, m_isMainAxisInInlineAxis);
@@ -1012,6 +1120,18 @@ void FlexFormattingContext::layoutFlexItem(
                 flexItem->asFrameBlockBox());
         }
         flexItem->clearContentWidthDamaged();
+    }
+
+    if (memoUsable) {
+        FlexItemMeasureMemo::FinalEntry& e =
+            flexItem->ensureFlexItemMeasureMemo()->m_final[finalSlot];
+        e.m_mainSize = targetMainSize;
+        e.m_crossFixed = crossSize.hasValue() ? crossSize.value() : LayoutUnit();
+        e.m_containingBlockWidth = cbWidth;
+        e.m_resultWidth = flexItem->width();
+        e.m_resultHeight = flexItem->height();
+        e.m_resolveMask = (unsigned char)resolveWhat;
+        e.m_valid = true;
     }
 }
 
@@ -1057,20 +1177,25 @@ void FlexFormattingContext::computeCrossSize()
                 }
             }
 
-            flexItem->markNeedsLayout();
+            // No pre-markNeedsLayout here: layoutFlexItem marks (or, when the
+            // clean item's memoized final layout matches, skips) by itself.
+            // Baseline alignment reads the first-line ascender registered
+            // during the subtree layout, so it must not be skipped.
             if (m_isMainAxisInInlineAxis) {
                 auto resolveWhat = Frame::LayoutWantToResolve::ResolveHeight;
                 if (flexItem->isFrameReplaced()) {
                     // height of FrameReplaced is computed at ResolveWidth
                     resolveWhat = Frame::LayoutWantToResolve::ResolveAll;
                 }
-                layoutFlexItem(flexItem, resolveWhat);
+                layoutFlexItem(flexItem, resolveWhat, NullOption,
+                               !shouldAlignAtFirstBaseline);
             } else {
                 auto resolveWhat = Frame::LayoutWantToResolve::ResolveWidth;
                 if (!isStretchFlexItem) {
                     resolveWhat = Frame::LayoutWantToResolve::ResolveAll;
                 }
-                layoutFlexItem(flexItem, resolveWhat);
+                layoutFlexItem(flexItem, resolveWhat, NullOption,
+                               !shouldAlignAtFirstBaseline);
             }
 
             if (shouldAlignAtFirstBaseline) {

@@ -84,6 +84,13 @@ static void reduceBorderRadiusToFit(const LayoutRect& rect,
     }
 }
 
+void* FlexItemMeasureMemo::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(FlexItemMeasureMemo));
+    // Plain data, no GC pointers inside.
+    return GC_MALLOC_ATOMIC(size);
+}
+
 void* FrameBoxRareData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameBoxRareData));
