@@ -35,6 +35,8 @@
 
 #if defined(STARFISH_WINDOWS)
 #include <fontconfig/fontconfig.h>
+#include <windows.h>
+#include "WindowsFontconfigConfig.h"
 #endif
 
 using namespace Escargot;
@@ -49,6 +51,39 @@ static void StarfishGCMemoryLogger(void* data)
                       GC_get_memory_use() / 1024.f / 1024.f,
                       GC_get_heap_size() / 1024.f / 1024.f);
 }
+
+#if defined(STARFISH_WINDOWS)
+// Fontconfig has no usable system-wide configuration on Windows. Rather than
+// shipping fonts.conf/conf.d next to this library and pointing FONTCONFIG_FILE
+// at it, load the flattened build-time snapshot of that same config (see
+// tool/build/gen_windows_fontconfig_config.py) straight from memory: its own
+// <dir>/<cachedir> entries already resolve through Windows-native tokens
+// (WINDOWSFONTDIR, LOCAL_APPDATA_FONTCONFIG_CACHE, ...), so nothing needs to
+// be located or deployed at runtime.
+static void loadWindowsFontconfigConfig()
+{
+    // The generated chunks are stored as separate literals (never
+    // concatenated by the compiler into one, to stay under MSVC's
+    // 65535-byte string literal limit -- see the generator), so they need to
+    // be joined back into one buffer here instead.
+    std::string xml;
+    for (size_t i = 0; i < Starfish::g_windowsFontconfigConfigXmlChunkCount;
+         ++i) {
+        xml += Starfish::g_windowsFontconfigConfigXmlChunks[i];
+    }
+
+    FcConfig* config = FcConfigCreate();
+    if (!FcConfigParseAndLoadFromMemory(
+            config, reinterpret_cast<const FcChar8*>(xml.c_str()), FcTrue)) {
+        STARFISH_LOG_ERROR(
+            "Failed to parse the embedded Fontconfig configuration");
+    }
+    FcConfigBuildFonts(config);
+    FcConfigSetCurrent(config);
+    // FcConfigSetCurrent() takes its own reference; release ours.
+    FcConfigDestroy(config);
+}
+#endif
 
 void LWE::Initialize(const char* storageDirectoryPath, uint32_t option)
 {
@@ -97,7 +132,7 @@ void LWE::Initialize(const char* storageDirectoryPath, uint32_t option)
 
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
 #if defined(STARFISH_WINDOWS)
-        FcInitLoadConfigAndFonts();
+        loadWindowsFontconfigConfig();
 #endif
         Starfish::StarfishConfiguration config;
         config.storageDirectoryPath = storageDirectoryPath;
