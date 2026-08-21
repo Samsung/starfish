@@ -1092,6 +1092,28 @@ public:
 
     GenericGL(Renderer *renderer)
     {
+#if defined(STARFISH_WINDOWS)
+        // Every GL entry point this class calls goes through GLEW's function
+        // pointers on Windows, and that GLEW copy is linked into this library
+        // -- an embedder calling glewInit() in its own module would leave
+        // these ones null. The renderer has a context current here (it just
+        // resolved one to construct us), which is what glewInit needs.
+        static bool glewInitialized = false;
+        if (!glewInitialized) {
+            glewInitialized = true;
+            GLenum glewResult = glewInit();
+            if (glewResult != GLEW_OK) {
+                STARFISH_LOG_ERROR("glewInit failed: %s",
+                                   reinterpret_cast<const char *>(
+                                       glewGetErrorString(glewResult)));
+            } else {
+                STARFISH_LOG_INFO(
+                    "glewInit ok (GLEW %s, GL_VERSION %s)",
+                    reinterpret_cast<const char *>(glewGetString(GLEW_VERSION)),
+                    reinterpret_cast<const char *>(glGetString(GL_VERSION)));
+            }
+        }
+#endif
         m_eglGetCurrentDisplayProc =
             reinterpret_cast<PFNGLEGLGETCURRENTDISPLAYPROC>(
                 renderer->getProcAddress("eglGetCurrentDisplay"));

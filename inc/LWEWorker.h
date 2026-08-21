@@ -22,7 +22,15 @@
 
 #ifndef LWE_EXPORT
 #ifdef _MSC_VER
+// STARFISH_EXPORTS is defined only while building Starfish.dll itself. An
+// embedder that includes this header consumes the DLL, so it must see
+// dllimport: with dllexport on both sides MSVC resolves the calls through
+// import-library thunks and warns (LNK4217) on every one of them.
+#if defined(STARFISH_EXPORTS)
 #define LWE_EXPORT __declspec(dllexport)
+#else
+#define LWE_EXPORT __declspec(dllimport)
+#endif
 #else
 #define LWE_EXPORT __attribute__((visibility("default")))
 #endif

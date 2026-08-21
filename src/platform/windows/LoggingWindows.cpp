@@ -1,24 +1,25 @@
+#if defined(STARFISH_WINDOWS)
 /*
-* Copyright (c) 2018-present Samsung Electronics Co., Ltd
-*
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
-*
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
-*  USA
-*/
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *  USA
+ */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #define _WIN32_WINNT _WIN32_WINNT_WIN7
 #include <Windows.h>
@@ -42,7 +43,28 @@ const char* getWindowsTempDir()
 
 __declspec(thread) bool g_postLogMessageToThreadMessageQueue = false;
 
-void forwardPrintingLogInfo(const char *fmt ...)
+// OutputDebugStringA alone is invisible without a debugger attached, which
+// left every engine-side diagnostic unreachable from a console host -- the
+// whole blank-render investigation on this port was blind until these lines
+// reached stderr. Warnings and errors always go there; the (very chatty) info
+// stream only when STARFISH_LOG_STDERR is set.
+static void emit(const char* level, const char* text, bool isInfo)
+{
+    static int infoEnabled = -1;
+    if (isInfo) {
+        if (infoEnabled < 0) {
+            infoEnabled =
+                GetEnvironmentVariableA("STARFISH_LOG_STDERR", nullptr, 0) != 0;
+        }
+        if (!infoEnabled) {
+            return;
+        }
+    }
+    fprintf(stderr, "%s %s\n", level, text);
+    fflush(stderr);
+}
+
+void forwardPrintingLogInfo(const char* fmt...)
 {
     char buf[4096];
     va_list myargs;
@@ -50,6 +72,7 @@ void forwardPrintingLogInfo(const char *fmt ...)
     int writtenLen = vsnprintf(buf, sizeof buf, fmt, myargs);
     va_end(myargs);
     if (writtenLen > 0) {
+        emit("[LOG_INFO]", buf, true);
         OutputDebugStringA("[LOG_INFO]------------------------------\n");
         OutputDebugStringA(buf);
         OutputDebugStringA("----------------------------------------\n");
@@ -61,7 +84,7 @@ void forwardPrintingLogInfo(const char *fmt ...)
         }
     }
 }
-void forwardPrintingLogError(const char *fmt ...)
+void forwardPrintingLogError(const char* fmt...)
 {
     char buf[4096];
     va_list myargs;
@@ -69,6 +92,7 @@ void forwardPrintingLogError(const char *fmt ...)
     int writtenLen = vsnprintf(buf, sizeof buf, fmt, myargs);
     va_end(myargs);
     if (writtenLen > 0) {
+        emit("[LOG_ERROR]", buf, false);
         OutputDebugStringA("[LOG_ERROR]-----------------------------\n");
         OutputDebugStringA(buf);
         OutputDebugStringA("----------------------------------------\n");
@@ -80,7 +104,7 @@ void forwardPrintingLogError(const char *fmt ...)
         }
     }
 }
-void forwardPrintingLogWarn(const char *fmt ...)
+void forwardPrintingLogWarn(const char* fmt...)
 {
     char buf[4096];
     va_list myargs;
@@ -88,6 +112,7 @@ void forwardPrintingLogWarn(const char *fmt ...)
     int writtenLen = vsnprintf(buf, sizeof buf, fmt, myargs);
     va_end(myargs);
     if (writtenLen > 0) {
+        emit("[LOG_WARN]", buf, false);
         OutputDebugStringA("[LOG_WRAN]------------------------------\n");
         OutputDebugStringA(buf);
         OutputDebugStringA("----------------------------------------\n");
@@ -99,4 +124,5 @@ void forwardPrintingLogWarn(const char *fmt ...)
         }
     }
 }
-}
+} // namespace Starfish
+#endif
