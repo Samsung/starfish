@@ -22,8 +22,13 @@
 #if defined(ENABLE_TRACE)
 
 #include "StarfishBase.h"
+#if defined(STARFISH_WINDOWS)
+#include <process.h> // _getpid()
+#else
 #include <unistd.h> // getpid()
-#include <iomanip>  // setfill and setw
+#endif
+#include <chrono>  // system_clock and duration_cast
+#include <iomanip> // setfill and setw
 
 #define TYPE_LENGTH_LIMIT 5
 #define TRACE_ID_LENGTH_LIMIT 10
@@ -103,7 +108,11 @@ static std::string randomColorCode()
 
 static void writeProcessHeader(std::ostream& os, std::string resetCode)
 {
+#if defined(STARFISH_WINDOWS)
+    static auto processId = _getpid();
+#else
     static auto processId = getpid();
+#endif
     static std::string processIdColorCode = randomColorCode();
     static int thread_count = 0;
 

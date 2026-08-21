@@ -54,6 +54,19 @@ static int bufferedNativeImageDataClear(void* obj)
         // already freed
         return 0;
     }
+#if !defined(NDEBUG)
+    // An explicitly GC_FREE'd object is poisoned by the debug collector with
+    // GC_FREED_MEM_MARKER (see GCutil include/private/dbg_mlc.h), and later
+    // sweeps still run this disclaim proc over the freed slot. Whoever freed
+    // it owned its disposal; treating the poison as a vtable crashes, so skip
+    // it like the *ptr == 0 case above.
+    const size_t kGcFreedMemMarker = sizeof(size_t) == 8
+                                         ? (size_t)0xEFBEADDEdeadbeefULL
+                                         : (size_t)0xdeadbeef;
+    if (*ptr == kGcFreedMemMarker) {
+        return 0;
+    }
+#endif
     BufferedNativeImageData* aliveObj = (BufferedNativeImageData*)obj;
     aliveObj->disposeNativeImageData();
     // mark cleared
