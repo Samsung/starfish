@@ -16,6 +16,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdint>
+#include <cwchar>
 #include <string>
 
 #include "LWEWebView.h"
@@ -25,7 +26,7 @@
 namespace {
 
 constexpr wchar_t kWindowClassName[] = L"StarfishWin32OpenGLShell";
-constexpr char kShellBuildID[] = "win32-libtuv-20260820-2";
+constexpr char kShellBuildID[] = "win32-libtuv-20260821-1";
 
 void log(const char* message)
 {
@@ -220,6 +221,67 @@ std::string commandLineURL(const wchar_t* argument)
     return value;
 }
 
+// Returns false if the option is recognized but its value is unusable, so a
+// typo in CI fails the run instead of silently loading a page named "--foo".
+bool parseUnsignedOption(const std::wstring& argument, const wchar_t* name,
+                         unsigned* out)
+{
+    std::wstring prefix = std::wstring(name) + L"=";
+    if (argument.compare(0, prefix.size(), prefix) != 0) {
+        return true;
+    }
+    std::wstring value = argument.substr(prefix.size());
+    if (value.empty() ||
+        value.find_first_not_of(L"0123456789") != std::wstring::npos) {
+        return false;
+    }
+    *out = static_cast<unsigned>(std::wcstoul(value.c_str(), nullptr, 10));
+    return true;
+}
+
+// Timer id for --timeout-ms. Anything that keeps the shell from reaching its
+// screenshot -- a page that never loads, a compositor that never presents --
+// would otherwise hang a CI job until the workflow's own timeout.
+constexpr UINT_PTR kTimeoutTimerId = 1;
+// Drives the repaint nudge below until the capture happens.
+constexpr UINT_PTR kNudgeTimerId = 2;
+constexpr UINT kNudgeIntervalMs = 250;
+
+// Posted from the page-loaded callback, which runs on the engine thread, so
+// that arming the capture and starting timers happens on the thread that owns
+// the window.
+constexpr UINT kMessagePageLoaded = WM_APP + 1;
+
+// Screenshot mode uses a fixed window size instead of maximizing: the capture
+// is then the same size on every machine and every runner, which is what makes
+// one comparable to the next.
+constexpr int kDefaultCaptureWidth = 1280;
+constexpr int kDefaultCaptureHeight = 800;
+
+// Parses WxH, e.g. "1280x800".
+bool parseWindowSize(const std::wstring& value, int* width, int* height)
+{
+    size_t separator = value.find(L'x');
+    if (separator == std::wstring::npos) {
+        return false;
+    }
+    std::wstring w = value.substr(0, separator);
+    std::wstring h = value.substr(separator + 1);
+    if (w.empty() || h.empty() ||
+        w.find_first_not_of(L"0123456789") != std::wstring::npos ||
+        h.find_first_not_of(L"0123456789") != std::wstring::npos) {
+        return false;
+    }
+    long parsedWidth = std::wcstol(w.c_str(), nullptr, 10);
+    long parsedHeight = std::wcstol(h.c_str(), nullptr, 10);
+    if (parsedWidth < 64 || parsedHeight < 64) {
+        return false;
+    }
+    *width = static_cast<int>(parsedWidth);
+    *height = static_cast<int>(parsedHeight);
+    return true;
+}
+
 // The shell owns the window and the Win32 input loop and talks to the engine
 // only through the public LWE embedding API, like the other ports. LWE runs on
 // its own thread (InitializeOption::PreferSeparateThread) and the API marshals
@@ -237,6 +299,16 @@ public:
         std::fprintf(stderr, "[StarfishShell] build: %s\n", kShellBuildID);
         std::fflush(stderr);
 
+        if (!parseArguments(argumentCount, arguments)) {
+            std::fprintf(stderr,
+                         "usage: StarfishShell [URL-or-file] "
+                         "[--screenshot=FILE.bmp] [--screenshot-frames=N] "
+                         "[--window-size=WxH] "
+                         "[--timeout-ms=N]\n");
+            std::fflush(stderr);
+            return 2;
+        }
+
         enableDPIAwareness();
         if (!createWindow()) {
             return 1;
@@ -253,7 +325,18 @@ public:
         // The renderer must see the final client area on its first frame:
         // creating the WebContainer while the HWND is still hidden leaves some
         // drivers with the pre-maximized backing size and no later expose.
-        ShowWindow(m_window, SW_SHOWMAXIMIZED);
+        //
+        // Screenshot runs get a fixed size rather than the maximized one, so
+        // the capture does not depend on the display the run happens to land
+        // on -- and so the resize that forces the captured frame stays within
+        // a size this run chose.
+        if (!m_screenshotPath.empty() || m_fixedWindowSize) {
+            // One pixel taller than asked for; see nudgeRepaint().
+            setClientSize(m_captureWidth, m_captureHeight + 1);
+            ShowWindow(m_window, SW_SHOWNORMAL);
+        } else {
+            ShowWindow(m_window, SW_SHOWMAXIMIZED);
+        }
         UpdateWindow(m_window);
         SetFocus(m_window);
 
@@ -264,22 +347,117 @@ public:
             return 1;
         }
 
-        m_initialURL = argumentCount > 1 ? commandLineURL(arguments[1])
-                                         : defaultSmokeURL();
         std::fprintf(stderr, "[StarfishShell] URL: %s\n", m_initialURL.c_str());
         std::fflush(stderr);
         m_container->LoadURL(m_initialURL);
         log("loadURL submitted");
 
+        if (m_timeoutMs) {
+            SetTimer(m_window, kTimeoutTimerId, m_timeoutMs, nullptr);
+        }
+
         int exitCode = runMessageLoop();
 
         destroyWebContainer();
+        // The screenshot is the whole point of the run when it was asked for,
+        // so report it in the exit code: a timeout or a failed capture has to
+        // fail the CI job, not pass quietly with no artifact.
+        if (!m_screenshotPath.empty() && !m_renderer.screenshotSucceeded()) {
+            log("ERROR: no screenshot was captured");
+            exitCode = exitCode ? exitCode : 1;
+        }
         m_renderer.deinitialize();
         shutdownWindow();
         return exitCode;
     }
 
 private:
+    // SetWindowPos sizes the whole window, border and title bar included, so
+    // asking it for 1280x800 leaves a 1264x761 client area -- and the client
+    // area is what gets captured. Convert the wanted client size to the window
+    // size this style and DPI need.
+    void setClientSize(int width, int height)
+    {
+        RECT rect{ 0, 0, width, height };
+        DWORD style = static_cast<DWORD>(GetWindowLongW(m_window, GWL_STYLE));
+        DWORD exStyle =
+            static_cast<DWORD>(GetWindowLongW(m_window, GWL_EXSTYLE));
+
+        // Per-monitor DPI v2 is enabled, so the frame metrics follow the
+        // monitor; plain AdjustWindowRectEx only knows the system DPI and
+        // would be wrong on a scaled display.
+        HMODULE user32 = GetModuleHandleW(L"user32.dll");
+        using AdjustForDPI = BOOL(WINAPI*)(LPRECT, DWORD, BOOL, DWORD, UINT);
+        using DPIForWindow = UINT(WINAPI*)(HWND);
+        auto adjustForDPI = reinterpret_cast<AdjustForDPI>(
+            GetProcAddress(user32, "AdjustWindowRectExForDpi"));
+        auto dpiForWindow = reinterpret_cast<DPIForWindow>(
+            GetProcAddress(user32, "GetDpiForWindow"));
+        if (!adjustForDPI || !dpiForWindow ||
+            !adjustForDPI(&rect, style, FALSE, exStyle,
+                          dpiForWindow(m_window))) {
+            AdjustWindowRectEx(&rect, style, FALSE, exStyle);
+        }
+        SetWindowPos(m_window, nullptr, 0, 0, rect.right - rect.left,
+                     rect.bottom - rect.top,
+                     SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    // Resizing is the repaint trigger: WM_SIZE already forwards the new client
+    // area to WebContainer::ResizeTo, which relayouts and repaints, which
+    // produces the frame the capture is waiting for. A resize to the size it
+    // already has is a no-op, so alternate one pixel of height. The window is
+    // created one pixel taller, so the first nudge -- the one that normally
+    // produces the captured frame -- lands on exactly the requested size.
+    void nudgeRepaint()
+    {
+        m_captureNudge = !m_captureNudge;
+        setClientSize(m_captureWidth,
+                      m_captureHeight + (m_captureNudge ? 0 : 1));
+    }
+
+    bool parseArguments(int argumentCount, wchar_t** arguments)
+    {
+        std::wstring url;
+        for (int i = 1; i < argumentCount; ++i) {
+            std::wstring argument = arguments[i];
+            if (argument.compare(0, 13, L"--screenshot=") == 0) {
+                m_screenshotPath = toUTF8(argument.substr(13).c_str());
+                if (m_screenshotPath.empty()) {
+                    return false;
+                }
+            } else if (argument.compare(0, 20, L"--screenshot-frames=") == 0) {
+                if (!parseUnsignedOption(argument, L"--screenshot-frames",
+                                         &m_screenshotFrames)) {
+                    return false;
+                }
+            } else if (argument.compare(0, 13, L"--timeout-ms=") == 0) {
+                if (!parseUnsignedOption(argument, L"--timeout-ms",
+                                         &m_timeoutMs)) {
+                    return false;
+                }
+            } else if (argument.compare(0, 14, L"--window-size=") == 0) {
+                if (!parseWindowSize(argument.substr(14), &m_captureWidth,
+                                     &m_captureHeight)) {
+                    return false;
+                }
+                m_fixedWindowSize = true;
+            } else if (argument.compare(0, 2, L"--") == 0) {
+                std::fprintf(stderr, "[StarfishShell] unknown option: %s\n",
+                             toUTF8(argument.c_str()).c_str());
+                return false;
+            } else if (url.empty()) {
+                url = argument;
+            } else {
+                std::fprintf(stderr, "[StarfishShell] more than one URL\n");
+                return false;
+            }
+        }
+        m_initialURL =
+            url.empty() ? defaultSmokeURL() : commandLineURL(url.c_str());
+        return true;
+    }
+
     int runMessageLoop()
     {
         MSG message;
@@ -378,10 +556,16 @@ private:
                 std::fflush(stderr);
             });
         m_container->RegisterOnPageLoadedHandler(
-            [](LWE::WebContainer*, const std::string& url) {
+            [this](LWE::WebContainer*, const std::string& url) {
                 std::fprintf(stderr, "[StarfishShell:page-loaded] %s\n",
                              url.c_str());
                 std::fflush(stderr);
+                // Hand off to the UI thread: arming the capture is cheap, but
+                // the repaint nudge that follows it needs a window timer, and
+                // those belong to the thread that owns the window.
+                if (!m_screenshotPath.empty()) {
+                    PostMessageW(m_window, kMessagePageLoaded, 0, 0);
+                }
             });
 
         LWE::Settings settings = m_container->GetSettings();
@@ -544,6 +728,39 @@ private:
             m_isIMEActive = false;
             m_compositionCommitted = false;
             return DefWindowProcW(window, message, wParam, lParam);
+        case kMessagePageLoaded:
+            m_renderer.requestScreenshot(m_screenshotPath, m_screenshotFrames,
+                                         m_window);
+            // First nudge immediately, then keep nudging: one forced frame is
+            // enough unless --screenshot-frames asked for more, and retrying
+            // costs nothing next to failing the run.
+            nudgeRepaint();
+            SetTimer(window, kNudgeTimerId, kNudgeIntervalMs, nullptr);
+            return 0;
+        case WM_TIMER:
+            if (wParam == kTimeoutTimerId) {
+                KillTimer(window, kTimeoutTimerId);
+                std::fprintf(stderr,
+                             "[StarfishShell] ERROR: --timeout-ms elapsed "
+                             "(%lu frames presented, capture %s)\n",
+                             m_renderer.swapCount(),
+                             m_renderer.screenshotPending() ? "still armed"
+                                                            : "not armed");
+                std::fflush(stderr);
+                // Nonzero, so a hung page fails the run. run() keeps this
+                // over the screenshot check, which would report 1 anyway.
+                PostQuitMessage(3);
+                return 0;
+            }
+            if (wParam == kNudgeTimerId) {
+                if (!m_renderer.screenshotPending()) {
+                    KillTimer(window, kNudgeTimerId);
+                    return 0;
+                }
+                nudgeRepaint();
+                return 0;
+            }
+            return DefWindowProcW(window, message, wParam, lParam);
         case WM_CLOSE:
             // Keep the HWND valid: run() tears the engine and the GL context
             // down after the message loop returns.
@@ -698,6 +915,18 @@ private:
     bool m_isIMEActive{ false };
     bool m_compositionCommitted{ false };
     std::string m_initialURL;
+    // Empty unless --screenshot was given, which is what turns the shell into
+    // a one-shot CI check instead of an interactive host.
+    std::string m_screenshotPath;
+    // Zero by default: the frame that gets captured is one this shell forced
+    // after page load, so it is a complete repaint already. Raise it only to
+    // skip past a driver that needs a warm-up frame.
+    unsigned m_screenshotFrames{ 0 };
+    unsigned m_timeoutMs{ 0 };
+    int m_captureWidth{ kDefaultCaptureWidth };
+    int m_captureHeight{ kDefaultCaptureHeight };
+    bool m_fixedWindowSize{ false };
+    bool m_captureNudge{ false };
 };
 
 } // namespace
