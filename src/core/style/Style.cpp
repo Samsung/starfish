@@ -10256,10 +10256,11 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
         addToRuleSet(sheet);
         recalcWebFonts();
         // A sheet with no `:host`/`::slotted` rule cannot change anything
-        // outside this resolver's own tree (shadow tree content is already
-        // invalidated by CSSStyleSheet::willAddToDocument()'s per-element
-        // rule matching, which runs regardless of this gate), so skip the
-        // host/light-DOM flat-tree walk below.
+        // outside this resolver's own tree -- when the sheet's media query
+        // matches, shadow tree content is already invalidated independently
+        // by CSSStyleSheet::willAddToDocument()'s per-element rule matching,
+        // and when it doesn't match, the sheet's rules don't apply anywhere
+        // to invalidate -- so skip the host/light-DOM flat-tree walk below.
         if (isShadowResolver() && sheetHasPromotableSelector(sheet)) {
             invalidateShadowScopeForSheetChange();
         }
@@ -10289,9 +10290,19 @@ void StyleResolver::removeSheet(CSSStyleSheet* sheet)
     // resolver, which only drops them when it rebuilds -- otherwise they keep
     // styling the host and its slotted children after the sheet is gone. See
     // setAdoptedSheets() for the promotion rationale.
+    //
+    // The sheetHasPromotableSelector() gate applies here too, unlike
+    // addSheet()'s else path: every caller (HTMLStyleElement,
+    // HTMLLinkElement, SVGStyleElement, StyleRuleImport) invokes
+    // willRemovedFromDocument() -- which reads the same still-populated
+    // sheet->styleRules() -- immediately before removeSheet(), so the sheet's
+    // rules are never stale here the way they can be on addSheet()'s else
+    // path.
     if (isShadowResolver()) {
         document()->styleResolver().setNeedsRecalcRuleSet();
-        invalidateShadowScopeForSheetChange();
+        if (sheetHasPromotableSelector(sheet)) {
+            invalidateShadowScopeForSheetChange();
+        }
     }
     document()->browsingContext()->setNeedsStyleSheetsRecalc();
 
