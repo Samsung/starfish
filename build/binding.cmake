@@ -1,6 +1,11 @@
 IF (NOT PYTHON_EXECUTABLE)
     IF (CMAKE_VERSION VERSION_LESS "3.12")
-        FIND_PACKAGE (PythonInterp REQUIRED)
+        # Unversioned FIND_PACKAGE(PythonInterp) tries a bare "python" name
+        # before any python3.x name -- on a system with a legacy python2
+        # symlinked to plain "python" (some older distros), that resolves to
+        # Python 2, not 3. Passing the major version restricts the name list
+        # to "python3"/"python3.x", sidestepping the bare name entirely.
+        FIND_PACKAGE (PythonInterp 3 REQUIRED)
     ELSE()
         FIND_PACKAGE (Python3 COMPONENTS Interpreter REQUIRED)
         SET (PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
