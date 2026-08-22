@@ -154,9 +154,13 @@ LayoutUnit FlexFormattingContext::basisSize(FrameBox* flexItem)
         }
     }
 
+    bool wasCleanBeforeMeasure = !flexItem->needsLayout();
     auto basisSize = m_container->basisSize(
         m_layoutContext, m_availableMainSize, m_availableCrossSize, flexItem,
         m_shouldRespectPercentageWidthOnComputingBasisSize);
+    if (wasCleanBeforeMeasure) {
+        flexItem->clearNeedsLayoutIgnoringBasisComputation();
+    }
 
     flexItem->ensureFlexItemMeasureMemo()->storeBasis(
         m_availableMainSize, m_availableCrossSize,
@@ -1065,11 +1069,17 @@ void FlexFormattingContext::layoutFlexItem(
     // statically positioned items so no per-pass relative-offset bookkeeping
     // is bypassed; line-clamp containers read child line boxes afterwards, so
     // they are excluded too.
+    const bool wasCleanAtEntry = !flexItem->needsLayout();
     const size_t finalSlot = crossSize.hasValue() ? 1 : 0;
     LayoutUnit targetMainSize =
         m_isMainAxisInInlineAxis ? flexItem->width() : flexItem->height();
     LayoutUnit cbWidth = containingBlock(flexItem)->contentWidth();
-    bool memoUsable = allowMemoSkip && !m_container->lineClamp() &&
+    // Only outside a basis computation: measurement-time layouts run with
+    // temporarily modified styles (e.g. the container's min/max sizes are
+    // stripped while computing a base size), so their results must neither be
+    // recorded nor reused as final subtree geometry.
+    bool memoUsable = allowMemoSkip && !m_layoutContext.inComputingBasisSize() &&
+                      !m_container->lineClamp() && !flexItem->isAnonymous() &&
                       flexItem->style()->position() ==
                           PositionValue::StaticPositionValue;
 
@@ -1120,6 +1130,10 @@ void FlexFormattingContext::layoutFlexItem(
                 flexItem->asFrameBlockBox());
         }
         flexItem->clearContentWidthDamaged();
+    }
+
+    if (wasCleanAtEntry && m_layoutContext.inComputingBasisSize()) {
+        flexItem->clearNeedsLayoutIgnoringBasisComputation();
     }
 
     if (memoUsable) {
@@ -1701,8 +1715,15 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
     bool seenPercentageBasisSize = false;
 
     if (!applyLineClamp && isMainAxisInInlineAxis) {
-        containingBlockOfFlexItem->setContentWidth(availableMainSize);
-        containingBlockOfFlexItem->markContentWidthDamaged();
+        // Damage the containing-block width only when this measurement
+        // actually changes it; a blanket damage flag forces every descendant
+        // through full layout even when the measurement width is identical to
+        // the last pass (e.g. re-measuring a dirty item whose container width
+        // is stable), defeating all clean-subtree reuse below this item.
+        if (availableMainSize != oldContainingBlockWidth) {
+            containingBlockOfFlexItem->setContentWidth(availableMainSize);
+            containingBlockOfFlexItem->markContentWidthDamaged();
+        }
 
         Length oldWidth = flexItem->style()->width(), width;
         if (flexBasis.isAuto() || flexBasis.isWidth()) {
@@ -1755,8 +1776,10 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
             isMainAxisInInlineAxis);
 
         flexItem->markNeedsLayout();
-        containingBlockOfFlexItem->setContentWidth(cbWidth);
-        containingBlockOfFlexItem->markContentWidthDamaged();
+        if (cbWidth != oldContainingBlockWidth) {
+            containingBlockOfFlexItem->setContentWidth(cbWidth);
+            containingBlockOfFlexItem->markContentWidthDamaged();
+        }
         flexItem->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
         flexItem->style()->setHeight(height);
         flexItem->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);

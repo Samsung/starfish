@@ -1699,6 +1699,23 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
 {
     FrameBox* gridItem = gridArea.box();
     GridLayoutScope scope(gridItem);
+    // The track-sizing measurements below force-mark and lay out the item;
+    // when the item was clean, restore that state afterwards (see
+    // clearNeedsLayoutIgnoringBasisComputation()). Otherwise, under a flex
+    // basis computation the suppressed clearNeedsLayout() leaves every grid
+    // item permanently dirty, and FrameGridBox::shouldLayout() then re-lays
+    // the whole grid on every later pass.
+    struct CleanStateRestorer {
+        FrameBox* m_item;
+        bool m_wasClean;
+        LayoutContext& m_ctx;
+        ~CleanStateRestorer()
+        {
+            if (m_wasClean && m_ctx.inComputingBasisSize()) {
+                m_item->clearNeedsLayoutIgnoringBasisComputation();
+            }
+        }
+    } cleanStateRestorer{gridItem, !gridItem->needsLayout(), m_layoutContext};
     ComputedStyle* style = gridItem->style();
 
     LayoutSize margin = fetchFixedMargin(m_container, style);
