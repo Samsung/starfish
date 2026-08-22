@@ -161,6 +161,9 @@ LayoutUnit FlexFormattingContext::basisSize(FrameBox* flexItem)
     if (wasCleanBeforeMeasure) {
         flexItem->clearNeedsLayoutIgnoringBasisComputation();
     }
+    if (FlexItemMeasureMemo* measuredMemo = flexItem->flexItemMeasureMemo()) {
+        measuredMemo->m_firstLine.m_valid = false;
+    }
 
     flexItem->ensureFlexItemMeasureMemo()->storeBasis(
         m_availableMainSize, m_availableCrossSize,
@@ -292,6 +295,9 @@ LayoutUnit FlexFormattingContext::automaticMinimumMainSize(FrameBox* flexItem)
         }
     }
     flexItem->markNeedsLayout();
+    if (FlexItemMeasureMemo* measuredMemo = flexItem->flexItemMeasureMemo()) {
+        measuredMemo->m_firstLine.m_valid = false;
+    }
     // The regular basis-size cache entry for this item stays valid: it was
     // computed with the item's real style, which is fully restored above, and
     // the content-basis measurement itself registers nothing (it bypasses the
@@ -1134,6 +1140,12 @@ void FlexFormattingContext::layoutFlexItem(
 
     if (wasCleanAtEntry && m_layoutContext.inComputingBasisSize()) {
         flexItem->clearNeedsLayoutIgnoringBasisComputation();
+    }
+
+    // The subtree was really laid out: any cached first-line scan of it is
+    // stale now (see FrameBox::heightAfterApplyingMinMaxHeights()).
+    if (FlexItemMeasureMemo* memo = flexItem->flexItemMeasureMemo()) {
+        memo->m_firstLine.m_valid = false;
     }
 
     if (memoUsable) {

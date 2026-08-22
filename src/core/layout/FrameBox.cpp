@@ -4413,7 +4413,28 @@ LayoutUnit FrameBox::heightAfterApplyingMinMaxHeights(LayoutContext& ctx,
         if (!flexibleBox->shouldApplyLineClamp(this) &&
             !flexibleBox->isMainAxisInInlineAxis() &&
             appliedOverflowY() == VisibleOverflow) {
-            auto result = ctx.lookupFirstLineOrDefiniteHeight(this);
+            // lookupFirstLineOrDefiniteHeight() scans the item's whole
+            // subtree; reuse the previous scan while the subtree is clean and
+            // the item's width is unchanged. A full layoutFlexItem() run
+            // invalidates the entry, real damage clears the whole memo.
+            Optional<LayoutUnit> result;
+            FlexItemMeasureMemo* memo = flexItemMeasureMemo();
+            if (!needsLayout() && memo && memo->m_firstLine.m_valid &&
+                memo->m_firstLine.m_width == width()) {
+                if (memo->m_firstLine.m_hasValue) {
+                    result = memo->m_firstLine.m_value;
+                }
+            } else {
+                result = ctx.lookupFirstLineOrDefiniteHeight(this);
+                if (!needsLayout()) {
+                    FlexItemMeasureMemo::FirstLineEntry& e =
+                        ensureFlexItemMeasureMemo()->m_firstLine;
+                    e.m_width = width();
+                    e.m_value = result ? result.value() : LayoutUnit();
+                    e.m_hasValue = result.hasValue();
+                    e.m_valid = true;
+                }
+            }
             if (result) {
                 minHeight = std::min(contentHeight(), result.value());
                 // CSS Flexbox §4.5: the content-based minimum is capped by the

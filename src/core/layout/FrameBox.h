@@ -116,10 +116,23 @@ struct FlexItemMeasureMemo : public gc {
         bool m_valid : 1;
     };
 
+    // Result of LayoutContext::lookupFirstLineOrDefiniteHeight() for the
+    // item: a full-subtree scan used to floor a column flex item's automatic
+    // minimum height. Valid while the item is clean and its width is
+    // unchanged; any real subtree layout invalidates it (layoutFlexItem
+    // clears it after a full run, real damage clears the whole memo).
+    struct FirstLineEntry {
+        LayoutUnit m_width;
+        LayoutUnit m_value;
+        bool m_hasValue : 1;
+        bool m_valid : 1;
+    };
+
     BasisEntry m_basis[kEntryCount];
     AutoMinEntry m_autoMin[kEntryCount];
     FinalEntry m_final[2];
     GridPreferredWidthEntry m_gridPreferredWidth[2];
+    FirstLineEntry m_firstLine;
     unsigned char m_basisNext;
     unsigned char m_autoMinNext;
     unsigned char m_gridPwNext;
@@ -139,6 +152,7 @@ struct FlexItemMeasureMemo : public gc {
         m_final[1].m_valid = false;
         m_gridPreferredWidth[0].m_valid = false;
         m_gridPreferredWidth[1].m_valid = false;
+        m_firstLine.m_valid = false;
         m_basisNext = 0;
         m_autoMinNext = 0;
         m_gridPwNext = 0;
