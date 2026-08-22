@@ -67,10 +67,20 @@ PROCESSORCOUNT (NPROCS)
 # Multi-config generators (Visual Studio, Xcode, Ninja Multi-Config) leave
 # CMAKE_BUILD_TYPE empty at configure time by design -- the config is chosen
 # per-build via --config, so this requirement only makes sense for
-# single-config generators (Makefiles, Ninja).
+# single-config generators (Makefiles, Ninja). For those, default an unset
+# CMAKE_BUILD_TYPE to Release (standard CMake practice, same default GCutil's
+# own CMakeLists.txt already uses) instead of hard-failing -- but still
+# reject a value that was explicitly passed and isn't one of the three this
+# tree actually supports.
 GET_PROPERTY (STARFISH_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
-IF (NOT STARFISH_IS_MULTI_CONFIG AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT CMAKE_BUILD_TYPE STREQUAL "Release" AND NOT CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    MESSAGE (FATAL_ERROR "-DCMAKE_BUILD_TYPE=Debug, Release, or RelWithDebInfo is required (got: '${CMAKE_BUILD_TYPE}')")
+IF (NOT STARFISH_IS_MULTI_CONFIG)
+    IF (NOT CMAKE_BUILD_TYPE)
+        SET (CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
+        SET_PROPERTY (CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "RelWithDebInfo")
+        MESSAGE (STATUS "CMAKE_BUILD_TYPE not set -- defaulting to Release")
+    ELSEIF (NOT CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT CMAKE_BUILD_TYPE STREQUAL "Release" AND NOT CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+        MESSAGE (FATAL_ERROR "-DCMAKE_BUILD_TYPE=Debug, Release, or RelWithDebInfo is required (got: '${CMAKE_BUILD_TYPE}')")
+    ENDIF ()
 ENDIF ()
 
 # INCLUDE CMAKE FILES

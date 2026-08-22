@@ -20,12 +20,6 @@ ELSE()
     MESSAGE (FATAL_ERROR "Windows supports only Intel x86 and x86_64")
 ENDIF()
 
-IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    SET(WINDOWS_MODE "Debug")
-ELSE()
-    SET(WINDOWS_MODE "Release")
-ENDIF()
-
 SET(STARFISH_CXXFLAGS
         /std:c++14
         /Oy-
@@ -51,11 +45,17 @@ ELSE()
     SET(STARFISH_CXXFLAGS_ARCH)
 ENDIF()
 
-IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    SET(STARFISH_CXXFLAGS_MODE /Od /MDd)
-ELSE()
-    SET(STARFISH_CXXFLAGS_MODE /O2 /MD)
-ENDIF()
+# Generator expressions instead of a configure-time IF(CMAKE_BUILD_TYPE ...):
+# CMAKE_BUILD_TYPE is empty at configure time for multi-config generators
+# (Visual Studio) -- an IF here would always take the ELSE branch regardless
+# of which config is actually selected via --config at build time, silently
+# building "Debug" with Release flags/CRT. $<CONFIG:Debug> resolves correctly
+# for both single- and multi-config generators. Quoted so the embedded `;`
+# list separators survive CMake's argument parser instead of splitting the
+# generator expression apart (cmake-generator-expressions(7)).
+SET(STARFISH_CXXFLAGS_MODE
+    "$<$<CONFIG:Debug>:/Od;/MDd>"
+    "$<$<NOT:$<CONFIG:Debug>>:/O2;/MD>")
 
 SET(STARFISH_DEFINES
         -DSTARFISH_VERSION_STR="${LWE_VERSION}"
@@ -85,17 +85,23 @@ IF (STARFISH_WINDOWS_ENABLE_MULTIMEDIA)
     LIST (APPEND STARFISH_DEFINES -DSTARFISH_ENABLE_MULTIMEDIA)
 ENDIF()
 
-IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    SET (STARFISH_DEFINES_MODE
-        -DGC_DEBUG # bdwgc
-        -D_GLIBCXX_DEBUG
-        -DSTARFISH_ENABLE_TEST
-    )
-ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release")
-    SET (STARFISH_DEFINES_MODE -DNDEBUG)
-ELSE()
-    MESSAGE (FATAL_ERROR "Release/Debug is NOT SET")
-ENDIF()
+# Same generator-expression reasoning as STARFISH_CXXFLAGS_MODE above. Any
+# non-Debug config (Release, RelWithDebInfo, ...) gets the release-type
+# defines, matching the top-level CMakeLists.txt's accepted CMAKE_BUILD_TYPE
+# values -- the old configure-time IF/ELSEIF/ELSE FATAL_ERROR'd on
+# RelWithDebInfo even though the top-level check allows it.
+#
+# STARFISH_ENABLE_TEST (unlike on Linux/Tizen) is deliberately never defined
+# here: it gates the LWERecord API-recorder/replayer and CompositorGL's GL
+# debug-callback hook, both POSIX-only (sys/time.h's gettimeofday, dlfcn.h's
+# dlsym/RTLD_DEFAULT) and never ported to Windows. Genuinely building a
+# Windows Debug config for the first time (see the multi-config fix above)
+# surfaced this as a hard C1083 (header not found) -- defining it here would
+# require porting or platform-gating that POSIX-only code, which is out of
+# scope for a build-system fix.
+SET (STARFISH_DEFINES_MODE
+    "$<$<CONFIG:Debug>:-DGC_DEBUG;-D_GLIBCXX_DEBUG>" # bdwgc
+    "$<$<NOT:$<CONFIG:Debug>>:-DNDEBUG>")
 
 SET (STARFISH_INCLUDE_DIRS
     ${STARFISH_ROOT}/inc
@@ -132,23 +138,29 @@ ELSE()
     SET (OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 ENDIF()
 
-SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/${WINDOWS_MODE})
-SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/${WINDOWS_MODE})
-SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/${WINDOWS_MODE})
-
 # Multi-config generators (Visual Studio) append their own <Config>
-# subdirectory on top of CMAKE_*_OUTPUT_DIRECTORY unless the matching
-# per-config _<CONFIG> variable is set too -- without this, x64's VS
-# generator built output lands in .../${WINDOWS_MODE}/${WINDOWS_MODE}/,
-# not .../${WINDOWS_MODE}/, breaking every path CI (and a dev) expects.
-# Single-config generators (Ninja) simply ignore the unused variant.
-# This pins it to WINDOWS_MODE for every config rather than genuinely
-# supporting Debug+Release from one multi-config build tree; that is
-# follow-up work, not done here.
-STRING (TOUPPER ${WINDOWS_MODE} WINDOWS_MODE_UPPER)
-SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY_${WINDOWS_MODE_UPPER} ${OUTPUT_DIRECTORY}/${WINDOWS_MODE})
-SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${WINDOWS_MODE_UPPER} ${OUTPUT_DIRECTORY}/${WINDOWS_MODE})
-SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY_${WINDOWS_MODE_UPPER} ${OUTPUT_DIRECTORY}/${WINDOWS_MODE})
+# subdirectory to CMAKE_*_OUTPUT_DIRECTORY automatically, UNLESS the matching
+# per-config _<CONFIG> variable is also set on it -- so setting a fixed
+# .../Release here unconditionally used to make VS nest it a second time
+# (.../Release/Release/), while pinning the _<CONFIG> variant to that same
+# fixed value fixed the nesting but silently built every config (Debug
+# included) with Release's own directory/flags, since STARFISH_CXXFLAGS_MODE/
+# STARFISH_DEFINES_MODE were previously chosen from configure-time
+# CMAKE_BUILD_TYPE too. Now that those are generator expressions (see above),
+# leaving CMAKE_*_OUTPUT_DIRECTORY unsuffixed here lets CMake's own <Config>
+# auto-append do the right thing per config (.../Debug/, .../Release/) for
+# multi-config generators. Single-config generators (Ninja) never auto-append
+# anything, so append CMAKE_BUILD_TYPE (guaranteed non-empty at this point --
+# see the top-level CMakeLists.txt) ourselves to keep today's layout.
+IF (STARFISH_IS_MULTI_CONFIG)
+    SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY})
+    SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY})
+    SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY})
+ELSE ()
+    SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE})
+    SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE})
+    SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE})
+ENDIF ()
 
 #######################################################
 # ESCARGOT

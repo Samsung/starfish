@@ -4,12 +4,15 @@ SET (STARFISH_WORKER_API_INCLUDE_DIRS ${STARFISH_API_INCLUDE_DIRS})
 
 SET (STARFISH_WORKER_API_DEFINES -DSTARFISH_WEBWORKER_HOST)
 
+# ELSE (not an exact-string ELSEIF allowlist) so every non-Debug config
+# (Release, RelWithDebInfo, MinSizeRel, ...) gets -DNDEBUG -- see the same
+# fix in starfish_public_api.cmake.
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     SET (STARFISH_WORKER_API_DEFINES
         ${STARFISH_WORKER_API_DEFINES}
         -D_GLIBCXX_DEBUG
     )
-ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+ELSE()
     SET (STARFISH_WORKER_API_DEFINES
         ${STARFISH_WORKER_API_DEFINES}
         -DNDEBUG
