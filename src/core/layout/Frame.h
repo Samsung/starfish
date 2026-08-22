@@ -2011,6 +2011,18 @@ public:
         m_flags.m_needsLayout = false;
     }
 
+    // For measurement protocols (flex basis, grid track sizing) that
+    // force-mark a clean frame to lay it out: restores the flag afterwards so
+    // the measurement leaves the dirty state as it found it. Inside a basis
+    // computation clearNeedsLayout() is suppressed, which would otherwise
+    // leave every measured-but-clean frame permanently dirty and defeat all
+    // clean-subtree reuse on later passes. Real damage still wins: it marks
+    // this frame again through propagateMarkNeedsLayout().
+    void clearNeedsLayoutIgnoringBasisComputation()
+    {
+        m_flags.m_needsLayout = false;
+    }
+
     bool needsLayout() const
     {
         return m_flags.m_needsLayout;

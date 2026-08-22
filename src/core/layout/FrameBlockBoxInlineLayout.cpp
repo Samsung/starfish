@@ -4813,6 +4813,24 @@ void FrameGridBox::computePreferredWidth(PreferredWidthContext& ctx)
             availableWidth = ctx.remainingWidth();
         }
 
+        // Computing the preferred width below runs a full grid track sizing
+        // that lays out -- and then deliberately dirties -- this grid and all
+        // of its items. Reuse the previous result while the grid is clean, so
+        // measuring an ancestor doesn't re-dirty (and later re-lay) every
+        // clean grid in its subtree on every pass.
+        if (!needsLayout()) {
+            FlexItemMeasureMemo* memo = flexItemMeasureMemo();
+            FlexItemMeasureMemo::GridPreferredWidthEntry* entry =
+                memo ? memo->findGridPreferredWidth(availableWidth) : nullptr;
+            if (entry) {
+                gridPreferredWidth = entry->m_value;
+                gridPreferredMinWidth = gridPreferredWidth;
+                ctx.updatePreferredWidth(gridPreferredWidth);
+                ctx.updatePreferredMinWidth(gridPreferredMinWidth);
+                return;
+            }
+        }
+
         GridFormattingContext gridFormattingContext(ctx.layoutContext(), this,
                                                     availableWidth);
 
@@ -4821,6 +4839,9 @@ void FrameGridBox::computePreferredWidth(PreferredWidthContext& ctx)
         gridPreferredMinWidth = gridPreferredWidth;
         ctx.updatePreferredWidth(gridPreferredWidth);
         ctx.updatePreferredMinWidth(gridPreferredMinWidth);
+
+        ensureFlexItemMeasureMemo()->storeGridPreferredWidth(
+            availableWidth, gridPreferredWidth);
 
         // FIXME
         // Implement own logic without calling layout like flex

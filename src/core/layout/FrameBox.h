@@ -106,11 +106,23 @@ struct FlexItemMeasureMemo : public gc {
         bool m_valid : 1;
     };
 
+    // Preferred (max-content) width of a grid container. Computing it runs a
+    // full grid track sizing that lays out and dirties every grid item (see
+    // FrameGridBox::computePreferredWidth()), so reusing it for a clean grid
+    // also keeps the whole subtree clean.
+    struct GridPreferredWidthEntry {
+        LayoutUnit m_availableWidth;
+        LayoutUnit m_value;
+        bool m_valid : 1;
+    };
+
     BasisEntry m_basis[kEntryCount];
     AutoMinEntry m_autoMin[kEntryCount];
     FinalEntry m_final[2];
+    GridPreferredWidthEntry m_gridPreferredWidth[2];
     unsigned char m_basisNext;
     unsigned char m_autoMinNext;
+    unsigned char m_gridPwNext;
 
     FlexItemMeasureMemo()
     {
@@ -125,8 +137,34 @@ struct FlexItemMeasureMemo : public gc {
         }
         m_final[0].m_valid = false;
         m_final[1].m_valid = false;
+        m_gridPreferredWidth[0].m_valid = false;
+        m_gridPreferredWidth[1].m_valid = false;
         m_basisNext = 0;
         m_autoMinNext = 0;
+        m_gridPwNext = 0;
+    }
+
+    GridPreferredWidthEntry* findGridPreferredWidth(LayoutUnit availableWidth)
+    {
+        for (size_t i = 0; i < 2; i++) {
+            GridPreferredWidthEntry& e = m_gridPreferredWidth[i];
+            if (e.m_valid && e.m_availableWidth == availableWidth) {
+                return &e;
+            }
+        }
+        return nullptr;
+    }
+
+    void storeGridPreferredWidth(LayoutUnit availableWidth, LayoutUnit value)
+    {
+        GridPreferredWidthEntry* e = findGridPreferredWidth(availableWidth);
+        if (!e) {
+            e = &m_gridPreferredWidth[m_gridPwNext];
+            m_gridPwNext = (m_gridPwNext + 1) % 2;
+        }
+        e->m_availableWidth = availableWidth;
+        e->m_value = value;
+        e->m_valid = true;
     }
 
     BasisEntry* findBasis(LayoutUnit availMain, LayoutUnit availCross,
