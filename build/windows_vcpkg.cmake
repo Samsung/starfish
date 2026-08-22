@@ -71,11 +71,16 @@ TARGET_LINK_LIBRARIES (starfish.windows.vcpkg INTERFACE
     PThreads4W::PThreads4W
 )
 
-IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    SET (STARFISH_WINDOWS_VCPKG_RUNTIME_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/bin")
-ELSE()
-    SET (STARFISH_WINDOWS_VCPKG_RUNTIME_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin")
-ENDIF()
+# This is read only inside a POST_BUILD COMMAND (windows.cmake's
+# copy_directory deploy step for starfish.shared_library), which CMake
+# evaluates per-build, so a $<CONFIG:Debug> generator expression here
+# resolves against the actual selected config -- unlike a configure-time
+# IF(CMAKE_BUILD_TYPE STREQUAL "Debug"), which would always take the ELSE
+# branch on a multi-config generator (CMAKE_BUILD_TYPE is empty at configure
+# time there) regardless of --config, deploying Release vcpkg DLLs next to a
+# Debug build.
+SET (STARFISH_WINDOWS_VCPKG_RUNTIME_DIR
+    "$<IF:$<CONFIG:Debug>,${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/bin,${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin>")
 
 SET (STARFISH_WINDOWS_VCPKG_FONTCONFIG_DIR
     "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/etc/fonts")

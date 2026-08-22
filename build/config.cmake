@@ -271,19 +271,22 @@ IF (${ENABLE_A11Y_TOUCH} STREQUAL "1" AND CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     ENDIF()
 ENDIF()
 
+# ELSE (not an exact-string ELSEIF allowlist) so every non-Debug config
+# (Release, RelWithDebInfo, MinSizeRel, ...) gets -DNDEBUG instead of the old
+# ELSEIF's "Release"/"RelWithDebInfo" verbatim match silently dropping it (or,
+# for anything else, hitting the FATAL_ERROR below even on a value the
+# top-level CMakeLists.txt already accepts).
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     SET (LWE_DEFINES_MODE
         -DGC_DEBUG # bdwgc
         -D_GLIBCXX_DEBUG
         -DSTARFISH_ENABLE_TEST
     )
-ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+ELSE()
     SET (LWE_DEFINES_MODE -DNDEBUG)
     IF (${ENABLE_TEST} STREQUAL "1")
         SET(LWE_DEFINES_MODE ${LWE_DEFINES_MODE} -DSTARFISH_ENABLE_TEST)
     ENDIF()
-ELSE()
-    MESSAGE (FATAL_ERROR "Release/Debug is NOT SET")
 ENDIF()
 
 IF (${BACKEND} STREQUAL "flutter")
@@ -455,9 +458,12 @@ endif()
 #IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen" AND (${CUSTOM} STREQUAL "unified_wearable" OR ${CUSTOM} STREQUAL "prod_wearable"))
 #    SET (LWE_CXXFLAGS_MODE -Os)
 #ELSE
+# ELSE so every non-Debug config gets -O2 -- the previous ELSEIF's exact
+# "Release"/"RelWithDebInfo" match left LWE_CXXFLAGS_MODE completely empty
+# (no optimization flag at all, not even -O0) for e.g. MinSizeRel.
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     SET (LWE_CXXFLAGS_MODE -O0)
-ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+ELSE()
     SET (LWE_CXXFLAGS_MODE -O2)
 ENDIF()
 

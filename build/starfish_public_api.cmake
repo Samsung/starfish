@@ -5,11 +5,15 @@ SET (STARFISH_API_INCLUDE_DIRS
     ${STARFISH_ROOT}/src/
 )
 
+# ELSE (not an exact-string ELSEIF allowlist) so every non-Debug config
+# (Release, RelWithDebInfo, MinSizeRel, ...) gets -DNDEBUG -- the previous
+# ELSEIF only matched "Release"/"RelWithDebInfo" verbatim, so e.g.
+# MinSizeRel silently got neither define.
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     SET (STARFISH_API_DEFINES
         -D_GLIBCXX_DEBUG
     )
-ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+ELSE()
     SET (STARFISH_API_DEFINES -DNDEBUG)
 ENDIF()
 
