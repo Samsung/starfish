@@ -36,24 +36,34 @@ static void PngWriteCallback(png_structp png_ptr, png_bytep data,
     p->insert(p->end(), data, data + length);
 }
 
-std::vector<uint8_t> ImageEncoder::encodePNG(const uint8_t* src, size_t w,
-                                             size_t h,
-                                             ImageColorSpace colorSpace)
+static bool encodePNGOnce(const uint8_t* src, size_t w, size_t h,
+                          ImageEncoder::ImageColorSpace colorSpace,
+                          std::vector<uint8_t>& result)
 {
-    STARFISH_ASSERT(src != nullptr);
-
-    std::vector<uint8_t> result;
     result.clear();
     png_structp p =
         png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!p) {
+        return false;
+    }
     png_infop info_ptr = png_create_info_struct(p);
-    setjmp(png_jmpbuf(p));
+    if (!info_ptr) {
+        png_destroy_write_struct(&p, NULL);
+        return false;
+    }
+    if (setjmp(png_jmpbuf(p))) {
+        // libpng longjmp'd here on an internal error; the write struct is
+        // left in an unusable state and must not be reused.
+        png_destroy_write_struct(&p, &info_ptr);
+        result.clear();
+        return false;
+    }
     png_set_IHDR(p, info_ptr, w, h, 8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
     // png_set_compression_level(p, 1);
     std::vector<uint8_t*> rows(h);
-    if (colorSpace == ImageColorSpace::RGBA ||
-        colorSpace == ImageColorSpace::BGRA) {
+    if (colorSpace == ImageEncoder::ImageColorSpace::RGBA ||
+        colorSpace == ImageEncoder::ImageColorSpace::BGRA) {
         for (size_t y = 0; y < h; ++y) {
             rows[y] = (uint8_t*)src + y * w * 4;
         }
@@ -62,12 +72,34 @@ std::vector<uint8_t> ImageEncoder::encodePNG(const uint8_t* src, size_t w,
     }
     png_set_rows(p, info_ptr, &rows[0]);
     png_set_write_fn(p, &result, PngWriteCallback, NULL);
-    if (colorSpace == ImageColorSpace::RGBA) {
+    if (colorSpace == ImageEncoder::ImageColorSpace::RGBA) {
         png_write_png(p, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
     } else {
         png_write_png(p, info_ptr, PNG_TRANSFORM_BGR, NULL);
     }
-    png_destroy_write_struct(&p, NULL);
+    png_destroy_write_struct(&p, &info_ptr);
+
+    return true;
+}
+
+std::vector<uint8_t> ImageEncoder::encodePNG(const uint8_t* src, size_t w,
+                                             size_t h,
+                                             ImageColorSpace colorSpace)
+{
+    STARFISH_ASSERT(src != nullptr);
+
+#if defined(STARFISH_ENABLE_TEST)
+    const int maxAttempts = 3;
+#else
+    const int maxAttempts = 1;
+#endif
+
+    std::vector<uint8_t> result;
+    for (int attempt = 0; attempt < maxAttempts; ++attempt) {
+        if (encodePNGOnce(src, w, h, colorSpace, result)) {
+            break;
+        }
+    }
 
     return result;
 }
