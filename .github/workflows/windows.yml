@@ -87,16 +87,16 @@ jobs:
             vcpkg_triplet: x64-windows
             cmake_processor: AMD64
             vcvars_bat: vcvars64.bat
-            # windows.cmake's Release/Debug check runs at configure time and
-            # only reads CMAKE_BUILD_TYPE, which multi-config generators
-            # (Visual Studio) never set on their own -- they pick the
-            # configuration at build time via --config instead. Passing it
-            # here anyway is harmless (VS ignores it) and satisfies that
-            # check; the generator still produces both configs and a
-            # Release/ output subfolder either way. Making that check (and
-            # the output paths downstream) properly multi-config-aware is
-            # follow-up work, not done here.
-            cmake_generator_args: '-G,Visual Studio 17 2022,-A,x64,-DCMAKE_BUILD_TYPE=Release'
+            # windows.cmake/CMakeLists.txt are now multi-config-aware: the
+            # top-level CMAKE_BUILD_TYPE requirement only applies to
+            # single-config generators, and windows.cmake picks its
+            # flags/defines/output directory via $<CONFIG:Debug> generator
+            # expressions resolved at build time from --config, not from
+            # CMAKE_BUILD_TYPE at configure time. So -DCMAKE_BUILD_TYPE=...
+            # is no longer needed (and wouldn't do anything) on this
+            # Visual-Studio leg -- the configuration is selected below via
+            # `cmake --build ... --config Release` instead.
+            cmake_generator_args: '-G,Visual Studio 17 2022,-A,x64'
     # `runs-on: [code-windows, code-win-2xlarge]` (a label list) never
     # attached a runner -- confirmed against NUI/dali-ui's own working
     # windows-build.yml on this same GHES instance, which addresses this
@@ -343,10 +343,70 @@ jobs:
 
           # --config Release: Ninja is a single-config generator (Release was
           # already fixed at configure time via CMAKE_BUILD_TYPE above), but
-          # the Visual Studio generator is multi-config and ignores that --
-          # it needs the config named again at build time instead.
+          # the Visual Studio generator is multi-config -- it has no build
+          # type at configure time and always needs the config named at
+          # build time instead. windows.cmake resolves its flags/defines/
+          # output directory from this via $<CONFIG:Debug> generator
+          # expressions, so this one flag genuinely selects a real,
+          # correctly-flagged Release build on the VS leg now (previously
+          # it always got Release flags/output regardless of --config).
           cmake --build out_windows --target starfish.windows_shell --config Release --parallel
           if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      # x64 only: this leg is the one multi-config generator (Visual Studio),
+      # so it's the only leg that can actually regress the bug fixed above --
+      # windows.cmake silently baking whichever config happened to be in
+      # CMAKE_BUILD_TYPE at configure time into every config's flags/output
+      # dir. Building Debug too from the SAME already-configured tree (not a
+      # separate configure) and asserting the two configs are genuinely
+      # distinct is the regression test for that: incremental on top of the
+      # Release build just above, so this only adds the cost of compiling
+      # Debug objects, not a second configure/vcpkg-install.
+      - name: Build Debug config (multi-config regression check)
+        if: matrix.arch == 'x64'
+        run: |
+          cmake --build out_windows --target starfish.windows_shell --config Debug --parallel
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      # Two checks: separate output directories (the old bug also nested
+      # Release/Release/ or aliased every config onto one directory), and the
+      # debug CRT (ucrtbased.dll/MSVCP140D.dll, from STARFISH_CXXFLAGS_MODE's
+      # /MDd) actually landing in the Debug DLL and NOT in the Release one --
+      # a substring match against the raw binary is enough, since PE import
+      # tables store imported DLL names as plain ASCII.
+      #
+      # Deliberately `if errorlevel N` / multi-line IF blocks, not a
+      # `cmd1 && (...) || cmd2` one-liner: confirmed on a real run that the
+      # one-liner form printed the OK branch's text (proving the check itself
+      # passed) but still made the whole step exit 1 -- cmd.exe's && / ||
+      # chaining across a parenthesized group left a stale nonzero errorlevel
+      # behind that this step's own exit code picked up. `if errorlevel 1`
+      # only ever reads the errorlevel set by the command immediately above
+      # it, so there's no chaining left to get wrong.
+      - name: Verify Debug and Release configs are genuinely distinct
+        if: matrix.arch == 'x64'
+        shell: cmd
+        run: |
+          if not exist out_windows\Debug\Starfish.dll (
+              echo ERROR: out_windows\Debug\Starfish.dll missing -- Debug config did not build into its own output directory
+              exit /b 1
+          )
+          if not exist out_windows\Release\Starfish.dll (
+              echo ERROR: out_windows\Release\Starfish.dll missing -- building Debug clobbered the Release output tree
+              exit /b 1
+          )
+          findstr /m "ucrtbased.dll" out_windows\Debug\Starfish.dll >nul
+          if errorlevel 1 (
+              echo ERROR: Debug build does not link the debug CRT -- multi-config selection regressed
+              exit /b 1
+          )
+          findstr /m "ucrtbased.dll" out_windows\Release\Starfish.dll >nul
+          if not errorlevel 1 (
+              echo ERROR: Release build links the debug CRT -- multi-config selection regressed
+              exit /b 1
+          )
+          echo OK: Debug and Release configs are genuinely distinct
+          exit /b 0
 
       # Publish only on a miss: overwriting an identical key with identical
       # content is a no-op on BART, but re-uploading hundreds of megabytes for
