@@ -188,6 +188,15 @@ IF (${USE_LIBWEBSOCKETS} STREQUAL "1")
             -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER
             -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY
             -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY)
+        # CMAKE_SHARED_LIBRARY_SONAME_FLAG is defined in CMake's platform
+        # modules for "Linux" but not for "Tizen". Without it the sub-build
+        # produces libwebsockets_lwe.so with no embedded SONAME, so the linker
+        # bakes the build-tree path (e.g. "lib/libwebsockets_lwe.so") into the
+        # DT_NEEDED of consumers instead of the bare filename, and the final
+        # link fails with "not found". Pass it explicitly — same root cause
+        # as the LINK_FLAGS soname fixes added for skia_matrix/clipper/etc.
+        SET (LIBWEBSOCKETS_CROSS_OPTION ${LIBWEBSOCKETS_CROSS_OPTION}
+            -DCMAKE_SHARED_LIBRARY_SONAME_FLAG=-Wl,-soname,)
     ENDIF()
 
     IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
