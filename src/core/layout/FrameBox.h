@@ -97,9 +97,9 @@ struct FlexItemMeasureMemo : public gc {
     // (fixed) cross size. When the item is clean and the inputs match, the
     // subtree geometry from that layout is still valid.
     struct FinalEntry {
-        LayoutUnit m_mainSize;              // border-box main size fixed
-        LayoutUnit m_crossFixed;            // fixed cross size (slot 1)
-        LayoutUnit m_containingBlockWidth;  // percent/auto resolution base
+        LayoutUnit m_mainSize;             // border-box main size fixed
+        LayoutUnit m_crossFixed;           // fixed cross size (slot 1)
+        LayoutUnit m_containingBlockWidth; // percent/auto resolution base
         LayoutUnit m_resultWidth;
         LayoutUnit m_resultHeight;
         unsigned char m_resolveMask;

@@ -1715,7 +1715,7 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
                 m_item->clearNeedsLayoutIgnoringBasisComputation();
             }
         }
-    } cleanStateRestorer{gridItem, !gridItem->needsLayout(), m_layoutContext};
+    } cleanStateRestorer{ gridItem, !gridItem->needsLayout(), m_layoutContext };
     ComputedStyle* style = gridItem->style();
 
     LayoutSize margin = fetchFixedMargin(m_container, style);
