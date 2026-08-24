@@ -494,7 +494,7 @@ public:
         m_linkEffectEnabled = enabled;
     }
 
-    bool linkEffectEnabled()
+    bool linkEffectEnabled() const
     {
         return m_linkEffectEnabled;
     }

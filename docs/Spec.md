@@ -1755,7 +1755,7 @@ The following properties are also implemented but were missing from earlier revi
 | Decoration    | box-decoration-break | slice &#124; clone | Slice/clone box decorations across line/page breaks. | |
 | List / Text   | line-clamp / -webkit-line-clamp | none &#124; &lt;integer&gt; | Limits text content of a block container to the specified number of lines. Behaves like `-webkit-line-clamp`; requires `display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden`. **Unprefixed `line-clamp` and unprefixed `box-orient` are NOT in the parser trie** — only `-webkit-line-clamp` and `-webkit-box-orient` (gated by `STARFISH_ENABLE_CSS_WEBKIT_LINE_PREFIX` / `…_BOX_PREFIX` respectively) work. | |
 
-> **Note on `cursor`:** The `cursor` property is parsed (and applied via the user-agent stylesheet's `cursor: default;` rule) but the value resolver is currently a stub — no actual cursor styling is rendered. Every page load logs `Unsupported css property: cursor` once.
+> **Note on `cursor`:** The `cursor` property is parsed into an inherited computed-style value (keyword form only — `url()` image cursors are not supported, the engine draws no cursor). The tracked keywords are `auto`, `default`, `pointer`, `none`, and all other CSS cursor keywords (collapsed to a single `CursorOtherValue` that serializes back to `auto` via `getComputedStyle`, since the concrete keyword is not retained). The `pointer` value drives the tap-sound (link effect) feedback on Tizen; an author setting any non-`pointer` keyword cleanly overrides an inherited `pointer`. No actual cursor is rendered.
 
 ### CSS Scrolling / Overflow
 
@@ -2946,7 +2946,7 @@ The following font-related CSS properties are **not in the parser trie** at all 
 
 | Property | Status |
 |----------|--------|
-| `cursor` | **No-op** — `updateValueCursor` is `STARFISH_UNSUPPORTED` returning `true`; declarations are accepted but never applied. UA stylesheet sets `cursor: default;` once. (See dedicated note in earlier sections.) |
+| `cursor` | Parsed into an inherited computed-style value (keyword form only — `url()` image cursors unsupported). Tracked keywords: `auto`, `default`, `pointer`, `none`; all other valid keywords collapse to `CursorOtherValue` (serializes to `auto` via `getComputedStyle` since the concrete keyword is not retained). The `pointer` value drives the tap-sound (link effect) feedback on Tizen. No cursor is rendered. (See dedicated note in earlier sections.) |
 | `user-select` | Only **`auto`** and **`none`** parse. `text` / `all` / `contain` are rejected at parse time (the C++ assigns the enum then returns `false`, so the value is dropped). UA wildcard `* { user-select: none }` makes the practical default `none`. |
 | `-webkit-user-select` | **NOT recognized.** |
 | `user-modify` | **NOT recognized.** |
