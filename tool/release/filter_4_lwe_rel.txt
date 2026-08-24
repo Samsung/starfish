@@ -64,7 +64,6 @@ P /.circleci
 - .git
 - .gitignore
 - .gitmodules
-- .gitattributes
 - .gitlab-ci.yml
 - .gbs.conf
 - *.list
