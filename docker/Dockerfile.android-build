@@ -99,14 +99,19 @@ RUN yes | sdkmanager --licenses >/dev/null && \
 # download for the new version (i.e. back to today's status quo for that
 # version until this Dockerfile is updated to match and the image rebuilt).
 # ---------------------------------------------------------------------------
+# gradle-wrapper.jar's manifest has no Main-Class attribute (true of both
+# the copy checked into gradle/gradle's own repo and the one real projects
+# commit under gradle/wrapper/) -- `java -jar` fails with "no main manifest
+# attribute". The real gradlew script never uses -jar; it puts the jar on
+# -classpath and names org.gradle.wrapper.GradleWrapperMain explicitly.
 ENV GRADLE_USER_HOME=/opt/gradle-home
 RUN GRADLE_VERSION=7.6.1 && \
     mkdir -p /tmp/gradle-warm/gradle/wrapper && cd /tmp/gradle-warm && \
     printf 'distributionBase=GRADLE_USER_HOME\ndistributionPath=wrapper/dists\nzipStoreBase=GRADLE_USER_HOME\nzipStorePath=wrapper/dists\ndistributionUrl=https\\://services.gradle.org/distributions/gradle-%s-bin.zip\n' "$GRADLE_VERSION" > gradle/wrapper/gradle-wrapper.properties && \
     curl -fsSL -o gradle/wrapper/gradle-wrapper.jar "https://raw.githubusercontent.com/gradle/gradle/v${GRADLE_VERSION}/gradle/wrapper/gradle-wrapper.jar" && \
-    printf '#!/bin/sh\nexec java -jar "$(cd "$(dirname "$0")" && pwd)/gradle/wrapper/gradle-wrapper.jar" "$@"\n' > gradlew && \
+    printf '#!/bin/sh\nexec java -classpath "$(cd "$(dirname "$0")" && pwd)/gradle/wrapper/gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain "$@"\n' > gradlew && \
     chmod +x gradlew && \
     sudo mkdir -p "$GRADLE_USER_HOME" && \
-    ./gradlew --version && \
     sudo chmod -R a+rwX "$GRADLE_USER_HOME" && \
+    ./gradlew --version && \
     cd / && rm -rf /tmp/gradle-warm
