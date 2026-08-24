@@ -2309,15 +2309,6 @@ void WebView::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
     }
 #endif
 
-    // Once a scroller has claimed the gesture the touch sequence is over for
-    // the DOM: BrowsingContext::dispatchTouchEvent fires touchcancel at that
-    // moment and then drops every following touchmove. It still hit-tested
-    // each of those moves first, though, and a hit test walks the whole frame
-    // tree of the document (plus the iframe's, plus a second pass to check
-    // whether the iframe is still the target). On a Family Hub scrolling a
-    // 168 entry list that is ~12 ms of the ~14 ms each touchmove costs, spent
-    // to compute a target that is then thrown away. Skip the DOM dispatch
-    // entirely; the scrollers above already received this move.
     if (kind == TouchEventKind::TouchEventMove &&
         m_scrollOccurredDuringGesture) {
         return;

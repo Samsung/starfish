@@ -76,23 +76,11 @@ size_t CanvasSurface::g_totalAllocatedCanvasSurfaceSize = 0;
 // (512px also stayed ahead with the animated-glow screen, 9.3 vs 8.9 fps),
 // and the list scroll profile shows the remaining tile cost is the repeated
 // per-tile stacking-context walk, which fewer tiles cut directly.
-#define STARFISH_CANVAS_SURFACE_TILE_SIZE 512
+#define STARFISH_CANVAS_SURFACE_TILE_SIZE 128
 #endif
 
-// Allows measuring other tile sizes on a device without a rebuild.
-static size_t initialCanvasSurfaceTileSize()
-{
-    const char* env = getenv("STARFISH_TILE_SIZE");
-    if (env) {
-        int size = atoi(env);
-        if (size >= 64 && size <= 2048) {
-            return (size_t)size;
-        }
-    }
-    return STARFISH_CANVAS_SURFACE_TILE_SIZE;
-}
-
-size_t CanvasSurface::g_canvasSurfaceTileSize = initialCanvasSurfaceTileSize();
+size_t CanvasSurface::g_canvasSurfaceTileSize =
+    STARFISH_CANVAS_SURFACE_TILE_SIZE;
 
 class CanvasSurfaceSimple : public CanvasSurface {
 public:
