@@ -630,6 +630,7 @@ test/cairo/internal-test/css/transform/transform03.html
 test/cairo/internal-test/css/transform/var-resolve.html
 test/cairo/internal-test/css/transform/transform-inherit-no-parent.html
 test/cairo/internal-test/css/style/cssinherit.html
+test/cairo/internal-test/css/style/cursor-parsing.html
 test/cairo/internal-test/css/opacity/3d-layer-overlapped.html
 test/cairo/internal-test/css/incremental/incremental_layout_relative_position_bug01.html
 test/cairo/internal-test/css/incremental/quicklayout-rel-pos-box-bug.html
