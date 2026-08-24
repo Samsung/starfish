@@ -537,12 +537,21 @@ find_package (PkgConfig REQUIRED)
 # The two -devel packages conflict and both own /usr/include/openssl and
 # /usr/lib/lib{ssl,crypto}.so, so the module picked here matches the BuildRequires
 # in the spec and is also what the libwebsockets sub-build is told to use
-# (see third_party.cmake). Older Tizen versions keep their previous behaviour.
+# (see third_party.cmake). Below Tizen 6.0 this must mirror the spec's own
+# %else block (pkgconfig(openssl), except 5.5 prod_tv/headless which still use
+# pkgconfig(openssl1.1)) -- leaving STARFISH_OPENSSL_MODULE undefined here for
+# those versions, as before, made the libwebsockets sub-build fall through to
+# its own unhinted find_package(OpenSSL), which fails to find anything in a
+# cross-compiled Tizen 5.x sysroot ("Could NOT find OpenSSL").
 IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     IF ((${TIZEN_MAJOR_VERSION} GREATER 10) OR ((${TIZEN_MAJOR_VERSION} EQUAL 10) AND (${TIZEN_MINOR_VERSION} GREATER 0)))
         SET (STARFISH_OPENSSL_MODULE openssl3)
     ELSEIF ((${TIZEN_MAJOR_VERSION} GREATER 6) OR (${TIZEN_MAJOR_VERSION} EQUAL 6))
         SET (STARFISH_OPENSSL_MODULE openssl1.1)
+    ELSEIF ((${TIZEN_MAJOR_VERSION} EQUAL 5) AND (${TIZEN_MINOR_VERSION} EQUAL 5) AND NOT (${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "headless"))
+        SET (STARFISH_OPENSSL_MODULE openssl1.1)
+    ELSE()
+        SET (STARFISH_OPENSSL_MODULE openssl)
     ENDIF()
     IF (DEFINED STARFISH_OPENSSL_MODULE)
         pkg_check_modules (STARFISH_OPENSSL REQUIRED ${STARFISH_OPENSSL_MODULE})
