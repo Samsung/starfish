@@ -1084,10 +1084,10 @@ void FlexFormattingContext::layoutFlexItem(
     // temporarily modified styles (e.g. the container's min/max sizes are
     // stripped while computing a base size), so their results must neither be
     // recorded nor reused as final subtree geometry.
-    bool memoUsable = allowMemoSkip && !m_layoutContext.inComputingBasisSize() &&
-                      !m_container->lineClamp() && !flexItem->isAnonymous() &&
-                      flexItem->style()->position() ==
-                          PositionValue::StaticPositionValue;
+    bool memoUsable =
+        allowMemoSkip && !m_layoutContext.inComputingBasisSize() &&
+        !m_container->lineClamp() && !flexItem->isAnonymous() &&
+        flexItem->style()->position() == PositionValue::StaticPositionValue;
 
     if (memoUsable && !flexItem->needsLayout()) {
         FlexItemMeasureMemo* memo = flexItem->flexItemMeasureMemo();
@@ -1152,7 +1152,8 @@ void FlexFormattingContext::layoutFlexItem(
         FlexItemMeasureMemo::FinalEntry& e =
             flexItem->ensureFlexItemMeasureMemo()->m_final[finalSlot];
         e.m_mainSize = targetMainSize;
-        e.m_crossFixed = crossSize.hasValue() ? crossSize.value() : LayoutUnit();
+        e.m_crossFixed =
+            crossSize.hasValue() ? crossSize.value() : LayoutUnit();
         e.m_containingBlockWidth = cbWidth;
         e.m_resultWidth = flexItem->width();
         e.m_resultHeight = flexItem->height();
