@@ -157,6 +157,20 @@ class StyleRule : public StyleRuleBase {
 
 public:
     static const unsigned maximumIdentifierCount = 10;
+
+    // CSS Shadow defines which element a shadow-scoped selector targets; rule
+    // promotion is Starfish's way of routing that rule to the StyleResolver
+    // which styles the target. A rule needs cross-scope routing when its
+    // declaration target is not styled by the resolver which owns the shadow
+    // stylesheet. See:
+    // https://drafts.csswg.org/css-shadow-1/#host-element-in-tree
+    // https://drafts.csswg.org/css-shadow-1/#slotted-pseudo
+    enum class ShadowScopeRuleTarget {
+        Local,
+        Host,
+        Slotted,
+    };
+
     StyleRule(CSSSelectorList&& selectorList, CSSStyleDeclaration* decl);
 
     void* operator new(size_t size);
@@ -212,9 +226,15 @@ public:
         return m_isSimplePseudoClassHostSelector;
     }
 
-    bool isPseudoClassHostSelector()
+    ShadowScopeRuleTarget shadowScopeRuleTarget()
     {
-        return m_isPseudoClassHostSelector;
+        if (isSimplePseudoClassHostSelector()) {
+            return ShadowScopeRuleTarget::Host;
+        }
+        if (hasSlottedSelector()) {
+            return ShadowScopeRuleTarget::Slotted;
+        }
+        return ShadowScopeRuleTarget::Local;
     }
 
     // True when the selector's subject (index 0; see the reversed,
@@ -239,7 +259,6 @@ protected:
     bool m_isSimpleClassSelector : 1;
     bool m_isSimpleTagSelector : 1;
     bool m_isSimplePseudoClassHostSelector : 1;
-    bool m_isPseudoClassHostSelector : 1;
     bool m_hasSlottedSelector : 1;
 
     unsigned m_identifierHashes[maximumIdentifierCount];
