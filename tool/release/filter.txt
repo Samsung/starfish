@@ -32,6 +32,7 @@ P /.circleci
 - /third_party/escargot/tools/check_tidy.py
 - /third_party/escargot/tools/run-tests.py
 - /third_party/escargot/tools/visualize_heap_usage.py
+- /third_party/escargot/samples
 + /third_party/libwebsockets
 - /third_party/openssl
 + /third_party/googletest
@@ -54,6 +55,18 @@ P /.circleci
 + /third_party/libwebp
 - /third_party/wpt
 - /tool/perf_tools
+- /tool/ci/cache_android_lwe_submodules.sh
+- /tool/ci/cache_starfish_thirdparty.sh
+- /tool/ci/cache_wpt.sh
+- /tool/ci/check_render_bmp.py
+- /tool/ci/lib_submodule_cache.sh
+- /tool/lint/check_contract_abi.py
+- /tool/lint/contract_abi/breaking_changes.md
+- /tool/lint/contract_abi/contract_shim.cpp
+- /tool/runner/uwe_loader_test.py
+- /third_party/escargot/test_sqlite3_real.js
+- /third_party/escargot/test_bcrypt_real.js
+- /docker/Dockerfile.android-build
 
 - .git
 - .gitignore
