@@ -143,8 +143,8 @@ void A11yLiveRegion::onMutation(Node* changed)
     }
     Node* source =
         root->getAttributeOrEmpty(ss->m_ariaAtomic)->equalsIgnoreCase("true")
-        ? root
-        : changed;
+            ? root
+            : changed;
     auto textContent = source->textContent();
     if (!textContent.hasValue()) {
         return;
@@ -171,8 +171,7 @@ void A11yLiveRegion::onMutation(Node* changed)
 
 void A11yLiveRegion::enqueuePolite(Element* root, String* text)
 {
-    if (m_queueHead >= m_queueRoots.size() &&
-        !webView()->tts()->isSpeaking()) {
+    if (m_queueHead >= m_queueRoots.size() && !webView()->tts()->isSpeaking()) {
         webView()->tts()->speech(root, text);
         return;
     }
@@ -181,9 +180,7 @@ void A11yLiveRegion::enqueuePolite(Element* root, String* text)
     if (m_drainTimerId == SIZE_MAX) {
         m_drainTimerId = webView()->timer()->addTimer(
             kDrainIntervalMs, nullptr,
-            [](void* data) {
-                static_cast<A11yLiveRegion*>(data)->drain();
-            },
+            [](void* data) { static_cast<A11yLiveRegion*>(data)->drain(); },
             this, true);
     }
 }

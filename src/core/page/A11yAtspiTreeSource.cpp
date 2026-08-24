@@ -83,8 +83,7 @@ static void clippedBorderBox(Element* element, double& x, double& y,
     while (doc) {
         for (Element* ancestor = current->parentElement(); ancestor;
              ancestor = ancestor->parentElement()) {
-            if (ancestor->frame() &&
-                ancestor->frame()->shouldApplyOverflow()) {
+            if (ancestor->frame() && ancestor->frame()->shouldApplyOverflow()) {
                 DOMRect* clip = ancestor->getBoundingClientRect();
                 intersectRect(x, y, width, height, clip->x(), clip->y(),
                               clip->width(), clip->height());
@@ -184,7 +183,8 @@ static bool isInteractiveTarget(WebView* webView, Element* element)
         return true;
     }
     return role->equals("button") || role->equalsIgnoreCase("link") ||
-        role->equalsIgnoreCase("progressbar") || role->equalsIgnoreCase("slider");
+           role->equalsIgnoreCase("progressbar") ||
+           role->equalsIgnoreCase("slider");
 }
 
 // Explicit accessible name on the element itself (alt counts for images).
@@ -649,10 +649,10 @@ void A11yAtspiTreeSource::posInSetOf(void* handle, int& position, int& setSize)
         return;
     }
     StaticStrings* ss = webView()->starfish()->staticStrings();
-    int ariaPos = String::parseInt(
-        element->getAttributeOrEmpty(ss->m_ariaPosinset));
-    int ariaSize = String::parseInt(
-        element->getAttributeOrEmpty(ss->m_ariaSetsize));
+    int ariaPos =
+        String::parseInt(element->getAttributeOrEmpty(ss->m_ariaPosinset));
+    int ariaSize =
+        String::parseInt(element->getAttributeOrEmpty(ss->m_ariaSetsize));
     // DOM ordinal among the parent's list item children (chromium computes
     // the same when aria-posinset/aria-setsize are absent).
     int ordinal = 0, count = 0;
@@ -701,8 +701,8 @@ bool A11yAtspiTreeSource::valueOf(void* handle, double& current,
         minimum = attrDouble(ss->m_min, 0);
         maximum = attrDouble(ss->m_max, 100);
         String* value = element->asHTMLInputElement()->value();
-        current = String::validDouble(value) ? String::parseDouble(value)
-                                             : minimum;
+        current =
+            String::validDouble(value) ? String::parseDouble(value) : minimum;
         return true;
     }
     if (element->localName()->equals("progress")) {
@@ -787,13 +787,12 @@ A11yAtspiTreeSource::States A11yAtspiTreeSource::statesOf(void* handle)
         // ARIA widget: an absent aria-checked reads as unchecked.
         states.checkable = true;
         states.mixed = ariaChecked->equalsIgnoreCase("mixed");
-        states.checked =
-            !states.mixed && ariaChecked->equalsIgnoreCase("true");
+        states.checked = !states.mixed && ariaChecked->equalsIgnoreCase("true");
     }
 
     states.disabled = element->isDisabledFormControl() ||
-        element->getAttributeOrEmpty(ss->m_ariaDisabled)
-            ->equalsIgnoreCase("true");
+                      element->getAttributeOrEmpty(ss->m_ariaDisabled)
+                          ->equalsIgnoreCase("true");
 
     String* ariaExpanded = element->getAttributeOrEmpty(ss->m_ariaExpanded);
     if (!ariaExpanded->isEmpty()) {
@@ -807,8 +806,8 @@ A11yAtspiTreeSource::States A11yAtspiTreeSource::statesOf(void* handle)
         states.selected = ariaSelected->equalsIgnoreCase("true");
     }
 
-    states.modal = element->getAttributeOrEmpty(ss->m_ariaModal)
-                       ->equalsIgnoreCase("true");
+    states.modal =
+        element->getAttributeOrEmpty(ss->m_ariaModal)->equalsIgnoreCase("true");
 
     double x = 0, y = 0, width = 0, height = 0;
     clippedBorderBox(element, x, y, width, height);
