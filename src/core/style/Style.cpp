@@ -10242,25 +10242,12 @@ static void markRenderingSubtreeNeedsStyleRecalc(Node* node)
     }
 }
 
-// True when any of the sheet's rules is one that addToRuleSet(CSSStyleSheet*)
-// promotes out of a shadow resolver and into the document resolver's
-// host-/slotted-scoped lists -- i.e. a rule whose subject lives outside the
-// shadow tree that owns the sheet, so only the document resolver ever styles
-// it. That is why `:host` requires the "simple" (combinator-free) form while
-// `::slotted()` does not: `:host .child` has an in-tree subject and stays
-// local, whereas `::slotted()` is always the rightmost compound.
-//
-// This predicate MUST stay in sync with that promotion branch: it duplicates
-// the branch's conditions by hand, and a promoting selector added there but
-// missed here would silently skip the host/slotted invalidation its callers
-// gate on. Keep both in step, or better, give them a shared source of truth.
-static bool sheetHasPromotableSelector(CSSStyleSheet* sheet)
+static bool sheetHasCrossScopeRule(CSSStyleSheet* sheet)
 {
     auto& rules = sheet->styleRules();
     for (size_t i = 0; i < rules.size(); i++) {
-        StyleRule* rule = rules[i].first;
-        if (rule->isSimplePseudoClassHostSelector() ||
-            rule->hasSlottedSelector()) {
+        if (rules[i].first->shadowScopeRuleTarget() !=
+            StyleRule::ShadowScopeRuleTarget::Local) {
             return true;
         }
     }
@@ -10313,7 +10300,7 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
         // Promoting this one sheet's `:host`/`::slotted` rules appends to the
         // document resolver's promoted lists, which is already the right result
         // -- no document rebuild needed on this path.
-        addToRuleSet(sheet);
+        bool addedCrossScopeRule = addToRuleSet(sheet);
         recalcWebFonts();
         // A sheet with no `:host`/`::slotted` rule cannot change anything
         // outside this resolver's own tree -- when the sheet's media query
@@ -10321,7 +10308,7 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
         // by CSSStyleSheet::willAddToDocument()'s per-element rule matching,
         // and when it doesn't match, the sheet's rules don't apply anywhere
         // to invalidate -- so skip the host/light-DOM flat-tree walk below.
-        if (isShadowResolver() && sheetHasPromotableSelector(sheet)) {
+        if (isShadowResolver() && addedCrossScopeRule) {
             invalidateShadowScopeForSheetChange();
         }
     } else {
@@ -10330,7 +10317,7 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
         // document resolver has to drop the previous promotions first or they
         // are duplicated. See setAdoptedSheets() for the promotion rationale.
         //
-        // No sheetHasPromotableSelector() gate here (unlike the fast path
+        // No cross-scope-rule gate here (unlike the fast path
         // above): this path is taken before addToRuleSet() runs for this
         // sheet, so its styleRules() may still be empty -- reading that as
         // "no promotable rule" would wrongly skip invalidating a `:host`
@@ -10351,7 +10338,7 @@ void StyleResolver::removeSheet(CSSStyleSheet* sheet)
     // styling the host and its slotted children after the sheet is gone. See
     // setAdoptedSheets() for the promotion rationale.
     //
-    // The sheetHasPromotableSelector() gate applies here too, unlike
+    // The sheetHasCrossScopeRule() gate applies here too, unlike
     // addSheet()'s else path: every caller (HTMLStyleElement,
     // HTMLLinkElement, SVGStyleElement, StyleRuleImport) invokes
     // willRemovedFromDocument() -- which reads the same still-populated
@@ -10360,7 +10347,7 @@ void StyleResolver::removeSheet(CSSStyleSheet* sheet)
     // path.
     if (isShadowResolver()) {
         document()->styleResolver().setNeedsRecalcRuleSet();
-        if (sheetHasPromotableSelector(sheet)) {
+        if (sheetHasCrossScopeRule(sheet)) {
             invalidateShadowScopeForSheetChange();
         }
     }
@@ -10725,7 +10712,7 @@ void StyleResolver::recalcWebFonts()
 #endif
 }
 
-void StyleResolver::addToRuleSet(CSSStyleSheet* sheet)
+bool StyleResolver::addToRuleSet(CSSStyleSheet* sheet)
 {
     sheet->parseSheetIfneeds();
 
@@ -10734,7 +10721,7 @@ void StyleResolver::addToRuleSet(CSSStyleSheet* sheet)
         !sheet->matchesMediaQueries(evaluator, sheet->mediaQuerySet(),
                                     &m_viewportDependentMediaQueryResults,
                                     &m_deviceDependentMediaQueryResults)) {
-        return;
+        return false;
     }
 
     sheet->clearStyleRules();
@@ -10746,39 +10733,41 @@ void StyleResolver::addToRuleSet(CSSStyleSheet* sheet)
                              &m_viewportDependentMediaQueryResults,
                              &m_deviceDependentMediaQueryResults);
 
+    bool addedCrossScopeRule = false;
+    bool isInShadowScope = isShadowResolver();
     size_t rules = sheet->styleRules().size();
     for (size_t j = 0; j < rules; j++) {
         StyleRule* rule = sheet->styleRules()[j].first;
-        // If a styleRule has a simple pseudo class host, promote it to the
-        // document resolver together with the origin host element so that
-        // matching can be restricted to the correct shadow tree.
-        // A shadow resolver is identified by isShadowResolver() (i.e. it was
-        // created for a ShadowRoot rather than the document).
-        // ::slotted() rules are the mirror image: also promoted to the
-        // document resolver (its subject is a slotted light-DOM element that
-        // the document resolver styles), keyed by the same origin host.
-        if (UNLIKELY(rule->isSimplePseudoClassHostSelector() &&
-                     isShadowResolver())) {
-            m_document->styleResolver().addHostScopedRule(
-                sheet->styleRules()[j], ownerHost());
-            m_document->styleResolver().m_hasSimplePseudoClassHostSelector =
-                true;
-        } else if (UNLIKELY(rule->hasSlottedSelector() && isShadowResolver())) {
-            m_document->styleResolver().addSlottedScopedRule(
-                sheet->styleRules()[j], ownerHost());
-            m_document->styleResolver().m_hasSlottedSelector = true;
-        } else if (UNLIKELY(rule->hasSlottedSelector())) {
-            // A ::slotted() rule outside any shadow tree (e.g. in the main
-            // document's own stylesheet) has no originating slot and can
-            // never legitimately match anything. Drop it instead of falling
-            // through to addToRuleSet(), which would bucket it as an
-            // ordinary universal/class/tag rule and test it against every
-            // element via the normal per-element matching path -- that path
-            // does not know about slot/host scoping the way the promoted-
-            // rule block above does, so the rule would wrongly match
-            // whatever its argument matches, globally.
-        } else {
+        switch (rule->shadowScopeRuleTarget()) {
+        case StyleRule::ShadowScopeRuleTarget::Local:
             addToRuleSet(sheet->styleRules()[j]);
+            break;
+        case StyleRule::ShadowScopeRuleTarget::Host:
+            if (UNLIKELY(isInShadowScope)) {
+                m_document->styleResolver().addHostScopedRule(
+                    sheet->styleRules()[j], ownerHost());
+                m_document->styleResolver().m_hasSimplePseudoClassHostSelector =
+                    true;
+                addedCrossScopeRule = true;
+            } else {
+                // Preserve the existing document-scope :host handling. CSS
+                // Shadow requires it to match nothing outside a shadow-tree
+                // context; fixing that behavior is a separate conformance
+                // change with its own WPT coverage.
+                addToRuleSet(sheet->styleRules()[j]);
+            }
+            break;
+        case StyleRule::ShadowScopeRuleTarget::Slotted:
+            if (UNLIKELY(isInShadowScope)) {
+                m_document->styleResolver().addSlottedScopedRule(
+                    sheet->styleRules()[j], ownerHost());
+                m_document->styleResolver().m_hasSlottedSelector = true;
+                addedCrossScopeRule = true;
+            }
+            // A ::slotted() rule outside a shadow tree has no originating
+            // slot and cannot match anything, so do not add it as a local
+            // rule.
+            break;
         }
     }
 
@@ -10786,6 +10775,8 @@ void StyleResolver::addToRuleSet(CSSStyleSheet* sheet)
     for (size_t k = 0; k < keyframes; k++) {
         addToKeyframesRule(sheet->keyframes()[k]);
     }
+
+    return addedCrossScopeRule;
 }
 
 // Registers attribute selectors found inside a functional pseudo-class's

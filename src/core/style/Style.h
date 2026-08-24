@@ -3556,7 +3556,7 @@ public:
 
 protected:
     void recalcWebFonts();
-    void addToRuleSet(CSSStyleSheet* sheet);
+    bool addToRuleSet(CSSStyleSheet* sheet);
     void addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule);
     void registerAttrFilterFromSelectorArguments(
         CSSPseudoSelector* pseudoSelector);
