@@ -270,9 +270,9 @@ int Filter::chainDownsampleFactor(FilterApplyContext& ctx)
     }
 
     FilterGaussianBlur* blur = static_cast<FilterGaussianBlur*>(last);
-    auto vm =
-        ctx.target->outmostSVGViewportBox()->computeTranlateScaleOnPaint()
-            .second;
+    auto vm = ctx.target->outmostSVGViewportBox()
+                  ->computeTranlateScaleOnPaint()
+                  .second;
     auto stdXY =
         blur->computeStdXY(ctx.target->unadjustedFrameRectByFilter()->size(),
                            std::make_pair(vm.getScaleX(), vm.getScaleY()));
@@ -284,8 +284,8 @@ int Filter::chainDownsampleFactor(FilterApplyContext& ctx)
     float dpr = owner()->webView()->screenInfo().devicePixelRatio;
     unsigned kernelX = (unsigned)(kernel.first * dpr);
     unsigned kernelY = (unsigned)(kernel.second * dpr);
-    unsigned kernelMin = std::min(kernelX ? kernelX : kernelY,
-                                  kernelY ? kernelY : kernelX);
+    unsigned kernelMin =
+        std::min(kernelX ? kernelX : kernelY, kernelY ? kernelY : kernelX);
 
     // Mirror FilterGaussianBlur::computeDownsampleFactor's guards: keep >= 8
     // samples across the kernel and >= 16 px per reduced dimension.
@@ -327,8 +327,8 @@ void Filter::applyFilter(FilterApplyContext& ctx)
                              reducedCtx);
         }
 
-        std::shared_ptr<FilterSourceBuffer> full(new FilterSourceBuffer(
-            nullptr, ctx.stride * ctx.height, true));
+        std::shared_ptr<FilterSourceBuffer> full(
+            new FilterSourceBuffer(nullptr, ctx.stride * ctx.height, true));
         filterUpsampleRGBA(reducedCtx.output->data(), reducedWidth,
                            reducedHeight, reducedStride, full->data(),
                            ctx.width, ctx.height, ctx.stride, factor);
@@ -337,9 +337,9 @@ void Filter::applyFilter(FilterApplyContext& ctx)
     }
 
     for (auto* primitive : m_filterPrimitives) {
-        primitive->apply(computeSubRegion(primitive, owner(), ctx.target,
-                                          subRegionScale),
-                         ctx);
+        primitive->apply(
+            computeSubRegion(primitive, owner(), ctx.target, subRegionScale),
+            ctx);
     }
 }
 

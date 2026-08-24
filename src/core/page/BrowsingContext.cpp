@@ -416,9 +416,11 @@ void BrowsingContext::layoutSVGViewportsNeedingContentLayout()
     INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kLayout,
                                      "layout svg viewport content");
 
-    LayoutContext ctx(starfish(),
-                      document()->frame()->asFrameBox()->asFrameBlockBox()
-                          ->asFrameDocument());
+    LayoutContext ctx(starfish(), document()
+                                      ->frame()
+                                      ->asFrameBox()
+                                      ->asFrameBlockBox()
+                                      ->asFrameDocument());
     for (auto* viewport : viewports) {
         // The frame tree may have been rebuilt since the request, dropping
         // this box.
