@@ -24,7 +24,7 @@ sudo apt-get install -y \
     libglib2.0-dev libcairo2-dev libfreetype-dev libfontconfig-dev libharfbuzz-dev \
     libx11-dev libxext-dev libxrender-dev libxi-dev \
     libegl-dev libgles-dev libgl1-mesa-dev \
-    libpng-dev libturbojpeg0-dev libgif-dev libwebp-dev \
+    libpng-dev libturbojpeg0-dev libjpeg-dev libgif-dev libwebp-dev \
     libcurl4-openssl-dev libssl-dev libicu-dev libcap-dev libasound2-dev zlib1g-dev
 
 # optional for zeromq.
