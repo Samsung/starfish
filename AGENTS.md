@@ -87,9 +87,9 @@ After a change, run the closest suites first:
 |---|---|---|
 | Any C++ | `./tool/lint/check_tidy.py` | Same check as the PR CI `prepare_source` job's "Check tidy" step |
 | `src/public/contract/**`, `inc/PlatformIntegrationData.h`, `inc/LWEWorker.h` | `./tool/lint/check_contract_abi.py` | Gates UWE delegate contract ABI breaks; same check as the PR CI `prepare_source` job's "Check contract ABI" step |
-| `core/dom`, DOM APIs | `./tool/runner/test_runner.py wpt_serve_dom internal_test` | Fast |
-| `core/style`, CSS/selectors | `./tool/runner/test_runner.py wpt_serve_css` | |
-| HTML parsing/elements | `./tool/runner/test_runner.py wpt_serve_html` | |
+| `core/dom`, DOM APIs | `./tool/runner/test_runner.py wpt_serve_testharness_dom internal_test` | Fast |
+| `core/style`, CSS/selectors | `./tool/runner/test_runner.py wpt_serve_testharness_css` | |
+| HTML parsing/elements | `./tool/runner/test_runner.py wpt_serve_testharness_html` | |
 | fetch / xhr / canvas / svg / ... | matching `wpt_serve_*` suite | |
 | worker / serviceworker | `wpt_serve_testharness_worker` / `_serviceworker` | Excluded from the aggregate suite (needs daemon peers) |
 | Layout, paint, rendering | `wpt_serve_reftest`, or `reftest_all` for a full pass | `reftest_all` is slow; prefer targeted suites while iterating |
