@@ -514,7 +514,18 @@ SET (LWE_LDFLAGS_DEFAULT -Wl,--gc-sections -Wl,-rpath=/usr/local/lib -Wl,-rpath=
 IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     SET (LWE_LDFLAGS_HOST -L/usr/local/lib -Wl,-rpath=\$$ORIGIN/lib -Wl,-rpath-link=lib)
 ELSEIF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
-    SET (LWE_LDFLAGS_HOST -L/usr/local/lib -Wl,-rpath=${LIBDIR}/lwe)
+    # -rpath-link (unlike -rpath) is link-time-only and can't use the
+    # runtime-resolved $ORIGIN token, so it has to be this build's own
+    # absolute output dir. Without it, resolving the NEEDED entries of an
+    # already-linked shared library (e.g. starfish.executable pulling in
+    # the *-impl.so that *-api.so needs) falls back to whatever the
+    # cross-ld's own default search behavior is -- newer binutils (Tizen
+    # 6.0+'s gcc 9.2 toolchain) also consult -L for that, but the older
+    # binutils paired with Tizen 5.x's gcc 6.2.1 toolchain doesn't, and
+    # fails with "not found (try using -rpath or -rpath-link)" followed by
+    # every symbol the missing .so would have provided coming back
+    # undefined.
+    SET (LWE_LDFLAGS_HOST -L/usr/local/lib -Wl,-rpath=${LIBDIR}/lwe -Wl,-rpath-link=${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 ENDIF()
 
 SET (LWE_LDFLAGS
