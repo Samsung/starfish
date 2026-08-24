@@ -1182,16 +1182,16 @@ void FilterGaussianBlur::apply(const Unit::Rect& subRegionInFloat,
         Filter::FilterSourceBuffer reducedInput(nullptr, reducedSize, true);
         Filter::FilterSourceBuffer reducedOutput(nullptr, reducedSize, true);
 
-        filterDownsampleRGBA(inputSource->data(), ctx.width, ctx.height, ctx.stride,
-                       reducedInput.data(), reducedWidth, reducedHeight,
-                       reducedStride, factor);
+        filterDownsampleRGBA(inputSource->data(), ctx.width, ctx.height,
+                             ctx.stride, reducedInput.data(), reducedWidth,
+                             reducedHeight, reducedStride, factor);
         standardBoxBlur(reducedInput.data(), reducedOutput.data(),
                         kernelSize.first / factor, kernelSize.second / factor,
                         reducedStride, reducedWidth, reducedHeight,
                         ctx.isAlphaImage, edgeMode);
         filterUpsampleRGBA(reducedOutput.data(), reducedWidth, reducedHeight,
-                     reducedStride, outputBuffer->data(), ctx.width, ctx.height,
-                     ctx.stride, factor);
+                           reducedStride, outputBuffer->data(), ctx.width,
+                           ctx.height, ctx.stride, factor);
     } else {
         standardBoxBlur(inputSource->data(), outputBuffer->data(),
                         kernelSize.first, kernelSize.second, ctx.stride,
