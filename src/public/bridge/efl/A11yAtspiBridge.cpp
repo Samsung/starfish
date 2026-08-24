@@ -1135,8 +1135,7 @@ static gboolean flushTreeEvents(gpointer)
         auto newIt = current.children.find(parent);
         const std::vector<void*>* newList =
             newIt != current.children.end() ? &newIt->second : nullptr;
-        bool resync =
-            newList && survivorsReordered(oldList, *newList);
+        bool resync = newList && survivorsReordered(oldList, *newList);
         if (resync) {
             resyncParents.insert(parent);
         }
@@ -1221,9 +1220,8 @@ static gboolean flushTreeEvents(gpointer)
             if (!obj) {
                 obj = lookupNode(entry.first);
             }
-            STARFISH_LOG_INFO(
-                "A11yAtspiBridge: state-change %d on %p -> %d\n",
-                (int)t.state, entry.first, t.after ? 1 : 0);
+            STARFISH_LOG_INFO("A11yAtspiBridge: state-change %d on %p -> %d\n",
+                              (int)t.state, entry.first, t.after ? 1 : 0);
             atk_object_notify_state_change(obj, t.state,
                                            t.after ? TRUE : FALSE);
         }
@@ -1234,9 +1232,8 @@ static gboolean flushTreeEvents(gpointer)
     for (const auto& entry : current.values) {
         auto oldIt = previous.values.find(entry.first);
         if (oldIt != previous.values.end() && oldIt->second != entry.second) {
-            STARFISH_LOG_INFO(
-                "A11yAtspiBridge: accessible-value %p -> %f\n", entry.first,
-                entry.second);
+            STARFISH_LOG_INFO("A11yAtspiBridge: accessible-value %p -> %f\n",
+                              entry.first, entry.second);
             g_object_notify(G_OBJECT(lookupNode(entry.first)),
                             "accessible-value");
         }
