@@ -978,8 +978,13 @@ static int computeDownsampleFactor(unsigned kernelSizeX, unsigned kernelSizeY,
 {
     // Keep this many samples across the kernel after downscaling, so the blur
     // still has a smooth profile, and keep the reduced image big enough that
-    // its edges stay meaningful.
-    const unsigned minKernelSizeAfterScale = 8;
+    // its edges stay meaningful. 16 is empirical: at 8 a kernel of ~18 px ran
+    // half-resolution and the residual error (up to 7/255 around edges) was
+    // above the internal pixel tests' per-channel tolerance of 4
+    // (svg_filter_geometry_01.html); requiring 16 samples keeps those
+    // mid-size blurs at full resolution while the wide decorative blurs this
+    // path targets still downscale.
+    const unsigned minKernelSizeAfterScale = 16;
     const int minDimensionAfterScale = 16;
     const int maxFactor = 4;
 
