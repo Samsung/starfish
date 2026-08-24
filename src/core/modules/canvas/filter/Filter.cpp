@@ -287,10 +287,10 @@ int Filter::chainDownsampleFactor(FilterApplyContext& ctx)
     unsigned kernelMin =
         std::min(kernelX ? kernelX : kernelY, kernelY ? kernelY : kernelX);
 
-    // Mirror FilterGaussianBlur::computeDownsampleFactor's guards: keep >= 8
+    // Mirror FilterGaussianBlur::computeDownsampleFactor's guards: keep >= 16
     // samples across the kernel and >= 16 px per reduced dimension.
     const int factor = 2;
-    if (kernelMin / (unsigned)factor < 8 || (int)ctx.width / factor < 16 ||
+    if (kernelMin / (unsigned)factor < 16 || (int)ctx.width / factor < 16 ||
         (int)ctx.height / factor < 16) {
         return 1;
     }
