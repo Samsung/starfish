@@ -100,6 +100,12 @@ struct FlexItemMeasureMemo : public gc {
         LayoutUnit m_mainSize;             // border-box main size fixed
         LayoutUnit m_crossFixed;           // fixed cross size (slot 1)
         LayoutUnit m_containingBlockWidth; // percent/auto resolution base
+        // Container's available cross size when the layout ran. In a row
+        // container the item's own (non-fixed) height and its descendants'
+        // percentage heights resolve against it, and it flips between
+        // indefinite (hypothetical pass) and definite (stretched pass) with
+        // every other key field unchanged.
+        LayoutUnit m_containerAvailCross;
         LayoutUnit m_resultWidth;
         LayoutUnit m_resultHeight;
         unsigned char m_resolveMask;
