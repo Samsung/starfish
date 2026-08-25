@@ -204,7 +204,7 @@ private:
     int m_currentUtterId;
     std::set<unsigned int> m_callbackIds;
 #ifdef STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
-    A11yLiveRegion* m_liveRegion{ nullptr };
+    Optional<A11yLiveRegion*> m_liveRegion;
 #endif
 };
 } // namespace Starfish
