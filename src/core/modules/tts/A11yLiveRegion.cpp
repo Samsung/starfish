@@ -41,10 +41,10 @@ static const unsigned kDrainIntervalMs = 400;
 // logic exists exactly once, under the same build gate as the class.
 A11yLiveRegion* TTS::liveRegion()
 {
-    if (!m_liveRegion) {
+    if (!m_liveRegion.hasValue()) {
         m_liveRegion = new A11yLiveRegion(webView());
     }
-    return m_liveRegion;
+    return m_liveRegion.value();
 }
 
 A11yLiveRegion::A11yLiveRegion(WebView* webView)
