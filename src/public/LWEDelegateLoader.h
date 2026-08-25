@@ -31,6 +31,8 @@
 
 namespace LWE {
 
+enum class LWELibrarySource;
+
 class LWEDelegateLoader {
 public:
     static LWEDelegateLoader* getInstance();
@@ -73,6 +75,10 @@ private:
     bool loadSettingsProcTable();
     bool loadWebContainerProcTable();
     bool loadWebViewProcTable();
+    bool validateAbiEpoch();
+    bool loadProcTables();
+    bool tryLoadAndValidate(LWELibrarySource source);
+    void discardFailedLibrary();
 
     void unloadCookieManagerProcTable();
     void unloadLWEProcTable();

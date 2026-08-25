@@ -211,6 +211,11 @@ bool LWE::IsUsingSeparateThread()
 } // namespace LWEDelegate
 
 extern "C" {
+uint32_t EXPORT_UNMANAGED_API LWEDelegate_GetAbiEpoch()
+{
+    return LWEDelegate::kDelegateAbiEpoch;
+}
+
 void EXPORT_UNMANAGED_API
 LWEDelegate_LWE_Initialize(const char* storageDirectoryPath, uint32_t option)
 

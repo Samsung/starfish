@@ -39,6 +39,7 @@ own stdout/stderr plus a clean exit. Run from repo root:
 """
 
 import os
+import shlex
 import shutil
 import sys
 import tempfile
@@ -121,6 +122,49 @@ def setup_unloadable_file_falls_back(impl_so):
     write_version(os.path.join(UPDATE_DIR, "VERSION"), "9.9.9")
 
 
+def build_fake_updated_impl(source):
+    source_path = os.path.join(UPDATE_DIR, "fake_updated_impl.cpp")
+    output_path = os.path.join(UPDATE_DIR, "libStarfish-impl.so")
+    os.makedirs(UPDATE_DIR)
+    with open(source_path, "w") as f:
+        f.write(source)
+
+    compiler = shlex.split(os.environ.get("CXX", "c++"))
+    process = Popen(compiler + ["-std=c++11", "-shared", "-fPIC",
+                               "-I", REPO_ROOT, source_path,
+                               "-o", output_path],
+                    stdout=PIPE, stderr=PIPE)
+    _, stderr = process.communicate()
+    if process.returncode != 0:
+        sys.exit("Cannot build fake UWE test library: " +
+                 stderr.decode("utf-8", "replace"))
+    write_version(os.path.join(UPDATE_DIR, "VERSION"), "9.9.9")
+
+
+def setup_incompatible_abi_epoch_falls_back(impl_so):
+    # A valid shared object with an incompatible ABI epoch must be rejected
+    # before any ProcTable or vtable call is possible.
+    build_fake_updated_impl(
+        '#include "src/public/contract/LWEDelegateContract.h"\n'
+        'extern "C" uint32_t LWEDelegate_GetAbiEpoch()\n'
+        '{ return LWEDelegate::kDelegateAbiEpoch + 1; }\n')
+
+
+def setup_missing_abi_epoch_falls_back(impl_so):
+    # A valid shared object without the handshake symbol must be rejected.
+    build_fake_updated_impl(
+        'extern "C" int UnrelatedSymbol() { return 0; }\n')
+
+
+def setup_missing_symbol_falls_back(impl_so):
+    # This candidate passes the version handshake but lacks every required
+    # ProcTable symbol. A post-dlopen validation failure must also fall back.
+    build_fake_updated_impl(
+        '#include "src/public/contract/LWEDelegateContract.h"\n'
+        'extern "C" uint32_t LWEDelegate_GetAbiEpoch()\n'
+        '{ return LWEDelegate::kDelegateAbiEpoch; }\n')
+
+
 SCENARIOS = [
     {
         "name": "updated_impl_selected",
@@ -145,6 +189,33 @@ SCENARIOS = [
                          "Failed to load updated LWE",
                          "Try to load default LWE"],
         "must_not_contain": ["Failed to load default LWE"],
+    },
+    {
+        "name": "incompatible_abi_epoch_falls_back_to_default",
+        "setup": setup_incompatible_abi_epoch_falls_back,
+        "must_contain": ["Try to load updated LWE",
+                         "LWE delegate ABI epoch mismatch",
+                         "Updated LWE validation failed",
+                         "Try to load default LWE"],
+        "must_not_contain": ["Failed to load default LWE"],
+    },
+    {
+        "name": "missing_abi_epoch_falls_back_to_default",
+        "setup": setup_missing_abi_epoch_falls_back,
+        "must_contain": ["Try to load updated LWE",
+                         "LWE delegate ABI epoch symbol is missing",
+                         "Updated LWE validation failed",
+                         "Try to load default LWE"],
+        "must_not_contain": ["Failed to load default LWE"],
+    },
+    {
+        "name": "missing_symbol_falls_back_to_default",
+        "setup": setup_missing_symbol_falls_back,
+        "must_contain": ["Try to load updated LWE",
+                         "Updated LWE validation failed",
+                         "Try to load default LWE"],
+        "must_not_contain": ["LWE delegate ABI epoch mismatch",
+                             "Failed to load default LWE"],
     },
 ]
 

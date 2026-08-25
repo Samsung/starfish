@@ -80,6 +80,7 @@ using std::size_t;
 
 #include "public/contract/LWEDelegate.h"
 #include "public/contract/LWEDelegateConfig.h"
+#include "public/contract/LWEDelegateContract.h"
 #include "public/contract/CookieManagerDelegate.h"
 #include "public/contract/ResourceErrorDelegate.h"
 #include "public/contract/SettingsDelegate.h"
@@ -112,6 +113,9 @@ using std::size_t;
         #ProcTable "::" #Member " no longer matches " #Wrapper)
 
 #include <type_traits>
+
+CONTRACT_ABI_CHECK_WRAPPER(DelegateContractProcTable, GetAbiEpoch,
+                           LWEDelegate_GetAbiEpoch);
 
 CONTRACT_ABI_CHECK_WRAPPER(LWEProcTable, Initialize,
                            LWEDelegate_LWE_Initialize);
@@ -248,6 +252,7 @@ extern "C" __attribute__((visibility("default"))) void ContractAbiAnchor(
 // DWARF. An exported function taking each by pointer does.
 extern "C" __attribute__((visibility("default"))) void
 ContractAbiAnchorProcTables(LWEProcTable* lwe,
+                            DelegateContractProcTable* delegateContract,
                             WebContainerProcTable* webContainer,
                             WebViewProcTable* webView,
                             SettingsProcTable* settings,
@@ -256,6 +261,7 @@ ContractAbiAnchorProcTables(LWEProcTable* lwe,
                             LWEWorkerProcTable* worker)
 {
     (void)lwe;
+    (void)delegateContract;
     (void)webContainer;
     (void)webView;
     (void)settings;

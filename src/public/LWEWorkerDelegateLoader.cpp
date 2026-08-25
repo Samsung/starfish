@@ -59,12 +59,59 @@ bool LWEWorkerDelegateLoader::load()
     "Please define STARFISH_ENABLE_SHARED_WORKER or STARFISH_ENABLE_SERVICE_WORKER."
 #endif
 
-    if (!LWELoaderUtils::openLWELibrary(m_handle, targetName,
-                                        m_preferUpdatedVersion)) {
+    if (LWELoaderUtils::shouldUseUpdatedLibrary(m_preferUpdatedVersion) &&
+        tryLoadAndValidate(targetName, LWELibrarySource::Updated)) {
+        return true;
+    }
+
+    return tryLoadAndValidate(targetName, LWELibrarySource::Default);
+}
+
+bool LWEWorkerDelegateLoader::tryLoadAndValidate(const std::string& targetName,
+                                                 LWELibrarySource source)
+{
+    if (!LWELoaderUtils::openLWELibrary(m_handle, targetName, source)) {
         return false;
     }
 
-    return loadLWEWorkerProcTable();
+    if (validateAbiEpoch() && loadLWEWorkerProcTable()) {
+        return true;
+    }
+
+    if (source == LWELibrarySource::Updated) {
+        std::cerr << "Updated LWE worker validation failed; falling back to "
+                     "default LWE."
+                  << std::endl;
+    }
+    discardFailedLibrary();
+    return false;
+}
+
+bool LWEWorkerDelegateLoader::validateAbiEpoch()
+{
+    auto getAbiEpoch =
+        reinterpret_cast<decltype(DelegateContractProcTable::GetAbiEpoch)>(
+            dlsym(m_handle, "LWEDelegate_GetAbiEpoch"));
+    if (!getAbiEpoch) {
+        std::cerr << "LWE delegate ABI epoch symbol is missing." << std::endl;
+        return false;
+    }
+
+    uint32_t epoch = getAbiEpoch();
+    if (epoch != LWEDelegate::kDelegateAbiEpoch) {
+        std::cerr << "LWE delegate ABI epoch mismatch: expected "
+                  << LWEDelegate::kDelegateAbiEpoch << ", got " << epoch << "."
+                  << std::endl;
+        return false;
+    }
+    return true;
+}
+
+void LWEWorkerDelegateLoader::discardFailedLibrary()
+{
+    dlclose(m_handle);
+    m_handle = nullptr;
+    unloadLWEWorkerProcTable();
 }
 
 void LWEWorkerDelegateLoader::unload()
