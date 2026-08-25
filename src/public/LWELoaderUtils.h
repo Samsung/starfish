@@ -26,10 +26,16 @@
 
 namespace LWE {
 
+enum class LWELibrarySource {
+    Default,
+    Updated,
+};
+
 class LWELoaderUtils {
 public:
-    static bool openLWELibrary(void*& handler, const std::string& targetName,
-                               bool preferUpdatedVersion);
+    static bool shouldUseUpdatedLibrary(bool preferUpdatedVersion);
+    static bool openLWELibrary(void*& handle, const std::string& targetName,
+                               LWELibrarySource source);
 
 private:
 };

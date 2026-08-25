@@ -24,6 +24,7 @@
 
 #include <dlfcn.h>
 #include <assert.h>
+#include <iostream>
 
 namespace LWE {
 
@@ -54,14 +55,71 @@ LWEDelegateLoader* LWEDelegateLoader::getSafeInstance()
 
 bool LWEDelegateLoader::load()
 {
+    if (LWELoaderUtils::shouldUseUpdatedLibrary(m_preferUpdatedVersion) &&
+        tryLoadAndValidate(LWELibrarySource::Updated)) {
+        return true;
+    }
+
+    return tryLoadAndValidate(LWELibrarySource::Default);
+}
+
+bool LWEDelegateLoader::tryLoadAndValidate(LWELibrarySource source)
+{
     if (!LWELoaderUtils::openLWELibrary(m_handle, STARFISH_API_TARGET_NAME,
-                                        m_preferUpdatedVersion)) {
+                                        source)) {
         return false;
     }
 
+    if (validateAbiEpoch() && loadProcTables()) {
+        return true;
+    }
+
+    if (source == LWELibrarySource::Updated) {
+        std::cerr << "Updated LWE validation failed; falling back to default "
+                     "LWE."
+                  << std::endl;
+    }
+    discardFailedLibrary();
+    return false;
+}
+
+bool LWEDelegateLoader::validateAbiEpoch()
+{
+    auto getAbiEpoch =
+        reinterpret_cast<decltype(DelegateContractProcTable::GetAbiEpoch)>(
+            dlsym(m_handle, "LWEDelegate_GetAbiEpoch"));
+    if (!getAbiEpoch) {
+        std::cerr << "LWE delegate ABI epoch symbol is missing." << std::endl;
+        return false;
+    }
+
+    uint32_t epoch = getAbiEpoch();
+    if (epoch != LWEDelegate::kDelegateAbiEpoch) {
+        std::cerr << "LWE delegate ABI epoch mismatch: expected "
+                  << LWEDelegate::kDelegateAbiEpoch << ", got " << epoch << "."
+                  << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool LWEDelegateLoader::loadProcTables()
+{
     return loadCookieManagerProcTable() && loadLWEProcTable() &&
            loadResourceErrorProcTable() && loadSettingsProcTable() &&
            loadWebContainerProcTable() && loadWebViewProcTable();
+}
+
+void LWEDelegateLoader::discardFailedLibrary()
+{
+    dlclose(m_handle);
+    m_handle = nullptr;
+    unloadCookieManagerProcTable();
+    unloadLWEProcTable();
+    unloadResourceErrorProcTable();
+    unloadSettingsProcTable();
+    unloadWebContainerProcTable();
+    unloadWebViewProcTable();
 }
 
 void LWEDelegateLoader::unload()

@@ -67,38 +67,36 @@ std::string readVersion(const std::string& path)
 
 namespace LWE {
 
-bool LWELoaderUtils::openLWELibrary(void*& handle,
-                                    const std::string& targetName,
-                                    bool preferUpdatedVersion)
+bool LWELoaderUtils::shouldUseUpdatedLibrary(bool preferUpdatedVersion)
 {
-    if (preferUpdatedVersion) {
-        std::string defaultVersion = readVersion(STARFISH_API_DEFAULT_PATH);
-        std::string uweVersion = readVersion(STARFISH_API_UWE_MOUNT_PATH);
-        std::cout << "default version: " << defaultVersion << std::endl;
-        std::cout << "uwe version: " << uweVersion << std::endl;
-
-        if (compareVersions(uweVersion, defaultVersion) > 0) {
-            std::cout << "Try to load updated LWE..." << std::endl;
-            handle = dlopen((STARFISH_API_UWE_MOUNT_PATH + targetName).c_str(),
-                            RTLD_LAZY);
-            if (!handle) {
-                std::cerr << "Failed to load updated LWE: " << dlerror()
-                          << std::endl;
-            }
-        }
-    }
-
-    if (!handle) {
-        // Try to open default version.
-        std::cout << "Try to load default LWE..." << std::endl;
-        handle = dlopen(targetName.c_str(), RTLD_LAZY);
-    }
-
-    if (!handle) {
-        std::cerr << "Failed to load default LWE: " << dlerror() << std::endl;
+    if (!preferUpdatedVersion) {
         return false;
     }
 
+    std::string defaultVersion = readVersion(STARFISH_API_DEFAULT_PATH);
+    std::string uweVersion = readVersion(STARFISH_API_UWE_MOUNT_PATH);
+    std::cout << "default version: " << defaultVersion << std::endl;
+    std::cout << "uwe version: " << uweVersion << std::endl;
+
+    return compareVersions(uweVersion, defaultVersion) > 0;
+}
+
+bool LWELoaderUtils::openLWELibrary(void*& handle,
+                                    const std::string& targetName,
+                                    LWELibrarySource source)
+{
+    bool isUpdated = source == LWELibrarySource::Updated;
+    const std::string libraryPath =
+        isUpdated ? STARFISH_API_UWE_MOUNT_PATH + targetName : targetName;
+
+    std::cout << "Try to load " << (isUpdated ? "updated" : "default")
+              << " LWE..." << std::endl;
+    handle = dlopen(libraryPath.c_str(), RTLD_LAZY);
+    if (!handle) {
+        std::cerr << "Failed to load " << (isUpdated ? "updated" : "default")
+                  << " LWE: " << dlerror() << std::endl;
+        return false;
+    }
     return true;
 }
 

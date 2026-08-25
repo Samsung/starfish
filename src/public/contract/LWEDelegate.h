@@ -19,7 +19,7 @@
 #ifndef __LWEDelegate__
 #define __LWEDelegate__
 
-#include "LWEDelegateConfig.h"
+#include "LWEDelegateContract.h"
 
 #include <cstdint>
 

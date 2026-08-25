@@ -28,6 +28,8 @@
 
 namespace LWE {
 
+enum class LWELibrarySource;
+
 class LWEWorkerDelegateLoader {
 public:
     static LWEWorkerDelegateLoader* getInstance();
@@ -55,6 +57,10 @@ private:
     ~LWEWorkerDelegateLoader() = default;
 
     bool loadLWEWorkerProcTable();
+    bool validateAbiEpoch();
+    bool tryLoadAndValidate(const std::string& targetName,
+                            LWELibrarySource source);
+    void discardFailedLibrary();
 
     void unloadLWEWorkerProcTable();
 

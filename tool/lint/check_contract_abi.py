@@ -70,6 +70,11 @@ file. Only lines *added* since the base count: matching against the file's
 full current text would make every once-merged waiver silently cover all
 future breaks of the same key forever.
 
+The runtime handshake's kDelegateAbiEpoch is managed here too. Its initial
+value must be 1. Append-only or unchanged ABI keeps the epoch unchanged; an
+intentionally breaking ABI must increment it exactly once in addition to
+providing the normal breaking-change waiver.
+
 Usage:
     check_contract_abi.py                 # base vs current working tree
     check_contract_abi.py --base <ref>     # base vs current working tree
@@ -102,6 +107,7 @@ CONTRACT_DIR = "src/public/contract"
 EXTRA_HEADERS = ("inc/PlatformIntegrationData.h", "inc/LWEWorker.h")
 SHIM_REL_PATH = "tool/lint/contract_abi/contract_shim.cpp"
 WAIVER_REL_PATH = "tool/lint/contract_abi/breaking_changes.md"
+ABI_EPOCH_REL_PATH = "src/public/contract/LWEDelegateContract.h"
 LOADER_REL_PATHS = (
     "src/public/LWEDelegateLoader.cpp",
     "src/public/LWEWorkerDelegateLoader.cpp",
@@ -132,6 +138,8 @@ VIRTUAL_RE = re.compile(r"\bvirtual\b")
 WRAPPER_NAME_RE = re.compile(r"\b(LWE(?:Worker)?Delegate_[A-Za-z_]+)\s*\(")
 DLSYM_RE = re.compile(r'dlsym\(\s*m_handle\s*,\s*"([A-Za-z_]+)"', re.S)
 WRAPPER_CHECK_MACRO_RE = re.compile(r"\bCONTRACT_ABI_CHECK_WRAPPER\s*\(")
+ABI_EPOCH_RE = re.compile(
+    r"\bconstexpr\s+uint32_t\s+kDelegateAbiEpoch\s*=\s*(\d+)\s*;")
 
 
 class SetupError(Exception):
@@ -835,6 +843,54 @@ def unwaived_breaking_items(items, ref):
             if kind == "breaking" and key not in text]
 
 
+def read_abi_epoch(tree_dir):
+    path = os.path.join(tree_dir, ABI_EPOCH_REL_PATH)
+    if not os.path.exists(path):
+        return None
+    matches = ABI_EPOCH_RE.findall(open(path).read())
+    if len(matches) != 1:
+        raise SetupError(
+            "%s must declare exactly one numeric kDelegateAbiEpoch" %
+            ABI_EPOCH_REL_PATH)
+    return int(matches[0])
+
+
+def abi_epoch_policy_errors(verdict, base_dir, new_dir):
+    """Return management errors for the runtime delegate ABI epoch.
+
+    The engine release version changes independently and is not an ABI
+    compatibility signal. The epoch starts at 1, stays fixed for compatible
+    changes, and advances exactly once for an intentionally breaking change.
+    """
+    base_epoch = read_abi_epoch(base_dir)
+    new_epoch = read_abi_epoch(new_dir)
+
+    if base_epoch is None:
+        if new_epoch is None:
+            return []
+        if new_epoch != 1:
+            return ["the initial delegate ABI epoch must be 1 (got %d)" %
+                    new_epoch]
+        return []
+
+    if new_epoch is None:
+        return ["kDelegateAbiEpoch was removed (base epoch is %d)" %
+                base_epoch]
+
+    if verdict == "breaking":
+        if new_epoch != base_epoch + 1:
+            return ["breaking delegate ABI changes must increment the epoch "
+                    "exactly once (base %d, current %d)" %
+                    (base_epoch, new_epoch)]
+        return []
+
+    if new_epoch != base_epoch:
+        return ["append-only or unchanged delegate ABI must keep the epoch "
+                "unchanged (base %d, current %d)" %
+                (base_epoch, new_epoch)]
+    return []
+
+
 # ---------------------------------------------------------------------------
 # Reporting
 # ---------------------------------------------------------------------------
@@ -924,9 +980,16 @@ def compare(base_ref, verbose):
         export_working_tree(new_dir)
         verdict, items, new_fp = compare_trees(
             base_dir, new_dir, "base %s" % base_ref, "working tree")
+        epoch_errors = abi_epoch_policy_errors(verdict, base_dir, new_dir)
 
     print_coverage(new_fp, "%s -> working tree" % base_ref, verbose)
     print_verdict(verdict, items)
+
+    if epoch_errors:
+        print("\nDelegate ABI epoch policy violation(s):")
+        for error in epoch_errors:
+            print("  %s" % error)
+        return 1
 
     if verdict != "breaking":
         return 0
@@ -1116,6 +1179,14 @@ def run_verify_checker():
     check_abidw_version()
 
     failures = []
+
+    epoch_policy_cases = [
+        ("epoch-unchanged", "unchanged", 3, 3, False),
+        ("epoch-append-unchanged", "append", 3, 3, False),
+        ("epoch-breaking-incremented", "breaking", 3, 4, False),
+        ("epoch-breaking-not-incremented", "breaking", 3, 3, True),
+        ("epoch-append-incremented", "append", 3, 4, True),
+    ]
     for name, expect, mutate in FIXTURES:
         with tempfile.TemporaryDirectory(prefix="contract_abi_verify.") as tmp:
             base_dir = os.path.join(tmp, "base")
@@ -1137,6 +1208,26 @@ def run_verify_checker():
                     print("[PASS] %s (SetupError as expected)" % name)
                 else:
                     failures.append((name, expect, "setup-error", str(e)))
+
+    for name, verdict, base_epoch, new_epoch, expect_error in epoch_policy_cases:
+        with tempfile.TemporaryDirectory(prefix="contract_abi_epoch.") as tmp:
+            base_dir = os.path.join(tmp, "base")
+            new_dir = os.path.join(tmp, "new")
+            os.makedirs(os.path.join(base_dir, CONTRACT_DIR))
+            os.makedirs(os.path.join(new_dir, CONTRACT_DIR))
+            for tree_dir, epoch in ((base_dir, base_epoch),
+                                    (new_dir, new_epoch)):
+                path = os.path.join(tree_dir, ABI_EPOCH_REL_PATH)
+                with open(path, "w") as f:
+                    f.write("constexpr uint32_t kDelegateAbiEpoch = %d;\n" %
+                            epoch)
+            got_error = bool(abi_epoch_policy_errors(
+                verdict, base_dir, new_dir))
+            if got_error != expect_error:
+                failures.append((name, "error=%s" % expect_error,
+                                 "error=%s" % got_error, ""))
+            else:
+                print("[PASS] %s" % name)
 
     # Empty-corpus guard: compiling without -femit-class-debug-always emits
     # every contract class as declaration-only; the per-class header-vs-
@@ -1164,7 +1255,7 @@ def run_verify_checker():
         except SetupError:
             print("[PASS] empty-corpus-guard (caught as expected)")
 
-    total = len(FIXTURES) + 1
+    total = len(FIXTURES) + len(epoch_policy_cases) + 1
     print()
     if failures:
         print("%d/%d fixtures failed:" % (len(failures), total))

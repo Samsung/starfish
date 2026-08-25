@@ -22,7 +22,7 @@
 #ifndef __LWEWorkerDelegate__
 #define __LWEWorkerDelegate__
 
-#include "LWEDelegateConfig.h"
+#include "LWEDelegateContract.h"
 
 namespace LWE {
 enum class WorkerProcessState;
