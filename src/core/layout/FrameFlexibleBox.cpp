@@ -1095,6 +1095,7 @@ void FlexFormattingContext::layoutFlexItem(
             FlexItemMeasureMemo::FinalEntry& e = memo->m_final[finalSlot];
             if (e.m_valid && e.m_mainSize == targetMainSize &&
                 e.m_containingBlockWidth == cbWidth &&
+                e.m_containerAvailCross == m_availableCrossSize &&
                 (!crossSize.hasValue() ||
                  e.m_crossFixed == crossSize.value()) &&
                 (resolveWhat & ~e.m_resolveMask) == 0) {
@@ -1155,6 +1156,7 @@ void FlexFormattingContext::layoutFlexItem(
         e.m_crossFixed =
             crossSize.hasValue() ? crossSize.value() : LayoutUnit();
         e.m_containingBlockWidth = cbWidth;
+        e.m_containerAvailCross = m_availableCrossSize;
         e.m_resultWidth = flexItem->width();
         e.m_resultHeight = flexItem->height();
         e.m_resolveMask = (unsigned char)resolveWhat;
