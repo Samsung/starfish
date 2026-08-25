@@ -11,6 +11,13 @@ before it resolves the engine ProcTables or calls through a delegate vtable.
 When an updated impl is rejected or lacks a required symbol, the loader tries
 the installed default impl instead.
 
+The main engine, SharedWorker, and ServiceWorker delegate contracts share this
+single epoch. Each corresponding impl library (`libStarfish-impl.so`,
+`libStarfish-sharedworker-impl.so`, and `libStarfish-serviceworker-impl.so`)
+exports `LWEDelegate_GetAbiEpoch()`, and each loader validates it before loading
+its ProcTable. A breaking change in the worker contract therefore increments
+the same `kDelegateAbiEpoch`; there is no worker-specific epoch.
+
 Keep delegate contract changes append-only: add virtual methods, ProcTable
 members, enum entries, and by-value struct fields at the end. Never reorder,
 remove, or change an existing declaration. Increment `kDelegateAbiEpoch` for a
@@ -35,9 +42,10 @@ the rest of the contract remains compatible. Compatibility is not symmetric:
 | Pre-handshake API | Future epoch-2 impl | Unsafe; the API cannot detect the incompatible epoch |
 | Epoch-1 API | Future epoch-2 impl | Rejected because the epoch differs; try the default impl |
 
-The platform package must update a handshake-aware API library and its matching
-default impl together. Otherwise the new API would reject the pre-handshake
-default impl and have no valid fallback.
+The platform package must update every handshake-aware API library and its
+matching main, SharedWorker, and ServiceWorker default impl together, all at the
+same epoch. Otherwise a new API could reject its pre-handshake default impl and
+have no valid fallback.
 
 More importantly, a pre-handshake API cannot reject a future impl from a
 different ABI epoch. Roll out the handshake as follows:

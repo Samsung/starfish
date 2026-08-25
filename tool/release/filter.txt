@@ -64,6 +64,7 @@ P /.circleci
 - /tool/lint/contract_abi/breaking_changes.md
 - /tool/lint/contract_abi/contract_shim.cpp
 - /tool/runner/uwe_loader_test.py
+- /tool/runner/uwe_worker_loader_test.py
 - /third_party/escargot/test_sqlite3_real.js
 - /third_party/escargot/test_bcrypt_real.js
 - /docker/Dockerfile.android-build
