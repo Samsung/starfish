@@ -21,11 +21,12 @@
 #include "Starfish.h"
 #include "platform/feedback/TapSoundFeedback.h"
 
-#if defined(STARFISH_WINDOWS)
+#if !defined(STARFISH_TIZEN)
 
 namespace Starfish {
 
-// No system tap-sound service (and no <dlfcn.h>) on Windows.
+// The platform tap-sound service (libfeedback) is Tizen-only; on every other
+// target there is nothing to play (and no <dlfcn.h> on Windows).
 void playPlatformTapSoundFeedback()
 {
 }
