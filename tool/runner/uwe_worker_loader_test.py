@@ -187,7 +187,7 @@ def run_worker(worker, data_dir):
     except TimeoutExpired:
         os.killpg(os.getpgid(process.pid), signal.SIGKILL)
         output, _ = process.communicate()
-        return None, output.decode("utf-8", "replace"), True
+        return None, output.decode("utf-8", "replace"), False
 
     return process.returncode, output.decode("utf-8", "replace"), \
         exited_early
@@ -207,7 +207,9 @@ def run_scenario(worker, scenario, impl_path, scratch):
     failures = []
     if exited_early:
         failures.append("worker exited before the test interrupted it")
-    if exit_code != 0:
+    if exit_code is None:
+        failures.append("worker did not exit after SIGINT")
+    elif exit_code != 0:
         failures.append("exited with code %s (expected 0)" % exit_code)
     for needle in scenario["must_contain"]:
         if needle not in output:
