@@ -98,6 +98,32 @@ private:
     }
 };
 
+// The cairo pattern below is an external resource, and most gradients are
+// released explicitly (the unique_ptr in the paint path, the document's
+// gradient cache) -- but the one a JS-visible CanvasGradient holds only dies
+// when the collector notices, and CanvasGradient cannot release it from a
+// finalizer of its own: GCutil registers GC_finalized_kind with
+// mark_unconditionally=FALSE (see the note in GCutil/fnlz_mlc.c), so a dead
+// object's fields are not kept alive for its own finalizer -- the gradient it
+// points at may already have been swept and its slot zeroed or recycled.
+//
+// So the cleanup lives on the class that actually holds the handle, in its own
+// disclaim-registered kind, the same way PathCairo does it. A custom kind
+// rather than GC_finalized_malloc because the latter hides the closure in the
+// word before the object and therefore forbids GC_FREE/delete, while
+// everything here relies on explicit release staying immediate.
+//
+// A disclaim proc is handed *every* unmarked slot of the block being swept --
+// free-list fragments, slots never constructed, slots reclaimed in an earlier
+// cycle, and (debug collector) slots poisoned by an explicit free. Word 0 --
+// the vptr -- is the liveness sentinel, as in pathCairoDisclaim: zero means
+// there is nothing to release. Note that word 0 holds the free-list link on a
+// free slot, so this must never dispatch a virtual call through it;
+// clearNativeResources() is deliberately non-virtual and only reads
+// m_pattern, which the collector has zeroed on any slot it freed
+// (GC_clear_block clears everything but the link).
+static int nativeGradientCairoDisclaim(void* obj);
+
 class NativeGradientCairo : public NativeGradient {
 public:
     NativeGradientCairo(GradientDrawingInfo* info)
@@ -124,8 +150,54 @@ public:
 
     ~NativeGradientCairo()
     {
-        cairo_pattern_destroy(m_pattern);
+        clearNativeResources();
     }
+
+    // Non-virtual on purpose, and idempotent: the disclaim proc calls it
+    // without touching the vptr, and a slot freed explicitly is walked over by
+    // the disclaim proc again later.
+    void clearNativeResources()
+    {
+        if (m_pattern) {
+            cairo_pattern_destroy(m_pattern);
+            m_pattern = nullptr;
+        }
+    }
+
+    static int gcKind()
+    {
+        // GCutil is built with GC_THREAD_ISOLATE, so a kind lives in the
+        // registering thread's own table; keep the cache per-thread so a
+        // gradient built off the engine main thread cannot pick up a kind
+        // index that belongs to another thread's table.
+        static thread_local int gcKind = 0;
+        if (gcKind != 0) {
+            return gcKind;
+        }
+        // Conservative whole-object descriptor (GC_DS_LENGTH + relocate), i.e.
+        // the same tracing a plain GC_MALLOC gives: the two GC pointers in
+        // NativeGradient stay traced, and m_pattern points outside the heap so
+        // scanning it is a no-op. _enumerable (ok_eager_sweep) gets the block
+        // swept in the cycle that killed the object, so a dead gradient's
+        // pattern is not held until the next allocation out of that block.
+        gcKind = (int)GC_new_kind_enumerable(GC_new_free_list(), GC_DS_LENGTH,
+                                             1 /* add size to descriptor */,
+                                             1 /* clear new objects */);
+        // mark_unconditionally stays FALSE: the disclaim proc touches only the
+        // cairo handle, never a GC pointer, so nothing has to be kept alive
+        // for it -- and TRUE would resurrect anything reachable from a dead
+        // gradient (see the note on GC_finalized_kind in GCutil/fnlz_mlc.c).
+        GC_register_disclaim_proc(gcKind, nativeGradientCairoDisclaim,
+                                  0 /* mark_unconditionally */);
+        return gcKind;
+    }
+
+    void* operator new(size_t size)
+    {
+        STARFISH_ASSERT(size == sizeof(NativeGradientCairo));
+        return GC_GENERIC_MALLOC(size, gcKind());
+    }
+    void* operator new[](size_t size) = delete;
 
     virtual void addColorStop(const double& offset,
                               const Unit::Color& color) override
@@ -215,24 +287,53 @@ private:
     cairo_pattern_t* m_pattern;
 };
 
-std::shared_ptr<NativeGradient> NativeGradient::create(
-    GradientDrawingInfo* info)
+static int nativeGradientCairoDisclaim(void* obj)
 {
-    return std::shared_ptr<NativeGradient>(new NativeGradientCairo(info));
+#ifdef GC_DEBUG
+    // The proc is passed the allocation base; under the debug collector the
+    // object itself starts one debug header later.
+    obj = GC_USR_PTR_FROM_BASE(obj);
+#endif
+    size_t* live = reinterpret_cast<size_t*>(obj);
+    if (*live == 0) {
+        return 0;
+    }
+#ifdef GC_DEBUG
+    // GC_FREED_MEM_MARKER (GCutil include/private/dbg_mlc.h): GC_debug_free()
+    // fills the whole object with it and defers the real deallocation to the
+    // collector, so the slot still looks live here -- whoever freed it already
+    // ran the destructor, and treating the poison as an object would hand
+    // cairo_pattern_destroy() a garbage handle.
+    const size_t gcFreedMemMarker = sizeof(size_t) == 8
+                                        ? (size_t)0xEFBEADDEdeadbeefULL
+                                        : (size_t)0xdeadbeef;
+    if (*live == gcFreedMemMarker) {
+        return 0;
+    }
+#endif
+    reinterpret_cast<NativeGradientCairo*>(obj)->clearNativeResources();
+    *live = 0;
+    return 0; // 0 = OK to reclaim (non-zero would resurrect the object)
 }
 
-std::shared_ptr<NativeGradient> NativeGradient::create(double x0, double y0,
+std::unique_ptr<NativeGradient> NativeGradient::create(
+    GradientDrawingInfo* info)
+{
+    return std::unique_ptr<NativeGradient>(new NativeGradientCairo(info));
+}
+
+std::unique_ptr<NativeGradient> NativeGradient::create(double x0, double y0,
                                                        double x1, double y1)
 {
-    return std::shared_ptr<NativeGradient>(
+    return std::unique_ptr<NativeGradient>(
         new NativeGradientCairo(x0, y0, x1, y1));
 }
 
-std::shared_ptr<NativeGradient> NativeGradient::create(double x0, double y0,
+std::unique_ptr<NativeGradient> NativeGradient::create(double x0, double y0,
                                                        double r0, double x1,
                                                        double y1, double r1)
 {
-    return std::shared_ptr<NativeGradient>(
+    return std::unique_ptr<NativeGradient>(
         new NativeGradientCairo(x0, y0, r0, x1, y1, r1));
 }
 
@@ -418,8 +519,7 @@ class CanvasCairo : public Canvas {
                     cairo_scale(m_canvas, xScale, yScale);
                 }
                 cairo_set_source(
-                    m_canvas,
-                    ((NativeGradientCairo*)gradientValue.get())->pattern());
+                    m_canvas, ((NativeGradientCairo*)gradientValue)->pattern());
 
             } else if (canvasStyle.isCanvasPatternValue() == true) {
                 auto nativePattern =

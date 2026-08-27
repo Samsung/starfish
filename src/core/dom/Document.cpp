@@ -245,9 +245,10 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     loadBuiltinPolyfill(webView()->builtinPolyfillPathString());
 
     m_isConnected = true;
-    m_nativeGradientCache = new GCUnorderedMap<
-        GradientDrawingInfo*, std::shared_ptr<NativeGradient>,
-        std::hash<GradientDrawingInfo*>, std::equal_to<GradientDrawingInfo*>>();
+    m_nativeGradientCache =
+        new GCUnorderedMap<GradientDrawingInfo*, NativeGradient*,
+                           std::hash<GradientDrawingInfo*>,
+                           std::equal_to<GradientDrawingInfo*>>();
 }
 
 NodeIterator* Document::createNodeIterator(Node* root, unsigned whatToShow,
@@ -898,6 +899,13 @@ void Document::dispose()
                 v[i]->dispose();
                 v.erase(i);
             }
+        }
+        // Executors that outlive this document (e.g. an ancestor document's
+        // executor animating elements inside this document) must not keep
+        // entries for the discarded elements; a retained handler would pin
+        // this document's whole script realm.
+        for (size_t i = 0; i < v.size(); i++) {
+            v[i]->removeEntriesOfDocument(this);
         }
     }
 
@@ -2493,8 +2501,7 @@ void Document::unmarkElementInClickProgress(Element* element)
         m_elementInClickProgressList.end());
 }
 
-std::shared_ptr<NativeGradient> Document::findInNativeGradientCache(
-    GradientDrawingInfo* key)
+NativeGradient* Document::findInNativeGradientCache(GradientDrawingInfo* key)
 {
     auto iter = m_nativeGradientCache->find(key);
     if (iter != m_nativeGradientCache->end()) {
@@ -2515,7 +2522,7 @@ std::shared_ptr<NativeGradient> Document::findInNativeGradientCache(
 }
 
 void Document::cacheNativeGradient(GradientDrawingInfo* key,
-                                   std::shared_ptr<NativeGradient> value)
+                                   std::unique_ptr<NativeGradient>& value)
 {
     STARFISH_ASSERT(key);
     STARFISH_ASSERT(value);
@@ -2523,13 +2530,21 @@ void Document::cacheNativeGradient(GradientDrawingInfo* key,
 
     size_t bufferSize = value->gradientImageDataCached()->bufferSize();
     if (pruneNativeGradientCacheIfNeeds(bufferSize)) {
+        // The cache takes exclusive ownership of `value` from here on;
+        // it is the only place that deletes a cached NativeGradient
+        // (here on overwrite, or in pruneNativeGradientCacheIfNeeds /
+        // clearNativeGradientCacheIfNeeds on eviction). If we couldn't
+        // make room for it above, `value` is left untouched and the
+        // caller keeps owning it.
+        NativeGradient* owned = value.release();
         auto iter = m_nativeGradientCache->find(key);
         if (iter == m_nativeGradientCache->end()) {
-            m_nativeGradientCache->insert(std::make_pair(key, value));
+            m_nativeGradientCache->insert(std::make_pair(key, owned));
         } else {
             m_nativeGradientCacheTotalSize -=
                 iter->second->gradientImageDataCached()->bufferSize();
-            iter.value() = value;
+            delete iter->second;
+            iter.value() = owned;
         }
         m_nativeGradientCacheLRUList.push_back(key);
         m_nativeGradientCacheTotalSize += bufferSize;
@@ -2560,6 +2575,7 @@ bool Document::pruneNativeGradientCacheIfNeeds(size_t reserve)
             if (iter2 != m_nativeGradientCache->end()) {
                 removedSize +=
                     iter2->second->gradientImageDataCached()->bufferSize();
+                delete iter2->second;
                 m_nativeGradientCache->erase(iter2);
                 iter = m_nativeGradientCacheLRUList.erase(iter);
             }
@@ -2572,6 +2588,9 @@ bool Document::pruneNativeGradientCacheIfNeeds(size_t reserve)
 void Document::clearNativeGradientCacheIfNeeds()
 {
     if (m_nativeGradientCache) {
+        for (auto& it : *m_nativeGradientCache) {
+            delete it.second;
+        }
         m_nativeGradientCache->clear();
         m_nativeGradientCacheLRUList.clear();
         m_nativeGradientCacheTotalSize = 0;

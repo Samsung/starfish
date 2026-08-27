@@ -165,11 +165,6 @@ struct GradientDrawingInfo : public gc {
         return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
     }
 
-    void* operator new(size_t size, GradientDrawingInfo* gradientDrawingInfo)
-    {
-        return gradientDrawingInfo;
-    }
-
     void* operator new[](size_t size) = delete;
 
     size_t hashValue() const;

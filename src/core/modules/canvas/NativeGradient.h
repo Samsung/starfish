@@ -28,12 +28,26 @@ namespace Starfish {
 struct GradientDrawingInfo;
 class NativeImageData;
 
+// A NativeGradient owns a backend resource (the cairo pattern), so the backend
+// implementation allocates itself from its own disclaim-registered GC kind --
+// see NativeGradientCairo in CanvasCairo.cpp. That keeps explicit release
+// working exactly as it reads here (delete/unique_ptr frees the pattern and the
+// GC memory right away, which matters because these are created and dropped
+// per paint), while a gradient nobody deletes -- the one a JS-visible
+// CanvasGradient holds -- still gets its pattern released when the collector
+// reclaims it.
+//
+// A CanvasGradient finalizer must never do that release on the gradient's
+// behalf: GCutil registers GC_finalized_kind with mark_unconditionally=FALSE
+// (see the note in GCutil/fnlz_mlc.c), so a dead object's fields are not kept
+// alive for its own finalizer -- by the time the closure runs, the gradient it
+// points at may already have been swept and its slot zeroed or recycled.
 class NativeGradient : public gc {
 public:
-    static std::shared_ptr<NativeGradient> create(GradientDrawingInfo* info);
-    static std::shared_ptr<NativeGradient> create(double x0, double y0,
+    static std::unique_ptr<NativeGradient> create(GradientDrawingInfo* info);
+    static std::unique_ptr<NativeGradient> create(double x0, double y0,
                                                   double x1, double y1);
-    static std::shared_ptr<NativeGradient> create(double x0, double y0,
+    static std::unique_ptr<NativeGradient> create(double x0, double y0,
                                                   double r0, double x1,
                                                   double y1, double r1);
 
@@ -92,7 +106,6 @@ protected:
     void removeGradientImageDataCached()
     {
         if (m_gradientDrawingInfo) {
-            delete m_gradientDrawingInfo;
             m_gradientDrawingInfo = nullptr;
         }
         if (m_gradientImageDataCached) {

@@ -645,10 +645,12 @@ public:
 
     // TODO : Extract these method to new Class.
     // Gradient cache
-    std::shared_ptr<NativeGradient> findInNativeGradientCache(
-        GradientDrawingInfo* key);
+    NativeGradient* findInNativeGradientCache(GradientDrawingInfo* key);
+    // Adopts `value` into the cache only if it can make room for it (see
+    // pruneNativeGradientCacheIfNeeds); otherwise `value` is left untouched
+    // so the caller keeps owning it.
     void cacheNativeGradient(GradientDrawingInfo* key,
-                             std::shared_ptr<NativeGradient> value);
+                             std::unique_ptr<NativeGradient>& value);
     bool pruneNativeGradientCacheIfNeeds(size_t reserve);
     void clearNativeGradientCacheIfNeeds();
 
@@ -927,7 +929,12 @@ protected:
     size_t m_tizenWidgetTransparentBackground;
 #endif
     GCVector<Element*> m_elementInClickProgressList;
-    GCUnorderedMap<GradientDrawingInfo*, std::shared_ptr<NativeGradient>,
+    // The cache is the sole owner of the cached NativeGradient instances
+    // (each is explicitly deleted on overwrite/eviction/clear below).
+    // The value is kept as a raw pointer rather than std::unique_ptr because
+    // the underlying robin_map cannot be instantiated with a move-only value
+    // type.
+    GCUnorderedMap<GradientDrawingInfo*, NativeGradient*,
                    std::hash<GradientDrawingInfo*>,
                    std::equal_to<GradientDrawingInfo*>>* m_nativeGradientCache;
     GCVector<GradientDrawingInfo*> m_nativeGradientCacheLRUList;
