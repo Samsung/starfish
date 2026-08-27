@@ -2923,6 +2923,7 @@ public:
             }
 
             m_textureFragments.clear();
+            m_textureFragments.shrink_to_fit();
 
             m_buffer = nullptr;
             m_width = 0;
@@ -3654,7 +3655,7 @@ protected:
     size_t m_wTextureCount;
     size_t m_hTextureCount;
     size_t m_textureTileSize;
-    GCAtomicVector<CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment>
+    std::vector<CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment>
         m_textureFragments;
 
     bool m_isFrameBuffer{ false };
