@@ -40,6 +40,11 @@
 
 namespace Starfish {
 
+// Unlike NativeGradientCairo, this holds no external resource, so it needs
+// neither its own GC kind nor a disclaim proc: a gradient nobody deletes (the
+// one a JS-visible CanvasGradient holds) is just collected. Keep it that way --
+// if this ever takes ownership of something native, it has to release it the
+// way NativeGradientCairo does, never from a CanvasGradient finalizer.
 class NativeGradientMock : public NativeGradient {
 public:
     NativeGradientMock(GradientDrawingInfo* info)
@@ -65,24 +70,24 @@ public:
 private:
 };
 
-std::shared_ptr<NativeGradient> NativeGradient::create(
+std::unique_ptr<NativeGradient> NativeGradient::create(
     GradientDrawingInfo* info)
 {
-    return std::shared_ptr<NativeGradient>(new NativeGradientMock(info));
+    return std::unique_ptr<NativeGradient>(new NativeGradientMock(info));
 }
 
-std::shared_ptr<NativeGradient> NativeGradient::create(double x0, double y0,
+std::unique_ptr<NativeGradient> NativeGradient::create(double x0, double y0,
                                                        double x1, double y1)
 {
-    return std::shared_ptr<NativeGradient>(
+    return std::unique_ptr<NativeGradient>(
         new NativeGradientMock(x0, y0, x1, y1));
 }
 
-std::shared_ptr<NativeGradient> NativeGradient::create(double x0, double y0,
+std::unique_ptr<NativeGradient> NativeGradient::create(double x0, double y0,
                                                        double r0, double x1,
                                                        double y1, double r1)
 {
-    return std::shared_ptr<NativeGradient>(
+    return std::unique_ptr<NativeGradient>(
         new NativeGradientMock(x0, y0, r0, x1, y1, r1));
 }
 

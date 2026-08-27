@@ -63,30 +63,103 @@
 
 namespace Starfish {
 
-static void pathCairoClear(void* obj, void* cd)
+// A disclaim proc is handed *every* unmarked slot of the block being swept --
+// it "must also tolerate being called with object from free list" (GCutil
+// include/private/gc_priv.h), and GC_disclaim_and_reclaim() re-visits the same
+// slot on every later cycle. So this runs over slots that were never
+// constructed, slots reclaimed in an earlier cycle, and (debug collector) slots
+// poisoned by an explicit free. Word 0 -- the vptr -- is the liveness sentinel,
+// the same way bufferedNativeImageDataClear uses it: zero means there is
+// nothing to release, and it is zeroed once the cairo handles are gone so a
+// repeat sweep over the slot is a no-op. The collector overwrites word 0 with
+// the free-list link right after this returns, so writing it here is safe.
+static int pathCairoDisclaim(void* obj)
 {
-    PathCairo* self = reinterpret_cast<PathCairo*>(obj);
-    self->clearNativeResources();
+#ifdef GC_DEBUG
+    // The proc is passed the allocation base; under the debug collector the
+    // object itself starts one debug header later.
+    obj = GC_USR_PTR_FROM_BASE(obj);
+#endif
+    size_t* live = reinterpret_cast<size_t*>(obj);
+    if (*live == 0) {
+        return 0;
+    }
+#ifdef GC_DEBUG
+    // GC_FREED_MEM_MARKER (GCutil include/private/dbg_mlc.h): whoever freed the
+    // object explicitly owned its disposal, and treating the poison as a live
+    // object would hand cairo_destroy() a garbage handle.
+    const size_t gcFreedMemMarker = sizeof(size_t) == 8
+                                        ? (size_t)0xEFBEADDEdeadbeefULL
+                                        : (size_t)0xdeadbeef;
+    if (*live == gcFreedMemMarker) {
+        return 0;
+    }
+#endif
+    reinterpret_cast<PathCairo*>(obj)->clearNativeResources();
+    *live = 0;
+    return 0; // 0 = OK to reclaim (non-zero would resurrect the object)
+}
+
+int PathCairo::gcKind()
+{
+    // GCutil is built with GC_THREAD_ISOLATE, so a kind lives in the
+    // registering thread's own table -- fine to cache in a plain static here,
+    // since paths are only ever allocated from the engine main thread, which
+    // never changes.
+    static int gcKind = 0;
+    if (gcKind != 0) {
+        return gcKind;
+    }
+
+    // The bitmap is applied from the allocation base, so under the debug
+    // collector every offset has to be shifted past the debug header --
+    // otherwise the traced word lands in that header and the dasharray buffer
+    // is never traced at all. (A custom mark proc would not need this: GCutil's
+    // GC_mark_and_push_custom() does the base-to-object conversion itself. A
+    // bitmap descriptor has no such hook.) One spare bitmap word covers the
+    // shift.
+#ifdef GC_DEBUG
+    const size_t headerWords = GC_get_debug_header_size() / sizeof(GC_word);
+#else
+    const size_t headerWords = 0;
+#endif
+    GC_word desc[GC_BITMAP_SIZE(PathCairo) + 1] = { 0 };
+    GC_set_bit(desc, headerWords +
+                         GC_WORD_OFFSET(
+                             PathCairo,
+                             m_needsComputeStrokeBoundingRect.strokeDasharray));
+    GC_descr descr =
+        GC_make_descriptor(desc, headerWords + GC_WORD_LEN(PathCairo));
+    // _enumerable (ok_eager_sweep) matches the other custom kind in this tree
+    // (BufferedNativeImageData) and gets the block swept before marking, so the
+    // cairo handles of a dead path are released in the cycle that killed it.
+    gcKind =
+        (int)GC_new_kind_enumerable(GC_new_free_list(), descr, FALSE, TRUE);
+    // mark_from_all stays FALSE: the disclaim proc touches only the two native
+    // cairo handles, never a GC pointer, so there is nothing to keep alive for
+    // it -- and TRUE would resurrect any self-referencing path forever (see the
+    // note on GC_finalized_kind in GCutil/fnlz_mlc.c).
+    GC_register_disclaim_proc(gcKind, pathCairoDisclaim, FALSE);
+    return gcKind;
 }
 
 void* PathCairo::operator new(size_t size)
 {
-    constexpr static GC_finalizer_closure data = { pathCairoClear, nullptr };
-    // PathCairo embeds a StrokeStyle (m_needsComputeStrokeBoundingRect),
-    // whose strokeDasharray is a GCAtomicVector<double> holding a live pointer
-    // into the GC heap. GC_finalized_atomic_malloc tells the collector this
-    // block contains no pointers to trace, so that dasharray buffer could be
-    // (and intermittently was) collected out from under a still-live
-    // PathCairo, later crashing with "Invalid pointer passed to free()" when
-    // Vector::operator= tried to free the now-stale/reused buffer (e.g.
-    // wpt/svg/painting/negative-dashoffset-odd-dasharray.html under memory
-    // pressure). Cairo's own native handles (m_cairoContext,
-    // m_dumyCairoSurface) don't need tracing -- they're external resources
-    // cleaned up by the finalizer below -- but the embedded GC pointer does,
-    // so this must be the non-atomic (pointer-scanning) finalized allocator,
-    // same as every other finalized GC type in this codebase that holds a
-    // real GC pointer (see ResourceRequest, CanvasGradient, etc.).
-    return GC_finalized_malloc(size, &data);
+    // PathCairo is mostly floats (the SkMatrix in Path, the bounding rects,
+    // the stroke style) plus two cairo handles that are external resources
+    // released by the disclaim proc above. The only GC pointer inside is the
+    // strokeDasharray buffer (GCAtomicVector<double>; its first word is the
+    // buffer pointer). Give this class its own kind with a bitmap descriptor
+    // that traces just that word, and a disclaim proc for cleanup -- same
+    // "run this on death" behavior a GC_finalized_malloc/
+    // GC_REGISTER_FINALIZER_NO_ORDER give, but without either the
+    // whole-object conservative scan (which let float bit patterns that
+    // happen to match heap addresses pin unrelated objects -- e.g. on
+    // 32-bit targets, where the heap covers a large share of the address
+    // space, that kept whole discarded documents alive) or the per-object
+    // finalizer-hash-table registration cost.
+    STARFISH_ASSERT(size == sizeof(PathCairo));
+    return GC_GENERIC_MALLOC(size, PathCairo::gcKind());
 }
 
 void PathCairo::clearNativeResources()

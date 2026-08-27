@@ -35,25 +35,14 @@ public:
                    double r0, double x1, double y1, double r1);
     CanvasGradient(ExecutionContext* executionContext,
                    GradientDrawingInfo* info);
-    ~CanvasGradient()
-    {
-    }
-
-    void* operator new(size_t size);
-    void clearNativeResources();
-    // Objects allocated via GC_finalized_malloc must not be freed with
-    // GC_FREE or delete. The no-op operator delete below prevents this.
-    void operator delete(void*)
-    {
-    }
-    void operator delete[](void*) = delete;
+    ~CanvasGradient();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(CanvasGradient)
 
     void addColorStop(double offset, NULLABLE String* color);
     void addColorStop(double offset, const Unit::Color& color);
 
-    std::shared_ptr<NativeGradient> nativeGradient()
+    NativeGradient* nativeGradient()
     {
         return m_nativeGardient;
     }
@@ -61,10 +50,16 @@ public:
     bool isZeroSize();
 
 private:
-    CanvasGradient(ExecutionContext* executionContext);
+    CanvasGradient(ExecutionContext* executionContext,
+                   NativeGradient* nativeGardient);
 
     ExecutionContext* m_executionContext;
-    std::shared_ptr<NativeGradient> m_nativeGardient;
+    // Owned in the sense that nothing else references it, but never deleted
+    // from here: a CanvasGradient only dies by collection, and a finalizer
+    // cannot reach a GC object that died in the same cycle. The gradient
+    // releases its own cairo pattern when it is reclaimed -- see the note in
+    // NativeGradient.h.
+    NativeGradient* m_nativeGardient;
 };
 } // namespace Starfish
 

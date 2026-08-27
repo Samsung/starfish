@@ -1827,10 +1827,12 @@ void FrameBox::paintGradient(Canvas* canvas, FrameBox* box,
         float imageHeight = height;
         Unit::Rect rect = Unit::Rect(0, 0, width, height).snapSizeToPixel();
         GradientDrawingInfo* info = value->makeGradientDrawingInfo(rect, box);
-        std::shared_ptr<NativeGradient> gradient =
+        NativeGradient* gradient =
             box->document()->findInNativeGradientCache(info);
-        if (gradient.get() == nullptr) {
-            gradient = NativeGradient::create(info);
+        std::unique_ptr<NativeGradient> newGradient;
+        if (gradient == nullptr) {
+            newGradient = NativeGradient::create(info);
+            gradient = newGradient.get();
         }
 
         // if we can shrink result image, shrink!
@@ -1873,16 +1875,16 @@ void FrameBox::paintGradient(Canvas* canvas, FrameBox* box,
             cv->clearColor(Unit::Color(0, 0, 0, 0));
             if (imageValue->gradientValue()->type() ==
                 GradientType::LinearGradient) {
-                cv->drawLinearGradient(rect, info, gradient.get());
+                cv->drawLinearGradient(rect, info, gradient);
             } else if (imageValue->gradientValue()->type() ==
                        GradientType::RadialGradient) {
-                cv->drawRadialGradient(rect, info, gradient.get());
+                cv->drawRadialGradient(rect, info, gradient);
             }
             cv->fill();
             delete cv;
 
             gradient->setGradientImageDataCached(imageData);
-            box->document()->cacheNativeGradient(info, gradient);
+            box->document()->cacheNativeGradient(info, newGradient);
         }
 
         Unit::Rect drawRect =
@@ -1903,7 +1905,7 @@ void FrameBox::paintGradient(Canvas* canvas, FrameBox* box,
         Unit::Rect rect =
             Unit::Rect(startX, startY, width, height).snapSizeToPixel();
         GradientDrawingInfo* info = value->makeGradientDrawingInfo(rect, box);
-        std::shared_ptr<NativeGradient> gradient = NativeGradient::create(info);
+        std::unique_ptr<NativeGradient> gradient = NativeGradient::create(info);
         canvas->save();
         for (float y = startY; y < dst.maxY();
              y += height, canvas->translate(0, rect.height())) {

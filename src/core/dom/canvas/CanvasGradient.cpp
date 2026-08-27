@@ -26,51 +26,38 @@
 
 namespace Starfish {
 
-static void canvasGradientClear(void* obj, void* cd)
-{
-    CanvasGradient* self = reinterpret_cast<CanvasGradient*>(obj);
-    self->clearNativeResources();
-}
-
-void* CanvasGradient::operator new(size_t size)
-{
-    constexpr static GC_finalizer_closure data = { canvasGradientClear,
-                                                   nullptr };
-    return GC_finalized_malloc(size, &data);
-}
-
-void CanvasGradient::clearNativeResources()
-{
-    m_nativeGardient.reset();
-}
-
-CanvasGradient::CanvasGradient(ExecutionContext* executionContext)
+CanvasGradient::CanvasGradient(ExecutionContext* executionContext,
+                               NativeGradient* nativeGardient)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
+    , m_nativeGardient(nativeGardient)
 {
     STARFISH_ASSERT(executionContext != nullptr);
 }
 
 CanvasGradient::CanvasGradient(ExecutionContext* executionContext, double x0,
                                double y0, double x1, double y1)
-    : CanvasGradient(executionContext)
+    : CanvasGradient(executionContext,
+                     NativeGradient::create(x0, y0, x1, y1).release())
 {
-    m_nativeGardient = NativeGradient::create(x0, y0, x1, y1);
 }
 
 CanvasGradient::CanvasGradient(ExecutionContext* executionContext, double x0,
                                double y0, double r0, double x1, double y1,
                                double r1)
-    : CanvasGradient(executionContext)
+    : CanvasGradient(executionContext,
+                     NativeGradient::create(x0, y0, r0, x1, y1, r1).release())
 {
-    m_nativeGardient = NativeGradient::create(x0, y0, r0, x1, y1, r1);
 }
 
 CanvasGradient::CanvasGradient(ExecutionContext* executionContext,
                                GradientDrawingInfo* info)
-    : CanvasGradient(executionContext)
+    : CanvasGradient(executionContext, NativeGradient::create(info).release())
 {
-    m_nativeGardient = NativeGradient::create(info);
+}
+
+CanvasGradient::~CanvasGradient()
+{
 }
 
 ScriptBindingInstance* CanvasGradient::scriptBindingInstance()

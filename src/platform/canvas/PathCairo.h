@@ -38,8 +38,10 @@ public:
     void clearNativeResources();
 
     void* operator new(size_t size);
-    // Objects allocated via GC_finalized_malloc must not be freed with
-    // GC_FREE or delete. The no-op operator delete below prevents this.
+    // PathCairo is allocated from its own disclaim-registered GC kind (see
+    // operator new). Objects of such a kind must not be freed with GC_FREE
+    // or delete -- that would poison the slot the disclaim proc later runs
+    // over. The no-op operator delete below prevents this.
     void operator delete(void*)
     {
     }
@@ -91,6 +93,10 @@ private:
 
     void applyStrokeStyle(const StrokeStyle& style);
     void updateBoundingRect();
+
+    // The GC kind operator new allocates from. A member because building its
+    // mark descriptor takes the offset of a private field.
+    static int gcKind();
 
     StrokeStyle m_needsComputeStrokeBoundingRect; // NaN stroke-width means
                                                   // needs computing
