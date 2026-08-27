@@ -71,12 +71,12 @@ protected:
 
     WebBase* m_webBase;
     uint32_t m_timeoutCounter;
-    GCUnorderedMap<uint32_t, void*> m_timeoutHandler;
+    GCAtomicUnorderedMap<uint32_t, void*> m_timeoutHandler;
     uint32_t m_requestAnimationFrameCounter;
     GCVector<std::pair<uint32_t, RequestAnimationFrameData*>>
         m_requestAnimationFrameHandler;
     size_t m_animationCounter;
-    GCUnorderedMap<uint32_t, void*> m_animationHandler;
+    GCAtomicUnorderedMap<uint32_t, void*> m_animationHandler;
 };
 } // namespace Starfish
 

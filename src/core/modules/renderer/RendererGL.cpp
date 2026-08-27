@@ -74,9 +74,6 @@ public:
     {
         m_offsetYDueToSoftwareKeyboard = 0;
         m_currentContext = kEmptyContextOrUnknown;
-
-        m_lastMouseX = -1;
-        m_lastMouseY = -1;
     }
 
     void ensureCompositorContext()
@@ -425,7 +422,6 @@ public:
     bool m_isKeyDown;
     bool m_mayNeedsSync;
     bool m_suppressSwapForCapture;
-    float m_lastMouseX, m_lastMouseY;
     int m_offsetYDueToSoftwareKeyboard;
     uintptr_t m_currentContext;
 };

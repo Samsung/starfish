@@ -50,7 +50,13 @@ Optional<String*> Storage::getItem(String* key)
 
 bool Storage::setItem(String* key, String* value)
 {
-    return m_storageInternal->setItem(key, value);
+    // A string coming from script can be an EscargotStringView, which keeps
+    // a live pointer into its VM instance. Storage outlives the document
+    // that wrote the entry, so storing the view as-is would pin the
+    // previous VM instance - and with it the whole previous document.
+    // Detach from the view before handing it to storage.
+    return m_storageInternal->setItem(String::fromStringView(key),
+                                      String::fromStringView(value));
 }
 
 void Storage::defaultNamedEnumerator(GCVector<String*>& enums)
