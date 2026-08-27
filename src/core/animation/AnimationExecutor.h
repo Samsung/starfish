@@ -37,6 +37,7 @@ class String;
 class Element;
 class Animation;
 class ActiveAnimationTask;
+class Document;
 
 class ActiveElementAnimation : public gc {
 public:
@@ -45,8 +46,7 @@ public:
                            float iterationCount,
                            AnimationDirectionValue direction,
                            AnimationPlayStateValue playState)
-        : m_hash(0)
-        , m_name(name)
+        : m_name(name)
         , m_element(element)
         , m_animationType(animationType)
         , m_index(index)
@@ -127,8 +127,6 @@ public:
 private:
     bool isOddIteration(ActiveAnimationTask* activeAnimationTask);
 
-    mutable size_t m_hash;
-
     String* m_name;
     Element* m_element;
     AnimationType m_animationType;
@@ -166,6 +164,14 @@ struct equal_to<Starfish::ActiveElementAnimation*> {
 };
 
 } // namespace std
+
+namespace tsl {
+namespace detail_robin_hash {
+    template <>
+    struct should_never_store_hash<Starfish::ActiveElementAnimation*>
+        : std::false_type {};
+} // namespace detail_robin_hash
+} // namespace tsl
 
 namespace Starfish {
 
@@ -239,6 +245,12 @@ public:
     void iterateAnimationTasks(void (*fn)(ActiveAnimationTask*, void*), void*);
 
     void dispose();
+
+    // Drop every transition/animation entry whose target element belongs to
+    // the given document. Called when a (child) document is discarded so
+    // executors that outlive it (e.g. an ancestor document's executor) do not
+    // keep its elements - and through their handlers the whole realm - alive.
+    void removeEntriesOfDocument(Document* document);
 
     bool hasActiveTransition(Element* element, CSSStyleValuePair::KeyKind p);
 
