@@ -45,7 +45,9 @@ void* HeadersData::operator new(size_t size)
 
 void HeadersData::clearNativeResources()
 {
-    m_httpHeaderMap.clear();
+    // clear() destroys every entry but doesn't guarantee the bucket array
+    // shrinks; swap with a fresh, empty map to release that capacity too.
+    HeaderMap().swap(m_httpHeaderMap.headerMap());
 }
 
 // https://tools.ietf.org/html/rfc2616#section-2.2
