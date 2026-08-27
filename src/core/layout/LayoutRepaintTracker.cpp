@@ -477,4 +477,70 @@ bool LayoutRepaintTracker::traceRepaintRegion(FrameDocument* fd)
 
     return gotPaintingDirty;
 }
+
+void LayoutRepaintTracker::removeEntriesOfDocument(Document* document)
+{
+    auto nodeIsInDocument = [document](Node* node) {
+        return node && node->document() == document;
+    };
+    auto frameIsInDocument = [&nodeIsInDocument](Frame* frame) {
+        return frame && nodeIsInDocument(frame->nearstNotAnonymousNode());
+    };
+
+    {
+        auto iter = m_rootedNodeSet.begin();
+        while (iter != m_rootedNodeSet.end()) {
+            if (nodeIsInDocument(*iter)) {
+                iter = m_rootedNodeSet.erase(iter);
+            } else {
+                iter++;
+            }
+        }
+    }
+    {
+        auto iter = m_lastLayoutResult.begin();
+        while (iter != m_lastLayoutResult.end()) {
+            if (nodeIsInDocument(iter->first) ||
+                nodeIsInDocument(iter->second.second)) {
+                iter = m_lastLayoutResult.erase(iter);
+            } else {
+                iter++;
+            }
+        }
+    }
+    {
+        size_t i = 0;
+        while (i < m_lastInlineTextLayoutResult.size()) {
+            auto& item = m_lastInlineTextLayoutResult[i];
+            if (frameIsInDocument(std::get<0>(item)) ||
+                frameIsInDocument(std::get<1>(item))) {
+                m_lastInlineTextLayoutResult.erase(i);
+            } else {
+                i++;
+            }
+        }
+    }
+    {
+        auto iter = m_dirtyAreaPerStackingContextOwners.begin();
+        while (iter != m_dirtyAreaPerStackingContextOwners.end()) {
+            if (nodeIsInDocument(iter->first)) {
+                iter = m_dirtyAreaPerStackingContextOwners.erase(iter);
+            } else {
+                iter++;
+            }
+        }
+    }
+    {
+        size_t i = 0;
+        while (i < m_boundMaxExtentDueToOverflow.size()) {
+            if (frameIsInDocument(
+                    std::get<1>(m_boundMaxExtentDueToOverflow[i]))) {
+                m_boundMaxExtentDueToOverflow.erase(
+                    m_boundMaxExtentDueToOverflow.begin() + i);
+            } else {
+                i++;
+            }
+        }
+    }
+}
 } // namespace Starfish

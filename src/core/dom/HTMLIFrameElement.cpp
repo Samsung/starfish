@@ -195,6 +195,11 @@ void HTMLIFrameElement::didNodeRemovedFromDocumentTree()
 {
     HTMLElement::didNodeRemovedFromDocumentTree();
     unloadSrc();
+    // The browsing context is discarded with the element's removal, so
+    // contentWindow is null from here on (a re-inserted iframe gets a new
+    // browsing context and a new WindowProxy). Keeping the proxy would keep
+    // the old Window and its document reachable through this element.
+    m_contentWindowProxy = nullptr;
 }
 
 void HTMLIFrameElement::loadSrc()

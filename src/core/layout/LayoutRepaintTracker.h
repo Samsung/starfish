@@ -26,6 +26,7 @@ class Node;
 class FrameBox;
 class FrameBlockBox;
 class FrameDocument;
+class Document;
 
 class LayoutRepaintTracker {
 public:
@@ -77,6 +78,13 @@ public:
     {
         m_dirtyAreaPerStackingContextOwners.clear();
     }
+
+    // Drop every entry that refers to a node or frame of `document`. Called
+    // when a child browsing context is disposed: this tracker belongs to an
+    // ancestor and would otherwise keep the discarded document's nodes and
+    // frames (and through them the whole document) alive until its next
+    // full trace.
+    void removeEntriesOfDocument(Document* document);
 
     const std::unordered_map<Node*, LayoutRect>&
     dirtyAreaPerStackingContextOwners()
