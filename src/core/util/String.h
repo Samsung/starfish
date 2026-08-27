@@ -2314,4 +2314,11 @@ struct equal_to<Starfish::String*> {
     }
 };
 } // namespace std
+
+namespace tsl {
+namespace detail_robin_hash {
+    template <>
+    struct should_never_store_hash<Starfish::String*> : std::false_type {};
+} // namespace detail_robin_hash
+} // namespace tsl
 #endif

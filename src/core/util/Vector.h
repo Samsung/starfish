@@ -35,6 +35,20 @@ public:
     size_t m_capacity;
 };
 
+// Whether a Vector shrink that keeps reusing the same buffer (erase/setLen)
+// must zero the vacated tail. Needed only for the conservatively scanned GC
+// allocator: with it, the stale bytes of removed elements would otherwise
+// keep feeding the collector false references (see the same treatment in
+// tsl::robin_hash's bucket_entry::destroy_value). The atomic GC allocator
+// and plain heap allocators are never scanned for pointers, so zeroing
+// there would be pure overhead with no safety benefit.
+template <typename Allocator>
+struct VectorEraseNeedsZeroFill : std::false_type {};
+
+template <typename T>
+struct VectorEraseNeedsZeroFill<GCUtil::gc_malloc_allocator<T>>
+    : std::true_type {};
+
 template <typename T, typename Allocator>
 class Vector {
 protected:
@@ -435,6 +449,16 @@ protected:
             new (&dst[i]) T(std::move(src[i]));
         }
     }
+    static void zeroVacatedTail(T* buffer, size_t pos, size_t n,
+                                std::true_type /*needsZeroFill*/)
+    {
+        if (n) {
+            memset(static_cast<void*>(buffer + pos), 0, n * sizeof(T));
+        }
+    }
+    static void zeroVacatedTail(T*, size_t, size_t, std::false_type)
+    {
+    }
 
     void defaultInitRange(size_t, size_t, std::true_type)
     {
@@ -585,6 +609,8 @@ protected:
             memmove(static_cast<void*>(m_buffer + start),
                     static_cast<const void*>(m_buffer + end), n * sizeof(T));
         }
+        zeroVacatedTail(m_buffer, start + n, sizeToErase,
+                        typename VectorEraseNeedsZeroFill<Allocator>::type());
     }
 
     void eraseShift(size_t start, size_t end, size_t sizeToErase,
@@ -651,6 +677,12 @@ protected:
             for (size_t i = newLen; i < m_size; i++) {
                 m_buffer[i].~T();
             }
+        } else if (newLen < m_size) {
+            // resize()'s shrink path reuses the same buffer, same as
+            // eraseShift -- the vacated tail needs the same treatment.
+            zeroVacatedTail(
+                m_buffer, newLen, m_size - newLen,
+                typename VectorEraseNeedsZeroFill<Allocator>::type());
         }
         m_size = newLen;
     }

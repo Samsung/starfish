@@ -34,12 +34,16 @@ namespace Starfish {
 
 size_t ActiveElementAnimation::hashValue() const
 {
-    if (m_hash == 0) {
-        hash_combine(m_hash, m_name->hashValue());
-        hash_combine(m_hash, (size_t)m_element);
-        hash_combine(m_hash, static_cast<size_t>(m_animationType));
-    }
-    return m_hash;
+    // Not cached: this object lives in conservatively scanned GC memory, and
+    // a heap-pointer-derived hash cached in a member field would sit there
+    // permanently, risking misidentification as a pointer on every
+    // collection. m_activeAnimations (the only user) already caches this
+    // safely itself (GC-safe odd-shifted storage in its robin_hash bucket).
+    size_t hash = 0;
+    hash_combine(hash, m_name->hashValue());
+    hash_combine(hash, (size_t)m_element);
+    hash_combine(hash, static_cast<size_t>(m_animationType));
+    return hash;
 }
 
 bool ActiveElementAnimation::equals(const ActiveElementAnimation* other) const
@@ -189,6 +193,29 @@ void AnimationExecutor::dispose()
         iter.value().clear();
     }
     m_activeAnimations.clear();
+}
+
+void AnimationExecutor::removeEntriesOfDocument(Document* document)
+{
+    for (size_t i = 0; i < m_activeTransitions.size();) {
+        Element* element = m_activeTransitions[i]->targetElement();
+        if (element && element->document() == document) {
+            m_activeTransitions.erase(i);
+        } else {
+            i++;
+        }
+    }
+
+    for (auto animations = m_activeAnimations.begin();
+         animations != m_activeAnimations.end();) {
+        Element* element = (*animations).first->element();
+        if (element && element->document() == document) {
+            animations.value().clear();
+            animations = m_activeAnimations.erase(animations);
+        } else {
+            animations++;
+        }
+    }
 }
 
 bool AnimationExecutor::hasActiveTransition(Element* element,
