@@ -1,0 +1,72 @@
+%% code2spec:diagram-type=system-context
+graph TD
+    %% External system boundaries
+    HTTP["HTTP Server (WPT)"]:::external
+    GPU["GPU Driver (OpenGL)"]:::external
+    DS["Display Server (X11/Wayland)"]:::external
+    NET["Remote HTTP Servers"]:::external
+    FS["File System"]:::external
+    JNI["Android Runtime (JNI)"]:::external
+
+    %% Application layer
+    subgraph APP["Shell Application"]
+        SHELL["shell<br/>MiniBrowser, Console, Windows"]:::core
+    end
+
+    %% Embedding API layer
+    subgraph API["Embedding API"]
+        EAPI["embedding-api<br/>LWEWebView, Delegates, Bridges"]:::core
+    end
+
+    %% Engine layer
+    subgraph ENG["Engine Core"]
+        CORE["engine-core<br/>GC, Platform Macros, Static Strings"]:::core
+        JSB["js-binding<br/>Script Engine, DOM Bindings"]:::core
+        HIST["browser-history<br/>History Manager"]:::core
+        WL["worker-launcher<br/>ServiceWorker, SharedWorker"]:::core
+    end
+
+    %% Platform layer
+    subgraph PLAT["Platform Abstraction"]
+        CANVAS["platform-canvas<br/>Cairo/GL Compositing, Fonts"]:::core
+        LOADER["platform-loader<br/>Resource Loading"]:::core
+        NETWORK["platform-network<br/>curl, HTTP Transaction"]:::core
+        MEDIA["platform-multimedia<br/>MediaPlayer, Demuxers"]:::core
+        MLOOP["platform-message-loop<br/>GLib/libUV Event Loop"]:::core
+        PSYS["platform-system<br/>File, Process, TTS, DeviceInfo"]:::core
+    end
+
+    %% Supporting
+    subgraph SUPP["Supporting"]
+        TP["third-party-libs<br/>robin_map"]:::core
+        DOCS["docs-webapi<br/>Documentation Generator"]:::core
+        TOOL["test-tooling<br/>Test Runners, WPT, Lint"]:::core
+    end
+
+    %% Relationships (backed by static imports/calls)
+    SHELL -->|"embeds via"| EAPI
+    EAPI -->|"uses"| CORE
+    EAPI -->|"JS bindings"| JSB
+    EAPI -->|"history"| HIST
+    EAPI -->|"worker entry"| WL
+    JSB -->|"depends on"| CORE
+    HIST -->|"depends on"| CORE
+    WL -->|"depends on"| CORE
+    CANVAS -->|"depends on"| CORE
+    LOADER -->|"depends on"| CORE
+    LOADER -->|"fetches via"| NETWORK
+    NETWORK -->|"depends on"| CORE
+    MEDIA -->|"depends on"| CORE
+    MLOOP -->|"depends on"| CORE
+    PSYS -->|"depends on"| CORE
+    CANVAS -->|"GPU calls"| GPU
+    NETWORK -->|"HTTP requests"| NET
+    PSYS -->|"file I/O"| FS
+    SHELL -->|"X11 connection"| DS
+    EAPI -->|"JNI bridge"| JNI
+    TOOL -->|"launches"| SHELL
+    TOOL -->|"HTTP tests"| HTTP
+
+    %% Styling
+    classDef core fill:#4a90d9,stroke:#333,color:#fff
+    classDef external fill:#f5a623,stroke:#333,color:#fff

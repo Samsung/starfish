@@ -1,0 +1,64 @@
+{
+  "repoRoot": "/home/hwang/starfish",
+  "outDir": "/home/hwang/starfish/code2spec",
+  "host": "github.sec.samsung.net",
+  "ownerPath": "jh1984-hwang",
+  "ownerSlug": "jh1984-hwang",
+  "repo": "starfish",
+  "branch": "master",
+  "defaultBranch": "master",
+  "remoteUrl": "git@github.sec.samsung.net:jh1984-hwang/starfish.git",
+  "deepLink": {
+    "type": "github",
+    "base": "https://github.sec.samsung.net/jh1984-hwang/starfish/blob/master",
+    "suffix": "",
+    "lineAnchorPrefix": "#L"
+  },
+  "topLevelEntries": [
+    "README.md",
+    "01-introduction.md",
+    "02-architecture.md",
+    "03-design-patterns.md",
+    "04-data-layer.md",
+    "05-external-interfaces.md",
+    "06-configuration-deployment.md",
+    "07-resources.md",
+    "08-security-quality.md",
+    "09-ipc-enum-catalog.md"
+  ],
+  "generatedAt": "2026-08-27T04:35:25.125Z",
+  "description": "Starfish is a lightweight Web browser engine for TV, mobile, headless and wearable devices; low memory usage is the core constraint.",
+  "languages": [
+    "C",
+    "C++",
+    "Python"
+  ],
+  "qualityScore": {
+    "requiredSlots": 100,
+    "wikiStructure": 100,
+    "mermaidSyntax": 100,
+    "moduleFrPairing": 100,
+    "astBaseline": 100,
+    "grounding": null,
+    "claimGrounding": null,
+    "symbolCoverage": 9,
+    "packageCoverage": 0,
+    "diagramAccuracy": 100
+  },
+  "qualityBreakdown": {
+    "verifiedAt": "2026-08-27T04:37:57.034Z",
+    "method": "deterministic validators only; CodeWikiBench and LLM-as-judge excluded",
+    "validators": {
+      "requiredSlots": "all 9 required SDD slots present (+ 3 conditional: 04-data-layer.md, 07-resources.md, 09-ipc-enum-catalog.md)",
+      "wikiStructure": "[wiki-structure] 16 warning(s) (non-blocking) across 7 file(s)\n  /home/hwang/starfish/code2spec/code2spec-quick-reference.md\n    ⚠ L17  cross-link             broken cross-link \"`AGENTS.md`\" → AGENTS.md\n    ⚠ L18  cross-link             broken cross-link \"`docs/Spec.md`\" → docs/Spec.md\n    ⚠ L19  cross-link             broken cross-link \"`AGENTS.md`\" → AGENTS.md\n    ⚠ L45  cross-link             broken cross-link \"`AGENTS.md`\" → AGENTS.md",
+      "mermaidSyntax": "[mermaid] ok — 14 block(s) v10-compat linted across 14 file(s)",
+      "moduleFrPairing": "  matched:   15  (100.0%)",
+      "astBaseline": "  status:   pass",
+      "grounding": "[grounding] N/A — no source deep-link(s) found across 44 file(s)",
+      "claimGrounding": "    supported:    0 (N/A)\n    contradicted: 0\n  badge links:   0 (trusted 0)",
+      "symbolCoverage": "  covered:  152  (8.8%)",
+      "packageCoverage": "  covered:   0  (0.0%)",
+      "diagramAccuracy": "    supported:      73  (100.0%)"
+    }
+  }
+}
