@@ -705,8 +705,39 @@ void BrowsingContext::dispose()
         webView()->renderer()->clearResources();
         m_webView->initRenderingFlags();
     } else {
-        webView()->messageLoop()->clearPendingIdlers(m_window);
+        // The ancestors' repaint caches index this document's nodes and
+        // frames; left alone they keep the discarded document (and its
+        // script realm) alive until the ancestor happens to retrace.
+        Document* doc = document();
+        for (BrowsingContext* bc = parentBrowsingContext(); bc;
+             bc = bc->parentBrowsingContext()) {
+            bc->m_layoutRepaintTracker.removeEntriesOfDocument(doc);
+        }
+        auto& prevDrawnInfo = webView()->prevDrawnStackingContextInfo();
+        auto iter = prevDrawnInfo.begin();
+        while (iter != prevDrawnInfo.end()) {
+            Node* owner = iter->second.graphicsLayerOwner;
+            if (iter->first->document() == doc ||
+                (owner && owner->document() == doc)) {
+                if (iter->second.graphicsBufferHolder) {
+                    iter->second.graphicsBufferHolder->detachNativeBuffers();
+                    iter.value().graphicsBufferHolder = nullptr;
+                }
+                iter = prevDrawnInfo.erase(iter);
+            } else {
+                iter++;
+            }
+        }
     }
+    // Clear pending idlers for the top-level window too, not only for
+    // iframes: on reload/navigation the old top-level BrowsingContext is
+    // disposed while the WebView (and its message loop) lives on, so a
+    // pending postMessage idler -- a new (NoGC) entry, i.e. a permanent
+    // scanned GC root -- would otherwise outlive the page and pin the entire
+    // previous document graph (windows, contexts, code blocks, styles)
+    // through its payload/source/target pointers, leaking a full page per
+    // reload.
+    webView()->messageLoop()->clearPendingIdlers(m_window);
     unregisterNeedsLayoutInWebView();
     unregisterDidLayoutInWebView();
 }
