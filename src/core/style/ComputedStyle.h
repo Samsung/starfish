@@ -5145,6 +5145,14 @@ protected:
     int m_styleDamageSourceNodeStateDOMTreeMap : 5;
     bool m_zIndexSpecifiedByUser : 1;
 
+public:
+    // Prototype (measure/tile-cost-breakdown): lazy cache for
+    // TextDecorationData::merge. 0 = unknown, 1 = merge is a no-op for this
+    // style, 2 = merge has an effect. ComputedStyle instances are rebuilt on
+    // style change, so the cached answer stays valid for the object lifetime.
+    uint8_t m_textDecorationMergeState = 0;
+
+private:
     Font* m_font;
 
     RareComputedStyleData m_rareComputedStyleData;

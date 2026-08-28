@@ -3564,15 +3564,60 @@ void FrameBox::paintContent(PaintingContext& ctx)
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
+uint32_t FrameBox::g_paintExtentEpoch = 1;
+
+LayoutRect FrameBox::paintExtent()
+{
+    if (m_paintExtentEpoch == g_paintExtentEpoch) {
+        return m_paintExtent;
+    }
+    LayoutRect r = frameVisibleRect();
+    // When overflow clipping applies, descendants are clipped to the padding
+    // box, which frameVisibleRect() already covers.
+    bool childrenClipped = isFrameBlockBox() && shouldApplyOverflow();
+    if (!childrenClipped) {
+        auto iter = childFrameBoxIterator(alloca(maxChildFrameBoxIteratorSize));
+        while (iter->hasNext()) {
+            FrameBox* child = iter->next();
+            if (child->needToEstablishStackingContext()) {
+                // Painted through the stacking-context tree, not this walk.
+                continue;
+            }
+            LayoutRect cr = child->paintExtent();
+            cr.setX(cr.x() + child->x());
+            cr.setY(cr.y() + child->y());
+            r.unite(cr);
+        }
+    }
+    m_paintExtent = r;
+    m_paintExtentEpoch = g_paintExtentEpoch;
+    return r;
+}
+
 void FrameBox::paintChildrenWith(PaintingContext& ctx)
 {
+    LayoutRect clipRect;
+    bool hasClipRect = ctx.m_canvas->clipBoundingRect(clipRect);
+    if (hasClipRect) {
+        // Guard against fixed-point/device rounding at the clip edges.
+        clipRect = LayoutRect(clipRect.x() - 1, clipRect.y() - 1,
+                              clipRect.width() + 2, clipRect.height() + 2);
+    }
     Frame* child = firstChild();
     while (child) {
-        ctx.m_canvas->translate(child->asFrameBox()->x(),
-                                child->asFrameBox()->y());
-        child->asFrameBox()->paintContent(ctx);
-        ctx.m_canvas->translate(-child->asFrameBox()->x(),
-                                -child->asFrameBox()->y());
+        FrameBox* box = child->asFrameBox();
+        if (hasClipRect) {
+            LayoutRect e = box->paintExtent();
+            e.setX(e.x() + box->x());
+            e.setY(e.y() + box->y());
+            if (!clipRect.intersects(e)) {
+                child = child->next();
+                continue;
+            }
+        }
+        ctx.m_canvas->translate(box->x(), box->y());
+        box->paintContent(ctx);
+        ctx.m_canvas->translate(-box->x(), -box->y());
         child = child->next();
     }
 }

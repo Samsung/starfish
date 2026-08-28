@@ -878,6 +878,13 @@ public:
 
     virtual void paintChildrenWith(PaintingContext& ctx);
     virtual void paintBackgroundAndBorders(Canvas* canvas);
+
+    // Subtree paint extent in this box's own coordinate space: the union of
+    // everything painted by paintContent() for this box and its non-stacking-
+    // context descendants. Cached per rendered frame (g_paintExtentEpoch is
+    // bumped once per WebView rendering pass, after layout).
+    LayoutRect paintExtent();
+    static uint32_t g_paintExtentEpoch;
     virtual void paintBoxShadows(Canvas* canvas);
     virtual void paintInsetBoxShadows(Canvas* canvas);
 
@@ -1227,6 +1234,11 @@ protected:
 
     // content + padding + border
     LayoutRect m_frameRect;
+
+    // paintExtent() cache; valid while m_paintExtentEpoch matches
+    // g_paintExtentEpoch. Plain data, no GC-visible pointers.
+    LayoutRect m_paintExtent;
+    uint32_t m_paintExtentEpoch { 0 };
 };
 
 struct MBPRestorer {

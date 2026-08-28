@@ -416,6 +416,137 @@ public:
             }
         }
 
+        // Flat path: the full apply loop below issues a translate + a
+        // text-decoration merge (and clip machinery) per path box, ~18
+        // boxes deep, once per stacking-context visit per tile fill.
+        // When the path is a plain chain - no clips, no border-radius, no
+        // abs/fixed positioning, no transforms, no iframes, and every merge
+        // is a known no-op - the whole loop is equivalent to a single
+        // translate by the summed offsets. Detect that case with one cheap
+        // arithmetic pass and replace the per-box canvas work.
+        {
+            bool flat = true;
+            LayoutUnit flatX = 0, flatY = 0;
+            struct FlatClip {
+                FrameBox* m_box;
+                LayoutUnit m_offsetX, m_offsetY;
+                FlatClip()
+                    : m_box(nullptr)
+                {
+                }
+            } flatClips[4];
+            size_t flatClipCount = 0;
+            // child->root order: boxes after the buffered frame are above it
+            // and only contribute a merge in the apply loop.
+            bool aboveBuffer = false;
+            for (size_t i = 0; flat && i < frameList.size(); i++) {
+                FrameBox* b = frameList[i];
+                ComputedStyle* st = b->style();
+                bool isBuffered = nearestBufferedFrame == b;
+
+                if (st) {
+                    if (b != childFrameBox &&
+                        (b->shouldResetTextDecoration() ||
+                         st->m_textDecorationMergeState != 1)) {
+                        flat = false;
+                        break;
+                    }
+                    if (st->isAbsolutePositioned() ||
+                        st->position() == FixedPositionValue || st->clip()) {
+                        flat = false;
+                        break;
+                    }
+                    if (forDrawScrollBar && st->hasBorderRadius()) {
+                        flat = false;
+                        break;
+                    }
+                }
+                if (aboveBuffer) {
+                    continue;
+                }
+                if (isBuffered) {
+                    aboveBuffer = true;
+                    StackingContext* sc = b->stackingContext();
+                    if (b->shouldApplyOverflow() &&
+                        (!sc || !sc->inScrollWithGraphicsBufferActive())) {
+                        flat = false;
+                    }
+                    continue;
+                }
+
+                StackingContext* sc = b->stackingContext();
+                if (sc && b != childFrameBox) {
+                    if (!sc->transformMatrix().isIdentity()) {
+                        flat = false;
+                        break;
+                    }
+                }
+                if (sc && sc->isIFrameStackingContext()) {
+                    flat = false;
+                    break;
+                }
+
+                LayoutUnit scrollX = 0, scrollY = 0;
+                if (b != childFrameBox && b->isFrameBlockBox()) {
+                    scrollX = b->asFrameBlockBox()->scrollLeft();
+                    scrollY = b->asFrameBlockBox()->scrollTop();
+                }
+
+                if (b != childFrameBox && b->shouldApplyOverflow()) {
+                    // Overflow clip: with a pure-translate path the clip rect
+                    // can be applied in buffer coordinates directly, without
+                    // materializing the per-box canvas state. In the full
+                    // loop the clip at box b sees the translates of every
+                    // outer box (minus their scrolls) plus b's own position -
+                    // in buffer coordinates that is
+                    //   P(b) = total - (partialBefore(b) - scroll(b))
+                    // where partialBefore(b) is the child-side running sum
+                    // before b. total is only known after the walk, so record
+                    // (partialBefore - scroll) and fix up at apply time.
+                    if (flatClipCount >= 4) {
+                        flat = false;
+                        break;
+                    }
+                    flatClips[flatClipCount].m_box = b;
+                    flatClips[flatClipCount].m_offsetX = flatX - scrollX;
+                    flatClips[flatClipCount].m_offsetY = flatY - scrollY;
+                    flatClipCount++;
+                }
+
+                flatX += b->x() - scrollX;
+                flatY += b->y() - scrollY;
+            }
+
+            if (flat) {
+                canvas->resetMatrixAndClip();
+                canvas->resetTextDecorationData();
+                if (!paintingContext.willCompositing) {
+                    canvas->pixelSnappedClip(paintingContext.screenClipRect);
+                }
+                clipIfNeedsGraphicsBuffer(childStackingContext,
+                                          paintingContext);
+                // Apply the clips outermost-first (records are
+                // child->root, so iterate backwards), translating to each
+                // clip box's buffer position P(b) = total - recorded partial
+                // so the border-box and border-radius clips run in their
+                // box-local coordinates just like the full loop.
+                LayoutUnit curX = 0, curY = 0;
+                for (size_t i = flatClipCount; i > 0; i--) {
+                    const FlatClip& fc = flatClips[i - 1];
+                    FrameBox* cb = fc.m_box;
+                    LayoutUnit px = flatX - fc.m_offsetX;
+                    LayoutUnit py = flatY - fc.m_offsetY;
+                    translatePosition(px - curX, py - curY);
+                    curX = px;
+                    curY = py;
+                    clipFrameBoxRect(cb);
+                    clipBorderRadiusIfNeeds(cb);
+                }
+                translatePosition(flatX - curX, flatY - curY);
+                return;
+            }
+        }
+
         canvas->resetMatrixAndClip();
         canvas->resetTextDecorationData();
 

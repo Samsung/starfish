@@ -4911,12 +4911,28 @@ void FrameBlockBox::paintInlineContentBlock(Canvas* canvas)
 {
     PaintingInlineStage stage = PaintingInlineBox;
 
+    LayoutRect clipRect;
+    bool hasClipRect = canvas->clipBoundingRect(clipRect);
+    if (hasClipRect) {
+        // Guard against fixed-point/device rounding at the clip edges.
+        clipRect = LayoutRect(clipRect.x() - 1, clipRect.y() - 1,
+                              clipRect.width() + 2, clipRect.height() + 2);
+    }
+
     LayoutUnit dx, dy;
     while (stage != PaintingInlineStageEnd) {
         for (size_t i = 0; i < m_lineBoxes.size(); i++) {
             LineBox& b = *m_lineBoxes[i];
             LayoutUnit ldx = b.frameRect().x();
             LayoutUnit ldy = b.frameRect().y();
+            if (hasClipRect) {
+                LayoutRect e = b.paintExtent();
+                e.setX(e.x() + ldx);
+                e.setY(e.y() + ldy);
+                if (!clipRect.intersects(e)) {
+                    continue;
+                }
+            }
             dx += ldx;
             dy += ldy;
             b.paintInlineContent(canvas, stage, dx, dy);
