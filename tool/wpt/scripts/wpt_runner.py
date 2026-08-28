@@ -52,6 +52,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)                                      # sibling wpt_*
 sys.path.insert(0, os.path.join(_HERE, os.pardir, os.pardir))  # tool/
 from repo_paths import REPO_ROOT  # noqa: E402
+from wpt_scope import collect, read_res  # noqa: E402, F401
 from wpt_server import wpt_serve, DEFAULT_WPT_ROOT  # noqa: E402
 from wpt_reftest import (run_reftest, load_manifest, ensure_manifest,  # noqa: E402
                          ensure_imgdiff)
@@ -149,44 +150,6 @@ def reason_category(reason):
     disagree on how a reason is bucketed.
     """
     return reason.split(":", 1)[0].strip()
-
-
-def read_res(path, force=False):
-    urls = []
-    with open(path) as fp:
-        for line in fp:
-            line = line.strip()
-            if not line:
-                continue
-            if line.startswith("#"):
-                if not force:
-                    continue
-                # --force re-includes commented entries. These may carry an
-                # annotation marker before the URL (e.g. "# [auto-fail] http..."
-                # from wpt_annotate.py), so pick the first http token rather
-                # than assuming the URL follows the '#' directly.
-                toks = [t for t in line.split() if t.startswith("http")]
-                if toks:
-                    urls.append(toks[0])
-                continue
-            if line.startswith("http"):
-                urls.append(line.split()[0])
-    return urls
-
-
-def collect(path, force):
-    """Return [(list_name, url), ...] from a .res file or a dir of them."""
-    items = []
-    if os.path.isdir(path):
-        for name in sorted(os.listdir(path)):
-            if name.endswith(".res"):
-                for u in read_res(os.path.join(path, name), force):
-                    items.append((name, u))
-    else:
-        name = os.path.basename(path)
-        for u in read_res(path, force):
-            items.append((name, u))
-    return items
 
 
 # Fingerprint of the local wpt-serve HTTP server's own connection-accept path
