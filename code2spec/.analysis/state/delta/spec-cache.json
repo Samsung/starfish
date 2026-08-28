@@ -3,8 +3,8 @@
   "mode": "detail",
   "analysis_scope": 3,
   "entries": {
-    "/home/hwang/starfish/compat/tizen_5.0/inc/LWEWebView.h": {
-      "file_path": "/home/hwang/starfish/compat/tizen_5.0/inc/LWEWebView.h",
+    "compat/tizen_5.0/inc/LWEWebView.h": {
+      "file_path": "compat/tizen_5.0/inc/LWEWebView.h",
       "file_hash": "38d6fe900274908faadda26877f7fb9653cdaadd77506930c3255f6b139adedc",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -13,8 +13,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/inc/LWEWebView.h": {
-      "file_path": "/home/hwang/starfish/inc/LWEWebView.h",
+    "inc/LWEWebView.h": {
+      "file_path": "inc/LWEWebView.h",
       "file_hash": "0f334af549dc31493770900de5a8274dad8752c5d7142e4020ef572df34eb307",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -23,8 +23,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/inc/LWEWorker.h": {
-      "file_path": "/home/hwang/starfish/inc/LWEWorker.h",
+    "inc/LWEWorker.h": {
+      "file_path": "inc/LWEWorker.h",
       "file_hash": "38c40a192fd81ec320d1527b5adc9f09298e2f6053b97220b44ea476fa3f2e94",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -33,8 +33,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/inc/PlatformIntegrationData.h": {
-      "file_path": "/home/hwang/starfish/inc/PlatformIntegrationData.h",
+    "inc/PlatformIntegrationData.h": {
+      "file_path": "inc/PlatformIntegrationData.h",
       "file_hash": "1a18d695fa725fc61b7d9978e40f25b63db26ce254bcad0dcccc90347d29b54e",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -43,8 +43,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/APIRecorder.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/APIRecorder.cpp",
+    "src/public/APIRecorder.cpp": {
+      "file_path": "src/public/APIRecorder.cpp",
       "file_hash": "d4725260d35afde7c4e7e449dce859ba42ef6f281b389303ac2b3b0653e72b08",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -53,8 +53,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/APIRecorder.h": {
-      "file_path": "/home/hwang/starfish/src/public/APIRecorder.h",
+    "src/public/APIRecorder.h": {
+      "file_path": "src/public/APIRecorder.h",
       "file_hash": "965c72de5a2a3c4c9397068a3dfd9dd00c517c71a9dcb79360730b21c38f3087",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -63,8 +63,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/LWEDelegateLoader.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/LWEDelegateLoader.cpp",
+    "src/public/LWEDelegateLoader.cpp": {
+      "file_path": "src/public/LWEDelegateLoader.cpp",
       "file_hash": "fccfe58134ca937e6cdab51ef3b75de31bc5c9acc0dd229b05b8dac1d6f6263d",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -73,8 +73,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/LWEDelegateLoader.h": {
-      "file_path": "/home/hwang/starfish/src/public/LWEDelegateLoader.h",
+    "src/public/LWEDelegateLoader.h": {
+      "file_path": "src/public/LWEDelegateLoader.h",
       "file_hash": "91672e910643e46f33ec2741b4056b8e6d6606974163073470e02d84ab0d3e8e",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -83,8 +83,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/LWELoaderUtils.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/LWELoaderUtils.cpp",
+    "src/public/LWELoaderUtils.cpp": {
+      "file_path": "src/public/LWELoaderUtils.cpp",
       "file_hash": "21385da2af15a6954c039c3217f41aa671bb6e68b32fe9555ffeb5e11f46cbc6",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -93,8 +93,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/LWELoaderUtils.h": {
-      "file_path": "/home/hwang/starfish/src/public/LWELoaderUtils.h",
+    "src/public/LWELoaderUtils.h": {
+      "file_path": "src/public/LWELoaderUtils.h",
       "file_hash": "3f32ee85e5b1f0940e750bdf2690705f17b6bf4af802b85f0ab90565504d87ac",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -103,8 +103,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/LWEWebView.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/LWEWebView.cpp",
+    "src/public/LWEWebView.cpp": {
+      "file_path": "src/public/LWEWebView.cpp",
       "file_hash": "2dd009ebd0741b7ef15205fc7e59fb5bd6ef8141060d0f1fbbb05508d6523bb2",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -113,8 +113,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/LWEWorker.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/LWEWorker.cpp",
+    "src/public/LWEWorker.cpp": {
+      "file_path": "src/public/LWEWorker.cpp",
       "file_hash": "c71a460d35de49d06728d323427b375417334141f09a5daacc27b10dbf4dacef",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -123,8 +123,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/LWEWorkerDelegateLoader.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/LWEWorkerDelegateLoader.cpp",
+    "src/public/LWEWorkerDelegateLoader.cpp": {
+      "file_path": "src/public/LWEWorkerDelegateLoader.cpp",
       "file_hash": "90c4f4a8765e287d5f7704de9baae616a9699236783d07a8e96db62c4d9fffdd",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -133,8 +133,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/LWEWorkerDelegateLoader.h": {
-      "file_path": "/home/hwang/starfish/src/public/LWEWorkerDelegateLoader.h",
+    "src/public/LWEWorkerDelegateLoader.h": {
+      "file_path": "src/public/LWEWorkerDelegateLoader.h",
       "file_hash": "98c97add9d8d4ba790ad7a294d1ba5fccdec08c3df611ab05250b056a5424913",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -143,8 +143,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/android/AndroidBridge.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/android/AndroidBridge.cpp",
+    "src/public/bridge/android/AndroidBridge.cpp": {
+      "file_path": "src/public/bridge/android/AndroidBridge.cpp",
       "file_hash": "04de3a04552b1b452b83504ba54f9b6f2c050b40af7ba8a74a6e6631d276b61d",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -153,8 +153,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/DownloadListener.java": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/DownloadListener.java",
+    "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/DownloadListener.java": {
+      "file_path": "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/DownloadListener.java",
       "file_hash": "32f5beb986257dc63fff84ea847b96bdd60c475c3dd675e69aac249b628e4915",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -163,8 +163,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebChromeClient.java": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebChromeClient.java",
+    "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebChromeClient.java": {
+      "file_path": "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebChromeClient.java",
       "file_hash": "9c505a1747c77951c2aadacde11c5cb96b45527bc5910e8a95276ea214553d39",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -173,8 +173,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceError.java": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceError.java",
+    "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceError.java": {
+      "file_path": "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceError.java",
       "file_hash": "644a3f6a26967630c6f3865b0ab6694f22bbf4f0b7ab4fa302a0dc7c7bdf1892",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -183,8 +183,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceRequest.java": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceRequest.java",
+    "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceRequest.java": {
+      "file_path": "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceRequest.java",
       "file_hash": "52c6902aac445d7aaf10109aa3ea53b03afa996a06c67162f49c0582cbbc2262",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -193,8 +193,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceRequestImpl.java": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceRequestImpl.java",
+    "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceRequestImpl.java": {
+      "file_path": "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceRequestImpl.java",
       "file_hash": "3516410d7555e0874104d723a960a5201522b7e89715adbdb61b426f60ea7153",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -203,8 +203,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceResponse.java": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceResponse.java",
+    "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceResponse.java": {
+      "file_path": "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceResponse.java",
       "file_hash": "2b037059159575c1f69c146f2d089eeed8101c5887748bcd702eec07163f9dc0",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -213,8 +213,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebSettings.java": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebSettings.java",
+    "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebSettings.java": {
+      "file_path": "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebSettings.java",
       "file_hash": "c031a6729daee9139635ad2e050950344c0a2f03ad71a9904684246e53a4a458",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -223,8 +223,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebView.java": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebView.java",
+    "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebView.java": {
+      "file_path": "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebView.java",
       "file_hash": "7dbdc3151638c7f6b6cc7ba15e1ae8fabfbd383d34434e406d710c3ec8f8002b",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -233,8 +233,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebViewClient.java": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebViewClient.java",
+    "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebViewClient.java": {
+      "file_path": "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebViewClient.java",
       "file_hash": "1f6618ae0384d2ab48b970d4013c267c1b5ce34f32472bca93bb7443da4f0558",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -243,8 +243,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/internal/LweWebView.java": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/internal/LweWebView.java",
+    "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/internal/LweWebView.java": {
+      "file_path": "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/internal/LweWebView.java",
       "file_hash": "24796432de35dc448635de78b754653e578e0c024e4fc1af657cad5790c0c1e4",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -253,8 +253,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/internal/LweWebViewImpl.java": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/android/java/com/samsung/android/lightweightwebengine/internal/LweWebViewImpl.java",
+    "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/internal/LweWebViewImpl.java": {
+      "file_path": "src/public/bridge/android/java/com/samsung/android/lightweightwebengine/internal/LweWebViewImpl.java",
       "file_hash": "b5494392fd38d07ae8b5015fd066d900016399a0532219136ea7d81ff0900bc9",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -263,8 +263,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/ecore_wl2/LWEWebViewEcoreWl2.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/ecore_wl2/LWEWebViewEcoreWl2.cpp",
+    "src/public/bridge/ecore_wl2/LWEWebViewEcoreWl2.cpp": {
+      "file_path": "src/public/bridge/ecore_wl2/LWEWebViewEcoreWl2.cpp",
       "file_hash": "3f84cf3946c3b747458703b447d5e13f48c03e4f598e1a24bd64718e068d6bce",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -273,8 +273,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/ecore_x/LWEWebViewEcoreX.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/ecore_x/LWEWebViewEcoreX.cpp",
+    "src/public/bridge/ecore_x/LWEWebViewEcoreX.cpp": {
+      "file_path": "src/public/bridge/ecore_x/LWEWebViewEcoreX.cpp",
       "file_hash": "32e89ec630a87347d3c199d2e07ba78ce54de3a9dddf8cc59ad6c12c4383f629",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -283,8 +283,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/efl/A11yAtspiBridge.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/efl/A11yAtspiBridge.cpp",
+    "src/public/bridge/efl/A11yAtspiBridge.cpp": {
+      "file_path": "src/public/bridge/efl/A11yAtspiBridge.cpp",
       "file_hash": "e6c8cbf575e8139d4f627f09667b79419ea38ee6c1a0e9b73c805343c3d31b88",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -293,8 +293,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/efl/A11yAtspiBridge.h": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/efl/A11yAtspiBridge.h",
+    "src/public/bridge/efl/A11yAtspiBridge.h": {
+      "file_path": "src/public/bridge/efl/A11yAtspiBridge.h",
       "file_hash": "02156126dcccefb03164af34e392634c0f8bf7714c75f3c044ec501aa34f722a",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -303,8 +303,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/efl/LWEWebViewEFL.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/efl/LWEWebViewEFL.cpp",
+    "src/public/bridge/efl/LWEWebViewEFL.cpp": {
+      "file_path": "src/public/bridge/efl/LWEWebViewEFL.cpp",
       "file_hash": "dca7aa5d10b0d9d401c67f00bee6af373fcc0b1d999bde682014068b284e3f49",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -313,8 +313,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/flutter/LWEWebViewFlutter.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/flutter/LWEWebViewFlutter.cpp",
+    "src/public/bridge/flutter/LWEWebViewFlutter.cpp": {
+      "file_path": "src/public/bridge/flutter/LWEWebViewFlutter.cpp",
       "file_hash": "16144f0473764bf5660db593827a1ffec51e952dbfcc2e101ebec0bbab5bcc65",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -323,8 +323,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/tcore_wl/LWEWebViewTcoreWl.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/tcore_wl/LWEWebViewTcoreWl.cpp",
+    "src/public/bridge/tcore_wl/LWEWebViewTcoreWl.cpp": {
+      "file_path": "src/public/bridge/tcore_wl/LWEWebViewTcoreWl.cpp",
       "file_hash": "fa92640a7fb9e8eb3f8021e592b8469412145dbc9438f2de58279ef8a6a50dae",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -333,8 +333,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/bridge/x11/LWEWebViewX11.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/bridge/x11/LWEWebViewX11.cpp",
+    "src/public/bridge/x11/LWEWebViewX11.cpp": {
+      "file_path": "src/public/bridge/x11/LWEWebViewX11.cpp",
       "file_hash": "324e2a8ce2cc23e07186bb777a3cb50d7759bba4903ef0e2b164d8b517cc870f",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -343,8 +343,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/contract/CookieManagerDelegate.h": {
-      "file_path": "/home/hwang/starfish/src/public/contract/CookieManagerDelegate.h",
+    "src/public/contract/CookieManagerDelegate.h": {
+      "file_path": "src/public/contract/CookieManagerDelegate.h",
       "file_hash": "a34a05894940cf437315fde54d901f3c7df1bb9a1f3e16ff3866cffea27706ce",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -353,8 +353,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/contract/LWEDelegate.h": {
-      "file_path": "/home/hwang/starfish/src/public/contract/LWEDelegate.h",
+    "src/public/contract/LWEDelegate.h": {
+      "file_path": "src/public/contract/LWEDelegate.h",
       "file_hash": "3115e30dd97709ee43791254168ffa5c1c1e4d9ce227ede954ddc489eaf4d7fa",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -363,8 +363,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/contract/LWEDelegateConfig.h": {
-      "file_path": "/home/hwang/starfish/src/public/contract/LWEDelegateConfig.h",
+    "src/public/contract/LWEDelegateConfig.h": {
+      "file_path": "src/public/contract/LWEDelegateConfig.h",
       "file_hash": "3218ceae36bef964a0f44b8be82a48ea9970c06f473294de6c85a5543a43d787",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -373,8 +373,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/contract/LWEDelegateContract.h": {
-      "file_path": "/home/hwang/starfish/src/public/contract/LWEDelegateContract.h",
+    "src/public/contract/LWEDelegateContract.h": {
+      "file_path": "src/public/contract/LWEDelegateContract.h",
       "file_hash": "3b600767610f8613bbeab1c70043cbc379777da55a0e9890155c51de49ad84b7",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -383,8 +383,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/contract/LWEWebContainerDelegate.h": {
-      "file_path": "/home/hwang/starfish/src/public/contract/LWEWebContainerDelegate.h",
+    "src/public/contract/LWEWebContainerDelegate.h": {
+      "file_path": "src/public/contract/LWEWebContainerDelegate.h",
       "file_hash": "49804c1ad3bd402a685fca761d57ac8959d3e168561032dd02e944ba25b76126",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -393,8 +393,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/contract/LWEWebViewDelegate.h": {
-      "file_path": "/home/hwang/starfish/src/public/contract/LWEWebViewDelegate.h",
+    "src/public/contract/LWEWebViewDelegate.h": {
+      "file_path": "src/public/contract/LWEWebViewDelegate.h",
       "file_hash": "6746ce920d8789fab96bab116908cf3ade9fe9100c11c8c2b7ce95272cc3489a",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -403,8 +403,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/contract/LWEWorkerDelegate.h": {
-      "file_path": "/home/hwang/starfish/src/public/contract/LWEWorkerDelegate.h",
+    "src/public/contract/LWEWorkerDelegate.h": {
+      "file_path": "src/public/contract/LWEWorkerDelegate.h",
       "file_hash": "0e4b16ff432f7a583454a525c04bf31ad5b0e5e8b1e1c4c5804d306f5f075dde",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -413,8 +413,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/contract/ResourceErrorDelegate.h": {
-      "file_path": "/home/hwang/starfish/src/public/contract/ResourceErrorDelegate.h",
+    "src/public/contract/ResourceErrorDelegate.h": {
+      "file_path": "src/public/contract/ResourceErrorDelegate.h",
       "file_hash": "d9a8042a5b6553affc2e42b7fd2ac0cf5407472be0d97153010ac67362f2a706",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -423,8 +423,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/contract/SettingsDelegate.h": {
-      "file_path": "/home/hwang/starfish/src/public/contract/SettingsDelegate.h",
+    "src/public/contract/SettingsDelegate.h": {
+      "file_path": "src/public/contract/SettingsDelegate.h",
       "file_hash": "9d168257fc76f441222805fc05a32e5c974a9ee1ec93ef339e11ddd577dfbda0",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -433,8 +433,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/delegate/CookieManagerDelegate.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/delegate/CookieManagerDelegate.cpp",
+    "src/public/delegate/CookieManagerDelegate.cpp": {
+      "file_path": "src/public/delegate/CookieManagerDelegate.cpp",
       "file_hash": "e7953bde5b9d12387dc5a3ccccf883c150ed2cce93d0b3f0fed8a6f431144321",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -443,8 +443,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/delegate/JavaScriptNativeHandler.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/delegate/JavaScriptNativeHandler.cpp",
+    "src/public/delegate/JavaScriptNativeHandler.cpp": {
+      "file_path": "src/public/delegate/JavaScriptNativeHandler.cpp",
       "file_hash": "f0d9ef753c8d0ddec5c2474baf41859acd1a1c434e037fe071b808f45f939373",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -453,8 +453,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/delegate/JavaScriptNativeHandler.h": {
-      "file_path": "/home/hwang/starfish/src/public/delegate/JavaScriptNativeHandler.h",
+    "src/public/delegate/JavaScriptNativeHandler.h": {
+      "file_path": "src/public/delegate/JavaScriptNativeHandler.h",
       "file_hash": "a615d9be7055efe2ef2534b014be1b81675d4c15995913ecb942cb9947452dfe",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -463,8 +463,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/delegate/LWEDelegate.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/delegate/LWEDelegate.cpp",
+    "src/public/delegate/LWEDelegate.cpp": {
+      "file_path": "src/public/delegate/LWEDelegate.cpp",
       "file_hash": "0438797e25e011b05bac1d99528ee241a7d09fba4a86111c3db78ac705e766c0",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -473,8 +473,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/delegate/LWEWebContainerDelegate.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/delegate/LWEWebContainerDelegate.cpp",
+    "src/public/delegate/LWEWebContainerDelegate.cpp": {
+      "file_path": "src/public/delegate/LWEWebContainerDelegate.cpp",
       "file_hash": "ba8d772eaaa7167c82f2b972f5ce72429d7f156dd53b68a67544b72663459701",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -483,8 +483,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/delegate/LWEWebViewDelegate.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/delegate/LWEWebViewDelegate.cpp",
+    "src/public/delegate/LWEWebViewDelegate.cpp": {
+      "file_path": "src/public/delegate/LWEWebViewDelegate.cpp",
       "file_hash": "cd5695263f3fd94a287eca35838c70ffe7aad643653e2ceeca5321a2d73ce36f",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -493,8 +493,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/delegate/LWEWebViewDelegateImpl.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/delegate/LWEWebViewDelegateImpl.cpp",
+    "src/public/delegate/LWEWebViewDelegateImpl.cpp": {
+      "file_path": "src/public/delegate/LWEWebViewDelegateImpl.cpp",
       "file_hash": "9c212f58bb830a60b0042690dad2b9a036a852998931f57a128ec5c38de71146",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -503,8 +503,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/delegate/LWEWebViewDelegateImpl.h": {
-      "file_path": "/home/hwang/starfish/src/public/delegate/LWEWebViewDelegateImpl.h",
+    "src/public/delegate/LWEWebViewDelegateImpl.h": {
+      "file_path": "src/public/delegate/LWEWebViewDelegateImpl.h",
       "file_hash": "451cbfa7f0225fb9f4f9e6bb5a8790712d2932b8db28b392ba5c560b17670fd0",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -513,8 +513,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/delegate/LWEWorkerDelegate.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/delegate/LWEWorkerDelegate.cpp",
+    "src/public/delegate/LWEWorkerDelegate.cpp": {
+      "file_path": "src/public/delegate/LWEWorkerDelegate.cpp",
       "file_hash": "a0239139034b113be6094a71700c0b6a9479768eee65f290f354e30df96fd608",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -523,8 +523,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/delegate/ResourceErrorDelegate.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/delegate/ResourceErrorDelegate.cpp",
+    "src/public/delegate/ResourceErrorDelegate.cpp": {
+      "file_path": "src/public/delegate/ResourceErrorDelegate.cpp",
       "file_hash": "a8a8d5c560bfd5fddd455b82e8cbc819673585f63d2d87824796f80af7d7f4b1",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -533,8 +533,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/delegate/SettingsBoolean.h": {
-      "file_path": "/home/hwang/starfish/src/public/delegate/SettingsBoolean.h",
+    "src/public/delegate/SettingsBoolean.h": {
+      "file_path": "src/public/delegate/SettingsBoolean.h",
       "file_hash": "7e8a91e32d18aa62bea48de0cc8480930c7f06e406c4b748f937755740b99a1e",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -543,8 +543,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/delegate/SettingsDelegate.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/delegate/SettingsDelegate.cpp",
+    "src/public/delegate/SettingsDelegate.cpp": {
+      "file_path": "src/public/delegate/SettingsDelegate.cpp",
       "file_hash": "6eee8bf8a87c254cbf44087cd804322609fbcfaeea4fb239f91e187fcaa7acad",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -553,8 +553,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/delegate/ThreadedCallHelper.cpp": {
-      "file_path": "/home/hwang/starfish/src/public/delegate/ThreadedCallHelper.cpp",
+    "src/public/delegate/ThreadedCallHelper.cpp": {
+      "file_path": "src/public/delegate/ThreadedCallHelper.cpp",
       "file_hash": "d5d9cb038582f24a1812419fe0840ea7b655c32b753d41bf1834388f7fa247f7",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -563,8 +563,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/public/delegate/ThreadedCallHelper.h": {
-      "file_path": "/home/hwang/starfish/src/public/delegate/ThreadedCallHelper.h",
+    "src/public/delegate/ThreadedCallHelper.h": {
+      "file_path": "src/public/delegate/ThreadedCallHelper.h",
       "file_hash": "5848d2988af0a25bb5c349e29cae64dc25899b172c9cd2cc2e1049278f9f6383",
       "sdd_doc": "modules/embedding-api.md",
       "fr_doc": "functional-requirements/embedding-api-fr.md",
@@ -573,8 +573,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/ci/check_render_bmp.py": {
-      "file_path": "/home/hwang/starfish/tool/ci/check_render_bmp.py",
+    "tool/ci/check_render_bmp.py": {
+      "file_path": "tool/ci/check_render_bmp.py",
       "file_hash": "daba10a50f0045c662cf594a1042b171a04b2303ce831053ba0c05675ce2ab37",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -583,8 +583,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/coverage/csv2xml.py": {
-      "file_path": "/home/hwang/starfish/tool/coverage/csv2xml.py",
+    "tool/coverage/csv2xml.py": {
+      "file_path": "tool/coverage/csv2xml.py",
       "file_hash": "1bf2ea50103797cff18bffb4b71779e40e1ac1db4c833a6b81400602f1096704",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -593,8 +593,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/coverage/genDomMethods.js": {
-      "file_path": "/home/hwang/starfish/tool/coverage/genDomMethods.js",
+    "tool/coverage/genDomMethods.js": {
+      "file_path": "tool/coverage/genDomMethods.js",
       "file_hash": "b686e2eeef7f8de12c50d0797a1f417ea89e69bcb181146e823408ae56a206fc",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -603,8 +603,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/coverage/genTable.js": {
-      "file_path": "/home/hwang/starfish/tool/coverage/genTable.js",
+    "tool/coverage/genTable.js": {
+      "file_path": "tool/coverage/genTable.js",
       "file_hash": "5d75218961916c11fb2203656c0c40ef905369be10b0c9a94ae5671fb7733ceb",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -613,8 +613,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/drivers/basics/__init__.py": {
-      "file_path": "/home/hwang/starfish/tool/drivers/basics/__init__.py",
+    "tool/drivers/basics/__init__.py": {
+      "file_path": "tool/drivers/basics/__init__.py",
       "file_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -623,8 +623,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/drivers/basics/constants.py": {
-      "file_path": "/home/hwang/starfish/tool/drivers/basics/constants.py",
+    "tool/drivers/basics/constants.py": {
+      "file_path": "tool/drivers/basics/constants.py",
       "file_hash": "046c68254bbd2315057a457e30ed2d1dbe428251c7e8b36f08d0f3cd7f99ea5d",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -633,8 +633,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/drivers/basics/parallel.py": {
-      "file_path": "/home/hwang/starfish/tool/drivers/basics/parallel.py",
+    "tool/drivers/basics/parallel.py": {
+      "file_path": "tool/drivers/basics/parallel.py",
       "file_hash": "2656fa6276c3b3d7f970fca1bcc1889e2a421750e12a10bf4e27337accd3494a",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -643,8 +643,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/drivers/basics/starfish_basic_test.py": {
-      "file_path": "/home/hwang/starfish/tool/drivers/basics/starfish_basic_test.py",
+    "tool/drivers/basics/starfish_basic_test.py": {
+      "file_path": "tool/drivers/basics/starfish_basic_test.py",
       "file_hash": "11214416ee74dfe360dfea8678ec355d4ef5639db1f2147512e5c2da65d79e21",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -653,8 +653,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/drivers/basics/starfish_pixel_test.py": {
-      "file_path": "/home/hwang/starfish/tool/drivers/basics/starfish_pixel_test.py",
+    "tool/drivers/basics/starfish_pixel_test.py": {
+      "file_path": "tool/drivers/basics/starfish_pixel_test.py",
       "file_hash": "df89bfb7b5bad3c408fb56f12ff394a8a7879671f290cba544bb9d9706f8b98a",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -663,8 +663,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/drivers/basics/starfish_pixel_with_remote_test.py": {
-      "file_path": "/home/hwang/starfish/tool/drivers/basics/starfish_pixel_with_remote_test.py",
+    "tool/drivers/basics/starfish_pixel_with_remote_test.py": {
+      "file_path": "tool/drivers/basics/starfish_pixel_with_remote_test.py",
       "file_hash": "34b931e48309b88b4b78ac126635d9fa71f9f49446f8640cde48e84666741394",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -673,8 +673,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/drivers/basics/utils.py": {
-      "file_path": "/home/hwang/starfish/tool/drivers/basics/utils.py",
+    "tool/drivers/basics/utils.py": {
+      "file_path": "tool/drivers/basics/utils.py",
       "file_hash": "40514468ebae425fa4e6811ed5aadd6fa4258cedd543307b77428313503c788b",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -683,8 +683,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/drivers/run_test.py": {
-      "file_path": "/home/hwang/starfish/tool/drivers/run_test.py",
+    "tool/drivers/run_test.py": {
+      "file_path": "tool/drivers/run_test.py",
       "file_hash": "3f62d197599e4807b09d9e0f34b43e8b8061a9effdcf5754f62082050ea3d4c2",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -693,8 +693,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/drivers/tests/__init__.py": {
-      "file_path": "/home/hwang/starfish/tool/drivers/tests/__init__.py",
+    "tool/drivers/tests/__init__.py": {
+      "file_path": "tool/drivers/tests/__init__.py",
       "file_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -703,8 +703,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/drivers/tests/csswg_test.py": {
-      "file_path": "/home/hwang/starfish/tool/drivers/tests/csswg_test.py",
+    "tool/drivers/tests/csswg_test.py": {
+      "file_path": "tool/drivers/tests/csswg_test.py",
       "file_hash": "564a2d94f99adea11969c1128e68473d29b70b907916f9363124515923c24f78",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -713,8 +713,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/drivers/tests/dom_conformance_test.py": {
-      "file_path": "/home/hwang/starfish/tool/drivers/tests/dom_conformance_test.py",
+    "tool/drivers/tests/dom_conformance_test.py": {
+      "file_path": "tool/drivers/tests/dom_conformance_test.py",
       "file_hash": "b7d4c949df37339668648dba811fdfd860ad1f21db6fd7f57689aa6ca6dd0c35",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -723,8 +723,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/drivers/tests/multi_results_test.py": {
-      "file_path": "/home/hwang/starfish/tool/drivers/tests/multi_results_test.py",
+    "tool/drivers/tests/multi_results_test.py": {
+      "file_path": "tool/drivers/tests/multi_results_test.py",
       "file_hash": "fc4e9bc1aa4c7b0764f5a8caa7384b34c7e822e5af786012c33e8653adfc3541",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -733,8 +733,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/drivers/tests/vendor_test.py": {
-      "file_path": "/home/hwang/starfish/tool/drivers/tests/vendor_test.py",
+    "tool/drivers/tests/vendor_test.py": {
+      "file_path": "tool/drivers/tests/vendor_test.py",
       "file_hash": "638f634c0a9d837f3300da7f706a9517f227d1d824a1c7523bea83c42f7a691a",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -743,8 +743,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/drivers/tests/wpt_test.py": {
-      "file_path": "/home/hwang/starfish/tool/drivers/tests/wpt_test.py",
+    "tool/drivers/tests/wpt_test.py": {
+      "file_path": "tool/drivers/tests/wpt_test.py",
       "file_hash": "03a518b5d9e27dd7a0cd64f16dd0bd05ad37018b6e8c4f12011712338beb064c",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -753,8 +753,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/imgdiff/imgdiff.cpp": {
-      "file_path": "/home/hwang/starfish/tool/imgdiff/imgdiff.cpp",
+    "tool/imgdiff/imgdiff.cpp": {
+      "file_path": "tool/imgdiff/imgdiff.cpp",
       "file_hash": "215a9cd5753a70ac63aca095b58dea5fd565cec226d2d829799966bbc27f16ad",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -763,8 +763,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/lint/check_contract_abi.py": {
-      "file_path": "/home/hwang/starfish/tool/lint/check_contract_abi.py",
+    "tool/lint/check_contract_abi.py": {
+      "file_path": "tool/lint/check_contract_abi.py",
       "file_hash": "d4efb745fb7c2a54c0ce7acb17877b52e117f925f46ea93f6588fa138a53d526",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -773,8 +773,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/lint/check_tidy.py": {
-      "file_path": "/home/hwang/starfish/tool/lint/check_tidy.py",
+    "tool/lint/check_tidy.py": {
+      "file_path": "tool/lint/check_tidy.py",
       "file_hash": "35aa00dd62ff227f79c3dca5e6ce6d4be6252a78c56ed9d971bf6ff0797a8135",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -783,8 +783,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/lint/contract_abi/contract_shim.cpp": {
-      "file_path": "/home/hwang/starfish/tool/lint/contract_abi/contract_shim.cpp",
+    "tool/lint/contract_abi/contract_shim.cpp": {
+      "file_path": "tool/lint/contract_abi/contract_shim.cpp",
       "file_hash": "cc238e28d9548da4ab2dfc7aff5142280ef0febfa33d981153b30f83f29606b1",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -793,8 +793,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/perf_tools/measure-bench/server.py": {
-      "file_path": "/home/hwang/starfish/tool/perf_tools/measure-bench/server.py",
+    "tool/perf_tools/measure-bench/server.py": {
+      "file_path": "tool/perf_tools/measure-bench/server.py",
       "file_hash": "ec63cad4772eb120061461ba0fcfc03355cde5e5e623adfd8245a84355310276",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -803,8 +803,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/perf_tools/mp4-avc-equiv/equiv.cpp": {
-      "file_path": "/home/hwang/starfish/tool/perf_tools/mp4-avc-equiv/equiv.cpp",
+    "tool/perf_tools/mp4-avc-equiv/equiv.cpp": {
+      "file_path": "tool/perf_tools/mp4-avc-equiv/equiv.cpp",
       "file_hash": "0077b3dab3cfeedbeeaf5b09c0baf1fddcfbe3d2307e73cca27c673f78760e00",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -813,8 +813,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/perf_tools/mse-smoke/gen_webm.py": {
-      "file_path": "/home/hwang/starfish/tool/perf_tools/mse-smoke/gen_webm.py",
+    "tool/perf_tools/mse-smoke/gen_webm.py": {
+      "file_path": "tool/perf_tools/mse-smoke/gen_webm.py",
       "file_hash": "a0c9f602823be751bce2d78c42fa2dbbc1c5f2d64bb9d16834926169c6654cc6",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -823,8 +823,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/perf_tools/mse-smoke/server.py": {
-      "file_path": "/home/hwang/starfish/tool/perf_tools/mse-smoke/server.py",
+    "tool/perf_tools/mse-smoke/server.py": {
+      "file_path": "tool/perf_tools/mse-smoke/server.py",
       "file_hash": "679bde16eca88909ae4e460211a6e54354814614b11114b759322968b1cc1ff3",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -833,8 +833,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/perf_tools/style-smoke/server.py": {
-      "file_path": "/home/hwang/starfish/tool/perf_tools/style-smoke/server.py",
+    "tool/perf_tools/style-smoke/server.py": {
+      "file_path": "tool/perf_tools/style-smoke/server.py",
       "file_hash": "d445f88fe62a22548faf6483f3100954e86f7c666f7549bda8639fbc4f71b219",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -843,8 +843,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/pixel_test/nw_capture/capture.js": {
-      "file_path": "/home/hwang/starfish/tool/pixel_test/nw_capture/capture.js",
+    "tool/pixel_test/nw_capture/capture.js": {
+      "file_path": "tool/pixel_test/nw_capture/capture.js",
       "file_hash": "19b068440eb0b535b2ed97dd0a7176d32521f3d00dd45db7848cf4d277ad0bf2",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -853,8 +853,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/pixel_test/nw_capture/inject.js": {
-      "file_path": "/home/hwang/starfish/tool/pixel_test/nw_capture/inject.js",
+    "tool/pixel_test/nw_capture/inject.js": {
+      "file_path": "tool/pixel_test/nw_capture/inject.js",
       "file_hash": "568c4b660857564a0168e0846942529fdb7da854b7c89ae71f8cfac40b357586",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -863,8 +863,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/pixel_test/syntaxChecker.js": {
-      "file_path": "/home/hwang/starfish/tool/pixel_test/syntaxChecker.js",
+    "tool/pixel_test/syntaxChecker.js": {
+      "file_path": "tool/pixel_test/syntaxChecker.js",
       "file_hash": "1373be4702d5e2f17b18c2592bde8ffd8e4824dfc1d760d8d96249a007bbcda0",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -873,8 +873,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/pixel_test/syntaxCoverage.js": {
-      "file_path": "/home/hwang/starfish/tool/pixel_test/syntaxCoverage.js",
+    "tool/pixel_test/syntaxCoverage.js": {
+      "file_path": "tool/pixel_test/syntaxCoverage.js",
       "file_hash": "e26e3450476a170a88802f1817a8ee2c4e84b7660c60caef3f8dd367417b52d0",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -883,8 +883,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/reftest/draw_mem_chart.py": {
-      "file_path": "/home/hwang/starfish/tool/reftest/draw_mem_chart.py",
+    "tool/reftest/draw_mem_chart.py": {
+      "file_path": "tool/reftest/draw_mem_chart.py",
       "file_hash": "d4814df8e440379886d1e92cf58e37f556b796a45c6db92710c395725c62b3da",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -893,8 +893,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/reftest/search_webkit_test.py": {
-      "file_path": "/home/hwang/starfish/tool/reftest/search_webkit_test.py",
+    "tool/reftest/search_webkit_test.py": {
+      "file_path": "tool/reftest/search_webkit_test.py",
       "file_hash": "a579d1c8e34c15bfccc276057a0e8ab81b9d7bba0668c746b3df84a4cf6e115c",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -903,8 +903,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/repo_paths.py": {
-      "file_path": "/home/hwang/starfish/tool/repo_paths.py",
+    "tool/repo_paths.py": {
+      "file_path": "tool/repo_paths.py",
       "file_hash": "b84d28f9b6dd6843b7cb824133b88b85719ed70e5f1106fcaa03bbfb373f7815",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -913,8 +913,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/runner/execution_test.py": {
-      "file_path": "/home/hwang/starfish/tool/runner/execution_test.py",
+    "tool/runner/execution_test.py": {
+      "file_path": "tool/runner/execution_test.py",
       "file_hash": "a414fd5944bd0ed5c234c6b9267c8c5e71b44338d1f4ce05f35409cd970508b9",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -923,8 +923,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/runner/execution_worker.py": {
-      "file_path": "/home/hwang/starfish/tool/runner/execution_worker.py",
+    "tool/runner/execution_worker.py": {
+      "file_path": "tool/runner/execution_worker.py",
       "file_hash": "2ac876fdf0a7464ed52c7fa83dc91c2a91215de53eae94177d20b4c0339f7097",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -933,8 +933,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/runner/http_server.py": {
-      "file_path": "/home/hwang/starfish/tool/runner/http_server.py",
+    "tool/runner/http_server.py": {
+      "file_path": "tool/runner/http_server.py",
       "file_hash": "f2067c3da9afb35afb75e20f800a5489cf2bd0388ac4883d605cb2ed9daf00fa",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -943,8 +943,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/runner/test_runner.py": {
-      "file_path": "/home/hwang/starfish/tool/runner/test_runner.py",
+    "tool/runner/test_runner.py": {
+      "file_path": "tool/runner/test_runner.py",
       "file_hash": "063509b52ec945abd500d6e72b877fec288013d24f60d86be76315fed39b6d77",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -953,8 +953,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/runner/update_result.py": {
-      "file_path": "/home/hwang/starfish/tool/runner/update_result.py",
+    "tool/runner/update_result.py": {
+      "file_path": "tool/runner/update_result.py",
       "file_hash": "da264f85695257cab4168022e2bd0123467a0b9b1099c6848e7369e989ac0cd9",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -963,8 +963,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/runner/uwe_loader_test.py": {
-      "file_path": "/home/hwang/starfish/tool/runner/uwe_loader_test.py",
+    "tool/runner/uwe_loader_test.py": {
+      "file_path": "tool/runner/uwe_loader_test.py",
       "file_hash": "eb2fa148d47b0f8dd57940d5838c18f32481afc13f1099003a5da82a6db0fb87",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -973,8 +973,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/runner/uwe_worker_loader_test.py": {
-      "file_path": "/home/hwang/starfish/tool/runner/uwe_worker_loader_test.py",
+    "tool/runner/uwe_worker_loader_test.py": {
+      "file_path": "tool/runner/uwe_worker_loader_test.py",
       "file_hash": "2b3dcf5503e3aec561355090c24daf4a84a93964ad5da274d34e779fbaa58401",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -983,8 +983,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/wpt/inject_report.js": {
-      "file_path": "/home/hwang/starfish/tool/wpt/inject_report.js",
+    "tool/wpt/inject_report.js": {
+      "file_path": "tool/wpt/inject_report.js",
       "file_hash": "940dfc92264f58b010892cf97d8847a0c893c00c41649846bac2b5f6f12eaf16",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -993,8 +993,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/wpt/scripts/wpt_annotate.py": {
-      "file_path": "/home/hwang/starfish/tool/wpt/scripts/wpt_annotate.py",
+    "tool/wpt/scripts/wpt_annotate.py": {
+      "file_path": "tool/wpt/scripts/wpt_annotate.py",
       "file_hash": "db16aa09322453ad1bac3fa0c3ae4e982c0102a74cfe5dc73002178a27dae63d",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -1003,8 +1003,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/wpt/scripts/wpt_audit.py": {
-      "file_path": "/home/hwang/starfish/tool/wpt/scripts/wpt_audit.py",
+    "tool/wpt/scripts/wpt_audit.py": {
+      "file_path": "tool/wpt/scripts/wpt_audit.py",
       "file_hash": "bcce8153f1b224bee8b1af969ad660fb90b8bd2f3b71cb4a1a526f87e4060d51",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -1013,8 +1013,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/wpt/scripts/wpt_generate_dashboard.py": {
-      "file_path": "/home/hwang/starfish/tool/wpt/scripts/wpt_generate_dashboard.py",
+    "tool/wpt/scripts/wpt_generate_dashboard.py": {
+      "file_path": "tool/wpt/scripts/wpt_generate_dashboard.py",
       "file_hash": "93de93752dbc9699a91e794a98c44f48847d1a7d2e6c54e0950b9c5ce0824dbd",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -1023,8 +1023,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/wpt/scripts/wpt_manifest_lists.py": {
-      "file_path": "/home/hwang/starfish/tool/wpt/scripts/wpt_manifest_lists.py",
+    "tool/wpt/scripts/wpt_manifest_lists.py": {
+      "file_path": "tool/wpt/scripts/wpt_manifest_lists.py",
       "file_hash": "ac8a15515c5e60c21ecac5e4d0d6fe7edbf76254bfaf358ee46f7a62035eb59d",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -1033,8 +1033,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/wpt/scripts/wpt_reftest.py": {
-      "file_path": "/home/hwang/starfish/tool/wpt/scripts/wpt_reftest.py",
+    "tool/wpt/scripts/wpt_reftest.py": {
+      "file_path": "tool/wpt/scripts/wpt_reftest.py",
       "file_hash": "409449cee44c0aa7d7b658d09cf4812a90255e512ab8c7cdeb555614caa1a9e3",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -1043,8 +1043,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/wpt/scripts/wpt_runner.py": {
-      "file_path": "/home/hwang/starfish/tool/wpt/scripts/wpt_runner.py",
+    "tool/wpt/scripts/wpt_runner.py": {
+      "file_path": "tool/wpt/scripts/wpt_runner.py",
       "file_hash": "d938a0477af8e97998b31b73ebe6a3a502302ed76ba8554b5f37319bf86afd32",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -1053,8 +1053,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/wpt/scripts/wpt_server.py": {
-      "file_path": "/home/hwang/starfish/tool/wpt/scripts/wpt_server.py",
+    "tool/wpt/scripts/wpt_server.py": {
+      "file_path": "tool/wpt/scripts/wpt_server.py",
       "file_hash": "1e1148cba5ff1519d96691ecd1ad58e67eae9ea69e8d6fb81cfb9474125058e9",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -1063,8 +1063,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/wpt/scripts/wpt_status.py": {
-      "file_path": "/home/hwang/starfish/tool/wpt/scripts/wpt_status.py",
+    "tool/wpt/scripts/wpt_status.py": {
+      "file_path": "tool/wpt/scripts/wpt_status.py",
       "file_hash": "9c6290acf343fd4dc232fa63e176be56181254532a56107108cb6cfedc07a27c",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -1073,8 +1073,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/tool/wpt/scripts/wpt_update_data.py": {
-      "file_path": "/home/hwang/starfish/tool/wpt/scripts/wpt_update_data.py",
+    "tool/wpt/scripts/wpt_update_data.py": {
+      "file_path": "tool/wpt/scripts/wpt_update_data.py",
       "file_hash": "3ddb50d2d236948d02bd669b581c801545e0af34c48e3601b79286ecf269f076",
       "sdd_doc": "modules/test-tooling.md",
       "fr_doc": "functional-requirements/test-tooling-fr.md",
@@ -1083,8 +1083,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/APIReplayer.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/APIReplayer.cpp",
+    "src/shell/APIReplayer.cpp": {
+      "file_path": "src/shell/APIReplayer.cpp",
       "file_hash": "0e0653c609956302cfd6c91fee51ea107b275923f452b7a60ff61c8bc69221ea",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1093,8 +1093,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/APIReplayer.h": {
-      "file_path": "/home/hwang/starfish/src/shell/APIReplayer.h",
+    "src/shell/APIReplayer.h": {
+      "file_path": "src/shell/APIReplayer.h",
       "file_hash": "1b1c1ac8e127a35f95e780abece9c036143856c691e4f849a3091a155376710b",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1103,8 +1103,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/AppLoop.h": {
-      "file_path": "/home/hwang/starfish/src/shell/AppLoop.h",
+    "src/shell/AppLoop.h": {
+      "file_path": "src/shell/AppLoop.h",
       "file_hash": "1ec8b8602db0f3e8d1a873ad6cdf2a9017ba7cd57c0c60c68e16af93dd351040",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1113,8 +1113,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/Console.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/Console.cpp",
+    "src/shell/Console.cpp": {
+      "file_path": "src/shell/Console.cpp",
       "file_hash": "79f021edd1954bfb9f2a0cb3c5a9e27b71c17021b6e594e7075c734250419d42",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1123,8 +1123,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/Console.h": {
-      "file_path": "/home/hwang/starfish/src/shell/Console.h",
+    "src/shell/Console.h": {
+      "file_path": "src/shell/Console.h",
       "file_hash": "0e09d49eb09e3a8f1318c3c56b3d345cdb710b9ac27aefec91a6161691ae1ce5",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1133,8 +1133,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/MiniBrowser.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/MiniBrowser.cpp",
+    "src/shell/MiniBrowser.cpp": {
+      "file_path": "src/shell/MiniBrowser.cpp",
       "file_hash": "7a3f6d8305ac6f899aabb19f6b4eed50c94a5792532396a1c2a359c7d06ac23f",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1143,8 +1143,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/MiniBrowser.h": {
-      "file_path": "/home/hwang/starfish/src/shell/MiniBrowser.h",
+    "src/shell/MiniBrowser.h": {
+      "file_path": "src/shell/MiniBrowser.h",
       "file_hash": "6b881d03030fc4830a7933271fecc13b88e0ce843ebfc39833dba83e935a1670",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1153,8 +1153,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/RendererDelegate.h": {
-      "file_path": "/home/hwang/starfish/src/shell/RendererDelegate.h",
+    "src/shell/RendererDelegate.h": {
+      "file_path": "src/shell/RendererDelegate.h",
       "file_hash": "d121dab4342cd1935777b67bd646af239b839353518b674464e7a0202d80e3db",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1163,8 +1163,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/Shell.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/Shell.cpp",
+    "src/shell/Shell.cpp": {
+      "file_path": "src/shell/Shell.cpp",
       "file_hash": "351b00619f6898965d1cac4bd147ffa9f96b3d9bdfdf673bdf03f22d6323e2a1",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1173,8 +1173,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/Shell.h": {
-      "file_path": "/home/hwang/starfish/src/shell/Shell.h",
+    "src/shell/Shell.h": {
+      "file_path": "src/shell/Shell.h",
       "file_hash": "6932c1964bb6ec0072b86a464af902a88ad47714e2b777de1505f7aa05c7a709",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1183,8 +1183,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/ShellConfig.h": {
-      "file_path": "/home/hwang/starfish/src/shell/ShellConfig.h",
+    "src/shell/ShellConfig.h": {
+      "file_path": "src/shell/ShellConfig.h",
       "file_hash": "fe58c25ea82e50a2e0afe1803f00227e9ce77bd12ede909aa90de914bc697a33",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1193,8 +1193,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/UnitTestRunner.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/UnitTestRunner.cpp",
+    "src/shell/UnitTestRunner.cpp": {
+      "file_path": "src/shell/UnitTestRunner.cpp",
       "file_hash": "55d1bff57efcdb53a3c16c7be3dfc94955730d9e8ec7f9953f010bc0fd2bab48",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1203,8 +1203,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/UnitTestRunner.h": {
-      "file_path": "/home/hwang/starfish/src/shell/UnitTestRunner.h",
+    "src/shell/UnitTestRunner.h": {
+      "file_path": "src/shell/UnitTestRunner.h",
       "file_hash": "222c324cc2afeafddb65fd7e0d1a9ab694b368e83053dc185134101d6bba3d01",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1213,8 +1213,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/Window.h": {
-      "file_path": "/home/hwang/starfish/src/shell/Window.h",
+    "src/shell/Window.h": {
+      "file_path": "src/shell/Window.h",
       "file_hash": "3121bc29c72a8b15ef1f944d0a479219c40efc7e64a863016d626fc45718d108",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1223,8 +1223,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/WindowKeyType.h": {
-      "file_path": "/home/hwang/starfish/src/shell/WindowKeyType.h",
+    "src/shell/WindowKeyType.h": {
+      "file_path": "src/shell/WindowKeyType.h",
       "file_hash": "7e4c82f615933896dc7cf746de208840fdb1a30059f99471532cf483d402a0a5",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1233,8 +1233,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/dummy/WindowDummy.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/dummy/WindowDummy.cpp",
+    "src/shell/dummy/WindowDummy.cpp": {
+      "file_path": "src/shell/dummy/WindowDummy.cpp",
       "file_hash": "98e076b6f5c077f2da9c6cbf33d2b03ecdf6bb773524e3915ae99c3aec4d7577",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1243,8 +1243,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/ecore/AppLoopEcore.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/ecore/AppLoopEcore.cpp",
+    "src/shell/ecore/AppLoopEcore.cpp": {
+      "file_path": "src/shell/ecore/AppLoopEcore.cpp",
       "file_hash": "9cfb338ca1ba2f5543a56d8922a46ebf78fbbe5bb6976902f2176754accaf058",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1253,8 +1253,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/ecore/ConsoleEcore.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/ecore/ConsoleEcore.cpp",
+    "src/shell/ecore/ConsoleEcore.cpp": {
+      "file_path": "src/shell/ecore/ConsoleEcore.cpp",
       "file_hash": "fd976196d060d06b135c04ec7e539603b6aae67c38759ebe8d772123668be9fc",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1263,8 +1263,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/efl/AppLoopEFL.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/efl/AppLoopEFL.cpp",
+    "src/shell/efl/AppLoopEFL.cpp": {
+      "file_path": "src/shell/efl/AppLoopEFL.cpp",
       "file_hash": "1dbcf699fe4e644e95b1f8997b2a7b4a5a9502c2779a73bcaafdb98ad234f10a",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1273,8 +1273,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/efl/AppLoopEFLHeadless.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/efl/AppLoopEFLHeadless.cpp",
+    "src/shell/efl/AppLoopEFLHeadless.cpp": {
+      "file_path": "src/shell/efl/AppLoopEFLHeadless.cpp",
       "file_hash": "a0cff6d8bb46597378f8414c69ce74361b9e99a27ad2893896e722ad7a240858",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1283,8 +1283,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/efl/ConsoleEFL.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/efl/ConsoleEFL.cpp",
+    "src/shell/efl/ConsoleEFL.cpp": {
+      "file_path": "src/shell/efl/ConsoleEFL.cpp",
       "file_hash": "fa32409c4bfb523b92dfed8ed5ae1ecf70c681dd11ca6c07282ef0cea98a2a83",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1293,8 +1293,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/efl/WindowEFL.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/efl/WindowEFL.cpp",
+    "src/shell/efl/WindowEFL.cpp": {
+      "file_path": "src/shell/efl/WindowEFL.cpp",
       "file_hash": "eda502106efb7bcc08af9465b3528554f72f83477bc46f82575eb7003e9413d3",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1303,8 +1303,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/glib/AppLoopGlib.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/glib/AppLoopGlib.cpp",
+    "src/shell/glib/AppLoopGlib.cpp": {
+      "file_path": "src/shell/glib/AppLoopGlib.cpp",
       "file_hash": "16a8fb6e4deab331ea603791f8b637e752f832e14dc8e666f175523fb2929555",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1313,8 +1313,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/glib/ConsoleGlib.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/glib/ConsoleGlib.cpp",
+    "src/shell/glib/ConsoleGlib.cpp": {
+      "file_path": "src/shell/glib/ConsoleGlib.cpp",
       "file_hash": "7be29b4b2da7dec92e35e359d700150f4503c2d38a15a1609ea983a826f9ece9",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1323,8 +1323,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/headless/WindowHeadless.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/headless/WindowHeadless.cpp",
+    "src/shell/headless/WindowHeadless.cpp": {
+      "file_path": "src/shell/headless/WindowHeadless.cpp",
       "file_hash": "8dc0dc8da711e84526666f0ba0c5a56b47ce634bb84421647f9ac86c61045985",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1333,8 +1333,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/libuv/AppLoopLibuv.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/libuv/AppLoopLibuv.cpp",
+    "src/shell/libuv/AppLoopLibuv.cpp": {
+      "file_path": "src/shell/libuv/AppLoopLibuv.cpp",
       "file_hash": "310adac9ff2d828ea4cd28495f124ea3f6e32897c34f7daacc4dd44ef6f2f0a7",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1343,8 +1343,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/libuv/ConsoleLibuv.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/libuv/ConsoleLibuv.cpp",
+    "src/shell/libuv/ConsoleLibuv.cpp": {
+      "file_path": "src/shell/libuv/ConsoleLibuv.cpp",
       "file_hash": "06ed5aca6e7a766690d096a6a3e6060154b7357a7a988082d23682f7c95e8576",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1353,8 +1353,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/tcore_wl/AppLoopTcoreWl.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/tcore_wl/AppLoopTcoreWl.cpp",
+    "src/shell/tcore_wl/AppLoopTcoreWl.cpp": {
+      "file_path": "src/shell/tcore_wl/AppLoopTcoreWl.cpp",
       "file_hash": "71a083c08fe6e2c60fc6725693e613ded426969452850fe611472b4d41a1f067",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1363,8 +1363,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/tcore_wl/ConsoleTcoreWl.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/tcore_wl/ConsoleTcoreWl.cpp",
+    "src/shell/tcore_wl/ConsoleTcoreWl.cpp": {
+      "file_path": "src/shell/tcore_wl/ConsoleTcoreWl.cpp",
       "file_hash": "218d3e229fd1fb6a5ca7b0920b8b579b2a361ef251cdc69873fc95b97369131d",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1373,8 +1373,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/test/APIRecorderTest.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/test/APIRecorderTest.cpp",
+    "src/shell/test/APIRecorderTest.cpp": {
+      "file_path": "src/shell/test/APIRecorderTest.cpp",
       "file_hash": "6a23be13c8fb781b5bf04b1f7221429fee9942f9a9b604893a18db3e710f3298",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1383,8 +1383,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/test/CookieManagerTest.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/test/CookieManagerTest.cpp",
+    "src/shell/test/CookieManagerTest.cpp": {
+      "file_path": "src/shell/test/CookieManagerTest.cpp",
       "file_hash": "b5fe0bd6d65e304420494608304706320030fac8afba8cacb800667aa099182b",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1393,8 +1393,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/test/LWETest.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/test/LWETest.cpp",
+    "src/shell/test/LWETest.cpp": {
+      "file_path": "src/shell/test/LWETest.cpp",
       "file_hash": "d1b5155a709bab9a0c4b2abb144d6ef5344f2769852fd075f65547459fade52d",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1403,8 +1403,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/test/SettingsTest.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/test/SettingsTest.cpp",
+    "src/shell/test/SettingsTest.cpp": {
+      "file_path": "src/shell/test/SettingsTest.cpp",
       "file_hash": "a1121578942db55b517a918ce1abc9f6b5e2ce09120f58167fae1c95af13db2c",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1413,8 +1413,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/test/WebContainerTest.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/test/WebContainerTest.cpp",
+    "src/shell/test/WebContainerTest.cpp": {
+      "file_path": "src/shell/test/WebContainerTest.cpp",
       "file_hash": "72138594760d6436231213900cc1439824b47f21d1f93c3694d2dbfbffa7c8e3",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1423,8 +1423,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/test/WebViewTest.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/test/WebViewTest.cpp",
+    "src/shell/test/WebViewTest.cpp": {
+      "file_path": "src/shell/test/WebViewTest.cpp",
       "file_hash": "976abf93bade10a8c3d139acdd767a2ef221ec0495f17c8ae50603c43994ed5e",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1433,8 +1433,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/windows/RendererWGL.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/windows/RendererWGL.cpp",
+    "src/shell/windows/RendererWGL.cpp": {
+      "file_path": "src/shell/windows/RendererWGL.cpp",
       "file_hash": "218a4e5619d732004dbd2952a87743aac5edae5a41b6b6ab1845272c038f3dde",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1443,8 +1443,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/windows/RendererWGL.h": {
-      "file_path": "/home/hwang/starfish/src/shell/windows/RendererWGL.h",
+    "src/shell/windows/RendererWGL.h": {
+      "file_path": "src/shell/windows/RendererWGL.h",
       "file_hash": "ab6822b22b122a9928882167e8cbab0ebb761add3fe107775c940465dc728bf3",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1453,8 +1453,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/windows/StarfishShell.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/windows/StarfishShell.cpp",
+    "src/shell/windows/StarfishShell.cpp": {
+      "file_path": "src/shell/windows/StarfishShell.cpp",
       "file_hash": "3a8599a1b80ca90a1b3fa6bd6683fec9990b0331ac8b4da9f8dbe8b4bc8c0f07",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1463,8 +1463,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/shell/x11_webcontainer/WindowX11Webcontainer.cpp": {
-      "file_path": "/home/hwang/starfish/src/shell/x11_webcontainer/WindowX11Webcontainer.cpp",
+    "src/shell/x11_webcontainer/WindowX11Webcontainer.cpp": {
+      "file_path": "src/shell/x11_webcontainer/WindowX11Webcontainer.cpp",
       "file_hash": "86ec787fbbdd42116e2fa90255d53ecdc22389dec687d4c00f088132289d827c",
       "sdd_doc": "modules/shell.md",
       "fr_doc": "functional-requirements/shell-fr.md",
@@ -1473,8 +1473,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/CharacterDataCustomBinding.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/CharacterDataCustomBinding.cpp",
+    "src/binding/CharacterDataCustomBinding.cpp": {
+      "file_path": "src/binding/CharacterDataCustomBinding.cpp",
       "file_hash": "9f7179d296df36d3574e8aff28d83a48bfe510f4e349d793111a75f379d06538",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1483,8 +1483,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/DocumentCustomBinding.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/DocumentCustomBinding.cpp",
+    "src/binding/DocumentCustomBinding.cpp": {
+      "file_path": "src/binding/DocumentCustomBinding.cpp",
       "file_hash": "5ad0c032c00805e1b6b55920b494b028e90739227d98f88e90404ef1ac624532",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1493,8 +1493,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/DocumentHoldable.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/DocumentHoldable.cpp",
+    "src/binding/DocumentHoldable.cpp": {
+      "file_path": "src/binding/DocumentHoldable.cpp",
       "file_hash": "300d5fcdb0ed278932024f92b8af3c55adacce5e768587732bafb5f3997b755d",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1503,8 +1503,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/DocumentHoldable.h": {
-      "file_path": "/home/hwang/starfish/src/binding/DocumentHoldable.h",
+    "src/binding/DocumentHoldable.h": {
+      "file_path": "src/binding/DocumentHoldable.h",
       "file_hash": "4360e520cb2125645d9d10c654cb7ae6e17e9022d78b45da5dda0a97598418b0",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1513,8 +1513,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/EventTargetCustomBinding.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/EventTargetCustomBinding.cpp",
+    "src/binding/EventTargetCustomBinding.cpp": {
+      "file_path": "src/binding/EventTargetCustomBinding.cpp",
       "file_hash": "52e42ebf968f3630e767a5dd4994f72826cc839b9b9c8c750d1ecfb5d9c5e3e6",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1523,8 +1523,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/GeolocationCustomBinding.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/GeolocationCustomBinding.cpp",
+    "src/binding/GeolocationCustomBinding.cpp": {
+      "file_path": "src/binding/GeolocationCustomBinding.cpp",
       "file_hash": "f6264f9549b1aac5bde1cee6682375df2783751905aa89393025b675a756203c",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1533,8 +1533,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/HTMLElementCustomBinding.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/HTMLElementCustomBinding.cpp",
+    "src/binding/HTMLElementCustomBinding.cpp": {
+      "file_path": "src/binding/HTMLElementCustomBinding.cpp",
       "file_hash": "6427fcf793ea77304c676a8ba0399f0f2ed6cf006ae1b8fc5dd13c418bbbc435",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1543,8 +1543,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/HTMLInputElementCustomBinding.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/HTMLInputElementCustomBinding.cpp",
+    "src/binding/HTMLInputElementCustomBinding.cpp": {
+      "file_path": "src/binding/HTMLInputElementCustomBinding.cpp",
       "file_hash": "65eec1a2e1b283fdfefa5b54466c656e590c3a9ade02e7c236850e93e8451a1e",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1553,8 +1553,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/ImageDataCustomBinding.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/ImageDataCustomBinding.cpp",
+    "src/binding/ImageDataCustomBinding.cpp": {
+      "file_path": "src/binding/ImageDataCustomBinding.cpp",
       "file_hash": "8d6c4166827aee67738a481def6b06342d6a4d2ab647e40b427e2a94cec76879",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1563,8 +1563,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/Iterable.h": {
-      "file_path": "/home/hwang/starfish/src/binding/Iterable.h",
+    "src/binding/Iterable.h": {
+      "file_path": "src/binding/Iterable.h",
       "file_hash": "e8b8c926eb650412faa63770490d06b8feb20e4da9e087301fce0a851189b559",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1573,8 +1573,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/IterationSource.h": {
-      "file_path": "/home/hwang/starfish/src/binding/IterationSource.h",
+    "src/binding/IterationSource.h": {
+      "file_path": "src/binding/IterationSource.h",
       "file_hash": "8a2afab2eab6282dd94568c769c24fed3fb5193292644e4d722545dfb3f82c67",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1583,8 +1583,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/Maplike.h": {
-      "file_path": "/home/hwang/starfish/src/binding/Maplike.h",
+    "src/binding/Maplike.h": {
+      "file_path": "src/binding/Maplike.h",
       "file_hash": "a4d47b6fd6dc75ecb35a48fa505fbbd21bdb6ade1ea2dcc74648971ba60468cf",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1593,8 +1593,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/MediaStreamCustomBinding.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/MediaStreamCustomBinding.cpp",
+    "src/binding/MediaStreamCustomBinding.cpp": {
+      "file_path": "src/binding/MediaStreamCustomBinding.cpp",
       "file_hash": "339776f4bf77cd9cff404941b48e9cd1d753cc1c6de1d1e47dddd1b4f152090f",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1603,8 +1603,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/ObservableArray.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/ObservableArray.cpp",
+    "src/binding/ObservableArray.cpp": {
+      "file_path": "src/binding/ObservableArray.cpp",
       "file_hash": "aafbfe77ba2c9a465be28b0b56d85d362a9aaeb159f548a1ab59b694ae62bade",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1613,8 +1613,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/ObservableArray.h": {
-      "file_path": "/home/hwang/starfish/src/binding/ObservableArray.h",
+    "src/binding/ObservableArray.h": {
+      "file_path": "src/binding/ObservableArray.h",
       "file_hash": "a5e4e7d022485f0e479f846f0267e83938b3a26439894a439393a8f94d1977c6",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1623,8 +1623,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/ScriptBindingInstance.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/ScriptBindingInstance.cpp",
+    "src/binding/ScriptBindingInstance.cpp": {
+      "file_path": "src/binding/ScriptBindingInstance.cpp",
       "file_hash": "3efa63238b6a74e09b6bf5bd739b5d5bf870f332022b44edfc01309aa67f7155",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1633,8 +1633,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/ScriptBindingInstance.h": {
-      "file_path": "/home/hwang/starfish/src/binding/ScriptBindingInstance.h",
+    "src/binding/ScriptBindingInstance.h": {
+      "file_path": "src/binding/ScriptBindingInstance.h",
       "file_hash": "c80e8e03c1abcaac30946b53fd86f5e20a0ec84517463c6629cf365ff54db644",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1643,8 +1643,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/ScriptBindingSecurity.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/ScriptBindingSecurity.cpp",
+    "src/binding/ScriptBindingSecurity.cpp": {
+      "file_path": "src/binding/ScriptBindingSecurity.cpp",
       "file_hash": "7ddaae377e63c2d57955508e9fcc48d158ae55a78e867d399d7fd09ebb365dcb",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1653,8 +1653,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/ScriptBindingSecurity.h": {
-      "file_path": "/home/hwang/starfish/src/binding/ScriptBindingSecurity.h",
+    "src/binding/ScriptBindingSecurity.h": {
+      "file_path": "src/binding/ScriptBindingSecurity.h",
       "file_hash": "b4228028dd7befd668c94635a602bb2160ca006f1bb898baac9d468ab88af694",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1663,8 +1663,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/ScriptBindingWindowInstance.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/ScriptBindingWindowInstance.cpp",
+    "src/binding/ScriptBindingWindowInstance.cpp": {
+      "file_path": "src/binding/ScriptBindingWindowInstance.cpp",
       "file_hash": "5a40663af3260c5c3f4555fab4ccac781cf44d6a5bd10bafa457e5117ba162da",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1673,8 +1673,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/ScriptBindingWindowInstance.h": {
-      "file_path": "/home/hwang/starfish/src/binding/ScriptBindingWindowInstance.h",
+    "src/binding/ScriptBindingWindowInstance.h": {
+      "file_path": "src/binding/ScriptBindingWindowInstance.h",
       "file_hash": "31662b2c1d7d2d928c3948136537e44af6d0f83fc6fce06cea14ee29789cd237",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1683,8 +1683,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/ScriptBindingWorkerInstance.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/ScriptBindingWorkerInstance.cpp",
+    "src/binding/ScriptBindingWorkerInstance.cpp": {
+      "file_path": "src/binding/ScriptBindingWorkerInstance.cpp",
       "file_hash": "72cc7b1148e4c8cc2181f202a5dc62ebed68489f9fff7e8b62cf709a2393435d",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1693,8 +1693,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/ScriptBindingWorkerInstance.h": {
-      "file_path": "/home/hwang/starfish/src/binding/ScriptBindingWorkerInstance.h",
+    "src/binding/ScriptBindingWorkerInstance.h": {
+      "file_path": "src/binding/ScriptBindingWorkerInstance.h",
       "file_hash": "c3f536e87988c25562efd27f6c24122460eb7004527d3737de6f2fd9f6b775c9",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1703,8 +1703,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/ScriptEngineInstance.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/ScriptEngineInstance.cpp",
+    "src/binding/ScriptEngineInstance.cpp": {
+      "file_path": "src/binding/ScriptEngineInstance.cpp",
       "file_hash": "8b537441e808d592b8ea675c69ea652f1997b68730619d800140d682dffe2373",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1713,8 +1713,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/ScriptEngineInstance.h": {
-      "file_path": "/home/hwang/starfish/src/binding/ScriptEngineInstance.h",
+    "src/binding/ScriptEngineInstance.h": {
+      "file_path": "src/binding/ScriptEngineInstance.h",
       "file_hash": "081b7df8bb504704b3d410c2f9e50aa6ea310bdd6ea50f306709a5abc76d77e2",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1723,8 +1723,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/ScriptWrappable.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/ScriptWrappable.cpp",
+    "src/binding/ScriptWrappable.cpp": {
+      "file_path": "src/binding/ScriptWrappable.cpp",
       "file_hash": "6aed75272cef7e3039df08bfd099e98bcc1a5bfc6c70080c78e8a83a218fb93f",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1733,8 +1733,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/ScriptWrappable.h": {
-      "file_path": "/home/hwang/starfish/src/binding/ScriptWrappable.h",
+    "src/binding/ScriptWrappable.h": {
+      "file_path": "src/binding/ScriptWrappable.h",
       "file_hash": "8d75185b6843cf8a9c56e9d7c2401fe919bc1d5cebcd167d7f73fd8686c9332b",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1743,8 +1743,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/StarfishHoldable.h": {
-      "file_path": "/home/hwang/starfish/src/binding/StarfishHoldable.h",
+    "src/binding/StarfishHoldable.h": {
+      "file_path": "src/binding/StarfishHoldable.h",
       "file_hash": "fed73a57a9284359f45072e9645f362440f972225f6583ed445e075d3f8efa3e",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1753,8 +1753,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/URLSearchParamsCustomBinding.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/URLSearchParamsCustomBinding.cpp",
+    "src/binding/URLSearchParamsCustomBinding.cpp": {
+      "file_path": "src/binding/URLSearchParamsCustomBinding.cpp",
       "file_hash": "8ca511bceeb15a8783392aedca5dcfaebf2405fdcf263078179c64476ded1b34",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1763,8 +1763,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/WebViewHoldable.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/WebViewHoldable.cpp",
+    "src/binding/WebViewHoldable.cpp": {
+      "file_path": "src/binding/WebViewHoldable.cpp",
       "file_hash": "69257151b2c9577da8d50893433b3eca6ee9abed64ee59d74e48284d0b908d9d",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1773,8 +1773,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/WebViewHoldable.h": {
-      "file_path": "/home/hwang/starfish/src/binding/WebViewHoldable.h",
+    "src/binding/WebViewHoldable.h": {
+      "file_path": "src/binding/WebViewHoldable.h",
       "file_hash": "a367bbeab7506f5a182a3f5315b8926f93c62c2e379d43d684b1a2e3c6c6a0f9",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1783,8 +1783,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/WindowCustomBinding.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/WindowCustomBinding.cpp",
+    "src/binding/WindowCustomBinding.cpp": {
+      "file_path": "src/binding/WindowCustomBinding.cpp",
       "file_hash": "debf19ceda3dc4a76361f9a76efafae77a68bf7cb08cb10a2eb68a5cafe4827f",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1793,8 +1793,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/WindowHoldable.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/WindowHoldable.cpp",
+    "src/binding/WindowHoldable.cpp": {
+      "file_path": "src/binding/WindowHoldable.cpp",
       "file_hash": "63ea4d3b49ba68437a5b7074e96a5158cfa36b3673888217793eb05e295fbdd6",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1803,8 +1803,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/WindowHoldable.h": {
-      "file_path": "/home/hwang/starfish/src/binding/WindowHoldable.h",
+    "src/binding/WindowHoldable.h": {
+      "file_path": "src/binding/WindowHoldable.h",
       "file_hash": "02406b90ae34485966c4f30d1f72006ab8a6edd14a3a89967edd3965956641c4",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1813,8 +1813,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/WindowProxy.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/WindowProxy.cpp",
+    "src/binding/WindowProxy.cpp": {
+      "file_path": "src/binding/WindowProxy.cpp",
       "file_hash": "debef15fb1a06428efb3b21190a77ef2def5db441a20e9660179455923f17cbd",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1823,8 +1823,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/WindowProxy.h": {
-      "file_path": "/home/hwang/starfish/src/binding/WindowProxy.h",
+    "src/binding/WindowProxy.h": {
+      "file_path": "src/binding/WindowProxy.h",
       "file_hash": "ba23378e0c7747a24986bd52514c4a42187a321b5a8bcd8c92907725f7566573",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1833,8 +1833,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/WorkerGlobalScopeCustomBinding.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/WorkerGlobalScopeCustomBinding.cpp",
+    "src/binding/WorkerGlobalScopeCustomBinding.cpp": {
+      "file_path": "src/binding/WorkerGlobalScopeCustomBinding.cpp",
       "file_hash": "adce74bc57d35735b58557c7040c5f517d05d664b042c0cde93d6cf1a4203efa",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1843,8 +1843,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/binding/XMLHttpRequestCustomBinding.cpp": {
-      "file_path": "/home/hwang/starfish/src/binding/XMLHttpRequestCustomBinding.cpp",
+    "src/binding/XMLHttpRequestCustomBinding.cpp": {
+      "file_path": "src/binding/XMLHttpRequestCustomBinding.cpp",
       "file_hash": "b37b57d8027a80f6a08e16b68e0156d143692c1405251f2955c4805f78f3dfe0",
       "sdd_doc": "modules/js-binding.md",
       "fr_doc": "functional-requirements/js-binding-fr.md",
@@ -1853,8 +1853,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/Demuxer.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/Demuxer.cpp",
+    "src/platform/multimedia/Demuxer.cpp": {
+      "file_path": "src/platform/multimedia/Demuxer.cpp",
       "file_hash": "df5e2838d458e2a7bae997d4a96005ce63cf854c32b38f86f47cddf241ba2690",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -1863,8 +1863,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/Demuxer.h": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/Demuxer.h",
+    "src/platform/multimedia/Demuxer.h": {
+      "file_path": "src/platform/multimedia/Demuxer.h",
       "file_hash": "958a216726c090cfe5765f49ac8ec7f135fe162965cf0c388359b5441bcf442d",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -1873,8 +1873,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/DemuxerMP4.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/DemuxerMP4.cpp",
+    "src/platform/multimedia/DemuxerMP4.cpp": {
+      "file_path": "src/platform/multimedia/DemuxerMP4.cpp",
       "file_hash": "4004b4d5023ca665154b8c68e44a81b86db693f4e800dd5f05b6cf64a62bf8bd",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -1883,8 +1883,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/DemuxerSource.h": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/DemuxerSource.h",
+    "src/platform/multimedia/DemuxerSource.h": {
+      "file_path": "src/platform/multimedia/DemuxerSource.h",
       "file_hash": "e6704b214c2b7b2933eb625e1eb276d25d8249871a5396852b150dd9f2b24965",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -1893,8 +1893,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/DemuxerWebM.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/DemuxerWebM.cpp",
+    "src/platform/multimedia/DemuxerWebM.cpp": {
+      "file_path": "src/platform/multimedia/DemuxerWebM.cpp",
       "file_hash": "c83ea81c596ea6db417057e9dbab1ae18071dbaebe5343862b3af3ddea76a425",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -1903,8 +1903,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MP4PacketGenerator.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MP4PacketGenerator.cpp",
+    "src/platform/multimedia/MP4PacketGenerator.cpp": {
+      "file_path": "src/platform/multimedia/MP4PacketGenerator.cpp",
       "file_hash": "4db47c4a04e8221d507ad5a9aec5349fbdb7b42cf3b056fcecba166f2017bedf",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -1913,8 +1913,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayer.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayer.cpp",
+    "src/platform/multimedia/MediaPlayer.cpp": {
+      "file_path": "src/platform/multimedia/MediaPlayer.cpp",
       "file_hash": "7dd43a904bf680fa765af0b46f59a6d58dd816094b492d8f435782ce3a6b1c3f",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -1923,8 +1923,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayer.h": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayer.h",
+    "src/platform/multimedia/MediaPlayer.h": {
+      "file_path": "src/platform/multimedia/MediaPlayer.h",
       "file_hash": "13469993236d6b3270e82f9a048fa61594d98ab36a6e52f19faec2d9afcc0d19",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -1933,8 +1933,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerAudio.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerAudio.cpp",
+    "src/platform/multimedia/MediaPlayerAudio.cpp": {
+      "file_path": "src/platform/multimedia/MediaPlayerAudio.cpp",
       "file_hash": "820f4f79ff428c73991270fe488ada241b554a8b8d92ebf658ad6f6429321e99",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -1943,8 +1943,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerAudio.h": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerAudio.h",
+    "src/platform/multimedia/MediaPlayerAudio.h": {
+      "file_path": "src/platform/multimedia/MediaPlayerAudio.h",
       "file_hash": "6fa5ca618982affc109fbc9254c2cf64618c4755679852271f04fdbee1f4a191",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -1953,8 +1953,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerAudioLinux.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerAudioLinux.cpp",
+    "src/platform/multimedia/MediaPlayerAudioLinux.cpp": {
+      "file_path": "src/platform/multimedia/MediaPlayerAudioLinux.cpp",
       "file_hash": "7cddcfb526bd438031b6fa478d79a9eff4b79262cd5ec3a62ed7cc544381ce6d",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -1963,8 +1963,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerAudioLinux.h": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerAudioLinux.h",
+    "src/platform/multimedia/MediaPlayerAudioLinux.h": {
+      "file_path": "src/platform/multimedia/MediaPlayerAudioLinux.h",
       "file_hash": "3148d0ec8b8501add55c1b259b37fb1d6df9d4a91f3e2eece360b9668f7b1ca2",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -1973,8 +1973,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerAudioTizen.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerAudioTizen.cpp",
+    "src/platform/multimedia/MediaPlayerAudioTizen.cpp": {
+      "file_path": "src/platform/multimedia/MediaPlayerAudioTizen.cpp",
       "file_hash": "6981e5f18481d32e0483b05f9dfb22455f016e337a63b991e028585d2478b1bf",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -1983,8 +1983,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerAudioTizen.h": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerAudioTizen.h",
+    "src/platform/multimedia/MediaPlayerAudioTizen.h": {
+      "file_path": "src/platform/multimedia/MediaPlayerAudioTizen.h",
       "file_hash": "39eca1c7e2e4b7bf1e467a6a3375974d0bb9ca076319e392b2815d21898d65fc",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -1993,8 +1993,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerESPlusPlayer.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerESPlusPlayer.cpp",
+    "src/platform/multimedia/MediaPlayerESPlusPlayer.cpp": {
+      "file_path": "src/platform/multimedia/MediaPlayerESPlusPlayer.cpp",
       "file_hash": "2e1411f8b8eda72182abb95e5dcd07f60de83434540afae5d98666ec459abcb3",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2003,8 +2003,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerESPlusPlayer.h": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerESPlusPlayer.h",
+    "src/platform/multimedia/MediaPlayerESPlusPlayer.h": {
+      "file_path": "src/platform/multimedia/MediaPlayerESPlusPlayer.h",
       "file_hash": "dfcbcfeb326562882bf0d46df5f4e5fbfc22fd81f415770a1896a37508bb2141",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2013,8 +2013,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerLinux.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerLinux.cpp",
+    "src/platform/multimedia/MediaPlayerLinux.cpp": {
+      "file_path": "src/platform/multimedia/MediaPlayerLinux.cpp",
       "file_hash": "b5b2c055f7ee91f6ea29e911bfa4adb758366f1ad31736cca3e74900bf929c88",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2023,8 +2023,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerLinux.h": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerLinux.h",
+    "src/platform/multimedia/MediaPlayerLinux.h": {
+      "file_path": "src/platform/multimedia/MediaPlayerLinux.h",
       "file_hash": "7cc402a65d0787a0009d703c88e3259f017a205eb1837a7a49cea1934985ffef",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2033,8 +2033,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerTV.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerTV.cpp",
+    "src/platform/multimedia/MediaPlayerTV.cpp": {
+      "file_path": "src/platform/multimedia/MediaPlayerTV.cpp",
       "file_hash": "61e65a3c2b711abdafef7a69ad2209ae786898a9fe9934926a177e0fc981e8fd",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2043,8 +2043,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerTizen.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerTizen.cpp",
+    "src/platform/multimedia/MediaPlayerTizen.cpp": {
+      "file_path": "src/platform/multimedia/MediaPlayerTizen.cpp",
       "file_hash": "5f646b635a83561b1f76df8ff96eed52790cc8dcc296305439a8eda2663a9962",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2053,8 +2053,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerTizen.h": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerTizen.h",
+    "src/platform/multimedia/MediaPlayerTizen.h": {
+      "file_path": "src/platform/multimedia/MediaPlayerTizen.h",
       "file_hash": "c0a3a580f5db370deecde986fb248c9b1ef5b615633e165212c7c287ce0f94d0",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2063,8 +2063,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerTizenBase.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerTizenBase.cpp",
+    "src/platform/multimedia/MediaPlayerTizenBase.cpp": {
+      "file_path": "src/platform/multimedia/MediaPlayerTizenBase.cpp",
       "file_hash": "bbc25014a00727330b5e7ef1b3eff924510fe932192b2c58de693aff5f5dc3ee",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2073,8 +2073,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerWebRtc.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerWebRtc.cpp",
+    "src/platform/multimedia/MediaPlayerWebRtc.cpp": {
+      "file_path": "src/platform/multimedia/MediaPlayerWebRtc.cpp",
       "file_hash": "a2a3f707634048d2f6ecbece403abdce9ef01bbe2293931b9459a43dc6ee1fe5",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2083,8 +2083,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerWebRtc.h": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerWebRtc.h",
+    "src/platform/multimedia/MediaPlayerWebRtc.h": {
+      "file_path": "src/platform/multimedia/MediaPlayerWebRtc.h",
       "file_hash": "d4674f48bdab3cbbda1041062c5d660c1c6ac8211c3d8b4b6a7c5e249b7b5d36",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2093,8 +2093,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerWebRtcLinux.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerWebRtcLinux.cpp",
+    "src/platform/multimedia/MediaPlayerWebRtcLinux.cpp": {
+      "file_path": "src/platform/multimedia/MediaPlayerWebRtcLinux.cpp",
       "file_hash": "05e3a208fd3be2806328214cc3317e1de2f968a3c64e2390173f4838630334e5",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2103,8 +2103,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerWebRtcLinux.h": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerWebRtcLinux.h",
+    "src/platform/multimedia/MediaPlayerWebRtcLinux.h": {
+      "file_path": "src/platform/multimedia/MediaPlayerWebRtcLinux.h",
       "file_hash": "d3b79c4c2d2195f579688a71ef5f5010dfbfbd98c8a90cc176fd0e1abdd9ca08",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2113,8 +2113,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerWebRtcTizen.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerWebRtcTizen.cpp",
+    "src/platform/multimedia/MediaPlayerWebRtcTizen.cpp": {
+      "file_path": "src/platform/multimedia/MediaPlayerWebRtcTizen.cpp",
       "file_hash": "1f177573ad78bb288b66b37108d53eeb4264aa4dd8c35fbd8e2512d77c975a32",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2123,8 +2123,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MediaPlayerWebRtcTizen.h": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MediaPlayerWebRtcTizen.h",
+    "src/platform/multimedia/MediaPlayerWebRtcTizen.h": {
+      "file_path": "src/platform/multimedia/MediaPlayerWebRtcTizen.h",
       "file_hash": "71b89dea818a23fbd436da26796d1073d174bc67d93a2a83dd239a1339c4c7bd",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2133,8 +2133,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MockMediaPlayer.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MockMediaPlayer.cpp",
+    "src/platform/multimedia/MockMediaPlayer.cpp": {
+      "file_path": "src/platform/multimedia/MockMediaPlayer.cpp",
       "file_hash": "608757fd1dd1f16e94e74144cbee0d4c038d205eded210dd50c58234fb95ef70",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2143,8 +2143,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/MockMediaPlayer.h": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/MockMediaPlayer.h",
+    "src/platform/multimedia/MockMediaPlayer.h": {
+      "file_path": "src/platform/multimedia/MockMediaPlayer.h",
       "file_hash": "401a315d3d7707c6aaa81e1cf25abd6e91fc8f70c27834eee8d9df37427e0857",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2153,8 +2153,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/PacketGenerator.h": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/PacketGenerator.h",
+    "src/platform/multimedia/PacketGenerator.h": {
+      "file_path": "src/platform/multimedia/PacketGenerator.h",
       "file_hash": "928f933cf2ce8dac6a29a6fa4095925d9ec26998aa6cc140ade65c906625835d",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2163,8 +2163,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/StreamInfo.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/StreamInfo.cpp",
+    "src/platform/multimedia/StreamInfo.cpp": {
+      "file_path": "src/platform/multimedia/StreamInfo.cpp",
       "file_hash": "d54a1c23d01db53fc903b5a54cce0d79ef505b6cd5bb45e4db4078f5bb32a064",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2173,8 +2173,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/multimedia/StreamInfo.h": {
-      "file_path": "/home/hwang/starfish/src/platform/multimedia/StreamInfo.h",
+    "src/platform/multimedia/StreamInfo.h": {
+      "file_path": "src/platform/multimedia/StreamInfo.h",
       "file_hash": "395699e11487346b0ac45d28b91ea3296bd6b645654a5e3377a31f9afab89961",
       "sdd_doc": "modules/platform-multimedia.md",
       "fr_doc": "functional-requirements/platform-multimedia-fr.md",
@@ -2183,8 +2183,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/CanvasCairo.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/CanvasCairo.cpp",
+    "src/platform/canvas/CanvasCairo.cpp": {
+      "file_path": "src/platform/canvas/CanvasCairo.cpp",
       "file_hash": "ba85882e49401bed628ba2077a8473676f1c402454b08a8a133335347896e780",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2193,8 +2193,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/CanvasCairoUtils.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/CanvasCairoUtils.cpp",
+    "src/platform/canvas/CanvasCairoUtils.cpp": {
+      "file_path": "src/platform/canvas/CanvasCairoUtils.cpp",
       "file_hash": "2d8626840a4420a58f3d0b8676d39bced1c9047b7cea7933b9452e6654cb6e00",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2203,8 +2203,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/CanvasCairoUtils.h": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/CanvasCairoUtils.h",
+    "src/platform/canvas/CanvasCairoUtils.h": {
+      "file_path": "src/platform/canvas/CanvasCairoUtils.h",
       "file_hash": "ecc39188f55877b3a402fb2427d9c96c205700cb7cbb4aac8b516571308e2770",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2213,8 +2213,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/CanvasMock.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/CanvasMock.cpp",
+    "src/platform/canvas/CanvasMock.cpp": {
+      "file_path": "src/platform/canvas/CanvasMock.cpp",
       "file_hash": "4770b666e3c5db2469d6d46ee6f0d9b3b2e4cc434ec9c3d42fcb97601007fc95",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2223,8 +2223,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/CompositorCairo.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/CompositorCairo.cpp",
+    "src/platform/canvas/CompositorCairo.cpp": {
+      "file_path": "src/platform/canvas/CompositorCairo.cpp",
       "file_hash": "dcadf7df22675e587ddf2dc125080c77fe341d823c45fc0f3013a286d4978b0b",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2233,8 +2233,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/CompositorGL.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/CompositorGL.cpp",
+    "src/platform/canvas/CompositorGL.cpp": {
+      "file_path": "src/platform/canvas/CompositorGL.cpp",
       "file_hash": "223520651e5c03a864ea1bfdde1533a1702b5ce10fd3e8c35f44567d1b011196",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2243,8 +2243,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/CompositorMock.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/CompositorMock.cpp",
+    "src/platform/canvas/CompositorMock.cpp": {
+      "file_path": "src/platform/canvas/CompositorMock.cpp",
       "file_hash": "aec74eb75fed6e4d264456cf6201eab26253dfeb55e2adf1e0a6059038d2d12e",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2253,8 +2253,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/PathCairo.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/PathCairo.cpp",
+    "src/platform/canvas/PathCairo.cpp": {
+      "file_path": "src/platform/canvas/PathCairo.cpp",
       "file_hash": "f836bd2fa88a151a5c94a62db1bd3b859caebec274ffbe5feb8a5ceca31f0272",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2263,8 +2263,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/PathCairo.h": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/PathCairo.h",
+    "src/platform/canvas/PathCairo.h": {
+      "file_path": "src/platform/canvas/PathCairo.h",
       "file_hash": "a9593115b063f6d8d2125a77b849c9b716ce482e821bf8eb4934fda963cfa12b",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2273,8 +2273,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/PathMock.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/PathMock.cpp",
+    "src/platform/canvas/PathMock.cpp": {
+      "file_path": "src/platform/canvas/PathMock.cpp",
       "file_hash": "909405103af5c0dc91e022bd83639907fb99a5b05bd926872c3566228899d942",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2283,8 +2283,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/PathMock.h": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/PathMock.h",
+    "src/platform/canvas/PathMock.h": {
+      "file_path": "src/platform/canvas/PathMock.h",
       "file_hash": "db90b76a451f6b054b531c2539a61a743dae06f57a2842a3533503911163cdf7",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2293,8 +2293,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/font/FontImplCairo.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/font/FontImplCairo.cpp",
+    "src/platform/canvas/font/FontImplCairo.cpp": {
+      "file_path": "src/platform/canvas/font/FontImplCairo.cpp",
       "file_hash": "6ddc9fc9b6140c99af11547e39aacf72466aebe621f4bd07988352062fd71254",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2303,8 +2303,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/font/FontImplCairo.h": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/font/FontImplCairo.h",
+    "src/platform/canvas/font/FontImplCairo.h": {
+      "file_path": "src/platform/canvas/font/FontImplCairo.h",
       "file_hash": "42126e493bddaa71eab4da8b95eec343b2c03179b07ccdd9249402d727d308c8",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2313,8 +2313,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/font/FontImplMock.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/font/FontImplMock.cpp",
+    "src/platform/canvas/font/FontImplMock.cpp": {
+      "file_path": "src/platform/canvas/font/FontImplMock.cpp",
       "file_hash": "9f67d519a4770a4504df5b44b4c1103fa1acbad679acfa75fc48d83f5d33ee67",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2323,8 +2323,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/font/hb-icu/HarfBuzzICU.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/font/hb-icu/HarfBuzzICU.cpp",
+    "src/platform/canvas/font/hb-icu/HarfBuzzICU.cpp": {
+      "file_path": "src/platform/canvas/font/hb-icu/HarfBuzzICU.cpp",
       "file_hash": "d79623346a69da7dec81e82b42ff143ca9620609667fb80c28c68aa1ac69328c",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2333,8 +2333,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/font/hb-icu/HarfBuzzICU.h": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/font/hb-icu/HarfBuzzICU.h",
+    "src/platform/canvas/font/hb-icu/HarfBuzzICU.h": {
+      "file_path": "src/platform/canvas/font/hb-icu/HarfBuzzICU.h",
       "file_hash": "aee7aec8ad2851834491e3486ef262bbbcab9c6e69aa0cd82f80b7a7646ad29f",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2343,8 +2343,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/gl/EvasGL.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/gl/EvasGL.cpp",
+    "src/platform/canvas/gl/EvasGL.cpp": {
+      "file_path": "src/platform/canvas/gl/EvasGL.cpp",
       "file_hash": "3b4a25dce72c142dd00e560e035cc285086bfaad377a3da835062c1e44d209c6",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2353,8 +2353,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/gl/GL.h": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/gl/GL.h",
+    "src/platform/canvas/gl/GL.h": {
+      "file_path": "src/platform/canvas/gl/GL.h",
       "file_hash": "6dafdcc3708ee9a9bf3586bd8f1553aabd7d9d559c7ca356e691f508a101c3a6",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2363,8 +2363,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/gl/GLTypes.h": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/gl/GLTypes.h",
+    "src/platform/canvas/gl/GLTypes.h": {
+      "file_path": "src/platform/canvas/gl/GLTypes.h",
       "file_hash": "bec4be894146dd5353c9d3b7a0421698425e2b8640f743392909816368e46f0e",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2373,8 +2373,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/gl/GenericGL.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/gl/GenericGL.cpp",
+    "src/platform/canvas/gl/GenericGL.cpp": {
+      "file_path": "src/platform/canvas/gl/GenericGL.cpp",
       "file_hash": "79c64d5dbc9c542c4b28182620d5ee1b3521b91dc1ddf76e4a5cebd74d05ac5a",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2383,8 +2383,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/gl/IncludeGL.h": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/gl/IncludeGL.h",
+    "src/platform/canvas/gl/IncludeGL.h": {
+      "file_path": "src/platform/canvas/gl/IncludeGL.h",
       "file_hash": "5a3a053e3a9c0418d5cf0d8c85d6ce582262d3a2ffeaf8d5c82127319e976a6a",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2393,8 +2393,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/image/AnimatedGIFNativeImageDataImpl.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/image/AnimatedGIFNativeImageDataImpl.cpp",
+    "src/platform/canvas/image/AnimatedGIFNativeImageDataImpl.cpp": {
+      "file_path": "src/platform/canvas/image/AnimatedGIFNativeImageDataImpl.cpp",
       "file_hash": "8547a5bfcbb967f01f3ccabca00a5d24387956b8b3d9eaa1928d3f435519c4d9",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2403,8 +2403,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/image/CompressedNativeImageDataImpl.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/image/CompressedNativeImageDataImpl.cpp",
+    "src/platform/canvas/image/CompressedNativeImageDataImpl.cpp": {
+      "file_path": "src/platform/canvas/image/CompressedNativeImageDataImpl.cpp",
       "file_hash": "9f0b4eb5b6eae7b4df1fc7bf28796abdebfed331ebb2e5b0cbddb98741d30f7a",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2413,8 +2413,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/image/NativeImageDataImpl.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/image/NativeImageDataImpl.cpp",
+    "src/platform/canvas/image/NativeImageDataImpl.cpp": {
+      "file_path": "src/platform/canvas/image/NativeImageDataImpl.cpp",
       "file_hash": "99518d8b56a9c7cf92718238bfafc98a8f7aa772708299afff77c1e41b20e6ae",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2423,8 +2423,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/canvas/image/SVGNativeImageDataImpl.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/canvas/image/SVGNativeImageDataImpl.cpp",
+    "src/platform/canvas/image/SVGNativeImageDataImpl.cpp": {
+      "file_path": "src/platform/canvas/image/SVGNativeImageDataImpl.cpp",
       "file_hash": "be41b064cfd36fc56b33bca46844a9f85b41bcb248e2615146e0b98941f8bc34",
       "sdd_doc": "modules/platform-canvas.md",
       "fr_doc": "functional-requirements/platform-canvas-fr.md",
@@ -2433,8 +2433,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/event/PlatformKeyEventData.h": {
-      "file_path": "/home/hwang/starfish/src/platform/event/PlatformKeyEventData.h",
+    "src/platform/event/PlatformKeyEventData.h": {
+      "file_path": "src/platform/event/PlatformKeyEventData.h",
       "file_hash": "b059351c12f8485ac28965c547e44a21907be7fb9c2f27df8e637665e2e75208",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2443,8 +2443,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/feedback/TapSoundFeedback.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/feedback/TapSoundFeedback.cpp",
+    "src/platform/feedback/TapSoundFeedback.cpp": {
+      "file_path": "src/platform/feedback/TapSoundFeedback.cpp",
       "file_hash": "3ff0aa8bef495ef7eca8b615d28036e8ee63c47d587b9cb5574932b4aede5894",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2453,8 +2453,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/feedback/TapSoundFeedback.h": {
-      "file_path": "/home/hwang/starfish/src/platform/feedback/TapSoundFeedback.h",
+    "src/platform/feedback/TapSoundFeedback.h": {
+      "file_path": "src/platform/feedback/TapSoundFeedback.h",
       "file_hash": "0c373b7efcd48545eb17ce7d1c7280dc7030fd2a1cc0f3893af3821ceebe51fe",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2463,8 +2463,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/file/PlatformDirectory.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/file/PlatformDirectory.cpp",
+    "src/platform/file/PlatformDirectory.cpp": {
+      "file_path": "src/platform/file/PlatformDirectory.cpp",
       "file_hash": "f747ceda5b42e7b662a8c4790df2d59bd56fe60cbf41638df26c90c4f590a428",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2473,8 +2473,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/file/PlatformDirectory.h": {
-      "file_path": "/home/hwang/starfish/src/platform/file/PlatformDirectory.h",
+    "src/platform/file/PlatformDirectory.h": {
+      "file_path": "src/platform/file/PlatformDirectory.h",
       "file_hash": "9a12cdaded24725597f24d90ec175b045c2294af2b3a3bea7ef6ec2bd6c9980a",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2483,8 +2483,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/file/PlatformFile.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/file/PlatformFile.cpp",
+    "src/platform/file/PlatformFile.cpp": {
+      "file_path": "src/platform/file/PlatformFile.cpp",
       "file_hash": "5b4f2069aca2142273e347037b875ccc6040af702697f03beb96d8b3c6d83cce",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2493,8 +2493,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/file/PlatformFile.h": {
-      "file_path": "/home/hwang/starfish/src/platform/file/PlatformFile.h",
+    "src/platform/file/PlatformFile.h": {
+      "file_path": "src/platform/file/PlatformFile.h",
       "file_hash": "169103e4a4419a3b6d9f463da36508bbc3d99dcf1b043635227c4dd07d2629e7",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2503,8 +2503,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/process/base/Process.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/process/base/Process.cpp",
+    "src/platform/process/base/Process.cpp": {
+      "file_path": "src/platform/process/base/Process.cpp",
       "file_hash": "0888c3ca23c61790d746f43cfe284f9bd830329e2a50f4e3352dfd25e1791710",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2513,8 +2513,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/process/base/Process.h": {
-      "file_path": "/home/hwang/starfish/src/platform/process/base/Process.h",
+    "src/platform/process/base/Process.h": {
+      "file_path": "src/platform/process/base/Process.h",
       "file_hash": "b340d059d4b835274dfc2310d8430be623c5aac9ba1f85e1305d8beaedfc8503",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2523,8 +2523,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/process/base/ProcessType.h": {
-      "file_path": "/home/hwang/starfish/src/platform/process/base/ProcessType.h",
+    "src/platform/process/base/ProcessType.h": {
+      "file_path": "src/platform/process/base/ProcessType.h",
       "file_hash": "5dd487231cdfb2096dd0556aec12f44d5e9831e4f5eee38a88ba5bbdeed0fef0",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2533,8 +2533,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/public/DeviceInfo.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/public/DeviceInfo.cpp",
+    "src/platform/public/DeviceInfo.cpp": {
+      "file_path": "src/platform/public/DeviceInfo.cpp",
       "file_hash": "68b491a8b49e3ff1c24f0ff2ec12d0c57764b0c70aa4e18927731ae210166a96",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2543,8 +2543,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/public/DeviceInfo.h": {
-      "file_path": "/home/hwang/starfish/src/platform/public/DeviceInfo.h",
+    "src/platform/public/DeviceInfo.h": {
+      "file_path": "src/platform/public/DeviceInfo.h",
       "file_hash": "47a758677973c08ba425d55fc52ca679de7a43c362a5a3ebb18abca51082f3e9",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2553,8 +2553,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/public/ScreenInfo.h": {
-      "file_path": "/home/hwang/starfish/src/platform/public/ScreenInfo.h",
+    "src/platform/public/ScreenInfo.h": {
+      "file_path": "src/platform/public/ScreenInfo.h",
       "file_hash": "ba857cb10c87e5a307e4a665de04e1d58862c0f07d43e38a90dd0313964d815d",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2563,8 +2563,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/public/ScreenOrientationType.h": {
-      "file_path": "/home/hwang/starfish/src/platform/public/ScreenOrientationType.h",
+    "src/platform/public/ScreenOrientationType.h": {
+      "file_path": "src/platform/public/ScreenOrientationType.h",
       "file_hash": "194088e2f249a5edea142d3e040c0bf5bba9ee1459037146602bff0172c509aa",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2573,8 +2573,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/tts/TTSBase.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/tts/TTSBase.cpp",
+    "src/platform/tts/TTSBase.cpp": {
+      "file_path": "src/platform/tts/TTSBase.cpp",
       "file_hash": "5a78ddbd2c3c71099cdb16642b5cba0f265b48f56b236582908c745826ecc883",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2583,8 +2583,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/tts/TTSTV.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/tts/TTSTV.cpp",
+    "src/platform/tts/TTSTV.cpp": {
+      "file_path": "src/platform/tts/TTSTV.cpp",
       "file_hash": "33b876fa15b5dc401a24f37195e86e3c87cdc0be47cb83a7fc9e805e51ec44f1",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2593,8 +2593,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/tts/TTSTizen.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/tts/TTSTizen.cpp",
+    "src/platform/tts/TTSTizen.cpp": {
+      "file_path": "src/platform/tts/TTSTizen.cpp",
       "file_hash": "e8215f49c173571259156c89e21511cb2b2602824269a1e3d7e1e7044fb946e1",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2603,8 +2603,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/windows/LoggingWindows.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/windows/LoggingWindows.cpp",
+    "src/platform/windows/LoggingWindows.cpp": {
+      "file_path": "src/platform/windows/LoggingWindows.cpp",
       "file_hash": "f29b0c2aa3b32bb137ffbeb37b3e911556fa0315509a697bcbc209fdfaf5b972",
       "sdd_doc": "modules/platform-system.md",
       "fr_doc": "functional-requirements/platform-system-fr.md",
@@ -2613,8 +2613,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/loader/ElementResourceClient.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/loader/ElementResourceClient.cpp",
+    "src/platform/loader/ElementResourceClient.cpp": {
+      "file_path": "src/platform/loader/ElementResourceClient.cpp",
       "file_hash": "34d18f1469c0ed3eeca99a85916ae75da2038c0f37c6e24de6897ad9969cb347",
       "sdd_doc": "modules/platform-loader.md",
       "fr_doc": "functional-requirements/platform-loader-fr.md",
@@ -2623,8 +2623,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/loader/ElementResourceClient.h": {
-      "file_path": "/home/hwang/starfish/src/platform/loader/ElementResourceClient.h",
+    "src/platform/loader/ElementResourceClient.h": {
+      "file_path": "src/platform/loader/ElementResourceClient.h",
       "file_hash": "8bc23c136dd7df4c395351ef5c8681ae81ef025acd8c26a72c23c958d27eee45",
       "sdd_doc": "modules/platform-loader.md",
       "fr_doc": "functional-requirements/platform-loader-fr.md",
@@ -2633,8 +2633,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/loader/FontResource.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/loader/FontResource.cpp",
+    "src/platform/loader/FontResource.cpp": {
+      "file_path": "src/platform/loader/FontResource.cpp",
       "file_hash": "e80b050ef42b817be5178af7e69f9c4390dc06fb404ca527b97226f93d7fbbfe",
       "sdd_doc": "modules/platform-loader.md",
       "fr_doc": "functional-requirements/platform-loader-fr.md",
@@ -2643,8 +2643,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/loader/FontResource.h": {
-      "file_path": "/home/hwang/starfish/src/platform/loader/FontResource.h",
+    "src/platform/loader/FontResource.h": {
+      "file_path": "src/platform/loader/FontResource.h",
       "file_hash": "fdc9ea202245386cce46ee0dfcd9024764ec155d954f4d829a5c9fed72c8de08",
       "sdd_doc": "modules/platform-loader.md",
       "fr_doc": "functional-requirements/platform-loader-fr.md",
@@ -2653,8 +2653,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/loader/HeaderResource.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/loader/HeaderResource.cpp",
+    "src/platform/loader/HeaderResource.cpp": {
+      "file_path": "src/platform/loader/HeaderResource.cpp",
       "file_hash": "202a9ecf586fa5a89b2d14808720435db3865983d3a231ce1d093c61fa4563d7",
       "sdd_doc": "modules/platform-loader.md",
       "fr_doc": "functional-requirements/platform-loader-fr.md",
@@ -2663,8 +2663,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/loader/HeaderResource.h": {
-      "file_path": "/home/hwang/starfish/src/platform/loader/HeaderResource.h",
+    "src/platform/loader/HeaderResource.h": {
+      "file_path": "src/platform/loader/HeaderResource.h",
       "file_hash": "a57c6cae40f2fb3c733e8ca5110664a8244fdc61acb075218dac38ca8459c1f6",
       "sdd_doc": "modules/platform-loader.md",
       "fr_doc": "functional-requirements/platform-loader-fr.md",
@@ -2673,8 +2673,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/loader/ImageResource.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/loader/ImageResource.cpp",
+    "src/platform/loader/ImageResource.cpp": {
+      "file_path": "src/platform/loader/ImageResource.cpp",
       "file_hash": "5f4570bee5081df5af63647d863a4386b6f2dc321120454ae5b02acbacadbf88",
       "sdd_doc": "modules/platform-loader.md",
       "fr_doc": "functional-requirements/platform-loader-fr.md",
@@ -2683,8 +2683,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/loader/ImageResource.h": {
-      "file_path": "/home/hwang/starfish/src/platform/loader/ImageResource.h",
+    "src/platform/loader/ImageResource.h": {
+      "file_path": "src/platform/loader/ImageResource.h",
       "file_hash": "7905ba0b657d48352c1a92f487320393c7dba19f31411542768adec4d5117c8a",
       "sdd_doc": "modules/platform-loader.md",
       "fr_doc": "functional-requirements/platform-loader-fr.md",
@@ -2693,8 +2693,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/loader/Resource.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/loader/Resource.cpp",
+    "src/platform/loader/Resource.cpp": {
+      "file_path": "src/platform/loader/Resource.cpp",
       "file_hash": "843cc466fde62cf4e4b3d365c2eb5c0c7899e661be2c69152ab1e4f51df1e4f8",
       "sdd_doc": "modules/platform-loader.md",
       "fr_doc": "functional-requirements/platform-loader-fr.md",
@@ -2703,8 +2703,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/loader/Resource.h": {
-      "file_path": "/home/hwang/starfish/src/platform/loader/Resource.h",
+    "src/platform/loader/Resource.h": {
+      "file_path": "src/platform/loader/Resource.h",
       "file_hash": "8dfd2928135cd721e48444d46d7555d2445b7eb748742bd690a60118199e3e0f",
       "sdd_doc": "modules/platform-loader.md",
       "fr_doc": "functional-requirements/platform-loader-fr.md",
@@ -2713,8 +2713,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/loader/ResourceClient.h": {
-      "file_path": "/home/hwang/starfish/src/platform/loader/ResourceClient.h",
+    "src/platform/loader/ResourceClient.h": {
+      "file_path": "src/platform/loader/ResourceClient.h",
       "file_hash": "ab0518cdb5624cd1fe0004e2c829998cc70858b9290c1b0cb9197ddbb5d8c837",
       "sdd_doc": "modules/platform-loader.md",
       "fr_doc": "functional-requirements/platform-loader-fr.md",
@@ -2723,8 +2723,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/loader/ResourceLoader.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/loader/ResourceLoader.cpp",
+    "src/platform/loader/ResourceLoader.cpp": {
+      "file_path": "src/platform/loader/ResourceLoader.cpp",
       "file_hash": "87bcdcc7a5155e5486b62bb94e4ae0349f353a12164d794a667a06ef8f4f68cd",
       "sdd_doc": "modules/platform-loader.md",
       "fr_doc": "functional-requirements/platform-loader-fr.md",
@@ -2733,8 +2733,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/loader/ResourceLoader.h": {
-      "file_path": "/home/hwang/starfish/src/platform/loader/ResourceLoader.h",
+    "src/platform/loader/ResourceLoader.h": {
+      "file_path": "src/platform/loader/ResourceLoader.h",
       "file_hash": "f31c3db91ee5059153d8626efb48964e107c74103a540812d43325f06ae35937",
       "sdd_doc": "modules/platform-loader.md",
       "fr_doc": "functional-requirements/platform-loader-fr.md",
@@ -2743,8 +2743,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/loader/ResourceURL.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/loader/ResourceURL.cpp",
+    "src/platform/loader/ResourceURL.cpp": {
+      "file_path": "src/platform/loader/ResourceURL.cpp",
       "file_hash": "0930bdb1ed387e27a3fff7d151610a0391911d9642c62eb0cedb2fcea45e25b6",
       "sdd_doc": "modules/platform-loader.md",
       "fr_doc": "functional-requirements/platform-loader-fr.md",
@@ -2753,8 +2753,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/loader/ResourceURL.h": {
-      "file_path": "/home/hwang/starfish/src/platform/loader/ResourceURL.h",
+    "src/platform/loader/ResourceURL.h": {
+      "file_path": "src/platform/loader/ResourceURL.h",
       "file_hash": "391572be020dd4689ad6704fe11f232019f4c4510434ed4902d4f30a5d6ea80b",
       "sdd_doc": "modules/platform-loader.md",
       "fr_doc": "functional-requirements/platform-loader-fr.md",
@@ -2763,8 +2763,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/loader/TextResource.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/loader/TextResource.cpp",
+    "src/platform/loader/TextResource.cpp": {
+      "file_path": "src/platform/loader/TextResource.cpp",
       "file_hash": "6fe084148a9502daa47b0bcda6d6f207878ec5cc44a5b9439601d4431ac2a04a",
       "sdd_doc": "modules/platform-loader.md",
       "fr_doc": "functional-requirements/platform-loader-fr.md",
@@ -2773,8 +2773,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/loader/TextResource.h": {
-      "file_path": "/home/hwang/starfish/src/platform/loader/TextResource.h",
+    "src/platform/loader/TextResource.h": {
+      "file_path": "src/platform/loader/TextResource.h",
       "file_hash": "e5ce98f50e254c3ce42f1d9d087843b9094841347ba1484bc2de9b6a1ca78356",
       "sdd_doc": "modules/platform-loader.md",
       "fr_doc": "functional-requirements/platform-loader-fr.md",
@@ -2783,8 +2783,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/network/curl/NetworkSharedResourceManager.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/network/curl/NetworkSharedResourceManager.cpp",
+    "src/platform/network/curl/NetworkSharedResourceManager.cpp": {
+      "file_path": "src/platform/network/curl/NetworkSharedResourceManager.cpp",
       "file_hash": "60fa13f1bc75ea5d8ad64c943164e5e4b2d6a00b2d3483e29740dd8c1da17a9f",
       "sdd_doc": "modules/platform-network.md",
       "fr_doc": "functional-requirements/platform-network-fr.md",
@@ -2793,8 +2793,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/network/curl/NetworkSharedResourceManager.h": {
-      "file_path": "/home/hwang/starfish/src/platform/network/curl/NetworkSharedResourceManager.h",
+    "src/platform/network/curl/NetworkSharedResourceManager.h": {
+      "file_path": "src/platform/network/curl/NetworkSharedResourceManager.h",
       "file_hash": "a2b309a3036848a020162c449a6ab3bc65cc5c3c3a72387892f0926901d4a3cf",
       "sdd_doc": "modules/platform-network.md",
       "fr_doc": "functional-requirements/platform-network-fr.md",
@@ -2803,8 +2803,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/network/http/HTTPCache.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/network/http/HTTPCache.cpp",
+    "src/platform/network/http/HTTPCache.cpp": {
+      "file_path": "src/platform/network/http/HTTPCache.cpp",
       "file_hash": "efb5fee5d992c7e78b15452f7615bd9ce70bcb1178c1aba67d9c9626bac4261a",
       "sdd_doc": "modules/platform-network.md",
       "fr_doc": "functional-requirements/platform-network-fr.md",
@@ -2813,8 +2813,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/network/http/HTTPCache.h": {
-      "file_path": "/home/hwang/starfish/src/platform/network/http/HTTPCache.h",
+    "src/platform/network/http/HTTPCache.h": {
+      "file_path": "src/platform/network/http/HTTPCache.h",
       "file_hash": "dc5b1a02ee61e51c7ae396bb6a5c44d3e7146f19412e0c858635a12b51e72331",
       "sdd_doc": "modules/platform-network.md",
       "fr_doc": "functional-requirements/platform-network-fr.md",
@@ -2823,8 +2823,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/network/http/HTTPCacheEntry.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/network/http/HTTPCacheEntry.cpp",
+    "src/platform/network/http/HTTPCacheEntry.cpp": {
+      "file_path": "src/platform/network/http/HTTPCacheEntry.cpp",
       "file_hash": "d02e67023a3e8ec71abb6effc922f52ab57ba430006960450c28e308dfec7230",
       "sdd_doc": "modules/platform-network.md",
       "fr_doc": "functional-requirements/platform-network-fr.md",
@@ -2833,8 +2833,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/network/http/HTTPCacheEntry.h": {
-      "file_path": "/home/hwang/starfish/src/platform/network/http/HTTPCacheEntry.h",
+    "src/platform/network/http/HTTPCacheEntry.h": {
+      "file_path": "src/platform/network/http/HTTPCacheEntry.h",
       "file_hash": "1c119949f079817034e9ad9ed7fd829a5ae6d1aaeacb08459ee8d2a0548f61ee",
       "sdd_doc": "modules/platform-network.md",
       "fr_doc": "functional-requirements/platform-network-fr.md",
@@ -2843,8 +2843,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/network/http/HTTPHeaderMap.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/network/http/HTTPHeaderMap.cpp",
+    "src/platform/network/http/HTTPHeaderMap.cpp": {
+      "file_path": "src/platform/network/http/HTTPHeaderMap.cpp",
       "file_hash": "82a050332b4b0c66158be48ce69125ea4d67cfa1e036ac415058efc45a924d9e",
       "sdd_doc": "modules/platform-network.md",
       "fr_doc": "functional-requirements/platform-network-fr.md",
@@ -2853,8 +2853,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/network/http/HTTPHeaderMap.h": {
-      "file_path": "/home/hwang/starfish/src/platform/network/http/HTTPHeaderMap.h",
+    "src/platform/network/http/HTTPHeaderMap.h": {
+      "file_path": "src/platform/network/http/HTTPHeaderMap.h",
       "file_hash": "6d09297095d09b78a6887ba43a0b4646ade690ac8b7d370df23a12493df098ad",
       "sdd_doc": "modules/platform-network.md",
       "fr_doc": "functional-requirements/platform-network-fr.md",
@@ -2863,8 +2863,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/network/http/HTTPRequest.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/network/http/HTTPRequest.cpp",
+    "src/platform/network/http/HTTPRequest.cpp": {
+      "file_path": "src/platform/network/http/HTTPRequest.cpp",
       "file_hash": "a985c7c12e303a66b4601d4f8528c1bf4a315ed86ff7ab841a18876fee540058",
       "sdd_doc": "modules/platform-network.md",
       "fr_doc": "functional-requirements/platform-network-fr.md",
@@ -2873,8 +2873,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/network/http/HTTPRequest.h": {
-      "file_path": "/home/hwang/starfish/src/platform/network/http/HTTPRequest.h",
+    "src/platform/network/http/HTTPRequest.h": {
+      "file_path": "src/platform/network/http/HTTPRequest.h",
       "file_hash": "76a3095cdfd71f130405b6e3a9933720cd8dfb70b0effed954729038a15e9c9a",
       "sdd_doc": "modules/platform-network.md",
       "fr_doc": "functional-requirements/platform-network-fr.md",
@@ -2883,8 +2883,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/network/http/HTTPResponse.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/network/http/HTTPResponse.cpp",
+    "src/platform/network/http/HTTPResponse.cpp": {
+      "file_path": "src/platform/network/http/HTTPResponse.cpp",
       "file_hash": "43a9aab8ba0c963f27b7acc862c182ae9ae2c708e5c4223765028e658888dc7d",
       "sdd_doc": "modules/platform-network.md",
       "fr_doc": "functional-requirements/platform-network-fr.md",
@@ -2893,8 +2893,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/network/http/HTTPResponse.h": {
-      "file_path": "/home/hwang/starfish/src/platform/network/http/HTTPResponse.h",
+    "src/platform/network/http/HTTPResponse.h": {
+      "file_path": "src/platform/network/http/HTTPResponse.h",
       "file_hash": "962355f831e4ea1632b69abd7c9eb180e48a2b433f4db698694d6a0f806e86ca",
       "sdd_doc": "modules/platform-network.md",
       "fr_doc": "functional-requirements/platform-network-fr.md",
@@ -2903,8 +2903,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/network/http/HTTPStatus.h": {
-      "file_path": "/home/hwang/starfish/src/platform/network/http/HTTPStatus.h",
+    "src/platform/network/http/HTTPStatus.h": {
+      "file_path": "src/platform/network/http/HTTPStatus.h",
       "file_hash": "2dd571f9bf3cef2d3e239657e31fc439b4848811e83de760471ae34d492c6a50",
       "sdd_doc": "modules/platform-network.md",
       "fr_doc": "functional-requirements/platform-network-fr.md",
@@ -2913,8 +2913,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/network/http/HTTPTransaction.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/network/http/HTTPTransaction.cpp",
+    "src/platform/network/http/HTTPTransaction.cpp": {
+      "file_path": "src/platform/network/http/HTTPTransaction.cpp",
       "file_hash": "301716b43018570edcb0cca8f547ffe384b70b92e429139198fa97a70e811061",
       "sdd_doc": "modules/platform-network.md",
       "fr_doc": "functional-requirements/platform-network-fr.md",
@@ -2923,8 +2923,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/network/http/HTTPTransaction.h": {
-      "file_path": "/home/hwang/starfish/src/platform/network/http/HTTPTransaction.h",
+    "src/platform/network/http/HTTPTransaction.h": {
+      "file_path": "src/platform/network/http/HTTPTransaction.h",
       "file_hash": "85e059219c3e74389bce044ef189019da6bec13d627f85f565edb99ec128ee77",
       "sdd_doc": "modules/platform-network.md",
       "fr_doc": "functional-requirements/platform-network-fr.md",
@@ -2933,8 +2933,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/network/http/HTTPUtil.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/network/http/HTTPUtil.cpp",
+    "src/platform/network/http/HTTPUtil.cpp": {
+      "file_path": "src/platform/network/http/HTTPUtil.cpp",
       "file_hash": "d74cef345c7a8d94e2cc1c9b9aa3a36fb5f566634dcf3f9e2c865855ca421e2e",
       "sdd_doc": "modules/platform-network.md",
       "fr_doc": "functional-requirements/platform-network-fr.md",
@@ -2943,8 +2943,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/network/http/HTTPUtil.h": {
-      "file_path": "/home/hwang/starfish/src/platform/network/http/HTTPUtil.h",
+    "src/platform/network/http/HTTPUtil.h": {
+      "file_path": "src/platform/network/http/HTTPUtil.h",
       "file_hash": "4ef284748b303e5eab3bacd938acbeb5fe83217f917ecec19b4f580aa0acf9a2",
       "sdd_doc": "modules/platform-network.md",
       "fr_doc": "functional-requirements/platform-network-fr.md",
@@ -2953,8 +2953,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/message_loop/MessageLoopGLib.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/message_loop/MessageLoopGLib.cpp",
+    "src/platform/message_loop/MessageLoopGLib.cpp": {
+      "file_path": "src/platform/message_loop/MessageLoopGLib.cpp",
       "file_hash": "8b83a5857175aaa87d48707b23e23971963e47ccc03352f829ab564c1fcfe49a",
       "sdd_doc": "modules/platform-message-loop.md",
       "fr_doc": "functional-requirements/platform-message-loop-fr.md",
@@ -2963,8 +2963,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/message_loop/MessageLoopGLib.h": {
-      "file_path": "/home/hwang/starfish/src/platform/message_loop/MessageLoopGLib.h",
+    "src/platform/message_loop/MessageLoopGLib.h": {
+      "file_path": "src/platform/message_loop/MessageLoopGLib.h",
       "file_hash": "0ca9b5a3a15b4fcf1c491c7dc7f6767c72049ac06c77d639c1125e86f24057dc",
       "sdd_doc": "modules/platform-message-loop.md",
       "fr_doc": "functional-requirements/platform-message-loop-fr.md",
@@ -2973,8 +2973,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/message_loop/MessageLoopLibUV.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/message_loop/MessageLoopLibUV.cpp",
+    "src/platform/message_loop/MessageLoopLibUV.cpp": {
+      "file_path": "src/platform/message_loop/MessageLoopLibUV.cpp",
       "file_hash": "d3f64ca78734ec74db0eb8cbf56042eb0283284a556d9f193673648b4c85c9b1",
       "sdd_doc": "modules/platform-message-loop.md",
       "fr_doc": "functional-requirements/platform-message-loop-fr.md",
@@ -2983,8 +2983,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/message_loop/MessageLoopLibUV.h": {
-      "file_path": "/home/hwang/starfish/src/platform/message_loop/MessageLoopLibUV.h",
+    "src/platform/message_loop/MessageLoopLibUV.h": {
+      "file_path": "src/platform/message_loop/MessageLoopLibUV.h",
       "file_hash": "02d7093cddaa7393eb750ee5de4f9db6364ff16cf4eeea81ef062748dbc2c919",
       "sdd_doc": "modules/platform-message-loop.md",
       "fr_doc": "functional-requirements/platform-message-loop-fr.md",
@@ -2993,8 +2993,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/message_loop/RunLoopGLib.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/message_loop/RunLoopGLib.cpp",
+    "src/platform/message_loop/RunLoopGLib.cpp": {
+      "file_path": "src/platform/message_loop/RunLoopGLib.cpp",
       "file_hash": "39c8f291a147786958807377a97a4931f798ac6e2b16bff81bf7603a8bcd95b9",
       "sdd_doc": "modules/platform-message-loop.md",
       "fr_doc": "functional-requirements/platform-message-loop-fr.md",
@@ -3003,8 +3003,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/message_loop/RunLoopGLib.h": {
-      "file_path": "/home/hwang/starfish/src/platform/message_loop/RunLoopGLib.h",
+    "src/platform/message_loop/RunLoopGLib.h": {
+      "file_path": "src/platform/message_loop/RunLoopGLib.h",
       "file_hash": "bf797c3a33c20eddcd422bf1425f95a1673aafe05ff54be6bacf83e3ff29456f",
       "sdd_doc": "modules/platform-message-loop.md",
       "fr_doc": "functional-requirements/platform-message-loop-fr.md",
@@ -3013,8 +3013,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/message_loop/RunLoopLibUV.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/message_loop/RunLoopLibUV.cpp",
+    "src/platform/message_loop/RunLoopLibUV.cpp": {
+      "file_path": "src/platform/message_loop/RunLoopLibUV.cpp",
       "file_hash": "e97d0257f21f4d2126ae64c992e8a13ffe4e3eb20969524ea4e155fdf2f16c88",
       "sdd_doc": "modules/platform-message-loop.md",
       "fr_doc": "functional-requirements/platform-message-loop-fr.md",
@@ -3023,8 +3023,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/message_loop/RunLoopLibUV.h": {
-      "file_path": "/home/hwang/starfish/src/platform/message_loop/RunLoopLibUV.h",
+    "src/platform/message_loop/RunLoopLibUV.h": {
+      "file_path": "src/platform/message_loop/RunLoopLibUV.h",
       "file_hash": "2978be9cee84e5be1915c9a37e5af1197d114947bace8d039be8747a84aa8e4e",
       "sdd_doc": "modules/platform-message-loop.md",
       "fr_doc": "functional-requirements/platform-message-loop-fr.md",
@@ -3033,8 +3033,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/message_loop/TimerGLib.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/message_loop/TimerGLib.cpp",
+    "src/platform/message_loop/TimerGLib.cpp": {
+      "file_path": "src/platform/message_loop/TimerGLib.cpp",
       "file_hash": "e3a4ed87e39d2d9bc5eab54d65ad624d5d24f300bd7a797ad5f1fcd37b1f9964",
       "sdd_doc": "modules/platform-message-loop.md",
       "fr_doc": "functional-requirements/platform-message-loop-fr.md",
@@ -3043,8 +3043,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/message_loop/TimerGLib.h": {
-      "file_path": "/home/hwang/starfish/src/platform/message_loop/TimerGLib.h",
+    "src/platform/message_loop/TimerGLib.h": {
+      "file_path": "src/platform/message_loop/TimerGLib.h",
       "file_hash": "a77bbd7d948b8137689acd854bb016c9d7dfec18c79ed7fde0332ef283e0abcd",
       "sdd_doc": "modules/platform-message-loop.md",
       "fr_doc": "functional-requirements/platform-message-loop-fr.md",
@@ -3053,8 +3053,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/message_loop/TimerLibUV.cpp": {
-      "file_path": "/home/hwang/starfish/src/platform/message_loop/TimerLibUV.cpp",
+    "src/platform/message_loop/TimerLibUV.cpp": {
+      "file_path": "src/platform/message_loop/TimerLibUV.cpp",
       "file_hash": "aabc51d8d5ef87ad1e1dfda7d0ae7dd92224a93bbe4d0bf28388c0390dbeced2",
       "sdd_doc": "modules/platform-message-loop.md",
       "fr_doc": "functional-requirements/platform-message-loop-fr.md",
@@ -3063,8 +3063,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/platform/message_loop/TimerLibUV.h": {
-      "file_path": "/home/hwang/starfish/src/platform/message_loop/TimerLibUV.h",
+    "src/platform/message_loop/TimerLibUV.h": {
+      "file_path": "src/platform/message_loop/TimerLibUV.h",
       "file_hash": "12902f22b6f448f7683c0f8c139c0d95fc5f4d23436101b1d23b54b08f15ca94",
       "sdd_doc": "modules/platform-message-loop.md",
       "fr_doc": "functional-requirements/platform-message-loop-fr.md",
@@ -3073,8 +3073,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/Starfish.cpp": {
-      "file_path": "/home/hwang/starfish/src/Starfish.cpp",
+    "src/Starfish.cpp": {
+      "file_path": "src/Starfish.cpp",
       "file_hash": "52177feb02057858f152f0bb2297f65cc78e0f0da7aff501ec3eba7cc8263364",
       "sdd_doc": "modules/engine-core.md",
       "fr_doc": "functional-requirements/engine-core-fr.md",
@@ -3083,8 +3083,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/Starfish.h": {
-      "file_path": "/home/hwang/starfish/src/Starfish.h",
+    "src/Starfish.h": {
+      "file_path": "src/Starfish.h",
       "file_hash": "16e588b84223f2b5fb3395002c8b3723454d584f0893a59173c05e1ffbec1571",
       "sdd_doc": "modules/engine-core.md",
       "fr_doc": "functional-requirements/engine-core-fr.md",
@@ -3093,8 +3093,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/StarfishBase.h": {
-      "file_path": "/home/hwang/starfish/src/StarfishBase.h",
+    "src/StarfishBase.h": {
+      "file_path": "src/StarfishBase.h",
       "file_hash": "b4634a9757d735a5e6b4d0e63ce69cfef77579a5ad464d2df199e9b2b5f06df1",
       "sdd_doc": "modules/engine-core.md",
       "fr_doc": "functional-requirements/engine-core-fr.md",
@@ -3103,8 +3103,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/StarfishConfig.h": {
-      "file_path": "/home/hwang/starfish/src/StarfishConfig.h",
+    "src/StarfishConfig.h": {
+      "file_path": "src/StarfishConfig.h",
       "file_hash": "047274bd394be685ea8ca61b8711fa9cea12fb5987d990b5591151fc733a29d6",
       "sdd_doc": "modules/engine-core.md",
       "fr_doc": "functional-requirements/engine-core-fr.md",
@@ -3113,8 +3113,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/StarfishInfo.h": {
-      "file_path": "/home/hwang/starfish/src/StarfishInfo.h",
+    "src/StarfishInfo.h": {
+      "file_path": "src/StarfishInfo.h",
       "file_hash": "1aeee5f358645d3acfb3c8c12961795d504df2e59f08b1a5da237accb41df23c",
       "sdd_doc": "modules/engine-core.md",
       "fr_doc": "functional-requirements/engine-core-fr.md",
@@ -3123,8 +3123,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/StarfishPlatform.h": {
-      "file_path": "/home/hwang/starfish/src/StarfishPlatform.h",
+    "src/StarfishPlatform.h": {
+      "file_path": "src/StarfishPlatform.h",
       "file_hash": "96877b91032bc7ee60ec4d02c22b5a68eb1b5e622f9efc97b8c2f01f713b69ee",
       "sdd_doc": "modules/engine-core.md",
       "fr_doc": "functional-requirements/engine-core-fr.md",
@@ -3133,8 +3133,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/StaticStrings.cpp": {
-      "file_path": "/home/hwang/starfish/src/StaticStrings.cpp",
+    "src/StaticStrings.cpp": {
+      "file_path": "src/StaticStrings.cpp",
       "file_hash": "4a342ff7678b623c9847bae56cbd916d4b4ede48cd1b0f4d33dd2178b15ba1a6",
       "sdd_doc": "modules/engine-core.md",
       "fr_doc": "functional-requirements/engine-core-fr.md",
@@ -3143,8 +3143,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/StaticStrings.h": {
-      "file_path": "/home/hwang/starfish/src/StaticStrings.h",
+    "src/StaticStrings.h": {
+      "file_path": "src/StaticStrings.h",
       "file_hash": "ad968d5f228d50df19a0037c426a61b5c721b92c85a84234cf847881710b44dd",
       "sdd_doc": "modules/engine-core.md",
       "fr_doc": "functional-requirements/engine-core-fr.md",
@@ -3153,8 +3153,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/StoragePathProvider.cpp": {
-      "file_path": "/home/hwang/starfish/src/StoragePathProvider.cpp",
+    "src/StoragePathProvider.cpp": {
+      "file_path": "src/StoragePathProvider.cpp",
       "file_hash": "049ce764eaca976cb5795c42c7cc4568fd1a8b3099eef80373d7c888b9905bc0",
       "sdd_doc": "modules/engine-core.md",
       "fr_doc": "functional-requirements/engine-core-fr.md",
@@ -3163,8 +3163,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/StoragePathProvider.h": {
-      "file_path": "/home/hwang/starfish/src/StoragePathProvider.h",
+    "src/StoragePathProvider.h": {
+      "file_path": "src/StoragePathProvider.h",
       "file_hash": "381080a41e0392a094607c8e80e24a911dcfcd72dfc6a138078c8f458c61216b",
       "sdd_doc": "modules/engine-core.md",
       "fr_doc": "functional-requirements/engine-core-fr.md",
@@ -3173,8 +3173,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/streamline_annotate.h": {
-      "file_path": "/home/hwang/starfish/src/streamline_annotate.h",
+    "src/streamline_annotate.h": {
+      "file_path": "src/streamline_annotate.h",
       "file_hash": "53ce7c3b60b84fdb7816eda879274009a2623062d5c43cd24ade2e0649404cf4",
       "sdd_doc": "modules/engine-core.md",
       "fr_doc": "functional-requirements/engine-core-fr.md",
@@ -3183,8 +3183,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/third_party/robin_map/include/tsl/robin_growth_policy.h": {
-      "file_path": "/home/hwang/starfish/third_party/robin_map/include/tsl/robin_growth_policy.h",
+    "third_party/robin_map/include/tsl/robin_growth_policy.h": {
+      "file_path": "third_party/robin_map/include/tsl/robin_growth_policy.h",
       "file_hash": "f8c66c22ea26c4c9c1a4eed82f53a8c04e9a31d258422a392c5d5fbc88c4dda7",
       "sdd_doc": "modules/third-party-libs.md",
       "fr_doc": "functional-requirements/third-party-libs-fr.md",
@@ -3193,8 +3193,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/third_party/robin_map/include/tsl/robin_hash.h": {
-      "file_path": "/home/hwang/starfish/third_party/robin_map/include/tsl/robin_hash.h",
+    "third_party/robin_map/include/tsl/robin_hash.h": {
+      "file_path": "third_party/robin_map/include/tsl/robin_hash.h",
       "file_hash": "82edacea8109c95ecd977dcb20e75d8776a93c14e284facc96606f80300e17de",
       "sdd_doc": "modules/third-party-libs.md",
       "fr_doc": "functional-requirements/third-party-libs-fr.md",
@@ -3203,8 +3203,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/third_party/robin_map/include/tsl/robin_map.h": {
-      "file_path": "/home/hwang/starfish/third_party/robin_map/include/tsl/robin_map.h",
+    "third_party/robin_map/include/tsl/robin_map.h": {
+      "file_path": "third_party/robin_map/include/tsl/robin_map.h",
       "file_hash": "31d293dd8d9dec7a0349c6e50b56f626c8a2e39aef08b71a954a73c716df5f6d",
       "sdd_doc": "modules/third-party-libs.md",
       "fr_doc": "functional-requirements/third-party-libs-fr.md",
@@ -3213,8 +3213,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/third_party/robin_map/include/tsl/robin_set.h": {
-      "file_path": "/home/hwang/starfish/third_party/robin_map/include/tsl/robin_set.h",
+    "third_party/robin_map/include/tsl/robin_set.h": {
+      "file_path": "third_party/robin_map/include/tsl/robin_set.h",
       "file_hash": "a0fc6bd49b1b3b7ef9b4bfc3b86ab39d8c492044b84bce30a51bab40af03bf8f",
       "sdd_doc": "modules/third-party-libs.md",
       "fr_doc": "functional-requirements/third-party-libs-fr.md",
@@ -3223,8 +3223,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/third_party/robin_map/include/tsl/robin_vector.h": {
-      "file_path": "/home/hwang/starfish/third_party/robin_map/include/tsl/robin_vector.h",
+    "third_party/robin_map/include/tsl/robin_vector.h": {
+      "file_path": "third_party/robin_map/include/tsl/robin_vector.h",
       "file_hash": "1efd92560f4c3a8b7d0d3d62f961e57c2a02c76106a07d03fefc5e14f3e91caf",
       "sdd_doc": "modules/third-party-libs.md",
       "fr_doc": "functional-requirements/third-party-libs-fr.md",
@@ -3233,8 +3233,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/docs/generator/__init__.py": {
-      "file_path": "/home/hwang/starfish/docs/generator/__init__.py",
+    "docs/generator/__init__.py": {
+      "file_path": "docs/generator/__init__.py",
       "file_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "sdd_doc": "modules/docs-webapi.md",
       "fr_doc": "functional-requirements/docs-webapi-fr.md",
@@ -3243,8 +3243,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/docs/generator/run.py": {
-      "file_path": "/home/hwang/starfish/docs/generator/run.py",
+    "docs/generator/run.py": {
+      "file_path": "docs/generator/run.py",
       "file_hash": "04bf253a7b2c86978f7ded9a8aac47758fbfb738015ff4f3c00d343987ea6715",
       "sdd_doc": "modules/docs-webapi.md",
       "fr_doc": "functional-requirements/docs-webapi-fr.md",
@@ -3253,8 +3253,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/docs/webpages/webapi/webapi_main.js": {
-      "file_path": "/home/hwang/starfish/docs/webpages/webapi/webapi_main.js",
+    "docs/webpages/webapi/webapi_main.js": {
+      "file_path": "docs/webpages/webapi/webapi_main.js",
       "file_hash": "b200450442ede231fc3292bca502ea57b0d5d5a3b401515989a86029b6253548",
       "sdd_doc": "modules/docs-webapi.md",
       "fr_doc": "functional-requirements/docs-webapi-fr.md",
@@ -3263,8 +3263,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/browser/history/HistoryManager.cpp": {
-      "file_path": "/home/hwang/starfish/src/browser/history/HistoryManager.cpp",
+    "src/browser/history/HistoryManager.cpp": {
+      "file_path": "src/browser/history/HistoryManager.cpp",
       "file_hash": "ce3d85fcf48560841b3a33afea0192aacee3abdf7ed2e1ddb3339736ee3a4a9c",
       "sdd_doc": "modules/browser-history.md",
       "fr_doc": "functional-requirements/browser-history-fr.md",
@@ -3273,8 +3273,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/browser/history/HistoryManager.h": {
-      "file_path": "/home/hwang/starfish/src/browser/history/HistoryManager.h",
+    "src/browser/history/HistoryManager.h": {
+      "file_path": "src/browser/history/HistoryManager.h",
       "file_hash": "b5fb5e40607a7eb322c299c8c4f3689599d86ac8f4c6b3577f33e55c7cb9d53b",
       "sdd_doc": "modules/browser-history.md",
       "fr_doc": "functional-requirements/browser-history-fr.md",
@@ -3283,8 +3283,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/launcher/ServiceWorkerEntry.cpp": {
-      "file_path": "/home/hwang/starfish/src/launcher/ServiceWorkerEntry.cpp",
+    "src/launcher/ServiceWorkerEntry.cpp": {
+      "file_path": "src/launcher/ServiceWorkerEntry.cpp",
       "file_hash": "a1fe56f551c9b93dcc121559582cbe596539ee7a3112d702b1f2c0775e23daef",
       "sdd_doc": "modules/worker-launcher.md",
       "fr_doc": "functional-requirements/worker-launcher-fr.md",
@@ -3293,8 +3293,8 @@
       "is_core": true,
       "source_dependencies": []
     },
-    "/home/hwang/starfish/src/launcher/SharedWorkerEntry.cpp": {
-      "file_path": "/home/hwang/starfish/src/launcher/SharedWorkerEntry.cpp",
+    "src/launcher/SharedWorkerEntry.cpp": {
+      "file_path": "src/launcher/SharedWorkerEntry.cpp",
       "file_hash": "7f0797340135623eb465350b85d792311641d072f482917ab2c08b1fccb8f1d2",
       "sdd_doc": "modules/worker-launcher.md",
       "fr_doc": "functional-requirements/worker-launcher-fr.md",

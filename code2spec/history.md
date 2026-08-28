@@ -9,7 +9,7 @@
 ## W1: code2spec-discovery (2026-08-27)
 ### Execution Summary
 - **Tool version:** v0.5.3
-- **Analysis target:** `/home/hwang/starfish` (full project)
+- **Analysis target:** `` (full project)
 - **Document language:** English
 - **AX Artifact restore:** skipped (MCP not available)
 ### Step Completion
