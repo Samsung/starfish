@@ -2614,6 +2614,14 @@ static void clearStyle(Element* element)
     }
 }
 
+void Node::clearCachedStyleRecursively()
+{
+    setStyle(nullptr);
+    if (isElement()) {
+        clearStyle(asElement());
+    }
+}
+
 void Node::didNodeRemovedFromDocumentTree()
 {
     if (document()->activeElement() == this) {
@@ -2626,10 +2634,7 @@ void Node::didNodeRemovedFromDocumentTree()
 
     clearDidPrepareAnimation();
     setState(NodeStateNormal, false);
-    setStyle(nullptr);
-    if (isElement()) {
-        clearStyle(asElement());
-    }
+    clearCachedStyleRecursively();
     FrameTreeBuilder::clearTree(this);
 }
 
