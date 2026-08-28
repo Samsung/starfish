@@ -72,6 +72,7 @@
 #include "core/storage/StorageNamespace.h"
 #include "core/storage/WebStorageNamespaceProvider.h"
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
+#include "core/layout/PaintPassMemo.h"
 #include "core/modules/renderer/Renderer.h"
 #include "core/modules/profiling/FrameRateCounter.h"
 #include "browser/history/HistoryManager.h"
@@ -354,6 +355,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
              FontFamilyData[2]{ 1, atomicDefaultFontName });
 
     m_frameRateCounter = new FrameRateCounter(this);
+    m_paintPassMemos = new PaintPassMemos();
     m_frameRateCounter->setObserver([](double fps) {
         thread_local static unsigned counter = 0;
         STARFISH_LOG_INFO("#%02d FPS: %.2f", ++counter, fps);
@@ -469,6 +471,8 @@ void* WebView::operator new(size_t size)
 
         markHashTable(desc,
                       GC_WORD_OFFSET(WebView, m_boxShadowCachePerRendering));
+
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_paintPassMemos));
 
         GC_set_bit(desc,
                    GC_WORD_OFFSET(WebView, m_globalPointingEventListener));
@@ -1478,6 +1482,9 @@ RenderResult WebView::rendering(bool force)
 
     m_lastRenderingTick = longTickCount();
     m_inRendering = true;
+    // Everything memoized for a paint pass is keyed to the geometry this pass
+    // is about to lay out, so the previous pass's entries go first.
+    m_paintPassMemos->beginPass();
     ANNOTATE_SETUP;
     ANNOTATE_CHANNEL_COLOR(3001, ANNOTATE_BLUE, "WebView::rendering");
     INSTALL_PROFILE_TIMER("WebView::rendering");
@@ -1685,7 +1692,8 @@ RenderResult WebView::rendering(bool force)
 
             StackingContext::PaintingStackingContextContext ctx(
                 m_needsComposite, prevDrawnStackingContextInfo, repaintRect,
-                m_repaintRegionInRendering, scrollX, scrollY);
+                m_repaintRegionInRendering, scrollX, scrollY,
+                m_paintPassMemos);
             if (!m_needsComposite) {
                 INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kPaint,
                                                  "painting job");
@@ -1846,10 +1854,6 @@ RenderResult WebView::rendering(bool force)
             .swap(m_boxShadowCachePerRendering);
     }
 
-
-    // Invalidate the per-frame FrameBox::paintExtent() cache; the next
-    // rendering pass recomputes extents after its layout is done.
-    FrameBox::g_paintExtentEpoch++;
 
     m_needsRendering = false;
     m_inRendering = false;

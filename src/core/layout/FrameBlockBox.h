@@ -108,7 +108,8 @@ public:
     }
 
     virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage,
-                                    LayoutUnit dx, LayoutUnit dy) override;
+                                    LayoutUnit dx, LayoutUnit dy,
+                                    PaintPassMemos* memos) override;
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y,
                            HitTestStage stage) override;
 
@@ -427,7 +428,8 @@ public:
     void* operator new[](size_t size) = delete;
 
     virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage,
-                                    LayoutUnit dx, LayoutUnit dy) override;
+                                    LayoutUnit dx, LayoutUnit dy,
+                                    PaintPassMemos* memos) override;
 
     void seenInlineBox(PaintingInlineStage stage)
     {
@@ -529,9 +531,11 @@ public:
 
     virtual void layoutInline(
         LineFormattingContext& lineFormattingContext) override;
-    virtual void paintStackingContextContent(Canvas* canvas) override;
+    virtual void paintStackingContextContent(Canvas* canvas,
+                                             PaintPassMemos* memos) override;
     virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage,
-                                    LayoutUnit dx, LayoutUnit dy) override;
+                                    LayoutUnit dx, LayoutUnit dy,
+                                    PaintPassMemos* memos) override;
     virtual void paintChildrenWith(PaintingContext& ctx) override;
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y,
                            HitTestStage stage) override;
@@ -992,7 +996,8 @@ protected:
     }
 
     void clearLineBoxes(LayoutContext& ctx);
-    virtual void paintInlineContentBlock(Canvas* canvas);
+    virtual void paintInlineContentBlock(Canvas* canvas,
+                                         PaintPassMemos* memos);
     void updateScrollWidthAndHeightIfNeeds(OverflowValue overflowX,
                                            OverflowValue overflowY);
     void updateScrollWidthAndHeightIfNeeds();

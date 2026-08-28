@@ -321,13 +321,14 @@ void FrameInputBox::paintBackgroundAndBorders(Canvas* canvas)
     FrameBox::paintBackgroundAndBorders(canvas);
 }
 
-void FrameInputBox::paintInlineContentBlock(Canvas* canvas)
+void FrameInputBox::paintInlineContentBlock(Canvas* canvas,
+                                            PaintPassMemos* memos)
 {
     if (style()->appearance() == NoneAppearanceValue) {
         return;
     }
 
-    FrameBlockBox::paintInlineContentBlock(canvas);
+    FrameBlockBox::paintInlineContentBlock(canvas, memos);
     paintCaret(canvas);
 }
 

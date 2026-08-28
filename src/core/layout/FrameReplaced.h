@@ -148,7 +148,8 @@ public:
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y,
                            HitTestStage stage) override;
 
-    virtual void paintStackingContextContent(Canvas* canvas) override
+    virtual void paintStackingContextContent(Canvas* canvas,
+                                             PaintPassMemos* memos) override
     {
         paintReplaced(canvas);
     }

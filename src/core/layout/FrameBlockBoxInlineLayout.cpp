@@ -1583,7 +1583,8 @@ void InlineBoxLayoutParentBox::mergeInlineTextBoxes(LineFormattingContext* ctx)
 
 void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
                                                   PaintingInlineStage stage,
-                                                  LayoutUnit dx, LayoutUnit dy)
+                                                  LayoutUnit dx, LayoutUnit dy,
+                                                  PaintPassMemos* memos)
 {
     if (stage == PaintingInlineBox && !m_flags.m_seenNormalFlowInlineBox) {
         return;
@@ -1622,28 +1623,28 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
                 canvas->setVisible(true);
             }
 
-            childBox->paintInlineContent(canvas, stage, dx, dy);
+            childBox->paintInlineContent(canvas, stage, dx, dy, memos);
 
             canvas->restore();
         } else if (childBox->isInlineTextBox()) {
-            childBox->paintInlineContent(canvas, stage, dx, dy);
+            childBox->paintInlineContent(canvas, stage, dx, dy, memos);
         } else if (childBox->isFrameReplaced()) {
             if (stage == PaintingAtomicInlineBoxButInlineReplaced &&
                 childBox->isFloating()) {
-                PaintingContext ctx(canvas);
+                PaintingContext ctx(canvas, memos);
                 ctx.m_paintingStage = PaintingNonPositionedFloats;
                 canvas->translate(dx, dy);
                 childBox->paintContent(ctx);
                 canvas->translate(-dx, -dy);
             } else if (stage == PaintingAtomicInlineBoxButInlineReplaced &&
                        childBox->isAtomicInlineLevel()) { // inline-block
-                PaintingContext ctx(canvas);
+                PaintingContext ctx(canvas, memos);
                 ctx.m_paintingStage = PaintingNormalFlowInline;
                 canvas->translate(dx, dy);
                 childBox->paintContent(ctx);
                 canvas->translate(-dx, -dy);
             } else if (stage == PaintingInlineReplaced) {
-                PaintingContext ctx(canvas);
+                PaintingContext ctx(canvas, memos);
                 ctx.m_paintingStage = PaintingNormalFlowInline;
                 canvas->translate(dx, dy);
                 childBox->paintContent(ctx);
@@ -1656,7 +1657,7 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
                 canvas->save();
 
                 canvas->translate(dx, dy);
-                PaintingContext ctx(canvas);
+                PaintingContext ctx(canvas, memos);
                 childBox->paintBackgroundAndBorders(canvas);
 
                 if (childBox->shouldResetTextDecoration()) {
@@ -1713,7 +1714,7 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
                 canvas->restore();
             }
         } else {
-            childBox->paintInlineContent(canvas, stage, dx, dy);
+            childBox->paintInlineContent(canvas, stage, dx, dy, memos);
         }
 
         dx -= cdx;
@@ -4902,12 +4903,13 @@ void FrameBlockBox::paintChildrenWith(PaintingContext& ctx)
         FrameBox::paintChildrenWith(ctx);
     } else {
         if (ctx.m_paintingStage == PaintingNormalFlowInline) {
-            paintInlineContentBlock(ctx.m_canvas);
+            paintInlineContentBlock(ctx.m_canvas, ctx.m_memos);
         }
     }
 }
 
-void FrameBlockBox::paintInlineContentBlock(Canvas* canvas)
+void FrameBlockBox::paintInlineContentBlock(Canvas* canvas,
+                                            PaintPassMemos* memos)
 {
     PaintingInlineStage stage = PaintingInlineBox;
 
@@ -4926,7 +4928,7 @@ void FrameBlockBox::paintInlineContentBlock(Canvas* canvas)
             LayoutUnit ldx = b.frameRect().x();
             LayoutUnit ldy = b.frameRect().y();
             if (hasClipRect) {
-                LayoutRect e = b.paintExtent();
+                LayoutRect e = b.paintExtent(memos);
                 e.setX(e.x() + ldx);
                 e.setY(e.y() + ldy);
                 if (!clipRect.intersects(e)) {
@@ -4935,7 +4937,7 @@ void FrameBlockBox::paintInlineContentBlock(Canvas* canvas)
             }
             dx += ldx;
             dy += ldy;
-            b.paintInlineContent(canvas, stage, dx, dy);
+            b.paintInlineContent(canvas, stage, dx, dy, memos);
             dx -= ldx;
             dy -= ldy;
         }
@@ -5008,7 +5010,7 @@ void FrameBlockBox::paintContent(PaintingContext& ctx)
         }
     } else if (!hasBlockFlow()) {
         if (ctx.m_paintingStage == PaintingNormalFlowInline) {
-            paintInlineContentBlock(ctx.m_canvas);
+            paintInlineContentBlock(ctx.m_canvas, ctx.m_memos);
             paintOutline(ctx.m_canvas);
         }
     } else {
@@ -5058,7 +5060,7 @@ FrameText* InlineTextBox::origin()
 
 void InlineTextBox::paintInlineContent(Canvas* canvas,
                                        PaintingInlineStage stage, LayoutUnit dx,
-                                       LayoutUnit dy)
+                                       LayoutUnit dy, PaintPassMemos* memos)
 {
     if (stage == PaintingInlineStage::PaintingInlineBox) {
         LayoutRect vr = frameVisibleRect();
@@ -5231,19 +5233,21 @@ void InlineNonReplacedBox::paintBackgroundAndBorders(Canvas* canvas)
     }
 }
 
-void InlineNonReplacedBox::paintStackingContextContent(Canvas* canvas)
+void InlineNonReplacedBox::paintStackingContextContent(Canvas* canvas,
+                                                       PaintPassMemos* memos)
 {
     PaintingInlineStage stage = PaintingInlineBox;
 
     while (stage != PaintingInlineStageEnd) {
-        InlineBoxLayoutParentBox::paintInlineContent(canvas, stage, 0, 0);
+        InlineBoxLayoutParentBox::paintInlineContent(canvas, stage, 0, 0, memos);
         stage = (PaintingInlineStage)(stage + 1);
     }
 }
 
 void InlineNonReplacedBox::paintInlineContent(Canvas* canvas,
                                               PaintingInlineStage stage,
-                                              LayoutUnit dx, LayoutUnit dy)
+                                              LayoutUnit dx, LayoutUnit dy,
+                                              PaintPassMemos* memos)
 {
     if (needToEstablishStackingContext()) {
         return;
@@ -5255,7 +5259,7 @@ void InlineNonReplacedBox::paintInlineContent(Canvas* canvas,
         canvas->translate(-dx, -dy);
     }
 
-    InlineBoxLayoutParentBox::paintInlineContent(canvas, stage, dx, dy);
+    InlineBoxLayoutParentBox::paintInlineContent(canvas, stage, dx, dy, memos);
 }
 
 void InlineTextBox::computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
@@ -5285,7 +5289,7 @@ void InlineNonReplacedBox::paintChildrenWith(PaintingContext& ctx)
         PaintingInlineStage stage = PaintingInlineBox;
 
         while (stage != PaintingInlineStageEnd) {
-            paintInlineContent(ctx.m_canvas, stage, 0, 0);
+            paintInlineContent(ctx.m_canvas, stage, 0, 0, ctx.m_memos);
             stage = (PaintingInlineStage)(stage + 1);
         }
     }

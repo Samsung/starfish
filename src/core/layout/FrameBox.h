@@ -844,7 +844,8 @@ public:
     bool needsToPaintBackgroundOrBorderOrBoxShadow();
     virtual void paintContent(PaintingContext& ctx);
     virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage,
-                                    LayoutUnit dx, LayoutUnit dy)
+                                    LayoutUnit dx, LayoutUnit dy,
+                                    PaintPassMemos* memos)
     {
     }
 
@@ -881,10 +882,10 @@ public:
 
     // Subtree paint extent in this box's own coordinate space: the union of
     // everything painted by paintContent() for this box and its non-stacking-
-    // context descendants. Cached per rendered frame (g_paintExtentEpoch is
-    // bumped once per WebView rendering pass, after layout).
-    LayoutRect paintExtent();
-    static uint32_t g_paintExtentEpoch;
+    // context descendants. Memoized for the paint pass in memos, which may be
+    // null outside a pass; the walk is O(subtree) per box without the memo, so
+    // callers inside a pass should always pass theirs.
+    LayoutRect paintExtent(PaintPassMemos* memos);
     virtual void paintBoxShadows(Canvas* canvas);
     virtual void paintInsetBoxShadows(Canvas* canvas);
 
@@ -991,7 +992,8 @@ public:
 
     void clearStackingContextIfNeeds();
 
-    virtual void paintStackingContextContent(Canvas* canvas);
+    virtual void paintStackingContextContent(Canvas* canvas,
+                                             PaintPassMemos* memos);
     virtual void willCompositeStackingContext(Compositor* c)
     {
     }
@@ -1234,11 +1236,6 @@ protected:
 
     // content + padding + border
     LayoutRect m_frameRect;
-
-    // paintExtent() cache; valid while m_paintExtentEpoch matches
-    // g_paintExtentEpoch. Plain data, no GC-visible pointers.
-    LayoutRect m_paintExtent;
-    uint32_t m_paintExtentEpoch { 0 };
 };
 
 struct MBPRestorer {

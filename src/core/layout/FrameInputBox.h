@@ -59,7 +59,8 @@ protected:
     }
 
     void paintCaret(Canvas* canvas);
-    virtual void paintInlineContentBlock(Canvas* canvas) override;
+    virtual void paintInlineContentBlock(Canvas* canvas,
+                                         PaintPassMemos* memos) override;
     static ComputedStyle* createInputElementStyleFrom(Node* parent);
 
 private:

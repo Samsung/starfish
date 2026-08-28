@@ -38,6 +38,7 @@
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
 #include "core/modules/canvas/NativeGradient.h"
 #include "core/modules/canvas/Compositor.h"
+#include "core/layout/PaintPassMemo.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
@@ -3564,12 +3565,12 @@ void FrameBox::paintContent(PaintingContext& ctx)
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
-uint32_t FrameBox::g_paintExtentEpoch = 1;
-
-LayoutRect FrameBox::paintExtent()
+LayoutRect FrameBox::paintExtent(PaintPassMemos* memos)
 {
-    if (m_paintExtentEpoch == g_paintExtentEpoch) {
-        return m_paintExtent;
+    if (memos) {
+        if (LayoutRect* memo = memos->m_paintExtent.find(this)) {
+            return *memo;
+        }
     }
     LayoutRect r = frameVisibleRect();
     // When overflow clipping applies, descendants are clipped to the padding
@@ -3583,14 +3584,15 @@ LayoutRect FrameBox::paintExtent()
                 // Painted through the stacking-context tree, not this walk.
                 continue;
             }
-            LayoutRect cr = child->paintExtent();
+            LayoutRect cr = child->paintExtent(memos);
             cr.setX(cr.x() + child->x());
             cr.setY(cr.y() + child->y());
             r.unite(cr);
         }
     }
-    m_paintExtent = r;
-    m_paintExtentEpoch = g_paintExtentEpoch;
+    if (memos) {
+        memos->m_paintExtent.put(this, r);
+    }
     return r;
 }
 
@@ -3607,7 +3609,7 @@ void FrameBox::paintChildrenWith(PaintingContext& ctx)
     while (child) {
         FrameBox* box = child->asFrameBox();
         if (hasClipRect) {
-            LayoutRect e = box->paintExtent();
+            LayoutRect e = box->paintExtent(ctx.m_memos);
             e.setX(e.x() + box->x());
             e.setY(e.y() + box->y());
             if (!clipRect.intersects(e)) {
@@ -3622,9 +3624,10 @@ void FrameBox::paintChildrenWith(PaintingContext& ctx)
     }
 }
 
-void FrameBox::paintStackingContextContent(Canvas* canvas)
+void FrameBox::paintStackingContextContent(Canvas* canvas,
+                                           PaintPassMemos* memos)
 {
-    PaintingContext ctx(canvas);
+    PaintingContext ctx(canvas, memos);
 
     // the in-flow, non-inline-level, non-positioned descendants.
     ctx.m_paintingStage = PaintingNormalFlowBlock;

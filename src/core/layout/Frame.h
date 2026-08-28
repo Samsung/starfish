@@ -31,6 +31,7 @@ class ComputedStyle;
 class Document;
 class Frame;
 class FrameBox;
+class PaintPassMemos;
 class FrameBlockBox;
 class FrameFlexibleBox;
 class FrameGridBox;
@@ -1174,14 +1175,19 @@ private:
 
 class PaintingContext {
 public:
-    explicit PaintingContext(Canvas* canvas)
+    explicit PaintingContext(Canvas* canvas, PaintPassMemos* memos = nullptr)
         : m_canvas(canvas)
         , m_paintingStage(PaintingNormalFlowBlock)
+        , m_memos(memos)
     {
     }
 
     Canvas* m_canvas;
     PaintingStage m_paintingStage;
+    // Memo tables of the paint pass this context belongs to, or null when
+    // painting outside a WebView pass - the memoized values are then simply
+    // recomputed.
+    PaintPassMemos* m_memos;
 };
 
 class FrameTreeItemModel {
