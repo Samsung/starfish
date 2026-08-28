@@ -57,10 +57,12 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)                                      # sibling wpt_*
 sys.path.insert(0, os.path.join(_HERE, os.pardir, os.pardir))  # tool/
 from wpt_server import wpt_serve, DEFAULT_WPT_ROOT  # noqa: E402
+from wpt_manifest_inventory import (DEFAULT_TARGETS, SERVER,  # noqa: E402
+                                    enumerate_tests, read_targets)
 from wpt_runner import (RE_PASS, RE_FAIL, RE_DONE, STARFISH,  # noqa: E402
                         run_one_reftest, run_one_crashtest, isolated_storage_dir)
-# ensure_manifest is re-exported for existing callers (wpt_manifest_lists.py,
-# test_runner.py); actually defined in wpt_reftest.py, the lowest-level module
+# ensure_manifest is re-exported for the existing test_runner.py caller;
+# actually defined in wpt_reftest.py, the lowest-level module
 # that needs it, so no module here needs a deferred/circular-avoiding import
 # for it. ensure_imgdiff is reftest's own prerequisite (see main()'s reftest
 # setup, mirroring wpt_runner.py's --mode reftest path). The manifest itself
@@ -70,9 +72,6 @@ from wpt_runner import (RE_PASS, RE_FAIL, RE_DONE, STARFISH,  # noqa: E402
 from wpt_reftest import ensure_manifest, ensure_imgdiff  # noqa: E402,F401
 
 TEST_TYPES = ("testharness", "reftest", "crashtest")
-
-DEFAULT_TARGETS = os.path.join(_HERE, os.pardir, "wpt_status_targets.txt")
-SERVER = "http://web-platform.test:8000"
 
 # WPTR DONE status codes emitted by tool/wpt/inject_report.js (testharness.js
 # harness status: 0 OK, 1 ERROR, 2 TIMEOUT, 3 PRECONDITION_FAILED).
@@ -102,79 +101,6 @@ def wpt_revision(wpt_root):
     if tag and sha and tag != sha:
         return "%s (%s)" % (tag, sha)
     return tag or sha or "unknown"
-
-
-def read_targets(path):
-    dirs = []
-    with open(path) as fp:
-        for line in fp:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            dirs.append(line.rstrip("/"))
-    return dirs
-
-
-def _collect_urls(node, prefix, out):
-    """Walk a manifest testharness subtree, appending url_base-relative paths.
-
-    A file entry is [hash, [url|null, extras], ...]; a null url means the test
-    url is the file's own path, while a non-null url is an explicit variant
-    (e.g. the .any.html / .any.worker.html expansions of a .any.js source).
-    """
-    for name, val in node.items():
-        if isinstance(val, list):
-            for variant in val[1:]:
-                url = variant[0]
-                if url is None:
-                    url = prefix + "/" + name
-                out.append(url)
-        elif isinstance(val, dict):
-            _collect_urls(val, prefix + "/" + name, out)
-
-
-def enumerate_tests(manifest_path, targets, test_type="testharness"):
-    """Return ({category: [full_url, ...]}, [missing_category, ...]).
-
-    test_type selects the MANIFEST.json items branch to walk ("testharness",
-    "reftest", "crashtest", ...). Non-testharness branches use a 3-element
-    variant ([url, references-or-extras, extras]) instead of testharness's
-    2-element one, but _collect_urls only ever reads variant[0] (the url), so
-    the same walker works unchanged across types.
-
-    manifest_path may be a path to MANIFEST.json (existing callers:
-    wpt_manifest_lists.py) or an already-parsed manifest dict -- main() below
-    parses it once and passes the dict for each requested test type, instead
-    of re-parsing the same (potentially tens-of-MB) file once per type.
-    """
-    if isinstance(manifest_path, dict):
-        manifest = manifest_path
-    else:
-        with open(manifest_path) as fp:
-            manifest = json.load(fp)
-    url_base = manifest["url_base"]
-    branch = manifest["items"][test_type]
-    by_category = {}
-    missing = []
-    for target in targets:
-        node = branch
-        found = True
-        for part in target.split("/"):
-            if isinstance(node, dict) and part in node:
-                node = node[part]
-            else:
-                found = False
-                break
-        if not found or not isinstance(node, dict):
-            missing.append(target)
-            by_category[target] = []
-            continue
-        rel = []
-        _collect_urls(node, target, rel)
-        prefix = url_base.rstrip("/")
-        by_category[target] = [SERVER + prefix + "/" + u.lstrip("/")
-                               for u in rel]
-    return by_category, missing
 
 
 def run_test(url, timeout, test_type="testharness", manifest=None):
