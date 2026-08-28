@@ -74,6 +74,7 @@ class EventTarget;
 class Scrolling;
 class BufferedNativeImageData;
 class FrameRateCounter;
+class PaintPassMemos;
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 class Avplay;
@@ -596,6 +597,14 @@ public:
     Optional<BufferedNativeImageData*> isThereImageInBoxShadowCache(
         FrameBox* box, size_t idx);
 
+    // Memo tables for the paint pass currently running, or the ones the next
+    // pass will use. Threaded into the paint code by the painting context
+    // objects; see PaintPassMemo.h.
+    PaintPassMemos* paintPassMemos()
+    {
+        return m_paintPassMemos;
+    }
+
 private:
     WebView(Starfish* starfish, const char* locale, const char* timezoneID,
             uint32_t w, uint32_t h, uint32_t defaultFontSize,
@@ -720,6 +729,8 @@ private:
     GCUnorderedMap<std::pair<FrameBox*, size_t>, BufferedNativeImageData*,
                    pair_hash<FrameBox*, size_t>>
         m_boxShadowCachePerRendering;
+
+    PaintPassMemos* m_paintPassMemos;
 
     GCVector<EventTarget*> m_globalPointingEventListener;
     GCUnorderedSet<Scrolling*> m_activeScrollingSet;

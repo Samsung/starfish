@@ -30,6 +30,7 @@ class CanvasSurface;
 class Compositor;
 class Frame;
 class FrameBox;
+class PaintPassMemos;
 class Node;
 class StackingContext;
 class BrowsingContext;
@@ -214,17 +215,21 @@ public:
         LayoutUnit scrollX, scrollY;
         LayoutUnit layerBaseX, layerBaseY;
         LayoutUnit layerScrollX, layerScrollY;
+        // Memo tables of the paint pass this context belongs to; see
+        // PaintPassMemo.h. Null only when painting outside a pass.
+        PaintPassMemos* memos;
         PaintingStackingContextContext(
             bool willCompositing,
             PrevDrawnStackingContextInfoMap& prevDrawnStackingContextInfoMap,
             const LayoutRect& screenClipRect, RepaintRegion& repaintRegion,
-            LayoutUnit scrollX, LayoutUnit scrollY)
+            LayoutUnit scrollX, LayoutUnit scrollY, PaintPassMemos* memos)
             : willCompositing(willCompositing)
             , prevDrawnStackingContextInfoMap(prevDrawnStackingContextInfoMap)
             , screenClipRect(screenClipRect)
             , repaintRegion(repaintRegion)
             , scrollX(scrollX)
             , scrollY(scrollY)
+            , memos(memos)
         {
         }
     };
@@ -268,8 +273,8 @@ public:
     // own graphics buffer. Such subtrees must always be visited during a
     // paint walk (paintStackingContext captures per-layer state for them),
     // so clip-based culling skips only subtrees where this is false.
-    // Cached per rendered frame (FrameBox::g_paintExtentEpoch).
-    bool subtreeContainsGraphicsBufferLayer();
+    // Memoized for the paint pass in memos.
+    bool subtreeContainsGraphicsBufferLayer(PaintPassMemos* memos);
 
     // Saves this context's live visibleRect into the carry-over map keyed
     // by its owner node, so the context recreated by a full re-establish
@@ -299,21 +304,21 @@ public:
     // the path is a known no-op the captured value is simply the default -
     // store it directly and report the visit as handled, skipping the
     // ComputeOverflow ancestor replay. Cached per rendered frame.
-    bool tryFastBufferedLayerVisit();
+    bool tryFastBufferedLayerVisit(PaintPassMemos* memos);
 
     // Recursively fast-captures the state of every graphics-buffer layer in
     // this (non-buffered) context's subtree via tryFastBufferedLayerVisit().
     // When it returns true the subtree visit has no side effects left beyond
     // pixels, so the visit may be culled by the clip test like any plain
     // subtree. Cached per rendered frame.
-    bool tryFastCaptureBufferedDescendants();
+    bool tryFastCaptureBufferedDescendants(PaintPassMemos* memos);
 
     // visibleRect() placed at this context's position inside its parent
     // context's coordinate space (absolutePointIncludingScroll from the
     // parent's owner) - the rect the child-SC clip culling tests. The
     // ancestor walk behind it repeats identically for every tile filled in
     // a frame, so cache the result per rendered frame.
-    LayoutRect cullRectInParentSpace();
+    LayoutRect cullRectInParentSpace(PaintPassMemos* memos);
 
     bool isAncestorOf(StackingContext* f)
     {
@@ -401,11 +406,6 @@ protected:
     StackingContextRareData* m_rareData;
     LayoutRect m_screenExtent;
 
-    // subtreeContainsGraphicsBufferLayer() cache; valid while the epoch
-    // matches FrameBox::g_paintExtentEpoch. Plain data, no GC pointers.
-    bool m_subtreeContainsGraphicsBufferLayer { false };
-    uint32_t m_subtreeGBLayerEpoch { 0 };
-
     void restorePrevVisibleRectIfPossible();
 
     // Set by markVisibleRectDirtyUpward(); consumed by
@@ -415,18 +415,6 @@ protected:
     // computation, and staying clean is what lets a carried-over rect
     // survive the pass after a full re-establish.
     bool m_visibleRectDirty { false };
-
-    // tryFastBufferedLayerVisit() cache, same epoch scheme.
-    bool m_fastBufferedVisitOk { false };
-    uint32_t m_fastBufferedVisitEpoch { 0 };
-
-    // tryFastCaptureBufferedDescendants() cache, same epoch scheme.
-    bool m_fastCaptureDescendantsOk { false };
-    uint32_t m_fastCaptureDescendantsEpoch { 0 };
-
-    // cullRectInParentSpace() cache, same epoch scheme.
-    LayoutRect m_cullRectInParentSpace;
-    uint32_t m_cullRectEpoch { 0 };
 
     // Set alongside m_rareData->m_visibleRect (same validity flag).
     LayoutRect m_visibleRectContentOnly;

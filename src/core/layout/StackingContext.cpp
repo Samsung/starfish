@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 
 #include "core/layout/StackingContext.h"
+#include "core/layout/PaintPassMemo.h"
 
 #include "Starfish.h"
 #include "core/dom/Node.h"
@@ -1759,7 +1760,8 @@ private:
 static bool canCullChildStackingContextVisit(bool hasClipRect,
                                              const LayoutRect& clipRect,
                                              StackingContext* sCtx,
-                                             FrameBox* parentBox);
+                                             FrameBox* parentBox,
+                                             PaintPassMemos* memos);
 static bool childCullClipRect(Canvas* canvas, LayoutRect& out);
 
 void StackingContext::fillGraphicsBufferContents(
@@ -1892,7 +1894,7 @@ void StackingContext::fillGraphicsBufferContents(
                 StackingContext* sCtx = *iter2;
                 if (!canCullChildStackingContextVisit(hasCullClip,
                                                       cullClipRect, sCtx,
-                                                      m_owner)) {
+                                                      m_owner, ctx.memos)) {
                     ComputeOverflow<Canvas> r(canvas, sCtx, m_owner, ctx);
                     sCtx->paintStackingContext(canvas, ctx);
                 }
@@ -1908,11 +1910,11 @@ void StackingContext::fillGraphicsBufferContents(
                                      canvas->renderTargetInfo().m_width,
                                      canvas->renderTargetInfo().m_height)) {
             FilterContext filterContext(&canvas, this, ctx);
-            m_owner->paintStackingContextContent(canvas);
+            m_owner->paintStackingContextContent(canvas, ctx.memos);
             m_owner->paintOutline(canvas);
             filterContext.applyAllFilter(ctx);
         } else {
-            m_owner->paintStackingContextContent(canvas);
+            m_owner->paintStackingContextContent(canvas, ctx.memos);
             m_owner->paintOutline(canvas);
         }
     }
@@ -1930,7 +1932,8 @@ void StackingContext::fillGraphicsBufferContents(
                     StackingContext* sCtx = *iter2;
                     if (!canCullChildStackingContextVisit(hasCullClip,
                                                           cullClipRect, sCtx,
-                                                          m_owner)) {
+                                                          m_owner,
+                                                          ctx.memos)) {
                         ComputeOverflow<Canvas> r(canvas, sCtx, m_owner, ctx);
                         sCtx->paintStackingContext(canvas, ctx);
                     }
@@ -2009,11 +2012,16 @@ void StackingContext::restorePrevVisibleRectIfPossible()
     m_isVisibleRectComputedForNonGraphicsLayer = true;
 }
 
-bool StackingContext::tryFastBufferedLayerVisit()
+bool StackingContext::tryFastBufferedLayerVisit(PaintPassMemos* memos)
 {
     STARFISH_ASSERT(needsGraphicsBuffer());
-    if (m_fastBufferedVisitEpoch == FrameBox::g_paintExtentEpoch) {
-        return m_fastBufferedVisitOk;
+    typedef StackingContextPassMemo Memo;
+    if (memos) {
+        if (Memo* m = memos->m_stackingContext.find(this)) {
+            if (m->isComputed(Memo::FastBufferedVisit)) {
+                return m->flag(Memo::FastBufferedVisit);
+            }
+        }
     }
     bool ok = true;
     Frame* f = m_owner->layoutParent();
@@ -2038,15 +2046,26 @@ bool StackingContext::tryFastBufferedLayerVisit()
     if (ok) {
         ensureRareData()->m_textDecorationData = TextDecorationData();
     }
-    m_fastBufferedVisitOk = ok;
-    m_fastBufferedVisitEpoch = FrameBox::g_paintExtentEpoch;
+    if (memos) {
+        Memo memo;
+        if (Memo* existing = memos->m_stackingContext.find(this)) {
+            memo = *existing;
+        }
+        memo.setFlag(Memo::FastBufferedVisit, ok);
+        memos->m_stackingContext.put(this, memo);
+    }
     return ok;
 }
 
-bool StackingContext::tryFastCaptureBufferedDescendants()
+bool StackingContext::tryFastCaptureBufferedDescendants(PaintPassMemos* memos)
 {
-    if (m_fastCaptureDescendantsEpoch == FrameBox::g_paintExtentEpoch) {
-        return m_fastCaptureDescendantsOk;
+    typedef StackingContextPassMemo Memo;
+    if (memos) {
+        if (Memo* m = memos->m_stackingContext.find(this)) {
+            if (m->isComputed(Memo::FastCaptureDescendants)) {
+                return m->flag(Memo::FastCaptureDescendants);
+            }
+        }
     }
     bool ok = true;
     auto iter = childContexts().begin();
@@ -2055,12 +2074,12 @@ bool StackingContext::tryFastCaptureBufferedDescendants()
         while (iter2 != (*iter)->end()) {
             StackingContext* c = *iter2;
             if (c->needsGraphicsBuffer()) {
-                if (!c->tryFastBufferedLayerVisit()) {
+                if (!c->tryFastBufferedLayerVisit(memos)) {
                     ok = false;
                     break;
                 }
-            } else if (c->subtreeContainsGraphicsBufferLayer()) {
-                if (!c->tryFastCaptureBufferedDescendants()) {
+            } else if (c->subtreeContainsGraphicsBufferLayer(memos)) {
+                if (!c->tryFastCaptureBufferedDescendants(memos)) {
                     ok = false;
                     break;
                 }
@@ -2069,15 +2088,28 @@ bool StackingContext::tryFastCaptureBufferedDescendants()
         }
         iter++;
     }
-    m_fastCaptureDescendantsOk = ok;
-    m_fastCaptureDescendantsEpoch = FrameBox::g_paintExtentEpoch;
+    if (memos) {
+        Memo memo;
+        if (Memo* existing = memos->m_stackingContext.find(this)) {
+            memo = *existing;
+        }
+        memo.setFlag(Memo::FastCaptureDescendants, ok);
+        memos->m_stackingContext.put(this, memo);
+    }
     return ok;
 }
 
-LayoutRect StackingContext::cullRectInParentSpace()
+LayoutRect StackingContext::cullRectInParentSpace(PaintPassMemos* memos)
 {
-    if (m_cullRectEpoch == FrameBox::g_paintExtentEpoch) {
-        return m_cullRectInParentSpace;
+    typedef StackingContextPassMemo Memo;
+    Memo memo;
+    if (memos) {
+        if (Memo* existing = memos->m_stackingContext.find(this)) {
+            if (existing->isComputed(Memo::CullRectInParentSpace)) {
+                return existing->m_cullRectInParentSpace;
+            }
+            memo = *existing;
+        }
     }
     STARFISH_ASSERT(parent());
     LayoutRect vr = visibleRect();
@@ -2085,15 +2117,23 @@ LayoutRect StackingContext::cullRectInParentSpace()
         m_owner->absolutePointIncludingScroll(parent()->owner(), false);
     vr.setX(vr.x() + o.x());
     vr.setY(vr.y() + o.y());
-    m_cullRectInParentSpace = vr;
-    m_cullRectEpoch = FrameBox::g_paintExtentEpoch;
+    if (memos) {
+        memo.m_cullRectInParentSpace = vr;
+        memo.setFlag(Memo::CullRectInParentSpace, true);
+        memos->m_stackingContext.put(this, memo);
+    }
     return vr;
 }
 
-bool StackingContext::subtreeContainsGraphicsBufferLayer()
+bool StackingContext::subtreeContainsGraphicsBufferLayer(PaintPassMemos* memos)
 {
-    if (m_subtreeGBLayerEpoch == FrameBox::g_paintExtentEpoch) {
-        return m_subtreeContainsGraphicsBufferLayer;
+    typedef StackingContextPassMemo Memo;
+    if (memos) {
+        if (Memo* m = memos->m_stackingContext.find(this)) {
+            if (m->isComputed(Memo::SubtreeContainsGraphicsBufferLayer)) {
+                return m->flag(Memo::SubtreeContainsGraphicsBufferLayer);
+            }
+        }
     }
     bool has = needsGraphicsBuffer();
     if (!has) {
@@ -2101,7 +2141,7 @@ bool StackingContext::subtreeContainsGraphicsBufferLayer()
         while (!has && iter != childContexts().end()) {
             auto iter2 = (*iter)->begin();
             while (iter2 != (*iter)->end()) {
-                if ((*iter2)->subtreeContainsGraphicsBufferLayer()) {
+                if ((*iter2)->subtreeContainsGraphicsBufferLayer(memos)) {
                     has = true;
                     break;
                 }
@@ -2110,8 +2150,14 @@ bool StackingContext::subtreeContainsGraphicsBufferLayer()
             iter++;
         }
     }
-    m_subtreeContainsGraphicsBufferLayer = has;
-    m_subtreeGBLayerEpoch = FrameBox::g_paintExtentEpoch;
+    if (memos) {
+        Memo memo;
+        if (Memo* existing = memos->m_stackingContext.find(this)) {
+            memo = *existing;
+        }
+        memo.setFlag(Memo::SubtreeContainsGraphicsBufferLayer, has);
+        memos->m_stackingContext.put(this, memo);
+    }
     return has;
 }
 
@@ -2126,12 +2172,13 @@ bool StackingContext::subtreeContainsGraphicsBufferLayer()
 static bool canCullChildStackingContextVisit(bool hasClipRect,
                                              const LayoutRect& clipRect,
                                              StackingContext* sCtx,
-                                             FrameBox* parentBox)
+                                             FrameBox* parentBox,
+                                             PaintPassMemos* memos)
 {
     if (sCtx->needsGraphicsBuffer()) {
         // The visit would only capture text-decoration state; when that
         // capture has a known-default result it is done directly here.
-        return sCtx->tryFastBufferedLayerVisit();
+        return sCtx->tryFastBufferedLayerVisit(memos);
     }
     if (!hasClipRect) {
         return false;
@@ -2140,8 +2187,8 @@ static bool canCullChildStackingContextVisit(bool hasClipRect,
     if (childBox->style()->position() == FixedPositionValue) {
         return false;
     }
-    if (sCtx->subtreeContainsGraphicsBufferLayer() &&
-        !sCtx->tryFastCaptureBufferedDescendants()) {
+    if (sCtx->subtreeContainsGraphicsBufferLayer(memos) &&
+        !sCtx->tryFastCaptureBufferedDescendants(memos)) {
         return false;
     }
     if (!sCtx->transformMatrix().isIdentity()) {
@@ -2149,7 +2196,7 @@ static bool canCullChildStackingContextVisit(bool hasClipRect,
     }
     STARFISH_ASSERT(sCtx->parent() && sCtx->parent()->owner() == parentBox);
     (void)parentBox;
-    return !clipRect.intersects(sCtx->cullRectInParentSpace());
+    return !clipRect.intersects(sCtx->cullRectInParentSpace(memos));
 }
 
 // Fetches the clip bounding rect for canCullChildStackingContextVisit(),
@@ -2551,7 +2598,8 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                 m_owner->node()
                                     ->webView()
                                     ->m_prevDrawnStackingContextInfo,
-                                LayoutRect(0, 0, 0, 0), rr, 0, 0);
+                                LayoutRect(0, 0, 0, 0), rr, 0, 0,
+                                m_owner->node()->webView()->paintPassMemos());
                             ctx.paintingForCompositingStartingFrom = this;
 
                             ctx.layerBaseX = tileDataX;
@@ -2761,7 +2809,8 @@ bool StackingContext::fillGraphicsBufferContents(
                     StackingContext::PaintingStackingContextContext ctx(
                         true, globalCtx.prevDrawnStackingContextInfoMap,
                         globalCtx.screenClipRect, globalCtx.repaintRegion,
-                        globalCtx.scrollX, globalCtx.scrollY);
+                        globalCtx.scrollX, globalCtx.scrollY,
+                        globalCtx.memos);
                     ctx.paintingForCompositingStartingFrom = this;
                     ctx.layerBaseX = tileDataX;
                     ctx.layerBaseY = tileDataY;
@@ -3030,7 +3079,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                 StackingContext* sCtx = *iter2;
                 if (!canCullChildStackingContextVisit(hasCullClip,
                                                       cullClipRect, sCtx,
-                                                      m_owner)) {
+                                                      m_owner, ctx.memos)) {
                     ComputeOverflow<Canvas> r(canvas, sCtx, m_owner, ctx);
                     sCtx->paintStackingContext(canvas, ctx);
                 }
@@ -3043,11 +3092,11 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     if (!canRejectPainting) {
         if (m_hasFilterEffect) {
             FilterContext filterContext(&canvas, this, ctx);
-            m_owner->paintStackingContextContent(canvas);
+            m_owner->paintStackingContextContent(canvas, ctx.memos);
             m_owner->paintOutline(canvas);
             filterContext.applyAllFilter(ctx);
         } else {
-            m_owner->paintStackingContextContent(canvas);
+            m_owner->paintStackingContextContent(canvas, ctx.memos);
             m_owner->paintOutline(canvas);
         }
     }
@@ -3065,7 +3114,8 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                     StackingContext* sCtx = *iter2;
                     if (!canCullChildStackingContextVisit(hasCullClip,
                                                           cullClipRect, sCtx,
-                                                          m_owner)) {
+                                                          m_owner,
+                                                          ctx.memos)) {
                         ComputeOverflow<Canvas> r(canvas, sCtx, m_owner, ctx);
                         sCtx->paintStackingContext(canvas, ctx);
                     }
