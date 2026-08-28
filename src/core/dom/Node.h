@@ -655,6 +655,14 @@ public:
         return m_style;
     }
 
+    // Clears this node's cached ComputedStyle and, for an element, recurses
+    // into its light-DOM subtree. Use when a node falls out of the rendering
+    // (flat) tree in a way the top-down style-recalc walk will never revisit
+    // -- e.g. removed from the document, or a shadow-host child left
+    // unassigned by every slot -- since no future walk will otherwise clear
+    // its now-stale style.
+    void clearCachedStyleRecursively();
+
     void setFrame(Frame* frame)
     {
         m_frame = frame;

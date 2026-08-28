@@ -60,6 +60,17 @@ public:
 
     virtual void didNodeRemovedFromDocumentTree() override
     {
+        // A formerly-assigned node that is not itself being removed from the
+        // document (e.g. only this <slot> left the shadow tree, not its
+        // host) gets no didNodeRemovedFromDocumentTree() call of its own, and
+        // nothing else will ever revisit it: Element::firstRenderingChild()
+        // only descends into a shadow-root host's shadow tree, so the
+        // top-down style-recalc walk skips an unassigned light-DOM child for
+        // good. Clear its now-stale style here instead of leaving it behind.
+        for (auto* assignee : m_assignedNodes) {
+            assignee->setIsSlotted(false);
+            assignee->clearCachedStyleRecursively();
+        }
         m_assignedNodes.clear();
     }
 

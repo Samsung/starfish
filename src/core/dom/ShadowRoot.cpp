@@ -243,6 +243,18 @@ void ShadowRoot::connectSlotWithSlottables()
         for (size_t j = 0; j < oldNodes.size(); j++) {
             if (!contains(newNodes, oldNodes[j])) {
                 oldNodes[j]->setNeedsStyleRecalc();
+
+                // If this node did not end up reassigned to some other slot
+                // in this same pass (isSlotted() is the ground truth set by
+                // the reassignment loop above), it just fell out of the flat
+                // tree entirely. setNeedsStyleRecalc() alone cannot fix its
+                // style: Element::firstRenderingChild() only descends into a
+                // shadow-root host's shadow tree, so the top-down recalc walk
+                // will never visit an unassigned light-DOM child again to
+                // refresh (or clear) it. Clear its stale style now instead.
+                if (!oldNodes[j]->isSlotted()) {
+                    oldNodes[j]->clearCachedStyleRecursively();
+                }
             }
         }
         for (size_t j = 0; j < newNodes.size(); j++) {
@@ -279,18 +291,40 @@ void ShadowRoot::didNodeRemoved(Node* parent, Node* oldChild)
 {
     DocumentFragment::didNodeRemoved(parent, oldChild);
 
-    Traverse::traverse(oldChild, [](Node* nd) {
+    // Snapshot every node assigned to a <slot> leaving with oldChild before
+    // clearAssignedNodes() wipes that bookkeeping below. connectSlotWithSlott
+    // ables() (called via updateSlotElements() below) only compares old/new
+    // assignments for slots still in this tree, so a formerly-assigned node
+    // whose slot left with oldChild would otherwise never be checked for
+    // having fallen out of the flat tree.
+    GCVector<Node*> formerAssignees;
+    Traverse::traverse(oldChild, [&formerAssignees](Node* nd) {
         nd->setIsInShadowRoot(false);
         // A <slot> detached from this tree holds no slottables. The document
         // -tree cleanup that normally clears this (didNodeRemovedFromDocument
         // Tree) is gated on isInDocumentScope() and is skipped for detached
         // shadow trees, so clear here so assignedNodes() reflects removal.
         if (nd->isHTMLSlotElement()) {
-            nd->asHTMLSlotElement()->clearAssignedNodes();
+            auto* slot = nd->asHTMLSlotElement();
+            for (auto* assignee : slot->immutableAssignedNodes()) {
+                formerAssignees.push_back(assignee);
+            }
+            slot->clearAssignedNodes();
         }
     });
 
     updateSlotElements();
+
+    // A former assignee not reassigned elsewhere by updateSlotElements()
+    // above (isSlotted() is the ground truth it sets) has fallen out of the
+    // flat tree for good: nothing will ever revisit it to refresh or clear
+    // its now-stale style, so do it here. See the matching comment in
+    // connectSlotWithSlottables().
+    for (auto* nd : formerAssignees) {
+        if (!nd->isSlotted()) {
+            nd->clearCachedStyleRecursively();
+        }
+    }
 
     if (isInDocumentScope()) {
         document()->updateDOMVersion();
