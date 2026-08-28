@@ -267,8 +267,7 @@ static void traceRepaintRegionJob(
                         if (!dirtyRect.isEmpty()) {
                             auto iter2 =
                                 dirtyAreaMapPerStackingContext.find(node);
-                            if (iter2 ==
-                                dirtyAreaMapPerStackingContext.end()) {
+                            if (iter2 == dirtyAreaMapPerStackingContext.end()) {
                                 dirtyAreaMapPerStackingContext.insert(
                                     std::make_pair(node, dirtyRect));
                             } else {

@@ -996,8 +996,7 @@ protected:
     }
 
     void clearLineBoxes(LayoutContext& ctx);
-    virtual void paintInlineContentBlock(Canvas* canvas,
-                                         PaintPassMemos* memos);
+    virtual void paintInlineContentBlock(Canvas* canvas, PaintPassMemos* memos);
     void updateScrollWidthAndHeightIfNeeds(OverflowValue overflowX,
                                            OverflowValue overflowY);
     void updateScrollWidthAndHeightIfNeeds();

@@ -53,7 +53,6 @@
 
 namespace Starfish {
 
-
 inline void computeBufferSizeFromVisibleRect(LayoutUnit minX, LayoutUnit minY,
                                              LayoutUnit maxX, LayoutUnit maxY,
                                              size_t& bufferWidth,
@@ -1280,97 +1279,98 @@ void StackingContext::applyStackingContextProperties(
         // Scoped invalidation: only a context marked by a mutation (or whose
         // buffered state changed) recomputes its visibleRect; an unmarked
         // layer keeps the rect from the previous pass.
-        bool recomputeVisibleRect = m_visibleRectDirty ||
-                                    !m_isVisibleRectComputedForNonGraphicsLayer ||
-                                    !wasGraphicsBuffer;
+        bool recomputeVisibleRect =
+            m_visibleRectDirty || !m_isVisibleRectComputedForNonGraphicsLayer ||
+            !wasGraphicsBuffer;
         if (recomputeVisibleRect) {
-        m_rareData->m_visibleRect = LayoutRect(0, 0, 0, 0);
-        bool shouldPaintWindowBackgroundImage = false;
-        if (m_owner->isRootElement()) {
-            BrowsingContext* bc =
-                m_owner->node()->document()->browsingContext();
-            HTMLElement* e = nullptr;
-            if (bc->hasRootElementBackground()) {
-                HTMLHtmlElement* root = bc->document()->rootElement();
-                e = root;
-            } else if (bc->hasBodyElementBackground()) {
-                HTMLBodyElement* body = bc->document()->rootElement()->body();
-                e = body;
-            }
+            m_rareData->m_visibleRect = LayoutRect(0, 0, 0, 0);
+            bool shouldPaintWindowBackgroundImage = false;
+            if (m_owner->isRootElement()) {
+                BrowsingContext* bc =
+                    m_owner->node()->document()->browsingContext();
+                HTMLElement* e = nullptr;
+                if (bc->hasRootElementBackground()) {
+                    HTMLHtmlElement* root = bc->document()->rootElement();
+                    e = root;
+                } else if (bc->hasBodyElementBackground()) {
+                    HTMLBodyElement* body =
+                        bc->document()->rootElement()->body();
+                    e = body;
+                }
 
-            if (e) {
-                if (e->style()->backgroundLayerSize()) {
-                    shouldPaintWindowBackgroundImage = true;
+                if (e) {
+                    if (e->style()->backgroundLayerSize()) {
+                        shouldPaintWindowBackgroundImage = true;
+                    }
                 }
             }
-        }
 
-        SkMatrix l = SkMatrix::I();
-        Frame::ComputeVisibleRectContext::ComputePurpose purpose =
-            willBeCompositedDueToSelf
-                ? Frame::ComputeVisibleRectContext::GraphicsBufferBySelf
-                : Frame::ComputeVisibleRectContext::GraphicsBufferByOtherLayer;
+            SkMatrix l = SkMatrix::I();
+            Frame::ComputeVisibleRectContext::ComputePurpose purpose =
+                willBeCompositedDueToSelf
+                    ? Frame::ComputeVisibleRectContext::GraphicsBufferBySelf
+                    : Frame::ComputeVisibleRectContext::
+                          GraphicsBufferByOtherLayer;
 
-        Frame::ComputeVisibleRectContext ctx(purpose, this, l,
-                                             m_rareData->m_visibleRect);
+            Frame::ComputeVisibleRectContext ctx(purpose, this, l,
+                                                 m_rareData->m_visibleRect);
 
-        if (shouldPaintWindowBackgroundImage) {
-            ctx.isVisibleRectCollapsible = false;
-        }
+            if (shouldPaintWindowBackgroundImage) {
+                ctx.isVisibleRectCollapsible = false;
+            }
 
-        computeVisibleRect(this, this, ctx);
+            computeVisibleRect(this, this, ctx);
 
-        if (shouldPaintWindowBackgroundImage) {
-            LayoutRect scrollRect(
-                0, 0, m_owner->document()->window()->scrollWidth(false),
-                m_owner->document()->window()->scrollHeight(false));
-            m_rareData->m_visibleRect.unite(scrollRect);
-            m_rareData->m_visibleRect.unite(
-                LayoutRect(0, 0, m_owner->node()->window()->innerWidth(),
-                           m_owner->node()->window()->innerHeight()));
-        } else if (inScrollActive()) {
-            if (needsRepaintingWhenScrolling()) {
-                // expand visibleRect to draw border
+            if (shouldPaintWindowBackgroundImage) {
                 LayoutRect scrollRect(
-                    0, 0, m_owner->asFrameBlockBox()->scrollWidth(),
-                    m_owner->asFrameBlockBox()->scrollHeight());
-                auto paddingBox =
-                    owner()->makeRect(BoxValue::PaddingBoxBoxValue);
-                auto bw = owner()->width().toFloat() - paddingBox.width();
-                auto bh = owner()->height().toFloat() - paddingBox.height();
-                scrollRect.setWidth(scrollRect.width() + bw);
-                scrollRect.setHeight(scrollRect.height() + bh);
+                    0, 0, m_owner->document()->window()->scrollWidth(false),
+                    m_owner->document()->window()->scrollHeight(false));
                 m_rareData->m_visibleRect.unite(scrollRect);
-            }
-        }
-
-        if (m_owner->isRootElement()) {
-            if (m_rareData->m_visibleRect.x() < 0) {
-                if (m_rareData->m_visibleRect.width() +
-                        m_rareData->m_visibleRect.x() >
-                    0) {
-                    m_rareData->m_visibleRect.setWidth(
-                        m_rareData->m_visibleRect.width() +
-                        m_rareData->m_visibleRect.x());
-                    m_rareData->m_visibleRect.setX(0);
-                } else {
-                    m_rareData->m_visibleRect.setWidth(0);
+                m_rareData->m_visibleRect.unite(
+                    LayoutRect(0, 0, m_owner->node()->window()->innerWidth(),
+                               m_owner->node()->window()->innerHeight()));
+            } else if (inScrollActive()) {
+                if (needsRepaintingWhenScrolling()) {
+                    // expand visibleRect to draw border
+                    LayoutRect scrollRect(
+                        0, 0, m_owner->asFrameBlockBox()->scrollWidth(),
+                        m_owner->asFrameBlockBox()->scrollHeight());
+                    auto paddingBox =
+                        owner()->makeRect(BoxValue::PaddingBoxBoxValue);
+                    auto bw = owner()->width().toFloat() - paddingBox.width();
+                    auto bh = owner()->height().toFloat() - paddingBox.height();
+                    scrollRect.setWidth(scrollRect.width() + bw);
+                    scrollRect.setHeight(scrollRect.height() + bh);
+                    m_rareData->m_visibleRect.unite(scrollRect);
                 }
             }
-            if (m_rareData->m_visibleRect.y() < 0) {
-                if (m_rareData->m_visibleRect.height() +
-                        m_rareData->m_visibleRect.y() >
-                    0) {
-                    m_rareData->m_visibleRect.setHeight(
-                        m_rareData->m_visibleRect.height() +
-                        m_rareData->m_visibleRect.y());
-                    m_rareData->m_visibleRect.setY(0);
-                } else {
-                    m_rareData->m_visibleRect.setHeight(0);
+
+            if (m_owner->isRootElement()) {
+                if (m_rareData->m_visibleRect.x() < 0) {
+                    if (m_rareData->m_visibleRect.width() +
+                            m_rareData->m_visibleRect.x() >
+                        0) {
+                        m_rareData->m_visibleRect.setWidth(
+                            m_rareData->m_visibleRect.width() +
+                            m_rareData->m_visibleRect.x());
+                        m_rareData->m_visibleRect.setX(0);
+                    } else {
+                        m_rareData->m_visibleRect.setWidth(0);
+                    }
+                }
+                if (m_rareData->m_visibleRect.y() < 0) {
+                    if (m_rareData->m_visibleRect.height() +
+                            m_rareData->m_visibleRect.y() >
+                        0) {
+                        m_rareData->m_visibleRect.setHeight(
+                            m_rareData->m_visibleRect.height() +
+                            m_rareData->m_visibleRect.y());
+                        m_rareData->m_visibleRect.setY(0);
+                    } else {
+                        m_rareData->m_visibleRect.setHeight(0);
+                    }
                 }
             }
-        }
-
         }
         m_isVisibleRectComputedForNonGraphicsLayer = true;
         m_visibleRectDirty = false;
@@ -1892,9 +1892,8 @@ void StackingContext::fillGraphicsBufferContents(
             auto iter2 = child->begin();
             while (iter2 != child->end()) {
                 StackingContext* sCtx = *iter2;
-                if (!canCullChildStackingContextVisit(hasCullClip,
-                                                      cullClipRect, sCtx,
-                                                      m_owner, ctx.memos)) {
+                if (!canCullChildStackingContextVisit(
+                        hasCullClip, cullClipRect, sCtx, m_owner, ctx.memos)) {
                     ComputeOverflow<Canvas> r(canvas, sCtx, m_owner, ctx);
                     sCtx->paintStackingContext(canvas, ctx);
                 }
@@ -1932,8 +1931,7 @@ void StackingContext::fillGraphicsBufferContents(
                     StackingContext* sCtx = *iter2;
                     if (!canCullChildStackingContextVisit(hasCullClip,
                                                           cullClipRect, sCtx,
-                                                          m_owner,
-                                                          ctx.memos)) {
+                                                          m_owner, ctx.memos)) {
                         ComputeOverflow<Canvas> r(canvas, sCtx, m_owner, ctx);
                         sCtx->paintStackingContext(canvas, ctx);
                     }
@@ -2207,11 +2205,10 @@ static bool childCullClipRect(Canvas* canvas, LayoutRect& out)
     if (!canvas->clipBoundingRect(out)) {
         return false;
     }
-    out = LayoutRect(out.x() - 1, out.y() - 1, out.width() + 2,
-                     out.height() + 2);
+    out =
+        LayoutRect(out.x() - 1, out.y() - 1, out.width() + 2, out.height() + 2);
     return true;
 }
-
 
 LayoutRect StackingContext::visibleRect()
 {
@@ -2386,7 +2383,6 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
             size_t hVisibleTextureEnd = 0;
             size_t wVisibleTextureStart = wTextureCount;
             size_t wVisibleTextureEnd = 0;
-
 
             for (size_t y = 0; y < hTextureCount; y++) {
                 size_t coveredColsCount = 0;
@@ -2809,8 +2805,7 @@ bool StackingContext::fillGraphicsBufferContents(
                     StackingContext::PaintingStackingContextContext ctx(
                         true, globalCtx.prevDrawnStackingContextInfoMap,
                         globalCtx.screenClipRect, globalCtx.repaintRegion,
-                        globalCtx.scrollX, globalCtx.scrollY,
-                        globalCtx.memos);
+                        globalCtx.scrollX, globalCtx.scrollY, globalCtx.memos);
                     ctx.paintingForCompositingStartingFrom = this;
                     ctx.layerBaseX = tileDataX;
                     ctx.layerBaseY = tileDataY;
@@ -3077,9 +3072,8 @@ void StackingContext::paintStackingContext(Canvas* canvas,
             auto iter2 = child->begin();
             while (iter2 != child->end()) {
                 StackingContext* sCtx = *iter2;
-                if (!canCullChildStackingContextVisit(hasCullClip,
-                                                      cullClipRect, sCtx,
-                                                      m_owner, ctx.memos)) {
+                if (!canCullChildStackingContextVisit(
+                        hasCullClip, cullClipRect, sCtx, m_owner, ctx.memos)) {
                     ComputeOverflow<Canvas> r(canvas, sCtx, m_owner, ctx);
                     sCtx->paintStackingContext(canvas, ctx);
                 }
@@ -3114,8 +3108,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                     StackingContext* sCtx = *iter2;
                     if (!canCullChildStackingContextVisit(hasCullClip,
                                                           cullClipRect, sCtx,
-                                                          m_owner,
-                                                          ctx.memos)) {
+                                                          m_owner, ctx.memos)) {
                         ComputeOverflow<Canvas> r(canvas, sCtx, m_owner, ctx);
                         sCtx->paintStackingContext(canvas, ctx);
                     }

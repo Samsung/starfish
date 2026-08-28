@@ -1692,8 +1692,7 @@ RenderResult WebView::rendering(bool force)
 
             StackingContext::PaintingStackingContextContext ctx(
                 m_needsComposite, prevDrawnStackingContextInfo, repaintRect,
-                m_repaintRegionInRendering, scrollX, scrollY,
-                m_paintPassMemos);
+                m_repaintRegionInRendering, scrollX, scrollY, m_paintPassMemos);
             if (!m_needsComposite) {
                 INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kPaint,
                                                  "painting job");
@@ -1853,7 +1852,6 @@ RenderResult WebView::rendering(bool force)
                        pair_hash<FrameBox*, size_t>>()
             .swap(m_boxShadowCachePerRendering);
     }
-
 
     m_needsRendering = false;
     m_inRendering = false;

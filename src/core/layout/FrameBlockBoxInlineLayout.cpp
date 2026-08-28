@@ -5239,7 +5239,8 @@ void InlineNonReplacedBox::paintStackingContextContent(Canvas* canvas,
     PaintingInlineStage stage = PaintingInlineBox;
 
     while (stage != PaintingInlineStageEnd) {
-        InlineBoxLayoutParentBox::paintInlineContent(canvas, stage, 0, 0, memos);
+        InlineBoxLayoutParentBox::paintInlineContent(canvas, stage, 0, 0,
+                                                     memos);
         stage = (PaintingInlineStage)(stage + 1);
     }
 }
