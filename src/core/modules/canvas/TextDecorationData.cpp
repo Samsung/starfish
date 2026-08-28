@@ -25,6 +25,14 @@ namespace Starfish {
 
 void TextDecorationData::merge(ComputedStyle* style)
 {
+    // Fast path: painting calls merge for every box on every tile, but almost
+    // no style actually carries a text-decoration. Remember per style object
+    // whether merge does anything and skip the rare-data scans when it cannot.
+    if (style->m_textDecorationMergeState == 1) {
+        return;
+    }
+
+    bool hasEffect = false;
     ValueList* vals = style->textDecorationLine();
     if (vals) {
         for (size_t i = 0; i < vals->size(); i++) {
@@ -33,10 +41,12 @@ void TextDecorationData::merge(ComputedStyle* style)
                 UnderlineTextDecorationLineValue) {
                 m_hasUnderLine = true;
                 m_underLineColor = style->color();
+                hasEffect = true;
             } else if (v.textDecorationLineValue() ==
                        LineThroughTextDecorationLineValue) {
                 m_hasLineThrough = true;
                 m_lineThroughColor = style->color();
+                hasEffect = true;
             }
         }
     }
@@ -46,6 +56,9 @@ void TextDecorationData::merge(ComputedStyle* style)
     if (c.hasValue()) {
         m_underLineColor = c.getValue();
         m_lineThroughColor = c.getValue();
+        hasEffect = true;
     }
+
+    style->m_textDecorationMergeState = hasEffect ? 2 : 1;
 }
 } // namespace Starfish

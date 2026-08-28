@@ -1845,6 +1845,11 @@ RenderResult WebView::rendering(bool force)
             .swap(m_boxShadowCachePerRendering);
     }
 
+
+    // Invalidate the per-frame FrameBox::paintExtent() cache; the next
+    // rendering pass recomputes extents after its layout is done.
+    FrameBox::g_paintExtentEpoch++;
+
     m_needsRendering = false;
     m_inRendering = false;
 

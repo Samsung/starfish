@@ -541,6 +541,14 @@ public:
         return false;
     }
 
+    // Returns the bounding rect of the current clip in user-space
+    // coordinates. Returns false when the backend cannot provide it;
+    // callers must then paint without clip-based culling.
+    virtual bool clipBoundingRect(LayoutRect& out)
+    {
+        return false;
+    }
+
     // Generic canvas functions
     virtual void beginPath()
     {

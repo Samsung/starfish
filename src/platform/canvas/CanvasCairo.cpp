@@ -2616,6 +2616,15 @@ private:
         }
     }
 
+    virtual bool clipBoundingRect(LayoutRect& out) override
+    {
+        double x1, x2;
+        double y1, y2;
+        cairo_clip_extents(m_canvas, &x1, &y1, &x2, &y2);
+        out = LayoutRect(x1, y1, x2 - x1, y2 - y1);
+        return true;
+    }
+
     virtual void setNeedsNoneAntialias() override
     {
         cairo_set_antialias(m_canvas, CAIRO_ANTIALIAS_NONE);
