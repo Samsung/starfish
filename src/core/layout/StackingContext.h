@@ -414,7 +414,7 @@ protected:
     // its never-computed state (flag/rect) already forces the first
     // computation, and staying clean is what lets a carried-over rect
     // survive the pass after a full re-establish.
-    bool m_visibleRectDirty { false };
+    bool m_visibleRectDirty{ false };
 
     // Set alongside m_rareData->m_visibleRect (same validity flag).
     LayoutRect m_visibleRectContentOnly;

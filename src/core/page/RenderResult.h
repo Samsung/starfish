@@ -89,7 +89,7 @@ struct PrevStackingContextVisibleRect {
     LayoutRect ownerFrameRect;
     LayoutRect visibleRect;
     LayoutRect visibleRectContentOnly;
-    bool wasGraphicsBuffer { false };
+    bool wasGraphicsBuffer{ false };
 };
 
 // Plain std map: entries live only inside one rendering pass (collected

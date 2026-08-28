@@ -1951,14 +1951,14 @@ public:
         // stacking contexts' subtrees are excluded from the frame-tree
         // traversal: their rects are composed from the child contexts'
         // own visibleRect() instead (see StackingContext.cpp).
-        bool subtreeRectsFromChildContexts { false };
+        bool subtreeRectsFromChildContexts{ false };
         // Set while computing a context's content-only extent (the lazy
         // visibleRect() path): the owner box must not force-contribute its
         // own frame rect there - the caller re-unites frameVisibleRect()
         // into the final rect separately, and ancestors composing this
         // content-only rect must see what a per-leaf walk from them would
         // have seen (which subjects the box to the collapsible filter).
-        bool contentOnlyExtent { false };
+        bool contentOnlyExtent{ false };
         std::vector<std::tuple<LayoutRect, FrameBox*>>
             boundMaxExtentDueToOverflow;
         std::unordered_set<FrameBox*> visbleRectComputedBox;
