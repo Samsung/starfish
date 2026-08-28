@@ -40,8 +40,9 @@ from argparse import ArgumentParser
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from wpt_server import DEFAULT_WPT_ROOT  # noqa: E402
-from wpt_status import (DEFAULT_TARGETS, ensure_manifest,  # noqa: E402
-                        enumerate_tests, read_targets)
+from wpt_reftest import ensure_manifest  # noqa: E402
+from wpt_manifest_inventory import (DEFAULT_TARGETS, enumerate_tests,  # noqa: E402
+                                    read_targets)
 
 
 def list_name(target):
