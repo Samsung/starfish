@@ -1,0 +1,86 @@
+{
+  "version": "1.0",
+  "built_at": "2026-08-27T13:32:30",
+  "deps": {
+    "modules/README.md": {
+      "source_files": [],
+      "primary_source": "",
+      "fr_doc": ""
+    },
+    "modules/browser-history.md": {
+      "source_files": [],
+      "primary_source": "",
+      "fr_doc": "functional-requirements/browser-history-fr.md"
+    },
+    "modules/docs-webapi.md": {
+      "source_files": [],
+      "primary_source": "",
+      "fr_doc": "functional-requirements/docs-webapi-fr.md"
+    },
+    "modules/embedding-api.md": {
+      "source_files": [],
+      "primary_source": "",
+      "fr_doc": "functional-requirements/embedding-api-fr.md"
+    },
+    "modules/engine-core.md": {
+      "source_files": [],
+      "primary_source": "",
+      "fr_doc": "functional-requirements/engine-core-fr.md"
+    },
+    "modules/js-binding.md": {
+      "source_files": [],
+      "primary_source": "",
+      "fr_doc": "functional-requirements/js-binding-fr.md"
+    },
+    "modules/platform-canvas.md": {
+      "source_files": [],
+      "primary_source": "",
+      "fr_doc": "functional-requirements/platform-canvas-fr.md"
+    },
+    "modules/platform-loader.md": {
+      "source_files": [],
+      "primary_source": "",
+      "fr_doc": "functional-requirements/platform-loader-fr.md"
+    },
+    "modules/platform-message-loop.md": {
+      "source_files": [],
+      "primary_source": "",
+      "fr_doc": "functional-requirements/platform-message-loop-fr.md"
+    },
+    "modules/platform-multimedia.md": {
+      "source_files": [],
+      "primary_source": "",
+      "fr_doc": "functional-requirements/platform-multimedia-fr.md"
+    },
+    "modules/platform-network.md": {
+      "source_files": [],
+      "primary_source": "",
+      "fr_doc": "functional-requirements/platform-network-fr.md"
+    },
+    "modules/platform-system.md": {
+      "source_files": [],
+      "primary_source": "",
+      "fr_doc": "functional-requirements/platform-system-fr.md"
+    },
+    "modules/shell.md": {
+      "source_files": [],
+      "primary_source": "",
+      "fr_doc": "functional-requirements/shell-fr.md"
+    },
+    "modules/test-tooling.md": {
+      "source_files": [],
+      "primary_source": "",
+      "fr_doc": "functional-requirements/test-tooling-fr.md"
+    },
+    "modules/third-party-libs.md": {
+      "source_files": [],
+      "primary_source": "",
+      "fr_doc": "functional-requirements/third-party-libs-fr.md"
+    },
+    "modules/worker-launcher.md": {
+      "source_files": [],
+      "primary_source": "",
+      "fr_doc": "functional-requirements/worker-launcher-fr.md"
+    }
+  }
+}
