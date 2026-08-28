@@ -179,6 +179,14 @@ public:
     }
 
     LayoutRect visibleRect();
+    // visibleRect() minus its own-frame seed: only what the traversal
+    // actually united (things that paint). This is what the composed
+    // recursion contributes to ancestors - the seed is a lower bound for
+    // this layer's own buffer, not painted content, and leaking it upward
+    // gave paints-nothing wrappers a phantom rect (WPT
+    // translation-animation-subpixel-offset and the color-scheme
+    // iframe-background-mismatch-dynamic pair caught this).
+    LayoutRect visibleRectContentOnly();
     float additionalPixelRatio();
 
     LayoutLocation transformOrigin();
@@ -262,6 +270,27 @@ public:
     // so clip-based culling skips only subtrees where this is false.
     // Cached per rendered frame (FrameBox::g_paintExtentEpoch).
     bool subtreeContainsGraphicsBufferLayer();
+
+    // Saves this context's live visibleRect into the carry-over map keyed
+    // by its owner node, so the context recreated by a full re-establish
+    // can adopt it (restorePrevVisibleRectIfPossible). Contexts that are
+    // dirty, never computed, or anonymous-owned are not saved - their
+    // successors recompute cold.
+    void collectPrevVisibleRect(PrevStackingContextVisibleRectMap& map);
+
+    // Marks this context's visibleRect (and every ancestor's, since a
+    // subtree rect feeds each enclosing context's union) as needing a
+    // recompute on the next stacking-context properties pass. Called from
+    // the same mutation points that request that pass; contexts not marked
+    // keep their cached rect across the pass.
+    void markVisibleRectDirtyUpward()
+    {
+        StackingContext* c = this;
+        while (c && !c->m_visibleRectDirty) {
+            c->m_visibleRectDirty = true;
+            c = c->parent();
+        }
+    }
 
     // For a needsGraphicsBuffer() context, a paint-walk visit's only
     // observable effect is capturing the text-decoration state merged along
@@ -377,6 +406,16 @@ protected:
     bool m_subtreeContainsGraphicsBufferLayer { false };
     uint32_t m_subtreeGBLayerEpoch { 0 };
 
+    void restorePrevVisibleRectIfPossible();
+
+    // Set by markVisibleRectDirtyUpward(); consumed by
+    // applyStackingContextProperties, which only then invalidates or
+    // recomputes this context's visibleRect. A fresh context starts clean:
+    // its never-computed state (flag/rect) already forces the first
+    // computation, and staying clean is what lets a carried-over rect
+    // survive the pass after a full re-establish.
+    bool m_visibleRectDirty { false };
+
     // tryFastBufferedLayerVisit() cache, same epoch scheme.
     bool m_fastBufferedVisitOk { false };
     uint32_t m_fastBufferedVisitEpoch { 0 };
@@ -388,6 +427,9 @@ protected:
     // cullRectInParentSpace() cache, same epoch scheme.
     LayoutRect m_cullRectInParentSpace;
     uint32_t m_cullRectEpoch { 0 };
+
+    // Set alongside m_rareData->m_visibleRect (same validity flag).
+    LayoutRect m_visibleRectContentOnly;
 };
 
 } // namespace Starfish

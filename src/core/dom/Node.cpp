@@ -2264,12 +2264,26 @@ void Node::propagateMarkChildNeedsFrameTreeBuild()
     }
 }
 
+void Node::markAncestorStackingContextVisibleRectDirty()
+{
+    Node* n = this;
+    while (n) {
+        Frame* f = n->frame();
+        if (f) {
+            f->markAncestorStackingContextVisibleRectDirty();
+            return;
+        }
+        n = n->renderingParentNode();
+    }
+}
+
 void Node::setNeedsFrameTreeBuild()
 {
     if (!document()->doesParticipateInRendering()) {
         return;
     }
 
+    markAncestorStackingContextVisibleRectDirty();
     window()->browsingContext()->setNeedsFrameTreeBuild();
 
     Frame* old = frame();
@@ -2333,6 +2347,7 @@ void Node::setNeedsFrameTreeBuildWithoutSelf()
         return;
     }
 
+    markAncestorStackingContextVisibleRectDirty();
     window()->browsingContext()->setNeedsFrameTreeBuild();
 
     if (needsFrameTreeBuild()) {

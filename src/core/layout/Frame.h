@@ -1941,6 +1941,18 @@ public:
         SkMatrix& tranformMatrix;
         LayoutRect& result;
         std::vector<FrameBox*> fragmentBoxStack;
+        // When set (stacking-context visibleRect composition), descendant
+        // stacking contexts' subtrees are excluded from the frame-tree
+        // traversal: their rects are composed from the child contexts'
+        // own visibleRect() instead (see StackingContext.cpp).
+        bool subtreeRectsFromChildContexts { false };
+        // Set while computing a context's content-only extent (the lazy
+        // visibleRect() path): the owner box must not force-contribute its
+        // own frame rect there - the caller re-unites frameVisibleRect()
+        // into the final rect separately, and ancestors composing this
+        // content-only rect must see what a per-leaf walk from them would
+        // have seen (which subjects the box to the collapsible filter).
+        bool contentOnlyExtent { false };
         std::vector<std::tuple<LayoutRect, FrameBox*>>
             boundMaxExtentDueToOverflow;
         std::unordered_set<FrameBox*> visbleRectComputedBox;
@@ -1999,6 +2011,10 @@ public:
 
     void propagateMarkNeedsLayout(
         Optional<ComputedStyle*> newStyle = NullOption);
+    // Marks the visibleRect of the stacking context this frame paints into
+    // (and its ancestors) dirty for the next stacking-context properties
+    // pass. Call from every mutation that requests that pass.
+    void markAncestorStackingContextVisibleRectDirty();
     void markNeedsLayout()
     {
         m_flags.m_needsLayout = true;

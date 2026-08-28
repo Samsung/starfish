@@ -602,6 +602,11 @@ public:
 
     void setNeedsFrameTreeBuild();
     void setNeedsFrameTreeBuildWithoutSelf();
+    // Marks the visibleRect of the stacking context this node paints into
+    // (climbing to the nearest rendering ancestor that has a frame when this
+    // node has none, e.g. display:none flipping on) dirty for the next
+    // stacking-context properties pass.
+    void markAncestorStackingContextVisibleRectDirty();
 
     void markNeedsFrameTreeBuild()
     {

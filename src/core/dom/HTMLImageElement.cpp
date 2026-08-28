@@ -108,6 +108,7 @@ public:
         }
 
         // image content can affect stacking context visible rect
+        m_element->markAncestorStackingContextVisibleRectDirty();
         m_element->window()
             ->webView()
             ->setNeedsComputeStackingContextProperties();

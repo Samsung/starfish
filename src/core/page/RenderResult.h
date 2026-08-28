@@ -78,6 +78,26 @@ struct PrevDrawnStackingContextInfo {
 typedef GCUnorderedMap<Node*, PrevDrawnStackingContextInfo>
     PrevDrawnStackingContextInfoMap;
 
+// Carries a stacking context's composed visibleRect across a full
+// stacking-context re-establish (a frame-tree rebuild replaces every
+// FrameBox, so the whole SC tree is recreated). Collected per node while
+// the old tree is torn down, restored onto the freshly created context in
+// the following properties pass when the owner's geometry is unchanged and
+// the old context was not marked dirty by the mutation. Lives only within
+// that one rendering pass.
+struct PrevStackingContextVisibleRect {
+    LayoutRect ownerFrameRect;
+    LayoutRect visibleRect;
+    LayoutRect visibleRectContentOnly;
+    bool wasGraphicsBuffer { false };
+};
+
+// Plain std map: entries live only inside one rendering pass (collected
+// during the SC tree teardown, consumed by the following properties pass),
+// and the Node keys are only compared, never dereferenced through the map.
+typedef std::unordered_map<Node*, PrevStackingContextVisibleRect>
+    PrevStackingContextVisibleRectMap;
+
 typedef std::unordered_map<Node*, LayoutRect> RepaintRegion;
 
 class RepaintRegionTrackerContext {

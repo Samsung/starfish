@@ -9880,6 +9880,7 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
                             }
                         }
 
+                        element->markAncestorStackingContextVisibleRectDirty();
                         element->markNeedsFrameTreeBuild();
                         e->propagateMarkChildNeedsFrameTreeBuild();
                         needsToExecuteNormalPath = false;
@@ -9906,11 +9907,13 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
 
     if (damage &
         ComputedStyleDamage::ComputedStyleDamageEstablishesStackingContext) {
+        element->markAncestorStackingContextVisibleRectDirty();
         element->webView()->setNeedsEstablishesStackingContext();
     }
 
     if (damage & ComputedStyleDamage::
                      ComputedStyleDamageComputeStackingContextProperties) {
+        element->markAncestorStackingContextVisibleRectDirty();
         element->webView()->setNeedsComputeStackingContextProperties();
     }
 
