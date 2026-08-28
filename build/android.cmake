@@ -344,6 +344,10 @@ ADD_CUSTOM_COMMAND (OUTPUT ${LIBWEBSOCKETS_BUILD_DIR}/libwebsocket_copied
         COMMENT "COPY LIBWEBSOCKETS SOURCE"
         COMMAND cp -r ${LIBWEBSOCKETS_SOURCE_DIR} ${OUTPUT_DIRECTORY}
         COMMAND sed -i "s/hidden/default/" ${LIBWEBSOCKETS_BUILD_DIR}/include/libwebsockets.h
+        # See third_party.cmake: a leftover lws_config.h in the source tree shadows
+        # the one the sub-build generates and desyncs the compiled feature set from
+        # the sources cmake selected.
+        COMMAND rm -f ${LIBWEBSOCKETS_BUILD_DIR}/include/lws_config.h
         COMMAND touch ${LIBWEBSOCKETS_BUILD_DIR}/libwebsocket_copied
         )
 
