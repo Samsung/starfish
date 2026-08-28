@@ -4096,6 +4096,7 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         return false;
     }
 
+
     if (ctx.purpose != Frame::ComputeVisibleRectContext::Scrolling &&
         stackingContext() && ctx.sourceStackingContext &&
         ctx.sourceStackingContext != stackingContext()) {
@@ -4226,7 +4227,8 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
                asFrameReplaced()->isFrameReplacedIFrame() &&
                !drawableContentsInStyle) {
         if (ctx.sourceStackingContext &&
-            this == ctx.sourceStackingContext->owner()) {
+            this == ctx.sourceStackingContext->owner() &&
+            !ctx.contentOnlyExtent) {
             // We are computing this iframe's OWN graphics-buffer extent. The
             // buffer must span the iframe box so the child document (whose root
             // stacking context may itself be composited) has a backing region

@@ -52,6 +52,7 @@
 
 namespace Starfish {
 
+
 inline void computeBufferSizeFromVisibleRect(LayoutUnit minX, LayoutUnit minY,
                                              LayoutUnit maxX, LayoutUnit maxY,
                                              size_t& bufferWidth,
@@ -1063,6 +1064,29 @@ static void computeVisibleRectPedigreeWorker(
     }
 }
 
+// Composed mode: contribute a child context's already-composed local
+// visibleRect() as a single rect, placed through the same fragment chain
+// (ancestor boxes, then the child's own box for its transform/overflow) the
+// per-leaf walk would have replayed.
+static void seedChildContextRectWorker(
+    StackingContext* c, const LayoutRect& childLocalRect,
+    std::vector<FrameBox*>& pedigree,
+    std::vector<FrameBox*>::reverse_iterator iter,
+    Frame::ComputeVisibleRectContext& ctx)
+{
+    if (pedigree.rend() == iter) {
+        if (ctx.visbleRectComputedBox.find(c->owner()) ==
+            ctx.visbleRectComputedBox.end()) {
+            ctx.visbleRectComputedBox.insert(c->owner());
+            Frame::ComputeVisibleRectContextFragment f(ctx, c->owner());
+            ctx.uniteRect(childLocalRect);
+        }
+    } else {
+        Frame::ComputeVisibleRectContextFragment f(ctx, *iter);
+        seedChildContextRectWorker(c, childLocalRect, pedigree, iter + 1, ctx);
+    }
+}
+
 static void computeVisibleRect(StackingContext* source, StackingContext* c,
                                Frame::ComputeVisibleRectContext& ctx)
 {
@@ -1074,6 +1098,21 @@ static void computeVisibleRect(StackingContext* source, StackingContext* c,
         return;
     }
 
+    // The composed path reuses each child context's local visibleRect(),
+    // which is computed with the collapsible leaf filter; a non-collapsible
+    // request (root layer painting the window background) must keep the
+    // original per-leaf traversal.
+    bool composed = ctx.isVisibleRectCollapsible;
+
+    // A context flagged with a needs-graphics-buffer reason is excluded from
+    // ancestor walks box-by-box (tryUniteVisibleRect drops its owner box and
+    // therefore its whole non-context subtree), but the context's own
+    // composed rect is computed from its own perspective, where the owner
+    // box is exempt from that check. Seeding such a rect would leak content
+    // the per-leaf walk never contributes - an iframe's replaced surface,
+    // for instance - and grow (and move) ancestor buffer origins. Keep the
+    // per-leaf path for those; their child contexts still compose below.
+
     if (c != source) {
         std::vector<FrameBox*> pedigree;
         FrameBox* box = c->owner()->layoutParent()->asFrameBox();
@@ -1082,12 +1121,24 @@ static void computeVisibleRect(StackingContext* source, StackingContext* c,
             box = box->layoutParent()->asFrameBox();
         }
 
+        if (composed && !c->needsGraphicsBufferReason()) {
+            // May recurse: a cold child re-enters this function with itself
+            // as the source, composing its own subtree the same way.
+            LayoutRect childLocalRect = c->visibleRectContentOnly();
+            seedChildContextRectWorker(c, childLocalRect, pedigree,
+                                       pedigree.rbegin(), ctx);
+            // The whole subtree is inside childLocalRect - no descent needed.
+            return;
+        }
+
         computeVisibleRectPedigreeWorker(c, pedigree, pedigree.rbegin(), ctx);
     } else {
         if (ctx.visbleRectComputedBox.find(c->owner()) ==
             ctx.visbleRectComputedBox.end()) {
             ctx.visbleRectComputedBox.insert(c->owner());
+            ctx.subtreeRectsFromChildContexts = composed;
             c->owner()->computeVisibleRect(ctx);
+            ctx.subtreeRectsFromChildContexts = false;
         }
     }
 
@@ -1187,6 +1238,8 @@ void StackingContext::drawOwnerBackgroundByCompositor(Compositor* compositor)
 void StackingContext::applyStackingContextProperties(
     ComputeStackingContextContext& ctx)
 {
+    restorePrevVisibleRectIfPossible();
+
     auto iter = m_childContexts.begin();
     while (iter != m_childContexts.end()) {
         StackingContextChild* child = *iter;
@@ -1218,13 +1271,19 @@ void StackingContext::applyStackingContextProperties(
         willBeComposited = true;
     }
 
-    if (m_rareData) {
-        m_rareData->m_visibleRect = LayoutRect(0, 0, 0, 0);
-    }
+    bool wasGraphicsBuffer = m_needsGraphicsBuffer;
 
     if (willBeComposited) {
         m_needsGraphicsBuffer = true;
         ensureRareData();
+        // Scoped invalidation: only a context marked by a mutation (or whose
+        // buffered state changed) recomputes its visibleRect; an unmarked
+        // layer keeps the rect from the previous pass.
+        bool recomputeVisibleRect = m_visibleRectDirty ||
+                                    !m_isVisibleRectComputedForNonGraphicsLayer ||
+                                    !wasGraphicsBuffer;
+        if (recomputeVisibleRect) {
+        m_rareData->m_visibleRect = LayoutRect(0, 0, 0, 0);
         bool shouldPaintWindowBackgroundImage = false;
         if (m_owner->isRootElement()) {
             BrowsingContext* bc =
@@ -1311,13 +1370,27 @@ void StackingContext::applyStackingContextProperties(
             }
         }
 
+        }
         m_isVisibleRectComputedForNonGraphicsLayer = true;
+        m_visibleRectDirty = false;
     } else {
         m_needsGraphicsBuffer = false;
-        m_isVisibleRectComputedForNonGraphicsLayer = false;
+        if (m_visibleRectDirty || wasGraphicsBuffer) {
+            m_isVisibleRectComputedForNonGraphicsLayer = false;
+            m_visibleRectDirty = false;
+        }
     }
 
     if (compositedBefore != willBeComposited) {
+        // Ancestors' composed rects include this subtree only while it is
+        // not composited into its own buffer; flipping that state changes
+        // what they must contain, so recompose them on a follow-up pass.
+        if (m_parent) {
+            m_parent->markVisibleRectDirtyUpward();
+            m_owner->node()
+                ->webView()
+                ->setNeedsComputeStackingContextProperties();
+        }
         m_owner->node()->webView()->markNeedsPaintingConsiderInRendering();
     } else if (compositedBefore && compositedBefore == willBeComposited) {
         if (prevDrawnMapIter != prevDrawnMap.end()) {
@@ -1879,6 +1952,63 @@ void StackingContext::fillGraphicsBufferContents(
     canvas->restore();
 }
 
+void StackingContext::collectPrevVisibleRect(
+    PrevStackingContextVisibleRectMap& map)
+{
+    if (!m_isVisibleRectComputedForNonGraphicsLayer || m_visibleRectDirty) {
+        return;
+    }
+    if (!m_rareData || m_owner->isAnonymous()) {
+        return;
+    }
+    Node* nd = m_owner->node();
+    if (!nd) {
+        return;
+    }
+    PrevStackingContextVisibleRect info;
+    info.ownerFrameRect = m_owner->frameRect();
+    info.visibleRect = m_rareData->m_visibleRect;
+    info.visibleRectContentOnly = m_visibleRectContentOnly;
+    info.wasGraphicsBuffer = m_needsGraphicsBuffer;
+    map[nd] = info;
+}
+
+void StackingContext::restorePrevVisibleRectIfPossible()
+{
+    if (m_isVisibleRectComputedForNonGraphicsLayer || m_visibleRectDirty) {
+        // Live already, or a mutation reached this (fresh) context - both
+        // must go through the normal recompute.
+        return;
+    }
+    if (m_owner->isAnonymous()) {
+        return;
+    }
+    Node* nd = m_owner->node();
+    if (!nd) {
+        return;
+    }
+    auto& map = nd->webView()->prevStackingContextVisibleRects();
+    auto iter = map.find(nd);
+    if (iter == map.end()) {
+        return;
+    }
+    const PrevStackingContextVisibleRect& info = iter->second;
+    if (info.ownerFrameRect != m_owner->frameRect()) {
+        // The owner moved or resized across the rebuild.
+        return;
+    }
+    if (info.wasGraphicsBuffer) {
+        // Buffered layers keep their unconditional recompute in
+        // applyStackingContextProperties: their pass has effects beyond the
+        // rect itself, and with the descendants' rects carried over the
+        // recompute is a cheap rect composition anyway.
+        return;
+    }
+    ensureRareData()->m_visibleRect = info.visibleRect;
+    m_visibleRectContentOnly = info.visibleRectContentOnly;
+    m_isVisibleRectComputedForNonGraphicsLayer = true;
+}
+
 bool StackingContext::tryFastBufferedLayerVisit()
 {
     STARFISH_ASSERT(needsGraphicsBuffer());
@@ -2035,18 +2165,41 @@ static bool childCullClipRect(Canvas* canvas, LayoutRect& out)
     return true;
 }
 
+
 LayoutRect StackingContext::visibleRect()
 {
     if (!m_isVisibleRectComputedForNonGraphicsLayer) {
-        ensureRareData()->m_visibleRect = m_owner->frameVisibleRect();
+        // Accumulate painted content into an empty rect first, so the
+        // content-only rect (what ancestors compose) is separable from the
+        // seeded rect (which keeps the owner's frameVisibleRect as a lower
+        // bound for this layer's own consumers, as it always has).
+        ensureRareData()->m_visibleRect = LayoutRect(0, 0, 0, 0);
         SkMatrix l = SkMatrix::I();
         Frame::ComputeVisibleRectContext ctx(
             Frame::ComputeVisibleRectContext::GraphicsBufferBySelf, this, l,
             m_rareData->m_visibleRect);
+        ctx.contentOnlyExtent = true;
         computeVisibleRect(this, this, ctx);
+        m_visibleRectContentOnly = m_rareData->m_visibleRect;
+        // Recombine exactly like the seeded traversal did: start from the
+        // seed and unite the content into it. Order matters for degenerate
+        // (zero-area) seeds - LayoutRect::unite ignores an empty *operand*
+        // but replaces an empty *accumulator*, and a zero-height owner kept
+        // its 800x0 rect under the old scheme.
+        {
+            LayoutRect seeded = m_owner->frameVisibleRect();
+            seeded.unite(m_visibleRectContentOnly);
+            m_rareData->m_visibleRect = seeded;
+        }
         m_isVisibleRectComputedForNonGraphicsLayer = true;
     }
     return m_rareData ? m_rareData->m_visibleRect : LayoutRect(0, 0, 0, 0);
+}
+
+LayoutRect StackingContext::visibleRectContentOnly()
+{
+    visibleRect();
+    return m_visibleRectContentOnly;
 }
 
 float StackingContext::additionalPixelRatio()

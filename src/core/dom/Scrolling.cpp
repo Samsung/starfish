@@ -560,6 +560,7 @@ void Scrolling::giveDamageToTarget(bool inScrollbarAppearingOrDisappearing)
             slowPathReason = reason;
         }
         logSlowScrollPathIfNeeded(slowPathReason, m_target->asElement());
+        m_target->asElement()->markAncestorStackingContextVisibleRectDirty();
         m_target->asElement()
             ->webView()
             ->setNeedsComputeStackingContextProperties();

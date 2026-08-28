@@ -2126,8 +2126,22 @@ static bool isLayoutDamaged(LayoutDamager damager, Length l)
     }
 }
 
+void Frame::markAncestorStackingContextVisibleRectDirty()
+{
+    for (Frame* f = this; f; f = f->parent()) {
+        if (f->isFrameBox()) {
+            StackingContext* sc = f->asFrameBox()->stackingContext();
+            if (sc) {
+                sc->markVisibleRectDirtyUpward();
+                return;
+            }
+        }
+    }
+}
+
 void Frame::propagateMarkNeedsLayout(Optional<ComputedStyle*> newStyle)
 {
+    markAncestorStackingContextVisibleRectDirty();
     for (Frame* f = this; f; f = f->parent()) {
         if (f->needToEstablishKindsOfFormattingContext() ||
             f->isFrameDocument()) {

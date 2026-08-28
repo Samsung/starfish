@@ -930,12 +930,14 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                         if (damage &
                             ComputedStyleDamage::
                                 ComputedStyleDamageEstablishesStackingContext) {
+                            markAncestorStackingContextVisibleRectDirty();
                             webView()->setNeedsEstablishesStackingContext();
                         }
 
                         if (damage &
                             ComputedStyleDamage::
                                 ComputedStyleDamageComputeStackingContextProperties) {
+                            markAncestorStackingContextVisibleRectDirty();
                             webView()
                                 ->setNeedsComputeStackingContextProperties();
                         }

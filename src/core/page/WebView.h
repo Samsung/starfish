@@ -287,6 +287,11 @@ public:
         return m_needsContinuousRendering;
     }
 
+    PrevStackingContextVisibleRectMap& prevStackingContextVisibleRects()
+    {
+        return m_prevStackingContextVisibleRects;
+    }
+
     PrevDrawnStackingContextInfoMap& prevDrawnStackingContextInfo()
     {
         return m_prevDrawnStackingContextInfo;
@@ -644,6 +649,7 @@ private:
     GCUnorderedSet<BlobURLStore> m_urlMediaSourceBlobStore;
 
     PrevDrawnStackingContextInfoMap m_prevDrawnStackingContextInfo;
+    PrevStackingContextVisibleRectMap m_prevStackingContextVisibleRects;
     GCVector<StackingContext*> m_stackingContextsNeedsGraphicsBuffer;
 
     uint64_t m_lastRenderingTick;

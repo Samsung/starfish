@@ -1205,6 +1205,7 @@ void WebView::layoutIfNeeded(bool shouldCareStackingContextNow)
                     m_rootStackingContext) {
                     m_rootStackingContext->computeStackingContextProperties();
                 }
+                m_prevStackingContextVisibleRects.clear();
                 m_needsComputeStackingContextProperties = false;
             }
 
@@ -2085,6 +2086,7 @@ void WebView::clearStackingContext()
             [&](StackingContext* ctx) {
                 STARFISH_ASSERT(ctx != nullptr);
 
+                ctx->collectPrevVisibleRect(m_prevStackingContextVisibleRects);
                 ctx->owner()->clearStackingContextIfNeeds();
                 auto iter = ctx->childContexts().begin();
                 while (iter != ctx->childContexts().end()) {
