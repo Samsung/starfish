@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "input": {
+    "moduleGroups": "/home/hwang/starfish/code2spec/.analysis/state/delta/module-groups.yaml",
+    "moduleGroupsSha256": "831cee670b2afe1c1d3dd4ec48b1cf4a9996091cb18632fed9da86f9fd2a0d7b",
+    "deps": "/home/hwang/starfish/code2spec/.ast/deps.json",
+    "depsSha256": "b4a4ca7147f1d883ce07fffbd1c9bb412f0d45bca215b8ae33e252b47fd4fbb1"
+  },
+  "modules": [
+    "browser_history",
+    "docs_webapi",
+    "embedding_api",
+    "engine_core",
+    "js_binding",
+    "platform_canvas",
+    "platform_loader",
+    "platform_message_loop",
+    "platform_multimedia",
+    "platform_network",
+    "platform_system",
+    "shell",
+    "test_tooling",
+    "third_party_libs",
+    "worker_launcher"
+  ],
+  "ownedFileCount": 330,
+  "ambiguousFiles": [],
+  "edges": []
+}

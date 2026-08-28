@@ -1,0 +1,436 @@
+auto_grouping:
+  algorithm: llm
+  enabled: true
+modules:
+- domain: null
+  files:
+  - src/Starfish.cpp
+  - src/Starfish.h
+  - src/StarfishBase.h
+  - src/StarfishConfig.h
+  - src/StarfishInfo.h
+  - src/StarfishPlatform.h
+  - src/StaticStrings.cpp
+  - src/StaticStrings.h
+  - src/StoragePathProvider.cpp
+  - src/StoragePathProvider.h
+  - src/streamline_annotate.h
+  hitl_review: 'confidence: 0.95'
+  name: engine-core
+  patterns: []
+  rationale: 'Core engine foundation: GC configuration, platform detection macros,
+    static strings, storage path provider, profiling annotations'
+- domain: null
+  files:
+  - src/binding/CharacterDataCustomBinding.cpp
+  - src/binding/DocumentCustomBinding.cpp
+  - src/binding/DocumentHoldable.cpp
+  - src/binding/DocumentHoldable.h
+  - src/binding/EventTargetCustomBinding.cpp
+  - src/binding/GeolocationCustomBinding.cpp
+  - src/binding/HTMLElementCustomBinding.cpp
+  - src/binding/HTMLInputElementCustomBinding.cpp
+  - src/binding/ImageDataCustomBinding.cpp
+  - src/binding/Iterable.h
+  - src/binding/IterationSource.h
+  - src/binding/Maplike.h
+  - src/binding/MediaStreamCustomBinding.cpp
+  - src/binding/ObservableArray.cpp
+  - src/binding/ObservableArray.h
+  - src/binding/ScriptBindingInstance.cpp
+  - src/binding/ScriptBindingInstance.h
+  - src/binding/ScriptBindingSecurity.cpp
+  - src/binding/ScriptBindingSecurity.h
+  - src/binding/ScriptBindingWindowInstance.cpp
+  - src/binding/ScriptBindingWindowInstance.h
+  - src/binding/ScriptBindingWorkerInstance.cpp
+  - src/binding/ScriptBindingWorkerInstance.h
+  - src/binding/ScriptEngineInstance.cpp
+  - src/binding/ScriptEngineInstance.h
+  - src/binding/ScriptWrappable.cpp
+  - src/binding/ScriptWrappable.h
+  - src/binding/StarfishHoldable.h
+  - src/binding/URLSearchParamsCustomBinding.cpp
+  - src/binding/WebViewHoldable.cpp
+  - src/binding/WebViewHoldable.h
+  - src/binding/WindowCustomBinding.cpp
+  - src/binding/WindowHoldable.cpp
+  - src/binding/WindowHoldable.h
+  - src/binding/WindowProxy.cpp
+  - src/binding/WindowProxy.h
+  - src/binding/WorkerGlobalScopeCustomBinding.cpp
+  - src/binding/XMLHttpRequestCustomBinding.cpp
+  hitl_review: 'confidence: 0.95'
+  name: js-binding
+  patterns: []
+  rationale: 'JavaScript engine binding layer: custom DOM bindings, script engine
+    instance, security, window/worker proxy, holdable GC references'
+- domain: null
+  files:
+  - src/browser/history/HistoryManager.cpp
+  - src/browser/history/HistoryManager.h
+  hitl_review: 'confidence: 0.95'
+  name: browser-history
+  patterns: []
+  rationale: Browser session history management for navigation
+- domain: null
+  files:
+  - src/launcher/ServiceWorkerEntry.cpp
+  - src/launcher/SharedWorkerEntry.cpp
+  hitl_review: 'confidence: 0.95'
+  name: worker-launcher
+  patterns: []
+  rationale: Worker process entry points for ServiceWorker and SharedWorker
+- domain: null
+  files:
+  - src/platform/canvas/CanvasCairo.cpp
+  - src/platform/canvas/CanvasCairoUtils.cpp
+  - src/platform/canvas/CanvasCairoUtils.h
+  - src/platform/canvas/CanvasMock.cpp
+  - src/platform/canvas/CompositorCairo.cpp
+  - src/platform/canvas/CompositorGL.cpp
+  - src/platform/canvas/CompositorMock.cpp
+  - src/platform/canvas/PathCairo.cpp
+  - src/platform/canvas/PathCairo.h
+  - src/platform/canvas/PathMock.cpp
+  - src/platform/canvas/PathMock.h
+  - src/platform/canvas/font/FontImplCairo.cpp
+  - src/platform/canvas/font/FontImplCairo.h
+  - src/platform/canvas/font/FontImplMock.cpp
+  - src/platform/canvas/font/hb-icu/HarfBuzzICU.cpp
+  - src/platform/canvas/font/hb-icu/HarfBuzzICU.h
+  - src/platform/canvas/gl/EvasGL.cpp
+  - src/platform/canvas/gl/GL.h
+  - src/platform/canvas/gl/GLTypes.h
+  - src/platform/canvas/gl/GenericGL.cpp
+  - src/platform/canvas/gl/IncludeGL.h
+  - src/platform/canvas/image/AnimatedGIFNativeImageDataImpl.cpp
+  - src/platform/canvas/image/CompressedNativeImageDataImpl.cpp
+  - src/platform/canvas/image/NativeImageDataImpl.cpp
+  - src/platform/canvas/image/SVGNativeImageDataImpl.cpp
+  hitl_review: 'confidence: 0.93'
+  name: platform-canvas
+  patterns: []
+  rationale: Canvas rendering, compositing (Cairo/GL), path drawing, font rendering
+    (HarfBuzz/ICU), image data
+- domain: null
+  files:
+  - src/platform/loader/ElementResourceClient.cpp
+  - src/platform/loader/ElementResourceClient.h
+  - src/platform/loader/FontResource.cpp
+  - src/platform/loader/FontResource.h
+  - src/platform/loader/HeaderResource.cpp
+  - src/platform/loader/HeaderResource.h
+  - src/platform/loader/ImageResource.cpp
+  - src/platform/loader/ImageResource.h
+  - src/platform/loader/Resource.cpp
+  - src/platform/loader/Resource.h
+  - src/platform/loader/ResourceClient.h
+  - src/platform/loader/ResourceLoader.cpp
+  - src/platform/loader/ResourceLoader.h
+  - src/platform/loader/ResourceURL.cpp
+  - src/platform/loader/ResourceURL.h
+  - src/platform/loader/TextResource.cpp
+  - src/platform/loader/TextResource.h
+  hitl_review: 'confidence: 0.95'
+  name: platform-loader
+  patterns: []
+  rationale: 'Resource loading: URL resolution, resource types, resource clients and
+    loader'
+- domain: null
+  files:
+  - src/platform/network/curl/NetworkSharedResourceManager.cpp
+  - src/platform/network/curl/NetworkSharedResourceManager.h
+  - src/platform/network/http/HTTPCache.cpp
+  - src/platform/network/http/HTTPCache.h
+  - src/platform/network/http/HTTPCacheEntry.cpp
+  - src/platform/network/http/HTTPCacheEntry.h
+  - src/platform/network/http/HTTPHeaderMap.cpp
+  - src/platform/network/http/HTTPHeaderMap.h
+  - src/platform/network/http/HTTPRequest.cpp
+  - src/platform/network/http/HTTPRequest.h
+  - src/platform/network/http/HTTPResponse.cpp
+  - src/platform/network/http/HTTPResponse.h
+  - src/platform/network/http/HTTPStatus.h
+  - src/platform/network/http/HTTPTransaction.cpp
+  - src/platform/network/http/HTTPTransaction.h
+  - src/platform/network/http/HTTPUtil.cpp
+  - src/platform/network/http/HTTPUtil.h
+  hitl_review: 'confidence: 0.95'
+  name: platform-network
+  patterns: []
+  rationale: 'Network stack: curl handle management, HTTP request/response/transaction,
+    caching, headers'
+- domain: null
+  files:
+  - src/platform/multimedia/Demuxer.cpp
+  - src/platform/multimedia/Demuxer.h
+  - src/platform/multimedia/DemuxerMP4.cpp
+  - src/platform/multimedia/DemuxerSource.h
+  - src/platform/multimedia/DemuxerWebM.cpp
+  - src/platform/multimedia/MP4PacketGenerator.cpp
+  - src/platform/multimedia/MediaPlayer.cpp
+  - src/platform/multimedia/MediaPlayer.h
+  - src/platform/multimedia/MediaPlayerAudio.cpp
+  - src/platform/multimedia/MediaPlayerAudio.h
+  - src/platform/multimedia/MediaPlayerAudioLinux.cpp
+  - src/platform/multimedia/MediaPlayerAudioLinux.h
+  - src/platform/multimedia/MediaPlayerAudioTizen.cpp
+  - src/platform/multimedia/MediaPlayerAudioTizen.h
+  - src/platform/multimedia/MediaPlayerESPlusPlayer.cpp
+  - src/platform/multimedia/MediaPlayerESPlusPlayer.h
+  - src/platform/multimedia/MediaPlayerLinux.cpp
+  - src/platform/multimedia/MediaPlayerLinux.h
+  - src/platform/multimedia/MediaPlayerTV.cpp
+  - src/platform/multimedia/MediaPlayerTizen.cpp
+  - src/platform/multimedia/MediaPlayerTizen.h
+  - src/platform/multimedia/MediaPlayerTizenBase.cpp
+  - src/platform/multimedia/MediaPlayerWebRtc.cpp
+  - src/platform/multimedia/MediaPlayerWebRtc.h
+  - src/platform/multimedia/MediaPlayerWebRtcLinux.cpp
+  - src/platform/multimedia/MediaPlayerWebRtcLinux.h
+  - src/platform/multimedia/MediaPlayerWebRtcTizen.cpp
+  - src/platform/multimedia/MediaPlayerWebRtcTizen.h
+  - src/platform/multimedia/MockMediaPlayer.cpp
+  - src/platform/multimedia/MockMediaPlayer.h
+  - src/platform/multimedia/PacketGenerator.h
+  - src/platform/multimedia/StreamInfo.cpp
+  - src/platform/multimedia/StreamInfo.h
+  hitl_review: 'confidence: 0.95'
+  name: platform-multimedia
+  patterns: []
+  rationale: 'Multimedia playback: media player (Linux/Tizen/TV/WebRTC), demuxers,
+    audio, packet generation, stream info'
+- domain: null
+  files:
+  - src/platform/message_loop/MessageLoopGLib.cpp
+  - src/platform/message_loop/MessageLoopGLib.h
+  - src/platform/message_loop/MessageLoopLibUV.cpp
+  - src/platform/message_loop/MessageLoopLibUV.h
+  - src/platform/message_loop/RunLoopGLib.cpp
+  - src/platform/message_loop/RunLoopGLib.h
+  - src/platform/message_loop/RunLoopLibUV.cpp
+  - src/platform/message_loop/RunLoopLibUV.h
+  - src/platform/message_loop/TimerGLib.cpp
+  - src/platform/message_loop/TimerGLib.h
+  - src/platform/message_loop/TimerLibUV.cpp
+  - src/platform/message_loop/TimerLibUV.h
+  hitl_review: 'confidence: 0.95'
+  name: platform-message-loop
+  patterns: []
+  rationale: Event loop and timer abstraction with GLib and libUV backends
+- domain: null
+  files:
+  - src/platform/event/PlatformKeyEventData.h
+  - src/platform/feedback/TapSoundFeedback.cpp
+  - src/platform/feedback/TapSoundFeedback.h
+  - src/platform/file/PlatformDirectory.cpp
+  - src/platform/file/PlatformDirectory.h
+  - src/platform/file/PlatformFile.cpp
+  - src/platform/file/PlatformFile.h
+  - src/platform/process/base/Process.cpp
+  - src/platform/process/base/Process.h
+  - src/platform/process/base/ProcessType.h
+  - src/platform/public/DeviceInfo.cpp
+  - src/platform/public/DeviceInfo.h
+  - src/platform/public/ScreenInfo.h
+  - src/platform/public/ScreenOrientationType.h
+  - src/platform/tts/TTSBase.cpp
+  - src/platform/tts/TTSTV.cpp
+  - src/platform/tts/TTSTizen.cpp
+  - src/platform/windows/LoggingWindows.cpp
+  hitl_review: 'confidence: 0.88'
+  name: platform-system
+  patterns: []
+  rationale: 'Platform system services: file I/O, directory, process, device/screen
+    info, key events, tap feedback, TTS, Windows logging'
+- domain: null
+  files:
+  - compat/tizen_5.0/inc/LWEWebView.h
+  - inc/LWEWebView.h
+  - inc/LWEWorker.h
+  - inc/PlatformIntegrationData.h
+  - src/public/APIRecorder.cpp
+  - src/public/APIRecorder.h
+  - src/public/LWEDelegateLoader.cpp
+  - src/public/LWEDelegateLoader.h
+  - src/public/LWELoaderUtils.cpp
+  - src/public/LWELoaderUtils.h
+  - src/public/LWEWebView.cpp
+  - src/public/LWEWorker.cpp
+  - src/public/LWEWorkerDelegateLoader.cpp
+  - src/public/LWEWorkerDelegateLoader.h
+  - src/public/bridge/android/AndroidBridge.cpp
+  - src/public/bridge/android/java/com/samsung/android/lightweightwebengine/DownloadListener.java
+  - src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebChromeClient.java
+  - src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceError.java
+  - src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceRequest.java
+  - src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceRequestImpl.java
+  - src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebResourceResponse.java
+  - src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebSettings.java
+  - src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebView.java
+  - src/public/bridge/android/java/com/samsung/android/lightweightwebengine/WebViewClient.java
+  - src/public/bridge/android/java/com/samsung/android/lightweightwebengine/internal/LweWebView.java
+  - src/public/bridge/android/java/com/samsung/android/lightweightwebengine/internal/LweWebViewImpl.java
+  - src/public/bridge/ecore_wl2/LWEWebViewEcoreWl2.cpp
+  - src/public/bridge/ecore_x/LWEWebViewEcoreX.cpp
+  - src/public/bridge/efl/A11yAtspiBridge.cpp
+  - src/public/bridge/efl/A11yAtspiBridge.h
+  - src/public/bridge/efl/LWEWebViewEFL.cpp
+  - src/public/bridge/flutter/LWEWebViewFlutter.cpp
+  - src/public/bridge/tcore_wl/LWEWebViewTcoreWl.cpp
+  - src/public/bridge/x11/LWEWebViewX11.cpp
+  - src/public/contract/CookieManagerDelegate.h
+  - src/public/contract/LWEDelegate.h
+  - src/public/contract/LWEDelegateConfig.h
+  - src/public/contract/LWEDelegateContract.h
+  - src/public/contract/LWEWebContainerDelegate.h
+  - src/public/contract/LWEWebViewDelegate.h
+  - src/public/contract/LWEWorkerDelegate.h
+  - src/public/contract/ResourceErrorDelegate.h
+  - src/public/contract/SettingsDelegate.h
+  - src/public/delegate/CookieManagerDelegate.cpp
+  - src/public/delegate/JavaScriptNativeHandler.cpp
+  - src/public/delegate/JavaScriptNativeHandler.h
+  - src/public/delegate/LWEDelegate.cpp
+  - src/public/delegate/LWEWebContainerDelegate.cpp
+  - src/public/delegate/LWEWebViewDelegate.cpp
+  - src/public/delegate/LWEWebViewDelegateImpl.cpp
+  - src/public/delegate/LWEWebViewDelegateImpl.h
+  - src/public/delegate/LWEWorkerDelegate.cpp
+  - src/public/delegate/ResourceErrorDelegate.cpp
+  - src/public/delegate/SettingsBoolean.h
+  - src/public/delegate/SettingsDelegate.cpp
+  - src/public/delegate/ThreadedCallHelper.cpp
+  - src/public/delegate/ThreadedCallHelper.h
+  hitl_review: 'confidence: 0.92'
+  name: embedding-api
+  patterns: []
+  rationale: 'Public embedding API: WebView/Worker API, per-platform bridges (Android
+    JNI, EFL, Ecore, Flutter, X11), delegate contracts and implementations, compatibility
+    headers'
+- domain: null
+  files:
+  - src/shell/APIReplayer.cpp
+  - src/shell/APIReplayer.h
+  - src/shell/AppLoop.h
+  - src/shell/Console.cpp
+  - src/shell/Console.h
+  - src/shell/MiniBrowser.cpp
+  - src/shell/MiniBrowser.h
+  - src/shell/RendererDelegate.h
+  - src/shell/Shell.cpp
+  - src/shell/Shell.h
+  - src/shell/ShellConfig.h
+  - src/shell/UnitTestRunner.cpp
+  - src/shell/UnitTestRunner.h
+  - src/shell/Window.h
+  - src/shell/WindowKeyType.h
+  - src/shell/dummy/WindowDummy.cpp
+  - src/shell/ecore/AppLoopEcore.cpp
+  - src/shell/ecore/ConsoleEcore.cpp
+  - src/shell/efl/AppLoopEFL.cpp
+  - src/shell/efl/AppLoopEFLHeadless.cpp
+  - src/shell/efl/ConsoleEFL.cpp
+  - src/shell/efl/WindowEFL.cpp
+  - src/shell/glib/AppLoopGlib.cpp
+  - src/shell/glib/ConsoleGlib.cpp
+  - src/shell/headless/WindowHeadless.cpp
+  - src/shell/libuv/AppLoopLibuv.cpp
+  - src/shell/libuv/ConsoleLibuv.cpp
+  - src/shell/tcore_wl/AppLoopTcoreWl.cpp
+  - src/shell/tcore_wl/ConsoleTcoreWl.cpp
+  - src/shell/test/APIRecorderTest.cpp
+  - src/shell/test/CookieManagerTest.cpp
+  - src/shell/test/LWETest.cpp
+  - src/shell/test/SettingsTest.cpp
+  - src/shell/test/WebContainerTest.cpp
+  - src/shell/test/WebViewTest.cpp
+  - src/shell/windows/RendererWGL.cpp
+  - src/shell/windows/RendererWGL.h
+  - src/shell/windows/StarfishShell.cpp
+  - src/shell/x11_webcontainer/WindowX11Webcontainer.cpp
+  hitl_review: 'confidence: 0.93'
+  name: shell
+  patterns: []
+  rationale: 'Browser shell: MiniBrowser, Console, window management (EFL/headless/X11/Windows),
+    app loops, API recorder, unit test runner, shell tests'
+- domain: null
+  files:
+  - tool/ci/check_render_bmp.py
+  - tool/coverage/csv2xml.py
+  - tool/coverage/genDomMethods.js
+  - tool/coverage/genTable.js
+  - tool/drivers/basics/__init__.py
+  - tool/drivers/basics/constants.py
+  - tool/drivers/basics/parallel.py
+  - tool/drivers/basics/starfish_basic_test.py
+  - tool/drivers/basics/starfish_pixel_test.py
+  - tool/drivers/basics/starfish_pixel_with_remote_test.py
+  - tool/drivers/basics/utils.py
+  - tool/drivers/run_test.py
+  - tool/drivers/tests/__init__.py
+  - tool/drivers/tests/csswg_test.py
+  - tool/drivers/tests/dom_conformance_test.py
+  - tool/drivers/tests/multi_results_test.py
+  - tool/drivers/tests/vendor_test.py
+  - tool/drivers/tests/wpt_test.py
+  - tool/imgdiff/imgdiff.cpp
+  - tool/lint/check_contract_abi.py
+  - tool/lint/check_tidy.py
+  - tool/lint/contract_abi/contract_shim.cpp
+  - tool/perf_tools/measure-bench/server.py
+  - tool/perf_tools/mp4-avc-equiv/equiv.cpp
+  - tool/perf_tools/mse-smoke/gen_webm.py
+  - tool/perf_tools/mse-smoke/server.py
+  - tool/perf_tools/style-smoke/server.py
+  - tool/pixel_test/nw_capture/capture.js
+  - tool/pixel_test/nw_capture/inject.js
+  - tool/pixel_test/syntaxChecker.js
+  - tool/pixel_test/syntaxCoverage.js
+  - tool/reftest/draw_mem_chart.py
+  - tool/reftest/search_webkit_test.py
+  - tool/repo_paths.py
+  - tool/runner/execution_test.py
+  - tool/runner/execution_worker.py
+  - tool/runner/http_server.py
+  - tool/runner/test_runner.py
+  - tool/runner/update_result.py
+  - tool/runner/uwe_loader_test.py
+  - tool/runner/uwe_worker_loader_test.py
+  - tool/wpt/inject_report.js
+  - tool/wpt/scripts/wpt_annotate.py
+  - tool/wpt/scripts/wpt_audit.py
+  - tool/wpt/scripts/wpt_generate_dashboard.py
+  - tool/wpt/scripts/wpt_manifest_lists.py
+  - tool/wpt/scripts/wpt_reftest.py
+  - tool/wpt/scripts/wpt_runner.py
+  - tool/wpt/scripts/wpt_server.py
+  - tool/wpt/scripts/wpt_status.py
+  - tool/wpt/scripts/wpt_update_data.py
+  hitl_review: 'confidence: 0.9'
+  name: test-tooling
+  patterns: []
+  rationale: 'Test framework and tooling: test runners, WPT scripts, pixel tests,
+    lint checkers, performance tools, coverage tools'
+- domain: null
+  files:
+  - third_party/robin_map/include/tsl/robin_growth_policy.h
+  - third_party/robin_map/include/tsl/robin_hash.h
+  - third_party/robin_map/include/tsl/robin_map.h
+  - third_party/robin_map/include/tsl/robin_set.h
+  - third_party/robin_map/include/tsl/robin_vector.h
+  hitl_review: 'confidence: 0.95'
+  name: third-party-libs
+  patterns: []
+  rationale: 'Third-party header-only libraries: tsl::robin_map hash map implementation'
+- domain: null
+  files:
+  - docs/generator/__init__.py
+  - docs/generator/run.py
+  - docs/webpages/webapi/webapi_main.js
+  hitl_review: 'confidence: 0.9'
+  name: docs-webapi
+  patterns: []
+  rationale: Documentation generator and web API documentation page
+version: 1
