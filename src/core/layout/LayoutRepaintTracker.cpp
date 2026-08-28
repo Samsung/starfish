@@ -223,17 +223,57 @@ static void traceRepaintRegionJob(
                 }
                 if (frameRectChanged) {
                     if (paintsSomething) {
-                        LayoutRect dirtyRect = currentFrameBox->frameRect();
-                        dirtyRect.unite(iter->second.first);
+                        LayoutRect newR = currentFrameBox->frameRect();
+                        const LayoutRect& oldR = iter->second.first;
+                        LayoutRect dirtyRect = newR;
+                        dirtyRect.unite(oldR);
                         dirtyRect.setX(0);
                         dirtyRect.setY(0);
 
-                        auto iter2 = dirtyAreaMapPerStackingContext.find(node);
-                        if (iter2 == dirtyAreaMapPerStackingContext.end()) {
-                            dirtyAreaMapPerStackingContext.insert(
-                                std::make_pair(node, dirtyRect));
-                        } else {
-                            iter2->second.unite(dirtyRect);
+                        // A stacking-context owner that paints nothing itself
+                        // and only resized (children shifted by the resize
+                        // register their own moves through the per-box diff
+                        // below) needs repainting only where coverage
+                        // changed - the size-delta bands - not its whole
+                        // layer-local area. That whole-area fallback made
+                        // every list growth repaint the entire layer.
+                        if (newR.location() == oldR.location() &&
+                            !currentFrameBox
+                                 ->needsToPaintBackgroundOrBorderOrBoxShadow() &&
+                            !(currentFrameBox->style()->outline() &&
+                              currentFrameBox->style()
+                                  ->outline()
+                                  ->isVisible())) {
+                            LayoutUnit maxW =
+                                std::max(newR.width(), oldR.width());
+                            LayoutUnit maxH =
+                                std::max(newR.height(), oldR.height());
+                            LayoutUnit minW =
+                                std::min(newR.width(), oldR.width());
+                            LayoutUnit minH =
+                                std::min(newR.height(), oldR.height());
+                            LayoutRect bands(0, 0, 0, 0);
+                            if (maxH != minH) {
+                                bands.unite(
+                                    LayoutRect(0, minH, maxW, maxH - minH));
+                            }
+                            if (maxW != minW) {
+                                bands.unite(
+                                    LayoutRect(minW, 0, maxW - minW, maxH));
+                            }
+                            dirtyRect = bands;
+                        }
+
+                        if (!dirtyRect.isEmpty()) {
+                            auto iter2 =
+                                dirtyAreaMapPerStackingContext.find(node);
+                            if (iter2 ==
+                                dirtyAreaMapPerStackingContext.end()) {
+                                dirtyAreaMapPerStackingContext.insert(
+                                    std::make_pair(node, dirtyRect));
+                            } else {
+                                iter2->second.unite(dirtyRect);
+                            }
                         }
                     }
 
