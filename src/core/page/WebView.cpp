@@ -2083,12 +2083,21 @@ void WebView::invalidateRenderCachesForDevicePixelRatioChange()
 void WebView::clearStackingContext()
 {
     if (m_rootStackingContext) {
+        // WebView::destroy() reaches here through m_renderer->destroy() after
+        // it has already run this->WebView::~WebView(), so the memo map member
+        // is destructed by then - collecting into it would be use-after-free.
+        // The memos only feed the next rendering pass anyway, so skip them on
+        // the destroy path.
+        const bool collectMemos = !m_renderer->isDestroyed();
         StackingContext* ctx = m_rootStackingContext;
         std::function<void(StackingContext*)> clearSC =
             [&](StackingContext* ctx) {
                 STARFISH_ASSERT(ctx != nullptr);
 
-                ctx->collectPrevVisibleRect(m_prevStackingContextVisibleRects);
+                if (collectMemos) {
+                    ctx->collectPrevVisibleRect(
+                        m_prevStackingContextVisibleRects);
+                }
                 ctx->owner()->clearStackingContextIfNeeds();
                 auto iter = ctx->childContexts().begin();
                 while (iter != ctx->childContexts().end()) {
