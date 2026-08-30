@@ -337,6 +337,10 @@ public:
     virtual void pause();
     virtual void resume();
     virtual void destroy();
+    bool isDestroyed() const
+    {
+        return m_isDestroyed;
+    }
     void setDevicePixelRatio(float dpr);
     float getDevicePixelRatio();
 
