@@ -1482,9 +1482,6 @@ RenderResult WebView::rendering(bool force)
 
     m_lastRenderingTick = longTickCount();
     m_inRendering = true;
-    // Everything memoized for a paint pass is keyed to the geometry this pass
-    // is about to lay out, so the previous pass's entries go first.
-    m_paintPassMemos->beginPass();
     ANNOTATE_SETUP;
     ANNOTATE_CHANNEL_COLOR(3001, ANNOTATE_BLUE, "WebView::rendering");
     INSTALL_PROFILE_TIMER("WebView::rendering");
@@ -1852,6 +1849,10 @@ RenderResult WebView::rendering(bool force)
                        pair_hash<FrameBox*, size_t>>()
             .swap(m_boxShadowCachePerRendering);
     }
+
+    // Everything memoized for this paint pass is keyed to the geometry it
+    // laid out, which the next mutation invalidates - drop it with the pass.
+    m_paintPassMemos->endPass();
 
     m_needsRendering = false;
     m_inRendering = false;
