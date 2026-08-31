@@ -34,6 +34,9 @@ P /.circleci
 - /third_party/escargot/third_party/wasm/wabt/wasm2c
 - /third_party/escargot/third_party/wasm/wabt/third_party
 - /third_party/escargot/third_party/wasm/wabt/test
+- /third_party/escargot/samples/rtos/
+- /third_party/escargot/test/napi-tc
+- /third_party/escargot/third_party/icu
 - /third_party/escargot/test
 - /third_party/escargot/tools/debugger
 - /third_party/escargot/tools/kangax
