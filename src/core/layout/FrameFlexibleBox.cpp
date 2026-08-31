@@ -1062,6 +1062,37 @@ struct CrossSizeFixer {
     bool m_isMainAxisInInlineAxis;
 };
 
+static bool frameIsWithinSubtree(Frame* frame, Frame* subtreeRoot)
+{
+    for (Frame* f = frame; f; f = f->parent()) {
+        if (f == subtreeRoot) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void registerSkippedPositionedDescendants(LayoutContext& ctx,
+                                                 FrameBox* flexItem, Frame* f)
+{
+    for (Frame* child = f->firstChild(); child; child = child->next()) {
+        if (child->isFrameBox() && child->isAbsolutePositioned() &&
+            !frameIsWithinSubtree(containingFrameBlockBox(child), flexItem)) {
+            // A positioned box anchored outside the skipped subtree (e.g. the
+            // viewport for position:fixed) must still be handed to its
+            // containing block for repositioning; that layout also covers
+            // positioned boxes nested inside it. One anchored inside the
+            // subtree kept a valid position with the memo hit, and its
+            // containing block is not laid out this pass, so it must not be
+            // registered (LayoutContext requires every registered box to be
+            // consumed).
+            ctx.registerAbsolutePositionedBox(child->asFrameBox());
+            continue;
+        }
+        registerSkippedPositionedDescendants(ctx, flexItem, child);
+    }
+}
+
 void FlexFormattingContext::layoutFlexItem(
     FrameBox* flexItem, Frame::LayoutWantToResolve resolveWhat,
     Optional<LayoutUnit> crossSize, bool allowMemoSkip)
@@ -1101,6 +1132,17 @@ void FlexFormattingContext::layoutFlexItem(
                 (resolveWhat & ~e.m_resolveMask) == 0) {
                 flexItem->setWidth(e.m_resultWidth);
                 flexItem->setHeight(e.m_resultHeight);
+                // The skip bypasses the subtree walk that registers
+                // absolutely/fixed positioned descendants, whose used
+                // position depends on their containing block (the viewport
+                // for position:fixed) rather than on this item's geometry.
+                // When the viewport size changed this pass, they must still
+                // be repositioned by their containing block.
+                if (m_layoutContext.viewportWidthDamaged() ||
+                    m_layoutContext.viewportHeightDamaged()) {
+                    registerSkippedPositionedDescendants(m_layoutContext,
+                                                         flexItem, flexItem);
+                }
                 return;
             }
         }
