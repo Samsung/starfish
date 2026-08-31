@@ -38,10 +38,13 @@ class StackingContext;
 // between passes is a generation bump instead of a walk: a slot left from an
 // older generation reads as empty and is overwritten in place.
 //
-// Keys are GC pointers, and the slot array is a GCVector, so the array is
-// GC-allocated and its keys are traced. Entries do not keep an object alive
-// beyond the pass in any way that matters, since the table is dropped at the
-// end of every pass.
+// The slot array is a GCAtomicVector: the collector keeps the array itself
+// alive but never scans its contents, so the FrameBox*/StackingContext* keys
+// do not pin anything. That is safe because keys are only hashed and
+// compared, never dereferenced, the keyed objects are kept alive by the
+// frame tree for the duration of the pass, and the table is dropped at the
+// end of every pass, so no entry is ever consulted after its key may have
+// died.
 template <typename Key, typename Value>
 class PaintPassTable {
 public:
@@ -133,7 +136,7 @@ private:
     void grow()
     {
         size_t newSize = m_slots.size() ? m_slots.size() * 2 : 64;
-        GCVector<Slot> old;
+        GCAtomicVector<Slot> old;
         old.resize(m_slots.size());
         for (size_t i = 0; i < m_slots.size(); i++) {
             old[i] = m_slots[i];
@@ -154,7 +157,7 @@ private:
         }
     }
 
-    GCVector<Slot> m_slots;
+    GCAtomicVector<Slot> m_slots;
     size_t m_liveCount{ 0 };
     uint32_t m_generation{ 1 };
 };
@@ -200,7 +203,32 @@ struct StackingContextPassMemo {
 // right answer, they just recompute.
 class PaintPassMemos : public gc {
 public:
-    void beginPass()
+    // Explicitly typed allocation: the only words the collector must see are
+    // the two tables' slot-array buffer pointers, each the first word of its
+    // table member (Vector layout: m_buffer, m_size, m_capacity). The slots
+    // themselves are atomic, so nothing else in the object is scanned.
+    void* operator new(size_t size)
+    {
+        STARFISH_ASSERT(size == sizeof(PaintPassMemos));
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(PaintPassMemos)] = { 0 };
+            GC_set_bit(obj_bitmap,
+                       GC_WORD_OFFSET(PaintPassMemos, m_paintExtent));
+            GC_set_bit(obj_bitmap,
+                       GC_WORD_OFFSET(PaintPassMemos, m_stackingContext));
+            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(PaintPassMemos));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
+    // Drops every entry. Called when the pass that computed them finishes:
+    // outside a pass the tables stay empty, so nothing computed against one
+    // layout can be read against the next.
+    void endPass()
     {
         m_paintExtent.clear();
         m_stackingContext.clear();
