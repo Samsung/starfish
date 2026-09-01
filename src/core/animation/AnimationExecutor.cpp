@@ -218,6 +218,39 @@ void AnimationExecutor::removeEntriesOfDocument(Document* document)
     }
 }
 
+void AnimationExecutor::removeEntriesOfElement(Element* element)
+{
+    for (size_t i = 0; i < m_activeTransitions.size();) {
+        if (m_activeTransitions[i]->targetElement() == element) {
+            m_activeTransitions[i]->detachFromElement();
+            m_activeTransitions.erase(i);
+        } else {
+            i++;
+        }
+    }
+
+    for (auto animations = m_activeAnimations.begin();
+         animations != m_activeAnimations.end();) {
+        ActiveElementAnimation* activeElementAnimation = (*animations).first;
+        if (activeElementAnimation->element() != element) {
+            animations++;
+            continue;
+        }
+        for (auto& task : animations.value()) {
+            task->detachFromElement();
+        }
+        // The Animation object handed out by Element.animate() has to learn
+        // that its effect stopped, or its finished promise stays pending for
+        // good. The animation was not replaced, so this is a cancellation, not
+        // a removal.
+        if (activeElementAnimation->webAnimation()) {
+            activeElementAnimation->webAnimation()->notifyCanceled();
+        }
+        animations.value().clear();
+        animations = m_activeAnimations.erase(animations);
+    }
+}
+
 bool AnimationExecutor::hasActiveTransition(Element* element,
                                             CSSStyleValuePair::KeyKind p)
 {
