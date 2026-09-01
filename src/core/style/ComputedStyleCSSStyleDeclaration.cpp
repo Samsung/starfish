@@ -110,6 +110,53 @@ void ComputedStyleCSSStyleDeclaration::triggerResolveComputedStyleIfNeeds(
     }
 }
 
+ComputedStyle*
+ComputedStyleCSSStyleDeclaration::resolveStyleOfNonRenderedElement()
+{
+    // CSSOM requires resolved values even for an element that generates no
+    // box. The style-recalc walk deliberately drops the ComputedStyles of a
+    // display:none subtree to save memory (see resolveChildrenStyle), so
+    // resolve the missing ancestor chain here on the fly, without persisting
+    // any of the intermediate styles.
+    STARFISH_ASSERT(!m_node->style());
+    if (!m_node->isElement()) {
+        return nullptr;
+    }
+
+    VectorWithInlineStorage<8, Element*, std::allocator<Element*>> chain;
+    Node* n = m_node;
+    while (n && n->isElement() && !n->style()) {
+        // A shadow-host child with no slot assigned is not in the flat tree
+        // at all; it has no rendering position to resolve against, unlike a
+        // display:none descendant (renderingParentNode() would misleadingly
+        // fall back to the host). Keep returning empty values for it.
+        Element* parent = n->parentElement();
+        if (parent && parent->isShadowRootHost() &&
+            !n->assignedSlotInternal()) {
+            return nullptr;
+        }
+        chain.push_back(n->asElement());
+        n = n->renderingParentNode();
+    }
+    if (!n || !n->style()) {
+        // Not connected to a styled tree (e.g. a detached subtree): keep
+        // returning empty values.
+        return nullptr;
+    }
+
+    ComputedStyle* parentStyle = n->style();
+    for (size_t i = chain.size(); i > 0; i--) {
+        Element* e = chain[i - 1];
+        StyleResolveContext ctx(e);
+        // These styles are read back and discarded, never applied to the
+        // element, so referenced resources must not be fetched for them.
+        parentStyle = ctx.m_styleResolver->resolveStyle(
+            ctx, e, parentStyle, false /* loadResources */);
+        ctx.m_styleResolver->clearCssCustomValues();
+    }
+    return parentStyle;
+}
+
 ComputedStyleCSSStyleDeclaration::RequiredStyleResolveStage
 ComputedStyleCSSStyleDeclaration::requiredStageForLength(const Length& length)
 {
@@ -450,15 +497,22 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 {
     triggerResolveComputedStyleIfNeeds(keyKind);
 
-    if (m_node->isDocument() || m_node->style() == nullptr) {
+    if (m_node->isDocument()) {
         return;
+    }
+
+    ComputedStyle* style = m_node->style();
+    if (style == nullptr) {
+        style = resolveStyleOfNonRenderedElement();
+        if (style == nullptr) {
+            return;
+        }
     }
 
     // Create CSSStyleValuePair and set the resolved style value to
     // CSSStyleValuePair. And add CSSStyleValuePair to m_cssValues.
     // Util perform this at least once, m_cssValues has no items.
     Frame* frame = m_node->frame();
-    ComputedStyle* style = m_node->style();
 
     switch (keyKind) {
 #define IGNORE_SHORTHANDS_AND_ETC(Name, ...) \

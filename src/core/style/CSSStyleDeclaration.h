@@ -542,6 +542,8 @@ private:
 
     void triggerResolveComputedStyleIfNeeds(CSSStyleValuePair::KeyKind keyKind);
 
+    ComputedStyle* resolveStyleOfNonRenderedElement();
+
     RequiredStyleResolveStage requiredStage(CSSStyleValuePair::KeyKind keyKind,
                                             ComputedStyle* style);
 

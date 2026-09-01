@@ -3520,8 +3520,16 @@ public:
     void dumpDOMStyle(Document* document);
 #endif
     ComputedStyle* resolveDocumentStyle(Document* doc);
+    // |loadResources| fetches images/fonts the resolved style references, and
+    // registers the element as their client -- appropriate when the style is
+    // going to be applied to the element via applyStyleToElement(). Callers
+    // that resolve a style only to read it back (e.g. getComputedStyle inside
+    // a display:none subtree, never applied/persisted) must pass false: the
+    // style is discarded right after, so fetching for it would leak a
+    // request/client with no element to ever notify or repaint.
     ComputedStyle* resolveStyle(StyleResolveContext& ctx, Element* node,
-                                ComputedStyle* parent);
+                                ComputedStyle* parent,
+                                bool loadResources = true);
 
     void matchAllRules(
         StyleResolveContext& ctx, Element* element, ComputedStyle* ret,
