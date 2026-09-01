@@ -408,7 +408,6 @@ void BrowsingContext::layoutSVGViewportsNeedingContentLayout()
     }
 
     auto viewports(std::move(m_svgViewportsNeedingContentLayout));
-    m_svgViewportsNeedingContentLayout.clear();
 
     if (!document()->frame()) {
         return;
