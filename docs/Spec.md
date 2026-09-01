@@ -1886,6 +1886,8 @@ The following selectors are **parsed without error but do not actually match any
 
 `:any-link`, `:focus-visible`, `:focus-within`, `:in-range`, `:out-of-range`, `:indeterminate`, `:invalid`, `:valid`, `:optional`, `:required`, `:read-only`, `:read-write`, `:target-within`, `:visited`. Use `:focus` instead of `:focus-visible`/`:focus-within`; for form-validation states, query the underlying state in JS.
 
+The `::marker` pseudo-element is likewise parsed without error but never styles the list marker; only the pseudo-elements listed in the table above (`::before`, `::after`, `::first-line`, `::first-letter`) actually generate or style boxes.
+
 `:is(...)` and `:where(...)` are implemented, and `:not(...)` accepts a full selector list. `:has(...)` is **not** implemented and raises `SyntaxError` at parse time — rewrite it using a regular descendant or compound selector.
 
 `:scope` is supported and matches `:root` in document context.
