@@ -1253,6 +1253,16 @@ public:
         return m_valueKind;
     }
 
+    // True while this pair still holds a deferred var() reference: the union
+    // keeps the original String* until StyleResolver substitutes it. Such a
+    // pair must not be stored inside a ValueList/ValuePair, because apply()
+    // only resolves a top-level VarFunctionValueKind; a nested one would later
+    // be read through the union as if it were a parsed value.
+    bool hasUnresolvedVarReference() const
+    {
+        return m_valueKind == VarFunctionValueKind;
+    }
+
     void setValueKind(ValueKind kind)
     {
         m_valueKind = kind;
@@ -1433,9 +1443,14 @@ public:
     {
         if (m_valueKind == Length) {
             return m_value.m_length.toLength();
-        } else {
-            STARFISH_ASSERT(m_valueKind == CalcValueKind);
+        } else if (m_valueKind == CalcValueKind) {
             return ::Starfish::Length(calcValue());
+        } else {
+            // Defensive: an unresolved value (e.g. VarFunctionValueKind still
+            // holding a String*) must never be read as a CalcData*. Callers
+            // should resolve var()/calc() before reaching here.
+            STARFISH_ASSERT(m_valueKind == CalcValueKind);
+            return ::Starfish::Length(::Starfish::Length::Fixed, 0);
         }
     }
 
