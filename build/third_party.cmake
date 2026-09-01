@@ -142,9 +142,8 @@ IF (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" OR ${SHARED_WORKER} STREQUAL "1" OR
 
     ADD_CUSTOM_COMMAND (OUTPUT ${NANOMSG_TARGET}
                         DEPENDS ${NANOMSG_LOCAL_TARGET}
-                        COMMENT "COPY NANOMSG"
+                        COMMENT "COPY AND INSTALL NANOMSG"
                         COMMAND cp -P ${NANOMSG_LOCAL_TARGET}* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
-                        COMMENT "INSTALL NANOMSG"
                         COMMAND cd ${NANOMSG_BUILDDIR} && make install
     )
 

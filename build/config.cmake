@@ -592,7 +592,13 @@ IF (${BACKEND} STREQUAL "glib_cairo_gl" AND CMAKE_SYSTEM_PROCESSOR STREQUAL "x86
     # STARFISH_SHELL_EFL / STARFISH_SHELL_ECORE_X). Non-EFL shells (e.g. x11)
     # must not require them.
     IF (${SHELL} STREQUAL "efl" OR ${SHELL} STREQUAL "ecore_x" OR ${SHELL} STREQUAL "ecore_wl2")
-        pkg_check_modules (STARFISH_BACKEND REQUIRED freetype2 fontconfig harfbuzz elementary ecore ecore-x ecore-imf ecore-imf-evas glesv2)
+        # ecore-x only exists on X11 desktops; Tizen (incl. the x86_64
+        # emulator) is wayland-only and ships no ecore-x package.
+        IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
+            pkg_check_modules (STARFISH_BACKEND REQUIRED freetype2 fontconfig harfbuzz elementary ecore ecore-imf ecore-imf-evas glesv2)
+        ELSE()
+            pkg_check_modules (STARFISH_BACKEND REQUIRED freetype2 fontconfig harfbuzz elementary ecore ecore-x ecore-imf ecore-imf-evas glesv2)
+        ENDIF()
     ELSE()
         pkg_check_modules (STARFISH_BACKEND REQUIRED freetype2 fontconfig harfbuzz glesv2)
     ENDIF()
@@ -686,6 +692,25 @@ int main() { AtkComponentIface i; i.grab_highlight = 0; (void)i; return 0; }"
     ENDIF()
     IF ("${ENABLE_ESPLUSPLAYER}" STREQUAL "1")
         pkg_check_modules (STARFISH_TIZEN_ESPLUSPLAYER REQUIRED esplusplayer)
+    ENDIF()
+    # Feature macros decide which platform sources get compiled, so the
+    # libraries those sources call have to follow the macros -- not just the
+    # ${CUSTOM} profile lists above (which cover only the profiles that
+    # historically enabled the feature).
+    SET (LWE_DEFINES_ENABLED "${LWE_DEFINES_ARCH};${LWE_DEFINES_CUSTOM}")
+
+    # src/platform/tts/TTSTizen.cpp (and TTSTV.cpp): STARFISH_ENABLE_TTS.
+    # prod_tv / the ENABLE_A11Y_TOUCH profiles already ask for tts above; the
+    # x86_64 arch defines also enable TTS for e.g. unified_tv on the emulator.
+    IF ("${LWE_DEFINES_ENABLED}" MATCHES "STARFISH_ENABLE_TTS")
+        pkg_check_modules (STARFISH_TIZEN_TTS REQUIRED tts)
+    ENDIF()
+
+    # src/platform/multimedia/MediaPlayerAudioTizen.cpp (audio_out_*):
+    # STARFISH_ENABLE_MULTIMEDIA && STARFISH_ENABLE_WEBAUDIO.
+    IF ("${LWE_DEFINES_ENABLED}" MATCHES "STARFISH_ENABLE_MULTIMEDIA"
+        AND "${LWE_DEFINES_ENABLED}" MATCHES "STARFISH_ENABLE_WEBAUDIO")
+        pkg_check_modules (STARFISH_TIZEN_AUDIO_IO REQUIRED capi-media-audio-io)
     ENDIF()
 ENDIF()
 
