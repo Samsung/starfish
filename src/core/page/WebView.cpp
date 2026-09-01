@@ -1145,7 +1145,6 @@ void WebView::computeLayoutPaintingDirty()
     INSTALL_PROFILE_TIMER("WebView::computeLayoutPaintingDirty");
 
     auto browsingContextsDidLayout = std::move(m_browsingContextsDidLayout);
-    m_browsingContextsDidLayout.clear();
     for (size_t i = 0; i < browsingContextsDidLayout.size(); i++) {
         browsingContextsDidLayout[i]->computeLayoutPaintingDirty();
     }
@@ -1158,7 +1157,6 @@ void WebView::layoutIfNeeded(bool shouldCareStackingContextNow)
 
     didLayout = didLayout | m_topLevelBrowsingContext->layoutIfNeeded();
     auto browsingContextsNeedsLayout = std::move(m_browsingContextsNeedsLayout);
-    m_browsingContextsNeedsLayout.clear();
     for (size_t i = 0; i < browsingContextsNeedsLayout.size(); i++) {
         didLayout =
             didLayout | browsingContextsNeedsLayout[i]->layoutIfNeeded();
