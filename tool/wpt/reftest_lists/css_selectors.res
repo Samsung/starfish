@@ -62,8 +62,8 @@ http://web-platform.test:8000/css/selectors/focus-within-013.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/has-style-sharing-pseudo-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/has-style-sharing-pseudo-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/has-style-sharing-pseudo-006.html
-http://web-platform.test:8000/css/selectors/has-style-sharing-pseudo-007.html
-http://web-platform.test:8000/css/selectors/has-style-sharing-pseudo-008.html
+# [vacuous-pass:HAS_MARKER_UNIMPLEMENTED] http://web-platform.test:8000/css/selectors/has-style-sharing-pseudo-007.html
+# [vacuous-pass:HAS_MARKER_UNIMPLEMENTED] http://web-platform.test:8000/css/selectors/has-style-sharing-pseudo-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/has-visited.html
 http://web-platform.test:8000/css/selectors/historical-xmlid.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/i18n/lang-pseudo-class-across-shadow-boundaries.html
