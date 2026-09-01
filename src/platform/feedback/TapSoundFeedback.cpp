@@ -57,6 +57,11 @@ namespace {
     typedef int (*feedback_play_type_by_name_fn)(const char* type,
                                                  const char* pattern);
 
+    // Owns the dlopen handle for the process lifetime: the function pointer
+    // handed out below points into libfeedback, so the library must stay
+    // mapped for as long as it can be called -- which is until exit.
+    void* s_feedbackHandle = nullptr;
+
     feedback_play_type_by_name_fn loadFeedbackPlayFn()
     {
         void* handle = dlopen("libfeedback.so.0", RTLD_LAZY | RTLD_LOCAL);
@@ -72,8 +77,9 @@ namespace {
             dlclose(handle);
             return nullptr;
         }
-        // The handle (and the feedback session) intentionally stays open for
-        // the process lifetime; taps recur as long as the page is interactive.
+        // Never dlclose'd: the feedback session stays open and taps recur as
+        // long as the page is interactive.
+        s_feedbackHandle = handle;
         return play;
     }
 
