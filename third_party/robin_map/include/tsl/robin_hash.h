@@ -29,6 +29,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <exception>
 #include <iterator>
 #include <limits>
@@ -317,6 +318,15 @@ public:
         if (!empty()) {
             destroy_value();
             m_dist_from_ideal_bucket = EMPTY_MARKER_DIST_FROM_IDEAL_BUCKET;
+            // Destroying the value does not touch the storage bytes, and for a
+            // trivially destructible value_type nothing does. A bucket array
+            // allocated on the GC heap is scanned conservatively, so the key
+            // and pointer fields left behind in an emptied bucket keep whatever
+            // they point at alive for as long as the table does - which for a
+            // long lived cache (a per-view memo table, an atomic string map) is
+            // effectively forever. Wipe them.
+            std::memset(static_cast<void*>(std::addressof(m_value)), 0,
+                        sizeof(m_value));
         }
     }
 
