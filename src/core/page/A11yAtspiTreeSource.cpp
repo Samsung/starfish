@@ -90,11 +90,8 @@ static void clippedBorderBox(Element* element, double& x, double& y,
             }
         }
         Window* window = doc->window();
-        if (window) {
-            intersectRect(x, y, width, height, 0, 0,
-                          (double)window->innerWidth(),
-                          (double)window->innerHeight());
-        }
+        intersectRect(x, y, width, height, 0, 0, (double)window->innerWidth(),
+                      (double)window->innerHeight());
         BrowsingContext* bc = doc->browsingContext();
         if (!bc || !bc->parentBrowsingContext()) {
             break;
