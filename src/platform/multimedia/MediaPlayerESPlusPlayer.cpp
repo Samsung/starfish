@@ -44,11 +44,11 @@
 #include "core/modules/renderer/Renderer.h"
 #include "platform/multimedia/MediaPlayerESPlusPlayer.h"
 
-// esplusplayer_set_ecore_display takes an Ecore_Wl2_Window*; the extended
-// display APIs live in the internal header (same includes as chromium-efl's
-// media_player_esplusplayer.cc).
+// The extended display APIs live in the internal header (same includes as
+// chromium-efl's media_player_esplusplayer.cc). esplusplayer_set_ecore_display
+// takes the Ecore_Wl2_Window as a void*, so no EFL header is needed here --
+// shells such as tcore_wl do not pull in ecore-wl2 include dirs at all.
 #include <esplusplayer_internal.h>
-#include <Ecore_Wl2.h>
 
 namespace Starfish {
 
@@ -413,9 +413,8 @@ bool MediaPlayerESPlusPlayer::setupOverlayDisplay()
                                   ["__internalLWEWebViewEFLEcoreWaylandHandle"];
     if (ecoreWindowHandle != nullptr) {
         ret = esplusplayer_set_ecore_display(
-            m_player, ESPLUSPLAYER_DISPLAY_TYPE_OVERLAY,
-            static_cast<Ecore_Wl2_Window*>(ecoreWindowHandle), 0, 0, width,
-            height);
+            m_player, ESPLUSPLAYER_DISPLAY_TYPE_OVERLAY, ecoreWindowHandle, 0,
+            0, width, height);
         STARFISH_LOG_INFO("ESPP: set_ecore_display(OVERLAY, %p, %dx%d) -> %d",
                           ecoreWindowHandle, (int)width, (int)height, ret);
     } else {
