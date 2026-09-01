@@ -201,6 +201,14 @@ static void setComputedStyleUnitPositionX(
             }
         } else {
             STARFISH_ASSERT(side.sideValue() == SideValue::RightSideValue);
+            if (offsetValueKind != CSSStyleValuePair::ValueKind::Length &&
+                offsetValueKind != CSSStyleValuePair::ValueKind::Percentage &&
+                offsetValueKind !=
+                    CSSStyleValuePair::ValueKind::CalcValueKind) {
+                // Anything else (e.g. a still unresolved var()) would be read
+                // through the union as a CalcData*, so drop the offset instead.
+                return;
+            }
             CalcTerm* term1 = new CalcTerm();
             if (offsetValueKind == CSSStyleValuePair::ValueKind::Length) {
                 term1->appendValue(CalcValue(offset.cssLengthValue()));
@@ -277,6 +285,14 @@ static void setComputedStyleUnitPositionY(
             }
         } else {
             STARFISH_ASSERT(side.sideValue() == SideValue::BottomSideValue);
+            if (offsetValueKind != CSSStyleValuePair::ValueKind::Length &&
+                offsetValueKind != CSSStyleValuePair::ValueKind::Percentage &&
+                offsetValueKind !=
+                    CSSStyleValuePair::ValueKind::CalcValueKind) {
+                // Anything else (e.g. a still unresolved var()) would be read
+                // through the union as a CalcData*, so drop the offset instead.
+                return;
+            }
             CalcTerm* term1 = new CalcTerm();
             if (offsetValueKind == CSSStyleValuePair::ValueKind::Length) {
                 term1->appendValue(CalcValue(offset.cssLengthValue()));
@@ -3473,9 +3489,30 @@ CSSStyleDeclaration* StyleResolver::resolveVarValue(
                                newCssValuePair.flagImportant());
     }
 #ifndef NDEBUG
+    // The resolution above only inspects the top-level pair, so an unresolved
+    // var() nested in a ValueList/ValuePair silently escapes and is later read
+    // through the union as if it were a parsed value. Report it here instead
+    // of at the crash site. (transform keeps its var() references under
+    // TransformFunctionsKind and resolves them while applying, so it is not
+    // reachable from this walk.)
+    std::function<void(const CSSStyleValuePair&)> assertResolved =
+        [&assertResolved](const CSSStyleValuePair& pair) {
+            STARFISH_ASSERT(!pair.hasUnresolvedVarReference());
+            if (pair.valueKind() ==
+                CSSStyleValuePair::ValueKind::ValueListKind) {
+                ValueList* list = pair.multiValue();
+                for (unsigned int i = 0; i < list->size(); i++) {
+                    assertResolved(list->at(i));
+                }
+            } else if (pair.valueKind() ==
+                       CSSStyleValuePair::ValueKind::ValuePairKind) {
+                ValuePair* valuePair = pair.pairValue();
+                assertResolved(valuePair->first());
+                assertResolved(valuePair->second());
+            }
+        };
     for (auto& pair : cssValues) {
-        STARFISH_ASSERT(pair.valueKind() !=
-                        CSSStyleValuePair::ValueKind::VarFunctionValueKind);
+        assertResolved(pair);
     }
 #endif
     return declaration;
@@ -11150,8 +11187,7 @@ bool CSSStyleValuePair::updateValueBorderRadius(const CSSTokenVector& tokens)
             if (!ret) {
                 return false;
             }
-            if (pair.valueKind() ==
-                CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
+            if (pair.hasUnresolvedVarReference()) {
                 // A calc() containing a var() parses with resolution deferred
                 // (VarFunctionValueKind holding the original String*). Storing
                 // it inside this ValueList would let toLengthValue() later read
@@ -11414,6 +11450,11 @@ static bool updatePositionValue(const GCVector<CSSStyleValuePair>& values,
             values[i + 1].valueKind() != CSSStyleValuePair::ValueKind::None &&
             !values[i + 1].isSideValueKind()) {
             CSSStyleValuePair second = values[++i];
+            if (second.hasUnresolvedVarReference()) {
+                // Fail so the caller falls back to the var-resolution path,
+                // which reparses the value once the var() is substituted.
+                return false;
+            }
             ValuePair* pair = new ValuePair(current, second);
             result.setValuePair(pair);
         } else {
