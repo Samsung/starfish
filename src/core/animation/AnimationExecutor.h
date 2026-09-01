@@ -252,6 +252,22 @@ public:
     // keep its elements - and through their handlers the whole realm - alive.
     void removeEntriesOfDocument(Document* document);
 
+    // Drop every transition/animation entry targeting the given element.
+    // Called when the element leaves the document tree: the state checks that
+    // normally retire an entry run per element from style resolution, which a
+    // removed element no longer takes part in, so its entries - and through
+    // them the element and its whole subtree - would stay alive for the
+    // lifetime of the document.
+    //
+    // Like removeEntriesOfDocument(), this drops the entries without firing
+    // the animationcancel/transitioncancel that a cancellation through
+    // checkActiveAnimationsState() would report. Those events are still owed
+    // here - removal from the tree cancels a running animation - but they need
+    // the cancel tick the state check computes from the task, so getting them
+    // right is a separate change from stopping the leak. An Animation object
+    // from Element.animate() does get its cancel, since that needs no tick.
+    void removeEntriesOfElement(Element* element);
+
     bool hasActiveTransition(Element* element, CSSStyleValuePair::KeyKind p);
 
     void registerTransition(ActiveAnimationTask* task);

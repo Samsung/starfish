@@ -52,6 +52,7 @@
 #include "core/page/Window.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
+#include "core/animation/AnimationExecutor.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "binding/generated/NodeOrDOMStringUnion.h"
@@ -2648,6 +2649,25 @@ void Node::didNodeRemovedFromDocumentTree()
     }
 
     clearDidPrepareAnimation();
+
+    if (isElement()) {
+        // Running transitions/animations are retired by the per element state
+        // checks that style resolution drives, and a node outside the tree
+        // never gets resolved again. Retire them here instead, or the entry
+        // keeps the element - and with it the removed subtree and its
+        // wrappers - alive for as long as the document lives.
+        //
+        // This walk runs once per removed element, so the empty executor -
+        // every element on a page that animates nothing - is checked without
+        // touching the executor's containers or the view's registration.
+        AnimationExecutor* executor = document()->animationExecutor();
+        if (executor->activeTransitions().size() ||
+            executor->activeAnimations().size()) {
+            executor->removeEntriesOfElement(asElement());
+            webView()->updateActiveAnimationExecutorRegistration(executor);
+        }
+    }
+
     setState(NodeStateNormal, false);
     clearCachedStyleRecursively();
     FrameTreeBuilder::clearTree(this);
