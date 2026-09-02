@@ -548,6 +548,7 @@ void FrameBlockBox::clearLineBoxes(LayoutContext& ctx)
 
 void FrameBlockBox::quickLayout(LayoutContext& ctx)
 {
+    invalidateScrollExtentOfContent();
     // The walk below re-registers every positioned descendant, which re-marks
     // this box if one is still anchored above it.
     clearHasPositionedDescendantAnchoredAbove();
@@ -642,6 +643,7 @@ static bool absolutePositionIgnorableFlexJustifyContentValue(
 void FrameBlockBox::layout(LayoutContext& ctx,
                            Frame::LayoutWantToResolve resolveWhat)
 {
+    invalidateScrollExtentOfContent();
     BlockFormattingContextBlock blockFormattingContextBlock(this, ctx);
     FrameBox* cb = containingBlock(this);
     LayoutUnit parentContentWidth = cb->contentWidth();
@@ -1072,14 +1074,9 @@ void FrameBlockBox::establishesStackingContextIfNeedsAndComputingPaintingFlags()
     }
 }
 
-void FrameBlockBox::computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
+void FrameBlockBox::computeVisibleRectOfContent(
+    Frame::ComputeVisibleRectContext& ctx)
 {
-    Frame::ComputeVisibleRectContextFragment f(ctx, this);
-
-    if (!tryUniteVisibleRect(ctx)) {
-        return;
-    }
-
     if (hasBlockFlow()) {
         Frame* child = firstChild();
         while (child) {
@@ -1091,6 +1088,50 @@ void FrameBlockBox::computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
             m_lineBoxes[i]->computeVisibleRect(ctx);
         }
     }
+}
+
+void FrameBlockBox::computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
+{
+    Frame::ComputeVisibleRectContextFragment f(ctx, this);
+
+    if (!tryUniteVisibleRect(ctx)) {
+        return;
+    }
+
+    // The scroll-rect walk runs after every layout pass, from the document
+    // and from each laid-out scroll container, and it only reaches a subtree
+    // whose box does not clip (tryUniteVisibleRect stops at overflow boxes),
+    // so nothing between here and the source clips or scrolls what is
+    // gathered below. When the matrix down to this box is a pure translation
+    // the content's extent in this box's own space is therefore reusable as
+    // a whole: keep it on the boxes the layout pass can skip (formatting
+    // context roots and out-of-flow boxes), and rebuild it only after the box
+    // has been laid out again. Table parts and the table-cell special value
+    // keep the per-leaf walk.
+    if (ctx.purpose == Frame::ComputeVisibleRectContext::Scrolling &&
+        !ctx.isForSpecialValueForTableCell &&
+        !(ctx.tranformMatrix.getType() & ~SkMatrix::kTranslate_Mask) &&
+        !isFrameTableObjectBox() && !isFrameDocument() &&
+        (needToEstablishKindsOfFormattingContext() || isAbsolutePositioned())) {
+        if (!hasCachedScrollExtentOfContent()) {
+            LayoutRect extent;
+            SkMatrix identity = SkMatrix::I();
+            Frame::ComputeVisibleRectContext content(
+                Frame::ComputeVisibleRectContext::Scrolling, ctx.sourceFrameBox,
+                identity, extent);
+            content.extendBySourcePadding = false;
+            content.fragmentBoxStack.push_back(this);
+            computeVisibleRectOfContent(content);
+            setCachedScrollExtentOfContent(extent);
+        }
+        const LayoutRect& extent = cachedScrollExtentOfContent();
+        if (!extent.isEmpty()) {
+            ctx.uniteRect(extent);
+        }
+        return;
+    }
+
+    computeVisibleRectOfContent(ctx);
 }
 
 static bool isNonSelfCollapsingHeight(LayoutContext& ctx, FrameBlockBox* box,

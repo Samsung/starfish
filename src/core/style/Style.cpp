@@ -9873,6 +9873,18 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
         element->webView()->setNeedsComputeStackingContextProperties();
     }
 
+    if (damage & (ComputedStyleDamage::
+                      ComputedStyleDamageEstablishesStackingContext |
+                  ComputedStyleDamage::
+                      ComputedStyleDamageComputeStackingContextProperties)) {
+        // A transform (or transform-origin) change moves this box's content
+        // without any layout, so the scroll-rect walk's cached content
+        // extents above it (FrameBlockBox::computeVisibleRect) are stale.
+        if (Frame* f = element->frame()) {
+            f->invalidateAncestorsScrollExtentOfContent();
+        }
+    }
+
     if (damage & ComputedStyleDamage::ComputedStyleDamagePainting) {
         element->setNeedsPainting();
     }

@@ -1984,6 +1984,11 @@ public:
         // content-only rect must see what a per-leaf walk from them would
         // have seen (which subjects the box to the collapsible filter).
         bool contentOnlyExtent{ false };
+        // Scrolling: uniteRect() pads the result by the source's right/bottom
+        // padding whenever the extent grows. A nested walk that only gathers
+        // a subtree's extent for its caller to unite must not, or the
+        // caller's unite would pad it a second time.
+        bool extendBySourcePadding{ true };
         std::vector<std::tuple<LayoutRect, FrameBox*>>
             boundMaxExtentDueToOverflow;
         std::unordered_set<FrameBox*> visbleRectComputedBox;
@@ -2046,6 +2051,10 @@ public:
     // (and its ancestors) dirty for the next stacking-context properties
     // pass. Call from every mutation that requests that pass.
     void markAncestorStackingContextVisibleRectDirty();
+    // Drops the cached scroll extent of this box and every FrameBox above it
+    // (FrameBox::invalidateScrollExtentOfContent): for a change that moves
+    // content without a layout, such as a transform.
+    void invalidateAncestorsScrollExtentOfContent();
     // Also raises childNeedsLayout on every FrameBlockBox above (see
     // childNeedsLayout below): a frame that needs layout must never sit under
     // a block the clean-subtree skip takes for clean, and this is the one
