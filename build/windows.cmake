@@ -205,11 +205,7 @@ SET_TARGET_PROPERTIES (escargot gc-lib PROPERTIES
 # instead of leaking into every target in this directory via global
 # add_compile_options.
 IF (TARGET escargot)
-    target_compile_definitions (escargot PRIVATE
-        SCRIPT_FUNCTION_OBJECT_BYTECODE_SIZE_MAX=4194304
-        ESCARGOT_OBJECT_STRUCTURE_ACCESS_CACHE_BUILD_MIN_SIZE=32
-        ESCARGOT_OBJECT_STRUCTURE_TRANSITION_MODE_MAX_SIZE=36
-    )
+    target_compile_definitions (escargot PRIVATE)
 ENDIF()
 
 SET (STARFISH_DEPENDENCIES
