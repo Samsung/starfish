@@ -1066,6 +1066,15 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                 STARFISH_ASSERT(oldBlockContainer ==
                                 ctx.currentBlockContainer());
 
+                // An in-flow box is laid out by its parent regardless of its
+                // own flag, but an out-of-flow one is laid out by its
+                // containing block only if it is dirty: a fresh frame with no
+                // layout yet must not pass for a clean, skippable subtree.
+                if (currentFrame->parent() && currentFrame->isFrameBox() &&
+                    !currentFrame->isNormalFlow()) {
+                    currentFrame->markNeedsLayout();
+                }
+
                 if (currentFrame->isFrameText() &&
                     currentFrame->style()->textTransform() !=
                         NoneTextTransformValue) {

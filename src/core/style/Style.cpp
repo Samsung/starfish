@@ -9604,6 +9604,37 @@ static bool isSVGElementFrameTreeBuilderNeverFrames(Element* element)
     return false;
 }
 
+// True when |element| is the last rendering child of |parent|, |parent|'s
+// frame is a plain block container (no table or flex/grid machinery), and no
+// ancestor frame, up to the root, is a split inline (whose halves the builder
+// would have to re-pair; the same test as the block-append fast path above).
+static bool isLastRenderingChildOfBlock(Element* element, Element* parent)
+{
+    if (element->renderingParentElement() != parent || !parent->frame() ||
+        !parent->frame()->isFrameBlockBox() ||
+        parent->frame()->isFrameTableObjectBox() ||
+        parent->frame()->isFrameFlexibleBox() ||
+        parent->frame()->isFrameGridBox()) {
+        return false;
+    }
+    for (Element* c = element; c; c = c->renderingParentElement()) {
+        if (c->frame() && c->frame()->isBlockLevel() &&
+            c->frame()->didSpiltFrameInline()) {
+            return false;
+        }
+    }
+    RenderingSiblingIterator iter(parent->firstRenderingChild());
+    while (true) {
+        Optional<Node*> child = iter.next();
+        if (!child) {
+            return false;
+        }
+        if (child.value() == element) {
+            return !iter.next();
+        }
+    }
+}
+
 static ComputedStyleDamage applyStyleToElement(Element* element,
                                                ComputedStyle* style,
                                                StyleResolveContext& ctx)
@@ -9758,6 +9789,25 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
 
                             needsToExecuteNormalPath = false;
                         }
+                    } else if (isElementAbsPositioned && e->frame() &&
+                               e->frame()->style()->display() ==
+                                   BlockDisplayValue &&
+                               isLastRenderingChildOfBlock(element, e)) {
+                        // The builder appends a frame to its container, which
+                        // is where this box belongs when it is the last child:
+                        // the trailing inline run's anonymous block, or a new
+                        // one, or the container itself. Its siblings' frames
+                        // are unaffected, so build just this element instead
+                        // of rebuilding every sibling from the first
+                        // out-of-flow one on.
+                        e->frame()->propagateMarkNeedsLayout();
+                        element->markAncestorStackingContextVisibleRectDirty();
+                        element->markNeedsFrameTreeBuild();
+                        for (Element* p = e; p;
+                             p = p->renderingParentElement()) {
+                            p->markChildNeedsFrameTreeBuild();
+                        }
+                        needsToExecuteNormalPath = false;
                     } else if (isElementAbsPositioned && e->frame() &&
                                e->frame()->style()->display() ==
                                    BlockDisplayValue) {

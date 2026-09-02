@@ -870,8 +870,12 @@ public:
     // True once an absolutely/relatively positioned descendant was registered
     // to a containing block above this box. Such a descendant's used position
     // depends on that ancestor's geometry, so this subtree must keep taking
-    // the quick-layout walk that re-registers it. Never cleared: the frame
-    // tree rebuild that drops the descendant recreates this box too.
+    // the quick-layout walk that re-registers it. Cleared right before this
+    // box's content is walked (after the skip decision for this pass), so
+    // the walk's registrations re-derive it: once such a descendant is gone
+    // - a frame tree rebuild, or an out-of-flow frame detached in place by
+    // Node::removeChild() - the next walk leaves the bit clear and the
+    // subtree becomes skippable again.
     bool hasPositionedDescendantAnchoredAbove()
     {
         return m_flags.m_isFirstLineOrHasPositionedDescendantAnchoredAbove;
@@ -879,6 +883,10 @@ public:
     void markHasPositionedDescendantAnchoredAbove()
     {
         m_flags.m_isFirstLineOrHasPositionedDescendantAnchoredAbove = true;
+    }
+    void clearHasPositionedDescendantAnchoredAbove()
+    {
+        m_flags.m_isFirstLineOrHasPositionedDescendantAnchoredAbove = false;
     }
     // Whether the quick-layout walk over this (clean) subtree can be skipped
     // in the current pass: nothing inside needs layout and nothing the walk

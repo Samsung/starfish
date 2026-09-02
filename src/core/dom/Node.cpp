@@ -1915,13 +1915,19 @@ Node* Node::removeChild(Node* child)
             frame()->removeChild(old);
             child->setFrame(nullptr);
             setNeedsLayout();
-        } else if (old->style() &&
-                   old->style()->display() == BlockDisplayValue &&
-                   old->isAbsolutePositioned() &&
-                   old->parent()->isFrameBlockBox() &&
-                   old->parent()->isAnonymous()) {
+        } else if (old->isFrameBox() && old->isAbsolutePositioned() &&
+                   old->parent() && !old->parent()->isFrameTableObjectBox() &&
+                   !child->isSVGChildElement()) {
+            // An out-of-flow box never changes how its siblings are wrapped
+            // (it joins whatever inline run or container it appears in and
+            // does not split inlines), so its frame can be detached in place;
+            // the siblings' frames stay valid. Rebuilding the containing
+            // block's whole subtree instead was the largest per-mutation cost
+            // for content made of absolutely positioned boxes.
             old->parent()->removeChild(old);
-            child->setFrame(nullptr);
+            FrameTreeBuilder::clearTree(child);
+            markAncestorStackingContextVisibleRectDirty();
+            webView()->setNeedsEstablishesStackingContext();
             setNeedsLayout();
         } else {
             child->setNeedsFrameTreeBuild();

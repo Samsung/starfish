@@ -246,6 +246,9 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
         return;
     }
 
+    // The content is laid out below; its registrations re-derive the bit.
+    clearHasPositionedDescendantAnchoredAbove();
+
     LayoutContextQuickLayoutStateMaker m(ctx, false);
 
     if (isFrameTableBox()) {
@@ -545,6 +548,9 @@ void FrameBlockBox::clearLineBoxes(LayoutContext& ctx)
 
 void FrameBlockBox::quickLayout(LayoutContext& ctx)
 {
+    // The walk below re-registers every positioned descendant, which re-marks
+    // this box if one is still anchored above it.
+    clearHasPositionedDescendantAnchoredAbove();
     if (!needToEstablishKindsOfFormattingContext()) {
         Frame::quickLayout(ctx);
     }
