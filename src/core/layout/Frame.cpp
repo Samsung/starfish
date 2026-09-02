@@ -798,9 +798,29 @@ void LayoutContext::registerPreferredWidthInfo(PreferredWidthKey key,
     (*c.m_preferredWidthValues)[key] = value;
 }
 
+// The boxes strictly between a positioned box and its containing block hold
+// a descendant whose used position is derived from geometry above them; they
+// must not skip the quick-layout walk that hands the box back to its
+// containing block (see FrameBlockBox::canSkipCleanSubtreeLayout).
+static void markPositionedDescendantAnchoredAbove(FrameBox* box,
+                                                  FrameBlockBox* cb)
+{
+    // An inline box lives in its block's line boxes, not in the frame tree;
+    // no block box lies between it and its containing block.
+    if (box->isInlineBox()) {
+        return;
+    }
+    for (Frame* f = box->parent(); f && f != cb; f = f->parent()) {
+        if (f->isFrameBlockBox()) {
+            f->asFrameBlockBox()->markHasPositionedDescendantAnchoredAbove();
+        }
+    }
+}
+
 void LayoutContext::registerAbsolutePositionedBox(FrameBox* box)
 {
     FrameBlockBox* cb = containingFrameBlockBox(box);
+    markPositionedDescendantAnchoredAbove(box, cb);
     m_absolutePositionedBoxes.emplace(cb, std::vector<FrameBox*>());
     auto& vec = m_absolutePositionedBoxes[cb];
     vec.push_back(box);
@@ -831,6 +851,7 @@ void LayoutContext::clearRegisteredAbsolutePositionedBoxes(
 void LayoutContext::addToRelativePositionedBoxes(FrameBox* box, bool dueToSelf)
 {
     FrameBlockBox* cb = containingFrameBlockBox(box);
+    markPositionedDescendantAnchoredAbove(box, cb);
     m_relativePositionedBoxes.emplace(
         cb, std::vector<std::pair<FrameBox*, bool>>());
     auto& vec = m_relativePositionedBoxes[cb];
@@ -1409,7 +1430,7 @@ Frame::Frame(Node* node, ComputedStyle* s)
     m_flags.m_hasBiggerContentThanFrameWidth = false;
     m_flags.m_hasBiggerContentThanFrameHeight = false;
     m_flags.m_needsToComputeScrollVisbleRect = false;
-    m_flags.m_isFirstLine = false;
+    m_flags.m_isFirstLineOrHasPositionedDescendantAnchoredAbove = false;
     m_flags.m_shouldApplyOverflow = false;
     m_flags.m_seenNormalFlowBlockChild = false;
     m_flags.m_seenNonPositionedFloats = false;
@@ -2139,9 +2160,21 @@ void Frame::markAncestorStackingContextVisibleRectDirty()
     }
 }
 
+void Frame::markAncestorsChildNeedsLayout()
+{
+    for (Frame* f = this; f; f = f->parent()) {
+        if (f->isFrameBlockBox()) {
+            f->m_flags.m_childNeedsLayout = true;
+        }
+    }
+}
+
 void Frame::propagateMarkNeedsLayout(Optional<ComputedStyle*> newStyle)
 {
     markAncestorStackingContextVisibleRectDirty();
+    // This frame may not be a formatting-context root and so not be marked
+    // below; its own block ancestors still hold a changed frame.
+    markAncestorsChildNeedsLayout();
     for (Frame* f = this; f; f = f->parent()) {
         if (f->needToEstablishKindsOfFormattingContext() ||
             f->isFrameDocument()) {

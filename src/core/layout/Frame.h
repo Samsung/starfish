@@ -441,6 +441,19 @@ public:
             .m_blockBoxAligningAtFirstBaselineStack->pop_back();
     }
 
+    // True while some enclosing box reads line ascenders back from the
+    // layout walk of its content: an inline-level box being placed in its
+    // line (m_inlineBlockBoxStack) or a flex item / table cell aligned at
+    // its first baseline (m_blockBoxAligningAtFirstBaselineStack). Those
+    // ascenders are registered by descendants' inline layout
+    // (registerLineBoxAscender), so no descendant may skip its walk then.
+    bool isCollectingAscenders()
+    {
+        BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+        return !c.m_inlineBlockBoxStack->empty() ||
+               !c.m_blockBoxAligningAtFirstBaselineStack->empty();
+    }
+
     void registerFirstLineAscender(FrameBlockBox* owner, LineBox* lineBox,
                                    LayoutUnit ascender);
     Optional<std::pair<LineBox*, LayoutUnit>> firstLineAscender(
@@ -457,6 +470,17 @@ public:
                                     PreferredWidthValue value);
 
     void registerAbsolutePositionedBox(FrameBox* box);
+
+    // Blocks that completed a real layout this pass: the only ones whose
+    // scroll rect can have changed (FrameBlockBox::computeScrollRectIfNeeded).
+    void registerBlockForScrollRectUpdate(FrameBlockBox* box)
+    {
+        m_blocksForScrollRectUpdate.push_back(box);
+    }
+    const std::vector<FrameBlockBox*>& blocksForScrollRectUpdate() const
+    {
+        return m_blocksForScrollRectUpdate;
+    }
 
     void layoutRegisteredAbsolutePositionedBoxes(
         FrameBlockBox* containingBlock);
@@ -743,6 +767,7 @@ private:
     // a reference for Frames
     std::vector<BlockFormattingContext> m_blockFormattingContextInfo;
     std::map<FrameBlockBox*, std::vector<FrameBox*>> m_absolutePositionedBoxes;
+    std::vector<FrameBlockBox*> m_blocksForScrollRectUpdate;
     std::map<FrameBlockBox*, std::vector<std::pair<FrameBox*, bool>>>
         m_relativePositionedBoxes;
     // TODO move these maps into BlockFormattingContext
@@ -2021,9 +2046,14 @@ public:
     // (and its ancestors) dirty for the next stacking-context properties
     // pass. Call from every mutation that requests that pass.
     void markAncestorStackingContextVisibleRectDirty();
+    // Also raises childNeedsLayout on every FrameBlockBox above (see
+    // childNeedsLayout below): a frame that needs layout must never sit under
+    // a block the clean-subtree skip takes for clean, and this is the one
+    // place that can guarantee it for every caller.
     void markNeedsLayout()
     {
         m_flags.m_needsLayout = true;
+        markAncestorsChildNeedsLayout();
     }
     void clearNeedsLayout(LayoutContext& ctx)
     {
@@ -2032,6 +2062,26 @@ public:
         }
         m_flags.m_needsLayout = false;
     }
+
+    // A clean FrameBlockBox whose subtree holds no frame needing layout can
+    // skip the quick-layout walk of that subtree. The bit is set on this
+    // frame and every FrameBlockBox ancestor whenever a frame is marked for
+    // layout (markNeedsLayout), and cleared when the block's subtree has
+    // been laid out (fully or quickly) in a pass. The upward walk never
+    // stops early: non-block frames don't carry the bit, so an ancestor's
+    // set bit says nothing about the frames above it.
+    bool childNeedsLayout() const
+    {
+        return m_flags.m_childNeedsLayout;
+    }
+    void clearChildNeedsLayout(LayoutContext& ctx)
+    {
+        if (ctx.inComputingBasisSize()) {
+            return;
+        }
+        m_flags.m_childNeedsLayout = false;
+    }
+    void markAncestorsChildNeedsLayout();
 
     // For measurement protocols (flex basis, grid track sizing) that
     // force-mark a clean frame to lay it out: restores the flag afterwards so
@@ -2469,8 +2519,12 @@ protected:
         bool m_hasBiggerContentThanFrameWidth : 1;
         bool m_hasBiggerContentThanFrameHeight : 1;
         bool m_needsToComputeScrollVisbleRect : 1;
-        // special flag for InlineBox
-        bool m_isFirstLine : 1;
+        // Shared bit (FrameFlags is full):
+        // - InlineBox: this box carries ::first-line style.
+        // - FrameBlockBox: a positioned descendant is anchored to a
+        //   containing block above this box, so its subtree can't be skipped
+        //   by the clean-subtree layout skip (see canSkipCleanSubtreeLayout).
+        bool m_isFirstLineOrHasPositionedDescendantAnchoredAbove : 1;
         // special flag for InlineTextBox
         CharDirection m_direction : 2;
         // special flag for InlineNonReplacedBox & for others
@@ -2487,6 +2541,11 @@ protected:
         bool m_paddingWidthDamaged : 1;
         bool m_contentHeightDamaged : 1;
         bool m_paddingHeightDamaged : 1;
+
+        // Some frame in this subtree (self included) was marked for layout
+        // since this frame last completed a layout pass. Maintained on
+        // FrameBlockBox only (markAncestorsChildNeedsLayout).
+        bool m_childNeedsLayout : 1;
     } m_flags;
 
 #if !defined(COMPILER_MSVC)

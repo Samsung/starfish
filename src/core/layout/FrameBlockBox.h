@@ -79,7 +79,8 @@ public:
         , m_start(0)
         , m_end(std::numeric_limits<uint16_t>::max())
     {
-        m_flags.m_isFirstLine = box->isFirstLine();
+        m_flags.m_isFirstLineOrHasPositionedDescendantAnchoredAbove =
+            box->isFirstLine();
         m_flags.m_direction = box->charDirection();
     }
 
@@ -88,7 +89,8 @@ public:
     {
         setText(run.m_stringView.string(), run.m_stringView.start(),
                 run.m_stringView.end());
-        m_flags.m_isFirstLine = isFirstLine;
+        m_flags.m_isFirstLineOrHasPositionedDescendantAnchoredAbove =
+            isFirstLine;
         m_flags.m_direction = run.m_direction;
     }
 
@@ -166,14 +168,14 @@ public:
 
     void unmarkFirstLine()
     {
-        m_flags.m_isFirstLine = false;
+        m_flags.m_isFirstLineOrHasPositionedDescendantAnchoredAbove = false;
         setWidth(style()->font()->measureText(textRun().m_stringView));
         setHeight(style()->font()->metrics().m_fontHeight);
     }
 
     bool isFirstLine()
     {
-        return m_flags.m_isFirstLine;
+        return m_flags.m_isFirstLineOrHasPositionedDescendantAnchoredAbove;
     }
 
     bool isHiddenByTextOverflow()
@@ -192,7 +194,9 @@ public:
             parent = parent->layoutParent();
         }
 
-        return Frame::style(parent, parent->style(), m_flags.m_isFirstLine);
+        return Frame::style(
+            parent, parent->style(),
+            m_flags.m_isFirstLineOrHasPositionedDescendantAnchoredAbove);
     }
 
     void* operator new(size_t size);
@@ -542,7 +546,9 @@ public:
 
     ComputedStyle* style()
     {
-        return Frame::style(this, Frame::style(), m_flags.m_isFirstLine);
+        return Frame::style(
+            this, Frame::style(),
+            m_flags.m_isFirstLineOrHasPositionedDescendantAnchoredAbove);
     }
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth) override;
@@ -649,7 +655,8 @@ protected:
         , m_origin(origin)
     {
         m_flags.m_isCollapsedOrDidSpiltFrameInline = false;
-        m_flags.m_isFirstLine = isFirstLine;
+        m_flags.m_isFirstLineOrHasPositionedDescendantAnchoredAbove =
+            isFirstLine;
         if (origin->isLeftMBPCleared()) {
             setLeftMBPCleared(true);
         }
@@ -859,6 +866,28 @@ public:
         return FrameBox::needToEstablishStackingContext() ||
                needsToEstablishStackingContextForScrolling();
     }
+
+    // True once an absolutely/relatively positioned descendant was registered
+    // to a containing block above this box. Such a descendant's used position
+    // depends on that ancestor's geometry, so this subtree must keep taking
+    // the quick-layout walk that re-registers it. Never cleared: the frame
+    // tree rebuild that drops the descendant recreates this box too.
+    bool hasPositionedDescendantAnchoredAbove()
+    {
+        return m_flags.m_isFirstLineOrHasPositionedDescendantAnchoredAbove;
+    }
+    void markHasPositionedDescendantAnchoredAbove()
+    {
+        m_flags.m_isFirstLineOrHasPositionedDescendantAnchoredAbove = true;
+    }
+    // Whether the quick-layout walk over this (clean) subtree can be skipped
+    // in the current pass: nothing inside needs layout and nothing the walk
+    // would re-register or re-derive can have changed.
+    bool canSkipCleanSubtreeLayout(LayoutContext& ctx);
+    // The same for an out-of-flow box re-laid by its containing block, which
+    // also has to be untouched by that block's damage (shouldLayout).
+    bool canSkipOutOfFlowLayout(LayoutContext& ctx,
+                                LayoutWantToResolve resolveWhat, FrameBox* cb);
 
     virtual bool hasBlockFlow()
     {
