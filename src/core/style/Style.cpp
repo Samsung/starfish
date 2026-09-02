@@ -160,6 +160,34 @@ static Length parseAbsoluteFontSize(int col, float mediumSize)
     return Length(Length::Fixed, strictFontSizeTable[row][col]);
 }
 
+// Builds `calc(100% - offset)` for an offset measured from the right/bottom
+// edge. Yields no value when the offset is neither a length, a percentage nor
+// a calc (e.g. a still unresolved var()), so the caller keeps its default
+// instead of reading the value union through the wrong member.
+static Optional<Length> farSideOffsetToLength(const CSSStyleValuePair& offset)
+{
+    CSSStyleValuePair::ValueKind kind = offset.valueKind();
+    CalcTerm* term1 = new CalcTerm();
+    if (kind == CSSStyleValuePair::ValueKind::Length) {
+        term1->appendValue(CalcValue(offset.cssLengthValue()));
+    } else if (kind == CSSStyleValuePair::ValueKind::Percentage) {
+        term1->appendValue(CalcValue(offset.percentageValue(), true));
+    } else if (kind == CSSStyleValuePair::ValueKind::CalcValueKind) {
+        term1->appendValue(CalcValue(offset.calcValue()));
+    } else {
+        return Optional<Length>();
+    }
+    term1->appendValue(true, CalcValue(-1.0f, false));
+
+    CalcTerm* term2 = new CalcTerm();
+    term2->appendValue(CalcValue(1.0f, true));
+
+    CalcData* calcData = new CalcData();
+    calcData->appendTerm(term1);
+    calcData->appendTerm(term2);
+    return Length(calcData);
+}
+
 static void setComputedStyleUnitPositionX(
     ComputedStyle* style, const CSSStyleValuePair& value, uint32_t layer,
     std::function<void(ComputedStyle* style, const Length& length,
@@ -201,32 +229,10 @@ static void setComputedStyleUnitPositionX(
             }
         } else {
             STARFISH_ASSERT(side.sideValue() == SideValue::RightSideValue);
-            if (offsetValueKind != CSSStyleValuePair::ValueKind::Length &&
-                offsetValueKind != CSSStyleValuePair::ValueKind::Percentage &&
-                offsetValueKind !=
-                    CSSStyleValuePair::ValueKind::CalcValueKind) {
-                // Anything else (e.g. a still unresolved var()) would be read
-                // through the union as a CalcData*, so drop the offset instead.
-                return;
+            Optional<Length> maybeLength = farSideOffsetToLength(offset);
+            if (maybeLength.hasValue()) {
+                setter(style, maybeLength.getValue(), layer);
             }
-            CalcTerm* term1 = new CalcTerm();
-            if (offsetValueKind == CSSStyleValuePair::ValueKind::Length) {
-                term1->appendValue(CalcValue(offset.cssLengthValue()));
-            } else if (offsetValueKind ==
-                       CSSStyleValuePair::ValueKind::Percentage) {
-                term1->appendValue(CalcValue(offset.percentageValue(), true));
-            } else {
-                term1->appendValue(CalcValue(offset.calcValue()));
-            }
-            term1->appendValue(true, CalcValue(-1.0f, false));
-
-            CalcTerm* term2 = new CalcTerm();
-            term2->appendValue(CalcValue(1.0f, true));
-
-            CalcData* calcData = new CalcData();
-            calcData->appendTerm(term1);
-            calcData->appendTerm(term2);
-            setter(style, Length(calcData), layer);
         }
     } else if (valueKind == CSSStyleValuePair::ValueKind::ValueListKind) {
         ValueList* list = value.multiValue();
@@ -285,32 +291,10 @@ static void setComputedStyleUnitPositionY(
             }
         } else {
             STARFISH_ASSERT(side.sideValue() == SideValue::BottomSideValue);
-            if (offsetValueKind != CSSStyleValuePair::ValueKind::Length &&
-                offsetValueKind != CSSStyleValuePair::ValueKind::Percentage &&
-                offsetValueKind !=
-                    CSSStyleValuePair::ValueKind::CalcValueKind) {
-                // Anything else (e.g. a still unresolved var()) would be read
-                // through the union as a CalcData*, so drop the offset instead.
-                return;
+            Optional<Length> maybeLength = farSideOffsetToLength(offset);
+            if (maybeLength.hasValue()) {
+                setter(style, maybeLength.getValue(), layer);
             }
-            CalcTerm* term1 = new CalcTerm();
-            if (offsetValueKind == CSSStyleValuePair::ValueKind::Length) {
-                term1->appendValue(CalcValue(offset.cssLengthValue()));
-            } else if (offsetValueKind ==
-                       CSSStyleValuePair::ValueKind::Percentage) {
-                term1->appendValue(CalcValue(offset.percentageValue(), true));
-            } else {
-                term1->appendValue(CalcValue(offset.calcValue()));
-            }
-            term1->appendValue(true, CalcValue(-1.0f, false));
-
-            CalcTerm* term2 = new CalcTerm();
-            term2->appendValue(CalcValue(1.0f, true));
-
-            CalcData* calcData = new CalcData();
-            calcData->appendTerm(term1);
-            calcData->appendTerm(term2);
-            setter(style, Length(calcData), layer);
         }
     } else if (valueKind == CSSStyleValuePair::ValueKind::ValueListKind) {
         ValueList* list = value.multiValue();
@@ -7303,30 +7287,11 @@ void StyleResolver::applyProperty(Element* element,
                                 }
                             } else if (first.sideValue() ==
                                        SideValue::RightSideValue) {
-                                CalcData* data = new CalcData();
-                                CalcValue val;
-                                CalcTerm* term1 = new CalcTerm();
-                                if (second.valueKind() ==
-                                    CSSStyleValuePair::ValueKind::Percentage) {
-                                    val.setType(
-                                        CalcValueType::ValueKind::kPercentage);
-                                    val.setValue(-1 * second.percentageValue());
-                                } else {
-                                    val.setType(
-                                        CalcValueType::ValueKind::kLength);
-                                    val.setValue(-1 * second.cssLengthValue());
+                                Optional<Length> nX =
+                                    farSideOffsetToLength(second);
+                                if (nX.hasValue()) {
+                                    x = nX.getValue();
                                 }
-                                term1->appendValue(val);
-
-                                CalcTerm* term2 = new CalcTerm();
-                                val.setType(
-                                    CalcValueType::ValueKind::kPercentage);
-                                val.setValue(1.0f);
-                                term2->appendValue(val);
-
-                                data->appendTerm(term1);
-                                data->appendTerm(term2);
-                                x = Length(data);
                             }
                         } else {
                             if (first.sideValue() == SideValue::TopSideValue) {
@@ -7338,30 +7303,11 @@ void StyleResolver::applyProperty(Element* element,
                                 }
                             } else if (first.sideValue() ==
                                        SideValue::BottomSideValue) {
-                                CalcData* data = new CalcData();
-                                CalcValue val;
-                                CalcTerm* term1 = new CalcTerm();
-                                if (second.valueKind() ==
-                                    CSSStyleValuePair::ValueKind::Percentage) {
-                                    val.setType(
-                                        CalcValueType::ValueKind::kPercentage);
-                                    val.setValue(-1 * second.percentageValue());
-                                } else {
-                                    val.setType(
-                                        CalcValueType::ValueKind::kLength);
-                                    val.setValue(-1 * second.cssLengthValue());
+                                Optional<Length> nY =
+                                    farSideOffsetToLength(second);
+                                if (nY.hasValue()) {
+                                    y = nY.getValue();
                                 }
-                                term1->appendValue(val);
-
-                                CalcTerm* term2 = new CalcTerm();
-                                val.setType(
-                                    CalcValueType::ValueKind::kPercentage);
-                                val.setValue(1.0f);
-                                term2->appendValue(val);
-
-                                data->appendTerm(term1);
-                                data->appendTerm(term2);
-                                y = Length(data);
                             }
                         }
                     }
