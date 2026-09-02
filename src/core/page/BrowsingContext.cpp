@@ -431,6 +431,15 @@ void BrowsingContext::layoutSVGViewportsNeedingContentLayout()
         viewport->layoutSVGContent(ctx);
         viewport->node()->setNeedsPainting();
     }
+
+    // Blocks laid out here (HTML inside <foreignObject>) are not seen by
+    // layoutIfNeeded()'s scroll-rect pass, which visits only the blocks its
+    // own context recorded.
+    for (FrameBlockBox* fb : ctx.blocksForScrollRectUpdate()) {
+        if (fb != document()->frame()) {
+            fb->computeScrollRectIfNeeded();
+        }
+    }
 }
 
 bool BrowsingContext::layoutIfNeeded()
@@ -452,14 +461,16 @@ bool BrowsingContext::layoutIfNeeded()
         document()->frame()->layout(ctx,
                                     Frame::LayoutWantToResolve::ResolveAll);
 
-        // compute scroll width & height of each FrameBlockBox if need
+        // compute scroll width & height of each FrameBlockBox if need. Only a
+        // block that completed a real layout this pass can have a new scroll
+        // rect (that is also where the needs-compute flag is raised), so
+        // visit those instead of the whole frame tree.
         document()->frame()->asFrameBlockBox()->computeScrollRectIfNeeded();
-        document()->frame()->asFrameBox()->iterateChildFrameBox(
-            [](FrameBox* fb) {
-                if (fb->isFrameBlockBox()) {
-                    fb->asFrameBlockBox()->computeScrollRectIfNeeded();
-                }
-            });
+        for (FrameBlockBox* fb : ctx.blocksForScrollRectUpdate()) {
+            if (fb != document()->frame()) {
+                fb->computeScrollRectIfNeeded();
+            }
+        }
 
         registerDidLayoutInWebView();
 

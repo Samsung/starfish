@@ -96,6 +96,8 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
         if (!shouldLayout(ctx, Frame::ResolveWidth, cb)) {
             return;
         }
+    } else if (canSkipOutOfFlowLayout(ctx, Frame::ResolveWidth, cb)) {
+        return;
     }
 
     LayoutContextQuickLayoutStateMaker m(ctx, false);
@@ -205,7 +207,14 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
     if (needToEstablishKindsOfFormattingContext()) {
         if (!shouldLayout(ctx, LayoutWantToResolve::ResolveHeight, cb)) {
             bool isQuickLayout = ctx.isQuickLayout();
-            {
+            bool skippedWalk = canSkipCleanSubtreeLayout(ctx);
+            if (skippedWalk) {
+                // Only what the parent reads back from the walk.
+                if (isFrameTableCellBox() || isFlexItem() ||
+                    isFrameButtonBox()) {
+                    ctx.registerContentHeight(this, contentHeight());
+                }
+            } else {
                 LayoutContextQuickLayoutStateMaker m(ctx, true);
                 quickLayout(ctx);
             }
@@ -220,9 +229,21 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
                 }
                 addToRelativePositionedBoxesIfNeeded(ctx);
             }
-            addToRelativePositionedBoxes(ctx);
+            // The walk's resetChildrenVerticalPositions() backed out the
+            // relative offsets of the line boxes' children; re-registering
+            // them here re-applies those offsets. A skipped walk left them
+            // applied, so they must not be registered again.
+            if (!skippedWalk) {
+                addToRelativePositionedBoxes(ctx);
+            }
             return;
         }
+    } else if (canSkipOutOfFlowLayout(ctx, LayoutWantToResolve::ResolveHeight,
+                                      cb)) {
+        // Nothing to hand back to a containing block: an out-of-flow box
+        // takes part in no margin collapsing and is not a flex item or table
+        // cell.
+        return;
     }
 
     LayoutContextQuickLayoutStateMaker m(ctx, false);
@@ -559,6 +580,18 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
                     ctx.clearRegisteredAbsolutePositionedBoxes(
                         child->asFrameBlockBox());
                 }
+            } else if (child->isFrameBlockBox() &&
+                       child->asFrameBlockBox()->canSkipCleanSubtreeLayout(
+                           ctx)) {
+                // What Frame::quickLayout would have done for it. Damage
+                // flags deeper in the skipped subtree are left as they are:
+                // a block clears its own at the start of its next layout(),
+                // and they are only ever read through a containing block
+                // that is being laid out.
+                child->clearContentWidthDamaged();
+                child->clearContentHeightDamaged();
+                child->clearPaddingWidthDamaged();
+                child->clearPaddingHeightDamaged();
             } else {
                 child->quickLayout(ctx);
             }
@@ -579,6 +612,8 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
         }
         addToRelativePositionedBoxes(ctx);
     }
+
+    clearChildNeedsLayout(ctx);
 
     if (!needToEstablishKindsOfFormattingContext()) {
         ctx.layoutRegisteredAbsolutePositionedBoxes(this);
@@ -819,9 +854,66 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         m_flags.m_hasBiggerContentThanFrameHeight = false;
     }
 
-    m_flags.m_needsToComputeScrollVisbleRect = true;
+    // Once per pass: the flag stays raised until the pass's scroll-rect
+    // update (or a scrollWidth/scrollHeight read) consumes it, so a block
+    // laid out several times in a pass (flex measurements, table passes) is
+    // registered on the first.
+    if (!m_flags.m_needsToComputeScrollVisbleRect) {
+        m_flags.m_needsToComputeScrollVisbleRect = true;
+        ctx.registerBlockForScrollRectUpdate(this);
+    }
 
+    clearChildNeedsLayout(ctx);
     clearNeedsLayout(ctx);
+}
+
+bool FrameBlockBox::canSkipOutOfFlowLayout(LayoutContext& ctx,
+                                           LayoutWantToResolve resolveWhat,
+                                           FrameBox* cb)
+{
+    // An out-of-flow box is laid out again whenever its containing block is;
+    // its geometry only depends on that block's padding box (which
+    // shouldLayout checks) and its own clean subtree.
+    return isAbsolutePositioned() && canSkipCleanSubtreeLayout(ctx) &&
+           !shouldLayout(ctx, resolveWhat, cb);
+}
+
+bool FrameBlockBox::canSkipCleanSubtreeLayout(LayoutContext& ctx)
+{
+    if (needsLayout() || childNeedsLayout()) {
+        return false;
+    }
+    // Viewport-relative geometry (percent lengths, position:fixed) inside the
+    // subtree is resolved by the walk's shouldLayout checks.
+    if (ctx.viewportWidthDamaged() || ctx.viewportHeightDamaged()) {
+        return false;
+    }
+    // Measurement passes run with temporarily modified styles; their
+    // results must be recomputed, never reused.
+    if (ctx.inComputingBasisSize() || ctx.isModifiedStyleFlexItem(this)) {
+        return false;
+    }
+    // A positioned descendant anchored above this box is repositioned by
+    // that ancestor only if the walk registers it again.
+    if (hasPositionedDescendantAnchoredAbove()) {
+        return false;
+    }
+    // Table layout drives its parts' geometry from the table; leave it alone.
+    if (isFrameTableObjectBox() || isFrameDocument()) {
+        return false;
+    }
+    // An enclosing inline-level box or baseline-aligned flex item derives its
+    // baseline from line ascenders that the walk of its content registers.
+    if (ctx.isCollectingAscenders()) {
+        return false;
+    }
+#if !defined(NDEBUG)
+    // The invariant markNeedsLayout() maintains: nothing under a block whose
+    // childNeedsLayout bit is clear may need layout.
+    iterateChildFrameBox(
+        [](FrameBox* box) { STARFISH_ASSERT(!box->needsLayout()); });
+#endif
+    return true;
 }
 
 void FrameBlockBox::computeScrollRectIfNeeded()
