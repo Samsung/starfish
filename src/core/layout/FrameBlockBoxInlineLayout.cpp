@@ -843,7 +843,21 @@ void InlineBoxLayoutParentBox::resetChildrenVerticalPositions(
                 ctx.addToRelativePositionedBoxes(box, dueToSelf);
             }
         } else {
-            m_boxes[i]->setY(0);
+            // Not only floats: every inline-level box positioned relatively
+            // by itself is handed back to its containing block below
+            // (addToRelativePositionedBoxes) and moved by its offset again,
+            // so its previous offset must be backed out here too, or it
+            // creeps by that offset on every quick layout. Inline blocks back
+            // theirs out in their own layout (computeContentHeight), text
+            // boxes move with the inline box that carries the position.
+            FrameBox* box = m_boxes[i];
+            if (!box->isInlineTextBox() && !box->isFrameBlockBox() &&
+                box->style() &&
+                box->style()->position() == RelativePositionValue) {
+                ctx.applyInvertOffsetBeforeApplyingRelativePositionInQuickLayout(
+                    box);
+            }
+            box->setY(0);
         }
     }
 }

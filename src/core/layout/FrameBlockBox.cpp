@@ -179,18 +179,24 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
     }
 }
 
+bool FrameBlockBox::isInsideRelativePositionedInline()
+{
+    if (node() && node()->parentElement()) {
+        Node* nd = node()->parentElement();
+        return nd->frame() != nullptr && nd->frame()->isFrameInline() &&
+               nd->style()->position() == RelativePositionValue;
+    }
+    return false;
+}
+
 void FrameBlockBox::addToRelativePositionedBoxesIfNeeded(LayoutContext& ctx)
 {
     if (style()->position() == PositionValue::RelativePositionValue) {
         ctx.addToRelativePositionedBoxes(this, true);
     }
 
-    if (node() && node()->parentElement()) {
-        Node* nd = node()->parentElement();
-        if (nd->frame() != nullptr && nd->frame()->isFrameInline() &&
-            nd->style()->position() == RelativePositionValue) {
-            ctx.addToRelativePositionedBoxes(this, false);
-        }
+    if (isInsideRelativePositionedInline()) {
+        ctx.addToRelativePositionedBoxes(this, false);
     }
 }
 
@@ -221,9 +227,14 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
             if (blockContainer(this)->hasBlockFlow() ||
                 blockContainer(this)
                     ->needToEstablishKindsOfFormattingContext()) {
-                if (style()->position() ==
-                        PositionValue::RelativePositionValue &&
-                    isQuickLayout) {
+                // Back out whatever relative offset the previous pass
+                // applied - own or inherited from an enclosing relatively
+                // positioned inline - before it is registered and applied
+                // again below.
+                if (isQuickLayout &&
+                    (style()->position() ==
+                         PositionValue::RelativePositionValue ||
+                     isInsideRelativePositionedInline())) {
                     ctx.applyInvertOffsetBeforeApplyingRelativePositionInQuickLayout(
                         this);
                 }

@@ -974,6 +974,9 @@ public:
     // The visible-rect walk over this box's content: block children, or the
     // line boxes of an inline formatting context.
     void computeVisibleRectOfContent(Frame::ComputeVisibleRectContext& ctx);
+    // Whether the element's parent is a relatively positioned inline, whose
+    // offset this box then inherits (see addToRelativePositionedBoxesIfNeeded).
+    bool isInsideRelativePositionedInline();
 
     virtual bool hasBlockFlow()
     {
