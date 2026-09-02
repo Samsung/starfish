@@ -1544,6 +1544,56 @@ void InlineBoxLayoutParentBox::mergeInlineTextBoxes(LineFormattingContext* ctx)
 
     LayoutUnit totalWidth;
     StringBuilder builder;
+    // Node coverage of the boxes merged so far: whether they all show text of
+    // the same node, and whether they show it as one contiguous slice that
+    // reads exactly like the node's text (so the merged box can simply view
+    // that slice, keeping per-character offsets and skipping the copy).
+    bool sameNode = true;
+    bool contiguousNodeText = true;
+    size_t nodeStart = 0, nodeEnd = 0;
+    auto accumulate = [&](InlineTextBox* textBox) {
+        if (!first) {
+            sameNode = textBox->coversNodeText();
+            contiguousNodeText = sameNode;
+            nodeStart = textBox->nodeStart();
+            nodeEnd = textBox->nodeEnd();
+        } else {
+            sameNode = sameNode && textBox->coversNodeText() &&
+                       textBox->node() == first->node();
+            contiguousNodeText = contiguousNodeText && sameNode &&
+                                 textBox->nodeStart() == nodeEnd;
+            nodeStart = std::min(nodeStart, textBox->nodeStart());
+            nodeEnd = std::max(nodeEnd, textBox->nodeEnd());
+        }
+        if (contiguousNodeText && !textBox->hasExactNodeText()) {
+            // A collapsed white-space box shows " " for the node's
+            // white-space run; it reads like the node only when that run is
+            // a single space.
+            StringView tv = textBox->text();
+            String* nodeText = textBox->nodeText();
+            contiguousNodeText =
+                nodeText && tv.length() == 1 &&
+                textBox->nodeEnd() - textBox->nodeStart() == 1 &&
+                nodeText->charAt(textBox->nodeStart()) == ' ' &&
+                tv.charAt(0) == ' ';
+        }
+    };
+    auto finishMerge = [&]() {
+        if (contiguousNodeText) {
+            first->setText(StringView(first->nodeText(), nodeStart, nodeEnd));
+        } else {
+            first->setText(builder.finalizeToStringView());
+            if (sameNode) {
+                first->setNodeRange(nodeStart, nodeEnd);
+            } else {
+                first->setNodeRange(0, 0);
+            }
+        }
+        first->setWidth(totalWidth);
+        builder.clear();
+        first = nullptr;
+        totalWidth = 0;
+    };
     while (it != boxes.end()) {
         FrameBox* box = *it;
 
@@ -1552,6 +1602,7 @@ void InlineBoxLayoutParentBox::mergeInlineTextBoxes(LineFormattingContext* ctx)
             totalWidth += textBox->width();
             StringView sv = textBox->text();
             builder.appendString(sv);
+            accumulate(textBox);
             if (first) {
                 ctx->m_layoutContext.pushIntoInlineTextBoxPool(
                     (*it)->asInlineTextBox());
@@ -1562,11 +1613,7 @@ void InlineBoxLayoutParentBox::mergeInlineTextBoxes(LineFormattingContext* ctx)
             }
         } else {
             if (first) {
-                first->setText(builder.finalizeToStringView());
-                first->setWidth(totalWidth);
-                builder.clear();
-                first = nullptr;
-                totalWidth = 0;
+                finishMerge();
             }
             if (box->isInlineNonReplacedBox()) {
                 box->asInlineNonReplacedBox()->mergeInlineTextBoxes(ctx);
@@ -1576,8 +1623,7 @@ void InlineBoxLayoutParentBox::mergeInlineTextBoxes(LineFormattingContext* ctx)
     }
 
     if (first) {
-        first->setText(builder.finalizeToStringView());
-        first->setWidth(totalWidth);
+        finishMerge();
     }
 }
 
@@ -2858,6 +2904,7 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
         }
         InlineTextBox* ib = new (allocateInlineTextBox())
             InlineTextBox(f, TextRun(source, start, end, dir), isFirstLine);
+        ib->setNodeRange(offset, nextOffset);
         ib->setLayoutParent(m_currentLayoutParent);
         ib->setWidth(textWidth);
         ib->setHeight(f->style()->font()->metrics().m_fontHeight);
