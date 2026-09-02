@@ -40,12 +40,17 @@ struct InlineTextBoxRareData : public gc {
     StringView m_nonOverflowText;
     String* m_overflowText;
     LayoutUnit m_nonOverflowTextWidth;
+    // InlineTextBox::nodeStart()/nodeEnd() once they no longer fit the
+    // box's uint16 fields.
+    size_t m_nodeStart;
+    size_t m_nodeEnd;
 
     InlineTextBoxRareData()
     {
         m_isHidedByTextOverflow = m_needsApplyTextOverflow = false;
         m_isTextOverflowDirectionIsLTR = true;
         m_overflowText = String::emptyString;
+        m_nodeStart = m_nodeEnd = 0;
     }
 
     void* operator new(size_t size)
@@ -78,7 +83,10 @@ public:
         , m_text(nullptr)
         , m_start(0)
         , m_end(std::numeric_limits<uint16_t>::max())
+        , m_nodeStart(0)
+        , m_nodeEnd(0)
     {
+        setNodeRange(box->nodeStart(), box->nodeEnd());
         m_flags.m_isFirstLineOrHasPositionedDescendantAnchoredAbove =
             box->isFirstLine();
         m_flags.m_direction = box->charDirection();
@@ -86,6 +94,8 @@ public:
 
     InlineTextBox(FrameText* frame, const TextRun& run, bool isFirstLine)
         : FrameBox(frame->nodeSlowCase(), frame->style())
+        , m_nodeStart(0)
+        , m_nodeEnd(0)
     {
         setText(run.m_stringView.string(), run.m_stringView.start(),
                 run.m_stringView.end());
@@ -143,6 +153,54 @@ public:
     CharDirection charDirection()
     {
         return m_flags.m_direction;
+    }
+
+    // The slice of the text node's laid-out text (FrameText::text()) this
+    // box stands for, as [start, end) offsets into it. Empty when unknown
+    // (boxes merged across text nodes); an unknown range yields the box's
+    // whole rect. Offsets beyond the uint16 fields live in the rare data,
+    // like the text offsets. Kept alongside the displayed string, which can
+    // be a shared " ", a mirrored/hyphenated copy or the concatenation of a
+    // line's runs and then carries no node offsets.
+    // Known limits: the offsets are into the laid-out text, which differs
+    // from the node's data after a length-changing text-transform, and a
+    // FrameText that is not the node's own frame (the remainder after
+    // ::first-letter) gets no range at all.
+    size_t nodeStart() const
+    {
+        return hasInlineTextBoxRareData() ? m_rareData->m_nodeStart
+                                          : m_nodeStart;
+    }
+    size_t nodeEnd() const
+    {
+        return hasInlineTextBoxRareData() ? m_rareData->m_nodeEnd : m_nodeEnd;
+    }
+    bool coversNodeText() const
+    {
+        return nodeStart() < nodeEnd();
+    }
+    void setNodeRange(size_t start, size_t end)
+    {
+        if (hasInlineTextBoxRareData() || end > uint16Max()) {
+            ensureInlineTextBoxRareData();
+            m_rareData->m_nodeStart = start;
+            m_rareData->m_nodeEnd = end;
+            return;
+        }
+        m_nodeStart = start;
+        m_nodeEnd = end;
+    }
+    String* nodeText()
+    {
+        Frame* f = node()->frame();
+        return (f && f->isFrameText()) ? f->asFrameText()->text() : nullptr;
+    }
+    // True when the displayed string is the node's laid-out text itself, so
+    // text() offsets are node offsets and characters can be measured
+    // individually.
+    bool hasExactNodeText()
+    {
+        return coversNodeText() && text().string() == nodeText();
     }
 
     void setCharDirection(CharDirection dir)
@@ -230,9 +288,19 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(InlineTextBox, m_text));
     }
 
+    static size_t uint16Max()
+    {
+        return std::numeric_limits<uint16_t>::max();
+    }
+
     void setText(String* str, size_t start, size_t end)
     {
         STARFISH_ASSERT(str);
+        // A view of the node's own text pins down which characters this box
+        // shows; any other string leaves the previously known range alone.
+        if (str == nodeText()) {
+            setNodeRange(start, end);
+        }
         if (hasInlineTextBoxRareData()) {
             inlineTextBoxRareData()->m_text = StringView(str, start, end);
             return;
@@ -266,7 +334,12 @@ protected:
         }
 
         InlineTextBoxRareData* rareData = new InlineTextBoxRareData();
-        rareData->m_text = StringView(m_text, m_start, m_end);
+        // No text yet while a constructor is still setting the box up.
+        if (m_text) {
+            rareData->m_text = StringView(m_text, m_start, m_end);
+        }
+        rareData->m_nodeStart = m_nodeStart;
+        rareData->m_nodeEnd = m_nodeEnd;
         m_start = 1;
         m_end = 0;
         m_rareData = rareData;
@@ -277,6 +350,8 @@ protected:
     };
     uint16_t m_start;
     uint16_t m_end;
+    uint16_t m_nodeStart;
+    uint16_t m_nodeEnd;
 };
 
 class InlineBoxLayoutParentBox : public FrameBox {

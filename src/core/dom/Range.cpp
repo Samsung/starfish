@@ -354,8 +354,19 @@ void Range::borderAndTextQuads(GCVector<DOMQuad*>& quads,
             }
         }
     }
+    // The text boxes of each text node, gathered in one pass over every block
+    // the range reaches into (a block holding many covered text nodes would
+    // otherwise be walked once per node) and consumed below in node order, so
+    // the quads keep the content order the walk of the range yields. A range
+    // within a single text node - the per-character sweep an editor or the
+    // APL viewhost does - needs no such bookkeeping and takes the direct
+    // walk.
+    Node* first = firstNode();
+    bool singleTextNode = first && first->isText() &&
+                          Traverse::next(first, nullptr) == stop;
+    GCUnorderedMap<Node*, GCVector<InlineTextBox*>> textBoxesByNode;
     GCUnorderedSet<Frame*> checkedFrameBlockBox;
-    for (Node* n = firstNode(); n != stop; n = Traverse::next(n, nullptr)) {
+    for (Node* n = first; n != stop; n = Traverse::next(n, nullptr)) {
         if (n->isElement()) {
             if (selectedElements.find(n) == selectedElements.end() ||
                 selectedElements.find(n->parentNode()) !=
@@ -364,50 +375,115 @@ void Range::borderAndTextQuads(GCVector<DOMQuad*>& quads,
             }
             n->asElement()->getClientQuads(quads, layoutIfNeeds);
         } else if (n->isText()) {
+            // The part of this node's text that the range covers.
+            unsigned start = (n == startContainer()) ? startOffset() : 0;
+            unsigned end = (n == endContainer()) ? endOffset() : n->nodeLength();
             Frame* f = n->frame();
-            if (f->isFrameText()) {
-                Frame* nearestFrameBlockBox = f->parent();
-                while (nearestFrameBlockBox &&
-                       !nearestFrameBlockBox->isFrameBlockBox()) {
-                    nearestFrameBlockBox = nearestFrameBlockBox->parent();
-                }
-                if (nearestFrameBlockBox &&
-                    selectedElements.find(n) == selectedElements.end() &&
-                    checkedFrameBlockBox.find(nearestFrameBlockBox) ==
-                        checkedFrameBlockBox.end()) {
-                    checkedFrameBlockBox.insert(nearestFrameBlockBox);
-
-                    auto blockBox = nearestFrameBlockBox->asFrameBlockBox();
-                    blockBox->iterateChildFrameBox([&](FrameBox* childBox) {
-                        if (childBox->node() &&
-                            isPointInRange(childBox->node(), 0)) {
-                            SkMatrix m =
-                                childBox->asFrameBox()->computeScreenMatrix();
-                            LayoutRect rect;
-                            rect.setWidth(childBox->asFrameBox()->width());
-                            rect.setHeight(childBox->asFrameBox()->height());
-                            rect = computeBoxExtent(rect, m);
-
-                            DOMQuad* q = new DOMQuad(
-                                m_document->executionContext(),
-                                DOMPointInit(rect.location().x(),
-                                             rect.location().y()),
-                                DOMPointInit(rect.location().x() +
-                                                 rect.size().width(),
-                                             rect.location().y()),
-                                DOMPointInit(
-                                    rect.location().x() + rect.size().width(),
-                                    rect.location().y() + rect.size().height()),
-                                DOMPointInit(rect.location().x(),
-                                             rect.location().y() +
-                                                 rect.size().height()));
-                            quads.push_back(q);
+            if (start >= end || !f || !f->isFrameText()) {
+                continue;
+            }
+            Frame* nearestFrameBlockBox = f->parent();
+            while (nearestFrameBlockBox &&
+                   !nearestFrameBlockBox->isFrameBlockBox()) {
+                nearestFrameBlockBox = nearestFrameBlockBox->parent();
+            }
+            if (!nearestFrameBlockBox) {
+                continue;
+            }
+            if (singleTextNode) {
+                nearestFrameBlockBox->asFrameBlockBox()->iterateChildFrameBox(
+                    [&](FrameBox* childBox) {
+                        if (childBox->isInlineTextBox() &&
+                            childBox->node() == n) {
+                            addTextQuads(childBox->asInlineTextBox(), start,
+                                         end, quads);
                         }
                     });
-                }
+                continue;
+            }
+            if (checkedFrameBlockBox.insert(nearestFrameBlockBox).second) {
+                // Nested blocks are not descended into: their text is reached
+                // through its own nearest block.
+                nearestFrameBlockBox->asFrameBox()
+                    ->iterateChildFrameBoxOnCondition([&](FrameBox* childBox) {
+                        if (childBox != nearestFrameBlockBox &&
+                            childBox->isFrameBlockBox()) {
+                            return false;
+                        }
+                        if (childBox->isInlineTextBox() && childBox->node() &&
+                            childBox->node()->isText()) {
+                            textBoxesByNode[childBox->node()].push_back(
+                                childBox->asInlineTextBox());
+                        }
+                        return true;
+                    });
+            }
+            auto boxes = textBoxesByNode.find(n);
+            if (boxes == textBoxesByNode.end()) {
+                continue;
+            }
+            for (InlineTextBox* box : boxes->second) {
+                addTextQuads(box, start, end, quads);
             }
         }
     }
+}
+
+// https://drafts.csswg.org/cssom-view/#dom-range-getclientrects
+// "For each Text node ... include the CSS border boxes of each ... text
+// fragment ... covered by the range": one quad per inline text box, cut down
+// to the characters in [start, end). A box is one run of the node's text on
+// one line, so the covered slice is measured with the box's own font, which
+// is what laid the run out.
+void Range::addTextQuads(InlineTextBox* box, unsigned start, unsigned end,
+                         GCVector<DOMQuad*>& quads)
+{
+    // A box whose node range is unknown (runs merged across nodes) stands
+    // for the node as a whole and contributes its whole rect, as every box
+    // did before per-character rects. A box showing something other than
+    // the node's own text (a collapsed " ", a mirrored or hyphenated copy,
+    // several runs merged in visual order) has no per-character offsets
+    // either: its whole box stands for the covered characters.
+    LayoutUnit width = box->width();
+    LayoutUnit x = 0;
+    if (box->coversNodeText()) {
+        size_t boxStart = box->nodeStart();
+        size_t boxEnd = box->nodeEnd();
+        size_t sliceStart = std::max<size_t>(start, boxStart);
+        size_t sliceEnd = std::min<size_t>(end, boxEnd);
+        if (sliceStart >= sliceEnd) {
+            return;
+        }
+        if ((sliceStart != boxStart || sliceEnd != boxEnd) &&
+            box->hasExactNodeText()) {
+            StringView text = box->text();
+            Font* font = box->style()->font();
+            LayoutUnit before = 0;
+            if (sliceStart != boxStart) {
+                before = font->measureText(
+                    StringView(text.string(), boxStart, sliceStart));
+            }
+            width = font->measureText(
+                StringView(text.string(), sliceStart, sliceEnd));
+            // Glyphs of a right-to-left run advance from the box's right
+            // edge.
+            x = (box->charDirection() == CharDirection::Rtl)
+                    ? box->width() - before - width
+                    : before;
+        }
+    }
+
+    LayoutRect rect = computeBoxExtent(LayoutRect(x, 0, width, box->height()),
+                                       box->computeScreenMatrix());
+    quads.push_back(new DOMQuad(
+        m_document->executionContext(),
+        DOMPointInit(rect.location().x(), rect.location().y()),
+        DOMPointInit(rect.location().x() + rect.size().width(),
+                     rect.location().y()),
+        DOMPointInit(rect.location().x() + rect.size().width(),
+                     rect.location().y() + rect.size().height()),
+        DOMPointInit(rect.location().x(),
+                     rect.location().y() + rect.size().height())));
 }
 
 Range* Range::cloneRange()

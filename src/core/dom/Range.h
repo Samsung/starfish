@@ -137,6 +137,8 @@ private:
     Node* root();
     void borderAndTextQuads(GCVector<DOMQuad*>& quads,
                             bool layoutIfNeeds = true);
+    void addTextQuads(InlineTextBox* box, unsigned start, unsigned end,
+                      GCVector<DOMQuad*>& quads);
 
     DocumentFragment* processContents(ProcessingType type);
 
