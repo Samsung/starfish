@@ -1007,8 +1007,15 @@ void LayoutContext::
     applyInvertOffsetBeforeApplyingRelativePositionInQuickLayout(FrameBox* box)
 {
     STARFISH_ASSERT(box);
-    STARFISH_ASSERT(box->style()->position() ==
-                    PositionValue::RelativePositionValue);
+    // The box is either relatively positioned itself or inherits the offset of
+    // an enclosing relatively positioned inline (dueToSelf below).
+    STARFISH_ASSERT(
+        box->style()->position() == PositionValue::RelativePositionValue ||
+        (box->node() && box->node()->parentElement() &&
+         box->node()->parentElement()->frame() &&
+         box->node()->parentElement()->frame()->isFrameInline() &&
+         box->node()->parentElement()->style()->position() ==
+             PositionValue::RelativePositionValue));
 
     FrameBlockBox* cb = containingFrameBlockBox(box);
     m_relativePositionedBoxes.emplace(
