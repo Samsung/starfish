@@ -971,6 +971,9 @@ public:
     // also has to be untouched by that block's damage (shouldLayout).
     bool canSkipOutOfFlowLayout(LayoutContext& ctx,
                                 LayoutWantToResolve resolveWhat, FrameBox* cb);
+    // The visible-rect walk over this box's content: block children, or the
+    // line boxes of an inline formatting context.
+    void computeVisibleRectOfContent(Frame::ComputeVisibleRectContext& ctx);
 
     virtual bool hasBlockFlow()
     {

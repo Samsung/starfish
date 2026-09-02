@@ -254,12 +254,19 @@ struct FrameBoxRareData : public gc {
     LayoutBoxSurroundData m_padding, m_border, m_margin;
     StackingContext* m_stackingContext;
     FlexItemMeasureMemo* m_flexItemMeasureMemo;
+    // The scrolling extent of this box's content (descendants, not the box
+    // itself) in the box's own coordinate space, as the scroll-rect walk
+    // last computed it. Valid until the box is laid out again; see
+    // FrameBlockBox::computeVisibleRect().
+    LayoutRect m_scrollExtentOfContent;
+    bool m_scrollExtentOfContentValid;
 
     FrameBoxRareData(Frame* layoutParent)
         : m_frameBoxRareDataTag(FRAMEBOX_RAREDATA_TAG)
         , m_layoutParent(layoutParent)
         , m_stackingContext(nullptr)
         , m_flexItemMeasureMemo(nullptr)
+        , m_scrollExtentOfContentValid(false)
     {
     }
 
@@ -1185,6 +1192,21 @@ protected:
         const Unit::Rect& shadowRect, const Unit::Rect& borderRect,
         const Unit::Rect& imageRect, Canvas* canvas);
 
+    bool hasCachedScrollExtentOfContent() const
+    {
+        return hasRareData() &&
+               frameBoxRareData()->m_scrollExtentOfContentValid;
+    }
+    const LayoutRect& cachedScrollExtentOfContent() const
+    {
+        return frameBoxRareData()->m_scrollExtentOfContent;
+    }
+    void setCachedScrollExtentOfContent(const LayoutRect& extent)
+    {
+        FrameBoxRareData* data = ensureFrameBoxRareData();
+        data->m_scrollExtentOfContent = extent;
+        data->m_scrollExtentOfContentValid = true;
+    }
     bool hasRareData() const
     {
         size_t* ptr = (size_t*)m_layoutParent;
@@ -1200,6 +1222,20 @@ protected:
     }
 
 public:
+    // Any layout of this box may move or resize what is inside it. The cache
+    // otherwise rests on the clean-subtree layout skip's guarantees: content
+    // under a box that was neither laid out nor quick-laid has not moved,
+    // except through a positioned descendant anchored above the box (which
+    // FrameBlockBox::hasPositionedDescendantAnchoredAbove keeps from being
+    // skipped) or through a transform change, which drops the caches
+    // explicitly (Frame::invalidateAncestorsScrollExtentOfContent).
+    void invalidateScrollExtentOfContent()
+    {
+        if (hasRareData()) {
+            frameBoxRareData()->m_scrollExtentOfContentValid = false;
+        }
+    }
+
     FlexItemMeasureMemo* flexItemMeasureMemo()
     {
         return hasRareData()
