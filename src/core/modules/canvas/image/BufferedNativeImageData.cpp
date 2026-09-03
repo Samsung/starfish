@@ -24,18 +24,25 @@
 #include "BufferedNativeImageData.h"
 #include "core/modules/threading/Thread.h"
 
+typedef int(GC_get_sub_pointer_proc)(void* ptr, struct GC_mark_pair* sub_ptrs);
 template <GC_get_sub_pointer_proc proc, const int number_of_sub_pointer>
 GC_ms_entry* markAndPushCustom(GC_word* addr,
                                struct GC_ms_entry* mark_stack_ptr,
                                struct GC_ms_entry* mark_stack_limit,
                                GC_word env)
 {
-    GC_mark_custom_result subPtrs[number_of_sub_pointer];
-    return GC_mark_and_push_custom(addr, mark_stack_ptr, mark_stack_limit, proc,
-                                   subPtrs, number_of_sub_pointer);
+    GC_mark_pair subPtrs[number_of_sub_pointer];
+#if defined(GC_DEBUG)
+    const char* start = (const char*)GC_USR_PTR_FROM_BASE(addr);
+#else
+    const char* start = (const char*)addr;
+#endif
+    int i = proc((/* no const */ void*)start, subPtrs);
+    return GC_mark_and_push_ptrs(mark_stack_ptr, mark_stack_limit, subPtrs + i,
+                                 number_of_sub_pointer - i);
 }
 
-int getValidValueNativeImageData(void* ptr, GC_mark_custom_result* arr)
+int getValidValueNativeImageData(void* ptr, GC_mark_pair* arr)
 {
     arr[0].from = (GC_word*)&ptr;
     arr[0].to = (GC_word*)ptr;
