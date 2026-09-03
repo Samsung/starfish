@@ -4636,6 +4636,103 @@ ALWAYS_INLINE void applyTransformIfNeeded(FrameBox* fBox, SkMatrix& m,
     }
 }
 
+// The ancestor walk in computeBoxMatrix() carries a small amount of state
+// upward (the overflow status and whether scroll offsets still apply). Two
+// walks that reach the same box with the same state produce the same matrix
+// for everything above it, which is what the cache below keys on.
+struct ScreenMatrixCacheState {
+    Frame* child;
+    FrameBox* absChild;
+    ComputeMatrixFor forWhat;
+    bool seenContainingBlockForAbsBlock;
+    bool seenAbsBlock;
+    bool seenFixedBlock;
+    bool canScroll;
+
+    ScreenMatrixCacheState()
+        : child(nullptr)
+        , absChild(nullptr)
+        , forWhat(ComputeMatrixFor::Screen)
+        , seenContainingBlockForAbsBlock(false)
+        , seenAbsBlock(false)
+        , seenFixedBlock(false)
+        , canScroll(false)
+    {
+    }
+
+    ScreenMatrixCacheState(const OverflowStatus& status,
+                           ComputeMatrixFor forWhat, bool canScroll)
+        : child(status.m_child)
+        , absChild(status.m_absChild)
+        , forWhat(forWhat)
+        , seenContainingBlockForAbsBlock(
+              status.m_seenContainingBlockForAbsBlock)
+        , seenAbsBlock(status.m_seenAbsBlock)
+        , seenFixedBlock(status.m_seenFixedBlock)
+        , canScroll(canScroll)
+    {
+    }
+
+    bool operator==(const ScreenMatrixCacheState& o) const
+    {
+        return child == o.child && absChild == o.absChild &&
+               forWhat == o.forWhat &&
+               seenContainingBlockForAbsBlock ==
+                   o.seenContainingBlockForAbsBlock &&
+               seenAbsBlock == o.seenAbsBlock &&
+               seenFixedBlock == o.seenFixedBlock && canScroll == o.canScroll;
+    }
+};
+
+struct ScreenMatrixCache {
+    struct Entry {
+        ScreenMatrixCacheState state;
+        SkMatrix matrix;
+        // GraphicsLayer walks stop at the owning buffer; a hit has to
+        // report the holder the cached walk found.
+        FrameBox* graphicsLayerHolder;
+    };
+    // Matrix from the root down to and including the keyed box, per state
+    // the walk arrived at the box with. Almost always a single entry.
+    std::unordered_map<FrameBox*, std::vector<Entry>> entries;
+
+    bool lookup(FrameBox* box, const ScreenMatrixCacheState& state,
+                SkMatrix& out, FrameBox*& graphicsLayerHolder)
+    {
+        auto iter = entries.find(box);
+        if (iter == entries.end()) {
+            return false;
+        }
+        for (const Entry& e : iter->second) {
+            if (e.state == state) {
+                out = e.matrix;
+                graphicsLayerHolder = e.graphicsLayerHolder;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void insert(FrameBox* box, const ScreenMatrixCacheState& state,
+                const SkMatrix& matrix, FrameBox* graphicsLayerHolder)
+    {
+        entries[box].push_back(Entry{ state, matrix, graphicsLayerHolder });
+    }
+};
+
+ScreenMatrixCacheScope::ScreenMatrixCacheScope(WebView* webView)
+    : m_webView(webView)
+    , m_previous(webView->screenMatrixCache())
+{
+    webView->setScreenMatrixCache(new ScreenMatrixCache());
+}
+
+ScreenMatrixCacheScope::~ScreenMatrixCacheScope()
+{
+    delete m_webView->screenMatrixCache();
+    m_webView->setScreenMatrixCache(m_previous);
+}
+
 static SkMatrix computeBoxMatrix(
     FrameBox* self, ComputeMatrixFor forWhat,
     bool includesScrollOnTopForGraphicsLayerMode = false)
@@ -4663,12 +4760,40 @@ static SkMatrix computeBoxMatrix(
         f = f->layoutParent();
     }
 
+    // A walk can stop at the first stacking-context owner the cache already
+    // has for the state the walk arrives with; every owner passed on a miss
+    // is recorded on the way back down.
+    // The cache lives on the WebView driving the pass; a box with no node
+    // (an anonymous box) picks it up from the first ancestor that has one.
+    ScreenMatrixCache* cache =
+        self->node() ? self->node()->webView()->screenMatrixCache() : nullptr;
+    FrameBox* cachedFrom = nullptr;
+    SkMatrix cachedMatrix;
+    VectorWithInlineStorage<
+        8, std::pair<size_t, ScreenMatrixCacheState>,
+        std::allocator<std::pair<size_t, ScreenMatrixCacheState>>>
+        cacheProbes;
+
     while (f) {
         if (forWhat == ComputeMatrixFor::GraphicsLayer &&
             f->asFrameBox()->stackingContext() &&
             f->asFrameBox()->stackingContext()->needsGraphicsBuffer()) {
             graphicsLayerHolder = f->asFrameBox();
             break;
+        }
+
+        if (!cache && f != self && f->node()) {
+            cache = f->node()->webView()->screenMatrixCache();
+        }
+
+        if (cache && f != self && f->asFrameBox()->stackingContext()) {
+            ScreenMatrixCacheState state(status, forWhat, canScroll);
+            if (cache->lookup(f->asFrameBox(), state, cachedMatrix,
+                              graphicsLayerHolder)) {
+                cachedFrom = f->asFrameBox();
+                break;
+            }
+            cacheProbes.push_back(std::make_pair(frameList.size(), state));
         }
 
         bool applyOverflow = status.canApplyOverflow(f);
@@ -4715,7 +4840,16 @@ static SkMatrix computeBoxMatrix(
         lastParentBox = graphicsLayerHolder;
     }
 
+    if (cachedFrom) {
+        m = cachedMatrix;
+        lastParentBox = cachedFrom;
+    }
+
+    size_t frameIndex = frameList.size();
+    size_t probeIndex = cacheProbes.size();
+
     while (iter != frameList.rend()) {
+        frameIndex--;
         FrameBox* fBox = iter->first;
         LayoutLocation pos;
         if (fBox == self) {
@@ -4743,6 +4877,11 @@ static SkMatrix computeBoxMatrix(
         applyTransformIfNeeded(fBox, m, inRendering);
 
         lastParentBox = fBox;
+        if (probeIndex && cacheProbes[probeIndex - 1].first == frameIndex) {
+            probeIndex--;
+            cache->insert(fBox, cacheProbes[probeIndex].second, m,
+                          graphicsLayerHolder);
+        }
         iter++;
     }
 

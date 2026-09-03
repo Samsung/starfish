@@ -356,6 +356,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 
     m_frameRateCounter = new FrameRateCounter(this);
     m_paintPassMemos = new PaintPassMemos();
+    m_screenMatrixCache = nullptr;
     m_frameRateCounter->setObserver([](double fps) {
         thread_local static unsigned counter = 0;
         STARFISH_LOG_INFO("#%02d FPS: %.2f", ++counter, fps);
@@ -1600,6 +1601,7 @@ RenderResult WebView::rendering(bool force)
                 std::move(m_repaintRegionTrackerContext);
             {
                 INSTALL_PROFILE_TIMER("track repaint region");
+                ScreenMatrixCacheScope screenMatrixCache(this);
                 RepaintRegionTracker tracker(
                     oldRepaintRegionTrackerContext,
                     m_repaintRegionTrackerContext,

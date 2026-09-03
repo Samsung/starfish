@@ -1312,6 +1312,27 @@ struct MBPRestorer {
     LayoutBoxSurroundData m_border;
     LayoutBoxSurroundData m_padding;
 };
+
+class WebView;
+struct ScreenMatrixCache;
+
+// While a scope is alive, FrameBox::computeScreenMatrix() memoizes the part
+// of its ancestor walk above each stacking-context owner, so sibling and
+// descendant layers stop re-walking the same chain to the root. Only open a
+// scope where layout, scroll offsets and stacking-context transform matrices
+// are fixed for its whole lifetime (one properties pass, one repaint
+// tracking pass); the cache is dropped when the scope ends.
+class ScreenMatrixCacheScope {
+public:
+    explicit ScreenMatrixCacheScope(WebView* webView);
+    ~ScreenMatrixCacheScope();
+    ScreenMatrixCacheScope(const ScreenMatrixCacheScope&) = delete;
+    ScreenMatrixCacheScope& operator=(const ScreenMatrixCacheScope&) = delete;
+
+private:
+    WebView* m_webView;
+    ScreenMatrixCache* m_previous;
+};
 } // namespace Starfish
 
 #endif
