@@ -70,7 +70,9 @@ inline void computeBufferSizeFromVisibleRect(LayoutUnit minX, LayoutUnit minY,
 struct StackingContext::ComputeStackingContextContext {
     bool needsToAllocateGraphicsBufferForFixedElement;
     bool seenPositionFixed;
-    std::unordered_map<StackingContext*, LayoutRect> extentPerLayer;
+    // True while visiting the subtree of a context whose screen extent was
+    // recomputed this pass; every context below it recomputes as well.
+    bool ancestorScreenExtentDirty;
     std::unordered_map<StackingContext*, LayoutRect> clippedExtentPerLayer;
     // Screen extents of the overflow-clipping ancestors met while clipping
     // layers. Every layer under the same clipping box walks up through it,
@@ -88,21 +90,15 @@ struct StackingContext::ComputeStackingContextContext {
     {
         seenPositionFixed = false;
         needsToAllocateGraphicsBufferForFixedElement = false;
+        ancestorScreenExtentDirty = false;
     }
 
+    // Only asked for contexts already visited this pass (self, a composited
+    // ancestor, an earlier composited layer), whose extent is settled.
     LayoutRect screenExtentPerLayer(StackingContext* c)
     {
-        {
-            auto iter = extentPerLayer.find(c);
-            if (iter != extentPerLayer.end()) {
-                return iter->second;
-            }
-        }
-
-        LayoutRect rt = c->owner()->computeScreenExtent();
-        extentPerLayer.insert(std::make_pair(c, rt));
-
-        return rt;
+        STARFISH_ASSERT(c->m_screenExtentValid);
+        return c->m_screenExtent;
     }
 
     // screenExtent after overflow applies
@@ -724,6 +720,14 @@ void StackingContext::computeStackingContextProperties(
 {
     computeTransformMatrix();
 
+    bool screenExtentDirty = compositingState.ancestorScreenExtentDirty ||
+                             m_screenExtentDirtySubtree || !m_screenExtentValid;
+    if (screenExtentDirty) {
+        m_screenExtent = m_owner->computeScreenExtent();
+        m_screenExtentValid = true;
+        m_screenExtentDirtySubtree = false;
+    }
+
     m_hasFilterEffect = false;
     if ((owner()->style()->hasAvailableFilter() ||
          m_ancestorsThatHasFilters.size() != 0)) {
@@ -809,7 +813,6 @@ void StackingContext::computeStackingContextProperties(
     }
 
     auto selfExtent = compositingState.screenExtentPerLayer(this);
-    m_screenExtent = selfExtent;
 
     bool compositedBySelf = selfNeedsGraphicsBuffer;
 
@@ -1020,6 +1023,9 @@ void StackingContext::computeStackingContextProperties(
 
     m_needsGraphicsBufferReason = reason;
 
+    bool ancestorScreenExtentDirty = compositingState.ancestorScreenExtentDirty;
+    compositingState.ancestorScreenExtentDirty = screenExtentDirty;
+
     auto iter = m_childContexts.begin();
     while (iter != m_childContexts.end()) {
         StackingContextChild* child = *iter;
@@ -1048,6 +1054,8 @@ void StackingContext::computeStackingContextProperties(
         }
         iter++;
     }
+
+    compositingState.ancestorScreenExtentDirty = ancestorScreenExtentDirty;
 
     if (m_owner->isRootElement()) {
         if (compositingState.isCompositedLayer(this)) {

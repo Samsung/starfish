@@ -907,6 +907,16 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                             computeTransition(pseudoNode, ocs,
                                               pseudoNode->frame(), ncs, damage,
                                               damagedKeys);
+                            // Same as for an element in applyStyleToElement:
+                            // the owner's style feeds its context's screen
+                            // extent.
+                            Frame* pseudoFrame = pseudoNode->frame();
+                            if (pseudoFrame && pseudoFrame->isFrameBox() &&
+                                pseudoFrame->asFrameBox()->stackingContext()) {
+                                pseudoFrame->asFrameBox()
+                                    ->stackingContext()
+                                    ->markScreenExtentDirty();
+                            }
                         }
 
                         // TODO

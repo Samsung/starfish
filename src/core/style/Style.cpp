@@ -55,6 +55,7 @@
 #include "core/layout/Frame.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/FrameBlockBox.h"
+#include "core/layout/StackingContext.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
@@ -9932,6 +9933,14 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
 
     if (damage & ComputedStyleDamage::ComputedStyleDamageComposite) {
         element->setNeedsComposite();
+    }
+
+    // A context owner's screen extent is derived from its style (transform
+    // and its origin, outline, shadows, filter, border-image); the contexts
+    // below it position through that transform too.
+    if (oldFrame && oldFrame->isFrameBox() &&
+        oldFrame->asFrameBox()->stackingContext()) {
+        oldFrame->asFrameBox()->stackingContext()->markScreenExtentDirty();
     }
     element->setStyle(style, &ctx);
     element->clearNeedsStyleRecalc();
