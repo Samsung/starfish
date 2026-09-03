@@ -75,6 +75,7 @@ class Scrolling;
 class BufferedNativeImageData;
 class FrameRateCounter;
 class PaintPassMemos;
+struct ScreenMatrixCache;
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 class Avplay;
@@ -605,6 +606,19 @@ public:
         return m_paintPassMemos;
     }
 
+    // Memoized ancestor walks of computeBoxMatrix, owned by the innermost
+    // live ScreenMatrixCacheScope (see FrameBox.h). Null outside a scope,
+    // which makes the walks recompute as they always did.
+    ScreenMatrixCache* screenMatrixCache()
+    {
+        return m_screenMatrixCache;
+    }
+
+    void setScreenMatrixCache(ScreenMatrixCache* cache)
+    {
+        m_screenMatrixCache = cache;
+    }
+
 private:
     WebView(Starfish* starfish, const char* locale, const char* timezoneID,
             uint32_t w, uint32_t h, uint32_t defaultFontSize,
@@ -731,6 +745,7 @@ private:
         m_boxShadowCachePerRendering;
 
     PaintPassMemos* m_paintPassMemos;
+    ScreenMatrixCache* m_screenMatrixCache;
 
     GCVector<EventTarget*> m_globalPointingEventListener;
     GCUnorderedSet<Scrolling*> m_activeScrollingSet;

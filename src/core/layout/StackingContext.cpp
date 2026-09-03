@@ -693,6 +693,10 @@ void StackingContext::computeStackingContextProperties()
 {
     STARFISH_ASSERT(isRootContext());
 
+    // Layout is settled for the whole pass, and each context updates its own
+    // transform matrix before any descendant walks up through it.
+    ScreenMatrixCacheScope screenMatrixCache(m_owner->node()->webView());
+
     ComputeStackingContextContext ctx(this);
     try {
         computeStackingContextProperties(ctx);
