@@ -4729,8 +4729,17 @@ ScreenMatrixCacheScope::ScreenMatrixCacheScope(WebView* webView)
 
 ScreenMatrixCacheScope::~ScreenMatrixCacheScope()
 {
+    end();
+}
+
+void ScreenMatrixCacheScope::end()
+{
+    if (!m_webView) {
+        return;
+    }
     delete m_webView->screenMatrixCache();
     m_webView->setScreenMatrixCache(m_previous);
+    m_webView = nullptr;
 }
 
 static SkMatrix computeBoxMatrix(

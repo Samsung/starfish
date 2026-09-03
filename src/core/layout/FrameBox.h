@@ -1326,6 +1326,10 @@ class ScreenMatrixCacheScope {
 public:
     explicit ScreenMatrixCacheScope(WebView* webView);
     ~ScreenMatrixCacheScope();
+    // Drops the cache before the end of the enclosing block, for a scope
+    // whose tail runs work that can move boxes again (script observers
+    // measuring elements after the paint pass, which lay out on demand).
+    void end();
     ScreenMatrixCacheScope(const ScreenMatrixCacheScope&) = delete;
     ScreenMatrixCacheScope& operator=(const ScreenMatrixCacheScope&) = delete;
 

@@ -428,6 +428,18 @@ protected:
     bool m_screenExtentValid{ false };
     bool m_screenExtentDirtySubtree{ false };
 
+    // Whether the owner's border box lies past the window's left or top
+    // edge (an absolutely positioned box there composites by itself).
+    // Same geometry as the screen extent, invalidated with it; computed
+    // only when the pass asks.
+    bool m_windowRectOffscreenValid{ false };
+    bool m_windowRectOffscreen{ false };
+
+    // Decisions of the properties pass, read back by
+    // applyStackingContextProperties.
+    bool m_passWillBeComposited{ false };
+    bool m_passCompositedBySelf{ false };
+
 public:
     void markScreenExtentDirty()
     {
