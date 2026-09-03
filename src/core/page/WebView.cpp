@@ -1537,6 +1537,11 @@ RenderResult WebView::rendering(bool force)
     layoutIfNeeded();
     computeLayoutPaintingDirty();
 
+    // Geometry is settled from here to the end of the frame; repaint
+    // tracking, painting and compositing all walk box matrices from the
+    // same layers.
+    ScreenMatrixCacheScope screenMatrixCache(this);
+
     bool didPainting = false;
     if (m_needsPainting) {
         didPainting = true;
@@ -1601,7 +1606,6 @@ RenderResult WebView::rendering(bool force)
                 std::move(m_repaintRegionTrackerContext);
             {
                 INSTALL_PROFILE_TIMER("track repaint region");
-                ScreenMatrixCacheScope screenMatrixCache(this);
                 RepaintRegionTracker tracker(
                     oldRepaintRegionTrackerContext,
                     m_repaintRegionTrackerContext,
@@ -1874,6 +1878,10 @@ RenderResult WebView::rendering(bool force)
     // Everything memoized for this paint pass is keyed to the geometry it
     // laid out, which the next mutation invalidates - drop it with the pass.
     m_paintPassMemos->endPass();
+    // The matrices above were built for the rendering pass (their transform
+    // comes from the stacking contexts, not from the style); what runs after
+    // this point measures elements outside a pass and can lay out again.
+    screenMatrixCache.end();
 
     m_needsRendering = false;
     m_inRendering = false;

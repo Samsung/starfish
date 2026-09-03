@@ -78,8 +78,6 @@ struct StackingContext::ComputeStackingContextContext {
     // layers. Every layer under the same clipping box walks up through it,
     // and each computeScreenExtent() is itself a walk to the root.
     std::unordered_map<FrameBox*, LayoutRect> clipBoxExtents;
-    std::unordered_map<StackingContext*, bool> compositeFlagInfo;
-    std::unordered_map<StackingContext*, bool> compositeFlagInfoBecauseSelf;
     std::vector<StackingContext*> compositedLayers;
     std::set<Document*> compositedDocuments;
     std::vector<StackingContext*> documentOwners;
@@ -726,6 +724,7 @@ void StackingContext::computeStackingContextProperties(
         m_screenExtent = m_owner->computeScreenExtent();
         m_screenExtentValid = true;
         m_screenExtentDirtySubtree = false;
+        m_windowRectOffscreenValid = false;
     }
 
     m_hasFilterEffect = false;
@@ -841,11 +840,16 @@ void StackingContext::computeStackingContextProperties(
 
     if (compositingState.seenCompositedLayer() && !isRootContext() &&
         m_owner->isAbsolutePositioned()) {
-        SkMatrix windowMatrix = m_owner->computeMatrixOnWindow();
-        auto windowRect = computeBoxExtent(
-            LayoutRect(0, 0, m_owner->width(), m_owner->height()),
-            windowMatrix);
-        if (windowRect.maxX() < 0 || windowRect.maxY() < 0) {
+        if (!m_windowRectOffscreenValid) {
+            SkMatrix windowMatrix = m_owner->computeMatrixOnWindow();
+            auto windowRect = computeBoxExtent(
+                LayoutRect(0, 0, m_owner->width(), m_owner->height()),
+                windowMatrix);
+            m_windowRectOffscreen =
+                windowRect.maxX() < 0 || windowRect.maxY() < 0;
+            m_windowRectOffscreenValid = true;
+        }
+        if (m_windowRectOffscreen) {
             compositedBySelf = true;
         }
     }
@@ -859,14 +863,14 @@ void StackingContext::computeStackingContextProperties(
 
     if (compositedBySelf) {
         reason = NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonBySelf;
-        compositingState.compositeFlagInfoBecauseSelf[this] = true;
+        m_passCompositedBySelf = true;
     } else {
         if (inScrollActive()) {
             compositedBySelf = true;
             reason =
                 NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonNeedsScroll;
         }
-        compositingState.compositeFlagInfoBecauseSelf[this] = compositedBySelf;
+        m_passCompositedBySelf = compositedBySelf;
     }
     bool willBeComposited = compositedBySelf;
 
@@ -1065,8 +1069,7 @@ void StackingContext::computeStackingContextProperties(
         }
     }
 
-    compositingState.compositeFlagInfo.insert(
-        std::make_pair(this, willBeComposited));
+    m_passWillBeComposited = willBeComposited;
 }
 
 static void computeVisibleRectPedigreeWorker(
@@ -1286,8 +1289,8 @@ void StackingContext::applyStackingContextProperties(
                 prevDrawnMapIter->second.graphicsBufferHolder;
         }
     }
-    bool willBeComposited = ctx.compositeFlagInfo[this];
-    bool willBeCompositedDueToSelf = ctx.compositeFlagInfoBecauseSelf[this];
+    bool willBeComposited = m_passWillBeComposited;
+    bool willBeCompositedDueToSelf = m_passCompositedBySelf;
 
     if (inAnimation || (compositedBefore && !willBeComposited)) {
         willBeComposited = true;
