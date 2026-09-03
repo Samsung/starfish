@@ -2167,6 +2167,23 @@ void Frame::markAncestorStackingContextVisibleRectDirty()
     }
 }
 
+// Flags the nearest enclosing stacking context (this frame's own, if it
+// owns one) so every context under it recomputes its screen extent on the
+// next properties pass. Used where screen positions move without a layout:
+// scroll offsets and style changes on a context owner.
+void Frame::markStackingContextScreenExtentDirty()
+{
+    for (Frame* f = this; f; f = f->parent()) {
+        if (f->isFrameBox()) {
+            StackingContext* sc = f->asFrameBox()->stackingContext();
+            if (sc) {
+                sc->markScreenExtentDirty();
+                return;
+            }
+        }
+    }
+}
+
 void Frame::invalidateAncestorsScrollExtentOfContent()
 {
     for (Frame* f = this; f; f = f->parent()) {

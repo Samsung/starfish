@@ -418,6 +418,21 @@ protected:
 
     // Set alongside m_rareData->m_visibleRect (same validity flag).
     LayoutRect m_visibleRectContentOnly;
+
+    // m_screenExtent is kept from one properties pass to the next as long
+    // as nothing it was derived from has changed: a layout marks the root,
+    // a scroll offset marks the scrolled frame's context, and a style
+    // change on an owner marks that owner's context (see
+    // markScreenExtentDirty). A marked context and everything below it
+    // recompute on the next pass; the rest reuse their extent.
+    bool m_screenExtentValid{ false };
+    bool m_screenExtentDirtySubtree{ false };
+
+public:
+    void markScreenExtentDirty()
+    {
+        m_screenExtentDirtySubtree = true;
+    }
 };
 
 } // namespace Starfish

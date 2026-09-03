@@ -2051,6 +2051,7 @@ public:
     // (and its ancestors) dirty for the next stacking-context properties
     // pass. Call from every mutation that requests that pass.
     void markAncestorStackingContextVisibleRectDirty();
+    void markStackingContextScreenExtentDirty();
     // Drops the cached scroll extent of this box and every FrameBox above it
     // (FrameBox::invalidateScrollExtentOfContent): for a change that moves
     // content without a layout, such as a transform.

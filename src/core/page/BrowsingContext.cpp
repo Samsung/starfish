@@ -430,6 +430,9 @@ void BrowsingContext::layoutSVGViewportsNeedingContentLayout()
         }
         viewport->layoutSVGContent(ctx);
         viewport->node()->setNeedsPainting();
+        // Content boxes moved without a full layout; drop the cached screen
+        // extents of any contexts within the viewport.
+        viewport->markStackingContextScreenExtentDirty();
     }
 
     // Blocks laid out here (HTML inside <foreignObject>) are not seen by
@@ -483,6 +486,12 @@ bool BrowsingContext::layoutIfNeeded()
                                 *getenv("STARFISH_SC_EST_GATE") == '1';
         if (!scEstGate) {
             webView()->setNeedsEstablishesStackingContext();
+        }
+        // Boxes moved: every cached screen extent in the tree is stale (the
+        // re-establish above replaces the contexts anyway, except under the
+        // gate).
+        if (webView()->rootStackingContext()) {
+            webView()->rootStackingContext()->markScreenExtentDirty();
         }
         webView()->setNeedsComputeStackingContextProperties();
 

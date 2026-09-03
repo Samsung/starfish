@@ -504,6 +504,21 @@ void Scrolling::logSlowScrollPathIfNeeded(unsigned reason, Node* node)
 
 void Scrolling::giveDamageToTarget(bool inScrollbarAppearingOrDisappearing)
 {
+    // Scroll offsets feed the screen matrices of everything under the
+    // scroller, whichever path below handles the repaint.
+    {
+        Frame* scrolledFrame = nullptr;
+        if (m_target->isWindow()) {
+            Element* html = m_target->asWindow()->document()->html();
+            scrolledFrame = html ? html->frame() : nullptr;
+        } else {
+            scrolledFrame = m_target->asElement()->frame();
+        }
+        if (scrolledFrame) {
+            scrolledFrame->markStackingContextScreenExtentDirty();
+        }
+    }
+
     if (m_target->isWindow()) {
         StackingContext* ctx = m_target->asWindow()
                                    ->document()
