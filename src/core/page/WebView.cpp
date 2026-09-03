@@ -1394,6 +1394,19 @@ static void cleanupLayoutRepaintTracker(BrowsingContext* ctx)
         [](BrowsingContext* ctx) { cleanupLayoutRepaintTracker(ctx); });
 }
 
+static bool isTransformTransitionOnOwnGraphicsBuffer(ActiveAnimationTask* task)
+{
+    if (task->property() != CSSStyleValuePair::KeyKind::Transform) {
+        return false;
+    }
+    Frame* frame = task->targetElement()->frame();
+    if (!frame || !frame->isFrameBox()) {
+        return false;
+    }
+    StackingContext* sc = frame->asFrameBox()->stackingContext();
+    return sc && sc->needsGraphicsBuffer();
+}
+
 static void saveCurrentPaintingState(StackingContext* ctx)
 {
     STARFISH_ASSERT(ctx != nullptr);
@@ -1749,6 +1762,14 @@ RenderResult WebView::rendering(bool force)
                 iter++;
             }
 
+            // Hand the emptied map back so the next save reuses its bucket
+            // storage. Regrowing it from empty every frame was a chain of
+            // GC allocations per paint, and the largest of them could trip a
+            // collection in the middle of an animation.
+            prevDrawnStackingContextInfo.clear();
+            m_prevDrawnStackingContextInfo =
+                std::move(prevDrawnStackingContextInfo);
+
             if (m_rootStackingContext) {
                 saveCurrentPaintingState(m_rootStackingContext);
             }
@@ -1931,7 +1952,14 @@ RenderResult WebView::rendering(bool force)
                     // so the transition (e.g. YouTube controls fading via
                     // opacity) freezes as a ghost. Force a repaint each tick so
                     // the animated property is re-rasterized into the buffer.
-                    task->targetElement()->setNeedsPainting();
+                    //
+                    // A transform transition on an element that owns a
+                    // graphics buffer is the exception: the matrix is applied
+                    // when that buffer is composited, so its contents stay
+                    // valid and repainting the subtree every tick is wasted.
+                    if (!isTransformTransitionOnOwnGraphicsBuffer(task)) {
+                        task->targetElement()->setNeedsPainting();
+                    }
                 }
             }
 

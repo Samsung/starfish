@@ -72,6 +72,10 @@ struct StackingContext::ComputeStackingContextContext {
     bool seenPositionFixed;
     std::unordered_map<StackingContext*, LayoutRect> extentPerLayer;
     std::unordered_map<StackingContext*, LayoutRect> clippedExtentPerLayer;
+    // Screen extents of the overflow-clipping ancestors met while clipping
+    // layers. Every layer under the same clipping box walks up through it,
+    // and each computeScreenExtent() is itself a walk to the root.
+    std::unordered_map<FrameBox*, LayoutRect> clipBoxExtents;
     std::unordered_map<StackingContext*, bool> compositeFlagInfo;
     std::unordered_map<StackingContext*, bool> compositeFlagInfoBecauseSelf;
     std::vector<StackingContext*> compositedLayers;
@@ -129,9 +133,15 @@ struct StackingContext::ComputeStackingContextContext {
             }
 
             if (f->shouldApplyOverflow()) {
-                LayoutRect parentExtent =
-                    f->asFrameBox()->computeScreenExtent();
-                rt = LayoutRect::overlappedRect(parentExtent, rt);
+                FrameBox* clipBox = f->asFrameBox();
+                auto cached = clipBoxExtents.find(clipBox);
+                if (cached == clipBoxExtents.end()) {
+                    cached = clipBoxExtents
+                                 .insert(std::make_pair(
+                                     clipBox, clipBox->computeScreenExtent()))
+                                 .first;
+                }
+                rt = LayoutRect::overlappedRect(cached->second, rt);
 
                 if (rt.isEmpty() ||
                     f->style()->position() == FixedPositionValue) {
