@@ -2736,6 +2736,7 @@ StyleResolver::StyleResolver(Document* document, ShadowRoot* ownerShadowRoot)
     , m_mediaQueryEvaluator(nullptr)
     , m_ruleSet(new RuleSet())
     , m_nextRuleSetOrder(0)
+    , m_resolvedVarDeclarationCount(0)
 {
 }
 
@@ -3448,15 +3449,55 @@ Optional<const MutablePropertyValueList*> StyleResolver::cssCustomValues()
     return Optional<const MutablePropertyValueList*>();
 }
 
+CSSStyleDeclaration* StyleResolver::parseResolvedVarValue(
+    CSSStyleValuePair::KeyKind keyKind, bool isImportant,
+    const CSSTokenValue& text)
+{
+    // FNV-1a over the text, then the property and importance folded in.
+    uint32_t hash = 2166136261u;
+    for (size_t i = 0; i < text.size(); i++) {
+        hash = (hash ^ (unsigned char)text[i]) * 16777619u;
+    }
+    hash = (hash ^ (uint32_t)keyKind) * 16777619u;
+    hash = (hash ^ (uint32_t)isImportant) * 16777619u;
+
+    GCVector<ResolvedVarDeclaration>& bucket = m_resolvedVarDeclarations[hash];
+    for (const ResolvedVarDeclaration& entry : bucket) {
+        if (entry.keyKind == keyKind && entry.isImportant == isImportant &&
+            entry.length == text.size() &&
+            memcmp(entry.text, text.data(), text.size()) == 0) {
+            return entry.declaration;
+        }
+    }
+
+    CSSStyleDeclaration* declaration = new CSSStyleDeclaration(document());
+    declaration->setPropertyInternal(keyKind, text.c_str(), text.size(),
+                                     isImportant);
+
+    // Script that animates a custom property can produce an unbounded set of
+    // substituted texts; start over rather than keep every one of them.
+    const size_t maxEntries = 1024;
+    if (m_resolvedVarDeclarationCount >= maxEntries) {
+        m_resolvedVarDeclarations.clear();
+        m_resolvedVarDeclarationCount = 0;
+    }
+    char* copy = (char*)GC_MALLOC_ATOMIC(text.size() + 1);
+    memcpy(copy, text.data(), text.size());
+    copy[text.size()] = 0;
+    m_resolvedVarDeclarations[hash].push_back(ResolvedVarDeclaration{
+        copy, text.size(), keyKind, isImportant, declaration });
+    m_resolvedVarDeclarationCount++;
+    return declaration;
+}
+
 CSSStyleDeclaration* StyleResolver::resolveVarValue(
     Element* element, const CSSStyleValuePair& cssValuePair,
     CSSStyleValuePair::KeyKind keyKind, bool isImportant)
 {
     auto newCssValue = resolveVarReferencedValue(element, cssValuePair);
 
-    CSSStyleDeclaration* declaration = new CSSStyleDeclaration(document());
-    declaration->setPropertyInternal(keyKind, newCssValue.c_str(),
-                                     newCssValue.size(), isImportant);
+    CSSStyleDeclaration* declaration =
+        parseResolvedVarValue(keyKind, isImportant, newCssValue);
     const GCAtomicVector<CSSStyleValuePair>& cssValues =
         declaration->cssValues();
     if (cssValues.size() == 1 &&

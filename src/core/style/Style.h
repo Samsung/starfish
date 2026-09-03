@@ -3605,6 +3605,21 @@ public:
                                          bool isImportant);
 
 protected:
+    // A var()-referencing declaration is re-parsed from its substituted text
+    // on every element it applies to. The text only depends on the custom
+    // property values in scope, so the same few strings come back for every
+    // element and every recalc; keep their parsed form.
+    struct ResolvedVarDeclaration {
+        const char* text;
+        size_t length;
+        CSSStyleValuePair::KeyKind keyKind;
+        bool isImportant;
+        CSSStyleDeclaration* declaration;
+    };
+    CSSStyleDeclaration* parseResolvedVarValue(
+        CSSStyleValuePair::KeyKind keyKind, bool isImportant,
+        const CSSTokenValue& text);
+
     void recalcWebFonts();
     bool addToRuleSet(CSSStyleSheet* sheet);
     void addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule);
@@ -3674,6 +3689,9 @@ protected:
     size_t m_nextRuleSetOrder;
     GCAtomicVector<AtomicString> m_ruleSetAttrFilter;
     Optional<MutablePropertyValueList*> m_cssCustomValues;
+    GCUnorderedMap<size_t, GCVector<ResolvedVarDeclaration>>
+        m_resolvedVarDeclarations;
+    size_t m_resolvedVarDeclarationCount;
 };
 
 } // namespace Starfish
