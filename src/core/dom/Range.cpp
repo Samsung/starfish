@@ -362,8 +362,8 @@ void Range::borderAndTextQuads(GCVector<DOMQuad*>& quads,
     // APL viewhost does - needs no such bookkeeping and takes the direct
     // walk.
     Node* first = firstNode();
-    bool singleTextNode = first && first->isText() &&
-                          Traverse::next(first, nullptr) == stop;
+    bool singleTextNode =
+        first && first->isText() && Traverse::next(first, nullptr) == stop;
     GCUnorderedMap<Node*, GCVector<InlineTextBox*>> textBoxesByNode;
     GCUnorderedSet<Frame*> checkedFrameBlockBox;
     for (Node* n = first; n != stop; n = Traverse::next(n, nullptr)) {
@@ -377,7 +377,8 @@ void Range::borderAndTextQuads(GCVector<DOMQuad*>& quads,
         } else if (n->isText()) {
             // The part of this node's text that the range covers.
             unsigned start = (n == startContainer()) ? startOffset() : 0;
-            unsigned end = (n == endContainer()) ? endOffset() : n->nodeLength();
+            unsigned end =
+                (n == endContainer()) ? endOffset() : n->nodeLength();
             Frame* f = n->frame();
             if (start >= end || !f || !f->isFrameText()) {
                 continue;
@@ -475,15 +476,15 @@ void Range::addTextQuads(InlineTextBox* box, unsigned start, unsigned end,
 
     LayoutRect rect = computeBoxExtent(LayoutRect(x, 0, width, box->height()),
                                        box->computeScreenMatrix());
-    quads.push_back(new DOMQuad(
-        m_document->executionContext(),
-        DOMPointInit(rect.location().x(), rect.location().y()),
-        DOMPointInit(rect.location().x() + rect.size().width(),
-                     rect.location().y()),
-        DOMPointInit(rect.location().x() + rect.size().width(),
-                     rect.location().y() + rect.size().height()),
-        DOMPointInit(rect.location().x(),
-                     rect.location().y() + rect.size().height())));
+    quads.push_back(
+        new DOMQuad(m_document->executionContext(),
+                    DOMPointInit(rect.location().x(), rect.location().y()),
+                    DOMPointInit(rect.location().x() + rect.size().width(),
+                                 rect.location().y()),
+                    DOMPointInit(rect.location().x() + rect.size().width(),
+                                 rect.location().y() + rect.size().height()),
+                    DOMPointInit(rect.location().x(),
+                                 rect.location().y() + rect.size().height())));
 }
 
 Range* Range::cloneRange()
