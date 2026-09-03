@@ -78,7 +78,7 @@ jobs:
 
   rebuild_starfish_thirdparty:
     needs: cleanup
-    runs-on: [ runner-type1 ]
+    runs-on: [ code-linux, code-2xlarge ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
       credentials:
