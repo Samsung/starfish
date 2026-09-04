@@ -106,12 +106,18 @@ class RepaintRegionTrackerContext {
 public:
     void clear()
     {
-        std::unordered_map<FrameBox*, LayoutRect>().swap(
+        std::unordered_map<const void*, LayoutRect>().swap(
             m_visibleRectOfFrameRectIsOverflowedBoxes);
     }
 
 protected:
-    std::unordered_map<FrameBox*, LayoutRect>
+    // Keyed by the FrameBox, and also by its node (element or pseudo-element)
+    // for a box the node owns outright -- see overflowedBoxNodeKey() in
+    // RepaintRegionTracker.cpp. A style change can rebuild a subtree's
+    // frames, and the next frame must still find what the old box painted
+    // outside its rect (a box-shadow, an outline) to erase it; the FrameBox*
+    // key dies with the old box, the node survives the rebuild.
+    std::unordered_map<const void*, LayoutRect>
         m_visibleRectOfFrameRectIsOverflowedBoxes;
 };
 } // namespace Starfish
