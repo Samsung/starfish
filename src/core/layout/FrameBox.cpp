@@ -4337,6 +4337,26 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         }
     }
 
+    // Composing a context's rect (see computeVisibleRect in
+    // StackingContext.cpp): a child context's subtree arrives as that
+    // context's own composed rect, so only its owner box is united here.
+    // Only the contexts below the source in the context tree are composed
+    // that way. A box whose ancestors cannot own a stacking context has its
+    // context parented above the source (establishesStackingContextIfNeeds
+    // skips them), so its subtree reaches the source's rect through this
+    // walk alone and must still be descended into.
+    if (ctx.subtreeRectsFromChildContexts && stackingContext() &&
+        ctx.sourceStackingContext &&
+        this != ctx.sourceStackingContext->owner()) {
+        StackingContext* c = stackingContext()->parent();
+        while (c && c != ctx.sourceStackingContext) {
+            c = c->parent();
+        }
+        if (c) {
+            return false;
+        }
+    }
+
     return ret;
 }
 
