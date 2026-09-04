@@ -588,7 +588,7 @@ CFLAGS+=' -DNO_UFFDWP_VDB '
 # Variables for build
 # This features_config values are used in cmake command.
 %define features_config -DWORKER='%{enable_worker}' -DSHARED_WORKER='%{enable_sharedworker}' \\\
-  -DSERVICE_WORKER='%{enable_serviceworker}' -DENABLE_TLS_ACCESS_BY_PTHREAD_KEY='%{enable_tls_access_by_pthread_key}' \\\
+  -DSERVICE_WORKER='%{enable_serviceworker}' -DTLS_ACCESS_BY_ADDRESS='%{enable_tls_access_by_address}' \\\
   -DWEBRTC='%{enable_webrtc}' -DWEBGL='%{enable_webgl}' \\\
   -DENABLE_ESPLUSPLAYER='%{enable_esplusplayer}'
 

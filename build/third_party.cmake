@@ -390,18 +390,14 @@ IF (${STARFISH_ENABLE_THREADING})
     # already gets it correctly: ESCARGOT_THREADING=ON above flows into
     # escargot's own GCUTIL_ENABLE_THREADING, which GCutil's CMakeLists uses
     # to add -DGC_THREAD_ISOLATE=1 to its own target scope.)
-    # BY_ADDRESS assumes every thread's GC TLS variable sits at the same
-    # fixed offset from the thread pointer, which local-dynamic TLS doesn't
-    # guarantee -- confirmed crashing a worker thread's GC_init ("there is
-    # a error calc tls offset", GCutil/misc.c). Use PTHREAD_KEY instead,
-    # which doesn't depend on TLS layout at all; no need to force a TLS
-    # model anymore either. ENABLE_TLS_ACCESS_BY_PTHREAD_KEY defaults ON but
-    # packaging turns it off for tizen_version_major <= 8 (untested there);
-    # off just falls back to GCutil's plain thread_local path, no crash risk
-    # either way.
-    IF (${ENABLE_TLS_ACCESS_BY_PTHREAD_KEY})
-        SET (ESCARGOT_TLS_ACCESS_BY_PTHREAD_KEY ON)
-    ENDIF()
+ENDIF()
+
+IF (DEFINED TLS_ACCESS_BY_ADDRESS)
+    SET (ESCARGOT_TLS_ACCESS_BY_ADDRESS ${TLS_ACCESS_BY_ADDRESS})
+ENDIF()
+
+IF (DEFINED TLS_ACCESS_BY_PTHREAD_KEY)
+    SET (ESCARGOT_TLS_ACCESS_BY_PTHREAD_KEY ${TLS_ACCESS_BY_PTHREAD_KEY})
 ENDIF()
 
 ADD_SUBDIRECTORY (third_party/escargot)
