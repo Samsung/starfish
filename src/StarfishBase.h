@@ -590,8 +590,21 @@ const char* getWindowsTempDir();
 
 enum NullOptionType { NullOption };
 
+// Intentionally does NOT inherit gc. Optional<T> is never heap-allocated
+// on its own (0 occurrences of `new Optional<` in the codebase) — it is
+// always used as a stack local, a by-value return, or an *embedded member*
+// of a GC-managed class. When T itself inherits gc (e.g. GCVector,
+// CSSStyleValuePair, LengthSize, QualifiedName), making Optional<T> also
+// inherit gc creates two distinct gc base subobjects inside one object.
+// The C++ standard requires them to have different addresses, which
+// defeats Empty Base Optimization (EBO) and inserts up to 8 bytes of
+// padding before m_value — pure waste on every instance. By not inheriting
+// gc here, EBO applies cleanly and the layout is sizeof(T) + padding(bool).
+// GC tracing is unaffected: a GC-managed class that embeds Optional<T>
+// registers the member's offset in its own fillGCDescriptor via
+// GC_WORD_OFFSET, so the collector still scans the inner GC pointers.
 template <typename T>
-struct Optional : public gc {
+struct Optional {
 public:
     Optional()
         : m_value()

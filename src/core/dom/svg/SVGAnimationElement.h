@@ -61,7 +61,7 @@ public:
                    GC_WORD_OFFSET(SVGAnimationElement, m_animationKeyframes));
         GC_set_bit(
             desc, GC_WORD_OFFSET(SVGAnimationElement, m_attributeNameAsString));
-        GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_values) + 1);
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_values));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement,
                                         m_valuesFromToPointerRooter));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_keySplines));

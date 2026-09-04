@@ -1604,7 +1604,11 @@ ActiveLengthSizeAnimationTask::ActiveLengthSizeAnimationTask(
 {
     // Note that this originated from legacy code.
     if (init.animationType == AnimationType::Transition) {
-        m_originalToValue = originalToValue;
+        if (originalToValue) {
+            m_originalToValue =
+                new LengthSize(originalToValue.value().width(),
+                               originalToValue.value().height());
+        }
     } else {
         m_isEveryAnimiatedValueResolved = true;
     }
@@ -1689,8 +1693,8 @@ bool ActiveLengthSizeAnimationTask::taskCanContinue(ComputedStyle* newStyle)
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundSize) {
         size_t layerIndex = this->layerIndex();
         if (layerIndex < newStyle->backgroundLayerSize() &&
-            newStyle->backgroundSizeIsLength(layerIndex) &&
-            m_originalToValue ==
+            newStyle->backgroundSizeIsLength(layerIndex) && m_originalToValue &&
+            *m_originalToValue.value() ==
                 newStyle->backgroundSizeLengthValue(layerIndex)) {
             return true;
         }
