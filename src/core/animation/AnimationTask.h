@@ -514,7 +514,7 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
-    Optional<LengthSize> m_originalToValue;
+    Optional<LengthSize*> m_originalToValue;
 };
 
 class ActiveVisibilityAnimationTask : public ActiveAnimationTask {
