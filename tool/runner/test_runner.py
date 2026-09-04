@@ -145,7 +145,7 @@ KHRONOS_WEBGL_JOBS = 4
 # iterations), leaving no margin for a slower or loaded CI host. Give the
 # suite enough headroom that only real hangs trip the watchdog; the other
 # (DOM/CSS) suites keep the tighter default.
-KHRONOS_WEBGL_TIMEOUT_SEC = 480
+KHRONOS_WEBGL_TIMEOUT_SEC = 1200
 
 def run_vendor_test_khronos(root, name):
     from http_server import popen_server
