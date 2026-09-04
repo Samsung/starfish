@@ -3559,6 +3559,19 @@ bool FrameBox::canOwnsStackingContext()
         return true;
     } else if (needsToEstablishStackingContextForScrolling()) {
         return true;
+    } else if (!isAnonymous() && node()) {
+        // A context drawn into its own graphics buffer last frame keeps that
+        // buffer even after the style reason for it (a transform transition,
+        // will-change) is gone; see the compositedBefore carry-over in
+        // StackingContext::applyStackingContextProperties. Its descendant
+        // contexts must then stay parented here so they keep painting into
+        // that buffer: re-parenting them to an ancestor context would draw
+        // them into the ancestor's tiles, underneath this box's own layer.
+        auto& info = node()->webView()->prevDrawnStackingContextInfo();
+        auto iter = info.find(node());
+        if (iter != info.end() && iter->second.needsGraphicsBuffer) {
+            return true;
+        }
     }
 
     return false;
