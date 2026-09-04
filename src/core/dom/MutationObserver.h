@@ -234,6 +234,7 @@ public:
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
+        GC_set_bit(desc, GC_WORD_OFFSET(MutationObserver, m_object));
         GC_set_bit(desc, GC_WORD_OFFSET(MutationObserver, m_executionContext));
         GC_set_bit(desc, GC_WORD_OFFSET(MutationObserver, m_callback));
         GC_set_bit(desc, GC_WORD_OFFSET(MutationObserver, m_queuedRecords));
