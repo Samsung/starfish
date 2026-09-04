@@ -3062,7 +3062,7 @@ static void applyAnimationDuration(Element* element, ComputedStyle* style,
     case CSSStyleValuePair::Inherit:
         parentStyle->markSomeNonInheritMemberExplicitlyInherited(
             item.keyKind());
-        style->setTransitionDuration(parentStyle->animationDuration(), index);
+        style->setAnimationDuration(parentStyle->animationDuration(), index);
         break;
     case CSSStyleValuePair::Time:
         style->setAnimationDuration(item.timeValue(), index);
