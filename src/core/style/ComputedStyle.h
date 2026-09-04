@@ -900,7 +900,7 @@ class ComputedStyle : public gc {
         m_seenPseudoElementBefore = false;
         m_seenPseudoElementAfter = false;
         m_gotInheritedColor = false;
-        m_someNonInheritMemberExplicitlyInherited = false;
+        m_explicitlyInheritedKeys = 0;
         m_originalDisplay = DisplayValue::InlineDisplayValue;
 
         initNonInheritedStyles();
@@ -924,7 +924,7 @@ public:
         m_seenPseudoElementBefore = false;
         m_seenPseudoElementAfter = false;
         m_gotInheritedColor = false;
-        m_someNonInheritMemberExplicitlyInherited = false;
+        m_explicitlyInheritedKeys = 0;
 
         initNonInheritedStyles();
     }
@@ -934,14 +934,36 @@ public:
         return m_seenViewPortUnitInStyle;
     }
 
-    bool someNonInheritMemberExplicitlyInherited()
+    // Bit for a non-inherited property in m_explicitlyInheritedKeys and in
+    // the damaged-key mask compareStyle()'s damagedKeys is folded into.
+    // Properties share bits modulo 63 (a collision only costs an extra
+    // recalc); properties compareStyle() never reports map to bit 63, which
+    // every damaged-key mask sets, so a child inheriting one of those is
+    // still re-resolved on any change of its parent.
+    static uint64_t explicitlyInheritedKeyBit(CSSStyleValuePair::KeyKind key);
+
+    // Some child resolved `inherit` for one of the non-inherited properties
+    // in damagedKeyMask against this style.
+    bool someNonInheritMemberExplicitlyInherited(uint64_t damagedKeyMask)
     {
-        return m_someNonInheritMemberExplicitlyInherited;
+        return (m_explicitlyInheritedKeys & damagedKeyMask) != 0;
     }
 
-    void markSomeNonInheritMemberExplicitlyInherited()
+    void markSomeNonInheritMemberExplicitlyInherited(
+        CSSStyleValuePair::KeyKind key)
     {
-        m_someNonInheritMemberExplicitlyInherited = true;
+        m_explicitlyInheritedKeys |= explicitlyInheritedKeyBit(key);
+    }
+
+    // The marks live on the style object, so a re-resolve that allocates a
+    // new one starts from an empty mask. The children that set them are not
+    // re-resolved on every change of this element (that is what the mask is
+    // for), so the new style takes the old style's marks over: a dropped
+    // mark would never be set again, and `inherit` on the property it
+    // stands for would stop updating.
+    void takeExplicitlyInheritedKeysFrom(ComputedStyle* from)
+    {
+        m_explicitlyInheritedKeys |= from->m_explicitlyInheritedKeys;
     }
 
     DisplayValue originalDisplay()
@@ -5110,13 +5132,15 @@ protected:
         InheritedStylesRareData* m_rareData;
     } m_inheritedStyles;
 
+    // See explicitlyInheritedKeyBit(): which non-inherited properties a
+    // child explicitly inherited from this style.
+    uint64_t m_explicitlyInheritedKeys;
     bool m_seenViewPortUnitInStyle : 1;
     bool m_seenPseudoElementFirstLine : 1;
     bool m_seenPseudoElementFirstLetter : 1;
     bool m_seenPseudoElementBefore : 1;
     bool m_seenPseudoElementAfter : 1;
     bool m_gotInheritedColor : 1;
-    bool m_someNonInheritMemberExplicitlyInherited : 1;
     FloatValue m_float : 2;
     ClearValue m_clear : 2;
     DisplayValue m_display : 5;
