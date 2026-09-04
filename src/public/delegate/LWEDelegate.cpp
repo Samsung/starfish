@@ -53,6 +53,36 @@ static void StarfishGCMemoryLogger(void* data)
 }
 
 #if defined(STARFISH_WINDOWS)
+static bool isFontconfigAlreadyInitialized()
+{
+    FcConfig* config = FcConfigGetCurrent();
+    if (!config) {
+        return false;
+    }
+
+    // 1. Check if we already have configuration files loaded.
+    // NOTE: FcConfigGetConfigFiles() already returns an FcStrList* (unlike
+    // the newer FcConfigGetFiles(), which returns an FcStrSet*), so it can
+    // be iterated directly. This keeps compatibility with older fontconfig
+    // versions that don't have FcConfigGetFiles() at all.
+    FcStrList* configFiles = FcConfigGetConfigFiles(config);
+    if (configFiles) {
+        FcChar8* file = FcStrListNext(configFiles);
+        FcStrListDone(configFiles);
+        if (file) {
+            return true;
+        }
+    }
+
+    // 2. Check if the system font set already has fonts loaded.
+    FcFontSet* systemFonts = FcConfigGetFonts(config, FcSetSystem);
+    if (systemFonts && systemFonts->nfont > 0) {
+        return true;
+    }
+
+    return false;
+}
+
 // Fontconfig has no usable system-wide configuration on Windows. Rather than
 // shipping fonts.conf/conf.d next to this library and pointing FONTCONFIG_FILE
 // at it, load the flattened build-time snapshot of that same config (see
@@ -62,6 +92,13 @@ static void StarfishGCMemoryLogger(void* data)
 // be located or deployed at runtime.
 static void loadWindowsFontconfigConfig()
 {
+    if (isFontconfigAlreadyInitialized()) {
+        STARFISH_LOG_INFO(
+            "Fontconfig is already initialized by the embedder or host "
+            "application. Skipping embedded config load.");
+        return;
+    }
+
     // The generated chunks are stored as separate literals (never
     // concatenated by the compiler into one, to stay under MSVC's
     // 65535-byte string literal limit -- see the generator), so they need to
