@@ -8264,6 +8264,24 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
 
     // Gather all css custom properties
     {
+        // Custom properties inherit. An element picks up its ancestors' values
+        // when a var() is resolved, by walking up from its rendering parent
+        // (CSSVariableSyntaxTreeBuilder::generateStyle). A pseudo-element is
+        // resolved against its originating element, so that walk skips the
+        // originating element's own values; seed them here so the pseudo's own
+        // declarations below override them in cascade order.
+        if (pseudoElementType != PseudoElementNone) {
+            auto inherited = parent->customProperty();
+            if (inherited) {
+                const auto& properties = inherited.value()->values();
+                auto list =
+                    ret->rareComputedStyleData()->ensureCustomProperty();
+                for (size_t i = 0; i < properties.size(); ++i) {
+                    list->setProperty(properties[i].name(),
+                                      properties[i].value());
+                }
+            }
+        }
         auto iter = &matchedRules[0];
         while (iter != end) {
             const auto& propertiesList =
