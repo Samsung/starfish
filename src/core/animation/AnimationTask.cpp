@@ -370,7 +370,20 @@ AnimatedValue* ActiveAnimationTask::currentAnimatedToValue()
 
 TimingFunction* ActiveAnimationTask::currentTimingFunction()
 {
-    return m_timingFunctions[m_frameIdx];
+    // m_timingFunctions holds one entry per interval (frameSize - 1), while
+    // m_frameIdx is a keyframe index shared with m_values/m_offsets (size
+    // frameSize). Forward playback treats m_frameIdx as the interval's start
+    // keyframe, so it indexes m_timingFunctions directly; backward playback
+    // treats it as the end keyframe (see currentAnimatedToValue() and
+    // computeProgress()'s m_offsets indexing), so the interval is
+    // m_frameIdx - 1. Without this branch, m_frameIdx == m_frameSize - 1
+    // (reachable via step()'s backward wrap or setIsForward()) reads past
+    // the end of m_timingFunctions.
+    if (m_isForward) {
+        return m_timingFunctions[m_frameIdx];
+    } else {
+        return m_timingFunctions[m_frameIdx - 1];
+    }
 }
 
 // Returns true iff no frame in the subtree rooted at |f| would paint anything
