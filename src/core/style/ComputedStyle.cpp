@@ -1187,6 +1187,48 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
     }
 }
 
+uint64_t ComputedStyle::explicitlyInheritedKeyBit(
+    CSSStyleValuePair::KeyKind key)
+{
+    switch (key) {
+    // Not reported in damagedKeys by compareStyle() below (compared as
+    // part of another property, or not compared at all).
+    case CSSStyleValuePair::KeyKind::All:
+    case CSSStyleValuePair::KeyKind::AnimationDelay:
+    case CSSStyleValuePair::KeyKind::AnimationDirection:
+    case CSSStyleValuePair::KeyKind::AnimationDuration:
+    case CSSStyleValuePair::KeyKind::AnimationFillMode:
+    case CSSStyleValuePair::KeyKind::AnimationIterationCount:
+    case CSSStyleValuePair::KeyKind::AnimationPlayState:
+    case CSSStyleValuePair::KeyKind::AnimationTimingFunction:
+    case CSSStyleValuePair::KeyKind::Content:
+    case CSSStyleValuePair::KeyKind::CounterIncrement:
+    case CSSStyleValuePair::KeyKind::CounterReset:
+    case CSSStyleValuePair::KeyKind::D:
+    case CSSStyleValuePair::KeyKind::MaskPositionX:
+    case CSSStyleValuePair::KeyKind::MaskPositionY:
+    case CSSStyleValuePair::KeyKind::MaskRepeatX:
+    case CSSStyleValuePair::KeyKind::MaskRepeatY:
+    case CSSStyleValuePair::KeyKind::MaskSize:
+    case CSSStyleValuePair::KeyKind::MaskType:
+    case CSSStyleValuePair::KeyKind::ObjectFit:
+    case CSSStyleValuePair::KeyKind::ObjectPosition:
+    case CSSStyleValuePair::KeyKind::R:
+    case CSSStyleValuePair::KeyKind::TransitionDelay:
+    case CSSStyleValuePair::KeyKind::TransitionDuration:
+    case CSSStyleValuePair::KeyKind::TransitionProperty:
+    case CSSStyleValuePair::KeyKind::TransitionTimingFunction:
+    case CSSStyleValuePair::KeyKind::WillChange:
+    case CSSStyleValuePair::KeyKind::X1:
+    case CSSStyleValuePair::KeyKind::X2:
+    case CSSStyleValuePair::KeyKind::Y1:
+    case CSSStyleValuePair::KeyKind::Y2:
+        return 1ull << 63;
+    default:
+        return 1ull << (static_cast<unsigned>(key) % 63);
+    }
+}
+
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                                  ComputedStyle* newStyle, bool* damagedKeys,
                                  bool isSVGDescendant)

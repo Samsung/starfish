@@ -2894,7 +2894,8 @@ static void applyTransitionProperty(Element* element, ComputedStyle* style,
         style->setTransitionProperty(CSSStyleValuePair::KeyKind::All, layer);
         break;
     case CSSStyleValuePair::Inherit:
-        parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+        parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+            item.keyKind());
         STARFISH_ASSERT(layer == 0);
         style->setTransitionProperty(parentStyle->transitionProperty());
         break;
@@ -2921,7 +2922,8 @@ static void applyTransitionDuration(Element* element, ComputedStyle* style,
         style->setTransitionDuration(CSSTime(0), layer);
         break;
     case CSSStyleValuePair::Inherit:
-        parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+        parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+            item.keyKind());
         STARFISH_ASSERT(layer == 0);
         style->setTransitionDuration(parentStyle->transitionDuration());
         break;
@@ -2960,7 +2962,8 @@ static void applyTransitionTimingFunction(Element* element,
         style->setTransitionTimingFunction(TimingFunctionEaseValue, layer);
         break;
     case CSSStyleValuePair::Inherit:
-        parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+        parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+            item.keyKind());
         STARFISH_ASSERT(layer == 0);
         style->setTransitionTimingFunction(
             parentStyle->transitionTimingFunction());
@@ -2992,7 +2995,8 @@ static void applyTransitionDelay(Element* element, ComputedStyle* style,
         style->setTransitionDelay(CSSTime(0), layer);
         break;
     case CSSStyleValuePair::Inherit:
-        parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+        parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+            item.keyKind());
         STARFISH_ASSERT(layer == 0);
         style->setTransitionDelay(parentStyle->transitionDelay());
         break;
@@ -3029,7 +3033,8 @@ static void applyAnimationName(Element* element, ComputedStyle* style,
         style->setAnimationName(String::fromUTF8("none"), index);
         break;
     case CSSStyleValuePair::Inherit:
-        parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+        parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+            item.keyKind());
         style->setAnimationName(parentStyle->animationName(), index);
         break;
     case CSSStyleValuePair::StringValueKind:
@@ -3055,7 +3060,8 @@ static void applyAnimationDuration(Element* element, ComputedStyle* style,
         style->setAnimationDuration(CSSTime(0), index);
         break;
     case CSSStyleValuePair::Inherit:
-        parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+        parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+            item.keyKind());
         style->setTransitionDuration(parentStyle->animationDuration(), index);
         break;
     case CSSStyleValuePair::Time:
@@ -3091,7 +3097,8 @@ static void applyAnimationDelay(Element* element, ComputedStyle* style,
         style->setAnimationDelay(CSSTime(0), index);
         break;
     case CSSStyleValuePair::Inherit:
-        parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+        parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+            item.keyKind());
         style->setAnimationDelay(parentStyle->animationDelay(), index);
         break;
     case CSSStyleValuePair::Time:
@@ -3128,7 +3135,8 @@ static void applyAnimationTimingFunction(Element* element, ComputedStyle* style,
         style->setAnimationTimingFunction(TimingFunctionEaseValue, index);
         break;
     case CSSStyleValuePair::Inherit:
-        parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+        parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+            item.keyKind());
         style->setAnimationTimingFunction(
             parentStyle->animationTimingFunction(), index);
         break;
@@ -3160,7 +3168,8 @@ static void applyAnimationIterationCount(Element* element, ComputedStyle* style,
         style->setAnimationIterationCount(1.0, index);
         break;
     case CSSStyleValuePair::Inherit:
-        parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+        parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+            item.keyKind());
         style->setAnimationIterationCount(
             parentStyle->animationIterationCount(), index);
         break;
@@ -3187,7 +3196,8 @@ static void applyAnimationDirection(Element* element, ComputedStyle* style,
         style->setAnimationDirection(AnimationDirectionValue::Normal, index);
         break;
     case CSSStyleValuePair::Inherit:
-        parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+        parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+            item.keyKind());
         style->setAnimationDirection(parentStyle->animationDirect(), index);
         break;
     case CSSStyleValuePair::AnimationDirectionValueKind:
@@ -3213,7 +3223,8 @@ static void applyAnimationPlayState(Element* element, ComputedStyle* style,
         style->setAnimationPlayState(AnimationPlayStateValue::Running, index);
         break;
     case CSSStyleValuePair::Inherit:
-        parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+        parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+            item.keyKind());
         style->setAnimationPlayState(parentStyle->animationPlayState(), index);
         break;
     case CSSStyleValuePair::AnimationPlayStateValueKind:
@@ -3239,7 +3250,8 @@ static void applyAnimationFillMode(Element* element, ComputedStyle* style,
         style->setAnimationFillMode(AnimationFillModeValue::None, index);
         break;
     case CSSStyleValuePair::Inherit:
-        parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+        parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+            item.keyKind());
         style->setAnimationFillMode(parentStyle->animationFillMode(), index);
         break;
     case CSSStyleValuePair::AnimationFillModeValueKind:
@@ -3588,7 +3600,8 @@ void StyleResolver::applyProperty(Element* element,
 
 #define MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED()                \
     if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) { \
-        parentStyle->markSomeNonInheritMemberExplicitlyInherited();         \
+        parentStyle->markSomeNonInheritMemberExplicitlyInherited(           \
+            newCssValue.keyKind());                                         \
     }
 
     switch (newCssValue.keyKind()) {
@@ -5717,7 +5730,8 @@ void StyleResolver::applyProperty(Element* element,
         if (newCssValue.valueKind() ==                                   \
             CSSStyleValuePair::ValueKind::Inherit) {                     \
             style->set##POS(parentStyle->pos());                         \
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();  \
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(    \
+                newCssValue.keyKind());                                  \
         } else if (newCssValue.valueKind() ==                            \
                        CSSStyleValuePair::ValueKind::Initial ||          \
                    newCssValue.valueKind() ==                            \
@@ -5757,7 +5771,8 @@ void StyleResolver::applyProperty(Element* element,
             break;                                                        \
         } else if (newCssValue.valueKind() ==                             \
                    CSSStyleValuePair::ValueKind::Inherit) {               \
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();   \
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(     \
+                newCssValue.keyKind());                                   \
             BorderData pBorder = parentStyle->border();                   \
             style->setBorder##POS##Style(pBorder.pos().style());          \
         } else if ((newCssValue.valueKind() ==                            \
@@ -5786,7 +5801,8 @@ void StyleResolver::applyProperty(Element* element,
                    CSSStyleValuePair::ValueKind::Inherit) {
             style->setBorderBlockStartStyle(
                 parentStyle->borderBlockStart().borderValue().style());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -5808,7 +5824,8 @@ void StyleResolver::applyProperty(Element* element,
                    CSSStyleValuePair::ValueKind::Inherit) {
             style->setBorderBlockEndStyle(
                 parentStyle->borderBlockEnd().borderValue().style());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -5830,7 +5847,8 @@ void StyleResolver::applyProperty(Element* element,
                    CSSStyleValuePair::ValueKind::Inherit) {
             style->setBorderInlineStartStyle(
                 parentStyle->borderInlineStart().borderValue().style());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -5852,7 +5870,8 @@ void StyleResolver::applyProperty(Element* element,
                    CSSStyleValuePair::ValueKind::Inherit) {
             style->setBorderInlineEndStyle(
                 parentStyle->borderInlineEnd().borderValue().style());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -5872,7 +5891,8 @@ void StyleResolver::applyProperty(Element* element,
             CSSStyleValuePair::ValueKind::Inherit) {                     \
             BorderData pBorder = parentStyle->border();                  \
             style->setBorder##POS##Width(pBorder.pos().width());         \
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();  \
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(    \
+                newCssValue.keyKind());                                  \
         } else if ((newCssValue.valueKind() ==                           \
                     CSSStyleValuePair::ValueKind::Initial) ||            \
                    (newCssValue.valueKind() ==                           \
@@ -5907,7 +5927,8 @@ void StyleResolver::applyProperty(Element* element,
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             style->setBorderBlockStartWidth(
                 parentStyle->borderBlockStart().borderValue().width());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -5937,7 +5958,8 @@ void StyleResolver::applyProperty(Element* element,
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             style->setBorderBlockEndWidth(
                 parentStyle->borderBlockStart().borderValue().width());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -5967,7 +5989,8 @@ void StyleResolver::applyProperty(Element* element,
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             style->setBorderInlineStartWidth(
                 parentStyle->borderInlineStart().borderValue().width());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -5997,7 +6020,8 @@ void StyleResolver::applyProperty(Element* element,
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             style->setBorderInlineEndWidth(
                 parentStyle->borderInlineEnd().borderValue().width());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -6029,7 +6053,8 @@ void StyleResolver::applyProperty(Element* element,
             CSSStyleValuePair::ValueKind::Inherit) {                        \
             BorderData pBorder = parentStyle->border();                     \
             style->setBorder##POS##Color(pBorder.pos().color());            \
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();     \
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(       \
+                newCssValue.keyKind());                                     \
         } else if ((newCssValue.valueKind() ==                              \
                     CSSStyleValuePair::ValueKind::Initial) ||               \
                    (newCssValue.valueKind() ==                              \
@@ -6060,7 +6085,8 @@ void StyleResolver::applyProperty(Element* element,
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             style->setBorderBlockStartColor(
                 parentStyle->borderBlockStart().borderValue().color());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -6085,7 +6111,8 @@ void StyleResolver::applyProperty(Element* element,
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             style->setBorderBlockEndColor(
                 parentStyle->borderBlockEnd().borderValue().color());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -6110,7 +6137,8 @@ void StyleResolver::applyProperty(Element* element,
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             style->setBorderInlineStartColor(
                 parentStyle->borderInlineStart().borderValue().color());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -6135,7 +6163,8 @@ void StyleResolver::applyProperty(Element* element,
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             style->setBorderInlineEndColor(
                 parentStyle->borderInlineEnd().borderValue().color());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -6180,7 +6209,8 @@ void StyleResolver::applyProperty(Element* element,
             CSSStyleValuePair::ValueKind::Inherit) {                    \
             LengthData pMargin = parentStyle->margin();                 \
             style->setMargin##POS(pMargin.pos());                       \
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited(); \
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(   \
+                newCssValue.keyKind());                                 \
         } else if ((newCssValue.valueKind() ==                          \
                     CSSStyleValuePair::ValueKind::Initial) ||           \
                    (newCssValue.valueKind() ==                          \
@@ -6204,7 +6234,8 @@ void StyleResolver::applyProperty(Element* element,
     case CSSStyleValuePair::KeyKind::MarginBlockStart:
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             style->setMarginBlockStart(parentStyle->marginBlockStart());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -6223,7 +6254,8 @@ void StyleResolver::applyProperty(Element* element,
     case CSSStyleValuePair::KeyKind::MarginBlockEnd:
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             style->setMarginBlockEnd(parentStyle->marginBlockEnd());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -6242,7 +6274,8 @@ void StyleResolver::applyProperty(Element* element,
     case CSSStyleValuePair::KeyKind::MarginInlineEnd:
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             style->setMarginInlineEnd(parentStyle->marginInlineEnd());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -6261,7 +6294,8 @@ void StyleResolver::applyProperty(Element* element,
     case CSSStyleValuePair::KeyKind::MarginInlineStart:
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             style->setMarginInlineStart(parentStyle->marginInlineStart());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -6283,7 +6317,8 @@ void StyleResolver::applyProperty(Element* element,
             CSSStyleValuePair::ValueKind::Inherit) {                    \
             LengthData pPadding = parentStyle->padding();               \
             style->setPadding##POS(pPadding.pos());                     \
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited(); \
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(   \
+                newCssValue.keyKind());                                 \
         } else if ((newCssValue.valueKind() ==                          \
                     CSSStyleValuePair::ValueKind::Initial) ||           \
                    (newCssValue.valueKind() ==                          \
@@ -6307,7 +6342,8 @@ void StyleResolver::applyProperty(Element* element,
     case CSSStyleValuePair::KeyKind::PaddingBlockStart:
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             style->setPaddingBlockStart(parentStyle->paddingBlockStart());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -6326,7 +6362,8 @@ void StyleResolver::applyProperty(Element* element,
     case CSSStyleValuePair::KeyKind::PaddingBlockEnd:
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             style->setPaddingBlockEnd(parentStyle->paddingBlockEnd());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -6345,7 +6382,8 @@ void StyleResolver::applyProperty(Element* element,
     case CSSStyleValuePair::KeyKind::PaddingInlineEnd:
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             style->setPaddingInlineEnd(parentStyle->paddingInlineEnd());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -6364,7 +6402,8 @@ void StyleResolver::applyProperty(Element* element,
     case CSSStyleValuePair::KeyKind::PaddingInlineStart:
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             style->setPaddingInlineStart(parentStyle->paddingInlineStart());
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(
+                newCssValue.keyKind());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -7497,7 +7536,8 @@ void StyleResolver::applyProperty(Element* element,
                                          Length(Length::Fixed, 0));           \
         } else if (newCssValue.valueKind() ==                                 \
                    CSSStyleValuePair::ValueKind::Inherit) {                   \
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited();       \
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(         \
+                newCssValue.keyKind());                                       \
             const auto& p = parentStyle->borderRadius();                      \
             style->setBorder##AB##Radius(p.m_##ab##AA, p.m_##ab##BB);         \
         } else if (newCssValue.valueKind() ==                                 \
@@ -9677,9 +9717,11 @@ static bool isLastRenderingChildOfBlock(Element* element, Element* parent)
     }
 }
 
-static ComputedStyleDamage applyStyleToElement(Element* element,
-                                               ComputedStyle* style,
-                                               StyleResolveContext& ctx)
+// damagedKeyMask, when given, receives the properties compareStyle() found
+// changed, folded with ComputedStyle::explicitlyInheritedKeyBit().
+static ComputedStyleDamage applyStyleToElement(
+    Element* element, ComputedStyle* style, StyleResolveContext& ctx,
+    uint64_t* damagedKeyMask = nullptr)
 {
     ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
     // TODO use needsStyleRecalcOnlyForAnimation
@@ -9725,7 +9767,22 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
                                    DamageComputedStyleDamageForBeginAnimation(
                                        element, style));
 
+    if (damagedKeyMask) {
+        // Bit 63 stands for the properties compareStyle() cannot report.
+        uint64_t mask = damage ? (1ull << 63) : 0;
+        for (size_t i = 0; i < CSSStyleValuePair::KeyKindSize; i++) {
+            if (damagedKeys[i]) {
+                mask |= ComputedStyle::explicitlyInheritedKeyBit(
+                    static_cast<CSSStyleValuePair::KeyKind>(i));
+            }
+        }
+        *damagedKeyMask = mask;
+    }
+
     ComputedStyle* oldStyle = element->style();
+    if (oldStyle) {
+        style->takeExplicitlyInheritedKeysFrom(oldStyle);
+    }
     Frame* oldFrame = element->frame();
 
     computeTransition(element, oldStyle, oldFrame, style, damage, damagedKeys);
@@ -9951,15 +10008,17 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
 static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
                                                Element* element,
                                                ComputedStyle* parentStyle,
-                                               bool inheritedStyleChanged)
+                                               bool inheritedStyleChanged,
+                                               uint64_t& damagedKeyMask)
 {
     StyleResolver* resolver = ctx.m_styleResolver;
     ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
+    damagedKeyMask = 0;
 
     if (element->needsStyleRecalc() || inheritedStyleChanged) {
         ComputedStyle* style =
             resolver->resolveStyle(ctx, element, parentStyle);
-        damage = applyStyleToElement(element, style, ctx);
+        damage = applyStyleToElement(element, style, ctx, &damagedKeyMask);
     }
 
     return damage;
@@ -10092,13 +10151,20 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
                                         ctx->m_computedStylePool);
             }
 
-            auto damage =
-                resolveElementStyle(*ctx, child->asElement(),
-                                    parentElementStyle, inheritedStyleChanged);
+            uint64_t damagedKeyMask;
+            auto damage = resolveElementStyle(
+                *ctx, child->asElement(), parentElementStyle,
+                inheritedStyleChanged, damagedKeyMask);
 
+            // A grandchild that resolved `inherit` for a non-inherited
+            // property against the old style must see the new value; only
+            // the properties that changed matter (a universal
+            // `box-sizing: inherit` must not re-resolve every child on
+            // every transform tick).
             if (damage != ComputedStyleDamage::ComputedStyleDamageNone &&
                 oldStyle &&
-                oldStyle->someNonInheritMemberExplicitlyInherited()) {
+                oldStyle->someNonInheritMemberExplicitlyInherited(
+                    damagedKeyMask)) {
                 child->markChildNeedsStyleRecalc();
 
                 RenderingSiblingIterator iter(child->firstRenderingChild());
