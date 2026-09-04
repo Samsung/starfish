@@ -1254,11 +1254,27 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                 WebView* wv = node()->webView();
                 bool shouldCacheBoxShadowImage = node() && wv->needsComposite();
 
+                // The corner piece is stretched along the edges from its last
+                // row/column and the centre is filled with its last pixel, so
+                // it must span the blur margin, the spread-expanded corner arc
+                // and one more blur radius of straight edge for the blur to
+                // settle. A piece that does not fit twice into the shadow
+                // image cannot be tiled; take the slow path instead.
+                size_t bufImageSize = 0;
+                if (canUseFastPath) {
+                    float cornerRadius = topLeftHorizontal + std::max(sd, 0.f);
+                    bufImageSize = ceil(radiusOffset + cornerRadius);
+                    float shortSide =
+                        std::min(shadowRect.width(), shadowRect.height()) +
+                        radiusOffset;
+                    if (bufImageSize * 2 > shortSide) {
+                        canUseFastPath = false;
+                    }
+                }
+
                 if (canUseFastPath) {
                     canvas->save();
                     canvas->setNeedsNoneAntialias();
-                    size_t bufImageSize = std::max((double)ceil(radiusOffset),
-                                                   (double)topLeftHorizontal);
                     BufferedNativeImageData* nativeImage = nullptr;
                     if (shouldCacheBoxShadowImage) {
                         auto test =
