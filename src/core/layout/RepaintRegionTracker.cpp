@@ -232,6 +232,20 @@ FrameBox* RepaintRegionTracker::findNearestStackingContextOwner(FrameBox* frame)
     return nullptr;
 }
 
+// See RepaintRegionTrackerContext::m_visibleRectOfFrameRectIsOverflowedBoxes.
+// Inline boxes can be split across lines and then share their node, and
+// anonymous boxes have none; those are recorded under the FrameBox only.
+static Node* overflowedBoxNodeKey(FrameBox* frame)
+{
+    Node* node = frame->node();
+    if (node && !frame->isAnonymous() && !frame->isInlineNonReplacedBox() &&
+        !frame->isInlineTextBox() &&
+        (node->isElement() || node->isPseudoElement())) {
+        return node;
+    }
+    return nullptr;
+}
+
 void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
                                               SkMatrix currentMatrix)
 {
@@ -445,8 +459,19 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
     LayoutRect currentVisibleRect = frame->frameVisibleRect();
 
     if (currentVisibleRect != frame->frameRect()) {
-        m_newContext.m_visibleRectOfFrameRectIsOverflowedBoxes.insert(
-            std::make_pair(frame, currentVisibleRect));
+        auto& overflowed =
+            m_newContext.m_visibleRectOfFrameRectIsOverflowedBoxes;
+        overflowed.insert(std::make_pair(frame, currentVisibleRect));
+        if (Node* nodeKey = overflowedBoxNodeKey(frame)) {
+            // Several boxes may still map to one node; keep their union so
+            // the node-keyed rect never shrinks what a rebuilt box must erase.
+            auto found = overflowed.find(nodeKey);
+            if (found == overflowed.end()) {
+                overflowed.insert(std::make_pair(nodeKey, currentVisibleRect));
+            } else {
+                found->second.unite(currentVisibleRect);
+            }
+        }
     }
 
     if (needsRepainting) {
@@ -454,10 +479,17 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
             currentVisibleRect = sc->visibleRect();
         }
         notifyDirty(frame, sc, currentMatrix, currentVisibleRect);
-        auto iter =
-            m_oldContext.m_visibleRectOfFrameRectIsOverflowedBoxes.find(frame);
-        if (iter !=
-            m_oldContext.m_visibleRectOfFrameRectIsOverflowedBoxes.end()) {
+        auto& oldOverflowed =
+            m_oldContext.m_visibleRectOfFrameRectIsOverflowedBoxes;
+        auto iter = oldOverflowed.find(frame);
+        if (iter == oldOverflowed.end()) {
+            // The box was rebuilt since the last frame; fall back to what
+            // its node's boxes painted then.
+            if (Node* nodeKey = overflowedBoxNodeKey(frame)) {
+                iter = oldOverflowed.find(nodeKey);
+            }
+        }
+        if (iter != oldOverflowed.end()) {
             notifyDirty(frame, sc, currentMatrix, iter->second);
         }
 
