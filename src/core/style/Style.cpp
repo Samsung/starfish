@@ -8314,12 +8314,14 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
         }
     }
 
-    {
-        auto list = ret->customProperty();
-        if (list) {
-            m_cssCustomValues = list.value();
-        }
-    }
+    // Make the resolver's var() lookup list exactly this style's own custom
+    // properties. A style with none must clear it: the list otherwise stays
+    // whatever the previously resolved style set (a ::after resolved right
+    // after its originating element leaves that element's list behind, and
+    // no caller clears it), and this element's var() references would then
+    // resolve against another element's values -- a focus ring drawn by
+    // `box-shadow: var(--glow)` reappeared on the item that had just lost it.
+    m_cssCustomValues = ret->customProperty();
 
     size_t authorSheetBeginIndex = 0;
 
