@@ -1447,8 +1447,7 @@ public:
         cairo_rectangle(m_canvas, 0, 0, ww, hh);
 
         cairo_clip(m_canvas);
-        cairo_paint_with_alpha(m_canvas, lastState()->m_layerOpacity *
-                                             lastState()->m_globalAlpha);
+        cairo_paint_with_alpha(m_canvas, lastState()->m_globalAlpha);
 
         // drawDebugLine(xx,yy,ww,hh);
         cairo_pattern_destroy(resizePattern);
@@ -1665,8 +1664,7 @@ public:
             cairo_rectangle(m_canvas, 0.0, 0.0, ww, hh);
 
             cairo_clip(m_canvas);
-            cairo_paint_with_alpha(m_canvas, lastState()->m_layerOpacity *
-                                                 lastState()->m_globalAlpha);
+            cairo_paint_with_alpha(m_canvas, lastState()->m_globalAlpha);
 
             cairo_pattern_destroy(pattern);
         }
@@ -1736,8 +1734,7 @@ public:
             cairo_rectangle(m_canvas, 0, 0, ww, hh);
 
             cairo_clip(m_canvas);
-            cairo_paint_with_alpha(m_canvas, lastState()->m_layerOpacity *
-                                                 lastState()->m_globalAlpha);
+            cairo_paint_with_alpha(m_canvas, lastState()->m_globalAlpha);
 
             cairo_pattern_destroy(pattern);
         }
