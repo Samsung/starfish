@@ -1849,9 +1849,19 @@ void StackingContext::fillGraphicsBufferContents(
     } else if (drawBorderAtAnotherPlaceDueToScroll) {
         canvas->save();
         auto rt = m_owner->makeRect(BoxValue::PaddingBoxBoxValue);
-        rt.setX(rt.x() + m_owner->asFrameBlockBox()->scrollLeft());
-        rt.setY(rt.y() + m_owner->asFrameBlockBox()->scrollTop());
+        LayoutUnit scrollLeft = m_owner->asFrameBlockBox()->scrollLeft();
+        LayoutUnit scrollTop = m_owner->asFrameBlockBox()->scrollTop();
+        rt.setX(rt.x() + scrollLeft);
+        rt.setY(rt.y() + scrollTop);
         canvas->clip(rt);
+        // The compositor clips this buffer to the border box plus the
+        // outline and shadows, so the rounded corners of the overflow clip
+        // have to be cut here, at the scrolled position of the box: the
+        // border-box radius path intersected with the padding box, as the
+        // non-composited path does.
+        m_owner->applyBorderRadiusClippingIfNeeds(
+            canvas, LayoutRect(scrollLeft, scrollTop, m_owner->width(),
+                               m_owner->height()));
     }
 
     // Within each stacking context, the following layers are painted in
@@ -3467,6 +3477,18 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                 }
 
                 compositor->clip(fullRect);
+                if (!needsRepaintingWhenScrolling()) {
+                    // The buffer holds unclipped content; a rounded overflow
+                    // clip has to be cut by the compositor, like the padding
+                    // box above. A box that repaints on scroll already clipped
+                    // its content in the buffer, and the rect here also covers
+                    // its outline and shadows, which must not be cut. Without
+                    // a border (one makes the box repaint on scroll) the
+                    // padding box is the border box the radius belongs to.
+                    const LayoutRect rect(0, 0, m_owner->width(),
+                                          m_owner->height());
+                    m_owner->applyBorderRadiusClippingIfNeeds(compositor, rect);
+                }
 
                 compositor->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
                                       -m_owner->asFrameBlockBox()->scrollTop());
