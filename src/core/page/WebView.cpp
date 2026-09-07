@@ -440,6 +440,8 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     m_frameRateCounter = new FrameRateCounter(this);
     m_paintPassMemos = new PaintPassMemos();
     m_screenMatrixCache = nullptr;
+    m_boxShadowImageCacheBytes = 0;
+    m_boxShadowImageCacheTick = 0;
     m_frameRateCounter->setObserver([](double fps) {
         thread_local static unsigned counter = 0;
         STARFISH_LOG_INFO("#%02d FPS: %.2f", ++counter, fps);
@@ -553,8 +555,7 @@ void* WebView::operator new(size_t size)
         GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_initialFontFamilyDatas));
         GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_frameRateCounter));
 
-        markHashTable(desc,
-                      GC_WORD_OFFSET(WebView, m_boxShadowCachePerRendering));
+        markHashTable(desc, GC_WORD_OFFSET(WebView, m_boxShadowImageCache));
 
         GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_paintPassMemos));
 
@@ -647,6 +648,7 @@ void WebView::enterIdleMode()
     // drop CanvasSurfaces if possible
     if (((int)m_idleModeJob & (int)LWE::IdleModeJob::ClearDrawnBuffers)) {
         clearDrawnBuffers();
+        clearBoxShadowImageCache();
     }
 
     if (((int)m_idleModeJob & (int)LWE::IdleModeJob::ClearFontCache)) {
@@ -777,6 +779,7 @@ void WebView::destroy()
     m_browsingContextsNeedsLayout.clear();
     m_browsingContextsDidLayout.clear();
     m_repaintRegionInRendering.clear();
+    clearBoxShadowImageCache();
     m_globalPointingEventListener.clear();
     m_jsInterfaceList.clear();
     m_repaintRegionTrackerContext.clear();
@@ -969,6 +972,7 @@ void WebView::navigateCrossDocument(ResourceURL* url, HistoryManagerAction type,
     m_browsingContextsNeedsLayout.clear();
     m_browsingContextsDidLayout.clear();
     m_repaintRegionInRendering.clear();
+    clearBoxShadowImageCache();
     m_globalPointingEventListener.clear();
     GCUnorderedSet<Scrolling*>().swap(m_activeScrollingSet);
     GCUnorderedSet<Scrolling*>().swap(m_pendingScrollEventSet);
@@ -1950,20 +1954,6 @@ RenderResult WebView::rendering(bool force)
     }
     longFrame.endPhase(LongFrameLogger::Phase::Composite);
 
-    // cleanup box-shadow cache
-    {
-        auto iter = m_boxShadowCachePerRendering.begin();
-        while (iter != m_boxShadowCachePerRendering.end()) {
-            delete iter.value();
-            iter.value() = nullptr;
-            iter++;
-        }
-        m_boxShadowCachePerRendering.clear();
-        GCUnorderedMap<std::pair<FrameBox*, size_t>, BufferedNativeImageData*,
-                       pair_hash<FrameBox*, size_t>>()
-            .swap(m_boxShadowCachePerRendering);
-    }
-
     // Everything memoized for this paint pass is keyed to the geometry it
     // laid out, which the next mutation invalidates - drop it with the pass.
     m_paintPassMemos->endPass();
@@ -2184,6 +2174,7 @@ void WebView::invalidateRenderCachesForDevicePixelRatioChange()
     m_repaintRegionTrackerContext.clear();
     m_stackingContextsNeedsGraphicsBuffer.clear();
     PrevDrawnStackingContextInfoMap().swap(m_prevDrawnStackingContextInfo);
+    clearBoxShadowImageCache();
     if (m_rootStackingContext) {
         StackingContext* ctx = m_rootStackingContext;
         std::function<void(StackingContext*)> clearSC =
@@ -2626,18 +2617,59 @@ void WebView::accessActiveImageURLsInRenderingSet(
     }
 }
 
-void WebView::putImageIntoBoxShadowCache(FrameBox* box, size_t idx,
-                                         BufferedNativeImageData* image)
+// Enough for the shadows of a screenful of cards; the least recently used
+// image goes first once it is full.
+static const size_t boxShadowImageCacheCapacity = 4 * 1024 * 1024;
+
+BufferedNativeImageData* WebView::lookupBoxShadowImage(
+    const BoxShadowImageKey& key)
 {
-    m_boxShadowCachePerRendering[std::make_pair(box, idx)] = image;
+    auto iter = m_boxShadowImageCache.find(key);
+    if (iter == m_boxShadowImageCache.end()) {
+        return nullptr;
+    }
+    iter.value().lastUse = ++m_boxShadowImageCacheTick;
+    return iter->second.image;
 }
 
-Optional<BufferedNativeImageData*> WebView::isThereImageInBoxShadowCache(
-    FrameBox* box, size_t idx)
+void WebView::storeBoxShadowImage(const BoxShadowImageKey& key,
+                                  BufferedNativeImageData* image)
 {
-    Optional<BufferedNativeImageData*> data =
-        m_boxShadowCachePerRendering[std::make_pair(box, idx)];
-    return data;
+    size_t bytes = image->stride() * image->height();
+    if (bytes > boxShadowImageCacheCapacity ||
+        m_boxShadowImageCache.find(key) != m_boxShadowImageCache.end()) {
+        delete image;
+        return;
+    }
+    while (!m_boxShadowImageCache.empty() &&
+           m_boxShadowImageCacheBytes + bytes > boxShadowImageCacheCapacity) {
+        auto oldest = m_boxShadowImageCache.begin();
+        for (auto iter = m_boxShadowImageCache.begin();
+             iter != m_boxShadowImageCache.end(); iter++) {
+            if (iter->second.lastUse < oldest->second.lastUse) {
+                oldest = iter;
+            }
+        }
+        m_boxShadowImageCacheBytes -= oldest->second.bytes;
+        delete oldest->second.image;
+        m_boxShadowImageCache.erase(oldest);
+    }
+    BoxShadowImageCacheEntry entry;
+    entry.image = image;
+    entry.bytes = bytes;
+    entry.lastUse = ++m_boxShadowImageCacheTick;
+    m_boxShadowImageCache.insert(std::make_pair(key, entry));
+    m_boxShadowImageCacheBytes += bytes;
+}
+
+void WebView::clearBoxShadowImageCache()
+{
+    for (auto iter = m_boxShadowImageCache.begin();
+         iter != m_boxShadowImageCache.end(); iter++) {
+        delete iter->second.image;
+    }
+    m_boxShadowImageCache.clear();
+    m_boxShadowImageCacheBytes = 0;
 }
 
 bool WebView::hasActiveAnimationExecutor(Element* e)
