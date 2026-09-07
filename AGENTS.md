@@ -15,6 +15,7 @@ of spec compliance.
 | WPT structure, tooling, `.res` list workflow | `docs/wpt.md` |
 | Supported web surface (HTML tags, DOM interfaces, CSS properties, build-conditional flags) | `docs/Spec.md` |
 | Full test suite list | `./tool/runner/test_runner.py -h` |
+| Module map of `platform/`, `public/`, `binding/`, `shell/`, `launcher/` with feature → file:line navigation (generated snapshot; `src/core/` is not covered) | `code2spec/code2spec-quick-reference.md`, then `code2spec/modules/<module>.md` |
 | Source layout | `src/{core,binding,platform,browser,public,shell,launcher}` — `core/` is the engine proper; `public/` is the embedding API (`public/bridge` = per-platform bridges, `public/delegate` = the implementation, `public/contract` = the pure-virtual interfaces the API layer and the implementation share across the `.so` boundary) |
 
 This file holds the norms; explanations live in the documents and code
