@@ -3472,6 +3472,7 @@ public:
         return m_ownerShadowRoot.hasValue();
     }
     Element* ownerHost() const;
+    StyleResolver& hostTreeResolver();
 
     void setNeedsRecalcRuleSet()
     {

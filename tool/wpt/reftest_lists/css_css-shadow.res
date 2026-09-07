@@ -93,7 +93,7 @@ http://web-platform.test:8000/css/css-shadow/shadow-link-rel-stylesheet-no-style
 http://web-platform.test:8000/css/css-shadow/shadow-link-rel-stylesheet.html
 http://web-platform.test:8000/css/css-shadow/shadow-reassign-dynamic-001.html
 http://web-platform.test:8000/css/css-shadow/shadow-reassign-dynamic-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/shadow-reassign-dynamic-004.html
+http://web-platform.test:8000/css/css-shadow/shadow-reassign-dynamic-004.html
 http://web-platform.test:8000/css/css-shadow/shadow-reassign-dynamic-006.html
 http://web-platform.test:8000/css/css-shadow/shadow-root-insert-into-document.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/slotted-details-content.html
