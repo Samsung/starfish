@@ -326,6 +326,9 @@ xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py
 
 # E. Internal Test
 ./tool/runner/test_runner.py internal_test
+
+# F. CDP Test
+./tool/cdp_test/run.py all --worker
 ```
 
 If you want to capture the screenshot on the command line, use:

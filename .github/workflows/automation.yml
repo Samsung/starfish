@@ -1,0 +1,63 @@
+name: Automation
+
+on:
+  workflow_call:
+    inputs:
+      thirdparty_key:
+        description: 'squash_thirdparty cache id (starfish-thirdparty-<key> under BART''s starfish-ci-cache/, see tool/ci/lib_submodule_cache.sh)'
+        required: true
+        type: string
+
+jobs:
+  cdp:
+    runs-on: [ code-linux, code-2xlarge ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          allow-unsafe-pr-checkout: true
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
+      - name: Fetch thirdparty submodules
+        shell: bash
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: |
+          source tool/ci/lib_submodule_cache.sh
+          submodule_cache_fetch "${{ inputs.thirdparty_key }}" cache.tar.gz thirdparty.tar.gz
+          tar xzf thirdparty.tar.gz
+
+      # test/ holds the CDP schema and Chromium's inspector-protocol tests.
+      - name: Checkout test submodule
+        env:
+          DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d /root/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > /root/.ssh/id_rsa
+          chmod 600 /root/.ssh/id_rsa
+          git submodule init
+          git submodule update test
+
+      - name: Build
+        run: |
+          cmake CMakeLists.txt -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release -DBACKEND=glib_headless -DSHELL=glib_headless \
+            -DSTARFISH_ENABLE_CDP=1
+          ninja starfish.executable
+
+      - name: Run CDP tests
+        run: |
+          python3 tool/cdp_test/run.py all \
+            --starfish $PWD/out/release/bin/lightweight-web-engine --worker
