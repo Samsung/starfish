@@ -109,6 +109,22 @@ jobs:
       - name: Add safe directory
         run: git config --global --add safe.directory /__w/starfish/starfish
 
+      # cache_starfish_thirdparty.sh clones straight from the git@github.sec.
+      # samsung.net submodule remotes on a cache miss; those are SSH-only
+      # (see .gitmodules) and need this same deploy key pr_ci.yml/push_ci.yml/
+      # x64_test.yml set up before calling it. This job never had that step,
+      # so every miss failed with "Permission denied (publickey)" -- always a
+      # miss here since cleanup (needs:) just wiped this key's cache entry.
+      # ssh resolves ~/.ssh from the passwd home (root -> /root), not $HOME
+      # (the runner sets HOME=/github/home); write the key where ssh looks.
+      - name: Setup deploy key
+        env:
+          DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d /root/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > /root/.ssh/id_rsa
+          chmod 600 /root/.ssh/id_rsa
+
       - name: Rebuild starfish thirdparty cache
         env:
           BART_API_KEY: ${{ secrets.BART_API_KEY }}
