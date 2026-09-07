@@ -112,11 +112,16 @@ bool createEGLSurface(EGLSurface& surface, const EGLDisplay& eglDisplay,
     EGLSurface eglSurface;
     {
         EGLint attributes[] = { EGL_NONE };
-        const auto eglNativeWindow =
-            tizen_core_wl_egl_window_native_get(eglWindow);
+        tizen_core_wl_native_egl_window_h eglNativeWindow = nullptr;
+        if (tizen_core_wl_egl_window_get_native_egl_window(
+                eglWindow, &eglNativeWindow) != TIZEN_CORE_WL_ERROR_NONE) {
+            printf("Failed to get native EGL window\n");
+            return false;
+        }
         eglSurface = eglCreateWindowSurface(
             eglDisplay, eglConfig, (EGLNativeWindowType)(eglNativeWindow),
             attributes);
+
         if (eglSurface == EGL_NO_SURFACE) {
             printf("Unable to create EGL surface (eglError: 0x%x)\n",
                    eglGetError());
