@@ -1,0 +1,350 @@
+{
+  "layer": "schema",
+  "revision": "ea39a11d80de9a08ce2af03f52125ed2e462cf84",
+  "counts": {
+    "total": 661,
+    "pass": 43,
+    "fail": 42
+  },
+  "entries": {
+    "Accessibility.getAXNodeAndAncestors": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Accessibility.getAXNodeAndAncestors returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "Accessibility.getFullAXTree": {
+      "expected": "pass"
+    },
+    "Accessibility.getPartialAXTree": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Accessibility.getPartialAXTree returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "Accessibility.getRootAXNode": {
+      "expected": "pass"
+    },
+    "Accessibility.queryAXTree": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Accessibility.queryAXTree returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "Ads.getAdMetrics": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Ads.getAdMetrics did not return metrics"
+    },
+    "Ads.getAdScripts": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Ads.getAdScripts did not return newScripts"
+    },
+    "Animation.getPlaybackRate": {
+      "expected": "pass"
+    },
+    "Audits.checkFormsIssues": {
+      "expected": "pass"
+    },
+    "Browser.getBrowserCommandLine": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Browser.getBrowserCommandLine did not return arguments"
+    },
+    "Browser.getGlobalPrivacyControl": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Browser.getGlobalPrivacyControl did not return gpc"
+    },
+    "Browser.getHistograms": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Browser.getHistograms did not return histograms"
+    },
+    "Browser.getVersion": {
+      "expected": "pass"
+    },
+    "Browser.getWindowForTarget": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Browser.getWindowForTarget did not return windowId"
+    },
+    "CSS.getEnvironmentVariables": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "CSS.getEnvironmentVariables returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "CSS.getMediaQueries": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "CSS.getMediaQueries returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "CSS.stopRuleUsageTracking": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "CSS.stopRuleUsageTracking returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "CSS.takeComputedStyleUpdates": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "CSS.takeComputedStyleUpdates returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "CSS.takeCoverageDelta": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "CSS.takeCoverageDelta returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "CacheStorage.requestCacheNames": {
+      "expected": "pass"
+    },
+    "CrashReportContext.getEntries": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "CrashReportContext.getEntries did not return entries"
+    },
+    "DOM.describeNode": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "DOM.describeNode returned {'code': -32000, 'message': 'Could not find node with given id'}"
+    },
+    "DOM.getBoxModel": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "DOM.getBoxModel returned {'code': -32000, 'message': 'Could not find node with given id'}"
+    },
+    "DOM.getContentQuads": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "DOM.getContentQuads returned {'code': -32000, 'message': 'Could not find node with given id'}"
+    },
+    "DOM.getDetachedDomNodes": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "DOM.getDetachedDomNodes returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "DOM.getDocument": {
+      "expected": "pass"
+    },
+    "DOM.getFlattenedDocument": {
+      "expected": "pass"
+    },
+    "DOM.getOuterHTML": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "DOM.getOuterHTML returned {'code': -32000, 'message': 'Could not find node with given id'}"
+    },
+    "DOM.getTopLayerElements": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "DOM.getTopLayerElements returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "DOM.resolveNode": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "DOM.resolveNode returned {'code': -32000, 'message': 'Could not find node with given id'}"
+    },
+    "Debugger.enable": {
+      "expected": "pass"
+    },
+    "Emulation.canEmulate": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Emulation.canEmulate did not return result"
+    },
+    "Emulation.getScreenInfos": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Emulation.getScreenInfos did not return screenInfos"
+    },
+    "Extensions.getExtensions": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Extensions.getExtensions returned {'code': -32000, 'message': 'Extensions are not supported'}"
+    },
+    "HeadlessExperimental.beginFrame": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "HeadlessExperimental.beginFrame did not return hasDamage"
+    },
+    "HeapProfiler.getSamplingProfile": {
+      "expected": "pass"
+    },
+    "HeapProfiler.stopSampling": {
+      "expected": "pass"
+    },
+    "IndexedDB.requestDatabaseNames": {
+      "expected": "pass"
+    },
+    "Memory.getAllTimeSamplingProfile": {
+      "expected": "pass"
+    },
+    "Memory.getBrowserSamplingProfile": {
+      "expected": "pass"
+    },
+    "Memory.getDOMCounters": {
+      "expected": "pass"
+    },
+    "Memory.getDOMCountersForLeakDetection": {
+      "expected": "pass"
+    },
+    "Memory.getSamplingProfile": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Memory.getSamplingProfile did not return profile"
+    },
+    "Network.canClearBrowserCache": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Network.canClearBrowserCache did not return result"
+    },
+    "Network.canClearBrowserCookies": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Network.canClearBrowserCookies did not return result"
+    },
+    "Network.canEmulateNetworkConditions": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Network.canEmulateNetworkConditions did not return result"
+    },
+    "Network.getAllCookies": {
+      "expected": "pass"
+    },
+    "Network.getCookies": {
+      "expected": "pass"
+    },
+    "Network.getSecurityIsolationStatus": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Network.getSecurityIsolationStatus did not return status"
+    },
+    "Page.captureScreenshot": {
+      "expected": "pass"
+    },
+    "Page.captureSnapshot": {
+      "expected": "pass"
+    },
+    "Page.getAnnotatedPageContent": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Page.getAnnotatedPageContent returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "Page.getAppManifest": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Page.getAppManifest did not return manifest"
+    },
+    "Page.getFrameTree": {
+      "expected": "pass"
+    },
+    "Page.getInstallabilityErrors": {
+      "expected": "pass"
+    },
+    "Page.getLayoutMetrics": {
+      "expected": "pass"
+    },
+    "Page.getNavigationHistory": {
+      "expected": "pass"
+    },
+    "Page.getResourceTree": {
+      "expected": "pass"
+    },
+    "Page.printToPDF": {
+      "expected": "pass"
+    },
+    "Page.startScreenRecording": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Page.startScreenRecording returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "Page.stopScreenRecording": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Page.stopScreenRecording returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "Performance.getMetrics": {
+      "expected": "pass"
+    },
+    "Profiler.getBestEffortCoverage": {
+      "expected": "pass"
+    },
+    "Profiler.startPreciseCoverage": {
+      "expected": "pass"
+    },
+    "Profiler.stop": {
+      "expected": "pass"
+    },
+    "Profiler.takePreciseCoverage": {
+      "expected": "pass"
+    },
+    "Runtime.getHeapUsage": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Runtime.getHeapUsage did not return embedderHeapUsedSize"
+    },
+    "Runtime.getIsolateId": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Runtime.getIsolateId returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "Runtime.globalLexicalScopeNames": {
+      "expected": "pass"
+    },
+    "Schema.getDomains": {
+      "expected": "pass"
+    },
+    "Storage.getCookies": {
+      "expected": "pass"
+    },
+    "Storage.getRelatedWebsiteSets": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Storage.getRelatedWebsiteSets returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "Storage.getStorageKey": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Storage.getStorageKey returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "Storage.getTrustTokens": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Storage.getTrustTokens returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "Storage.runBounceTrackingMitigations": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Storage.runBounceTrackingMitigations returned {'code': -32601, 'message': \"'method' wasn't found\"}"
+    },
+    "SystemInfo.getInfo": {
+      "expected": "pass"
+    },
+    "SystemInfo.getProcessInfo": {
+      "expected": "pass"
+    },
+    "Target.attachToBrowserTarget": {
+      "expected": "pass"
+    },
+    "Target.createBrowserContext": {
+      "expected": "pass"
+    },
+    "Target.getBrowserContexts": {
+      "expected": "pass"
+    },
+    "Target.getTargetInfo": {
+      "expected": "pass"
+    },
+    "Target.getTargets": {
+      "expected": "pass"
+    },
+    "Tracing.getCategories": {
+      "expected": "pass"
+    },
+    "Tracing.getTrackEventDescriptor": {
+      "expected": "fail",
+      "category": "failed",
+      "detail": "Tracing.getTrackEventDescriptor did not return descriptor"
+    },
+    "Tracing.requestMemoryDump": {
+      "expected": "pass"
+    }
+  }
+}

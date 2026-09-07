@@ -64,6 +64,8 @@ core # dump
 # Pins patch files to LF so Windows checkouts don't corrupt them via autocrlf;
 # has to be committed to take effect for anyone else, so exempt it too.
 !.gitattributes
+# CI workflows; without this the .* rule hides new files under .github/.
+!.github/
 autogen_*.html
 third_party/libtuv/build/
 third_party/libtuv/include/tuv__config.h
@@ -80,6 +82,11 @@ CLAUDE.local.md
 # not read at runtime.
 tool/wpt/testharness_lists/*.remap
 tool/wpt/testharness_lists/*.missing
+
+# CDP test run state and browser profiles; left behind only if the run is killed.
+tool/cdp_test/*.lock
+tool/cdp_test/*.partial
+.tmp/
 
 # WPT status report generation
 report.html

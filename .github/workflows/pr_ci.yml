@@ -241,6 +241,13 @@ jobs:
       thirdparty_key: ${{ needs.prepare_source.outputs.thirdparty_key }}
     secrets: inherit
 
+  automation:
+    needs: [ prepare_source ]
+    uses: ./.github/workflows/automation.yml
+    with:
+      thirdparty_key: ${{ needs.prepare_source.outputs.thirdparty_key }}
+    secrets: inherit
+
   dynamic_loader:
     needs: [ prepare_source ]
     uses: ./.github/workflows/dynamic_loader.yml
