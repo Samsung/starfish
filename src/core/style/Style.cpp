@@ -8006,6 +8006,47 @@ void StyleResolver::applyProperty(Element* element,
     }
 }
 
+// Routes an already-matched rule to the style currently being resolved. A rule
+// whose subject is a pseudo-element contributes only while that same
+// pseudo-element is resolved; otherwise it just records that the pseudo-element
+// was seen, which is what makes a ::before/::after box get generated at all.
+// A rule without a pseudo-element contributes only to the originating element.
+// The promoted :host/::slotted() paths call this too, so that a rule targeting
+// the originating element (`::slotted(x) { ... }`) cannot leak into
+// `x::before`.
+void StyleResolver::addMatchedRuleForPseudoElement(
+    StyleRule* rule, ResourceURL* url, PseudoElementType rulePseudoType,
+    PseudoElementType pseudoElementType, ComputedStyle* ret,
+    MatchedStyleRules<>& matchedRules)
+{
+    if (rulePseudoType == PseudoElementType::PseudoElementNone) {
+        if (pseudoElementType == PseudoElementType::PseudoElementNone) {
+            matchedRules.push_back(std::make_pair(rule, url));
+        }
+        return;
+    }
+
+    if (rulePseudoType == pseudoElementType) {
+        ret->setPseudoType(pseudoElementType);
+        matchedRules.push_back(std::make_pair(rule, url));
+        return;
+    }
+
+    if (rulePseudoType == PseudoElementType::PseudoElementFirstLine) {
+        ret->m_seenPseudoElementFirstLine = true;
+    } else if (rulePseudoType == PseudoElementType::PseudoElementFirstLetter) {
+        ret->m_seenPseudoElementFirstLetter = true;
+    } else if (rulePseudoType == PseudoElementType::PseudoElementBefore) {
+        ret->m_seenPseudoElementBefore |=
+            rule->styleDeclaration()->hasCSSValuePair(
+                CSSStyleValuePair::KeyKind::Content);
+    } else if (rulePseudoType == PseudoElementType::PseudoElementAfter) {
+        ret->m_seenPseudoElementAfter |=
+            rule->styleDeclaration()->hasCSSValuePair(
+                CSSStyleValuePair::KeyKind::Content);
+    }
+}
+
 void StyleResolver::collectMatchingRulesFromAuthorSheet(
     StyleResolveContext& ctx,
     const GCVector<std::pair<StyleRule*, ResourceURL*>>::iterator& begin,
@@ -8064,33 +8105,8 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
         MatchResult result(nullptr);
         if (matchSelector(element, elementName, elementId, elementClasses,
                           selectorList, 0, result) == Match::SelectorMatches) {
-            if (result.pseudoType != PseudoElementType::PseudoElementNone) {
-                if (result.pseudoType == pseudoElementType) {
-                    ret->setPseudoType(pseudoElementType);
-                    authorRules.push_back(std::make_pair(rule, url));
-                } else {
-                    if (result.pseudoType ==
-                        PseudoElementType::PseudoElementFirstLine) {
-                        ret->m_seenPseudoElementFirstLine = true;
-                    } else if (result.pseudoType ==
-                               PseudoElementType::PseudoElementFirstLetter) {
-                        ret->m_seenPseudoElementFirstLetter = true;
-                    } else if (result.pseudoType ==
-                               PseudoElementType::PseudoElementBefore) {
-                        ret->m_seenPseudoElementBefore |=
-                            rule->styleDeclaration()->hasCSSValuePair(
-                                CSSStyleValuePair::KeyKind::Content);
-                    } else if (result.pseudoType ==
-                               PseudoElementType::PseudoElementAfter) {
-                        ret->m_seenPseudoElementAfter |=
-                            rule->styleDeclaration()->hasCSSValuePair(
-                                CSSStyleValuePair::KeyKind::Content);
-                    }
-                }
-            } else if (pseudoElementType ==
-                       PseudoElementType::PseudoElementNone) {
-                authorRules.push_back(std::make_pair(rule, url));
-            }
+            addMatchedRuleForPseudoElement(rule, url, result.pseudoType,
+                                           pseudoElementType, ret, authorRules);
         }
 
         if (result.seenCombinator) {
@@ -8222,7 +8238,9 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
             if (matchSelector(element, elementName, elementId, elementClasses,
                               hsr.rule->selectorList(), 0,
                               hsrResult) == Match::SelectorMatches) {
-                matchedRules.push_back(std::make_pair(hsr.rule, hsr.url));
+                addMatchedRuleForPseudoElement(
+                    hsr.rule, hsr.url, hsrResult.pseudoType, pseudoElementType,
+                    ret, matchedRules);
             }
             // Propagate damage-source flags so that attribute/state changes
             // that affect :host() conditions correctly invalidate the cache,
@@ -8261,7 +8279,9 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
                 if (matchSelector(element, elementName, elementId,
                                   elementClasses, ssr.rule->selectorList(), 0,
                                   ssrResult) == Match::SelectorMatches) {
-                    matchedRules.push_back(std::make_pair(ssr.rule, ssr.url));
+                    addMatchedRuleForPseudoElement(
+                        ssr.rule, ssr.url, ssrResult.pseudoType,
+                        pseudoElementType, ret, matchedRules);
                 }
                 // Propagate damage-source flags so that attribute/class/state
                 // changes affecting ::slotted()'s argument or an ancestor

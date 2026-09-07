@@ -1507,6 +1507,27 @@ bool CSSParser::parseName(CSSTokenString& name, bool& hasPrefix,
     return true;
 }
 
+// Selectors permit only specific pseudo-element chains: ::slotted() may be
+// followed by a tree-abiding pseudo-element (css-shadow-1), and ::before /
+// ::after may carry ::marker (css-lists-3). Anything else after a
+// pseudo-element invalidates the selector. User-action pseudo-classes after a
+// pseudo-element (`::before:hover`, Selectors 4) are valid per spec too but
+// are not supported yet, so they keep failing here.
+static bool mayFollowPseudoElement(CSSSelector::PseudoType preceding,
+                                   CSSSelector* follower)
+{
+    if (preceding == CSSSelector::PseudoSlotted) {
+        return follower->isTreeAbidingPseudoElement();
+    }
+    if (preceding == CSSSelector::PseudoBefore ||
+        preceding == CSSSelector::PseudoAfter) {
+        return follower->type() == CSSSelector::PseudoElement &&
+               follower->asCSSPseudoSelector()->pseudoType() ==
+                   CSSSelector::PseudoMarker;
+    }
+    return false;
+}
+
 void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
 {
     CSSSelector* compoundSelector;
@@ -1531,7 +1552,8 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
 
     bool foundPseudoClassHost = false;
     while (CSSSelector* simpleSelector = getSimpleSelector()) {
-        if (compoundPseudoElement != CSSSelector::PseudoNone) {
+        if (compoundPseudoElement != CSSSelector::PseudoNone &&
+            !mayFollowPseudoElement(compoundPseudoElement, simpleSelector)) {
             m_failedParsing = true;
             return;
         }
