@@ -3176,6 +3176,18 @@ public:
                (pseudotype() == PseudoAfter || pseudotype() == PseudoBefore);
     }
 
+    // The tree-abiding pseudo-elements (css-pseudo-4 "Tree-Abiding
+    // Pseudo-elements") that exist in this engine; ::file-selector-button and
+    // the newer additions from other specs do not. Which pseudo-elements they
+    // may be chained onto is the selector parser's decision.
+    bool isTreeAbidingPseudoElement() const
+    {
+        return m_type == PseudoElement &&
+               (pseudotype() == PseudoBefore || pseudotype() == PseudoAfter ||
+                pseudotype() == PseudoMarker ||
+                pseudotype() == PseudoPlaceholder);
+    }
+
     CSSPseudoSelector* asCSSPseudoSelector()
     {
         STARFISH_ASSERT(isPseudoSelector());
@@ -3565,6 +3577,11 @@ public:
         const GCAtomicTightVector<AtomicString>& elementClasses,
         MatchedStyleRules<>& authorRules, ComputedStyle* ret,
         PseudoElementType pseudoElementType);
+    void addMatchedRuleForPseudoElement(StyleRule* rule, ResourceURL* url,
+                                        PseudoElementType rulePseudoType,
+                                        PseudoElementType pseudoElementType,
+                                        ComputedStyle* ret,
+                                        MatchedStyleRules<>& matchedRules);
 
     const MediaQueryEvaluator& mediaQueryEvaluator();
 

@@ -105,7 +105,7 @@ http://web-platform.test:8000/css/css-shadow/slotted-file-selector-button.html
 http://web-platform.test:8000/css/css-shadow/slotted-placeholder.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/slotted-specificity-002.html
 http://web-platform.test:8000/css/css-shadow/slotted-specificity.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/slotted-with-pseudo-element.html
+http://web-platform.test:8000/css/css-shadow/slotted-with-pseudo-element.html
 http://web-platform.test:8000/css/css-shadow/stylesheet-title-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/svg-id-ref-001.html
 http://web-platform.test:8000/css/css-shadow/whitespace-crash-001.html
