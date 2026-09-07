@@ -97,6 +97,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # ---------------------------------------------------------------------------
 # fontconfig: provides fc-cache/fc-match, required by install_pixel_test_dep
 # (libfontconfig-dev only provides dev headers, not the CLI tools)
+# nodejs: the CDP test suite reuses Chromium's inspector-protocol tests as is.
+# They are written in JavaScript, so running them needs the Node.js runtime.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         xvfb \
         xauth \
@@ -104,6 +106,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         fonts-dejavu-core \
         fonts-liberation \
         fontconfig \
+        nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 # ---------------------------------------------------------------------------
