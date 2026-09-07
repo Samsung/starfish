@@ -225,10 +225,16 @@ static void traceRepaintRegionJob(
                     if (paintsSomething) {
                         LayoutRect newR = currentFrameBox->frameRect();
                         const LayoutRect& oldR = iter->second.first;
-                        LayoutRect dirtyRect = newR;
-                        dirtyRect.unite(oldR);
-                        dirtyRect.setX(0);
-                        dirtyRect.setY(0);
+                        // The rect is keyed to this owner and mapped through
+                        // its new matrix, so only its own area is meaningful
+                        // here: the spot it moved away from is erased by the
+                        // repaint tracker from the extent it drew last time.
+                        // Uniting the two locations instead stretched the area
+                        // by the distance moved - a box re-parented to a new
+                        // containing block dirtied thousands of pixels below.
+                        LayoutRect dirtyRect(
+                            0, 0, std::max(newR.width(), oldR.width()),
+                            std::max(newR.height(), oldR.height()));
 
                         // A stacking-context owner that paints nothing itself
                         // and only resized (children shifted by the resize
