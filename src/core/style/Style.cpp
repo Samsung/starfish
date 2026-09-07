@@ -8095,6 +8095,18 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
     }
 }
 
+// ::slotted() represents the elements assigned *after flattening* to a slot
+// (css-shadow-1 #slotted-pseudo). WHATWG DOM "find flattened slottables"
+// expands an assigned <slot> that is itself in a shadow root into its own
+// slottables, so such a slot never appears in that result and ::slotted()
+// cannot represent it. A <slot> outside a shadow root is an ordinary element
+// and is appended as-is, so it stays matchable -- the same distinction
+// HTMLSlotElement::findFlattenedSlottables draws.
+static bool isFlattenedAwaySlot(Element* element)
+{
+    return element->isHTMLSlotElement() && element->isInShadowRoot();
+}
+
 static bool comparingRules(const std::pair<StyleRule*, ResourceURL*>& r1,
                            const std::pair<StyleRule*, ResourceURL*>& r2)
 {
@@ -8223,7 +8235,8 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     // node (styled by this, the document resolver -- see Node::styleResolver);
     // its origin shadow tree is found via its assigned slot, and only rules
     // promoted from that same tree apply.
-    if (UNLIKELY(m_hasSlottedSelector) && element->isSlotted()) {
+    if (UNLIKELY(m_hasSlottedSelector) && element->isSlotted() &&
+        !isFlattenedAwaySlot(element)) {
         Optional<HTMLSlotElement*> slot = element->assignedSlotInternal();
         if (slot) {
             Element* slotHost = slot.value()->parentShadowRoot()->host();
@@ -9155,7 +9168,7 @@ bool StyleResolver::checkPseudoElement(Element* element,
         // path that might call checkPseudoElement directly (mirroring
         // PseudoHost/PseudoHostFunction's own independent
         // isShadowRootHost() check above, for the same reason).
-        if (!element->isSlotted()) {
+        if (!element->isSlotted() || isFlattenedAwaySlot(element)) {
             return false;
         }
         STARFISH_ASSERT(selector->selectorArguments().size() == 1);

@@ -81,6 +81,6 @@ http://web-platform.test:8000/css/css-shadow/slotted-link.html
 http://web-platform.test:8000/css/css-shadow/slotted-matches.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/slotted-nested.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/slotted-parsing.html
-# [auto-fail] http://web-platform.test:8000/css/css-shadow/slotted-slot.html
+http://web-platform.test:8000/css/css-shadow/slotted-slot.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/slotted-user-agent-part-invalidation.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/stylesheet-title-002.html
