@@ -73,6 +73,33 @@ class PlatformKeyEventData;
 class EventTarget;
 class Scrolling;
 class BufferedNativeImageData;
+
+// Everything that shapes a blurred box-shadow image: the box's border box
+// and border widths, the shadow's offsets, blur, spread and colour, the
+// border radii, the device pixel ratio and which painting path drew it. Two
+// boxes with equal keys paint pixel-identical images, so the image can be
+// shared between them and reused frame after frame.
+struct BoxShadowImageKey {
+    static const size_t maxWords = 32;
+    int32_t words[maxWords];
+
+    bool operator==(const BoxShadowImageKey& other) const
+    {
+        return memcmp(words, other.words, sizeof(words)) == 0;
+    }
+
+    struct Hash {
+        size_t operator()(const BoxShadowImageKey& key) const
+        {
+            uint64_t h = 1469598103934665603ull;
+            for (size_t i = 0; i < maxWords; i++) {
+                h ^= (uint32_t)key.words[i];
+                h *= 1099511628211ull;
+            }
+            return (size_t)h;
+        }
+    };
+};
 class FrameRateCounter;
 class PaintPassMemos;
 struct ScreenMatrixCache;
@@ -593,10 +620,15 @@ public:
         void (*callback)(const std::string& url, NULLABLE void* data),
         NULLABLE void* data);
 
-    void putImageIntoBoxShadowCache(FrameBox* box, size_t idx,
-                                    BufferedNativeImageData* image);
-    Optional<BufferedNativeImageData*> isThereImageInBoxShadowCache(
-        FrameBox* box, size_t idx);
+    // Blurred box-shadow images, kept across frames and shared by every
+    // box whose shadow is shaped identically. A lookup miss paints and blurs
+    // the image, then hands it to storeBoxShadowImage, which owns it from
+    // then on (it is deleted on eviction or right away if it cannot fit).
+    NULLABLE BufferedNativeImageData* lookupBoxShadowImage(
+        const BoxShadowImageKey& key);
+    void storeBoxShadowImage(const BoxShadowImageKey& key,
+                             BufferedNativeImageData* image);
+    void clearBoxShadowImageCache();
 
     // Memo tables for the paint pass currently running, or the ones the next
     // pass will use. Threaded into the paint code by the painting context
@@ -732,17 +764,16 @@ private:
     FontFamilyData* m_initialFontFamilyDatas;
     FrameRateCounter* m_frameRateCounter;
 
-    // when painting tile, each box can be painted multiple times
-    template <class T1, class T2>
-    struct pair_hash {
-        size_t operator()(const std::pair<T1, T2>& pair) const
-        {
-            return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
-        }
+    struct BoxShadowImageCacheEntry {
+        BufferedNativeImageData* image;
+        size_t bytes;
+        uint64_t lastUse;
     };
-    GCUnorderedMap<std::pair<FrameBox*, size_t>, BufferedNativeImageData*,
-                   pair_hash<FrameBox*, size_t>>
-        m_boxShadowCachePerRendering;
+    GCUnorderedMap<BoxShadowImageKey, BoxShadowImageCacheEntry,
+                   BoxShadowImageKey::Hash>
+        m_boxShadowImageCache;
+    size_t m_boxShadowImageCacheBytes;
+    uint64_t m_boxShadowImageCacheTick;
 
     PaintPassMemos* m_paintPassMemos;
     ScreenMatrixCache* m_screenMatrixCache;

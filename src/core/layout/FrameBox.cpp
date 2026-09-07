@@ -1016,6 +1016,70 @@ void FrameBox::applyBorderShapeClippingUsedInPaintingBoxShadow(
     }
 }
 
+enum class BoxShadowImageKind {
+    OuterPiece,
+    Outer,
+    Inset,
+};
+
+// Every input the painting paths below read while drawing and blurring a
+// shadow image, so equal keys mean equal pixels. See BoxShadowImageKey.
+// The border radii go in as the style lengths, not resolved values: the
+// paths resolve percentages against rects of their own. A calc() radius
+// has no flat encoding, so such a box gets no key and paints uncached.
+static Optional<BoxShadowImageKey> boxShadowImageKey(
+    FrameBox* frame, const CanvasShadowData& shadow, const Unit::Color& color,
+    BoxShadowImageKind kind, float dpr)
+{
+    BoxShadowImageKey key;
+    memset(key.words, 0, sizeof(key.words));
+    size_t i = 0;
+    auto putFloat = [&key, &i](float f) {
+        int32_t v;
+        memcpy(&v, &f, sizeof(v));
+        key.words[i++] = v;
+    };
+    key.words[i++] = (int32_t)kind;
+    putFloat(dpr);
+    key.words[i++] = frame->width().rawValue();
+    key.words[i++] = frame->height().rawValue();
+    key.words[i++] = frame->borderLeft().rawValue();
+    key.words[i++] = frame->borderTop().rawValue();
+    key.words[i++] = frame->borderRight().rawValue();
+    key.words[i++] = frame->borderBottom().rawValue();
+    putFloat(shadow.offsetX());
+    putFloat(shadow.offsetY());
+    putFloat(shadow.radius());
+    putFloat(shadow.spreadDistance());
+    key.words[i++] = (int32_t)(((uint32_t)color.r() << 24) |
+                               ((uint32_t)color.g() << 16) |
+                               ((uint32_t)color.b() << 8) | color.a());
+    bool hasRadius = frame->hasFrameBorderRadius();
+    key.words[i++] = hasRadius;
+    if (hasRadius) {
+        BorderRadiusData br = frame->frameBorderRadius();
+        const Length* lengths[8] = {
+            &br.m_topLeftHorizontal,     &br.m_topLeftVertical,
+            &br.m_topRightHorizontal,    &br.m_topRightVertical,
+            &br.m_bottomRightHorizontal, &br.m_bottomRightVertical,
+            &br.m_bottomLeftHorizontal,  &br.m_bottomLeftVertical,
+        };
+        for (size_t j = 0; j < 8; j++) {
+            const Length& l = *lengths[j];
+            key.words[i++] = (int32_t)l.type();
+            if (l.isFixed()) {
+                putFloat(l.fixed());
+            } else if (l.isPercent()) {
+                putFloat(l.percent());
+            } else {
+                return Optional<BoxShadowImageKey>();
+            }
+        }
+    }
+    STARFISH_ASSERT(i <= BoxShadowImageKey::maxWords);
+    return key;
+}
+
 static std::pair<bool, float> canUseFastPathOfPaintingBoxShadow(
     FrameBox* frame, const Unit::Rect& shadowRect,
     const CanvasShadowData& shadow)
@@ -1184,9 +1248,7 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
         CanvasShadowDataList list =
             s->boxShadow()->toCanvasShadowDataList(this);
 
-        size_t shadowIndex = 0;
         for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
-            shadowIndex++;
             float sd = shadow->spreadDistance();
             auto shadowColor =
                 shadow->hasColor() ? shadow->color() : s->color();
@@ -1252,7 +1314,6 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                 bool canUseFastPath = result.first;
                 float topLeftHorizontal = result.second;
                 WebView* wv = node()->webView();
-                bool shouldCacheBoxShadowImage = node() && wv->needsComposite();
 
                 // The corner piece is stretched along the edges from its last
                 // row/column and the centre is filled with its last pixel, so
@@ -1275,14 +1336,14 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                 if (canUseFastPath) {
                     canvas->save();
                     canvas->setNeedsNoneAntialias();
-                    BufferedNativeImageData* nativeImage = nullptr;
-                    if (shouldCacheBoxShadowImage) {
-                        auto test =
-                            wv->isThereImageInBoxShadowCache(this, shadowIndex);
-                        if (test) {
-                            nativeImage = test.value();
-                        }
-                    }
+                    Optional<BoxShadowImageKey> cacheKey = boxShadowImageKey(
+                        this, *shadow, shadowColor,
+                        BoxShadowImageKind::OuterPiece,
+                        wv->screenInfo().devicePixelRatio);
+                    BufferedNativeImageData* nativeImage =
+                        cacheKey ? wv->lookupBoxShadowImage(cacheKey.value())
+                                 : nullptr;
+                    bool cachedImage = nativeImage != nullptr;
 
                     if (!nativeImage) {
                         nativeImage = BufferedNativeImageData::create(
@@ -1352,40 +1413,47 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
 
                     canvas->restore();
 
-                    if (shouldCacheBoxShadowImage) {
-                        node()->webView()->putImageIntoBoxShadowCache(
-                            this, shadowIndex, nativeImage);
+                    if (cachedImage) {
+                    } else if (cacheKey) {
+                        wv->storeBoxShadowImage(cacheKey.value(), nativeImage);
                     } else {
                         delete nativeImage;
                     }
                 } else {
                     canvas->save();
+                    Optional<BoxShadowImageKey> cacheKey = boxShadowImageKey(
+                        this, *shadow, shadowColor, BoxShadowImageKind::Outer,
+                        wv->screenInfo().devicePixelRatio);
                     BufferedNativeImageData* nativeImage =
-                        BufferedNativeImageData::create(
+                        cacheKey ? wv->lookupBoxShadowImage(cacheKey.value())
+                                 : nullptr;
+                    bool cachedImage = nativeImage != nullptr;
+
+                    if (!nativeImage) {
+                        nativeImage = BufferedNativeImageData::create(
                             wv->screenInfo().devicePixelRatio,
                             ceil(shadowRect.width() + radiusOffset),
                             ceil(shadowRect.height() + radiusOffset));
-                    Canvas* cv = Canvas::create(node()->webView(), nativeImage);
-                    cv->clearColor(Unit::Color(0, 0, 0, 0));
+                        Canvas* cv =
+                            Canvas::create(node()->webView(), nativeImage);
+                        cv->clearColor(Unit::Color(0, 0, 0, 0));
+                        cv->setFillColor(shadowColor);
 
-                    if (shadow->hasColor()) {
-                        cv->setFillColor(shadow->color());
-                    } else {
-                        cv->setFillColor(s->color());
+                        cv->translate(ceil(radiusOffset / 2),
+                                      ceil(radiusOffset / 2));
+                        const LayoutRect clipRect(0, 0, shadowRect.width(),
+                                                  shadowRect.height());
+                        applyBorderRadiusClippingIfNeeds(cv, clipRect, sd);
+                        cv->drawRect(shadowRect);
+
+                        ShadowBlur sb(nativeImage->data(),
+                                      nativeImage->width(),
+                                      nativeImage->height(),
+                                      nativeImage->stride());
+                        sb.process(shadow->radius() / 2 *
+                                   wv->screenInfo().devicePixelRatio);
+                        delete cv;
                     }
-
-                    cv->translate(ceil(radiusOffset / 2),
-                                  ceil(radiusOffset / 2));
-                    const LayoutRect clipRect(0, 0, shadowRect.width(),
-                                              shadowRect.height());
-                    applyBorderRadiusClippingIfNeeds(cv, clipRect, sd);
-                    cv->drawRect(shadowRect);
-
-                    ShadowBlur sb(nativeImage->data(), nativeImage->width(),
-                                  nativeImage->height(), nativeImage->stride());
-                    sb.process(shadow->radius() / 2 *
-                               wv->screenInfo().devicePixelRatio);
-                    delete cv;
 
                     float offset = ceil(radiusOffset / 2);
                     Unit::Rect imageRect(
@@ -1399,7 +1467,12 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     canvas->drawImage(nativeImage, imageRect);
                     canvas->restore();
 
-                    delete nativeImage;
+                    if (cachedImage) {
+                    } else if (cacheKey) {
+                        wv->storeBoxShadowImage(cacheKey.value(), nativeImage);
+                    } else {
+                        delete nativeImage;
+                    }
                 }
             }
         }
@@ -1422,9 +1495,7 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
         CanvasShadowDataList list =
             s->boxShadow()->toCanvasShadowDataList(this);
 
-        size_t shadowIndex = 0;
         for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
-            shadowIndex++;
             float sd = shadow->spreadDistance();
             auto shadowColor =
                 shadow->hasColor() ? shadow->color() : s->color();
@@ -1439,7 +1510,6 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 WebView* wv = node()->webView();
                 auto canUseFastPath = canUseFastPathOfPaintingBoxShadow(
                     this, paddingRect, *shadow);
-                bool shouldCacheBoxShadowImage = wv->needsComposite();
 
                 if (shadow->radius() == 0) {
                     // fast path #1(no blur)
@@ -1598,14 +1668,13 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 Unit::Rect imageRect(0, 0, exteriorRect.width() + margin,
                                      exteriorRect.height() + margin);
 
-                BufferedNativeImageData* nativeImage = nullptr;
-                if (shouldCacheBoxShadowImage) {
-                    auto test =
-                        wv->isThereImageInBoxShadowCache(this, shadowIndex);
-                    if (test) {
-                        nativeImage = test.value();
-                    }
-                }
+                Optional<BoxShadowImageKey> cacheKey = boxShadowImageKey(
+                    this, *shadow, shadowColor, BoxShadowImageKind::Inset,
+                    wv->screenInfo().devicePixelRatio);
+                BufferedNativeImageData* nativeImage =
+                    cacheKey ? wv->lookupBoxShadowImage(cacheKey.value())
+                             : nullptr;
+                bool cachedImage = nativeImage != nullptr;
 
                 if (!nativeImage) {
                     nativeImage = BufferedNativeImageData::create(
@@ -1673,9 +1742,9 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
 
                 canvas->restore();
 
-                if (shouldCacheBoxShadowImage) {
-                    node()->webView()->putImageIntoBoxShadowCache(
-                        this, shadowIndex, nativeImage);
+                if (cachedImage) {
+                } else if (cacheKey) {
+                    wv->storeBoxShadowImage(cacheKey.value(), nativeImage);
                 } else {
                     delete nativeImage;
                 }
