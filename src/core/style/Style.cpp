@@ -2746,6 +2746,18 @@ Element* StyleResolver::ownerHost() const
     return m_ownerShadowRoot ? m_ownerShadowRoot->host() : nullptr;
 }
 
+// The resolver that styles this shadow tree's host and the host's light-DOM
+// children -- where promoted `:host` / `::slotted()` rules must live. That is
+// the document resolver only while the host sits in the document tree; a host
+// inside another shadow tree is styled by that tree's resolver (see
+// Node::styleResolver), and promoting to the document would leave its rules
+// unreachable.
+StyleResolver& StyleResolver::hostTreeResolver()
+{
+    STARFISH_ASSERT(isShadowResolver());
+    return ownerHost()->styleResolver();
+}
+
 ComputedStyle* StyleResolver::resolveDocumentStyle(Document* document)
 {
     STARFISH_ASSERT(document != nullptr);
@@ -10451,8 +10463,8 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
     if (addedAtLast && !m_needsRecalcRuleSet) {
         LongTaskFinder t("StyleResolver::addSheet at last", 1);
         // Promoting this one sheet's `:host`/`::slotted` rules appends to the
-        // document resolver's promoted lists, which is already the right result
-        // -- no document rebuild needed on this path.
+        // host-tree resolver's promoted lists, which is already the right
+        // result -- no rebuild of that resolver needed on this path.
         bool addedCrossScopeRule = addToRuleSet(sheet);
         recalcWebFonts();
         // A sheet with no `:host`/`::slotted` rule cannot change anything
@@ -10467,7 +10479,7 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
     } else {
         m_needsRecalcRuleSet = true;
         // The pending rebuild re-promotes every rule of this resolver, so the
-        // document resolver has to drop the previous promotions first or they
+        // host-tree resolver has to drop the previous promotions first or they
         // are duplicated. See setAdoptedSheets() for the promotion rationale.
         //
         // No cross-scope-rule gate here (unlike the fast path
@@ -10476,7 +10488,7 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
         // "no promotable rule" would wrongly skip invalidating a `:host`
         // sheet's host and slotted light DOM.
         if (isShadowResolver()) {
-            document()->styleResolver().setNeedsRecalcRuleSet();
+            hostTreeResolver().setNeedsRecalcRuleSet();
             invalidateShadowScopeForSheetChange();
         }
         document()->browsingContext()->setNeedsStyleSheetsRecalc();
@@ -10486,7 +10498,7 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
 void StyleResolver::removeSheet(CSSStyleSheet* sheet)
 {
     m_needsRecalcRuleSet = true;
-    // A removed shadow sheet's `:host`/`::slotted` rules live in the document
+    // A removed shadow sheet's `:host`/`::slotted` rules live in the host-tree
     // resolver, which only drops them when it rebuilds -- otherwise they keep
     // styling the host and its slotted children after the sheet is gone. See
     // setAdoptedSheets() for the promotion rationale.
@@ -10499,7 +10511,7 @@ void StyleResolver::removeSheet(CSSStyleSheet* sheet)
     // rules are never stale here the way they can be on addSheet()'s else
     // path.
     if (isShadowResolver()) {
-        document()->styleResolver().setNeedsRecalcRuleSet();
+        hostTreeResolver().setNeedsRecalcRuleSet();
         if (sheetHasCrossScopeRule(sheet)) {
             invalidateShadowScopeForSheetChange();
         }
@@ -10522,14 +10534,15 @@ void StyleResolver::setAdoptedSheets(const GCVector<CSSStyleSheet*>& sheets)
         }
     }
     m_needsRecalcRuleSet = true;
-    // A `:host` rule from a shadow resolver is promoted into the document
+    // A `:host` rule from a shadow resolver is promoted into the host-tree
     // resolver's rule set, so changing a shadow root's adopted sheets must also
-    // rebuild the document resolver; otherwise a previously promoted `:host`
-    // rule lingers after the adopted sheet is replaced or removed. The document
-    // rebuild re-marks every shadow resolver (removeAllRules), and the recalc
-    // order (document first, then shadow) re-promotes the current rules.
+    // rebuild that resolver; otherwise a previously promoted `:host` rule
+    // lingers after the adopted sheet is replaced or removed. Its rebuild
+    // re-marks every shadow resolver (removeAllRules), and the recalc order
+    // (document, then shadow roots in tree order, so an outer tree before the
+    // trees nested in it) re-promotes the current rules.
     if (isShadowResolver()) {
-        document()->styleResolver().setNeedsRecalcRuleSet();
+        hostTreeResolver().setNeedsRecalcRuleSet();
     }
     document()->browsingContext()->setNeedsStyleSheetsRecalc();
 }
@@ -10542,8 +10555,15 @@ void StyleResolver::removeAllRules()
     m_slottedScopedRules.clear();
 
     if (m_hasSimplePseudoClassHostSelector || m_hasSlottedSelector) {
-        Traverse::traverseIncludingShadowDOM(document(), [](Node* node) {
-            if (node->isShadowRoot()) {
+        // The promoted rules just dropped came from the shadow trees nested
+        // anywhere under this resolver's own tree (see hostTreeResolver()), so
+        // those resolvers must re-promote. Trees elsewhere in the document
+        // promote into other resolvers and are left alone.
+        Node* treeRoot = isShadowResolver()
+                             ? static_cast<Node*>(m_ownerShadowRoot.value())
+                             : static_cast<Node*>(document());
+        Traverse::traverseIncludingShadowDOM(treeRoot, [treeRoot](Node* node) {
+            if (node->isShadowRoot() && node != treeRoot) {
                 node->asShadowRoot()->styleResolver().setNeedsRecalcRuleSet();
             }
         });
@@ -10897,10 +10917,9 @@ bool StyleResolver::addToRuleSet(CSSStyleSheet* sheet)
             break;
         case StyleRule::ShadowScopeRuleTarget::Host:
             if (UNLIKELY(isInShadowScope)) {
-                m_document->styleResolver().addHostScopedRule(
-                    sheet->styleRules()[j], ownerHost());
-                m_document->styleResolver().m_hasSimplePseudoClassHostSelector =
-                    true;
+                hostTreeResolver().addHostScopedRule(sheet->styleRules()[j],
+                                                     ownerHost());
+                hostTreeResolver().m_hasSimplePseudoClassHostSelector = true;
                 addedCrossScopeRule = true;
             } else {
                 // Preserve the existing document-scope :host handling. CSS
@@ -10912,9 +10931,9 @@ bool StyleResolver::addToRuleSet(CSSStyleSheet* sheet)
             break;
         case StyleRule::ShadowScopeRuleTarget::Slotted:
             if (UNLIKELY(isInShadowScope)) {
-                m_document->styleResolver().addSlottedScopedRule(
-                    sheet->styleRules()[j], ownerHost());
-                m_document->styleResolver().m_hasSlottedSelector = true;
+                hostTreeResolver().addSlottedScopedRule(sheet->styleRules()[j],
+                                                        ownerHost());
+                hostTreeResolver().m_hasSlottedSelector = true;
                 addedCrossScopeRule = true;
             }
             // A ::slotted() rule outside a shadow tree has no originating
