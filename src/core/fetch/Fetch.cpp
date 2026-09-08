@@ -91,6 +91,13 @@ void Fetch::start()
         return;
     }
 
+    if (!m_request->bodyInit().hasValue()) {
+        // A method that is allowed a body, used without one - for example
+        // fetch(url, { method: 'POST' }).
+        m_resourceRequest->send();
+        return;
+    }
+
     const char* binaryData = nullptr;
     size_t binarySize = 0;
     if (m_request->requestBody()->extractBinary(&binaryData, &binarySize)) {

@@ -58,7 +58,9 @@ public:
     String* extract();
     // Exposes a buffer-source body (ArrayBuffer / ArrayBufferView) as raw
     // bytes so a caller can hand it to ResourceRequest as a binary entity
-    // body. Returns false when the body is not a buffer source.
+    // body. Returns false when the body is not a buffer source. As in
+    // extract(), an already read body yields an empty range rather than its
+    // bytes a second time, so *data is always a valid pointer.
     bool extractBinary(const char** data, size_t* size);
 
     bool isArrayBufferType();
