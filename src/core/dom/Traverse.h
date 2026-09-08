@@ -425,7 +425,7 @@ public:
                     // Return next assigned node from slot
                     Node* c = m_slotAssignedNodes[m_slotAssignedNodesIndex];
                     m_slotAssignedNodesIndex++;
-                    STARFISH_ASSERT(!c->isHTMLSlotElement());
+                    STARFISH_ASSERT(!c->isFlattenedAwaySlot());
                     return c;
                 }
                 // Exhausted all assigned nodes for this slot
@@ -444,13 +444,13 @@ public:
                 // Advance to next sibling for subsequent calls
                 updateNode(m_currentNode->nextSibling());
             }
-            // If current node is a slot, updateNode() prepared its assigned
-            // nodes. Skip returning the slot itself - continue to get actual
-            // content.
-            if (c.hasValue() && c.value() && c.value()->isHTMLSlotElement()) {
+            // If current node is a shadow-tree slot, updateNode() prepared
+            // its assigned nodes. Skip returning the slot itself - continue to
+            // get actual content.
+            if (c.hasValue() && c.value() && c.value()->isFlattenedAwaySlot()) {
                 continue;
             }
-            STARFISH_ASSERT(!c || !c->isHTMLSlotElement());
+            STARFISH_ASSERT(!c || !c->isFlattenedAwaySlot());
             return c;
         }
     }
@@ -459,14 +459,16 @@ private:
     void updateNode(Node* node)
     {
         // Update the iterator state to point to the given node.
-        // For slot elements, we collect their assigned nodes and iterate
-        // through those instead of the slot element itself, since slots are
-        // "transparent" in the rendering tree - they don't render
-        // themselves, only their assigned content.
+        // For shadow-tree slot elements, we collect their assigned nodes and
+        // iterate through those instead of the slot element itself, since
+        // such slots are "transparent" in the rendering tree - they don't
+        // render themselves, only their assigned content. A <slot> outside a
+        // shadow tree is an ordinary element (Node::isFlattenedAwaySlot) and
+        // takes Case 1.
 
         while (node) {
             // Case 1: Non-slot node - use it directly
-            if (LIKELY(!node->isHTMLSlotElement())) {
+            if (LIKELY(!node->isFlattenedAwaySlot())) {
                 m_slotAssignedNodes.clear();
                 m_slotAssignedNodesIndex = SIZE_MAX;
                 m_currentNode = node;
