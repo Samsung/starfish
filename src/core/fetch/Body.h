@@ -56,6 +56,10 @@ public:
     Promise* text();
 
     String* extract();
+    // Exposes a buffer-source body (ArrayBuffer / ArrayBufferView) as raw
+    // bytes so a caller can hand it to ResourceRequest as a binary entity
+    // body. Returns false when the body is not a buffer source.
+    bool extractBinary(const char** data, size_t* size);
 
     bool isArrayBufferType();
     bool isArrayBufferViewType();

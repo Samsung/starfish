@@ -88,9 +88,18 @@ void Fetch::start()
         m_request->method()->equals("HEAD")) {
         // This is a method that cannot have a body
         m_resourceRequest->send();
+        return;
+    }
+
+    const char* binaryData = nullptr;
+    size_t binarySize = 0;
+    if (m_request->requestBody()->extractBinary(&binaryData, &binarySize)) {
+        // A buffer-source body (ArrayBuffer / ArrayBufferView) is not
+        // necessarily valid UTF-8, so it has to travel as a binary entity
+        // body instead of going through String.
+        m_resourceRequest->setBinaryRequestBody(binaryData, binarySize);
+        m_resourceRequest->send();
     } else if (m_request->requestBody()->isTextType()) {
-        // Currently, it is possible only in case of text because resource
-        // request supports only string type.
         m_resourceRequest->send(m_request->requestBody()->extract());
     } else {
         STARFISH_UNIMPLEMENTED();

@@ -348,6 +348,35 @@ String* Body::extract()
     return result;
 }
 
+bool Body::extractBinary(const char** data, size_t* size)
+{
+    if (!m_bodyInit.hasValue()) {
+        return false;
+    }
+    BodyInit body = m_bodyInit.getValue();
+    if (!body.isArrayBufferViewOrArrayBufferValue()) {
+        return false;
+    }
+
+    createReadableStream();
+    if (!m_readableStream->isDisturbedOrLocked()) {
+        m_readableStream->lock();
+        m_readableStream->close();
+    }
+
+    auto byteBuffer = body.getArrayBufferViewOrArrayBufferValue();
+    if (byteBuffer.isArrayBufferValue()) {
+        auto arrayBuffer = byteBuffer.getArrayBufferValue();
+        *data = (const char*)arrayBufferRawData(arrayBuffer);
+        *size = arrayBufferByteSize(arrayBuffer);
+    } else {
+        auto arrayBufferView = byteBuffer.getArrayBufferViewValue();
+        *data = (const char*)arrayBufferViewRawData(arrayBufferView);
+        *size = arrayBufferViewByteSize(arrayBufferView);
+    }
+    return true;
+}
+
 String* Body::extractTextFromBodyInit()
 {
     if (m_bodyInit.hasValue()) {
@@ -396,6 +425,9 @@ void Body::setBodyInit(const Optional<BodyInit>& bodyInitValue)
         m_contentType = String::createASCIIString(kTextPlainContentType);
     } else if (bodyInit.isBlobValue()) {
         m_contentType = bodyInit.getBlobValue()->type();
+    } else if (bodyInit.isArrayBufferViewOrArrayBufferValue()) {
+        // https://fetch.spec.whatwg.org/#bodyinit-safely-extract - a buffer
+        // source has no associated Content-Type.
     } else {
         STARFISH_UNSUPPORTED("BodyInit for types other than String and Blob");
     }
