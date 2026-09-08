@@ -1649,6 +1649,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("-webkit-box");
         case DisplayValue::InlineBoxDisplayValue:
             return String::fromUTF8("-webkit-inline-box");
+        case DisplayValue::ContentsDisplayValue:
+            return String::fromUTF8("contents");
         case DisplayValue::NoneDisplayValue:
             return String::fromUTF8("none");
         default:
@@ -9893,8 +9895,18 @@ static ComputedStyleDamage applyStyleToElement(
             }
         } else if (style->display() != DisplayValue::NoneDisplayValue &&
                    element->frame() == nullptr &&
+                   !(element->style() &&
+                     element->style()->display() ==
+                         DisplayValue::ContentsDisplayValue) &&
                    element->renderingParentElement()) {
             // special path for Node::appendChild
+            //
+            // A frameless element is taken to be a freshly inserted one whose
+            // subtree owns no frames yet, so the shortcuts below rebuild only
+            // this element without detaching its container's children. An
+            // element that was `display: contents` has no frame either, but
+            // its children's frames are already in the container -- it must
+            // take the normal path, which rebuilds from the container.
 
             Element* e = element->renderingParentElement();
             while (e) {
@@ -9915,7 +9927,13 @@ static ComputedStyleDamage applyStyleToElement(
                     }
                 } else {
                     bool needsToExecuteNormalPath = true;
-                    bool isElementAbsPositioned = style->isAbsolutePositioned();
+                    // A `display: contents` element has no box for
+                    // `position` to place, so the out-of-flow shortcuts below
+                    // (which rebuild only from the first positioned sibling
+                    // on) do not apply to it.
+                    bool isElementAbsPositioned =
+                        style->isAbsolutePositioned() &&
+                        style->display() != DisplayValue::ContentsDisplayValue;
                     if (e->style()->display() ==
                             DisplayValue::BlockDisplayValue &&
                         style->display() == DisplayValue::BlockDisplayValue &&
@@ -10293,7 +10311,12 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
                 }
 
                 if (!child->frame()) {
-                    if (parentElement->frame() && parentElement->isElement()) {
+                    // A `display: contents` parent renders (its text goes into
+                    // the nearest boxed ancestor) but owns no frame itself.
+                    if (parentElement->isElement() &&
+                        (parentElement->frame() ||
+                         parentElementStyle->display() ==
+                             DisplayValue::ContentsDisplayValue)) {
                         Element* e = parentElement->asElement();
                         while (e) {
                             if (e->style()->hasBlockLikeDisplay()) {
@@ -11873,6 +11896,8 @@ bool CSSStyleValuePair::updateValueDisplay(Document* document,
         m_value.m_display = DisplayValue::GridDisplayValue;
     } else if (value.equals("inline-grid")) {
         m_value.m_display = DisplayValue::InlineGridDisplayValue;
+    } else if (value.equals("contents")) {
+        m_value.m_display = DisplayValue::ContentsDisplayValue;
     } else if (value.equals("none")) {
         m_value.m_display = DisplayValue::NoneDisplayValue;
     } else {

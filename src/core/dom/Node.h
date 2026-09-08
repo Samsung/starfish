@@ -310,6 +310,14 @@ public:
 
     Node* renderingParentNode() const;
 
+    // The nearest rendering ancestor that generates a box, i.e. the node whose
+    // frame this node's own frame (or, for a boxless node, its children's
+    // frames) hangs off. Differs from renderingParentNode() only across
+    // `display: contents` ancestors, which stay in the rendering tree for
+    // style inheritance but own no frame (css-display-3
+    // #valdef-display-contents).
+    Node* renderingBoxParentNode() const;
+
     // The slot this node is assigned to (flat-tree / "find a slot"), or an
     // empty Optional when unassigned. Closed-shadow aware (uses
     // internalShadowRoot); only elements and text are slottable. When present

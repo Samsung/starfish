@@ -690,8 +690,53 @@ void ComputedStyle::loadResources(
     loadFont(consumer);
 }
 
+// css-display-3 Appendix B: on elements whose rendering is not defined by
+// CSS's box model (replaced elements and form controls), `display: contents`
+// behaves as `display: none`.
+//
+// Deliberately narrower than the appendix: `wbr`, `meter`, `progress`, `embed`
+// and `frame(set)` have no element class here and render nothing anyway, so
+// they fall through to ordinary unboxing; and every `<svg>` is treated as the
+// outermost one (B.2 wants inner `svg`/`g`/`use`/`tspan` hoisted and the
+// remaining SVG elements hidden, which the SVG frame builder does not model).
+static bool unboxesAsNone(Node* current)
+{
+    if (current->isHTMLImageElement() || current->isHTMLIFrameElement() ||
+        current->isHTMLBRElement() || current->isHTMLObjectElement() ||
+        current->isHTMLInputElement() || current->isHTMLTextAreaElement() ||
+        current->isHTMLSelectElement() || current->isSVGSVGElement()) {
+        return true;
+    }
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+    if (current->isHTMLMediaElement()) {
+        return true;
+    }
+#endif
+#ifdef STARFISH_ENABLE_CANVAS
+    if (current->isHTMLCanvasElement()) {
+        return true;
+    }
+#endif
+    return false;
+}
+
 void ComputedStyle::blockify(Node* current, bool force)
 {
+    if (m_display == DisplayValue::ContentsDisplayValue && current) {
+        // css-display-3 #transformations: the root element's `contents`
+        // computes to `block`. Elsewhere blockification leaves `contents`
+        // alone -- a boxless element has nothing for float/position to act
+        // on. Its children become the flex/grid items in its place; they are
+        // wrapped at the frame level (FrameTreeBuilder) but their computed
+        // display is not blockified here, unlike direct items.
+        if (current->isHTMLHtmlElement()) {
+            m_display = DisplayValue::BlockDisplayValue;
+        } else if (unboxesAsNone(current)) {
+            m_display = DisplayValue::NoneDisplayValue;
+        }
+        return;
+    }
+
     // 9.7 Relationships between 'display', 'position', and 'float'
     if (m_originalDisplay != DisplayValue::NoneDisplayValue) {
         bool isAbsolutePositioned =
@@ -793,18 +838,32 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
         background->checkComputed(m_inheritedStyles.m_color);
     }
 
+    // `auto` for align-self/justify-self resolves against the *box* parent:
+    // a `display: contents` parent generates no box, so its children are
+    // items of the nearest boxed ancestor and take that one's *-items
+    // (css-align-3 #align-self-property, css-display-3 #unbox).
+    ComputedStyle* itemsParentStyle = parentStyle;
+    m_parentIsBoxless =
+        parentStyle->display() == DisplayValue::ContentsDisplayValue;
+    if (m_parentIsBoxless) {
+        Node* boxParent = current->renderingBoxParentNode();
+        if (boxParent && boxParent->style()) {
+            itemsParentStyle = boxParent->style();
+        }
+    }
+
     if (!m_alignSelfSpecifiedByUser) {
         // https://www.w3.org/TR/css-flexbox-1/#propdef-align-self
         // initial value of  'align-self' is 'auto', 'auto' is computed to
         // parent's 'align-items' value; otherwise 'stretch'
-        m_alignSelf = parentStyle->m_alignItems;
+        m_alignSelf = itemsParentStyle->m_alignItems;
     }
 
     if (!m_justifySelfSpecifiedByUser) {
         // https://www.w3.org/TR/css-align-3/#propdef-justify-self
         // initial value of 'justify-self' is 'auto', which computes to the
         // parent's 'justify-items' value
-        m_justifySelf = parentStyle->m_justifyItems;
+        m_justifySelf = itemsParentStyle->m_justifyItems;
     }
 
     Length curFontSize = fontSize();

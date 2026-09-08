@@ -84,6 +84,7 @@ test/cairo/internal-test/click/click-internal-test-2.html
 test/cairo/internal-test/click/click-internal-test-4.html
 test/cairo/internal-test/css/display/ltr-display-internal-test-3.html
 test/cairo/internal-test/css/display/ltr-display-internal-test-1.html
+test/cairo/internal-test/css/display/display-contents.html
 test/cairo/internal-test/click/click-internal-test-3.html
 test/cairo/internal-test/click/click-internal-test-5.html
 test/cairo/internal-test/css/position/ltr-position-internal-test-with-image-element-4.html

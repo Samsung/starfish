@@ -115,6 +115,23 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
         VerticalAlignValue va = box->style()->verticalAlign();
         if (box->isInlineTextBox()) {
             hasBoxOtherThanCollapsedInlineNonReplacedBox = true;
+
+            // Text under a `display: contents` element carries that
+            // element's font and line-height, not this box's, so it has to
+            // size the line itself -- as it would have inside the inline box
+            // the element does not generate (css-display-3 #unbox). Read the
+            // text's own style: InlineTextBox::style() may hand back a
+            // ::first-line style arranged against a different parent.
+            if (box->Frame::style()->parentIsBoxless()) {
+                hasBoxOtherThanText = true;
+                const auto& metrics = box->style()->font()->metrics();
+                LayoutUnit halfLeading =
+                    (box->lineHeight() - metrics.m_fontHeight) / 2;
+                maxAscenderSoFar = std::max(metrics.m_ascender + halfLeading,
+                                            maxAscenderSoFar);
+                maxDescenderSoFar = std::min(metrics.m_descender - halfLeading,
+                                             maxDescenderSoFar);
+            }
         } else if (box->isInlineNonReplacedBox()) {
             hasBoxOtherThanText = true;
             InlineNonReplacedBox* rb = box->asInlineNonReplacedBox();
@@ -833,9 +850,9 @@ void InlineBoxLayoutParentBox::resetChildrenVerticalPositions(
                 ctx.applyInvertOffsetBeforeApplyingRelativePositionInQuickLayout(
                     box);
                 bool dueToSelf = true;
-                if (box->node() && box->node()->parentElement()) {
-                    Node* nd = box->node()->parentElement();
-                    if (nd->frame()->isFrameInline() &&
+                if (box->node() && box->node()->renderingBoxParentNode()) {
+                    Node* nd = box->node()->renderingBoxParentNode();
+                    if (nd->frame() && nd->frame()->isFrameInline() &&
                         nd->style()->position() == RelativePositionValue) {
                         dueToSelf = false;
                     }

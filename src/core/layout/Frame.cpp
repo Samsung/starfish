@@ -873,11 +873,14 @@ void LayoutContext::layoutRelativePositionedBox(FrameBox* box, bool dueToSelf)
     if (dueToSelf) {
         applyRelativePosition(box);
     } else {
-        Element* elm = box->node()->parentElement();
-        while (elm && elm->frame()->isFrameInline() &&
+        // Walk the boxed ancestors: a `display: contents` ancestor owns no
+        // frame, so it cannot be the relatively positioned inline that moves
+        // this box.
+        Node* elm = box->node()->renderingBoxParentNode();
+        while (elm && elm->frame() && elm->frame()->isFrameInline() &&
                elm->style()->position() == RelativePositionValue) {
             applyRelativePositionInlineCase(elm->frame(), box);
-            elm = elm->parentElement();
+            elm = elm->renderingBoxParentNode();
         }
     }
 }
@@ -1034,9 +1037,9 @@ void LayoutContext::
         LayoutUnit orgY = box->y();
 
         bool dueToSelf = true;
-        if (box->node() && box->node()->parentElement()) {
-            Node* nd = box->node()->parentElement();
-            if (nd->frame()->isFrameInline() &&
+        if (box->node() && box->node()->renderingBoxParentNode()) {
+            Node* nd = box->node()->renderingBoxParentNode();
+            if (nd->frame() && nd->frame()->isFrameInline() &&
                 nd->style()->position() == RelativePositionValue) {
                 dueToSelf = false;
             }
@@ -1912,6 +1915,32 @@ ComputedStyle* Frame::firstLineStyle(Frame* frame, ComputedStyle* frameStyle)
         resolver = &document()->styleResolver();
     }
     if (resolver->usesFirstLineRule()) {
+        if ((isInlineTextBox() || isFrameText()) &&
+            Frame::style()->parentIsBoxless()) {
+            // `frame` is the box this text is laid out in. Text under a
+            // `display: contents` element sits directly in that box's line
+            // but is styled by the element, so ::first-line reaches it the
+            // way it reaches an inline's text: the element's own declarations
+            // keep winning over the inherited first-line values (css-pseudo-4
+            // #first-line-inheritance).
+            Node* styleParent = node()->renderingParentNode();
+            if (styleParent && styleParent->style()) {
+                Frame* fb = frame->isInlineNonReplacedBox()
+                                ? frame->asInlineNonReplacedBox()->origin()
+                                : frame;
+                while (fb && !(fb->isFrameBlockBox() && fb->node())) {
+                    fb = fb->parent();
+                }
+                if (fb) {
+                    if (ComputedStyle* pseudoStyle = fb->cachedPseudoStyle(
+                            PseudoElementType::PseudoElementFirstLineInherited,
+                            styleParent->style())) {
+                        return pseudoStyle;
+                    }
+                }
+                return Frame::style();
+            }
+        }
         if (ComputedStyle* pseudoStyle = firstLineStyleFromCache(
                 frame->isFrameText() ? frame->parent() : frame, frameStyle)) {
             return pseudoStyle;

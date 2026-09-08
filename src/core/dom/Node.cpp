@@ -574,6 +574,16 @@ Node* Node::renderingParentNode() const
     return nd;
 }
 
+Node* Node::renderingBoxParentNode() const
+{
+    Node* nd = renderingParentNode();
+    while (nd && nd->style() &&
+           nd->style()->display() == DisplayValue::ContentsDisplayValue) {
+        nd = nd->renderingParentNode();
+    }
+    return nd;
+}
+
 Node* Node::makeShadowClone()
 {
     if (isSVGUseElement()) {
@@ -2324,10 +2334,10 @@ void Node::setNeedsFrameTreeBuild()
             blockParent);
     } else {
         if (isElement() && !needsFrameTreeBuild()) {
-            if (renderingParentNode() && renderingParentNode()->frame()) {
+            if (renderingBoxParentNode() && renderingBoxParentNode()->frame()) {
                 Frame* blockParent = FrameTreeBuilder::
                     findNearestBlockStartPositionOfFrameTreeBuildCandidate(
-                        renderingParentNode()->frame());
+                        renderingBoxParentNode()->frame());
                 if (blockParent) {
                     FrameTreeBuilder::
                         needsFrameTreeBuildFromChildrenOfThisFrame(blockParent);
@@ -2374,10 +2384,10 @@ void Node::setNeedsFrameTreeBuildWithoutSelf()
             blockParent);
     } else {
         if (isElement()) {
-            if (renderingParentNode() && renderingParentNode()->frame()) {
+            if (renderingBoxParentNode() && renderingBoxParentNode()->frame()) {
                 Frame* blockParent = FrameTreeBuilder::
                     findNearestBlockStartPositionOfFrameTreeBuildCandidate(
-                        renderingParentNode()->frame());
+                        renderingBoxParentNode()->frame());
                 if (blockParent) {
                     FrameTreeBuilder::
                         needsFrameTreeBuildFromChildrenOfThisFrame(blockParent);
