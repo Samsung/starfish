@@ -246,6 +246,26 @@ static Node* overflowedBoxNodeKey(FrameBox* frame)
     return nullptr;
 }
 
+// A subtree skipped for being invisible keeps the entries its stacking
+// contexts got when they were last painted. Left untouched, the seeding loop
+// in the constructor reads them as layers that disappeared and dirties their
+// old extents on every frame, so a hidden pane kept the visible content
+// under it repainting for as long as anything else animated.
+void RepaintRegionTracker::markSkippedSubtreeAsUnchanged(StackingContext* sc)
+{
+    for (StackingContextChild* child : sc->childContexts()) {
+        for (StackingContext* childCtx : *child) {
+            auto iter = m_prevDrawnStackingContextInfoMap.find(
+                childCtx->owner()->node());
+            if (iter != m_prevDrawnStackingContextInfoMap.end()) {
+                iter.value().hasThisLayerThisTime = true;
+                iter.value().isEqualsWithPrevDrawing = true;
+            }
+            markSkippedSubtreeAsUnchanged(childCtx);
+        }
+    }
+}
+
 void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
                                               SkMatrix currentMatrix)
 {
@@ -288,6 +308,7 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
                                     cb->computeScreenMatrix(),
                                     cb->frameVisibleRect());
                     }
+                    markSkippedSubtreeAsUnchanged(sc);
                     return;
                 }
                 iter.value().isEqualsWithPrevDrawing = true;
@@ -295,6 +316,7 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
                 needToSkip = false;
             }
             if (needToSkip) {
+                markSkippedSubtreeAsUnchanged(sc);
                 return;
             }
         }

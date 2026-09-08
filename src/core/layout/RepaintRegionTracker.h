@@ -58,6 +58,7 @@ public:
 
     const RepaintRegion& repaintRegion();
     ~RepaintRegionTracker();
+    void markSkippedSubtreeAsUnchanged(StackingContext* sc);
     void notifyDirty(FrameBox* frame, StackingContext* sc,
                      const SkMatrix& currentMatrix, LayoutRect r);
     FrameBox* findNearestStackingContextOwner(FrameBox* frame);
