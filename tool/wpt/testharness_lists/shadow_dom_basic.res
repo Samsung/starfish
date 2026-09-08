@@ -86,7 +86,7 @@ http://web-platform.test:8000/shadow-dom/slot-reconciliation-at-node-removal.htm
 http://web-platform.test:8000/shadow-dom/slots-fallback.html
 http://web-platform.test:8000/shadow-dom/slots-fallback-in-document.html
 http://web-platform.test:8000/shadow-dom/slots.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/slots-outside-shadow-dom.html
+http://web-platform.test:8000/shadow-dom/slots-outside-shadow-dom.html
 http://web-platform.test:8000/shadow-dom/Slottable-mixin.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/touch-event-retargeting-leak.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/user-agent-shadow-root-crash.html

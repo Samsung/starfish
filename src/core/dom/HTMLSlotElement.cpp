@@ -121,7 +121,7 @@ void HTMLSlotElement::findFlattenedSlottables(GCVector<Node*>& result)
     auto append = [&](Node* nd) {
         // A slotted child that is itself a slot is expanded in place; any other
         // node (including a slot in a non-shadow root) is appended as-is.
-        if (nd->isHTMLSlotElement() && nd->isInShadowRoot()) {
+        if (nd->isFlattenedAwaySlot()) {
             nd->asHTMLSlotElement()->findFlattenedSlottables(result);
         } else {
             result.push_back(nd);

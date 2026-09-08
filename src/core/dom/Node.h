@@ -255,6 +255,17 @@ public:
         return m_isSlotted;
     }
 
+    // A <slot> in a shadow tree is expanded into its flattened slottables and
+    // never appears in the flat tree itself (WHATWG DOM "find flattened
+    // slottables"). A <slot> whose root is not a shadow root takes no part in
+    // slot assignment and is an ordinary element: it is rendered, styled and
+    // selector-matchable like any other, and it stays as-is when it is itself
+    // slotted into a shadow slot.
+    bool isFlattenedAwaySlot() const
+    {
+        return isHTMLSlotElement() && isInShadowRoot();
+    }
+
     void markIsRegisteredToObserverBefore()
     {
         m_isRegisteredToObserverBefore = true;

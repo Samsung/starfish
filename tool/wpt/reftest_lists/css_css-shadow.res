@@ -8,7 +8,10 @@ http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-invisible-slot.h
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-nested-slot-display-override.html
 http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-root-hides-children.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slot-display-override.html
-http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slot-fallback.html
+# slot-fallback: a light-DOM <slot> is an ordinary flat-tree element, so it
+# generates a box; the UA `slot { display: contents }` it relies on needs
+# `display: contents`, which the engine does not implement yet.
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slot-fallback.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slot-style.html
 http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slot.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slotted-nested.html
