@@ -116,7 +116,7 @@ enum UnitType ENSURE_ENUM_UNSIGNED {
 // inline | block | list-item | inline-list-item | inline-block | table |
 // inline-table | table-row-group | table-header-group | table-footer-group |
 // table-row | table-column-group | table-column | table-cell | table-caption |
-// flex | inline-flex | none | inherit
+// flex | inline-flex | contents | none | inherit
 enum DisplayValue ENSURE_ENUM_UNSIGNED {
     InlineDisplayValue, // initial value
     BlockDisplayValue,
@@ -139,6 +139,11 @@ enum DisplayValue ENSURE_ENUM_UNSIGNED {
     InlineGridDisplayValue,
     BoxDisplayValue,       // Only for -webkit-box
     InlineBoxDisplayValue, // Only for -webkit-inline-box
+    // The element generates no box of its own; its children and
+    // pseudo-elements generate boxes as if they were children of its parent
+    // (css-display-3 #valdef-display-contents). Unlike `none`, the element
+    // still takes part in style resolution and inheritance.
+    ContentsDisplayValue,
     NoneDisplayValue,
 };
 

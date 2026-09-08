@@ -466,6 +466,15 @@ void ComputedStyleCSSStyleDeclaration::updateWithLengthValueForMBP(
 {
     CSSStyleValuePair cssStyleValuePair;
 
+    // cssom-1 #resolved-values: without a layout box the resolved value is
+    // the computed value; with one it is the used value below.
+    if (!frame) {
+        cssStyleValuePair = lengthToCSSStyleValue(valueFromStyle(style));
+        cssStyleValuePair.setKeyKind(keykind);
+        addValuePair(cssStyleValuePair);
+        return;
+    }
+
     // Update keykind.
     cssStyleValuePair.setKeyKind(keykind);
 
@@ -857,13 +866,13 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         } else if (frame && style->width().isDefinite(true)) {
             w.setLengthValue(CSSLength(style->width().specifiedValue(
                 LayoutContext::parentContentWidth(frame), m_node)));
+        } else if (frame && frame->isFrameBox()) {
+            w.setLengthValue(CSSLength(frame->asFrameBox()->contentWidth()));
         } else {
-            if (frame && frame->isFrameBox()) {
-                w.setLengthValue(
-                    CSSLength(frame->asFrameBox()->contentWidth()));
-            } else {
-                w.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-            }
+            // cssom-1 #resolved-values: without a layout box the resolved
+            // value is the computed value.
+            w = lengthToCSSStyleValue(style->width());
+            w.setKeyKind(CSSStyleValuePair::KeyKind::Width);
         }
         addValuePair(w);
     } break;
@@ -888,7 +897,10 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                     CSSLength(frame->asFrameBox()->contentHeight()));
             }
         } else {
-            h.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+            // cssom-1 #resolved-values: without a layout box the resolved
+            // value is the computed value.
+            h = lengthToCSSStyleValue(style->height());
+            h.setKeyKind(CSSStyleValuePair::KeyKind::Height);
         }
         addValuePair(h);
     } break;

@@ -181,8 +181,8 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
 
 bool FrameBlockBox::isInsideRelativePositionedInline()
 {
-    if (node() && node()->parentElement()) {
-        Node* nd = node()->parentElement();
+    if (node() && node()->renderingBoxParentNode()) {
+        Node* nd = node()->renderingBoxParentNode();
         return nd->frame() != nullptr && nd->frame()->isFrameInline() &&
                nd->style()->position() == RelativePositionValue;
     }
@@ -578,9 +578,9 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
                 child->style()->position() == RelativePositionValue) {
                 auto box = child->asFrameBox();
                 bool dueToSelf = true;
-                if (box->node() && box->node()->parentElement()) {
-                    Node* nd = box->node()->parentElement();
-                    if (nd->frame()->isFrameInline() &&
+                if (box->node() && box->node()->renderingBoxParentNode()) {
+                    Node* nd = box->node()->renderingBoxParentNode();
+                    if (nd->frame() && nd->frame()->isFrameInline() &&
                         nd->style()->position() == RelativePositionValue) {
                         dueToSelf = false;
                     }

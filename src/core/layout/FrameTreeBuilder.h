@@ -175,6 +175,10 @@ private:
                               bool force);
     static Frame* buildTree(Node* current, FrameTreeBuilderContext& ctx,
                             bool force);
+    // Builds the children and pseudo-elements of a `display: contents` node
+    // into ctx as-is; the node itself gets no frame.
+    static void buildBoxlessSubtree(Node* current, FrameTreeBuilderContext& ctx,
+                                    bool force);
     static void buildPseudoContentChild(FrameTreeBuilderContext& context,
                                         Node* parent, ContentData* child);
     static void buildListCounterInsideIfNeeds(FrameTreeBuilderContext& context,

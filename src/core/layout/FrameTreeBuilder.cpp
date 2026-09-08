@@ -151,10 +151,16 @@ bool FrameTreeBuilderContext::isInFrameTableFlow() const
 
 void FrameTreeBuilder::clearTree(Node* current)
 {
-    if (!current->frame())
-        return;
+    if (!current->frame()) {
+        // A `display: contents` node owns no frame but its children do, so
+        // keep descending to drop theirs. A display:none subtree stops here:
+        // its descendants had their style cleared with it.
+        if (!current->style() ||
+            current->style()->display() != DisplayValue::ContentsDisplayValue) {
+            return;
+        }
+    }
 
-    Frame* f = current->frame();
     current->setFrame(nullptr);
 
     RenderingSiblingIterator iter(current->firstRenderingChild());
@@ -459,7 +465,7 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
 
     if (ctx.isInFrameInlineFlow() && !isNormalFlowBlockChild) {
         auto iter =
-            ctx.frameInlineItem().find(currentNode->renderingParentNode());
+            ctx.frameInlineItem().find(currentNode->renderingBoxParentNode());
         if (iter != ctx.frameInlineItem().end()) {
             iter->second->appendChild(currentFrame);
         }
@@ -719,8 +725,8 @@ void FrameTreeBuilder::createPseudoElement(Node* parent,
             pseudoParentFrame = nextFrame->parent();
             parentStyle = nextFrame->style();
         }
-    } else if (pseudoElement->renderingParentNode()) {
-        pseudoParentFrame = pseudoElement->renderingParentNode()->frame();
+    } else if (pseudoElement->renderingBoxParentNode()) {
+        pseudoParentFrame = pseudoElement->renderingBoxParentNode()->frame();
     }
 
     if (!pseudoParentFrame) {
@@ -924,7 +930,10 @@ void FrameTreeBuilder::buildPseudoContentChild(FrameTreeBuilderContext& context,
 {
     STARFISH_ASSERT(parent->isBeforePseudoElement() ||
                     parent->isAfterPseudoElement());
-    STARFISH_ASSERT(parent->frame());
+    // The pseudo-element owns a frame unless it is itself `display: contents`,
+    // in which case its content runs attach to the surrounding context.
+    STARFISH_ASSERT(parent->frame() || parent->style()->display() ==
+                                           DisplayValue::ContentsDisplayValue);
 #ifndef NDEBUG
     FrameBlockBox* forCheckIntegrity = context.currentBlockContainer();
 #endif
@@ -955,6 +964,61 @@ void FrameTreeBuilder::buildPseudoContentChild(FrameTreeBuilderContext& context,
     STARFISH_ASSERT(forCheckIntegrity == context.currentBlockContainer());
 }
 
+void FrameTreeBuilder::buildBoxlessSubtree(Node* current,
+                                           FrameTreeBuilderContext& ctx,
+                                           bool force)
+{
+    // `display: contents` (css-display-3 #valdef-display-contents): the
+    // element generates no box, and its children and pseudo-elements generate
+    // boxes as if they were children of its parent. So they are built into the
+    // unchanged context -- same block container, inline/flex/table flow --
+    // exactly where this element's own frame would have gone.
+    bool rebuild = current->needsFrameTreeBuild() || force;
+    if (rebuild) {
+        clearTree(current);
+        current->clearNeedsFrameTreeBuild();
+        force = true;
+        createPseudoElement(current, PseudoElementType::PseudoElementBefore,
+                            ctx);
+    }
+
+    if (current->isBeforePseudoElement() || current->isAfterPseudoElement()) {
+        // A boxless ::before/::after still renders its `content`; the text
+        // and counter runs go where the pseudo-element's own box would have.
+        if (ContentDataGroup* content = current->style()->content()) {
+            for (auto iter = content->begin(); iter != content->end(); iter++) {
+                buildPseudoContentChild(ctx, current, &(*iter));
+            }
+        }
+    } else if (current->childNeedsFrameTreeBuild() || force) {
+        Node* frameCreationTarget = current;
+        if (current->isElement()) {
+            Optional<ShadowRoot*> shadowRoot =
+                current->asElement()->internalShadowRoot();
+            if (shadowRoot) {
+                frameCreationTarget = shadowRoot.value();
+            }
+        }
+
+        RenderingSiblingIterator iter(
+            frameCreationTarget->firstRenderingChild());
+        while (true) {
+            Optional<Node*> child = iter.next();
+            if (!child) {
+                break;
+            }
+            buildTree(child.value(), ctx, force);
+        }
+        frameCreationTarget->clearChildNeedsFrameTreeBuild();
+        current->clearChildNeedsFrameTreeBuild();
+    }
+
+    if (rebuild) {
+        createPseudoElement(current, PseudoElementType::PseudoElementAfter,
+                            ctx);
+    }
+}
+
 Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                                    bool force = false)
 {
@@ -968,6 +1032,11 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         if (!current->isCharacterData() && current->style()) {
             current->style()->blockify(current, true);
         }
+    }
+
+    if (current->style()->display() == DisplayValue::ContentsDisplayValue) {
+        buildBoxlessSubtree(current, ctx, force);
+        return nullptr;
     }
 
     if (UNLIKELY(current->isSVGSVGElement())) {
@@ -1010,8 +1079,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                     didSplitBlock = true;
                     currentFrame->markDidSpiltFrameInline();
 
-                    STARFISH_ASSERT(current->renderingParentNode());
-                    Frame* parent = current->renderingParentNode()->frame();
+                    STARFISH_ASSERT(current->renderingBoxParentNode());
+                    Frame* parent = current->renderingBoxParentNode()->frame();
                     while (parent) {
                         if (!parent->isAnonymous() &&
                             parent->isFrameBlockBox()) {
@@ -1020,9 +1089,13 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                         parent = parent->parent();
                     }
 
+                    // Walk the inline ancestors up to the block being split;
+                    // a boxless (display: contents) ancestor on the way has
+                    // no frame and no inline item, so it is simply passed
+                    // over.
                     Node* nd = current->renderingParentNode();
                     while (nd) {
-                        if (nd->frame()->isFrameBlockBox()) {
+                        if (nd->frame() && nd->frame()->isFrameBlockBox()) {
                             break;
                         }
                         auto iter = ctx.frameInlineItem().find(nd);

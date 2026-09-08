@@ -976,6 +976,11 @@ public:
         return m_display;
     }
 
+    bool parentIsBoxless() const
+    {
+        return m_parentIsBoxless;
+    }
+
     bool hasBlockLikeDisplay()
     {
         switch (display()) {
@@ -5080,6 +5085,7 @@ protected:
 
     void initNonInheritedStyles()
     {
+        m_parentIsBoxless = false;
         m_display = DisplayValue::InlineDisplayValue;
         m_position = PositionValue::StaticPositionValue;
         m_float = FloatValue::NoneFloatValue;
@@ -5141,6 +5147,10 @@ protected:
     bool m_seenPseudoElementBefore : 1;
     bool m_seenPseudoElementAfter : 1;
     bool m_gotInheritedColor : 1;
+    // The style this one inherits from belongs to a `display: contents`
+    // element, i.e. our owner's boxes attach to a further ancestor's frame.
+    // Cached so that layout hot paths need not walk the ancestor chain.
+    bool m_parentIsBoxless : 1;
     FloatValue m_float : 2;
     ClearValue m_clear : 2;
     DisplayValue m_display : 5;

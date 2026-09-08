@@ -2,19 +2,19 @@
 http://web-platform.test:8000/css/css-display/display-change-object-iframe.html
 http://web-platform.test:8000/css/css-display/display-contents-alignment-001.html
 http://web-platform.test:8000/css/css-display/display-contents-alignment-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-before-after-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-before-after-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-before-after-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-block-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-block-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-button.html
+http://web-platform.test:8000/css/css-display/display-contents-before-after-001.html
+http://web-platform.test:8000/css/css-display/display-contents-before-after-002.html
+http://web-platform.test:8000/css/css-display/display-contents-before-after-003.html
+http://web-platform.test:8000/css/css-display/display-contents-block-001.html
+http://web-platform.test:8000/css/css-display/display-contents-block-002.html
+http://web-platform.test:8000/css/css-display/display-contents-button.html
 http://web-platform.test:8000/css/css-display/display-contents-details-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-details.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-before-after-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-before-after-first-letter-001.html
+http://web-platform.test:8000/css/css-display/display-contents-details.html
+http://web-platform.test:8000/css/css-display/display-contents-dynamic-before-after-001.html
+http://web-platform.test:8000/css/css-display/display-contents-dynamic-before-after-first-letter-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-fieldset-legend-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-flex-001-inline.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-flex-001-none.html
+http://web-platform.test:8000/css/css-display/display-contents-dynamic-flex-001-inline.html
+http://web-platform.test:8000/css/css-display/display-contents-dynamic-flex-001-none.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-flex-002-inline.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-flex-002-none.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-flex-003-inline.html
@@ -24,50 +24,50 @@ http://web-platform.test:8000/css/css-display/display-contents-dynamic-generated
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-inline-flex-001-none.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-list-001-inline.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-list-001-none.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-multicol-001-inline.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-multicol-001-none.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-pseudo-insertion-001.html
+http://web-platform.test:8000/css/css-display/display-contents-dynamic-multicol-001-inline.html
+http://web-platform.test:8000/css/css-display/display-contents-dynamic-multicol-001-none.html
+http://web-platform.test:8000/css/css-display/display-contents-dynamic-pseudo-insertion-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-table-001-inline.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-table-001-none.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-table-002-inline.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-table-002-none.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-fieldset-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-fieldset-nested-legend.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-fieldset.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-first-letter-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-first-letter-002.html
+http://web-platform.test:8000/css/css-display/display-contents-fieldset-002.html
+http://web-platform.test:8000/css/css-display/display-contents-fieldset-nested-legend.html
+http://web-platform.test:8000/css/css-display/display-contents-fieldset.html
+http://web-platform.test:8000/css/css-display/display-contents-first-letter-001.html
+http://web-platform.test:8000/css/css-display/display-contents-first-letter-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-first-line-001.html
 http://web-platform.test:8000/css/css-display/display-contents-first-line-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-flex-001.html
+http://web-platform.test:8000/css/css-display/display-contents-flex-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-flex-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-flex-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-float-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-inline-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-inline-002.html
+http://web-platform.test:8000/css/css-display/display-contents-float-001.html
+http://web-platform.test:8000/css/css-display/display-contents-inline-001.html
+http://web-platform.test:8000/css/css-display/display-contents-inline-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-inline-flex-001.html
 http://web-platform.test:8000/css/css-display/display-contents-line-height.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-list-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-multicol-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-oof-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-oof-002.html
+http://web-platform.test:8000/css/css-display/display-contents-multicol-001.html
+http://web-platform.test:8000/css/css-display/display-contents-oof-001.html
+http://web-platform.test:8000/css/css-display/display-contents-oof-002.html
 http://web-platform.test:8000/css/css-display/display-contents-root-background.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-shadow-dom-1.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-shadow-host-whitespace.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-sharing-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-slot-attach-whitespace.html
+http://web-platform.test:8000/css/css-display/display-contents-shadow-host-whitespace.html
+http://web-platform.test:8000/css/css-display/display-contents-sharing-001.html
+http://web-platform.test:8000/css/css-display/display-contents-slot-attach-whitespace.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-state-change-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-suppression-dynamic-001.html
+http://web-platform.test:8000/css/css-display/display-contents-suppression-dynamic-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-svg-elements.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-table-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-table-002.html
 http://web-platform.test:8000/css/css-display/display-contents-table-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-td-001.html
+http://web-platform.test:8000/css/css-display/display-contents-td-001.html
 http://web-platform.test:8000/css/css-display/display-contents-text-inherit-002.html
 http://web-platform.test:8000/css/css-display/display-contents-text-inherit.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-text-only-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-tr-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-unusual-html-elements-none.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-whitespace-inside-inline.html
+http://web-platform.test:8000/css/css-display/display-contents-text-only-001.html
+http://web-platform.test:8000/css/css-display/display-contents-tr-001.html
+http://web-platform.test:8000/css/css-display/display-contents-unusual-html-elements-none.html
+http://web-platform.test:8000/css/css-display/display-contents-whitespace-inside-inline.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-display/display-first-line-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-flow-root-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-flow-root-002.html
