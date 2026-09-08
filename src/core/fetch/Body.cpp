@@ -350,6 +350,9 @@ String* Body::extract()
 
 bool Body::extractBinary(const char** data, size_t* size)
 {
+    *data = "";
+    *size = 0;
+
     if (!m_bodyInit.hasValue()) {
         return false;
     }
@@ -359,10 +362,11 @@ bool Body::extractBinary(const char** data, size_t* size)
     }
 
     createReadableStream();
-    if (!m_readableStream->isDisturbedOrLocked()) {
-        m_readableStream->lock();
-        m_readableStream->close();
+    if (m_readableStream->isDisturbedOrLocked()) {
+        // As in extractText(): an already read body extracts to nothing.
+        return true;
     }
+    m_readableStream->lock();
 
     auto byteBuffer = body.getArrayBufferViewOrArrayBufferValue();
     if (byteBuffer.isArrayBufferValue()) {
@@ -374,6 +378,8 @@ bool Body::extractBinary(const char** data, size_t* size)
         *data = (const char*)arrayBufferViewRawData(arrayBufferView);
         *size = arrayBufferViewByteSize(arrayBufferView);
     }
+
+    m_readableStream->close();
     return true;
 }
 
@@ -458,8 +464,11 @@ void Body::copyBody(Body* body)
                 srcBodyValue.getUSVStringValue()->toUTF8NonGCString();
             m_bodyInit = BodyInit::createUSVString(String::fromUTF8(
                 bodyValueString.data(), bodyValueString.size()));
+        } else if (srcBodyValue.isArrayBufferViewOrArrayBufferValue()) {
+            m_bodyInit = BodyInit::createArrayBufferViewOrArrayBuffer(
+                srcBodyValue.getArrayBufferViewOrArrayBufferValue());
         } else {
-            STARFISH_UNSUPPORTED("null BodyInit");
+            STARFISH_UNSUPPORTED("Copying this BodyInit type");
         }
     } else {
         if (body->body()) {

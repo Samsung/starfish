@@ -128,6 +128,9 @@ void Request::initialize(RequestInfo* input, NULLABLE RequestInit* init)
         Request* request = input->getRequestValue();
         RequestData* data = request->m_data;
 
+        // Without the URL every use of the new request - Request.url,
+        // fetch(request.clone()) - dereferences a null ResourceURL.
+        m_data->m_url = data->m_url;
         m_data->m_method = data->m_method;
         m_data->m_referrer = data->m_referrer;
         m_data->m_mode = data->m_mode;
