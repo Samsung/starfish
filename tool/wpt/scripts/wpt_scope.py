@@ -16,6 +16,45 @@
 """Inventory helpers for WPT `.res` lists."""
 
 import os
+from urllib.parse import urlsplit
+
+
+def compare_inventory(manifest_items, ci_entries):
+    """Compare candidate keys with active CI entries without selecting tests.
+
+    manifest_items contains (type, URL) keys; ci_entries maps each requested
+    type to (list name, URL) pairs from collect(..., False). Callers supply
+    the actual CI lists, including separately scheduled suites. Missing CI
+    keys are never silently added to the MANIFEST or treated as executable.
+    URL queries and origins remain significant. List provenance is retained
+    for duplicate entries and diagnostics.
+    """
+    candidates = set(manifest_items)
+    provenance = {}
+    for kind, entries in ci_entries.items():
+        for name, url in entries:
+            provenance.setdefault((kind, url), set()).add(name)
+    ci = set(provenance)
+    same_type_path = set()
+    other_types = {}
+    for kind, url in candidates:
+        parsed = urlsplit(url)
+        path = (parsed.path, parsed.query, parsed.fragment)
+        same_type_path.add((kind, path))
+        other_types.setdefault(path, set()).add(kind)
+    missing = {}
+    for kind, url in ci - candidates:
+        parsed = urlsplit(url)
+        path = (parsed.path, parsed.query, parsed.fragment)
+        if (kind, path) in same_type_path:
+            reason = "origin_mismatch"
+        elif path in other_types:
+            reason = "type_mismatch"
+        else:
+            reason = "absent"
+        missing[(kind, url)] = reason
+    return {"covered": ci & candidates, "missing": missing,
+            "additional": candidates - ci, "ci_sources": provenance}
 
 
 def read_res(path, force=False):

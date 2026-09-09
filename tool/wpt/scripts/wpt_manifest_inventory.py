@@ -24,6 +24,22 @@ DEFAULT_TARGETS = os.path.join(_HERE, os.pardir, "wpt_status_targets.txt")
 SERVER = "http://web-platform.test:8000"
 
 
+def manifest_inventory(manifest, test_types):
+    """Return unique (type, URL) candidates across entire requested branches.
+
+    Keep the existing HTTP URL convention used by nightly and CI lists.
+    This is inventory, not execution eligibility: no Worker or capability
+    filtering is performed. Missing branches fail rather than look empty.
+    """
+    inventory = set()
+    prefix = SERVER + manifest["url_base"].rstrip("/") + "/"
+    for kind in test_types:
+        urls = []
+        _collect_urls(manifest["items"][kind], "", urls)
+        inventory.update((kind, prefix + url.lstrip("/")) for url in urls)
+    return inventory
+
+
 def read_targets(path):
     dirs = []
     with open(path) as fp:
