@@ -641,6 +641,8 @@ test/cairo/internal-test/css/opacity/opacity-layer-image-alpha.html
 test/cairo/internal-test/css/incremental/incremental_layout_relative_position_bug01.html
 test/cairo/internal-test/css/incremental/quicklayout-rel-pos-box-bug.html
 test/cairo/internal-test/css/incremental/quicklayout-rel-pos-box-bug-01.html
+test/cairo/internal-test/css/incremental/quicklayout-abspos-offset-in-padding-box.html
+test/cairo/internal-test/css/incremental/quicklayout-abspos-in-basis-measurement.html
 test/cairo/internal-test/css/incremental/flex-item-resolve-height-correctly.html
 test/cairo/internal-test/css/stackingcontext/iframe_border_with_composite.html
 test/cairo/internal-test/css/stackingcontext/fixed-inside-buffered-ancestors.html
