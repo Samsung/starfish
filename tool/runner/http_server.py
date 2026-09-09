@@ -5,13 +5,73 @@
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from contextlib import contextmanager
 from functools import partial
+from urllib.parse import urlparse
+import json
 import signal
 import errno
 import sys
 import os
 
+# A request to this path is answered with a description of that request instead
+# of a file. Serving files can only show a test what is on disk; a test that
+# checks what its own request put on the wire -- the bytes of a fetch() body,
+# the method it went out with -- needs the request itself reflected back.
+ECHO_PATH = "/echo"
+
 
 class RequestHandler(SimpleHTTPRequestHandler):
+    def is_echo_request(self):
+        return urlparse(self.path).path == ECHO_PATH
+
+    def echo_request(self):
+        length = int(self.headers.get("Content-Length") or 0)
+        body = self.rfile.read(length) if length else b""
+        payload = json.dumps(
+            {
+                "method": self.command,
+                "contentType": self.headers.get("Content-Type"),
+                "contentLength": self.headers.get("Content-Length"),
+                "bodyHex": body.hex(),
+                "bodyLen": len(body),
+            }
+        ).encode("utf-8")
+
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(payload)))
+        # Test documents load over file://, so every echo request is
+        # cross-origin and its response is unreadable without this.
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        self.wfile.write(payload)
+
+    def do_GET(self):
+        if self.is_echo_request():
+            self.echo_request()
+            return
+        super().do_GET()
+
+    def do_POST(self):
+        if self.is_echo_request():
+            self.echo_request()
+            return
+        self.send_error(405)
+
+    do_PUT = do_POST
+
+    def do_OPTIONS(self):
+        # A PUT is not a CORS-safelisted method, so a conforming engine sends
+        # a preflight before it and drops the request if this does not answer.
+        if not self.is_echo_request():
+            self.send_error(405)
+            return
+        self.send_response(204)
+        self.send_header("Content-Length", "0")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+
     def end_headers(self):
         if options.no_cache:
             self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
