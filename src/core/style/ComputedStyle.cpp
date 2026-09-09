@@ -29,6 +29,7 @@
 #include "core/dom/Node.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
+#include "core/dom/HTMLDialogElement.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/PseudoElement.h"
 #include "core/page/BrowsingContext.h"
@@ -720,16 +721,27 @@ static bool unboxesAsNone(Node* current)
     return false;
 }
 
+static bool isInTopLayer(Node* current)
+{
+    if (current->isHTMLDialogElement() &&
+        current->asHTMLDialogElement()->isInShowModal()) {
+        return true;
+    }
+    return current->document()->fullscreenElement() == current;
+}
+
 void ComputedStyle::blockify(Node* current, bool force)
 {
     if (m_display == DisplayValue::ContentsDisplayValue && current) {
         // css-display-3 #transformations: the root element's `contents`
-        // computes to `block`. Elsewhere blockification leaves `contents`
-        // alone -- a boxless element has nothing for float/position to act
-        // on. Its children become the flex/grid items in its place; they are
-        // wrapped at the frame level (FrameTreeBuilder) but their computed
-        // display is not blockified here, unlike direct items.
-        if (current->isHTMLHtmlElement()) {
+        // computes to `block`, and so does a top layer element's (a modal
+        // dialog, the fullscreen element -- css-position-4 #top-layer).
+        // Elsewhere blockification leaves `contents` alone -- a boxless
+        // element has nothing for float/position to act on. Its children
+        // become the flex/grid items in its place; they are wrapped at the
+        // frame level (FrameTreeBuilder) but their computed display is not
+        // blockified here, unlike direct items.
+        if (current->isHTMLHtmlElement() || isInTopLayer(current)) {
             m_display = DisplayValue::BlockDisplayValue;
         } else if (unboxesAsNone(current)) {
             m_display = DisplayValue::NoneDisplayValue;

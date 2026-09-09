@@ -2579,7 +2579,14 @@ bool LineFormattingContext::canAppendToCurrentLine(FrameBox* box,
                                                    LayoutUnit width)
 {
     bool wrapLine;
-    if (box->layoutParent()->isLineBox()) {
+    if (box->isInlineTextBox() && box->Frame::style()->parentIsBoxless()) {
+        // Text under a `display: contents` element wraps per that element's
+        // `white-space`, which its own style carries (css-text-3: the
+        // property applies to text); the layout parent's value would be the
+        // box parent's. Everywhere else the layout parent decides, as it does
+        // for a textarea's inner editor whose box overrides the text's value.
+        wrapLine = box->shouldWrapLines();
+    } else if (box->layoutParent()->isLineBox()) {
         wrapLine = m_block->shouldWrapLines();
     } else {
         wrapLine = box->layoutParent()->shouldWrapLines();
