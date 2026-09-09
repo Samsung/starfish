@@ -222,6 +222,36 @@ void ShadowRoot::connectSlotWithSlottables()
         }
         if (changed) {
             document()->signalSlotChange(slots[i]);
+
+            // The slot's flat-tree children are its assigned nodes, or its
+            // own children (fallback content) when nothing is assigned. The
+            // top-down style-recalc walk only descends into a slot whose
+            // "child needs recalc" bit is set, and fallback content is not
+            // visited at all while nodes are assigned, so when the last
+            // assigned node leaves, mark the fallback content dirty
+            // ourselves: it is about to render for the first time (or again)
+            // with whatever style it last had -- possibly none.
+            if (newNodes.empty()) {
+                for (Node* child = slots[i]->firstChild(); child;
+                     child = child->nextSibling()) {
+                    child->setNeedsStyleRecalc();
+                }
+            } else if (oldNodes.empty()) {
+                // The fallback content just left the flat tree; nothing will
+                // visit it again, so drop its now-stale style rather than
+                // keep serving it (and keep the pool entries) until the slot
+                // empties again.
+                for (Node* child = slots[i]->firstChild(); child;
+                     child = child->nextSibling()) {
+                    child->clearCachedStyleRecursively();
+                }
+            }
+
+            // The nodes moved between slots keep their frames, so a style
+            // recalc alone would not move their boxes; rebuild from the
+            // slot's box parent (or the slot's own box) so both the old and
+            // the new slot re-collect their children.
+            slots[i]->setNeedsFrameTreeBuild();
         }
 
         // A node newly assigned here (whether it had no slot before, or a

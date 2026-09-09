@@ -387,139 +387,63 @@ public:
     }
 };
 
+// Iterates the rendering-tree (flat-tree) siblings starting at `node`, which
+// callers take from Node::firstRenderingChild(). A slot's flat-tree children
+// are its assigned nodes (css-scoping-1 #flat-tree); they are not DOM siblings
+// of one another, so when `node` is a slotted node the iterator walks its
+// slot's assigned-node list instead of nextSibling(). The slot itself is an
+// ordinary rendering-tree node: the UA sheet's `display: contents` is what
+// keeps it from generating a box.
 class RenderingSiblingIterator {
 public:
     RenderingSiblingIterator(Node* node)
         : m_currentNode(node)
-        , m_slotAssignedNodesIndex(SIZE_MAX)
+        , m_assignedNodes(nullptr)
+        , m_index(0)
     {
-        updateNode(node);
-    }
-
-    RenderingSiblingIterator(const RenderingSiblingIterator& other)
-        : m_currentNode(other.m_currentNode)
-        , m_slotAssignedNodesIndex(other.m_slotAssignedNodesIndex)
-        , m_slotAssignedNodes(other.m_slotAssignedNodes)
-    {
-    }
-
-    const RenderingSiblingIterator& operator=(
-        const RenderingSiblingIterator& other)
-    {
-        m_currentNode = other.m_currentNode;
-        m_slotAssignedNodesIndex = other.m_slotAssignedNodesIndex;
-        m_slotAssignedNodes = other.m_slotAssignedNodes;
-        return *this;
+        if (node && node->isSlotted()) {
+            if (Optional<HTMLSlotElement*> slot =
+                    node->assignedSlotInternal()) {
+                const GCVector<Node*>& nodes =
+                    slot.value()->immutableAssignedNodes();
+                for (size_t i = 0; i < nodes.size(); i++) {
+                    if (nodes[i] == node) {
+                        m_assignedNodes = &nodes;
+                        m_index = i;
+                        break;
+                    }
+                }
+                // "find a slot" and the slot's assigned list are rebuilt
+                // together by ShadowRoot::connectSlotWithSlottables; a slotted
+                // node is always in its slot's list.
+                STARFISH_ASSERT(m_assignedNodes);
+            }
+        }
     }
 
     Optional<Node*> next()
     {
-        // Returns next sibling in rendering tree, flattening slot content.
-        // Slot elements are transparent: their assigned nodes are returned
-        // instead.
-        while (true) {
-            // Case A: Currently iterating through a slot's assigned nodes
-            // (m_slotAssignedNodesIndex is valid index, not SIZE_MAX)
-            if (m_slotAssignedNodesIndex != SIZE_MAX) {
-                if (m_slotAssignedNodesIndex < m_slotAssignedNodes.size()) {
-                    // Return next assigned node from slot
-                    Node* c = m_slotAssignedNodes[m_slotAssignedNodesIndex];
-                    m_slotAssignedNodesIndex++;
-                    STARFISH_ASSERT(!c->isFlattenedAwaySlot());
-                    return c;
-                }
-                // Exhausted all assigned nodes for this slot
-                // Reset and move to slot's next sibling
-                m_slotAssignedNodesIndex = SIZE_MAX;
-                m_slotAssignedNodes.clear();
-
-                STARFISH_ASSERT(m_currentNode);
-                updateNode(m_currentNode->nextSibling());
-                continue;
+        if (m_assignedNodes) {
+            if (m_index < m_assignedNodes->size()) {
+                return (*m_assignedNodes)[m_index++];
             }
-
-            // Case B: Normal node iteration (not inside slot's assigned nodes)
-            Optional<Node*> c = m_currentNode;
-            if (m_currentNode) {
-                // Advance to next sibling for subsequent calls
-                updateNode(m_currentNode->nextSibling());
-            }
-            // If current node is a shadow-tree slot, updateNode() prepared
-            // its assigned nodes. Skip returning the slot itself - continue to
-            // get actual content.
-            if (c.hasValue() && c.value() && c.value()->isFlattenedAwaySlot()) {
-                continue;
-            }
-            STARFISH_ASSERT(!c || !c->isFlattenedAwaySlot());
-            return c;
+            return nullptr;
         }
+
+        Node* c = m_currentNode;
+        if (c) {
+            m_currentNode = c->nextSibling();
+        }
+        return c;
     }
 
 private:
-    void updateNode(Node* node)
-    {
-        // Update the iterator state to point to the given node.
-        // For shadow-tree slot elements, we collect their assigned nodes and
-        // iterate through those instead of the slot element itself, since
-        // such slots are "transparent" in the rendering tree - they don't
-        // render themselves, only their assigned content. A <slot> outside a
-        // shadow tree is an ordinary element (Node::isFlattenedAwaySlot) and
-        // takes Case 1.
-
-        while (node) {
-            // Case 1: Non-slot node - use it directly
-            if (LIKELY(!node->isFlattenedAwaySlot())) {
-                m_slotAssignedNodes.clear();
-                m_slotAssignedNodesIndex = SIZE_MAX;
-                m_currentNode = node;
-                return;
-            }
-
-            // Case 2: Slot element - collect assigned nodes to iterate
-            // through Slots are transparent in rendering: we return their
-            // assigned content, not the slot element itself.
-            m_slotAssignedNodesIndex = 0;
-            m_currentNode = node;
-
-            // Get flattened assigned nodes (includes nested slot content)
-            AssignedNodesOptions opt;
-            opt.setFlatten(true);
-            m_slotAssignedNodes = node->asHTMLSlotElement()->assignedNodes(
-                Optional<AssignedNodesOptions>(opt));
-
-            // If no assigned nodes from the slot's assignedNodes(),
-            // collect rendering children directly (e.g., slot's fallback
-            // content)
-            if (!m_slotAssignedNodes.size()) {
-                RenderingSiblingIterator iter = node->firstRenderingChild();
-                while (true) {
-                    Optional<Node*> child = iter.next();
-                    if (!child) {
-                        break;
-                    }
-                    m_slotAssignedNodes.push_back(child.value());
-                }
-            }
-
-            // If we found assigned nodes, return and let next() iterate
-            // through them
-            if (m_slotAssignedNodes.size()) {
-                return;
-            } else {
-                // Empty slot with no content - skip to next sibling
-                node = node->nextSibling();
-            }
-        }
-
-        // No more nodes - reset to end state
-        m_slotAssignedNodes.clear();
-        m_slotAssignedNodesIndex = SIZE_MAX;
-        m_currentNode = nullptr;
-    }
-
-    Optional<Node*> m_currentNode;
-    size_t m_slotAssignedNodesIndex;
-    GCVector<Node*> m_slotAssignedNodes;
+    Node* m_currentNode;
+    // Points into the live slot's member; the slot outlives this stack-local
+    // iterator, and assignments only change on DOM mutation, never during a
+    // style or frame-tree pass.
+    const GCVector<Node*>* m_assignedNodes;
+    size_t m_index;
 };
 } // namespace Starfish
 
