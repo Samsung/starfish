@@ -10019,7 +10019,7 @@ static ComputedStyleDamage applyStyleToElement(
                         // whose child bit is set, and boxless ancestors
                         // between the two (a slot, a display:contents
                         // wrapper) would otherwise stop it short.
-                        element->renderingParentNode()
+                        element->renderingParentElement()
                             ->propagateMarkChildNeedsFrameTreeBuild();
                         needsToExecuteNormalPath = false;
                     }
