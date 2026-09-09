@@ -545,6 +545,23 @@ html/syntax, html/rendering, cors. Strong: css, dom, html/canvas, workers, xhr.
 
 ## Status board (wpt.fyi-comparable)
 
+The inventory foundation for a future full-manifest nightly is separate from
+execution: `wpt_manifest_inventory.manifest_inventory` enumerates unique
+`(test type, URL)` candidates across complete branches, and
+`wpt_scope.compare_inventory` compares them with active CI list entries while
+retaining source-list provenance. Origin differences, type differences and
+missing URLs are diagnostics, not automatic additions. These helpers preserve
+the current HTTP URL convention; they do not assert canonical protocol support
+or filter Worker tests. The current nightly target selection is unchanged.
+Callers must supply all relevant active CI lists, including separate suites;
+an inventory is not proof that those tests completed a nightly run.
+
+The contract tests use synthetic data and start no browser or WPT server:
+
+```sh
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 -B -m unittest discover -s tool/wpt/scripts -p test_wpt_inventory.py
+```
+
 The nightly status board at <https://pages.github.sec.samsung.net/lws/starfish/>
 runs *un-curated* spec directories (`tool/wpt/wpt_status_targets.txt`) to reveal
 where Starfish is strong or weak per spec area — unlike the CI gate above, which
