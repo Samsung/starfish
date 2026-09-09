@@ -10107,6 +10107,28 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
     return damage;
 }
 
+// The children of `parent` are styled against the box parent, so when
+// `parent` gains or loses its box they are re-resolved. A `display:
+// contents` child shares that box parent with its own children, so the
+// marking follows such children down; a boxed child ends it.
+static void markChildrenNeedsStyleRecalcForBoxChange(Node* parent)
+{
+    parent->markChildNeedsStyleRecalc();
+
+    RenderingSiblingIterator iter(parent->firstRenderingChild());
+    while (true) {
+        Optional<Node*> child = iter.next();
+        if (!child) {
+            break;
+        }
+        child->markNeedsStyleRecalc();
+        if (child->isElement() && child->style() &&
+            child->style()->display() == DisplayValue::ContentsDisplayValue) {
+            markChildrenNeedsStyleRecalcForBoxChange(child.value());
+        }
+    }
+}
+
 static void clearStyle(StyleResolveContext& ctx, Element* element)
 {
     STARFISH_ASSERT(element != nullptr);
@@ -10260,6 +10282,10 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
                         grandChild->markNeedsStyleRecalc();
                     }
                 }
+            }
+
+            if (damage & ComputedStyleDamage::ComputedStyleDamageBoxChange) {
+                markChildrenNeedsStyleRecalcForBoxChange(child.value());
             }
 
             child->m_gotInheritedStyleDirty =

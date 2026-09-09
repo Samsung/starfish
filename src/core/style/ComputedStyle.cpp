@@ -1605,6 +1605,21 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
     }
 
+    // Children of a `display: contents` element are styled against the box
+    // parent (m_parentIsBoxless, `auto` align-self/justify-self), so gaining
+    // or losing the box changes their computed style even though nothing
+    // inherited did. Compare the computed display, not the specified one:
+    // a top layer element blockifies `contents` while it is in the top
+    // layer, so its box can come and go with the check above seeing no
+    // change.
+    if ((newStyle->m_display == DisplayValue::ContentsDisplayValue) !=
+        (oldStyle->m_display == DisplayValue::ContentsDisplayValue)) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Display] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageBoxChange |
+            ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+    }
+
     if (newStyle->m_position != oldStyle->m_position) {
         damagedKeys[CSSStyleValuePair::KeyKind::Position] = true;
         damage = static_cast<ComputedStyleDamage>(

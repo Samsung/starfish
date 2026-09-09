@@ -66,7 +66,11 @@ enum ComputedStyleDamage {
     // The geometry inside an <svg> viewport changed. An SVG box folds its
     // transform into its frame rect, so this still needs a layout pass - but
     // only of that viewport's content, not of the whole document.
-    ComputedStyleDamageSVGViewportContent = 1 << 8
+    ComputedStyleDamageSVGViewportContent = 1 << 8,
+    // The element gained or lost its box (`display: contents` toggled). Its
+    // children are styled against the box parent, so they are re-resolved;
+    // nothing inherited changed, so the rest of the subtree is not.
+    ComputedStyleDamageBoxChange = 1 << 9
 };
 
 union FontFamilyData {
