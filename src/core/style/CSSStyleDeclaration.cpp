@@ -1344,6 +1344,13 @@ CSSStyleValuePair CSSStyleDeclaration::lengthToCSSStyleValue(Length len)
         p.setCalcValue(len.calcData());
     } else if (len.isInheritableNumber()) {
         p.setNumberValue(len.inheritableNumber());
+    } else if (len.isIntrinsic()) {
+        p.setValueKind(
+            CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind);
+        p.setValue(len.isFitContent() ? WidthHeightKeywordValue::FitContentValue
+                   : len.isMinContent()
+                       ? WidthHeightKeywordValue::MinContentValue
+                       : WidthHeightKeywordValue::MaxContentValue);
     } else {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
