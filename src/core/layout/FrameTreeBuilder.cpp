@@ -152,11 +152,13 @@ bool FrameTreeBuilderContext::isInFrameTableFlow() const
 void FrameTreeBuilder::clearTree(Node* current)
 {
     if (!current->frame()) {
-        // A `display: contents` node owns no frame but its children do, so
-        // keep descending to drop theirs. A display:none subtree stops here:
-        // its descendants had their style cleared with it.
-        if (!current->style() ||
-            current->style()->display() != DisplayValue::ContentsDisplayValue) {
+        // A frameless node may still have children holding frames: a
+        // `display: contents` node never owns one, and a node that just lost
+        // its box (e.g. a slot styled display:none whose slotted content was
+        // rendered before) has not had its children swept yet. Keep
+        // descending while there is a style to go on; the descendants of a
+        // display:none subtree had theirs cleared, so the walk stops there.
+        if (!current->style()) {
             return;
         }
     }
@@ -170,6 +172,17 @@ void FrameTreeBuilder::clearTree(Node* current)
             break;
         }
         clearTree(child.value());
+    }
+
+    // A slot's rendering children are its assigned nodes; its fallback
+    // content, rendered until those nodes were assigned, may still hold
+    // frames that the walk above no longer reaches.
+    if (current->isHTMLSlotElement() &&
+        current->asHTMLSlotElement()->immutableAssignedNodes().size()) {
+        for (Node* child = current->firstChild(); child;
+             child = child->nextSibling()) {
+            clearTree(child);
+        }
     }
 }
 

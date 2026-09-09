@@ -76,6 +76,18 @@ public:
 
     String* slotName();
 
+    // Flat-tree children of a slot are its assigned nodes, or its own
+    // children (fallback content) when nothing is assigned (css-scoping-1
+    // #flat-tree). RenderingSiblingIterator continues along the assigned list
+    // from the node returned here.
+    virtual Node* firstRenderingChild() override
+    {
+        if (m_assignedNodes.size()) {
+            return m_assignedNodes[0];
+        }
+        return firstChild();
+    }
+
     const GCVector<Node*>& immutableAssignedNodes() const
     {
         return m_assignedNodes;

@@ -557,12 +557,12 @@ Optional<HTMLSlotElement*> Node::assignedSlotInternal() const
 
 Node* Node::renderingParentNode() const
 {
-    // Returns the parent node in rendering tree, considering shadow DOM slot
-    // assignment. If parent has shadow root and this node is assigned to a
-    // slot, returns slot's parent.
+    // Returns the parent in the rendering (flat) tree. A slotted node's
+    // flat-tree parent is its slot (css-scoping-1 #flat-tree): the slot is
+    // what it inherits from and, when the slot generates a box, lays out in.
 
     if (Optional<HTMLSlotElement*> slot = assignedSlotInternal()) {
-        return slot.value()->renderingParentNode();
+        return slot.value();
     }
 
     // Shadow root boundary: return host element

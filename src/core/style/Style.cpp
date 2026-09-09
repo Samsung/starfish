@@ -8257,7 +8257,10 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     // promoted from that same tree apply.
     // ::slotted() represents the elements assigned *after flattening* to a
     // slot (css-shadow-1 #slotted-pseudo), so a flattened-away <slot> is
-    // never one of them.
+    // never one of them. Only the directly assigned slot's tree is consulted:
+    // when that slot is itself slotted into an outer tree, the outer tree's
+    // ::slotted() rules should also reach this element, which is not
+    // implemented yet.
     if (UNLIKELY(m_hasSlottedSelector) && element->isSlotted() &&
         !element->isFlattenedAwaySlot()) {
         Optional<HTMLSlotElement*> slot = element->assignedSlotInternal();
@@ -10011,7 +10014,13 @@ static ComputedStyleDamage applyStyleToElement(
 
                         element->markAncestorStackingContextVisibleRectDirty();
                         element->markNeedsFrameTreeBuild();
-                        e->propagateMarkChildNeedsFrameTreeBuild();
+                        // Mark from the element's own rendering parent, not
+                        // from `e`: the builder only descends into a node
+                        // whose child bit is set, and boxless ancestors
+                        // between the two (a slot, a display:contents
+                        // wrapper) would otherwise stop it short.
+                        element->renderingParentNode()
+                            ->propagateMarkChildNeedsFrameTreeBuild();
                         needsToExecuteNormalPath = false;
                     }
 
@@ -10317,12 +10326,15 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
                         (parentElement->frame() ||
                          parentElementStyle->display() ==
                              DisplayValue::ContentsDisplayValue)) {
+                        // Walk the flat tree: a slot's parent chain leaves
+                        // the shadow tree at its host, where a DOM walk would
+                        // stop at the shadow root.
                         Element* e = parentElement->asElement();
                         while (e) {
                             if (e->style()->hasBlockLikeDisplay()) {
                                 break;
                             }
-                            e = e->parentElement();
+                            e = e->renderingParentElement();
                         }
                         if (e && e->frame() && !e->frame()->isFrameDocument()) {
                             window()

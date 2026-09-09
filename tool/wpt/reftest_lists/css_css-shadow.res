@@ -5,11 +5,11 @@ http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-host-functional-
 http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-host-rule.html
 http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-host-with-before-after.html
 http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-invisible-slot.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-nested-slot-display-override.html
+http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-nested-slot-display-override.html
 http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-root-hides-children.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slot-display-override.html
+http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slot-display-override.html
 http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slot-fallback.html
-# [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slot-style.html
+http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slot-style.html
 http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slot.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slotted-nested.html
 http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slotted-rule.html
@@ -17,24 +17,24 @@ http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-with-outside-rul
 http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-with-rules-no-style-leak.html
 http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-with-rules.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-002.html
+# [vacuous-pass:HAS_SLOTTED_UNIMPLEMENTED] http://web-platform.test:8000/css/css-shadow/has-slotted-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-flattened-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-flattened-002.html
+# [vacuous-pass:HAS_SLOTTED_UNIMPLEMENTED] http://web-platform.test:8000/css/css-shadow/has-slotted-flattened-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-flattened-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-flattened-004.html
+# [vacuous-pass:HAS_SLOTTED_UNIMPLEMENTED] http://web-platform.test:8000/css/css-shadow/has-slotted-flattened-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-001.tentative.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-002.tentative.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-003.tentative.html
+# [vacuous-pass:HAS_SLOTTED_UNIMPLEMENTED] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-002.tentative.html
+# [vacuous-pass:HAS_SLOTTED_UNIMPLEMENTED] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-003.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-004.tentative.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-005.tentative.html
+# [vacuous-pass:HAS_SLOTTED_UNIMPLEMENTED] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-005.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-006.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-007.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-flattened-001.tentative.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-flattened-002.tentative.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-flattened-003.tentative.html
+# [vacuous-pass:HAS_SLOTTED_UNIMPLEMENTED] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-flattened-002.tentative.html
+# [vacuous-pass:HAS_SLOTTED_UNIMPLEMENTED] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-flattened-003.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-flattened-004.tentative.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-flattened-005.tentative.html
+# [vacuous-pass:HAS_SLOTTED_UNIMPLEMENTED] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-flattened-005.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/has-slotted-functional-flattened-006.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/host-context-specificity-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/host-context-specificity-002.html
@@ -75,7 +75,7 @@ http://web-platform.test:8000/css/css-shadow/host-specificity.html
 http://web-platform.test:8000/css/css-shadow/part/interaction-with-placeholder.html
 http://web-platform.test:8000/css/css-shadow/part/part-after-combinator-invalidation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/part/part-nested-pseudo.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/reslot-text-inheritance.html
+http://web-platform.test:8000/css/css-shadow/reslot-text-inheritance.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/scoped-reference-animation-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/scoped-reference-animation-002.html
 http://web-platform.test:8000/css/css-shadow/shadow-assign-dynamic-001.html
@@ -83,7 +83,7 @@ http://web-platform.test:8000/css/css-shadow/shadow-assign-dynamic-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/shadow-directionality-001.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/shadow-directionality-002.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/shadow-disabled-sheet-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/shadow-fallback-dynamic-001.html
+http://web-platform.test:8000/css/css-shadow/shadow-fallback-dynamic-001.html
 http://web-platform.test:8000/css/css-shadow/shadow-fallback-dynamic-002.html
 http://web-platform.test:8000/css/css-shadow/shadow-fallback-dynamic-003.html
 http://web-platform.test:8000/css/css-shadow/shadow-fallback-dynamic-004.html

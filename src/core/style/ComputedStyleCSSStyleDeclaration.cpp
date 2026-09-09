@@ -21,6 +21,7 @@
 
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
+#include "core/dom/HTMLSlotElement.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
@@ -133,6 +134,12 @@ ComputedStyleCSSStyleDeclaration::resolveStyleOfNonRenderedElement()
         Element* parent = n->parentElement();
         if (parent && parent->isShadowRootHost() &&
             !n->assignedSlotInternal()) {
+            return nullptr;
+        }
+        // Likewise a slot's fallback content while the slot has assigned
+        // nodes (css-scoping-1 #flat-tree).
+        if (parent && parent->isHTMLSlotElement() &&
+            parent->asHTMLSlotElement()->immutableAssignedNodes().size()) {
             return nullptr;
         }
         chain.push_back(n->asElement());
