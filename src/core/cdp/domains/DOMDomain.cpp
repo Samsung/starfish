@@ -27,6 +27,7 @@
 #include "../CDPSession.h"
 #include "../NodeRegistry.h"
 #include "../RemoteObject.h"
+#include "PageDomain.h"
 #include "core/page/WebView.h"
 #include "core/page/BrowsingContext.h"
 #include "core/dom/Document.h"
@@ -36,6 +37,7 @@
 #include "core/dom/CharacterData.h"
 #include "core/dom/NodeList.h"
 #include "core/dom/HTMLInputElement.h"
+#include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/Event.h"
 #include "core/dom/EventTarget.h"
@@ -202,12 +204,15 @@ void DOMDomain::processMessage(CDPCommand& cmd, const std::string& method)
     }
 
     if (method == "describeNode") {
-        // Puppeteer resolves ElementHandles via objectId; also accept nodeId.
+        // Accept objectId, backendNodeId, or nodeId.
         Node* node = nullptr;
         if (cmd.params() && cmd.params()->HasMember("objectId") &&
             (*cmd.params())["objectId"].IsString()) {
             node = nodeFromObjectId(m_dispatcher,
                                     (*cmd.params())["objectId"].GetString());
+        } else if (cmd.params() && cmd.params()->HasMember("backendNodeId") &&
+                   (*cmd.params())["backendNodeId"].IsInt()) {
+            node = reg->lookup((*cmd.params())["backendNodeId"].GetInt());
         } else {
             node = reg->lookup(paramNodeId(cmd));
         }
@@ -225,6 +230,21 @@ void DOMDomain::processMessage(CDPCommand& cmd, const std::string& method)
         rapidjson::Value result(rapidjson::kObjectType);
         rapidjson::Value n(rapidjson::kObjectType);
         reg->serializeNode(node, depth, n, alloc);
+        if (node->isHTMLIFrameElement()) {
+            Optional<BrowsingContext*> context =
+                node->asHTMLIFrameElement()->browsingContext();
+            if (context) {
+                std::string frameId =
+                    m_dispatcher->page()->frameIdForBrowsingContext(
+                        context.value());
+                if (!frameId.empty()) {
+                    n.AddMember("frameId",
+                                rapidjson::Value(frameId.c_str(),
+                                                 frameId.size(), alloc),
+                                alloc);
+                }
+            }
+        }
         result.AddMember("node", n, alloc);
         cmd.sendResult(result, out);
         return;

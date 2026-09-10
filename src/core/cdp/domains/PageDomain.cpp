@@ -947,7 +947,7 @@ void PageDomain::discoverChildFrames(const std::string& sessionId)
     }
 }
 
-BrowsingContext* PageDomain::browsingContextForExecutionContextId(
+Optional<BrowsingContext*> PageDomain::browsingContextForExecutionContextId(
     uint32_t contextId)
 {
     CDPSession* s = m_dispatcher->session();
@@ -978,6 +978,41 @@ BrowsingContext* PageDomain::browsingContextForExecutionContextId(
     }
 
     return resolveByPath(wv, path);
+}
+
+Optional<BrowsingContext*> PageDomain::browsingContextForFrameId(
+    const std::string& frameId)
+{
+    CDPSession* session = m_dispatcher->session();
+    WebView* webView = m_dispatcher->webView();
+    if (frameId == session->frameId) {
+        return webView->mainBrowsingContext();
+    }
+
+    ensureChildFrameRecords();
+    for (const ChildFrame& child : session->childFrames) {
+        if (child.frameId == frameId) {
+            return resolveByPath(webView, child.path);
+        }
+    }
+    return nullptr;
+}
+
+std::string PageDomain::frameIdForBrowsingContext(BrowsingContext* context)
+{
+    CDPSession* session = m_dispatcher->session();
+    WebView* webView = m_dispatcher->webView();
+    if (context == webView->mainBrowsingContext()) {
+        return session->frameId;
+    }
+
+    ensureChildFrameRecords();
+    for (const ChildFrame& child : session->childFrames) {
+        if (resolveByPath(webView, child.path) == context) {
+            return child.frameId;
+        }
+    }
+    return std::string();
 }
 
 void PageDomain::emitScreencastFrame(WebView* wv, const std::string& sessionId,

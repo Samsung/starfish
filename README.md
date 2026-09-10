@@ -100,6 +100,9 @@ Default values are in **bold**.
   Enable coverage measurements with gcov
 * -DSHELL=[ **x11** | glib_headless ]<br>
   Create an executable build target.
+* -DCLI=[ **0** | 1 ]<br>
+  Build the CLI on Linux. Requires a shell executable and
+  -DSTARFISH_ENABLE_CDP=1.
 
 ### Directory Structure
 Starfish is compiled to ``out/release`` (or ``out/debug``) directory.
@@ -329,6 +332,9 @@ xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py
 
 # F. CDP Test
 ./tool/cdp_test/run.py all --worker
+
+# G. LWE CLI Test
+python3 tool/cli_test/run_cli_test.py
 ```
 
 If you want to capture the screenshot on the command line, use:

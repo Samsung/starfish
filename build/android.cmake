@@ -110,8 +110,11 @@ file(GLOB STARFISH_SRC "${STARFISH_ROOT}/src/*.cpp" )
 file(GLOB_RECURSE STARFISH_GEN_SRC "${OUTPUT_DIRECTORY}/starfish_generated/binding/**/*.cpp" )
 file(GLOB_RECURSE STARFISH_SUB_SRC "${STARFISH_ROOT}/src/**/*.cpp" )
 FILE (GLOB_RECURSE STARFISH_SHELL_SRC ${STARFISH_ROOT}/src/shell/*.cpp)
+FILE (GLOB_RECURSE STARFISH_CLI_SRC ${STARFISH_ROOT}/src/launcher/cli/*.cpp)
 
 LIST (REMOVE_ITEM STARFISH_SUB_SRC
+        ${STARFISH_ROOT}/src/launcher/CLI.cpp
+        ${STARFISH_CLI_SRC}
         ${STARFISH_SHELL_SRC}
         )
 

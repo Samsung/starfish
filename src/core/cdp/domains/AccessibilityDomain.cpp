@@ -26,25 +26,20 @@
 #include "../CDPCommand.h"
 #include "../CDPSession.h"
 #include "../NodeRegistry.h"
+#include "PageDomain.h"
 #include "core/page/WebView.h"
 #include "core/page/BrowsingContext.h"
 #include "core/dom/Document.h"
 #include "core/dom/Node.h"
 #include "core/dom/Element.h"
+#include "core/style/ComputedStyle.h"
 
 #include "rapidjson/document.h"
 #include <cstring>
 #include <string>
-#include <vector>
 #include <cctype>
 
 namespace Starfish {
-
-static Document* mainDocument(WebView* wv)
-{
-    BrowsingContext* bc = wv->mainBrowsingContext();
-    return bc ? bc->document() : nullptr;
-}
 
 static std::string toUTF8(String* s)
 {
@@ -96,6 +91,19 @@ static std::string collapse(const std::string& in)
     return out;
 }
 
+static bool isHiddenFromAccessibility(Element* element)
+{
+    if (hasAttr(element, "hidden") ||
+        lower(collapse(attr(element, "aria-hidden"))) == "true") {
+        return true;
+    }
+
+    ComputedStyle* style = element->style();
+    return style &&
+           (style->display() == DisplayValue::NoneDisplayValue ||
+            style->visibility() != VisibilityValue::VisibleVisibilityValue);
+}
+
 // Map an element to an ARIA role. Explicit role attribute wins. Returns "" for
 // elements that carry no semantic role (folded as "generic"/ignored).
 static std::string roleForElement(Element* el, const std::string& tag)
@@ -110,6 +118,9 @@ static std::string roleForElement(Element* el, const std::string& tag)
 
     if (tag == "button") {
         return "button";
+    }
+    if (tag == "iframe") {
+        return "Iframe";
     }
     if (tag == "a") {
         return hasAttr(el, "href") ? "link" : "generic";
@@ -194,6 +205,23 @@ static std::string subtreeText(Node* node)
     return collapse(t.hasValue() ? toUTF8(t.value()) : std::string());
 }
 
+static std::string textForNode(Node* node)
+{
+    Optional<String*> value = node->textContent();
+    std::string text = value.hasValue() ? toUTF8(value.value()) : std::string();
+    std::string normalized = collapse(text);
+    if (normalized.empty()) {
+        return normalized;
+    }
+    if (!text.empty() && std::isspace((unsigned char)text.front())) {
+        normalized.insert(normalized.begin(), ' ');
+    }
+    if (!text.empty() && std::isspace((unsigned char)text.back())) {
+        normalized.push_back(' ');
+    }
+    return normalized;
+}
+
 // Compute the accessible name: aria-label > (control value/alt) > text content.
 static std::string nameForElement(Element* el, const std::string& tag,
                                   const std::string& role)
@@ -237,76 +265,176 @@ namespace {
         rapidjson::Value* nodes;
         rapidjson::Document::AllocatorType* alloc;
 
-        // Pre-order push: a node is appended to the array before its
-        // descendants so the documentElement is array[0]. puppeteer's
-        // createTree() treats the first array entry as the tree root.
-        std::string addNode(Element* el, int parentAxId)
+        std::string axId(Node* node)
         {
+            return "ax-" + std::to_string(reg->getOrCreate(node));
+        }
+
+        bool shouldAddNode(Node* node)
+        {
+            if (node->nodeType() == Node::TEXT_NODE) {
+                return !textForNode(node).empty();
+            }
+            if (node->nodeType() != Node::ELEMENT_NODE) {
+                return false;
+            }
+
+            Element* element = node->asElement();
+            return lower(toUTF8(element->localName())) != "head" &&
+                   !isHiddenFromAccessibility(element);
+        }
+
+        void addRoleAndName(rapidjson::Value& node, const std::string& role,
+                            const std::string& name)
+        {
+            rapidjson::Value roleValue(rapidjson::kObjectType);
+            roleValue.AddMember("type", "role", *alloc);
+            roleValue.AddMember(
+                "value", rapidjson::Value(role.c_str(), role.size(), *alloc),
+                *alloc);
+            node.AddMember("role", roleValue, *alloc);
+
+            rapidjson::Value nameValue(rapidjson::kObjectType);
+            nameValue.AddMember("type", "computedString", *alloc);
+            nameValue.AddMember(
+                "value", rapidjson::Value(name.c_str(), name.size(), *alloc),
+                *alloc);
+            node.AddMember("name", nameValue, *alloc);
+        }
+
+        void addTextNode(Node* domNode, int parentBackendId)
+        {
+            std::string name = textForNode(domNode);
+            if (name.empty()) {
+                return;
+            }
+
+            int backendId = reg->getOrCreate(domNode);
+            std::string nodeId = "ax-" + std::to_string(backendId);
+            std::string inlineId = nodeId + "-inline";
+
+            rapidjson::Value node(rapidjson::kObjectType);
+            node.AddMember(
+                "nodeId",
+                rapidjson::Value(nodeId.c_str(), nodeId.size(), *alloc),
+                *alloc);
+            node.AddMember("ignored", false, *alloc);
+            addRoleAndName(node, "StaticText", name);
+            node.AddMember("properties",
+                           rapidjson::Value(rapidjson::kArrayType), *alloc);
+            node.AddMember("backendDOMNodeId", backendId, *alloc);
+            std::string parentId = "ax-" + std::to_string(parentBackendId);
+            node.AddMember(
+                "parentId",
+                rapidjson::Value(parentId.c_str(), parentId.size(), *alloc),
+                *alloc);
+            rapidjson::Value childIds(rapidjson::kArrayType);
+            childIds.PushBack(
+                rapidjson::Value(inlineId.c_str(), inlineId.size(), *alloc),
+                *alloc);
+            node.AddMember("childIds", childIds, *alloc);
+            nodes->PushBack(node, *alloc);
+
+            rapidjson::Value inlineNode(rapidjson::kObjectType);
+            inlineNode.AddMember(
+                "nodeId",
+                rapidjson::Value(inlineId.c_str(), inlineId.size(), *alloc),
+                *alloc);
+            inlineNode.AddMember("ignored", false, *alloc);
+            addRoleAndName(inlineNode, "InlineTextBox", name);
+            inlineNode.AddMember(
+                "properties", rapidjson::Value(rapidjson::kArrayType), *alloc);
+            inlineNode.AddMember("backendDOMNodeId", backendId, *alloc);
+            inlineNode.AddMember(
+                "parentId",
+                rapidjson::Value(nodeId.c_str(), nodeId.size(), *alloc),
+                *alloc);
+            inlineNode.AddMember(
+                "childIds", rapidjson::Value(rapidjson::kArrayType), *alloc);
+            nodes->PushBack(inlineNode, *alloc);
+        }
+
+        // Add each node before its descendants.
+        void addNode(Node* domNode, int parentBackendId,
+                     bool includeDescendants = true)
+        {
+            if (domNode->nodeType() == Node::TEXT_NODE) {
+                addTextNode(domNode, parentBackendId);
+                return;
+            }
+
+            Element* el = domNode->asElement();
             int backendId = reg->getOrCreate(el);
-            std::string axId = "ax-" + std::to_string(backendId);
+            std::string nodeId = "ax-" + std::to_string(backendId);
 
             std::string tag = lower(toUTF8(el->localName()));
             std::string role = roleForElement(el, tag);
-            bool ignored = role.empty() || role == "generic";
+            bool ignored =
+                role.empty() || tag == "html" || tag == "head" || tag == "body";
             std::string name = nameForElement(el, tag, role);
 
             rapidjson::Value n(rapidjson::kObjectType);
             n.AddMember("nodeId",
-                        rapidjson::Value(axId.c_str(), axId.size(), *alloc),
+                        rapidjson::Value(nodeId.c_str(), nodeId.size(), *alloc),
                         *alloc);
             n.AddMember("ignored", ignored, *alloc);
 
             if (!ignored) {
-                rapidjson::Value roleVal(rapidjson::kObjectType);
-                roleVal.AddMember("type", "role", *alloc);
-                roleVal.AddMember(
-                    "value",
-                    rapidjson::Value(role.c_str(), role.size(), *alloc),
-                    *alloc);
-                n.AddMember("role", roleVal, *alloc);
-
-                rapidjson::Value nameVal(rapidjson::kObjectType);
-                nameVal.AddMember("type", "computedString", *alloc);
-                nameVal.AddMember(
-                    "value",
-                    rapidjson::Value(name.c_str(), name.size(), *alloc),
-                    *alloc);
-                n.AddMember("name", nameVal, *alloc);
+                addRoleAndName(n, role, name);
             }
 
             n.AddMember("properties", rapidjson::Value(rapidjson::kArrayType),
                         *alloc);
             n.AddMember("backendDOMNodeId", backendId, *alloc);
-            if (parentAxId >= 0) {
-                std::string pid = "ax-" + std::to_string(parentAxId);
+            if (parentBackendId >= 0) {
+                std::string pid = "ax-" + std::to_string(parentBackendId);
                 n.AddMember("parentId",
                             rapidjson::Value(pid.c_str(), pid.size(), *alloc),
                             *alloc);
             }
 
-            // childIds are known up-front from the element's element-children.
             rapidjson::Value childIds(rapidjson::kArrayType);
-            std::vector<Element*> childEls;
             for (Node* c = el->firstChild(); c; c = c->nextSibling()) {
-                if (c->nodeType() == Node::ELEMENT_NODE) {
-                    Element* ce = c->asElement();
-                    int cb = reg->getOrCreate(ce);
-                    std::string cid = "ax-" + std::to_string(cb);
-                    childIds.PushBack(
-                        rapidjson::Value(cid.c_str(), cid.size(), *alloc),
-                        *alloc);
-                    childEls.push_back(ce);
+                if (shouldAddNode(c)) {
+                    std::string childId = axId(c);
+                    childIds.PushBack(rapidjson::Value(childId.c_str(),
+                                                       childId.size(), *alloc),
+                                      *alloc);
                 }
             }
             n.AddMember("childIds", childIds, *alloc);
 
             nodes->PushBack(n, *alloc);
 
-            // Recurse after pushing self (pre-order).
-            for (Element* ce : childEls) {
-                addNode(ce, backendId);
+            if (includeDescendants) {
+                for (Node* c = el->firstChild(); c; c = c->nextSibling()) {
+                    if (shouldAddNode(c)) {
+                        addNode(c, backendId);
+                    }
+                }
             }
-            return axId;
+        }
+
+        void addNodesMatchingRole(Node* domNode, const std::string& role)
+        {
+            if (domNode->nodeType() == Node::ELEMENT_NODE) {
+                Element* element = domNode->asElement();
+                if (isHiddenFromAccessibility(element)) {
+                    return;
+                }
+                std::string tag = lower(toUTF8(element->localName()));
+                if (roleForElement(element, tag) == role) {
+                    Node* parent = domNode->parentNode();
+                    int parentBackendId =
+                        parent ? reg->getOrCreate(parent) : -1;
+                    addNode(domNode, parentBackendId, false);
+                }
+            }
+
+            for (Node* child = domNode->firstChild(); child;
+                 child = child->nextSibling()) {
+                addNodesMatchingRole(child, role);
+            }
         }
     };
 
@@ -331,12 +459,22 @@ void AccessibilityDomain::processMessage(CDPCommand& cmd,
     }
 
     if (method == "getFullAXTree" || method == "getRootAXNode") {
-        Document* doc = mainDocument(wv);
-        if (!doc) {
+        Optional<BrowsingContext*> context = wv->mainBrowsingContext();
+        if (cmd.params() && cmd.params()->HasMember("frameId") &&
+            (*cmd.params())["frameId"].IsString()) {
+            context = m_dispatcher->page()->browsingContextForFrameId(
+                (*cmd.params())["frameId"].GetString());
+        }
+        Optional<Document*> document;
+        if (context) {
+            document = context->document();
+        }
+        if (!document) {
             cmd.sendError(-32000, "No document");
             return;
         }
-        Element* root = doc->documentElement();
+        Document* doc = document.value();
+        Optional<Element*> root = doc->documentElement();
         if (!root) {
             cmd.sendError(-32000, "No document element");
             return;
@@ -352,7 +490,7 @@ void AccessibilityDomain::processMessage(CDPCommand& cmd,
         // snapshot() expose the document's content as one tree instead of a
         // flat list (it only returns serializeTree(...)[0]). Mark it focusable
         // so puppeteer's isInteresting() keeps it.
-        int rootBackend = reg->getOrCreate(root);
+        int rootBackend = reg->getOrCreate(root.value());
         std::string rootChildAx = "ax-" + std::to_string(rootBackend);
         {
             rapidjson::Value rn(rapidjson::kObjectType);
@@ -364,7 +502,11 @@ void AccessibilityDomain::processMessage(CDPCommand& cmd,
             rn.AddMember("role", roleVal, alloc);
             rapidjson::Value nameVal(rapidjson::kObjectType);
             nameVal.AddMember("type", "computedString", alloc);
-            nameVal.AddMember("value", "", alloc);
+            std::string documentName = toUTF8(doc->title());
+            nameVal.AddMember("value",
+                              rapidjson::Value(documentName.c_str(),
+                                               documentName.size(), alloc),
+                              alloc);
             rn.AddMember("name", nameVal, alloc);
             rapidjson::Value props(rapidjson::kArrayType);
             rapidjson::Value focusable(rapidjson::kObjectType);
@@ -385,7 +527,7 @@ void AccessibilityDomain::processMessage(CDPCommand& cmd,
         }
 
         AXBuilder b{ reg, &nodes, &alloc };
-        b.addNode(root, -1);
+        b.addNode(root.value(), -1);
 
         if (method == "getRootAXNode") {
             // array[0] is the synthetic RootWebArea.
@@ -397,6 +539,34 @@ void AccessibilityDomain::processMessage(CDPCommand& cmd,
             return;
         }
 
+        result.AddMember("nodes", nodes, alloc);
+        cmd.sendResult(result, out);
+        return;
+    }
+
+    if (method == "queryAXTree") {
+        if (!cmd.params() || !cmd.params()->HasMember("backendNodeId") ||
+            !(*cmd.params())["backendNodeId"].IsInt() ||
+            !cmd.params()->HasMember("role") ||
+            !(*cmd.params())["role"].IsString()) {
+            cmd.sendError(-32602, "backendNodeId and role are required");
+            return;
+        }
+
+        Optional<Node*> root =
+            reg->lookup((*cmd.params())["backendNodeId"].GetInt());
+        if (!root) {
+            cmd.sendError(-32000, "Could not find node with given id");
+            return;
+        }
+
+        rapidjson::Document out;
+        rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
+        rapidjson::Value result(rapidjson::kObjectType);
+        rapidjson::Value nodes(rapidjson::kArrayType);
+        const char* role = (*cmd.params())["role"].GetString();
+        AXBuilder builder{ reg, &nodes, &alloc };
+        builder.addNodesMatchingRole(root.value(), role);
         result.AddMember("nodes", nodes, alloc);
         cmd.sendResult(result, out);
         return;
