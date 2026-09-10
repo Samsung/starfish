@@ -868,6 +868,22 @@ void InlineBoxLayoutParentBox::resetChildrenVerticalPositions(
             // theirs out in their own layout (computeContentHeight), text
             // boxes move with the inline box that carries the position.
             FrameBox* box = m_boxes[i];
+            if (box->isAbsolutePositioned()) {
+                LengthData offset = box->style()->offset();
+                if (!offset.top().isAuto() || !offset.bottom().isAuto()) {
+                    // With an offset given, the box's y is set outright
+                    // against the padding box of its containing block, so it
+                    // already carries the correction for this line box's own
+                    // position inside that block. Zeroing it drops that
+                    // correction, and nothing puts it back when the
+                    // containing block establishes a formatting context:
+                    // quickLayout then skips
+                    // layoutRegisteredAbsolutePositionedBoxes. A box left at
+                    // its static position keeps the reset, which is what its
+                    // later moveY() offsets from.
+                    continue;
+                }
+            }
             if (!box->isInlineTextBox() && !box->isFrameBlockBox() &&
                 box->style() &&
                 box->style()->position() == RelativePositionValue) {
