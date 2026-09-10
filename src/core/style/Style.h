@@ -3694,6 +3694,14 @@ protected:
     bool m_needsRecalcRuleSet;
     bool m_hasSimplePseudoClassHostSelector;
     bool m_hasSlottedSelector;
+    // Document resolver only: some shadow tree in the document has promoted a
+    // ::slotted() rule -- into this resolver or into a nested tree's host
+    // resolver. Gates the slot-chain walk in matchAllRules, which otherwise
+    // would run for every slotted element on pages without ::slotted() at
+    // all; the per-resolver m_hasSlottedSelector cannot, since a re-slotted
+    // node's rules may live in resolvers other than the one styling it.
+    // Conservative: cleared only when this resolver rebuilds its rule set.
+    bool m_hasSlottedRuleInDocument;
     uint32_t m_mediumFontSize;
     Optional<ShadowRoot*> m_ownerShadowRoot;
     GCVector<CSSStyleSheet*> m_sheets;
