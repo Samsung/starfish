@@ -931,6 +931,7 @@ test/cairo/internal-test/selector/pseudo_element_chaining.html
 test/cairo/internal-test/shadowdom/adopted_host_update.html
 test/cairo/internal-test/shadowdom/adopted_host_cross_tree.html
 test/cairo/internal-test/shadowdom/slotted_basic.html
+test/cairo/internal-test/shadowdom/slotted_nested_slot_chain.html
 test/cairo/internal-test/shadowdom/shadowroot_inner_html.html
 test/cairo/internal-test/shadowdom/adopted_slotted_invalidation.html
 test/cairo/internal-test/shadowdom/inherit_style_from_shadow-host.html

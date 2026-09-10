@@ -8251,49 +8251,58 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     }
 
     // Match ::slotted() rules promoted from shadow resolvers -- the mirror
-    // image of the :host block above. `element` here is a slotted light-DOM
-    // node (styled by this, the document resolver -- see Node::styleResolver);
-    // its origin shadow tree is found via its assigned slot, and only rules
-    // promoted from that same tree apply.
+    // image of the :host block above. `element` here is a slotted node
+    // styled by this resolver (see Node::styleResolver); the rules that may
+    // apply are found by walking its slot chain.
     // ::slotted() represents the elements assigned *after flattening* to a
-    // slot (css-shadow-1 #slotted-pseudo), so a flattened-away <slot> is
-    // never one of them. Only the directly assigned slot's tree is consulted:
-    // when that slot is itself slotted into an outer tree, the outer tree's
-    // ::slotted() rules should also reach this element, which is not
-    // implemented yet.
-    if (UNLIKELY(m_hasSlottedSelector) && element->isSlotted() &&
-        !element->isFlattenedAwaySlot()) {
+    // slot (css-shadow-1 #slotted-pseudo). A shadow tree's <slot> is thus
+    // never one of them, but when that <slot> is itself assigned to a slot of
+    // a nested shadow tree, the nodes it carries are flattened slottables of
+    // the nested slot too, so the nested tree's ::slotted() rules reach them
+    // as well. Each tree's rules live in the resolver of its host
+    // (hostTreeResolver()), which is not necessarily this one.
+    if (UNLIKELY(element->isSlotted()) && !element->isFlattenedAwaySlot()) {
         Optional<HTMLSlotElement*> slot = element->assignedSlotInternal();
-        if (slot) {
+        while (slot) {
             Element* slotHost = slot.value()->parentShadowRoot()->host();
-            for (size_t i = 0; i < m_slottedScopedRules.size(); i++) {
-                const SlottedScopedRule& ssr = m_slottedScopedRules[i];
-                if (ssr.host != slotHost) {
-                    continue;
+            StyleResolver& treeResolver = slotHost->styleResolver();
+            if (treeResolver.m_hasSlottedSelector) {
+                for (size_t i = 0; i < treeResolver.m_slottedScopedRules.size();
+                     i++) {
+                    const SlottedScopedRule& ssr =
+                        treeResolver.m_slottedScopedRules[i];
+                    if (ssr.host != slotHost) {
+                        continue;
+                    }
+                    MatchResult ssrResult(slotHost); // scope = origin host
+                    if (matchSelector(element, elementName, elementId,
+                                      elementClasses, ssr.rule->selectorList(),
+                                      0, ssrResult) == Match::SelectorMatches) {
+                        addMatchedRuleForPseudoElement(
+                            ssr.rule, ssr.url, ssrResult.pseudoType,
+                            pseudoElementType, ret, matchedRules);
+                    }
+                    // Propagate damage-source flags so that
+                    // attribute/class/state changes affecting ::slotted()'s
+                    // argument or an ancestor combinator correctly invalidate
+                    // the cache, mirroring the :host block above.
+                    if (ssrResult.seenCombinator) {
+                        ret->setStyleDamageSource(ssrResult.styleDamageFrom);
+                    } else {
+                        ret->setStyleDamageSource(
+                            (StyleDamageSource)(ssrResult.styleDamageFrom &
+                                                ~StyleDamageFromDOMTree));
+                    }
+                    ret->setStyleDamageSourceNodeStateMap(
+                        ssrResult.styleDamageSourceNodeStateMap);
+                    ret->setStyleDamageSourceNodeStateDOMTreeMap(
+                        ssrResult.styleDamageSourceNodeStateDOMTreeMap);
                 }
-                MatchResult ssrResult(slotHost); // scope = origin host
-                if (matchSelector(element, elementName, elementId,
-                                  elementClasses, ssr.rule->selectorList(), 0,
-                                  ssrResult) == Match::SelectorMatches) {
-                    addMatchedRuleForPseudoElement(
-                        ssr.rule, ssr.url, ssrResult.pseudoType,
-                        pseudoElementType, ret, matchedRules);
-                }
-                // Propagate damage-source flags so that attribute/class/state
-                // changes affecting ::slotted()'s argument or an ancestor
-                // combinator correctly invalidate the cache, mirroring the
-                // :host block above.
-                if (ssrResult.seenCombinator) {
-                    ret->setStyleDamageSource(ssrResult.styleDamageFrom);
-                } else {
-                    ret->setStyleDamageSource(
-                        (StyleDamageSource)(ssrResult.styleDamageFrom &
-                                            ~StyleDamageFromDOMTree));
-                }
-                ret->setStyleDamageSourceNodeStateMap(
-                    ssrResult.styleDamageSourceNodeStateMap);
-                ret->setStyleDamageSourceNodeStateDOMTreeMap(
-                    ssrResult.styleDamageSourceNodeStateDOMTreeMap);
+            }
+            if (slot.value()->isSlotted()) {
+                slot = slot.value()->assignedSlotInternal();
+            } else {
+                slot = NullOption;
             }
         }
     }
@@ -8490,19 +8499,36 @@ StyleResolver::Match StyleResolver::matchForRelation(
             return element->renderingParentElement();
         };
     } else if (UNLIKELY(selectorList[0].m_selector->isSlottedSelector())) {
-        // ::slotted()'s preceding combinators (e.g. ".mydiv ::slotted(*)")
-        // match ancestors of the <slot> the subject was assigned to, inside
-        // the shadow tree -- not the subject's own light-DOM ancestors. The
-        // first hop crosses from the slotted subject to its <slot>; once
-        // inside the shadow tree, subsequent hops are plain ancestor walks
-        // (the slot and ".mydiv" are connected via ordinary parentElement()).
-        nextParentElement = [](Element* element) -> Element* {
-            if (element->isSlotted()) {
-                Optional<HTMLSlotElement*> slot =
-                    element->assignedSlotInternal();
-                return slot ? slot.value() : nullptr;
+        // ::slotted()'s preceding combinators (e.g. ".mydiv ::slotted(*)",
+        // ".mydiv > ::slotted(*)") relate to the <slot> the pseudo-element
+        // originates from, inside the rule's own shadow tree -- not to the
+        // subject's own light-DOM ancestors. The subject lives outside that
+        // tree (result.scope is the tree's host), so the hop off it stands in
+        // for the slot: it lands on the parent of the slot the subject is
+        // assigned to *in that tree*. When the subject reached the tree
+        // through a chain of re-slotted <slot>s, the walk follows the chain
+        // until it finds the slot whose tree is the rule's. Once inside the
+        // tree, hops are plain parentElement() walks that stay in the tree --
+        // an in-tree ancestor that is itself slotted into a nested tree must
+        // not cross into it.
+        nextParentElement = [&result](Element* element) -> Element* {
+            if (!result.scope) {
+                return element->parentElement();
             }
-            return element->parentElement();
+            Node* scopeHost = result.scope.value();
+            if (element->isInShadowRoot() &&
+                element->parentShadowRoot()->host() == scopeHost) {
+                return element->parentElement();
+            }
+            Optional<HTMLSlotElement*> slot = element->assignedSlotInternal();
+            while (slot &&
+                   slot.value()->parentShadowRoot()->host() != scopeHost) {
+                if (!slot.value()->isSlotted()) {
+                    return nullptr;
+                }
+                slot = slot.value()->assignedSlotInternal();
+            }
+            return slot ? slot.value()->parentElement() : nullptr;
         };
     }
 
