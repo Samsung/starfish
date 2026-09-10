@@ -11,7 +11,7 @@ http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slot-display-ove
 http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slot-fallback.html
 http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slot-style.html
 http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slot.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slotted-nested.html
+http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slotted-nested.html
 http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-slotted-rule.html
 http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-with-outside-rules.html
 http://web-platform.test:8000/css/css-shadow/css-scoping-shadow-with-rules-no-style-leak.html

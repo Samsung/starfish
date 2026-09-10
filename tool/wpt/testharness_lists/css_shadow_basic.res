@@ -79,7 +79,7 @@ http://web-platform.test:8000/css/css-shadow/slot-non-html-display-value.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/slotted-invalidation.html
 http://web-platform.test:8000/css/css-shadow/slotted-link.html
 http://web-platform.test:8000/css/css-shadow/slotted-matches.html
-# [auto-fail] http://web-platform.test:8000/css/css-shadow/slotted-nested.html
+http://web-platform.test:8000/css/css-shadow/slotted-nested.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/slotted-parsing.html
 http://web-platform.test:8000/css/css-shadow/slotted-slot.html
 # [auto-fail] http://web-platform.test:8000/css/css-shadow/slotted-user-agent-part-invalidation.html
