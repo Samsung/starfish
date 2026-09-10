@@ -5,8 +5,6 @@ http://web-platform.test:8000/shadow-dom/build-deep-detached-shadow-then-append-
 # [auto-fail] http://web-platform.test:8000/shadow-dom/capturing-and-bubbling-event-listeners-across-shadow-trees.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/cross-shadow-boundary-selection-remove-splittext-crash.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/cross-shadow-boundary-selection-splittext-crash.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/directionality-001.tentative.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/directionality-002.tentative.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/directionality-003-crash.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/Document-caretPositionFromPoint.tentative.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/DocumentOrShadowRoot-prototype-elementFromPoint.html
@@ -44,17 +42,11 @@ http://web-platform.test:8000/shadow-dom/HTMLSlotElement-interface.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/imperative-slot-assign-not-slotable-crash.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/imperative-slot-fallback-clear.html
 http://web-platform.test:8000/shadow-dom/imperative-slot-initial-fallback.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/imperative-slot-layout-invalidation-001.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/input-element-list.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/input-type-radio.html
 http://web-platform.test:8000/shadow-dom/inserting-fragment-under-shadow-host.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/invalidate-shadow-dom-crash.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/invalidate-sibling-different-slots.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/layout-slot-no-longer-assigned.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/layout-slot-no-longer-fallback.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/manual-slot-assignment-no-wrong-unassign.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/MouseEvent-prototype-offsetX-offsetY.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/nested-hover-pseudo-class-removal.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/nested-slot-remove-crash.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/Node-prototype-cloneNode.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/offsetParent-across-shadow-boundaries.html
@@ -65,7 +57,6 @@ http://web-platform.test:8000/shadow-dom/Range-prototype-insertNode.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/scroll-to-the-fragment-in-shadow-tree.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/shadow-root-clonable.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/ShadowRoot-interface.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/shadow-style-invalidation-vw-units.html
 http://web-platform.test:8000/shadow-dom/slotchange-customelements.html
 http://web-platform.test:8000/shadow-dom/slotchange-event.html
 http://web-platform.test:8000/shadow-dom/slotchange.html
@@ -74,14 +65,6 @@ http://web-platform.test:8000/shadow-dom/slotchange.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/slot-dir-attach-child-meter-crash.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/slot-dir-attach-child-progress-crash.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/slot-dir-attach-child-textarea-crash.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/slot-fallback-content-001.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/slot-fallback-content-002.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/slot-fallback-content-003.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/slot-fallback-content-004.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/slot-fallback-content-005.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/slot-fallback-content-006.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/slot-fallback-content-007.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/slot-fallback-content-008.html
 http://web-platform.test:8000/shadow-dom/slot-reconciliation-at-node-removal.html
 http://web-platform.test:8000/shadow-dom/slots-fallback.html
 http://web-platform.test:8000/shadow-dom/slots-fallback-in-document.html
