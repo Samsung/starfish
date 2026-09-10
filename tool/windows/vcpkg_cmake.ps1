@@ -24,6 +24,7 @@
 #    fetch_vcpkg_asset.ps1 instead, which shells out to a real curl.exe
 #    that --ssl-no-revoke actually works on.
 param(
+  [switch]$Dali,
   [Parameter(ValueFromRemainingArguments = $true)]
   [string[]]$CMakeArgs
 )
@@ -33,7 +34,12 @@ $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 
 . (Join-Path $PSScriptRoot 'lib_retry.ps1')
 
-$configPath = Join-Path $RepoRoot 'vcpkg-configuration.json'
+if ($Dali) {
+  $DaliVcpkgDir = Join-Path $RepoRoot 'tool\windows\dali-vcpkg'
+  $configPath = Join-Path $DaliVcpkgDir 'vcpkg-configuration.json'
+} else {
+  $configPath = Join-Path $RepoRoot 'vcpkg-configuration.json'
+}
 $vcpkgCommit = (Get-Content $configPath -Raw | ConvertFrom-Json).'default-registry'.baseline
 if (-not $vcpkgCommit) { throw "couldn't read default-registry.baseline from $configPath" }
 
@@ -82,5 +88,9 @@ if (-not $psCmd) { throw "neither pwsh.exe nor powershell.exe found on PATH" }
 $env:X_VCPKG_ASSET_SOURCES = "x-script,`"$($psCmd.Source)`" -NoProfile -ExecutionPolicy Bypass -File `"$fetchScript`" {url} {sha512} {dst}"
 
 $toolchain = Join-Path $vcpkgRoot 'scripts\buildsystems\vcpkg.cmake'
-& cmake "-DCMAKE_TOOLCHAIN_FILE=$toolchain" @CMakeArgs
+$cmakeInvocation = @("-DCMAKE_TOOLCHAIN_FILE=$toolchain")
+if ($Dali) {
+  $cmakeInvocation += "-DVCPKG_MANIFEST_DIR=$DaliVcpkgDir"
+}
+& cmake @cmakeInvocation @CMakeArgs
 exit $LASTEXITCODE

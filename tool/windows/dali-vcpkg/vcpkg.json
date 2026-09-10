@@ -1,0 +1,1 @@
+{"name":"starfish-windows-dali","version-string":"0.0.0","description":"Windows x64 DALi-era dependency graph for WGL","dependencies":[{"name":"curl","default-features":false,"features":["ssl","sspi"]},"libwebsockets","cairo","harfbuzz","fontconfig","freetype","giflib","glew","libpng","libjpeg-turbo","libwebp","pthreads"]}
