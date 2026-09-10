@@ -1688,7 +1688,7 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
     LayoutUnit availableCrossSize, FrameBox* flexItem,
     bool shouldRespectPercentageWidthOnComputingBasisSize)
 {
-    LayoutContextComputingBasisSizeStateMaker marker(ctx, true);
+    LayoutContextComputingBasisSizeStateMaker marker(ctx, true, flexItem);
 
     bool isMainAxisInInlineAxis = this->isMainAxisInInlineAxis();
     LayoutUnit basisSize = intMaxForLayoutUnit;

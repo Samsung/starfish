@@ -487,6 +487,10 @@ public:
 
     void clearRegisteredAbsolutePositionedBoxes(FrameBlockBox* containingBlock);
 
+    // Drops every registration whose containing block is subtreeRoot or lies
+    // under it.
+    void clearRegisteredAbsolutePositionedBoxesWithin(Frame* subtreeRoot);
+
     void addToRelativePositionedBoxes(FrameBox* box, bool dueToSelf);
 
     void layoutRegisteredRelativePositionedBoxes(
@@ -889,24 +893,41 @@ private:
     LayoutContext& m_layoutContext;
 };
 
+// measuredSubtree is the box the measurement lays out. The measurement is a
+// throwaway pass: a block inside it that establishes a formatting context
+// registers its absolutely positioned descendants but defers laying them out
+// to its containing block's layout() (FrameBlockBox::layout skips that while
+// a basis size is being computed), so the registrations outlive the
+// measurement. They are only consumed if the final layout reaches the same
+// containing block again, which a flex measurement memo hit skips; the
+// leftover then trips LayoutContext's destructor. The final layout registers
+// everything it lays out anew, so whatever the measurement queued under the
+// measured box is dropped when it ends.
 class LayoutContextComputingBasisSizeStateMaker {
 public:
     LayoutContextComputingBasisSizeStateMaker(LayoutContext& ctx,
-                                              bool inComputingBasisSize)
+                                              bool inComputingBasisSize,
+                                              Frame* measuredSubtree = nullptr)
         : m_oldInComputingBasisSize(ctx.inComputingBasisSize())
         , m_layoutContext(ctx)
+        , m_measuredSubtree(measuredSubtree)
     {
         m_layoutContext.setInComputingBasisSize(inComputingBasisSize);
     }
 
     ~LayoutContextComputingBasisSizeStateMaker()
     {
+        if (m_measuredSubtree) {
+            m_layoutContext.clearRegisteredAbsolutePositionedBoxesWithin(
+                m_measuredSubtree);
+        }
         m_layoutContext.setInComputingBasisSize(m_oldInComputingBasisSize);
     }
 
 private:
     bool m_oldInComputingBasisSize;
     LayoutContext& m_layoutContext;
+    Frame* m_measuredSubtree;
 };
 
 enum HasFloat {

@@ -848,6 +848,23 @@ void LayoutContext::clearRegisteredAbsolutePositionedBoxes(
     m_absolutePositionedBoxes.erase(containingBlock);
 }
 
+void LayoutContext::clearRegisteredAbsolutePositionedBoxesWithin(
+    Frame* subtreeRoot)
+{
+    for (auto iter = m_absolutePositionedBoxes.begin();
+         iter != m_absolutePositionedBoxes.end();) {
+        Frame* f = iter->first;
+        while (f && f != subtreeRoot) {
+            f = f->parent();
+        }
+        if (f) {
+            iter = m_absolutePositionedBoxes.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+}
+
 void LayoutContext::addToRelativePositionedBoxes(FrameBox* box, bool dueToSelf)
 {
     FrameBlockBox* cb = containingFrameBlockBox(box);
