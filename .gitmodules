@@ -1,47 +1,66 @@
 [submodule "third_party/deviceapi"]
 	path = third_party/deviceapi
-	url = git@github.sec.samsung.net:lws/tizen_device_api_loader.git
+	url = https://github.com/Samsung/starfish-submodules.git
 	ignore = untracked
+	branch = modules/third_party/deviceapi
+	shallow = true
 [submodule "binding_generator"]
 	path = binding_generator
-	url = git@github.sec.samsung.net:lws/binding_generator.git
+	url = https://github.com/Samsung/starfish-submodules.git
 	ignore = untracked
+	branch = modules/binding_generator
 [submodule "third_party/escargot"]
 	path = third_party/escargot
 	url = https://github.com/Samsung/escargot.git
 	ignore = untracked
 [submodule "third_party/MP4Parse"]
 	path = third_party/MP4Parse
-	url = git@github.sec.samsung.net:lws-submodules/MP4Parse.git
+	url = https://github.com/Samsung/starfish-submodules.git
 	ignore = untracked
+	branch = modules/third_party/MP4Parse
+	shallow = true
 [submodule "third_party/clipper"]
 	path = third_party/clipper
-	url = git@github.sec.samsung.net:lws-submodules/clipper.git
+	url = https://github.com/Samsung/starfish-submodules.git
 	ignore = untracked
+	branch = modules/third_party/clipper
+	shallow = true
 [submodule "third_party/rapidxml"]
 	path = third_party/rapidxml
-	url = git@github.sec.samsung.net:lws-submodules/rapidxml.git
+	url = https://github.com/Samsung/starfish-submodules.git
 	ignore = untracked
+	branch = modules/third_party/rapidxml
+	shallow = true
 [submodule "third_party/skia_matrix"]
 	path = third_party/skia_matrix
-	url = git@github.sec.samsung.net:lws-submodules/skia_matrix.git
+	url = https://github.com/Samsung/starfish-submodules.git
 	ignore = untracked
+	branch = modules/third_party/skia_matrix
+	shallow = true
 [submodule "third_party/webm"]
 	path = third_party/webm
-	url = git@github.sec.samsung.net:lws-submodules/webm.git
+	url = https://github.com/Samsung/starfish-submodules.git
 	ignore = untracked
+	branch = modules/third_party/webm
+	shallow = true
 [submodule "tool/gyp"]
 	path = tool/gyp
-	url = git@github.sec.samsung.net:lws-misc/gyp.git
+	url = https://github.com/Samsung/starfish-submodules.git
 	ignore = untracked
+	branch = modules/tool/gyp
+	shallow = true
 [submodule "third_party/libtuv"]
 	path = third_party/libtuv
-	url = git@github.sec.samsung.net:lws-submodules/libtuv.git
+	url = https://github.com/Samsung/starfish-submodules.git
 	ignore = untracked
+	branch = modules/third_party/libtuv
+	shallow = true
 [submodule "third_party/earcut.hpp"]
 	path = third_party/earcut.hpp
-	url = git@github.sec.samsung.net:lws-submodules/earcut.hpp.git
+	url = https://github.com/Samsung/starfish-submodules.git
 	ignore = untracked
+	branch = modules/third_party/earcut.hpp
+	shallow = true
 [submodule "test"]
 	path = test
 	url = git@github.sec.samsung.net:lws-test/web_tc_new.git
@@ -60,28 +79,42 @@
 	ignore = untracked
 [submodule "third_party/webrtc"]
 	path = third_party/webrtc
-	url = git@github.sec.samsung.net:lws-submodules/webrtc.git
+	url = https://github.com/Samsung/starfish-submodules.git
+	branch = modules/third_party/webrtc
+	shallow = true
 [submodule "third_party/libwebsockets"]
 	path = third_party/libwebsockets
-	url = git@github.sec.samsung.net:lws-submodules/libwebsockets.git
+	url = https://github.com/Samsung/starfish-submodules.git
+	branch = modules/third_party/libwebsockets
+	shallow = true
 [submodule "third_party/openssl"]
 	path = third_party/openssl
-	url = git@github.sec.samsung.net:lws-submodules/openssl.git
+	url = https://github.com/Samsung/starfish-submodules.git
+	branch = modules/third_party/openssl
+	shallow = true
 [submodule "third_party/libjpeg-turbo"]
 	path = third_party/libjpeg-turbo
-	url = git@github.sec.samsung.net:lws-submodules/libjpeg-turbo.git
+	url = https://github.com/Samsung/starfish-submodules.git
+	branch = modules/third_party/libjpeg-turbo
+	shallow = true
 [submodule "third_party/giflib"]
 	path = third_party/giflib
-	url = git@github.sec.samsung.net:lws-submodules/giflib.git
+	url = https://github.com/Samsung/starfish-submodules.git
+	branch = modules/third_party/giflib
+	shallow = true
 [submodule "third_party/libpng"]
 	path = third_party/libpng
-	url = git@github.sec.samsung.net:lws-submodules/libpng.git
+	url = https://github.com/Samsung/starfish-submodules.git
+	branch = modules/third_party/libpng
+	shallow = true
 [submodule "third_party/googletest"]
 	path = third_party/googletest
 	url = https://github.com/google/googletest.git
 [submodule "third_party/libwebp"]
 	path = third_party/libwebp
-	url = git@github.sec.samsung.net:tizen/libwebp.git
+	url = https://github.com/Samsung/starfish-submodules.git
+	branch = modules/third_party/libwebp
+	shallow = true
 [submodule "third_party/wpt"]
 	path = third_party/wpt
 	url = https://github.com/web-platform-tests/wpt.git

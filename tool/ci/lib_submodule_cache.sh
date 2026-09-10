@@ -247,7 +247,10 @@ submodule_make_all_standalone() {
 # tree object, so it's fully deterministic regardless of what's sitting on
 # disk or which remotes are configured.
 submodule_cache_key() {
-  git ls-tree -r HEAD -- "$@" | grep '^160000 commit ' | sha256sum | cut -d' ' -f1
+  {
+    git ls-tree -r HEAD -- "$@" | grep '^160000 commit '
+    git hash-object .gitmodules
+  } | sha256sum | cut -d' ' -f1
 }
 
 # submodule_cache_id <name> <key> -- identifier string used as this cache's
