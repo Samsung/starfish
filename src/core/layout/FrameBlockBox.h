@@ -1571,8 +1571,8 @@ public:
     std::unordered_map<FrameBlockBox*, LayoutUnit> m_inlineBlockAscender;
 
     std::vector<FloatingBoxLayoutContext> m_floatingBoxLayoutContexts;
-    std::vector<FrameBox*> m_absolutePositionedBoxes;
-    std::vector<FrameBox*> m_pendingFloatingBoxes;
+    GCVector<FrameBox*> m_absolutePositionedBoxes;
+    GCVector<FrameBox*> m_pendingFloatingBoxes;
     GCVector<FrameBox*> m_pendingInlineBoxes;
     Word m_word;
 

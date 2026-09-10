@@ -108,7 +108,6 @@ void WindowProxy::init(ScriptBindingInstance* instance, void* domObjectPointer)
                             ALLOW_READ("close")
                             ALLOW_READ("focus")
                             ALLOW_READ("picker")
-                            ALLOW_READ_WRITE("pagePopupController")
                         }
 
                         if (!allow) {
