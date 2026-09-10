@@ -2734,6 +2734,7 @@ StyleResolver::StyleResolver(Document* document, ShadowRoot* ownerShadowRoot)
     , m_needsRecalcRuleSet(true)
     , m_hasSimplePseudoClassHostSelector(false)
     , m_hasSlottedSelector(false)
+    , m_hasSlottedRuleInDocument(false)
     , m_mediumFontSize(document->webView()->defaultFontSize())
     , m_ownerShadowRoot(ownerShadowRoot)
     , m_mediaQueryEvaluator(nullptr)
@@ -8261,7 +8262,8 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     // the nested slot too, so the nested tree's ::slotted() rules reach them
     // as well. Each tree's rules live in the resolver of its host
     // (hostTreeResolver()), which is not necessarily this one.
-    if (UNLIKELY(element->isSlotted()) && !element->isFlattenedAwaySlot()) {
+    if (UNLIKELY(document()->styleResolver().m_hasSlottedRuleInDocument) &&
+        element->isSlotted() && !element->isFlattenedAwaySlot()) {
         Optional<HTMLSlotElement*> slot = element->assignedSlotInternal();
         while (slot) {
             Element* slotHost = slot.value()->parentShadowRoot()->host();
@@ -8491,6 +8493,9 @@ StyleResolver::Match StyleResolver::matchForRelation(
 
     std::function<Element*(Element*)> nextParentElement =
         [](Element* element) -> Element* { return element->parentElement(); };
+    // Set by the ::slotted() walker below once its first hop has been
+    // classified; must outlive the lambda, which runs after this if-chain.
+    bool classified = false;
     if (UNLIKELY(selector->isPseudoClassHostFamilySelector())) {
         nextParentElement = [](Element* element) -> Element* {
             if (element->isShadowRootHost()) {
@@ -8510,19 +8515,35 @@ StyleResolver::Match StyleResolver::matchForRelation(
         // until it finds the slot whose tree is the rule's. Once inside the
         // tree, hops are plain parentElement() walks that stay in the tree --
         // an in-tree ancestor that is itself slotted into a nested tree must
-        // not cross into it.
-        nextParentElement = [&result](Element* element) -> Element* {
-            if (!result.scope) {
+        // not cross into it. Only the first hop needs the (tree-walking)
+        // classification: parentElement() stops at the shadow root, so once
+        // inside the tree every later hop is in-tree too.
+        // Without a scope (a sheet-change invalidation probe rather than a
+        // promoted rule) the hop off a slotted subject lands on its directly
+        // assigned slot's parent, the same tree the rule would be scoped to
+        // in the single-slot case.
+        nextParentElement = [&result,
+                             &classified](Element* element) -> Element* {
+            if (classified) {
                 return element->parentElement();
             }
-            Node* scopeHost = result.scope.value();
-            if (element->isInShadowRoot() &&
-                element->parentShadowRoot()->host() == scopeHost) {
+            classified = true;
+            bool inTree =
+                result.scope
+                    ? element->isInShadowRoot() &&
+                          element->parentShadowRoot()->host() ==
+                              result.scope.value()
+                    : !element->isSlotted() || element->isFlattenedAwaySlot();
+            if (inTree) {
                 return element->parentElement();
+            }
+            if (!element->isSlotted()) {
+                return nullptr;
             }
             Optional<HTMLSlotElement*> slot = element->assignedSlotInternal();
-            while (slot &&
-                   slot.value()->parentShadowRoot()->host() != scopeHost) {
+            while (slot && result.scope &&
+                   slot.value()->parentShadowRoot()->host() !=
+                       result.scope.value()) {
                 if (!slot.value()->isSlotted()) {
                     return nullptr;
                 }
@@ -10668,6 +10689,11 @@ void StyleResolver::removeAllRules()
     }
     m_hasSimplePseudoClassHostSelector = false;
     m_hasSlottedSelector = false;
+    if (!isShadowResolver()) {
+        // Every shadow resolver was just marked for recalc above, so each
+        // tree that still has ::slotted() rules re-raises this bit.
+        m_hasSlottedRuleInDocument = false;
+    }
 
     resetNextRuleSetOrder();
 }
@@ -11032,6 +11058,7 @@ bool StyleResolver::addToRuleSet(CSSStyleSheet* sheet)
                 hostTreeResolver().addSlottedScopedRule(sheet->styleRules()[j],
                                                         ownerHost());
                 hostTreeResolver().m_hasSlottedSelector = true;
+                document()->styleResolver().m_hasSlottedRuleInDocument = true;
                 addedCrossScopeRule = true;
             }
             // A ::slotted() rule outside a shadow tree has no originating
