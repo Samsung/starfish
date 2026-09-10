@@ -3700,7 +3700,10 @@ protected:
     // would run for every slotted element on pages without ::slotted() at
     // all; the per-resolver m_hasSlottedSelector cannot, since a re-slotted
     // node's rules may live in resolvers other than the one styling it.
-    // Conservative: cleared only when this resolver rebuilds its rule set.
+    // Monotonic: raised at the first promotion and never cleared, so a
+    // document rule-set rebuild cannot orphan rules still held by a nested
+    // tree's resolver (see removeAllRules). A page that once had ::slotted()
+    // keeps paying for the walk, which is the pre-gate cost.
     bool m_hasSlottedRuleInDocument;
     uint32_t m_mediumFontSize;
     Optional<ShadowRoot*> m_ownerShadowRoot;

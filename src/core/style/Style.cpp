@@ -10689,11 +10689,10 @@ void StyleResolver::removeAllRules()
     }
     m_hasSimplePseudoClassHostSelector = false;
     m_hasSlottedSelector = false;
-    if (!isShadowResolver()) {
-        // Every shadow resolver was just marked for recalc above, so each
-        // tree that still has ::slotted() rules re-raises this bit.
-        m_hasSlottedRuleInDocument = false;
-    }
+    // m_hasSlottedRuleInDocument deliberately stays raised: the shadow
+    // resolvers holding the promoted rules are re-marked above only when this
+    // resolver had promoted rules itself, so a tree that promoted into a
+    // nested resolver would otherwise be left with rules no one consults.
 
     resetNextRuleSetOrder();
 }
