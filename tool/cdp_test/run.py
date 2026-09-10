@@ -45,9 +45,13 @@ import pathlib
 import sys
 import time
 
-from driver import behavior, case, commands as command_table, launcher, testlist
-
 SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
+# tool/, so that driver.launcher reaches common and repo_paths.
+sys.path.insert(0, str(SCRIPT_DIR.parent))
+
+from driver import (behavior, case, commands as command_table, launcher,  # noqa: E402
+                    testlist)
+
 # What --workers means when given without a number. Chosen from one full
 # behavior sweep: 4 at a time finished it in about a quarter of the time and
 # left the time each entry took unchanged, so no entry was starved into a

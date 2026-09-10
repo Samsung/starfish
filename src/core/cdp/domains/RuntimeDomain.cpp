@@ -55,10 +55,10 @@ BrowsingContext* RuntimeDomain::targetBrowsingContext(WebView* wv,
     if (cmd.params() && cmd.params()->HasMember(key) &&
         (*cmd.params())[key].IsInt()) {
         uint32_t ctxId = (uint32_t)(*cmd.params())[key].GetInt();
-        BrowsingContext* child =
+        Optional<BrowsingContext*> child =
             m_dispatcher->page()->browsingContextForExecutionContextId(ctxId);
         if (child) {
-            return child;
+            return child.value();
         }
     }
     return wv->mainBrowsingContext();

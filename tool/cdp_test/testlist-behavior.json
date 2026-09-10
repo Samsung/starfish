@@ -3,8 +3,8 @@
   "revision": "8c1e8c78de78a9a20327bc2e631cf9726ca37bdc",
   "counts": {
     "total": 961,
-    "pass": 21,
-    "fail": 940
+    "pass": 22,
+    "fail": 939
   },
   "entries": {
     "access-inspected-object.js": {
@@ -33,9 +33,7 @@
       "detail": "line 4: expected ' generic', got '(nothing)'"
     },
     "accessibility/accessibility-getFullAXTree.js": {
-      "expected": "fail",
-      "category": "output-differs",
-      "detail": "line 4: expected ' generic', got ''"
+      "expected": "pass"
     },
     "accessibility/accessibility-getNodeWithNoAXNode.js": {
       "expected": "fail",

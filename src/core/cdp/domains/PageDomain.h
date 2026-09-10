@@ -86,10 +86,14 @@ public:
     // (re)discovery and whenever the frame tree is queried.
     void sweepDetachedFrames(const std::string& sessionId);
 
-    // Resolve a Runtime executionContextId to its child iframe BrowsingContext,
-    // or nullptr if the id is not a child frame (caller falls back to main).
+    // Resolve a Runtime executionContextId to its child iframe BrowsingContext.
+    // An unknown id returns an empty value, so the caller can use the main one.
     // Re-walks the live tree by ordinal each call (no stored GC pointers).
-    BrowsingContext* browsingContextForExecutionContextId(uint32_t contextId);
+    Optional<BrowsingContext*> browsingContextForExecutionContextId(
+        uint32_t contextId);
+    Optional<BrowsingContext*> browsingContextForFrameId(
+        const std::string& frameId);
+    std::string frameIdForBrowsingContext(BrowsingContext* context);
 
     // Stop an active Page.startScreencast: cancel the repetitive capture timer
     // and clear the screencast session state. Safe to call when inactive.

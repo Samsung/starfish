@@ -54,10 +54,18 @@ jobs:
         run: |
           cmake CMakeLists.txt -G Ninja \
             -DCMAKE_BUILD_TYPE=Release -DBACKEND=glib_headless -DSHELL=glib_headless \
-            -DSTARFISH_ENABLE_CDP=1
-          ninja starfish.executable
+            -DSTARFISH_ENABLE_CDP=1 -DCLI=1
+          ninja starfish.executable starfish.cli.executable starfish.cli.unit_test
 
       - name: Run CDP tests
         run: |
           python3 tool/cdp_test/run.py all \
             --starfish $PWD/out/release/bin/lightweight-web-engine --worker
+
+      - name: Run CLI unit tests
+        run: $PWD/out/release/bin/lightweight-web-engine-cli-unit-test
+
+      - name: Run CLI integration tests
+        run: |
+          python3 tool/cli_test/run_cli_test.py \
+            --binary $PWD/out/release/bin/lightweight-web-engine-cli

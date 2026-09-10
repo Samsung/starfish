@@ -9,7 +9,7 @@ and gives entries to worker threads. Below a worker everything is a child
 process: one Starfish per entry, and one Node as well for a behavior entry.
 
 ```text
-                     run.py                     one process owns the
+                run.py                 one process owns the
                         │                     list, workers and report
      ┌──────────────────┴──────────────────┐
      ▼                                     ▼
@@ -103,5 +103,10 @@ list, so you can tell which upstream a list was built from.
 The list is saved after every entry. A run that is killed therefore keeps its
 results so far. The other files are temporary. Ctrl-C leaves a lock file and a
 storage directory behind, and the next run deletes the ones a dead pid owned.
+
+The private homes and both sweeps come from
+[`tool/common/storage.py`](../common/storage.py), which the CLI suite uses
+too. The owner stamp there is one name for every suite, so whichever suite
+runs next also clears what an interrupted run of the other one left.
 
 See [TESTLIST.md](TESTLIST.md) for the fields inside a list.

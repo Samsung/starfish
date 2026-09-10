@@ -17,17 +17,18 @@ import shutil
 import signal
 import socket
 import subprocess
-import tempfile
 import time
+
+from common import storage
 
 from . import client
 
 # Stamped into the fixture page so an orphan can be recognised in /proc. The
 # page also has to keep the process alive, hence the timer.
 MARKER = "starfish-cdp-test"
-# Stamped into each browser's environment so the sweep can tell a leftover
-# from a browser that a concurrently running suite still owns.
-OWNER_VARIABLE = "STARFISH_CDP_OWNER"
+# Names this suite's directories under .tmp. Ownership is not per suite: see
+# OWNER_VARIABLE in common/storage.py.
+STORAGE_GROUP = "test-cdp"
 TEST_PAGE = ("data:text/html,<!--%s-->"
              "<script>setInterval(function(){}, 300)</script>" % MARKER)
 
@@ -72,13 +73,6 @@ def _repository_dir():
 
 
 REPOSITORY_DIR = _repository_dir()
-# Where each browser's private HOME goes. Starfish keeps cookies, localStorage,
-# IndexedDB and the code cache under $HOME, in one directory shared by every
-# instance, so without this a test reads what earlier tests left behind: the
-# upstream expectations assume an empty profile, and a run that follows a
-# cookie test would see its cookies. Kept in the repository rather than /tmp so
-# what a failing entry wrote is easy to find; .tmp is git-ignored.
-STORAGE_ROOT = REPOSITORY_DIR / ".tmp" / "test-cdp"
 
 
 def find_free_port():
@@ -220,103 +214,22 @@ def _on_signal(number, _frame):
 
 def install_cleanup():
     """Arm the cleanup paths. Call once, before the first browser starts."""
-    # atexit runs handlers in reverse order of registration, so the storage is
-    # registered first and removed last: no browser may still be writing to it.
-    atexit.register(_drop_storage)
+    # Registered first so it runs last: no browser may still be writing to the
+    # storage when it goes. See register_cleanup for the ordering rule.
+    storage.register_cleanup(STORAGE_GROUP)
     atexit.register(_stop_all)
     for number in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
         signal.signal(number, _on_signal)
 
 
-def _is_running(pid):
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        return True
-    return True
-
-
-def _new_storage():
-    """A directory for one browser to keep its profile in.
-
-    Grouped under the pid that made it, so a leftover can be matched to a run
-    the same way a leftover browser is, and workers cannot collide: mkdtemp
-    picks the name.
-    """
-    owned = STORAGE_ROOT / str(os.getpid())
-    owned.mkdir(parents=True, exist_ok=True)
-    return pathlib.Path(tempfile.mkdtemp(dir=owned))
-
-
-def _drop_storage():
-    """Give up this run's storage. Registered with atexit."""
-    shutil.rmtree(STORAGE_ROOT / str(os.getpid()), ignore_errors=True)
-    _drop_empty_roots()
-
-
-def _drop_empty_roots():
-    """Remove the shared parents, but only while they are empty.
-
-    rmdir fails on a directory another run is using, which is the point: two
-    runs share these parents, and _new_storage recreates them, so losing the
-    race costs nothing.
-    """
-    for path in (STORAGE_ROOT, STORAGE_ROOT.parent):
-        try:
-            path.rmdir()
-        except OSError:
-            break
-
-
 def sweep_storage():
-    """Remove the storage of runs that are gone, and report how many.
-
-    Ctrl-C kills the runner without running atexit, so a directory left
-    behind is normal. Only a dead owner's is taken: a concurrent run of the
-    other layer is still using its own.
-    """
-    removed = 0
-    if STORAGE_ROOT.is_dir():
-        for entry in STORAGE_ROOT.iterdir():
-            if not entry.name.isdigit() or _is_running(int(entry.name)):
-                continue
-            shutil.rmtree(entry, ignore_errors=True)
-            removed += 1
-    _drop_empty_roots()
-    return removed
+    """Remove the storage of runs that are gone, and report how many."""
+    return storage.sweep_homes(STORAGE_GROUP)
 
 
 def sweep_strays():
-    """Kill every marked browser whose owning run is gone.
-
-    Ownership comes from OWNER_VARIABLE in the browser's own environment, not
-    from its parent. A parent check would misfire twice: a subreaper such as
-    a container started with --init adopts orphans so they never look
-    parentless, and at start-up this run owns nothing yet, so a concurrent
-    suite's browser would look like a leftover and be killed.
-    """
-    killed = 0
-    for entry in pathlib.Path("/proc").iterdir():
-        if not entry.name.isdigit():
-            continue
-        try:
-            if MARKER.encode() not in (entry / "cmdline").read_bytes():
-                continue
-            owner = None
-            for variable in (entry / "environ").read_bytes().split(b"\0"):
-                name, _, value = variable.partition(b"=")
-                if name.decode(errors="replace") == OWNER_VARIABLE:
-                    owner = int(value)
-                    break
-            if owner is not None and _is_running(owner):
-                continue        # ours, or another suite still running
-            os.kill(int(entry.name), signal.SIGKILL)
-            killed += 1
-        except (OSError, IndexError, ValueError):
-            continue
-    return killed
+    """Kill every marked browser whose owning run is gone."""
+    return storage.sweep_strays(MARKER)
 
 
 @contextlib.contextmanager
@@ -341,14 +254,13 @@ def running(starfish, timeout):
         command = [SETPRIV, "--pdeathsig", "SIGKILL"] + command
 
     port = find_free_port()
-    storage = _new_storage()
-    environment = os.environ.copy()
+    home = storage.private_home(STORAGE_GROUP)
+    environment = storage.owned_environment()
     environment["STARFISH_ENABLE_CDP"] = "1"
     environment["STARFISH_CDP_PORT"] = str(port)
-    environment[OWNER_VARIABLE] = str(os.getpid())
     # Everything Starfish persists hangs off HOME, so one variable isolates
     # the lot. Set for the browser only: node keeps the real environment.
-    environment["HOME"] = str(storage)
+    environment["HOME"] = str(home)
     process = subprocess.Popen(
         command,
         env=environment,
@@ -371,4 +283,4 @@ def running(starfish, timeout):
         stop(process)
         _live.discard(process)
         # After the browser is gone, so nothing is still writing to it.
-        shutil.rmtree(storage, ignore_errors=True)
+        shutil.rmtree(home, ignore_errors=True)
