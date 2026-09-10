@@ -378,7 +378,5 @@ http://web-platform.test:8000/html/browsers/browsing-the-web/navigating-across-d
 http://web-platform.test:8000/html/browsers/browsing-the-web/navigating-across-documents/source/navigate-child-function.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/navigating-across-documents/navigation-unload-same-origin-fragment.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/navigating-across-documents/empty_fragment.html
-# [auto-fail] http://web-platform.test:8000/websockets/binary/002.html
-# [auto-fail] http://web-platform.test:8000/websockets/binary/001.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/history-traversal/window-name-after-same-origin-sub-frame-navigation.sub.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/history-traversal/window-name-after-cross-origin-sub-frame-navigation.sub.html
