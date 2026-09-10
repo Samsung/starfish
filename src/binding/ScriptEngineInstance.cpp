@@ -104,5 +104,16 @@ MicroTaskExecutionManager::~MicroTaskExecutionManager()
         m_engine->drainMicroTaskQueue();
     }
     m_engine->macroTaskCounter()--;
+
+    // DIAGNOSTIC: the whole nested-Manager stack for this turn just
+    // unwound (counter back to 0), so nothing else on this call stack
+    // is going to drain the queue. If a job is still pending here, it
+    // was either enqueued after a forceInvokeDrainMicroTaskQueue() call
+    // (m_fired skip above) or leaked from some JS-entry path that never
+    // opened a MicroTaskExecutionManager at all. Either way it will now
+    // sit stuck until some unrelated future Manager happens to close at
+    // counter==1 - remove once the leaking call site is found.
+    STARFISH_ASSERT(!(m_engine->macroTaskCounter() == 0 &&
+                      m_engine->engineInstance()->hasPendingJob()));
 }
 } // namespace Starfish
