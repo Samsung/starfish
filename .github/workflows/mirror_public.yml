@@ -1,0 +1,25 @@
+name: Mirror to public GitHub
+
+# Whenever master is pushed on the internal GHE repo, mirror it to
+# https://github.com/Samsung/starfish.git so the public repo stays in sync.
+on:
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  mirror:
+    if: github.repository == 'lws/starfish'
+    runs-on: [ code-linux ]
+    steps:
+      - name: Checkout
+        uses: CODE-Actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Push mirror to Samsung/starfish
+        env:
+          PUBLIC_GITHUB_TOKEN: ${{ secrets.PUBLIC_GITHUB_TOKEN }}
+        run: |
+          git remote add public "https://x-access-token:${PUBLIC_GITHUB_TOKEN}@github.com/Samsung/starfish.git"
+          git push public HEAD:refs/heads/master
