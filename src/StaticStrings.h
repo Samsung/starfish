@@ -676,6 +676,8 @@ public:
     QualifiedName m_onload;
     QualifiedName m_submit;
     QualifiedName m_onsubmit;
+    QualifiedName m_toggle;
+    QualifiedName m_ontoggle;
     QualifiedName m_input;
     QualifiedName m_oninput;
     QualifiedName m_invalid;

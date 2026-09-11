@@ -3077,6 +3077,7 @@ DEFINE_EVENT_LISTENER(Document, pointermove);
 DEFINE_EVENT_LISTENER(Document, progress);
 DEFINE_EVENT_LISTENER(Document, resize);
 DEFINE_EVENT_LISTENER(Document, submit);
+DEFINE_EVENT_LISTENER(Document, toggle);
 DEFINE_EVENT_LISTENER(Document, readystatechange);
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 DEFINE_EVENT_LISTENER(Document, suspend);

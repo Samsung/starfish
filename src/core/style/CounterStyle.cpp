@@ -295,6 +295,12 @@ const CounterStyle* CounterStyle::getKnownCounter(String* name)
     if (name->equalsIgnoreCase("disc")) {
         return getDiscCounter();
     }
+    if (name->equals("disclosure-open")) {
+        return getDisclosureCounter(true);
+    }
+    if (name->equals("disclosure-closed")) {
+        return getDisclosureCounter(false);
+    }
     if (name->equalsIgnoreCase("decimal")) {
         return getDecimalCounter();
     }
@@ -357,6 +363,22 @@ const CounterStyle* CounterStyle::getDiscCounter()
             CounterStyle(String::createASCIIString("disc"), CyclicSystem);
         counter->setSuffix(String::spaceString);
         counter->addSymbol(String::createUTF32String(0x2022));
+    }
+    return counter;
+}
+
+const CounterStyle* CounterStyle::getDisclosureCounter(bool open)
+{
+    STARFISH_ASSERT(isMainThread());
+    static CounterStyle* counters[2] = { nullptr, nullptr };
+    auto& counter = counters[open ? 1 : 0];
+    if (!counter) {
+        counter = new (NoGC)
+            CounterStyle(open ? String::createASCIIString("disclosure-open")
+                              : String::createASCIIString("disclosure-closed"),
+                         CyclicSystem);
+        counter->setSuffix(String::spaceString);
+        counter->addSymbol(String::createUTF32String(open ? 0x25BE : 0x25B8));
     }
     return counter;
 }

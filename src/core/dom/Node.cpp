@@ -25,6 +25,7 @@
 #include "core/dom/Attr.h"
 #include "core/dom/CharacterData.h"
 #include "core/dom/Document.h"
+#include "core/dom/HTMLDetailsElement.h"
 #include "core/dom/DocumentFragment.h"
 #include "core/dom/DocumentType.h"
 #include "core/dom/ProcessingInstruction.h"
@@ -536,6 +537,13 @@ Optional<HTMLSlotElement*> Node::assignedSlotInternal() const
     Optional<ShadowRoot*> sr = nd->asElement()->internalShadowRoot();
     if (!sr) {
         return NullOption;
+    }
+    if (nd->isHTMLDetailsElement() && (isElement() || isText())) {
+        // The native details slots are selected by role, not slot= names.
+        auto summary = nd->asHTMLDetailsElement()->firstSummary();
+        auto slot = summary && summary.value() == this ? sr->firstChild()
+                                                       : sr->lastChild();
+        return slot->asHTMLSlotElement();
     }
     String* slotName;
     if (isElement()) {
@@ -2603,6 +2611,14 @@ void Node::didComputedStyleChanged(ComputedStyle* oldStyle,
 
 void Node::didNodeInserted(Node* parent, Node* newChild)
 {
+    if (parent == this) {
+        // HTML insertion steps apply in disconnected trees as well.
+        Traverse::traverse(newChild, [](Node* node) {
+            if (node->isHTMLDetailsElement()) {
+                node->asHTMLDetailsElement()->ensureExclusivity(false);
+            }
+        });
+    }
     if (hasRareMembers()) {
         m_rareNodeMembers->invalidateActiveActiveNodeListCacheIfNeeded();
     }

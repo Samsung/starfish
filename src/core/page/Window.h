@@ -357,7 +357,7 @@ public:
     DECLARE_EVENT_LISTENER(resize);
     // DECLARE_EVENT_LISTENER(select);
     // DECLARE_EVENT_LISTENER(show);
-    // DECLARE_EVENT_LISTENER(toggle);
+    DECLARE_EVENT_LISTENER(toggle);
     DECLARE_EVENT_LISTENER(submit);
     DECLARE_EVENT_LISTENER(securitypolicyviolation);
     DECLARE_EVENT_LISTENER(pointerdown);

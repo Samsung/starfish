@@ -30,6 +30,7 @@
 #include "core/dom/HTMLButtonElement.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/dom/HTMLDialogElement.h"
+#include "core/dom/HTMLDetailsElement.h"
 #include "core/dom/HTMLDivElement.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLDataElement.h"
@@ -222,6 +223,8 @@ Element* HTMLDocument::createHTMLElement(Document* document,
         return new HTMLOutputElement(document, qname);
     } else if (name == str->m_dialogTagName.localNameAtomic()) {
         return new HTMLDialogElement(document, qname);
+    } else if (name == str->m_detailsTagName.localNameAtomic()) {
+        return new HTMLDetailsElement(document, qname);
     } else if (name == str->m_dataTagName.localNameAtomic()) {
         return new HTMLDataElement(document, qname);
     } else if (name == str->m_templateTagName.localNameAtomic()) {
@@ -248,7 +251,6 @@ Element* HTMLDocument::createHTMLElement(Document* document,
     DEFINE_KNOWN_ELEMENT(address)
     DEFINE_KNOWN_ELEMENT(article)
     DEFINE_KNOWN_ELEMENT(aside)
-    DEFINE_KNOWN_ELEMENT(details)
     DEFINE_KNOWN_ELEMENT(footer)
     DEFINE_KNOWN_ELEMENT(header)
     DEFINE_KNOWN_ELEMENT(hgroup)

@@ -23,6 +23,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLSlotElement.h"
+#include "core/dom/HTMLDetailsElement.h"
 #include "core/dom/MutationObservationScope.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/parser/HTMLParser.h"
@@ -179,8 +180,17 @@ void ShadowRoot::connectSlotWithSlottables()
 
     // Traverse host children and assign to appropriate slots
     Node* node = host()->firstChild();
+    Optional<Element*> detailsSummary;
+    bool detailsSlots = host()->isHTMLDetailsElement() && slots.size() == 2;
+    if (detailsSlots) {
+        detailsSummary = host()->asHTMLDetailsElement()->firstSummary();
+    }
     while (node != nullptr) {
-        if (node->isElement()) {
+        if (detailsSlots && (node->isElement() || node->isText())) {
+            slots[detailsSummary && node == detailsSummary.value() ? 0 : 1]
+                ->m_assignedNodes.push_back(node);
+            node->setIsSlotted(true);
+        } else if (node->isElement()) {
             auto slotName = node->asElement()->slot();
             // Named slot: element has slot attribute
             // Default slot: element has no slot attribute

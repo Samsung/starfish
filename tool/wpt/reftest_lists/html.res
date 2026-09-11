@@ -899,12 +899,12 @@ http://web-platform.test:8000/html/rendering/the-details-element/details-display
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/the-details-element/details-pseudo-elements-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/the-details-element/details-revert.html
 http://web-platform.test:8000/html/rendering/the-details-element/details-summary-display-inline-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/the-details-element/details-summary-display-inline-002.html
+http://web-platform.test:8000/html/rendering/the-details-element/details-summary-display-inline-002.html
 http://web-platform.test:8000/html/rendering/the-details-element/summary-display-flex.html
 http://web-platform.test:8000/html/rendering/the-details-element/summary-display-grid.html
 http://web-platform.test:8000/html/rendering/the-details-element/summary-display-inline-flex.html
 http://web-platform.test:8000/html/rendering/the-details-element/summary-display-inline-grid.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/the-details-element/summary-display-list-item-001.html
+http://web-platform.test:8000/html/rendering/the-details-element/summary-display-list-item-001.html
 http://web-platform.test:8000/html/rendering/the-details-element/summary-display-list-item-002.html
 http://web-platform.test:8000/html/rendering/the-details-element/summary-in-ol.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/the-details-element/summary-text-decoration.html
@@ -1182,7 +1182,7 @@ http://web-platform.test:8000/html/semantics/grouping-content/the-ol-element/rev
 http://web-platform.test:8000/html/semantics/grouping-content/the-ol-element/reversed-2.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/grouping-content/the-pre-element/grouping-pre-reftest-001.html
 http://web-platform.test:8000/html/semantics/grouping-content/the-pre-element/pre-newline-bidi.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/interactive-elements/the-details-element/details-add-summary.html
+http://web-platform.test:8000/html/semantics/interactive-elements/the-details-element/details-add-summary.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/interactive-elements/the-dialog-element/backdrop-descendant-selector.html
 http://web-platform.test:8000/html/semantics/interactive-elements/the-dialog-element/backdrop-dynamic-display-none.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/interactive-elements/the-dialog-element/backdrop-dynamic-style-change.html
