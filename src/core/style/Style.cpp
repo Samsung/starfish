@@ -10150,8 +10150,8 @@ static ComputedStyleDamage applyStyleToElement(
 
     if (damage & ComputedStyleDamage::
                      ComputedStyleDamageComputeStackingContextProperties) {
-        if (!markVisibleRectDirtyForMovedContext(element, damagedKeys,
-                                                 oldStyle, style)) {
+        if (!markVisibleRectDirtyForMovedContext(element, damagedKeys, oldStyle,
+                                                 style)) {
             element->markAncestorStackingContextVisibleRectDirty();
         }
         element->webView()->setNeedsComputeStackingContextProperties();

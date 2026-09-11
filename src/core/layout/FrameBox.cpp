@@ -1051,9 +1051,9 @@ static Optional<BoxShadowImageKey> boxShadowImageKey(
     putFloat(shadow.offsetY());
     putFloat(shadow.radius());
     putFloat(shadow.spreadDistance());
-    key.words[i++] = (int32_t)(((uint32_t)color.r() << 24) |
-                               ((uint32_t)color.g() << 16) |
-                               ((uint32_t)color.b() << 8) | color.a());
+    key.words[i++] =
+        (int32_t)(((uint32_t)color.r() << 24) | ((uint32_t)color.g() << 16) |
+                  ((uint32_t)color.b() << 8) | color.a());
     bool hasRadius = frame->hasFrameBorderRadius();
     key.words[i++] = hasRadius;
     if (hasRadius) {
@@ -1336,10 +1336,10 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                 if (canUseFastPath) {
                     canvas->save();
                     canvas->setNeedsNoneAntialias();
-                    Optional<BoxShadowImageKey> cacheKey = boxShadowImageKey(
-                        this, *shadow, shadowColor,
-                        BoxShadowImageKind::OuterPiece,
-                        wv->screenInfo().devicePixelRatio);
+                    Optional<BoxShadowImageKey> cacheKey =
+                        boxShadowImageKey(this, *shadow, shadowColor,
+                                          BoxShadowImageKind::OuterPiece,
+                                          wv->screenInfo().devicePixelRatio);
                     BufferedNativeImageData* nativeImage =
                         cacheKey ? wv->lookupBoxShadowImage(cacheKey.value())
                                  : nullptr;
@@ -1446,8 +1446,7 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                         applyBorderRadiusClippingIfNeeds(cv, clipRect, sd);
                         cv->drawRect(shadowRect);
 
-                        ShadowBlur sb(nativeImage->data(),
-                                      nativeImage->width(),
+                        ShadowBlur sb(nativeImage->data(), nativeImage->width(),
                                       nativeImage->height(),
                                       nativeImage->stride());
                         sb.process(shadow->radius() / 2 *
@@ -4709,49 +4708,59 @@ enum ComputeMatrixFor {
 ALWAYS_INLINE void applyTransformIfNeeded(FrameBox* fBox, SkMatrix& m,
                                           bool inRendering)
 {
-    if (fBox->needToEstablishStackingContext()) {
-        if (inRendering) {
-            StackingContext* sc = fBox->stackingContext();
-            if (sc) {
-                SkMatrix m2 = sc->transformMatrix();
-                if (!m2.isIdentity()) {
-                    LayoutLocation to =
-                        fBox->stackingContext()->transformOrigin();
-                    m.preTranslate((float)to.x(), (float)to.y());
-                    m.preConcat(m2);
-                    m.preTranslate(-(float)to.x(), -(float)to.y());
-                }
-            }
-        } else {
-            // fBox->style() maps to node()->style(), which can be cleared to
-            // null while the layout tree is being torn down (e.g. a blur/focus
-            // change triggering getBoundingClientRect() during app shutdown
-            // while media is playing). The rendering branch above already
-            // null-checks stackingContext(); mirror that here so a box whose
-            // style is gone contributes no transform instead of crashing.
-            ComputedStyle* cs = fBox->style();
-            StyleTransformDataGroup* transforms =
-                cs ? cs->transforms(fBox) : nullptr;
-            if (transforms) {
-                SkMatrix m2 = cs->transformsToMatrix(
-                    fBox->width(), fBox->height(), fBox, true);
-                if (!m2.isIdentity()) {
-                    LayoutUnit ox = fBox->width() / 2;
-                    LayoutUnit oy = fBox->height() / 2;
-                    if (cs->hasTransformOrigin()) {
-                        StyleTransformOrigin* origin = cs->transformOrigin();
-                        auto od = origin->originValue();
-                        ox = od->getXAxis().specifiedValue(fBox->width(), fBox);
-                        oy =
-                            od->getYAxis().specifiedValue(fBox->height(), fBox);
-                    }
-                    m.preTranslate((float)ox, (float)oy);
-                    m.preConcat(m2);
-                    m.preTranslate(-(float)ox, -(float)oy);
-                }
-            }
+    if (inRendering) {
+        // The stacking-context tree is what painting and hit testing follow,
+        // and a context exists only for a box that established one, so its
+        // pointer answers this - unlike needToEstablishStackingContext(),
+        // which re-derives the answer from style and from the box's overflow
+        // status, once per box on every ancestor walk.
+        StackingContext* sc = fBox->stackingContext();
+        if (!sc) {
+            return;
         }
+        SkMatrix m2 = sc->transformMatrix();
+        if (!m2.isIdentity()) {
+            LayoutLocation to = sc->transformOrigin();
+            m.preTranslate((float)to.x(), (float)to.y());
+            m.preConcat(m2);
+            m.preTranslate(-(float)to.x(), -(float)to.y());
+        }
+        return;
     }
+
+    if (!fBox->needToEstablishStackingContext()) {
+        return;
+    }
+
+    // fBox->style() maps to node()->style(), which can be cleared to null
+    // while the layout tree is being torn down (e.g. a blur/focus change
+    // triggering getBoundingClientRect() during app shutdown while media is
+    // playing). The rendering branch above already null-checks
+    // stackingContext(); mirror that here so a box whose style is gone
+    // contributes no transform instead of crashing.
+    ComputedStyle* cs = fBox->style();
+    StyleTransformDataGroup* transforms = cs ? cs->transforms(fBox) : nullptr;
+    if (!transforms) {
+        return;
+    }
+
+    SkMatrix m2 =
+        cs->transformsToMatrix(fBox->width(), fBox->height(), fBox, true);
+    if (m2.isIdentity()) {
+        return;
+    }
+
+    LayoutUnit ox = fBox->width() / 2;
+    LayoutUnit oy = fBox->height() / 2;
+    if (cs->hasTransformOrigin()) {
+        StyleTransformOrigin* origin = cs->transformOrigin();
+        auto od = origin->originValue();
+        ox = od->getXAxis().specifiedValue(fBox->width(), fBox);
+        oy = od->getYAxis().specifiedValue(fBox->height(), fBox);
+    }
+    m.preTranslate((float)ox, (float)oy);
+    m.preConcat(m2);
+    m.preTranslate(-(float)ox, -(float)oy);
 }
 
 // The ancestor walk in computeBoxMatrix() carries a small amount of state

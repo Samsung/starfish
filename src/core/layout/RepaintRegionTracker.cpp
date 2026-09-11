@@ -567,8 +567,7 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
             childMatrix = box->computeScreenMatrix();
         } else if (box->isAbsolutePositioned() &&
                    (box->style()->position() == FixedPositionValue ||
-                    !frame->canBeContainingBlockOfAbsolutePositionedBox(
-                        box))) {
+                    !frame->canBeContainingBlockOfAbsolutePositionedBox(box))) {
             // An out-of-flow box is placed from its containing block, so the
             // scroll offsets of the boxes between them - the parent's among
             // them - do not move it, and a fixed box follows no scroller at
