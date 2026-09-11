@@ -72,17 +72,17 @@ public:
     void* operator new(size_t size) = delete;
     void* operator new[](size_t size) = delete;
 
-    // These objects are allocated with a GC disclaim proc
-    // (bufferedNativeImageDataClear) that a later reclaim sweep runs on this
-    // slot. GC_FREE()ing here would poison the slot (GC_FREED_MEM_MARKER, or a
-    // free-list link in a non-debug collector), and the disclaim proc would
-    // then dereference that garbage as a vtable and crash. The destructor above
-    // has already disposed the decoded buffer, so instead of freeing, clear the
-    // vtable slot -- the "already disposed" sentinel the disclaim proc checks
-    // -- and let GC reclaim the small object shell.
+    // These objects are allocated with a GC disclaim proc (disclaimProc) that
+    // a later reclaim sweep runs on this slot. GC_FREE()ing here would poison
+    // the slot (GC_FREED_MEM_MARKER, or a free-list link in a non-debug
+    // collector), and the disclaim proc would then dereference that garbage
+    // as a vtable and crash. The destructor above has already disposed the
+    // decoded buffer, so instead of freeing, mark the disclaim-proc sentinel
+    // -- see m_gcDisclaimAlive below for why that can't be the vtable slot --
+    // and let GC reclaim the small object shell.
     void operator delete(void* ptr)
     {
-        *reinterpret_cast<size_t*>(ptr) = 0;
+        reinterpret_cast<BufferedNativeImageData*>(ptr)->m_gcDisclaimAlive = 0;
     }
 
 #ifdef STARFISH_ENABLE_TEST
@@ -95,11 +95,34 @@ protected:
     BufferedNativeImageData()
     {
         m_isSeenByGC = false;
+        m_gcDisclaimAlive = 1;
 #if !defined(OS_WINDOWS)
         everyNativeImageInstances().push_back(this);
 #endif
     }
     bool m_isSeenByGC : 1;
+
+private:
+    // The disclaim proc GC_register_disclaim_proc() calls for a slot of this
+    // kind. A private static member (not a free function) so it can reach
+    // m_gcDisclaimAlive without a friend declaration; it has the plain
+    // C-callback signature GC_register_disclaim_proc() expects.
+    static int GC_CALLBACK disclaimProc(void* obj);
+
+    // Liveness sentinel for disclaimProc (BufferedNativeImageData.cpp).
+    // Deliberately NOT word 0 (the vtable pointer): the instant disclaimProc
+    // returns 0, GC_reclaim_generic() (GCutil reclaim.c) claims word 0 as the
+    // free-list link and only then zeroes the rest of the object via
+    // GC_clear_block(), which explicitly skips word 0. So on the next sweep
+    // over a slot still sitting unreclaimed on the free list, word 0 holds
+    // that link (an ordinary, usually non-zero pointer), not our sentinel --
+    // disclaimProc would misclassify the slot as live and dispatch
+    // disposeNativeImageData() through a bogus vtable. m_gcDisclaimAlive lives
+    // elsewhere in the object, which GC_clear_block *does* zero on every pass
+    // (first disposal or a later re-visit alike), so it reads back 0
+    // reliably from then on. 1 while the object is live, 0 once disposed;
+    // never read/written anywhere else.
+    size_t m_gcDisclaimAlive;
 };
 } // namespace Starfish
 

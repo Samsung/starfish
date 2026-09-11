@@ -98,6 +98,18 @@ private:
     // mark descriptor takes the offset of a private field.
     static int gcKind();
 
+    // The disclaim proc GC_register_disclaim_proc() calls for a slot of that
+    // kind. A private static member (not a free function) purely so it can
+    // reach m_gcDisclaimAlive without a friend declaration; it has the plain
+    // C-callback signature GC_register_disclaim_proc() expects.
+    static int GC_CALLBACK disclaimProc(void* obj);
+
+    // Liveness sentinel for disclaimProc (PathCairo.cpp). Deliberately NOT
+    // word 0 (the vtable pointer) -- see the comment on disclaimProc for why
+    // a disclaim-proc sentinel stored there gets clobbered by the GC's
+    // free-list link. 1 while native resources are still owned, 0 once
+    // clearNativeResources() has run; never read/written anywhere else.
+    size_t m_gcDisclaimAlive;
     StrokeStyle m_needsComputeStrokeBoundingRect; // NaN stroke-width means
                                                   // needs computing
     bool m_needsComputeFillBoundingRect;
