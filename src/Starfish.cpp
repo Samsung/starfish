@@ -250,10 +250,10 @@ void Starfish::printEveryReachableGCObjects()
             size_t size;
             int kind = GC_get_kind_and_size(obj, &size);
             STARFISH_ASSERT(size == bytes);
-#if defined(NDEBUG)
-            void* ptr = obj;
-#else
+#ifdef GC_DEBUG
             void* ptr = GC_USR_PTR_FROM_BASE(obj);
+#else
+            void* ptr = obj;
 #endif
             STARFISH_LOG_ERROR("@@@ kind %d pointer %p", (int)kind, ptr);
 #if !defined(NDEBUG) && (!defined(OS_WINDOWS) && !defined(STARFISH_ANDROID) && \

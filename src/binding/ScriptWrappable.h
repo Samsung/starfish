@@ -304,6 +304,8 @@ ScriptArrayBuffer createScriptArrayBufferAdoptingVector(
 
 ScriptUint8Array createScriptUint8Array(ScriptBindingInstance* instance,
                                         void* scriptFreeableBuffer, size_t len);
+ScriptUint8Array createScriptUint8ArrayAdoptingVector(
+    ScriptBindingInstance* instance, std::vector<char>&& source);
 ScriptInt8Array createEmptyInt8Array(ScriptBindingInstance* instance);
 ScriptUint8Array createEmptyUint8Array(ScriptBindingInstance* instance);
 ScriptInt16Array createEmptyInt16Array(ScriptBindingInstance* instance);

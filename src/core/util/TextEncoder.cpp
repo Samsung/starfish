@@ -76,7 +76,7 @@ ScriptUint8Array TextEncoder::encode(Optional<String*> input)
 
     struct Data {
         TextEncoder* self;
-        Vector<char, std::allocator<char>> buffer;
+        std::vector<char> buffer;
     } d;
 
     d.self = this;
@@ -109,10 +109,8 @@ ScriptUint8Array TextEncoder::encode(Optional<String*> input)
         },
         &d);
 
-    size_t len = d.buffer.size();
-    char* buf = d.buffer.takeBuffer();
-    return createScriptUint8Array(m_executionContext->scriptBindingInstance(),
-                                  buf, len);
+    return createScriptUint8ArrayAdoptingVector(
+        m_executionContext->scriptBindingInstance(), std::move(d.buffer));
 }
 
 } // namespace Starfish
