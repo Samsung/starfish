@@ -453,7 +453,19 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
             }
         }
 
-        currentMatrix = frame->computeScreenMatrix();
+        // The matrix this box was called with is already its own: the walk
+        // below either hands a box the matrix it computed for it, or
+        // translates the parent's by the child's offset, which is what a
+        // fresh walk to the root would produce. A child document is the
+        // exception: it is painted behind its iframe's border and padding,
+        // which the walk carries and computeScreenMatrix() leaves out. A
+        // matrix overflowed to infinity or NaN never compares equal.
+        STARFISH_ASSERT(!frame->node()
+                             ->document()
+                             ->browsingContext()
+                             ->isTopLevelBrowsingContext() ||
+                        !currentMatrix.isFinite() ||
+                        currentMatrix == frame->computeScreenMatrix());
 
         auto& layoutRepaintTracker = frame->node()
                                          ->document()
@@ -552,6 +564,15 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
 
         if (box->stackingContext() &&
             !box->stackingContext()->transformMatrix().isIdentity()) {
+            childMatrix = box->computeScreenMatrix();
+        } else if (box->isAbsolutePositioned() &&
+                   (box->style()->position() == FixedPositionValue ||
+                    !frame->canBeContainingBlockOfAbsolutePositionedBox(
+                        box))) {
+            // An out-of-flow box is placed from its containing block, so the
+            // scroll offsets of the boxes between them - the parent's among
+            // them - do not move it, and a fixed box follows no scroller at
+            // all; the matrix carried down through those boxes is not its.
             childMatrix = box->computeScreenMatrix();
         } else {
             auto pos = box->absolutePointIncludingScroll(frame);
