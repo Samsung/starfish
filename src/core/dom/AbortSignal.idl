@@ -1,0 +1,9 @@
+// https://dom.spec.whatwg.org/#interface-abortsignal
+// timeout(), any(), and consuming-API integration are separate increments.
+[Exposed=(Window,Worker)] interface AbortSignal : EventTarget {
+    [NewObject, CallWith=ExecutionContext] static AbortSignal abort(optional any reason);
+    readonly attribute boolean aborted;
+    readonly attribute any reason;
+    void throwIfAborted();
+    attribute EventHandler onabort;
+};

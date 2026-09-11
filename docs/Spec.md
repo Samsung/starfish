@@ -2282,6 +2282,23 @@ Extensions to the Navigator Object: The navigator is extended by the following a
 | POSITION_UNAVAILABLE | The position of the device could not be determined. | 2 |
 | TIMEOUT | The length of time specified by the timeout property has elapsed before successfully acquiring a new Position object. | 3 |
 
+### AbortController & AbortSignal
+
+Basic DOM cancellation signals are exposed in Window and, when Worker support
+is built, Worker globals. Sources: `src/core/dom/AbortController.idl` and
+`src/core/dom/AbortSignal.idl`.
+
+| Interface | Supported surface |
+|-----------|-------------------|
+| `AbortController` | Constructor, same-object `signal`, `abort(optional reason)`. |
+| `AbortSignal` | Extends `EventTarget`; not directly constructible. Static `abort(optional reason)`, readonly `aborted` and `reason`, `throwIfAborted()`, `onabort`. |
+| Cancellation semantics | Synchronous trusted `abort` event, first reason wins, omitted/undefined reason creates an `AbortError` DOMException in the signal's realm. Arbitrary JS reasons retain identity. Static `abort()` does not dispatch an event. |
+| Not yet implemented | Static `AbortSignal.timeout()` / `any()`, `addEventListener({signal})` cancellation, and Fetch/Request/stream cancellation integration. Providing a signal to these APIs does not enable cancellation. |
+
+Window coverage is registered in `tool/wpt/testharness_lists/dom_abort.res`:
+`event.any.html`, `AbortSignal.any.html`, and `reason-constructor.html`.
+Worker exposure is not a claim that the Worker test variants were verified.
+
 ### Fetch API
 
 `fetch`, `Headers`, `Request`, `Response`, and the `Body` mixin are exposed. Verified by IDL `src/core/fetch/*.idl` and runtime probes.
@@ -2293,7 +2310,7 @@ Extensions to the Navigator Object: The navigator is extended by the following a
 | `Request` | Constructor + `clone()`; properties `method`, `url`, `headers`, `mode`, `credentials`, `cache`, `redirect`, `referrer`, `referrerPolicy`, `destination`, `integrity`, `body`. **`Request.signal` is `undefined` (`[Unimplemented]`)** — `RequestInit.signal` is silently ignored. |
 | `Response` | Constructor; instance methods `text()`, `json()`, `arrayBuffer()`, `blob()`, `formData()`, `clone()`. Static `Response.error()`, `Response.redirect(url, status)`. **`Response.json` static is NOT exposed.** |
 | `Body` mixin | `body` (`ReadableStream`), `bodyUsed`, plus the consumers above. **`BodyInit` does not accept `FormData` or `URLSearchParams`** — only `Blob`/`BufferSource`/`USVString`/`ReadableStream`. |
-| **Not exposed** | `AbortController`, `AbortSignal`. There is no way to cancel an in-flight `fetch()` from JS. |
+| **Cancellation not integrated** | `AbortController` and `AbortSignal` are exposed as DOM cancellation signals, but cannot yet cancel an in-flight `fetch()`. |
 
 ### URL & URLSearchParams
 
