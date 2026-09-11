@@ -715,8 +715,7 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
                     StyleAnimationData* styleAnimationData =
                         context.m_toStyle->animation();
                     for (size_t n = 0;
-                         n < styleAnimationData->animationKeyframesListSize();
-                         n++) {
+                         n < styleAnimationData->animationNameSize(); n++) {
                         if (styleAnimationData->animationName(n)->equals(
                                 "none")) {
                             // animation name is gone.

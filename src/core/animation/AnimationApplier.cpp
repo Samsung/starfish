@@ -117,8 +117,7 @@ bool AnimationApplier::apply()
     // animation: x-animation 5s, r-animation 5s;
     //
     // i means animation index.
-    for (size_t i = 0; i < styleAnimationData->animationKeyframesListSize();
-         i++) {
+    for (size_t i = 0; i < styleAnimationData->animationNameSize(); i++) {
         if (!styleAnimationData->isValidToApply(i)) {
             continue;
         }
