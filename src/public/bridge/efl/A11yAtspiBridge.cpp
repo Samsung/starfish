@@ -1360,6 +1360,27 @@ static const gchar* starfishUtilGetToolkitVersion(void)
 // Bridge lifecycle
 /////////////////////////////////////////////////////////////////////////////
 
+// elementary's ewk accessibility wrapper entry point (the Tizen hack
+// chromium-efl rides on, see efl_ui_widget.c / elm_atspi_ewk_wrapper.c; a
+// Tizen extension with no public header, hence dlsym). It creates the
+// wrapper widget under the host widget once and, on every call, re-reads
+// "__PlugID" off the webview object: a changed id replaces the PLUG proxy,
+// a missing id drops it. elementary only calls it by itself for sub-objects
+// of evas type "EWebView"/"WebView", so the bridge has to call it whenever
+// the plug id changes.
+typedef void (*ElmEwkWrapperInitFn)(Evas_Object*, Evas_Object*);
+static ElmEwkWrapperInitFn elmEwkWrapperInit()
+{
+    static bool resolved = false;
+    static ElmEwkWrapperInitFn fn = nullptr;
+    if (!resolved) {
+        resolved = true;
+        fn = reinterpret_cast<ElmEwkWrapperInitFn>(
+            dlsym(RTLD_DEFAULT, "elm_atspi_ewk_wrapper_a11y_init"));
+    }
+    return fn;
+}
+
 static void enableBridge()
 {
     if (g_enabled || !g_window) {
@@ -1436,16 +1457,16 @@ static void enableBridge()
     onTreeSourceChanged(nullptr);
 
     // Preferred integration: hand the webview object to elementary's ewk
-    // accessibility wrapper (the same Tizen hack chromium-efl rides on, see
-    // efl_ui_widget.c / elm_atspi_ewk_wrapper.c). The wrapper reads
-    // "__PlugID" off the object, creates a PLUG proxy and embeds our tree
-    // as an accessibility child of the host widget - daemon navigation then
-    // flows from the host's elm tree into the web content. Resolved via
-    // dlsym: the symbol is a Tizen extension with no public header.
-    if (!g_elmEmbedded && g_accessWidget && g_webviewObject) {
-        typedef void (*A11yInitFn)(Evas_Object*, Evas_Object*);
-        A11yInitFn a11yInit = reinterpret_cast<A11yInitFn>(
-            dlsym(RTLD_DEFAULT, "elm_atspi_ewk_wrapper_a11y_init"));
+    // accessibility wrapper, which embeds our tree as an accessibility
+    // child of the host widget - daemon navigation then flows from the
+    // host's elm tree into the web content. Every enable registers a fresh
+    // plug (a new a11y bus connection, hence a new unique name and plug
+    // id), so this must run on every enable, not just the first: the
+    // wrapper keeps whatever id it last read, and a proxy left pointing at
+    // the previous connection is a dead end for the daemon.
+    g_elmEmbedded = false;
+    if (g_accessWidget && g_webviewObject) {
+        ElmEwkWrapperInitFn a11yInit = elmEwkWrapperInit();
         if (a11yInit) {
             a11yInit(g_accessWidget, g_webviewObject);
             g_elmEmbedded = true;
@@ -1506,6 +1527,16 @@ static void disableBridge()
             evas_object_data_set(carrier, kPlugIdKey, nullptr);
             free(plugId);
         }
+    }
+
+    // With "__PlugID" gone, let the wrapper drop its proxy now instead of
+    // leaving a dead one in the host tree until the next enable.
+    if (g_elmEmbedded) {
+        ElmEwkWrapperInitFn a11yInit = elmEwkWrapperInit();
+        if (a11yInit && g_accessWidget && g_webviewObject) {
+            a11yInit(g_accessWidget, g_webviewObject);
+        }
+        g_elmEmbedded = false;
     }
 
     g_enabled = false;
