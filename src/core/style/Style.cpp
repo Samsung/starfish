@@ -9825,6 +9825,58 @@ static bool isLastRenderingChildOfBlock(Element* element, Element* parent)
     }
 }
 
+// A transform, transform-origin or opacity change on a stacking context
+// owner moves the context without changing what is in it, and contexts above
+// a buffered context leave it out of their rects. So a buffered owner marks
+// nothing, and an unbuffered one marks rects only up to the first buffered
+// context instead of up to the root. That keeps a transform transition on a
+// layer from walking the layer's subtree, and the contexts above a layer
+// from walking theirs, on every tick. Returns false when the damage needs the
+// ordinary marking.
+static bool markVisibleRectDirtyForMovedContext(Element* element,
+                                                const bool* damagedKeys,
+                                                ComputedStyle* oldStyle,
+                                                ComputedStyle* newStyle)
+{
+    Frame* frame = element->frame();
+    if (!frame || !frame->isFrameBox() || !oldStyle) {
+        return false;
+    }
+    StackingContext* sc = frame->asFrameBox()->stackingContext();
+    if (!sc) {
+        return false;
+    }
+    bool moved = false;
+    for (size_t i = 0; i < CSSStyleValuePair::KeyKindSize; i++) {
+        if (!damagedKeys[i]) {
+            continue;
+        }
+        if (i != CSSStyleValuePair::KeyKind::Transform &&
+            i != CSSStyleValuePair::KeyKind::TransformOrigin &&
+            i != CSSStyleValuePair::KeyKind::Opacity) {
+            return false;
+        }
+        moved = true;
+    }
+    if (!moved) {
+        return false;
+    }
+    if (damagedKeys[CSSStyleValuePair::KeyKind::Opacity]) {
+        // An unbuffered owner's opacity is painted, not composited, and the
+        // repaint tracker learns of the change only from the owner's own
+        // rect being marked. And a rect taken while the owner was invisible
+        // (opacity 0) is empty, so crossing zero needs the recompute too.
+        if (!sc->needsGraphicsBuffer() || oldStyle->opacity() == 0 ||
+            newStyle->opacity() == 0) {
+            return false;
+        }
+    }
+    if (!sc->needsGraphicsBuffer()) {
+        sc->markVisibleRectDirtyUpToGraphicsBuffer();
+    }
+    return true;
+}
+
 // damagedKeyMask, when given, receives the properties compareStyle() found
 // changed, folded with ComputedStyle::explicitlyInheritedKeyBit().
 static ComputedStyleDamage applyStyleToElement(
@@ -10098,7 +10150,10 @@ static ComputedStyleDamage applyStyleToElement(
 
     if (damage & ComputedStyleDamage::
                      ComputedStyleDamageComputeStackingContextProperties) {
-        element->markAncestorStackingContextVisibleRectDirty();
+        if (!markVisibleRectDirtyForMovedContext(element, damagedKeys,
+                                                 oldStyle, style)) {
+            element->markAncestorStackingContextVisibleRectDirty();
+        }
         element->webView()->setNeedsComputeStackingContextProperties();
     }
 
