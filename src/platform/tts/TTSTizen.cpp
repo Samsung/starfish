@@ -257,16 +257,55 @@ static void dispatchErrorEvent(TTS* t, int id, const char* errorCode,
     }
 }
 
-static void accessibilityChangedCB(keynode_t* keynodeName, void* data)
+// Live instances that follow the accessibility vconf keys. vconf identifies a
+// registration by (key, callback) only: registering the same callback again
+// for another instance is refused, and vconf_ignore_key_changed() from any
+// instance (including a second destroy() run by the GC finalizer of an
+// already-destroyed one) drops whichever registration exists - so a
+// per-instance registration silently detaches the live instance and leaves
+// its accessibility mode frozen. Register once per process and fan out.
+static std::vector<TTS*> gLiveInstances;
+
+static void accessibilityChangedCB(keynode_t*, void*)
 {
-    // Do not free data
-    TTS* t = (TTS*)data;
     bool enabled = false;
     if (!readAccessibilityVconf(enabled)) {
         return;
     }
-    if (isValidTTS(t)) {
+    // Copy: setAccessibilityMode() must not mutate the list, but be safe.
+    std::vector<TTS*> instances(gLiveInstances);
+    for (TTS* t : instances) {
         t->setAccessibilityMode(enabled);
+    }
+}
+
+static void addLiveInstance(TTS* t)
+{
+    if (std::find(gLiveInstances.begin(), gLiveInstances.end(), t) !=
+        gLiveInstances.end()) {
+        return;
+    }
+    if (gLiveInstances.empty()) {
+        vconf_notify_key_changed(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS,
+                                 accessibilityChangedCB, nullptr);
+        vconf_notify_key_changed(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS_TEMPORARY,
+                                 accessibilityChangedCB, nullptr);
+    }
+    gLiveInstances.push_back(t);
+}
+
+static void removeLiveInstance(TTS* t)
+{
+    auto iter = std::find(gLiveInstances.begin(), gLiveInstances.end(), t);
+    if (iter == gLiveInstances.end()) {
+        return;
+    }
+    gLiveInstances.erase(iter);
+    if (gLiveInstances.empty()) {
+        vconf_ignore_key_changed(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS,
+                                 accessibilityChangedCB);
+        vconf_ignore_key_changed(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS_TEMPORARY,
+                                 accessibilityChangedCB);
     }
 }
 
@@ -412,12 +451,7 @@ void TTS::initialize()
         return;
     }
     setAccessibilityMode(enabled);
-
-    // Add listener
-    vconf_notify_key_changed(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS,
-                             accessibilityChangedCB, this);
-    vconf_notify_key_changed(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS_TEMPORARY,
-                             accessibilityChangedCB, this);
+    addLiveInstance(this);
 
     if (m_handle == NULL) {
         guint* idleIdPtr = new guint(0);
@@ -603,10 +637,8 @@ void TTS::destroy()
         STARFISH_LOG_ERROR("[TTS] handle is null in destroyTTSHandle()");
     }
 
-    vconf_ignore_key_changed(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS,
-                             accessibilityChangedCB);
-    vconf_ignore_key_changed(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS_TEMPORARY,
-                             accessibilityChangedCB);
+    // Idempotent: destroy() runs again from the GC finalizer.
+    removeLiveInstance(this);
 }
 
 void TTS::setMode(LWE::TTSMode lweTTSMode)
