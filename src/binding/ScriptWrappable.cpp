@@ -1850,6 +1850,36 @@ ScriptUint8Array createScriptUint8Array(ScriptBindingInstance* instance,
         .result->asUint8ArrayObject();
 }
 
+ScriptUint8Array createScriptUint8ArrayAdoptingVector(
+    ScriptBindingInstance* instance, std::vector<char>&& source)
+{
+    if (source.empty()) {
+        return createEmptyUint8Array(instance);
+    }
+    std::vector<char>* holder = new std::vector<char>(std::move(source));
+    ContextRef* ctx = instance->scriptContext();
+    return Evaluator::execute(
+               ctx,
+               [](ExecutionStateRef* state,
+                  std::vector<char>* holder) -> ValueRef* {
+                   auto buf = ArrayBufferObjectRef::create(state);
+                   BackingStoreRef* backingStore =
+                       BackingStoreRef::createNonSharedBackingStore(
+                           holder->data(), holder->size(),
+                           [](void* data, size_t length, void* deleterData) {
+                               delete static_cast<std::vector<char>*>(
+                                   deleterData);
+                           },
+                           holder);
+                   buf->attachBuffer(backingStore);
+                   auto arr = Uint8ArrayObjectRef::create(state);
+                   arr->setBuffer(buf, 0, holder->size(), holder->size());
+                   return arr;
+               },
+               holder)
+        .result->asUint8ArrayObject();
+}
+
 ScriptUint8Array createEmptyUint8Array(ScriptBindingInstance* instance)
 {
     ContextRef* ctx = instance->scriptContext();

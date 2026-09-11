@@ -67,7 +67,7 @@ namespace Starfish {
 // re-visit alike), so it reads back 0 reliably from then on.
 int GC_CALLBACK BufferedNativeImageData::disclaimProc(void* obj)
 {
-#if !defined(NDEBUG)
+#ifdef GC_DEBUG
     obj = GC_USR_PTR_FROM_BASE(obj);
 #endif
     BufferedNativeImageData* aliveObj = (BufferedNativeImageData*)obj;
