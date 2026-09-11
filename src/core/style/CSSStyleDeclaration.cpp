@@ -885,6 +885,9 @@ void CSSStyleDeclaration::setFourSidedShorthandProperty(
         c.setValue(String::fromUTF8(value, length));
         c.setFlagImportant(isImportant);
         addCSSValuePair(fourSidedShorthand, c);
+        // Shorthands containing var() expand only after substitution.
+        // https://www.w3.org/TR/css-variables-1/#variables-in-shorthands
+        return;
     } else if (c.updateValueCommon(tokens)) {
         c.setFlagImportant(isImportant);
         for (int i = 0; i < 4; i++) {
