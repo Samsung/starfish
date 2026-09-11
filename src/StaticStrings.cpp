@@ -545,6 +545,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "onload"));
     m_submit =
         QualifiedName(AtomicString::createAtomicString(starfish, "submit"));
+    m_toggle =
+        QualifiedName(AtomicString::createAtomicString(starfish, "toggle"));
+    m_ontoggle =
+        QualifiedName(AtomicString::createAtomicString(starfish, "ontoggle"));
     m_onsubmit =
         QualifiedName(AtomicString::createAtomicString(starfish, "onsubmit"));
     m_input =

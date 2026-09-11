@@ -53,6 +53,8 @@ public:
         Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
     int tabIndex() override;
+    bool supportsFocus() override;
+    bool handleDefaultEvent(Event* event) override;
 
     LayoutRect offsetRect();
     long offsetWidth()
@@ -136,7 +138,7 @@ public:
     // DECLARE_EVENT_LISTENER(select);
     // DECLARE_EVENT_LISTENER(show);
     DECLARE_EVENT_LISTENER(submit);
-    // DECLARE_EVENT_LISTENER(toggle);
+    DECLARE_EVENT_LISTENER(toggle);
     DECLARE_EVENT_LISTENER(pointerdown);
     DECLARE_EVENT_LISTENER(pointerup);
     DECLARE_EVENT_LISTENER(pointermove);

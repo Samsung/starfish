@@ -20,6 +20,8 @@
 #include "StarfishConfig.h"
 
 #include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLDetailsElement.h"
+#include "core/dom/KeyboardEvent.h"
 
 #include "Starfish.h"
 #include "core/dom/Event.h"
@@ -174,6 +176,8 @@ void HTMLElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
         setAttributeEventListener(ss->m_keypress, value, this);
     } else if (name == ss->m_onresize) {
         setAttributeEventListener(ss->m_resize, value, this);
+    } else if (name == ss->m_ontoggle) {
+        setAttributeEventListener(ss->m_toggle, value, this);
     } else if (name == ss->m_onsubmit) {
         setAttributeEventListener(ss->m_submit, value, this);
     } else if (name == ss->m_oninput) {
@@ -402,6 +406,68 @@ void HTMLElement::setLang(String* lang)
     setAttribute(starfish()->staticStrings()->m_lang, lang);
 }
 
+bool HTMLElement::supportsFocus()
+{
+    return HTMLDetailsElement::summaryOwner(this) || Element::supportsFocus();
+}
+
+bool HTMLElement::handleDefaultEvent(Event* event)
+{
+    if (Element::handleDefaultEvent(event)) {
+        return true;
+    }
+    auto details = HTMLDetailsElement::summaryOwner(this);
+    if (!details) {
+        return false;
+    }
+    // Summary activation excludes interactive descendants, but not ordinary
+    // phrasing content. See HTML "the summary element", activation behavior.
+    auto target = event->eventPath().empty()
+                      ? event->target()
+                      : event->eventPath().front().shadowAdjustedTarget.value();
+    if (target && target->isNode()) {
+        for (Node* node = target->asNode(); node && node != this;
+             node = node->parentNode()) {
+            if (!node->isElement()) {
+                continue;
+            }
+            auto element = node->asElement();
+            auto tag = element->localName();
+            auto has = [&](const char* attr) {
+                return element->hasAttribute(
+                    String::createASCIIString(attr, strlen(attr)));
+            };
+            if (tag->equals("button") || tag->equals("select") ||
+                tag->equals("textarea") || tag->equals("label") ||
+                tag->equals("details") || tag->equals("iframe") ||
+                tag->equals("embed") || (tag->equals("a") && has("href")) ||
+                ((tag->equals("audio") || tag->equals("video")) &&
+                 has("controls")) ||
+                ((tag->equals("img") || tag->equals("object")) &&
+                 has("usemap")) ||
+                (tag->equals("input") &&
+                 !element
+                      ->getAttributeOrEmpty(starfish()->staticStrings()->m_type)
+                      ->equalsIgnoreCase("hidden"))) {
+                return false;
+            }
+        }
+    }
+    if (event->isMouseEvent() && event->type()->equals("click")) {
+        details->setOpen(!details->open());
+        return true;
+    }
+    if (event->isTrusted() && event->isKeyboardEvent() && target == this) {
+        auto key = event->asKeyboardEvent()->key();
+        if (event->type()->equals("keydown") &&
+            (key->equals("Enter") || key->equals(" "))) {
+            dispatchEventByUA(document()->createSimulatedMouseClickEvent());
+            return true;
+        }
+    }
+    return false;
+}
+
 void HTMLElement::click()
 {
     // https://html.spec.whatwg.org/multipage/interaction.html#dom-click
@@ -493,6 +559,7 @@ DEFINE_EVENT_LISTENER(HTMLElement, progress);
 DEFINE_EVENT_LISTENER(HTMLElement, scroll);
 DEFINE_EVENT_LISTENER(HTMLElement, resize);
 DEFINE_EVENT_LISTENER(HTMLElement, submit);
+DEFINE_EVENT_LISTENER(HTMLElement, toggle);
 DEFINE_EVENT_LISTENER(HTMLElement, pointerdown);
 DEFINE_EVENT_LISTENER(HTMLElement, pointerup);
 DEFINE_EVENT_LISTENER(HTMLElement, pointermove);

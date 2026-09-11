@@ -1,0 +1,14 @@
+// https://html.spec.whatwg.org/multipage/interaction.html#the-toggleevent-interface
+[Constructor(DOMString type, optional ToggleEventInit eventInitDict),
+ ConstructorCallWith=ExecutionContext, Exposed=Window]
+interface ToggleEvent : Event {
+    readonly attribute DOMString oldState;
+    readonly attribute DOMString newState;
+    readonly attribute Element? source;
+};
+
+dictionary ToggleEventInit : EventInit {
+    DOMString oldState = "";
+    DOMString newState = "";
+    Element? source = null;
+};

@@ -62,7 +62,7 @@ interface GlobalEventHandlers {
   attribute EventHandler onsubmit;
   [STARFISH_ENABLE_MULTIMEDIA] attribute EventHandler onsuspend;
   [STARFISH_ENABLE_MULTIMEDIA] attribute EventHandler ontimeupdate;
-  [Unimplemented] attribute EventHandler ontoggle;
+  attribute EventHandler ontoggle;
   [STARFISH_ENABLE_MULTIMEDIA] attribute EventHandler onvolumechange;
   [STARFISH_ENABLE_MULTIMEDIA] attribute EventHandler onwaiting;
 

@@ -137,6 +137,7 @@ public:
     static const CounterStyle* getKnownCounter(String* name);
     static const CounterStyle* getNoneCounter();
     static const CounterStyle* getDiscCounter();
+    static const CounterStyle* getDisclosureCounter(bool open);
     static const CounterStyle* getDecimalCounter();
     static const CounterStyle* getCircleCounter();
     static const CounterStyle* getSquareCounter();
