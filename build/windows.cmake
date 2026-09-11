@@ -60,6 +60,7 @@ SET(STARFISH_CXXFLAGS_MODE
 SET(STARFISH_DEFINES
         -DSTARFISH_VERSION_STR="${LWE_VERSION}"
         -DSTARFISH_WINDOWS
+        -DSTARFISH_WINDOWS_ANGLE
         -DSTARFISH_EXPORTS
         -D_TIMESPEC_DEFINED
         -D_USE_MATH_DEFINES
@@ -369,8 +370,9 @@ ADD_CUSTOM_COMMAND (TARGET starfish.shared_library POST_BUILD
 )
 
 IF (STARFISH_WINDOWS_BUILD_SHELL)
-    FILE (GLOB STARFISH_WINDOWS_SHELL_SRC
-        ${STARFISH_ROOT}/src/shell/windows/*.cpp)
+    SET (STARFISH_WINDOWS_SHELL_SRC
+        ${STARFISH_ROOT}/src/shell/windows/StarfishShell.cpp
+        ${STARFISH_ROOT}/src/shell/windows/RendererANGLE.cpp)
     ADD_EXECUTABLE (starfish.windows_shell ${STARFISH_WINDOWS_SHELL_SRC})
     SET_TARGET_PROPERTIES (starfish.windows_shell PROPERTIES
         OUTPUT_NAME "StarfishShell"
@@ -386,11 +388,10 @@ IF (STARFISH_WINDOWS_BUILD_SHELL)
     # deliberately NOT defined here: the shell is an embedder, so LWE_EXPORT
     # must resolve to dllimport against Starfish.dll.
     TARGET_COMPILE_DEFINITIONS (starfish.windows_shell PRIVATE
-        STARFISH_WINDOWS _CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN)
-    # gdi32: ChoosePixelFormat/SetPixelFormat/SwapBuffers. opengl32: wgl* and
-    # the OpenGL 1.1 entry points RendererWGL falls back to.
+        STARFISH_WINDOWS STARFISH_WINDOWS_ANGLE _CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN)
+    # gdi32: GetDC/ReleaseDC for the EGL native window handle.
     TARGET_LINK_LIBRARIES (starfish.windows_shell PRIVATE
-        starfish.shared_library user32 imm32 gdi32 opengl32)
+        starfish.shared_library user32 imm32 gdi32)
     # The shell's entry point is wmain (wide argv, for URL/file arguments with
     # non-ASCII paths). CMake links the executable with an explicit
     # /subsystem:console, and link.exe then defaults to mainCRTStartup --

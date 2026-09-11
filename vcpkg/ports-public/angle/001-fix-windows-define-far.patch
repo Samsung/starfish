@@ -1,0 +1,12 @@
+diff --git a/src/gpu_info_util/SystemInfo_win.cpp b/src/gpu_info_util/SystemInfo_win.cpp
+index f4bb137f2..0a94e457e 100644
+--- a/src/gpu_info_util/SystemInfo_win.cpp
++++ b/src/gpu_info_util/SystemInfo_win.cpp
+@@ -14,6 +14,7 @@
+ // Windows.h needs to be included first
+ #include <windows.h>
+ 
++#define FAR
+ #include <dxgi.h>
+ 
+ #include <array>

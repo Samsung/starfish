@@ -20,7 +20,7 @@
     "fontconfig",
     "freetype",
     "giflib",
-    "glew",
+    "angle",
     "libpng",
     "pthreads"
   ]
