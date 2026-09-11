@@ -336,6 +336,14 @@ void Window::postMessage(Window* source, ScriptValue message,
 
     // NOTE addIder would hold serializedRecord
     if (browsingContext()) {
+        // Per HTML spec §10.3.3: if targetOrigin is not "*", check it against
+        // the receiver's current origin before delivering the message.
+        if (!targetOrigin->equals("*")) {
+            String* receiverOrigin = location()->origin();
+            if (!receiverOrigin->equals(targetOrigin)) {
+                return;
+            }
+        }
         webView()->messageLoop()->addIdler(
             browsingContext()->window(),
             [](size_t handle, void* data, void* data1, void* data2) {

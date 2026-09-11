@@ -79,8 +79,11 @@ bool WebOrigin::isSameOrigin(const WebOrigin* otherWebOrigin) const
         return true;
     }
 
-    if ((isOpaque()) && (otherWebOrigin->isOpaque())) {
-        return true;
+    // Per HTML spec §7.5: two distinct opaque origins are never same-origin.
+    // Only the identity check above (this == otherWebOrigin) covers the case
+    // where the same opaque origin is compared to itself.
+    if (isOpaque() || otherWebOrigin->isOpaque()) {
+        return false;
     }
 
     if ((isOpaque()) || (otherWebOrigin->isOpaque())) {
