@@ -162,6 +162,8 @@ FILE (GLOB STARFISH_WORKER_CORE_SRC
     ${STARFISH_ROOT}/src/core/dom/CloseEvent.cpp
     ${STARFISH_ROOT}/src/core/dom/Event.cpp
     ${STARFISH_ROOT}/src/core/dom/EventTarget.cpp
+    ${STARFISH_ROOT}/src/core/dom/AbortController.cpp
+    ${STARFISH_ROOT}/src/core/dom/AbortSignal.cpp
     ${STARFISH_ROOT}/src/core/dom/DOMException.cpp
     ${STARFISH_ROOT}/src/core/csp/*.cpp
     ${STARFISH_ROOT}/src/core/fetch/*.cpp

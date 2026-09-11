@@ -1,0 +1,53 @@
+/*
+ * Copyright (c) 2026-present Samsung Electronics Co., Ltd
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *  USA
+ */
+
+#ifndef __StarfishAbortSignal__
+#define __StarfishAbortSignal__
+
+#include "core/dom/EventTargetWithExecutionContext.h"
+
+namespace Starfish {
+
+class AbortSignal : public EventTargetWithExecutionContext {
+public:
+    AbortSignal(ExecutionContext* executionContext);
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isAbortSignal() const override;
+
+    static AbortSignal* abort(ExecutionContext* executionContext,
+                              ScriptValue reason = scriptUndefined());
+    bool aborted() const;
+    ScriptValue reason() const
+    {
+        return m_reason;
+    }
+    void throwIfAborted();
+    void signalAbort(ScriptValue reason);
+    EventListener* onabort();
+    void setOnabort(EventListener* listener);
+
+private:
+    void setAbortReason(ScriptValue reason);
+    // A GC-traced JS value also preserves object identity across reason reads.
+    ScriptValue m_reason;
+};
+
+} // namespace Starfish
+#endif
