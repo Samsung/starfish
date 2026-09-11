@@ -19,6 +19,7 @@
  */
 
 #include <SkMatrix.h>
+#include <chrono>
 #include <inttypes.h>
 
 #include "StarfishConfig.h"
@@ -117,6 +118,88 @@ ANNOTATE_DEFINE;
 extern bool g_forceRendering;
 extern Starfish::CanvasSurface* g_surfaceForScreehShot;
 #endif
+
+namespace {
+
+// STARFISH_LONG_FRAME_LOG=1 logs every rendering pass that overruns the 60Hz
+// frame budget, split by phase, so a dropped frame can be attributed to
+// script, layout, paint or composite on a production build.
+class LongFrameLogger {
+    using Clock = std::chrono::steady_clock;
+
+public:
+    enum class Phase { Script, Layout, Paint, Composite };
+
+    LongFrameLogger()
+        : m_enabled(isEnabled())
+    {
+        if (m_enabled) {
+            m_start = m_phaseStart = Clock::now();
+        }
+    }
+
+    void endPhase(Phase phase)
+    {
+        if (m_enabled) {
+            Clock::time_point now = Clock::now();
+            m_phaseMs[static_cast<size_t>(phase)] =
+                millisecondsBetween(m_phaseStart, now);
+            m_phaseStart = now;
+        }
+    }
+
+    ~LongFrameLogger()
+    {
+        if (!m_enabled) {
+            return;
+        }
+        float totalMs = millisecondsBetween(m_start, Clock::now());
+        if (totalMs > kFrameBudgetMs) {
+            // Whatever ran outside the four marked phases (per-pass cleanup,
+            // animation stepping for the next frame) is reported as "other"
+            // so the parts always add up to the total.
+            float otherMs = totalMs;
+            for (float phaseMs : m_phaseMs) {
+                otherMs -= phaseMs;
+            }
+            STARFISH_LOG_INFO(
+                "long frame %.2fms (script %.2f, layout %.2f, "
+                "paint %.2f, composite %.2f, other %.2f)",
+                totalMs, phaseMs(Phase::Script), phaseMs(Phase::Layout),
+                phaseMs(Phase::Paint), phaseMs(Phase::Composite), otherMs);
+        }
+    }
+
+private:
+    static constexpr float kFrameBudgetMs = 16.f;
+
+    static bool isEnabled()
+    {
+        static const bool s_enabled = [] {
+            const char* v = getenv("STARFISH_LONG_FRAME_LOG");
+            return v && *v == '1';
+        }();
+        return s_enabled;
+    }
+
+    static float millisecondsBetween(Clock::time_point from,
+                                     Clock::time_point to)
+    {
+        return std::chrono::duration<float, std::milli>(to - from).count();
+    }
+
+    float phaseMs(Phase phase) const
+    {
+        return m_phaseMs[static_cast<size_t>(phase)];
+    }
+
+    bool m_enabled;
+    Clock::time_point m_start;
+    Clock::time_point m_phaseStart;
+    float m_phaseMs[4]{};
+};
+
+} // namespace
 
 namespace Starfish {
 #if defined(STARFISH_ENABLE_TEST)
@@ -1494,6 +1577,7 @@ RenderResult WebView::rendering(bool force)
 
     m_lastRenderingTick = longTickCount();
     m_inRendering = true;
+    LongFrameLogger longFrame;
     ANNOTATE_SETUP;
     ANNOTATE_CHANNEL_COLOR(3001, ANNOTATE_BLUE, "WebView::rendering");
     INSTALL_PROFILE_TIMER("WebView::rendering");
@@ -1531,11 +1615,14 @@ RenderResult WebView::rendering(bool force)
         }
     }
 
+    longFrame.endPhase(LongFrameLogger::Phase::Script);
+
     size_t totalAllocatedCanvasSurfaceSizeBefore =
         CanvasSurface::g_totalAllocatedCanvasSurfaceSize;
 
     layoutIfNeeded();
     computeLayoutPaintingDirty();
+    longFrame.endPhase(LongFrameLogger::Phase::Layout);
 
     // Geometry is settled from here to the end of the frame; repaint
     // tracking, painting and compositing all walk box matrices from the
@@ -1791,6 +1878,7 @@ RenderResult WebView::rendering(bool force)
         delete canvas;
         clearStack<DEFAULT_CLEAR_STACK_SIZE>();
     }
+    longFrame.endPhase(LongFrameLogger::Phase::Paint);
 
     bool someTilesSkippedPaintingDueToTimeOver = false;
     if (m_needsComposite) {
@@ -1860,6 +1948,7 @@ RenderResult WebView::rendering(bool force)
         }
         m_needsComposite = false;
     }
+    longFrame.endPhase(LongFrameLogger::Phase::Composite);
 
     // cleanup box-shadow cache
     {
