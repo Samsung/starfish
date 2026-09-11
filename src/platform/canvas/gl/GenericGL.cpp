@@ -27,6 +27,13 @@
 #include "core/page/WebView.h"
 #include "core/modules/renderer/Renderer.h"
 
+// On STARFISH_WINDOWS_ANGLE, IncludeGL.h above already pulled in the real
+// EGL/egl.h + EGL/eglext.h (ANGLE ships genuine Khronos headers), which
+// define all of these already -- redeclaring them here would conflict
+// (e.g. GLsizeiptr/GLintptr by basic type on x86, EGL_NO_CONTEXT/PFNEGL*
+// by redefinition). Every other platform's IncludeGL.h branch stops at
+// GLES2/GLES3 with no EGL header, so they still need these stand-ins.
+#if !defined(STARFISH_WINDOWS_ANGLE)
 #define EGL_NO_CONTEXT ((EGLContext)0)
 typedef void *EGLDisplay;
 typedef void *EGLContext;
@@ -35,20 +42,25 @@ typedef void *EGLClientBuffer;
 typedef unsigned int EGLBoolean;
 typedef unsigned int EGLenum;
 typedef GLint EGLint;
+#endif
 typedef EGLDisplay (*PFNGLEGLGETCURRENTDISPLAYPROC)();
+#if !defined(STARFISH_WINDOWS_ANGLE)
 typedef EGLImageKHR (*PFNEGLCREATEIMAGEKHRPROC)(EGLDisplay dpy, EGLContext ctx,
                                                 EGLenum target,
                                                 EGLClientBuffer buffer,
                                                 const EGLint *attribList);
 typedef EGLBoolean (*PFNEGLDESTROYIMAGEKHRPROC)(EGLDisplay dpy,
                                                 EGLImageKHR image);
+#endif
 
 // gles3.0 only
 #ifndef GLAPIENTRY
 #define GLAPIENTRY
 #endif
+#if !defined(STARFISH_WINDOWS_ANGLE)
 typedef void(GLAPIENTRY *PFNGLINVALIDATEFRAMEBUFFERPROC)(
     GLenum target, GLsizei numAttachments, const GLenum *attachments);
+#endif
 
 namespace Starfish {
 
@@ -1092,7 +1104,7 @@ public:
 
     GenericGL(Renderer *renderer)
     {
-#if defined(STARFISH_WINDOWS)
+#if defined(STARFISH_WINDOWS) && !defined(STARFISH_WINDOWS_ANGLE)
         // Every GL entry point this class calls goes through GLEW's function
         // pointers on Windows, and that GLEW copy is linked into this library
         // -- an embedder calling glewInit() in its own module would leave

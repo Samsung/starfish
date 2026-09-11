@@ -21,7 +21,7 @@
 
 #include "LWEWebView.h"
 
-#include "RendererWGL.h"
+#include "RendererANGLE.h"
 
 namespace {
 
@@ -314,17 +314,15 @@ public:
             return 1;
         }
 
-        log("initializing OpenGL");
-        if (!m_renderer.initialize(m_window)) {
-            showError(L"OpenGL initialization failed");
-            shutdownWindow();
-            return 1;
-        }
-        log("OpenGL initialized");
-
-        // The renderer must see the final client area on its first frame:
-        // creating the WebContainer while the HWND is still hidden leaves some
-        // drivers with the pre-maximized backing size and no later expose.
+        // The window must already be at its final size before the EGL/D3D11
+        // window surface is created: eglCreateWindowSurface sizes ANGLE's
+        // swapchain from the HWND's client rect at that moment, and while
+        // ANGLE resizes the swapchain again once it notices the client rect
+        // changed, that check runs on a later swap -- for a page that barely
+        // repaints, that may never happen. Showing/maximizing first means the
+        // renderer and the WebContainer (created further below, from the same
+        // now-final GetClientRect) agree on size from frame one instead of
+        // relying on ANGLE to reconcile them after the fact.
         //
         // Screenshot runs get a fixed size rather than the maximized one, so
         // the capture does not depend on the display the run happens to land
@@ -339,6 +337,34 @@ public:
         }
         UpdateWindow(m_window);
         SetFocus(m_window);
+
+        log("initializing OpenGL");
+        // Screenshot runs never need to present anything -- the capture just
+        // reads the framebuffer back -- so they render into an EGL Pbuffer
+        // instead of a window surface. A window surface needs a real DXGI
+        // swapchain, which needs an active/interactive desktop session; a CI
+        // runner with nobody logged in doesn't have one, and that swapchain
+        // creation fails identically for hardware and WARP devices there
+        // (DXGI_ERROR_NOT_CURRENTLY_AVAILABLE). A Pbuffer is just a D3D11
+        // texture with no such requirement. Match the window's current
+        // client size (set just above) so the renderer's own resize
+        // tracking, which still watches this HWND, starts from the same
+        // value instead of immediately treating it as a resize.
+        bool offscreen = !m_screenshotPath.empty();
+        unsigned offscreenWidth = 0;
+        unsigned offscreenHeight = 0;
+        if (offscreen) {
+            RECT client{};
+            GetClientRect(m_window, &client);
+            offscreenWidth = static_cast<unsigned>(client.right - client.left);
+            offscreenHeight = static_cast<unsigned>(client.bottom - client.top);
+        }
+        if (!m_renderer.initialize(m_window, offscreenWidth, offscreenHeight)) {
+            showError(L"OpenGL initialization failed");
+            shutdownWindow();
+            return 1;
+        }
+        log("OpenGL initialized");
 
         if (!createWebContainer()) {
             showError(L"Starfish failed to create a WebContainer");
@@ -502,7 +528,7 @@ private:
             "Asia/Seoul"
         };
 
-        StarfishShell::RendererWGL* renderer = &m_renderer;
+        StarfishShell::RendererANGLE* renderer = &m_renderer;
         LWE::WebContainer::RendererGLConfiguration config;
         config.onMakeCurrent = [renderer](LWE::WebContainer*) {
             renderer->makeCurrent();
@@ -634,11 +660,23 @@ private:
             return 0;
         }
         case WM_DPICHANGED: {
-            const RECT* suggested = reinterpret_cast<const RECT*>(lParam);
-            SetWindowPos(window, nullptr, suggested->left, suggested->top,
-                         suggested->right - suggested->left,
-                         suggested->bottom - suggested->top,
-                         SWP_NOACTIVATE | SWP_NOZORDER);
+            // The suggested rect is sized for the window's *restored* state,
+            // not for maximized. ShowWindow(SW_SHOWMAXIMIZED) is what first
+            // puts a never-shown window onto a real monitor, so this message
+            // can fire synchronously inside that call, before the message
+            // loop ever runs. Applying the suggested rect unconditionally
+            // would shrink the window right back down immediately after it
+            // was maximized, and nothing would re-maximize it afterward --
+            // only a manual resize produces a further WM_SIZE to fix it. A
+            // maximized window already gets the correct extent for whichever
+            // monitor it ends up on, so leave it alone.
+            if (!IsZoomed(window)) {
+                const RECT* suggested = reinterpret_cast<const RECT*>(lParam);
+                SetWindowPos(window, nullptr, suggested->left, suggested->top,
+                             suggested->right - suggested->left,
+                             suggested->bottom - suggested->top,
+                             SWP_NOACTIVATE | SWP_NOZORDER);
+            }
             return 0;
         }
         case WM_MOUSEMOVE:
@@ -910,7 +948,7 @@ private:
 
     HINSTANCE m_instance{ nullptr };
     HWND m_window{ nullptr };
-    StarfishShell::RendererWGL m_renderer;
+    StarfishShell::RendererANGLE m_renderer;
     LWE::WebContainer* m_container{ nullptr };
     bool m_isIMEActive{ false };
     bool m_compositionCommitted{ false };

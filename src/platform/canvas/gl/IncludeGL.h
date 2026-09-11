@@ -22,7 +22,7 @@
 
 #if !defined(STARFISH_HEADLESS)
 
-#if defined(STARFISH_WINDOWS_UWP)
+#if defined(STARFISH_WINDOWS_UWP) || defined(STARFISH_WINDOWS_ANGLE)
 // Enable function definitions in the GL headers below
 #define GL_GLEXT_PROTOTYPES
 #include <GLES2/gl2.h>
@@ -31,13 +31,9 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <EGL/eglplatform.h>
+#if defined(STARFISH_WINDOWS_UWP)
 #include <angle_windowsstore.h>
-#elif defined(STARFISH_WINDOWS)
-#include <GL/glew.h>
-#include <GL/wglew.h>
-
-#include <Windows.h>
-#pragma comment(lib, "Opengl32.lib")
+#endif
 #elif defined(STARFISH_ANDROID)
 #define EGL_EGLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES

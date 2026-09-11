@@ -167,6 +167,9 @@ void Renderer::destroy()
     STARFISH_LOG_INFO("Renderer::destroy()");
     m_isDestroyed = true;
     clearResources();
+    // The native display can only be terminated after the render thread has
+    // detached its context from the draw and read surfaces.
+    clearCurrentContext();
     clearNativeHandlers();
     if (m_compositorContext) {
         delete m_compositorContext;

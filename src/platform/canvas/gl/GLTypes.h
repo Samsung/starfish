@@ -43,9 +43,15 @@ typedef int64_t GLint64;
 typedef uint64_t GLuint64;
 #endif
 
-#if defined(STARFISH_WINDOWS)
-typedef ptrdiff_t GLintptr;
-typedef ptrdiff_t GLsizeiptr;
+// Must match Khronos khrplatform.h's khronos_intptr_t/khronos_ssize_t
+// exactly (basic type, not just size): real GLES2/gl2.h -- pulled in
+// alongside this header on STARFISH_WINDOWS_ANGLE builds -- typedefs
+// GLintptr/GLsizeiptr from those, and MSVC errors (C2371) on a redeclaration
+// that merely matches in size, e.g. ptrdiff_t on 32-bit Windows is `int`,
+// not the `long int` khronos_ssize_t uses there.
+#if defined(STARFISH_WINDOWS) && defined(_WIN64)
+typedef long long int GLintptr;
+typedef long long int GLsizeiptr;
 #else
 typedef long int GLintptr;
 typedef long int GLsizeiptr;

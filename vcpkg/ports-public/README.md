@@ -14,6 +14,18 @@ is the failure mode to watch for.
 
 Upstream is https://github.com/microsoft/vcpkg (MIT).
 
+## angle -- from-scratch port, not a patch
+
+Unlike every other port here, `angle` has no upstream vcpkg counterpart at
+all: Google does not publish one, and ANGLE's own build is GN/Chromium-based,
+not CMake. This port is a hand-written `CMakeLists.txt` (globbing ANGLE's own
+source layout for `libEGL`/`libGLESv2`/`libANGLE`) pinned at commit
+`aa292a59f9f222535c2ff34d8eecbe3cce039664` (2019-07-19), the same commit the
+DALi-era build (`tool/windows/dali-vcpkg`) uses -- it also references this
+directory as a second overlay path, so both graphs share one copy instead of
+drifting. The current (non-DALi) Windows graph has not yet been moved to a
+newer ANGLE; that is separate follow-up work, not a DALi-only limitation.
+
 ## gperf -- full replacement, not a patch
 
 Unlike every other port here, `gperf`'s `portfile.cmake` and `vcpkg.json` are
