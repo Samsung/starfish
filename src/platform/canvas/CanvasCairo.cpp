@@ -115,13 +115,18 @@ private:
 //
 // A disclaim proc is handed *every* unmarked slot of the block being swept --
 // free-list fragments, slots never constructed, slots reclaimed in an earlier
-// cycle, and (debug collector) slots poisoned by an explicit free. Word 0 --
-// the vptr -- is the liveness sentinel, as in pathCairoDisclaim: zero means
-// there is nothing to release. Note that word 0 holds the free-list link on a
-// free slot, so this must never dispatch a virtual call through it;
-// clearNativeResources() is deliberately non-virtual and only reads
-// m_pattern, which the collector has zeroed on any slot it freed
-// (GC_clear_block clears everything but the link).
+// cycle, and (debug collector) slots poisoned by an explicit free. The
+// liveness sentinel is m_pattern, NOT word 0 (the vtable pointer): the instant
+// this proc returns 0, GC_reclaim_generic() (GCutil reclaim.c) claims word 0
+// as the free-list link and only then zeroes the rest of the object via
+// GC_clear_block(), which explicitly skips word 0. So on the next sweep over
+// a slot still sitting unreclaimed on the free list, word 0 holds that link
+// (an ordinary, usually non-zero pointer), not a sentinel -- checking it would
+// misclassify a disposed-but-not-yet-reallocated slot as live. m_pattern does
+// not have that problem: GC_clear_block zeroes it on every pass, first
+// disposal or a later re-visit alike, and this must never dispatch a virtual
+// call through word 0 regardless; clearNativeResources() is deliberately
+// non-virtual and only reads m_pattern.
 static int nativeGradientCairoDisclaim(void* obj);
 
 class NativeGradientCairo : public NativeGradient {
@@ -294,8 +299,8 @@ static int nativeGradientCairoDisclaim(void* obj)
     // object itself starts one debug header later.
     obj = GC_USR_PTR_FROM_BASE(obj);
 #endif
-    size_t* live = reinterpret_cast<size_t*>(obj);
-    if (*live == 0) {
+    NativeGradientCairo* gradient = reinterpret_cast<NativeGradientCairo*>(obj);
+    if (gradient->pattern() == nullptr) {
         return 0;
     }
 #ifdef GC_DEBUG
@@ -307,12 +312,11 @@ static int nativeGradientCairoDisclaim(void* obj)
     const size_t gcFreedMemMarker = sizeof(size_t) == 8
                                         ? (size_t)0xEFBEADDEdeadbeefULL
                                         : (size_t)0xdeadbeef;
-    if (*live == gcFreedMemMarker) {
+    if (reinterpret_cast<size_t>(gradient->pattern()) == gcFreedMemMarker) {
         return 0;
     }
 #endif
-    reinterpret_cast<NativeGradientCairo*>(obj)->clearNativeResources();
-    *live = 0;
+    gradient->clearNativeResources();
     return 0; // 0 = OK to reclaim (non-zero would resurrect the object)
 }
 

@@ -51,13 +51,27 @@ int getValidValueNativeImageData(void* ptr, GC_mark_pair* arr)
 
 namespace Starfish {
 
-static int bufferedNativeImageDataClear(void* obj)
+// A disclaim proc is handed *every* unmarked slot of the block being swept --
+// free-list fragments, slots never constructed, and (debug collector) slots
+// poisoned by an explicit free -- and GC_disclaim_and_reclaim() (GCutil
+// reclaim.c) re-visits the same slot on every later cycle. The liveness
+// sentinel therefore cannot be word 0 (the vtable pointer): the instant this
+// proc returns 0, GC_reclaim_generic() claims word 0 as the free-list link
+// and only then zeroes the rest of the object via GC_clear_block(), which
+// explicitly skips word 0. So on the next sweep over a slot still sitting
+// unreclaimed on the free list, word 0 holds that link (an ordinary, usually
+// non-zero pointer), not our sentinel -- this would misclassify the slot as
+// live and dispatch disposeNativeImageData() (virtual) through a bogus
+// vtable. m_gcDisclaimAlive lives elsewhere in the object, which
+// GC_clear_block *does* zero on every pass (first disposal or a later
+// re-visit alike), so it reads back 0 reliably from then on.
+int GC_CALLBACK BufferedNativeImageData::disclaimProc(void* obj)
 {
 #if !defined(NDEBUG)
     obj = GC_USR_PTR_FROM_BASE(obj);
 #endif
-    size_t* ptr = (size_t*)obj;
-    if (*ptr == 0) {
+    BufferedNativeImageData* aliveObj = (BufferedNativeImageData*)obj;
+    if (aliveObj->m_gcDisclaimAlive == 0) {
         // already freed
         return 0;
     }
@@ -66,18 +80,17 @@ static int bufferedNativeImageDataClear(void* obj)
     // GC_FREED_MEM_MARKER (see GCutil include/private/dbg_mlc.h), and later
     // sweeps still run this disclaim proc over the freed slot. Whoever freed
     // it owned its disposal; treating the poison as a vtable crashes, so skip
-    // it like the *ptr == 0 case above.
+    // it like the m_gcDisclaimAlive == 0 case above.
     const size_t kGcFreedMemMarker = sizeof(size_t) == 8
                                          ? (size_t)0xEFBEADDEdeadbeefULL
                                          : (size_t)0xdeadbeef;
-    if (*ptr == kGcFreedMemMarker) {
+    if (aliveObj->m_gcDisclaimAlive == kGcFreedMemMarker) {
         return 0;
     }
 #endif
-    BufferedNativeImageData* aliveObj = (BufferedNativeImageData*)obj;
     aliveObj->disposeNativeImageData();
     // mark cleared
-    *ptr = 0;
+    aliveObj->m_gcDisclaimAlive = 0;
     return 0;
 }
 
@@ -93,7 +106,7 @@ int BufferedNativeImageData::nativeImageDataGCKind()
                 GC_new_proc(markAndPushCustom<getValidValueNativeImageData, 1>),
                 0),
             FALSE, TRUE);
-        GC_register_disclaim_proc(gcKind, bufferedNativeImageDataClear, 1);
+        GC_register_disclaim_proc(gcKind, disclaimProc, 1);
     }
     return gcKind;
 }

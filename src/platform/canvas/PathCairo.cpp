@@ -68,20 +68,29 @@ namespace Starfish {
 // include/private/gc_priv.h), and GC_disclaim_and_reclaim() re-visits the same
 // slot on every later cycle. So this runs over slots that were never
 // constructed, slots reclaimed in an earlier cycle, and (debug collector) slots
-// poisoned by an explicit free. Word 0 -- the vptr -- is the liveness sentinel,
-// the same way bufferedNativeImageDataClear uses it: zero means there is
-// nothing to release, and it is zeroed once the cairo handles are gone so a
-// repeat sweep over the slot is a no-op. The collector overwrites word 0 with
-// the free-list link right after this returns, so writing it here is safe.
-static int pathCairoDisclaim(void* obj)
+// poisoned by an explicit free.
+//
+// The liveness sentinel therefore CANNOT be word 0 (the vptr): the instant
+// this proc returns 0, GC_reclaim_generic() (GCutil reclaim.c) does
+// `obj_link(p) = list;` -- overwrites word 0 with the free-list link -- and
+// only *then* clears the rest of the object via GC_clear_block(), which
+// explicitly skips word 0 ("skip link field"). So a sentinel written to word 0
+// survives only until that same statement runs, and the *next* sweep over an
+// object still sitting unreclaimed on the free list sees the free-list link
+// (an ordinary, usually non-zero pointer), not our zero -- the "already
+// disposed" check misses, and the code below would call clearNativeResources()
+// through a dangling/garbage `this`. m_gcDisclaimAlive lives elsewhere in the
+// object, which GC_clear_block *does* zero on every pass (first disposal or a
+// later re-visit alike), so it reads back 0 reliably from then on.
+int GC_CALLBACK PathCairo::disclaimProc(void* obj)
 {
 #ifdef GC_DEBUG
     // The proc is passed the allocation base; under the debug collector the
     // object itself starts one debug header later.
     obj = GC_USR_PTR_FROM_BASE(obj);
 #endif
-    size_t* live = reinterpret_cast<size_t*>(obj);
-    if (*live == 0) {
+    PathCairo* path = reinterpret_cast<PathCairo*>(obj);
+    if (path->m_gcDisclaimAlive == 0) {
         return 0;
     }
 #ifdef GC_DEBUG
@@ -91,12 +100,11 @@ static int pathCairoDisclaim(void* obj)
     const size_t gcFreedMemMarker = sizeof(size_t) == 8
                                         ? (size_t)0xEFBEADDEdeadbeefULL
                                         : (size_t)0xdeadbeef;
-    if (*live == gcFreedMemMarker) {
+    if (path->m_gcDisclaimAlive == gcFreedMemMarker) {
         return 0;
     }
 #endif
-    reinterpret_cast<PathCairo*>(obj)->clearNativeResources();
-    *live = 0;
+    path->clearNativeResources();
     return 0; // 0 = OK to reclaim (non-zero would resurrect the object)
 }
 
@@ -139,7 +147,7 @@ int PathCairo::gcKind()
     // cairo handles, never a GC pointer, so there is nothing to keep alive for
     // it -- and TRUE would resurrect any self-referencing path forever (see the
     // note on GC_finalized_kind in GCutil/fnlz_mlc.c).
-    GC_register_disclaim_proc(gcKind, pathCairoDisclaim, FALSE);
+    GC_register_disclaim_proc(gcKind, disclaimProc, FALSE);
     return gcKind;
 }
 
@@ -172,6 +180,8 @@ void PathCairo::clearNativeResources()
         cairo_surface_destroy(m_dumyCairoSurface);
         m_dumyCairoSurface = nullptr;
     }
+    // Marks the disclaim-proc sentinel; see disclaimProc above.
+    m_gcDisclaimAlive = 0;
 }
 
 Path* Path::create()
@@ -180,7 +190,8 @@ Path* Path::create()
 }
 
 PathCairo::PathCairo()
-    : m_cairoContext(nullptr)
+    : m_gcDisclaimAlive(1)
+    , m_cairoContext(nullptr)
     , m_dumyCairoSurface(nullptr)
 {
     m_needsComputeStrokeBoundingRect.strokeMiterLimit = 0;
