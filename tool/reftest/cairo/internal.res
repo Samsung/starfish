@@ -954,6 +954,7 @@ test/cairo/internal-test/shadowdom/template-deep-clone.html
 test/cairo/internal-test/shadowdom/style_ordinary_rule_after_first_resolution.html
 test/cairo/internal-test/shadowdom/slot_unassign_stale_style.html
 test/cairo/internal-test/shadowdom/nested_host_promotion.html
+test/cairo/internal-test/css/var-calc-four-sided-shorthand.html
 test/cairo/internal-test/shadowdom/slot_outside_shadow_tree.html
 test/cairo/internal-test/shadowdom/slot_in_rendering_tree.html
 #test/cairo/internal-test/web-animation/element_animate_01.html // please update this test after add an AnimationPlaybackEvent.
