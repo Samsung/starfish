@@ -297,6 +297,20 @@ public:
         }
     }
 
+    // Like markVisibleRectDirtyUpward(), but stops at the first buffered
+    // context: the contexts above it leave a buffered child out of their
+    // rects (see computeVisibleRect), so a change below it cannot reach them.
+    void markVisibleRectDirtyUpToGraphicsBuffer()
+    {
+        for (StackingContext* c = this; c && !c->m_visibleRectDirty;
+             c = c->parent()) {
+            c->m_visibleRectDirty = true;
+            if (c->m_needsGraphicsBuffer) {
+                break;
+            }
+        }
+    }
+
     // For a needsGraphicsBuffer() context, a paint-walk visit's only
     // observable effect is capturing the text-decoration state merged along
     // the ancestor path (paintStackingContext returns right after). The full
