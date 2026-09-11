@@ -320,7 +320,9 @@
 "i, cite, em, var, address, dfn {"
 "    font-style: italic;"
 "}"
-"address, article, aside, details, footer, header, hgroup, main, nav, section, summary, code {"
+// Phrasing content such as code retains the initial inline display.
+// https://html.spec.whatwg.org/multipage/rendering.html#phrasing-content-3
+"address, article, aside, details, footer, header, hgroup, main, nav, section, summary {"
 "    display: block;"
 "}"
 "html|slot {"
