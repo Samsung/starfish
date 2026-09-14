@@ -1392,18 +1392,24 @@ int32_t CountingContext::getAndUpdateListCounterIndex(Frame* frame)
         return 0;
     }
 
+    // A list item can be any element with display: list-item, not just li.
+    // Use the marker's originating element, not an enclosing li whose
+    // value attribute belongs to a different list item.
+    // https://drafts.csswg.org/css-lists-3/#declaring-a-list-item
     Node* node = frame->node();
     while (node) {
-        if (node->isHTMLLIElement()) {
+        if (node->isElement() &&
+            node->style()->display() == DisplayValue::ListItemDisplayValue) {
             break;
         }
         node = node->parentNode();
     }
 
     STARFISH_ASSERT(m_listCounterIndice.size() == m_listCounterReverses.size());
-    STARFISH_ASSERT(node && node->isHTMLLIElement());
+    STARFISH_ASSERT(node && node->style()->display() ==
+                                DisplayValue::ListItemDisplayValue);
 
-    if (node->asHTMLLIElement()->hasValue()) {
+    if (node->isHTMLLIElement() && node->asHTMLLIElement()->hasValue()) {
         m_listCounterIndice.back() = node->asHTMLLIElement()->value();
     }
 
