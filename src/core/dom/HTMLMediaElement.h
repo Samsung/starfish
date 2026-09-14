@@ -400,11 +400,6 @@ public:
     void giveupFetchingResource(bool shouldSetError = true);
     void setNetworkStateAsHaveNothing();
 
-    // Composite request driven by a new decoded video frame (as opposed to a
-    // one-shot state change like prepared/ended). Rate-limited when
-    // STARFISH_VIDEO_COMPOSITE_FPS_CAP is set, so a 60fps stream does not
-    // force the whole-page recomposite faster than the display can keep up.
-    void setNeedsCompositeForVideoFrame();
     void dispose()
     {
         m_operationQueueAbortGeneration++;
@@ -415,7 +410,6 @@ public:
     }
 
 protected:
-    uint64_t m_lastVideoFrameCompositeTime{ 0 };
     bool m_autoplayingFlag;
     double m_playbackRate;
     bool m_isPaused;

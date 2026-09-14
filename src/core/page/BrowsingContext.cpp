@@ -477,19 +477,9 @@ bool BrowsingContext::layoutIfNeeded()
 
         registerDidLayoutInWebView();
 
-        // A pure-geometry layout cannot change which boxes establish stacking
-        // contexts: SC establishment is style-derived and re-requested via
-        // ComputedStyleDamageEstablishesStackingContext, and frame tree
-        // rebuilds request it in buildFrameTreeIfNeeds. Skipping the full SC
-        // clear+rebuild here leaves only the property recompute per layout.
-        static bool scEstGate = getenv("STARFISH_SC_EST_GATE") &&
-                                *getenv("STARFISH_SC_EST_GATE") == '1';
-        if (!scEstGate) {
-            webView()->setNeedsEstablishesStackingContext();
-        }
+        webView()->setNeedsEstablishesStackingContext();
         // Boxes moved: every cached screen extent in the tree is stale (the
-        // re-establish above replaces the contexts anyway, except under the
-        // gate).
+        // re-establish above replaces the contexts anyway).
         if (webView()->rootStackingContext()) {
             webView()->rootStackingContext()->markScreenExtentDirty();
         }

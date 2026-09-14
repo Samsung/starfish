@@ -58,15 +58,6 @@ namespace Starfish {
 // (Settings::SetVideoOverlayEnabled), read off the owning WebView.
 bool MediaPlayerTizen::videoOverlayEnabled()
 {
-    // STARFISH_VIDEO_OVERLAY=1 (or =0) overrides the app setting, so the
-    // overlay path can be toggled per-device without an app update.
-    static int envOverride = []() {
-        const char* v = getenv("STARFISH_VIDEO_OVERLAY");
-        return v && *v ? (atoi(v) != 0 ? 1 : 0) : -1;
-    }();
-    if (envOverride >= 0) {
-        return envOverride == 1;
-    }
     return m_container && m_container->webView() &&
            m_container->webView()->videoOverlayEnabled();
 }
