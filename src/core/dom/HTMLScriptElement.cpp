@@ -473,15 +473,19 @@ static void buildScriptResourceRequest(HTMLScriptElement* element,
 {
     ResourceURL* targetURL = rurl;
     if (module) {
+        // https://html.spec.whatwg.org/#fetch-a-single-module-script
+        // The module map is keyed by the URL after import map resolution, so
+        // a bare specifier imported from several modules maps to one entry
+        // and one fetch.
+        targetURL = resolveModuleSrcFromImportMap(element->document(), rurl);
         auto& moduleScripts = element->document()->moduleScripts();
         for (auto* ms : moduleScripts) {
-            if (ms->url && *ms->url.value() == *rurl) {
+            if (ms->url && *ms->url.value() == *targetURL) {
                 // we already have the module.
                 return;
             }
         }
 
-        targetURL = resolveModuleSrcFromImportMap(element->document(), rurl);
         moduleScripts.push_back(new Document::ScriptModuleData(
             nullptr, targetURL, element, fromParser));
     }

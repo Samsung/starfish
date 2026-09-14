@@ -913,6 +913,7 @@ test/cairo/internal-test/scripting/execution_order/microTask_with_promise.html
 test/cairo/internal-test/scripting/module/test1.html
 test/cairo/internal-test/scripting/module/test2.html
 test/cairo/internal-test/scripting/module/test3.html
+test/cairo/internal-test/scripting/module/importmap_shared_specifier.html
 test/cairo/internal-test/idb/idb_put_object.html
 test/cairo/internal-test/custom-element-registry/define.html
 test/cairo/internal-test/custom-element-registry/reactions.html
