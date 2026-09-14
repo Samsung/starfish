@@ -401,23 +401,6 @@ void HTMLMediaElement::dedicatedMediaSourceFailure()
     m_delayingTheLoadEvent = false;
 }
 
-void HTMLMediaElement::setNeedsCompositeForVideoFrame()
-{
-    static int capFps = []() {
-        const char* v = getenv("STARFISH_VIDEO_COMPOSITE_FPS_CAP");
-        return v ? atoi(v) : 0;
-    }();
-    if (capFps > 0) {
-        uint64_t intervalMs = 1000 / (uint64_t)capFps;
-        uint64_t now = tickCount();
-        if (now - m_lastVideoFrameCompositeTime < intervalMs) {
-            return;
-        }
-        m_lastVideoFrameCompositeTime = now;
-    }
-    setNeedsComposite();
-}
-
 void HTMLMediaElement::giveupFetchingResource(bool shouldSetError)
 {
     if (shouldSetError) {

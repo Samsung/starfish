@@ -1311,7 +1311,7 @@ static void updateTimeCallback(void* data)
     // decoder-driven setNeedsComposite stalls.
     if (self->isMSE() == true && self->container() != nullptr &&
         self->container()->frame() != nullptr) {
-        self->container()->setNeedsCompositeForVideoFrame();
+        self->container()->setNeedsComposite();
     }
 }
 
@@ -1402,7 +1402,7 @@ void MediaPlayerLinux::setNativePlayerDisplayModeWithGL()
                         MediaPlayerLinux* self = (MediaPlayerLinux*)data;
                         if (self->alive() && self->container() != nullptr &&
                             self->container()->frame() != nullptr) {
-                            self->container()->setNeedsCompositeForVideoFrame();
+                            self->container()->setNeedsComposite();
                         }
                     },
                     player);
@@ -1739,7 +1739,7 @@ void MediaPlayerLinux::willDrawVideo(Compositor* canvas,
                 MediaPlayerLinux* self = (MediaPlayerLinux*)data;
                 if (self->alive() && self->container() != nullptr &&
                     self->container()->frame() != nullptr) {
-                    self->container()->setNeedsCompositeForVideoFrame();
+                    self->container()->setNeedsComposite();
                 }
             },
             delay, this);
@@ -2381,7 +2381,7 @@ void MediaPlayerLinux::publishDecodedFrame(AVFrame* frame)
                         MediaPlayerLinux* self = (MediaPlayerLinux*)data;
                         if (self->alive() && self->container() != nullptr &&
                             self->container()->frame() != nullptr) {
-                            self->container()->setNeedsCompositeForVideoFrame();
+                            self->container()->setNeedsComposite();
                         }
                         Locker<Mutex> locker(
                             *self->m_setNeedsCompositeEventIdlerHandleMutex);

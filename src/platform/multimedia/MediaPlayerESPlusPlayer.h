@@ -238,8 +238,7 @@ private:
     // use esplusplayer_resume.
     bool m_started : 1;
     // Selected once in createAndOpenPlayer (same source of truth as the
-    // capi path: STARFISH_VIDEO_OVERLAY env override, then the WebView
-    // setting).
+    // capi path: the WebView setting).
     bool m_overlayMode : 1;
     // Tracks the HW overlay plane visibility so scroll-driven show/hide is
     // only pushed to the player on a change.

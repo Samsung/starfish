@@ -259,15 +259,7 @@ void MediaPlayerESPlusPlayer::prepare(ResourceURL* url)
 
 bool MediaPlayerESPlusPlayer::videoOverlayEnabled()
 {
-    // Same policy as the capi path (MediaPlayerTizen::videoOverlayEnabled):
-    // STARFISH_VIDEO_OVERLAY env overrides the app setting.
-    static int envOverride = []() {
-        const char* v = getenv("STARFISH_VIDEO_OVERLAY");
-        return v && *v ? (atoi(v) != 0 ? 1 : 0) : -1;
-    }();
-    if (envOverride >= 0) {
-        return envOverride == 1;
-    }
+    // Same policy as the capi path (MediaPlayerTizen::videoOverlayEnabled).
     return m_container && m_container->webView() &&
            m_container->webView()->videoOverlayEnabled();
 }
@@ -1368,7 +1360,7 @@ void MediaPlayerESPlusPlayer::requestCompositeForVideoFrame()
                         }
                         if (self->container() != nullptr &&
                             self->container()->frame() != nullptr) {
-                            self->container()->setNeedsCompositeForVideoFrame();
+                            self->container()->setNeedsComposite();
                         }
                     },
                     this);
