@@ -1553,11 +1553,13 @@ public:
         gl()->bindBuffer(GL_ARRAY_BUFFER, buffer);
         if (bytes > capacity) {
             capacity = bytes;
-            gl()->bufferData(GL_ARRAY_BUFFER, bytes, NULL, GL_STREAM_DRAW);
+            gl()->bufferData(GL_ARRAY_BUFFER, (GLsizeiptr)bytes, NULL,
+                             GL_STREAM_DRAW);
         } else {
-            gl()->bufferData(GL_ARRAY_BUFFER, capacity, NULL, GL_STREAM_DRAW);
+            gl()->bufferData(GL_ARRAY_BUFFER, (GLsizeiptr)capacity, NULL,
+                             GL_STREAM_DRAW);
         }
-        gl()->bufferSubData(GL_ARRAY_BUFFER, 0, bytes, data);
+        gl()->bufferSubData(GL_ARRAY_BUFFER, 0, (GLsizeiptr)bytes, data);
     }
 
     GLuint texVertexShader()

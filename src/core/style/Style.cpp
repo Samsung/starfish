@@ -10221,7 +10221,9 @@ static void resolveSVGUseElementStyle(SVGSVGElement* svgElement)
                 ctx, e.second, e.first->style());
             sr->setStyle(
                 new ComputedStyle(style)); // just set style here for inherit
-            applyStyleToElement(sr->firstElementChild(), style, ctx);
+            if (Element* cloned = sr->firstElementChild()) {
+                applyStyleToElement(cloned, style, ctx);
+            }
             if (style->display() != NoneDisplayValue) {
                 RenderingSiblingIterator iter(sr->firstRenderingChild());
                 while (true) {
