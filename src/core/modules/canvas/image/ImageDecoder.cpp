@@ -605,17 +605,6 @@ static void setTargetPixel(GifByteType* pBuffer, GifColorType* colorMapEntry)
     }
 }
 
-static void makeTranparentPixel(GifByteType* pBuffer)
-{
-    if (pBuffer) {
-        GifByteType* buffer = pBuffer;
-        *buffer++ = 0;
-        *buffer++ = 0;
-        *buffer++ = 0;
-        *buffer++ = 0;
-    }
-}
-
 static GifRowType* allocateTarget(int width, int height)
 {
     GifRowType* buffer = (GifRowType*)malloc(height * sizeof(GifRowType));
@@ -735,8 +724,8 @@ static ImageDecoder::DecodeResult decodeGIF(
         GifColorType* colorMapEntry = nullptr;
         GifByteType* buffer = nullptr;
 
-        result.m_buffer =
-            (uint8_t*)malloc(result.m_width * result.m_height * 4);
+        // Transparent pixels are skipped below, so start from all-zero.
+        result.m_buffer = (uint8_t*)calloc(result.m_width * result.m_height, 4);
         STARFISH_RELEASE_ASSERT(result.m_buffer != nullptr);
         buffer = (GifByteType*)result.m_buffer;
         for (unsigned long h = 0; h < result.m_height; h++) {
@@ -943,7 +932,7 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
     int extCode = 0;
     int errorCode = 0;
     int transparentIndex = -1;
-    GifDisposeMethod disposeMethod = GifDisposeMethod::Background;
+    GifDisposeMethod disposeMethod = GifDisposeMethod::None;
     ColorMapObject* colorMap = nullptr;
     GifRecordType recordType = UNDEFINED_RECORD_TYPE;
     DecodeResult result;
@@ -993,21 +982,49 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
                 }
             }
 
-            if (disposeMethod == GifDisposeMethod::Background) {
-                // Clear background
-                GifColorType* colorMapEntry =
-                    &colorMap->Colors[gifFile->SBackGroundColor];
-                for (int h = 0; h < (int)result.m_height; h++) {
-                    for (int w = 0; w < (int)result.m_width; w++) {
-                        GifByteType* buffer =
-                            result.m_buffer + h * result.m_stride + w * 4;
-                        if (gifFile->SBackGroundColor != transparentIndex) {
-                            setTargetPixel(buffer, colorMapEntry);
-                        } else {
-                            makeTranparentPixel(buffer);
-                        }
-                        buffer = buffer + 4;
+            STARFISH_RELEASE_ASSERT(result.m_buffer != nullptr);
+            if (!m_gifPassStarted) {
+                // Each pass starts from a fully transparent canvas.
+                memset(result.m_buffer, 0, result.m_stride * result.m_height);
+                m_gifPassStarted = true;
+            } else if (m_gifPrevDispose != GifDisposeMethod::None) {
+                // Dispose the previous frame's area before drawing this one.
+                // "Restore to background" clears it to transparent (like
+                // browsers, the logical screen background color is ignored);
+                // "restore to previous" puts back what was under it.
+                size_t lineBytes = m_gifPrevWidth * 4;
+                for (size_t h = 0; h < m_gifPrevHeight; h++) {
+                    uint8_t* line = result.m_buffer +
+                                    (m_gifPrevTop + h) * result.m_stride +
+                                    m_gifPrevLeft * 4;
+                    if (m_gifPrevDispose == GifDisposeMethod::Background) {
+                        memset(line, 0, lineBytes);
+                    } else {
+                        memcpy(line, m_gifPrevSnapshot.data() + h * lineBytes,
+                               lineBytes);
                     }
+                }
+            }
+
+            m_gifPrevDispose = disposeMethod;
+            m_gifPrevLeft =
+                std::min<size_t>(gifFile->Image.Left, result.m_width);
+            m_gifPrevTop =
+                std::min<size_t>(gifFile->Image.Top, result.m_height);
+            m_gifPrevWidth = std::min<size_t>(gifFile->Image.Width,
+                                              result.m_width - m_gifPrevLeft);
+            m_gifPrevHeight = std::min<size_t>(gifFile->Image.Height,
+                                               result.m_height - m_gifPrevTop);
+            if (disposeMethod == GifDisposeMethod::RestorePrevious) {
+                // Save what is under this frame so it can be restored.
+                size_t lineBytes = m_gifPrevWidth * 4;
+                m_gifPrevSnapshot.resize(lineBytes * m_gifPrevHeight);
+                for (size_t h = 0; h < m_gifPrevHeight; h++) {
+                    memcpy(m_gifPrevSnapshot.data() + h * lineBytes,
+                           result.m_buffer +
+                               (m_gifPrevTop + h) * result.m_stride +
+                               m_gifPrevLeft * 4,
+                           lineBytes);
                 }
             }
             {
@@ -1015,8 +1032,6 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
                 GifRowType gifRow = nullptr;
                 GifColorType* colorMapEntry = nullptr;
                 GifByteType* buffer = nullptr;
-
-                STARFISH_RELEASE_ASSERT(result.m_buffer != nullptr);
 
                 row = gifFile->Image.Top;
                 col = gifFile->Image.Left;
@@ -1058,13 +1073,12 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
                     if (extension[0] != 4) {
                         return result;
                     }
-                    if (dispose == 3) {
-                        // It's not supported yet.
+                    if (dispose == 2) {
                         disposeMethod = GifDisposeMethod::Background;
+                    } else if (dispose == 3) {
+                        disposeMethod = GifDisposeMethod::RestorePrevious;
                     } else {
-                        disposeMethod = (dispose == 2)
-                                            ? GifDisposeMethod::Background
-                                            : GifDisposeMethod::None;
+                        disposeMethod = GifDisposeMethod::None;
                     }
                     transparentIndex =
                         (flags & GIF_TRANSPARENT_MASK) ? extension[4] : -1;
@@ -1133,6 +1147,7 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
             result.m_isSuccessful = false;
             result.delay = 0;
             m_gifFile = gifFile;
+            m_gifPassStarted = false;
         } break;
         default:
             STARFISH_LOG_WARN("Unhandled record type!");
@@ -1149,6 +1164,7 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
         // original members must be initialized to null.
         m_gifFile = nullptr;
         m_gifBuffer = nullptr;
+        m_gifPassStarted = false;
         return result;
     }
     result.m_isSuccessful = true;

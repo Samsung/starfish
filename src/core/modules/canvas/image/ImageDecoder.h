@@ -81,7 +81,7 @@ private:
     enum class GifDisposeMethod {
         None,
         Background,
-        Restor,
+        RestorePrevious,
     };
 
     bool prepareAnimatedGIF();
@@ -91,6 +91,17 @@ private:
     void* m_gifFile;
     void* m_gifBuffer;
     GifReadData m_gifReadData;
+    // The first frame of each pass is drawn on a fully transparent canvas,
+    // and the previous frame's disposal is applied before the next frame.
+    // The previous frame's area is kept clamped to the canvas; the snapshot
+    // holds what was under it when its disposal is "restore to previous".
+    bool m_gifPassStarted{ false };
+    GifDisposeMethod m_gifPrevDispose{ GifDisposeMethod::None };
+    size_t m_gifPrevLeft{ 0 };
+    size_t m_gifPrevTop{ 0 };
+    size_t m_gifPrevWidth{ 0 };
+    size_t m_gifPrevHeight{ 0 };
+    std::vector<uint8_t> m_gifPrevSnapshot;
     uint32_t m_needsDownScaleImageResourceLargerThan;
     float m_devicePixelRatio;
     int m_loopCount = 1;
