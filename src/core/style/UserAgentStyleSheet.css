@@ -330,6 +330,7 @@
 "}"
 "details > summary:first-of-type {"
 "    display: list-item;"
+"    counter-increment: list-item 0;"
 "    list-style-position: inside;"
 "    list-style-type: disclosure-closed;"
 "}"

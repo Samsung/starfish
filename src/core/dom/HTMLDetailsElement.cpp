@@ -48,7 +48,7 @@ HTMLDetailsElement::HTMLDetailsElement(Document* document,
         starfish()->staticStrings()->m_style,
         String::createASCIIString(
             "display: list-item; list-style-type: disclosure-closed; "
-            "list-style-position: inside"));
+            "list-style-position: inside; counter-increment: list-item 0"));
     summarySlot->appendChild(fallback);
     root->appendChild(summarySlot);
     auto contentSlot =
@@ -195,10 +195,12 @@ void HTMLDetailsElement::didAttributeChanged(QualifiedName name,
                 ss->m_style,
                 open() ? String::createASCIIString(
                              "display: list-item; list-style-type: "
-                             "disclosure-open; list-style-position: inside")
+                             "disclosure-open; list-style-position: inside; "
+                             "counter-increment: list-item 0")
                        : String::createASCIIString(
                              "display: list-item; list-style-type: "
-                             "disclosure-closed; list-style-position: inside"));
+                             "disclosure-closed; list-style-position: inside; "
+                             "counter-increment: list-item 0"));
         queueToggle(attributeRemoved);
         if (attributeCreated) {
             ensureExclusivity(true);
