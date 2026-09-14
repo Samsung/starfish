@@ -526,6 +526,13 @@ Node* Node::getRootNode(GetRootNodeOptions options)
 
 Optional<HTMLSlotElement*> Node::assignedSlotInternal() const
 {
+    // Pseudo-elements are generated in the flat tree, not distributed as
+    // light-DOM children into slots in their originating element.
+    // https://drafts.csswg.org/css-shadow-1/#flat-tree
+    if (isPseudoElement()) {
+        return NullOption;
+    }
+
     // "find a slot" for this node, closed-shadow aware via internalShadowRoot
     // (not subject to the scriptable assignedSlot's open-flag restriction).
     // Only elements and text are slottable; an element uses its slot= name (or
