@@ -8,7 +8,6 @@ to be joined against a second report to explain a skip.
     {
       "layer": "schema",
       "revision": "ea39a11d80de9a08ce2af03f52125ed2e462cf84",
-      "counts": { "total": 661, "pass": 43, "fail": 42 },
       "entries": {
         "Browser.getVersion": { "expected": "pass" },
         "Animation.disable": {
@@ -76,11 +75,10 @@ def revision_of(list_path):
     return json.loads(list_path.read_text()).get("revision")
 
 
-def save(list_path, layer_name, revision, active, skipped, counts):
+def save(list_path, layer_name, revision, active, skipped):
     document = {
         "layer": layer_name,
         "revision": revision,
-        "counts": counts,
         "entries": dict(
             sorted(
                 [(name, {"expected": "pass"}) for name in active] +

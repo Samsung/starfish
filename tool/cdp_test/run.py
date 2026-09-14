@@ -88,17 +88,13 @@ def require(path, what):
 class Layer:
     """What differs between the two layers, so the runner can share the rest."""
 
-    def __init__(self, name, list_path, revision, known, run_one, label,
-                 total=None):
+    def __init__(self, name, list_path, revision, known, run_one, label):
         self.name = name
         self.list_path = list_path
         self.revision = revision
         self.known = known           # every entry that may appear in the list
         self.run_one = run_one       # (starfish, entry, timeout) -> None
         self.label = label
-        # For schema the list covers a subset of the protocol, so the wider
-        # count is carried separately.
-        self.total = total if total is not None else len(known)
 
 
 def schema_layer(args):
@@ -112,7 +108,6 @@ def schema_layer(args):
         list_path=SCRIPT_DIR / "testlist-schema.json",
         revision=command_table.revision(protocol_dir),
         known={m: c for m, c in table.items() if m in listable},
-        total=len(table),
         run_one=lambda starfish, entry, timeout: case.run(
             starfish, table[entry], timeout),
         label=lambda entry: entry)
@@ -132,19 +127,6 @@ def behavior_layer(args):
 
 
 LAYERS = {"schema": schema_layer, "behavior": behavior_layer}
-
-
-def counts_for(layer, active, skipped):
-    """The counts stored beside the entries, as this run left them.
-
-    total is the wider figure the layer is judged against, which for schema is
-    every command in the protocol, not just the ones it can send.
-    """
-    return {
-        "total": layer.total,
-        "pass": len(active),
-        "fail": len(skipped),
-    }
 
 
 def run_layer(args, layer):
@@ -202,8 +184,7 @@ def run_layer(args, layer):
             if entry not in ran:
                 skipped[entry] = record
         testlist.save(layer.list_path, layer.name, layer.revision,
-                      sorted(active), skipped,
-                      counts_for(layer, active, skipped))
+                      sorted(active), skipped)
         return active, skipped
 
     def measure(entry):

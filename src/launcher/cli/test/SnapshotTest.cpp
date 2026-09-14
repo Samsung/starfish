@@ -20,6 +20,8 @@
 #include "Snapshot.h"
 #include "gtest/gtest.h"
 
+#include <vector>
+
 namespace StarfishCLI {
 
 TEST(SnapshotTest, IncludesOnlyReferenceableInteractiveNodes)
@@ -36,9 +38,12 @@ TEST(SnapshotTest, IncludesOnlyReferenceableInteractiveNodes)
     ]})";
     std::string output;
     std::string error;
+    std::vector<int> nodeIds;
 
-    EXPECT_TRUE(formatInteractiveSnapshot(axTree, output, error));
+    EXPECT_TRUE(formatInteractiveSnapshot(axTree, output, error, nodeIds));
     EXPECT_EQ("@e1 [link] \"Help\"\n", output);
+    ASSERT_EQ(1u, nodeIds.size());
+    EXPECT_EQ(10, nodeIds[0]);
     EXPECT_TRUE(error.empty());
 }
 
@@ -51,20 +56,24 @@ TEST(SnapshotTest, EscapesTerminalControlCharacters)
         R"("backendDOMNodeId":10}]})";
     std::string output;
     std::string error;
+    std::vector<int> nodeIds;
 
-    EXPECT_TRUE(formatInteractiveSnapshot(axTree, output, error));
+    EXPECT_TRUE(formatInteractiveSnapshot(axTree, output, error, nodeIds));
     EXPECT_EQ(
         "@e1 [button] \"Unsafe\\u001b]0;owned\\u0007\\u009b"
         "31mred\\u009d0;title\\u009c\\\"\\\\\"\n",
         output);
+    ASSERT_EQ(1u, nodeIds.size());
+    EXPECT_EQ(10, nodeIds[0]);
 }
 
 TEST(SnapshotTest, RejectsResponseWithoutNodes)
 {
     std::string output;
     std::string error;
+    std::vector<int> nodeIds;
 
-    EXPECT_FALSE(formatInteractiveSnapshot("{}", output, error));
+    EXPECT_FALSE(formatInteractiveSnapshot("{}", output, error, nodeIds));
     EXPECT_EQ("unexpected Accessibility.getFullAXTree response", error);
 }
 

@@ -4,7 +4,6 @@
 {
   "layer": "behavior",
   "revision": "8c1e8c78de78a9a20327bc2e631cf9726ca37bdc",
-  "counts": { "total": 961, "pass": 21, "fail": 940 },
   "entries": {
     "access-inspected-object.js": {
       "expected": "fail",
@@ -21,7 +20,6 @@
 | Field | Meaning |
 | --- | --- |
 | `revision` | the upstream commit the entries were built against |
-| `counts.total` | every case upstream has. For schema, every CDP command |
 | `expected` | `pass` runs every time. `fail` runs only with `--include-fails` |
 | `category` | how the failure was grouped, from what the run saw. Never from the expected output |
 | `detail` | the first line that differs, cut at 1000 characters |

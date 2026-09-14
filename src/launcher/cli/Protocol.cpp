@@ -27,6 +27,7 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <limits>
 
 namespace StarfishCLI {
 
@@ -81,6 +82,35 @@ std::string makeCloseRequest()
     return makeRequest(kCommandClose, std::string());
 }
 
+std::string makeClickRequest(const std::string& selector)
+{
+    rapidjson::StringBuffer buffer;
+    JsonWriter writer(buffer);
+    writer.StartObject();
+    writer.Key("command");
+    writer.String(kCommandClick);
+    writer.Key("selector");
+    writeString(writer, selector);
+    writer.EndObject();
+    return std::string(buffer.GetString()) + "\n";
+}
+
+std::string makeFillRequest(const std::string& selector,
+                            const std::string& text)
+{
+    rapidjson::StringBuffer buffer;
+    JsonWriter writer(buffer);
+    writer.StartObject();
+    writer.Key("command");
+    writer.String(kCommandFill);
+    writer.Key("selector");
+    writeString(writer, selector);
+    writer.Key("text");
+    writeString(writer, text);
+    writer.EndObject();
+    return std::string(buffer.GetString()) + "\n";
+}
+
 bool parseRequest(const std::string& input, Request& request)
 {
     rapidjson::Document document;
@@ -91,7 +121,35 @@ bool parseRequest(const std::string& input, Request& request)
 
     request.command = stringMember(document, "command");
     request.url = stringMember(document, "url");
+    request.selector = stringMember(document, "selector");
+    request.text = stringMember(document, "text");
     return !request.command.empty();
+}
+
+bool parseElementReference(const std::string& selector, int& elementRef)
+{
+    if (selector.size() < 3 || selector[0] != '@' || selector[1] != 'e') {
+        return false;
+    }
+
+    int value = 0;
+    for (size_t i = 2; i < selector.size(); i++) {
+        char character = selector[i];
+        if (character < '0' || character > '9') {
+            return false;
+        }
+        int digit = character - '0';
+        if (value > (std::numeric_limits<int>::max() - digit) / 10) {
+            return false;
+        }
+        value = value * 10 + digit;
+    }
+    if (value < 1) {
+        return false;
+    }
+
+    elementRef = value;
+    return true;
 }
 
 std::string makeOkResponse(const std::string& result)

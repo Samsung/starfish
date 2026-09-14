@@ -21,11 +21,12 @@
 #define __StarfishCLISnapshot__
 
 #include <string>
+#include <vector>
 
 namespace StarfishCLI {
 
 bool formatInteractiveSnapshot(const std::string& axTree, std::string& output,
-                               std::string& error);
+                               std::string& error, std::vector<int>& nodeIds);
 
 } // namespace StarfishCLI
 

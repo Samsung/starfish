@@ -49,7 +49,6 @@ run, so a skip carries the reason it was skipped.
 {
   "layer": "schema",
   "revision": "ea39a11d80de9a08ce2af03f52125ed2e462cf84",
-  "counts": { "total": 661, "pass": 43, "fail": 42 },
   "entries": {
     "Browser.getVersion": { "expected": "pass" },
     "Accessibility.queryAXTree": {

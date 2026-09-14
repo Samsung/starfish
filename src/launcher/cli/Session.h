@@ -21,6 +21,7 @@
 #define __StarfishCLISession__
 
 #include <string>
+#include <vector>
 
 namespace StarfishCLI {
 
@@ -33,6 +34,8 @@ public:
     bool setup(std::string& error);
     bool open(const std::string& url, std::string& error);
     bool snapshotInteractive(std::string& output, std::string& error);
+    bool click(int elementRef, std::string& error);
+    bool fill(int elementRef, const std::string& text, std::string& error);
 
 private:
     bool command(const std::string& method, const std::string& parameters,
@@ -40,6 +43,7 @@ private:
 
     CDPClient& m_client;
     std::string m_sessionId;
+    std::vector<int> m_snapshotNodeIds;
 };
 
 } // namespace StarfishCLI
