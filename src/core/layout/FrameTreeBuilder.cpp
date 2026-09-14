@@ -1413,6 +1413,18 @@ int32_t CountingContext::getAndUpdateListCounterIndex(Frame* frame)
         m_listCounterIndice.back() = node->asHTMLLIElement()->value();
     }
 
+    // The summary UA rule suppresses implicit list-item increments with
+    // counter-increment: list-item 0, including for the default summary.
+    // https://html.spec.whatwg.org/multipage/rendering.html#the-details-and-summary-elements
+    if (auto increments = node->style()->counterIncrement()) {
+        for (const auto& increment : *increments) {
+            if (increment.first.string()->equals("list-item") &&
+                increment.second == 0) {
+                return m_listCounterIndice.back();
+            }
+        }
+    }
+
     if (m_listCounterReverses.back()) {
         return m_listCounterIndice.back()--;
     } else {
