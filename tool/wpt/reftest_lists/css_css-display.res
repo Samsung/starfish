@@ -9,7 +9,8 @@ http://web-platform.test:8000/css/css-display/display-contents-block-001.html
 http://web-platform.test:8000/css/css-display/display-contents-block-002.html
 http://web-platform.test:8000/css/css-display/display-contents-button.html
 http://web-platform.test:8000/css/css-display/display-contents-details-001.html
-http://web-platform.test:8000/css/css-display/display-contents-details.html
+# Requires unsupported ::details-content styling (display: contents).
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-details.html
 http://web-platform.test:8000/css/css-display/display-contents-dynamic-before-after-001.html
 http://web-platform.test:8000/css/css-display/display-contents-dynamic-before-after-first-letter-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-dynamic-fieldset-legend-001.html

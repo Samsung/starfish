@@ -890,7 +890,8 @@ http://web-platform.test:8000/html/rendering/the-details-element/details-after.h
 http://web-platform.test:8000/html/rendering/the-details-element/details-before.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/the-details-element/details-content-pseudo-attr.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/the-details-element/details-display-type-001-ref.html
-http://web-platform.test:8000/html/rendering/the-details-element/details-display-type-001.html
+# Requires unsupported subgrid and ::details-content styling.
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/the-details-element/details-display-type-001.html
 http://web-platform.test:8000/html/rendering/the-details-element/details-display-type-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/the-details-element/details-pseudo-elements-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/the-details-element/details-pseudo-elements-002.html
@@ -898,7 +899,8 @@ http://web-platform.test:8000/html/rendering/the-details-element/details-display
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/the-details-element/details-pseudo-elements-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/the-details-element/details-pseudo-elements-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/the-details-element/details-revert.html
-http://web-platform.test:8000/html/rendering/the-details-element/details-summary-display-inline-001.html
+# Requires unsupported ::details-content styling (display: contents).
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/the-details-element/details-summary-display-inline-001.html
 http://web-platform.test:8000/html/rendering/the-details-element/details-summary-display-inline-002.html
 http://web-platform.test:8000/html/rendering/the-details-element/summary-display-flex.html
 http://web-platform.test:8000/html/rendering/the-details-element/summary-display-grid.html
