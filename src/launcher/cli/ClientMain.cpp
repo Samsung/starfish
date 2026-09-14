@@ -198,6 +198,8 @@ namespace {
                 "Commands:\n"
                 "  open <url>    Open a URL\n"
                 "  snapshot -i  List interactive elements\n"
+                "  click @eN    Click element by reference\n"
+                "  fill @eN <text>  Replace input value\n"
                 "  close         Close the session\n",
                 kProgramName);
     }
@@ -221,6 +223,21 @@ namespace {
         }
         if (command == kCommandClose && argc == 2) {
             request = makeCloseRequest();
+            return true;
+        }
+        if (command == kCommandClick && argc == 3) {
+            request = makeClickRequest(argv[2]);
+            return true;
+        }
+        if (command == kCommandFill && argc >= 4) {
+            // Join remaining args with spaces so the shell does not need
+            // to quote the text.
+            std::string text = argv[3];
+            for (int i = 4; i < argc; i++) {
+                text += " ";
+                text += argv[i];
+            }
+            request = makeFillRequest(argv[2], text);
             return true;
         }
         return false;

@@ -42,4 +42,45 @@ TEST(ProtocolTest, MakesAndParsesSuccessfulSnapshotResponse)
     EXPECT_TRUE(response.error.empty());
 }
 
+TEST(ProtocolTest, MakesAndParsesClickRequest)
+{
+    Request request;
+
+    EXPECT_TRUE(parseRequest(makeClickRequest("@e2"), request));
+    EXPECT_EQ("click", request.command);
+    EXPECT_EQ("@e2", request.selector);
+}
+
+TEST(ProtocolTest, MakesAndParsesFillRequest)
+{
+    Request request;
+
+    EXPECT_TRUE(parseRequest(makeFillRequest("@e3", "hello world"), request));
+    EXPECT_EQ("fill", request.command);
+    EXPECT_EQ("@e3", request.selector);
+    EXPECT_EQ("hello world", request.text);
+}
+
+TEST(ProtocolTest, ParsesElementReference)
+{
+    int elementRef = 0;
+
+    EXPECT_TRUE(parseElementReference("@e1", elementRef));
+    EXPECT_EQ(1, elementRef);
+    EXPECT_TRUE(parseElementReference("@e123", elementRef));
+    EXPECT_EQ(123, elementRef);
+}
+
+TEST(ProtocolTest, RejectsInvalidElementReference)
+{
+    int elementRef = 0;
+
+    EXPECT_FALSE(parseElementReference("", elementRef));
+    EXPECT_FALSE(parseElementReference("@e", elementRef));
+    EXPECT_FALSE(parseElementReference("@e0", elementRef));
+    EXPECT_FALSE(parseElementReference("@e-1", elementRef));
+    EXPECT_FALSE(parseElementReference("@e3abc", elementRef));
+    EXPECT_FALSE(parseElementReference("@e999999999999999999999", elementRef));
+}
+
 } // namespace StarfishCLI

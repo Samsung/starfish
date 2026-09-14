@@ -34,7 +34,6 @@
 #include <unistd.h>
 
 #include <cerrno>
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
@@ -282,6 +281,26 @@ int daemonMain(int argc, char* argv[])
             std::string output;
             if (session.snapshotInteractive(output, error)) {
                 response = makeOkResponse(output);
+            } else {
+                response = makeErrorResponse(error);
+            }
+        } else if (request.command == kCommandClick) {
+            int elementRef = 0;
+            if (!parseElementReference(request.selector, elementRef)) {
+                response =
+                    makeErrorResponse("click requires a valid @eN reference");
+            } else if (session.click(elementRef, error)) {
+                response = makeOkResponse();
+            } else {
+                response = makeErrorResponse(error);
+            }
+        } else if (request.command == kCommandFill) {
+            int elementRef = 0;
+            if (!parseElementReference(request.selector, elementRef)) {
+                response =
+                    makeErrorResponse("fill requires a valid @eN reference");
+            } else if (session.fill(elementRef, request.text, error)) {
+                response = makeOkResponse();
             } else {
                 response = makeErrorResponse(error);
             }

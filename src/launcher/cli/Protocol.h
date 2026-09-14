@@ -28,10 +28,14 @@ namespace StarfishCLI {
 constexpr const char* kCommandOpen = "open";
 constexpr const char* kCommandSnapshot = "snapshot";
 constexpr const char* kCommandClose = "close";
+constexpr const char* kCommandClick = "click";
+constexpr const char* kCommandFill = "fill";
 
 struct Request {
     std::string command;
     std::string url;
+    std::string selector;
+    std::string text;
 };
 
 struct Response {
@@ -43,7 +47,11 @@ struct Response {
 std::string makeOpenRequest(const std::string& url);
 std::string makeSnapshotRequest();
 std::string makeCloseRequest();
+std::string makeClickRequest(const std::string& selector);
+std::string makeFillRequest(const std::string& selector,
+                            const std::string& text);
 bool parseRequest(const std::string& input, Request& request);
+bool parseElementReference(const std::string& selector, int& elementRef);
 
 std::string makeOkResponse(const std::string& result = std::string());
 std::string makeErrorResponse(const std::string& error);

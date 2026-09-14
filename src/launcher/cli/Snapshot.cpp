@@ -21,6 +21,8 @@
 
 #include "rapidjson/document.h"
 
+#include <vector>
+
 namespace StarfishCLI {
 
 namespace {
@@ -84,7 +86,7 @@ namespace {
 } // namespace
 
 bool formatInteractiveSnapshot(const std::string& axTree, std::string& output,
-                               std::string& error)
+                               std::string& error, std::vector<int>& nodeIds)
 {
     rapidjson::Document document;
     document.Parse(axTree.c_str());
@@ -95,6 +97,7 @@ bool formatInteractiveSnapshot(const std::string& axTree, std::string& output,
     }
 
     output.clear();
+    nodeIds.clear();
     size_t reference = 0;
     const rapidjson::Value& nodes = document["nodes"];
     for (rapidjson::SizeType index = 0; index < nodes.Size(); index++) {
@@ -112,6 +115,7 @@ bool formatInteractiveSnapshot(const std::string& axTree, std::string& output,
         }
 
         reference++;
+        nodeIds.push_back(node["backendDOMNodeId"].GetInt());
         output += "@e" + std::to_string(reference) + " [" + role + "]";
         std::string name = propertyValue(node, "name");
         if (!name.empty()) {

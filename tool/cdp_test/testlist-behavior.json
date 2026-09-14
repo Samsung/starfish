@@ -1,11 +1,6 @@
 {
   "layer": "behavior",
   "revision": "8c1e8c78de78a9a20327bc2e631cf9726ca37bdc",
-  "counts": {
-    "total": 961,
-    "pass": 22,
-    "fail": 939
-  },
   "entries": {
     "access-inspected-object.js": {
       "expected": "fail",
