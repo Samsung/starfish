@@ -295,10 +295,10 @@ const CounterStyle* CounterStyle::getKnownCounter(String* name)
     if (name->equalsIgnoreCase("disc")) {
         return getDiscCounter();
     }
-    if (name->equals("disclosure-open")) {
+    if (name->equalsIgnoreCase("disclosure-open")) {
         return getDisclosureCounter(true);
     }
-    if (name->equals("disclosure-closed")) {
+    if (name->equalsIgnoreCase("disclosure-closed")) {
         return getDisclosureCounter(false);
     }
     if (name->equalsIgnoreCase("decimal")) {
