@@ -183,45 +183,51 @@ bool HTMLDetailsElement::isDocumentDisposed()
     return context && context->isDisposed();
 }
 
-// The idler payload of a queued toggle. Replacing a pending task does not
-// remove its idler -- the window it lives on may already have freed it -- but
-// cancels the payload, and the idler then fires once as a no-op. So the
-// element never holds an idler handle that has to stay valid across document
-// moves and window teardown.
+// The queued toggle: which window's event loop holds its idler and under
+// which handle, plus the open state it will report as old. Reused across
+// re-toggles, so a run of toggles within one task costs one allocation.
 struct HTMLDetailsElement::ToggleTask : public gc {
     HTMLDetailsElement* element;
+    Window* window;
+    size_t handle;
     bool oldOpen;
-    bool cancelled{ false };
 };
 
 void HTMLDetailsElement::queueToggle(bool oldOpen)
 {
     // HTML "details notification task steps": a still-pending task is
-    // replaced while its old state is kept. A destroyed document runs no
-    // tasks (HTML "destroy a document"), so nothing is queued for it; a
-    // document that merely has no browsing context (DOMParser,
-    // createHTMLDocument) still gets its toggle, as the WPT toggleEvent tests
-    // expect.
-    if (m_pendingToggle) {
-        m_pendingToggle->cancelled = true;
-        oldOpen = m_pendingToggle->oldOpen;
+    // replaced while its old state is kept. Its idler can be removed as long
+    // as the window it was queued on is alive: only that window's teardown
+    // frees idlers behind our back, and then there is nothing left to remove.
+    // A destroyed document runs no tasks (HTML "destroy a document"), so
+    // nothing is queued for it; a document that merely has no browsing
+    // context (DOMParser, createHTMLDocument) still gets its toggle, as the
+    // WPT toggleEvent tests expect.
+    auto loop = window()->webView()->messageLoop();
+    ToggleTask* task = m_pendingToggle;
+    if (task) {
+        if (!task->window->browsingContext()->isDisposed()) {
+            loop->removeIdler(task->handle);
+        }
         m_pendingToggle = nullptr;
+    } else {
+        task = new ToggleTask;
+        task->element = this;
+        task->oldOpen = oldOpen;
     }
     if (isDocumentDisposed()) {
         return;
     }
-    auto task = new ToggleTask;
-    task->element = this;
-    task->oldOpen = oldOpen;
     m_pendingToggle = task;
-    window()->webView()->messageLoop()->addIdler(
+    task->window = window();
+    task->handle = loop->addIdler(
         window(),
         [](size_t handle, void* data) {
             auto task = static_cast<ToggleTask*>(data);
-            if (task->cancelled) {
+            auto details = task->element;
+            if (details->m_pendingToggle != task) {
                 return;
             }
-            auto details = task->element;
             details->m_pendingToggle = nullptr;
             if (details->isDocumentDisposed()) {
                 return;
