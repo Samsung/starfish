@@ -99,6 +99,13 @@ Requires(postun): /sbin/ldconfig
 %endif
 %endif
 
+# Tizen 5.0/5.5's legacy gold lacks ARM GNU2 TLS descriptor relocations.
+%if (0%{?tizen_version_major} == 5) && ((0%{?tizen_version_minor} == 0) || (0%{?tizen_version_minor} == 5))
+%define force_tls_dialect_gnu2 0
+%else
+%define force_tls_dialect_gnu2 1
+%endif
+
 # Untested below Tizen 9 -- off there, on (default) everywhere else.
 %if 0%{?tizen_version_major} <= 8
 %define enable_tls_access_by_address 0
@@ -590,7 +597,7 @@ CFLAGS+=' -DNO_UFFDWP_VDB '
 %define features_config -DWORKER='%{enable_worker}' -DSHARED_WORKER='%{enable_sharedworker}' \\\
   -DSERVICE_WORKER='%{enable_serviceworker}' -DTLS_ACCESS_BY_ADDRESS='%{enable_tls_access_by_address}' \\\
   -DWEBRTC='%{enable_webrtc}' -DWEBGL='%{enable_webgl}' \\\
-  -DENABLE_ESPLUSPLAYER='%{enable_esplusplayer}'
+  -DENABLE_ESPLUSPLAYER='%{enable_esplusplayer}' -DESCARGOT_FORCE_TLS_DIALECT_GNU2='%{force_tls_dialect_gnu2}'
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 %define out_tizen %{out_folder}/unified_tv/release
