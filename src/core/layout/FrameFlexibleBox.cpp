@@ -135,7 +135,15 @@ LayoutUnit FlexFormattingContext::basisSize(FrameBox* flexItem)
     // Cross-pass reuse: computing the base size lays out the item's whole
     // subtree, so when nothing in the subtree is dirty and the measurement
     // inputs are unchanged since the previous layout pass, reuse that result.
-    if (!flexItem->needsLayout()) {
+    // A raised childNeedsLayout bit means a measurement (flex basis, grid
+    // track sizing) has laid out frames below the item since its last final
+    // layout and restored them to clean, so the tree holds geometry from
+    // other inputs: the base size itself would still be right, but the
+    // automatic-minimum floor applied to it afterwards
+    // (FrameBox::heightAfterApplyingMinMaxHeights()) reads the item's current
+    // content height and line boxes, so the subtree has to be laid out for
+    // these inputs again.
+    if (!flexItem->needsLayout() && !flexItem->childNeedsLayout()) {
         FlexItemMeasureMemo* memo = flexItem->flexItemMeasureMemo();
         FlexItemMeasureMemo::BasisEntry* entry =
             memo ? memo->findBasis(
@@ -143,6 +151,11 @@ LayoutUnit FlexFormattingContext::basisSize(FrameBox* flexItem)
                        m_shouldRespectPercentageWidthOnComputingBasisSize)
                  : nullptr;
         if (entry) {
+            // Leave the item as the skipped measurement would have: see
+            // FlexItemMeasureMemo::BasisEntry::m_contentHeight.
+            if (entry->m_hasContentHeight) {
+                flexItem->setContentHeight(entry->m_contentHeight);
+            }
             m_layoutContext.registerToBasisSizeCache(
                 flexItem,
                 m_isMainAxisInInlineAxis ? m_availableMainSize
@@ -155,9 +168,11 @@ LayoutUnit FlexFormattingContext::basisSize(FrameBox* flexItem)
     }
 
     bool wasCleanBeforeMeasure = !flexItem->needsLayout();
+    bool laidOutContentHeight = false;
     auto basisSize = m_container->basisSize(
         m_layoutContext, m_availableMainSize, m_availableCrossSize, flexItem,
-        m_shouldRespectPercentageWidthOnComputingBasisSize);
+        m_shouldRespectPercentageWidthOnComputingBasisSize,
+        &laidOutContentHeight);
     if (wasCleanBeforeMeasure) {
         flexItem->clearNeedsLayoutIgnoringBasisComputation();
     }
@@ -168,7 +183,7 @@ LayoutUnit FlexFormattingContext::basisSize(FrameBox* flexItem)
     flexItem->ensureFlexItemMeasureMemo()->storeBasis(
         m_availableMainSize, m_availableCrossSize,
         m_shouldRespectPercentageWidthOnComputingBasisSize, basisSize.second,
-        basisSize.first);
+        basisSize.first, laidOutContentHeight, flexItem->contentHeight());
 
     m_layoutContext.registerToBasisSizeCache(
         flexItem,
@@ -1106,6 +1121,14 @@ void FlexFormattingContext::layoutFlexItem(
     // statically positioned items so no per-pass relative-offset bookkeeping
     // is bypassed; line-clamp containers read child line boxes afterwards, so
     // they are excluded too.
+    //
+    // The item's own needsLayout bit is not enough to call the subtree clean:
+    // the measurement protocols (flex basis, automatic minimum, grid track
+    // sizing) lay out frames below it and then restore them to clean, which
+    // leaves the tree holding measurement-time geometry that the memo does
+    // not describe. Every such layout raises childNeedsLayout on the block
+    // ancestors, and only a final layout of this item clears it, so a raised
+    // bit means the subtree has been rewritten since the memo was stored.
     const bool wasCleanAtEntry = !flexItem->needsLayout();
     const size_t finalSlot = crossSize.hasValue() ? 1 : 0;
     LayoutUnit targetMainSize =
@@ -1120,7 +1143,8 @@ void FlexFormattingContext::layoutFlexItem(
         !m_container->lineClamp() && !flexItem->isAnonymous() &&
         flexItem->style()->position() == PositionValue::StaticPositionValue;
 
-    if (memoUsable && !flexItem->needsLayout()) {
+    if (memoUsable && !flexItem->needsLayout() &&
+        !flexItem->childNeedsLayout()) {
         FlexItemMeasureMemo* memo = flexItem->flexItemMeasureMemo();
         if (memo) {
             FlexItemMeasureMemo::FinalEntry& e = memo->m_final[finalSlot];
@@ -1186,9 +1210,17 @@ void FlexFormattingContext::layoutFlexItem(
     }
 
     // The subtree was really laid out: any cached first-line scan of it is
-    // stale now (see FrameBox::heightAfterApplyingMinMaxHeights()).
+    // stale now (see FrameBox::heightAfterApplyingMinMaxHeights()). A layout
+    // at the item's hypothetical cross size (slot 0) also leaves the subtree
+    // aligned to that size, so the stretched-pass entry (slot 1) no longer
+    // describes the tree: the stretched pass that follows in this container
+    // pass must lay the subtree out again instead of restoring the item's
+    // box over children placed for the smaller cross size.
     if (FlexItemMeasureMemo* memo = flexItem->flexItemMeasureMemo()) {
         memo->m_firstLine.m_valid = false;
+        if (finalSlot == 0) {
+            memo->m_final[1].m_valid = false;
+        }
     }
 
     if (memoUsable) {
@@ -1686,7 +1718,8 @@ static void computeBorderMarginPaddingWithinFlexContext(
 std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
     LayoutContext& ctx, LayoutUnit availableMainSize,
     LayoutUnit availableCrossSize, FrameBox* flexItem,
-    bool shouldRespectPercentageWidthOnComputingBasisSize)
+    bool shouldRespectPercentageWidthOnComputingBasisSize,
+    bool* laidOutContentHeight)
 {
     LayoutContextComputingBasisSizeStateMaker marker(ctx, true, flexItem);
 
@@ -1861,6 +1894,9 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
             flexItem->setContentHeight(sumofLineBoxHeight);
         }
         basisSize = flexItem->contentHeight();
+        if (laidOutContentHeight) {
+            *laidOutContentHeight = true;
+        }
     }
 
     containingBlockOfFlexItem->setContentWidth(oldContainingBlockWidth);

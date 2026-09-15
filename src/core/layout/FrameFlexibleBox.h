@@ -141,11 +141,14 @@ public:
                               LayoutWantToResolve resolveWhat,
                               FrameBox* containingBox) override;
 
-    // <basisSize, seenPercentageWidth>
+    // <basisSize, seenPercentageWidth>. `laidOutContentHeight` is set when the
+    // base size was measured by laying the item out at its content height in
+    // a column container (so its contentHeight() is that measurement).
     std::pair<LayoutUnit, bool> basisSize(
         LayoutContext& ctx, LayoutUnit availableMainSize,
         LayoutUnit availableCrossSize, FrameBox* flexItem,
-        bool shouldRespectPercentageWidthOnComputingBasisSize);
+        bool shouldRespectPercentageWidthOnComputingBasisSize,
+        bool* laidOutContentHeight = nullptr);
     bool isMainAxisInInlineAxis();
     bool isSingleLine();
     bool isLtrDirection();
