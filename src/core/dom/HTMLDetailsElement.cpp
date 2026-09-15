@@ -171,6 +171,18 @@ void HTMLDetailsElement::queueToggle(bool oldOpen)
     } else {
         m_toggleOldOpen = oldOpen;
     }
+    if (!m_disposerRegistered) {
+        // Window teardown frees every pending idler without telling its
+        // owner; drop our handle first so a later toggle (from a page that
+        // kept this element) cannot remove a stale one.
+        m_disposerRegistered = true;
+        window()->registerDisposer(this, [this]() {
+            if (m_toggleTask != SIZE_MAX) {
+                window()->webView()->messageLoop()->removeIdler(m_toggleTask);
+                m_toggleTask = SIZE_MAX;
+            }
+        });
+    }
     m_toggleTask = loop->addIdler(
         window(),
         [](size_t handle, void* data) {
