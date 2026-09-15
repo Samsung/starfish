@@ -1890,18 +1890,25 @@ void FrameBox::paintGradient(Canvas* canvas, FrameBox* box,
 
     float startX = dst.x();
     float startY = dst.y();
+    // dst is offset by the image position inside the painting area, which
+    // starts at 0. Repeated tiles must reach the end of the painting area even
+    // when the position is negative.
+    float endX = dst.maxX();
+    float endY = dst.maxY();
 
     if (repeatX) {
         startX = fmodf(startX, width);
         if (startX > 0) {
             startX -= width;
         }
+        endX = std::max(endX, dst.width());
     }
     if (repeatY) {
         startY = fmodf(startY, height);
         if (startY > 0) {
             startY -= height;
         }
+        endY = std::max(endY, dst.height());
     }
     auto value = imageValue->gradientValue();
     bool cacheable = value->isCacheable(width, height, true) &&
@@ -1975,10 +1982,10 @@ void FrameBox::paintGradient(Canvas* canvas, FrameBox* box,
         Unit::Rect drawRect =
             Unit::Rect(startX, startY, width, height).snapSizeToPixel();
         canvas->save();
-        for (float y = startY; y < dst.maxY();
+        for (float y = startY; y < endY;
              y += height, canvas->translate(0, drawRect.height())) {
             canvas->save();
-            for (float x = startX; x < dst.maxX();
+            for (float x = startX; x < endX;
                  x += width, canvas->translate(drawRect.width(), 0)) {
                 canvas->drawImage(gradient->gradientImageDataCached(), drawRect,
                                   imageRenderingValue);
@@ -1992,10 +1999,10 @@ void FrameBox::paintGradient(Canvas* canvas, FrameBox* box,
         GradientDrawingInfo* info = value->makeGradientDrawingInfo(rect, box);
         std::unique_ptr<NativeGradient> gradient = NativeGradient::create(info);
         canvas->save();
-        for (float y = startY; y < dst.maxY();
+        for (float y = startY; y < endY;
              y += height, canvas->translate(0, rect.height())) {
             canvas->save();
-            for (float x = startX; x < dst.maxX();
+            for (float x = startX; x < endX;
                  x += width, canvas->translate(rect.width(), 0)) {
                 if (imageValue->gradientValue()->type() ==
                     GradientType::LinearGradient) {

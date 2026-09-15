@@ -226,6 +226,18 @@ Optional<AnimatedValue*> AnimatedValue::create(
             STARFISH_UNIMPLEMENTED();
         }
         break;
+    case CSSStyleValuePair::MaskPositionX:
+        if (neededOriginProperty) {
+            return new AnimatedValue(style->maskPositionX(layer));
+        }
+        return AnimatedValue::createAnimatedValueFromBackgroundPosition(
+            property, layer);
+    case CSSStyleValuePair::MaskPositionY:
+        if (neededOriginProperty) {
+            return new AnimatedValue(style->maskPositionY(layer));
+        }
+        return AnimatedValue::createAnimatedValueFromBackgroundPosition(
+            property, layer);
     case CSSStyleValuePair::BackgroundSize:
         if (style->backgroundLayerSize() > 0) {
             if (neededOriginProperty) {
