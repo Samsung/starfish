@@ -2697,6 +2697,14 @@ void Document::enqueueMutationObserverMicroTask(MutationObserver* observer)
 
 void Document::signalSlotChange(HTMLSlotElement* slot)
 {
+    // slotchange is not composed, and a user-agent shadow root is closed and
+    // unreachable from script, so a signal raised there has no observer:
+    // skip it rather than spend a microtask. That microtask could not even
+    // be queued when the assignment changes outside a task, e.g. while style
+    // resolution clones a <details> into an SVG <use> shadow tree.
+    if (slot->parentShadowRoot()->isUserAgent()) {
+        return;
+    }
     // WHATWG DOM "signal a slot change": append the slot to the signal slots
     // (ordered + deduped) and schedule the microtask. It fires from the same
     // checkpoint, after mutation observers are notified; order matters because
