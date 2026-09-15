@@ -2697,11 +2697,15 @@ void Document::enqueueMutationObserverMicroTask(MutationObserver* observer)
 
 void Document::signalSlotChange(HTMLSlotElement* slot)
 {
-    // slotchange is not composed, and a user-agent shadow root is closed and
-    // unreachable from script, so a signal raised there has no observer:
-    // skip it rather than spend a microtask. That microtask could not even
-    // be queued when the assignment changes outside a task, e.g. while style
-    // resolution clones a <details> into an SVG <use> shadow tree.
+    // A user-agent shadow tree (HTML rendering: details has one with two
+    // slots) is an implementation detail, so it must not leak into what
+    // authors can observe. slotchange is not composed and the root is closed,
+    // so the event itself is invisible; but the signal would also queue the
+    // "notify mutation observers" microtask, reordering queueMicrotask()
+    // callbacks against observer notifications. Blink skips the signal for
+    // user-agent roots for the same reason. It also could not be queued when
+    // the assignment changes outside a task, e.g. while style resolution
+    // clones a <details> into an SVG <use> shadow tree.
     if (slot->parentShadowRoot()->isUserAgent()) {
         return;
     }
