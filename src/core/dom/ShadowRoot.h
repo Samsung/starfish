@@ -89,6 +89,18 @@ public:
         return m_declarative;
     }
 
+    // Created by the engine for its own rendering (Element::
+    // internalEnsureShadowRoot), never by attachShadow or declarative markup.
+    bool isUserAgent() const
+    {
+        return m_userAgent;
+    }
+
+    void setUserAgent(bool userAgent)
+    {
+        m_userAgent = userAgent;
+    }
+
     void setDeclarative(bool declarative)
     {
         m_declarative = declarative;
@@ -192,6 +204,7 @@ private:
     bool m_serializable : 1;
     bool m_availableToElementInternals : 1;
     bool m_declarative : 1;
+    bool m_userAgent : 1;
     Element* m_host;
     GCUnorderedMap<String*, HTMLSlotElement*> m_namedSlotElements;
     StyleResolver* m_styleResolver;

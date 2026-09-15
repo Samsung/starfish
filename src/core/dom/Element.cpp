@@ -2687,8 +2687,10 @@ ShadowRoot* Element::internalEnsureShadowRoot()
     RareElementMembers* rareMembers = ensureRareElementMembers();
     STARFISH_ASSERT(rareMembers->isRareElementMembers());
     if (!rareMembers->m_shadowRoot) {
-        rareMembers->m_shadowRoot =
+        auto shadowRoot =
             new ShadowRoot(document(), ShadowRootMode::Closed, this);
+        shadowRoot->setUserAgent(true);
+        rareMembers->m_shadowRoot = shadowRoot;
         setNeedsFrameTreeBuild();
     }
     return rareMembers->m_shadowRoot.value();
