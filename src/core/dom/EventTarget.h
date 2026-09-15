@@ -146,6 +146,9 @@ public:
 
     virtual ExecutionContext* executionContext() const = 0;
 
+    // https://dom.spec.whatwg.org/#retarget
+    static EventTarget* retarget(EventTarget* a, EventTarget* b);
+
     Optional<GCVector<EventListener*>*> getEventListeners(
         const String* eventType);
 

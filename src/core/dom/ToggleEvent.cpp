@@ -20,33 +20,20 @@
 #include "StarfishConfig.h"
 #include "core/dom/ToggleEvent.h"
 #include "core/dom/Element.h"
-#include "core/dom/ShadowRoot.h"
+#include "core/dom/EventTarget.h"
 
 namespace Starfish {
 Optional<Element*> ToggleEvent::source()
 {
-    // HTML's ToggleEvent source getter retargets across shadow boundaries.
-    auto source = m_source;
-    while (source) {
-        Node* root = source->getRootNode();
-        if (!root->isShadowRoot()) {
-            return source;
-        }
-        Node* target = currentTarget() && currentTarget()->isNode()
-                           ? currentTarget()->asNode()
-                           : nullptr;
-        while (target) {
-            if (root->contains(target)) {
-                return source;
-            }
-            auto targetRoot = target->getRootNode();
-            if (!targetRoot->isShadowRoot()) {
-                break;
-            }
-            target = targetRoot->asShadowRoot()->host();
-        }
-        source = root->asShadowRoot()->host();
+    // HTML ToggleEvent: the source getter retargets source against the
+    // event's currentTarget, so a node inside a shadow tree the listener
+    // cannot see is reported as that tree's host instead.
+    if (!m_source) {
+        return NullOption;
     }
-    return NullOption;
+    EventTarget* retargeted =
+        EventTarget::retarget(m_source.value(), currentTarget());
+    STARFISH_ASSERT(retargeted->isNode() && retargeted->asNode()->isElement());
+    return retargeted->asNode()->asElement();
 }
 } // namespace Starfish
