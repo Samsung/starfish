@@ -49,7 +49,7 @@ http://web-platform.test:8000/css/css-lists/counter-reset-inside-display-content
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/counter-reset-reversed-siblings-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/counter-reset-reversed-with-regular.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/counter-set-001.html
-# [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-lists/counter-set-002.html
+http://web-platform.test:8000/css/css-lists/counter-set-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/counter-slot-order-scoping.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/counter-slot-order.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/counters-001.html
@@ -82,7 +82,7 @@ http://web-platform.test:8000/css/css-lists/details-open.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/inline-list-with-table-child.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/inline-list.html
 http://web-platform.test:8000/css/css-lists/li-insert-child.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-list-item-counter-001.html
+http://web-platform.test:8000/css/css-lists/li-list-item-counter-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-list-item-counter-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-list-item-counter-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-list-item-counter-004.html
@@ -99,24 +99,24 @@ http://web-platform.test:8000/css/css-lists/li-value-counter-reset-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-006c.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-006d.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-006e.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-007a.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-007b.html
+http://web-platform.test:8000/css/css-lists/li-value-reversed-007a.html
+http://web-platform.test:8000/css/css-lists/li-value-reversed-007b.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-008a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-008b.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-009a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-009b.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-010.html
+http://web-platform.test:8000/css/css-lists/li-value-reversed-010.html
 http://web-platform.test:8000/css/css-lists/li-value-reversed-011.html
 http://web-platform.test:8000/css/css-lists/li-value-reversed-012.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-013.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-014.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-015.html
+http://web-platform.test:8000/css/css-lists/li-value-reversed-014.html
+http://web-platform.test:8000/css/css-lists/li-value-reversed-015.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-016.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-017.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-018.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-019.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-020.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-021.html
+http://web-platform.test:8000/css/css-lists/li-value-reversed-020.html
+http://web-platform.test:8000/css/css-lists/li-value-reversed-021.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-022.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-023.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/li-value-reversed-024.html
