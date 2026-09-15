@@ -1205,6 +1205,36 @@ void ActiveLengthAnimationTask::resolveUnresolvedAnimatedValues()
                     parentLength = posSize.height() - imgSize.height();
                     break;
                 }
+                case CSSStyleValuePair::MaskPositionX:
+                case CSSStyleValuePair::MaskPositionY: {
+                    // Percentages resolve against the padding box minus the
+                    // mask size, like StackingContext::applyMask(). An auto
+                    // or keyword mask size is taken as the padding box, which
+                    // is exact for gradient masks.
+                    if (!frm->isFrameBox()) {
+                        break;
+                    }
+                    FrameBox* box = frm->asFrameBox();
+                    ComputedStyle* style = m_targetElement->style();
+                    Unit::Rect rect =
+                        box->makeRect(BoxValue::PaddingBoxBoxValue);
+                    bool isX = m_property == CSSStyleValuePair::MaskPositionX;
+                    float positioningLength =
+                        isX ? rect.width() : rect.height();
+                    float maskLength = positioningLength;
+                    if (style->maskSizeIsLength(layerIndex())) {
+                        LengthSize maskSize =
+                            style->maskSizeLengthValue(layerIndex());
+                        Length size =
+                            isX ? maskSize.width() : maskSize.height();
+                        if (!size.isAuto()) {
+                            maskLength =
+                                size.specifiedValue(positioningLength, box);
+                        }
+                    }
+                    parentLength = positioningLength - maskLength;
+                    break;
+                }
                 case CSSStyleValuePair::FontSize:
                     break;
                 case CSSStyleValuePair::X:
@@ -1248,6 +1278,8 @@ void ActiveLengthAnimationTask::resolveUnresolvedAnimatedValues()
                 case CSSStyleValuePair::Right:
                 case CSSStyleValuePair::Top:
                 case CSSStyleValuePair::Bottom:
+                case CSSStyleValuePair::MaskPositionX:
+                case CSSStyleValuePair::MaskPositionY:
                     break;
                 case CSSStyleValuePair::Height:
                 case CSSStyleValuePair::MaxHeight:
@@ -1433,6 +1465,12 @@ void ActiveLengthAnimationTask::execute(double progress, ComputedStyle* style)
         break;
     case CSSStyleValuePair::KeyKind::BackgroundPositionY:
         style->setBackgroundPositionY(newLength, layerIndex());
+        break;
+    case CSSStyleValuePair::KeyKind::MaskPositionX:
+        style->setMaskPositionX(newLength, layerIndex());
+        break;
+    case CSSStyleValuePair::KeyKind::MaskPositionY:
+        style->setMaskPositionY(newLength, layerIndex());
         break;
     case CSSStyleValuePair::KeyKind::FontSize:
         style->setFontSize(newLength);

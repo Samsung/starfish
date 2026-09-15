@@ -378,6 +378,8 @@ bool AnimationUtil::isPropertyForActiveLengthAnimationTask(
     case CSSStyleValuePair::KeyKind::Bottom:
     case CSSStyleValuePair::KeyKind::BackgroundPositionX:
     case CSSStyleValuePair::KeyKind::BackgroundPositionY:
+    case CSSStyleValuePair::KeyKind::MaskPositionX:
+    case CSSStyleValuePair::KeyKind::MaskPositionY:
     case CSSStyleValuePair::KeyKind::FontSize:
     case CSSStyleValuePair::KeyKind::Font: // shorthand
         return true;

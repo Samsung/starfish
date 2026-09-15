@@ -195,6 +195,13 @@ bool AnimationApplier::createLayerdValues(
     // TODO: there is another property that has layers
     if (isAnimatableBackgroundProperty(currentKeyKind)) {
         layerSize = m_style->backgroundLayerSize();
+    } else if (currentKeyKind == CSSStyleValuePair::MaskPositionX ||
+               currentKeyKind == CSSStyleValuePair::MaskPositionY) {
+        layerSize = m_style->maskLayerSize();
+        if (layerSize == 0) {
+            // No mask image to position.
+            return false;
+        }
     }
     layeredValues.resize(layerSize);
 
