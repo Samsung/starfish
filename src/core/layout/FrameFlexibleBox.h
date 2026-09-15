@@ -30,7 +30,7 @@ class FrameFlexibleBox;
 class LineBox;
 
 struct FlexLine {
-    std::vector<FrameBox*> m_flexItems;
+    GCVector<FrameBox*> m_flexItems;
     LayoutUnit m_lineWidth;
     LayoutUnit m_lineHeight;
     LayoutUnit m_maxAscender;

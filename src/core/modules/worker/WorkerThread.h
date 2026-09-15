@@ -109,7 +109,7 @@ protected:
     std::atomic<State> m_state;
     GlobalScope* m_workerMessageLoopGlobalScope;
     Mutex* m_childThreadDataLock;
-    std::vector<WorkerThread*> m_childThreads;
+    GCVector<WorkerThread*> m_childThreads;
     WorkerHostInitData m_workerHostInitData;
 
 private:

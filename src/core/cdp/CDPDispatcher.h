@@ -200,7 +200,7 @@ private:
                const std::string& method);
 
     CDPServer* m_server;
-    std::vector<TargetContext*> m_contexts; // [0] is the initial target
+    GCVector<TargetContext*> m_contexts; // [0] is the initial target
     TargetContext* m_current;               // selected per-dispatch
     std::string m_browserSessionId;         // Target.attachToBrowserTarget
     TargetDomain* m_target;

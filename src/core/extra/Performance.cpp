@@ -46,7 +46,7 @@ double Performance::timeOrigin()
 // Performance Timeline API implementation
 // https://w3c.github.io/performance-timeline/
 
-GCVector<PerformanceEntry*> Performance::getEntries()
+const GCVector<PerformanceEntry*>& Performance::getEntries()
 {
     return m_entries;
 }
