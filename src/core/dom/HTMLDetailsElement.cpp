@@ -72,7 +72,7 @@ void* HTMLDetailsElement::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLDetailsElement)] = { 0 };
         HTMLElement::fillGCDescriptor(desc);
-        GC_set_bit(desc, GC_WORD_OFFSET(HTMLDetailsElement, m_toggleWindow));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLDetailsElement, m_pendingToggle));
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLDetailsElement));
         typeInited = true;
     }
@@ -183,44 +183,46 @@ bool HTMLDetailsElement::isDocumentDisposed()
     return context && context->isDisposed();
 }
 
+// The idler payload of a queued toggle. Replacing a pending task does not
+// remove its idler -- the window it lives on may already have freed it -- but
+// cancels the payload, and the idler then fires once as a no-op. So the
+// element never holds an idler handle that has to stay valid across document
+// moves and window teardown.
+struct HTMLDetailsElement::ToggleTask : public gc {
+    HTMLDetailsElement* element;
+    bool oldOpen;
+    bool cancelled{ false };
+};
+
 void HTMLDetailsElement::queueToggle(bool oldOpen)
 {
-    // HTML "details notification task steps": the task is queued on the
-    // element's relevant global object, replacing a still-pending one while
-    // keeping its old state. The element may have moved to another document
-    // since, so that pending task can belong to another window -- every
-    // window of a WebView shares one message loop, so it is still ours to
-    // remove. A destroyed document never runs its tasks again (HTML "destroy
-    // a document"), so nothing is queued for it; a document that merely has
-    // no browsing context (DOMParser, createHTMLDocument) still gets its
-    // toggle, as the WPT toggleEvent tests expect.
-    if (m_toggleTask != SIZE_MAX) {
-        window()->webView()->messageLoop()->removeIdler(m_toggleTask);
-        m_toggleTask = SIZE_MAX;
-    } else {
-        m_toggleOldOpen = oldOpen;
+    // HTML "details notification task steps": a still-pending task is
+    // replaced while its old state is kept. A destroyed document runs no
+    // tasks (HTML "destroy a document"), so nothing is queued for it; a
+    // document that merely has no browsing context (DOMParser,
+    // createHTMLDocument) still gets its toggle, as the WPT toggleEvent tests
+    // expect.
+    if (m_pendingToggle) {
+        m_pendingToggle->cancelled = true;
+        oldOpen = m_pendingToggle->oldOpen;
+        m_pendingToggle = nullptr;
     }
     if (isDocumentDisposed()) {
         return;
     }
-    Window* owner = window();
-    if (m_toggleWindow != owner) {
-        // Window teardown frees every pending idler without telling its
-        // owner; remove ours first so a later toggle cannot touch a stale
-        // handle. Registered once per window the task has lived on.
-        m_toggleWindow = owner;
-        owner->registerDisposer(this, [this, owner]() {
-            if (m_toggleTask != SIZE_MAX && m_toggleWindow == owner) {
-                owner->webView()->messageLoop()->removeIdler(m_toggleTask);
-                m_toggleTask = SIZE_MAX;
-            }
-        });
-    }
-    m_toggleTask = owner->webView()->messageLoop()->addIdler(
-        owner,
+    auto task = new ToggleTask;
+    task->element = this;
+    task->oldOpen = oldOpen;
+    m_pendingToggle = task;
+    window()->webView()->messageLoop()->addIdler(
+        window(),
         [](size_t handle, void* data) {
-            auto details = static_cast<HTMLDetailsElement*>(data);
-            details->m_toggleTask = SIZE_MAX;
+            auto task = static_cast<ToggleTask*>(data);
+            if (task->cancelled) {
+                return;
+            }
+            auto details = task->element;
+            details->m_pendingToggle = nullptr;
             if (details->isDocumentDisposed()) {
                 return;
             }
@@ -229,14 +231,13 @@ void HTMLDetailsElement::queueToggle(bool oldOpen)
                 details->scriptBindingInstance()->engineInstance());
             ToggleEventInit init;
             init.setOldState(
-                (details->m_toggleOldOpen ? ss->m_open : ss->m_closed)
-                    .toString());
+                (task->oldOpen ? ss->m_open : ss->m_closed).toString());
             init.setNewState(
                 (details->open() ? ss->m_open : ss->m_closed).toString());
             details->dispatchEventByUA(new ToggleEvent(
                 details->executionContext(), ss->m_toggle.toString(), init));
         },
-        this);
+        task);
 }
 
 void HTMLDetailsElement::didAttributeChanged(QualifiedName name,

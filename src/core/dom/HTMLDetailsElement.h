@@ -24,7 +24,6 @@
 
 namespace Starfish {
 class HTMLSlotElement;
-class Window;
 
 class HTMLDetailsElement : public HTMLElement {
 public:
@@ -48,12 +47,11 @@ public:
     void ensureExclusivity(bool closeOthers);
 
 private:
+    struct ToggleTask;
     void queueToggle(bool oldOpen);
     bool isDocumentDisposed();
-    size_t m_toggleTask{ SIZE_MAX };
-    bool m_toggleOldOpen{ false };
-    // Window whose event loop holds the pending toggle task, if any.
-    Window* m_toggleWindow{ nullptr };
+    // The queued "details notification task", until it runs or is replaced.
+    ToggleTask* m_pendingToggle{ nullptr };
 };
 } // namespace Starfish
 #endif
