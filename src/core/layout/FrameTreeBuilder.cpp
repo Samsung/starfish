@@ -18,6 +18,7 @@
  */
 
 #include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/Node.h"
 #include "core/dom/Element.h"
@@ -1386,6 +1387,25 @@ void CountingContext::resetPseudoCounter(Node* container,
     }
 }
 
+// The net list-item increment an element declares itself through
+// counter-increment, replacing the implicit one of a list item.
+// https://drafts.csswg.org/css-lists-3/#declaring-a-list-item
+static bool explicitListItemIncrement(Node* node, int32_t& net)
+{
+    if (!node->style() || !node->style()->counterIncrement()) {
+        return false;
+    }
+    bool found = false;
+    net = 0;
+    for (const auto& increment : *node->style()->counterIncrement()) {
+        if (increment.first.string()->equals("list-item")) {
+            found = true;
+            net += increment.second;
+        }
+    }
+    return found;
+}
+
 int32_t CountingContext::getAndUpdateListCounterIndex(Frame* frame)
 {
     if (!m_listCounterIndice.size()) {
@@ -1409,27 +1429,23 @@ int32_t CountingContext::getAndUpdateListCounterIndex(Frame* frame)
     STARFISH_ASSERT(node && node->style()->display() ==
                                 DisplayValue::ListItemDisplayValue);
 
-    if (node->isHTMLLIElement() && node->asHTMLLIElement()->hasValue()) {
-        m_listCounterIndice.back() = node->asHTMLLIElement()->value();
-    }
-
-    // The summary UA rule suppresses implicit list-item increments with
-    // counter-increment: list-item 0, including for the default summary.
+    // The stored index is the value the next item takes under the implicit
+    // list-item increment of one. An explicit counter-increment on list-item
+    // replaces that increment (css-lists-3 "declaring a list item"), so it
+    // shifts this item's value by the difference; the summary UA rule uses
+    // list-item 0 to keep the marker out of the count. The li value
+    // attribute sets the counter after any increment, so it wins outright.
     // https://html.spec.whatwg.org/multipage/rendering.html#the-details-and-summary-elements
-    if (auto increments = node->style()->counterIncrement()) {
-        for (const auto& increment : *increments) {
-            if (increment.first.string()->equals("list-item") &&
-                increment.second == 0) {
-                return m_listCounterIndice.back();
-            }
-        }
+    int32_t step = m_listCounterReverses.back() ? -1 : 1;
+    int32_t value = m_listCounterIndice.back();
+    int32_t net;
+    if (node->isHTMLLIElement() && node->asHTMLLIElement()->hasValue()) {
+        value = node->asHTMLLIElement()->value();
+    } else if (explicitListItemIncrement(node, net)) {
+        value += net - step;
     }
-
-    if (m_listCounterReverses.back()) {
-        return m_listCounterIndice.back()--;
-    } else {
-        return m_listCounterIndice.back()++;
-    }
+    m_listCounterIndice.back() = value + step;
+    return value;
 }
 
 void CountingContext::setCounterIfNeeds(Frame* from)
@@ -1440,9 +1456,33 @@ void CountingContext::setCounterIfNeeds(Frame* from)
     }
     // List counter (list-style-type, list-style-position, list-style-image)
     if (node->isHTMLListContainer()) {
-        m_listCounterIndice.push_back(
-            node->asHTMLListContainer()->startNumber());
-        if (node->asHTMLListContainer()->reversed()) {
+        auto list = node->asHTMLListContainer();
+        int32_t start = list->startNumber();
+        if (list->reversed() &&
+            !node->asElement()->getAttribute(
+                node->starfish()->staticStrings()->m_start)) {
+            // css-lists-3 reversed(): without an explicit value the counter
+            // starts where the last item ends at the magnitude of its own
+            // increment. startNumber() assumes the implicit -1 per item, so
+            // take out what explicit list-item increments add to that, for
+            // every item and once more for the last one.
+            int32_t last = 0;
+            for (Node* n = node->firstChild(); n;) {
+                if (n->isHTMLListContainer()) {
+                    n = Traverse::nextSkippingChildren(n, node);
+                    continue;
+                }
+                if (n->isHTMLLIElement()) {
+                    int32_t net;
+                    last = explicitListItemIncrement(n, net) ? net + 1 : 0;
+                    start -= last;
+                }
+                n = Traverse::next(n, node);
+            }
+            start -= last;
+        }
+        m_listCounterIndice.push_back(start);
+        if (list->reversed()) {
             m_listCounterReverses.push_back(true);
         } else {
             m_listCounterReverses.push_back(false);
