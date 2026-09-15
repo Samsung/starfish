@@ -170,7 +170,7 @@ The HTML parser and DOM expose the following tags as well; they were missing fro
 |  | width, height | pixels |  |
 |  [dialog](https://html.spec.whatwg.org/multipage/interactive-elements.html#the-dialog-element) | open | open | The HTMLDialogElement is exposed and the `open` attribute reflects, but `showModal()` modal stacking is partial. |
 | [details](https://html.spec.whatwg.org/multipage/interactive-elements.html#the-details-element) | open, name | open, name | Native disclosure with exclusive named groups and coalesced `toggle` events. |
-| [summary](https://html.spec.whatwg.org/multipage/interactive-elements.html#the-summary-element) | Global attributes | HTMLElement | The first summary child toggles its details; a missing summary gets a default legend. |
+| [summary](https://html.spec.whatwg.org/multipage/interactive-elements.html#the-summary-element) |  |  | The first summary child toggles its details and is focusable (`tabIndex` defaults to 0); a missing summary gets a default legend. |
 |  [col](https://www.w3.org/TR/html5/tabular-data.html#the-col-element) | span | number |  |
 |  [param](https://www.w3.org/TR/html5/embedded-content-0.html#the-param-element) | name, value | &lt;string&gt; | Companion to `<object>`. |
 |  [form](https://www.w3.org/TR/html5/forms.html#the-form-element) | action | &lt;URL&gt; |  |
@@ -703,6 +703,9 @@ section are supported.
 |  | iterable | iterable&lt;Node&gt; | Supports `for..of`, `forEach`. |
 |  [HTMLCollection — legacy entry](https://dom.spec.whatwg.org/#htmlcollection)  |  attribute  |  length  |  (duplicate row preserved for legacy spec compatibility) |
 |    |  method  |  Element? item(unsigned long index) (or collection[index])  |  Returns the element with index index number from the collection. The elements are sorted in tree order.  |
+| [HTMLDetailsElement](https://html.spec.whatwg.org/multipage/interactive-elements.html#htmldetailselement) | interface | HTMLDetailsElement | Disclosure widget: the first summary child toggles it, and closed content is hidden inside an internal shadow tree. |
+|  | attribute | open | Reflects the `open` content attribute; each change queues one coalesced `toggle` event. |
+|  | attribute | name | Reflects the `name` content attribute; open details sharing a non-empty name in the same tree are mutually exclusive. |
 | [HTMLDivElement](https://www.w3.org/TR/html5/grouping-content.html#the-div-element) | interface | HTMLDivElement | Offers a generic mechanism for adding structure to documents |
 | [HTMLDocument](https://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-26809268) | interface | HTMLDocument | An HTMLDocument is the root of the HTML hierarchy and holds the entire content. |
 | [HTMLElement](https://html.spec.whatwg.org/multipage/dom.html#htmlelement) | interface | HTMLElement |  |

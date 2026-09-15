@@ -244,10 +244,16 @@ void HTMLElement::styleForPresentationAttribute(
 
 int HTMLElement::tabIndex()
 {
-    if (supportsFocus()) {
-        return Element::tabIndex();
+    if (!supportsFocus()) {
+        return -1;
     }
-    return -1;
+    auto result = getAttribute(starfish()->staticStrings()->m_tabindex);
+    if (result) {
+        return String::parseInt(result.value());
+    }
+    // HTML "tabIndex" getter: a summary for its parent details defaults to
+    // 0, so it takes part in sequential focus navigation.
+    return HTMLDetailsElement::summaryOwner(this) ? 0 : -1;
 }
 
 LayoutRect HTMLElement::offsetRect()
