@@ -896,6 +896,7 @@ test/cairo/internal-test/event/touch-end-before-click.html
 test/cairo/internal-test/event/touch-no-mouseleave.html
 test/cairo/internal-test/event/touch-cancel-clears-state.html
 test/cairo/internal-test/dom/DOMRect01.html
+test/cairo/internal-test/dom/details-toggle-across-iframes.html
 test/cairo/internal-test/resize-observer/observe.html
 test/cairo/internal-test/resize-observer/observe2.html
 test/cairo/internal-test/resize-observer/notify.html
@@ -909,6 +910,7 @@ test/cairo/internal-test/mutation-observer/observe_attribute_subtree_true.html
 test/cairo/internal-test/mutation-observer/observe_attribute_with_inline-style.html
 test/cairo/internal-test/mutation-observer/observe_attribute.html
 test/cairo/internal-test/mutation-observer/observe_throw_errors.html
+test/cairo/internal-test/mutation-observer/details-child-change-microtask-order.html
 test/cairo/internal-test/scripting/execution_order/microTask_with_promise.html
 test/cairo/internal-test/scripting/module/test1.html
 test/cairo/internal-test/scripting/module/test2.html

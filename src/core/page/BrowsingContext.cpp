@@ -143,6 +143,7 @@ BrowsingContext::BrowsingContext(WebView* webView, HTMLIFrameElement* source,
 
 void BrowsingContext::initFlags()
 {
+    m_disposed = false;
     m_needsStyleRecalc = false;
     m_styleRecalcRenderingSkipped = false;
     m_needsStyleRecalcForWholeDocument = false;
@@ -647,6 +648,7 @@ void BrowsingContext::onIdle()
 
 void BrowsingContext::dispose()
 {
+    m_disposed = true;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     for (size_t i = 0; i < m_existingMediaElements.size(); i++) {
         m_existingMediaElements[i]->dispose();
