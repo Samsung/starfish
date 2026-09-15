@@ -3763,6 +3763,13 @@ void FrameBox::establishesStackingContextIfNeedsAndComputingPaintingFlags()
             // stacking context is disappear
             // trigger repaint tracker
             nd->webView()->markNeedsPaintingConsiderInRendering();
+            if (iter->second.needsGraphicsBuffer) {
+                // The content was composited into its own buffer, so the
+                // enclosing contexts' composed visibleRects excluded it. It
+                // now paints into them; keep their pre-rebuild rects from
+                // being restored or the buffer they size misses it.
+                markAncestorStackingContextVisibleRectDirty();
+            }
         }
     }
 
