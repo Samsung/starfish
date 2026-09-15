@@ -27,6 +27,7 @@
 #include "core/dom/ToggleEvent.h"
 #include "core/dom/Traverse.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/style/CSSStyleDeclaration.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "binding/ScriptEngineInstance.h"
@@ -147,8 +148,11 @@ HTMLSlotElement* HTMLDetailsElement::slotFor(Node* child)
 
 void HTMLDetailsElement::ensureExclusivity(bool closeOthers)
 {
+    if (!open()) {
+        return;
+    }
     auto name = getAttributeOrEmpty(starfish()->staticStrings()->m_name);
-    if (!open() || !name->length()) {
+    if (name->isEmpty()) {
         return;
     }
     Traverse::traverse(getRootNode(), [&](Node* node) {
@@ -187,19 +191,18 @@ void HTMLDetailsElement::queueToggle(bool oldOpen)
         window(),
         [](size_t handle, void* data) {
             auto details = static_cast<HTMLDetailsElement*>(data);
+            auto ss = details->starfish()->staticStrings();
             MicroTaskExecutionManager microtasks(
                 details->scriptBindingInstance()->engineInstance());
             ToggleEventInit init;
-            init.setOldState(details->m_toggleOldOpen
-                                 ? String::createASCIIString("open")
-                                 : String::createASCIIString("closed"));
-            init.setNewState(details->open()
-                                 ? String::createASCIIString("open")
-                                 : String::createASCIIString("closed"));
+            init.setOldState(
+                (details->m_toggleOldOpen ? ss->m_open : ss->m_closed)
+                    .toString());
+            init.setNewState(
+                (details->open() ? ss->m_open : ss->m_closed).toString());
             details->m_toggleTask = SIZE_MAX;
-            details->dispatchEventByUA(
-                new ToggleEvent(details->executionContext(),
-                                String::createASCIIString("toggle"), init));
+            details->dispatchEventByUA(new ToggleEvent(
+                details->executionContext(), ss->m_toggle.toString(), init));
         },
         this);
 }
@@ -214,23 +217,23 @@ void HTMLDetailsElement::didAttributeChanged(QualifiedName name,
                                      attributeRemoved);
     auto ss = starfish()->staticStrings();
     if (name == ss->m_open && (attributeCreated || attributeRemoved)) {
-        internalShadowRoot()->lastChild()->asElement()->setAttribute(
-            ss->m_style, open() ? String::createASCIIString("display: block")
-                                : String::createASCIIString("display: none"));
+        // Flip only the two properties that depend on open; the rest of the
+        // internal declarations were set once in the constructor.
+        const char* display = open() ? "block" : "none";
+        internalShadowRoot()
+            ->lastChild()
+            ->asElement()
+            ->inlineStyle()
+            ->setPropertyInternal(CSSStyleValuePair::KeyKind::Display, display,
+                                  strlen(display), false);
+        const char* marker = open() ? "disclosure-open" : "disclosure-closed";
         internalShadowRoot()
             ->firstChild()
             ->firstChild()
             ->asElement()
-            ->setAttribute(
-                ss->m_style,
-                open() ? String::createASCIIString(
-                             "display: list-item; list-style-type: "
-                             "disclosure-open; list-style-position: inside; "
-                             "counter-increment: list-item 0")
-                       : String::createASCIIString(
-                             "display: list-item; list-style-type: "
-                             "disclosure-closed; list-style-position: inside; "
-                             "counter-increment: list-item 0"));
+            ->inlineStyle()
+            ->setPropertyInternal(CSSStyleValuePair::KeyKind::ListStyleType,
+                                  marker, strlen(marker), false);
         queueToggle(attributeRemoved);
         if (attributeCreated) {
             ensureExclusivity(true);
