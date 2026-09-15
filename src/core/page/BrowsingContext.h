@@ -287,6 +287,13 @@ public:
         return m_parentBrowsingContext;
     }
 
+    // dispose() has run: the document is no longer fully active and its
+    // pending tasks were dropped (HTML "destroy a document").
+    bool isDisposed()
+    {
+        return m_disposed;
+    }
+
     bool isDescendantOf(BrowsingContext* other);
 
     HistoryManager* historyManager();
@@ -363,6 +370,7 @@ private:
     BrowsingContext* m_parentBrowsingContext;
     HTMLIFrameElement* m_sourceElement;
 
+    bool m_disposed : 1;
     bool m_needsStyleRecalc : 1;
     bool m_styleRecalcRenderingSkipped : 1;
     bool m_needsStyleRecalcForWholeDocument : 1;

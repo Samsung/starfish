@@ -2974,8 +2974,11 @@ ContentSecurityPolicy* Document::contentSecurityPolicy()
 bool Document::isFullyActive()
 {
     BrowsingContext* bContext = browsingContext();
+    if (!bContext || bContext->isDisposed()) {
+        return false;
+    }
     if (bContext->isTopLevelBrowsingContext()) {
-        if (bContext && (bContext->document() == this)) {
+        if (bContext->document() == this) {
             return true;
         }
     } else {

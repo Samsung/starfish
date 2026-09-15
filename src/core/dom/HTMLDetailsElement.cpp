@@ -28,6 +28,7 @@
 #include "core/dom/Traverse.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/style/CSSStyleDeclaration.h"
+#include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "binding/ScriptEngineInstance.h"
@@ -71,6 +72,7 @@ void* HTMLDetailsElement::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLDetailsElement)] = { 0 };
         HTMLElement::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLDetailsElement, m_toggleWindow));
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLDetailsElement));
         typeInited = true;
     }
@@ -175,30 +177,53 @@ void HTMLDetailsElement::ensureExclusivity(bool closeOthers)
     });
 }
 
+bool HTMLDetailsElement::isDocumentDisposed()
+{
+    BrowsingContext* context = document()->browsingContext();
+    return context && context->isDisposed();
+}
+
 void HTMLDetailsElement::queueToggle(bool oldOpen)
 {
-    auto loop = window()->webView()->messageLoop();
+    // HTML "details notification task steps": the task is queued on the
+    // element's relevant global object, replacing a still-pending one while
+    // keeping its old state. The element may have moved to another document
+    // since, so that pending task can belong to another window -- every
+    // window of a WebView shares one message loop, so it is still ours to
+    // remove. A destroyed document never runs its tasks again (HTML "destroy
+    // a document"), so nothing is queued for it; a document that merely has
+    // no browsing context (DOMParser, createHTMLDocument) still gets its
+    // toggle, as the WPT toggleEvent tests expect.
     if (m_toggleTask != SIZE_MAX) {
-        loop->removeIdler(m_toggleTask);
+        window()->webView()->messageLoop()->removeIdler(m_toggleTask);
+        m_toggleTask = SIZE_MAX;
     } else {
         m_toggleOldOpen = oldOpen;
     }
-    if (!m_disposerRegistered) {
+    if (isDocumentDisposed()) {
+        return;
+    }
+    Window* owner = window();
+    if (m_toggleWindow != owner) {
         // Window teardown frees every pending idler without telling its
-        // owner; drop our handle first so a later toggle (from a page that
-        // kept this element) cannot remove a stale one.
-        m_disposerRegistered = true;
-        window()->registerDisposer(this, [this]() {
-            if (m_toggleTask != SIZE_MAX) {
-                window()->webView()->messageLoop()->removeIdler(m_toggleTask);
+        // owner; remove ours first so a later toggle cannot touch a stale
+        // handle. Registered once per window the task has lived on.
+        m_toggleWindow = owner;
+        owner->registerDisposer(this, [this, owner]() {
+            if (m_toggleTask != SIZE_MAX && m_toggleWindow == owner) {
+                owner->webView()->messageLoop()->removeIdler(m_toggleTask);
                 m_toggleTask = SIZE_MAX;
             }
         });
     }
-    m_toggleTask = loop->addIdler(
-        window(),
+    m_toggleTask = owner->webView()->messageLoop()->addIdler(
+        owner,
         [](size_t handle, void* data) {
             auto details = static_cast<HTMLDetailsElement*>(data);
+            details->m_toggleTask = SIZE_MAX;
+            if (details->isDocumentDisposed()) {
+                return;
+            }
             auto ss = details->starfish()->staticStrings();
             MicroTaskExecutionManager microtasks(
                 details->scriptBindingInstance()->engineInstance());
@@ -208,7 +233,6 @@ void HTMLDetailsElement::queueToggle(bool oldOpen)
                     .toString());
             init.setNewState(
                 (details->open() ? ss->m_open : ss->m_closed).toString());
-            details->m_toggleTask = SIZE_MAX;
             details->dispatchEventByUA(new ToggleEvent(
                 details->executionContext(), ss->m_toggle.toString(), init));
         },
