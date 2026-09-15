@@ -182,11 +182,15 @@ void ShadowRoot::connectSlotWithSlottables()
     // Traverse host children and assign to appropriate slots
     Node* node = host()->firstChild();
     bool detailsSlots = host()->isHTMLDetailsElement();
+    Optional<Element*> detailsSummary;
+    if (detailsSlots) {
+        detailsSummary = host()->asHTMLDetailsElement()->firstSummary();
+    }
     while (node != nullptr) {
         if (detailsSlots && (node->isElement() || node->isText())) {
             host()
                 ->asHTMLDetailsElement()
-                ->slotFor(node)
+                ->slotFor(node, detailsSummary)
                 ->m_assignedNodes.push_back(node);
             node->setIsSlotted(true);
         } else if (node->isElement()) {
