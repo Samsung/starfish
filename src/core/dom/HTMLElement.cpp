@@ -432,28 +432,27 @@ bool HTMLElement::handleDefaultEvent(Event* event)
                       ? event->target()
                       : event->eventPath().front().shadowAdjustedTarget.value();
     if (target && target->isNode()) {
+        auto ss = starfish()->staticStrings();
         for (Node* node = target->asNode(); node && node != this;
              node = node->parentNode()) {
             if (!node->isElement()) {
                 continue;
             }
             auto element = node->asElement();
-            auto tag = element->localName();
-            auto has = [&](const char* attr) {
-                return element->hasAttribute(
-                    String::createASCIIString(attr, strlen(attr)));
+            auto tag = element->name();
+            auto has = [&](const QualifiedName& attr) {
+                return element->getAttribute(attr).hasValue();
             };
-            if (tag->equals("button") || tag->equals("select") ||
-                tag->equals("textarea") || tag->equals("label") ||
-                tag->equals("details") || tag->equals("iframe") ||
-                tag->equals("embed") || (tag->equals("a") && has("href")) ||
-                ((tag->equals("audio") || tag->equals("video")) &&
-                 has("controls")) ||
-                ((tag->equals("img") || tag->equals("object")) &&
-                 has("usemap")) ||
-                (tag->equals("input") &&
-                 !element
-                      ->getAttributeOrEmpty(starfish()->staticStrings()->m_type)
+            if (tag == ss->m_buttonTagName || tag == ss->m_selectTagName ||
+                tag == ss->m_textareaTagName || tag == ss->m_labelTagName ||
+                tag == ss->m_detailsTagName || tag == ss->m_iframeTagName ||
+                tag == ss->m_embedTagName ||
+                (tag == ss->m_aTagName && has(ss->m_href)) ||
+                ((tag == ss->m_audioTagName || tag == ss->m_videoTagName) &&
+                 has(ss->m_controls)) ||
+                (tag == ss->m_imgTagName && has(ss->m_usemap)) ||
+                (tag == ss->m_inputTagName &&
+                 !element->getAttributeOrEmpty(ss->m_type)
                       ->equalsIgnoreCase("hidden"))) {
                 return false;
             }
