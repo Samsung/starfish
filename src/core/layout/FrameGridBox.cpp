@@ -1824,8 +1824,14 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
 
     style->setWidth(Length(Length::Fixed, width));
 
+    // A clean item whose childNeedsLayout bit is raised had frames below it
+    // laid out by a measurement in this pass (track sizing computes the
+    // items' preferred widths through the flex basis protocol, which restores
+    // the measured frames to clean); that geometry is not the item's final
+    // one, so the item is laid out again.
     if (widthOnly) {
-        if (needsGridItemLayout(gridItem, style, true)) {
+        if (gridItem->childNeedsLayout() ||
+            needsGridItemLayout(gridItem, style, true)) {
             gridItem->markNeedsLayout();
         }
         gridItem->layout(m_layoutContext,
@@ -1922,7 +1928,7 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
 
     style->setHeight(Length(Length::Fixed, height));
 
-    if (gridItem->needsLayout() ||
+    if (gridItem->needsLayout() || gridItem->childNeedsLayout() ||
         needsGridItemLayout(gridItem, style, false)) {
         gridItem->markNeedsLayout();
         gridItem->layout(m_layoutContext,

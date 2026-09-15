@@ -80,6 +80,15 @@ struct FlexItemMeasureMemo : public gc {
         LayoutUnit m_availMain;
         LayoutUnit m_availCross;
         LayoutUnit m_value;
+        // The item's content height as the measurement left it, when the
+        // measurement laid the item out at its content height. Reusing the
+        // entry skips that layout, so the caller restores this instead: the
+        // automatic-minimum floor applied to the base size afterwards
+        // (FrameBox::heightAfterApplyingMinMaxHeights()) caps itself by
+        // contentHeight(), which otherwise still holds whatever the previous
+        // pass ended with, e.g. the size the item was grown to.
+        LayoutUnit m_contentHeight;
+        bool m_hasContentHeight : 1;
         bool m_seenPercent : 1;
         bool m_respectPercentWidth : 1;
         bool m_valid : 1;
@@ -203,7 +212,8 @@ struct FlexItemMeasureMemo : public gc {
 
     void storeBasis(LayoutUnit availMain, LayoutUnit availCross,
                     bool respectPercentWidth, bool seenPercent,
-                    LayoutUnit value)
+                    LayoutUnit value, bool hasContentHeight,
+                    LayoutUnit contentHeight)
     {
         BasisEntry* e = findBasis(availMain, availCross, respectPercentWidth);
         if (!e) {
@@ -213,6 +223,8 @@ struct FlexItemMeasureMemo : public gc {
         e->m_availMain = availMain;
         e->m_availCross = availCross;
         e->m_value = value;
+        e->m_hasContentHeight = hasContentHeight;
+        e->m_contentHeight = contentHeight;
         e->m_seenPercent = seenPercent;
         e->m_respectPercentWidth = respectPercentWidth;
         e->m_valid = true;
