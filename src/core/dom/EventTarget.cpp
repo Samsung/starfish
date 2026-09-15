@@ -363,7 +363,7 @@ static bool isShadowIncludingInclusiveAncestor(Node* ancestor, Node* node)
 }
 
 // https://dom.spec.whatwg.org/#retarget
-static EventTarget* retarget(EventTarget* a, EventTarget* b)
+EventTarget* EventTarget::retarget(EventTarget* a, EventTarget* b)
 {
     while (true) {
         if (!a || !a->isNode()) {
@@ -388,13 +388,13 @@ static EventPathStruct makeEventPathStruct(
 {
     EventPathStruct s;
     s.invocationTarget = invocationTarget;
-    s.shadowAdjustedTarget = retarget(target, invocationTarget);
+    s.shadowAdjustedTarget = EventTarget::retarget(target, invocationTarget);
     // Same per-struct independent retarget() pattern as shadowAdjustedTarget
     // above, applied to the event's original (dispatch-start) relatedTarget.
     s.relatedTarget =
         originalRelatedTarget
-            ? Optional<EventTarget*>(
-                  retarget(originalRelatedTarget.value(), invocationTarget))
+            ? Optional<EventTarget*>(EventTarget::retarget(
+                  originalRelatedTarget.value(), invocationTarget))
             : NullOption;
     s.rootOfClosedTree = rootOfClosedTree;
     s.slotInClosedTree = slotInClosedTree;
