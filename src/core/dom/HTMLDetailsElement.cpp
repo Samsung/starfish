@@ -134,14 +134,22 @@ Optional<HTMLDetailsElement*> HTMLDetailsElement::summaryOwner(Node* summary)
 
 HTMLSlotElement* HTMLDetailsElement::slotFor(Node* child)
 {
+    // Only a summary-named child can be the first summary; skip the scan for
+    // everything else.
+    bool summaryNamed = child->isHTMLElement() &&
+                        child->asElement()->name() ==
+                            starfish()->staticStrings()->m_summaryTagName;
+    return slotFor(child, summaryNamed ? firstSummary() : NullOption);
+}
+
+HTMLSlotElement* HTMLDetailsElement::slotFor(Node* child,
+                                             Optional<Element*> firstSummary)
+{
     // The summary slot precedes the content slot in the shadow root. Only
     // the first summary child is assigned to it; a later summary, text and
     // any other element are content.
     ShadowRoot* root = internalShadowRoot().value();
-    bool isFirstSummary = child->isHTMLElement() &&
-                          child->asElement()->name() ==
-                              starfish()->staticStrings()->m_summaryTagName &&
-                          firstSummary().value() == child;
+    bool isFirstSummary = firstSummary && firstSummary.value() == child;
     return (isFirstSummary ? root->firstChild() : root->lastChild())
         ->asHTMLSlotElement();
 }

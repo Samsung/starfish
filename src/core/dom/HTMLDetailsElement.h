@@ -37,8 +37,10 @@ public:
     void setOpen(bool value);
     Optional<Element*> firstSummary();
     static Optional<HTMLDetailsElement*> summaryOwner(Node* summary);
-    // The slot of the internal shadow tree a light-DOM child renders in.
+    // The slot of the internal shadow tree a light-DOM child renders in. The
+    // second form takes a precomputed firstSummary() for batch assignment.
     HTMLSlotElement* slotFor(Node* child);
+    HTMLSlotElement* slotFor(Node* child, Optional<Element*> firstSummary);
     void didAttributeChanged(QualifiedName name, Optional<String*> old,
                              String* value, bool attributeCreated,
                              bool attributeRemoved) override;
