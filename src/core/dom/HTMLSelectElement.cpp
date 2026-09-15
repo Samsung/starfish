@@ -396,6 +396,7 @@ void HTMLSelectElement::resetFromOption(HTMLOptionElement* resetFrom)
 
 void HTMLSelectElement::didNodeInserted(Node* parent, Node* newChild)
 {
+    HTMLElement::didNodeInserted(parent, newChild);
     if (!newChild->isHTMLOptionElement()) {
         return;
     }
