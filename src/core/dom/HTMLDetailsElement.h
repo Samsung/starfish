@@ -48,6 +48,7 @@ private:
     void queueToggle(bool oldOpen);
     size_t m_toggleTask{ SIZE_MAX };
     bool m_toggleOldOpen{ false };
+    bool m_disposerRegistered{ false };
 };
 } // namespace Starfish
 #endif
