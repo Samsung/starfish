@@ -23,6 +23,8 @@
 #include "core/dom/HTMLElement.h"
 
 namespace Starfish {
+class HTMLSlotElement;
+
 class HTMLDetailsElement : public HTMLElement {
 public:
     HTMLDetailsElement(Document* document, const QualifiedName& qname);
@@ -35,6 +37,8 @@ public:
     void setOpen(bool value);
     Optional<Element*> firstSummary();
     static Optional<HTMLDetailsElement*> summaryOwner(Node* summary);
+    // The slot of the internal shadow tree a light-DOM child renders in.
+    HTMLSlotElement* slotFor(Node* child);
     void didAttributeChanged(QualifiedName name, Optional<String*> old,
                              String* value, bool attributeCreated,
                              bool attributeRemoved) override;

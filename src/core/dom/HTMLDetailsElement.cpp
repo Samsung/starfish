@@ -21,6 +21,7 @@
 #include "Starfish.h"
 #include "core/dom/HTMLDetailsElement.h"
 #include "core/dom/Document.h"
+#include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLSlotElement.h"
 #include "core/dom/ShadowRoot.h"
 #include "core/dom/ToggleEvent.h"
@@ -37,23 +38,26 @@ HTMLDetailsElement::HTMLDetailsElement(Document* document,
     : HTMLElement(document, qname)
 {
     // HTML rendering: separate summary and content slots keep author DOM
-    // intact, including text preceding the first summary.
+    // intact, including text preceding the first summary. The parts are
+    // created as HTML elements explicitly: Document::createElement() yields
+    // generic elements when an HTML details lives in an XML document.
+    auto ss = starfish()->staticStrings();
     auto root = internalEnsureShadowRoot();
     auto summarySlot =
-        document->createElement(String::createASCIIString("slot"));
+        HTMLDocument::createHTMLElement(document, ss->m_slotTagName);
     auto fallback =
-        document->createElement(String::createASCIIString("summary"));
+        HTMLDocument::createHTMLElement(document, ss->m_summaryTagName);
     fallback->setTextContent(String::createASCIIString("Details"));
     fallback->setAttribute(
-        starfish()->staticStrings()->m_style,
+        ss->m_style,
         String::createASCIIString(
             "display: list-item; list-style-type: disclosure-closed; "
             "list-style-position: inside; counter-increment: list-item 0"));
     summarySlot->appendChild(fallback);
     root->appendChild(summarySlot);
     auto contentSlot =
-        document->createElement(String::createASCIIString("slot"));
-    contentSlot->setAttribute(starfish()->staticStrings()->m_style,
+        HTMLDocument::createHTMLElement(document, ss->m_slotTagName);
+    contentSlot->setAttribute(ss->m_style,
                               String::createASCIIString("display: none"));
     root->appendChild(contentSlot);
 }
@@ -125,6 +129,20 @@ Optional<HTMLDetailsElement*> HTMLDetailsElement::summaryOwner(Node* summary)
         }
     }
     return NullOption;
+}
+
+HTMLSlotElement* HTMLDetailsElement::slotFor(Node* child)
+{
+    // The summary slot precedes the content slot in the shadow root. Only
+    // the first summary child is assigned to it; a later summary, text and
+    // any other element are content.
+    ShadowRoot* root = internalShadowRoot().value();
+    bool isFirstSummary = child->isHTMLElement() &&
+                          child->asElement()->name() ==
+                              starfish()->staticStrings()->m_summaryTagName &&
+                          firstSummary().value() == child;
+    return (isFirstSummary ? root->firstChild() : root->lastChild())
+        ->asHTMLSlotElement();
 }
 
 void HTMLDetailsElement::ensureExclusivity(bool closeOthers)
