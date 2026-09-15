@@ -547,10 +547,7 @@ Optional<HTMLSlotElement*> Node::assignedSlotInternal() const
     }
     if (nd->isHTMLDetailsElement() && (isElement() || isText())) {
         // The native details slots are selected by role, not slot= names.
-        auto summary = nd->asHTMLDetailsElement()->firstSummary();
-        auto slot = summary && summary.value() == this ? sr->firstChild()
-                                                       : sr->lastChild();
-        return slot->asHTMLSlotElement();
+        return nd->asHTMLDetailsElement()->slotFor(const_cast<Node*>(this));
     }
     String* slotName;
     if (isElement()) {
