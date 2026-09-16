@@ -1263,17 +1263,19 @@ static void onTreeSourceChanged(void*)
 // own flat navigation.
 static bool g_dbusFilterAdded = false;
 
-// GestureInfo wire format (iiiiiiu): type, startX, endX, startY, endY,
-// state, eventTime. Types/states follow the Tizen accessibility gesture
-// enums (dali accessibility-actions.h): TWO_FINGER_HOVER=1 is the
-// two-finger pan; states BEGIN=0 ONGOING=1 ENDED=2 ABORTED=3.
+// GestureInfo wire format (iiiiiiu): type, beginX, beginY, endX, endY,
+// state, eventTime (the argument order the window manager's gesture module
+// publishes as x_beg, y_beg, x_end, y_end). Types/states follow the Tizen
+// accessibility gesture enums (dali accessibility-actions.h):
+// TWO_FINGER_HOVER=1 is the two-finger pan; states BEGIN=0 ONGOING=1
+// ENDED=2 ABORTED=3.
 static const dbus_int32_t kGestureTwoFingerHover = 1;
 static bool g_panActive = false;
 static dbus_int32_t g_panLastX = 0;
 static dbus_int32_t g_panLastY = 0;
 
-static dbus_bool_t handleA11yGesture(dbus_int32_t type, dbus_int32_t startX,
-                                     dbus_int32_t endX, dbus_int32_t startY,
+static dbus_bool_t handleA11yGesture(dbus_int32_t type, dbus_int32_t beginX,
+                                     dbus_int32_t beginY, dbus_int32_t endX,
                                      dbus_int32_t endY, dbus_int32_t state)
 {
     if (type != kGestureTwoFingerHover) {
@@ -1284,8 +1286,8 @@ static dbus_bool_t handleA11yGesture(dbus_int32_t type, dbus_int32_t startX,
     // increment since the previous event, content following the finger.
     if (!g_panActive || state == 0 /* BEGIN */) {
         g_panActive = true;
-        g_panLastX = startX;
-        g_panLastY = startY;
+        g_panLastX = beginX;
+        g_panLastY = beginY;
     }
     double deltaX = (double)(endX - g_panLastX);
     double deltaY = (double)(endY - g_panLastY);
@@ -1300,7 +1302,12 @@ static dbus_bool_t handleA11yGesture(dbus_int32_t type, dbus_int32_t startX,
         if (dpr <= 0) {
             dpr = 1.0;
         }
-        source->scrollBy(-deltaX / dpr, -deltaY / dpr);
+        // Scroll from the box under the fingers, as a touch drag on the same
+        // spot would: the content usually lives in an iframe or an overflow
+        // box, not in the top-level document.
+        double clientX = 0, clientY = 0;
+        toClientCss(endX, endY, ATK_XY_SCREEN, clientX, clientY);
+        source->scrollBy(clientX, clientY, -deltaX / dpr, -deltaY / dpr);
         updateFocusRing();
     }
     return TRUE;
@@ -1314,20 +1321,20 @@ static DBusHandlerResult a11yDbusFilter(DBusConnection* connection,
         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
     }
     dbus_bool_t consumed = FALSE;
-    dbus_int32_t type = 0, startX = 0, endX = 0, startY = 0, endY = 0,
+    dbus_int32_t type = 0, beginX = 0, beginY = 0, endX = 0, endY = 0,
                  state = 0;
     dbus_uint32_t eventTime = 0;
     if (dbus_message_get_args(message, nullptr, DBUS_TYPE_INT32, &type,
-                              DBUS_TYPE_INT32, &startX, DBUS_TYPE_INT32, &endX,
-                              DBUS_TYPE_INT32, &startY, DBUS_TYPE_INT32, &endY,
-                              DBUS_TYPE_INT32, &state, DBUS_TYPE_UINT32,
+                              DBUS_TYPE_INT32, &beginX, DBUS_TYPE_INT32,
+                              &beginY, DBUS_TYPE_INT32, &endX, DBUS_TYPE_INT32,
+                              &endY, DBUS_TYPE_INT32, &state, DBUS_TYPE_UINT32,
                               &eventTime, DBUS_TYPE_INVALID)) {
-        consumed = handleA11yGesture(type, startX, endX, startY, endY, state);
+        consumed = handleA11yGesture(type, beginX, beginY, endX, endY, state);
     }
     STARFISH_LOG_INFO(
         "A11yAtspiBridge: DoGesture type %d state %d (%d,%d)->(%d,%d) -> "
         "%s\n",
-        (int)type, (int)state, (int)startX, (int)startY, (int)endX, (int)endY,
+        (int)type, (int)state, (int)beginX, (int)beginY, (int)endX, (int)endY,
         consumed ? "consumed" : "not consumed");
     DBusMessage* reply = dbus_message_new_method_return(message);
     if (reply) {
