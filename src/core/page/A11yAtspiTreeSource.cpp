@@ -415,15 +415,13 @@ Element* A11yAtspiTreeSource::toElement(void* handle)
     return static_cast<Element*>(handle);
 }
 
-void* A11yAtspiTreeSource::hitTest(double clientX, double clientY)
+// Innermost node at a top-level viewport point, before any promotion to an
+// enumerated target. Descends through iframes the same way event dispatch
+// does: hitTest() works in page coordinates per browsing context,
+// isInnerIFrameEvent converts to the inner frame's viewport coordinates.
+static Node* deepestNodeAtPoint(BrowsingContext* bc, double clientX,
+                                double clientY)
 {
-    BrowsingContext* bc = webView()->mainBrowsingContext();
-    if (!bc) {
-        return nullptr;
-    }
-    // Descend through iframes the same way event dispatch does: hitTest()
-    // works in page coordinates per browsing context, isInnerIFrameEvent
-    // converts to the inner frame's viewport coordinates.
     double pageX = clientX + bc->window()->scrollX(false);
     double pageY = clientY + bc->window()->scrollY(false);
     Node* node = nullptr;
@@ -444,6 +442,16 @@ void* A11yAtspiTreeSource::hitTest(double clientX, double clientY)
         pageX = innerX + bc->window()->scrollX(false);
         pageY = innerY + bc->window()->scrollY(false);
     }
+    return node;
+}
+
+void* A11yAtspiTreeSource::hitTest(double clientX, double clientY)
+{
+    BrowsingContext* bc = webView()->mainBrowsingContext();
+    if (!bc) {
+        return nullptr;
+    }
+    Node* node = deepestNodeAtPoint(bc, clientX, clientY);
     if (!node) {
         return nullptr;
     }
@@ -749,12 +757,57 @@ UTF8StringDataNonGCStd A11yAtspiTreeSource::textOf(void* handle)
     return value->toUTF8NonGCString();
 }
 
-void A11yAtspiTreeSource::scrollBy(double dx, double dy)
+void A11yAtspiTreeSource::scrollBy(double clientX, double clientY, double dx,
+                                   double dy)
 {
     BrowsingContext* bc = webView()->mainBrowsingContext();
     if (!bc) {
         return;
     }
+    // The box under the fingers, not the target hitTest() would promote it
+    // to: promotion walks out of the iframe the content lives in, past every
+    // scroller on the way.
+    Node* node = deepestNodeAtPoint(bc, clientX, clientY);
+    Element* element =
+        node ? (node->isElement() ? node->asElement() : node->parentElement())
+             : nullptr;
+    while (element) {
+        Document* document = element->ownerDocument();
+        for (Element* current = element; current;
+             current = current->parentElement()) {
+            double left = current->scrollLeftProperty();
+            double top = current->scrollTopProperty();
+            current->scrollBy(dx, dy);
+            // Hand on only what this box had no room for, per axis, the way
+            // scroll chaining carries a touch drag out of a list that has
+            // hit its end (or that only scrolls the other way).
+            dx -= current->scrollLeftProperty() - left;
+            dy -= current->scrollTopProperty() - top;
+            if (dx > -1 && dx < 1 && dy > -1 && dy < 1) {
+                return;
+            }
+        }
+        if (!document) {
+            break;
+        }
+        // The document's own viewport, reached explicitly: whether the root
+        // element or the body stands in for it depends on the quirks mode,
+        // and neither does in every mode.
+        Window* window = document->window();
+        double scrollX = window->scrollX();
+        double scrollY = window->scrollY();
+        window->scrollBy(dx, dy);
+        dx -= window->scrollX() - scrollX;
+        dy -= window->scrollY() - scrollY;
+        if (dx > -1 && dx < 1 && dy > -1 && dy < 1) {
+            return;
+        }
+        BrowsingContext* owner = document->browsingContext();
+        element = (owner && owner->parentBrowsingContext())
+                      ? owner->sourceElement()
+                      : nullptr;
+    }
+    // Nothing under the fingers: scroll the top-level document.
     bc->window()->scrollBy(dx, dy);
 }
 
