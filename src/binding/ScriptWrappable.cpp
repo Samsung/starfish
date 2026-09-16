@@ -1813,12 +1813,26 @@ ScriptArrayBuffer createScriptArrayBufferAdoptingVector(
         .result->asArrayBufferObject();
 }
 
+// A freshly created ArrayBufferView has no backing ArrayBuffer, and Escargot
+// dereferences buffer() without a null check (reading `.length`, for one), so
+// every view handed back to script needs one. Callers that immediately attach
+// a real buffer just overwrite this.
+static void attachEmptyBuffer(ExecutionStateRef* state,
+                              ArrayBufferViewRef* view)
+{
+    ArrayBufferObjectRef* buffer = ArrayBufferObjectRef::create(state);
+    buffer->allocateBuffer(state, 0);
+    view->setBuffer(buffer, 0, 0, 0);
+}
+
 ScriptInt8Array createEmptyInt8Array(ScriptBindingInstance* instance)
 {
     ContextRef* ctx = instance->scriptContext();
     return Evaluator::execute(ctx,
                               [](ExecutionStateRef* state) -> ValueRef* {
-                                  return Int8ArrayObjectRef::create(state);
+                                  auto arr = Int8ArrayObjectRef::create(state);
+                                  attachEmptyBuffer(state, arr);
+                                  return arr;
                               })
         .result->asInt8ArrayObject();
 }
@@ -1885,7 +1899,9 @@ ScriptUint8Array createEmptyUint8Array(ScriptBindingInstance* instance)
     ContextRef* ctx = instance->scriptContext();
     return Evaluator::execute(ctx,
                               [](ExecutionStateRef* state) -> ValueRef* {
-                                  return Uint8ArrayObjectRef::create(state);
+                                  auto arr = Uint8ArrayObjectRef::create(state);
+                                  attachEmptyBuffer(state, arr);
+                                  return arr;
                               })
         .result->asUint8ArrayObject();
 }
@@ -1895,7 +1911,9 @@ ScriptInt16Array createEmptyInt16Array(ScriptBindingInstance* instance)
     ContextRef* ctx = instance->scriptContext();
     return Evaluator::execute(ctx,
                               [](ExecutionStateRef* state) -> ValueRef* {
-                                  return Int16ArrayObjectRef::create(state);
+                                  auto arr = Int16ArrayObjectRef::create(state);
+                                  attachEmptyBuffer(state, arr);
+                                  return arr;
                               })
         .result->asInt16ArrayObject();
 }
@@ -1905,7 +1923,10 @@ ScriptUint16Array createEmptyUint16Array(ScriptBindingInstance* instance)
     ContextRef* ctx = instance->scriptContext();
     return Evaluator::execute(ctx,
                               [](ExecutionStateRef* state) -> ValueRef* {
-                                  return Uint16ArrayObjectRef::create(state);
+                                  auto arr =
+                                      Uint16ArrayObjectRef::create(state);
+                                  attachEmptyBuffer(state, arr);
+                                  return arr;
                               })
         .result->asUint16ArrayObject();
 }
@@ -1915,7 +1936,9 @@ ScriptInt32Array createEmptyInt32Array(ScriptBindingInstance* instance)
     ContextRef* ctx = instance->scriptContext();
     return Evaluator::execute(ctx,
                               [](ExecutionStateRef* state) -> ValueRef* {
-                                  return Int32ArrayObjectRef::create(state);
+                                  auto arr = Int32ArrayObjectRef::create(state);
+                                  attachEmptyBuffer(state, arr);
+                                  return arr;
                               })
         .result->asInt32ArrayObject();
 }
@@ -1925,7 +1948,10 @@ ScriptUint32Array createEmptyUint32Array(ScriptBindingInstance* instance)
     ContextRef* ctx = instance->scriptContext();
     return Evaluator::execute(ctx,
                               [](ExecutionStateRef* state) -> ValueRef* {
-                                  return Uint32ArrayObjectRef::create(state);
+                                  auto arr =
+                                      Uint32ArrayObjectRef::create(state);
+                                  attachEmptyBuffer(state, arr);
+                                  return arr;
                               })
         .result->asUint32ArrayObject();
 }
@@ -1935,7 +1961,10 @@ ScriptFloat32Array createEmptyFloat32Array(ScriptBindingInstance* instance)
     ContextRef* ctx = instance->scriptContext();
     return Evaluator::execute(ctx,
                               [](ExecutionStateRef* state) -> ValueRef* {
-                                  return Float32ArrayObjectRef::create(state);
+                                  auto arr =
+                                      Float32ArrayObjectRef::create(state);
+                                  attachEmptyBuffer(state, arr);
+                                  return arr;
                               })
         .result->asFloat32ArrayObject();
 }
@@ -1945,7 +1974,10 @@ ScriptFloat64Array createEmptyFloat64Array(ScriptBindingInstance* instance)
     ContextRef* ctx = instance->scriptContext();
     return Evaluator::execute(ctx,
                               [](ExecutionStateRef* state) -> ValueRef* {
-                                  return Float64ArrayObjectRef::create(state);
+                                  auto arr =
+                                      Float64ArrayObjectRef::create(state);
+                                  attachEmptyBuffer(state, arr);
+                                  return arr;
                               })
         .result->asFloat64ArrayObject();
 }
@@ -1956,8 +1988,10 @@ ScriptUint8ClampedArray createEmptyUint8ClampedArray(
     ContextRef* ctx = instance->scriptContext();
     return Evaluator::execute(ctx,
                               [](ExecutionStateRef* state) -> ValueRef* {
-                                  return Uint8ClampedArrayObjectRef::create(
-                                      state);
+                                  auto arr =
+                                      Uint8ClampedArrayObjectRef::create(state);
+                                  attachEmptyBuffer(state, arr);
+                                  return arr;
                               })
         .result->asUint8ClampedArrayObject();
 }
