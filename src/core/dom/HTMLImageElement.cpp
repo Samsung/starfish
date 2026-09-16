@@ -441,31 +441,69 @@ void HTMLImageElement::stopFrameTimer()
         document()->webView()->timer()->removeTimer(m_updateFrameTimer);
         m_updateFrameTimer = 0;
     }
+    if (m_updateFrameAnimationFrame) {
+        document()->window()->cancelAnimationFrame(m_updateFrameAnimationFrame);
+        m_updateFrameAnimationFrame = 0;
+    }
 }
 
-void HTMLImageElement::updateFrame(size_t delay)
+void HTMLImageElement::updateFrame(uint64_t delayInMs)
 {
     stopFrameTimer();
     if (!isConnected()) {
         return;
     }
     m_updateFrameTimer = document()->webView()->timer()->addTimer(
-        delay * 10, document()->window(),
-        [](void* data) {
-            HTMLImageElement* imageElement = (HTMLImageElement*)data;
-            if (imageElement->m_imageData != nullptr) {
-                if (imageElement->frame()) {
-                    imageElement->setNeedsPainting();
-                }
-                if (imageElement->m_imageData->asAnimatedGIFNativeImageData()
-                        ->prepareNextFrame()) {
-                    size_t delay = imageElement->m_imageData
-                                       ->asAnimatedGIFNativeImageData()
-                                       ->delay();
-                    imageElement->updateFrame(delay);
-                }
-            }
-        },
-        this, false);
+        (unsigned)delayInMs, document()->window(), tickAnimatedGIFFrame, this,
+        false);
+}
+
+void HTMLImageElement::tickAnimatedGIFFrame(void* data)
+{
+    HTMLImageElement* imageElement = (HTMLImageElement*)data;
+    imageElement->m_updateFrameTimer = 0;
+    if (!imageElement->m_imageData || !imageElement->isConnected()) {
+        return;
+    }
+
+    // Swap the frame from inside "update the rendering" instead of from the
+    // timer callback, so the frame that is decoded is the one the rendering
+    // pass immediately following it paints. Decoding here would leave the new
+    // frame waiting for a rendering pass to be scheduled, which adds a
+    // variable delay on top of every frame.
+    //
+    // The timer stays the wakeup source: keeping a rAF callback registered for
+    // the whole animation would make the engine render every vsync even for a
+    // GIF that only asks for a frame every 100ms.
+    imageElement->m_updateFrameAnimationFrame =
+        imageElement->document()->window()->requestAnimationFrame(
+            advanceAnimatedGIFFrame, imageElement);
+}
+
+void HTMLImageElement::advanceAnimatedGIFFrame(void* data)
+{
+    HTMLImageElement* imageElement = (HTMLImageElement*)data;
+    imageElement->m_updateFrameAnimationFrame = 0;
+    if (!imageElement->m_imageData || !imageElement->isConnected()) {
+        return;
+    }
+
+    AnimatedGIFNativeImageData* gifData =
+        imageElement->m_imageData->asAnimatedGIFNativeImageData();
+
+    // The data owns the animation clock and catches up on its own when this
+    // tick is late, so all that is left here is to paint what it produced and
+    // to wake up again when the frame after it falls due.
+    auto result = gifData->prepareNextFrame();
+    if (result == AnimatedGIFNativeImageData::FrameUpdateResult::Finished) {
+        return;
+    }
+
+    if (result == AnimatedGIFNativeImageData::FrameUpdateResult::Updated &&
+        imageElement->frame()) {
+        imageElement->setNeedsPainting();
+    }
+
+    imageElement->updateFrame(gifData->delayUntilNextFrameInMs());
 }
 } // namespace Starfish

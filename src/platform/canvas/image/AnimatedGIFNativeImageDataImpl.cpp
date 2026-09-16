@@ -25,10 +25,17 @@
 
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
 #include <cairo.h>
-#include <chrono>
 #endif
 
+#include <chrono>
+
 #define MinimumDelay 3
+
+// How many frames a single prepareNextFrame() call decodes at most while
+// catching up. GIF frames are deltas, so reaching a later frame always costs a
+// decode per intervening frame; past this many frames the catch-up itself is
+// what keeps the animation late, so the rest of the backlog is dropped.
+#define MaxCatchUpFrames 32
 
 namespace Starfish {
 
@@ -91,42 +98,55 @@ public:
         }
     }
 
-    virtual bool prepareNextFrame() override
+    virtual FrameUpdateResult prepareNextFrame() override
     {
-        if (m_width != 0 && m_height != 0 && m_imageDecoder) {
-            STARFISH_ASSERT(m_imageDecoder != nullptr);
-
-            // Several image elements can share this data (e.g. the same
-            // data: URL). Each of them drives its own frame timer, so only
-            // advance once the current frame's delay has really elapsed.
-            // Otherwise the animation runs N times faster with N clients.
-            auto now = Clock::now();
-            if (m_hasNextFrameTime && now < m_nextFrameTime) {
-                return true;
-            }
-
-            if (!m_image) {
-                STARFISH_ASSERT(m_stride == m_width * 4);
-                m_image = (uint8_t*)malloc(m_width * m_height * 4);
-                STARFISH_RELEASE_ASSERT(m_image != nullptr);
-            }
-
-            auto idResult = m_imageDecoder->nextFrameOfAnimatedGIF(
-                m_image, m_width, m_height);
-            if (idResult.m_width == 0 && idResult.m_height == 0) {
-                return false;
-            }
-            STARFISH_ASSERT(m_image == idResult.m_buffer);
-
-            m_delay = idResult.delay;
-            if (m_delay <= MinimumDelay) {
-                m_delay = MinimumDelay;
-            }
-            m_nextFrameTime = now + std::chrono::milliseconds(m_delay * 10);
-            m_hasNextFrameTime = true;
-            return true;
+        if (m_width == 0 || m_height == 0 || !m_imageDecoder) {
+            return FrameUpdateResult::Finished;
         }
-        return false;
+
+        // Several image elements can share this data (e.g. the same data:
+        // URL) and each of them drives its own frame timer, so the animation
+        // clock lives here: a tick that arrives before the current frame is
+        // due leaves the frame alone. Otherwise the animation would run N
+        // times faster with N clients.
+        auto now = Clock::now();
+        if (m_hasNextFrameTime && now < m_nextFrameTime) {
+            return FrameUpdateResult::NoChange;
+        }
+
+        bool decoded = false;
+        size_t steps = 0;
+        do {
+            if (!decodeNextFrame()) {
+                return decoded ? FrameUpdateResult::Updated
+                               : FrameUpdateResult::Finished;
+            }
+            decoded = true;
+
+            // Count the frame from the deadline it was due at, not from the
+            // moment we got around to decoding it, so the decode and dispatch
+            // cost isn't added to every frame and compounded into drift.
+            m_nextFrameTime = (m_hasNextFrameTime ? m_nextFrameTime : now) +
+                              std::chrono::milliseconds(m_delay * 10);
+            m_hasNextFrameTime = true;
+
+            // Decoding takes time, so ask again whether the frame we just
+            // produced is itself already outdated. If it is, decode through
+            // the boundaries that are already past: only the last frame of
+            // the run is painted, so a late tick jumps straight to the frame
+            // that is due instead of flashing through the skipped ones.
+            now = Clock::now();
+        } while (m_nextFrameTime <= now && ++steps < MaxCatchUpFrames);
+
+        if (m_nextFrameTime <= now) {
+            // Still behind after decoding a whole backlog: the decoder cannot
+            // keep up with the rate this GIF asks for. Drop the remaining debt
+            // and restart the schedule from here, otherwise it carries into
+            // every later tick and the animation plays at decode speed for
+            // good.
+            m_nextFrameTime = now + std::chrono::milliseconds(m_delay * 10);
+        }
+        return FrameUpdateResult::Updated;
     }
 
     virtual uint8_t* data() override
@@ -202,19 +222,39 @@ public:
         return m_height;
     }
 
-    // Returns the time left until the next frame is due, in 1/100 sec.
-    virtual size_t delay() override
+    virtual uint64_t delayUntilNextFrameInMs() override
     {
         if (!m_hasNextFrameTime) {
-            return m_delay;
+            return 0;
         }
         auto left = std::chrono::duration_cast<std::chrono::milliseconds>(
                         m_nextFrameTime - Clock::now())
                         .count();
-        return std::max<long long>(1, (left + 9) / 10);
+        return left > 0 ? (uint64_t)left : 0;
     }
 
 private:
+    // Decodes the next frame into m_image. Returns false once the animation
+    // has no further frame to show.
+    bool decodeNextFrame()
+    {
+        if (!m_image) {
+            STARFISH_ASSERT(m_stride == m_width * 4);
+            m_image = (uint8_t*)malloc(m_width * m_height * 4);
+            STARFISH_RELEASE_ASSERT(m_image != nullptr);
+        }
+
+        auto idResult =
+            m_imageDecoder->nextFrameOfAnimatedGIF(m_image, m_width, m_height);
+        if (idResult.m_width == 0 && idResult.m_height == 0) {
+            return false;
+        }
+        STARFISH_ASSERT(m_image == idResult.m_buffer);
+
+        m_delay = std::max<size_t>(idResult.delay, MinimumDelay);
+        return true;
+    }
+
 #ifdef STARFISH_ENABLE_TEST
     virtual void dumpImage(const char* path)
     {

@@ -26,13 +26,25 @@ namespace Starfish {
 
 class AnimatedGIFNativeImageData : public BufferedNativeImageData {
 public:
+    enum class FrameUpdateResult {
+        NoChange, // the frame on screen is still the one that is due
+        Updated,  // a new frame was decoded and has to be painted
+        Finished, // there is no further frame to show
+    };
+
     static NativeImageData* create(
         const std::vector<char>& compressedImageData, std::string&& imageURL,
         uint32_t needsDownScaleImageResourceLargerThan, float devicePixelRatio,
         size_t width, size_t height, size_t stride);
 
-    virtual bool prepareNextFrame() = 0;
-    virtual size_t delay() = 0;
+    // Advances the animation to the frame that belongs on screen at the moment
+    // of the call. The data can be shared by several image elements, each
+    // driving its own timer, so the animation clock lives here rather than in
+    // the clients.
+    virtual FrameUpdateResult prepareNextFrame() = 0;
+
+    // Milliseconds left until the next frame is due; 0 means "due now".
+    virtual uint64_t delayUntilNextFrameInMs() = 0;
     virtual bool isAnimatedGIFNativeImageData() const
     {
         return true;
