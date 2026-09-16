@@ -306,6 +306,14 @@ void HTMLImageElement::didNodeInsertedToDocumentTree()
     }
 }
 
+void HTMLImageElement::didNodeRemovedFromDocumentTree()
+{
+    HTMLElement::didNodeRemovedFromDocumentTree();
+    // A detached image is not rendered, so stop animating it. It restarts
+    // from didNodeInsertedToDocumentTree, which reloads the image.
+    stopFrameTimer();
+}
+
 void HTMLImageElement::unloadImage()
 {
     if (m_imageResource) {
@@ -317,6 +325,7 @@ void HTMLImageElement::unloadImage()
         m_elementResourceClient = nullptr;
     }
     m_imageData = nullptr;
+    stopFrameTimer();
     m_requestErrorType = RequestErrorType::NoError;
     if (frame()) {
         setNeedsLayout();
@@ -426,10 +435,19 @@ bool HTMLImageElement::hasRequestError()
     return m_requestErrorType != RequestErrorType::NoError;
 }
 
-void HTMLImageElement::updateFrame(size_t delay)
+void HTMLImageElement::stopFrameTimer()
 {
     if (m_updateFrameTimer) {
         document()->webView()->timer()->removeTimer(m_updateFrameTimer);
+        m_updateFrameTimer = 0;
+    }
+}
+
+void HTMLImageElement::updateFrame(size_t delay)
+{
+    stopFrameTimer();
+    if (!isConnected()) {
+        return;
     }
     m_updateFrameTimer = document()->webView()->timer()->addTimer(
         delay * 10, document()->window(),
