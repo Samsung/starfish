@@ -55,6 +55,7 @@ http://web-platform.test:8000/dom/nodes/ChildNode-after.html
 http://web-platform.test:8000/dom/nodes/ParentNode-append.html
 http://web-platform.test:8000/dom/nodes/Document-getElementsByClassName.html
 http://web-platform.test:8000/dom/nodes/Node-isSameNode.html
+http://web-platform.test:8000/dom/nodes/Node-isConnected-shadow-dom.html
 http://web-platform.test:8000/dom/nodes/Element-getElementsByClassName.html
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-13.htm
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-25.htm
