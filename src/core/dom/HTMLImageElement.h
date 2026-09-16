@@ -101,7 +101,7 @@ public:
     WebOrigin* webOrigin();
     bool hasRequestError();
 
-    void updateFrame(size_t delay);
+    void updateFrame(uint64_t delayInMs);
     void stopFrameTimer();
 
     // Re-issues the same fetch as the current src so the image is
@@ -120,12 +120,20 @@ private:
     void loadImage(String* src);
     ResourceURL* origin();
 
+    static void tickAnimatedGIFFrame(void* data);
+    static void advanceAnimatedGIFFrame(void* data);
+
     ImageResource* m_imageResource;
     ElementResourceClient* m_elementResourceClient;
     NativeImageData* m_imageData;
     RequestErrorType m_requestErrorType;
 
+    // Drive the animated GIF: the timer wakes us up when the next frame falls
+    // due, and it then asks for an animation frame so the frame is swapped by
+    // the rendering pass that paints it. The frame deadlines themselves belong
+    // to the image data, which several elements can share.
     size_t m_updateFrameTimer{ 0 };
+    uint32_t m_updateFrameAnimationFrame{ 0 };
 };
 } // namespace Starfish
 
