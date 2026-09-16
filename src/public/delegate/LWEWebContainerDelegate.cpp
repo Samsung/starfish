@@ -1226,18 +1226,20 @@ void WebContainerImpl::RemoveJavascriptInterface(
             m_webView->removeJavaScriptNativeInterface(objectName,
                                                        functionName);
 
-            if (!jsFunctionName.empty()) {
-                Starfish::unregisterJavaScriptNativeInterface(
-                    m_webView->mainBrowsingContext()
-                        ->window()
-                        ->scriptBindingInstance(),
-                    objectName, functionName);
-            } else {
-                Starfish::unregisterJavaScriptNativeInterface(
-                    m_webView->mainBrowsingContext()
-                        ->window()
-                        ->scriptBindingInstance(),
-                    objectName);
+            if (m_webView->mainBrowsingContext()) {
+                if (!jsFunctionName.empty()) {
+                    Starfish::unregisterJavaScriptNativeInterface(
+                        m_webView->mainBrowsingContext()
+                            ->window()
+                            ->scriptBindingInstance(),
+                        objectName, functionName);
+                } else {
+                    Starfish::unregisterJavaScriptNativeInterface(
+                        m_webView->mainBrowsingContext()
+                            ->window()
+                            ->scriptBindingInstance(),
+                        objectName);
+                }
             }
         });
 }

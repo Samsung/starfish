@@ -180,6 +180,24 @@ TEST_F(WebContainerDestroyTest, Destroy)
     EXPECT_TRUE(true);
 }
 
+TEST_F(WebContainerDestroyTest, AddRemoveJavaScriptInterfaceBeforePageLoad)
+{
+    // Reproduces a crash where RemoveJavascriptInterface dereferenced
+    // mainBrowsingContext() without checking it, which is still null
+    // because no page has been loaded yet.
+    m_lwe->AddJavaScriptInterface(
+        "TEST", "echo1",
+        [](std::string param) -> std::string { return param; });
+    m_lwe->AddJavaScriptInterface(
+        "TEST", "echo2",
+        [](std::string param) -> std::string { return param; });
+    m_lwe->RemoveJavascriptInterface("TEST", "");
+    m_window->appLoop()->start(1);
+    m_lwe->Destroy();
+    // Expect no crash.
+    EXPECT_TRUE(true);
+}
+
 class WebContainerTest : public ::testing::Test {
 public:
     WebContainerTest() = default;
