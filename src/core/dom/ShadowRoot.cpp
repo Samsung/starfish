@@ -48,6 +48,14 @@ ShadowRoot::ShadowRoot(Document* document, ShadowRootMode mode, Element* host)
     , m_styleResolver(new StyleResolver(m_document, this))
     , m_adoptedStyleSheetsProxy(nullptr)
 {
+    // A shadow root is connected when its host is connected. Unlike ordinary
+    // nodes, it is not appended as a child of its host, so the regular
+    // insertion walk cannot initialize this state when the root is attached
+    // to a host that is already in the document.
+    if (host->isConnected()) {
+        setConnected();
+    }
+
     // add ua sheet
     m_styleResolver->addSheet(document->styleResolver().sheets()[0]);
 }
