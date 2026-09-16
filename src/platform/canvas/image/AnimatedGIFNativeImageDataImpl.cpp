@@ -25,6 +25,7 @@
 
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
 #include <cairo.h>
+#include <chrono>
 #endif
 
 #define MinimumDelay 3
@@ -95,6 +96,15 @@ public:
         if (m_width != 0 && m_height != 0 && m_imageDecoder) {
             STARFISH_ASSERT(m_imageDecoder != nullptr);
 
+            // Several image elements can share this data (e.g. the same
+            // data: URL). Each of them drives its own frame timer, so only
+            // advance once the current frame's delay has really elapsed.
+            // Otherwise the animation runs N times faster with N clients.
+            auto now = Clock::now();
+            if (m_hasNextFrameTime && now < m_nextFrameTime) {
+                return true;
+            }
+
             if (!m_image) {
                 STARFISH_ASSERT(m_stride == m_width * 4);
                 m_image = (uint8_t*)malloc(m_width * m_height * 4);
@@ -112,6 +122,8 @@ public:
             if (m_delay <= MinimumDelay) {
                 m_delay = MinimumDelay;
             }
+            m_nextFrameTime = now + std::chrono::milliseconds(m_delay * 10);
+            m_hasNextFrameTime = true;
             return true;
         }
         return false;
@@ -190,9 +202,16 @@ public:
         return m_height;
     }
 
+    // Returns the time left until the next frame is due, in 1/100 sec.
     virtual size_t delay() override
     {
-        return m_delay;
+        if (!m_hasNextFrameTime) {
+            return m_delay;
+        }
+        auto left = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        m_nextFrameTime - Clock::now())
+                        .count();
+        return std::max<long long>(1, (left + 9) / 10);
     }
 
 private:
@@ -220,6 +239,9 @@ protected:
     cairo_surface_t* m_imageSurface;
 #endif
     size_t m_delay{ 0 };
+    using Clock = std::chrono::steady_clock;
+    Clock::time_point m_nextFrameTime;
+    bool m_hasNextFrameTime{ false };
     ImageDecoder* m_imageDecoder{ nullptr };
 };
 
