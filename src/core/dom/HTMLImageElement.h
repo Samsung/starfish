@@ -96,11 +96,13 @@ public:
     virtual void didNodeAdopted(Document* oldDocument) override;
 
     virtual void didNodeInsertedToDocumentTree() override;
+    virtual void didNodeRemovedFromDocumentTree() override;
 
     WebOrigin* webOrigin();
     bool hasRequestError();
 
     void updateFrame(size_t delay);
+    void stopFrameTimer();
 
     // Re-issues the same fetch as the current src so the image is
     // (re)decoded against the webView's current devicePixelRatio, since
