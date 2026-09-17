@@ -923,6 +923,10 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                         // implement CSS animtion for pseudo element
                         // here when we can tracking psuedo element is appear
 
+                        // The generated content takes its style from the
+                        // pseudo-element when its frames are built, so an
+                        // inherited change rebuilds them. A custom property
+                        // alone changes nothing the content inherits.
                         if ((damage & ComputedStyleDamage::
                                           ComputedStyleDamageInherited) ||
                             (damage & ComputedStyleDamage::

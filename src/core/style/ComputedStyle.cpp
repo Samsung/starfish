@@ -2666,7 +2666,8 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         auto newCustomProperty = newStyle->customProperty();
         if (oldCustomProperty.hasValue() != newCustomProperty.hasValue()) {
             damage = static_cast<ComputedStyleDamage>(
-                ComputedStyleDamage::ComputedStyleDamageInherited | damage);
+                ComputedStyleDamage::ComputedStyleDamageCustomProperty |
+                damage);
         } else if (newCustomProperty) {
             const auto& oldCustomPropertyValues =
                 oldStyle->customProperty()->values();
@@ -2675,13 +2676,15 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             if (oldCustomPropertyValues.size() !=
                 newCustomPropertyValues.size()) {
                 damage = static_cast<ComputedStyleDamage>(
-                    ComputedStyleDamage::ComputedStyleDamageInherited | damage);
+                    ComputedStyleDamage::ComputedStyleDamageCustomProperty |
+                    damage);
             } else {
                 for (size_t i = 0; i < newCustomPropertyValues.size(); i++) {
                     if (newCustomPropertyValues[i] !=
                         oldCustomPropertyValues[i]) {
                         damage = static_cast<ComputedStyleDamage>(
-                            ComputedStyleDamage::ComputedStyleDamageInherited |
+                            ComputedStyleDamage::
+                                ComputedStyleDamageCustomProperty |
                             damage);
                         break;
                     }
