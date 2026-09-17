@@ -3996,9 +3996,9 @@ LayoutRect FrameBox::frameVisibleShadowsRect(ShadowDataList* boxShadow)
     owner.setY(0);
     LayoutRect ret = owner;
 
-    CanvasShadowDataList list = boxShadow->toCanvasShadowDataList(this);
-    for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
-        LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
+    for (size_t i = 0; i < boxShadow->size(); i++) {
+        LayoutRect rect = computeVisibleShadowRect(
+            owner, boxShadow->at(i).toCanvasShadowData(this));
         ret.unite(rect);
     }
 
