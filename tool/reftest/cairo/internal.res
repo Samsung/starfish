@@ -684,6 +684,7 @@ test/cairo/internal-test/css/flex/flex_column-gap_12.html
 test/cairo/internal-test/css/flex/flex_column-gap_13.html
 test/cairo/internal-test/css/flex/flex_column-gap_14.html
 test/cairo/internal-test/css/flex/flex_column-gap_15.html
+test/cairo/internal-test/css/flex/flex_percentage_image_intrinsic_width.html
 test/cairo/internal-test/css/flex/flex_pseudo_after.html
 test/cairo/internal-test/css/flex/flex_with_-webkit-box_prefix.html
 test/cairo/internal-test/css/flex/flex_flex_left_right_abs_pos.html

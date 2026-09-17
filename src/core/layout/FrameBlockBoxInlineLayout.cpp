@@ -4456,6 +4456,7 @@ PreferredWidthContext::preferredWidthsWithNewContext(Frame* f)
     PreferredWidthContext newCtx(m_layoutContext, this, f, m_owner,
                                  m_remainingWidth - mbpWidth);
     newCtx.computePreferredWidth();
+    newCtx.finishLine(false);
 
     auto& floatContext = nearestFloatContext();
     if (f->style()->clear() & ClearValue::LeftClearValue) {
