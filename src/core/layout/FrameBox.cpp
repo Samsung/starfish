@@ -1026,7 +1026,9 @@ enum class BoxShadowImageKind {
 // shadow image, so equal keys mean equal pixels. See BoxShadowImageKey.
 // The border radii go in as the style lengths, not resolved values: the
 // paths resolve percentages against rects of their own. A calc() radius
-// has no flat encoding, so such a box gets no key and paints uncached.
+// without a percentage resolves to the same length against any rect and goes
+// in as that length; one with a percentage has no flat encoding, so such a
+// box gets no key and paints uncached.
 static Optional<BoxShadowImageKey> boxShadowImageKey(
     FrameBox* frame, const CanvasShadowData& shadow, const Unit::Color& color,
     BoxShadowImageKind kind, float dpr)
@@ -1066,11 +1068,15 @@ static Optional<BoxShadowImageKey> boxShadowImageKey(
         };
         for (size_t j = 0; j < 8; j++) {
             const Length& l = *lengths[j];
-            key.words[i++] = (int32_t)l.type();
             if (l.isFixed()) {
+                key.words[i++] = (int32_t)Length::Fixed;
                 putFloat(l.fixed());
             } else if (l.isPercent()) {
+                key.words[i++] = (int32_t)Length::Percent;
                 putFloat(l.percent());
+            } else if (l.isCalc() && !l.hasPercent()) {
+                key.words[i++] = (int32_t)Length::Fixed;
+                putFloat(l.specifiedValue(LayoutUnit(0), frame));
             } else {
                 return Optional<BoxShadowImageKey>();
             }
