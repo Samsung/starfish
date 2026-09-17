@@ -1017,13 +1017,15 @@ void FrameBox::applyBorderShapeClippingUsedInPaintingBoxShadow(
 }
 
 enum class BoxShadowImageKind {
-    OuterPiece,
     Outer,
     Inset,
+    OuterCorner,
+    InsetCorner,
 };
 
-// Every input the painting paths below read while drawing and blurring a
-// shadow image, so equal keys mean equal pixels. See BoxShadowImageKey.
+// Every input the full-size painting paths below read while drawing and
+// blurring a shadow image, so equal keys mean equal pixels. See
+// BoxShadowImageKey.
 // The border radii go in as the style lengths, not resolved values: the
 // paths resolve percentages against rects of their own. A calc() radius
 // without a percentage resolves to the same length against any rect and goes
@@ -1086,60 +1088,8 @@ static Optional<BoxShadowImageKey> boxShadowImageKey(
     return key;
 }
 
-static std::pair<bool, float> canUseFastPathOfPaintingBoxShadow(
-    FrameBox* frame, const Unit::Rect& shadowRect,
-    const CanvasShadowData& shadow)
-{
-    float shortSide = std::min(shadowRect.width(), shadowRect.height());
-    bool canUseFastPath =
-        (shadow.radius() < shortSide / 2) && shadow.radius() > 0;
-    float topLeftHorizontal = 0;
-    float topRightHorizontal = 0;
-    float topLeftVertical = 0;
-    float bottomLeftVertical = 0;
-    float topRightVertical = 0;
-    float bottomRightVertical = 0;
-    float bottomLeftHorizontal = 0;
-    float bottomRightHorizontal = 0;
-    if (canUseFastPath && frame->hasFrameBorderRadius()) {
-        auto br = frame->frameBorderRadius();
-        frame->computeBorderRadiusProperties(
-            br, frame->frameRect(), topLeftHorizontal, topRightHorizontal,
-            topLeftVertical, bottomLeftVertical, topRightVertical,
-            bottomRightVertical, bottomLeftHorizontal, bottomRightHorizontal);
-        if (topLeftHorizontal == topRightHorizontal &&
-            topRightHorizontal == topLeftVertical &&
-            topLeftVertical == bottomLeftVertical &&
-            bottomLeftVertical == topRightVertical &&
-            topRightVertical == bottomRightVertical &&
-            bottomRightVertical == bottomLeftHorizontal &&
-            bottomLeftHorizontal == bottomRightHorizontal) {
-            auto halfWidth = shadowRect.width() / 2;
-            auto halfHeight = shadowRect.height() / 2;
-            if (topLeftHorizontal > halfWidth) {
-                topLeftHorizontal = halfWidth;
-                topRightHorizontal = halfWidth;
-                bottomLeftHorizontal = halfWidth;
-                bottomRightHorizontal = halfWidth;
-            }
-
-            if (topLeftVertical > halfHeight) {
-                topLeftVertical = halfHeight;
-                bottomLeftVertical = halfHeight;
-                topRightVertical = halfHeight;
-                bottomRightVertical = halfHeight;
-            }
-
-        } else {
-            canUseFastPath = false;
-        }
-    }
-
-    return std::make_pair(canUseFastPath, topLeftHorizontal);
-}
-
 static void drawBoxShadowRotatePieceImage(Canvas* canvas, Unit::Rect src,
-                                          Unit::Rect& dst, float deg,
+                                          Unit::Rect dst, float deg,
                                           NativeImageData* piece,
                                           const DrawImageInfo& drawImageInfo,
                                           float dpr)
@@ -1160,83 +1110,263 @@ static void drawBoxShadowRotatePieceImage(Canvas* canvas, Unit::Rect src,
     canvas->restore();
 }
 
-static void drawBoxShadowPieceImage(Canvas* canvas, NativeImageData* piece,
-                                    float pieceSize,
-                                    const Unit::Rect& imageRect, float dpr)
+// A blurred box shadow only varies around the corners of its shape: along a
+// straight side it repeats one profile, and away from the sides it is flat.
+// So it is painted as a nine patch. Each corner is a small piece blurred once
+// for its radii - shared by every corner of every box that has those radii,
+// whatever the size of the box - the sides are stretched from a line of a
+// piece where the corner no longer reaches, and the rest is a plain fill.
+//
+// A piece holds the top-left corner of the shape. The other corners draw it
+// turned by 90 degrees at a time, which swaps the two radii of an elliptical
+// corner on every other turn.
+class BoxShadowNinePatch {
+public:
+    // Straight side kept in a piece beyond what the corner and the blur
+    // reach, which is where the sides are sampled.
+    static const int straightPart = 2;
+
+    // margin is the part of a piece outside the shape, which an outer shadow
+    // fades into. For an inset shadow that is the solid side, as deep as the
+    // blur reaches.
+    BoxShadowNinePatch(WebView* webView, bool inset, const Unit::Color& color,
+                       float blur, int margin = 0)
+        : m_webView(webView)
+        , m_inset(inset)
+        , m_color(color)
+        , m_blur(blur)
+        , m_dpr(webView->screenInfo().devicePixelRatio)
+        , m_margin(margin)
+    {
+        // How far ShadowBlur's three box passes carry a pixel.
+        float kernelSize =
+            ShadowBlur::computeKernelSizeAtStdDeviation(blur / 2 * m_dpr);
+        m_reach = ceil(kernelSize * 1.5f / m_dpr) + 1;
+        if (inset) {
+            m_margin = m_reach;
+        }
+        for (size_t i = 0; i < 4; i++) {
+            m_images[i] = nullptr;
+            m_created[i] = false;
+        }
+    }
+
+    // False when the corners of a width x height shape are too close for
+    // their pieces to stay clear of each other.
+    bool fit(int width, int height, const BorderRadiusFixedData& radii)
+    {
+        // As the top-left corner each of them is a turned copy of.
+        const float r[4][2] = {
+            { radii.m_topLeftHorizontal, radii.m_topLeftVertical },
+            { radii.m_topRightVertical, radii.m_topRightHorizontal },
+            { radii.m_bottomRightHorizontal, radii.m_bottomRightVertical },
+            { radii.m_bottomLeftVertical, radii.m_bottomLeftHorizontal },
+        };
+        for (size_t i = 0; i < 4; i++) {
+            m_horizontal[i] = r[i][0];
+            m_vertical[i] = r[i][1];
+            m_inner[i] =
+                (int)ceil(std::max(r[i][0], r[i][1])) + m_reach + straightPart;
+        }
+        return m_inner[0] + m_inner[1] <= width &&
+               m_inner[3] + m_inner[2] <= width &&
+               m_inner[0] + m_inner[3] <= height &&
+               m_inner[1] + m_inner[2] <= height;
+    }
+
+    // outerRect is the shape grown by the margin on every side.
+    void draw(Canvas* canvas, const Unit::Rect& outerRect)
+    {
+        const DrawImageInfo info = { 1.0, 1.0,
+                                     BorderImageRepeatValue::StretchValue,
+                                     BorderImageRepeatValue::StretchValue };
+        const float x = outerRect.x();
+        const float y = outerRect.y();
+        const float maxX = outerRect.maxX();
+        const float maxY = outerRect.maxY();
+        const int band = m_margin + m_reach;
+        int size[4];
+        for (size_t i = 0; i < 4; i++) {
+            size[i] = m_margin + m_inner[i];
+        }
+
+        // Clockwise from the top-left, a quarter turn more for each.
+        const Unit::Rect cornerRects[4] = {
+            Unit::Rect(x, y, size[0], size[0]),
+            Unit::Rect(maxX - size[1], y, size[1], size[1]),
+            Unit::Rect(maxX - size[2], maxY - size[2], size[2], size[2]),
+            Unit::Rect(x, maxY - size[3], size[3], size[3]),
+        };
+        for (size_t i = 0; i < 4; i++) {
+            if (!isRejected(canvas, cornerRects[i])) {
+                drawBoxShadowRotatePieceImage(
+                    canvas, Unit::Rect(0, 0, size[i], size[i]), cornerRects[i],
+                    90 * i, piece(i), info, m_dpr);
+            }
+        }
+
+        // The sides, from the last column (top, bottom) or the last row of
+        // the top-left piece, where it has settled into the side's profile.
+        const Unit::Rect sideRects[4] = {
+            Unit::Rect(x + size[0], y, maxX - size[1] - (x + size[0]), band),
+            Unit::Rect(maxX - band, y + size[1], band,
+                       maxY - size[2] - (y + size[1])),
+            Unit::Rect(x + size[3], maxY - band, maxX - size[2] - (x + size[3]),
+                       band),
+            Unit::Rect(x, y + size[0], band, maxY - size[3] - (y + size[0])),
+        };
+        for (size_t i = 0; i < 4; i++) {
+            if (sideRects[i].width() <= 0 || sideRects[i].height() <= 0 ||
+                isRejected(canvas, sideRects[i])) {
+                continue;
+            }
+            bool alongX = i == 0 || i == 2;
+            drawBoxShadowRotatePieceImage(
+                canvas,
+                alongX ? Unit::Rect(size[0] - 1, 0, 1, band)
+                       : Unit::Rect(0, size[0] - 1, band, 1),
+                sideRects[i], (i == 1 || i == 2) ? 180 : 0, piece(0), info,
+                m_dpr);
+        }
+
+        if (!m_inset) {
+            // What is left inside the sides, around the inner parts of the
+            // pieces, is the plain colour.
+            const float l = x + band;
+            const float t = y + band;
+            const float r = maxX - band;
+            const float b = maxY - band;
+            int notch[4];
+            for (size_t i = 0; i < 4; i++) {
+                notch[i] = size[i] - band;
+            }
+            canvas->beginPath();
+            canvas->moveTo(l + notch[0], t);
+            canvas->lineTo(r - notch[1], t);
+            canvas->lineTo(r - notch[1], t + notch[1]);
+            canvas->lineTo(r, t + notch[1]);
+            canvas->lineTo(r, b - notch[2]);
+            canvas->lineTo(r - notch[2], b - notch[2]);
+            canvas->lineTo(r - notch[2], b);
+            canvas->lineTo(l + notch[3], b);
+            canvas->lineTo(l + notch[3], b - notch[3]);
+            canvas->lineTo(l, b - notch[3]);
+            canvas->lineTo(l, t + notch[0]);
+            canvas->lineTo(l + notch[0], t + notch[0]);
+            canvas->closePath();
+            canvas->setFillColor(m_color);
+            canvas->fill();
+        }
+    }
+
+    // Hands the pieces blurred for this paint over to the cache. Not before
+    // the drawing is done: storing one may evict another.
+    void finish()
+    {
+        for (size_t i = 0; i < 4; i++) {
+            if (m_created[i]) {
+                m_webView->storeBoxShadowImage(m_keys[i], m_images[i]);
+                m_created[i] = false;
+            }
+        }
+    }
+
+    int margin() const
+    {
+        return m_margin;
+    }
+
+private:
+    static bool isRejected(Canvas* canvas, const Unit::Rect& rect)
+    {
+        return canvas->canRejectPainting(
+            LayoutRect(rect.x(), rect.y(), rect.width(), rect.height()));
+    }
+
+    // The piece of a corner, as the top-left corner it is drawn turned from.
+    BufferedNativeImageData* piece(size_t i)
+    {
+        if (m_images[i]) {
+            return m_images[i];
+        }
+        const int size = m_margin + m_inner[i];
+        BoxShadowImageKey& key = m_keys[i];
+        memset(key.words, 0, sizeof(key.words));
+        const float floats[4] = { m_dpr, m_blur, m_horizontal[i],
+                                  m_vertical[i] };
+        key.words[0] = (int32_t)(m_inset ? BoxShadowImageKind::InsetCorner
+                                         : BoxShadowImageKind::OuterCorner);
+        memcpy(&key.words[1], floats, sizeof(floats));
+        key.words[5] = (int32_t)(((uint32_t)m_color.r() << 24) |
+                                 ((uint32_t)m_color.g() << 16) |
+                                 ((uint32_t)m_color.b() << 8) | m_color.a());
+        key.words[6] = m_margin;
+        key.words[7] = size;
+
+        // Corners with the same radii share it, also before it reaches the
+        // cache.
+        for (size_t j = 0; j < 4; j++) {
+            if (j != i && m_images[j] && m_keys[j] == key) {
+                m_images[i] = m_images[j];
+                return m_images[i];
+            }
+        }
+        m_images[i] = m_webView->lookupBoxShadowImage(key);
+        if (m_images[i]) {
+            return m_images[i];
+        }
+
+        BufferedNativeImageData* image =
+            BufferedNativeImageData::create(m_dpr, size, size);
+        Canvas* cv = Canvas::create(m_webView, image);
+        cv->clearColor(Unit::Color(0, 0, 0, 0));
+        cv->setFillColor(m_color);
+        // Only the top-left corner of the shape is inside the piece.
+        const LayoutRect shape(m_margin, m_margin, size * 2, size * 2);
+        const BorderRadiusFixedData radii(m_horizontal[i], m_vertical[i], 0, 0,
+                                          0, 0, 0, 0);
+        if (m_inset) {
+            cv->rect(Unit::Rect(0, 0, size, size));
+            emitBorderRadiusPath(cv, shape, radii);
+            cv->setFillRule(false);
+            cv->fill();
+            cv->flush();
+        } else {
+            emitBorderRadiusPath(cv, shape, radii);
+            cv->clipPath();
+            cv->drawRect(shape);
+        }
+        ShadowBlur sb(image->data(), image->width(), image->height(),
+                      image->stride());
+        sb.process(m_blur / 2 * m_dpr);
+        delete cv;
+
+        m_images[i] = image;
+        m_created[i] = true;
+        return image;
+    }
+
+    WebView* m_webView;
+    bool m_inset;
+    Unit::Color m_color;
+    float m_blur;
+    float m_dpr;
+    int m_margin;
+    int m_reach;
+    float m_horizontal[4];
+    float m_vertical[4];
+    int m_inner[4];
+    BufferedNativeImageData* m_images[4];
+    BoxShadowImageKey m_keys[4];
+    bool m_created[4];
+};
+
+// The pieces of a nine patch are placed on whole pixels.
+static bool isWholePixels(float a, float b, float c)
 {
-    // top-left
-    Unit::Rect src;
-    Unit::Rect dst;
-    src = Unit::Rect(0, 0, pieceSize, pieceSize);
-    dst = Unit::Rect(imageRect.x(), imageRect.y(), pieceSize, pieceSize);
-    DrawImageInfo drawImageInfo = { 1.0, 1.0,
-                                    BorderImageRepeatValue::StretchValue,
-                                    BorderImageRepeatValue::StretchValue };
-
-    Unit::Rect scaledSrc = src;
-    scaledSrc.setX(src.x() * dpr);
-    scaledSrc.setY(src.y() * dpr);
-    scaledSrc.setWidth(src.width() * dpr);
-    scaledSrc.setHeight(src.height() * dpr);
-    canvas->drawImage(piece, scaledSrc, dst, drawImageInfo);
-
-    // top-left -> top-right
-    src = Unit::Rect(pieceSize - 1, 0, 1, pieceSize);
-    dst = Unit::Rect(imageRect.x() + pieceSize, imageRect.y(),
-                     imageRect.width() - pieceSize * 2, pieceSize);
-    scaledSrc = src;
-    scaledSrc.setX(src.x() * dpr);
-    scaledSrc.setY(src.y() * dpr);
-    scaledSrc.setWidth(src.width() * dpr);
-    scaledSrc.setHeight(src.height() * dpr);
-    canvas->drawImage(piece, scaledSrc, dst, drawImageInfo);
-
-    // top-right
-    src = Unit::Rect(0, 0, pieceSize, pieceSize);
-    dst = Unit::Rect(imageRect.maxX() - pieceSize, imageRect.y(), pieceSize,
-                     pieceSize);
-    drawBoxShadowRotatePieceImage(canvas, src, dst, 90, piece, drawImageInfo,
-                                  dpr);
-
-    // top-right -> bottom-right
-    src = Unit::Rect(0, pieceSize - 1, pieceSize, 1);
-    dst = Unit::Rect(imageRect.maxX() - pieceSize, imageRect.y() + pieceSize,
-                     pieceSize, imageRect.height() - pieceSize * 2);
-    drawBoxShadowRotatePieceImage(canvas, src, dst, 180, piece, drawImageInfo,
-                                  dpr);
-
-    // bottom-right
-    src = Unit::Rect(0, 0, pieceSize, pieceSize);
-    dst = Unit::Rect(imageRect.maxX() - pieceSize, imageRect.maxY() - pieceSize,
-                     pieceSize, pieceSize);
-    drawBoxShadowRotatePieceImage(canvas, src, dst, 180, piece, drawImageInfo,
-                                  dpr);
-
-    // bottom-right -> bottom-left
-    src = Unit::Rect(pieceSize - 1, 0, 1, pieceSize);
-    dst = Unit::Rect(imageRect.x() + pieceSize, imageRect.maxY() - pieceSize,
-                     imageRect.width() - pieceSize * 2, pieceSize);
-    drawBoxShadowRotatePieceImage(canvas, src, dst, 180, piece, drawImageInfo,
-                                  dpr);
-
-    // bottom-left
-    src = Unit::Rect(0, 0, pieceSize, pieceSize);
-    dst = Unit::Rect(imageRect.x(), imageRect.maxY() - pieceSize, pieceSize,
-                     pieceSize);
-    drawBoxShadowRotatePieceImage(canvas, src, dst, 270, piece, drawImageInfo,
-                                  dpr);
-
-    // bottom-left -> top-left
-    src = Unit::Rect(0, pieceSize - 1, pieceSize, 1);
-    dst = Unit::Rect(imageRect.x(), imageRect.y() + pieceSize, pieceSize,
-                     imageRect.height() - pieceSize * 2);
-    scaledSrc = src;
-    scaledSrc.setX(src.x() * dpr);
-    scaledSrc.setY(src.y() * dpr);
-    scaledSrc.setWidth(src.width() * dpr);
-    scaledSrc.setHeight(src.height() * dpr);
-    canvas->drawImage(piece, scaledSrc, dst, drawImageInfo);
+    return a == floorf(a) && b == floorf(b) && c == floorf(c);
 }
+
 void FrameBox::paintBoxShadows(Canvas* canvas)
 {
     STARFISH_ASSERT(canvas != nullptr);
@@ -1315,116 +1445,32 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     radiusOffset *= 2;
                 }
 
-                auto result = canUseFastPathOfPaintingBoxShadow(
-                    this, shadowRect, *shadow);
-                bool canUseFastPath = result.first;
-                float topLeftHorizontal = result.second;
                 WebView* wv = node()->webView();
-
-                // The corner piece is stretched along the edges from its last
-                // row/column and the centre is filled with its last pixel, so
-                // it must span the blur margin, the spread-expanded corner arc
-                // and one more blur radius of straight edge for the blur to
-                // settle. A piece that does not fit twice into the shadow
-                // image cannot be tiled; take the slow path instead.
-                size_t bufImageSize = 0;
-                if (canUseFastPath) {
-                    float cornerRadius = topLeftHorizontal + std::max(sd, 0.f);
-                    bufImageSize = ceil(radiusOffset + cornerRadius);
-                    float shortSide =
-                        std::min(shadowRect.width(), shadowRect.height()) +
-                        radiusOffset;
-                    if (bufImageSize * 2 > shortSide) {
-                        canUseFastPath = false;
-                    }
+                const int margin = ceil(radiusOffset / 2);
+                BoxShadowNinePatch ninePatch(wv, false, shadowColor,
+                                             shadow->radius(), margin);
+                BorderRadiusFixedData radii(0, 0, 0, 0, 0, 0, 0, 0);
+                if (hasFrameBorderRadius()) {
+                    radii = computeFixedBorderRadius(
+                        LayoutRect(0, 0, shadowRect.width(),
+                                   shadowRect.height()),
+                        sd, false);
                 }
 
-                if (canUseFastPath) {
+                if (isWholePixels(shadow->offsetX(), shadow->offsetY(), sd) &&
+                    ninePatch.fit(shadowRect.width(), shadowRect.height(),
+                                  radii)) {
                     canvas->save();
-                    canvas->setNeedsNoneAntialias();
-                    Optional<BoxShadowImageKey> cacheKey =
-                        boxShadowImageKey(this, *shadow, shadowColor,
-                                          BoxShadowImageKind::OuterPiece,
-                                          wv->screenInfo().devicePixelRatio);
-                    BufferedNativeImageData* nativeImage =
-                        cacheKey ? wv->lookupBoxShadowImage(cacheKey.value())
-                                 : nullptr;
-                    bool cachedImage = nativeImage != nullptr;
-
-                    if (!nativeImage) {
-                        nativeImage = BufferedNativeImageData::create(
-                            wv->screenInfo().devicePixelRatio, bufImageSize,
-                            bufImageSize);
-                        Canvas* cv = Canvas::create(wv, nativeImage);
-                        cv->setFillColor(shadowColor);
-                        cv->clearColor(Unit::Color(0, 0, 0, 0));
-
-                        cv->translate(ceil(radiusOffset / 2),
-                                      ceil(radiusOffset / 2));
-                        const LayoutRect clipRect(0, 0, shadowRect.width(),
-                                                  shadowRect.height());
-                        applyBorderRadiusClippingIfNeeds(cv, clipRect, sd);
-                        cv->drawRect(shadowRect);
-                        ShadowBlur sb(nativeImage->data(), nativeImage->width(),
-                                      nativeImage->height(),
-                                      nativeImage->stride());
-                        sb.process(shadow->radius() / 2 *
-                                   wv->screenInfo().devicePixelRatio);
-                        delete cv;
-                    }
-
-                    float offset = ceil(radiusOffset / 2);
-                    Unit::Rect imageRect(
-                        -offset + shadow->offsetX() - sd,
-                        -offset + shadow->offsetY() - sd,
-                        ceil(shadowRect.width() + radiusOffset),
-                        ceil(shadowRect.height() + radiusOffset));
-
+                    Unit::Rect outerRect(-margin + shadow->offsetX() - sd,
+                                         -margin + shadow->offsetY() - sd,
+                                         shadowRect.width() + margin * 2,
+                                         shadowRect.height() + margin * 2);
                     applyBorderShapeClippingUsedInPaintingBoxShadow(
-                        shadowRect, borderRect, imageRect, canvas);
-
-                    float pieceSize = bufImageSize;
-                    // center
-                    // pick color from blurred buffer
-                    uint8_t* buf = nativeImage->data();
-                    size_t edgeHeight =
-                        (nativeImage->height() > 0 ? nativeImage->height() - 1
-                                                   : 0);
-                    size_t edgeWidth =
-                        (nativeImage->width() > 0 ? nativeImage->width() - 1
-                                                  : 0);
-                    size_t base =
-                        edgeHeight * nativeImage->stride() + edgeWidth * 4;
-#ifdef PORT_PIXEL_ORDER_RGBA
-                    unsigned char r = buf[base];
-                    unsigned char g = buf[base + 1];
-                    unsigned char b = buf[base + 2];
-                    unsigned char a = buf[base + 3];
-#else
-                    unsigned char b = buf[base];
-                    unsigned char g = buf[base + 1];
-                    unsigned char r = buf[base + 2];
-                    unsigned char a = buf[base + 3];
-#endif
-
-                    canvas->setFillColor(Unit::Color(r, g, b, a));
-                    canvas->drawRect(Unit::Rect(
-                        imageRect.x() + pieceSize, imageRect.y() + pieceSize,
-                        imageRect.width() - pieceSize * 2,
-                        imageRect.height() - pieceSize * 2));
-
-                    drawBoxShadowPieceImage(canvas, nativeImage, pieceSize,
-                                            imageRect,
-                                            wv->screenInfo().devicePixelRatio);
-
+                        shadowRect, borderRect, outerRect, canvas);
+                    canvas->setNeedsNoneAntialias();
+                    ninePatch.draw(canvas, outerRect);
                     canvas->restore();
-
-                    if (cachedImage) {
-                    } else if (cacheKey) {
-                        wv->storeBoxShadowImage(cacheKey.value(), nativeImage);
-                    } else {
-                        delete nativeImage;
-                    }
+                    ninePatch.finish();
                 } else {
                     canvas->save();
                     Optional<BoxShadowImageKey> cacheKey = boxShadowImageKey(
@@ -1513,8 +1559,6 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 Unit::Rect borderRect = makeRect(BoxValue::BorderBoxBoxValue);
                 Unit::Rect paddingRect = makeRect(BoxValue::PaddingBoxBoxValue);
                 WebView* wv = node()->webView();
-                auto canUseFastPath = canUseFastPathOfPaintingBoxShadow(
-                    this, paddingRect, *shadow);
 
                 if (shadow->radius() == 0) {
                     // fast path #1(no blur)
@@ -1550,96 +1594,6 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
 
                     canvas->restore();
                     continue;
-                } else if (canUseFastPath.first &&
-                           borderLeft() == borderTop() &&
-                           borderTop() == borderRight() &&
-                           borderRight() == borderBottom()) {
-                    float topLeftHorizontal = canUseFastPath.second;
-                    float radius = shadow->radius();
-                    size_t pieceSize =
-                        std::max(ceil(radius * 2), topLeftHorizontal) +
-                        borderLeft();
-                    float pieceSizeHalf = pieceSize / 2.f;
-
-                    if (pieceSize <= paddingRect.width() / 2 &&
-                        pieceSize <= paddingRect.height() / 2) {
-                        // fast path #2 (since all four corners have same
-                        // border, border-radius value)
-                        BufferedNativeImageData* nativeImage =
-                            BufferedNativeImageData::create(
-                                wv->screenInfo().devicePixelRatio, pieceSize,
-                                pieceSize);
-                        canvas->save();
-                        canvas->setNeedsNoneAntialias();
-
-                        Canvas* cv =
-                            Canvas::create(node()->webView(), nativeImage);
-                        cv->clearColor(Unit::Color(0, 0, 0, 0));
-
-                        Unit::Rect pieceShadowInnerRect(
-                            pieceSizeHalf, pieceSizeHalf, paddingRect.width(),
-                            paddingRect.height());
-
-                        cv->rect(Unit::Rect(0, 0, pieceSize, pieceSize));
-
-                        if (hasFrameBorderRadius()) {
-                            applyBorderRadius(
-                                cv,
-                                LayoutRect(pieceShadowInnerRect.x(),
-                                           pieceShadowInnerRect.y(),
-                                           pieceShadowInnerRect.width(),
-                                           pieceShadowInnerRect.height()),
-                                sd, true);
-                        } else {
-                            cv->rect(pieceShadowInnerRect);
-                        }
-
-                        cv->setFillColor(shadowColor);
-                        cv->setFillRule(false);
-                        cv->fill();
-                        cv->flush();
-                        ShadowBlur sb(nativeImage->data(), nativeImage->width(),
-                                      nativeImage->height(),
-                                      nativeImage->stride());
-                        sb.process(shadow->radius() *
-                                   wv->screenInfo().devicePixelRatio / 2);
-                        delete cv;
-
-                        Unit::Rect pieceDrawRect(
-                            paddingRect.x() + shadow->offsetX() + sd -
-                                pieceSizeHalf,
-                            paddingRect.y() + shadow->offsetY() + sd -
-                                pieceSizeHalf,
-                            paddingRect.width() - sd * 2 + pieceSize,
-                            paddingRect.height() - sd * 2 + pieceSize);
-
-                        if (hasFrameBorderRadius()) {
-                            int xx = 0, yy = 0, ww = 0, hh = 0;
-                            LayoutUnit rx = paddingRect.x();
-                            LayoutUnit ry = paddingRect.y();
-                            xx = rx.floor();
-                            yy = ry.floor();
-                            ww = snapSizeToPixel(paddingRect.width(), rx);
-                            hh = snapSizeToPixel(paddingRect.height(), ry);
-                            applyBorderRadiusClippingIfNeeds(
-                                canvas, LayoutRect(xx, yy, ww, hh), 0, true);
-                        } else {
-                            canvas->clip(paddingRect);
-                        }
-
-                        canvas->rect(paddingRect);
-                        canvas->rect(pieceDrawRect);
-                        canvas->setFillColor(shadowColor);
-                        canvas->setFillRule(false);
-                        canvas->fill();
-
-                        drawBoxShadowPieceImage(
-                            canvas, nativeImage, pieceSize, pieceDrawRect,
-                            wv->screenInfo().devicePixelRatio);
-
-                        canvas->restore();
-                        continue;
-                    }
                 }
 
                 Unit::Rect shadowRect(
@@ -1658,6 +1612,60 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 iw = snapSizeToPixel(paddingRect.width() - sd * 2, x);
                 ih = snapSizeToPixel(paddingRect.height() - sd * 2, y);
                 Unit::Rect interiorRect(ix, iy, iw, ih);
+
+                BoxShadowNinePatch ninePatch(wv, true, shadowColor,
+                                             shadow->radius());
+                BorderRadiusFixedData radii(0, 0, 0, 0, 0, 0, 0, 0);
+                if (hasFrameBorderRadius()) {
+                    radii = computeFixedBorderRadius(LayoutRect(ix, iy, iw, ih),
+                                                     sd, true);
+                }
+                if (isWholePixels(shadow->offsetX(), shadow->offsetY(), sd) &&
+                    ninePatch.fit(iw, ih, radii)) {
+                    LayoutUnit prx = paddingRect.x();
+                    LayoutUnit pry = paddingRect.y();
+                    Unit::Rect clipRect(
+                        prx.floor(), pry.floor(),
+                        snapSizeToPixel(paddingRect.width(), prx),
+                        snapSizeToPixel(paddingRect.height(), pry));
+                    canvas->save();
+                    if (hasFrameBorderRadius()) {
+                        applyBorderRadiusClippingIfNeeds(
+                            canvas,
+                            LayoutRect(clipRect.x(), clipRect.y(),
+                                       clipRect.width(), clipRect.height()),
+                            0, true);
+                    } else {
+                        canvas->clip(clipRect);
+                    }
+                    canvas->setNeedsNoneAntialias();
+
+                    // The hole, where the full-size image below puts it.
+                    const int reach = ninePatch.margin();
+                    Unit::Rect outerRect(
+                        ix + std::min(shadow->offsetX(), 0.f) - reach,
+                        iy + std::min(shadow->offsetY(), 0.f) - reach,
+                        iw + reach * 2, ih + reach * 2);
+                    // Beyond the reach of the hole the shadow is solid: the
+                    // padding box without the part of it the patch covers.
+                    Unit::Rect covered = outerRect;
+                    covered.intersect(clipRect);
+                    if (!(covered == clipRect)) {
+                        canvas->beginPath();
+                        canvas->rect(clipRect);
+                        if (covered.width() > 0 && covered.height() > 0) {
+                            canvas->rect(covered);
+                        }
+                        canvas->setFillColor(shadowColor);
+                        canvas->setFillRule(false);
+                        canvas->fill();
+                    }
+                    ninePatch.draw(canvas, outerRect);
+
+                    canvas->restore();
+                    ninePatch.finish();
+                    continue;
+                }
 
                 Unit::Rect exteriorRect;
                 exteriorRect.unite(borderRect);
