@@ -169,7 +169,7 @@ std::pair<LayoutUnit, LayoutUnit>
 FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
     LayoutContext& ctx, LayoutUnit w, LayoutUnit h, LayoutUnit parentWidth,
     LayoutUnit parentHeight, bool hasAspectRatio,
-    bool parentHeightHasFixedValue)
+    bool parentHeightHasFixedValue, bool underComputingPreferredWidth)
 {
     LayoutUnit newWidth = w;
     LayoutUnit newHeight = h;
@@ -181,8 +181,12 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
     Length maxHeight = style()->maxHeight();
     bool canApplyMinHeight = minHeight.isDefinite(parentHeightHasFixedValue);
     bool canApplyMaxHeight = maxHeight.isDefinite(parentHeightHasFixedValue);
+    // The containing block width is not known yet while computing preferred
+    // widths, so a percentage min/max-width cannot be resolved there.
+    bool canApplyMinWidth = minWidth.isDefinite(!underComputingPreferredWidth);
+    bool canApplyMaxWidth = maxWidth.isDefinite(!underComputingPreferredWidth);
 
-    if (minWidth.isSpecified()) {
+    if (canApplyMinWidth) {
         newWidth = std::max(w, contentWidthAfterApplyingBoxSizing(
                                    minWidth.specifiedValue(parentWidth, this)));
         if (canApplyMinHeight) {
@@ -217,7 +221,7 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
                 newHeight = newWidth * (h / w);
             }
         }
-    } else if (maxWidth.isSpecified()) {
+    } else if (canApplyMaxWidth) {
         newWidth = std::min(w, contentWidthAfterApplyingBoxSizing(
                                    maxWidth.specifiedValue(parentWidth, this)));
         if (canApplyMinHeight) {

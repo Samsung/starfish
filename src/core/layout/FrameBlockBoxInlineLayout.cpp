@@ -4602,7 +4602,7 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
 
         auto widthAndHeight = minMaxWidthAndHeightAppliedIfNeeds(
             ctx.layoutContext(), w, h, parentContentWidth, parentContentHeight,
-            hasAspectRatio, parentHasFixedHeight);
+            hasAspectRatio, parentHasFixedHeight, true);
 
         w = widthAndHeight.first;
     }

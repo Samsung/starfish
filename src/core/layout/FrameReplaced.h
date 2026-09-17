@@ -118,7 +118,8 @@ public:
     std::pair<LayoutUnit, LayoutUnit> minMaxWidthAndHeightAppliedIfNeeds(
         LayoutContext& ctx, LayoutUnit w, LayoutUnit h, LayoutUnit parentWidth,
         LayoutUnit parentHeight, bool hasAspectRatio,
-        bool parentHeightHasFixedValue);
+        bool parentHeightHasFixedValue,
+        bool underComputingPreferredWidth = false);
 
     virtual const char* name() override
     {

@@ -528,9 +528,11 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame,
         }
 
         if (container->isAbsolutePositioned()) {
+            // An absolutely positioned box resolves percentages and
+            // offsets against the padding box of its containing block.
+            FrameBox* cb = containingBlock(container);
+            LayoutUnit parentHeight = cb->contentHeight() + cb->paddingHeight();
             if (height.isCalc() || height.isPercent()) {
-                LayoutUnit parentHeight =
-                    containingBlock(container)->contentHeight();
                 reverse.emplace_back(
                     container,
                     Length(Length::Fixed,
@@ -540,8 +542,6 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame,
 
             LengthData offset = container->style()->offset();
             if (offset.top().isSpecified() && offset.bottom().isSpecified()) {
-                LayoutUnit parentHeight =
-                    containingBlock(container)->contentHeight();
                 LayoutUnit t =
                     offset.top().specifiedValue(parentHeight, container);
                 LayoutUnit b =
