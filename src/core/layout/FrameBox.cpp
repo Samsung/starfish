@@ -1647,14 +1647,12 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                     paddingRect.width() + std::abs(shadow->offsetX()),
                     paddingRect.height() + std::abs(shadow->offsetY()));
                 int ix = 0, iy = 0, iw = 0, ih = 0;
-                LayoutUnit x = ((shadow->offsetX() < 0)
-                                    ? 0.0f
-                                    : paddingRect.x() + shadow->offsetX()) +
-                               sd;
-                LayoutUnit y = ((shadow->offsetY() < 0)
-                                    ? 0.0f
-                                    : paddingRect.y() + shadow->offsetY()) +
-                               sd;
+                // The image is placed by a negative offset below, so only a
+                // positive one moves the hole inside it.
+                LayoutUnit x =
+                    paddingRect.x() + std::max(shadow->offsetX(), 0.f) + sd;
+                LayoutUnit y =
+                    paddingRect.y() + std::max(shadow->offsetY(), 0.f) + sd;
                 ix = x.floor();
                 iy = y.floor();
                 iw = snapSizeToPixel(paddingRect.width() - sd * 2, x);
