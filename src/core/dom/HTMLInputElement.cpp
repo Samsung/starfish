@@ -20,6 +20,8 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
+#include <limits>
+
 #include "core/dom/Event.h"
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/Document.h"
@@ -46,6 +48,109 @@ namespace Starfish {
 // 524288 is Chromium's
 static const int INITIAL_MAXLENGTH = 524288;
 
+// The range state is the only stepped state implemented, so its bookkeeping
+// details are the only ones the helpers below need.
+// https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range)
+static const double DEFAULT_MINIMUM_FOR_RANGE_TYPE = 0;
+static const double DEFAULT_MAXIMUM_FOR_RANGE_TYPE = 100;
+static const double DEFAULT_STEP_FOR_RANGE_TYPE = 1;
+
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#valid-floating-point-number
+// String::validDouble() only screens the character set, so it accepts "",
+// "1.2.3", "e" and "+1"; deciding whether a value "is not a valid
+// floating-point number" the way the value sanitization steps mean it needs
+// the actual grammar.
+static bool parseFloatingPointNumber(String* input, double* out)
+{
+    size_t length = input->length();
+    size_t i = 0;
+
+    if (i < length && input->charAt(i) == '-') {
+        i++;
+    }
+
+    size_t integerDigits = 0;
+    while (i < length && String::isASCIIDigit(input->charAt(i))) {
+        i++;
+        integerDigits++;
+    }
+
+    size_t fractionDigits = 0;
+    if (i < length && input->charAt(i) == '.') {
+        i++;
+        while (i < length && String::isASCIIDigit(input->charAt(i))) {
+            i++;
+            fractionDigits++;
+        }
+        // A fraction part must have at least one digit ("1." is not valid),
+        // while an absent integer part is fine (".5" is valid).
+        if (!fractionDigits) {
+            return false;
+        }
+    }
+    if (!integerDigits && !fractionDigits) {
+        return false;
+    }
+
+    if (i < length && (input->charAt(i) == 'e' || input->charAt(i) == 'E')) {
+        i++;
+        if (i < length &&
+            (input->charAt(i) == '+' || input->charAt(i) == '-')) {
+            i++;
+        }
+        size_t exponentDigits = 0;
+        while (i < length && String::isASCIIDigit(input->charAt(i))) {
+            i++;
+            exponentDigits++;
+        }
+        if (!exponentDigits) {
+            return false;
+        }
+    }
+
+    // Trailing content makes the whole string invalid; the value sanitization
+    // steps ask for a *valid* floating-point number, not a parsable prefix.
+    if (i != length) {
+        return false;
+    }
+
+    double value = String::parseDouble(input);
+    if (!std::isfinite(value)) {
+        return false;
+    }
+
+    *out = value;
+    return true;
+}
+
+// Dividing by the step almost never lands exactly on an integer even when the
+// value does sit on the step (0.6 / 0.1 is 5.999999999999999 in double), so a
+// multiple within a rounding error of an integer counts as on-step.
+static bool isIntegralMultipleOfStep(double multiple)
+{
+    double rounded = std::round(multiple);
+    return std::abs(multiple - rounded) <=
+           std::abs(multiple) * std::numeric_limits<double>::epsilon() * 8;
+}
+
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#best-representation-of-the-number-as-a-floating-point-number
+// String::fromDouble() prints with "%g", which caps at 6 significant digits
+// and turns 1234567 into "1.23457e+06"; the best representation is the
+// shortest form that round-trips. Magnitudes outside what "%g" prints plainly
+// (below 1e-4, at or above 1e+15) still come out in exponent form with a
+// zero-padded exponent, which JS number serialization would not do.
+static String* serializeFloatingPointNumber(double value)
+{
+    char buf[64];
+    for (int precision = 15; precision <= 17; precision++) {
+        snprintf(buf, sizeof(buf), "%.*g", precision, value);
+        if (strtod(buf, nullptr) == value) {
+            break;
+        }
+    }
+    return String::fromUTF8(buf, strnlen(buf, sizeof(buf)));
+}
+
 HTMLInputElement::HTMLInputElement(Document* document,
                                    const QualifiedName& qname)
     : HTMLTextEditable(document, qname)
@@ -53,10 +158,6 @@ HTMLInputElement::HTMLInputElement(Document* document,
     , m_checkness(false)
     , m_dirtyCheckness(false)
     , m_previousCheckness(false)
-    , m_defaultMinimum(0)
-    , m_defaultMaximum(0)
-    , m_defaultStep(0)
-    , m_stepScaleFactor(0)
     , m_previousCheckedRadioButton(nullptr)
 {
 }
@@ -146,8 +247,10 @@ String* HTMLInputElement::value()
 {
     if (!m_dirtiness) {
         if (type()->equals("range")) {
-            double val = defaultValueForRangeType();
-            return String::fromDouble(val);
+            // The value content attribute has not been through the range
+            // state's sanitization when it is absent, or when it was set
+            // before `type` became range, so run it here.
+            return sanitizedRangeValue(defaultValue());
         }
 
         return defaultValue();
@@ -167,7 +270,13 @@ void HTMLInputElement::setValue(String* val)
     sanitizeValue();
 
     if (!oldValue->equals(val) || m_shouldDrawCaret) {
-        setNeedsFrameTreeBuildWithoutSelf();
+        if (type()->equals("range")) {
+            // A range control has no child frames; only where its thumb lands
+            // changes, so the frame tree can stay as it is.
+            setNeedsPainting();
+        } else {
+            setNeedsFrameTreeBuildWithoutSelf();
+        }
     }
 }
 
@@ -178,18 +287,7 @@ void HTMLInputElement::sanitizeValue()
         type()->equals("datetime-local")) {
         // TODO
     } else if (type()->equals("range")) {
-        double val;
-        if (!String::validDouble(m_value)) {
-            val = defaultValueForRangeType();
-        } else {
-            val = String::parseDouble(m_value);
-            if (sufferingFromStepMismatch(val)) {
-                double stepVal;
-                allowedValueStep(&stepVal);
-                val = roundValueToMultiplesOfSteps(val, stepVal);
-            }
-        }
-        m_value = String::fromDouble(val);
+        m_value = sanitizedRangeValue(m_value);
     } else if (type()->equals("number")) {
         // TODO
         for (size_t i = 0; i < m_value->length(); i++) {
@@ -211,57 +309,68 @@ void HTMLInputElement::sanitizeValue()
     }
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range):concept-input-value-default-range
 double HTMLInputElement::defaultValueForRangeType()
 {
-    double val = 0;
-    String* valAttr = defaultValue();
-    if (!valAttr->equals(String::emptyString) && String::validDouble(valAttr)) {
-        val = String::parseDouble(valAttr);
-    } else {
-        double min = minimum();
-        double max = maximum();
-        if (max < min) {
-            val = min;
-        } else {
-            val = min + ((max - min) / 2);
-        }
-    }
+    double min = minimum();
+    double max = maximum();
+    // "the minimum plus half the difference between the minimum and the
+    // maximum", or the minimum when the maximum is less than the minimum.
+    return max < min ? min : min + ((max - min) / 2);
+}
 
-    double stepVal;
-    bool hasAllowedValueStep = allowedValueStep(&stepVal);
-    if (!hasAllowedValueStep || !sufferingFromStepMismatch(val)) {
+// Rounds to the nearest value that sits on the allowed value step, and then
+// keeps the result inside [min, max] as the range state demands.
+// The arithmetic is done in double, so a value exactly halfway between two
+// candidates of a decimal step (0.15 with step 0.1) can round to the smaller
+// one where an arbitrary-precision implementation picks the larger.
+double HTMLInputElement::alignToAllowedValueStep(double val, double stepVal,
+                                                 double min, double max)
+{
+    double base = stepBase();
+    double multiple = (val - base) / stepVal;
+    if (isIntegralMultipleOfStep(multiple)) {
+        // Already on the step. Keep the value as it came in rather than
+        // recomputing base + nearest * step, which would reintroduce the
+        // division's rounding error into the serialized value.
         return val;
     }
 
-    // Suffering from step mismatch
-    return roundValueToMultiplesOfSteps(val, stepVal);
+    double lower = base + std::floor(multiple) * stepVal;
+    double upper = base + std::ceil(multiple) * stepVal;
+
+    // Of two equally close candidates the spec asks for the larger one.
+    double aligned = (val - lower) < (upper - val) ? lower : upper;
+    if (aligned > max) {
+        aligned = lower;
+    }
+    if (aligned < min) {
+        aligned = upper;
+    }
+    return aligned;
 }
 
-// https://html.spec.whatwg.org/multipage/input.html#attr-input-step
-bool HTMLInputElement::sufferingFromStepMismatch(double val)
+// https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range):value-sanitization-algorithm
+// The range state's value sanitization together with the underflow, overflow
+// and step mismatch corrections the state layers on top of it: parse, fall
+// back to the default value, clamp, then align to the step.
+String* HTMLInputElement::sanitizedRangeValue(String* input)
 {
+    double val;
+    if (!parseFloatingPointNumber(input, &val)) {
+        val = defaultValueForRangeType();
+    }
+
+    double min = minimum();
+    double max = std::max(min, maximum());
+    val = std::min(std::max(val, min), max);
+
     double stepVal;
     if (allowedValueStep(&stepVal)) {
-        if (remainder(stepBase() - val, stepVal) != 0) {
-            return true;
-        }
+        val = alignToAllowedValueStep(val, stepVal, min, max);
     }
 
-    return false;
-}
-
-double HTMLInputElement::roundValueToMultiplesOfSteps(double val,
-                                                      double stepVal)
-{
-    int multiplier = val / stepVal;
-    int smaller = stepVal * multiplier;
-    int bigger = stepVal * (multiplier + 1);
-
-    if (val - smaller < bigger - val) {
-        return smaller;
-    } else {
-        return bigger;
-    }
+    return serializeFloatingPointNumber(val);
 }
 
 String* HTMLInputElement::checkboxTickSymbol()
@@ -554,8 +663,19 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name,
                                          attributeRemoved);
 
     if (name == starfish()->staticStrings()->m_type) {
-        setDefaultBookkeepingValues();
         setNeedsFrameTreeBuild();
+    } else if (name == starfish()->staticStrings()->m_min ||
+               name == starfish()->staticStrings()->m_max ||
+               name == starfish()->staticStrings()->m_step) {
+        // The range state keeps its value inside [min, max] and on the step,
+        // so a change to any of the three re-runs sanitization even for a
+        // value the author already set.
+        if (type()->equals("range")) {
+            if (m_dirtiness) {
+                sanitizeValue();
+            }
+            setNeedsFrameTreeBuild();
+        }
     } else if (name == starfish()->staticStrings()->m_value) {
         // https://html.spec.whatwg.org/multipage/input.html#attr-input-value
         if (!m_dirtiness) {
@@ -733,22 +853,20 @@ void HTMLInputElement::setMin(String* min)
 
 double HTMLInputElement::minimum()
 {
-    String* minAttr = min();
-    if (minAttr->equals(String::emptyString) || !String::validDouble(minAttr)) {
-        return m_defaultMinimum;
-    } else {
-        return String::parseDouble(minAttr);
+    double val;
+    if (parseFloatingPointNumber(min(), &val)) {
+        return val;
     }
+    return DEFAULT_MINIMUM_FOR_RANGE_TYPE;
 }
 
 double HTMLInputElement::maximum()
 {
-    String* maxAttr = max();
-    if (maxAttr->equals(String::emptyString) || !String::validDouble(maxAttr)) {
-        return m_defaultMaximum;
-    } else {
-        return String::parseDouble(maxAttr);
+    double val;
+    if (parseFloatingPointNumber(max(), &val)) {
+        return val;
     }
+    return DEFAULT_MAXIMUM_FOR_RANGE_TYPE;
 }
 
 String* HTMLInputElement::step()
@@ -761,36 +879,36 @@ void HTMLInputElement::setStep(String* step)
     setAttribute(starfish()->staticStrings()->m_step, step);
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#concept-input-step
 bool HTMLInputElement::allowedValueStep(double* ret)
 {
     String* stepVal = step();
-    if (stepVal->equals(String::emptyString)) {
-        *ret = m_defaultStep * m_stepScaleFactor;
-        return true;
-    } else if (stepVal->toASCIILower()->equals("any")) {
+    if (stepVal->toASCIILower()->equals("any")) {
         // no allowed value step
         return false;
     }
 
-    double val = String::parseDouble(stepVal);
-    if (val <= 0) {
-        *ret = m_defaultStep * m_stepScaleFactor;
+    // An absent, unparsable or non-positive step attribute falls back to the
+    // default step, which the range state's step scale factor of 1 leaves as
+    // is.
+    double val;
+    if (!parseFloatingPointNumber(stepVal, &val) || val <= 0) {
+        val = DEFAULT_STEP_FOR_RANGE_TYPE;
     }
 
-    *ret = val * m_stepScaleFactor;
+    *ret = val;
     return true;
 }
 
 double HTMLInputElement::stepBase()
 {
-    String* minAttr = min();
-    if (!minAttr->equals(String::emptyString) && String::validDouble(minAttr)) {
-        return String::parseDouble(minAttr);
+    double val;
+    if (parseFloatingPointNumber(min(), &val)) {
+        return val;
     }
 
-    String* val = defaultValue();
-    if (!val->equals(String::emptyString) && String::validDouble(val)) {
-        return String::parseDouble(val);
+    if (parseFloatingPointNumber(defaultValue(), &val)) {
+        return val;
     }
 
     // https://html.spec.whatwg.org/multipage/input.html#week-state-(type=week):concept-input-step-default-base
@@ -801,14 +919,114 @@ double HTMLInputElement::stepBase()
     return 0;
 }
 
-// https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range):concept-input-value-default-range
-void HTMLInputElement::setDefaultBookkeepingValues()
+double HTMLInputElement::rangeValueFraction()
 {
-    if (type()->equals("range")) {
-        m_defaultMinimum = 0;
-        m_defaultMaximum = 100;
-        m_defaultStep = 1;
-        m_stepScaleFactor = 1;
+    double min = minimum();
+    double max = maximum();
+    if (max <= min) {
+        return 0;
     }
+
+    double val;
+    if (!parseFloatingPointNumber(value(), &val)) {
+        return 0;
+    }
+    return (std::min(std::max(val, min), max) - min) / (max - min);
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#dom-input-valueasnumber
+double HTMLInputElement::valueAsNumber()
+{
+    // Range is the only state whose value sanitization is implemented, and for
+    // a state that does not define a value-as-number the attribute is defined
+    // to return NaN.
+    if (!type()->equals("range")) {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+
+    double val;
+    if (!parseFloatingPointNumber(value(), &val)) {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    return val;
+}
+
+void HTMLInputElement::setValueAsNumber(double val)
+{
+    if (!type()->equals("range")) {
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_STATE_ERR,
+                               "InvalidStateError");
+    }
+
+    // The spec asks for a TypeError on an infinite value, which needs a throw
+    // path the bindings do not offer yet; an unrepresentable number takes the
+    // NaN route instead of leaking "inf" into the value.
+    if (!std::isfinite(val)) {
+        setValue(String::emptyString);
+        return;
+    }
+
+    setValue(serializeFloatingPointNumber(val));
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#dom-input-stepup
+void HTMLInputElement::stepUp(int32_t n)
+{
+    applyStep(n);
+}
+
+void HTMLInputElement::stepDown(int32_t n)
+{
+    applyStep(-(int64_t)n);
+}
+
+void HTMLInputElement::applyStep(int64_t n)
+{
+    // Only the range state has an implemented step; every other state is in
+    // the spec's "the method is not supported" case.
+    if (!type()->equals("range")) {
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_STATE_ERR,
+                               "InvalidStateError");
+    }
+
+    double stepVal;
+    if (!allowedValueStep(&stepVal)) {
+        // step="any"
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_STATE_ERR,
+                               "InvalidStateError");
+    }
+
+    double min = minimum();
+    double max = maximum();
+    if (min > max) {
+        return;
+    }
+
+    double val;
+    if (!parseFloatingPointNumber(value(), &val)) {
+        return;
+    }
+
+    val += stepVal * n;
+
+    // A value that started off-step is rounded in the direction of the step
+    // rather than to the nearest multiple.
+    double base = stepBase();
+    double multiple = (val - base) / stepVal;
+    if (!isIntegralMultipleOfStep(multiple)) {
+        val = base +
+              (n > 0 ? std::floor(multiple) : std::ceil(multiple)) * stepVal;
+    }
+
+    if (val < min) {
+        val = base + std::ceil((min - base) / stepVal) * stepVal;
+    } else if (val > max) {
+        val = base + std::floor((max - base) / stepVal) * stepVal;
+    }
+
+    setValue(serializeFloatingPointNumber(val));
 }
 } // namespace Starfish

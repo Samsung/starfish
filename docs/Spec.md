@@ -782,7 +782,10 @@ section are supported.
 |  | attribute | step | Granularity to be matched by the form control's value |
 |  | attribute | type | Returns the type of the input element. |
 |  | attribute | defaultValue | Returns / Sets the default value as originally specified in the HTML that created this object. |
+|  | attribute | valueAsNumber | Returns / Sets the value of the element interpreted as a number. Implemented for `type=range`; other types return NaN and throw `InvalidStateError` on set. |
 |  | attribute | labels | Is a NodeList that represents a list of label elements that are labels for this button. |
+|  | method | stepUp(n) | Increments the value by the allowed value step times `n`. Implemented for `type=range`. |
+|  | method | stepDown(n) | Decrements the value by the allowed value step times `n`. Implemented for `type=range`. |
 | [HTMLIFrameElement](https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element) | interface | HTMLIFrameElement |  |
 |  | attribute | src | Reflects the src HTML attribute, containing the full URL of the frame including base URI. |
 |  | attribute | name | Reflects the name HTML attribute, containing a name by which to refer to the frame. |

@@ -91,6 +91,15 @@ public:
     String* step();
     void setStep(String* step);
 
+    // Where the thumb sits along the track: 0 at the minimum, 1 at the
+    // maximum. Used by the layout box that paints the range control.
+    double rangeValueFraction();
+
+    double valueAsNumber();
+    void setValueAsNumber(double value);
+    void stepUp(int32_t n);
+    void stepDown(int32_t n);
+
     bool hasActivationBehavior() override;
     void activationBehavior() override;
     void legacyPreActivationBehavior() override;
@@ -133,20 +142,16 @@ private:
     bool allowedValueStep(double* ret);
     double stepBase();
     double defaultValueForRangeType();
-    bool sufferingFromStepMismatch(double val);
-    double roundValueToMultiplesOfSteps(double val, double stepVal);
-    void setDefaultBookkeepingValues();
+    double alignToAllowedValueStep(double val, double stepVal, double min,
+                                   double max);
+    String* sanitizedRangeValue(String* input);
+    void applyStep(int64_t n);
 
     bool m_dirtiness;
 
     bool m_checkness;
     bool m_dirtyCheckness;
     bool m_previousCheckness;
-
-    int32_t m_defaultMinimum;
-    int32_t m_defaultMaximum;
-    int32_t m_defaultStep;
-    int32_t m_stepScaleFactor;
 
     HTMLInputElement* m_previousCheckedRadioButton;
 
