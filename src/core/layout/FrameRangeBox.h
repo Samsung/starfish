@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2026-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,31 +17,31 @@
  *  USA
  */
 
-#ifndef __StarfishFrameInputBox__
-#define __StarfishFrameInputBox__
+#ifndef __StarfishFrameRangeBox__
+#define __StarfishFrameRangeBox__
 
-#include "core/layout/FrameBlockBox.h"
+#include "core/layout/FrameInputBox.h"
 
 namespace Starfish {
 
-class FrameTreeBuilderContext;
-class ComputedStyle;
-
-class FrameInputBox : public FrameBlockBox {
+// A range control draws a track and a thumb instead of a text value, so it
+// takes none of FrameInputBox's caret or line box handling.
+//
+// It stays a block box rather than becoming a replaced one: a range control is
+// semi-replaced, meaning it has a default size but still stretches when a flex
+// container or a pair of opposing insets ask it to, which a replaced box would
+// not do.
+// https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range)
+class FrameRangeBox final : public FrameInputBox {
 public:
-    FrameInputBox(Node* node, ComputedStyle* style);
-    static FrameInputBox* buildFrameTree(Node* current,
-                                         FrameTreeBuilderContext& ctx,
-                                         bool force);
+    FrameRangeBox(Node* node, ComputedStyle* style)
+        : FrameInputBox(node, style)
+    {
+    }
 
     virtual const char* name() override
     {
-        return "FrameInputBox";
-    }
-
-    virtual bool isFrameInputBox() override
-    {
-        return true;
+        return "FrameRangeBox";
     }
 
     virtual void layout(LayoutContext& ctx,
@@ -55,16 +55,14 @@ public:
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
-        FrameBlockBox::fillGCDescriptor(desc);
+        FrameInputBox::fillGCDescriptor(desc);
     }
 
-    void paintCaret(Canvas* canvas);
     virtual void paintInlineContentBlock(Canvas* canvas,
                                          PaintPassMemos* memos) override;
-    static ComputedStyle* createInputElementStyleFrom(Node* parent);
 
 private:
-    FrameText* firstFrameTextChild();
+    void paintSlider(Canvas* canvas);
 };
 } // namespace Starfish
 
