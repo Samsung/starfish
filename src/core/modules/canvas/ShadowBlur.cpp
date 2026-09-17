@@ -81,85 +81,74 @@ inline void kernelPosition(int blurIteration, unsigned& radius, int& deltaLeft,
     }
 }
 
-inline void boxBlur(uint8_t* srcData, uint8_t* dstData, unsigned dx, int dxLeft,
-                    int dxRight, int stride, int strideLine, int effectWidth,
-                    int effectHeight)
+// ceil(2^32 / d): (n * m) >> 32 equals n / d while n * d < 2^32, and a box
+// sum never exceeds 255 * d with d <= RADIUS_LIMIT + 1.
+static inline uint64_t reciprocalOf(unsigned d)
 {
-    const int maxKernelSize = std::min(dxRight, effectWidth);
+    return ((1ull << 32) + d - 1) / d;
+}
 
-    // Concerning the array width/length: it is Element size + Margin + Border.
-    // The number of pixels will be
-    // P = width * height * channels.
-    for (int y = 0; y < effectHeight; ++y) {
-        int line = y * strideLine;
-        int sumR = 0, sumG = 0, sumB = 0, sumA = 0;
-
-        const uint8_t* edgeValueLeft = srcData + line;
-        const uint8_t* edgeValueRight =
-            srcData + (line + (effectWidth - 1) * stride);
-
-        // Fill the kernel.
-        for (int i = dxLeft * -1; i < dxRight; ++i) {
-            // Is this right for negative values of 'i'?
-            unsigned offset = line + i * stride;
-            const uint8_t* srcPtr = srcData + offset;
-
-            if (i < 0) {
-                sumR += edgeValueLeft[0];
-                sumG += edgeValueLeft[1];
-                sumB += edgeValueLeft[2];
-                sumA += edgeValueLeft[3];
-            } else if (i >= effectWidth) {
-                sumR += edgeValueRight[0];
-                sumG += edgeValueRight[1];
-                sumB += edgeValueRight[2];
-                sumA += edgeValueRight[3];
-            } else {
-                sumR += *srcPtr++;
-                sumG += *srcPtr++;
-                sumB += *srcPtr++;
-                sumA += *srcPtr;
-            }
+// One box pass along the rows. Each output is the mean of the window
+// [x - left, x + right), with the row's first and last pixel repeated beyond
+// its ends.
+static void boxBlurRows(const uint8_t* src, uint8_t* dst, unsigned kernelSize,
+                        int left, int right, int stride, int width, int height)
+{
+    const uint64_t m = reciprocalOf(kernelSize);
+    const int last = width - 1;
+    for (int y = 0; y < height; ++y) {
+        const uint8_t* s = src + y * stride;
+        uint8_t* d = dst + y * stride;
+        uint32_t sum[4] = { 0, 0, 0, 0 };
+        for (int i = -left; i < right; ++i) {
+            const uint8_t* p = s + std::min(std::max(i, 0), last) * 4;
+            sum[0] += p[0];
+            sum[1] += p[1];
+            sum[2] += p[2];
+            sum[3] += p[3];
         }
+        for (int x = 0; x < width; ++x) {
+            d[0] = static_cast<uint8_t>((sum[0] * m) >> 32);
+            d[1] = static_cast<uint8_t>((sum[1] * m) >> 32);
+            d[2] = static_cast<uint8_t>((sum[2] * m) >> 32);
+            d[3] = static_cast<uint8_t>((sum[3] * m) >> 32);
+            d += 4;
+            const uint8_t* out = s + std::max(x - left, 0) * 4;
+            const uint8_t* in = s + std::min(x + right, last) * 4;
+            sum[0] += in[0] - out[0];
+            sum[1] += in[1] - out[1];
+            sum[2] += in[2] - out[2];
+            sum[3] += in[3] - out[3];
+        }
+    }
+}
 
-        // Blurring.
-        for (int x = 0; x < effectWidth; ++x) {
-            unsigned pixelByteOffset = line + x * stride;
-            uint8_t* dstPtr = dstData + pixelByteOffset;
-
-            *dstPtr++ = static_cast<uint8_t>(sumR / dx);
-            *dstPtr++ = static_cast<uint8_t>(sumG / dx);
-            *dstPtr++ = static_cast<uint8_t>(sumB / dx);
-            *dstPtr = static_cast<uint8_t>(sumA / dx);
-
-            // Shift kernel.
-            if (x < dxLeft) {
-                sumR -= edgeValueLeft[0];
-                sumG -= edgeValueLeft[1];
-                sumB -= edgeValueLeft[2];
-                sumA -= edgeValueLeft[3];
-            } else {
-                unsigned leftOffset = pixelByteOffset - dxLeft * stride;
-                const uint8_t* srcPtr = srcData + leftOffset;
-                sumR -= srcPtr[0];
-                sumG -= srcPtr[1];
-                sumB -= srcPtr[2];
-                sumA -= srcPtr[3];
-            }
-
-            if (x + dxRight >= effectWidth) {
-                sumR += edgeValueRight[0];
-                sumG += edgeValueRight[1];
-                sumB += edgeValueRight[2];
-                sumA += edgeValueRight[3];
-            } else {
-                unsigned rightOffset = pixelByteOffset + dxRight * stride;
-                const uint8_t* srcPtr = srcData + rightOffset;
-                sumR += srcPtr[0];
-                sumG += srcPtr[1];
-                sumB += srcPtr[2];
-                sumA += srcPtr[3];
-            }
+// The same pass along the columns, walked row by row: the window sums of
+// every column are carried in `sums`, so memory is read and written in row
+// order instead of striding down one column at a time.
+static void boxBlurColumns(const uint8_t* src, uint8_t* dst,
+                           unsigned kernelSize, int top, int bottom, int stride,
+                           int width, int height, uint32_t* sums)
+{
+    const uint64_t m = reciprocalOf(kernelSize);
+    const int last = height - 1;
+    const int n = width * 4;
+    memset(sums, 0, sizeof(uint32_t) * n);
+    for (int i = -top; i < bottom; ++i) {
+        const uint8_t* s = src + std::min(std::max(i, 0), last) * stride;
+        for (int k = 0; k < n; ++k) {
+            sums[k] += s[k];
+        }
+    }
+    for (int y = 0; y < height; ++y) {
+        uint8_t* d = dst + y * stride;
+        for (int k = 0; k < n; ++k) {
+            d[k] = static_cast<uint8_t>((sums[k] * m) >> 32);
+        }
+        const uint8_t* out = src + std::max(y - top, 0) * stride;
+        const uint8_t* in = src + std::min(y + bottom, last) * stride;
+        for (int k = 0; k < n; ++k) {
+            sums[k] += in[k] - out[k];
         }
     }
 }
@@ -172,19 +161,20 @@ inline void standardBoxBlur(uint8_t* fromBuffer, uint8_t* toBuffer,
     int dxRight = 0;
     int dyLeft = 0;
     int dyRight = 0;
+    std::unique_ptr<uint32_t[]> columnSums(new uint32_t[imageWidth * 4]);
 
     for (int i = 0; i < 3; ++i) {
         if (kernelSizeX) {
             kernelPosition(i, kernelSizeX, dxLeft, dxRight);
-            boxBlur(fromBuffer, toBuffer, kernelSizeX, dxLeft, dxRight, 4,
-                    stride, imageWidth, imageHeight);
+            boxBlurRows(fromBuffer, toBuffer, kernelSizeX, dxLeft, dxRight,
+                        stride, imageWidth, imageHeight);
             std::swap(fromBuffer, toBuffer);
         }
 
         if (kernelSizeY) {
             kernelPosition(i, kernelSizeY, dyLeft, dyRight);
-            boxBlur(fromBuffer, toBuffer, kernelSizeY, dyLeft, dyRight, stride,
-                    4, imageHeight, imageWidth);
+            boxBlurColumns(fromBuffer, toBuffer, kernelSizeY, dyLeft, dyRight,
+                           stride, imageWidth, imageHeight, columnSums.get());
             std::swap(fromBuffer, toBuffer);
         }
     }
@@ -215,7 +205,7 @@ float ShadowBlur::computeKernelSizeAtStdDeviation(float stdDeviation)
 
 void ShadowBlur::process(float stdDeviation)
 {
-    if (stdDeviation <= 0) {
+    if (stdDeviation <= 0 || !m_width || !m_height) {
         return;
     }
 
