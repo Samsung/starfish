@@ -70,7 +70,12 @@ enum ComputedStyleDamage {
     // The element gained or lost its box (`display: contents` toggled). Its
     // children are styled against the box parent, so they are re-resolved;
     // nothing inherited changed, so the rest of the subtree is not.
-    ComputedStyleDamageBoxChange = 1 << 9
+    ComputedStyleDamageBoxChange = 1 << 9,
+    // A custom property's value changed. Custom properties inherit, so the
+    // subtree is re-resolved as for ComputedStyleDamageInherited, but no box
+    // reads one directly: whatever it feeds through var() is reported by the
+    // property that references it.
+    ComputedStyleDamageCustomProperty = 1 << 10
 };
 
 union FontFamilyData {

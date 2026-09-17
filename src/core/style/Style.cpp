@@ -10393,7 +10393,9 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
             }
 
             child->m_gotInheritedStyleDirty =
-                damage & ComputedStyleDamage::ComputedStyleDamageInherited;
+                damage &
+                (ComputedStyleDamage::ComputedStyleDamageInherited |
+                 ComputedStyleDamage::ComputedStyleDamageCustomProperty);
 
             if (child->style()->display() == DisplayValue::NoneDisplayValue) {
                 child->m_gotInheritedStyleDirty = false;
