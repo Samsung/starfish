@@ -39,11 +39,11 @@ interface HTMLInputElement : HTMLElement {
     [CEReactions] attribute DOMString defaultValue;
     [TreatNullAs=EmptyString, CEReactions] attribute DOMString value;
     [Unimplemented] attribute object? valueAsDate;
-    [Unimplemented] attribute unrestricted double valueAsNumber;
+    [RaisesException=Setter] attribute unrestricted double valueAsNumber;
     [Unimplemented, CEReactions] attribute unsigned long width;
 
-    [Unimplemented] void stepUp(optional long n = 1);
-    [Unimplemented] void stepDown(optional long n = 1);
+    [RaisesException] void stepUp(optional long n = 1);
+    [RaisesException] void stepDown(optional long n = 1);
 
     [Unimplemented] readonly attribute boolean willValidate;
     [Unimplemented] readonly attribute ValidityState validity;
