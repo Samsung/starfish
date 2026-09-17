@@ -70,6 +70,9 @@ inline void computeBufferSizeFromVisibleRect(LayoutUnit minX, LayoutUnit minY,
 struct StackingContext::ComputeStackingContextContext {
     bool needsToAllocateGraphicsBufferForFixedElement;
     bool seenPositionFixed;
+    // Only tracked while needsToAllocateGraphicsBufferForFixedElement is
+    // set: a context was composited for a reason other than that.
+    bool seenLayerCompositedOnItsOwn;
     // True while visiting the subtree of a context whose screen extent was
     // recomputed this pass; every context below it recomputes as well.
     bool ancestorScreenExtentDirty;
@@ -87,6 +90,7 @@ struct StackingContext::ComputeStackingContextContext {
         : rootLayer(rootLayer)
     {
         seenPositionFixed = false;
+        seenLayerCompositedOnItsOwn = false;
         needsToAllocateGraphicsBufferForFixedElement = false;
         ancestorScreenExtentDirty = false;
     }
@@ -154,7 +158,8 @@ struct StackingContext::ComputeStackingContextContext {
         STARFISH_ASSERT(c != nullptr);
         STARFISH_ASSERT(!isCompositedLayer(c));
 
-        if (seenPositionFixed) {
+        if (seenPositionFixed &&
+            !needsToAllocateGraphicsBufferForFixedElement) {
             throw RecomputeStackContextReason::PositionFixed;
         }
         compositedLayers.push_back(c);
@@ -691,16 +696,36 @@ void StackingContext::computeStackingContextProperties()
     // transform matrix before any descendant walks up through it.
     ScreenMatrixCacheScope screenMatrixCache(m_owner->node()->webView());
 
+    // A position:fixed context next to a composited layer needs a buffer of
+    // its own, which the pass only learns partway through; it then starts
+    // over. A page in that state stays in it from frame to frame, so begin
+    // the way the last pass ended. The outcome is the same either way: a
+    // pass that gave fixed contexts a buffer is kept only if a pass that did
+    // not would have started over, that is, if it met a fixed context and
+    // something composited without that buffer.
+    WebView* webView = m_owner->node()->webView();
     ComputeStackingContextContext ctx(this);
+    ctx.needsToAllocateGraphicsBufferForFixedElement =
+        webView->m_fixedStackingContextNeededGraphicsBuffer;
     try {
         computeStackingContextProperties(ctx);
+        if (ctx.needsToAllocateGraphicsBufferForFixedElement &&
+            !(ctx.seenPositionFixed && ctx.seenLayerCompositedOnItsOwn)) {
+            ctx = ComputeStackingContextContext(this);
+            computeStackingContextProperties(ctx);
+        }
     } catch (RecomputeStackContextReason e) {
         if (e == RecomputeStackContextReason::PositionFixed) {
             ctx = ComputeStackingContextContext(this);
             ctx.needsToAllocateGraphicsBufferForFixedElement = true;
+            // The abandoned pass cleared the screen extent marks of the
+            // contexts it visited without reaching everything below them.
+            ctx.ancestorScreenExtentDirty = true;
             computeStackingContextProperties(ctx);
         }
     }
+    webView->m_fixedStackingContextNeededGraphicsBuffer =
+        ctx.needsToAllocateGraphicsBufferForFixedElement;
     applyStackingContextProperties(ctx);
 
     ApplyPropertiesPostProcessingContext postCtx;
@@ -741,6 +766,7 @@ void StackingContext::computeStackingContextProperties(
         NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonNone;
 
     bool selfNeedsGraphicsBuffer = m_owner->needsGraphicsBuffer();
+    bool bufferOnlyForFixedElement = false;
 
     if (m_owner->style()->position() == PositionValue::FixedPositionValue) {
         // position:fixed inside a scrolling ancestor does not follow the
@@ -765,6 +791,8 @@ void StackingContext::computeStackingContextProperties(
             throw RecomputeStackContextReason::PositionFixed;
         } else if (compositingState
                        .needsToAllocateGraphicsBufferForFixedElement) {
+            compositingState.seenPositionFixed = true;
+            bufferOnlyForFixedElement = !selfNeedsGraphicsBuffer;
             selfNeedsGraphicsBuffer = true;
         } else {
             compositingState.seenPositionFixed = true;
@@ -814,11 +842,16 @@ void StackingContext::computeStackingContextProperties(
     auto selfExtent = compositingState.screenExtentPerLayer(this);
 
     bool compositedBySelf = selfNeedsGraphicsBuffer;
+    // What composites this context whether or not position:fixed contexts
+    // are given a buffer of their own; see computeStackingContextProperties().
+    bool compositedOnItsOwn =
+        selfNeedsGraphicsBuffer && !bufferOnlyForFixedElement;
 
-    if (m_owner->node() && m_owner->node()->isElement()) {
-        compositedBySelf |=
-            m_owner->node()->window()->webView()->hasActiveAnimationExecutor(
-                m_owner->node()->asElement());
+    if (m_owner->node() && m_owner->node()->isElement() &&
+        m_owner->node()->window()->webView()->hasActiveAnimationExecutor(
+            m_owner->node()->asElement())) {
+        compositedBySelf = true;
+        compositedOnItsOwn = true;
     }
 
 #if !defined(STARFISH_ENABLE_TEST)
@@ -834,6 +867,7 @@ void StackingContext::computeStackingContextProperties(
         if ((fb->hasBiggerContentThanFrameWidth() ||
              fb->hasBiggerContentThanFrameHeight())) {
             compositedBySelf = true;
+            compositedOnItsOwn = true;
         }
     }
 #endif
@@ -859,6 +893,12 @@ void StackingContext::computeStackingContextProperties(
             true /* test whatever compositor supports filter */
         && m_hasFilterEffect) {
         compositedBySelf = true;
+        compositedOnItsOwn = true;
+    }
+
+    if (compositingState.needsToAllocateGraphicsBufferForFixedElement &&
+        (compositedOnItsOwn || inScrollActive())) {
+        compositingState.seenLayerCompositedOnItsOwn = true;
     }
 
     if (compositedBySelf) {

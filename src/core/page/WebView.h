@@ -716,6 +716,9 @@ private:
     bool m_needsRendering;
     bool m_needsEstablishesStackingContext;
     bool m_needsComputeStackingContextProperties;
+    // How the last stacking context properties pass ended; see
+    // StackingContext::computeStackingContextProperties().
+    bool m_fixedStackingContextNeededGraphicsBuffer;
     bool m_needsPainting;
     bool m_needsComposite;
     bool m_needsContinuousRendering;

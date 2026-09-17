@@ -364,6 +364,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_needsRendering(false)
     , m_needsEstablishesStackingContext(false)
     , m_needsComputeStackingContextProperties(false)
+    , m_fixedStackingContextNeededGraphicsBuffer(false)
     , m_needsPainting(false)
     , m_needsComposite(false)
     , m_needsContinuousRendering(false)
