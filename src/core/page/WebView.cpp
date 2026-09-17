@@ -2621,6 +2621,10 @@ void WebView::accessActiveImageURLsInRenderingSet(
 // Enough for the shadows of a screenful of cards; the least recently used
 // image goes first once it is full.
 static const size_t boxShadowImageCacheCapacity = 4 * 1024 * 1024;
+// What an entry takes besides its pixels - the surface wrapping them, the
+// image object and its slot in the map. Counted so that a page cycling
+// through tiny shadows cannot pile up entries by the hundred thousand.
+static const size_t boxShadowImageCacheEntryOverhead = 1024;
 
 BufferedNativeImageData* WebView::lookupBoxShadowImage(
     const BoxShadowImageKey& key)
@@ -2636,7 +2640,8 @@ BufferedNativeImageData* WebView::lookupBoxShadowImage(
 void WebView::storeBoxShadowImage(const BoxShadowImageKey& key,
                                   BufferedNativeImageData* image)
 {
-    size_t bytes = image->stride() * image->height();
+    size_t bytes =
+        image->stride() * image->height() + boxShadowImageCacheEntryOverhead;
     if (bytes > boxShadowImageCacheCapacity ||
         m_boxShadowImageCache.find(key) != m_boxShadowImageCache.end()) {
         delete image;
