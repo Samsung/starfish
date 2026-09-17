@@ -139,6 +139,8 @@ http://web-platform.test:8000/html/semantics/forms/the-option-element/option-tex
 http://web-platform.test:8000/html/semantics/forms/the-option-element/option-selected.html
 http://web-platform.test:8000/html/semantics/forms/the-option-element/option-form.html
 http://web-platform.test:8000/html/semantics/forms/the-input-element/search_input.html
+http://web-platform.test:8000/html/semantics/forms/the-input-element/range.html
+http://web-platform.test:8000/html/semantics/forms/the-input-element/range-2.html
 http://web-platform.test:8000/html/semantics/forms/the-input-element/required_attribute.html
 # [auto-fail] http://web-platform.test:8000/html/semantics/forms/the-input-element/pattern_attribute.html
 http://web-platform.test:8000/html/semantics/forms/the-input-element/input-width.html

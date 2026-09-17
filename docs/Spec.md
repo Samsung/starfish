@@ -175,7 +175,7 @@ The HTML parser and DOM expose the following tags as well; they were missing fro
 |  [param](https://www.w3.org/TR/html5/embedded-content-0.html#the-param-element) | name, value | &lt;string&gt; | Companion to `<object>`. |
 |  [form](https://www.w3.org/TR/html5/forms.html#the-form-element) | action | &lt;URL&gt; |  |
 |  | method | get &#124; post |  |
-|  [input](https://www.w3.org/TR/html5/forms.html#the-input-element) | type | text &#124; password &#124; checkbox &#124; radio &#124; submit &#124; reset &#124; button &#124; hidden &#124; file &#124; number &#124; range &#124; email &#124; url &#124; date &#124; time | The exact set of types depends on platform input widget support; layout falls back to text for unsupported types. |
+|  [input](https://www.w3.org/TR/html5/forms.html#the-input-element) | type | text &#124; password &#124; checkbox &#124; radio &#124; submit &#124; reset &#124; button &#124; hidden &#124; file &#124; number &#124; range &#124; email &#124; url &#124; date &#124; time | The exact set of types depends on platform input widget support; layout falls back to text for unsupported types. `range` renders a slider with spec value sanitization, but is not yet operable by pointer or key. |
 |  | name, value, placeholder | &lt;string&gt; |  |
 |  | disabled, readonly, checked, required | boolean attribute |  |
 |  [button](https://www.w3.org/TR/html5/forms.html#the-button-element) | type | submit &#124; reset &#124; button |  |
@@ -2944,13 +2944,14 @@ The following font-related CSS properties are **not in the parser trie** at all 
 
 | Property/Pseudo | Status |
 |-----------------|--------|
-| `appearance: auto`, `appearance: none` | Supported, only on `FrameInputBox` (text inputs/buttons) — suppresses background/border/content paint. |
+| `appearance: auto`, `appearance: none` | Supported, only on `FrameInputBox` (text inputs/buttons) — suppresses background/border/content paint. On `input[type=range]` it suppresses only the slider; the CSS background and borders still paint. |
 | `appearance: button / checkbox / radio / menulist / textfield / slider-horizontal / progress-bar / scrollbar* / etc.` | **Silently rejected** — declaration dropped, computed falls back to `auto`. |
 | `-webkit-appearance` / `-moz-appearance` | **NOT recognized** — full declaration dropped with `Unsupported css property` warning. |
 | `accent-color`, `color-scheme`, `forced-color-adjust` | **NOT recognized** — silently dropped. No way to tint native form widgets or signal dark-mode preference. |
 | `:placeholder-shown` (pseudo-class) | **WORKS** — both `Element.matches()` and selector matching work (correction to earlier audit). |
 | `::placeholder` (pseudo-element) | **NOT supported** — `checkPseudoElement` lacks the case (logs `Unsupported css pseudo-element: 60`). Style placeholder color via `:placeholder-shown { color: ... }` on the input itself. |
 | Native `<input type=checkbox/radio>` chrome | LWE has no native checkbox/radio painter; `appearance: none` does NOT change the box dimensions. |
+| Native `<input type=range>` chrome | Track and thumb are painted by the engine, with a 129×16 default size. Not operable by pointer or key yet. `::-webkit-slider-thumb` / `::-moz-range-track` are not supported, and since `-webkit-appearance` is not recognized, the common `-webkit-appearance: none` + custom-thumb idiom leaves the native slider in place. |
 
 ### Scroll-driven animations — runtime caveats
 

@@ -27,7 +27,7 @@ namespace Starfish {
 class FrameTreeBuilderContext;
 class ComputedStyle;
 
-class FrameInputBox final : public FrameBlockBox {
+class FrameInputBox : public FrameBlockBox {
 public:
     FrameInputBox(Node* node, ComputedStyle* style);
     static FrameInputBox* buildFrameTree(Node* current,

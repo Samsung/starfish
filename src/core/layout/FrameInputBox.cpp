@@ -33,6 +33,7 @@
 #include "core/page/Window.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameText.h"
+#include "core/layout/FrameRangeBox.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/modules/canvas/Canvas.h"
 
@@ -114,7 +115,12 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
     FrameInputBox* currentFrame = nullptr;
     FrameBlockBox* parent = ctx.currentBlockContainer();
     if (current->needsFrameTreeBuild() || force) {
-        currentFrame = new FrameInputBox(current, nullptr);
+        if (current->isHTMLInputElement() &&
+            current->asHTMLInputElement()->type()->equals("range")) {
+            currentFrame = new FrameRangeBox(current, nullptr);
+        } else {
+            currentFrame = new FrameInputBox(current, nullptr);
+        }
         force = true;
     } else {
         currentFrame = current->frame()->asFrameInputBox();
