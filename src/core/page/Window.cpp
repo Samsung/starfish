@@ -31,6 +31,7 @@
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLCollection.h"
+#include "core/dom/KeyboardEvent.h"
 #include "core/dom/MessageEvent.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/NodeList.h"
@@ -72,6 +73,7 @@
 #include "core/style/MediaQueryList.h"
 #include "core/style/MediaQueryListMatcher.h"
 #include "core/modules/renderer/Renderer.h"
+#include "platform/event/PlatformKeyEventData.h"
 #include "core/modules/crypto/Crypto.h"
 #include "core/modules/indexeddb/IDBStorageManager.h"
 #include "core/modules/indexeddb/IDBFactory.h"
@@ -702,6 +704,28 @@ void Window::simulateTouchCancel(float x, float y)
                    y * webView()->screenInfo().devicePixelRatio);
     webView()->renderer()->dispatchTouchEvent(TouchEventKind::TouchEventCancel,
                                               &data, 1);
+}
+
+bool Window::simulateKeyDown(const std::string& key)
+{
+    KeyValue keyValue;
+    if (!keyToKeyValue(key, keyValue)) {
+        return false;
+    }
+    PlatformKeyEventData data(keyValue);
+    webView()->renderer()->dispatchKeyEvent(KeyEventKind::KeyEventDown, data);
+    return true;
+}
+
+bool Window::simulateKeyUp(const std::string& key)
+{
+    KeyValue keyValue;
+    if (!keyToKeyValue(key, keyValue)) {
+        return false;
+    }
+    PlatformKeyEventData data(keyValue);
+    webView()->renderer()->dispatchKeyEvent(KeyEventKind::KeyEventUp, data);
+    return true;
 }
 
 void Window::simulateVisibilitychange(bool show)

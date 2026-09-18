@@ -135,6 +135,56 @@ String* keyValueToKey(KeyValue v)
     }
 }
 
+bool keyToKeyValue(const std::string& key, const std::string& text,
+                   KeyValue& out)
+{
+    // Only keys keyValueToKey can name back: a KeyValue it does not know
+    // reaches script as key == "undefined", so mapping one here would build
+    // half-working surface. Tab/Backspace/Home/End already had that gap before
+    // this table existed.
+    static const struct {
+        const char* name;
+        KeyValue value;
+    } namedKeys[] = {
+        { "Enter", EnterKey },
+        { "Return", EnterKey },
+        { "Tab", TabKey },
+        { "Backspace", BackspaceKey },
+        { "Delete", DeleteKey },
+        { "ArrowLeft", ArrowLeftKey },
+        { "ArrowRight", ArrowRightKey },
+        { "ArrowUp", ArrowUpKey },
+        { "ArrowDown", ArrowDownKey },
+        { "Home", HomeKey },
+        { "End", EndKey },
+        { "Escape", EscapeKey },
+        { " ", SpaceKey },
+        { "Space", SpaceKey },
+    };
+
+    for (size_t i = 0; i < sizeof(namedKeys) / sizeof(namedKeys[0]); i++) {
+        if (key == namedKeys[i].name) {
+            out = namedKeys[i].value;
+            return true;
+        }
+    }
+
+    // Printable single character: prefer text, fall back to key. The KeyValue
+    // enum is ASCII-aligned over 32..126 (SpaceKey = 32 through
+    // TildeMarkKey = 126), so the character is its own code.
+    char c = 0;
+    if (text.size() == 1) {
+        c = text[0];
+    } else if (key.size() == 1) {
+        c = key[0];
+    }
+    if (c >= 32 && c <= 126) {
+        out = static_cast<KeyValue>((unsigned char)c);
+        return true;
+    }
+    return false;
+}
+
 String* keyValueToCode(KeyValue v)
 {
     if (v >= AKey && v <= ZKey) {

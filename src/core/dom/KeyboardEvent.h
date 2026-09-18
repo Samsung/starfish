@@ -29,6 +29,18 @@ namespace Starfish {
 class PlatformKeyEventData;
 
 String* keyValueToKey(KeyValue v);
+// Reverse of keyValueToKey: resolves a KeyboardEvent.key name, or a single
+// printable ASCII character, to its KeyValue. `text` is the character a key
+// event carries when the name alone does not identify it (CDP passes both) and
+// wins over a single-character `key`. Returns false when nothing maps, so a
+// caller reports the bad name instead of dispatching an UnidentifiedKey that
+// every handler would ignore.
+bool keyToKeyValue(const std::string& key, const std::string& text,
+                   KeyValue& out);
+inline bool keyToKeyValue(const std::string& key, KeyValue& out)
+{
+    return keyToKeyValue(key, std::string(), out);
+}
 String* keyValueToCode(KeyValue v);
 uint32_t keyValueToKeyCode(KeyValue v, bool isForVirtualKeyCode = false);
 uint32_t keyValueToCharCode(KeyValue v);
