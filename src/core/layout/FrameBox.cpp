@@ -1024,16 +1024,16 @@ enum class BoxShadowImageKind {
 };
 
 // Every input the full-size painting paths below read while drawing and
-// blurring a shadow image, so equal keys mean equal pixels. See
-// BoxShadowImageKey.
+// blurring a shadow mask, so equal keys mean equal pixels. The colour is not
+// one of them: it is put on when the mask is drawn. See BoxShadowImageKey.
 // The border radii go in as the style lengths, not resolved values: the
 // paths resolve percentages against rects of their own. A calc() radius
 // without a percentage resolves to the same length against any rect and goes
 // in as that length; one with a percentage has no flat encoding, so such a
 // box gets no key and paints uncached.
 static Optional<BoxShadowImageKey> boxShadowImageKey(
-    FrameBox* frame, const CanvasShadowData& shadow, const Unit::Color& color,
-    BoxShadowImageKind kind, float dpr)
+    FrameBox* frame, const CanvasShadowData& shadow, BoxShadowImageKind kind,
+    float dpr)
 {
     BoxShadowImageKey key;
     memset(key.words, 0, sizeof(key.words));
@@ -1055,9 +1055,6 @@ static Optional<BoxShadowImageKey> boxShadowImageKey(
     putFloat(shadow.offsetY());
     putFloat(shadow.radius());
     putFloat(shadow.spreadDistance());
-    key.words[i++] =
-        (int32_t)(((uint32_t)color.r() << 24) | ((uint32_t)color.g() << 16) |
-                  ((uint32_t)color.b() << 8) | color.a());
     bool hasRadius = frame->hasFrameBorderRadius();
     key.words[i++] = hasRadius;
     if (hasRadius) {
@@ -1088,11 +1085,75 @@ static Optional<BoxShadowImageKey> boxShadowImageKey(
     return key;
 }
 
+// A shadow is kept as a blurred mask of its shape, one byte of coverage per
+// pixel, and the colour is put on when it is drawn. Shadows that differ only
+// in colour share one, and it blurs and stores at a quarter of the size of
+// an image. draw() paints the shape onto a canvas of width x height device
+// pixels; only its coverage is kept.
+template <typename Draw>
+static BufferedNativeImageData* blurredShadowMask(WebView* webView,
+                                                  size_t width, size_t height,
+                                                  float stdDeviation,
+                                                  const Draw& draw)
+{
+    BufferedNativeImageData* shape =
+        BufferedNativeImageData::create(width, height);
+    Canvas* cv = Canvas::create(webView, shape);
+    cv->clearColor(Unit::Color(0, 0, 0, 0));
+    cv->setFillColor(Unit::Color(255, 255, 255, 255));
+    draw(cv);
+    cv->flush();
+    delete cv;
+
+    BufferedNativeImageData* mask =
+        BufferedNativeImageData::createAlphaMask(width, height);
+    for (size_t y = 0; y < height; y++) {
+        const uint8_t* s = shape->data() + y * shape->stride() + 3;
+        uint8_t* d = mask->data() + y * mask->stride();
+        for (size_t x = 0; x < width; x++) {
+            d[x] = s[x * 4];
+        }
+    }
+    delete shape;
+
+    ShadowBlur sb(mask->data(), mask->width(), mask->height(), mask->stride(),
+                  1);
+    sb.process(stdDeviation);
+    return mask;
+}
+
+// Clears from the mask what the shape draw() paints. It takes the place of
+// clipping the drawn mask to the outside of that shape: a mask under a clip
+// with a hole does not composite right (see Canvas::fillWithImageAlpha),
+// and a shape cut out once costs nothing when the mask is drawn again.
+template <typename Draw>
+static void cutShapeFromMask(WebView* webView, BufferedNativeImageData* mask,
+                             const Draw& draw)
+{
+    BufferedNativeImageData* shape =
+        BufferedNativeImageData::create(mask->width(), mask->height());
+    Canvas* cv = Canvas::create(webView, shape);
+    cv->clearColor(Unit::Color(0, 0, 0, 0));
+    cv->setFillColor(Unit::Color(255, 255, 255, 255));
+    draw(cv);
+    cv->flush();
+    delete cv;
+
+    for (size_t y = 0; y < mask->height(); y++) {
+        const uint8_t* s = shape->data() + y * shape->stride() + 3;
+        uint8_t* d = mask->data() + y * mask->stride();
+        for (size_t x = 0; x < mask->width(); x++) {
+            const uint32_t t = d[x] * (255 - s[x * 4]) + 128;
+            d[x] = (t + (t >> 8)) >> 8;
+        }
+    }
+    delete shape;
+}
+
 static void drawBoxShadowRotatePieceImage(Canvas* canvas, Unit::Rect src,
                                           Unit::Rect dst, float deg,
                                           NativeImageData* piece,
-                                          const DrawImageInfo& drawImageInfo,
-                                          float dpr)
+                                          const Unit::Color& color, float dpr)
 {
     src.setX(src.x() * dpr);
     src.setY(src.y() * dpr);
@@ -1106,7 +1167,7 @@ static void drawBoxShadowRotatePieceImage(Canvas* canvas, Unit::Rect src,
     canvas->translate(dst.width() / 2.f, dst.height() / 2.f);
     canvas->rotate(UnitHelper::convertFromDegToRad(deg));
     canvas->translate(-dst.width() / 2.f, -dst.height() / 2.f);
-    canvas->drawImage(piece, src, dst, drawImageInfo);
+    canvas->fillWithImageAlpha(piece, src, dst, color);
     canvas->restore();
 }
 
@@ -1114,8 +1175,9 @@ static void drawBoxShadowRotatePieceImage(Canvas* canvas, Unit::Rect src,
 // straight side it repeats one profile, and away from the sides it is flat.
 // So it is painted as a nine patch. Each corner is a small piece blurred once
 // for its radii - shared by every corner of every box that has those radii,
-// whatever the size of the box - the sides are stretched from a line of a
-// piece where the corner no longer reaches, and the rest is a plain fill.
+// whatever the size or the colour of the box - the sides are stretched from a
+// line of a piece where the corner no longer reaches, and the rest is a plain
+// fill.
 //
 // A piece holds the top-left corner of the shape. The other corners draw it
 // turned by 90 degrees at a time, which swaps the two radii of an elliptical
@@ -1177,9 +1239,6 @@ public:
     // outerRect is the shape grown by the margin on every side.
     void draw(Canvas* canvas, const Unit::Rect& outerRect)
     {
-        const DrawImageInfo info = { 1.0, 1.0,
-                                     BorderImageRepeatValue::StretchValue,
-                                     BorderImageRepeatValue::StretchValue };
         const float x = outerRect.x();
         const float y = outerRect.y();
         const float maxX = outerRect.maxX();
@@ -1201,7 +1260,7 @@ public:
             if (!isRejected(canvas, cornerRects[i])) {
                 drawBoxShadowRotatePieceImage(
                     canvas, Unit::Rect(0, 0, size[i], size[i]), cornerRects[i],
-                    90 * i, piece(i), info, m_dpr);
+                    90 * i, piece(i), m_color, m_dpr);
             }
         }
 
@@ -1225,7 +1284,7 @@ public:
                 canvas,
                 alongX ? Unit::Rect(size[0] - 1, 0, 1, band)
                        : Unit::Rect(0, size[0] - 1, band, 1),
-                sideRects[i], (i == 1 || i == 2) ? 180 : 0, piece(0), info,
+                sideRects[i], (i == 1 || i == 2) ? 180 : 0, piece(0), m_color,
                 m_dpr);
         }
 
@@ -1297,11 +1356,8 @@ private:
         key.words[0] = (int32_t)(m_inset ? BoxShadowImageKind::InsetCorner
                                          : BoxShadowImageKind::OuterCorner);
         memcpy(&key.words[1], floats, sizeof(floats));
-        key.words[5] = (int32_t)(((uint32_t)m_color.r() << 24) |
-                                 ((uint32_t)m_color.g() << 16) |
-                                 ((uint32_t)m_color.b() << 8) | m_color.a());
-        key.words[6] = m_margin;
-        key.words[7] = size;
+        key.words[5] = m_margin;
+        key.words[6] = size;
 
         // Corners with the same radii share it, also before it reaches the
         // cache.
@@ -1316,30 +1372,25 @@ private:
             return m_images[i];
         }
 
-        BufferedNativeImageData* image =
-            BufferedNativeImageData::create(m_dpr, size, size);
-        Canvas* cv = Canvas::create(m_webView, image);
-        cv->clearColor(Unit::Color(0, 0, 0, 0));
-        cv->setFillColor(m_color);
         // Only the top-left corner of the shape is inside the piece.
         const LayoutRect shape(m_margin, m_margin, size * 2, size * 2);
         const BorderRadiusFixedData radii(m_horizontal[i], m_vertical[i], 0, 0,
                                           0, 0, 0, 0);
-        if (m_inset) {
-            cv->rect(Unit::Rect(0, 0, size, size));
-            emitBorderRadiusPath(cv, shape, radii);
-            cv->setFillRule(false);
-            cv->fill();
-            cv->flush();
-        } else {
-            emitBorderRadiusPath(cv, shape, radii);
-            cv->clipPath();
-            cv->drawRect(shape);
-        }
-        ShadowBlur sb(image->data(), image->width(), image->height(),
-                      image->stride());
-        sb.process(m_blur / 2 * m_dpr);
-        delete cv;
+        const size_t deviceSize = ceil(size * m_dpr);
+        BufferedNativeImageData* image =
+            blurredShadowMask(m_webView, deviceSize, deviceSize,
+                              m_blur / 2 * m_dpr, [&](Canvas* cv) {
+                                  if (m_inset) {
+                                      cv->rect(Unit::Rect(0, 0, size, size));
+                                      emitBorderRadiusPath(cv, shape, radii);
+                                      cv->setFillRule(false);
+                                      cv->fill();
+                                  } else {
+                                      emitBorderRadiusPath(cv, shape, radii);
+                                      cv->clipPath();
+                                      cv->drawRect(shape);
+                                  }
+                              });
 
         m_images[i] = image;
         m_created[i] = true;
@@ -1473,38 +1524,13 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     ninePatch.finish();
                 } else {
                     canvas->save();
+                    const float dpr = wv->screenInfo().devicePixelRatio;
                     Optional<BoxShadowImageKey> cacheKey = boxShadowImageKey(
-                        this, *shadow, shadowColor, BoxShadowImageKind::Outer,
-                        wv->screenInfo().devicePixelRatio);
+                        this, *shadow, BoxShadowImageKind::Outer, dpr);
                     BufferedNativeImageData* nativeImage =
                         cacheKey ? wv->lookupBoxShadowImage(cacheKey.value())
                                  : nullptr;
                     bool cachedImage = nativeImage != nullptr;
-
-                    if (!nativeImage) {
-                        nativeImage = BufferedNativeImageData::create(
-                            wv->screenInfo().devicePixelRatio,
-                            ceil(shadowRect.width() + radiusOffset),
-                            ceil(shadowRect.height() + radiusOffset));
-                        Canvas* cv =
-                            Canvas::create(node()->webView(), nativeImage);
-                        cv->clearColor(Unit::Color(0, 0, 0, 0));
-                        cv->setFillColor(shadowColor);
-
-                        cv->translate(ceil(radiusOffset / 2),
-                                      ceil(radiusOffset / 2));
-                        const LayoutRect clipRect(0, 0, shadowRect.width(),
-                                                  shadowRect.height());
-                        applyBorderRadiusClippingIfNeeds(cv, clipRect, sd);
-                        cv->drawRect(shadowRect);
-
-                        ShadowBlur sb(nativeImage->data(), nativeImage->width(),
-                                      nativeImage->height(),
-                                      nativeImage->stride());
-                        sb.process(shadow->radius() / 2 *
-                                   wv->screenInfo().devicePixelRatio);
-                        delete cv;
-                    }
 
                     float offset = ceil(radiusOffset / 2);
                     Unit::Rect imageRect(
@@ -1513,9 +1539,38 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                         ceil(shadowRect.width() + radiusOffset),
                         ceil(shadowRect.height() + radiusOffset));
 
-                    applyBorderShapeClippingUsedInPaintingBoxShadow(
-                        shadowRect, borderRect, imageRect, canvas);
-                    canvas->drawImage(nativeImage, imageRect);
+                    if (!nativeImage) {
+                        nativeImage = blurredShadowMask(
+                            wv, ceil(imageRect.width() * dpr),
+                            ceil(imageRect.height() * dpr),
+                            shadow->radius() / 2 * dpr, [&](Canvas* cv) {
+                                cv->translate(offset, offset);
+                                const LayoutRect clipRect(0, 0,
+                                                          shadowRect.width(),
+                                                          shadowRect.height());
+                                applyBorderRadiusClippingIfNeeds(cv, clipRect,
+                                                                 sd);
+                                cv->drawRect(shadowRect);
+                            });
+                        // The shadow does not show through the border box.
+                        if (borderRect.intersects(imageRect)) {
+                            cutShapeFromMask(wv, nativeImage, [&](Canvas* cv) {
+                                cv->translate(-imageRect.x(), -imageRect.y());
+                                if (hasFrameBorderRadius()) {
+                                    applyBorderRadiusClippingIfNeeds(
+                                        cv,
+                                        LayoutRect(0, 0, width(), height()));
+                                }
+                                cv->drawRect(borderRect);
+                            });
+                        }
+                    }
+
+                    canvas->fillWithImageAlpha(
+                        nativeImage,
+                        Unit::Rect(0, 0, nativeImage->width(),
+                                   nativeImage->height()),
+                        imageRect, shadowColor);
                     canvas->restore();
 
                     if (cachedImage) {
@@ -1676,8 +1731,10 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 const float margin = 4.0f;
                 const float half = 2.0f;
 
-                Unit::Rect imageRect(0, 0, exteriorRect.width() + margin,
-                                     exteriorRect.height() + margin);
+                // Whole pixels, so that the mask draws one to one: a shape
+                // baked into it would blur under resampling.
+                Unit::Rect imageRect(0, 0, ceil(exteriorRect.width() + margin),
+                                     ceil(exteriorRect.height() + margin));
 
                 int xx = 0, yy = 0, ww = 0, hh = 0;
                 LayoutUnit rx = paddingRect.x();
@@ -1710,61 +1767,48 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 crop.intersect(Unit::Rect(0, 0, imageWidth, imageHeight));
 
                 Optional<BoxShadowImageKey> cacheKey = boxShadowImageKey(
-                    this, *shadow, shadowColor, BoxShadowImageKind::Inset, dpr);
+                    this, *shadow, BoxShadowImageKind::Inset, dpr);
                 BufferedNativeImageData* nativeImage =
                     cacheKey ? wv->lookupBoxShadowImage(cacheKey.value())
                              : nullptr;
                 bool cachedImage = nativeImage != nullptr;
 
                 if (!nativeImage) {
-                    nativeImage = BufferedNativeImageData::create(
-                        wv->screenInfo().devicePixelRatio, imageRect.width(),
-                        imageRect.height());
-                    Canvas* cv = Canvas::create(node()->webView(), nativeImage);
-                    cv->clearColor(Unit::Color(0, 0, 0, 0));
-                    cv->setFillColor(shadowColor);
+                    nativeImage = blurredShadowMask(
+                        wv, imageWidth, imageHeight, shadow->radius() * dpr / 2,
+                        [&](Canvas* cv) {
+                            // Draw an outline of Image
+                            cv->beginPath();
+                            cv->rect(imageRect);
+                            cv->closePath();
 
-                    // Draw an outline of Image
-                    cv->beginPath();
-                    cv->rect(imageRect);
-                    cv->closePath();
+                            cv->translate(half, half);
 
-                    cv->translate(half, half);
-
-                    // Draw a shadow box that will not be filled.
-                    if (hasFrameBorderRadius()) {
-                        const LayoutRect rect(
-                            interiorRect.x(), interiorRect.y(),
-                            interiorRect.width(), interiorRect.height());
-                        // apply inner border radius line(anti-clock)
-                        applyBorderRadius(cv, rect, sd, true);
-                    } else {
-                        // draw interiorRect
-                        const LayoutRect rect(
-                            interiorRect.x(), interiorRect.y(),
-                            interiorRect.width(), interiorRect.height());
-                        cv->setFillRule(false);
-                        cv->drawPixelSnappedRect(rect);
-                    }
-                    cv->fill();
-
-                    ShadowBlur sb(nativeImage->data(), nativeImage->width(),
-                                  nativeImage->height(), nativeImage->stride());
-                    sb.process(shadow->radius() *
-                               wv->screenInfo().devicePixelRatio / 2);
-                    delete cv;
+                            // Draw a shadow box that will not be filled.
+                            const LayoutRect rect(
+                                interiorRect.x(), interiorRect.y(),
+                                interiorRect.width(), interiorRect.height());
+                            if (hasFrameBorderRadius()) {
+                                // apply inner border radius line(anti-clock)
+                                applyBorderRadius(cv, rect, sd, true);
+                            } else {
+                                cv->setFillRule(false);
+                                cv->drawPixelSnappedRect(rect);
+                            }
+                            cv->fill();
+                        });
 
                     BufferedNativeImageData* cropped =
-                        BufferedNativeImageData::create(crop.width(),
-                                                        crop.height());
+                        BufferedNativeImageData::createAlphaMask(crop.width(),
+                                                                 crop.height());
                     const uint8_t* src =
                         nativeImage->data() +
                         (size_t)crop.y() * nativeImage->stride() +
-                        (size_t)crop.x() * 4;
+                        (size_t)crop.x();
                     for (size_t row = 0; row < cropped->height(); row++) {
                         memcpy(cropped->data() + row * cropped->stride(),
                                src + row * nativeImage->stride(),
-                               cropped->stride());
+                               cropped->width());
                     }
                     delete nativeImage;
                     nativeImage = cropped;
@@ -1780,10 +1824,13 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 }
 
                 canvas->translate(dx, dy);
-                canvas->drawImage(
+                canvas->fillWithImageAlpha(
                     nativeImage,
+                    Unit::Rect(0, 0, nativeImage->width(),
+                               nativeImage->height()),
                     Unit::Rect(crop.x() * scaleX, crop.y() * scaleY,
-                               crop.width() * scaleX, crop.height() * scaleY));
+                               crop.width() * scaleX, crop.height() * scaleY),
+                    shadowColor);
 
                 canvas->restore();
 
