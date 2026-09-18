@@ -46,9 +46,12 @@ public:
     void completeDeferredNavigation(const std::string& sessionId,
                                     const std::string& url);
     // Abandon a parked navigation (Fetch.failRequest). Emits loadingFailed and
-    // finishes the lifecycle without loading a document.
+    // finishes the lifecycle without loading a document. errorText is the
+    // net::ERR_* string for the failure; it is also returned in the deferred
+    // Page.navigate result.
     void failDeferredNavigation(const std::string& sessionId,
-                                const std::string& url);
+                                const std::string& url,
+                                const std::string& errorText);
 
     // Page.setDocumentContent: replace the main document with `html` by loading
     // it as a data:text/html URL through the same beginNavigation /

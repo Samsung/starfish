@@ -130,10 +130,9 @@ void FetchDomain::processMessage(CDPCommand& cmd, const std::string& method)
         // If a navigation is parked, releasing interception should let it run
         // to the original URL rather than hang forever.
         if (s->pendingFetchNav.active) {
-            PendingFetchNavigation nav = s->pendingFetchNav;
-            s->pendingFetchNav = PendingFetchNavigation();
-            m_dispatcher->page()->completeDeferredNavigation(nav.sessionId,
-                                                             nav.url);
+            std::string sid = s->pendingFetchNav.sessionId;
+            std::string navUrl = s->pendingFetchNav.url;
+            m_dispatcher->page()->completeDeferredNavigation(sid, navUrl);
         }
         cmd.sendResultEmpty();
         return;
@@ -144,13 +143,12 @@ void FetchDomain::processMessage(CDPCommand& cmd, const std::string& method)
         cmd.sendResultEmpty();
         if (s->pendingFetchNav.active &&
             s->pendingFetchNav.requestId == requestId) {
-            PendingFetchNavigation nav = s->pendingFetchNav;
-            s->pendingFetchNav = PendingFetchNavigation();
             // continueRequest may override the URL; honor it if present.
             std::string overrideUrl = paramStr(cmd, "url");
-            std::string target = overrideUrl.empty() ? nav.url : overrideUrl;
-            m_dispatcher->page()->completeDeferredNavigation(nav.sessionId,
-                                                             target);
+            std::string sid = s->pendingFetchNav.sessionId;
+            std::string navUrl = s->pendingFetchNav.url;
+            std::string target = overrideUrl.empty() ? navUrl : overrideUrl;
+            m_dispatcher->page()->completeDeferredNavigation(sid, target);
         }
         return;
     }
@@ -160,8 +158,6 @@ void FetchDomain::processMessage(CDPCommand& cmd, const std::string& method)
         cmd.sendResultEmpty();
         if (s->pendingFetchNav.active &&
             s->pendingFetchNav.requestId == requestId) {
-            PendingFetchNavigation nav = s->pendingFetchNav;
-            s->pendingFetchNav = PendingFetchNavigation();
             // body is base64-encoded per the CDP spec. data: URLs accept
             // base64 directly, so forward it unchanged (the document loader
             // renders the data: URL) with the client's Content-Type.
@@ -171,21 +167,51 @@ void FetchDomain::processMessage(CDPCommand& cmd, const std::string& method)
                 mt = "text/html";
             }
             std::string dataUrl = "data:" + mt + ";base64," + rawBody;
-            m_dispatcher->page()->completeDeferredNavigation(nav.sessionId,
-                                                             dataUrl);
+            std::string sid = s->pendingFetchNav.sessionId;
+            m_dispatcher->page()->completeDeferredNavigation(sid, dataUrl);
         }
         return;
     }
 
     if (method == "failRequest") {
         std::string requestId = paramStr(cmd, "requestId");
+        std::string errorReason;
+        if (cmd.params() && cmd.params()->HasMember("errorReason") &&
+            (*cmd.params())["errorReason"].IsString()) {
+            errorReason = (*cmd.params())["errorReason"].GetString();
+        }
         cmd.sendResultEmpty();
         if (s->pendingFetchNav.active &&
             s->pendingFetchNav.requestId == requestId) {
-            PendingFetchNavigation nav = s->pendingFetchNav;
-            s->pendingFetchNav = PendingFetchNavigation();
-            m_dispatcher->page()->failDeferredNavigation(nav.sessionId,
-                                                         nav.url);
+            std::string sid = s->pendingFetchNav.sessionId;
+            std::string navUrl = s->pendingFetchNav.url;
+            // Map CDP errorReason to Chrome's net::ERR_* text.
+            std::string errorText = "net::ERR_FAILED";
+            if (errorReason == "Aborted") {
+                errorText = "net::ERR_ABORTED";
+            } else if (errorReason == "AddressUnreachable") {
+                errorText = "net::ERR_ADDRESS_UNREACHABLE";
+            } else if (errorReason == "BlockedByClient") {
+                errorText = "net::ERR_BLOCKED_BY_CLIENT";
+            } else if (errorReason == "BlockedByResponse") {
+                errorText = "net::ERR_BLOCKED_BY_RESPONSE";
+            } else if (errorReason == "ConnectionRefused") {
+                errorText = "net::ERR_CONNECTION_REFUSED";
+            } else if (errorReason == "ConnectionReset") {
+                errorText = "net::ERR_CONNECTION_RESET";
+            } else if (errorReason == "ConnectionClosed") {
+                errorText = "net::ERR_CONNECTION_CLOSED";
+            } else if (errorReason == "ConnectionFailed") {
+                errorText = "net::ERR_CONNECTION_FAILED";
+            } else if (errorReason == "ConnectionAborted") {
+                errorText = "net::ERR_CONNECTION_ABORTED";
+            } else if (errorReason == "Failed") {
+                errorText = "net::ERR_FAILED";
+            } else if (errorReason == "TimedOut") {
+                errorText = "net::ERR_TIMED_OUT";
+            }
+            m_dispatcher->page()->failDeferredNavigation(sid, navUrl,
+                                                         errorText);
         }
         return;
     }
