@@ -12,6 +12,14 @@ from . import launcher
 from .client import call, connect, debugger_url
 
 
+class ProtocolError(AssertionError):
+    """A CDP command returned an error response."""
+
+    def __init__(self, method, error):
+        self.code = error.get("code") if isinstance(error, dict) else None
+        super().__init__("%s returned %s" % (method, error))
+
+
 def label(case):
     return case["method"]
 
@@ -36,7 +44,7 @@ def check_response(method, response, result_keys):
     only commands that declare one.
     """
     if "error" in response:
-        raise AssertionError("%s returned %s" % (method, response["error"]))
+        raise ProtocolError(method, response["error"])
     result = response.get("result", {})
     for key in result_keys:
         if key not in result:

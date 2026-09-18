@@ -21,6 +21,7 @@
 | --- | --- |
 | `revision` | the upstream commit the entries were built against |
 | `expected` | `pass` runs every time. `fail` runs only with `--include-fails` |
+| `suite` | `internal` identifies a Starfish-owned behavior test |
 | `category` | how the failure was grouped, from what the run saw. Never from the expected output |
 | `detail` | the first line that differs, cut at 1000 characters |
 
@@ -32,10 +33,13 @@
 | `output-differs` | the output came, and differs from `-expected.txt` |
 | `not-implemented` | the command returned `-32601` |
 | `bad-params` | the command returned `-32602` |
+| `unprobeable` | a prior schema pass rejected the no-parameter request |
+| `protocol-error` | a schema command returned another CDP error code |
+| `schema-mismatch` | a successful schema response omitted a required field |
+| `probe-error` | the schema probe could not obtain or parse a response |
 | `no-connection` | the WebSocket did not open |
 | `script-error` | the test script threw, so it never finished |
 | `harness-error` | Node itself failed, so the test never ran |
-| `failed` | the schema layer's only category. The response failed the check |
 
 `output-differs` takes every failure the categories above did not match, so
 its entries have no one cause. Read the detail.

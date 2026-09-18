@@ -12,15 +12,15 @@
       "category": "output-differs",
       "detail": "line 2: expected '{', got 'Error: {}'"
     },
+    "accessibility/accessibility-getAXNodeAndAncestors-errors.js": {
+      "expected": "pass",
+      "suite": "internal"
+    },
     "accessibility/accessibility-getAXNodeAndAncestors.js": {
-      "expected": "fail",
-      "category": "script-error",
-      "detail": "line 2: expected '{', got \"Error while executing test script: TypeError: Cannot read properties of undefined (reading 'nodes')\""
+      "expected": "pass"
     },
     "accessibility/accessibility-getChildAXNodes.js": {
-      "expected": "fail",
-      "category": "output-differs",
-      "detail": "line 5: expected ' main', got ''"
+      "expected": "pass"
     },
     "accessibility/accessibility-getFullAXTree-display-locked.js": {
       "expected": "fail",
@@ -34,6 +34,10 @@
       "expected": "fail",
       "category": "output-differs",
       "detail": "line 2: expected '{', got 'Error: {}'"
+    },
+    "accessibility/accessibility-getPartialAXTree.js": {
+      "expected": "pass",
+      "suite": "internal"
     },
     "accessibility/accessibility-getRelationships.js": {
       "expected": "fail",
@@ -111,9 +115,7 @@
       "detail": "line 2: expected 'nodesUpdated [', got \"Error while executing test script: TypeError: Cannot read properties of undefined (reading 'properties')\""
     },
     "accessibility/accessibility-query-axtree-errors.js": {
-      "expected": "fail",
-      "category": "not-implemented",
-      "detail": "line 4: expected ' code : -32000', got ' code : -32601'"
+      "expected": "pass"
     },
     "accessibility/accessibility-query-axtree.js": {
       "expected": "fail",
@@ -121,9 +123,7 @@
       "detail": "line 2: expected '', got \"Error while executing test script: TypeError: Cannot read properties of undefined (reading '0')\""
     },
     "accessibility/getFullAXTree-depth.js": {
-      "expected": "fail",
-      "category": "output-differs",
-      "detail": "line 4: expected ' generic', got ''"
+      "expected": "pass"
     },
     "accessibility/tree-updated-events.js": {
       "expected": "fail",
@@ -1287,7 +1287,7 @@
     "fetch/fetch-continue-no-intercept-response-after-redirect.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 2: expected 'Intercepted request http://127.0.0.1:8000/inspector-protocol/resources/redirect1.php', got 'Intercepted request file:///home/daeyeon/code/samsungland/daeyeon.starfish-worktrees/cdp-regression/test/cdp/inspector-p'"
+      "detail": "line 2: expected 'Intercepted request http://127.0.0.1:8000/inspector-protocol/resources/redirect1.php', got 'Intercepted request file://<repo>/test/cdp/inspector-p'"
     },
     "fetch/fetch-continue-response-with-overrides-after-get-body.js": {
       "expected": "fail",
@@ -1752,7 +1752,7 @@
     "fetch/service-worker-interception-target.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 2: expected '[renderer] Request to http://127.0.0.1:8000/inspector-protocol/fetch/resources/empty.html, type: Document', got '[renderer] Request to file:///home/daeyeon/code/samsungland/daeyeon.starfish-worktrees/cdp-regression/test/cdp/inspector'"
+      "detail": "line 2: expected '[renderer] Request to http://127.0.0.1:8000/inspector-protocol/fetch/resources/empty.html, type: Document', got '[renderer] Request to file://<repo>/test/cdp/inspector'"
     },
     "fetch/service-worker-interception.js": {
       "expected": "fail",
@@ -2947,7 +2947,7 @@
     "network/raw-headers-for-protected-document.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 3: expected '<script src=\"http://127.0.0.1:8000/inspector-protocol/network/resources/cookie.pl\">', got '<script src=\"file:///home/daeyeon/code/samsungland/daeyeon.starfish-worktrees/cdp-regression/test/cdp/inspector-protocol'"
+      "detail": "line 3: expected '<script src=\"http://127.0.0.1:8000/inspector-protocol/network/resources/cookie.pl\">', got '<script src=\"file://<repo>/test/cdp/inspector-protocol'"
     },
     "network/raw-response-headers.js": {
       "expected": "fail",
@@ -2962,7 +2962,7 @@
     "network/redirect-cached-navigation.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 5: expected ' url: http://127.0.0.1:8000/inspector-protocol/network/resources/redirect-cached.php', got ' url: file:///home/daeyeon/code/samsungland/daeyeon.starfish-worktrees/cdp-regression/test/cdp/inspector-protocol/netwo'"
+      "detail": "line 5: expected ' url: http://127.0.0.1:8000/inspector-protocol/network/resources/redirect-cached.php', got ' url: file://<repo>/test/cdp/inspector-protocol/netwo'"
     },
     "network/redirect-resource-type.js": {
       "expected": "fail",
@@ -3405,7 +3405,7 @@
     "page/lifecycle-network-idle0.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 2: expected 'Intercepted http://127.0.0.1:8000/inspector-protocol/page/resources/client-side-redirect.html?location=http://127.0.0.1:', got 'Intercepted file:///home/daeyeon/code/samsungland/daeyeon.starfish-worktrees/cdp-regression/test/cdp/inspector-protocol/'"
+      "detail": "line 2: expected 'Intercepted http://127.0.0.1:8000/inspector-protocol/page/resources/client-side-redirect.html?location=http://127.0.0.1:', got 'Intercepted file://<repo>/test/cdp/inspector-protocol/'"
     },
     "page/navigate-204.js": {
       "expected": "fail",
@@ -3506,7 +3506,7 @@
     "page/page-produceCompilationCache.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 2: expected 'Running http://127.0.0.1:8000/inspector-protocol/page/resources/script-1.js', got 'Running file:///home/daeyeon/code/samsungland/daeyeon.starfish-worktrees/cdp-regression/test/cdp/inspector-protocol/page'"
+      "detail": "line 2: expected 'Running http://127.0.0.1:8000/inspector-protocol/page/resources/script-1.js', got 'Running file://<repo>/test/cdp/inspector-protocol/page'"
     },
     "page/page-resetNavigationHistory.js": {
       "expected": "fail",
@@ -4301,7 +4301,7 @@
     "target/target-setAutoAttach-new-page.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 13: expected ' url :', got ' url : file:///home/daeyeon/code/samsungland/daeyeon.starfish-worktrees/cdp-regression/test/cdp/inspector-pro'"
+      "detail": "line 13: expected ' url :', got ' url : file://<repo>/test/cdp/inspector-pro'"
     },
     "target/target-setAutoAttach-oopif-multisession-existing.js": {
       "expected": "fail",
@@ -4681,7 +4681,7 @@
     "webauthn/webauthn-presence-simulation.js": {
       "expected": "fail",
       "category": "harness-error",
-      "detail": "node exited 1: /home/daeyeon/code/samsungland/daeyeon.starfish-worktrees/cdp-regression/test/cdp/inspector-protocol/webauthn/webauthn-presence-simulation.js:23"
+      "detail": "node exited 1: <repo>/test/cdp/inspector-protocol/webauthn/webauthn-presence-simulation.js:23"
     },
     "webauthn/webauthn-remove-credential.js": {
       "expected": "fail",

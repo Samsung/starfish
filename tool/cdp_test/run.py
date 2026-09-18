@@ -9,10 +9,10 @@ Two layers, run from one entry point:
               declares non-optional. Broad and cheap, but it only checks
               shape: the protocol states no values, so neither can this.
 
-    behavior  Run Chromium's own inspector-protocol tests unmodified and diff
+    behavior  Run inspector-protocol tests with Chromium's harness and diff
               their output against the -expected.txt that ships with them.
-              Narrower, but the expectations come from the people who define
-              CDP rather than from us.
+              Chromium's tests stay unmodified. Starfish-owned tests stay in
+              a separate directory so an upstream update cannot delete them.
 
 No test is written here. Each layer keeps one file, tool/cdp_test/testlist-
 <layer>.json, which is both the list of what to run and the result of the
@@ -35,8 +35,10 @@ or a name.
 
 A category is derived from what the run saw, never from the expected output,
 and names the observation rather than a cause: timeout, output-differs,
-script-error, not-implemented, bad-params, no-connection, harness-error, and
-failed for the schema layer. detail carries the first line that differs.
+script-error, not-implemented, bad-params, no-connection, harness-error,
+protocol-error, schema-mismatch, and probe-error. A schema request that cannot
+run without parameters is reported as UNPROBEABLE and is not saved. detail
+carries the first line that differs.
 """
 import argparse
 import concurrent.futures
@@ -69,11 +71,12 @@ LABEL_WIDTH = 14
 # entry using its whole timeout. Ten minutes leaves a schema sweep, which is
 # short whatever the machine, unasked and catches a behavior sweep.
 LONG_RUN_SECONDS = 600
-# Everything downloaded lives in the test submodule, next to the other test
-# corpora. Only our code and the two lists live here.
+# Downloaded and internal test data lives in the test submodule. Only the
+# runner and its result lists live here.
 SUITE_DIR = launcher.REPOSITORY_DIR / "test" / "cdp"
 PROTOCOL_DIR = SUITE_DIR / "protocol"
 INSPECTOR_DIR = SUITE_DIR / "inspector-protocol"
+INTERNAL_INSPECTOR_DIR = SUITE_DIR / "inspector-protocol-internal"
 
 
 def require(path, what):
@@ -88,26 +91,28 @@ def require(path, what):
 class Layer:
     """What differs between the two layers, so the runner can share the rest."""
 
-    def __init__(self, name, list_path, revision, known, run_one, label):
+    def __init__(self, name, list_path, revision, known, run_one, label,
+                 metadata=None):
         self.name = name
         self.list_path = list_path
         self.revision = revision
         self.known = known           # every entry that may appear in the list
         self.run_one = run_one       # (starfish, entry, timeout) -> None
         self.label = label
+        self.metadata = metadata or {}
 
 
 def schema_layer(args):
     protocol_dir = require(PROTOCOL_DIR, "the CDP protocol definition")
     table = command_table.load(protocol_dir)
-    # Only the commands this layer can send and judge are listable. The rest
-    # are excluded by derivation, not by an entry saying so.
-    listable = command_table.reachable(table)
+    # Schema-required parameters make a command impossible to call here.
+    # Semantic parameter requirements are discovered from the response.
+    candidates = command_table.candidates(table)
     return Layer(
         name="schema",
         list_path=SCRIPT_DIR / "testlist-schema.json",
         revision=command_table.revision(protocol_dir),
-        known={m: c for m, c in table.items() if m in listable},
+        known={m: c for m, c in table.items() if m in candidates},
         run_one=lambda starfish, entry, timeout: case.run(
             starfish, table[entry], timeout),
         label=lambda entry: entry)
@@ -115,15 +120,26 @@ def schema_layer(args):
 
 def behavior_layer(args):
     suite_dir = require(INSPECTOR_DIR, "the inspector-protocol suite")
-    known = set(behavior.entries(suite_dir))
+    internal_dir = require(INTERNAL_INSPECTOR_DIR,
+                           "the internal inspector-protocol suite")
+    roots = {entry: suite_dir for entry in behavior.entries(suite_dir)}
+    for entry in behavior.entries(internal_dir):
+        if entry in roots:
+            raise SystemExit(
+                "%s exists in both inspector-protocol suites; remove the "
+                "internal copy" % entry)
+        roots[entry] = internal_dir
     return Layer(
         name="behavior",
         list_path=SCRIPT_DIR / "testlist-behavior.json",
         revision=(suite_dir / "revision.txt").read_text().strip(),
-        known=known,
+        known=set(roots),
         run_one=lambda starfish, entry, timeout: behavior.run(
-            starfish, suite_dir, entry, timeout),
-        label=behavior.label)
+            starfish, roots[entry], entry, timeout, suite_dir),
+        label=behavior.label,
+        metadata={entry: {"suite": "internal"}
+                  for entry, root in roots.items()
+                  if root == internal_dir})
 
 
 LAYERS = {"schema": schema_layer, "behavior": behavior_layer}
@@ -154,9 +170,12 @@ def run_layer(args, layer):
         to_run = sorted(testlist.names(args.list, layer.known))
     else:
         # A plain run covers the entries expected to pass, so it can only
-        # demote. Reaching an expected-fail entry needs --include-fails.
-        to_run = was_active + (sorted(was_skipped) if args.include_fails
-                               else [])
+        # demote. A full sweep also probes entries added by an upstream update
+        # that have no saved result yet.
+        to_run = list(was_active)
+        if args.include_fails:
+            listed = set(was_active) | set(was_skipped)
+            to_run += sorted(set(was_skipped) | (set(layer.known) - listed))
     was_active_set = set(was_active)
     confirm_long_run(args, layer, len(to_run))
 
@@ -184,7 +203,7 @@ def run_layer(args, layer):
             if entry not in ran:
                 skipped[entry] = record
         testlist.save(layer.list_path, layer.name, layer.revision,
-                      sorted(active), skipped)
+                      sorted(active), skipped, layer.metadata)
         return active, skipped
 
     def measure(entry):
@@ -213,6 +232,19 @@ def run_layer(args, layer):
             if category == "active":
                 now_active.append(entry)
                 print("%d/%d PASS %s" % (position, len(to_run), name))
+            elif category == "unprobeable":
+                if entry in was_active_set:
+                    now_skipped[entry] = {
+                        "category": category, "detail": detail
+                    }
+                    regressions.append(name)
+                    print("%d/%d FAIL %s: %s: %s"
+                          % (position, len(to_run), name, category, detail))
+                else:
+                    print("%d/%d UNPROBEABLE %s: %s"
+                          % (position, len(to_run), name, detail))
+                print("      Use an existing Chromium behavior test, or add "
+                      "one under test/cdp/inspector-protocol-internal/.")
             else:
                 now_skipped[entry] = {"category": category, "detail": detail}
                 # Only a demotion is a failure of this run: an entry already
@@ -332,12 +364,22 @@ def classify(args, layer, entry):
     """Probe one entry and return ("active", "") or (category, detail)."""
     try:
         layer.run_one(args.starfish, entry, args.timeout)
-    except (AssertionError, OSError, RuntimeError, ValueError) as error:
+    except case.ProtocolError as error:
+        detail = " ".join(str(error).split())
+        if layer.name == "schema":
+            if error.code == -32601:
+                return "not-implemented", detail
+            if error.code in (-32602, -32000):
+                return "unprobeable", detail
+        return "protocol-error", detail
+    except AssertionError as error:
         if layer.name == "behavior":
             return behavior.reason(error)
-        # The schema layer sends one command, so there is nothing to group by:
-        # the response that failed the check is the whole story.
-        return "failed", " ".join(str(error).split())
+        return "schema-mismatch", " ".join(str(error).split())
+    except (OSError, RuntimeError, ValueError) as error:
+        if layer.name == "behavior":
+            return behavior.reason(error)
+        return "probe-error", " ".join(str(error).split())
     return "active", ""
 
 
@@ -349,13 +391,16 @@ carries every field the pinned protocol declares non-optional.
 Broad and cheap, but it only checks shape. The protocol states no values, so
 neither can this. It also cannot reach a command that takes a required
 parameter, because the protocol does not say where such a value comes from.
+If an optional parameter is semantically required, the rejected request is
+reported as UNPROBEABLE with guidance to add behavior coverage.
 """,
     "behavior": """\
-Run Chromium's inspector-protocol tests unmodified and compare each test's
-output with the -expected.txt that ships beside it.
+Run Chromium and Starfish-owned inspector-protocol tests with Chromium's
+harness. Compare each test's output with the -expected.txt beside it.
 
-The expectations come from the people who define CDP, not from us. The tests
-are JavaScript, so this layer needs a Node binary; the schema layer does not.
+Chromium's tests stay unmodified. Starfish-owned tests stay outside the
+downloaded upstream corpus and may be proposed upstream. The tests are
+JavaScript, so this layer needs a Node binary; the schema layer does not.
 """,
 }
 
@@ -367,10 +412,10 @@ not stop the next. The exit status is non-zero if any layer failed.
 """
 
 INCLUDE_FAILS_HELP = """\
-also run the entries the list expects to fail, so one that now passes is
-promoted back to expected-pass. It starts a browser per entry, so a full sweep
-takes a while. Without it a run covers the expected-pass entries only, and can
-only demote"""
+also run entries that failed before or have no saved result, so one that now
+passes is promoted back to expected-pass and new upstream entries are probed.
+It starts a browser per entry, so a full sweep takes a while. Without it a run
+covers the expected-pass entries only, and can only demote"""
 
 EXAMPLES = """\
 examples:
@@ -447,7 +492,7 @@ def main():
     behavior_parser = subcommands.add_parser(
         "behavior", description=LAYER_HELP["behavior"],
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        help="run Chromium's inspector-protocol tests unmodified")
+        help="run inspector-protocol behavior tests")
     for name, layer_parser in (("schema", schema),
                                ("behavior", behavior_parser)):
         add_shared_options(layer_parser)

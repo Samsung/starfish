@@ -75,17 +75,22 @@ def revision_of(list_path):
     return json.loads(list_path.read_text()).get("revision")
 
 
-def save(list_path, layer_name, revision, active, skipped):
+def save(list_path, layer_name, revision, active, skipped, metadata=None):
+    metadata = metadata or {}
+    records = []
+    for name in active:
+        records.append((name, {"expected": "pass", **metadata.get(name, {})}))
+    for name, record in skipped.items():
+        records.append((name, {
+            "expected": "fail",
+            **metadata.get(name, {}),
+            "category": record["category"],
+            "detail": _fit(record["detail"]),
+        }))
     document = {
         "layer": layer_name,
         "revision": revision,
-        "entries": dict(
-            sorted(
-                [(name, {"expected": "pass"}) for name in active] +
-                [(name, {"expected": "fail",
-                         "category": record["category"],
-                         "detail": _fit(record["detail"])})
-                 for name, record in skipped.items()])),
+        "entries": dict(sorted(records)),
     }
     # Written through a temporary file in the same directory, because a run
     # saves after every entry and may be killed mid-write. os.replace is
