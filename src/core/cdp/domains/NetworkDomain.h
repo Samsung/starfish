@@ -129,7 +129,9 @@ public:
                                  rapidjson::Document::AllocatorType& alloc);
     // Write the cookies in the `cookies` array (CDP CookieParam form) into the
     // jar. currentHost/currentPath are used when a cookie omits url/domain.
-    static void writeCookieArray(const rapidjson::Value& cookies,
+    // Returns false if a cookie fails validation (e.g. sourcePort doesn't
+    // match the URL port), so the caller can return a CDP error.
+    static bool writeCookieArray(const rapidjson::Value& cookies,
                                  const std::string& currentHost,
                                  const std::string& currentPath);
     // Expire every cookie in the jar (Storage.clearCookies).

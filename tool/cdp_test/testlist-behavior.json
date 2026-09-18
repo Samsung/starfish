@@ -3918,19 +3918,13 @@
       "detail": "line 3: expected 'Open cache, add item', got \"Error while executing test script: TypeError: Cannot read properties of undefined (reading 'storageKey')\""
     },
     "storage/cookie-priority.js": {
-      "expected": "fail",
-      "category": "output-differs",
-      "detail": "line 3: expected 'priority_high: High', got 'priority_high: undefined'"
+      "expected": "pass"
     },
     "storage/cookie-sourceport.js": {
-      "expected": "fail",
-      "category": "output-differs",
-      "detail": "line 3: expected 'sourcePort_Specified: 1234', got 'sourcePort_Specified: undefined'"
+      "expected": "pass"
     },
     "storage/cookie-sourcescheme.js": {
-      "expected": "fail",
-      "category": "output-differs",
-      "detail": "line 3: expected 'sourceScheme_Secure: Secure', got 'sourceScheme_Secure: undefined'"
+      "expected": "pass"
     },
     "storage/cookies.js": {
       "expected": "fail",

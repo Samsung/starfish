@@ -162,8 +162,11 @@ void StorageDomain::processMessage(CDPCommand& cmd, const std::string& method)
         WebView* wv = m_dispatcher->webView();
         std::string curHost = hostOf(currentOrigin(wv));
         if (cmd.params() && cmd.params()->HasMember("cookies")) {
-            NetworkDomain::writeCookieArray((*cmd.params())["cookies"], curHost,
-                                            std::string());
+            if (!NetworkDomain::writeCookieArray((*cmd.params())["cookies"],
+                                                 curHost, std::string())) {
+                cmd.sendError(-32602, "Invalid cookie fields");
+                return;
+            }
         }
         cmd.sendResultEmpty();
         return;
