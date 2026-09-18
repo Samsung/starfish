@@ -4270,13 +4270,12 @@ LayoutRect FrameBox::frameVisibleRect()
         // every text node must have SomputedStyle
         auto textShadow = cs->textShadow();
         if (textShadow) {
-            CanvasShadowDataList list =
-                textShadow->toCanvasShadowDataList(this);
             LayoutRect owner = frameRect();
             owner.setX(0);
             owner.setY(0);
-            for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
-                LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
+            for (size_t i = 0; i < textShadow->size(); i++) {
+                LayoutRect rect = computeVisibleShadowRect(
+                    owner, textShadow->at(i).toCanvasShadowData(this));
                 out.unite(rect);
             }
         }
@@ -4775,39 +4774,32 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     if (boxHasDrawableContents) {
         size_t len = isInlineTextBox() ? 2 : 1;
         for (size_t i = 0; cs && i < len; ++i) {
-            CanvasShadowDataList list;
+            const ShadowDataList* list =
+                i == 0 ? cs->boxShadow() : cs->textShadow();
             LayoutRect owner = frameRect();
             owner.setX(0);
             owner.setY(0);
             LayoutRect shadowsRect = owner;
-            bool hasShadow = false;
-            if (i == 0) {
-                if (cs->boxShadow()) {
-                    list = cs->boxShadow()->toCanvasShadowDataList(this);
-                    hasShadow = true;
-                }
-            } else {
-                if (cs->textShadow()) {
-                    list = cs->textShadow()->toCanvasShadowDataList(this);
-                    hasShadow = true;
-                }
-            }
-            for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
+            bool hasShadow = list != nullptr;
+            // The rects are only united, so the shadows are taken one at a
+            // time in list order rather than through a list built per call.
+            for (size_t j = 0; list && j < list->size(); j++) {
+                CanvasShadowData shadow = list->at(j).toCanvasShadowData(this);
                 if (ctx.isVisibleRectCollapsible && isFrameBlockBox()) {
-                    if (shadow->hasColor() &&
-                        !shadow->color().isTransparent()) {
+                    if (shadow.hasColor() &&
+                        !shadow.color().isTransparent()) {
                         LayoutRect rect =
-                            computeVisibleShadowRect(owner, *shadow);
+                            computeVisibleShadowRect(owner, shadow);
                         shadowsRect.unite(rect);
-                    } else if (!shadow->hasColor() &&
+                    } else if (!shadow.hasColor() &&
                                !cs->color().isTransparent()) {
                         LayoutRect rect =
-                            computeVisibleShadowRect(owner, *shadow);
+                            computeVisibleShadowRect(owner, shadow);
                         shadowsRect.unite(rect);
                     }
                 } else if (ctx.isForSpecialValueForTableCell &&
                            isScrollingPurpose && isFrameFlexibleBox()) {
-                    LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
+                    LayoutRect rect = computeVisibleShadowRect(owner, shadow);
                     shadowsRect.unite(rect);
                     ret = false;
                 }
