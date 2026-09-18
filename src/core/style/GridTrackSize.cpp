@@ -61,14 +61,28 @@ bool GridTrackSize::equals(GridTrackSize* other)
         return false;
     }
 
-    if (m_type == GridTrackSizeType::kLength) {
+    switch (m_type) {
+    case GridTrackSizeType::kLength:
         return as<GridTrackSizeLength>()->gridLegnth() ==
                other->as<GridTrackSizeLength>()->gridLegnth();
-    } else if (m_type == GridTrackSizeType::kMinMax) {
+    case GridTrackSizeType::kMinMax:
         return as<GridTrackSizeMinMax>()->min() ==
                    other->as<GridTrackSizeMinMax>()->min() &&
                as<GridTrackSizeMinMax>()->max() ==
                    other->as<GridTrackSizeMinMax>()->max();
+    case GridTrackSizeType::kMinContent:
+    case GridTrackSizeType::kMaxContent:
+        return true;
+    case GridTrackSizeType::kFixedRepeat:
+        return as<GridTrackSizeFixedRepeat>()->repeatCount() ==
+                   other->as<GridTrackSizeFixedRepeat>()->repeatCount() &&
+               equals(as<GridTrackSizeRepeat>()->gridTrackSizes(),
+                      other->as<GridTrackSizeRepeat>()->gridTrackSizes());
+    case GridTrackSizeType::kAutoRepeat:
+        return as<GridTrackSizeAutoRepeat>()->autoRepeatType() ==
+                   other->as<GridTrackSizeAutoRepeat>()->autoRepeatType() &&
+               equals(as<GridTrackSizeRepeat>()->gridTrackSizes(),
+                      other->as<GridTrackSizeRepeat>()->gridTrackSizes());
     }
     return false;
 }

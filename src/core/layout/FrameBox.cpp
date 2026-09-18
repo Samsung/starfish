@@ -4786,8 +4786,7 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
             for (size_t j = 0; list && j < list->size(); j++) {
                 CanvasShadowData shadow = list->at(j).toCanvasShadowData(this);
                 if (ctx.isVisibleRectCollapsible && isFrameBlockBox()) {
-                    if (shadow.hasColor() &&
-                        !shadow.color().isTransparent()) {
+                    if (shadow.hasColor() && !shadow.color().isTransparent()) {
                         LayoutRect rect =
                             computeVisibleShadowRect(owner, shadow);
                         shadowsRect.unite(rect);
