@@ -1031,9 +1031,11 @@ enum class BoxShadowImageKind {
 // without a percentage resolves to the same length against any rect and goes
 // in as that length; one with a percentage has no flat encoding, so such a
 // box gets no key and paints uncached.
+// boxWidth and boxHeight are the border box the mask is made for, which a
+// strip (see drawShadowMaskStrip) makes shorter than the frame's own.
 static Optional<BoxShadowImageKey> boxShadowImageKey(
     FrameBox* frame, const CanvasShadowData& shadow, BoxShadowImageKind kind,
-    float dpr)
+    float dpr, LayoutUnit boxWidth, LayoutUnit boxHeight)
 {
     BoxShadowImageKey key;
     memset(key.words, 0, sizeof(key.words));
@@ -1045,8 +1047,8 @@ static Optional<BoxShadowImageKey> boxShadowImageKey(
     };
     key.words[i++] = (int32_t)kind;
     putFloat(dpr);
-    key.words[i++] = frame->width().rawValue();
-    key.words[i++] = frame->height().rawValue();
+    key.words[i++] = boxWidth.rawValue();
+    key.words[i++] = boxHeight.rawValue();
     key.words[i++] = frame->borderLeft().rawValue();
     key.words[i++] = frame->borderTop().rawValue();
     key.words[i++] = frame->borderRight().rawValue();
@@ -1213,9 +1215,8 @@ public:
         }
     }
 
-    // False when the corners of a width x height shape are too close for
-    // their pieces to stay clear of each other.
-    bool fit(int width, int height, const BorderRadiusFixedData& radii)
+    // How far into the shape each corner reaches, for the given radii.
+    void measure(const BorderRadiusFixedData& radii)
     {
         // As the top-left corner each of them is a turned copy of.
         const float r[4][2] = {
@@ -1230,10 +1231,40 @@ public:
             m_inner[i] =
                 (int)ceil(std::max(r[i][0], r[i][1])) + m_reach + straightPart;
         }
+    }
+
+    // Whether the corners of a shape that wide, or that tall, stay clear of
+    // each other along that axis.
+    bool fitsAcross(int width) const
+    {
         return m_inner[0] + m_inner[1] <= width &&
-               m_inner[3] + m_inner[2] <= width &&
-               m_inner[0] + m_inner[3] <= height &&
+               m_inner[3] + m_inner[2] <= width;
+    }
+    bool fitsDown(int height) const
+    {
+        return m_inner[0] + m_inner[3] <= height &&
                m_inner[1] + m_inner[2] <= height;
+    }
+
+    // False when the corners of a width x height shape are too close for
+    // their pieces to stay clear of each other.
+    bool fit(int width, int height, const BorderRadiusFixedData& radii)
+    {
+        measure(radii);
+        return fitsAcross(width) && fitsDown(height);
+    }
+
+    // How far the corners reach in from the start (left or top) and the end
+    // of the shape along an axis: 0 across, 1 down.
+    int capStart(int axis) const
+    {
+        return axis == 0 ? std::max(m_inner[0], m_inner[3])
+                         : std::max(m_inner[0], m_inner[1]);
+    }
+    int capEnd(int axis) const
+    {
+        return axis == 0 ? std::max(m_inner[1], m_inner[2])
+                         : std::max(m_inner[3], m_inner[2]);
     }
 
     // outerRect is the shape grown by the margin on every side.
@@ -1418,6 +1449,94 @@ static bool isWholePixels(float a, float b, float c)
     return a == floorf(a) && b == floorf(b) && c == floorf(c);
 }
 
+// A shape too short for corner pieces along one axis may still have a
+// straight run along the other, where its shadow repeats one column (or
+// row). The mask of a box just long enough for the two end caps and that
+// run is kept, keyed without the box's length, and a longer box draws it as
+// a strip: the caps at its ends and the run stretched between them.
+//
+// Which axis a shape gets a strip along, if any: 0 across, 1 down, -1 none.
+static int shadowStripAxis(bool fitsAcross, bool fitsDown)
+{
+    if (fitsAcross == fitsDown) {
+        return -1;
+    }
+    return fitsAcross ? 0 : 1;
+}
+
+// A strip's caps must not depend on the box's length; a percentage radius
+// does.
+static bool hasPercentBorderRadius(FrameBox* frame)
+{
+    if (!frame->hasFrameBorderRadius()) {
+        return false;
+    }
+    BorderRadiusData br = frame->frameBorderRadius();
+    const Length* lengths[8] = {
+        &br.m_topLeftHorizontal,     &br.m_topLeftVertical,
+        &br.m_topRightHorizontal,    &br.m_topRightVertical,
+        &br.m_bottomRightHorizontal, &br.m_bottomRightVertical,
+        &br.m_bottomLeftHorizontal,  &br.m_bottomLeftVertical,
+    };
+    for (size_t i = 0; i < 8; i++) {
+        if (lengths[i]->isPercent() || lengths[i]->hasPercent()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Draws mask, made for a box shorter along axis, onto dst: capStart and
+// capEnd are the lengths of the caps from the start and the end of dst (and
+// of the mask), scale is the size of a mask pixel in dst units, and the
+// mask's first column (or row) past the start cap fills the run between
+// the caps.
+static void drawShadowMaskStrip(Canvas* canvas, BufferedNativeImageData* mask,
+                                const Unit::Rect& dst, int axis, float capStart,
+                                float capEnd, float scaleX, float scaleY,
+                                const Unit::Color& color)
+{
+    const float maskWidth = mask->width();
+    const float maskHeight = mask->height();
+    if (axis == 0) {
+        const float run = dst.width() - capStart - capEnd;
+        const float column = capStart / scaleX;
+        canvas->fillWithImageAlpha(
+            mask, Unit::Rect(0, 0, column, maskHeight),
+            Unit::Rect(dst.x(), dst.y(), capStart, dst.height()), color);
+        if (run > 0) {
+            canvas->fillWithImageAlpha(
+                mask, Unit::Rect(column, 0, 1, maskHeight),
+                Unit::Rect(dst.x() + capStart, dst.y(), run, dst.height()),
+                color);
+        }
+        canvas->fillWithImageAlpha(
+            mask,
+            Unit::Rect(maskWidth - capEnd / scaleX, 0, capEnd / scaleX,
+                       maskHeight),
+            Unit::Rect(dst.maxX() - capEnd, dst.y(), capEnd, dst.height()),
+            color);
+    } else {
+        const float run = dst.height() - capStart - capEnd;
+        const float row = capStart / scaleY;
+        canvas->fillWithImageAlpha(
+            mask, Unit::Rect(0, 0, maskWidth, row),
+            Unit::Rect(dst.x(), dst.y(), dst.width(), capStart), color);
+        if (run > 0) {
+            canvas->fillWithImageAlpha(
+                mask, Unit::Rect(0, row, maskWidth, 1),
+                Unit::Rect(dst.x(), dst.y() + capStart, dst.width(), run),
+                color);
+        }
+        canvas->fillWithImageAlpha(
+            mask,
+            Unit::Rect(0, maskHeight - capEnd / scaleY, maskWidth,
+                       capEnd / scaleY),
+            Unit::Rect(dst.x(), dst.maxY() - capEnd, dst.width(), capEnd),
+            color);
+    }
+}
+
 void FrameBox::paintBoxShadows(Canvas* canvas)
 {
     STARFISH_ASSERT(canvas != nullptr);
@@ -1507,10 +1626,14 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                                    shadowRect.height()),
                         sd, false);
                 }
+                ninePatch.measure(radii);
+                const bool wholePixels =
+                    isWholePixels(shadow->offsetX(), shadow->offsetY(), sd);
+                const bool fitsAcross =
+                    ninePatch.fitsAcross(shadowRect.width());
+                const bool fitsDown = ninePatch.fitsDown(shadowRect.height());
 
-                if (isWholePixels(shadow->offsetX(), shadow->offsetY(), sd) &&
-                    ninePatch.fit(shadowRect.width(), shadowRect.height(),
-                                  radii)) {
+                if (wholePixels && fitsAcross && fitsDown) {
                     canvas->save();
                     Unit::Rect outerRect(-margin + shadow->offsetX() - sd,
                                          -margin + shadow->offsetY() - sd,
@@ -1525,52 +1648,114 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                 } else {
                     canvas->save();
                     const float dpr = wv->screenInfo().devicePixelRatio;
+                    const float offset = ceil(radiusOffset / 2);
+
+                    // The shadow of a border box of the given size: the
+                    // shape, and where its mask goes.
+                    struct Geometry {
+                        Unit::Rect borderRect;
+                        Unit::Rect shadowRect;
+                        Unit::Rect imageRect;
+                    };
+                    auto geometry = [&](float boxWidth, float boxHeight) {
+                        Geometry g;
+                        g.borderRect = Unit::Rect(0, 0, boxWidth, boxHeight);
+                        g.shadowRect = Unit::Rect(
+                            0, 0, snapSizeToPixel(boxWidth + sd * 2, 0),
+                            snapSizeToPixel(boxHeight + sd * 2, 0));
+                        g.imageRect = Unit::Rect(
+                            -offset + shadow->offsetX() - sd,
+                            -offset + shadow->offsetY() - sd,
+                            ceil(g.shadowRect.width() + radiusOffset),
+                            ceil(g.shadowRect.height() + radiusOffset));
+                        return g;
+                    };
+                    const Geometry real = geometry(width(), height());
+
+                    // A strip when only one axis is too short: the mask is
+                    // that of a box just long enough for the caps along the
+                    // other axis. The caps are measured from the mask's
+                    // edges, so they take in the margin around the shape.
+                    int axis = wholePixels && !hasPercentBorderRadius(this)
+                                   ? shadowStripAxis(fitsAcross, fitsDown)
+                                   : -1;
+                    Geometry made = real;
+                    float capStart = 0;
+                    float capEnd = 0;
+                    if (axis >= 0) {
+                        const float endMargin = ceil(radiusOffset) - offset;
+                        capStart = offset + ninePatch.capStart(axis);
+                        capEnd = endMargin + ninePatch.capEnd(axis);
+                        // With the fraction of the box's own length, so
+                        // that the shape and the border box snap to pixels
+                        // the way they do for the box.
+                        const float length = axis == 0 ? width() : height();
+                        const float shapeLength =
+                            ninePatch.capStart(axis) + ninePatch.capEnd(axis) +
+                            BoxShadowNinePatch::straightPart + length -
+                            floor(length);
+                        made = axis == 0
+                                   ? geometry(shapeLength - sd * 2, height())
+                                   : geometry(width(), shapeLength - sd * 2);
+                        if (made.borderRect.width() <= 0 ||
+                            made.borderRect.height() <= 0) {
+                            axis = -1;
+                            made = real;
+                        }
+                    }
+
                     Optional<BoxShadowImageKey> cacheKey = boxShadowImageKey(
-                        this, *shadow, BoxShadowImageKind::Outer, dpr);
+                        this, *shadow, BoxShadowImageKind::Outer, dpr,
+                        made.borderRect.width(), made.borderRect.height());
                     BufferedNativeImageData* nativeImage =
                         cacheKey ? wv->lookupBoxShadowImage(cacheKey.value())
                                  : nullptr;
                     bool cachedImage = nativeImage != nullptr;
 
-                    float offset = ceil(radiusOffset / 2);
-                    Unit::Rect imageRect(
-                        -offset + shadow->offsetX() - sd,
-                        -offset + shadow->offsetY() - sd,
-                        ceil(shadowRect.width() + radiusOffset),
-                        ceil(shadowRect.height() + radiusOffset));
-
                     if (!nativeImage) {
                         nativeImage = blurredShadowMask(
-                            wv, ceil(imageRect.width() * dpr),
-                            ceil(imageRect.height() * dpr),
+                            wv, ceil(made.imageRect.width() * dpr),
+                            ceil(made.imageRect.height() * dpr),
                             shadow->radius() / 2 * dpr, [&](Canvas* cv) {
                                 cv->translate(offset, offset);
-                                const LayoutRect clipRect(0, 0,
-                                                          shadowRect.width(),
-                                                          shadowRect.height());
+                                const LayoutRect clipRect(
+                                    0, 0, made.shadowRect.width(),
+                                    made.shadowRect.height());
                                 applyBorderRadiusClippingIfNeeds(cv, clipRect,
                                                                  sd);
-                                cv->drawRect(shadowRect);
+                                cv->drawRect(made.shadowRect);
                             });
                         // The shadow does not show through the border box.
-                        if (borderRect.intersects(imageRect)) {
+                        if (made.borderRect.intersects(made.imageRect)) {
                             cutShapeFromMask(wv, nativeImage, [&](Canvas* cv) {
-                                cv->translate(-imageRect.x(), -imageRect.y());
+                                cv->translate(-made.imageRect.x(),
+                                              -made.imageRect.y());
                                 if (hasFrameBorderRadius()) {
                                     applyBorderRadiusClippingIfNeeds(
-                                        cv,
-                                        LayoutRect(0, 0, width(), height()));
+                                        cv, LayoutRect(
+                                                0, 0, made.borderRect.width(),
+                                                made.borderRect.height()));
                                 }
-                                cv->drawRect(borderRect);
+                                cv->drawRect(made.borderRect);
                             });
                         }
                     }
 
-                    canvas->fillWithImageAlpha(
-                        nativeImage,
-                        Unit::Rect(0, 0, nativeImage->width(),
-                                   nativeImage->height()),
-                        imageRect, shadowColor);
+                    if (axis < 0) {
+                        canvas->fillWithImageAlpha(
+                            nativeImage,
+                            Unit::Rect(0, 0, nativeImage->width(),
+                                       nativeImage->height()),
+                            real.imageRect, shadowColor);
+                    } else {
+                        canvas->setNeedsNoneAntialias();
+                        drawShadowMaskStrip(
+                            canvas, nativeImage, real.imageRect, axis, capStart,
+                            capEnd,
+                            made.imageRect.width() / nativeImage->width(),
+                            made.imageRect.height() / nativeImage->height(),
+                            shadowColor);
+                    }
                     canvas->restore();
 
                     if (cachedImage) {
@@ -1651,32 +1836,105 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                     continue;
                 }
 
-                Unit::Rect shadowRect(
-                    paddingRect.x(), paddingRect.y(),
-                    paddingRect.width() + std::abs(shadow->offsetX()),
-                    paddingRect.height() + std::abs(shadow->offsetY()));
-                int ix = 0, iy = 0, iw = 0, ih = 0;
-                // The image is placed by a negative offset below, so only a
-                // positive one moves the hole inside it.
-                LayoutUnit x =
-                    paddingRect.x() + std::max(shadow->offsetX(), 0.f) + sd;
-                LayoutUnit y =
-                    paddingRect.y() + std::max(shadow->offsetY(), 0.f) + sd;
-                ix = x.floor();
-                iy = y.floor();
-                iw = snapSizeToPixel(paddingRect.width() - sd * 2, x);
-                ih = snapSizeToPixel(paddingRect.height() - sd * 2, y);
-                Unit::Rect interiorRect(ix, iy, iw, ih);
+                const float dpr = wv->screenInfo().devicePixelRatio;
+                // Create image buffer bigger than paddingbox+ shadowBox
+                const float margin = 4.0f;
+                const float half = 2.0f;
+                const float dx =
+                    (shadow->offsetX() < 0) ? -half + shadow->offsetX() : -half;
+                const float dy =
+                    (shadow->offsetY() < 0) ? -half + shadow->offsetY() : -half;
+
+                // The shadow of a padding box of the given size: the hole,
+                // the mask around it and the part of the mask that shows.
+                struct Geometry {
+                    Unit::Rect paddingRect;
+                    Unit::Rect interiorRect;
+                    Unit::Rect imageRect;
+                    Unit::Rect rect;
+                    Unit::Rect crop;
+                    size_t imageWidth;
+                    size_t imageHeight;
+                    float scaleX;
+                    float scaleY;
+                };
+                auto geometry = [&](float paddingWidth, float paddingHeight) {
+                    Geometry g;
+                    g.paddingRect = Unit::Rect(paddingRect.x(), paddingRect.y(),
+                                               paddingWidth, paddingHeight);
+                    Unit::Rect box(0, 0, paddingWidth + borderWidth(),
+                                   paddingHeight + borderHeight());
+                    Unit::Rect shadowRect(
+                        g.paddingRect.x(), g.paddingRect.y(),
+                        paddingWidth + std::abs(shadow->offsetX()),
+                        paddingHeight + std::abs(shadow->offsetY()));
+                    // The image is placed by a negative offset below, so
+                    // only a positive one moves the hole inside it.
+                    LayoutUnit x = g.paddingRect.x() +
+                                   std::max(shadow->offsetX(), 0.f) + sd;
+                    LayoutUnit y = g.paddingRect.y() +
+                                   std::max(shadow->offsetY(), 0.f) + sd;
+                    g.interiorRect =
+                        Unit::Rect(x.floor(), y.floor(),
+                                   snapSizeToPixel(paddingWidth - sd * 2, x),
+                                   snapSizeToPixel(paddingHeight - sd * 2, y));
+
+                    Unit::Rect exteriorRect;
+                    exteriorRect.unite(box);
+                    exteriorRect.unite(shadowRect);
+                    exteriorRect.unite(g.interiorRect);
+                    // Whole pixels, so that the mask draws one to one: a
+                    // shape baked into it would blur under resampling.
+                    g.imageRect =
+                        Unit::Rect(0, 0, ceil(exteriorRect.width() + margin),
+                                   ceil(exteriorRect.height() + margin));
+
+                    LayoutUnit rx = g.paddingRect.x();
+                    LayoutUnit ry = g.paddingRect.y();
+                    g.rect = Unit::Rect(rx.floor(), ry.floor(),
+                                        snapSizeToPixel(paddingWidth, rx),
+                                        snapSizeToPixel(paddingHeight, ry));
+
+                    // Only the padding box shows of the image, so that is
+                    // the part that is kept, with a pixel around it for the
+                    // sampling at its edges. The image is drawn from its
+                    // device size onto imageRect; the crop is cut and drawn
+                    // on that same scale.
+                    g.imageWidth = ceil(g.imageRect.width() * dpr);
+                    g.imageHeight = ceil(g.imageRect.height() * dpr);
+                    g.scaleX = g.imageRect.width() / g.imageWidth;
+                    g.scaleY = g.imageRect.height() / g.imageHeight;
+                    g.crop = Unit::Rect(floor((g.rect.x() - dx) / g.scaleX) - 1,
+                                        floor((g.rect.y() - dy) / g.scaleY) - 1,
+                                        0, 0);
+                    g.crop.setWidth(ceil((g.rect.maxX() - dx) / g.scaleX) + 1 -
+                                    g.crop.x());
+                    g.crop.setHeight(ceil((g.rect.maxY() - dy) / g.scaleY) + 1 -
+                                     g.crop.y());
+                    g.crop.intersect(
+                        Unit::Rect(0, 0, g.imageWidth, g.imageHeight));
+                    return g;
+                };
+                const Geometry real =
+                    geometry(paddingRect.width(), paddingRect.height());
+                const int iw = real.interiorRect.width();
+                const int ih = real.interiorRect.height();
 
                 BoxShadowNinePatch ninePatch(wv, true, shadowColor,
                                              shadow->radius());
                 BorderRadiusFixedData radii(0, 0, 0, 0, 0, 0, 0, 0);
                 if (hasFrameBorderRadius()) {
-                    radii = computeFixedBorderRadius(LayoutRect(ix, iy, iw, ih),
-                                                     sd, true);
+                    radii = computeFixedBorderRadius(
+                        LayoutRect(real.interiorRect.x(), real.interiorRect.y(),
+                                   iw, ih),
+                        sd, true);
                 }
-                if (isWholePixels(shadow->offsetX(), shadow->offsetY(), sd) &&
-                    ninePatch.fit(iw, ih, radii)) {
+                ninePatch.measure(radii);
+                const bool wholePixels =
+                    isWholePixels(shadow->offsetX(), shadow->offsetY(), sd);
+                const bool fitsAcross = ninePatch.fitsAcross(iw);
+                const bool fitsDown = ninePatch.fitsDown(ih);
+                if (wholePixels && fitsAcross && fitsDown) {
                     LayoutUnit prx = paddingRect.x();
                     LayoutUnit pry = paddingRect.y();
                     Unit::Rect clipRect(
@@ -1698,8 +1956,10 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                     // The hole, where the full-size image below puts it.
                     const int reach = ninePatch.margin();
                     Unit::Rect outerRect(
-                        ix + std::min(shadow->offsetX(), 0.f) - reach,
-                        iy + std::min(shadow->offsetY(), 0.f) - reach,
+                        real.interiorRect.x() +
+                            std::min(shadow->offsetX(), 0.f) - reach,
+                        real.interiorRect.y() +
+                            std::min(shadow->offsetY(), 0.f) - reach,
                         iw + reach * 2, ih + reach * 2);
                     // Beyond the reach of the hole the shadow is solid: the
                     // padding box without the part of it the patch covers.
@@ -1722,52 +1982,59 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                     continue;
                 }
 
-                Unit::Rect exteriorRect;
-                exteriorRect.unite(borderRect);
-                exteriorRect.unite(shadowRect);
-                exteriorRect.unite(interiorRect);
-
-                // Create image buffer bigger than paddingbox+ shadowBox
-                const float margin = 4.0f;
-                const float half = 2.0f;
-
-                // Whole pixels, so that the mask draws one to one: a shape
-                // baked into it would blur under resampling.
-                Unit::Rect imageRect(0, 0, ceil(exteriorRect.width() + margin),
-                                     ceil(exteriorRect.height() + margin));
-
-                int xx = 0, yy = 0, ww = 0, hh = 0;
-                LayoutUnit rx = paddingRect.x();
-                LayoutUnit ry = paddingRect.y();
-                xx = rx.floor();
-                yy = ry.floor();
-                ww = snapSizeToPixel(paddingRect.width(), rx);
-                hh = snapSizeToPixel(paddingRect.height(), ry);
-                Unit::Rect rect(xx, yy, ww, hh);
-
-                float dx =
-                    (shadow->offsetX() < 0) ? -half + shadow->offsetX() : -half;
-                float dy =
-                    (shadow->offsetY() < 0) ? -half + shadow->offsetY() : -half;
-
-                // Only the padding box shows of the image, so that is the
-                // part that is kept, with a pixel around it for the sampling
-                // at its edges. The image is drawn from its device size onto
-                // imageRect; the crop is cut and drawn on that same scale.
-                const float dpr = wv->screenInfo().devicePixelRatio;
-                const size_t imageWidth = ceil(imageRect.width() * dpr);
-                const size_t imageHeight = ceil(imageRect.height() * dpr);
-                const float scaleX = imageRect.width() / imageWidth;
-                const float scaleY = imageRect.height() / imageHeight;
-                Unit::Rect crop(floor((rect.x() - dx) / scaleX) - 1,
-                                floor((rect.y() - dy) / scaleY) - 1, 0, 0);
-                crop.setWidth(ceil((rect.maxX() - dx) / scaleX) + 1 - crop.x());
-                crop.setHeight(ceil((rect.maxY() - dy) / scaleY) + 1 -
-                               crop.y());
-                crop.intersect(Unit::Rect(0, 0, imageWidth, imageHeight));
+                // A strip when only one axis of the hole is too short: the
+                // mask is that of a padding box whose hole is just long
+                // enough for the caps along the other axis. The caps are
+                // measured from the edges of the crop.
+                int axis = wholePixels && !hasPercentBorderRadius(this)
+                               ? shadowStripAxis(fitsAcross, fitsDown)
+                               : -1;
+                Geometry made = real;
+                float capStart = 0;
+                float capEnd = 0;
+                if (axis >= 0) {
+                    // With the fraction of the padding box's own length,
+                    // so that the hole and the crop snap to pixels the way
+                    // they do for the box.
+                    const float length =
+                        axis == 0 ? paddingRect.width() : paddingRect.height();
+                    const float holeLength = ninePatch.capStart(axis) +
+                                             ninePatch.capEnd(axis) +
+                                             BoxShadowNinePatch::straightPart +
+                                             length - floor(length);
+                    made = axis == 0 ? geometry(holeLength + sd * 2,
+                                                paddingRect.height())
+                                     : geometry(paddingRect.width(),
+                                                holeLength + sd * 2);
+                    if (made.paddingRect.width() <= 0 ||
+                        made.paddingRect.height() <= 0) {
+                        axis = -1;
+                        made = real;
+                    }
+                    // From the crop's start to the end of the start cap, in
+                    // the same place in both masks; the end cap likewise
+                    // from the crop's end.
+                    if (axis == 0) {
+                        capStart = made.interiorRect.x() +
+                                   ninePatch.capStart(0) - dx -
+                                   made.crop.x() * made.scaleX;
+                        capEnd = made.crop.maxX() * made.scaleX -
+                                 (made.interiorRect.maxX() -
+                                  ninePatch.capEnd(0) - dx);
+                    } else {
+                        capStart = made.interiorRect.y() +
+                                   ninePatch.capStart(1) - dy -
+                                   made.crop.y() * made.scaleY;
+                        capEnd = made.crop.maxY() * made.scaleY -
+                                 (made.interiorRect.maxY() -
+                                  ninePatch.capEnd(1) - dy);
+                    }
+                }
 
                 Optional<BoxShadowImageKey> cacheKey = boxShadowImageKey(
-                    this, *shadow, BoxShadowImageKind::Inset, dpr);
+                    this, *shadow, BoxShadowImageKind::Inset, dpr,
+                    made.paddingRect.width() + borderWidth(),
+                    made.paddingRect.height() + borderHeight());
                 BufferedNativeImageData* nativeImage =
                     cacheKey ? wv->lookupBoxShadowImage(cacheKey.value())
                              : nullptr;
@@ -1775,19 +2042,20 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
 
                 if (!nativeImage) {
                     nativeImage = blurredShadowMask(
-                        wv, imageWidth, imageHeight, shadow->radius() * dpr / 2,
-                        [&](Canvas* cv) {
+                        wv, made.imageWidth, made.imageHeight,
+                        shadow->radius() * dpr / 2, [&](Canvas* cv) {
                             // Draw an outline of Image
                             cv->beginPath();
-                            cv->rect(imageRect);
+                            cv->rect(made.imageRect);
                             cv->closePath();
 
                             cv->translate(half, half);
 
                             // Draw a shadow box that will not be filled.
-                            const LayoutRect rect(
-                                interiorRect.x(), interiorRect.y(),
-                                interiorRect.width(), interiorRect.height());
+                            const LayoutRect rect(made.interiorRect.x(),
+                                                  made.interiorRect.y(),
+                                                  made.interiorRect.width(),
+                                                  made.interiorRect.height());
                             if (hasFrameBorderRadius()) {
                                 // apply inner border radius line(anti-clock)
                                 applyBorderRadius(cv, rect, sd, true);
@@ -1799,12 +2067,12 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                         });
 
                     BufferedNativeImageData* cropped =
-                        BufferedNativeImageData::createAlphaMask(crop.width(),
-                                                                 crop.height());
+                        BufferedNativeImageData::createAlphaMask(
+                            made.crop.width(), made.crop.height());
                     const uint8_t* src =
                         nativeImage->data() +
-                        (size_t)crop.y() * nativeImage->stride() +
-                        (size_t)crop.x();
+                        (size_t)made.crop.y() * nativeImage->stride() +
+                        (size_t)made.crop.x();
                     for (size_t row = 0; row < cropped->height(); row++) {
                         memcpy(cropped->data() + row * cropped->stride(),
                                src + row * nativeImage->stride(),
@@ -1816,21 +2084,30 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
 
                 canvas->save();
                 if (hasFrameBorderRadius()) {
-                    const LayoutRect r(rect.x(), rect.y(), rect.width(),
-                                       rect.height());
+                    const LayoutRect r(real.rect.x(), real.rect.y(),
+                                       real.rect.width(), real.rect.height());
                     applyBorderRadiusClippingIfNeeds(canvas, r, 0, true);
                 } else {
-                    canvas->clip(rect);
+                    canvas->clip(real.rect);
                 }
 
                 canvas->translate(dx, dy);
-                canvas->fillWithImageAlpha(
-                    nativeImage,
-                    Unit::Rect(0, 0, nativeImage->width(),
-                               nativeImage->height()),
-                    Unit::Rect(crop.x() * scaleX, crop.y() * scaleY,
-                               crop.width() * scaleX, crop.height() * scaleY),
-                    shadowColor);
+                const Unit::Rect dst(real.crop.x() * real.scaleX,
+                                     real.crop.y() * real.scaleY,
+                                     real.crop.width() * real.scaleX,
+                                     real.crop.height() * real.scaleY);
+                if (axis < 0) {
+                    canvas->fillWithImageAlpha(
+                        nativeImage,
+                        Unit::Rect(0, 0, nativeImage->width(),
+                                   nativeImage->height()),
+                        dst, shadowColor);
+                } else {
+                    canvas->setNeedsNoneAntialias();
+                    drawShadowMaskStrip(canvas, nativeImage, dst, axis,
+                                        capStart, capEnd, made.scaleX,
+                                        made.scaleY, shadowColor);
+                }
 
                 canvas->restore();
 
