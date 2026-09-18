@@ -34,10 +34,12 @@ namespace Starfish {
 const float ShadowBlur::RADIUS_LIMIT = 500.f;
 
 ShadowBlur::ShadowBlur(uint8_t* source, const size_t& width,
-                       const size_t& height, const size_t& stride)
+                       const size_t& height, const size_t& stride,
+                       size_t channels)
     : m_width(width)
     , m_height(height)
     , m_stride(stride)
+    , m_channels(channels)
     , m_source(source)
     , m_workspace(new uint8_t[m_stride * m_height],
                   [](uint8_t* data) { delete[] data; })
@@ -153,28 +155,89 @@ static void boxBlurColumns(const uint8_t* src, uint8_t* dst,
     }
 }
 
+// The two passes for an alpha mask, one byte per pixel.
+static void boxBlurRowsAlpha(const uint8_t* src, uint8_t* dst,
+                             unsigned kernelSize, int left, int right,
+                             int stride, int width, int height)
+{
+    const uint64_t m = reciprocalOf(kernelSize);
+    const int last = width - 1;
+    for (int y = 0; y < height; ++y) {
+        const uint8_t* s = src + y * stride;
+        uint8_t* d = dst + y * stride;
+        uint32_t sum = 0;
+        for (int i = -left; i < right; ++i) {
+            sum += s[std::min(std::max(i, 0), last)];
+        }
+        for (int x = 0; x < width; ++x) {
+            d[x] = static_cast<uint8_t>((sum * m) >> 32);
+            sum += s[std::min(x + right, last)] - s[std::max(x - left, 0)];
+        }
+    }
+}
+
+static void boxBlurColumnsAlpha(const uint8_t* src, uint8_t* dst,
+                                unsigned kernelSize, int top, int bottom,
+                                int stride, int width, int height,
+                                uint32_t* sums)
+{
+    const uint64_t m = reciprocalOf(kernelSize);
+    const int last = height - 1;
+    memset(sums, 0, sizeof(uint32_t) * width);
+    for (int i = -top; i < bottom; ++i) {
+        const uint8_t* s = src + std::min(std::max(i, 0), last) * stride;
+        for (int x = 0; x < width; ++x) {
+            sums[x] += s[x];
+        }
+    }
+    for (int y = 0; y < height; ++y) {
+        uint8_t* d = dst + y * stride;
+        for (int x = 0; x < width; ++x) {
+            d[x] = static_cast<uint8_t>((sums[x] * m) >> 32);
+        }
+        const uint8_t* out = src + std::max(y - top, 0) * stride;
+        const uint8_t* in = src + std::min(y + bottom, last) * stride;
+        for (int x = 0; x < width; ++x) {
+            sums[x] += in[x] - out[x];
+        }
+    }
+}
+
 inline void standardBoxBlur(uint8_t* fromBuffer, uint8_t* toBuffer,
                             unsigned kernelSizeX, unsigned kernelSizeY,
-                            int stride, int imageWidth, int imageHeight)
+                            int stride, int imageWidth, int imageHeight,
+                            int channels)
 {
     int dxLeft = 0;
     int dxRight = 0;
     int dyLeft = 0;
     int dyRight = 0;
-    std::unique_ptr<uint32_t[]> columnSums(new uint32_t[imageWidth * 4]);
+    std::unique_ptr<uint32_t[]> columnSums(new uint32_t[imageWidth * channels]);
 
     for (int i = 0; i < 3; ++i) {
         if (kernelSizeX) {
             kernelPosition(i, kernelSizeX, dxLeft, dxRight);
-            boxBlurRows(fromBuffer, toBuffer, kernelSizeX, dxLeft, dxRight,
-                        stride, imageWidth, imageHeight);
+            if (channels == 1) {
+                boxBlurRowsAlpha(fromBuffer, toBuffer, kernelSizeX, dxLeft,
+                                 dxRight, stride, imageWidth, imageHeight);
+            } else {
+                boxBlurRows(fromBuffer, toBuffer, kernelSizeX, dxLeft, dxRight,
+                            stride, imageWidth, imageHeight);
+            }
             std::swap(fromBuffer, toBuffer);
         }
 
         if (kernelSizeY) {
             kernelPosition(i, kernelSizeY, dyLeft, dyRight);
-            boxBlurColumns(fromBuffer, toBuffer, kernelSizeY, dyLeft, dyRight,
-                           stride, imageWidth, imageHeight, columnSums.get());
+            if (channels == 1) {
+                boxBlurColumnsAlpha(fromBuffer, toBuffer, kernelSizeY, dyLeft,
+                                    dyRight, stride, imageWidth, imageHeight,
+                                    columnSums.get());
+            } else {
+                boxBlurColumns(fromBuffer, toBuffer, kernelSizeY, dyLeft,
+                               dyRight, stride, imageWidth, imageHeight,
+                               columnSums.get());
+            }
             std::swap(fromBuffer, toBuffer);
         }
     }
@@ -212,6 +275,6 @@ void ShadowBlur::process(float stdDeviation)
     LongTaskFinder timer("ShadowBlur::process", 1);
     int kernelSize = computeKernelSizeAtStdDeviation(stdDeviation);
     standardBoxBlur(m_source, m_workspace.get(), kernelSize, kernelSize,
-                    m_stride, m_width, m_height);
+                    m_stride, m_width, m_height, m_channels);
 }
 } // namespace Starfish

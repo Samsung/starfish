@@ -26,8 +26,9 @@ namespace Starfish {
 
 class ShadowBlur {
 public:
+    // channels is 4 for a premultiplied ARGB image, 1 for an alpha mask.
     ShadowBlur(uint8_t* source, const size_t& width, const size_t& height,
-               const size_t& stride);
+               const size_t& stride, size_t channels = 4);
     ~ShadowBlur();
     void process(float stdDeviation);
 
@@ -38,6 +39,7 @@ private:
     size_t m_width;
     size_t m_height;
     size_t m_stride;
+    size_t m_channels;
     uint8_t* m_source;
     std::unique_ptr<uint8_t, void (*)(uint8_t*)> m_workspace;
 };
