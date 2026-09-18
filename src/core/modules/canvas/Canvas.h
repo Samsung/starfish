@@ -672,6 +672,15 @@ public:
     {
         STARFISH_UNSUPPORTED("CanvasPath function: fillPreserve");
     }
+    // Fills dst with color through the alpha of the src part of data, scaled
+    // onto dst as drawImage() would draw it.
+    virtual void fillWithImageAlpha(NativeImageData* data,
+                                    const Unit::Rect& src,
+                                    const Unit::Rect& dst,
+                                    const Unit::Color& color)
+    {
+        STARFISH_UNSUPPORTED("Canvas function: fillWithImageAlpha");
+    }
 #if defined(STARFISH_ENABLE_TEST)
     virtual void dump(const char* path)
     {

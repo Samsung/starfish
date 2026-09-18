@@ -37,16 +37,18 @@ public:
             BufferedNativeImageData::nativeImageDataGCKind());
     }
 
-    BufferedNativeImageDataImpl(size_t w, size_t h)
+    BufferedNativeImageDataImpl(size_t w, size_t h, bool alphaMask = false)
+        : m_alphaMask(alphaMask)
     {
-        m_image = (unsigned char*)malloc(w * h * 4);
+        // An alpha mask row is padded to four bytes, as cairo lays it out.
+        m_stride = alphaMask ? ((w + 3) & ~(size_t)3) : w * 4;
+        m_image = (unsigned char*)malloc(m_stride * h);
         STARFISH_RELEASE_ASSERT(m_image);
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
         m_imageSurface = nullptr;
 #endif
         m_width = w;
         m_height = h;
-        m_stride = w * 4;
         initInternalSurface();
     }
 
@@ -92,8 +94,9 @@ public:
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
         if (m_width && m_height) {
             m_imageSurface = cairo_image_surface_create_for_data(
-                (unsigned char*)m_image, CAIRO_FORMAT_ARGB32, m_width, m_height,
-                m_stride);
+                (unsigned char*)m_image,
+                m_alphaMask ? CAIRO_FORMAT_A8 : CAIRO_FORMAT_ARGB32, m_width,
+                m_height, m_stride);
         }
 #endif
     }
@@ -141,6 +144,7 @@ protected:
     size_t m_width;
     size_t m_stride;
     size_t m_height;
+    bool m_alphaMask;
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
     cairo_surface_t* m_imageSurface;
 #endif
@@ -150,5 +154,11 @@ BufferedNativeImageData* BufferedNativeImageData::create(size_t width,
                                                          size_t height)
 {
     return new BufferedNativeImageDataImpl(width, height);
+}
+
+BufferedNativeImageData* BufferedNativeImageData::createAlphaMask(size_t width,
+                                                                  size_t height)
+{
+    return new BufferedNativeImageDataImpl(width, height, true);
 }
 } // namespace Starfish
