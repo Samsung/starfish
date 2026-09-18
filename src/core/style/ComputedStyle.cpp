@@ -2708,10 +2708,25 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                         ComputedStyleDamage::ComputedStyleDamagePainting |
                         damage);
                 } else {
-                    damage = static_cast<ComputedStyleDamage>(
-                        ComputedStyleDamage::
-                            ComputedStyleDamageEstablishesStackingContext |
-                        damage);
+                    // Whether a box establishes a stacking context follows
+                    // the presence of mask layers (see
+                    // Frame::computeStackingContextFlags), not where the
+                    // mask sits: one that only moves, resizes or repeats
+                    // differently leaves the context tree as it stands and
+                    // only paints differently, so it does not have to be
+                    // torn down and rebuilt.
+                    if (oldStyle->maskLayerSize() !=
+                        newStyle->maskLayerSize()) {
+                        damage = static_cast<ComputedStyleDamage>(
+                            ComputedStyleDamage::
+                                ComputedStyleDamageEstablishesStackingContext |
+                            damage);
+                    } else {
+                        damage = static_cast<ComputedStyleDamage>(
+                            ComputedStyleDamage::
+                                ComputedStyleDamageComputeStackingContextProperties |
+                            damage);
+                    }
                     damage = static_cast<ComputedStyleDamage>(
                         ComputedStyleDamage::ComputedStyleDamagePainting |
                         damage);
