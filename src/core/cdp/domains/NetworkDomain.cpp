@@ -50,6 +50,7 @@
 #include <vector>
 #include <regex>
 #include <algorithm>
+#include <map>
 
 namespace Starfish {
 
@@ -64,7 +65,34 @@ namespace {
         int64_t expires = 0; // epoch seconds, 0 == session cookie in the jar
         std::string name;
         std::string value;
+        // Chrome-specific fields not in the Netscape jar format. Stored in a
+        // side-channel (g_cookieExtra) so they survive the CDP round-trip
+        // (setCookies → getCookies) even though the jar can't persist them.
+        std::string priority = "Medium";    // VeryLow/Low/Medium/High/VeryHigh
+        int sourcePort = 0;                 // 0 = unspecified
+        std::string sourceScheme = "Unset"; // Unset/Secure/NonSecure
     };
+
+    // Side-channel for cookie fields the Netscape jar can't store.
+    // Key: domain + "\t" + path + "\t" + name (lowercased domain).
+    struct CookieExtra {
+        std::string priority = "Medium";
+        int sourcePort = 0;
+        std::string sourceScheme = "Unset";
+    };
+    static std::map<std::string, CookieExtra> g_cookieExtra;
+
+    static std::string cookieExtraKey(const std::string& domain,
+                                      const std::string& path,
+                                      const std::string& name)
+    {
+        std::string d;
+        d.reserve(domain.size());
+        for (char c : domain) {
+            d.push_back((char)std::tolower((unsigned char)c));
+        }
+        return d + "\t" + (path.empty() ? "/" : path) + "\t" + name;
+    }
 
     // Split a tab-separated Netscape cookie line into its 7 fields.
     // Returns false if the line is not a cookie record (comment etc.).
@@ -148,6 +176,14 @@ namespace {
         line += e.value;
         NetworkSharedResourceManager::getInstance()->addCookieLine(
             line.c_str());
+
+        // Store Chrome-specific fields the jar can't hold, so getCookies can
+        // return them (the CDP round-trip: setCookies → getCookies).
+        std::string key = cookieExtraKey(e.domain, path, e.name);
+        CookieExtra& extra = g_cookieExtra[key];
+        extra.priority = e.priority;
+        extra.sourcePort = e.sourcePort;
+        extra.sourceScheme = e.sourceScheme;
     }
 
     static std::string paramStr(CDPCommand& cmd, const char* name)
@@ -213,6 +249,44 @@ namespace {
         return p ? p->toUTF8NonGCString() : std::string();
     }
 
+    // Extract the explicit port from a URL (0 if none).
+    static int urlPort(const std::string& url)
+    {
+        if (url.empty()) {
+            return 0;
+        }
+        // scheme://host:port/path → find ':' after host
+        size_t schemeEnd = url.find("://");
+        if (schemeEnd == std::string::npos) {
+            return 0;
+        }
+        size_t portStart = url.find(':', schemeEnd + 3);
+        size_t pathStart = url.find('/', schemeEnd + 3);
+        if (portStart == std::string::npos) {
+            return 0;
+        }
+        if (pathStart != std::string::npos && portStart > pathStart) {
+            return 0; // ':' is in the path, not the port
+        }
+        std::string portStr =
+            url.substr(portStart + 1, pathStart == std::string::npos
+                                          ? std::string::npos
+                                          : pathStart - portStart - 1);
+        return (int)strtol(portStr.c_str(), nullptr, 10);
+    }
+
+    // Is the URL's scheme https?
+    static bool isHttpsUrl(const std::string& url)
+    {
+        return url.compare(0, 8, "https://") == 0;
+    }
+
+    // Default port for a URL scheme.
+    static int defaultPort(bool isHttps)
+    {
+        return isHttps ? 443 : 80;
+    }
+
     // Does the jar-stored cookie domain cover host? (RFC6265 domain-match.)
     static bool cookieDomainMatches(const std::string& cookieDomain,
                                     const std::string& host)
@@ -275,6 +349,40 @@ namespace {
         c.AddMember("secure", e.secure, alloc);
         c.AddMember("session", session, alloc);
         c.AddMember("sameSite", "None", alloc);
+
+        // Chrome-specific fields: look up the side-channel extras stored when
+        // the cookie was set via CDP. If not found (cookie came from a real
+        // HTTP response, not CDP), defaults are used.
+        std::string key = cookieExtraKey(e.domain, path, e.name);
+        auto it = g_cookieExtra.find(key);
+        if (it != g_cookieExtra.end()) {
+            c.AddMember("priority",
+                        rapidjson::Value(it->second.priority.c_str(),
+                                         it->second.priority.size(), alloc),
+                        alloc);
+            // sourcePort=0 means "unspecified": report the default port for
+            // the source scheme (443 for Secure, 80 for NonSecure).
+            int port = it->second.sourcePort;
+            if (port == 0) {
+                port = (it->second.sourceScheme == "Secure") ? 443 : 80;
+            }
+            c.AddMember("sourcePort", port, alloc);
+            c.AddMember("sourceScheme",
+                        rapidjson::Value(it->second.sourceScheme.c_str(),
+                                         it->second.sourceScheme.size(), alloc),
+                        alloc);
+        } else {
+            c.AddMember("priority", "Medium", alloc);
+            // The cookie came from a real HTTP response, so the jar is all
+            // there is: it keeps the Secure flag but not the URL that set
+            // the cookie. Report the default port of the scheme the flag
+            // implies. A cookie set on a non-default port is therefore
+            // reported with the default one.
+            c.AddMember("sourcePort", e.secure ? 443 : 80, alloc);
+            std::string ss = e.secure ? "Secure" : "NonSecure";
+            c.AddMember("sourceScheme",
+                        rapidjson::Value(ss.c_str(), ss.size(), alloc), alloc);
+        }
         arr.PushBack(c, alloc);
     }
 
@@ -362,6 +470,41 @@ namespace {
         }
         if (cv.HasMember("expires") && cv["expires"].IsNumber()) {
             e.expires = (int64_t)cv["expires"].GetDouble();
+        }
+        // Chrome-specific cookie fields (not in the Netscape jar format).
+        if (cv.HasMember("priority") && cv["priority"].IsString()) {
+            std::string p = cv["priority"].GetString();
+            if (p == "VeryLow" || p == "Low" || p == "Medium" || p == "High" ||
+                p == "VeryHigh") {
+                e.priority = p;
+            } else {
+                e.priority = "Medium"; // invalid → default
+            }
+        }
+        if (cv.HasMember("sourcePort") && cv["sourcePort"].IsInt()) {
+            e.sourcePort = cv["sourcePort"].GetInt();
+        } else {
+            // Unspecified: default to the scheme's default port, NOT the URL's
+            // explicit port (Chromium behaviour: sourcePort=0 is stored, and
+            // getCookies reports the default port for the source scheme).
+            e.sourcePort = 0;
+        }
+        if (cv.HasMember("sourceScheme") && cv["sourceScheme"].IsString()) {
+            std::string s = cv["sourceScheme"].GetString();
+            if (s == "Unset" || s == "Secure" || s == "NonSecure") {
+                e.sourceScheme = s;
+            }
+        } else {
+            // Unspecified: derive from URL scheme, falling back to the secure
+            // attribute.  https→Secure, http+secure→Secure, http→NonSecure.
+            bool isHttps = !url.empty() && isHttpsUrl(url);
+            if (isHttps) {
+                e.sourceScheme = "Secure";
+            } else if (e.secure) {
+                e.sourceScheme = "Secure";
+            } else {
+                e.sourceScheme = "NonSecure";
+            }
         }
         return e;
     }
@@ -1004,6 +1147,28 @@ void NetworkDomain::processMessage(CDPCommand& cmd, const std::string& method)
         e.expires = hasNumber(cmd, "expires")
                         ? (int64_t)paramNum(cmd, "expires", 0)
                         : 0;
+        // Chrome-specific fields.
+        if (cmd.params() && cmd.params()->HasMember("priority") &&
+            (*cmd.params())["priority"].IsString()) {
+            std::string p = (*cmd.params())["priority"].GetString();
+            if (p == "VeryLow" || p == "Low" || p == "Medium" || p == "High" ||
+                p == "VeryHigh") {
+                e.priority = p;
+            } else {
+                e.priority = "Medium";
+            }
+        }
+        if (cmd.params() && cmd.params()->HasMember("sourcePort") &&
+            (*cmd.params())["sourcePort"].IsInt()) {
+            e.sourcePort = (*cmd.params())["sourcePort"].GetInt();
+        }
+        if (cmd.params() && cmd.params()->HasMember("sourceScheme") &&
+            (*cmd.params())["sourceScheme"].IsString()) {
+            std::string sch = (*cmd.params())["sourceScheme"].GetString();
+            if (sch == "Unset" || sch == "Secure" || sch == "NonSecure") {
+                e.sourceScheme = sch;
+            }
+        }
         bool ok = !e.name.empty() && !e.domain.empty();
         if (ok) {
             writeCookieLine(e);
@@ -1021,15 +1186,9 @@ void NetworkDomain::processMessage(CDPCommand& cmd, const std::string& method)
             (*cmd.params())["cookies"].IsArray()) {
             rapidjson::Value& cookies = (*cmd.params())["cookies"];
             std::string curHost = urlHost(currentUrl(wv));
-            for (rapidjson::SizeType i = 0; i < cookies.Size(); ++i) {
-                rapidjson::Value& cv = cookies[i];
-                if (!cv.IsObject()) {
-                    continue;
-                }
-                CookieEntry e = cookieFromJson(cv, curHost, std::string());
-                if (!e.name.empty() && !e.domain.empty()) {
-                    writeCookieLine(e);
-                }
+            if (!writeCookieArray(cookies, curHost, std::string())) {
+                cmd.sendError(-32602, "Invalid cookie fields");
+                return;
             }
         }
         cmd.sendResultEmpty();
@@ -1562,23 +1721,35 @@ void NetworkDomain::appendAllCookies(rapidjson::Value& arr,
     }
 }
 
-void NetworkDomain::writeCookieArray(const rapidjson::Value& cookies,
+bool NetworkDomain::writeCookieArray(const rapidjson::Value& cookies,
                                      const std::string& currentHost,
                                      const std::string& currentPath)
 {
     if (!cookies.IsArray()) {
-        return;
+        return true;
     }
     for (rapidjson::SizeType i = 0; i < cookies.Size(); ++i) {
         const rapidjson::Value& cv = cookies[i];
         if (!cv.IsObject()) {
             continue;
         }
+        // Validate sourcePort vs URL port: if both are specified they must
+        // match (Chromium rejects mismatches with "Invalid cookie fields").
+        if (cv.HasMember("sourcePort") && cv["sourcePort"].IsInt() &&
+            cv.HasMember("url") && cv["url"].IsString()) {
+            int sp = cv["sourcePort"].GetInt();
+            std::string u = cv["url"].GetString();
+            int urlP = urlPort(u);
+            if (urlP != 0 && sp != 0 && sp != urlP) {
+                return false;
+            }
+        }
         CookieEntry e = cookieFromJson(cv, currentHost, currentPath);
         if (!e.name.empty() && !e.domain.empty()) {
             writeCookieLine(e);
         }
     }
+    return true;
 }
 
 void NetworkDomain::clearAllCookies()
