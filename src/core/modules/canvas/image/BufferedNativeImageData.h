@@ -41,6 +41,10 @@ public:
 
     static BufferedNativeImageData* create(size_t actualDeviceWidth,
                                            size_t actualDeviceHeight);
+    // One byte of coverage per pixel, no colour: the shape of a mask that
+    // Canvas::fillWithImageAlpha() paints a colour through.
+    static BufferedNativeImageData* createAlphaMask(size_t actualDeviceWidth,
+                                                    size_t actualDeviceHeight);
     static BufferedNativeImageData* create(
         float devicePixelRatio, size_t width,
         size_t height); // this function will apply

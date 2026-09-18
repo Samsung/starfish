@@ -700,6 +700,7 @@ public:
         checkError();
         Canvas::save();
         cairo_save(m_canvas);
+        m_clipHasHole.push_back(m_clipHasHole.back());
     }
 
     // pop state stack and restore state
@@ -738,6 +739,9 @@ public:
         }
         Canvas::restore();
         cairo_restore(m_canvas);
+        if (m_clipHasHole.size() > 1) {
+            m_clipHasHole.pop_back();
+        }
     }
 
     // transformations (default transform is the identity matrix)
@@ -839,6 +843,11 @@ public:
 
     virtual void clip(const Unit::Rect& rt) override
     {
+        // With a path already there the clip is that path and the rectangle
+        // together: one inside the other, as a rule.
+        if (cairo_has_current_point(m_canvas)) {
+            m_clipHasHole.back() = true;
+        }
         cairo_rectangle(m_canvas, rt.x(), rt.y(), rt.width(), rt.height());
         cairo_clip(m_canvas);
     }
@@ -1541,6 +1550,104 @@ public:
         }
     }
 
+    virtual void fillWithImageAlpha(NativeImageData* data,
+                                    const Unit::Rect& src,
+                                    const Unit::Rect& dst,
+                                    const Unit::Color& color) override
+    {
+        if (lastState()->m_visible == false || dst.width() == 0 ||
+            dst.height() == 0) {
+            return;
+        }
+        const float alpha = color.A() * lastState()->m_globalAlpha;
+
+        // cairo composites a mask through a clip with a hole - a border box
+        // cut out of a shadow's rectangle - by rows when the hole's edges
+        // fall between pixels: the partial coverage of an edge spills along
+        // its row. Under such a clip the colour is put on the src part of
+        // the mask here, and that image is painted as any image is, which
+        // composites right.
+        const bool clipIsRectangles = !m_clipHasHole.back();
+
+        cairo_surface_t* srcImage = (cairo_surface_t*)data->unwrap();
+        STARFISH_ASSERT(srcImage != nullptr);
+        cairo_surface_t* image = nullptr;
+        if (!clipIsRectangles) {
+            const size_t stride =
+                cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, src.width());
+            if (m_tintedImage.size() < stride * (size_t)src.height()) {
+                m_tintedImage.resize(stride * (size_t)src.height());
+            }
+            image = cairo_image_surface_create_for_data(
+                m_tintedImage.data(), CAIRO_FORMAT_ARGB32, src.width(),
+                src.height(), stride);
+            // Premultiplied, as cairo keeps ARGB32, with pixman's rounding:
+            // one table per channel from coverage to value.
+            auto mul = [](uint32_t a, uint32_t b) -> uint8_t {
+                uint32_t t = a * b + 128;
+                return (t + (t >> 8)) >> 8;
+            };
+            const uint32_t a = std::min<uint32_t>(255, lroundf(alpha * 255));
+            const uint32_t channel[4] = { mul(color.b(), a), mul(color.g(), a),
+                                          mul(color.r(), a), a };
+            uint8_t table[4][256];
+            for (size_t c = 0; c < 4; c++) {
+                for (uint32_t coverage = 0; coverage < 256; coverage++) {
+                    table[c][coverage] = mul(channel[c], coverage);
+                }
+            }
+            uint8_t* d = m_tintedImage.data();
+            const uint8_t* m = data->data() + (size_t)src.y() * data->stride() +
+                               (size_t)src.x();
+            for (size_t y = 0; y < (size_t)src.height(); y++) {
+                uint8_t* row = d + y * stride;
+                const uint8_t* coverage = m + y * data->stride();
+                for (size_t x = 0; x < (size_t)src.width(); x++) {
+                    row[x * 4] = table[0][coverage[x]];
+                    row[x * 4 + 1] = table[1][coverage[x]];
+                    row[x * 4 + 2] = table[2][coverage[x]];
+                    row[x * 4 + 3] = table[3][coverage[x]];
+                }
+            }
+            cairo_surface_mark_dirty(image);
+        } else if (src.x() != 0 || src.y() != 0 ||
+                   src.width() != data->width() ||
+                   src.height() != data->height()) {
+            image = cairo_surface_create_for_rectangle(
+                srcImage, src.x(), src.y(), src.width(), src.height());
+        }
+
+        cairo_save(m_canvas);
+        cairo_pattern_t* pattern =
+            cairo_pattern_create_for_surface(image ? image : srcImage);
+        cairo_translate(m_canvas, dst.x(), dst.y());
+        cairo_matrix_t matrix;
+        cairo_matrix_init_identity(&matrix);
+        cairo_matrix_scale(&matrix, src.width() / dst.width(),
+                           src.height() / dst.height());
+        cairo_pattern_set_matrix(pattern, &matrix);
+        setImageRenderingModeToPattern(
+            pattern, ImageRenderingValue::ImageRenderingAutoValue);
+        cairo_pattern_set_extend(pattern, CAIRO_EXTEND_PAD);
+
+        cairo_rectangle(m_canvas, 0, 0, dst.width(), dst.height());
+        cairo_clip(m_canvas);
+        if (clipIsRectangles) {
+            cairo_set_source_rgba(m_canvas, color.R(), color.G(), color.B(),
+                                  alpha);
+            cairo_mask(m_canvas, pattern);
+        } else {
+            cairo_set_source(m_canvas, pattern);
+            cairo_paint(m_canvas);
+        }
+
+        cairo_pattern_destroy(pattern);
+        if (image) {
+            cairo_surface_destroy(image);
+        }
+        cairo_restore(m_canvas);
+    }
+
     virtual void drawImageInner(NativeImageData* data, const Unit::Rect& src,
                                 const Unit::Rect& dst,
                                 const DrawImageInfo& borderinfo,
@@ -2099,13 +2206,33 @@ public:
         stroke();
     }
 
+    // A path of several subpaths clips to one with the others cut out of it.
+    bool pathHasSeveralSubpaths()
+    {
+        cairo_path_t* path = cairo_copy_path(m_canvas);
+        size_t subpaths = 0;
+        for (int i = 0; i < path->num_data; i += path->data[i].header.length) {
+            if (path->data[i].header.type == CAIRO_PATH_MOVE_TO) {
+                subpaths++;
+            }
+        }
+        cairo_path_destroy(path);
+        return subpaths > 1;
+    }
+
     virtual void clipPath() override
     {
+        if (pathHasSeveralSubpaths()) {
+            m_clipHasHole.back() = true;
+        }
         cairo_clip(m_canvas);
     }
 
     virtual void clipPathPreserve() override
     {
+        if (pathHasSeveralSubpaths()) {
+            m_clipHasHole.back() = true;
+        }
         cairo_clip_preserve(m_canvas);
     }
 
@@ -2673,6 +2800,11 @@ protected:
     bool m_shouldDestroyCairo;
     bool m_shouldDestroySurface;
     CanvasFlag m_flag{ PlainElement };
+    // Per saved state: whether a clip with a hole - a shape cut out of
+    // another - is in effect. See fillWithImageAlpha().
+    std::vector<bool> m_clipHasHole{ false };
+    // Scratch pixels for the colour put on a mask under such a clip.
+    std::vector<uint8_t> m_tintedImage;
 };
 
 Canvas* Canvas::create(WebView* webView, CanvasSurface* data, CanvasFlag flag)
