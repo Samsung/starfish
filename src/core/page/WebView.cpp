@@ -2618,8 +2618,10 @@ void WebView::accessActiveImageURLsInRenderingSet(
     }
 }
 
-// Enough for the shadows of a screenful of cards; the least recently used
-// image goes first once it is full.
+// Enough for the shadows of a screenful of cards at a device pixel ratio of
+// one; the least recently used image goes first once it is full. The images
+// grow with the square of the ratio, so the capacity does too, which keeps
+// the budget the same per CSS pixel.
 static const size_t boxShadowImageCacheCapacity = 4 * 1024 * 1024;
 // What an entry takes besides its pixels - the surface wrapping them, the
 // image object and its slot in the map. Counted so that a page cycling
@@ -2640,15 +2642,17 @@ BufferedNativeImageData* WebView::lookupBoxShadowImage(
 void WebView::storeBoxShadowImage(const BoxShadowImageKey& key,
                                   BufferedNativeImageData* image)
 {
+    const float dpr = m_screenInfo.devicePixelRatio;
+    const size_t capacity = boxShadowImageCacheCapacity * dpr * dpr;
     size_t bytes =
         image->stride() * image->height() + boxShadowImageCacheEntryOverhead;
-    if (bytes > boxShadowImageCacheCapacity ||
+    if (bytes > capacity ||
         m_boxShadowImageCache.find(key) != m_boxShadowImageCache.end()) {
         delete image;
         return;
     }
     while (!m_boxShadowImageCache.empty() &&
-           m_boxShadowImageCacheBytes + bytes > boxShadowImageCacheCapacity) {
+           m_boxShadowImageCacheBytes + bytes > capacity) {
         auto oldest = m_boxShadowImageCache.begin();
         for (auto iter = m_boxShadowImageCache.begin();
              iter != m_boxShadowImageCache.end(); iter++) {
