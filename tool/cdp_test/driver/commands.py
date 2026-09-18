@@ -61,17 +61,14 @@ def checkable(commands):
             if command["result_keys"]}
 
 
-def reachable(commands):
-    """Commands this layer can actually send and then judge.
+def candidates(commands):
+    """Commands this layer can try without generated parameter values.
 
     A command with a required parameter cannot be sent at all, because the
     protocol says the parameter exists but not where its value comes from.
-    Together with checkable() this leaves 85 of 661.
-
-    Only these belong in the list. The rest are facts about the protocol, not
-    about Starfish: they would never change, so recording them would leave a
-    file where almost every line is noise. The full 661 picture stays in the
-    coverage report, which is derived rather than stored.
+    A command whose parameters are all optional remains a candidate. If their
+    semantics require one of them, the runner discovers the rejected request
+    and leaves that command to the behavior layer.
     """
     return {method for method, command in commands.items()
             if command["result_keys"] and not command["required_params"]}

@@ -16,6 +16,7 @@ from . import client, launcher
 # The Chromium tests are JavaScript, so they run under Node. node/main.mjs
 # is the only part of this suite that is not Python.
 NODE_MAIN = pathlib.Path(__file__).resolve().parent / "node" / "main.mjs"
+PORTABLE_REPOSITORY = "<repo>"
 
 
 def entries(suite_dir):
@@ -39,7 +40,7 @@ def label(entry):
     return entry
 
 
-def run(starfish, suite_dir, entry, timeout):
+def run(starfish, suite_dir, entry, timeout, harness_dir):
     """Run one test and raise AssertionError when the output differs."""
     if not NODE_MAIN.is_file():
         raise RuntimeError("node/main.mjs is missing at %s" % NODE_MAIN)
@@ -55,7 +56,7 @@ def run(starfish, suite_dir, entry, timeout):
             raise RuntimeError("/json/version has no webSocketDebuggerUrl")
         try:
             result = subprocess.run(
-                ["node", str(NODE_MAIN), browser_url, str(suite_dir),
+                ["node", str(NODE_MAIN), browser_url, str(harness_dir),
                  str(test_path), str(int(timeout))],
                 capture_output=True, text=True, timeout=timeout * 3 + 30)
         except subprocess.TimeoutExpired:
@@ -80,7 +81,8 @@ def reason(error):
     expected output, or a test that merely prints "-32601" would be filed as
     a missing method. Each category names what was seen, not why.
     """
-    text = str(error)
+    text = str(error).replace(str(launcher.REPOSITORY_DIR),
+                              PORTABLE_REPOSITORY)
     seen = _observed(text)
     if "HARNESS TIMEOUT" in seen:
         # main.mjs prints this when it runs out of time. What the test was

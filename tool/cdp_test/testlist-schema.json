@@ -2,26 +2,11 @@
   "layer": "schema",
   "revision": "ea39a11d80de9a08ce2af03f52125ed2e462cf84",
   "entries": {
-    "Accessibility.getAXNodeAndAncestors": {
-      "expected": "fail",
-      "category": "failed",
-      "detail": "Accessibility.getAXNodeAndAncestors returned {'code': -32601, 'message': \"'method' wasn't found\"}"
-    },
     "Accessibility.getFullAXTree": {
       "expected": "pass"
     },
-    "Accessibility.getPartialAXTree": {
-      "expected": "fail",
-      "category": "failed",
-      "detail": "Accessibility.getPartialAXTree returned {'code': -32601, 'message': \"'method' wasn't found\"}"
-    },
     "Accessibility.getRootAXNode": {
       "expected": "pass"
-    },
-    "Accessibility.queryAXTree": {
-      "expected": "fail",
-      "category": "failed",
-      "detail": "Accessibility.queryAXTree returned {'code': -32601, 'message': \"'method' wasn't found\"}"
     },
     "Ads.getAdMetrics": {
       "expected": "fail",

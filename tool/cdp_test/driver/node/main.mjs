@@ -50,15 +50,17 @@ const WEB_GLOBALS = [
 // The suite is written for Chromium's web test server, and a test that builds
 // an absolute URL takes the origin from here.
 const TEST_ORIGIN = 'http://127.0.0.1:8000';
+const DUMMY_PAGE_URL =
+  `${TEST_ORIGIN}/inspector-protocol/resources/inspector-protocol-page.html`;
 
 const sandbox = {
   console,
   setTimeout, clearTimeout, setInterval, clearInterval, queueMicrotask,
   URL, URLSearchParams, TextEncoder, TextDecoder,
   DevToolsHost: {
-    // content_shell points this at inspector-protocol-page.html. There is no
-    // such page here, and a blank one is what startBlank means anyway.
-    dummyPageURL: 'about:blank',
+    // Match content_shell's initial page URL. Tests expose this URL through
+    // protocol results even when they replace the page with document.write.
+    dummyPageURL: DUMMY_PAGE_URL,
     sendMessageToEmbedder(json) {
       const message = JSON.parse(json);
       if (message.method === 'dispatchProtocolMessage') {
