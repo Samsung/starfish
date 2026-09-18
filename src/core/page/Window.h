@@ -304,6 +304,12 @@ public:
     void simulateTouchMove(float x, float y);
     void simulateTouchEnd(float x, float y);
     void simulateTouchCancel(float x, float y);
+    // key is a KeyboardEvent.key name ("ArrowDown") or a single printable
+    // character. Pair them: BrowsingContext clears the
+    // keydownEventDefaultPrevented latch only on a keyup, and while it is set
+    // every later keypress and composition event is dropped.
+    bool simulateKeyDown(const std::string& key);
+    bool simulateKeyUp(const std::string& key);
     void simulateVisibilitychange(bool show);
     void testStart();
     // Touch-exploration accessibility test helpers.

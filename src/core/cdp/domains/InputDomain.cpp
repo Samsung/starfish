@@ -25,6 +25,7 @@
 #include "../CDPDispatcher.h"
 #include "../CDPCommand.h"
 #include "core/page/WebView.h"
+#include "core/dom/KeyboardEvent.h"
 #include "core/modules/renderer/Renderer.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/Touch.h"
@@ -84,76 +85,6 @@ static MouseButtonsValue cdpButtonsMask(const std::string& b)
         return MouseButtonsValue::LeftButtonDown;
     }
     return MouseButtonsValue::NoButtonDown;
-}
-
-// Map a CDP key event to a Starfish KeyValue. Printable ASCII is resolved from
-// `text` (single char) or single-char `key`; the KeyValue enum is ASCII-aligned
-// for 32..126. Named keys (Enter/Backspace/...) map by their `key` name.
-static bool cdpKeyToKeyValue(const std::string& key, const std::string& text,
-                             KeyValue& out)
-{
-    // Named keys first.
-    if (key == "Enter" || key == "Return") {
-        out = KeyValue::EnterKey;
-        return true;
-    }
-    if (key == "Tab") {
-        out = KeyValue::TabKey;
-        return true;
-    }
-    if (key == "Backspace") {
-        out = KeyValue::BackspaceKey;
-        return true;
-    }
-    if (key == "Delete") {
-        out = KeyValue::DeleteKey;
-        return true;
-    }
-    if (key == "ArrowLeft") {
-        out = KeyValue::ArrowLeftKey;
-        return true;
-    }
-    if (key == "ArrowRight") {
-        out = KeyValue::ArrowRightKey;
-        return true;
-    }
-    if (key == "ArrowUp") {
-        out = KeyValue::ArrowUpKey;
-        return true;
-    }
-    if (key == "ArrowDown") {
-        out = KeyValue::ArrowDownKey;
-        return true;
-    }
-    if (key == "Home") {
-        out = KeyValue::HomeKey;
-        return true;
-    }
-    if (key == "End") {
-        out = KeyValue::EndKey;
-        return true;
-    }
-    if (key == "Escape") {
-        out = KeyValue::EscapeKey;
-        return true;
-    }
-    if (key == " " || key == "Space") {
-        out = KeyValue::SpaceKey;
-        return true;
-    }
-
-    // Printable single character: prefer text, fall back to key.
-    char c = 0;
-    if (text.size() == 1) {
-        c = text[0];
-    } else if (key.size() == 1) {
-        c = key[0];
-    }
-    if (c >= 32 && c <= 126) {
-        out = static_cast<KeyValue>((unsigned char)c);
-        return true;
-    }
-    return false;
 }
 
 void InputDomain::processMessage(CDPCommand& cmd, const std::string& method)
@@ -219,7 +150,7 @@ void InputDomain::processMessage(CDPCommand& cmd, const std::string& method)
         std::string text = paramString(cmd, "text");
 
         KeyValue kv;
-        if (!cdpKeyToKeyValue(key, text, kv)) {
+        if (!keyToKeyValue(key, text, kv)) {
             // Unmappable key (e.g. modifier-only); ack without dispatch.
             cmd.sendResultEmpty();
             return;

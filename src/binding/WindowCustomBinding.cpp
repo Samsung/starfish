@@ -673,6 +673,34 @@ static ValueRef* simulateTouchCancelFunction(ExecutionStateRef* state,
     return scriptUndefined();
 }
 
+static ValueRef* simulateKeyDownFunction(ExecutionStateRef* state,
+                                         ValueRef* thisValue, size_t argc,
+                                         NULLABLE ValueRef** argv,
+                                         bool isNewExpression)
+{
+    GENERATE_WINDOW();
+    std::string key = argv[0]->toString(state)->toStdUTF8String().data();
+    if (!window->simulateKeyDown(key)) {
+        STARFISH_LOG_ERROR("simulateKeyDown: unsupported key \"%s\"",
+                           key.c_str());
+    }
+    return scriptUndefined();
+}
+
+static ValueRef* simulateKeyUpFunction(ExecutionStateRef* state,
+                                       ValueRef* thisValue, size_t argc,
+                                       NULLABLE ValueRef** argv,
+                                       bool isNewExpression)
+{
+    GENERATE_WINDOW();
+    std::string key = argv[0]->toString(state)->toStdUTF8String().data();
+    if (!window->simulateKeyUp(key)) {
+        STARFISH_LOG_ERROR("simulateKeyUp: unsupported key \"%s\"",
+                           key.c_str());
+    }
+    return scriptUndefined();
+}
+
 static ValueRef* simulateVisibilitychangeFunction(ExecutionStateRef* state,
                                                   ValueRef* thisValue,
                                                   size_t argc, ValueRef** argv,
@@ -1320,6 +1348,8 @@ void Window::postInit(ScriptBindingInstance* instance)
             DEFINE_TEST_FUNCTION(simulateTouchMove, 2);
             DEFINE_TEST_FUNCTION(simulateTouchEnd, 2);
             DEFINE_TEST_FUNCTION(simulateTouchCancel, 2);
+            DEFINE_TEST_FUNCTION(simulateKeyDown, 1);
+            DEFINE_TEST_FUNCTION(simulateKeyUp, 1);
             DEFINE_TEST_FUNCTION(simulateVisibilitychange, 1);
             DEFINE_TEST_FUNCTION(getLastTTSText, 0);
             DEFINE_TEST_FUNCTION(setTTSAccessibilityMode, 1);
