@@ -994,7 +994,7 @@ public:
 
         tizen_core_imf_context_set_client_window(m_imfContext, (void*)m_window);
 
-        tizen_core_imf_context_add_event_callback(
+        tizen_core_imf_context_add_event_cb(
             m_imfContext, TIZEN_CORE_IMF_CALLBACK_COMMIT,
             [](tizen_core_imf_context_h ctx, void* event_info,
                void* user_data) {
@@ -1004,7 +1004,7 @@ public:
             },
             this);
 
-        tizen_core_imf_context_add_event_callback(
+        tizen_core_imf_context_add_event_cb(
             m_imfContext, TIZEN_CORE_IMF_CALLBACK_PREEDIT_CHANGED,
             [](tizen_core_imf_context_h ctx, void* event_info,
                void* user_data) {
