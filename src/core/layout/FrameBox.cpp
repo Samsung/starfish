@@ -1679,9 +1679,38 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 Unit::Rect imageRect(0, 0, exteriorRect.width() + margin,
                                      exteriorRect.height() + margin);
 
+                int xx = 0, yy = 0, ww = 0, hh = 0;
+                LayoutUnit rx = paddingRect.x();
+                LayoutUnit ry = paddingRect.y();
+                xx = rx.floor();
+                yy = ry.floor();
+                ww = snapSizeToPixel(paddingRect.width(), rx);
+                hh = snapSizeToPixel(paddingRect.height(), ry);
+                Unit::Rect rect(xx, yy, ww, hh);
+
+                float dx =
+                    (shadow->offsetX() < 0) ? -half + shadow->offsetX() : -half;
+                float dy =
+                    (shadow->offsetY() < 0) ? -half + shadow->offsetY() : -half;
+
+                // Only the padding box shows of the image, so that is the
+                // part that is kept, with a pixel around it for the sampling
+                // at its edges. The image is drawn from its device size onto
+                // imageRect; the crop is cut and drawn on that same scale.
+                const float dpr = wv->screenInfo().devicePixelRatio;
+                const size_t imageWidth = ceil(imageRect.width() * dpr);
+                const size_t imageHeight = ceil(imageRect.height() * dpr);
+                const float scaleX = imageRect.width() / imageWidth;
+                const float scaleY = imageRect.height() / imageHeight;
+                Unit::Rect crop(floor((rect.x() - dx) / scaleX) - 1,
+                                floor((rect.y() - dy) / scaleY) - 1, 0, 0);
+                crop.setWidth(ceil((rect.maxX() - dx) / scaleX) + 1 - crop.x());
+                crop.setHeight(ceil((rect.maxY() - dy) / scaleY) + 1 -
+                               crop.y());
+                crop.intersect(Unit::Rect(0, 0, imageWidth, imageHeight));
+
                 Optional<BoxShadowImageKey> cacheKey = boxShadowImageKey(
-                    this, *shadow, shadowColor, BoxShadowImageKind::Inset,
-                    wv->screenInfo().devicePixelRatio);
+                    this, *shadow, shadowColor, BoxShadowImageKind::Inset, dpr);
                 BufferedNativeImageData* nativeImage =
                     cacheKey ? wv->lookupBoxShadowImage(cacheKey.value())
                              : nullptr;
@@ -1724,16 +1753,23 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                     sb.process(shadow->radius() *
                                wv->screenInfo().devicePixelRatio / 2);
                     delete cv;
+
+                    BufferedNativeImageData* cropped =
+                        BufferedNativeImageData::create(crop.width(),
+                                                        crop.height());
+                    const uint8_t* src =
+                        nativeImage->data() +
+                        (size_t)crop.y() * nativeImage->stride() +
+                        (size_t)crop.x() * 4;
+                    for (size_t row = 0; row < cropped->height(); row++) {
+                        memcpy(cropped->data() + row * cropped->stride(),
+                               src + row * nativeImage->stride(),
+                               cropped->stride());
+                    }
+                    delete nativeImage;
+                    nativeImage = cropped;
                 }
 
-                int xx = 0, yy = 0, ww = 0, hh = 0;
-                LayoutUnit rx = paddingRect.x();
-                LayoutUnit ry = paddingRect.y();
-                xx = rx.floor();
-                yy = ry.floor();
-                ww = snapSizeToPixel(paddingRect.width(), rx);
-                hh = snapSizeToPixel(paddingRect.height(), ry);
-                Unit::Rect rect(xx, yy, ww, hh);
                 canvas->save();
                 if (hasFrameBorderRadius()) {
                     const LayoutRect r(rect.x(), rect.y(), rect.width(),
@@ -1743,13 +1779,11 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                     canvas->clip(rect);
                 }
 
-                float dx =
-                    (shadow->offsetX() < 0) ? -half + shadow->offsetX() : -half;
-                float dy =
-                    (shadow->offsetY() < 0) ? -half + shadow->offsetY() : -half;
-
                 canvas->translate(dx, dy);
-                canvas->drawImage(nativeImage, imageRect);
+                canvas->drawImage(
+                    nativeImage,
+                    Unit::Rect(crop.x() * scaleX, crop.y() * scaleY,
+                               crop.width() * scaleX, crop.height() * scaleY));
 
                 canvas->restore();
 
