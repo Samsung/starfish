@@ -85,6 +85,10 @@ struct PendingFetchNavigation {
     std::string requestId; // the Fetch interception id (== networkRequestId)
     std::string url;       // the URL navigate() was asked to load
     std::string sessionId; // session the navigation belongs to
+    // The Page.navigate command's id, so failDeferredNavigation can return
+    // errorText in the navigate result (Chromium defers the navigate response
+    // until the navigation commits or fails).
+    Optional<int64_t> navigateCmdId;
 };
 
 // A resource seen on the wire by the ResourceLoader network hook. Recorded in

@@ -51,6 +51,10 @@ public:
     {
         return m_id.hasValue();
     }
+    int64_t id() const
+    {
+        return m_id.value();
+    }
 
     void sendResult(rapidjson::Value& result, rapidjson::Document& doc);
     void sendResultEmpty();

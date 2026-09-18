@@ -1182,7 +1182,7 @@
     "fetch/abort-navigation.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 3: expected 'Error text from Page.navigate: net::ERR_ABORTED', got 'Error text from Page.navigate: undefined'"
+      "detail": "line 4: expected 'current location: http://127.0.0.1:8000/inspector-protocol/resources/test-page.html', got 'current location: file://<repo>/test/cdp/inspector-protocol/resources/test-page'"
     },
     "fetch/about-blank-frame-id.js": {
       "expected": "fail",
@@ -3484,9 +3484,7 @@
       "detail": "line 2: expected '(nothing)', got 'HARNESS TIMEOUT'"
     },
     "page/page-lifecycleEvents.js": {
-      "expected": "fail",
-      "category": "output-differs",
-      "detail": "line 4: expected ' [1] : firstContentfulPaint', got ' [1] : init'"
+      "expected": "pass"
     },
     "page/page-lifecycleEventsAboutBlankFrame.js": {
       "expected": "fail",

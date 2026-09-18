@@ -1249,6 +1249,16 @@ void PageDomain::finishNavigation(const std::string& sessionId)
     emitLifecycle(sessionId, "DOMContentLoaded");
     emitLifecycle(sessionId, "load");
 
+    // Paint-timing lifecycle events. On a real browser these fire at actual
+    // paint time; the headless mock backend has no paint pipeline, so emit them
+    // synchronously after load. Puppeteer does not gate on these, but
+    // Chromium's inspector-protocol test (page-lifecycleEvents.js) expects them
+    // in the sorted event list.
+    emitLifecycle(sessionId, "firstPaint");
+    emitLifecycle(sessionId, "firstContentfulPaint");
+    emitLifecycle(sessionId, "firstMeaningfulPaint");
+    emitLifecycle(sessionId, "firstMeaningfulPaintCandidate");
+
     // networkAlmostIdle / networkIdle:
     //  - HTTP(S) documents load the document + subresources through the real
     //    ResourceLoader, whose CDP hook tracks in-flight requests and fires
@@ -1304,10 +1314,31 @@ void PageDomain::completeDeferredNavigation(const std::string& sessionId,
     // Now that the request has resumed, fire the deferred response phase.
     m_dispatcher->network()->emitNavigationResponse(sessionId, url);
     finishNavigation(sessionId);
+
+    // Send the deferred Page.navigate result (success).
+    CDPSession* s = m_dispatcher->session();
+    if (s->pendingFetchNav.navigateCmdId.hasValue()) {
+        rapidjson::Document doc;
+        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+        rapidjson::Value result(rapidjson::kObjectType);
+        result.AddMember(
+            "frameId",
+            rapidjson::Value(s->frameId.c_str(), s->frameId.size(), alloc),
+            alloc);
+        result.AddMember(
+            "loaderId",
+            rapidjson::Value(s->loaderId.c_str(), s->loaderId.size(), alloc),
+            alloc);
+        CDPCommand navCmd(m_dispatcher, s->pendingFetchNav.navigateCmdId,
+                          sessionId, nullptr);
+        navCmd.sendResult(result, doc);
+        s->pendingFetchNav = PendingFetchNavigation();
+    }
 }
 
 void PageDomain::failDeferredNavigation(const std::string& sessionId,
-                                        const std::string& url)
+                                        const std::string& url,
+                                        const std::string& errorText)
 {
     CDPSession* s = m_dispatcher->session();
 
@@ -1324,7 +1355,10 @@ void PageDomain::failDeferredNavigation(const std::string& sessionId,
             alloc);
         params.AddMember("timestamp", (double)longTickCount(), alloc);
         params.AddMember("type", "Document", alloc);
-        params.AddMember("errorText", "net::ERR_FAILED", alloc);
+        params.AddMember(
+            "errorText",
+            rapidjson::Value(errorText.c_str(), errorText.size(), alloc),
+            alloc);
         params.AddMember("canceled", false, alloc);
         CDPCommand evt(m_dispatcher, Optional<int64_t>(), sessionId, nullptr);
         evt.sendEvent("Network.loadingFailed", params, doc);
@@ -1342,6 +1376,29 @@ void PageDomain::failDeferredNavigation(const std::string& sessionId,
             salloc);
         CDPCommand sevt(m_dispatcher, Optional<int64_t>(), sessionId, nullptr);
         sevt.sendEvent("Page.frameStoppedLoading", sparams, sdoc);
+    }
+
+    // Send the deferred Page.navigate result with errorText.
+    if (s->pendingFetchNav.navigateCmdId.hasValue()) {
+        rapidjson::Document doc;
+        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+        rapidjson::Value result(rapidjson::kObjectType);
+        result.AddMember(
+            "frameId",
+            rapidjson::Value(s->frameId.c_str(), s->frameId.size(), alloc),
+            alloc);
+        result.AddMember(
+            "loaderId",
+            rapidjson::Value(s->loaderId.c_str(), s->loaderId.size(), alloc),
+            alloc);
+        result.AddMember(
+            "errorText",
+            rapidjson::Value(errorText.c_str(), errorText.size(), alloc),
+            alloc);
+        CDPCommand navCmd(m_dispatcher, s->pendingFetchNav.navigateCmdId,
+                          sessionId, nullptr);
+        navCmd.sendResult(result, doc);
+        s->pendingFetchNav = PendingFetchNavigation();
     }
 }
 
@@ -1600,18 +1657,27 @@ void PageDomain::processMessage(CDPCommand& cmd, const std::string& method)
         }
 
         // ensureNewDocumentNavigation keys on a non-empty loaderId in the
-        // navigate result; send it before the synthesized lifecycle, and (for
-        // the Fetch path) before parking so puppeteer's goto promise proceeds.
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember(
-            "frameId", rapidjson::Value(fid.c_str(), fid.size(), alloc), alloc);
-        result.AddMember(
-            "loaderId",
-            rapidjson::Value(s->loaderId.c_str(), s->loaderId.size(), alloc),
-            alloc);
-        cmd.sendResult(result, doc);
+        // navigate result. When Fetch interception is active, defer sending
+        // the result until the navigation commits or fails (Chromium does the
+        // same: Page.navigate waits for the navigation to finish). For the
+        // non-Fetch path, send the result immediately before the synthesized
+        // lifecycle.
+        bool isDataUrl = std::string(url).compare(0, 5, "data:") == 0;
+        bool willPark = s->fetchEnabled && !isDataUrl;
+
+        if (!willPark) {
+            rapidjson::Document doc;
+            rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+            rapidjson::Value result(rapidjson::kObjectType);
+            result.AddMember("frameId",
+                             rapidjson::Value(fid.c_str(), fid.size(), alloc),
+                             alloc);
+            result.AddMember("loaderId",
+                             rapidjson::Value(s->loaderId.c_str(),
+                                              s->loaderId.size(), alloc),
+                             alloc);
+            cmd.sendResult(result, doc);
+        }
 
         // Request interception: emit Fetch.requestPaused and park the load. The
         // actual loadHTMLDocument + finishNavigation run later, from the
@@ -1626,14 +1692,15 @@ void PageDomain::processMessage(CDPCommand& cmd, const std::string& method)
         // inline path below still emits Network.requestWillBeSent, so the
         // page.on('request') listener fires; the request just cannot be
         // continued/fulfilled (a puppeteer-side limitation, not ours).
-        bool isDataUrl = std::string(url).compare(0, 5, "data:") == 0;
-        if (s->fetchEnabled && !isDataUrl) {
+        if (willPark) {
             std::string reqId = m_dispatcher->fetch()->emitNavigationPaused(
                 sid, std::string(url));
             s->pendingFetchNav.active = true;
             s->pendingFetchNav.requestId = reqId;
             s->pendingFetchNav.url = std::string(url);
             s->pendingFetchNav.sessionId = sid;
+            s->pendingFetchNav.navigateCmdId =
+                cmd.hasId() ? Optional<int64_t>(cmd.id()) : Optional<int64_t>();
             return;
         }
 
