@@ -149,6 +149,33 @@ public:
     {
         return m_page;
     }
+    AccessibilityDomain* accessibility()
+    {
+        return m_accessibility;
+    }
+
+    // Point the per-dispatch context at `context` for as long as this object
+    // lives. An event emitted outside a command (from a timer or an engine
+    // hook) has no dispatch to select the context, and the domain code it
+    // calls reads session()/webView() from there. Single-threaded, so the
+    // save-and-restore cannot interleave.
+    class ScopedTarget {
+    public:
+        ScopedTarget(CDPDispatcher* dispatcher, TargetContext* context)
+            : m_dispatcher(dispatcher)
+            , m_saved(dispatcher->m_current)
+        {
+            m_dispatcher->m_current = context;
+        }
+        ~ScopedTarget()
+        {
+            m_dispatcher->m_current = m_saved;
+        }
+
+    private:
+        CDPDispatcher* m_dispatcher;
+        TargetContext* m_saved;
+    };
     RuntimeDomain* runtime()
     {
         return m_runtime;

@@ -10,7 +10,7 @@
     "accessibility/accessibility-aria-1.1.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 2: expected '{', got 'Error: {}'"
+      "detail": "line 21: expected ' nativeSource : label', got ' attribute : title'"
     },
     "accessibility/accessibility-getAXNodeAndAncestors-errors.js": {
       "expected": "pass",
@@ -25,15 +25,13 @@
     "accessibility/accessibility-getFullAXTree-display-locked.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 4: expected ' generic', got '(nothing)'"
+      "detail": "line 7: expected ' generic', got ' StaticText \" locked \"'"
     },
     "accessibility/accessibility-getFullAXTree.js": {
       "expected": "pass"
     },
     "accessibility/accessibility-getNodeWithNoAXNode.js": {
-      "expected": "fail",
-      "category": "output-differs",
-      "detail": "line 2: expected '{', got 'Error: {}'"
+      "expected": "pass"
     },
     "accessibility/accessibility-getPartialAXTree.js": {
       "expected": "pass",
@@ -42,7 +40,7 @@
     "accessibility/accessibility-getRelationships.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 2: expected '{', got 'Error: {}'"
+      "detail": "line 56: expected ' name : required', got ' name : activedescendant'"
     },
     "accessibility/accessibility-getRootNode.js": {
       "expected": "fail",
@@ -50,64 +48,70 @@
       "detail": "line 2: expected '', got 'HARNESS TIMEOUT'"
     },
     "accessibility/accessibility-getTreeWithNoAXNode.js": {
-      "expected": "fail",
-      "category": "output-differs",
-      "detail": "line 2: expected '', got 'Error: {}'"
+      "expected": "pass"
+    },
+    "accessibility/accessibility-ignored-tree-shape.js": {
+      "expected": "pass",
+      "suite": "internal"
     },
     "accessibility/accessibility-ignoredNodes.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 2: expected '', got 'Error: {}'"
+      "detail": "line 34: expected ' image', got ' img'"
     },
     "accessibility/accessibility-ignoredNodesModal.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 2: expected '{', got 'Error: {}'"
+      "detail": "line 59: expected ' [0] : {', got ' ]'"
+    },
+    "accessibility/accessibility-loadComplete.js": {
+      "expected": "pass",
+      "suite": "internal"
     },
     "accessibility/accessibility-modal.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 2: expected '{', got 'Error: {}'"
+      "detail": "line 31: expected ' [0] : {', got ' ]'"
     },
     "accessibility/accessibility-nameSources-buttons.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 2: expected '{', got 'Error: {}'"
+      "detail": "line 21: expected ' nativeSource : label', got ' type : contents'"
     },
     "accessibility/accessibility-nameSources-img-figure.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 2: expected '{', got 'Error: {}'"
+      "detail": "line 57: expected ' attributeValue : {', got ' type : attribute'"
     },
     "accessibility/accessibility-nameSources-input-buttons.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 2: expected '{', got 'Error: {}'"
+      "detail": "line 21: expected ' nativeSource : label', got ' type : contents'"
     },
     "accessibility/accessibility-nameSources-input.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 2: expected '{', got 'Error: {}'"
+      "detail": "line 21: expected ' nativeSource : label', got ' attribute : title'"
     },
     "accessibility/accessibility-nameSources-labelledby.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 2: expected '{', got 'Error: {}'"
+      "detail": "line 52: expected ' nativeSource : label', got ' type : contents'"
     },
     "accessibility/accessibility-nameSources-options.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 2: expected '{', got 'Error: {}'"
+      "detail": "line 6: expected ' value : 127', got ' value : 113'"
     },
     "accessibility/accessibility-nameSources-summary.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 2: expected '{', got 'Error: {}'"
+      "detail": "line 6: expected ' value : 37', got ' value : 88'"
     },
     "accessibility/accessibility-nameSources-visiblity.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 2: expected '{', got 'Error: {}'"
+      "detail": "line 24: expected ' value : 1 2 7', got ' value : 1 2 3 4 5 6 7'"
     },
     "accessibility/accessibility-nodes-updated-retrieves-children.js": {
       "expected": "fail",
@@ -118,17 +122,13 @@
       "expected": "pass"
     },
     "accessibility/accessibility-query-axtree.js": {
-      "expected": "fail",
-      "category": "script-error",
-      "detail": "line 2: expected '', got \"Error while executing test script: TypeError: Cannot read properties of undefined (reading '0')\""
+      "expected": "pass"
     },
     "accessibility/getFullAXTree-depth.js": {
       "expected": "pass"
     },
     "accessibility/tree-updated-events.js": {
-      "expected": "fail",
-      "category": "output-differs",
-      "detail": "line 4: expected 'Nodes updated includes node ID equal to childrenAddRemoveTarget ID? true', got \"Error during test: TypeError: Cannot read properties of undefined (reading 'nodes')\""
+      "expected": "pass"
     },
     "ads/get-ad-scripts.js": {
       "expected": "fail",
@@ -3720,9 +3720,7 @@
       "detail": "line 2: expected '{', got \"Error while executing test script: TypeError: Cannot read properties of undefined (reading 'params')\""
     },
     "query-axtree-oopif.js": {
-      "expected": "fail",
-      "category": "output-differs",
-      "detail": "line 4: expected 'node1', got \"Error during test: TypeError: Cannot read properties of undefined (reading 'nodes')\""
+      "expected": "pass"
     },
     "reload-memory-cache.js": {
       "expected": "fail",

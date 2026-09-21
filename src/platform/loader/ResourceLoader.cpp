@@ -39,6 +39,7 @@
 #if defined(STARFISH_ENABLE_CDP)
 #include "core/cdp/CDPServer.h"
 #include "core/cdp/CDPDispatcher.h"
+#include "core/cdp/AXChangeNotifier.h"
 #endif
 
 #ifndef STARFISH_RESOURCE_CACHE_SIZE
@@ -599,6 +600,11 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                             }
 #endif
                         } else {
+#if defined(STARFISH_ENABLE_CDP)
+                            // The top-level document is loaded, which is
+                            // when the accessibility tree is complete.
+                            notifyAXLoadComplete(doc);
+#endif
                             struct Param : public gc {
                                 String* url;
                             };

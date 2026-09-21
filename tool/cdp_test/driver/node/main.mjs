@@ -70,6 +70,24 @@ const sandbox = {
       // meaning outside content_shell.
     },
   },
+  // A test script runs in a page under content_shell, so the DOM interface
+  // objects are globals there. Node is not one of the globals Node.js has.
+  // Only the nodeType constants are read, so the values come from the DOM
+  // standard rather than from an implementation.
+  Node: {
+    ELEMENT_NODE: 1,
+    ATTRIBUTE_NODE: 2,
+    TEXT_NODE: 3,
+    CDATA_SECTION_NODE: 4,
+    ENTITY_REFERENCE_NODE: 5,
+    ENTITY_NODE: 6,
+    PROCESSING_INSTRUCTION_NODE: 7,
+    COMMENT_NODE: 8,
+    DOCUMENT_NODE: 9,
+    DOCUMENT_TYPE_NODE: 10,
+    DOCUMENT_FRAGMENT_NODE: 11,
+    NOTATION_NODE: 12,
+  },
   // Load-time stubs. The DevToolsAPI statics that would touch document or
   // XMLHttpRequest are all replaced below, so these need only exist.
   window: { addEventListener() {}, location: { search: '', href: '' } },

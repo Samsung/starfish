@@ -77,6 +77,76 @@ static Node* nodeFromObjectId(CDPDispatcher* disp, const char* oid)
     return w->isNode() ? w->asNode() : nullptr;
 }
 
+// The parent the DOM domain reports. A shadow root reports its host, and a
+// document reports the frame owner that embeds it, so one chain reaches the
+// main document from anywhere in the page.
+static Node* innerParentNode(Node* node)
+{
+    if (node->isShadowRoot()) {
+        return node->asShadowRoot()->host();
+    }
+    return node->parentNode();
+}
+
+// Tell the client about one level of children and record that it was sent.
+static void sendChildNodes(CDPDispatcher* dispatcher, CDPCommand& cmd,
+                           NodeRegistry* reg, Node* parent, int depth)
+{
+    rapidjson::Document out;
+    rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
+    rapidjson::Value params(rapidjson::kObjectType);
+    params.AddMember("parentId", reg->getOrCreate(parent), alloc);
+    rapidjson::Value nodes(rapidjson::kArrayType);
+    for (Node* c = parent->firstChild(); c; c = c->nextSibling()) {
+        rapidjson::Value child(rapidjson::kObjectType);
+        reg->serializeNode(c, depth - 1, child, alloc);
+        nodes.PushBack(child, alloc);
+    }
+    params.AddMember("nodes", nodes, alloc);
+    reg->markChildrenSent(parent);
+
+    CDPCommand evt(dispatcher, Optional<int64_t>(), cmd.sessionId(), nullptr);
+    evt.sendEvent("DOM.setChildNodes", params, out);
+}
+
+// A command answers with a node id, but the client only knows the nodes it
+// has been sent. Walk up to the nearest node it does know and send one
+// DOM.setChildNodes per level below that, so the id it gets back resolves.
+// This mirrors InspectorDOMAgent::PushNodePathToFrontend.
+static int pushNodePathToFrontend(CDPDispatcher* dispatcher, CDPCommand& cmd,
+                                  NodeRegistry* reg, Node* node)
+{
+    if (!node) {
+        return 0;
+    }
+    if (reg->wasSent(node)) {
+        return reg->getOrCreate(node);
+    }
+
+    // Collect the ancestors the client is missing, nearest first.
+    GCVector<Node*> path;
+    for (Node* parent = innerParentNode(node); parent;
+         parent = innerParentNode(parent)) {
+        path.push_back(parent);
+        if (reg->wasSent(parent)) {
+            break;
+        }
+    }
+    // Nothing on the chain is known, so there is no place to attach the
+    // node. Hand back the id anyway: it is still valid as a backend id.
+    if (path.empty() || !reg->wasSent(path.back())) {
+        return reg->getOrCreate(node);
+    }
+
+    for (size_t i = path.size(); i > 0; i--) {
+        Node* parent = path[i - 1];
+        if (!reg->childrenWereSent(parent)) {
+            sendChildNodes(dispatcher, cmd, reg, parent, 1);
+        }
+    }
+    return reg->getOrCreate(node);
+}
+
 static int paramNodeId(CDPCommand& cmd)
 {
     if (cmd.params() && cmd.params()->HasMember("nodeId") &&
@@ -137,22 +207,7 @@ void DOMDomain::processMessage(CDPCommand& cmd, const std::string& method)
             depth = (*cmd.params())["depth"].GetInt();
         }
         cmd.sendResultEmpty();
-
-        // Emit DOM.setChildNodes.
-        rapidjson::Document out;
-        rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
-        rapidjson::Value params(rapidjson::kObjectType);
-        params.AddMember("parentId", nodeId, alloc);
-        rapidjson::Value nodes(rapidjson::kArrayType);
-        for (Node* c = node->firstChild(); c; c = c->nextSibling()) {
-            rapidjson::Value child(rapidjson::kObjectType);
-            reg->serializeNode(c, depth - 1, child, alloc);
-            nodes.PushBack(child, alloc);
-        }
-        params.AddMember("nodes", nodes, alloc);
-        CDPCommand evt(m_dispatcher, Optional<int64_t>(), cmd.sessionId(),
-                       nullptr);
-        evt.sendEvent("DOM.setChildNodes", params, out);
+        sendChildNodes(m_dispatcher, cmd, reg, node, depth);
         return;
     }
 
@@ -167,10 +222,12 @@ void DOMDomain::processMessage(CDPCommand& cmd, const std::string& method)
         const char* sel = (*cmd.params())["selector"].GetString();
         Element* found =
             node->querySelector(String::fromUTF8(sel, strlen(sel)));
+        int foundId =
+            found ? pushNodePathToFrontend(m_dispatcher, cmd, reg, found) : 0;
         rapidjson::Document out;
         rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
         rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember("nodeId", found ? reg->getOrCreate(found) : 0, alloc);
+        result.AddMember("nodeId", foundId, alloc);
         cmd.sendResult(result, out);
         return;
     }
@@ -186,17 +243,24 @@ void DOMDomain::processMessage(CDPCommand& cmd, const std::string& method)
         const char* sel = (*cmd.params())["selector"].GetString();
         NodeList* list =
             node->querySelectorAll(String::fromUTF8(sel, strlen(sel)));
-        rapidjson::Document out;
-        rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        rapidjson::Value ids(rapidjson::kArrayType);
+        // Every match is pushed before the result goes out, so the client
+        // has seen each node by the time it reads the ids.
+        GCVector<int> matched;
         if (list) {
             for (size_t i = 0; i < list->length(); i++) {
                 Node* n = list->item(i);
                 if (n) {
-                    ids.PushBack(reg->getOrCreate(n), alloc);
+                    matched.push_back(
+                        pushNodePathToFrontend(m_dispatcher, cmd, reg, n));
                 }
             }
+        }
+        rapidjson::Document out;
+        rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
+        rapidjson::Value result(rapidjson::kObjectType);
+        rapidjson::Value ids(rapidjson::kArrayType);
+        for (int id : matched) {
+            ids.PushBack(id, alloc);
         }
         result.AddMember("nodeIds", ids, alloc);
         cmd.sendResult(result, out);
@@ -229,7 +293,9 @@ void DOMDomain::processMessage(CDPCommand& cmd, const std::string& method)
         rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
         rapidjson::Value result(rapidjson::kObjectType);
         rapidjson::Value n(rapidjson::kObjectType);
-        reg->serializeNode(node, depth, n, alloc);
+        // describeNode hands back a node without binding it to the client's
+        // node id space, so nothing here counts as sent.
+        reg->serializeNode(node, depth, n, alloc, false);
         if (node->isHTMLIFrameElement()) {
             Optional<BrowsingContext*> context =
                 node->asHTMLIFrameElement()->browsingContext();
@@ -897,7 +963,8 @@ void DOMDomain::processMessage(CDPCommand& cmd, const std::string& method)
             cmd.sendError(-32000, "No node at given location");
             return;
         }
-        int backendNodeId = reg->getOrCreate(node);
+        int backendNodeId =
+            pushNodePathToFrontend(m_dispatcher, cmd, reg, node);
         rapidjson::Document out;
         rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
         rapidjson::Value result(rapidjson::kObjectType);
@@ -1064,7 +1131,7 @@ void DOMDomain::processMessage(CDPCommand& cmd, const std::string& method)
             cmd.sendError(-32000, "Could not find node with given id");
             return;
         }
-        int nodeId = reg->getOrCreate(node);
+        int nodeId = pushNodePathToFrontend(m_dispatcher, cmd, reg, node);
         rapidjson::Document out;
         rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
         rapidjson::Value result(rapidjson::kObjectType);
@@ -1088,20 +1155,26 @@ void DOMDomain::processMessage(CDPCommand& cmd, const std::string& method)
     }
 
     if (method == "pushNodesByBackendIdsToFrontend") {
-        rapidjson::Document out;
-        rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        rapidjson::Value ids(rapidjson::kArrayType);
+        // backendNodeId and nodeId share one id space here, so a known
+        // backendId maps straight to the same frontend nodeId. The client
+        // still has to be told about the node first.
+        GCVector<int> pushed;
         if (cmd.params() && cmd.params()->HasMember("backendNodeIds") &&
             (*cmd.params())["backendNodeIds"].IsArray()) {
             const rapidjson::Value& in = (*cmd.params())["backendNodeIds"];
             for (rapidjson::SizeType i = 0; i < in.Size(); i++) {
                 int backendId = in[i].IsInt() ? in[i].GetInt() : 0;
-                // backendNodeId and nodeId share one id space here, so a known
-                // backendId maps straight to the same frontend nodeId.
                 Node* n = reg->lookup(backendId);
-                ids.PushBack(n ? reg->getOrCreate(n) : 0, alloc);
+                pushed.push_back(
+                    pushNodePathToFrontend(m_dispatcher, cmd, reg, n));
             }
+        }
+        rapidjson::Document out;
+        rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
+        rapidjson::Value result(rapidjson::kObjectType);
+        rapidjson::Value ids(rapidjson::kArrayType);
+        for (int id : pushed) {
+            ids.PushBack(id, alloc);
         }
         result.AddMember("nodeIds", ids, alloc);
         cmd.sendResult(result, out);
