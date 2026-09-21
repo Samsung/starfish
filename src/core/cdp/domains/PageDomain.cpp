@@ -22,6 +22,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "PageDomain.h"
+#include "AccessibilityDomain.h"
 #include "NetworkDomain.h"
 #include "FetchDomain.h"
 #include "RuntimeDomain.h"
@@ -1300,6 +1301,10 @@ void PageDomain::finishNavigation(const std::string& sessionId)
         CDPCommand sevt(m_dispatcher, Optional<int64_t>(), sessionId, nullptr);
         sevt.sendEvent("Page.frameStoppedLoading", sparams, sdoc);
     }
+    // Accessibility.loadComplete is not emitted here. This runs right after
+    // the navigation is issued, before the document is parsed, so the tree
+    // would still be empty. It is emitted from the window load event
+    // instead (notifyAXLoadComplete in ResourceLoader.cpp).
 }
 
 void PageDomain::completeDeferredNavigation(const std::string& sessionId,

@@ -20,12 +20,17 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPAccessibilityDomain__)
 #define __StarfishCDPAccessibilityDomain__
 
+#include <memory>
 #include <string>
 
 namespace Starfish {
 
+class AXNode;
+class AXTree;
 class CDPDispatcher;
 class CDPCommand;
+class Document;
+class Node;
 
 class AccessibilityDomain {
 public:
@@ -35,7 +40,26 @@ public:
     }
     void processMessage(CDPCommand& cmd, const std::string& method);
 
+    // The document finished loading. Chromium resets what it knows the
+    // client holds and announces the new root, so a client that was
+    // attached across the navigation starts from a known node.
+    void emitLoadComplete(const std::string& sessionId);
+
+    // An AX-relevant DOM change. The node is reported only if the client
+    // was handed it earlier; the event is coalesced by a short timer,
+    // because one DOM operation dirties several nodes.
+    void markNodeDirty(Node* domNode);
+
 private:
+    Optional<Document*> documentFor(CDPCommand& cmd);
+    // A fresh tree per command. Nothing is kept between commands, so a page
+    // no client is inspecting carries no accessibility data at all.
+    std::unique_ptr<AXTree> buildTree(Document* document);
+    static AXNode* nearestAXAncestor(AXTree* tree, Node* domNode);
+    // Static Timer callback for the coalescing window; `data` is a malloc'd
+    // record that re-resolves the session, which may be gone by then.
+    static void onDirtyFlushTimer(void* data);
+
     CDPDispatcher* m_dispatcher;
 };
 

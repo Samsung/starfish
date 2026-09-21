@@ -114,6 +114,9 @@
 #include "platform/file/PlatformFile.h"
 #include "platform/loader/ImageResource.h"
 #include "platform/network/curl/NetworkSharedResourceManager.h"
+#if defined(STARFISH_ENABLE_CDP)
+#include "core/cdp/AXChangeNotifier.h"
+#endif
 
 namespace Starfish {
 #ifdef STARFISH_ENABLE_NETWORK_PROFILING
@@ -1714,6 +1717,12 @@ void Document::didNodeInserted(Node* parent, Node* newChild)
             this, [](Node* nd) -> bool { return nd->isHTMLBodyElement(); });
     }
 
+#if defined(STARFISH_ENABLE_CDP)
+    // The change is to the parent's child list, so the parent is the node
+    // whose accessibility data moved.
+    notifyAXNodeChangedIfObserved(parent);
+#endif
+
     updateDOMVersion();
 }
 
@@ -1727,6 +1736,10 @@ void Document::didNodeRemoved(Node* parent, Node* oldChild)
         m_body = childMatchedBy(
             this, [](Node* nd) -> bool { return nd->isHTMLBodyElement(); });
     }
+
+#if defined(STARFISH_ENABLE_CDP)
+    notifyAXNodeChangedIfObserved(parent);
+#endif
 
     updateDOMVersion();
 }

@@ -28,6 +28,9 @@
 #if defined(STARFISH_ENABLE_TTS) && \
     defined(STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION)
 #include "core/modules/tts/A11yLiveRegion.h"
+#if defined(STARFISH_ENABLE_CDP)
+#include "core/cdp/AXChangeNotifier.h"
+#endif
 #endif
 
 namespace Starfish {
@@ -114,6 +117,11 @@ void CharacterData::setData(String* data)
     notifyDOMEventToParentTree(parentNode(), [oldData, data](Node* parent) {
         parent->didCharacterDataModified(oldData, data);
     });
+
+#if defined(STARFISH_ENABLE_CDP)
+    // The text itself is the accessibility node that changed.
+    notifyAXNodeChangedIfObserved(this);
+#endif
 
 #if defined(STARFISH_ENABLE_TTS) && \
     defined(STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION)

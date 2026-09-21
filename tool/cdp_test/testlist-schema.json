@@ -6,7 +6,9 @@
       "expected": "pass"
     },
     "Accessibility.getRootAXNode": {
-      "expected": "pass"
+      "expected": "fail",
+      "category": "unprobeable",
+      "detail": "Accessibility.getRootAXNode returned {'code': -32000, 'message': 'Accessibility has not been enabled.'}"
     },
     "Ads.getAdMetrics": {
       "expected": "fail",

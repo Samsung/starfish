@@ -22,6 +22,7 @@
 
 #include <cstdint>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -290,6 +291,19 @@ public:
     // a given idle level is announced once per document.
     bool networkAlmostIdleEmitted = false;
     bool networkIdleEmitted = false;
+
+    // --- Accessibility node tracking --------------------------------------
+    // Accessibility.nodesUpdated only reports nodes the client already
+    // holds, so a change to anything else is not worth sending. These are
+    // the AX node ids handed out by getRootAXNode, getAXNodeAndAncestors,
+    // getChildAXNodes and the loadComplete event.
+    std::set<std::string> axNodesRequested;
+    // Ids changed since the last flush, always a subset of the above.
+    std::set<std::string> axDirtyNodes;
+    // Coalescing timer id (Timer::addTimer), SIZE_MAX when none is armed.
+    // One DOM operation can dirty many nodes, and a client wants one event
+    // rather than one per node.
+    size_t axFlushTimerId = SIZE_MAX;
 
     // --- Runtime.compileScript results -----------------------------------
     // A script compiled+persisted via

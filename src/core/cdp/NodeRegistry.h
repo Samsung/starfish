@@ -37,12 +37,33 @@ public:
     bool has(Node* node) const;
     void reset(); // navigate: drop all mappings, m_next=1
 
+    // An id alone does not mean the client knows the node: the registry also
+    // hands out ids to commands that never serialize one, such as the
+    // Accessibility queries. These two say what the client has actually been
+    // sent, so DOM.setChildNodes only has to carry the levels it is missing.
+    bool wasSent(Node* node) const;
+    bool childrenWereSent(Node* node) const;
+    void markChildrenSent(Node* node);
+
     // Serialize a CDP Node. depth: 0=no children, N=N levels, <0=full.
+    // `send` records the node, and every descendant written with it, as
+    // known to the client. Pass false for a command that returns a node
+    // without binding it, such as DOM.describeNode.
     void serializeNode(Node* node, int depth, rapidjson::Value& out,
-                       rapidjson::Document::AllocatorType& alloc);
+                       rapidjson::Document::AllocatorType& alloc,
+                       bool send = true);
 
 private:
-    GCUnorderedMap<Node*, int> m_nodeToId;
+    struct Entry {
+        int id;
+        // Both are about what the client has seen, not about the node.
+        bool sent;
+        bool childrenSent;
+    };
+
+    Entry* entryFor(Node* node);
+
+    GCUnorderedMap<Node*, Entry> m_nodeToId;
     GCUnorderedMap<int, Node*> m_idToNode;
     int m_next;
 };
