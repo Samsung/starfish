@@ -139,6 +139,10 @@ public:
     // DECLARE_EVENT_LISTENER(show);
     DECLARE_EVENT_LISTENER(submit);
     DECLARE_EVENT_LISTENER(toggle);
+    DECLARE_EVENT_LISTENER(touchstart);
+    DECLARE_EVENT_LISTENER(touchend);
+    DECLARE_EVENT_LISTENER(touchmove);
+    DECLARE_EVENT_LISTENER(touchcancel);
     DECLARE_EVENT_LISTENER(pointerdown);
     DECLARE_EVENT_LISTENER(pointerup);
     DECLARE_EVENT_LISTENER(pointermove);

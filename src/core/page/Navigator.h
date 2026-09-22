@@ -65,6 +65,8 @@ public:
         return false;
     }
 
+    int32_t maxTouchPoints();
+
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     MediaCapabilities* mediaCapabilities();
 #endif

@@ -132,6 +132,8 @@ void HTMLElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
         setAttributeEventListener(ss->m_touchend, value, this);
     } else if (name == ss->m_ontouchmove) {
         setAttributeEventListener(ss->m_touchmove, value, this);
+    } else if (name == ss->m_ontouchcancel) {
+        setAttributeEventListener(ss->m_touchcancel, value, this);
     } else if (name == ss->m_onpointerdown) {
         setAttributeEventListener(ss->m_pointerdown, value, this);
     } else if (name == ss->m_onpointerup) {
@@ -565,6 +567,10 @@ DEFINE_EVENT_LISTENER(HTMLElement, scroll);
 DEFINE_EVENT_LISTENER(HTMLElement, resize);
 DEFINE_EVENT_LISTENER(HTMLElement, submit);
 DEFINE_EVENT_LISTENER(HTMLElement, toggle);
+DEFINE_EVENT_LISTENER(HTMLElement, touchstart);
+DEFINE_EVENT_LISTENER(HTMLElement, touchend);
+DEFINE_EVENT_LISTENER(HTMLElement, touchmove);
+DEFINE_EVENT_LISTENER(HTMLElement, touchcancel);
 DEFINE_EVENT_LISTENER(HTMLElement, pointerdown);
 DEFINE_EVENT_LISTENER(HTMLElement, pointerup);
 DEFINE_EVENT_LISTENER(HTMLElement, pointermove);

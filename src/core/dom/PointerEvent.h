@@ -34,7 +34,7 @@ class PointerData {
 public:
     PointerData()
         : m_pointerId(1)
-        , m_pointerType(String::createASCIIString("mouse"))
+        , m_pointerType(nullptr)
     {
     }
 
@@ -43,9 +43,22 @@ public:
         return m_pointerId;
     }
 
+    void setPointerId(int32_t pointerId)
+    {
+        m_pointerId = pointerId;
+    }
+
+    // Left unset until the dispatching code names the input that produced the
+    // event; the dictionary default is the empty string.
+    // https://w3c.github.io/pointerevents/#dom-pointereventinit-pointertype
     String* pointerType() const
     {
-        return m_pointerType;
+        return m_pointerType ? m_pointerType : String::emptyString;
+    }
+
+    void setPointerType(String* pointerType)
+    {
+        m_pointerType = pointerType;
     }
 
 protected:
@@ -103,15 +116,18 @@ public:
     }
 
     PointerEvent(ExecutionContext* executionContext, String* eventType,
-                 MouseData& data)
+                 MouseData& data, String* pointerType)
         : MouseEvent(executionContext, eventType, data)
     {
+        m_pointerData.setPointerType(pointerType);
     }
 
     PointerEvent(ExecutionContext* executionContext, String* eventType,
                  PointerEventInit& init)
         : MouseEvent(executionContext, eventType, init)
     {
+        m_pointerData.setPointerId(init.pointerId());
+        m_pointerData.setPointerType(init.pointerType());
     }
 
     virtual void init(ScriptBindingInstance* instance,

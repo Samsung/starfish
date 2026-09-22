@@ -23,6 +23,8 @@
 #include "core/dom/Document.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/location/Geolocation.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 #include "core/modules/serviceworker/ServiceWorkerContainer.h"
 #endif
@@ -51,6 +53,23 @@ Geolocation* Navigator::geolocation()
         m_geolocation = Geolocation::create(executionContext()->document());
     }
     return m_geolocation;
+}
+
+// A touch panel does not tell the engine how many contacts it tracks, so the
+// count reported here is the conventional one for the phone and TV panels
+// this engine targets. What content branches on is whether it is above zero:
+// that is the feature test for touch input.
+// https://w3c.github.io/pointerevents/#dom-navigator-maxtouchpoints
+int32_t Navigator::maxTouchPoints()
+{
+    const int32_t typicalPanelContactCount = 5;
+    StarfishDeviceKind deviceKind = executionContext()
+                                        ->document()
+                                        ->browsingContext()
+                                        ->webView()
+                                        ->deviceKind();
+    return (deviceKind & deviceKindUseTouchScreen) ? typicalPanelContactCount
+                                                   : 0;
 }
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA

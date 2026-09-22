@@ -1182,10 +1182,10 @@ static MouseEvent* createMouseEvent(Document* document, String* name,
 }
 
 static PointerEvent* createPointerEvent(Document* document, String* name,
-                                        MouseData& data)
+                                        MouseData& data, String* pointerType)
 {
     PointerEvent* event =
-        new PointerEvent(document->executionContext(), name, data);
+        new PointerEvent(document->executionContext(), name, data, pointerType);
     event->setBubbles(true);
     event->setCancelable(true);
     event->setView(document->window());
@@ -1590,7 +1590,7 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         returnValue = !document()->window()->dispatchEventByUA(t, e);
         Event* pe = createPointerEvent(
             document(), starfish()->staticStrings()->m_pointerdown.localName(),
-            pointerData);
+            pointerData, starfish()->staticStrings()->m_pointerTypeTouch);
         document()->window()->dispatchEventByUA(t, pe);
         break;
     }
@@ -1644,7 +1644,7 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
             Event* pe = createPointerEvent(
                 document(),
                 starfish()->staticStrings()->m_pointermove.localName(),
-                pointerData);
+                pointerData, starfish()->staticStrings()->m_pointerTypeTouch);
             document()->window()->dispatchEventByUA(pt, pe);
         }
         break;
@@ -1656,7 +1656,8 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         releaseActiveNode();
         Node* t = targetNode->nearestParentElement();
         t = t ? t : document();
-        // Spec order: touchend → pointerup → click.
+        // Spec order: touchend → pointerup → mousemove → mousedown →
+        // mouseup → click.
         name = starfish()->staticStrings()->m_touchend.localName();
         Event* e = createTouchEvent(document(), name, touches, count);
         returnValue = !document()->window()->dispatchEventByUA(t, e);
@@ -1666,7 +1667,7 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
                 : t;
         Event* pe = createPointerEvent(
             document(), starfish()->staticStrings()->m_pointerup.localName(),
-            pointerData);
+            pointerData, starfish()->staticStrings()->m_pointerTypeTouch);
         document()->window()->dispatchEventByUA(pt, pe);
         // Implicit pointer capture release on pointerup.
         m_pointerCaptureTarget = nullptr;
@@ -1675,6 +1676,36 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
                 isTapSoundFeedbackTarget(starfish(), t)) {
                 playPlatformTapSoundFeedback();
             }
+            // Compatibility mouse events. Content written for mouse input
+            // follows a tap through the whole mousemove → mousedown →
+            // mouseup → click sequence, so synthesizing click alone leaves
+            // it unresponsive to touch — a video player that reveals its
+            // controls on mousemove and hides them again once no further
+            // pointer activity arrives is the visible case.
+            // https://w3c.github.io/touch-events/#mouse-events
+            MouseData compatData(MouseButtonValue::NoButton,
+                                 MouseButtonsValue::NoButtonDown, targetX,
+                                 targetY, targetScreenX, targetScreenY, 0);
+            document()->window()->dispatchEventByUA(
+                t, createMouseEvent(
+                       document(),
+                       starfish()->staticStrings()->m_mousemove.localName(),
+                       compatData));
+            compatData.setButton(MouseButtonValue::LeftButton);
+            compatData.setButtons(MouseButtonsValue::LeftButtonDown);
+            compatData.setClickCount(1);
+            document()->window()->dispatchEventByUA(
+                t, createMouseEvent(
+                       document(),
+                       starfish()->staticStrings()->m_mousedown.localName(),
+                       compatData));
+            compatData.setButtons(MouseButtonsValue::NoButtonDown);
+            document()->window()->dispatchEventByUA(
+                t, createMouseEvent(
+                       document(),
+                       starfish()->staticStrings()->m_mouseup.localName(),
+                       compatData));
+
             name = starfish()->staticStrings()->m_click.localName();
             MouseData clickData(MouseButtonValue::LeftButton,
                                 MouseButtonsValue::LeftButtonDown, targetX,
@@ -1875,7 +1906,7 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
         returnValue = !document()->window()->dispatchEventByUA(t, me);
         Event* pe = createPointerEvent(
             document(), starfish()->staticStrings()->m_pointerdown.localName(),
-            downData);
+            downData, starfish()->staticStrings()->m_pointerTypeMouse);
         document()->window()->dispatchEventByUA(t, pe);
         break;
     }
@@ -1899,7 +1930,8 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
                 starfish()->staticStrings()->m_pointermove.localName())) {
             Event* pe = createPointerEvent(
                 document(),
-                starfish()->staticStrings()->m_pointermove.localName(), data);
+                starfish()->staticStrings()->m_pointermove.localName(), data,
+                starfish()->staticStrings()->m_pointerTypeMouse);
             document()->window()->dispatchEventByUA(t, pe);
         }
         break;
@@ -1913,7 +1945,7 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
         returnValue = !document()->window()->dispatchEventByUA(t, me);
         Event* pe = createPointerEvent(
             document(), starfish()->staticStrings()->m_pointerup.localName(),
-            upData);
+            upData, starfish()->staticStrings()->m_pointerTypeMouse);
         document()->window()->dispatchEventByUA(t, pe);
 
         // Implicit pointer capture release on pointerup.
