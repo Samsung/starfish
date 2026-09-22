@@ -19,7 +19,7 @@
 
 #include "StarfishConfig.h"
 
-// Tizen TTS implementation for non-TV profiles (mobile/common/etc.).
+// Tizen TTS implementation for non-TV profiles (common/headless/etc.).
 // TV profiles keep their own implementation in TTSTV.cpp. The three TTS
 // backends are mutually exclusive by guard:
 //   TTSTV.cpp    : TIZEN && TTS &&  PROD_TV && GLIB

@@ -57,7 +57,7 @@ TARGET_COMPILE_OPTIONS (skia_matrix PUBLIC ${THIRD_PARTY_CXXFLAGS})
 # consumer linking against this by its build-tree path got that raw path
 # baked into its own DT_NEEDED instead of a bare filename -- resolved fine
 # in the build tree, "not found" once installed to a different layout
-# (confirmed via `ldd liblightweight-web-engine.mobile-impl.so` on-device:
+# (confirmed via `ldd liblightweight-web-engine.common-impl.so` on-device:
 # "lib/libskia_matrix.so => not found" -- a relative path with a slash in
 # it, which the dynamic linker never searches RPATH for at all).
 SET_TARGET_PROPERTIES (skia_matrix PROPERTIES LINK_FLAGS "-Wl,-soname,libskia_matrix.so")
@@ -114,9 +114,6 @@ IF (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" OR ${SHARED_WORKER} STREQUAL "1" OR
     SET (NANOMSG_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libnanomsg.so)
 
     SET (NANOMSG_CFLAGS_COMMON "-g3 -fPIC")
-    IF (${CUSTOM} STREQUAL "unified_wearable")
-        SET (NANOMSG_CFLAGS_CUSTOM "-Os")
-    ENDIF()
 
     IF (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
         SET (NANOMSG_CFLAGS_ARCH "-m32")

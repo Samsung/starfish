@@ -20,7 +20,7 @@ on:
         type: string        
       gbs_device:
         description: 'device'
-        default: 'mobile'
+        default: 'common'
         required: true
         type: string
     

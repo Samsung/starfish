@@ -27,7 +27,7 @@
     "09-ipc-enum-catalog.md"
   ],
   "generatedAt": "2026-08-27T04:35:25.125Z",
-  "description": "Starfish is a lightweight Web browser engine for TV, mobile, headless and wearable devices; low memory usage is the core constraint.",
+  "description": "Starfish is a lightweight Web browser engine for TV, common and headless devices; low memory usage is the core constraint.",
   "languages": [
     "C",
     "C++",
