@@ -1720,7 +1720,8 @@ void Frame::computeStyleFlags()
         style->mixBlendMode() != BlendMode::Normal;
 
     // TODO add condition
-    m_flags.m_needsGraphicsBuffer = (style->has3DTransforms(this));
+    m_flags.m_needsGraphicsBuffer =
+        (style->has3DTransforms(this)) || (style->maskLayerSize() > 0);
     if (wc && (wc->transform() || wc->opacity())) {
         m_flags.m_needsGraphicsBuffer |= true;
     }

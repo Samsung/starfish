@@ -60,6 +60,11 @@ public:
         m_surface = nullptr;
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = true;
+        m_currentMaskSurface = nullptr;
+        m_maskOffsetX = 0;
+        m_maskOffsetY = 0;
+        m_maskWidth = 0;
+        m_maskHeight = 0;
 
         initFromBuffer(data->mapBuffer(), data->bufferWidth(),
                        data->bufferHeight(), data->bufferStride());
@@ -291,15 +296,85 @@ public:
         cairo_restore(m_canvas);
     }
 
-    virtual void drawSurface(CanvasSurface* data, const Unit::Rect& dst)
+    virtual void setMaskSurface(CanvasSurface* maskSurface, float offsetX,
+                                float offsetY, float maskWidth,
+                                float maskHeight) override
+    {
+        m_currentMaskSurface = maskSurface;
+        m_maskOffsetX = offsetX;
+        m_maskOffsetY = offsetY;
+        m_maskWidth = maskWidth;
+        m_maskHeight = maskHeight;
+    }
+
+    virtual void clearMaskSurface() override
+    {
+        m_currentMaskSurface = nullptr;
+    }
+
+    virtual void drawSurface(CanvasSurface* data,
+                             const Unit::Rect& dst) override
     {
         cairo_surface_t* image;
         image = cairo_image_surface_create_for_data(
             (unsigned char*)data->mapBuffer(), CAIRO_FORMAT_ARGB32,
             data->bufferWidth(), data->bufferHeight(), data->bufferStride());
         checkError();
-        drawImageCairo(image, dst, data->bufferWidth(), data->bufferHeight(),
-                       true);
+
+        if (m_currentMaskSurface) {
+            float xx = dst.x();
+            float yy = dst.y();
+            float ww = dst.width();
+            float hh = dst.height();
+
+            if (data->bufferWidth() && data->bufferHeight() && ww && hh) {
+                cairo_save(m_canvas);
+
+                cairo_pattern_t* resizePattern =
+                    cairo_pattern_create_for_surface(image);
+                cairo_translate(m_canvas, xx, yy);
+
+                cairo_matrix_t matrix;
+                cairo_matrix_init_identity(&matrix);
+                cairo_matrix_scale(&matrix, (double)data->bufferWidth() / ww,
+                                   (double)data->bufferHeight() / hh);
+                cairo_pattern_set_matrix(resizePattern, &matrix);
+                cairo_pattern_set_filter(resizePattern, CAIRO_FILTER_FAST);
+                checkError();
+                cairo_set_source(m_canvas, resizePattern);
+
+                cairo_surface_t* maskImage =
+                    cairo_image_surface_create_for_data(
+                        (unsigned char*)m_currentMaskSurface->mapBuffer(),
+                        CAIRO_FORMAT_ARGB32,
+                        m_currentMaskSurface->bufferWidth(),
+                        m_currentMaskSurface->bufferHeight(),
+                        m_currentMaskSurface->bufferStride());
+
+                cairo_pattern_t* maskPattern =
+                    cairo_pattern_create_for_surface(maskImage);
+                cairo_matrix_t maskMatrix;
+                cairo_matrix_init_translate(&maskMatrix, xx, yy);
+                cairo_matrix_scale(
+                    &maskMatrix,
+                    (double)m_currentMaskSurface->bufferWidth() / m_maskWidth,
+                    (double)m_currentMaskSurface->bufferHeight() /
+                        m_maskHeight);
+                cairo_pattern_set_matrix(maskPattern, &maskMatrix);
+
+                cairo_mask(m_canvas, maskPattern);
+
+                cairo_pattern_destroy(maskPattern);
+                cairo_surface_destroy(maskImage);
+                cairo_pattern_destroy(resizePattern);
+
+                cairo_restore(m_canvas);
+                checkError();
+            }
+        } else {
+            drawImageCairo(image, dst, data->bufferWidth(),
+                           data->bufferHeight(), true);
+        }
 
         cairo_surface_destroy(image);
         data->unmapBufferAndNotifyUpdatedRegion(0, 0, 0, 0);
@@ -410,6 +485,11 @@ protected:
     unsigned m_height;
     bool m_shouldDestroyCairo;
     bool m_shouldDestroySurface;
+    CanvasSurface* m_currentMaskSurface;
+    float m_maskOffsetX;
+    float m_maskOffsetY;
+    float m_maskWidth;
+    float m_maskHeight;
 };
 
 uint32_t CompositorFactory::maximumTextureSizeCairo()

@@ -29,6 +29,7 @@ class CanvasSurface;
 class GraphicsBufferHolder;
 class FrameBox;
 class Node;
+class ComputedStyle;
 
 struct RenderInfo {
     void* updatedBufferAddress;
@@ -52,6 +53,9 @@ struct PrevDrawnStackingContextInfo {
         needsGraphicsBuffer = hasThisLayerThisTime = isEqualsWithPrevDrawing =
             isVisibleBefore = false;
         graphicsBufferHolder = nullptr;
+        maskSurface = nullptr;
+        maskStyle = nullptr;
+        maskResourceSignature = 0;
         graphicsLayerOwner = nullptr;
         opacity = 1;
         transformMatrix = SkMatrix::I();
@@ -71,6 +75,9 @@ struct PrevDrawnStackingContextInfo {
     SkMatrix transformMatrix;
     float opacity;
     GraphicsBufferHolder* graphicsBufferHolder;
+    CanvasSurface* maskSurface;
+    ComputedStyle* maskStyle;
+    size_t maskResourceSignature;
     LayoutRect graphicsBufferVisibleRect;
     float additionalPixelRatio;
 };

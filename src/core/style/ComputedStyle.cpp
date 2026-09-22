@@ -40,6 +40,7 @@
 #include "core/page/WebView.h"
 #include "core/style/CSSProperty.h"
 #include "core/style/FilterFunctions.h"
+#include "core/style/GradientData.h"
 #include "core/style/WillChangeData.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/AncestorSelectorFilter.h"
@@ -1131,6 +1132,17 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         if (filter) {
             filter->checkComputed(curFontSize, rootFontSize, font, windowSize,
                                   this);
+        }
+
+        PositionedMaskData* mask = m_rareComputedStyleData.positionedMask();
+        if (mask) {
+            for (uint32_t i = 0; i < maskLayerSize(); i++) {
+                ImageValue* imageValue = maskImage(i);
+                if (imageValue && imageValue->type().isGradient()) {
+                    imageValue->gradientValue()->checkComputed(
+                        curFontSize, rootFontSize, font, windowSize, this);
+                }
+            }
         }
 
 #define TO_FIXED(name, name2)                                           \
@@ -2728,7 +2740,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                             damage);
                     }
                     damage = static_cast<ComputedStyleDamage>(
-                        ComputedStyleDamage::ComputedStyleDamagePainting |
+                        ComputedStyleDamage::ComputedStyleDamageComposite |
                         damage);
                 }
             }

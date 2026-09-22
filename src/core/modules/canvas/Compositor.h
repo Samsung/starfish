@@ -113,6 +113,15 @@ public:
     virtual void drawRect(const LayoutRect& rt) = 0;
     virtual void punchHole(const Unit::Rect& rt) = 0;
 
+    virtual void setMaskSurface(CanvasSurface* maskSurface, float offsetX,
+                                float offsetY, float maskWidth,
+                                float maskHeight)
+    {
+    }
+    virtual void clearMaskSurface()
+    {
+    }
+
     virtual void drawSurface(CanvasSurface* data, const Unit::Rect& dst) = 0;
 
     virtual void applyMatrixTo(LayoutLocation& lp) = 0;

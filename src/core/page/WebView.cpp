@@ -1514,6 +1514,10 @@ static void saveCurrentPaintingState(StackingContext* ctx)
         info.graphicsBufferVisibleRect = ctx->visibleRect();
         info.additionalPixelRatio = ctx->additionalPixelRatio();
         info.graphicsBufferHolder = ctx->graphicsBufferHolder();
+        info.maskSurface = ctx->maskSurface();
+        info.maskStyle = ctx->maskStyle();
+        info.maskResourceSignature = ctx->maskResourceSignature();
+        ctx->setMaskSurface(nullptr);
     } else {
         StackingContext* owner = ctx->parent();
         while (owner != nullptr && !owner->needsGraphicsBuffer()) {
@@ -1856,6 +1860,10 @@ RenderResult WebView::rendering(bool force)
                 if (iter->second.graphicsBufferHolder) {
                     iter.value().graphicsBufferHolder->flushSurfaces();
                     iter.value().graphicsBufferHolder = nullptr;
+                }
+                if (iter->second.maskSurface) {
+                    iter.value().maskSurface->detachNativeBuffer();
+                    iter.value().maskSurface = nullptr;
                 }
                 iter++;
             }
