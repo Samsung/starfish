@@ -93,14 +93,15 @@ bool Session::open(const std::string& url, std::string& error)
 {
     std::string result;
     std::string parameters = "{\"url\":" + jsonString(url) + "}";
-    m_client.expectEvent("Page.loadEventFired");
+    m_client.expectEvent("Accessibility.loadComplete");
     if (!command("Page.navigate", parameters, result, error)) {
         return false;
     }
 
     std::string eventParameters;
-    if (!m_client.waitForEvent("Page.loadEventFired", eventParameters, 30000)) {
-        error = "timeout waiting for Page.loadEventFired";
+    if (!m_client.waitForEvent("Accessibility.loadComplete", eventParameters,
+                               30000)) {
+        error = "timeout waiting for Accessibility.loadComplete";
         return false;
     }
     return true;
