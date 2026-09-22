@@ -1071,11 +1071,6 @@ public:
             bool isTouch = ev->dev && evas_device_class_get(ev->dev) ==
                                           EVAS_DEVICE_CLASS_TOUCH;
 
-            // Diagnostic: prove whether raw input reaches the shell and via
-            // which device class (touch vs mouse).
-            STARFISH_LOG_INFO("WebViewEFL: mouse down at (%d, %d) isTouch %d",
-                              currentPosX, currentPosY, isTouch ? 1 : 0);
-
             if (isTouch && (currentPosX >= 0 && currentPosY >= 0)) {
                 float pts[2] = { (float)currentPosX, (float)currentPosY };
                 int ids[1] = { 0 };
@@ -1181,14 +1176,25 @@ public:
             bool isTouch = ev->dev && evas_device_class_get(ev->dev) ==
                                           EVAS_DEVICE_CLASS_TOUCH;
 
-            if (isTouch && webView->m_isMouseLbuttonDown) {
-                float pts[2] = { (float)currentPosX, (float)currentPosY };
-                int ids[1] = { 0 };
-                webView->FetchWebContainer()->DispatchTouchMoveEvent(pts, ids,
-                                                                     1);
+            if (isTouch) {
+                // A touch panel has no hover, but Evas still reports a move to
+                // the contact point just before the press and after the
+                // release. Forwarding those as mouse moves makes the engine
+                // update hover, which content reads as the pointer entering
+                // and then immediately leaving — a video player reveals its
+                // controls on that entry and hides them again on the exit, so
+                // a single tap flashes the controls. Only the part of the
+                // gesture with a finger actually down is a touch move.
+                if (webView->m_isMouseLbuttonDown) {
+                    float pts[2] = { (float)currentPosX, (float)currentPosY };
+                    int ids[1] = { 0 };
+                    webView->FetchWebContainer()->DispatchTouchMoveEvent(
+                        pts, ids, 1);
+                }
             } else if (!webView->m_isTouchDown) {
-                // Suppress non-touch mouse move events during a touch sequence
-                // to prevent spurious hover/mouseleave updates.
+                // Fallback for panels that report no device class: once a
+                // touch press has been seen, keep mouse moves out of the
+                // ongoing sequence for the same reason.
                 unsigned char buttons = webView->m_isMouseLbuttonDown
                                             ? MouseButtonsValue::LeftButtonDown
                                             : MouseButtonsValue::NoButtonDown;
