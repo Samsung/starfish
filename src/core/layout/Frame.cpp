@@ -1724,6 +1724,16 @@ void Frame::computeStyleFlags()
     if (wc && (wc->transform() || wc->opacity())) {
         m_flags.m_needsGraphicsBuffer |= true;
     }
+
+    size_t transitionSize = style->transitionLayerSize();
+    for (size_t i = 0; i < transitionSize; i++) {
+        if (style->transitionProperty(i) ==
+            CSSStyleValuePair::KeyKind::Transform) {
+            m_flags.m_needsGraphicsBuffer |= true;
+            m_flags.m_needToEstablishStackingContext |= true;
+            break;
+        }
+    }
 }
 
 Node* Frame::nodeSlowCase() const
