@@ -839,6 +839,12 @@ public:
 
     String* m_overflowString;
 
+    // PointerEvent.pointerType values. Held here so that the per-event
+    // dispatch does not allocate a fresh string for every pointer event.
+    // https://w3c.github.io/pointerevents/#dom-pointerevent-pointertype
+    String* m_pointerTypeMouse;
+    String* m_pointerTypeTouch;
+
 protected:
 };
 } // namespace Starfish

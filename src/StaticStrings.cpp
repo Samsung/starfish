@@ -964,5 +964,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
 #else
     m_overflowString = String::fromUTF8("\u2026");
 #endif
+
+    m_pointerTypeMouse = String::createASCIIString("mouse");
+    m_pointerTypeTouch = String::createASCIIString("touch");
 }
 } // namespace Starfish

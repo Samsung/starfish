@@ -1418,6 +1418,10 @@ supported.
 | | attribute | onpointermove | Fired when a pointer changes coordinates. |
 | | attribute | onpointerup | Fired when a pointer is no longer active. |
 | | attribute | onscroll | Fired when the document view or an element has scrolled. |
+| | attribute | ontouchstart | Fired when a touch point is placed on the touch surface. |
+| | attribute | ontouchend | Fired when a touch point is removed from the touch surface. |
+| | attribute | ontouchmove | Fired when a touch point is moved along the touch surface. |
+| | attribute | ontouchcancel | Fired when a touch point has been disrupted. |
 | | attribute | onsubmit | Fired at a `<form>` when it is submitted. |
 | | attribute | onpause | Fired when the element has been paused. |
 | | attribute | onplay | Fired when the element is no longer paused. Fired after the play() method has returned, or when the autoplay attribute has caused playback to begin. |
@@ -2238,12 +2242,13 @@ Extensions to the Navigator Object: The navigator is extended by the following a
 |----------------------|--------|---------------------------|-------------|
 | [Navigator](https://html.spec.whatwg.org/#the-navigator-object)	| interface	| Navigator	| The navigator attribute of the Window interface must return an instance of the Navigator interface, which represents the identity and state of the user agent (the client), and allows Web pages to register themselves as potential protocol and content handlers |
 | |	attribute	| geolocation	| Return geolocation interface. |
+| |	attribute	| maxTouchPoints	| Maximum number of simultaneous touch contacts. Reports a non-zero count on touchscreen device kinds and `0` otherwise, so it doubles as the touch-input feature test. |
 | |	attribute	| cookieEnabled	| Return true if the user agent attempts to handle cookies according to the cookie specification. |
 | |	attribute	| language	| Return a string representing the language version as defined in BCP 47 (e.g. `ko_KR`). |
 | |	attribute	| onLine	| Returns whether the user agent considers itself to be online. LWE always returns `true`. |
 | |	method	| boolean javaEnabled() | Always returns `false` (Java applets are not supported). |
 | |	misc	| **Unsupported in LWE** (`[Unimplemented]`) | `productSub`, `languages`, `plugins`, `mimeTypes`. |
-| |	misc	| **Not exposed at all** | `mediaDevices`, `clipboard`, `share`, `permissions`, `bluetooth`, `usb`, `xr`, `maxTouchPoints`, `hardwareConcurrency`, `deviceMemory`, `connection`, `userAgentData`, `serviceWorker` (build-conditional under `STARFISH_ENABLE_SERVICE_WORKER`), `getBattery`/`battery`. |
+| |	misc	| **Not exposed at all** | `mediaDevices`, `clipboard`, `share`, `permissions`, `bluetooth`, `usb`, `xr`, `hardwareConcurrency`, `deviceMemory`, `connection`, `userAgentData`, `serviceWorker` (build-conditional under `STARFISH_ENABLE_SERVICE_WORKER`), `getBattery`/`battery`. |
 | [NavigatorID](https://html.spec.whatwg.org/multipage/#navigatorid) | interface | | NavigatorID is used for identifying Navigator. |
 | | attribute | appCodeName | Returns the string "Mozilla". |
 | | attribute | appName | Returns the string "Netscape". |
@@ -3056,7 +3061,7 @@ The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` 
 |-----------------|--------|
 | `KeyboardEvent` | Implements `key`, `code`, `keyCode`, `charCode`, `which` (via UIEvent), `ctrlKey`, `shiftKey`, `altKey`, `metaKey`, `repeat`, plus `DOM_KEY_LOCATION_*` constants. **`[Unimplemented]`:** `location`, `isComposing`, `getModifierState(key)` — read as `undefined`. The C++ already stores `location`/`isComposing`; the IDL annotation is stale. |
 | `MouseEvent` | Adds `pageX`/`pageY` (read 0 on synthetic events because `MouseEventInit` does not surface them). **`[Unimplemented]`:** `offsetX`, `offsetY`, `movementX`, `movementY`, `x`, `y`, `layerX`, `layerY`, `getModifierState(key)`. **Bug:** `new MouseEvent('click', {altKey:true})` does NOT copy modifier keys from the init dict. |
-| `PointerEvent` | Exposed; inherits MouseEvent. Implements only `pointerId`, `pointerType` on the prototype. **`[Unimplemented]`:** `width`, `height`, `pressure`, `tangentialPressure`, `tiltX`, `tiltY`, `twist`, `altitudeAngle`, `azimuthAngle`, `isPrimary`, `getCoalescedEvents()`, `getPredictedEvents()`. **Bug:** `new PointerEvent` ctor ignores `pointerId`/`pointerType` from init dict. **Bug:** `document.createEvent('PointerEvent')` throws "operation is not supported"; use `new PointerEvent(...)`. |
+| `PointerEvent` | Exposed; inherits MouseEvent. Implements only `pointerId`, `pointerType` on the prototype. `pointerType` names the input that produced the event (`"touch"` for a finger, `"mouse"` for the pointing device). **`[Unimplemented]`:** `width`, `height`, `pressure`, `tangentialPressure`, `tiltX`, `tiltY`, `twist`, `altitudeAngle`, `azimuthAngle`, `isPrimary`, `getCoalescedEvents()`, `getPredictedEvents()`. **Bug:** `document.createEvent('PointerEvent')` throws "operation is not supported"; use `new PointerEvent(...)`. |
 | `WheelEvent` | **Does NOT exist in LWE** — `WheelEvent === undefined`. `el.onwheel` accepts assignment but never fires. |
 | `TouchEvent` / `Touch` / `TouchList` | All three constructors exposed (`typeof === 'function'`), but **`new TouchEvent(...)` throws `Illegal constructor`** — there is no JS-side way to construct/dispatch a TouchEvent. Real touch events fire only on touchscreen-capable shells (not on glfw/EFL desktop). `Touch` is constructible (`target`, `screenX/Y`, `clientX/Y` only); `TouchEvent.touches` is on the prototype but `targetTouches`/`changedTouches`/modifier flags are not. |
 | `DragEvent` / `DataTransfer` / `DataTransferItem` / `DataTransferItemList` | **All four are absent** — no IDL, no C++. Globals are `undefined`. `HTMLElement.draggable` is `[Unimplemented]` — reflector returns `undefined`. All `ondrag*` handler slots accept assignment but never fire. |

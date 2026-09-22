@@ -34,6 +34,9 @@ interface Navigator {
   // Partial
   // https://dev.w3.org/geo/api/spec-source.html#navi-geo
   readonly attribute Geolocation geolocation;
+
+  // https://w3c.github.io/pointerevents/#extensions-to-the-navigator-interface
+  readonly attribute long maxTouchPoints;
 };
 
 Navigator implements NavigatorID;
