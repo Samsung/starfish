@@ -338,6 +338,9 @@ StackingContextRareData::StackingContextRareData()
     : m_visibleRect(0, 0, 0, 0)
     , m_additionalPixelRatio(1)
     , m_graphicsBufferHolder(nullptr)
+    , m_maskSurface(nullptr)
+    , m_maskStyle(nullptr)
+    , m_maskResourceSignature(0)
     , m_matrix(SkMatrix::I())
 {
 }
@@ -1269,6 +1272,15 @@ bool StackingContext::isOwnerBackgroundDrawnByCompositor()
         return false;
     }
     ComputedStyle* s = owner()->style();
+    if (s->maskLayerSize()) {
+        return false;
+    }
+    for (StackingContext* ancestor = parent(); ancestor;
+         ancestor = ancestor->parent()) {
+        if (ancestor->owner()->style()->maskLayerSize()) {
+            return false;
+        }
+    }
     if (s->backgroundColor().isTransparent()) {
         return false;
     }
@@ -3418,6 +3430,52 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         return;
     }
 
+    // CSS Masking applies an element's mask to its rendered descendants too.
+    // Overlapping composited descendants still require group compositing to
+    // apply the mask only once to their combined pixels.
+    StackingContext* maskContext = this;
+    while (maskContext && (maskContext->owner()->isFrameSVGBox() ||
+                           !maskContext->owner()->style()->maskLayerSize())) {
+        maskContext = maskContext->parent();
+    }
+    CanvasSurface* compositingMask = nullptr;
+    float maskOriginX = 0;
+    float maskOriginY = 0;
+    float maskScaleX = 1;
+    float maskScaleY = 1;
+    if (maskContext) {
+        maskContext->updateMaskSurface();
+        compositingMask = maskContext->maskSurface();
+        if (maskContext != this) {
+            SkMatrix maskInverse;
+            if (maskContext->owner()->computeScreenMatrix(false).invert(
+                    &maskInverse)) {
+                SkPoint points[] = { SkPoint::Make(0, 0), SkPoint::Make(1, 0),
+                                     SkPoint::Make(0, 1) };
+                m_owner
+                    ->computeScreenMatrix(m_owner->isFrameBlockBox() &&
+                                          m_owner->shouldApplyOverflow())
+                    .mapPoints(points, 3);
+                maskInverse.mapPoints(points, 3);
+                maskOriginX = points[0].x();
+                maskOriginY = points[0].y();
+                maskScaleX = points[1].x() - maskOriginX;
+                maskScaleY = points[2].y() - maskOriginY;
+                if (std::abs(maskScaleX) < 0.0001f) {
+                    maskScaleX = 1;
+                }
+                if (std::abs(maskScaleY) < 0.0001f) {
+                    maskScaleY = 1;
+                }
+            }
+        } else if (maskContext->owner()->isFrameBlockBox() &&
+                   maskContext->owner()->shouldApplyOverflow()) {
+            maskOriginX -=
+                maskContext->owner()->asFrameBlockBox()->scrollLeft();
+            maskOriginY -= maskContext->owner()->asFrameBlockBox()->scrollTop();
+        }
+    }
+
     auto contentSurface = owner()->contentSurface();
     if (!thereIsNoBufferBecauseThereIsNoVisibleContent || contentSurface ||
         isOwnerBackgroundDrawnByCompositor) {
@@ -3476,8 +3534,14 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                     auto clr = owner()->style()->backgroundColor();
                     if (!clr.isTransparent()) {
                         compositor->save();
-                        compositor->setFillColor(clr);
-                        compositor->drawRect(fullRect);
+                        if (maskContext == this && compositingMask) {
+                            compositor->beginOpacityLayer(clr.A(), fullRect);
+                            compositor->drawSurface(compositingMask, fullRect);
+                            compositor->endOpacityLayer();
+                        } else {
+                            compositor->setFillColor(clr);
+                            compositor->drawRect(fullRect);
+                        }
                         compositor->restore();
                     }
                 }
@@ -3584,10 +3648,21 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                                         ->m_surfaces.size() &&
                         m_rareData->m_graphicsBufferHolder
                                 ->m_surfaces[tileIndex] != nullptr) {
+                        if (compositingMask) {
+                            compositor->setMaskSurface(
+                                compositingMask,
+                                (float)minX + maskOriginX / maskScaleX,
+                                (float)minY + maskOriginY / maskScaleY,
+                                maskContext->owner()->width() / maskScaleX,
+                                maskContext->owner()->height() / maskScaleY);
+                        }
                         compositor->drawSurface(
                             m_rareData->m_graphicsBufferHolder
                                 ->m_surfaces[tileIndex],
                             Unit::Rect(tx, ty, w, h));
+                        if (compositingMask) {
+                            compositor->clearMaskSurface();
+                        }
 #ifdef STARFISH_ENABLE_TEST
                         if (UNLIKELY(owner()->node()->webView()->startUpFlag() &
                                      StarfishStartUpFlag::
@@ -3641,9 +3716,19 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             auto dy = owner()->borderTop() + owner()->paddingTop();
             compositor->translate(dx, dy);
 
+            if (compositingMask) {
+                compositor->setMaskSurface(
+                    compositingMask, dx + maskOriginX / maskScaleX,
+                    dy + maskOriginY / maskScaleY,
+                    maskContext->owner()->width() / maskScaleX,
+                    maskContext->owner()->height() / maskScaleY);
+            }
             compositor->drawSurface(contentSurface.getValue(),
                                     Unit::Rect(0, 0, owner()->contentWidth(),
                                                owner()->contentHeight()));
+            if (compositingMask) {
+                compositor->clearMaskSurface();
+            }
             compositor->restore();
         }
 
@@ -3902,7 +3987,7 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
 void StackingContext::applyMask(Canvas* canvas,
                                 PaintingStackingContextContext& ctx)
 {
-    if (m_owner->isFrameSVGBox()) {
+    if (m_owner->isFrameSVGBox() || needsGraphicsBuffer()) {
         return;
     }
 
@@ -3910,8 +3995,136 @@ void StackingContext::applyMask(Canvas* canvas,
         return;
     }
 
+    Unit::Rect rect =
+        m_owner->makeRect(BoxValue::BorderBoxBoxValue).snapSizeToPixel();
+    if (rect.width() <= 0 || rect.height() <= 0) {
+        return;
+    }
+
+    auto imageData =
+        BufferedNativeImageData::create(rect.width(), rect.height());
+    Canvas* maskCanvas = Canvas::create(m_owner->node()->webView(), imageData);
+    maskCanvas->clearColor(Unit::Color(0, 0, 0, 0));
+    paintMask(maskCanvas);
+    delete maskCanvas;
+    canvas->maskNativeImage(imageData, rect);
+}
+
+void StackingContext::updateMaskSurface()
+{
+    Unit::Rect rect =
+        m_owner->makeRect(BoxValue::BorderBoxBoxValue).snapSizeToPixel();
+    if (rect.width() <= 0 || rect.height() <= 0) {
+        return;
+    }
+
+    float devicePixelRatio =
+        m_owner->node()->webView()->screenInfo().devicePixelRatio;
+    float maxSize =
+        Compositor::maximumTextureSize(m_owner->document()->starfish());
+    float maxLogicalSize = std::max(1.0f, maxSize - 1) / devicePixelRatio;
+    float scale = std::min(1.0f, std::min(maxLogicalSize / rect.width(),
+                                          maxLogicalSize / rect.height()));
+    size_t surfaceWidth = std::max((size_t)1, (size_t)(rect.width() * scale));
+    size_t surfaceHeight = std::max((size_t)1, (size_t)(rect.height() * scale));
+
+    CanvasSurface* surface = maskSurface();
+    if (!surface) {
+        auto& previous =
+            m_owner->node()->webView()->prevDrawnStackingContextInfo();
+        auto iter = previous.find(m_owner->node());
+        if (iter != previous.end() && iter->second.maskSurface) {
+            surface = iter->second.maskSurface;
+            ensureRareData()->m_maskStyle = iter->second.maskStyle;
+            m_rareData->m_maskResourceSignature =
+                iter->second.maskResourceSignature;
+            iter.value().maskSurface = nullptr;
+            setMaskSurface(surface);
+        }
+    }
+
+    ComputedStyle* style = m_owner->style();
+    size_t resourceSignature = style->maskLayerSize();
+    PositionedMaskData* maskData =
+        style->rareComputedStyleData()->positionedMask();
+    for (uint32_t i = 0; i < style->maskLayerSize(); i++) {
+        ImageValue* image = style->maskImage(i);
+        if (image && image->type().isURL() && maskData) {
+            ImageResource* resource = maskData->imageResource(i);
+            if (resource) {
+                m_owner->node()
+                    ->webView()
+                    ->putURLIntoActiveImageURLsInRenderingSet(
+                        resource->url()->urlString()->toUTF8NonGCString());
+            }
+            NativeImageData* data = resource ? resource->imageData() : nullptr;
+            resourceSignature =
+                resourceSignature * 31 + reinterpret_cast<size_t>(data);
+            if (data) {
+                resourceSignature = resourceSignature * 31 + data->width();
+                resourceSignature = resourceSignature * 31 + data->height();
+            }
+        }
+    }
+    if (surface &&
+        (surface->width() != surfaceWidth ||
+         surface->height() != surfaceHeight ||
+         surface->bufferWidth() !=
+             std::max((size_t)1, (size_t)(surfaceWidth * devicePixelRatio)) ||
+         surface->bufferHeight() !=
+             std::max((size_t)1, (size_t)(surfaceHeight * devicePixelRatio)))) {
+        surface->detachNativeBuffer();
+        surface = nullptr;
+    }
+    if (surface && m_rareData->m_maskStyle == style &&
+        m_rareData->m_maskResourceSignature == resourceSignature) {
+        return;
+    }
+    if (!surface) {
+        surface = CanvasSurface::create(m_owner->node()->webView()->renderer(),
+                                        surfaceWidth, surfaceHeight, 1,
+                                        CanvasSurface::PreferUnitedTexture);
+        setMaskSurface(surface);
+    }
+
+    Canvas* maskCanvas = Canvas::create(m_owner->node()->webView(), surface);
+    maskCanvas->clearColor(Unit::Color(0, 0, 0, 0));
+    maskCanvas->scale((float)surfaceWidth / rect.width(),
+                      (float)surfaceHeight / rect.height());
+    paintMask(maskCanvas);
+    delete maskCanvas;
+    if (inScrollWithGraphicsBufferActive() &&
+        !style->backgroundColor().isTransparent()) {
+        auto mapped = surface->mapBuffer(0, 0, surface->bufferWidth(),
+                                         surface->bufferHeight());
+        Unit::Color color = style->backgroundColor();
+        for (size_t y = 0; y < mapped.m_mappedBufferHeight; y++) {
+            uint8_t* row =
+                mapped.m_bufferAddress + y * mapped.m_mappedBufferStride;
+            for (size_t x = 0; x < mapped.m_mappedBufferWidth; x++) {
+                uint8_t* pixel = row + x * 4;
+                uint8_t alpha = pixel[3];
+#if defined(PORT_PIXEL_ORDER_BGRA)
+                pixel[0] = color.b() * alpha / 255;
+                pixel[1] = color.g() * alpha / 255;
+                pixel[2] = color.r() * alpha / 255;
+#else
+                pixel[0] = color.r() * alpha / 255;
+                pixel[1] = color.g() * alpha / 255;
+                pixel[2] = color.b() * alpha / 255;
+#endif
+            }
+        }
+    }
+    surface->unmapBufferAndNotifyUpdatedRegion(0, 0, surface->bufferWidth(),
+                                               surface->bufferHeight());
+    m_rareData->m_maskStyle = style;
+    m_rareData->m_maskResourceSignature = resourceSignature;
+}
+
+void StackingContext::paintMask(Canvas* maskCanvas)
+{
     auto style = m_owner->style();
-    auto document = m_owner->document();
     for (uint32_t i = 0; i < m_owner->style()->maskLayerSize(); i++) {
         if (style->maskImage(i) == nullptr) {
             continue;
@@ -3932,7 +4145,7 @@ void StackingContext::applyMask(Canvas* canvas,
             ImageResource* ir = maskStyle->imageResource(i);
 
             if (!ir) {
-                return;
+                continue;
             }
             if (box->node() != nullptr) {
                 box->node()->webView()->putURLIntoActiveImageURLsInRenderingSet(
@@ -3941,7 +4154,7 @@ void StackingContext::applyMask(Canvas* canvas,
 
             id = ir->imageData();
             if (id == nullptr || id->width() == 0 || id->height() == 0) {
-                return;
+                continue;
             }
 
             if (id->isSVGNativeImageData() &&
@@ -3969,27 +4182,8 @@ void StackingContext::applyMask(Canvas* canvas,
         Unit::Rect paintingRect;
         Unit::Rect positioningRect;
 
-        if (box->isFrameBlockBox()) {
-            FrameBox scrollBox(box->node(), style);
-            scrollBox.copyFrom(box,
-                               FrameBox::BorderCopy | FrameBox::PaddingCopy);
-            scrollBox.setWidth(box->asFrameBlockBox()->scrollWidth());
-            scrollBox.setHeight(box->asFrameBlockBox()->scrollHeight());
-
-            positioningRect = scrollBox.makeRect(BoxValue::PaddingBoxBoxValue);
-            positioningRect.setX(positioningRect.x() -
-                                 box->asFrameBlockBox()->scrollLeft());
-            positioningRect.setY(positioningRect.x() -
-                                 box->asFrameBlockBox()->scrollTop());
-            paintingRect = scrollBox.makeRect(BoxValue::BorderBoxBoxValue);
-        } else {
-            positioningRect = box->makeRect(BoxValue::PaddingBoxBoxValue);
-            paintingRect = box->makeRect(BoxValue::BorderBoxBoxValue);
-        }
-        canvas->translate(paintingRect.x(), paintingRect.y());
-        canvas->clip(
-            Unit::Rect(0, 0, paintingRect.width(), paintingRect.height()));
-
+        positioningRect = box->makeRect(BoxValue::PaddingBoxBoxValue);
+        paintingRect = box->makeRect(BoxValue::BorderBoxBoxValue);
         float positionW = positioningRect.width();
         float positionH = positioningRect.height();
         float paintingW = paintingRect.width();
@@ -4058,14 +4252,9 @@ void StackingContext::applyMask(Canvas* canvas,
 
         bool shouldApplyRepeat = type.isGradient() ? hasSpecifiedSize : true;
 
-        Unit::Rect rect =
-            m_owner->makeRect(BoxValue::BorderBoxBoxValue).snapSizeToPixel();
-        auto imageData =
-            BufferedNativeImageData::create(rect.width(), rect.height());
-        Canvas* maskCanvas =
-            Canvas::create(m_owner->node()->webView(), imageData);
-        maskCanvas->clearColor(Unit::Color(0, 0, 0, 0));
         maskCanvas->save();
+        maskCanvas->translate(paintingRect.x(), paintingRect.y());
+        maskCanvas->clip(Unit::Rect(0, 0, paintingW, paintingH));
 
         if (shouldApplyRepeat &&
             (repeatX == RepeatStyleValue::RepeatRepeatValue &&
@@ -4125,8 +4314,6 @@ void StackingContext::applyMask(Canvas* canvas,
         }
         maskCanvas->fill();
         maskCanvas->restore();
-        delete maskCanvas;
-        canvas->maskNativeImage(imageData, rect);
     }
 }
 

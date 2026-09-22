@@ -1055,7 +1055,7 @@ test/cairo/reftest/vendor/blink_original/svg/in-html/svg-assert-failure-percenta
 #test/cairo/reftest/vendor/blink_original/svg/markers/marker-orientation-minus-one.html
 test/cairo/reftest/vendor/blink_original/svg/masking/css-mask-of-root.html
 #test/cairo/reftest/vendor/blink_original/svg/masking/mask-of-root.html
-test/cairo/reftest/vendor/blink_original/svg/masking/mask-valid-reference-wrong-element-type-crash.html
+#test/cairo/reftest/vendor/blink_original/svg/masking/mask-valid-reference-wrong-element-type-crash.html
 #test/cairo/reftest/vendor/blink_original/svg/masking/mask-with-visibility-hidden-group.html
 #test/cairo/reftest/vendor/blink_original/svg/overflow/large-overflow.html
 test/cairo/reftest/vendor/blink_original/svg/overflow/overflow-visible-with-border-radius.html

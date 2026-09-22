@@ -34,6 +34,7 @@ class PaintPassMemos;
 class Node;
 class StackingContext;
 class BrowsingContext;
+class ComputedStyle;
 
 enum NeedsGraphicsLayerReason ENSURE_ENUM_UNSIGNED {
     NeedsGraphicsLayerReasonNone,
@@ -128,6 +129,9 @@ struct StackingContextRareData : public gc {
     LayoutRect m_visibleRect;
     float m_additionalPixelRatio;
     GraphicsBufferHolder* m_graphicsBufferHolder;
+    CanvasSurface* m_maskSurface;
+    ComputedStyle* m_maskStyle;
+    size_t m_maskResourceSignature;
     SkMatrix m_matrix;
     TextDecorationData m_textDecorationData;
 
@@ -141,6 +145,9 @@ protected:
     {
         GC_set_bit(desc, GC_WORD_OFFSET(StackingContextRareData,
                                         m_graphicsBufferHolder));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(StackingContextRareData, m_maskSurface));
+        GC_set_bit(desc, GC_WORD_OFFSET(StackingContextRareData, m_maskStyle));
     }
 };
 
@@ -352,6 +359,26 @@ public:
         }
         return nullptr;
     }
+    CanvasSurface* maskSurface()
+    {
+        if (m_rareData) {
+            return m_rareData->m_maskSurface;
+        }
+        return nullptr;
+    }
+    void setMaskSurface(CanvasSurface* surface)
+    {
+        ensureRareData();
+        m_rareData->m_maskSurface = surface;
+    }
+    ComputedStyle* maskStyle()
+    {
+        return m_rareData ? m_rareData->m_maskStyle : nullptr;
+    }
+    size_t maskResourceSignature()
+    {
+        return m_rareData ? m_rareData->m_maskResourceSignature : 0;
+    }
     void clearGraphicsBuffer();
 
     RepaintingWhenScrollingReason repaintingWhenScrollingReason();
@@ -407,6 +434,8 @@ protected:
     void fillGraphicsBufferContents(Canvas* canvas,
                                     PaintingStackingContextContext& ctx);
     void applyMask(Canvas* canvas, PaintingStackingContextContext& ctx);
+    void paintMask(Canvas* maskCanvas);
+    void updateMaskSurface();
 
     bool m_needsGraphicsBuffer : 1;
     bool m_hasNon2DRectTransform : 1;
