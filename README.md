@@ -1,6 +1,6 @@
 # Starfish
 ## Abstract
-Starfish is a lightweight Web browser engine for TV, mobile, headless and wearable devices.
+Starfish is a lightweight Web browser engine for TV, common and headless devices.
 
 ## Supported Platforms
 The following platforms are supported.
@@ -203,8 +203,8 @@ gbs -c ../gbs-conf/gbs.conf build -A armv7l -P profile.50std  --incremental --in
 The following build options are supported when building RPMs.
 Default values are in **bold**.
 
-* --define 'build_profile [ tv | mobile | headless | wearable | **all** ]'<br>
-  Genereate RPMs for TV, mobile, headless and wearable platforms.
+* --define 'build_profile [ tv | common | headless | **all** ]'<br>
+  Genereate RPMs for TV, common and headless platforms.
 
 ### How to Compile: Windows x86/x64
 

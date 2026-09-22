@@ -67,14 +67,12 @@ ENDIF()
 # STARFISH_ENABLE_TRANSPARENT_WINDOW : enable transparent window (transparent background) currently necessary for TIZEN based TV targets
 # STARFISH_ENABLE_BODY_FOCUS_RING : draw focus ring when focus event occurred
 # STARFISH_ENABLE_VIRTUAL_CURSOR : enable painting of virtual cursor
-# STARFISH_TIZEN_WEARABLE_WIDGET : enable features only necessary for TIZEN wearable targets
-# STARFISH_DISABLE_OVERFLOW_SCROLL : disable scroll event for wearable targets
+# STARFISH_DISABLE_OVERFLOW_SCROLL : disable scroll event
 # STARFISH_ENABLE_CANVAS : enable HTMLCanvasElement
 # STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX: enable CSS -webkit-transform-* support
 # STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX: enable CSS -webkit-flex-* support
 # STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX: enable CSS -webkit-transition-* support
 # STARFISH_ENABLE_OBSOLETE_SPEC : enable obsolete spec
-# STARFISH_ENABLE_BATTERY_STATUS : enable battery status api
 # STARFISH_ENABLE_WEBRTC: enable WebRTC
 # STARFISH_ENABLE_WEBSOCKET: enable WebSocket spec
 # STARFISH_ENABLE_WASM : enable WebAssembly
@@ -112,7 +110,7 @@ ENDIF()
 # define, the sub-build in third_party.cmake, its target dependency in
 # starfish.cmake and the link against websockets_lwe - keys off this single flag,
 # so a profile can never end up compiling WebSocket without its library.
-IF (CMAKE_SYSTEM_NAME STREQUAL "Linux" OR ${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile" OR ${CUSTOM} STREQUAL "unified_wearable" OR ${CUSTOM} STREQUAL "flutter")
+IF (CMAKE_SYSTEM_NAME STREQUAL "Linux" OR ${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_common" OR ${CUSTOM} STREQUAL "flutter")
     SET (USE_LIBWEBSOCKETS "1")
 ELSE()
     SET (USE_LIBWEBSOCKETS "0")
@@ -189,7 +187,7 @@ IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     ENDIF()
 ENDIF()
 
-IF (${CUSTOM} STREQUAL "unified_mobile")
+IF (${CUSTOM} STREQUAL "unified_common")
     SET (LWE_DEFINES_CUSTOM
         -DSTARFISH_ENABLE_CANVAS
         -DSTARFISH_ENABLE_MULTIMEDIA
@@ -237,15 +235,6 @@ ELSEIF (${CUSTOM} STREQUAL "prod_tv")
         -DUSE_PRODUCT_FEATURE
         #-DSTARFISH_ENABLE_WEBAUDIO
         -DSTARFISH_TIZEN_USERAPP_SDK_API_ONLY
-    )
-ELSEIF (${CUSTOM} STREQUAL "unified_wearable")
-    SET (LWE_DEFINES_CUSTOM
-        -DSTARFISH_TIZEN_WEARABLE_WIDGET
-        -DSTARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED
-        -DSTARFISH_DISABLE_OVERFLOW_SCROLL
-        #-DSTARFISH_ENABLE_MULTIMEDIA
-        -DSTARFISH_ENABLE_OBSOLETE_SPEC
-        -DSTARFISH_ENABLE_BATTERY_STATUS
     )
 ELSEIF (${CUSTOM} STREQUAL "headless")
     SET (LWE_DEFINES_CUSTOM
@@ -455,9 +444,6 @@ if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9)
     SET (LWE_CXXFLAGS_COMPILER ${LWE_CXXFLAGS_COMPILER} -Wno-attributes -Wno-deprecated-copy -Wno-cast-function-type -Wno-pessimizing-move -Wno-strict-aliasing -Wno-overloaded-virtual -Wno-mismatched-new-delete -Wno-builtin-macro-redefined)
 endif()
 
-#IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen" AND (${CUSTOM} STREQUAL "unified_wearable" OR ${CUSTOM} STREQUAL "prod_wearable"))
-#    SET (LWE_CXXFLAGS_MODE -Os)
-#ELSE
 # ELSE so every non-Debug config gets -O2 -- the previous ELSEIF's exact
 # "Release"/"RelWithDebInfo" match left LWE_CXXFLAGS_MODE completely empty
 # (no optimization flag at all, not even -O0) for e.g. MinSizeRel.
@@ -644,12 +630,7 @@ ENDIF()
 IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     pkg_check_modules (STARFISH_BACKEND_GLES REQUIRED gles20)
     IF (${CUSTOM} STREQUAL "unified_common")
-        pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog capi-appfw-app-common capi-media-player capi-network-connection)
-    ELSEIF (${CUSTOM} MATCHES "mobile")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog capi-appfw-app-common capi-media-player capi-network-connection capi-media-audio-io)
-    ELSEIF (${CUSTOM} MATCHES "wearable")
-        pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog capi-appfw-app-common capi-media-player capi-media-sound-manager capi-system-info capi-system-device)
-        pkg_check_modules (STARFISH_TIZEN_CUSTOM_BUNDLE REQUIRED bundle)
     ELSEIF (${CUSTOM} STREQUAL "unified_tv")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog capi-appfw-app-common capi-network-connection capi-media-player capi-media-audio-io)
     ELSEIF (${CUSTOM} STREQUAL "headless")

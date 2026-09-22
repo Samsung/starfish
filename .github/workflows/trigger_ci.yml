@@ -17,7 +17,7 @@ on:
         default: 'armv7l'
         description: 'arch'
       device:
-        default: 'mobile'
+        default: 'common'
         description: 'device'
 jobs:
 
@@ -27,7 +27,7 @@ jobs:
       # gbs_conf: tizen
       # gbs_profile: tizen_standard
       # gbs_arch: armv7l
-      # gbs_device: mobile
+      # gbs_device: common
       gbs_conf: ${{ inputs.conf }}
       gbs_profile: ${{ inputs.profile }}
       gbs_arch: ${{ inputs.arch }}

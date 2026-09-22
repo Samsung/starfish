@@ -1,7 +1,7 @@
 # AGENTS.md
 
-Starfish is a lightweight Web browser engine for TV, mobile, headless and
-wearable devices; low memory usage is the core constraint. The JS engine is
+Starfish is a lightweight Web browser engine for TV, common and headless
+devices; low memory usage is the core constraint. The JS engine is
 Escargot (`third_party/escargot`). The relevant WHATWG/W3C/ECMA-262 spec is
 the source of truth for behavior, and Web Platform Tests (WPT) are the proof
 of spec compliance.

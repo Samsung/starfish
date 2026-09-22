@@ -30,7 +30,7 @@ Requires(postun): /sbin/ldconfig
 
 # RPM ref: http://backreference.org/2011/09/17/some-tips-on-rpm-conditional-macros/
 
-# [ tv | mobile | wearable ]
+# [ tv | common ]
 # The following syntax's been outdated.
 # %if %{?tizen_profile_name:1}%{!?tizen_profile_name:0}
 # %define profile %{tizen_profile_name}
@@ -38,7 +38,7 @@ Requires(postun): /sbin/ldconfig
 # %define profile undefined
 # %endif
 
-# [ tv | headless | mobile | wearable | all ]
+# [ tv | headless | common | all ]
 # build for all profile
 %if 0%{?build_profile:1}
 %define rpm %{build_profile}
@@ -73,10 +73,6 @@ Requires(postun): /sbin/ldconfig
 %define rpm prod_tv
     %endif
   %endif
-%endif
-
-%if 0%{?sec_product_feature_profile_wearable} == 1
-%define rpm wearable
 %endif
 
 %if 0%{?rebuild_force:1}
@@ -138,28 +134,28 @@ Requires(postun): /sbin/ldconfig
 %define enable_webrtc 0
 %endif
 
-# -DENABLE_ESPLUSPLAYER flag: only turned on for the "mobile" profile on
+# -DENABLE_ESPLUSPLAYER flag: only turned on for the "common" profile on
 # Tizen 10 or higher (esplusplayer MSE backend is unsupported before Tizen 10).
 # It is fed through the shared features_config, so leaving it off for "all" keeps
-# the unified_tv/wearable/etc. sub-builds from linking the esplusplayer backend.
-# (The unified_mobile sub-build does not need this flag anyway: config.cmake
-# force-enables ENABLE_ESPLUSPLAYER for CUSTOM=unified_mobile on Tizen 10+.)
+# the unified_tv/etc. sub-builds from linking the esplusplayer backend.
+# (The unified_common sub-build does not need this flag anyway: config.cmake
+# force-enables ENABLE_ESPLUSPLAYER for CUSTOM=unified_common on Tizen 10+.)
 %if 0%{?enable_esplusplayer:1}
 %else
-%if "%{rpm}" == "mobile" && 0%{?tizen_version_major} >= 10
+%if "%{rpm}" == "common" && 0%{?tizen_version_major} >= 10
 %define enable_esplusplayer 1
 %else
 %define enable_esplusplayer 0
 %endif
 %endif
 
-# BuildRequires gate is broader than the -D flag: the unified_mobile sub-build
-# runs for both "mobile" and "all", and config.cmake force-requires
+# BuildRequires gate is broader than the -D flag: the unified_common sub-build
+# runs for both "common" and "all", and config.cmake force-requires
 # pkgconfig(esplusplayer) for that CUSTOM on Tizen 10+. Without this the
 # buildroot never pulls the package in and cmake configuration fails for "all".
 %if 0%{?need_esplusplayer_pkg:1}
 %else
-%if ("%{rpm}" == "mobile" || "%{rpm}" == "all") && 0%{?tizen_version_major} >= 10
+%if ("%{rpm}" == "common" || "%{rpm}" == "all") && 0%{?tizen_version_major} >= 10
 %define need_esplusplayer_pkg 1
 %else
 %define need_esplusplayer_pkg 0
@@ -224,15 +220,11 @@ Requires(postun): /sbin/ldconfig
 # %if "%{?TIZEN_PRODUCT_TV}" == "1"
 # %define profile tv
 # %else
-# %if "%{?TIZEN_PRODUCT_MOBILE}" == "1"
-# %define profile mobile
-# %else
-# %if "%{?TIZEN_PRODUCT_WEARABLE}" == "1"
-# %define profile wearable
+# %if "%{?TIZEN_PRODUCT_COMMON}" == "1"
+# %define profile common
 # %else
 #  default profile
 # %define profile undefined
-# %endif
 # %endif
 # %endif
 
@@ -313,7 +305,7 @@ BuildRequires: pkgconfig(openssl)
 
 BuildRequires: pkgconfig(libpulse)
 
-%if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "mobile" || "%{rpm}" == "wearable" || "%{rpm}" == "all"
+%if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "common" || "%{rpm}" == "all"
 BuildRequires: pkgconfig(capi-system-info)
 BuildRequires: pkgconfig(capi-system-device)
 %endif
@@ -325,7 +317,7 @@ BuildRequires: pkgconfig(capi-media-tool)
 %endif
 
 # Touch-exploration accessibility + AT-SPI2 provider (ENABLE_A11Y_TOUCH)
-%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
+%if "%{rpm}" == "common" || "%{rpm}" == "all"
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(atk)
 BuildRequires: pkgconfig(atk-bridge-2.0)
@@ -366,11 +358,10 @@ BuildRequires: sdk-core
 #%endif # aarch64
 
 # Supporting multiprofiles
-# Use profile_mobile as default, as it is both minimal and
-# platform-independent version of LWE at the time of writing
-# TODO: Creates a profile_common if this is no longer true.
+# Use profile_common as default, as it is both minimal and
+# platform-independent version of LWE at the time of writing.
 Requires: %{name}-compat = %{version}-%{release}
-Recommends: %{name}-profile_mobile = %{version}-%{release}
+Recommends: %{name}-profile_common = %{version}-%{release}
 
 %description
 This package provides a Tizen specific implementation of Lightweight Web Engine.
@@ -384,8 +375,7 @@ This package provides a Tizen specific implementation of Lightweight Web Engine.
 Summary:     Lightweight Web Engine for tv
 Provides:    %{name}-compat = %{version}-%{release}
 Conflicts:   %{name}-profile_headless = %{version}-%{release}
-Conflicts:   %{name}-profile_mobile = %{version}-%{release}
-Conflicts:   %{name}-profile_wearable = %{version}-%{release}
+Conflicts:   %{name}-profile_common = %{version}-%{release}
 %description profile_tv
 Lightweight Web Engine for tv
 %endif
@@ -395,32 +385,19 @@ Lightweight Web Engine for tv
 Summary:     Lightweight Web Engine for headless
 Provides:    %{name}-compat = %{version}-%{release}
 Conflicts:   %{name}-profile_tv = %{version}-%{release}
-Conflicts:   %{name}-profile_mobile = %{version}-%{release}
-Conflicts:   %{name}-profile_wearable = %{version}-%{release}
+Conflicts:   %{name}-profile_common = %{version}-%{release}
 %description profile_headless
 Lightweight Web Engine for headless
 %endif
 
-%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
-%package profile_mobile
-Summary:     Lightweight Web Engine for mobile
+%if "%{rpm}" == "common" || "%{rpm}" == "all"
+%package profile_common
+Summary:     Lightweight Web Engine for common
 Provides:    %{name}-compat = %{version}-%{release}
 Conflicts:   %{name}-profile_tv = %{version}-%{release}
 Conflicts:   %{name}-profile_headless = %{version}-%{release}
-Conflicts:   %{name}-profile_wearable = %{version}-%{release}
-%description profile_mobile
-Lightweight Web Engine for mobile
-%endif
-
-%if "%{rpm}" == "wearable" || "%{rpm}" == "all"
-%package profile_wearable
-Summary:     Lightweight Web Engine for wearable
-Provides:    %{name}-compat = %{version}-%{release}
-Conflicts:   %{name}-profile_tv = %{version}-%{release}
-Conflicts:   %{name}-profile_headless = %{version}-%{release}
-Conflicts:   %{name}-profile_mobile = %{version}-%{release}
-%description profile_wearable
-Lightweight Web Engine for wearable
+%description profile_common
+Lightweight Web Engine for common
 %endif
 
 %if "%{rpm}" == "flutter"
@@ -429,8 +406,7 @@ Summary:     Lightweight Web Engine for flutter
 Provides:    %{name}-compat = %{version}-%{release}
 Conflicts:   %{name}-profile_tv = %{version}-%{release}
 Conflicts:   %{name}-profile_headless = %{version}-%{release}
-Conflicts:   %{name}-profile_wearable = %{version}-%{release}
-Conflicts:   %{name}-profile_mobile = %{version}-%{release}
+Conflicts:   %{name}-profile_common = %{version}-%{release}
 %description profile_flutter
 Lightweight Web Engine for flutter
 %endif
@@ -450,8 +426,7 @@ headers and package configs.
 Summary:     Development files for Lightweight Web Engine for tv
 Requires:    %{name}-profile_tv
 Conflicts:   %{name}-shell-profile_headless = %{version}-%{release}
-Conflicts:   %{name}-shell-profile_mobile = %{version}-%{release}
-Conflicts:   %{name}-shell-profile_wearable = %{version}-%{release}
+Conflicts:   %{name}-shell-profile_common = %{version}-%{release}
 %description shell-profile_tv
 Development files for Lightweight Web Engine for tv. This package provides
 a standalone executable binary for tv.
@@ -462,35 +437,21 @@ a standalone executable binary for tv.
 Summary:     Development files for Lightweight Web Engine for headless
 Requires:    %{name}-profile_headless
 Conflicts:   %{name}-shell-profile_tv = %{version}-%{release}
-Conflicts:   %{name}-shell-profile_mobile = %{version}-%{release}
-Conflicts:   %{name}-shell-profile_wearable = %{version}-%{release}
+Conflicts:   %{name}-shell-profile_common = %{version}-%{release}
 %description shell-profile_headless
 Development files for Lightweight Web Engine for headless. This package provides
 a standalone executable binary for headless.
 %endif
 
-%if "%{rpm}" == "mobile"
-%package shell-profile_mobile
-Summary:     Development files for Lightweight Web Engine for mobile
-Requires:    %{name}-profile_mobile
+%if "%{rpm}" == "common"
+%package shell-profile_common
+Summary:     Development files for Lightweight Web Engine for common
+Requires:    %{name}-profile_common
 Conflicts:   %{name}-shell-profile_tv = %{version}-%{release}
 Conflicts:   %{name}-shell-profile_headless = %{version}-%{release}
-Conflicts:   %{name}-shell-profile_wearable = %{version}-%{release}
-%description shell-profile_mobile
-Development files for Lightweight Web Engine for mobile. This package provides
-a standalone executable binary for mobile.
-%endif
-
-%if "%{rpm}" == "wearable"
-%package shell-profile_wearable
-Summary:     Development files for Lightweight Web Engine for wearable
-Requires:    %{name}-profile_wearable
-Conflicts:   %{name}-shell-profile_tv = %{version}-%{release}
-Conflicts:   %{name}-shell-profile_headless = %{version}-%{release}
-Conflicts:   %{name}-shell-profile_mobile = %{version}-%{release}
-%description shell-profile_wearable
-Development files for Lightweight Web Engine for wearable. This package provides
-a standalone executable binary for wearable.
+%description shell-profile_common
+Development files for Lightweight Web Engine for common. This package provides
+a standalone executable binary for common.
 %endif
 
 %if "%{rpm}" == "flutter"
@@ -499,8 +460,7 @@ Summary:     Development files for Lightweight Web Engine for flutter
 Requires:    %{name}-profile_flutter
 Conflicts:   %{name}-shell-profile_tv = %{version}-%{release}
 Conflicts:   %{name}-shell-profile_headless = %{version}-%{release}
-Conflicts:   %{name}-shell-profile_wearable = %{version}-%{release}
-Conflicts:   %{name}-shell-profile_mobile = %{version}-%{release}
+Conflicts:   %{name}-shell-profile_common = %{version}-%{release}
 %description shell-profile_flutter
 Development files for Lightweight Web Engine for flutter. This package provides
 a standalone executable binary for flutter.
@@ -727,15 +687,15 @@ ninja -C %{out_tizen} starfish.executable.tpk
 %endif
 
 
-%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
-%define out_tizen %{out_folder}/unified_mobile/release
+%if "%{rpm}" == "common" || "%{rpm}" == "all"
+%define out_tizen %{out_folder}/unified_common/release
 
 # For Cairo
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
-  -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_SYSTEM_NAME=Tizen -DCMAKE_SYSTEM_PROCESSOR='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_mobile \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_SYSTEM_NAME=Tizen -DCMAKE_SYSTEM_PROCESSOR='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_common \
   -DBACKEND='%{lwe_backend}' -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
-  -DSHELL='%{lwe_shell_type}' -DTARGETNAME=lightweight-web-engine.mobile \
+  -DSHELL='%{lwe_shell_type}' -DTARGETNAME=lightweight-web-engine.common \
   -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
   -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' -DENABLE_A11Y_TOUCH=1 \
   -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \
@@ -761,43 +721,6 @@ ninja -C %{out_tizen} starfish.executable.tpk
 
 %endif
 
-
-%if "%{rpm}" == "wearable" || "%{rpm}" == "all"
-%define out_tizen %{out_folder}/unified_wearable/release
-
-CFLAGS+=' -Os '
-CXXFLAGS+=' -Os '
-
-# For Cairo
-cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
-  -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
-  -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_SYSTEM_NAME=Tizen -DCMAKE_SYSTEM_PROCESSOR='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_wearable \
-  -DBACKEND='%{lwe_backend}' -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
-  -DSHELL='%{lwe_shell_type}' -DTARGETNAME=lightweight-web-engine.wearable \
-  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' \
-  -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
-  -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \
-  -G Ninja
-ninja -C %{out_tizen} starfish.shared_library
-ninja -C %{out_tizen} starfish_api.shared_library
-ninja -C %{out_tizen} starfish.executable
-
-%if "%{?enable_sharedworker}" == "1"
-ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
-%endif
-%if "%{?enable_serviceworker}" == "1"
-ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
-%endif
-
-%if "%{?build_uwe_tpk}" == "1"
-ninja -C %{out_tizen} starfish.uwe.tpk
-%endif
-
-%if "%{?build_shell_tpk}" == "1"
-ninja -C %{out_tizen} starfish.executable.tpk
-%endif
-
-%endif
 
 %if "%{rpm}" == "flutter"
 %define out_tizen %{out_folder}/flutter/release
@@ -825,7 +748,7 @@ mkdir -p %{buildroot}%{_libdir}/lwe
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_unitdir}
 
-%if "%{rpm}" == "tv" || "%{rpm}" == "mobile" || "%{rpm}" == "wearable" || "%{rpm}" == "all" || "%{rpm}" == "prod_tv" || "%{rpm}" == "headless"
+%if "%{rpm}" == "tv" || "%{rpm}" == "common" || "%{rpm}" == "all" || "%{rpm}" == "prod_tv" || "%{rpm}" == "headless"
 install -d %{buildroot}%{_datadir}/lwe/update
 install -m 0644 %{out_tizen}/lightweight-web-engine-update.service %{buildroot}%{_unitdir}
 %install_service multi-user.target.wants lightweight-web-engine-update.service
@@ -866,24 +789,14 @@ cp -fr %{out_folder}/headless/release/lib/VERSION %{buildroot}%{_libdir}/lwe/hea
 cp -fr %{out_folder}/headless/release/lightweight-web-engine.headless %{buildroot}%{_bindir}
 %endif
 
-%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
-mkdir -p %{buildroot}/%{_libdir}/lwe/mobile
-cp -fr %{out_folder}/unified_mobile/release/lib/*.so* %{buildroot}%{_libdir}/lwe/mobile
-cp -fr %{out_folder}/unified_mobile/release/lib/*.mobile.so* %{buildroot}%{_libdir}/lwe/mobile
-cp -fr %{out_folder}/unified_mobile/release/lib/VERSION %{buildroot}%{_libdir}/lwe/mobile
+%if "%{rpm}" == "common" || "%{rpm}" == "all"
+mkdir -p %{buildroot}/%{_libdir}/lwe/common
+cp -fr %{out_folder}/unified_common/release/lib/*.so* %{buildroot}%{_libdir}/lwe/common
+cp -fr %{out_folder}/unified_common/release/lib/*.common.so* %{buildroot}%{_libdir}/lwe/common
+cp -fr %{out_folder}/unified_common/release/lib/VERSION %{buildroot}%{_libdir}/lwe/common
 %endif
-%if "%{rpm}" == "mobile" && "%{?disable_shell}" == "0"
-cp -fr %{out_folder}/unified_mobile/release/lightweight-web-engine.mobile %{buildroot}%{_bindir}
-%endif
-
-%if "%{rpm}" == "wearable" || "%{rpm}" == "all"
-mkdir -p %{buildroot}/%{_libdir}/lwe/wearable
-cp -fr %{out_folder}/unified_wearable/release/lib/*.so* %{buildroot}%{_libdir}/lwe/wearable
-cp -fr %{out_folder}/unified_wearable/release/lib/*.wearable.so* %{buildroot}%{_libdir}/lwe/wearable
-cp -fr %{out_folder}/unified_wearable/release/lib/VERSION %{buildroot}%{_libdir}/lwe/wearable
-%endif
-%if "%{rpm}" == "wearable" && "%{?disable_shell}" == "0"
-cp -fr %{out_folder}/unified_wearable/release/lightweight-web-engine.wearable %{buildroot}%{_bindir}
+%if "%{rpm}" == "common" && "%{?disable_shell}" == "0"
+cp -fr %{out_folder}/unified_common/release/lightweight-web-engine.common %{buildroot}%{_bindir}
 %endif
 
 %if "%{rpm}" == "flutter"
@@ -1003,50 +916,25 @@ exit 0
 %endif
 
 #############################################
-%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
-%post profile_mobile
+%if "%{rpm}" == "common" || "%{rpm}" == "all"
+%post profile_common
 pushd %{_libdir}/lwe
-for FILE in `ls mobile/*.so* | grep -v 'mobile.so'`; do
+for FILE in `ls common/*.so* | grep -v 'common.so'`; do
    ln -sf "$FILE" .
 done
-ln -sf mobile/liblightweight-web-engine.mobile.so liblightweight-web-engine.so.1
-ln -sf mobile/VERSION VERSION
+ln -sf common/liblightweight-web-engine.common.so liblightweight-web-engine.so.1
+ln -sf common/VERSION VERSION
 %if "%{?enable_sharedworker}" == "1"
-ln -sf mobile/liblightweight-web-engine.mobile-sharedworker.so liblightweight-web-engine-sharedworker.so.1
+ln -sf common/liblightweight-web-engine.common-sharedworker.so liblightweight-web-engine-sharedworker.so.1
 %endif
 %if "%{?enable_serviceworker}" == "1"
-ln -sf mobile/liblightweight-web-engine.mobile-serviceworker.so liblightweight-web-engine-serviceworker.so.1
+ln -sf common/liblightweight-web-engine.common-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif
 popd
 %endif
-%if "%{rpm}" == "mobile"
+%if "%{rpm}" == "common"
 pushd %{_bindir}
-ln -sf lightweight-web-engine.mobile %{bin}
-popd
-/sbin/ldconfig
-exit 0
-%endif
-
-#############################################
-%if "%{rpm}" == "wearable" || "%{rpm}" == "all"
-%post profile_wearable
-pushd %{_libdir}/lwe
-for FILE in `ls wearable/*.so* | grep -v 'wearable.so'`; do
-    ln -sf "$FILE" .
-done
-ln -sf wearable/liblightweight-web-engine.wearable.so liblightweight-web-engine.so.1
-ln -sf wearable/VERSION VERSION
-%if "%{?enable_sharedworker}" == "1"
-ln -sf wearable/liblightweight-web-engine.wearable-sharedworker.so liblightweight-web-engine-sharedworker.so.1
-%endif
-%if "%{?enable_serviceworker}" == "1"
-ln -sf wearable/liblightweight-web-engine.wearable-serviceworker.so liblightweight-web-engine-serviceworker.so.1
-%endif
-popd
-%endif
-%if "%{rpm}" == "wearable"
-pushd %{_bindir}
-ln -sf lightweight-web-engine.wearable %{bin}
+ln -sf lightweight-web-engine.common %{bin}
 popd
 /sbin/ldconfig
 exit 0
@@ -1107,27 +995,13 @@ exit 0
 %license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.ICU
 %endif
 
-%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
-%files profile_mobile
+%if "%{rpm}" == "common" || "%{rpm}" == "all"
+%files profile_common
 %manifest %{name}.manifest
 %{_libdir}/*.so
 %{_libdir}/lwe/*.so*
-%{_libdir}/lwe/mobile/*.so*
-%{_libdir}/lwe/mobile/VERSION
-%{_sysconfdir}/ld.so.conf.d/*.conf
-%{_unitdir}/lightweight-web-engine-update.service
-%{_unitdir}/multi-user.target.wants/lightweight-web-engine-update.service
-%{_datadir}/lwe/update
-%license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.ICU
-%endif
-
-%if "%{rpm}" == "wearable" || "%{rpm}" == "all"
-%files profile_wearable
-%manifest %{name}.manifest
-%{_libdir}/*.so
-%{_libdir}/lwe/*.so*
-%{_libdir}/lwe/wearable/*.so*
-%{_libdir}/lwe/wearable/VERSION
+%{_libdir}/lwe/common/*.so*
+%{_libdir}/lwe/common/VERSION
 %{_sysconfdir}/ld.so.conf.d/*.conf
 %{_unitdir}/lightweight-web-engine-update.service
 %{_unitdir}/multi-user.target.wants/lightweight-web-engine-update.service
@@ -1170,16 +1044,10 @@ exit 0
 %{_bindir}/lightweight-web-engine.headless
 %endif
 
-%if "%{rpm}" == "mobile"
-%files shell-profile_mobile
+%if "%{rpm}" == "common"
+%files shell-profile_common
 %manifest %{name}.manifest
-%{_bindir}/lightweight-web-engine.mobile
-%endif
-
-%if "%{rpm}" == "wearable"
-%files shell-profile_wearable
-%manifest %{name}.manifest
-%{_bindir}/lightweight-web-engine.wearable
+%{_bindir}/lightweight-web-engine.common
 %endif
 
 %if "%{rpm}" == "flutter"

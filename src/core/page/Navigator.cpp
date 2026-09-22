@@ -26,9 +26,6 @@
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 #include "core/modules/serviceworker/ServiceWorkerContainer.h"
 #endif
-#ifdef STARFISH_ENABLE_BATTERY_STATUS
-#include "core/modules/battery/Battery.h"
-#endif
 
 #if defined(STARFISH_ENABLE_WEBRTC)
 #include "core/modules/mediastream/WebRtcManager.h"
@@ -44,10 +41,6 @@ Navigator::Navigator(Document* document)
     , m_geolocation(nullptr)
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
     , m_serviceWorker(nullptr)
-#endif
-#ifdef STARFISH_ENABLE_BATTERY_STATUS
-    , m_batteryPromise(nullptr)
-    , m_batteryManager(nullptr)
 #endif
 {
 }
@@ -87,31 +80,6 @@ WebRtcManager* Navigator::webRtcManager()
     }
     return m_webRtcManager;
 }
-#endif
-
-#ifdef STARFISH_ENABLE_BATTERY_STATUS
-Promise* Navigator::getBattery()
-{
-    if (m_batteryPromise == nullptr) {
-        m_batteryPromise = new Promise(scriptBindingInstance());
-    }
-    if (m_batteryManager == nullptr) {
-        m_batteryManager = new BatteryManager(executionContext());
-    }
-
-    m_batteryPromise->fulfill(m_batteryManager->scriptValue());
-    return m_batteryPromise;
-}
-
-#ifdef STARFISH_ENABLE_OBSOLETE_SPEC
-BatteryManager* Navigator::battery()
-{
-    if (m_batteryManager == nullptr) {
-        m_batteryManager = new BatteryManager(executionContext());
-    }
-    return m_batteryManager;
-}
-#endif
 #endif
 
 void Navigator::dispose()

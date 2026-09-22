@@ -22,7 +22,6 @@
 
 #include "binding/ScriptWrappable.h"
 #include "core/page/NavigatorMixin.h"
-#include "core/modules/battery/Battery.h"
 #include "core/page/MediaCapabilities.h"
 
 #ifdef STARFISH_ENABLE_WEBRTC
@@ -92,18 +91,6 @@ public:
 protected:
     WebRtcManager* m_webRtcManager{ nullptr };
     MediaDevices* m_mediaDevices{ nullptr };
-#endif
-
-#ifdef STARFISH_ENABLE_BATTERY_STATUS
-public:
-    Promise* getBattery();
-#ifdef STARFISH_ENABLE_OBSOLETE_SPEC
-    BatteryManager* battery();
-#endif
-
-protected:
-    Promise* m_batteryPromise;
-    BatteryManager* m_batteryManager;
 #endif
 };
 } // namespace Starfish

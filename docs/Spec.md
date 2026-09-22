@@ -54,10 +54,9 @@ The compile-time flags that gate large chunks of this spec. "Default" is for the
 | [WAI-ARIA](#accessible-rich-internet-applications-wai-aria) touch exploration | `STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION` (from `ENABLE_A11Y_TOUCH=1`) | on for `CMAKE_SYSTEM_PROCESSOR=x86_64`; on `CMAKE_SYSTEM_NAME=Tizen` it needs `-DENABLE_A11Y_TOUCH=1` and is force-disabled on TV profiles | Tap-to-speak / double-tap-activate / swipe navigation absent; ARIA attributes still reflect. |
 | CSS transitions & animations | `STARFISH_ENABLE_ANIMATION` | on (every `CMAKE_SYSTEM_PROCESSOR`) | `@keyframes`, `transition`, and the Web Animations entry points do not run. |
 | CSS legacy `-webkit-*` aliases | `STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX`, `…_BOX_PREFIX`, `…_LINE_PREFIX`, `…_TRANSFORM_PREFIX`, `…_TRANSITION_PREFIX` | on (every `CMAKE_SYSTEM_PROCESSOR`, all five) | Aliases not parsed; use unprefixed forms. |
-| [Obsolete](#obsolete) / [Obsolete CSS](#obsolete-css) | `STARFISH_ENABLE_OBSOLETE_SPEC` | on (every `CMAKE_SYSTEM_PROCESSOR`) | `Document.width`/`height`, `Window.event`, `Navigator.battery` and the obsolete CSS properties are absent. |
+| [Obsolete](#obsolete) / [Obsolete CSS](#obsolete-css) | `STARFISH_ENABLE_OBSOLETE_SPEC` | on (every `CMAKE_SYSTEM_PROCESSOR`) | `Document.width`/`height`, `Window.event` and the obsolete CSS properties are absent. |
 | WebAssembly (`WebAssembly` global) | `ENABLE_WASM=1` | off | `WebAssembly` undefined. |
 | `Intl`, locale-sensitive formatting | `RUNTIME_ICU=1` (→ `STARFISH_ENABLE_RUNTIME_ICU_BINDER`) | on | ICU is linked directly (`icu-uc`/`icu-i18n` become build dependencies) instead of being bound at runtime. The JS-visible `Intl` surface is the same either way. |
-| Battery Status | `STARFISH_ENABLE_BATTERY_STATUS` | off (`CMAKE_SYSTEM_NAME=Tizen` + `CUSTOM=unified_wearable` only) | `BatteryManager`, `navigator.getBattery` undefined. |
 | Web Device API (`window.tizen`) | `CMAKE_SYSTEM_NAME=Tizen` + `TIZEN_DEVICE_API` | off (linux/windows/android) | `window.tizen` undefined. |
 | MSE playback backend | `ENABLE_ESPLUSPLAYER=1` | off; auto-enabled on `CMAKE_SYSTEM_NAME=Tizen` with `TIZEN_MAJOR_VERSION >= 10`. Requires `CMAKE_SYSTEM_NAME=Tizen` | Media Source playback uses the platform-default media path. |
 | ffmpeg media player | `USE_FFMPEG_MEDIA_PLAYER=1` | off | `<video>`/`<audio>` use the platform-default media path. |
@@ -232,7 +231,6 @@ section are supported.
 > - `ServiceWorker`, `ServiceWorkerRegistration`, `Notification`, `PushManager`, `Cache`, `caches`, `FetchEvent`, `ExtendableEvent` — `SERVICE_WORKER=1`
 > - `IDBFactory`, `IDBDatabase`, `IDBObjectStore`, … — `IDB=1`
 > - `SpeechSynthesis`, `SpeechSynthesisUtterance`, `SpeechSynthesisVoice`, `SpeechSynthesisEvent` — `STARFISH_ENABLE_TTS` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64`)
-> - `BatteryManager`, `navigator.getBattery()` — `STARFISH_ENABLE_BATTERY_STATUS` (Tizen wearable only)
 >
 > The `CMAKE_SYSTEM_NAME=Linux CMAKE_SYSTEM_PROCESSOR=x86_64` release build that `README.md` builds ships with `WEBGL=0`, `WEBRTC=0`, `WORKER=0`, `SHARED_WORKER=0`, `SERVICE_WORKER=0`, `IDB=0`, plus TTS/WebAudio/WebSocket on. Other hosts and arches differ — see [Build-Conditional Surface](#build-conditional-surface) for the full table.
 
@@ -1539,7 +1537,6 @@ To use these features, you need to define STARFISH_ENABLE_OBSOLETE_SPEC.
 | Document  | attribute | width | Returns the width of the &lt;body&gt; element of the current document in pixels. |
 |  | attribute | height | Returns the height of the &lt;body&gt; element of the current document in pixels.  |
 | Window  | attribute | event | Returns current dispatching event. |
-| Navigator  | attribute | battery | The battery read-only property returns a BatteryManager provides information about the system's battery charge level. |
 
 
 ## CSS
@@ -2234,18 +2231,6 @@ Blob object is used by an XMLHTTPRequest object to retrieve binary data. Support
 | [FileReader](https://w3c.github.io/FileAPI/#APIASynch)     | interface | FileReader     | Asynchronous reader over `Blob`/`File`. Standard `readAsText`/`readAsArrayBuffer`/`readAsDataURL` plus `result`/`onload`/`onerror` are exposed. |
 | [FormData](https://xhr.spec.whatwg.org/#interface-formdata) | interface | FormData       | Constructable; supports `append`/`delete`/`get`/`getAll`/`has`/`set`. Accepted as the body of `XMLHttpRequest.send()` and `fetch()`. |
 
-### BatteryManager
-
-> **Build flag:** `BatteryManager` is gated by `STARFISH_ENABLE_BATTERY_STATUS` (set only on the `CUSTOM=unified_wearable` Tizen wearable variant). The default Linux/x64/EFL build does NOT define it; `BatteryManager` and `navigator.getBattery()` are `undefined` at runtime. Verified by `Battery.idl` extended attributes and runtime probe.
-
-Extensions to the Navigator Object: The navigator is extended by the following attributes and methods.
-
-| Interface            | Type   | Name                      | Description |
-|----------------------|--------|---------------------------|-------------|
-| [BatteryManager](https://w3c.github.io/battery/#the-batterymanager-interface)	| interface	| BatteryManager	| |
-| |	attribute	| level	| Return the level of system battery. The level attribute MUST be set to 0 if the system's battery is depleted and the system is about to be suspended, and to 1.0 if the battery is full, the implementation is unable to report the battery's level, or there is no battery attached to the system |
-
-
 ### Geolocation
 Extensions to the Navigator Object: The navigator is extended by the following attributes and methods.
 
@@ -2258,7 +2243,7 @@ Extensions to the Navigator Object: The navigator is extended by the following a
 | |	attribute	| onLine	| Returns whether the user agent considers itself to be online. LWE always returns `true`. |
 | |	method	| boolean javaEnabled() | Always returns `false` (Java applets are not supported). |
 | |	misc	| **Unsupported in LWE** (`[Unimplemented]`) | `productSub`, `languages`, `plugins`, `mimeTypes`. |
-| |	misc	| **Not exposed at all** | `mediaDevices`, `clipboard`, `share`, `permissions`, `bluetooth`, `usb`, `xr`, `maxTouchPoints`, `hardwareConcurrency`, `deviceMemory`, `connection`, `userAgentData`, `serviceWorker` (build-conditional under `STARFISH_ENABLE_SERVICE_WORKER`), `getBattery`/`battery` (Tizen wearable only). |
+| |	misc	| **Not exposed at all** | `mediaDevices`, `clipboard`, `share`, `permissions`, `bluetooth`, `usb`, `xr`, `maxTouchPoints`, `hardwareConcurrency`, `deviceMemory`, `connection`, `userAgentData`, `serviceWorker` (build-conditional under `STARFISH_ENABLE_SERVICE_WORKER`), `getBattery`/`battery`. |
 | [NavigatorID](https://html.spec.whatwg.org/multipage/#navigatorid) | interface | | NavigatorID is used for identifying Navigator. |
 | | attribute | appCodeName | Returns the string "Mozilla". |
 | | attribute | appName | Returns the string "Netscape". |
@@ -2544,7 +2529,7 @@ The existing canvas mixin tables are incomplete. Adding the missing pieces:
 | `display` value | Status |
 |-----------------|--------|
 | `block`, `inline`, `inline-block`, `none`, `flex`, `inline-flex`, `grid`, `inline-grid`, `table`, `inline-table`, `table-row`, `table-row-group`, `table-header-group`, `table-footer-group`, `table-cell`, `table-column`, `table-column-group`, `table-caption`, `list-item`, **`inline-list-item`** | Supported. (`list-item` and `inline-list-item` were missing from Spec.md.) |
-| `-webkit-box`, `-webkit-inline-box` | Supported when `STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX` is set (default for Linux/Android/Windows hosts; off on Tizen wearable builds). Primary use case is `-webkit-line-clamp`. |
+| `-webkit-box`, `-webkit-inline-box` | Supported when `STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX` is set (default for Linux/Android/Windows hosts). Primary use case is `-webkit-line-clamp`. |
 | `-webkit-flex`, `-webkit-inline-flex` | Aliases under `STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX` (already documented in Obsolete CSS). |
 | `contents` | Supported ([css-display-3](https://drafts.csswg.org/css-display-3/#valdef-display-contents)). The element generates no box; its children and `::before`/`::after` render in its place and still inherit from it. Blockified to `block` on the root; on replaced elements and form controls (`img`, `iframe`, `br`, `object`, `input`, `textarea`, `select`, `video`/`audio`, `canvas`) and on every `svg` element it behaves as `none` per Appendix B; the rest of Appendix B.2 (hoisting inner `svg`/`g`/`use`/`tspan`, hiding other SVG elements) is not implemented. The UA sheet applies it to HTML `slot`. |
 | `flow-root` | **NOT supported** — silently dropped. Float-clearing BFC creation does NOT happen. Use a float-clearing wrapper instead. |

@@ -10,7 +10,7 @@
 
 **Project name:** Starfish (also referred to as Lightweight Web Engine / LWE).
 
-**Definition:** Starfish is a lightweight Web browser engine for TV, mobile, headless and wearable devices; low memory usage is the core constraint. `AGENTS.md`
+**Definition:** Starfish is a lightweight Web browser engine for TV, common and headless devices; low memory usage is the core constraint. `AGENTS.md`
 
 **JS Engine:** Escargot (`third_party/escargot`). `AGENTS.md`
 

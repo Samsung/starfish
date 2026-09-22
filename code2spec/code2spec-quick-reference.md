@@ -5,7 +5,7 @@
 
 ## System Overview
 
-- **Project:** Starfish — lightweight Web browser engine for TV, mobile, headless, wearable devices
+- **Project:** Starfish — lightweight Web browser engine for TV, common and headless devices
 - **Core constraint:** Low memory usage
 - **JS Engine:** Escargot (`third_party/escargot`)
 - **Build:** CMake + Ninja, output to `out/release/` or `out/debug/`
