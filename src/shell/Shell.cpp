@@ -79,6 +79,14 @@ int Shell::run(int argc, char* argv[])
     }
 
     std::string argv1 = argv[1];
+    if (argv1 == "--version" || argv1 == "-v") {
+        printf("Starfish version: %s\n", STARFISH_VERSION_STR);
+        return 0;
+    } else if (argv1 == "--help" || argv1 == "-h") {
+        printUsage();
+        return 0;
+    }
+
     if (argv1 == "unit-test") {
         return runUnitTest(argc, argv);
     } else if (argv1 == "create-destroy-test") {
@@ -272,7 +280,36 @@ void Shell::setBacktraceHandler()
 
 void Shell::printUsage()
 {
-    puts("please specify url");
+    puts("Usage:");
+    puts("  ./Starfish <URL> [options]");
+    puts("  ./Starfish unit-test [options]");
+    puts("  ./Starfish create-destroy-test {repeat-count} {interval} {URL}");
+#if defined(STARFISH_ENABLE_TEST)
+    puts("  ./Starfish replay <recording.jsonl> [--speed=<factor>] [options]");
+#endif
+    puts("");
+    puts("Options:");
+    puts("  -v, --version                          Print version and exit");
+    puts("  -h, --help                             Show help and exit");
+    puts(
+        "  --width=<value>                        Set window width (default: "
+        "1920)");
+    puts(
+        "  --height=<value>                       Set window height (default: "
+        "1080)");
+    puts("  --posX=<value>                         Set window X position");
+    puts("  --posY=<value>                         Set window Y position");
+    puts("  --device-pixel-ratio=<value>           Set device pixel ratio");
+    puts(
+        "  --useragent=<value>                    Set custom User-Agent "
+        "string");
+    puts(
+        "  --timeout=<value>                      Set execution timeout in "
+        "seconds");
+    puts("  --storage-dir=<value>                  Set storage directory path");
+    puts(
+        "  --hide-window                          Run with window hidden "
+        "(regression/pixel test only)");
 }
 
 void Shell::runCrashTestThread()

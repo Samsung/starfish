@@ -42,9 +42,11 @@ using XWindow = Window;
 namespace {
 
 bool createSimpleWindow(Display* display, XWindow& window, int width,
-                        int height)
+                        int height, bool isVisible)
 {
-    window = XCreateSimpleWindow(display, DefaultRootWindow(display), 0, 0,
+    int x = isVisible ? 0 : -20000;
+    int y = isVisible ? 0 : -20000;
+    window = XCreateSimpleWindow(display, DefaultRootWindow(display), x, y,
                                  width, height, 0, 0, WhitePixel(display, 0));
 
     const long eventMask = StructureNotifyMask | ButtonPressMask |
@@ -55,7 +57,12 @@ bool createSimpleWindow(Display* display, XWindow& window, int width,
 
     XSetWindowAttributes attributes = {};
     attributes.event_mask = eventMask;
-    XChangeWindowAttributes(display, window, CWEventMask, &attributes);
+    unsigned long valueMask = CWEventMask;
+    if (!isVisible) {
+        attributes.override_redirect = True;
+        valueMask |= CWOverrideRedirect;
+    }
+    XChangeWindowAttributes(display, window, valueMask, &attributes);
 
     return true;
 }
@@ -337,20 +344,20 @@ bool WindowX11Webcontainer::init(const char* appName, int width, int height)
         fprintf(stderr, "Warning: Cannot set X modifiers\n");
     }
 
-    createSimpleWindow(display, window, width, height);
+    createSimpleWindow(display, window, width, height, m_isVisible);
 
-    if (m_isVisible) {
-        XMapWindow(display, window);
-    } else {
-        XUnmapWindow(display, window);
-    }
+    XMapWindow(display, window);
 
     XStoreName(display, window, appName);
 
     wmDeleteWindow = XInternAtom(display, "WM_DELETE_WINDOW", true);
     XSetWMProtocols(display, window, &wmDeleteWindow, 1);
 
-    XMoveWindow(display, window, 0, 0);
+    if (m_isVisible) {
+        XMoveWindow(display, window, 0, 0);
+    } else {
+        XMoveWindow(display, window, -20000, -20000);
+    }
     XFlush(display);
 
     m_display = display;
