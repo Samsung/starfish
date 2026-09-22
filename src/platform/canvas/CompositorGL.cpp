@@ -514,13 +514,13 @@ struct CompositorImplGLState {
 
 struct CanvasSurfaceTextureInfo {
     struct CanvasSurfaceTextureInfoFragment {
-        size_t textureID;
-        size_t textureWidth;
-        size_t textureHeight;
-        float srcX;      // [0~1]
-        float srcY;      // [0~1]
-        float srcWidth;  // [0~1]
-        float srcHeight; // [0~1]
+        size_t textureID = 0;
+        size_t textureWidth = 0;
+        size_t textureHeight = 0;
+        float srcX = 0;      // [0~1]
+        float srcY = 0;      // [0~1]
+        float srcWidth = 0;  // [0~1]
+        float srcHeight = 0; // [0~1]
         bool sharedTexture = false;
     };
 
@@ -3265,14 +3265,12 @@ public:
                 CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment
                     fragment;
 
-                if (fragment.textureID == 0) {
-                    GLuint textureID;
-                    gl()->genTextures(1, &textureID);
-                    checkError(gl());
-                    fragment.textureID = static_cast<size_t>(textureID);
-                }
-                gl()->bindTexture(GL_TEXTURE_2D,
-                                  static_cast<GLuint>(fragment.textureID));
+                GLuint textureID;
+                gl()->genTextures(1, &textureID);
+                checkError(gl());
+                fragment.textureID = static_cast<size_t>(textureID);
+
+                gl()->bindTexture(GL_TEXTURE_2D, textureID);
                 checkError(gl());
                 gl()->texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_bufferWidth,
                                  m_bufferHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
@@ -3676,8 +3674,62 @@ public:
         }
     }
 
+#if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
+    // The decoder hands over a new frame of the same geometry on every
+    // composite. Dropping the texture into the texture cache and allocating a
+    // fresh one per frame would keep a playback-long trail of same-sized
+    // textures alive, so upload into the storage that already holds the
+    // previous frame instead. Returns false when there is no such storage yet
+    // or the frame geometry changed, leaving the caller on the full path.
+    bool uploadVideoFrameToAttachedTexture(LinuxMediaPacket* packet)
+    {
+        if (!m_isEGLImageExternal || m_isEGLBufferOwner ||
+            m_textureFragments.size() != 1 ||
+            m_textureFragments[0].sharedTexture) {
+            return false;
+        }
+
+        size_t w = packet->width();
+        size_t h = packet->height();
+        float devicePixelRatio =
+            m_renderer->webView()->screenInfo().devicePixelRatio;
+        if (std::max((size_t)1, (size_t)(w * devicePixelRatio)) !=
+                m_bufferWidth ||
+            std::max((size_t)1, (size_t)(h * devicePixelRatio)) !=
+                m_bufferHeight) {
+            return false;
+        }
+
+        if (!m_renderer->makeCurrent()) {
+            return false;
+        }
+
+        m_width = w;
+        m_height = h;
+        m_bufferStride = packet->stride();
+        m_buffer = reinterpret_cast<unsigned char*>(packet->buffer());
+
+        gl()->bindTexture(GL_TEXTURE_2D,
+                          static_cast<GLuint>(m_textureFragments[0].textureID));
+        checkError(gl());
+        gl()->texSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_bufferWidth,
+                            m_bufferHeight, GL_RGBA, GL_UNSIGNED_BYTE,
+                            m_buffer);
+        checkError(gl());
+        gl()->bindTexture(GL_TEXTURE_2D, 0);
+        checkError(gl());
+        return true;
+    }
+#endif
+
     virtual void attachPlatformExternalBuffer(void* buffer) override
     {
+#if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
+        if (uploadVideoFrameToAttachedTexture(
+                static_cast<LinuxMediaPacket*>(buffer))) {
+            return;
+        }
+#endif
         detachNativeBuffer();
 
         m_isEGLBufferOwner = false;
