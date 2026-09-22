@@ -1152,11 +1152,61 @@ static void cutShapeFromMask(WebView* webView, BufferedNativeImageData* mask,
     delete shape;
 }
 
+// Draws piece turned by deg over dst, from what src marks out of it in the
+// piece's own units, before the device scale.
+//
+// part is the part of dst worth painting, the rest of it being hidden, and
+// src is cut to match. The turn is a whole number of quarters, so a
+// rectangle of dst is a rectangle of the piece as well. A src one unit
+// across is a run the piece is stretched along: cutting the run would only
+// resample the same profile, so it is kept whole and only dst moves in.
 static void drawBoxShadowRotatePieceImage(Canvas* canvas, Unit::Rect src,
-                                          Unit::Rect dst, float deg,
+                                          const Unit::Rect& dst,
+                                          const Unit::Rect& part, float deg,
                                           NativeImageData* piece,
                                           const Unit::Color& color, float dpr)
 {
+    Unit::Rect local(0, 0, dst.width(), dst.height());
+    if (!(part == dst)) {
+        // The part as a fraction of dst, turned back into the piece's frame:
+        // a quarter turn clockwise takes (u, v) there to (1 - v, u) here.
+        float u0 = (part.x() - dst.x()) / dst.width();
+        float u1 = (part.maxX() - dst.x()) / dst.width();
+        float v0 = (part.y() - dst.y()) / dst.height();
+        float v1 = (part.maxY() - dst.y()) / dst.height();
+        for (int turns = ((int)(deg / 90.f)) & 3; turns > 0; turns--) {
+            const float u[2] = { v0, v1 };
+            const float v[2] = { 1 - u1, 1 - u0 };
+            u0 = u[0];
+            u1 = u[1];
+            v0 = v[0];
+            v1 = v[1];
+        }
+
+        // The piece is cut on whole device pixels, which is how it is
+        // copied, and dst keeps whatever the cut leaves over.
+        if (src.width() > 1) {
+            const float w = src.width() * dpr;
+            const float x0 = u0 > 0 ? floorf(u0 * w) : 0;
+            const float x1 = u1 < 1 ? std::min(ceilf(u1 * w), w) : w;
+            u0 = x0 / w;
+            u1 = x1 / w;
+            src.setX(src.x() + x0 / dpr);
+            src.setWidth((x1 - x0) / dpr);
+        }
+        if (src.height() > 1) {
+            const float h = src.height() * dpr;
+            const float y0 = v0 > 0 ? floorf(v0 * h) : 0;
+            const float y1 = v1 < 1 ? std::min(ceilf(v1 * h), h) : h;
+            v0 = y0 / h;
+            v1 = y1 / h;
+            src.setY(src.y() + y0 / dpr);
+            src.setHeight((y1 - y0) / dpr);
+        }
+        local = Unit::Rect(u0 * dst.width(), v0 * dst.height(),
+                           (u1 - u0) * dst.width(), (v1 - v0) * dst.height());
+    }
+
     src.setX(src.x() * dpr);
     src.setY(src.y() * dpr);
     src.setWidth(src.width() * dpr);
@@ -1164,13 +1214,124 @@ static void drawBoxShadowRotatePieceImage(Canvas* canvas, Unit::Rect src,
 
     canvas->save();
     canvas->translate(dst.x(), dst.y());
-    dst.setX(0);
-    dst.setY(0);
     canvas->translate(dst.width() / 2.f, dst.height() / 2.f);
     canvas->rotate(UnitHelper::convertFromDegToRad(deg));
     canvas->translate(-dst.width() / 2.f, -dst.height() / 2.f);
-    canvas->fillWithImageAlpha(piece, src, dst, color);
+    canvas->fillWithImageAlpha(piece, src, local, color);
     canvas->restore();
+}
+
+// What of a shadow will show where it is painted: the clip it is drawn
+// under, and the parts of it nothing shows of - an outer shadow is clipped
+// out of its own border box, so whatever of it falls inside is painted for
+// nothing. A piece wholly hidden is dropped, and one a hidden part takes a
+// whole band off the edge of is cut down to the rest of it.
+class BoxShadowVisibility {
+public:
+    void clipTo(const Unit::Rect& rect)
+    {
+        m_clip = rect;
+        m_hasClip = true;
+    }
+
+    void hide(const Unit::Rect& rect)
+    {
+        if (rect.isEmpty() || m_hiddenCount >= 2) {
+            return;
+        }
+        m_hidden[m_hiddenCount++] = rect;
+    }
+
+    // False when nothing of rect shows; otherwise part is what of it does.
+    bool visiblePart(const Unit::Rect& rect, Unit::Rect& part) const
+    {
+        Unit::Rect r = rect;
+        if (m_hasClip) {
+            r.intersect(m_clip);
+        }
+        for (size_t i = 0; i < m_hiddenCount && !r.isEmpty(); i++) {
+            Unit::Rect hidden = r;
+            hidden.intersect(m_hidden[i]);
+            if (hidden.isEmpty()) {
+                continue;
+            }
+            // Only a band along one edge leaves a rectangle behind.
+            if (hidden.width() == r.width()) {
+                if (hidden.height() == r.height()) {
+                    return false;
+                }
+                if (hidden.y() == r.y()) {
+                    r = Unit::Rect(r.x(), hidden.maxY(), r.width(),
+                                   r.maxY() - hidden.maxY());
+                } else if (hidden.maxY() == r.maxY()) {
+                    r.setHeight(hidden.y() - r.y());
+                }
+            } else if (hidden.height() == r.height()) {
+                if (hidden.x() == r.x()) {
+                    r = Unit::Rect(hidden.maxX(), r.y(),
+                                   r.maxX() - hidden.maxX(), r.height());
+                } else if (hidden.maxX() == r.maxX()) {
+                    r.setWidth(hidden.x() - r.x());
+                }
+            }
+        }
+        if (r.isEmpty()) {
+            return false;
+        }
+        part = r;
+        return true;
+    }
+
+    // Whether nothing of rect shows at all, which a shape that stays inside
+    // it - the notch fill - then need not be painted either.
+    bool isHidden(const Unit::Rect& rect) const
+    {
+        for (size_t i = 0; i < m_hiddenCount; i++) {
+            if (m_hidden[i].contains(rect)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+private:
+    Unit::Rect m_clip;
+    bool m_hasClip = false;
+    Unit::Rect m_hidden[2];
+    size_t m_hiddenCount = 0;
+};
+
+// The two bands of a rounded box that no corner cuts into - one the full
+// width of it, one the full height - which together hold as much of it as
+// two rectangles can. On whole pixels, so that a piece cut against them
+// stays on the pixel grid, where it is drawn without antialiasing.
+static void hideBorderShape(BoxShadowVisibility& visibility,
+                            const Unit::Rect& rect,
+                            const BorderRadiusFixedData& radii)
+{
+    const float top =
+        std::max(radii.m_topLeftVertical, radii.m_topRightVertical);
+    const float bottom =
+        std::max(radii.m_bottomLeftVertical, radii.m_bottomRightVertical);
+    const float left =
+        std::max(radii.m_topLeftHorizontal, radii.m_bottomLeftHorizontal);
+    const float right =
+        std::max(radii.m_topRightHorizontal, radii.m_bottomRightHorizontal);
+
+    const float x = ceilf(rect.x());
+    const float y = ceilf(rect.y());
+    const float maxX = floorf(rect.maxX());
+    const float maxY = floorf(rect.maxY());
+    const float bandTop = ceilf(rect.y() + top);
+    const float bandBottom = floorf(rect.maxY() - bottom);
+    const float bandLeft = ceilf(rect.x() + left);
+    const float bandRight = floorf(rect.maxX() - right);
+
+    visibility.hide(Unit::Rect(x, bandTop, maxX - x, bandBottom - bandTop));
+    if (left > 0 || right > 0 || top > 0 || bottom > 0) {
+        visibility.hide(
+            Unit::Rect(bandLeft, y, bandRight - bandLeft, maxY - y));
+    }
 }
 
 // A blurred box shadow only varies around the corners of its shape: along a
@@ -1267,8 +1428,10 @@ public:
                          : std::max(m_inner[3], m_inner[2]);
     }
 
-    // outerRect is the shape grown by the margin on every side.
-    void draw(Canvas* canvas, const Unit::Rect& outerRect)
+    // outerRect is the shape grown by the margin on every side. Of every
+    // piece of it only the part visibility keeps is painted.
+    void draw(Canvas* canvas, const Unit::Rect& outerRect,
+              const BoxShadowVisibility& visibility)
     {
         const float x = outerRect.x();
         const float y = outerRect.y();
@@ -1288,11 +1451,14 @@ public:
             Unit::Rect(x, maxY - size[3], size[3], size[3]),
         };
         for (size_t i = 0; i < 4; i++) {
-            if (!isRejected(canvas, cornerRects[i])) {
-                drawBoxShadowRotatePieceImage(
-                    canvas, Unit::Rect(0, 0, size[i], size[i]), cornerRects[i],
-                    90 * i, piece(i), m_color, m_dpr);
+            Unit::Rect part;
+            if (!visibility.visiblePart(cornerRects[i], part) ||
+                isRejected(canvas, part)) {
+                continue;
             }
+            drawBoxShadowRotatePieceImage(
+                canvas, Unit::Rect(0, 0, size[i], size[i]), cornerRects[i],
+                part, 90 * i, piece(i), m_color, m_dpr);
         }
 
         // The sides, from the last column (top, bottom) or the last row of
@@ -1306,8 +1472,10 @@ public:
             Unit::Rect(x, y + size[0], band, maxY - size[3] - (y + size[0])),
         };
         for (size_t i = 0; i < 4; i++) {
+            Unit::Rect part;
             if (sideRects[i].width() <= 0 || sideRects[i].height() <= 0 ||
-                isRejected(canvas, sideRects[i])) {
+                !visibility.visiblePart(sideRects[i], part) ||
+                isRejected(canvas, part)) {
                 continue;
             }
             bool alongX = i == 0 || i == 2;
@@ -1315,8 +1483,8 @@ public:
                 canvas,
                 alongX ? Unit::Rect(size[0] - 1, 0, 1, band)
                        : Unit::Rect(0, size[0] - 1, band, 1),
-                sideRects[i], (i == 1 || i == 2) ? 180 : 0, piece(0), m_color,
-                m_dpr);
+                sideRects[i], part, (i == 1 || i == 2) ? 180 : 0, piece(0),
+                m_color, m_dpr);
         }
 
         if (!m_inset) {
@@ -1326,6 +1494,12 @@ public:
             const float t = y + band;
             const float r = maxX - band;
             const float b = maxY - band;
+            // It stays inside the sides, so nothing of it shows when they
+            // are hidden - the usual case, the fill being under the box.
+            if (r <= l || b <= t ||
+                visibility.isHidden(Unit::Rect(l, t, r - l, b - t))) {
+                return;
+            }
             int notch[4];
             for (size_t i = 0; i < 4; i++) {
                 notch[i] = size[i] - band;
@@ -1642,7 +1816,19 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     applyBorderShapeClippingUsedInPaintingBoxShadow(
                         shadowRect, borderRect, outerRect, canvas);
                     canvas->setNeedsNoneAntialias();
-                    ninePatch.draw(canvas, outerRect);
+                    // That clipping keeps the shadow out of the border box,
+                    // so the patch has nothing to paint in there.
+                    BoxShadowVisibility visibility;
+                    if (borderRect.intersects(outerRect)) {
+                        BorderRadiusFixedData shape(0, 0, 0, 0, 0, 0, 0, 0);
+                        const LayoutRect box(0, 0, width(), height());
+                        if (hasFrameBorderRadius()) {
+                            shape = computeFixedBorderRadius(
+                                box.snapSizeToPixel(), 0, false);
+                        }
+                        hideBorderShape(visibility, borderRect, shape);
+                    }
+                    ninePatch.draw(canvas, outerRect, visibility);
                     canvas->restore();
                     ninePatch.finish();
                 } else {
@@ -1975,7 +2161,10 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                         canvas->setFillRule(false);
                         canvas->fill();
                     }
-                    ninePatch.draw(canvas, outerRect);
+                    // Only the padding box the patch is clipped to shows.
+                    BoxShadowVisibility visibility;
+                    visibility.clipTo(clipRect);
+                    ninePatch.draw(canvas, outerRect, visibility);
 
                     canvas->restore();
                     ninePatch.finish();
