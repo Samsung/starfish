@@ -367,7 +367,7 @@ CSSVariableSyntaxTreeBuilder::generateStyle(
                             }
 
                             currentNode = currentNode->renderingParentElement();
-                            if (currentNode) {
+                            if (currentNode && currentNode->style()) {
                                 auto cp =
                                     currentNode->style()->customProperty();
                                 if (cp) {
