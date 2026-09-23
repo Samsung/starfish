@@ -126,38 +126,66 @@ Promise* Body::arrayBuffer()
                             String::fromUTF8("Body is locked"));
 
         m_promise->reject(createScriptValue(error));
-    } else {
-        if (m_bodyInit.hasValue()) {
-            m_readableStream->lock();
+        return m_promise;
+    }
 
-            BodyInit body = m_bodyInit.getValue();
+    m_readableStream->setDisturbed(true);
+    m_readableStream->lock();
 
-            if (body.isUSVStringValue()) {
-                auto value = body.getUSVStringValue();
-                auto str = value->toUTF8NonGCString();
-                void* buffer = calloc(1, str.length());
-                memcpy(buffer, str.data(), str.length());
-                auto scriptArrayBuffer = createScriptArrayBuffer(
-                    executionContext()->scriptBindingInstance(), buffer,
-                    value->length());
-
-                m_promise->fulfill(createScriptValue(scriptArrayBuffer));
-            } else if (body.isArrayBufferViewOrArrayBufferValue()) {
-                auto arrayValue = body.getArrayBufferViewOrArrayBufferValue();
-                // FIXME getting ArrayBuffer of ArrayBufferView
-                ScriptValue value =
-                    arrayValue.isArrayBufferValue()
-                        ? createScriptValue(arrayValue.getArrayBufferValue())
-                        : createScriptValue(
-                              arrayValue.getArrayBufferViewValue());
-                m_promise->fulfill(value);
+    if (m_bodyInit.hasValue()) {
+        BodyInit body = m_bodyInit.getValue();
+        if (body.isReadableStreamValue()) {
+            ReadableStream* stream = body.getReadableStreamValue();
+            if (stream->state() == ReadableStream::State::Closed) {
+                stream->resolveData(m_promise, executionContext(),
+                                    BodyType::ArrayBuffer);
             } else {
-                STARFISH_UNSUPPORTED("null BodyInit");
+                stream->addPendingBodyPromise(m_promise, executionContext(),
+                                              BodyType::ArrayBuffer);
             }
-        } else {
-            m_readableStream->resolveData(m_promise, executionContext(),
-                                          BodyType::ArrayBuffer);
+            return m_promise;
         }
+
+        if (body.isUSVStringValue()) {
+            auto value = body.getUSVStringValue();
+            auto str = value->toUTF8NonGCString();
+            void* buffer = calloc(1, str.length() == 0 ? 1 : str.length());
+            if (str.length() > 0) {
+                memcpy(buffer, str.data(), str.length());
+            }
+            auto scriptArrayBuffer = createScriptArrayBuffer(
+                executionContext()->scriptBindingInstance(), buffer,
+                value->length());
+
+            m_promise->fulfill(createScriptValue(scriptArrayBuffer));
+        } else if (body.isArrayBufferViewOrArrayBufferValue()) {
+            auto arrayValue = body.getArrayBufferViewOrArrayBufferValue();
+            // FIXME getting ArrayBuffer of ArrayBufferView
+            ScriptValue value =
+                arrayValue.isArrayBufferValue()
+                    ? createScriptValue(arrayValue.getArrayBufferValue())
+                    : createScriptValue(arrayValue.getArrayBufferViewValue());
+            m_promise->fulfill(value);
+        } else if (body.isBlobValue()) {
+            auto blob = body.getBlobValue();
+            void* newBuffer = malloc(blob->size() == 0 ? 1 : blob->size());
+            if (blob->size() > 0 && blob->data()) {
+                memcpy(newBuffer, blob->data(), blob->size());
+            }
+            auto scriptArrayBuffer = createScriptArrayBuffer(
+                executionContext()->scriptBindingInstance(), newBuffer,
+                blob->size());
+            m_promise->fulfill(createScriptValue(scriptArrayBuffer));
+        } else if (body.isNoneValue()) {
+            auto scriptArrayBuffer = createScriptArrayBuffer(
+                executionContext()->scriptBindingInstance(), calloc(1, 1), 0);
+            m_promise->fulfill(createScriptValue(scriptArrayBuffer));
+        } else {
+            STARFISH_UNSUPPORTED("Unsupported BodyInit type in arrayBuffer()");
+        }
+    } else {
+        m_readableStream->resolveData(m_promise, executionContext(),
+                                      BodyType::ArrayBuffer);
     }
 
     m_readableStream->close();
@@ -174,29 +202,70 @@ Promise* Body::blob()
                             String::fromUTF8("Body is locked"));
 
         m_promise->reject(createScriptValue(error));
-    } else {
-        if (m_bodyInit.hasValue()) {
-            m_readableStream->lock();
+        return m_promise;
+    }
 
-            BodyInit body = m_bodyInit.getValue();
+    m_readableStream->setDisturbed(true);
+    m_readableStream->lock();
 
-            if (body.isUSVStringValue()) {
-                auto value = body.getUSVStringValue();
-                auto str = value->toUTF8NonGCString();
-                void* buffer = calloc(1, str.length());
-                memcpy(buffer, str.data(), str.length());
-
-                auto blob = new Blob(executionContext(), value->length(),
-                                     contentType(), buffer, false, false, true);
-
-                m_promise->fulfill(blob->scriptValue());
+    if (m_bodyInit.hasValue()) {
+        BodyInit body = m_bodyInit.getValue();
+        if (body.isReadableStreamValue()) {
+            ReadableStream* stream = body.getReadableStreamValue();
+            if (stream->state() == ReadableStream::State::Closed) {
+                stream->resolveData(m_promise, executionContext(),
+                                    BodyType::Blob);
             } else {
-                STARFISH_UNSUPPORTED("null BodyInit");
+                stream->addPendingBodyPromise(m_promise, executionContext(),
+                                              BodyType::Blob);
             }
-        } else {
-            m_readableStream->resolveData(m_promise, executionContext(),
-                                          BodyType::Blob);
+            return m_promise;
         }
+
+        if (body.isUSVStringValue()) {
+            auto value = body.getUSVStringValue();
+            auto str = value->toUTF8NonGCString();
+            void* buffer = calloc(1, str.length() == 0 ? 1 : str.length());
+            if (str.length() > 0) {
+                memcpy(buffer, str.data(), str.length());
+            }
+
+            auto blob = new Blob(executionContext(), value->length(),
+                                 contentType(), buffer, false, false, true);
+
+            m_promise->fulfill(blob->scriptValue());
+        } else if (body.isBlobValue()) {
+            m_promise->fulfill(body.getBlobValue()->scriptValue());
+        } else if (body.isArrayBufferViewOrArrayBufferValue()) {
+            auto byteBuffer = body.getArrayBufferViewOrArrayBufferValue();
+            size_t size = 0;
+            void* data = nullptr;
+            if (byteBuffer.isArrayBufferValue()) {
+                auto ab = byteBuffer.getArrayBufferValue();
+                size = arrayBufferByteSize(ab);
+                data = arrayBufferRawData(ab);
+            } else {
+                auto abv = byteBuffer.getArrayBufferViewValue();
+                size = arrayBufferViewByteSize(abv);
+                data = arrayBufferViewRawData(abv);
+            }
+            void* buffer = calloc(1, size == 0 ? 1 : size);
+            if (size > 0 && data) {
+                memcpy(buffer, data, size);
+            }
+            auto blob = new Blob(executionContext(), size, contentType(),
+                                 buffer, false, false, true);
+            m_promise->fulfill(blob->scriptValue());
+        } else if (body.isNoneValue()) {
+            auto blob = new Blob(executionContext(), 0, contentType(),
+                                 calloc(1, 1), false, false, true);
+            m_promise->fulfill(blob->scriptValue());
+        } else {
+            STARFISH_UNSUPPORTED("Unsupported BodyInit type in blob()");
+        }
+    } else {
+        m_readableStream->resolveData(m_promise, executionContext(),
+                                      BodyType::Blob);
     }
 
     m_readableStream->close();
@@ -213,24 +282,45 @@ Promise* Body::json()
                             String::fromUTF8("Body is locked"));
 
         m_promise->reject(createScriptValue(error));
-    } else {
-        if (m_bodyInit.hasValue()) {
-            m_readableStream->lock();
+        return m_promise;
+    }
 
-            BodyInit body = m_bodyInit.getValue();
+    m_readableStream->setDisturbed(true);
+    m_readableStream->lock();
 
-            if (body.isUSVStringValue()) {
-                ScriptValue jsonObject =
-                    parseJSON(executionContext()->scriptBindingInstance(),
-                              body.getUSVStringValue());
-                m_promise->fulfill(jsonObject);
+    if (m_bodyInit.hasValue()) {
+        BodyInit body = m_bodyInit.getValue();
+        if (body.isReadableStreamValue()) {
+            ReadableStream* stream = body.getReadableStreamValue();
+            if (stream->state() == ReadableStream::State::Closed) {
+                stream->resolveData(m_promise, executionContext(),
+                                    BodyType::Json);
             } else {
-                STARFISH_UNSUPPORTED("null BodyInit");
+                stream->addPendingBodyPromise(m_promise, executionContext(),
+                                              BodyType::Json);
             }
-        } else {
-            m_readableStream->resolveData(m_promise, executionContext(),
-                                          BodyType::Json);
+            return m_promise;
         }
+
+        if (body.isUSVStringValue() ||
+            body.isArrayBufferViewOrArrayBufferValue()) {
+            String* text = extractTextFromBodyInit();
+            ScriptValue jsonObject =
+                parseJSON(executionContext()->scriptBindingInstance(), text);
+            m_promise->fulfill(jsonObject);
+        } else if (body.isNoneValue()) {
+            auto error = scriptTypeError(
+                executionContext()->scriptBindingInstance(),
+                String::fromUTF8("Unexpected end of JSON input"));
+            m_promise->reject(createScriptValue(error));
+        } else if (body.isBlobValue()) {
+            STARFISH_UNSUPPORTED("Blob to json()");
+        } else {
+            STARFISH_UNSUPPORTED("Unsupported BodyInit type in json()");
+        }
+    } else {
+        m_readableStream->resolveData(m_promise, executionContext(),
+                                      BodyType::Json);
     }
 
     m_readableStream->close();
@@ -263,36 +353,52 @@ Promise* Body::text()
                             String::fromUTF8("Body is locked"));
 
         m_promise->reject(createScriptValue(error));
-    } else {
-        if (m_bodyInit.hasValue()) {
-            m_readableStream->lock();
+        return m_promise;
+    }
 
-            BodyInit body = m_bodyInit.getValue();
-            if (body.isUSVStringValue() ||
-                body.isArrayBufferViewOrArrayBufferValue()) {
-                String* text = extractTextFromBodyInit();
-                m_promise->fulfill(createScriptValue(text));
-            } else if (body.isBlobValue()) {
-                String* url = URL::createObjectURL(body.getBlobValue());
-                if (!m_resourceRequest) {
-                    m_resourceRequest = new ResourceRequest(executionContext());
-                }
-                m_resourceRequest->addResourceRequestClient(
-                    new BodyResourceRequestClient(this));
+    m_readableStream->setDisturbed(true);
+    m_readableStream->lock();
 
-                RequestData* reqData = new RequestData();
-                reqData->m_url = new ResourceURL(
-                    url, executionContext()->baseURL()->baseURI());
-                reqData->m_syncLevel = RequestSyncLevel::NeverSync;
-                m_resourceRequest->open(reqData, new HeadersData());
-                m_resourceRequest->send();
+    if (m_bodyInit.hasValue()) {
+        BodyInit body = m_bodyInit.getValue();
+        if (body.isReadableStreamValue()) {
+            ReadableStream* stream = body.getReadableStreamValue();
+            if (stream->state() == ReadableStream::State::Closed) {
+                stream->resolveData(m_promise, executionContext(),
+                                    BodyType::Text);
             } else {
-                STARFISH_UNSUPPORTED("null BodyInit");
+                stream->addPendingBodyPromise(m_promise, executionContext(),
+                                              BodyType::Text);
             }
-        } else {
-            m_readableStream->resolveData(m_promise, executionContext(),
-                                          BodyType::Text);
+            return m_promise;
         }
+
+        if (body.isUSVStringValue() ||
+            body.isArrayBufferViewOrArrayBufferValue()) {
+            String* text = extractTextFromBodyInit();
+            m_promise->fulfill(createScriptValue(text));
+        } else if (body.isBlobValue()) {
+            String* url = URL::createObjectURL(body.getBlobValue());
+            if (!m_resourceRequest) {
+                m_resourceRequest = new ResourceRequest(executionContext());
+            }
+            m_resourceRequest->addResourceRequestClient(
+                new BodyResourceRequestClient(this));
+
+            RequestData* reqData = new RequestData();
+            reqData->m_url =
+                new ResourceURL(url, executionContext()->baseURL()->baseURI());
+            reqData->m_syncLevel = RequestSyncLevel::NeverSync;
+            m_resourceRequest->open(reqData, new HeadersData());
+            m_resourceRequest->send();
+        } else if (body.isNoneValue()) {
+            m_promise->fulfill(createScriptValue(String::emptyString));
+        } else {
+            STARFISH_UNSUPPORTED("Unsupported BodyInit type in text()");
+        }
+    } else {
+        m_readableStream->resolveData(m_promise, executionContext(),
+                                      BodyType::Text);
     }
     m_readableStream->close();
     return m_promise;
@@ -422,11 +528,16 @@ void Body::setBodyInit(const Optional<BodyInit>& bodyInitValue)
         return;
     }
 
+    auto bodyInit = m_bodyInit.getValue();
+    if (bodyInit.isReadableStreamValue()) {
+        m_readableStream = bodyInit.getReadableStreamValue();
+        return;
+    }
+
     // extract Body : https://fetch.spec.whatwg.org/#body-mixin
     createReadableStream();
     m_readableStream->releaseLock();
 
-    auto bodyInit = m_bodyInit.getValue();
     if (bodyInit.isUSVStringValue()) {
         m_contentType = String::createASCIIString(kTextPlainContentType);
     } else if (bodyInit.isBlobValue()) {
@@ -434,6 +545,8 @@ void Body::setBodyInit(const Optional<BodyInit>& bodyInitValue)
     } else if (bodyInit.isArrayBufferViewOrArrayBufferValue()) {
         // https://fetch.spec.whatwg.org/#bodyinit-safely-extract - a buffer
         // source has no associated Content-Type.
+    } else if (bodyInit.isNoneValue()) {
+        // NoneValue has no associated Content-Type.
     } else {
         STARFISH_UNSUPPORTED("BodyInit for types other than String and Blob");
     }

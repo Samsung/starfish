@@ -19,6 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "binding/ScriptBindingInstance.h"
+#include "core/fetch/Body.h"
 #include "core/fetch/stream/ReadableStream.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/ExecutionContext.h"
@@ -103,7 +104,7 @@ ExecutionContext* ReadableStream::executionContext()
 
 ReadableStreamDefaultReader* ReadableStream::getReader()
 {
-    if (m_state == State::Closed || m_state == State::Errored || locked()) {
+    if (locked()) {
         throw new DOMException(executionContext(),
                                DOMException::Code::SCRIPT_TYPE_ERR);
     }
@@ -141,7 +142,14 @@ void ReadableStream::close()
 {
     m_state = ReadableStream::State::Closed;
 
+    m_reader->closed()->fulfill(scriptUndefined());
     m_reader->runCloseStepsReadRequests();
+
+    for (size_t i = 0; i < m_pendingBodyPromises.size(); i++) {
+        auto item = m_pendingBodyPromises[i];
+        resolveData(item->promise, item->executionContext, item->type);
+    }
+    m_pendingBodyPromises.clear();
 }
 
 void ReadableStream::resolveData(Promise* promise,
@@ -152,7 +160,13 @@ void ReadableStream::resolveData(Promise* promise,
         m_streamBuffer->resolveWithType(promise, executionContext, type);
         m_streamBuffer->clear();
     } else {
-        promise->fulfill(createScriptValue(String::emptyString));
+        if (type == BodyType::ArrayBuffer) {
+            auto scriptArrayBuffer = createScriptArrayBuffer(
+                executionContext->scriptBindingInstance(), calloc(1, 1), 0);
+            promise->fulfill(createScriptValue(scriptArrayBuffer));
+        } else {
+            promise->fulfill(createScriptValue(String::emptyString));
+        }
     }
 }
 } // namespace Starfish

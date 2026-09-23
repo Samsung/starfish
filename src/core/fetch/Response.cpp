@@ -55,7 +55,7 @@ Response::Response(ExecutionContext* executionContext, Optional<BodyInit>& body)
 {
     m_headers->setGuard(Guard::Response);
     handleBodyInit(body);
-    setStatusText(String::createASCIIString("OK"));
+    setStatusText(String::emptyString);
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
     GC_REGISTER_FINALIZER_NO_ORDER(

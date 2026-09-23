@@ -29,6 +29,18 @@ class ReadableStreamDefaultReader;
 class ReadableStreamBuffer;
 enum class BodyType;
 
+struct PendingBodyPromise : public gc {
+    Promise* promise;
+    ExecutionContext* executionContext;
+    BodyType type;
+    PendingBodyPromise(Promise* p, ExecutionContext* ctx, BodyType t)
+        : promise(p)
+        , executionContext(ctx)
+        , type(t)
+    {
+    }
+};
+
 class ReadableStream : public ScriptWrappable {
 public:
     enum State : uint8_t { Readable, Closed, Errored };
@@ -70,6 +82,13 @@ public:
     void close();
     void resolveData(Promise* promise, ExecutionContext* executionContext,
                      BodyType type);
+    void addPendingBodyPromise(Promise* promise,
+                               ExecutionContext* executionContext,
+                               BodyType type)
+    {
+        m_pendingBodyPromises.push_back(
+            new PendingBodyPromise(promise, executionContext, type));
+    }
 
     DEFINE_GETTER_SETTER(State, state, State);
     DEFINE_GETTER_SETTER(bool, disturbed, Disturbed);
@@ -79,6 +98,7 @@ private:
     ReadableStreamDefaultController* m_controller;
     ReadableStreamDefaultReader* m_reader;
     ReadableStreamBuffer* m_streamBuffer;
+    GCVector<PendingBodyPromise*> m_pendingBodyPromises;
     State m_state;
     bool m_disturbed;
 
@@ -89,6 +109,7 @@ private:
         GC_set_bit(desc, GC_WORD_OFFSET(ReadableStream, m_controller));
         GC_set_bit(desc, GC_WORD_OFFSET(ReadableStream, m_reader));
         GC_set_bit(desc, GC_WORD_OFFSET(ReadableStream, m_streamBuffer));
+        GC_set_bit(desc, GC_WORD_OFFSET(ReadableStream, m_pendingBodyPromises));
     }
 };
 } // namespace Starfish
