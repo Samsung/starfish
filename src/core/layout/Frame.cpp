@@ -1721,7 +1721,8 @@ void Frame::computeStyleFlags()
 
     // TODO add condition
     m_flags.m_needsGraphicsBuffer =
-        (style->has3DTransforms(this)) || (style->maskLayerSize() > 0);
+        style->has3DTransforms(this) ||
+        (style->maskLayerSize() > 0 && !isFrameSVGBox() && !isFrameSVGSVGBox());
     if (wc && (wc->transform() || wc->opacity())) {
         m_flags.m_needsGraphicsBuffer |= true;
     }

@@ -691,6 +691,53 @@ static void findAnimationTaskRelatedWithTransformScale(
     }
 }
 
+static bool maskPaintsOpaqueBorderBox(FrameBox* box)
+{
+    ComputedStyle* style = box->style();
+    PositionedMaskData* mask = style->mask();
+    if (!mask) {
+        return false;
+    }
+
+    Unit::Rect positioningRect = box->makeRect(BoxValue::PaddingBoxBoxValue);
+    Unit::Rect paintingRect = box->makeRect(BoxValue::BorderBoxBoxValue);
+    if (positioningRect.x() != paintingRect.x() ||
+        positioningRect.y() != paintingRect.y() ||
+        positioningRect.width() != paintingRect.width() ||
+        positioningRect.height() != paintingRect.height()) {
+        return false;
+    }
+
+    for (uint32_t i = 0; i < style->maskLayerSize(); i++) {
+        ImageValue* image = style->maskImage(i);
+        if (!image || !image->type().isGradient() ||
+            !image->gradientValue()->isEffective() ||
+            !mask->maskSizeIsLength(i)) {
+            continue;
+        }
+        LengthSize size = mask->maskSizeLengthValue(i);
+        if (!size.width().isAuto() || !size.height().isAuto()) {
+            continue;
+        }
+
+        const auto& stops = image->gradientValue()->colorStopList();
+        if (stops.empty()) {
+            continue;
+        }
+        bool opaque = true;
+        for (ColorStop* stop : stops) {
+            if (stop->color().hasAlpha()) {
+                opaque = false;
+                break;
+            }
+        }
+        if (opaque) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void StackingContext::computeStackingContextProperties()
 {
     STARFISH_ASSERT(isRootContext());
@@ -769,6 +816,22 @@ void StackingContext::computeStackingContextProperties(
         NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonNone;
 
     bool selfNeedsGraphicsBuffer = m_owner->needsGraphicsBuffer();
+    if (!m_owner->isFrameReplaced() && maskPaintsOpaqueBorderBox(m_owner)) {
+        ComputedStyle* style = m_owner->style();
+        bool hasOtherBufferReason = style->has3DTransforms(m_owner);
+        auto willChange = style->willChange();
+        hasOtherBufferReason |=
+            willChange && (willChange->transform() || willChange->opacity());
+        for (size_t i = 0; i < style->transitionLayerSize(); i++) {
+            auto property = style->transitionProperty(i);
+            if (property == CSSStyleValuePair::KeyKind::Transform ||
+                property == CSSStyleValuePair::KeyKind::All) {
+                hasOtherBufferReason = true;
+                break;
+            }
+        }
+        selfNeedsGraphicsBuffer = hasOtherBufferReason;
+    }
     bool bufferOnlyForFixedElement = false;
 
     if (m_owner->style()->position() == PositionValue::FixedPositionValue) {
