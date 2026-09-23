@@ -328,7 +328,7 @@ public:
     uintptr_t createSharedContext()
     {
         ensureContext();
-        EGLint ctxAttr[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+        EGLint ctxAttr[] = { EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE };
         EGLContext c = eglCreateContext(m_dpy, m_cfg, m_ctx, ctxAttr);
         return reinterpret_cast<uintptr_t>(c);
     }

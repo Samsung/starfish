@@ -57,6 +57,7 @@ interface WebGL2RenderingContextBase
     const GLenum STENCIL                                       = 0x1802;
     const GLenum RED                                           = 0x1903;
     const GLenum RGB8                                          = 0x8051;
+    const GLenum RGBA8                                         = 0x8058;
     const GLenum RGB10_A2                                      = 0x8059;
     const GLenum TEXTURE_BINDING_3D                            = 0x806A;
     const GLenum UNPACK_SKIP_IMAGES                            = 0x806D;
@@ -336,31 +337,31 @@ interface WebGL2RenderingContextBase
                                                              GLsizei width, GLsizei height);
 
     /* Texture objects */
-    [Unimplemented] undefined texStorage2D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width,
-                                           GLsizei height);
-    [Unimplemented] undefined texStorage3D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width,
-                                           GLsizei height, GLsizei depth);
+    undefined texStorage2D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width,
+                           GLsizei height);
+    undefined texStorage3D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width,
+                           GLsizei height, GLsizei depth);
 
-    [Unimplemented] undefined texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
-                                         GLsizei depth, GLint border, GLenum format, GLenum type, GLintptr pboOffset);
-    [Unimplemented] undefined texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
-                                         GLsizei depth, GLint border, GLenum format, GLenum type,
-                                         TexImageSource source); // May throw DOMException
-    [Unimplemented] undefined texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
-                                         GLsizei depth, GLint border, GLenum format, GLenum type, [AllowShared] ArrayBufferView? srcData);
-    [Unimplemented] undefined texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
-                                         GLsizei depth, GLint border, GLenum format, GLenum type, [AllowShared] ArrayBufferView srcData,
-                                         unsigned long long srcOffset);
+    undefined texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+                         GLsizei depth, GLint border, GLenum format, GLenum type, GLintptr pboOffset);
+    undefined texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+                         GLsizei depth, GLint border, GLenum format, GLenum type,
+                         TexImageSource source); // May throw DOMException
+    undefined texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+                         GLsizei depth, GLint border, GLenum format, GLenum type, [AllowShared] ArrayBufferView? srcData);
+    undefined texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+                         GLsizei depth, GLint border, GLenum format, GLenum type, [AllowShared] ArrayBufferView srcData,
+                         unsigned long long srcOffset);
 
-    [Unimplemented] undefined texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
-                                            GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
-                                            GLintptr pboOffset);
-    [Unimplemented] undefined texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
-                                            GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
-                                            TexImageSource source); // May throw DOMException
-    [Unimplemented] undefined texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
-                                            GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
-                                            [AllowShared] ArrayBufferView? srcData, optional unsigned long long srcOffset = 0);
+    undefined texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
+                            GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
+                            GLintptr pboOffset);
+    undefined texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
+                            GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
+                            TexImageSource source); // May throw DOMException
+    undefined texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
+                            GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
+                            [AllowShared] ArrayBufferView? srcData, optional unsigned long long srcOffset = 0);
 
     [Unimplemented] undefined copyTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
                                                 GLint x, GLint y, GLsizei width, GLsizei height);
@@ -525,23 +526,23 @@ interface WebGL2RenderingContextOverloads
                             GLenum format, GLenum type, TexImageSource source); // May throw DOMException
 
     // WebGL2 entrypoints:
-    [Unimplemented] undefined texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
-                                         GLint border, GLenum format, GLenum type, GLintptr pboOffset);
-    [Unimplemented] undefined texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
-                                         GLint border, GLenum format, GLenum type,
-                                         TexImageSource source); // May throw DOMException
-    [Unimplemented] undefined texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
-                                         GLint border, GLenum format, GLenum type, [AllowShared] ArrayBufferView srcData,
-                                         unsigned long long srcOffset);
+    undefined texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+                         GLint border, GLenum format, GLenum type, GLintptr pboOffset);
+    undefined texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+                         GLint border, GLenum format, GLenum type,
+                         TexImageSource source); // May throw DOMException
+    undefined texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+                         GLint border, GLenum format, GLenum type, [AllowShared] ArrayBufferView srcData,
+                         unsigned long long srcOffset);
 
-    [Unimplemented] undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
-                                            GLsizei height, GLenum format, GLenum type, GLintptr pboOffset);
-    [Unimplemented] undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
-                                            GLsizei height, GLenum format, GLenum type,
-                                            TexImageSource source); // May throw DOMException
-    [Unimplemented] undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
-                                            GLsizei height, GLenum format, GLenum type, [AllowShared] ArrayBufferView srcData,
-                                            unsigned long long srcOffset);
+    undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
+                            GLsizei height, GLenum format, GLenum type, GLintptr pboOffset);
+    undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
+                            GLsizei height, GLenum format, GLenum type,
+                            TexImageSource source); // May throw DOMException
+    undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
+                            GLsizei height, GLenum format, GLenum type, [AllowShared] ArrayBufferView srcData,
+                            unsigned long long srcOffset);
 
     [Unimplemented] undefined compressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
                                                    GLsizei height, GLint border, GLsizei imageSize, GLintptr offset);

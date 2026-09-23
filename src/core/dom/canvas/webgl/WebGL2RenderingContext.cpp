@@ -30,6 +30,7 @@
 #include "core/dom/canvas/webgl/WebGLBuffer.h"
 #include "core/dom/canvas/webgl/WebGLFramebuffer.h"
 #include "core/dom/canvas/webgl/WebGLProgram.h"
+#include "core/dom/canvas/webgl/WebGLTexture.h"
 #include "core/dom/canvas/webgl/WebGLRenderingContextState.h"
 #include "core/dom/canvas/webgl/WebGLUniformLocation.h"
 #include "core/util/debug/Trace.h"
@@ -432,6 +433,10 @@ ScriptValue WebGL2RenderingContext::getTexParameter(GLenum target, GLenum pname)
     switch (pname) {
     // GLboolean
     case GL_TEXTURE_IMMUTABLE_FORMAT: {
+        WebGLTexture* texture = getBoundTextureObject(target);
+        if (texture) {
+            return createScriptValue(texture->isImmutable());
+        }
         GLint params = 0;
         gl()->getTexParameteriv(target, pname, &params);
         if (hasNewGLError()) {
@@ -1732,6 +1737,10 @@ void WebGL2RenderingContext::bufferSubData(GLenum target,
                         srcData->rawBuffer() + srcOffset * elementSize);
 }
 
+#ifndef GL_INTERNALFORMAT_SUPPORTED
+#define GL_INTERNALFORMAT_SUPPORTED 0x826F
+#endif
+
 bool WebGL2RenderingContext::checkInternalFormat(GLint internalFormat,
                                                  GLenum format, GLenum type)
 {
@@ -1744,6 +1753,7 @@ bool WebGL2RenderingContext::checkInternalFormat(GLint internalFormat,
                        .c_str());
         return false;
     }
+
     return true;
 }
 
@@ -1772,6 +1782,116 @@ size_t WebGL2RenderingContext::getBytesPerPixel(GLenum format, GLenum type)
     return Pixel::getBytesPerPixel(format, type, 2);
 }
 
+void WebGL2RenderingContext::texStorage2D(GLenum target, GLsizei levels,
+                                          GLenum internalformat, GLsizei width,
+                                          GLsizei height)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (target != GL_TEXTURE_2D && target != GL_TEXTURE_CUBE_MAP) {
+        setGLError(GL_INVALID_ENUM, "target is invalid.");
+        return;
+    }
+
+    if (!Pixel::isSizedInternalFormat(internalformat)) {
+        setGLError(GL_INVALID_ENUM,
+                   "internalformat is not a sized internal format.");
+        return;
+    }
+
+    if (levels <= 0 || width <= 0 || height <= 0) {
+        setGLError(GL_INVALID_VALUE, "dimensions must be greater than 0.");
+        return;
+    }
+
+    GLsizei maxDim2D = std::max(width, height);
+    GLsizei maxLevels2D = 0;
+    while (maxDim2D > 0) {
+        maxLevels2D++;
+        maxDim2D >>= 1;
+    }
+    if (levels > maxLevels2D) {
+        setGLError(GL_INVALID_OPERATION,
+                   "levels is too large for the given dimensions.");
+        return;
+    }
+
+    if (!hasBoundTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    WebGLTexture* texture = getBoundTextureObject(target);
+    if (texture && texture->isImmutable()) {
+        setGLError(GL_INVALID_OPERATION, "Texture is already immutable.");
+        return;
+    }
+
+    gl()->texStorage2D(target, levels, internalformat, width, height);
+
+    if (texture && !hasNewGLError()) {
+        texture->setImmutable(true);
+    }
+}
+
+void WebGL2RenderingContext::texStorage3D(GLenum target, GLsizei levels,
+                                          GLenum internalformat, GLsizei width,
+                                          GLsizei height, GLsizei depth)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (target != GL_TEXTURE_3D && target != GL_TEXTURE_2D_ARRAY) {
+        setGLError(GL_INVALID_ENUM, "target is invalid.");
+        return;
+    }
+
+    if (!Pixel::isSizedInternalFormat(internalformat)) {
+        setGLError(GL_INVALID_ENUM,
+                   "internalformat is not a sized internal format.");
+        return;
+    }
+
+    if (levels <= 0 || width <= 0 || height <= 0 || depth <= 0) {
+        setGLError(GL_INVALID_VALUE, "dimensions must be greater than 0.");
+        return;
+    }
+
+    GLsizei maxDim3D = std::max(width, std::max(height, depth));
+    GLsizei maxLevels3D = 0;
+    while (maxDim3D > 0) {
+        maxLevels3D++;
+        maxDim3D >>= 1;
+    }
+    if (levels > maxLevels3D) {
+        setGLError(GL_INVALID_OPERATION,
+                   "levels is too large for the given dimensions.");
+        return;
+    }
+
+    if (!hasBoundTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    WebGLTexture* texture = getBoundTextureObject(target);
+    if (texture && texture->isImmutable()) {
+        setGLError(GL_INVALID_OPERATION, "Texture is already immutable.");
+        return;
+    }
+
+    gl()->texStorage3D(target, levels, internalformat, width, height, depth);
+
+    if (texture && !hasNewGLError()) {
+        texture->setImmutable(true);
+    }
+}
+
 void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
                                         GLint internalformat, GLsizei width,
                                         GLsizei height, GLint border,
@@ -1788,6 +1908,502 @@ void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
 {
     WebGLRenderingContext::texImage2D(target, level, internalformat, format,
                                       type, source);
+}
+
+void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
+                                        GLint internalformat, GLsizei width,
+                                        GLsizei height, GLint border,
+                                        GLenum format, GLenum type,
+                                        GLintptr pboOffset)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    WebGLTexture* texture = getBoundTextureObject(target);
+    if (texture && texture->isImmutable()) {
+        setGLError(GL_INVALID_OPERATION, "Texture is immutable.");
+        return;
+    }
+
+    if (!hasBoundTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    if (!getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).hasValue() ||
+        getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).value() == nullptr) {
+        setGLError(GL_INVALID_OPERATION, "PIXEL_UNPACK_BUFFER is not bound.");
+        return;
+    }
+
+    gl()->texImage2D(target, level, internalformat, width, height, border,
+                     format, type, reinterpret_cast<const void*>(pboOffset));
+}
+
+void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
+                                        GLint internalformat, GLsizei width,
+                                        GLsizei height, GLint border,
+                                        GLenum format, GLenum type,
+                                        TexImageSource source)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (!hasBoundTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    if (border != 0) {
+        setGLError(GL_INVALID_VALUE, "border must be 0.");
+        return;
+    }
+
+    if (!checkInternalFormat(internalformat, format, type)) {
+        return;
+    }
+
+    GLint skipPixels = 0;
+    GLint skipRows = 0;
+    gl()->getIntegerv(GL_UNPACK_SKIP_PIXELS, &skipPixels);
+    gl()->getIntegerv(GL_UNPACK_SKIP_ROWS, &skipRows);
+
+    handleTexImageWithImageSource(
+        format, type, source,
+        [&](const TexImageHelper* helper) {
+            STARFISH_ASSERT(helper != nullptr);
+            gl()->texImage2D(
+                target, level, helper->dataFormat().valueOr(internalformat),
+                width, height, 0, helper->dataFormat().valueOr(format), type,
+                helper->data());
+        },
+        0, skipPixels, skipRows, width, height, 1, 0);
+}
+
+void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
+                                        GLint internalformat, GLsizei width,
+                                        GLsizei height, GLint border,
+                                        GLenum format, GLenum type,
+                                        ScriptArrayBufferView srcData,
+                                        unsigned long long srcOffset)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    WebGLTexture* texture = getBoundTextureObject(target);
+    if (texture && texture->isImmutable()) {
+        setGLError(GL_INVALID_OPERATION, "Texture is immutable.");
+        return;
+    }
+
+    if (!hasBoundTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    if (border != 0) {
+        setGLError(GL_INVALID_VALUE, "border must be 0.");
+        return;
+    }
+
+    if (!checkInternalFormat(internalformat, format, type)) {
+        return;
+    }
+
+    handleTexImageWithArrayBufferView(
+        target, level, width, height, 1, format, type, srcData, srcOffset,
+        [&](const TexImageHelper* helper) {
+            STARFISH_ASSERT(helper != nullptr);
+            gl()->texImage2D(target, level, internalformat, width, height, 0,
+                             format, type, helper->data());
+        },
+        [&](const std::vector<GLubyte>& blackData) {
+            gl()->texImage2D(target, level, internalformat, width, height, 0,
+                             format, type, blackData.data());
+        },
+        [&](const std::vector<GLushort>& blackData) {
+            gl()->texImage2D(target, level, internalformat, width, height, 0,
+                             format, type, blackData.data());
+        });
+}
+
+void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
+                                        GLint internalformat, GLsizei width,
+                                        GLsizei height, GLsizei depth,
+                                        GLint border, GLenum format,
+                                        GLenum type, GLintptr pboOffset)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    WebGLTexture* texture = getBoundTextureObject(target);
+    if (texture && texture->isImmutable()) {
+        setGLError(GL_INVALID_OPERATION, "Texture is immutable.");
+        return;
+    }
+
+    if (!hasBoundTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    if (!getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).hasValue() ||
+        getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).value() == nullptr) {
+        setGLError(GL_INVALID_OPERATION, "PIXEL_UNPACK_BUFFER is not bound.");
+        return;
+    }
+
+    gl()->texImage3D(target, level, internalformat, width, height, depth,
+                     border, format, type,
+                     reinterpret_cast<const void*>(pboOffset));
+}
+
+void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
+                                        GLint internalformat, GLsizei width,
+                                        GLsizei height, GLsizei depth,
+                                        GLint border, GLenum format,
+                                        GLenum type, TexImageSource source)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (!hasBoundTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    if (border != 0) {
+        setGLError(GL_INVALID_VALUE, "border must be 0.");
+        return;
+    }
+
+    if (!checkInternalFormat(internalformat, format, type)) {
+        return;
+    }
+
+    GLint skipPixels = 0;
+    GLint skipRows = 0;
+    GLint imageHeight = 0;
+    gl()->getIntegerv(GL_UNPACK_SKIP_PIXELS, &skipPixels);
+    gl()->getIntegerv(GL_UNPACK_SKIP_ROWS, &skipRows);
+    gl()->getIntegerv(GL_UNPACK_IMAGE_HEIGHT, &imageHeight);
+
+    handleTexImageWithImageSource(
+        format, type, source,
+        [&](const TexImageHelper* helper) {
+            STARFISH_ASSERT(helper != nullptr);
+            gl()->texImage3D(
+                target, level, helper->dataFormat().valueOr(internalformat),
+                width, height, depth, 0, helper->dataFormat().valueOr(format),
+                type, helper->data());
+        },
+        height, skipPixels, skipRows, width, height, depth, imageHeight);
+}
+
+void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
+                                        GLint internalformat, GLsizei width,
+                                        GLsizei height, GLsizei depth,
+                                        GLint border, GLenum format,
+                                        GLenum type,
+                                        Optional<ScriptArrayBufferView> srcData)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (target != GL_TEXTURE_3D && target != GL_TEXTURE_2D_ARRAY) {
+        setGLError(GL_INVALID_ENUM, "target is invalid.");
+        return;
+    }
+
+    if (!hasBoundTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    if (!checkInternalFormat(internalformat, format, type)) {
+        return;
+    }
+
+    handleTexImageWithArrayBufferView(
+        target, level, width, height, depth, format, type, srcData, 0,
+        [&](const TexImageHelper* helper) {
+            STARFISH_ASSERT(helper != nullptr);
+            gl()->texImage3D(target, level, internalformat, width, height,
+                             depth, 0, format, type, helper->data());
+        },
+        [&](const std::vector<GLubyte>& blackData) {
+            gl()->texImage3D(target, level, internalformat, width, height,
+                             depth, 0, format, type, blackData.data());
+        },
+        [&](const std::vector<GLushort>& blackData) {
+            gl()->texImage3D(target, level, internalformat, width, height,
+                             depth, 0, format, type, blackData.data());
+        });
+}
+
+void WebGL2RenderingContext::texImage3D(
+    GLenum target, GLint level, GLint internalformat, GLsizei width,
+    GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type,
+    ScriptArrayBufferView srcData, unsigned long long srcOffset)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (target != GL_TEXTURE_3D && target != GL_TEXTURE_2D_ARRAY) {
+        setGLError(GL_INVALID_ENUM, "target is invalid.");
+        return;
+    }
+
+    if (!hasBoundTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    if (border != 0) {
+        setGLError(GL_INVALID_VALUE, "border must be 0.");
+        return;
+    }
+
+    if (!checkInternalFormat(internalformat, format, type)) {
+        return;
+    }
+
+    handleTexImageWithArrayBufferView(
+        target, level, width, height, depth, format, type, srcData, srcOffset,
+        [&](const TexImageHelper* helper) {
+            STARFISH_ASSERT(helper != nullptr);
+            gl()->texImage3D(target, level, internalformat, width, height,
+                             depth, 0, format, type, helper->data());
+        },
+        [&](const std::vector<GLubyte>& blackData) {
+            gl()->texImage3D(target, level, internalformat, width, height,
+                             depth, 0, format, type, blackData.data());
+        },
+        [&](const std::vector<GLushort>& blackData) {
+            gl()->texImage3D(target, level, internalformat, width, height,
+                             depth, 0, format, type, blackData.data());
+        });
+}
+
+void WebGL2RenderingContext::texSubImage3D(GLenum target, GLint level,
+                                           GLint xoffset, GLint yoffset,
+                                           GLint zoffset, GLsizei width,
+                                           GLsizei height, GLsizei depth,
+                                           GLenum format, GLenum type,
+                                           GLintptr pboOffset)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (target != GL_TEXTURE_3D && target != GL_TEXTURE_2D_ARRAY) {
+        setGLError(GL_INVALID_ENUM, "target is invalid.");
+        return;
+    }
+
+    if (!hasBoundTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    if (!getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).hasValue() ||
+        getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).value() == nullptr) {
+        setGLError(GL_INVALID_OPERATION, "PIXEL_UNPACK_BUFFER is not bound.");
+        return;
+    }
+
+    gl()->texSubImage3D(target, level, xoffset, yoffset, zoffset, width, height,
+                        depth, format, type,
+                        reinterpret_cast<const void*>(pboOffset));
+}
+
+void WebGL2RenderingContext::texSubImage3D(GLenum target, GLint level,
+                                           GLint xoffset, GLint yoffset,
+                                           GLint zoffset, GLsizei width,
+                                           GLsizei height, GLsizei depth,
+                                           GLenum format, GLenum type,
+                                           TexImageSource source)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (target != GL_TEXTURE_3D && target != GL_TEXTURE_2D_ARRAY) {
+        setGLError(GL_INVALID_ENUM, "target is invalid.");
+        return;
+    }
+
+    if (!hasBoundTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    GLint skipPixels = 0;
+    GLint skipRows = 0;
+    GLint imageHeight = 0;
+    gl()->getIntegerv(GL_UNPACK_SKIP_PIXELS, &skipPixels);
+    gl()->getIntegerv(GL_UNPACK_SKIP_ROWS, &skipRows);
+    gl()->getIntegerv(GL_UNPACK_IMAGE_HEIGHT, &imageHeight);
+
+    handleTexImageWithImageSource(
+        format, type, source,
+        [&](const TexImageHelper* helper) {
+            STARFISH_ASSERT(helper != nullptr);
+            gl()->texSubImage3D(
+                target, level, xoffset, yoffset, zoffset, width, height, depth,
+                helper->dataFormat().valueOr(format), type, helper->data());
+        },
+        height, skipPixels, skipRows, width, height, depth, imageHeight);
+}
+
+void WebGL2RenderingContext::texSubImage3D(
+    GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
+    GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
+    Optional<ScriptArrayBufferView> srcData, unsigned long long srcOffset)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (target != GL_TEXTURE_3D && target != GL_TEXTURE_2D_ARRAY) {
+        setGLError(GL_INVALID_ENUM, "target is invalid.");
+        return;
+    }
+
+    if (!hasBoundTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    if (!srcData.hasValue()) {
+        setGLError(GL_INVALID_VALUE, "srcData is null.");
+        return;
+    }
+
+    handleTexImageWithArrayBufferView(
+        target, level, width, height, depth, format, type, srcData, srcOffset,
+        [&](const TexImageHelper* helper) {
+            STARFISH_ASSERT(helper != nullptr);
+            gl()->texSubImage3D(target, level, xoffset, yoffset, zoffset, width,
+                                height, depth, format, type, helper->data());
+        },
+        [&](const std::vector<GLubyte>& blackData) {
+            gl()->texSubImage3D(target, level, xoffset, yoffset, zoffset, width,
+                                height, depth, format, type, blackData.data());
+        },
+        [&](const std::vector<GLushort>& blackData) {
+            gl()->texSubImage3D(target, level, xoffset, yoffset, zoffset, width,
+                                height, depth, format, type, blackData.data());
+        });
+}
+
+void WebGL2RenderingContext::texSubImage2D(GLenum target, GLint level,
+                                           GLint xoffset, GLint yoffset,
+                                           GLsizei width, GLsizei height,
+                                           GLenum format, GLenum type,
+                                           GLintptr pboOffset)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (!hasBoundTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    if (!getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).hasValue() ||
+        getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).value() == nullptr) {
+        setGLError(GL_INVALID_OPERATION, "PIXEL_UNPACK_BUFFER is not bound.");
+        return;
+    }
+
+    gl()->texSubImage2D(target, level, xoffset, yoffset, width, height, format,
+                        type, reinterpret_cast<const void*>(pboOffset));
+}
+
+void WebGL2RenderingContext::texSubImage2D(GLenum target, GLint level,
+                                           GLint xoffset, GLint yoffset,
+                                           GLsizei width, GLsizei height,
+                                           GLenum format, GLenum type,
+                                           TexImageSource source)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (!hasBoundTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    GLint skipPixels = 0;
+    GLint skipRows = 0;
+    gl()->getIntegerv(GL_UNPACK_SKIP_PIXELS, &skipPixels);
+    gl()->getIntegerv(GL_UNPACK_SKIP_ROWS, &skipRows);
+
+    handleTexImageWithImageSource(
+        format, type, source,
+        [&](const TexImageHelper* helper) {
+            STARFISH_ASSERT(helper != nullptr);
+            gl()->texSubImage2D(target, level, xoffset, yoffset, width, height,
+                                helper->dataFormat().valueOr(format), type,
+                                helper->data());
+        },
+        0, skipPixels, skipRows, width, height, 1, 0);
+}
+
+void WebGL2RenderingContext::texSubImage2D(GLenum target, GLint level,
+                                           GLint xoffset, GLint yoffset,
+                                           GLsizei width, GLsizei height,
+                                           GLenum format, GLenum type,
+                                           ScriptArrayBufferView srcData,
+                                           unsigned long long srcOffset)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (!hasBoundTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    handleTexImageWithArrayBufferView(
+        target, level, width, height, 1, format, type, srcData, srcOffset,
+        [&](const TexImageHelper* helper) {
+            STARFISH_ASSERT(helper != nullptr);
+            gl()->texSubImage2D(target, level, xoffset, yoffset, width, height,
+                                format, type, helper->data());
+        },
+        [&](const std::vector<GLubyte>& blackData) {
+            gl()->texSubImage2D(target, level, xoffset, yoffset, width, height,
+                                format, type, blackData.data());
+        },
+        [&](const std::vector<GLushort>& blackData) {
+            gl()->texSubImage2D(target, level, xoffset, yoffset, width, height,
+                                format, type, blackData.data());
+        });
 }
 
 void WebGL2RenderingContext::texSubImage2D(

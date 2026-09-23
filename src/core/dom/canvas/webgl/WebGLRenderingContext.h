@@ -27,9 +27,12 @@
 #include "core/dom/canvas/webgl/WebGLUtils.h"
 #include "core/dom/canvas/webgl/WebGLContextAttributes.h"
 #include "core/util/GCDescriptor.h"
+#include "core/dom/canvas/webgl/WebGLExtensions.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 
 #include <unordered_set>
 #include <unordered_map>
+#include <vector>
 
 namespace Starfish {
 
@@ -51,7 +54,46 @@ class ArrayBufferOrSharedArrayBufferOrArrayBufferView;
 class
     ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement;
 class GL;
-class TexImageHelper;
+
+class TexImageHelper final {
+public:
+    struct ImageData {
+        ImageData() = default;
+        size_t width = 0;
+        size_t height = 0;
+        size_t stride = 0;
+        GLenum format = 0;
+        unsigned char* data = nullptr;
+    };
+
+    TexImageHelper(size_t width, size_t height, size_t stride, GLenum format,
+                   void* data);
+    TexImageHelper(NativeImageData* imageData, GLenum format);
+    ~TexImageHelper();
+
+    void draw(const bool needsFlipY, const bool needsPremultiplyAlpha,
+              const GLenum type, const size_t bytesPerPixel,
+              size_t sliceHeight = 0);
+
+    void drawSubRectangle(const bool needsFlipY,
+                          const bool needsPremultiplyAlpha, const GLenum type,
+                          const size_t bytesPerPixel,
+                          size_t skipPixels, size_t skipRows,
+                          size_t destWidth, size_t destHeight,
+                          size_t depth = 1, size_t imageHeight = 0);
+
+    const void* data() const;
+    const ImageData& sourceImage() const;
+    Optional<GLenum> dataFormat() const;
+
+private:
+    unsigned char multiplyAlpha(unsigned char color, float alpha);
+
+    ImageData m_sourceImage;
+    std::vector<unsigned char> m_data;
+    Optional<GLenum> m_dataFormat;
+    bool m_isNativeImageDataUsed;
+};
 
 using Float32List = Float32ArrayOrSequenceOfGLfloat;
 using Int32List = Int32ArrayOrSequenceOfGLint;
@@ -258,17 +300,6 @@ public:
                     Optional<ScriptArrayBufferView> pixels);
 
 private:
-    void handleTexImageWithArrayBufferView(
-        GLenum target, GLint level, GLsizei width, GLsizei height,
-        GLenum format, GLenum type, Optional<ScriptArrayBufferView> pixels,
-        std::function<void(const TexImageHelper*)> updateImage,
-        std::function<void(const std::vector<GLubyte>&)> updateBlackImage,
-        std::function<void(const std::vector<GLushort>&)>
-            updateTwoBytesBlackImage);
-    void handleTexImageWithImageSource(
-        const GLenum format, const GLenum type, const TexImageSource& source,
-        std::function<void(const TexImageHelper*)> updateImage);
-
 public:
     void texImage2D(GLenum target, GLint level, GLint internalFormat,
                     GLsizei width, GLsizei height, GLint border, GLenum format,
@@ -306,6 +337,7 @@ public:
     FILL_GC_POINTER(WebGLRenderingContext, m_unpackColorSpace);
     FILL_GC_POINTER(WebGLRenderingContext, m_drawingBufferColorSpace);
     FILL_GC_COLLECTION(WebGLRenderingContext, m_enabledExtensions);
+    FILL_GC_COLLECTION(WebGLRenderingContext, m_boundTextureObjects);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 
 public:
@@ -320,6 +352,21 @@ private:
     bool checkAttribOrUniformName(String* name);
 
 protected:
+    void handleTexImageWithArrayBufferView(
+        GLenum target, GLint level, GLsizei width, GLsizei height,
+        GLsizei depth, GLenum format, GLenum type,
+        Optional<ScriptArrayBufferView> pixels, unsigned long long srcOffset,
+        std::function<void(const TexImageHelper*)> updateImage,
+        std::function<void(const std::vector<GLubyte>&)> updateBlackImage,
+        std::function<void(const std::vector<GLushort>&)>
+            updateTwoBytesBlackImage);
+    void handleTexImageWithImageSource(
+        const GLenum format, const GLenum type, const TexImageSource& source,
+        std::function<void(const TexImageHelper*)> updateImage,
+        size_t sliceHeight = 0, size_t skipPixels = 0, size_t skipRows = 0,
+        size_t destWidth = 0, size_t destHeight = 0, size_t depth = 1,
+        size_t imageHeight = 0);
+
     bool isFromCurrentContext(WebGLObject* object);
 
 private:
@@ -339,6 +386,7 @@ private:
 
 protected:
     bool hasBoundTexture(GLenum target) const;
+    WebGLTexture* getBoundTextureObject(GLenum target) const;
 
     GLenum getUniformType(WebGLProgram* program,
                           WebGLUniformLocation* location);
@@ -366,12 +414,20 @@ private:
                                      GLenum type);
     virtual bool isSrcDataValid(ScriptArrayBufferView srcData, GLenum type);
     virtual size_t getBytesPerPixel(GLenum format, GLenum type);
+    virtual int webGLVersion() const
+    {
+        return 1;
+    }
 
     bool m_hasPendingJobsBetweenFrames;
     uint32_t m_pendingClearMask;
 
+protected:
     GLErrorSet m_GLErrors;
+
+private:
     GLTextureMap m_boundTextures;
+    GCUnorderedMap<GLenum, WebGLTexture*> m_boundTextureObjects;
     bool m_unpackFlipY;
     bool m_unpackPremultiplyAlpha;
     GLenum m_unpackColorspaceConversion;

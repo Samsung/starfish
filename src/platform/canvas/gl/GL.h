@@ -63,6 +63,9 @@ public:
     virtual void texStorage2D(GLenum target, GLsizei levels,
                               GLenum internalformat, GLsizei width,
                               GLsizei height) = 0;
+    virtual void texStorage3D(GLenum target, GLsizei levels,
+                              GLenum internalformat, GLsizei width,
+                              GLsizei height, GLsizei depth) = 0;
     virtual GLenum checkFramebufferStatus(GLenum target) = 0;
     virtual void clear(GLbitfield mask) = 0;
     virtual void clearColor(GLclampf red, GLclampf green, GLclampf blue,
@@ -185,6 +188,9 @@ public:
     virtual void releaseShaderCompiler(void) = 0;
     virtual void renderbufferStorage(GLenum target, GLenum internalformat,
                                      GLsizei width, GLsizei height) = 0;
+    virtual void getInternalformativ(GLenum target, GLenum internalformat,
+                                     GLenum pname, GLsizei bufSize,
+                                     GLint *params) = 0;
     virtual void sampleCoverage(GLfloat value, GLboolean invert) = 0;
     virtual void scissor(GLint x, GLint y, GLsizei width, GLsizei height) = 0;
     virtual void stencilFunc(GLenum func, GLint ref, GLuint mask) = 0;
@@ -198,6 +204,10 @@ public:
     virtual void texImage2D(GLenum target, GLint level, GLint internalformat,
                             GLsizei width, GLsizei height, GLint border,
                             GLenum format, GLenum type, const void *pixels) = 0;
+    virtual void texImage3D(GLenum target, GLint level, GLint internalformat,
+                            GLsizei width, GLsizei height, GLsizei depth,
+                            GLint border, GLenum format, GLenum type,
+                            const void *pixels) = 0;
     virtual void texParameterf(GLenum target, GLenum pname, GLfloat param) = 0;
     virtual void texParameterfv(GLenum target, GLenum pname,
                                 const GLfloat *params) = 0;
@@ -208,6 +218,10 @@ public:
                                GLint yoffset, GLsizei width, GLsizei height,
                                GLenum format, GLenum type,
                                const void *pixels) = 0;
+    virtual void texSubImage3D(GLenum target, GLint level, GLint xoffset,
+                               GLint yoffset, GLint zoffset, GLsizei width,
+                               GLsizei height, GLsizei depth, GLenum format,
+                               GLenum type, const void *pixels) = 0;
     virtual void uniform1f(GLint location, GLfloat x) = 0;
     virtual void uniform1fv(GLint location, GLsizei count,
                             const GLfloat *v) = 0;

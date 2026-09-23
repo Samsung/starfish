@@ -191,7 +191,6 @@ static size_t getBytesPerPixelWebGL2(GLenum format, GLenum type)
 }
 
 namespace Starfish {
-
 bool Pixel::isInternalFormatValid(GLint internalFormat, GLenum format,
                                   GLenum type, int webGLVersion)
 {
@@ -201,8 +200,33 @@ bool Pixel::isInternalFormatValid(GLint internalFormat, GLenum format,
     if (webGLVersion == 2) {
         return isInternalFormatValidWebGL2(internalFormat, format, type);
     }
-    STARFISH_ASSERT_NOT_REACHED();
-    return 0;
+    return false;
+}
+
+bool Pixel::isSizedInternalFormat(GLenum internalformat)
+{
+    if (internalformat == GL_RGBA || internalformat == GL_RGB ||
+        internalformat == GL_ALPHA || internalformat == GL_LUMINANCE ||
+        internalformat == GL_LUMINANCE_ALPHA) {
+        return false;
+    }
+
+    for (const Combination& combination : combinationsWebGL2) {
+        if (combination.internalFormat == static_cast<GLint>(internalformat)) {
+            return true;
+        }
+    }
+    switch (internalformat) {
+    case GL_DEPTH_COMPONENT16:
+    case GL_DEPTH_COMPONENT24:
+    case GL_DEPTH_COMPONENT32F:
+    case GL_DEPTH24_STENCIL8:
+    case GL_DEPTH32F_STENCIL8:
+    case GL_STENCIL_INDEX8:
+        return true;
+    default:
+        return false;
+    }
 }
 
 size_t Pixel::getBytesPerPixel(GLenum format, GLenum type, int webGLVersion)
