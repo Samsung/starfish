@@ -322,18 +322,18 @@ interface WebGL2RenderingContextBase
                                optional unsigned long long dstOffset = 0, optional GLuint length = 0);
 
     /* Framebuffer objects */
-    [Unimplemented] undefined blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0,
-                                              GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
-    [Unimplemented] undefined framebufferTextureLayer(GLenum target, GLenum attachment, WebGLTexture? texture, GLint level,
+    undefined blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0,
+                              GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
+    undefined framebufferTextureLayer(GLenum target, GLenum attachment, WebGLTexture? texture, GLint level,
                                                       GLint layer);
-    [Unimplemented] undefined invalidateFramebuffer(GLenum target, sequence<GLenum> attachments);
-    [Unimplemented] undefined invalidateSubFramebuffer(GLenum target, sequence<GLenum> attachments,
-                                                       GLint x, GLint y, GLsizei width, GLsizei height);
+    undefined invalidateFramebuffer(GLenum target, sequence<GLenum> attachments);
+    undefined invalidateSubFramebuffer(GLenum target, sequence<GLenum> attachments,
+                                       GLint x, GLint y, GLsizei width, GLsizei height);
     [Unimplemented] undefined readBuffer(GLenum src);
 
     /* Renderbuffer objects */
     [Unimplemented] any getInternalformatParameter(GLenum target, GLenum internalformat, GLenum pname);
-    [Unimplemented] undefined renderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalformat,
+    undefined renderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalformat,
                                                              GLsizei width, GLsizei height);
 
     /* Texture objects */
@@ -428,16 +428,16 @@ interface WebGL2RenderingContextBase
     undefined drawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, GLintptr offset);
 
     /* Multiple Render Targets */
-    [Unimplemented] undefined drawBuffers(sequence<GLenum> buffers);
+    undefined drawBuffers(sequence<GLenum> buffers);
 
-    [Unimplemented] undefined clearBufferfv(GLenum buffer, GLint drawbuffer, Float32List values,
-                                            optional unsigned long long srcOffset = 0);
-    [Unimplemented] undefined clearBufferiv(GLenum buffer, GLint drawbuffer, Int32List values,
-                                            optional unsigned long long srcOffset = 0);
-    [Unimplemented] undefined clearBufferuiv(GLenum buffer, GLint drawbuffer, Uint32List values,
-                                             optional unsigned long long srcOffset = 0);
+    undefined clearBufferfv(GLenum buffer, GLint drawbuffer, Float32List values,
+                            optional unsigned long long srcOffset = 0);
+    undefined clearBufferiv(GLenum buffer, GLint drawbuffer, Int32List values,
+                            optional unsigned long long srcOffset = 0);
+    undefined clearBufferuiv(GLenum buffer, GLint drawbuffer, Uint32List values,
+                             optional unsigned long long srcOffset = 0);
 
-    [Unimplemented] undefined clearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil);
+    undefined clearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil);
 
     /* Query Objects */
     [Unimplemented] WebGLQuery createQuery();
@@ -588,9 +588,9 @@ interface WebGL2RenderingContextOverloads
     undefined readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type,
                          [AllowShared] ArrayBufferView? dstData);
     // WebGL2:
-    [Unimplemented] undefined readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type,
+    undefined readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type,
                                          GLintptr offset);
-    [Unimplemented] undefined readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type,
+    undefined readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type,
                                          [AllowShared] ArrayBufferView dstData, unsigned long long dstOffset);
 };
 

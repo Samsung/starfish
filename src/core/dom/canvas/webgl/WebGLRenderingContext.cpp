@@ -1350,11 +1350,14 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
     }
     // GLenum
     case kIMPLEMENTATION_COLOR_READ_TYPE: {
-        // Our implementation-chosen is a combination of RGBA and UNSIGNED_BYTE.
-        return ValueRef::create(GL_UNSIGNED_BYTE);
+        GLint readType = GL_UNSIGNED_BYTE;
+        m_gl->getIntegerv(kIMPLEMENTATION_COLOR_READ_TYPE, &readType);
+        return ValueRef::create(static_cast<uint32_t>(readType));
     }
     case kIMPLEMENTATION_COLOR_READ_FORMAT: {
-        return ValueRef::create(GL_RGBA);
+        GLint readFormat = GL_RGBA;
+        m_gl->getIntegerv(kIMPLEMENTATION_COLOR_READ_FORMAT, &readFormat);
+        return ValueRef::create(static_cast<uint32_t>(readFormat));
     }
     // DOMString
     case GL_SHADING_LANGUAGE_VERSION:
@@ -2989,7 +2992,7 @@ void WebGLRenderingContext::compressedTexSubImage2D(
 
 size_t WebGLRenderingContext::getBytesPerPixel(GLenum format, GLenum type)
 {
-    return Pixel::getBytesPerPixel(format, type, 1);
+    return Pixel::getBytesPerPixel(format, type, webGLVersion());
 }
 
 void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
@@ -3018,17 +3021,20 @@ void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
                 isTypeMatched = pixelsView->isInt8ArrayObject();
             } else if (type == GL_SHORT) {
                 isTypeMatched = pixelsView->isInt16ArrayObject();
-            } else if (type == GL_UNSIGNED_SHORT) {
+            } else if (type == GL_UNSIGNED_SHORT || type == GL_HALF_FLOAT) {
                 isTypeMatched = pixelsView->isUint16ArrayObject();
             } else if (type == GL_INT) {
                 isTypeMatched = pixelsView->isInt32ArrayObject();
-            } else if (type == GL_UNSIGNED_INT) {
+            } else if (type == GL_UNSIGNED_INT ||
+                       type == GL_UNSIGNED_INT_2_10_10_10_REV ||
+                       type == GL_UNSIGNED_INT_10F_11F_11F_REV ||
+                       type == GL_UNSIGNED_INT_5_9_9_9_REV) {
                 isTypeMatched = pixelsView->isUint32ArrayObject();
             }
         }
 
         if (!isTypeMatched) {
-            setGLError(GL_INVALID_OPERATION);
+            setGLError(GL_INVALID_OPERATION, "Type not matched with view");
             return;
         }
 
@@ -3049,17 +3055,34 @@ void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
             isValidCombination =
                 (format == GL_RGBA && type == GL_UNSIGNED_BYTE);
         } else if (webGLVersion() == 2) {
+            bool isIntegerFormat =
+                (format == GL_RGBA_INTEGER || format == GL_RGB_INTEGER ||
+                 format == GL_RG_INTEGER || format == GL_RED_INTEGER);
+            bool isIntegerType =
+                (type == GL_INT || type == GL_UNSIGNED_INT ||
+                 type == GL_SHORT || type == GL_UNSIGNED_SHORT ||
+                 type == GL_BYTE || type == GL_UNSIGNED_BYTE ||
+                 type == GL_UNSIGNED_INT_2_10_10_10_REV);
+            bool isNormalizedFloatFormat =
+                (format == GL_RGBA || format == GL_RGB || format == GL_RG ||
+                 format == GL_RED);
+            bool isNormalizedFloatType =
+                (type == GL_UNSIGNED_BYTE || type == GL_BYTE ||
+                 type == GL_FLOAT || type == GL_HALF_FLOAT ||
+                 type == GL_UNSIGNED_SHORT_5_6_5 ||
+                 type == GL_UNSIGNED_SHORT_4_4_4_4 ||
+                 type == GL_UNSIGNED_SHORT_5_5_5_1 ||
+                 type == GL_UNSIGNED_INT_2_10_10_10_REV);
             isValidCombination =
-                (format == GL_RGBA && type == GL_UNSIGNED_BYTE) ||
-                (format == GL_RGBA_INTEGER &&
-                 (type == GL_INT || type == GL_UNSIGNED_INT ||
-                  type == GL_BYTE || type == GL_UNSIGNED_BYTE)) ||
-                (format == GL_RGBA &&
-                 (type == GL_FLOAT || type == GL_HALF_FLOAT));
+                (isNormalizedFloatFormat && isNormalizedFloatType) ||
+                (isIntegerFormat && isIntegerType);
         }
 
         if (!isValidCombination) {
-            setGLError(GL_INVALID_OPERATION);
+            std::string msg = StringUtils::formatString(
+                "Invalid combination of format=0x%x and type=0x%x", format,
+                type);
+            setGLError(GL_INVALID_OPERATION, msg.c_str());
             return;
         }
 
@@ -3076,7 +3099,7 @@ void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
             // If pixels is non-null, but is not large enough to retrieve all of
             // the pixels in the specified rectangle taking into account pixel
             // store modes, an INVALID_OPERATION error is generated.
-            setGLError(GL_INVALID_OPERATION);
+            setGLError(GL_INVALID_OPERATION, "View buffer too small");
             return;
         }
 
@@ -3213,7 +3236,8 @@ void TexImageHelper::draw(const bool needsFlipY,
         order = { 0, 1, 2, 3 };
     }
 
-    const size_t effectiveSliceHeight = (sliceHeight > 0 && sliceHeight <= height) ? sliceHeight : height;
+    const size_t effectiveSliceHeight =
+        (sliceHeight > 0 && sliceHeight <= height) ? sliceHeight : height;
 
     for (size_t row = 0; row < height; row++) {
         // Calculate the memory offset for the current row
@@ -3223,7 +3247,8 @@ void TexImageHelper::draw(const bool needsFlipY,
             size_t sliceIndex = row / effectiveSliceHeight;
             size_t rowInSlice = row % effectiveSliceHeight;
             size_t flippedRowInSlice = (effectiveSliceHeight - 1 - rowInSlice);
-            size_t flippedRow = sliceIndex * effectiveSliceHeight + flippedRowInSlice;
+            size_t flippedRow =
+                sliceIndex * effectiveSliceHeight + flippedRowInSlice;
             if (flippedRow >= height) {
                 flippedRow = row;
             }
@@ -3287,13 +3312,10 @@ void TexImageHelper::draw(const bool needsFlipY,
     }
 }
 
-void TexImageHelper::drawSubRectangle(const bool needsFlipY,
-                                      const bool needsPremultiplyAlpha,
-                                      const GLenum type,
-                                      const size_t bytesPerPixel,
-                                      size_t skipPixels, size_t skipRows,
-                                      size_t destWidth, size_t destHeight,
-                                      size_t depth, size_t imageHeight)
+void TexImageHelper::drawSubRectangle(
+    const bool needsFlipY, const bool needsPremultiplyAlpha, const GLenum type,
+    const size_t bytesPerPixel, size_t skipPixels, size_t skipRows,
+    size_t destWidth, size_t destHeight, size_t depth, size_t imageHeight)
 {
     const size_t srcWidth = m_sourceImage.width;
     const size_t srcHeight = m_sourceImage.height;
@@ -3307,7 +3329,8 @@ void TexImageHelper::drawSubRectangle(const bool needsFlipY,
 #if defined(PORT_PIXEL_ORDER_BGRA)
     if (m_isNativeImageDataUsed) {
         if (m_sourceImage.format == GL_RGBA && type == GL_UNSIGNED_BYTE &&
-            WebGLExtensionRegistry::instance().hasEXT_texture_format_BGRA8888()) {
+            WebGLExtensionRegistry::instance()
+                .hasEXT_texture_format_BGRA8888()) {
             m_dataFormat = GL_BGRA_EXT;
             needsColorConversion = false;
         } else {
@@ -3346,7 +3369,8 @@ void TexImageHelper::drawSubRectangle(const bool needsFlipY,
                              (effectiveImageHeight - 1 - skipRows - r);
                 }
             } else {
-                srcRow = effectiveSliceIndex * effectiveImageHeight + skipRows + r;
+                srcRow =
+                    effectiveSliceIndex * effectiveImageHeight + skipRows + r;
             }
             if (srcRow >= srcHeight) {
                 continue;
@@ -3376,9 +3400,11 @@ void TexImageHelper::drawSubRectangle(const bool needsFlipY,
                         }
                         GLushort packed = 0;
                         if (type == GL_UNSIGNED_SHORT_5_5_5_1) {
-                            packed = Pixel::makePixel5551(red, green, blue, alpha);
+                            packed =
+                                Pixel::makePixel5551(red, green, blue, alpha);
                         } else if (type == GL_UNSIGNED_SHORT_4_4_4_4) {
-                            packed = Pixel::makePixel4444(red, green, blue, alpha);
+                            packed =
+                                Pixel::makePixel4444(red, green, blue, alpha);
                         } else if (type == GL_UNSIGNED_SHORT_5_6_5) {
                             packed = Pixel::makePixel565(red, green, blue);
                         }
@@ -3389,9 +3415,12 @@ void TexImageHelper::drawSubRectangle(const bool needsFlipY,
                     }
                 } else if (needsPremultiplyAlpha && srcBytesPerPixel == 4) {
                     float alpha = image[srcOffset + order[3]] / 255.f;
-                    m_data[destOffset + 0] = multiplyAlpha(image[srcOffset + order[0]], alpha);
-                    m_data[destOffset + 1] = multiplyAlpha(image[srcOffset + order[1]], alpha);
-                    m_data[destOffset + 2] = multiplyAlpha(image[srcOffset + order[2]], alpha);
+                    m_data[destOffset + 0] =
+                        multiplyAlpha(image[srcOffset + order[0]], alpha);
+                    m_data[destOffset + 1] =
+                        multiplyAlpha(image[srcOffset + order[1]], alpha);
+                    m_data[destOffset + 2] =
+                        multiplyAlpha(image[srcOffset + order[2]], alpha);
                     if (dstBytesPerPixel == 4) {
                         m_data[destOffset + 3] = image[srcOffset + order[3]];
                     }

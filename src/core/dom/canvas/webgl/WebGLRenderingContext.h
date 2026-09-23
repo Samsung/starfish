@@ -77,9 +77,8 @@ public:
 
     void drawSubRectangle(const bool needsFlipY,
                           const bool needsPremultiplyAlpha, const GLenum type,
-                          const size_t bytesPerPixel,
-                          size_t skipPixels, size_t skipRows,
-                          size_t destWidth, size_t destHeight,
+                          const size_t bytesPerPixel, size_t skipPixels,
+                          size_t skipRows, size_t destWidth, size_t destHeight,
                           size_t depth = 1, size_t imageHeight = 0);
 
     const void* data() const;
@@ -380,8 +379,10 @@ protected:
     bool isFromCurrentProgram(WebGLUniformLocation* uniform);
     bool isExtensionEnabled(const char* requestedName);
 
-private:
+protected:
     bool isDefaultFramebufferBound();
+
+private:
     GLuint getCurrentFBO();
     void setPendingClearMask(uint32_t mask);
     void flushDrawingCommands();

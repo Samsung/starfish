@@ -245,6 +245,35 @@ public:
     void drawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count,
                            GLenum type, GLintptr offset);
 
+    /* Framebuffer objects */
+    void blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
+                         GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
+                         GLbitfield mask, GLenum filter);
+    void framebufferTextureLayer(GLenum target, GLenum attachment,
+                                 Optional<WebGLTexture*> texture, GLint level,
+                                 GLint layer);
+    void invalidateFramebuffer(GLenum target,
+                               GCAtomicVector<GLenum> attachments);
+    void invalidateSubFramebuffer(GLenum target,
+                                  GCAtomicVector<GLenum> attachments, GLint x,
+                                  GLint y, GLsizei width, GLsizei height);
+
+    /* Renderbuffer objects */
+    void renderbufferStorageMultisample(GLenum target, GLsizei samples,
+                                        GLenum internalformat, GLsizei width,
+                                        GLsizei height);
+
+    /* Multiple Render Targets & Clear Buffers */
+    void drawBuffers(GCAtomicVector<GLenum> buffers);
+    void clearBufferfv(GLenum buffer, GLint drawbuffer, Float32List values,
+                       unsigned long long srcOffset = 0);
+    void clearBufferiv(GLenum buffer, GLint drawbuffer, Int32List values,
+                       unsigned long long srcOffset = 0);
+    void clearBufferuiv(GLenum buffer, GLint drawbuffer, Uint32List values,
+                        unsigned long long srcOffset = 0);
+    void clearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth,
+                       GLint stencil);
+
     // Implement WebGL2RenderingContextOverloads
 
     void shaderSource(WebGLShader* shader, String* source) override;
@@ -370,6 +399,12 @@ public:
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                     GLenum format, GLenum type,
                     Optional<ScriptArrayBufferView> dstData);
+    // WebGL2:
+    void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                    GLenum format, GLenum type, GLintptr offset);
+    void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                    GLenum format, GLenum type, ScriptArrayBufferView dstData,
+                    unsigned long long dstOffset);
 
 protected:
     Optional<ScriptValue> getParameterImpl(GLenum pname);
