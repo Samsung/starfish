@@ -2463,7 +2463,11 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
                 }
             };
 
-            if (clip == BoxValue::TextBoxValue) {
+            // The root/body background becomes the canvas background, whose
+            // painting area covers the canvas. background-clip therefore has
+            // no effect on a propagated background.
+            // https://drafts.csswg.org/css-backgrounds-4/#special-backgrounds
+            if (!rootOrBodyelement && clip == BoxValue::TextBoxValue) {
                 canvas->save();
                 canvas->translate(paintingRect.x(), paintingRect.y());
                 Unit::Rect maskRect(0, 0, paintingRect.width(),
@@ -2758,7 +2762,7 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
         canvas->translate(paintingRect.x(), paintingRect.y());
 
         BoxValue clip = style->backgroundClip(idx);
-        bool hasTextClip = (clip == BoxValue::TextBoxValue);
+        bool hasTextClip = !rootOrBodyelement && clip == BoxValue::TextBoxValue;
         if (hasTextClip) {
             Unit::Rect maskRect(0, 0, paintingRect.width(),
                                 paintingRect.height());
