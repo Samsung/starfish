@@ -155,7 +155,8 @@ Promise* BaseAudioContext::decodeAudioData(
         DecodeSuccessCallback* successCallback;
     };
 
-    Params* p = new Params{ this, promise, buffer, length, successCallback };
+    Params* p = new (GC_MALLOC_UNCOLLECTABLE(sizeof(Params)))
+        Params{ this, promise, buffer, length, successCallback };
 
     executionContext()->webBase()->messageLoop()->addIdler(
         executionContext()->document()->window(),
@@ -185,7 +186,7 @@ Promise* BaseAudioContext::decodeAudioData(
                 successCallback->call(self->scriptBindingInstance(),
                                       audioBuffer);
             }
-            delete p;
+            GC_FREE(p);
         },
         p);
 
