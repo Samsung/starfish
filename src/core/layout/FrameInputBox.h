@@ -58,6 +58,7 @@ protected:
         FrameBlockBox::fillGCDescriptor(desc);
     }
 
+public:
     void paintCaret(Canvas* canvas);
     virtual void paintInlineContentBlock(Canvas* canvas,
                                          PaintPassMemos* memos) override;

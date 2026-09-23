@@ -5203,9 +5203,14 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
         }
 
         canvas->setFont(s->font());
-        canvas->setFillColor(s->color());
+        if (canvas->isTextMaskPainting()) {
+            canvas->setFillColor(Unit::Color(255, 255, 255, 255));
+        } else {
+            canvas->setFillColor(s->color());
+        }
 
-        bool hasShadow = s->textShadow() ? true : false;
+        bool hasShadow =
+            !canvas->isTextMaskPainting() && s->textShadow() ? true : false;
 
         if (hasShadow) {
             canvas->save();
@@ -5356,7 +5361,7 @@ void InlineNonReplacedBox::paintInlineContent(Canvas* canvas,
         return;
     }
 
-    if (stage == PaintingInlineBox) {
+    if (stage == PaintingInlineBox && !canvas->isTextMaskPainting()) {
         canvas->translate(dx, dy);
         paintBackgroundAndBorders(canvas);
         canvas->translate(-dx, -dy);

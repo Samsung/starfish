@@ -1666,7 +1666,7 @@ section are supported.
 | | background-size | [ &lt;length-percentage&gt; &#124; auto ]{1,2} &#124; cover &#124; contain | 1- and 2-value forms supported; comma-separated layer list supported. | |
 | | background-attachment | scroll &#124; fixed &#124; local [, ... ]* | All three keywords parse and round-trip through `getComputedStyle`. Layout/paint behavior of `fixed`/`local` (e.g. viewport-fixed painting) is **not** verified by this audit; treat as best-effort. | |
 | | background-origin | &lt;box&gt; [, &lt;box&gt;]* where &lt;box&gt; = border-box &#124; padding-box &#124; content-box | All three values supported. | |
-| | background-clip | &lt;box&gt; [, &lt;box&gt;]* where &lt;box&gt; = border-box &#124; padding-box &#124; content-box | `border-box`, `padding-box`, `content-box` supported. **`background-clip: text` is silently dropped to `border-box`** with no warning. | |
+| | background-clip | [ &lt;box&gt; &#124; text ]# where &lt;box&gt; = border-box &#124; padding-box &#124; content-box | `border-box`, `padding-box`, `content-box`, and `text` supported (also `-webkit-background-clip`). `text` clips the background layers to the text glyphs via Cairo group masking. `-webkit-text-fill-color` is also supported as an alias of `color`. | |
 | | background-blend-mode | — | **Not supported.** Logged at parse time as `Unsupported css property: background-blend-mode`. Use `mix-blend-mode` on the element if a single blend is acceptable. | |
 | [Font](https://www.w3.org/TR/CSS2/fonts.html) | font-style | normal &#124; italic &#124; oblique | Specifies the font style for text. | A font provides a resource containing the visual representation of characters. |
 | | font-family | &lt;family-name&gt;# &#124; &lt;generic-family&gt; | Comma-separated prioritized list of font family names and/or generic family keywords (`serif`, `sans-serif`, `monospace`, `cursive`, `fantasy`). Quoted family names with spaces are accepted. | |
@@ -1843,6 +1843,8 @@ To use these features, you need to define specific string when compile. the stri
 | STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX | -webkit-transform | alias of transform |
 | | -webkit-transform-origin | alias of transform-origin |
 | STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX | -webkit-transition | alias of transition |
+| | -webkit-background-clip | alias of background-clip |
+| | -webkit-text-fill-color | alias of color |
 
 ## Selectors
 

@@ -775,6 +775,29 @@ public:
         translate(x.toDouble(), y.toDouble());
     }
 
+    virtual void beginTextClip(const Unit::Rect& rect) override
+    {
+        save();
+        clip(rect);
+        cairo_push_group(m_canvas);
+    }
+    virtual void beginTextClipContent() override
+    {
+        cairo_pattern_t* maskPattern = cairo_pop_group(m_canvas);
+        lastState()->m_maskPattern = maskPattern;
+        cairo_push_group(m_canvas);
+    }
+    virtual void endTextClip() override
+    {
+        cairo_pop_group_to_source(m_canvas);
+        cairo_pattern_t* maskPattern =
+            (cairo_pattern_t*)lastState()->m_maskPattern;
+        cairo_mask(m_canvas, maskPattern);
+        cairo_pattern_destroy(maskPattern);
+        lastState()->m_maskPattern = nullptr;
+        restore();
+    }
+
     virtual void beginLayer(const Unit::Rect& subCanvasRect, float layerOpacity,
                             CanvasLayerMode mode) override
     {
@@ -2695,11 +2718,16 @@ private:
         if (lastState()->m_textDecorationData.hasUnderLine() == true) {
             cairo_set_line_width(canvas, lineWidth);
 
-            cairo_set_source_rgba(
-                canvas, lastState()->m_textDecorationData.underLineColor().R(),
-                lastState()->m_textDecorationData.underLineColor().G(),
-                lastState()->m_textDecorationData.underLineColor().B(),
-                lastState()->m_textDecorationData.underLineColor().A());
+            if (isTextMaskPainting()) {
+                cairo_set_source_rgba(canvas, 1.0, 1.0, 1.0, 1.0);
+            } else {
+                cairo_set_source_rgba(
+                    canvas,
+                    lastState()->m_textDecorationData.underLineColor().R(),
+                    lastState()->m_textDecorationData.underLineColor().G(),
+                    lastState()->m_textDecorationData.underLineColor().B(),
+                    lastState()->m_textDecorationData.underLineColor().A());
+            }
 
             float y = face->underline_position / (float)fc->m_unitsPerEM *
                           intSize / 72 +
@@ -2712,12 +2740,16 @@ private:
         if (lastState()->m_textDecorationData.hasLineThrough() == true) {
             cairo_set_line_width(canvas, lineWidth);
 
-            cairo_set_source_rgba(
-                canvas,
-                lastState()->m_textDecorationData.lineThroughColor().R(),
-                lastState()->m_textDecorationData.lineThroughColor().G(),
-                lastState()->m_textDecorationData.lineThroughColor().B(),
-                lastState()->m_textDecorationData.lineThroughColor().A());
+            if (isTextMaskPainting()) {
+                cairo_set_source_rgba(canvas, 1.0, 1.0, 1.0, 1.0);
+            } else {
+                cairo_set_source_rgba(
+                    canvas,
+                    lastState()->m_textDecorationData.lineThroughColor().R(),
+                    lastState()->m_textDecorationData.lineThroughColor().G(),
+                    lastState()->m_textDecorationData.lineThroughColor().B(),
+                    lastState()->m_textDecorationData.lineThroughColor().A());
+            }
 
             float y =
                 (lastState()->m_font->metrics().m_ascender) -

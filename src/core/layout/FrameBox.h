@@ -898,6 +898,7 @@ public:
 
     virtual void paintChildrenWith(PaintingContext& ctx);
     virtual void paintBackgroundAndBorders(Canvas* canvas);
+    virtual void paintTextForMask(Canvas* canvas);
 
     // Subtree paint extent in this box's own coordinate space: the union of
     // everything painted by paintContent() for this box and its non-stacking-
