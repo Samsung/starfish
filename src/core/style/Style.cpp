@@ -1906,6 +1906,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("padding-box");
         case ContentBoxBoxValue:
             return String::fromUTF8("content-box");
+        case TextBoxValue:
+            return String::fromUTF8("text");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -13481,7 +13483,8 @@ bool CSSStyleValuePair::updateValueBackgroundAttachment(
     return true;
 }
 
-bool CSSStyleValuePair::updateValueUnitBox(const CSSTokenValue& value)
+bool CSSStyleValuePair::updateValueUnitBox(const CSSTokenValue& value,
+                                           bool allowText)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::BoxValueKind;
     if (value.equals("border-box")) {
@@ -13490,6 +13493,8 @@ bool CSSStyleValuePair::updateValueUnitBox(const CSSTokenValue& value)
         m_value.m_box = BoxValue::PaddingBoxBoxValue;
     } else if (value.equals("content-box")) {
         m_value.m_box = BoxValue::ContentBoxBoxValue;
+    } else if (allowText && value.equals("text")) {
+        m_value.m_box = BoxValue::TextBoxValue;
     } else {
         return false;
     }
@@ -13501,7 +13506,7 @@ bool CSSStyleValuePair::updateValueBackgroundClip(Document* document,
 {
     STARFISH_ASSERT(document != nullptr);
 
-    return updateValueBox(tokens, true);
+    return updateValueBox(tokens, true, true);
 }
 
 bool CSSStyleValuePair::updateValueBackgroundOrigin(
@@ -13509,11 +13514,11 @@ bool CSSStyleValuePair::updateValueBackgroundOrigin(
 {
     STARFISH_ASSERT(document != nullptr);
 
-    return updateValueBox(tokens, true);
+    return updateValueBox(tokens, true, false);
 }
 
 bool CSSStyleValuePair::updateValueBox(const CSSTokenVector& tokens,
-                                       bool allowComma)
+                                       bool allowComma, bool allowText)
 {
     size_t len = 0;
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
@@ -13531,10 +13536,9 @@ bool CSSStyleValuePair::updateValueBox(const CSSTokenVector& tokens,
             len++;
             continue;
         }
-
         CSSStyleValuePair ret;
         if (len == 1) {
-            if (!ret.updateValueUnitBox(tokens[i - 1])) {
+            if (!ret.updateValueUnitBox(tokens[i - 1], allowText)) {
                 return false;
             }
         } else {

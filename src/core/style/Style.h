@@ -285,6 +285,7 @@ enum BoxValue ENSURE_ENUM_UNSIGNED {
     BorderBoxBoxValue,
     PaddingBoxBoxValue,
     ContentBoxBoxValue,
+    TextBoxValue,
 };
 
 enum BackgroundAttachmentValue ENSURE_ENUM_UNSIGNED {
@@ -2701,7 +2702,7 @@ public:
     bool updateValueAngle(const CSSTokenVector& tokens, uint8_t option);
     bool updateValueUnitAngle(const CSSTokenValue& token, uint8_t option);
     bool updateValueUnitAngleOrCalc(const CSSTokenValue& token, uint8_t option);
-    bool updateValueUnitBox(const CSSTokenValue& token);
+    bool updateValueUnitBox(const CSSTokenValue& token, bool allowText = false);
     bool updateValueBackgroundImage(const CSSTokenVector& tokens,
                                     bool allowComma);
     bool updateValueBackgroundSize(const CSSTokenVector& tokens,
@@ -2709,7 +2710,8 @@ public:
     bool updateValueBackgroundAttachment(const CSSTokenVector& tokens,
                                          bool allowComma);
     bool updateValueBorderRadius(const CSSTokenVector& tokens);
-    bool updateValueBox(const CSSTokenVector& tokens, bool allowComma);
+    bool updateValueBox(const CSSTokenVector& tokens, bool allowComma,
+                        bool allowText = false);
     bool updateValueUnitRepeatStyle(const CSSTokenValue& token);
     bool updateValueUnitPositionX(const CSSTokenValue& token);
     bool updateValueUnitPositionY(const CSSTokenValue& token);

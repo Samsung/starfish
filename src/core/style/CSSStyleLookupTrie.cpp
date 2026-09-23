@@ -1358,7 +1358,22 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
     case 23:
         // border-top-right-radius
         // text-underline-position
+        // -webkit-background-clip
+        // -webkit-text-fill-color
         switch (data[0]) {
+        case '-':
+            if (memcmp(data, "-webkit-background-clip", 23) == 0) {
+                return CSSStyleValuePair::KeyKind::BackgroundClip;
+            }
+            if (memcmp(data, "-webkit-text-fill-color", 23) == 0) {
+                return CSSStyleValuePair::KeyKind::Color;
+            }
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+            if (memcmp(data, "-webkit-justify-content", 23) == 0) {
+                return CSSStyleValuePair::KeyKind::JustifyContent;
+            }
+#endif
+            break;
         case 'b':
             if (memcmp(data, "border-top-right-radius", 23) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderTopRightRadius;
@@ -1378,13 +1393,6 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
                 return CSSStyleValuePair::KeyKind::TextUnderlinePosition;
             }
             break;
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
-        case '-':
-            if (memcmp(data, "-webkit-justify-content", 23) == 0) {
-                return CSSStyleValuePair::KeyKind::JustifyContent;
-            }
-            break;
-#endif
         }
         break;
     case 24:
@@ -2487,6 +2495,16 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
         break;
     case 19:
         switch (data[0]) {
+        case 'w':
+            if (memcmp(data, "webkitTextFillColor", 19) == 0) {
+                return CSSStyleValuePair::KeyKind::Color;
+            }
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+            if (memcmp(data, "webkitFlexDirection", 19) == 0) {
+                return CSSStyleValuePair::KeyKind::FlexDirection;
+            }
+#endif
+            break;
         case 'b':
             if (memcmp(data, "backgroundPositionX", 19) == 0) {
                 return CSSStyleValuePair::KeyKind::BackgroundPositionX;
@@ -2520,17 +2538,15 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
                 return CSSStyleValuePair::KeyKind::GridTemplateColumns;
             }
             break;
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
-        case 'w':
-            if (memcmp(data, "webkitFlexDirection", 19) == 0) {
-                return CSSStyleValuePair::KeyKind::FlexDirection;
-            }
-            break;
-#endif
         }
         break;
     case 20:
         switch (data[0]) {
+        case 'w':
+            if (memcmp(data, "webkitBackgroundClip", 20) == 0) {
+                return CSSStyleValuePair::KeyKind::BackgroundClip;
+            }
+            break;
         case 'b':
             if (memcmp(data, "borderTopRightRadius", 20) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderTopRightRadius;

@@ -58,6 +58,7 @@ protected:
         FrameInputBox::fillGCDescriptor(desc);
     }
 
+public:
     virtual void paintInlineContentBlock(Canvas* canvas,
                                          PaintPassMemos* memos) override;
 

@@ -1660,6 +1660,7 @@ Unit::Rect FrameTableBox::makeRect(BoxValue box)
 
     switch (box) {
     case BoxValue::BorderBoxBoxValue:
+    case BoxValue::TextBoxValue:
         x = tableRect.x();
         y = tableRect.y();
         w = tableRect.width();

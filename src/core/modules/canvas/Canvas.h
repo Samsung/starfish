@@ -319,6 +319,21 @@ public:
     // state
     virtual void save();    // push state on state stack
     virtual void restore(); // pop state stack and restore state
+
+    virtual void beginTextClip(const Unit::Rect& rect) = 0;
+    virtual void beginTextClipContent() = 0;
+    virtual void endTextClip() = 0;
+
+    bool isTextMaskPainting() const
+    {
+        return m_isTextMaskPainting;
+    }
+
+    void setTextMaskPainting(bool v)
+    {
+        m_isTextMaskPainting = v;
+    }
+
     // transformations (default transform is the identity matrix)
     virtual void scale(double x, double y) = 0;
     virtual void rotate(double angle) = 0;
@@ -752,6 +767,7 @@ protected:
     GCVector<CanvasState*> m_state{};
     GCVector<CanvasState*> m_stateMemoryPool{};
     bool m_shouldApplyCanvasFillStrokeSource{ false };
+    bool m_isTextMaskPainting{ false };
 };
 
 ALWAYS_INLINE uint32_t convertPixelAsPremultiplyAlpha(uint32_t* pixel)

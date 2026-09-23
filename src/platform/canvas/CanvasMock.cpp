@@ -166,6 +166,16 @@ public:
     {
     }
 
+    virtual void beginTextClip(const Unit::Rect& rect) override
+    {
+    }
+    virtual void beginTextClipContent() override
+    {
+    }
+    virtual void endTextClip() override
+    {
+    }
+
     virtual void beginLayer(const Unit::Rect& layerRect, float layerOpacity,
                             CanvasLayerMode mode)
     {

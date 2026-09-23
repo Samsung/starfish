@@ -987,6 +987,31 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
     canvas->restore();
 }
 
+void FrameBox::paintTextForMask(Canvas* canvas)
+{
+    if (isFrameBlockBox()) {
+        FrameBlockBox* block = asFrameBlockBox();
+        if (!block->hasBlockFlow()) {
+            block->paintInlineContentBlock(canvas, nullptr);
+        } else {
+            Frame* child = block->firstChild();
+            while (child) {
+                if (child->isFrameBox()) {
+                    FrameBox* childBox = child->asFrameBox();
+                    canvas->save();
+                    canvas->translate(childBox->x(), childBox->y());
+                    childBox->paintTextForMask(canvas);
+                    canvas->restore();
+                }
+                child = child->next();
+            }
+        }
+    } else if (isInlineBoxLayoutParentBox()) {
+        asInlineBoxLayoutParentBox()->paintInlineContent(
+            canvas, PaintingInlineBox, 0, 0, nullptr);
+    }
+}
+
 void FrameBox::applyBorderShapeClippingUsedInPaintingBoxShadow(
     const Unit::Rect& shadowRect, const Unit::Rect& borderRect,
     const Unit::Rect& imageRect, Canvas* canvas)
@@ -2319,6 +2344,7 @@ Unit::Rect FrameBox::makeRect(BoxValue box)
 
     switch (box) {
     case BoxValue::BorderBoxBoxValue:
+    case BoxValue::TextBoxValue:
         x = 0;
         y = 0;
         w = width();
@@ -2406,7 +2432,6 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
                        ->isOwnerBackgroundDrawnByCompositor()) {
             // skip painting. compositor draws bg-color before tiles
         } else {
-            canvas->save();
             Unit::Rect paintingRect;
             if (rootOrBodyelement) {
                 Window* window = rootOrBodyelement->window();
@@ -2419,19 +2444,43 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
                 unsigned int idx = style->backgroundLayerSize() - 1;
                 paintingRect = box->makeRect(style->backgroundClip(idx));
             }
-            canvas->setFillColor(style->backgroundColor());
-            if (box->hasFrameBorderRadius()) {
-                box->applyBorderRadius(
-                    canvas,
-                    LayoutRect(paintingRect.x(), paintingRect.y(),
-                               paintingRect.width(), paintingRect.height()));
-                canvas->fill();
+
+            unsigned int idx = style->backgroundLayerSize() - 1;
+            BoxValue clip = style->backgroundClip(idx);
+
+            auto paintBgColor = [&](Canvas* c) {
+                c->setFillColor(style->backgroundColor());
+                if (box->hasFrameBorderRadius()) {
+                    box->applyBorderRadius(
+                        c, LayoutRect(paintingRect.x(), paintingRect.y(),
+                                      paintingRect.width(),
+                                      paintingRect.height()));
+                    c->fill();
+                } else {
+                    c->drawPixelSnappedRect(LayoutRect(
+                        paintingRect.x(), paintingRect.y(),
+                        paintingRect.width(), paintingRect.height()));
+                }
+            };
+
+            if (clip == BoxValue::TextBoxValue) {
+                canvas->save();
+                canvas->translate(paintingRect.x(), paintingRect.y());
+                Unit::Rect maskRect(0, 0, paintingRect.width(),
+                                    paintingRect.height());
+                canvas->beginTextClip(maskRect);
+                canvas->setTextMaskPainting(true);
+                box->paintTextForMask(canvas);
+                canvas->setTextMaskPainting(false);
+                canvas->beginTextClipContent();
+                paintBgColor(canvas);
+                canvas->endTextClip();
+                canvas->restore();
             } else {
-                canvas->drawPixelSnappedRect(
-                    LayoutRect(paintingRect.x(), paintingRect.y(),
-                               paintingRect.width(), paintingRect.height()));
+                canvas->save();
+                paintBgColor(canvas);
+                canvas->restore();
             }
-            canvas->restore();
         }
     }
     paintBackgroundLayers(canvas, box, rootOrBodyelement, style);
@@ -2707,6 +2756,19 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
         }
         canvas->save();
         canvas->translate(paintingRect.x(), paintingRect.y());
+
+        BoxValue clip = style->backgroundClip(idx);
+        bool hasTextClip = (clip == BoxValue::TextBoxValue);
+        if (hasTextClip) {
+            Unit::Rect maskRect(0, 0, paintingRect.width(),
+                                paintingRect.height());
+            canvas->beginTextClip(maskRect);
+            canvas->setTextMaskPainting(true);
+            box->paintTextForMask(canvas);
+            canvas->setTextMaskPainting(false);
+            canvas->beginTextClipContent();
+        }
+
         canvas->clip(
             Unit::Rect(0, 0, paintingRect.width(), paintingRect.height()));
 
@@ -2824,6 +2886,11 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                               false, imageRenderingValue);
             }
         }
+
+        if (hasTextClip) {
+            canvas->endTextClip();
+        }
+
         canvas->restore();
     }
 }
