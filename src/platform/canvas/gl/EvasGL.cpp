@@ -119,37 +119,68 @@ public:
                               GLenum internalformat, GLsizei width,
                               GLsizei height) override
     {
-        m_evasGLAPI->glTexStorage2D(target, levels, internalformat, width,
-                                    height);
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glTexStorage2D) {
+            m_evasGLAPI->glTexStorage2D(target, levels, internalformat, width,
+                                        height);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glTexStorage2D");
     }
 
     virtual void texStorage3D(GLenum target, GLsizei levels,
                               GLenum internalformat, GLsizei width,
                               GLsizei height, GLsizei depth) override
     {
-        m_evasGLAPI->glTexStorage3D(target, levels, internalformat, width,
-                                    height, depth);
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glTexStorage3D) {
+            m_evasGLAPI->glTexStorage3D(target, levels, internalformat, width,
+                                        height, depth);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glTexStorage3D");
     }
 
     virtual GLuint getUniformBlockIndex(GLuint program,
                                         const GLchar *uniformBlockName) override
     {
-        return m_evasGLAPI->glGetUniformBlockIndex(program, uniformBlockName);
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glGetUniformBlockIndex) {
+            return m_evasGLAPI->glGetUniformBlockIndex(program,
+                                                       uniformBlockName);
+        }
+#endif
+        STARFISH_UNSUPPORTED("glGetUniformBlockIndex");
+        return GL_INVALID_INDEX;
     }
 
     virtual void uniformBlockBinding(GLuint program, GLuint uniformBlockIndex,
                                      GLuint uniformBlockBinding) override
     {
-        m_evasGLAPI->glUniformBlockBinding(program, uniformBlockIndex,
-                                           uniformBlockBinding);
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glUniformBlockBinding) {
+            m_evasGLAPI->glUniformBlockBinding(program, uniformBlockIndex,
+                                               uniformBlockBinding);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glUniformBlockBinding");
     }
 
     virtual void getActiveUniformBlockiv(GLuint program,
                                          GLuint uniformBlockIndex, GLenum pname,
                                          GLint *params) override
     {
-        m_evasGLAPI->glGetActiveUniformBlockiv(program, uniformBlockIndex,
-                                               pname, params);
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glGetActiveUniformBlockiv) {
+            m_evasGLAPI->glGetActiveUniformBlockiv(program, uniformBlockIndex,
+                                                   pname, params);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glGetActiveUniformBlockiv");
     }
 
     virtual void getActiveUniformBlockName(GLuint program,
@@ -157,8 +188,14 @@ public:
                                            GLsizei bufSize, GLsizei *length,
                                            GLchar *uniformBlockName) override
     {
-        m_evasGLAPI->glGetActiveUniformBlockName(
-            program, uniformBlockIndex, bufSize, length, uniformBlockName);
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glGetActiveUniformBlockName) {
+            m_evasGLAPI->glGetActiveUniformBlockName(
+                program, uniformBlockIndex, bufSize, length, uniformBlockName);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glGetActiveUniformBlockName");
     }
 
     virtual GLenum checkFramebufferStatus(GLenum target) override
@@ -341,7 +378,14 @@ public:
     virtual void drawArraysInstanced(GLenum mode, GLint first, GLsizei count,
                                      GLsizei instanceCount) override
     {
-        m_evasGLAPI->glDrawArraysInstanced(mode, first, count, instanceCount);
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glDrawArraysInstanced) {
+            m_evasGLAPI->glDrawArraysInstanced(mode, first, count,
+                                               instanceCount);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glDrawArraysInstanced");
     }
 
     virtual void drawElements(GLenum mode, GLsizei count, GLenum type,
@@ -354,16 +398,28 @@ public:
                                        const void *indices,
                                        GLsizei instanceCount) override
     {
-        m_evasGLAPI->glDrawElementsInstanced(mode, count, type, indices,
-                                             instanceCount);
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glDrawElementsInstanced) {
+            m_evasGLAPI->glDrawElementsInstanced(mode, count, type, indices,
+                                                 instanceCount);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glDrawElementsInstanced");
     }
 
     virtual void drawRangeElements(GLenum mode, GLuint start, GLuint end,
                                    GLsizei count, GLenum type,
                                    const void *indices) override
     {
-        m_evasGLAPI->glDrawRangeElements(mode, start, end, count, type,
-                                         indices);
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glDrawRangeElements) {
+            m_evasGLAPI->glDrawRangeElements(mode, start, end, count, type,
+                                             indices);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glDrawRangeElements");
     }
 
     virtual void enable(GLenum cap) override
@@ -912,7 +968,13 @@ public:
 
     virtual void vertexAttribDivisor(GLuint index, GLuint divisor) override
     {
-        m_evasGLAPI->glVertexAttribDivisor(index, divisor);
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glVertexAttribDivisor) {
+            m_evasGLAPI->glVertexAttribDivisor(index, divisor);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glVertexAttribDivisor");
     }
 
     virtual void viewport(GLint x, GLint y, GLsizei width,
@@ -1112,16 +1174,28 @@ public:
                                    const GLchar *const *uniformNames,
                                    GLuint *uniformIndices) override
     {
-        m_evasGLAPI->glGetUniformIndices(program, uniformCount, uniformNames,
-                                         uniformIndices);
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glGetUniformIndices) {
+            m_evasGLAPI->glGetUniformIndices(program, uniformCount,
+                                             uniformNames, uniformIndices);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glGetUniformIndices");
     }
 
     virtual void getActiveUniformsiv(GLuint program, GLsizei uniformCount,
                                      const GLuint *uniformIndices, GLenum pname,
                                      GLint *params) override
     {
-        m_evasGLAPI->glGetActiveUniformsiv(program, uniformCount,
-                                           uniformIndices, pname, params);
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glGetActiveUniformsiv) {
+            m_evasGLAPI->glGetActiveUniformsiv(program, uniformCount,
+                                               uniformIndices, pname, params);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glGetActiveUniformsiv");
     }
 
     GLsync fenceSync(GLenum condition, GLbitfield flags) override
@@ -1170,7 +1244,133 @@ public:
     void invalidateFramebuffer(GLenum target, GLsizei numAttachments,
                                const GLenum *attachments) override
     {
-        m_glInvalidateFramebuffer(target, numAttachments, attachments);
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glInvalidateFramebuffer) {
+            m_evasGLAPI->glInvalidateFramebuffer(target, numAttachments,
+                                                 attachments);
+            return;
+        }
+#endif
+        if (m_glInvalidateFramebuffer) {
+            m_glInvalidateFramebuffer(target, numAttachments, attachments);
+        } else {
+            STARFISH_UNSUPPORTED("glInvalidateFramebuffer");
+        }
+    }
+
+    void invalidateSubFramebuffer(GLenum target, GLsizei numAttachments,
+                                  const GLenum *attachments, GLint x, GLint y,
+                                  GLsizei width, GLsizei height) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glInvalidateSubFramebuffer) {
+            m_evasGLAPI->glInvalidateSubFramebuffer(
+                target, numAttachments, attachments, x, y, width, height);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glInvalidateSubFramebuffer");
+    }
+
+    void drawBuffers(GLsizei n, const GLenum *bufs) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glDrawBuffers) {
+            m_evasGLAPI->glDrawBuffers(n, bufs);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glDrawBuffers");
+    }
+
+    void clearBufferiv(GLenum buffer, GLint drawbuffer,
+                       const GLint *values) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glClearBufferiv) {
+            m_evasGLAPI->glClearBufferiv(buffer, drawbuffer, values);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glClearBufferiv");
+    }
+
+    void clearBufferuiv(GLenum buffer, GLint drawbuffer,
+                        const GLuint *values) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glClearBufferuiv) {
+            m_evasGLAPI->glClearBufferuiv(buffer, drawbuffer, values);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glClearBufferuiv");
+    }
+
+    void clearBufferfv(GLenum buffer, GLint drawbuffer,
+                       const GLfloat *values) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glClearBufferfv) {
+            m_evasGLAPI->glClearBufferfv(buffer, drawbuffer, values);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glClearBufferfv");
+    }
+
+    void clearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth,
+                       GLint stencil) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glClearBufferfi) {
+            m_evasGLAPI->glClearBufferfi(buffer, drawbuffer, depth, stencil);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glClearBufferfi");
+    }
+
+    void blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
+                         GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
+                         GLbitfield mask, GLenum filter) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glBlitFramebuffer) {
+            m_evasGLAPI->glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0,
+                                           dstY0, dstX1, dstY1, mask, filter);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glBlitFramebuffer");
+    }
+
+    void framebufferTextureLayer(GLenum target, GLenum attachment,
+                                 GLuint texture, GLint level,
+                                 GLint layer) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glFramebufferTextureLayer) {
+            m_evasGLAPI->glFramebufferTextureLayer(target, attachment, texture,
+                                                   level, layer);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glFramebufferTextureLayer");
+    }
+
+    void renderbufferStorageMultisample(GLenum target, GLsizei samples,
+                                        GLenum internalformat, GLsizei width,
+                                        GLsizei height) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glRenderbufferStorageMultisample) {
+            m_evasGLAPI->glRenderbufferStorageMultisample(
+                target, samples, internalformat, width, height);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glRenderbufferStorageMultisample");
     }
 
     EvasGL(void *p)

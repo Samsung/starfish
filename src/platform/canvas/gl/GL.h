@@ -383,6 +383,30 @@ public:
 
     virtual void invalidateFramebuffer(GLenum target, GLsizei numAttachments,
                                        const GLenum *attachments) = 0;
+    virtual void invalidateSubFramebuffer(GLenum target, GLsizei numAttachments,
+                                          const GLenum *attachments, GLint x,
+                                          GLint y, GLsizei width,
+                                          GLsizei height) = 0;
+    virtual void drawBuffers(GLsizei n, const GLenum *bufs) = 0;
+    virtual void clearBufferiv(GLenum buffer, GLint drawbuffer,
+                               const GLint *values) = 0;
+    virtual void clearBufferuiv(GLenum buffer, GLint drawbuffer,
+                                const GLuint *values) = 0;
+    virtual void clearBufferfv(GLenum buffer, GLint drawbuffer,
+                               const GLfloat *values) = 0;
+    virtual void clearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth,
+                               GLint stencil) = 0;
+    virtual void blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1,
+                                 GLint srcY1, GLint dstX0, GLint dstY0,
+                                 GLint dstX1, GLint dstY1, GLbitfield mask,
+                                 GLenum filter) = 0;
+    virtual void framebufferTextureLayer(GLenum target, GLenum attachment,
+                                         GLuint texture, GLint level,
+                                         GLint layer) = 0;
+    virtual void renderbufferStorageMultisample(GLenum target, GLsizei samples,
+                                                GLenum internalformat,
+                                                GLsizei width,
+                                                GLsizei height) = 0;
 };
 
 } // namespace Starfish

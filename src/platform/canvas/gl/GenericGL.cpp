@@ -1216,6 +1216,66 @@ public:
         glInvalidateFramebuffer(target, numAttachments, attachments);
     }
 
+    void invalidateSubFramebuffer(GLenum target, GLsizei numAttachments,
+                                  const GLenum *attachments, GLint x, GLint y,
+                                  GLsizei width, GLsizei height) override
+    {
+        glInvalidateSubFramebuffer(target, numAttachments, attachments, x, y,
+                                   width, height);
+    }
+
+    void drawBuffers(GLsizei n, const GLenum *bufs) override
+    {
+        glDrawBuffers(n, bufs);
+    }
+
+    void clearBufferiv(GLenum buffer, GLint drawbuffer,
+                       const GLint *values) override
+    {
+        glClearBufferiv(buffer, drawbuffer, values);
+    }
+
+    void clearBufferuiv(GLenum buffer, GLint drawbuffer,
+                        const GLuint *values) override
+    {
+        glClearBufferuiv(buffer, drawbuffer, values);
+    }
+
+    void clearBufferfv(GLenum buffer, GLint drawbuffer,
+                       const GLfloat *values) override
+    {
+        glClearBufferfv(buffer, drawbuffer, values);
+    }
+
+    void clearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth,
+                       GLint stencil) override
+    {
+        glClearBufferfi(buffer, drawbuffer, depth, stencil);
+    }
+
+    void blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
+                         GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
+                         GLbitfield mask, GLenum filter) override
+    {
+        glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1,
+                          dstY1, mask, filter);
+    }
+
+    void framebufferTextureLayer(GLenum target, GLenum attachment,
+                                 GLuint texture, GLint level,
+                                 GLint layer) override
+    {
+        glFramebufferTextureLayer(target, attachment, texture, level, layer);
+    }
+
+    void renderbufferStorageMultisample(GLenum target, GLsizei samples,
+                                        GLenum internalformat, GLsizei width,
+                                        GLsizei height) override
+    {
+        glRenderbufferStorageMultisample(target, samples, internalformat, width,
+                                         height);
+    }
+
     GenericGL(Renderer *renderer)
     {
 #if defined(STARFISH_WINDOWS) && !defined(STARFISH_WINDOWS_ANGLE)

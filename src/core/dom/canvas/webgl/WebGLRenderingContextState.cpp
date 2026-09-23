@@ -74,9 +74,18 @@ void WebGLRenderingContextState::setBufferBoundToVertexAttributes(
 
 Optional<WebGLBuffer*> WebGLRenderingContextState::getBoundBuffer(GLuint target)
 {
-    GLuint vao = vertexArray();
-    const auto& iter = m_buffersBound[vao].find(target);
-    if (iter == m_buffersBound[vao].end()) {
+    if (target == GL_ELEMENT_ARRAY_BUFFER) {
+        GLuint vao = vertexArray();
+        const auto& iter = m_elementArrayBuffers.find(vao);
+        if (iter == m_elementArrayBuffers.end()) {
+            return nullptr;
+        }
+        STARFISH_ASSERT(iter->second != nullptr);
+        return iter->second;
+    }
+
+    const auto& iter = m_globalBuffersBound.find(target);
+    if (iter == m_globalBuffersBound.end()) {
         return nullptr;
     }
 
@@ -87,11 +96,20 @@ Optional<WebGLBuffer*> WebGLRenderingContextState::getBoundBuffer(GLuint target)
 void WebGLRenderingContextState::setBoundBuffer(GLenum target,
                                                 Optional<WebGLBuffer*> maybe)
 {
-    GLuint vao = vertexArray();
-    if (maybe.hasValue()) {
-        m_buffersBound[vao][target] = maybe.value();
+    if (target == GL_ELEMENT_ARRAY_BUFFER) {
+        GLuint vao = vertexArray();
+        if (maybe.hasValue() && maybe.value() != nullptr) {
+            m_elementArrayBuffers[vao] = maybe.value();
+        } else {
+            m_elementArrayBuffers.erase(vao);
+        }
+        return;
+    }
+
+    if (maybe.hasValue() && maybe.value() != nullptr) {
+        m_globalBuffersBound[target] = maybe.value();
     } else {
-        m_buffersBound[vao].erase(target);
+        m_globalBuffersBound.erase(target);
     }
 }
 
@@ -102,7 +120,8 @@ void WebGLRenderingContextState::deleteVertexArray(GLuint vao)
         m_webGLVertexArrayObject.value()->glObject() == vao) {
         m_webGLVertexArrayObject = nullptr;
     }
-    m_buffersBound.erase(vao);
+    m_arraysEnabled.erase(vao);
+    m_elementArrayBuffers.erase(vao);
     m_buffersBoundToVertexAttributes.erase(vao);
 }
 
@@ -114,7 +133,7 @@ void WebGLRenderingContextState::deleteVertexArrayOES(GLuint vao)
         m_webGLVertexArrayObjectOES = nullptr;
     }
     m_arraysEnabled.erase(vao);
-    m_buffersBound.erase(vao);
+    m_elementArrayBuffers.erase(vao);
     m_buffersBoundToVertexAttributes.erase(vao);
 }
 

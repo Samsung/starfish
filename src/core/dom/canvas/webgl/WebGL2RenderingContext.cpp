@@ -2008,6 +2008,204 @@ void WebGL2RenderingContext::drawRangeElements(GLenum mode, GLuint start,
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
+void WebGL2RenderingContext::blitFramebuffer(GLint srcX0, GLint srcY0,
+                                             GLint srcX1, GLint srcY1,
+                                             GLint dstX0, GLint dstY0,
+                                             GLint dstX1, GLint dstY1,
+                                             GLbitfield mask, GLenum filter)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (filter != GL_NEAREST && filter != GL_LINEAR) {
+        setGLError(GL_INVALID_ENUM, "filter must be GL_NEAREST or GL_LINEAR.");
+        return;
+    }
+
+    gl()->blitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1,
+                          dstY1, mask, filter);
+    m_ownerHTMLCanvasElement->setNeedsComposite();
+}
+
+void WebGL2RenderingContext::framebufferTextureLayer(
+    GLenum target, GLenum attachment, Optional<WebGLTexture*> maybeTexture,
+    GLint level, GLint layer)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (isDefaultFramebufferBound()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    GLuint texName = 0;
+    if (maybeTexture.hasValue()) {
+        WebGLTexture* texture = maybeTexture.value();
+        if (texture) {
+            if (!isFromCurrentContext(texture) || texture->isDeleted()) {
+                setGLError(GL_INVALID_OPERATION);
+                return;
+            }
+            texName = texture->glObject();
+        }
+    }
+
+    gl()->framebufferTextureLayer(target, attachment, texName, level, layer);
+    m_ownerHTMLCanvasElement->setNeedsComposite();
+}
+
+void WebGL2RenderingContext::renderbufferStorageMultisample(
+    GLenum target, GLsizei samples, GLenum internalformat, GLsizei width,
+    GLsizei height)
+{
+    ENTER_CONTEXT_SCOPE();
+    gl()->renderbufferStorageMultisample(target, samples, internalformat, width,
+                                         height);
+}
+
+void WebGL2RenderingContext::invalidateFramebuffer(
+    GLenum target, GCAtomicVector<GLenum> attachments)
+{
+    ENTER_CONTEXT_SCOPE();
+    gl()->invalidateFramebuffer(target, attachments.size(), attachments.data());
+}
+
+void WebGL2RenderingContext::invalidateSubFramebuffer(
+    GLenum target, GCAtomicVector<GLenum> attachments, GLint x, GLint y,
+    GLsizei width, GLsizei height)
+{
+    ENTER_CONTEXT_SCOPE();
+    gl()->invalidateSubFramebuffer(target, attachments.size(),
+                                   attachments.data(), x, y, width, height);
+}
+
+void WebGL2RenderingContext::drawBuffers(GCAtomicVector<GLenum> buffers)
+{
+    ENTER_CONTEXT_SCOPE();
+    GLint maxDrawBuffers = 0;
+    gl()->getIntegerv(GL_MAX_DRAW_BUFFERS, &maxDrawBuffers);
+    if (buffers.size() > static_cast<size_t>(maxDrawBuffers)) {
+        setGLError(GL_INVALID_VALUE,
+                   "buffers length exceeds MAX_DRAW_BUFFERS.");
+        return;
+    }
+    gl()->drawBuffers(buffers.size(), buffers.data());
+}
+
+void WebGL2RenderingContext::clearBufferfv(GLenum buffer, GLint drawbuffer,
+                                           Float32List values,
+                                           unsigned long long srcOffset)
+{
+    ENTER_CONTEXT_SCOPE();
+    if (buffer != GL_COLOR && buffer != GL_DEPTH) {
+        setGLError(GL_INVALID_ENUM, "buffer must be GL_COLOR or GL_DEPTH.");
+        return;
+    }
+    if (buffer == GL_DEPTH && drawbuffer != 0) {
+        setGLError(GL_INVALID_VALUE, "drawbuffer must be 0 for DEPTH.");
+        return;
+    }
+
+    if (values.isFloat32ArrayValue()) {
+        const ScriptFloat32Array arr = values.getFloat32ArrayValue();
+        if (srcOffset >= arr->arrayLength()) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        const GLfloat* ptr =
+            reinterpret_cast<const GLfloat*>(arr->rawBuffer()) + srcOffset;
+        gl()->clearBufferfv(buffer, drawbuffer, ptr);
+    } else if (values.isSequenceOfGLfloatValue()) {
+        const GCAtomicVector<double> seq = values.getSequenceOfGLfloatValue();
+        if (srcOffset >= seq.size()) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        std::vector<GLfloat> floats(seq.begin(), seq.end());
+        gl()->clearBufferfv(buffer, drawbuffer, floats.data() + srcOffset);
+    }
+    m_ownerHTMLCanvasElement->setNeedsComposite();
+}
+
+void WebGL2RenderingContext::clearBufferiv(GLenum buffer, GLint drawbuffer,
+                                           Int32List values,
+                                           unsigned long long srcOffset)
+{
+    ENTER_CONTEXT_SCOPE();
+    if (buffer != GL_COLOR && buffer != GL_STENCIL) {
+        setGLError(GL_INVALID_ENUM, "buffer must be GL_COLOR or GL_STENCIL.");
+        return;
+    }
+    if (buffer == GL_STENCIL && drawbuffer != 0) {
+        setGLError(GL_INVALID_VALUE, "drawbuffer must be 0 for STENCIL.");
+        return;
+    }
+
+    if (values.isInt32ArrayValue()) {
+        const ScriptInt32Array arr = values.getInt32ArrayValue();
+        if (srcOffset >= arr->arrayLength()) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        const GLint* ptr =
+            reinterpret_cast<const GLint*>(arr->rawBuffer()) + srcOffset;
+        gl()->clearBufferiv(buffer, drawbuffer, ptr);
+    } else if (values.isSequenceOfGLintValue()) {
+        const GCAtomicVector<int32_t> seq = values.getSequenceOfGLintValue();
+        if (srcOffset >= seq.size()) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        gl()->clearBufferiv(buffer, drawbuffer, seq.data() + srcOffset);
+    }
+    m_ownerHTMLCanvasElement->setNeedsComposite();
+}
+
+void WebGL2RenderingContext::clearBufferuiv(GLenum buffer, GLint drawbuffer,
+                                            Uint32List values,
+                                            unsigned long long srcOffset)
+{
+    ENTER_CONTEXT_SCOPE();
+    if (buffer != GL_COLOR) {
+        setGLError(GL_INVALID_ENUM, "buffer must be GL_COLOR.");
+        return;
+    }
+
+    if (values.isUint32ArrayValue()) {
+        const ScriptUint32Array arr = values.getUint32ArrayValue();
+        if (srcOffset >= arr->arrayLength()) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        const GLuint* ptr =
+            reinterpret_cast<const GLuint*>(arr->rawBuffer()) + srcOffset;
+        gl()->clearBufferuiv(buffer, drawbuffer, ptr);
+    } else if (values.isSequenceOfGLuintValue()) {
+        const GCAtomicVector<uint32_t> seq = values.getSequenceOfGLuintValue();
+        if (srcOffset >= seq.size()) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        gl()->clearBufferuiv(buffer, drawbuffer, seq.data() + srcOffset);
+    }
+    m_ownerHTMLCanvasElement->setNeedsComposite();
+}
+
+void WebGL2RenderingContext::clearBufferfi(GLenum buffer, GLint drawbuffer,
+                                           GLfloat depth, GLint stencil)
+{
+    ENTER_CONTEXT_SCOPE();
+    if (buffer != GL_DEPTH_STENCIL) {
+        setGLError(GL_INVALID_ENUM, "buffer must be GL_DEPTH_STENCIL.");
+        return;
+    }
+    if (drawbuffer != 0) {
+        setGLError(GL_INVALID_VALUE, "drawbuffer must be 0 for DEPTH_STENCIL.");
+        return;
+    }
+    gl()->clearBufferfi(buffer, drawbuffer, depth, stencil);
+    m_ownerHTMLCanvasElement->setNeedsComposite();
+}
+
 void WebGL2RenderingContext::bufferData(GLenum target, GLsizeiptr size,
                                         GLenum usage)
 {
@@ -2886,6 +3084,55 @@ void WebGL2RenderingContext::uniformMatrix4fv(
                                 transpose, data, srcOffset, srcLength);
 }
 
+static bool isSupportedReadPixelsFormat(GLenum format)
+{
+    switch (format) {
+    case GL_ALPHA:
+    case GL_RGB:
+    case GL_RGBA:
+    case GL_RGBA_INTEGER:
+    case GL_RGB_INTEGER:
+    case GL_RG:
+    case GL_RG_INTEGER:
+    case GL_RED:
+    case GL_RED_INTEGER:
+    case GL_DEPTH_COMPONENT:
+    case GL_DEPTH_STENCIL:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static bool isSupportedReadPixelsType(GLenum type, size_t& alignment)
+{
+    switch (type) {
+    case GL_UNSIGNED_BYTE:
+    case GL_BYTE:
+        alignment = 1;
+        return true;
+    case GL_UNSIGNED_SHORT:
+    case GL_SHORT:
+    case GL_HALF_FLOAT:
+    case GL_UNSIGNED_SHORT_5_6_5:
+    case GL_UNSIGNED_SHORT_4_4_4_4:
+    case GL_UNSIGNED_SHORT_5_5_5_1:
+        alignment = 2;
+        return true;
+    case GL_UNSIGNED_INT:
+    case GL_INT:
+    case GL_FLOAT:
+    case GL_UNSIGNED_INT_2_10_10_10_REV:
+    case GL_UNSIGNED_INT_10F_11F_11F_REV:
+    case GL_UNSIGNED_INT_5_9_9_9_REV:
+    case GL_FLOAT_32_UNSIGNED_INT_24_8_REV:
+        alignment = 4;
+        return true;
+    default:
+        return false;
+    }
+}
+
 void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
                                         GLsizei height, GLenum format,
                                         GLenum type,
@@ -2893,6 +3140,146 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
 {
     WebGLRenderingContext::readPixels(x, y, width, height, format, type,
                                       dstData);
+}
+
+void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
+                                        GLsizei height, GLenum format,
+                                        GLenum type, GLintptr offset)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (width < 0 || height < 0 || offset < 0) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    size_t alignment = 1;
+    if (!isSupportedReadPixelsFormat(format) ||
+        !isSupportedReadPixelsType(type, alignment)) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    GLint packBuffer = 0;
+    gl()->getIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &packBuffer);
+    if (!packBuffer) {
+        setGLError(GL_INVALID_OPERATION, "PIXEL_PACK_BUFFER is not bound");
+        return;
+    }
+
+    if (offset % alignment != 0) {
+        setGLError(GL_INVALID_OPERATION, "Offset not aligned");
+        return;
+    }
+
+    size_t bytesPerPixel = getBytesPerPixel(format, type);
+    size_t requiredSize = static_cast<size_t>(width) * height * bytesPerPixel;
+    GLint bufferSize = 0;
+    gl()->getBufferParameteriv(GL_PIXEL_PACK_BUFFER, GL_BUFFER_SIZE,
+                               &bufferSize);
+    if (static_cast<size_t>(offset) + requiredSize >
+        static_cast<size_t>(bufferSize)) {
+        setGLError(GL_INVALID_OPERATION, "Buffer not large enough");
+        return;
+    }
+
+    gl()->readPixels(x, y, width, height, format, type,
+                     reinterpret_cast<void*>(offset));
+}
+
+void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
+                                        GLsizei height, GLenum format,
+                                        GLenum type,
+                                        ScriptArrayBufferView dstData,
+                                        unsigned long long dstOffset)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (width < 0 || height < 0) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    size_t alignment = 1;
+    if (!isSupportedReadPixelsFormat(format) ||
+        !isSupportedReadPixelsType(type, alignment)) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    GLint packBuffer = 0;
+    gl()->getIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &packBuffer);
+    if (packBuffer) {
+        setGLError(GL_INVALID_OPERATION, "PIXEL_PACK_BUFFER is bound");
+        return;
+    }
+
+    ScriptArrayBufferView pixelsView = dstData;
+    bool isTypeMatched = false;
+    if (type == GL_UNSIGNED_BYTE) {
+        isTypeMatched = (pixelsView->isUint8ArrayObject() ||
+                         pixelsView->isUint8ClampedArrayObject());
+    } else if (type == GL_UNSIGNED_SHORT_5_6_5 ||
+               type == GL_UNSIGNED_SHORT_4_4_4_4 ||
+               type == GL_UNSIGNED_SHORT_5_5_5_1 || type == GL_UNSIGNED_SHORT ||
+               type == GL_HALF_FLOAT) {
+        isTypeMatched = pixelsView->isUint16ArrayObject();
+    } else if (type == GL_BYTE) {
+        isTypeMatched = pixelsView->isInt8ArrayObject();
+    } else if (type == GL_SHORT) {
+        isTypeMatched = pixelsView->isInt16ArrayObject();
+    } else if (type == GL_INT) {
+        isTypeMatched = pixelsView->isInt32ArrayObject();
+    } else if (type == GL_UNSIGNED_INT) {
+        isTypeMatched = pixelsView->isUint32ArrayObject();
+    } else if (type == GL_FLOAT) {
+        isTypeMatched = pixelsView->isFloat32ArrayObject();
+    }
+
+    if (!isTypeMatched) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    bool isIntegerFormat =
+        (format == GL_RGBA_INTEGER || format == GL_RGB_INTEGER ||
+         format == GL_RG_INTEGER || format == GL_RED_INTEGER);
+    bool isIntegerType =
+        (type == GL_INT || type == GL_UNSIGNED_INT || type == GL_SHORT ||
+         type == GL_UNSIGNED_SHORT || type == GL_BYTE ||
+         type == GL_UNSIGNED_BYTE || type == GL_UNSIGNED_INT_2_10_10_10_REV);
+    bool isNormalizedFloatFormat = (format == GL_RGBA || format == GL_RGB ||
+                                    format == GL_RG || format == GL_RED);
+    bool isNormalizedFloatType =
+        (type == GL_UNSIGNED_BYTE || type == GL_BYTE || type == GL_FLOAT ||
+         type == GL_HALF_FLOAT || type == GL_UNSIGNED_SHORT_5_6_5 ||
+         type == GL_UNSIGNED_SHORT_4_4_4_4 ||
+         type == GL_UNSIGNED_SHORT_5_5_5_1 ||
+         type == GL_UNSIGNED_INT_2_10_10_10_REV);
+    bool isValidCombination =
+        (isNormalizedFloatFormat && isNormalizedFloatType) ||
+        (isIntegerFormat && isIntegerType);
+
+    if (!isValidCombination) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    size_t bytesPerPixel = getBytesPerPixel(format, type);
+    size_t byteLengthOfPixels =
+        static_cast<size_t>(width) * height * bytesPerPixel;
+    size_t elementSize = dstData->isDataViewObject()
+                             ? 1
+                             : dstData->byteLength() / dstData->arrayLength();
+
+    if (dstData->byteLength() < dstOffset * elementSize + byteLengthOfPixels) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    GLvoid* data = dstData->rawBuffer() + dstData->byteOffset() +
+                   (dstOffset * elementSize);
+    gl()->readPixels(x, y, width, height, format, type, data);
 }
 
 } // namespace Starfish

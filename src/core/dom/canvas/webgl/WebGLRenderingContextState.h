@@ -81,8 +81,8 @@ private:
 #undef V
 
     GCUnorderedMap<GLuint, std::unordered_set<GLuint>> m_arraysEnabled;
-    GCUnorderedMap<GLuint, std::unordered_map<GLuint, WebGLBuffer*>>
-        m_buffersBound;
+    GCUnorderedMap<GLuint, WebGLBuffer*> m_elementArrayBuffers;
+    GCUnorderedMap<GLenum, WebGLBuffer*> m_globalBuffersBound;
     GCUnorderedMap<GLuint, std::unordered_map<GLuint, WebGLBuffer*>>
         m_buffersBoundToVertexAttributes;
 };
