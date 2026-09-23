@@ -32,6 +32,18 @@ public:
                 GLuint object);
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLShader() const override;
+
+    void setSource(const std::string& source)
+    {
+        m_source = source;
+    }
+    const std::string& source() const
+    {
+        return m_source;
+    }
+
+private:
+    std::string m_source;
 };
 } // namespace Starfish
 

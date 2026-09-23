@@ -1538,11 +1538,11 @@ test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/context/context-type-
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/glsl3/shader-with-1025-character-define.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/glsl3/shader-with-1025-character-identifier.frag.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/glsl3/shader-with-invalid-characters.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/glsl3/shader-with-mis-matching-uniform-block.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/glsl3/shader-with-mis-matching-uniform-block.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/glsl3/short-circuiting-in-loop-condition.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/glsl3/texture-offset-out-of-range.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/glsl3/uniform-block-layouts.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/glsl3/uniform-block-layout-match.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/glsl3/uniform-block-layouts.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/glsl3/uniform-block-layout-match.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/glsl3/uniform-location-length-limits.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/glsl3/valid-invariant.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/glsl3/vector-dynamic-indexing.html
@@ -1579,7 +1579,7 @@ test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/programs/gl-get-frag-
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/instanced-arrays.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/out-of-bounds-index-buffers-after-copying.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/rgb-format-support.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/uniform-block-buffer-size.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/uniform-block-buffer-size.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/samplers/samplers.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/samplers/sampler-drawing-test.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/state/gl-enum-tests.html

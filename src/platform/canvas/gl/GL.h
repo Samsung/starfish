@@ -66,6 +66,17 @@ public:
     virtual void texStorage3D(GLenum target, GLsizei levels,
                               GLenum internalformat, GLsizei width,
                               GLsizei height, GLsizei depth) = 0;
+    virtual GLuint getUniformBlockIndex(GLuint program,
+                                        const GLchar *uniformBlockName) = 0;
+    virtual void uniformBlockBinding(GLuint program, GLuint uniformBlockIndex,
+                                     GLuint uniformBlockBinding) = 0;
+    virtual void getActiveUniformBlockiv(GLuint program,
+                                         GLuint uniformBlockIndex, GLenum pname,
+                                         GLint *params) = 0;
+    virtual void getActiveUniformBlockName(GLuint program,
+                                           GLuint uniformBlockIndex,
+                                           GLsizei bufSize, GLsizei *length,
+                                           GLchar *uniformBlockName) = 0;
     virtual GLenum checkFramebufferStatus(GLenum target) = 0;
     virtual void clear(GLbitfield mask) = 0;
     virtual void clearColor(GLclampf red, GLclampf green, GLclampf blue,
@@ -115,8 +126,16 @@ public:
     virtual void disable(GLenum cap) = 0;
     virtual void disableVertexAttribArray(GLuint index) = 0;
     virtual void drawArrays(GLenum mode, GLint first, GLsizei count) = 0;
+    virtual void drawArraysInstanced(GLenum mode, GLint first, GLsizei count,
+                                     GLsizei instanceCount) = 0;
     virtual void drawElements(GLenum mode, GLsizei count, GLenum type,
                               const void *indices) = 0;
+    virtual void drawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
+                                       const void *indices,
+                                       GLsizei instanceCount) = 0;
+    virtual void drawRangeElements(GLenum mode, GLuint start, GLuint end,
+                                   GLsizei count, GLenum type,
+                                   const void *indices) = 0;
     virtual void enable(GLenum cap) = 0;
     virtual void enableVertexAttribArray(GLuint index) = 0;
     virtual void finish(void) = 0;
@@ -264,10 +283,11 @@ public:
     virtual void vertexAttrib3fv(GLuint indx, const GLfloat *values) = 0;
     virtual void vertexAttrib4f(GLuint indx, GLfloat x, GLfloat y, GLfloat z,
                                 GLfloat w) = 0;
-    virtual void vertexAttrib4fv(GLuint indx, const GLfloat *values) = 0;
-    virtual void vertexAttribPointer(GLuint indx, GLint size, GLenum type,
+    virtual void vertexAttrib4fv(GLuint index, const GLfloat *v) = 0;
+    virtual void vertexAttribPointer(GLuint index, GLint size, GLenum type,
                                      GLboolean normalized, GLsizei stride,
-                                     const void *ptr) = 0;
+                                     const void *pointer) = 0;
+    virtual void vertexAttribDivisor(GLuint index, GLuint divisor) = 0;
     virtual void viewport(GLint x, GLint y, GLsizei width, GLsizei height) = 0;
 
     virtual void genVertexArrays(GLsizei n, GLuint *arrays) = 0;
@@ -343,6 +363,9 @@ public:
                              const GLuint *value) = 0;
     virtual void uniform4uiv(GLint location, GLsizei count,
                              const GLuint *value) = 0;
+    virtual void getUniformIndices(GLuint program, GLsizei uniformCount,
+                                   const GLchar *const *uniformNames,
+                                   GLuint *uniformIndices) = 0;
     virtual void getActiveUniformsiv(GLuint program, GLsizei uniformCount,
                                      const GLuint *uniformIndices, GLenum pname,
                                      GLint *params) = 0;
