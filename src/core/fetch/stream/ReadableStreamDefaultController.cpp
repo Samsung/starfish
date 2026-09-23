@@ -58,16 +58,31 @@ ScriptBindingInstance* ReadableStreamDefaultController::scriptBindingInstance()
 
 void ReadableStreamDefaultController::enqueue(ScriptValue chunk)
 {
-    if (chunk->isString()) {
-        auto stringObject = chunk->asString();
+    if (chunk->isObject()) {
+        auto obj = chunk->asObject();
+        if (obj->isArrayBufferView()) {
+            auto view = obj->asArrayBufferView();
+            m_stream->streamBuffer()->push((const char*)view->rawBuffer(),
+                                           view->byteLength());
+        } else if (obj->isArrayBufferObject()) {
+            auto ab = obj->asArrayBufferObject();
+            m_stream->streamBuffer()->push((const char*)ab->rawBuffer(),
+                                           ab->byteLength());
+        }
+    } else if (chunk->isString()) {
+        String* browserString = toBrowserString(m_scriptBindingInstance, chunk);
+        auto str = browserString->toUTF8NonGCString();
+        m_stream->streamBuffer()->push(str.data(), str.length());
+    }
 
+    if (m_stream->reader()) {
         m_stream->reader()->fulfillReadRequest(chunk, false);
     }
 }
 
 void ReadableStreamDefaultController::close()
 {
-    m_stream->setState(ReadableStream::State::Closed);
+    m_stream->close();
 }
 
 void ReadableStreamDefaultController::error()

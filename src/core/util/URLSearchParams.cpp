@@ -84,24 +84,25 @@ void URLSearchParams::parse(String* str)
     std::string searchStr = search->toUTF8NonGCString();
     std::vector<std::string> pairs = StringUtils::split(searchStr, '&');
     for (auto& pair : pairs) {
-        std::vector<std::string> keyAndValue = StringUtils::split(pair, '=');
-        if (!keyAndValue.size()) {
+        if (pair.empty()) {
             continue;
         }
-        String* key = ResourceURL::createPercentDecodingString(
-            String::fromUTF8(keyAndValue[0].data(), keyAndValue[0].length()),
-            true);
-        URLParam* param;
-        if (keyAndValue.size() == 2) {
-            param =
-                new URLParam(key, ResourceURL::createPercentDecodingString(
-                                      String::fromUTF8(keyAndValue[1].data(),
-                                                       keyAndValue[1].length()),
-                                      true));
+        size_t eqPos = pair.find('=');
+        String* key = nullptr;
+        String* value = nullptr;
+        if (eqPos != std::string::npos) {
+            std::string keyStr = pair.substr(0, eqPos);
+            std::string valStr = pair.substr(eqPos + 1);
+            key = ResourceURL::createPercentDecodingString(
+                String::fromUTF8(keyStr.data(), keyStr.length()), true);
+            value = ResourceURL::createPercentDecodingString(
+                String::fromUTF8(valStr.data(), valStr.length()), true);
         } else {
-            param = new URLParam(key, String::emptyString);
+            key = ResourceURL::createPercentDecodingString(
+                String::fromUTF8(pair.data(), pair.length()), true);
+            value = String::emptyString;
         }
-        m_list.push_back(param);
+        m_list.push_back(new URLParam(key, value));
     }
 }
 
