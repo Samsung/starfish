@@ -27,6 +27,7 @@ namespace Starfish {
 WebGLTexture::WebGLTexture(ScriptBindingInstance* instance,
                            WebGLRenderingContext* context, GLuint object)
     : WebGLObject(instance, context, object)
+    , m_isImmutable(false)
 {
 }
 

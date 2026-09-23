@@ -251,6 +251,62 @@ public:
                        GLenum format, GLenum type, TexImageSource source);
 
     // WebGL2 entrypoints:
+    void texStorage2D(GLenum target, GLsizei levels, GLenum internalformat,
+                      GLsizei width, GLsizei height);
+    void texStorage3D(GLenum target, GLsizei levels, GLenum internalformat,
+                      GLsizei width, GLsizei height, GLsizei depth);
+
+    void texImage2D(GLenum target, GLint level, GLint internalformat,
+                    GLsizei width, GLsizei height, GLint border, GLenum format,
+                    GLenum type, GLintptr pboOffset);
+    void texImage2D(GLenum target, GLint level, GLint internalformat,
+                    GLsizei width, GLsizei height, GLint border, GLenum format,
+                    GLenum type, TexImageSource source);
+    void texImage2D(GLenum target, GLint level, GLint internalformat,
+                    GLsizei width, GLsizei height, GLint border, GLenum format,
+                    GLenum type, ScriptArrayBufferView srcData,
+                    unsigned long long srcOffset);
+
+    void texImage3D(GLenum target, GLint level, GLint internalformat,
+                    GLsizei width, GLsizei height, GLsizei depth, GLint border,
+                    GLenum format, GLenum type, GLintptr pboOffset);
+    void texImage3D(GLenum target, GLint level, GLint internalformat,
+                    GLsizei width, GLsizei height, GLsizei depth, GLint border,
+                    GLenum format, GLenum type, TexImageSource source);
+    void texImage3D(GLenum target, GLint level, GLint internalformat,
+                    GLsizei width, GLsizei height, GLsizei depth, GLint border,
+                    GLenum format, GLenum type,
+                    Optional<ScriptArrayBufferView> srcData);
+    void texImage3D(GLenum target, GLint level, GLint internalformat,
+                    GLsizei width, GLsizei height, GLsizei depth, GLint border,
+                    GLenum format, GLenum type, ScriptArrayBufferView srcData,
+                    unsigned long long srcOffset);
+
+    void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLint zoffset, GLsizei width, GLsizei height,
+                       GLsizei depth, GLenum format, GLenum type,
+                       GLintptr pboOffset);
+    void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLint zoffset, GLsizei width, GLsizei height,
+                       GLsizei depth, GLenum format, GLenum type,
+                       TexImageSource source);
+    void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLint zoffset, GLsizei width, GLsizei height,
+                       GLsizei depth, GLenum format, GLenum type,
+                       Optional<ScriptArrayBufferView> srcData,
+                       unsigned long long srcOffset);
+
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLsizei width, GLsizei height, GLenum format,
+                       GLenum type, GLintptr pboOffset);
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLsizei width, GLsizei height, GLenum format,
+                       GLenum type, TexImageSource source);
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLsizei width, GLsizei height, GLenum format,
+                       GLenum type, ScriptArrayBufferView srcData,
+                       unsigned long long srcOffset);
+
     void uniform1fv(Optional<WebGLUniformLocation*> location, Float32List data,
                     unsigned long long srcOffset = 0, GLuint srcLength = 0);
     void uniform2fv(Optional<WebGLUniformLocation*> location, Float32List data,
@@ -305,6 +361,10 @@ private:
                              GLenum type) override;
     bool isSrcDataValid(ScriptArrayBufferView srcData, GLenum type) override;
     size_t getBytesPerPixel(GLenum format, GLenum type) override;
+    int webGLVersion() const override
+    {
+        return 2;
+    }
 
     GLenum m_currentVertexAttribType = GL_FLOAT;
 };

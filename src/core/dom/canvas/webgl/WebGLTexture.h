@@ -32,6 +32,18 @@ public:
                  WebGLRenderingContext* context, GLuint object);
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLTexture() const override;
+
+    bool isImmutable() const
+    {
+        return m_isImmutable;
+    }
+    void setImmutable(bool immutable)
+    {
+        m_isImmutable = immutable;
+    }
+
+private:
+    bool m_isImmutable = false;
 };
 } // namespace Starfish
 

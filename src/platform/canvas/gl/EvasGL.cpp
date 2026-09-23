@@ -123,6 +123,14 @@ public:
                                     height);
     }
 
+    virtual void texStorage3D(GLenum target, GLsizei levels,
+                              GLenum internalformat, GLsizei width,
+                              GLsizei height, GLsizei depth) override
+    {
+        m_evasGLAPI->glTexStorage3D(target, levels, internalformat, width,
+                                    height, depth);
+    }
+
     virtual GLenum checkFramebufferStatus(GLenum target) override
     {
         return m_evasGLAPI->glCheckFramebufferStatus(target);
@@ -566,6 +574,14 @@ public:
                                            height);
     }
 
+    virtual void getInternalformativ(GLenum target, GLenum internalformat,
+                                     GLenum pname, GLsizei bufSize,
+                                     GLint *params) override
+    {
+        m_evasGLAPI->glGetInternalformativ(target, internalformat, pname,
+                                           bufSize, params);
+    }
+
     virtual void sampleCoverage(GLfloat value, GLboolean invert) override
     {
         m_evasGLAPI->glSampleCoverage(value, invert);
@@ -618,6 +634,15 @@ public:
                                   border, format, type, pixels);
     }
 
+    virtual void texImage3D(GLenum target, GLint level, GLint internalformat,
+                            GLsizei width, GLsizei height, GLsizei depth,
+                            GLint border, GLenum format, GLenum type,
+                            const void *pixels) override
+    {
+        m_evasGLAPI->glTexImage3D(target, level, internalformat, width, height,
+                                  depth, border, format, type, pixels);
+    }
+
     virtual void texParameterf(GLenum target, GLenum pname,
                                GLfloat param) override
     {
@@ -649,6 +674,16 @@ public:
     {
         m_evasGLAPI->glTexSubImage2D(target, level, xoffset, yoffset, width,
                                      height, format, type, pixels);
+    }
+
+    virtual void texSubImage3D(GLenum target, GLint level, GLint xoffset,
+                               GLint yoffset, GLint zoffset, GLsizei width,
+                               GLsizei height, GLsizei depth, GLenum format,
+                               GLenum type, const void *pixels) override
+    {
+        m_evasGLAPI->glTexSubImage3D(target, level, xoffset, yoffset, zoffset,
+                                     width, height, depth, format, type,
+                                     pixels);
     }
 
     virtual void uniform1f(GLint location, GLfloat x) override
