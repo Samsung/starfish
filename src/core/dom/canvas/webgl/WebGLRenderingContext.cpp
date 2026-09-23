@@ -48,6 +48,7 @@
 #include "binding/generated/Int32ArrayOrSequenceOfGLintUnion.h"
 #include "binding/generated/ArrayBufferOrSharedArrayBufferOrArrayBufferViewUnion.h"
 #include "binding/generated/ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementUnion.h"
+#include <regex>
 #include "core/dom/canvas/webgl/WebGLOES_VertexArrayObject.h"
 #include "core/dom/canvas/webgl/WebGLShaderPrecisionFormat.h"
 #include "core/page/WebView.h"
@@ -963,6 +964,10 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
         return;
     }
 
+    if (!validateDrawCallUBO()) {
+        return;
+    }
+
     for (GLuint array : getState()->arraysEnabled()) {
         // If a vertex attribute is enabled as an array via
         // enableVertexAttribArray but no buffer is bound to that attribute
@@ -1003,6 +1008,11 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
         // If the CURRENT_PROGRAM is null, an INVALID_OPERATION error will be
         // generated.
         setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    if (!validateDrawCallUBO()) {
+        return;
     }
 
     m_gl->drawElements(mode, count, type, reinterpret_cast<void*>(offset));
@@ -1142,6 +1152,7 @@ void WebGLRenderingContext::shaderSource(WebGLShader* shader, String* source)
     ENTER_CONTEXT_SCOPE();
 
     std::string str = source->toUTF8NonGCString();
+    shader->setSource(str);
     const char* sourceArray[1] = { str.c_str() };
 
     m_gl->shaderSource(shader->glObject(), 1, sourceArray, nullptr);
@@ -2246,6 +2257,58 @@ void WebGLRenderingContext::lineWidth(GLfloat width)
     m_gl->lineWidth(width);
 }
 
+static bool validateUniformBlocksMatch(const GCVector<WebGLShader*>& shaders)
+{
+    std::unordered_map<std::string, std::vector<std::string>> blockDefinitions;
+    std::regex blockRegex(R"(uniform\s+([A-Za-z0-9_]+)\s*\{([^}]*)\})");
+
+    for (WebGLShader* shader : shaders) {
+        if (!shader)
+            continue;
+        const std::string& src = shader->source();
+        if (src.empty())
+            continue;
+
+        auto begin = std::sregex_iterator(src.begin(), src.end(), blockRegex);
+        auto end = std::sregex_iterator();
+        for (auto it = begin; it != end; ++it) {
+            std::string blockName = (*it)[1].str();
+            std::string body = (*it)[2].str();
+
+            // Extract tokens (normalize whitespace and semicolons)
+            std::vector<std::string> tokens;
+            std::string cur;
+            for (char c : body) {
+                if (isspace(c) || c == ';') {
+                    if (!cur.empty()) {
+                        tokens.push_back(cur);
+                        cur.clear();
+                    }
+                    if (c == ';') {
+                        tokens.push_back(";");
+                    }
+                } else {
+                    cur += c;
+                }
+            }
+            if (!cur.empty()) {
+                tokens.push_back(cur);
+            }
+
+            auto existing = blockDefinitions.find(blockName);
+            if (existing == blockDefinitions.end()) {
+                blockDefinitions[blockName] = tokens;
+            } else {
+                if (existing->second != tokens) {
+                    // Uniform block declaration mismatch across shaders!
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
 void WebGLRenderingContext::linkProgram(WebGLProgram* program)
 {
     ENTER_CONTEXT_SCOPE();
@@ -2280,6 +2343,13 @@ void WebGLRenderingContext::linkProgram(WebGLProgram* program)
     }
 
     program->setLinkFailed(false);
+
+    if (webGLVersion() >= 2) {
+        if (!validateUniformBlocksMatch(program->getWebGLShaders())) {
+            program->setLinkFailed(true);
+            return;
+        }
+    }
 
     GLint linkStatus = 0;
     m_gl->getProgramiv(program->glObject(), GL_LINK_STATUS, &linkStatus);
@@ -4066,6 +4136,8 @@ void WebGLRenderingContext::uniformMatrix4fv(
 
 void WebGLRenderingContext::setGLError(GLenum code, const char* message)
 {
+    STARFISH_LOG_ERROR("[SET_GL_ERROR] code=0x%x msg=%s", code,
+                       message ? message : "(null)");
     m_GLErrors.insert(code);
     if (message) {
         TRACE(WEBGL, "Error(%s): %s", glValueString(code), message);

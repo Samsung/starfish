@@ -157,6 +157,34 @@ public:
         glTexStorage3D(target, levels, internalformat, width, height, depth);
     }
 
+    virtual GLuint getUniformBlockIndex(GLuint program,
+                                        const GLchar *uniformBlockName) override
+    {
+        return glGetUniformBlockIndex(program, uniformBlockName);
+    }
+
+    virtual void uniformBlockBinding(GLuint program, GLuint uniformBlockIndex,
+                                     GLuint uniformBlockBinding) override
+    {
+        glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
+    }
+
+    virtual void getActiveUniformBlockiv(GLuint program,
+                                         GLuint uniformBlockIndex, GLenum pname,
+                                         GLint *params) override
+    {
+        glGetActiveUniformBlockiv(program, uniformBlockIndex, pname, params);
+    }
+
+    virtual void getActiveUniformBlockName(GLuint program,
+                                           GLuint uniformBlockIndex,
+                                           GLsizei bufSize, GLsizei *length,
+                                           GLchar *uniformBlockName) override
+    {
+        glGetActiveUniformBlockName(program, uniformBlockIndex, bufSize, length,
+                                    uniformBlockName);
+    }
+
     virtual GLenum checkFramebufferStatus(GLenum target) override
     {
         return glCheckFramebufferStatus(target);
@@ -332,10 +360,51 @@ public:
         glDrawArrays(mode, first, count);
     }
 
+    virtual void drawArraysInstanced(GLenum mode, GLint first, GLsizei count,
+                                     GLsizei instanceCount) override
+    {
+        glDrawArraysInstanced(mode, first, count, instanceCount);
+    }
+
     virtual void drawElements(GLenum mode, GLsizei count, GLenum type,
                               const void *indices) override
     {
         glDrawElements(mode, count, type, indices);
+        GLenum err = glGetError();
+        if (err != GL_NO_ERROR) {
+            STARFISH_LOG_ERROR(
+                "[DEBUG GL] glDrawElements failed with error 0x%x (mode=%d "
+                "count=%d type=0x%x indices=%p)",
+                err, mode, count, type, indices);
+        }
+    }
+
+    virtual void drawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
+                                       const void *indices,
+                                       GLsizei instanceCount) override
+    {
+        glDrawElementsInstanced(mode, count, type, indices, instanceCount);
+        GLenum err = glGetError();
+        if (err != GL_NO_ERROR) {
+            STARFISH_LOG_ERROR(
+                "[DEBUG GL] glDrawElementsInstanced failed with error 0x%x "
+                "(mode=%d count=%d type=0x%x indices=%p instanceCount=%d)",
+                err, mode, count, type, indices, instanceCount);
+        }
+    }
+
+    virtual void drawRangeElements(GLenum mode, GLuint start, GLuint end,
+                                   GLsizei count, GLenum type,
+                                   const void *indices) override
+    {
+        glDrawRangeElements(mode, start, end, count, type, indices);
+        GLenum err = glGetError();
+        if (err != GL_NO_ERROR) {
+            STARFISH_LOG_ERROR(
+                "[DEBUG GL] glDrawRangeElements failed with error 0x%x "
+                "(mode=%d start=%u end=%u count=%d type=0x%x indices=%p)",
+                err, mode, start, end, count, type, indices);
+        }
     }
 
     virtual void enable(GLenum cap) override
@@ -874,6 +943,11 @@ public:
         glVertexAttribPointer(indx, size, type, normalized, stride, ptr);
     }
 
+    virtual void vertexAttribDivisor(GLuint index, GLuint divisor) override
+    {
+        glVertexAttribDivisor(index, divisor);
+    }
+
     virtual void viewport(GLint x, GLint y, GLsizei width,
                           GLsizei height) override
     {
@@ -1077,9 +1151,17 @@ public:
         glUniform4uiv(location, count, value);
     }
 
-    void getActiveUniformsiv(GLuint program, GLsizei uniformCount,
-                             const GLuint *uniformIndices, GLenum pname,
-                             GLint *params) override
+    virtual void getUniformIndices(GLuint program, GLsizei uniformCount,
+                                   const GLchar *const *uniformNames,
+                                   GLuint *uniformIndices) override
+    {
+        glGetUniformIndices(program, uniformCount, uniformNames,
+                            uniformIndices);
+    }
+
+    virtual void getActiveUniformsiv(GLuint program, GLsizei uniformCount,
+                                     const GLuint *uniformIndices, GLenum pname,
+                                     GLint *params) override
     {
         glGetActiveUniformsiv(program, uniformCount, uniformIndices, pname,
                               params);

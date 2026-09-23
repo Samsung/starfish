@@ -131,6 +131,36 @@ public:
                                     height, depth);
     }
 
+    virtual GLuint getUniformBlockIndex(GLuint program,
+                                        const GLchar *uniformBlockName) override
+    {
+        return m_evasGLAPI->glGetUniformBlockIndex(program, uniformBlockName);
+    }
+
+    virtual void uniformBlockBinding(GLuint program, GLuint uniformBlockIndex,
+                                     GLuint uniformBlockBinding) override
+    {
+        m_evasGLAPI->glUniformBlockBinding(program, uniformBlockIndex,
+                                           uniformBlockBinding);
+    }
+
+    virtual void getActiveUniformBlockiv(GLuint program,
+                                         GLuint uniformBlockIndex, GLenum pname,
+                                         GLint *params) override
+    {
+        m_evasGLAPI->glGetActiveUniformBlockiv(program, uniformBlockIndex,
+                                               pname, params);
+    }
+
+    virtual void getActiveUniformBlockName(GLuint program,
+                                           GLuint uniformBlockIndex,
+                                           GLsizei bufSize, GLsizei *length,
+                                           GLchar *uniformBlockName) override
+    {
+        m_evasGLAPI->glGetActiveUniformBlockName(
+            program, uniformBlockIndex, bufSize, length, uniformBlockName);
+    }
+
     virtual GLenum checkFramebufferStatus(GLenum target) override
     {
         return m_evasGLAPI->glCheckFramebufferStatus(target);
@@ -308,10 +338,32 @@ public:
         m_evasGLAPI->glDrawArrays(mode, first, count);
     }
 
+    virtual void drawArraysInstanced(GLenum mode, GLint first, GLsizei count,
+                                     GLsizei instanceCount) override
+    {
+        m_evasGLAPI->glDrawArraysInstanced(mode, first, count, instanceCount);
+    }
+
     virtual void drawElements(GLenum mode, GLsizei count, GLenum type,
                               const void *indices) override
     {
         m_evasGLAPI->glDrawElements(mode, count, type, indices);
+    }
+
+    virtual void drawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
+                                       const void *indices,
+                                       GLsizei instanceCount) override
+    {
+        m_evasGLAPI->glDrawElementsInstanced(mode, count, type, indices,
+                                             instanceCount);
+    }
+
+    virtual void drawRangeElements(GLenum mode, GLuint start, GLuint end,
+                                   GLsizei count, GLenum type,
+                                   const void *indices) override
+    {
+        m_evasGLAPI->glDrawRangeElements(mode, start, end, count, type,
+                                         indices);
     }
 
     virtual void enable(GLenum cap) override
@@ -858,6 +910,11 @@ public:
                                            ptr);
     }
 
+    virtual void vertexAttribDivisor(GLuint index, GLuint divisor) override
+    {
+        m_evasGLAPI->glVertexAttribDivisor(index, divisor);
+    }
+
     virtual void viewport(GLint x, GLint y, GLsizei width,
                           GLsizei height) override
     {
@@ -1051,9 +1108,17 @@ public:
         m_evasGLAPI->glUniform4uiv(location, count, value);
     }
 
-    void getActiveUniformsiv(GLuint program, GLsizei uniformCount,
-                             const GLuint *uniformIndices, GLenum pname,
-                             GLint *params) override
+    virtual void getUniformIndices(GLuint program, GLsizei uniformCount,
+                                   const GLchar *const *uniformNames,
+                                   GLuint *uniformIndices) override
+    {
+        m_evasGLAPI->glGetUniformIndices(program, uniformCount, uniformNames,
+                                         uniformIndices);
+    }
+
+    virtual void getActiveUniformsiv(GLuint program, GLsizei uniformCount,
+                                     const GLuint *uniformIndices, GLenum pname,
+                                     GLint *params) override
     {
         m_evasGLAPI->glGetActiveUniformsiv(program, uniformCount,
                                            uniformIndices, pname, params);

@@ -256,7 +256,11 @@ public:
                    GLint z, GLint w);
     void useProgram(Optional<WebGLProgram*> program);
     void validateProgram(WebGLProgram* program);
-    void shaderSource(WebGLShader* shader, String* source);
+    virtual void shaderSource(WebGLShader* shader, String* source);
+    virtual bool validateDrawCallUBO()
+    {
+        return true;
+    }
 
     void stencilFunc(GLenum func, GLint ref, GLuint mask);
     void stencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
@@ -379,8 +383,6 @@ protected:
 private:
     bool isDefaultFramebufferBound();
     GLuint getCurrentFBO();
-    GLint getCurrentProgram();
-    void completePendingJobs();
     void setPendingClearMask(uint32_t mask);
     void flushDrawingCommands();
 
@@ -424,6 +426,8 @@ private:
 
 protected:
     GLErrorSet m_GLErrors;
+    GLint getCurrentProgram();
+    void completePendingJobs();
 
 private:
     GLTextureMap m_boundTextures;

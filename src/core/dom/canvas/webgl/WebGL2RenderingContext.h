@@ -99,6 +99,12 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(WebGL2RenderingContext);
 
+    BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGL2RenderingContext,
+                                     WebGLRenderingContext);
+    FILL_GC_POINTER(WebGL2RenderingContext, m_uniformBufferBindings);
+    END_IMPLEMENT_NEW_WITH_GC_DESC();
+
+public:
     // Implement WebGLRenderingContextBase
 
     void bindBuffer(GLenum target, Optional<WebGLBuffer*> buffer);
@@ -214,14 +220,35 @@ public:
     ScriptValue getActiveUniforms(WebGLProgram* program,
                                   GCAtomicVector<GLuint> uniformIndices,
                                   GLenum pname);
+    Optional<GCAtomicVector<GLuint>> getUniformIndices(
+        WebGLProgram* program, GCVector<String*> uniformNames);
+    GLuint getUniformBlockIndex(WebGLProgram* program,
+                                String* uniformBlockName);
+    ScriptValue getActiveUniformBlockParameter(WebGLProgram* program,
+                                               GLuint uniformBlockIndex,
+                                               GLenum pname);
+    String* getActiveUniformBlockName(WebGLProgram* program,
+                                      GLuint uniformBlockIndex);
+    void uniformBlockBinding(WebGLProgram* program, GLuint uniformBlockIndex,
+                             GLuint uniformBlockBinding);
 
     /* Vertex Array Objects */
     WebGLVertexArrayObject* createVertexArray();
     void deleteVertexArray(Optional<WebGLVertexArrayObject*> vertexArray);
     GLboolean isVertexArray(Optional<WebGLVertexArrayObject*> vertexArray);
     void bindVertexArray(Optional<WebGLVertexArrayObject*> array);
+    void vertexAttribDivisor(GLuint index, GLuint divisor);
+    void drawArraysInstanced(GLenum mode, GLint first, GLsizei count,
+                             GLsizei instanceCount);
+    void drawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
+                               GLintptr offset, GLsizei instanceCount);
+    void drawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count,
+                           GLenum type, GLintptr offset);
 
     // Implement WebGL2RenderingContextOverloads
+
+    void shaderSource(WebGLShader* shader, String* source) override;
+    bool validateDrawCallUBO() override;
 
     // WebGL1:
     void bufferData(GLenum target, GLsizeiptr size, GLenum usage);
@@ -367,6 +394,23 @@ private:
     }
 
     GLenum m_currentVertexAttribType = GL_FLOAT;
+
+    class IndexedBufferBinding : public gc {
+    public:
+        IndexedBufferBinding(WebGLBuffer* b = nullptr, GLintptr o = 0,
+                             GLsizeiptr s = 0, bool r = false)
+            : buffer(b)
+            , offset(o)
+            , size(s)
+            , isRange(r)
+        {
+        }
+        WebGLBuffer* buffer;
+        GLintptr offset;
+        GLsizeiptr size;
+        bool isRange;
+    };
+    GCVector<IndexedBufferBinding*> m_uniformBufferBindings;
 };
 
 } // namespace Starfish

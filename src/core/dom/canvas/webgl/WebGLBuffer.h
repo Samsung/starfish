@@ -38,8 +38,18 @@ public:
     void setTargetOnce(GLenum target);
     GLenum target();
 
+    void setByteLength(GLsizeiptr byteLength)
+    {
+        m_byteLength = byteLength;
+    }
+    GLsizeiptr byteLength() const
+    {
+        return m_byteLength;
+    }
+
 private:
     GLenum m_target = GL_NONE;
+    GLsizeiptr m_byteLength = 0;
 };
 } // namespace Starfish
 

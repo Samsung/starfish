@@ -30,13 +30,16 @@
 #include "core/dom/canvas/webgl/WebGLBuffer.h"
 #include "core/dom/canvas/webgl/WebGLFramebuffer.h"
 #include "core/dom/canvas/webgl/WebGLProgram.h"
+#include "core/dom/canvas/webgl/WebGLShader.h"
 #include "core/dom/canvas/webgl/WebGLTexture.h"
 #include "core/dom/canvas/webgl/WebGLRenderingContextState.h"
 #include "core/dom/canvas/webgl/WebGLUniformLocation.h"
+#include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/util/debug/Trace.h"
 #include "platform/canvas/gl/GL.h"
 #include "platform/canvas/gl/IncludeGL.h"
 #include <EscargotPublic.h>
+#include <regex>
 
 /* WebGL-specific enums */
 static constexpr GLenum kMAX_CLIENT_WAIT_TIMEOUT_WEBGL = 0x9247;
@@ -385,7 +388,12 @@ ScriptValue WebGL2RenderingContext::getProgramParameter(WebGLProgram* program,
     switch (pname) {
     // GLboolean
     case GL_DELETE_STATUS:
+        return createScriptValue(static_cast<bool>(params));
     case GL_LINK_STATUS:
+        if (program->linkFailed()) {
+            return createScriptValue(false);
+        }
+        return createScriptValue(static_cast<bool>(params));
     case GL_VALIDATE_STATUS:
         return createScriptValue(static_cast<bool>(params));
     // GLenum
@@ -1422,12 +1430,23 @@ void WebGL2RenderingContext::bindBufferBase(GLenum target, GLuint index,
         getState()->setBoundBuffer(target, value);
 
         value->setTargetOnce(target);
+        if (target == GL_UNIFORM_BUFFER) {
+            if (index >= m_uniformBufferBindings.size()) {
+                m_uniformBufferBindings.resize(index + 1);
+            }
+            m_uniformBufferBindings[index] =
+                new IndexedBufferBinding(value, 0, 0, false);
+        }
     } else {
         gl()->bindBufferBase(target, index, 0);
         if (hasNewGLError()) {
             return;
         }
         getState()->setBoundBuffer(target, nullptr);
+        if (target == GL_UNIFORM_BUFFER &&
+            index < m_uniformBufferBindings.size()) {
+            m_uniformBufferBindings[index] = nullptr;
+        }
     }
 }
 
@@ -1473,13 +1492,182 @@ void WebGL2RenderingContext::bindBufferRange(GLenum target, GLuint index,
         getState()->setBoundBuffer(target, value);
 
         value->setTargetOnce(target);
+        if (target == GL_UNIFORM_BUFFER) {
+            if (index >= m_uniformBufferBindings.size()) {
+                m_uniformBufferBindings.resize(index + 1);
+            }
+            m_uniformBufferBindings[index] =
+                new IndexedBufferBinding(value, offset, size, true);
+        }
     } else {
         gl()->bindBufferRange(target, index, 0, offset, size);
         if (hasNewGLError()) {
             return;
         }
         getState()->setBoundBuffer(target, nullptr);
+        if (target == GL_UNIFORM_BUFFER &&
+            index < m_uniformBufferBindings.size()) {
+            m_uniformBufferBindings[index] = nullptr;
+        }
     }
+}
+
+GLuint WebGL2RenderingContext::getUniformBlockIndex(WebGLProgram* program,
+                                                    String* uniformBlockName)
+{
+    ENTER_CONTEXT_SCOPE(GL_INVALID_INDEX);
+    if (!isFromCurrentContext(program)) {
+        setGLError(GL_INVALID_OPERATION);
+        return GL_INVALID_INDEX;
+    }
+    if (!uniformBlockName || uniformBlockName->length() == 0) {
+        return GL_INVALID_INDEX;
+    }
+    return gl()->getUniformBlockIndex(
+        program->glObject(), uniformBlockName->toUTF8NonGCString().c_str());
+}
+
+ScriptValue WebGL2RenderingContext::getActiveUniformBlockParameter(
+    WebGLProgram* program, GLuint uniformBlockIndex, GLenum pname)
+{
+    ENTER_CONTEXT_SCOPE(scriptNull());
+    if (!isFromCurrentContext(program)) {
+        setGLError(GL_INVALID_OPERATION);
+        return scriptNull();
+    }
+    switch (pname) {
+    case GL_UNIFORM_BLOCK_BINDING:
+    case GL_UNIFORM_BLOCK_DATA_SIZE:
+    case GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS: {
+        GLint params = 0;
+        gl()->getActiveUniformBlockiv(program->glObject(), uniformBlockIndex,
+                                      pname, &params);
+        if (hasNewGLError()) {
+            return scriptNull();
+        }
+        return createScriptValue(params);
+    }
+    case GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES: {
+        GLint uniformCount = 0;
+        gl()->getActiveUniformBlockiv(program->glObject(), uniformBlockIndex,
+                                      GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS,
+                                      &uniformCount);
+        if (hasNewGLError() || uniformCount == 0) {
+            return createScriptValue(
+                createTypedArray<Escargot::Uint32ArrayObjectRef>(
+                    scriptBindingInstance(), std::vector<GLuint>()));
+        }
+        std::vector<GLint> indices(uniformCount);
+        gl()->getActiveUniformBlockiv(program->glObject(), uniformBlockIndex,
+                                      pname, indices.data());
+        if (hasNewGLError()) {
+            return scriptNull();
+        }
+        return createScriptValue(
+            createTypedArray<Escargot::Uint32ArrayObjectRef>(
+                scriptBindingInstance(),
+                std::vector<GLuint>(indices.begin(), indices.end())));
+    }
+    case GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER:
+    case GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER: {
+        GLint params = 0;
+        gl()->getActiveUniformBlockiv(program->glObject(), uniformBlockIndex,
+                                      pname, &params);
+        if (hasNewGLError()) {
+            return scriptNull();
+        }
+        return createScriptValue(static_cast<bool>(params));
+    }
+    default:
+        setGLError(GL_INVALID_ENUM);
+        return scriptNull();
+    }
+}
+
+String* WebGL2RenderingContext::getActiveUniformBlockName(
+    WebGLProgram* program, GLuint uniformBlockIndex)
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+    if (!isFromCurrentContext(program)) {
+        setGLError(GL_INVALID_OPERATION);
+        return nullptr;
+    }
+    GLint maxNameLength = 0;
+    gl()->getActiveUniformBlockiv(program->glObject(), uniformBlockIndex,
+                                  GL_UNIFORM_BLOCK_NAME_LENGTH, &maxNameLength);
+    if (hasNewGLError() || maxNameLength == 0) {
+        return nullptr;
+    }
+    std::vector<GLchar> name(maxNameLength);
+    GLsizei length = 0;
+    gl()->getActiveUniformBlockName(program->glObject(), uniformBlockIndex,
+                                    maxNameLength, &length, name.data());
+    if (hasNewGLError()) {
+        return nullptr;
+    }
+    return String::fromUTF8(name.data(), length);
+}
+
+void WebGL2RenderingContext::uniformBlockBinding(WebGLProgram* program,
+                                                 GLuint uniformBlockIndex,
+                                                 GLuint uniformBlockBinding)
+{
+    ENTER_CONTEXT_SCOPE();
+    if (!isFromCurrentContext(program)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    GLint maxBindings = 0;
+    gl()->getIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxBindings);
+    if (uniformBlockBinding >= static_cast<GLuint>(maxBindings)) {
+        setGLError(GL_INVALID_VALUE,
+                   "uniformBlockBinding is greater than or equal to "
+                   "MAX_UNIFORM_BUFFER_BINDINGS.");
+        return;
+    }
+
+    gl()->uniformBlockBinding(program->glObject(), uniformBlockIndex,
+                              uniformBlockBinding);
+}
+
+Optional<GCAtomicVector<GLuint>> WebGL2RenderingContext::getUniformIndices(
+    WebGLProgram* program, GCVector<String*> uniformNames)
+{
+    ENTER_CONTEXT_SCOPE(Optional<GCAtomicVector<GLuint>>());
+
+    if (!isFromCurrentContext(program)) {
+        setGLError(GL_INVALID_OPERATION);
+        return Optional<GCAtomicVector<GLuint>>();
+    }
+
+    size_t count = uniformNames.size();
+    if (count == 0) {
+        return GCAtomicVector<GLuint>();
+    }
+
+    std::vector<std::string> nameStrings;
+    nameStrings.reserve(count);
+    std::vector<const GLchar*> names;
+    names.reserve(count);
+    for (size_t i = 0; i < count; ++i) {
+        if (!uniformNames[i]) {
+            return Optional<GCAtomicVector<GLuint>>();
+        }
+        nameStrings.push_back(uniformNames[i]->toUTF8NonGCString());
+        names.push_back(nameStrings.back().c_str());
+    }
+
+    GCAtomicVector<GLuint> indices;
+    indices.resize(count);
+    gl()->getUniformIndices(program->glObject(), count, names.data(),
+                            indices.data());
+
+    if (hasNewGLError()) {
+        return Optional<GCAtomicVector<GLuint>>();
+    }
+
+    return indices;
 }
 
 ScriptValue WebGL2RenderingContext::getActiveUniforms(
@@ -1633,6 +1821,192 @@ void WebGL2RenderingContext::bindVertexArray(
 }
 
 // WebGL2RenderingContextOverloads
+
+bool WebGL2RenderingContext::validateDrawCallUBO()
+{
+    GLint programId = getCurrentProgram();
+    if (!programId)
+        return true;
+
+    GLint numBlocks = 0;
+    gl()->getProgramiv(programId, GL_ACTIVE_UNIFORM_BLOCKS, &numBlocks);
+
+    for (GLint i = 0; i < numBlocks; i++) {
+        GLint dataSize = 0;
+        gl()->getActiveUniformBlockiv(programId, i, GL_UNIFORM_BLOCK_DATA_SIZE,
+                                      &dataSize);
+        if (dataSize > 0) {
+            GLint binding = 0;
+            gl()->getActiveUniformBlockiv(programId, i,
+                                          GL_UNIFORM_BLOCK_BINDING, &binding);
+
+            if (binding < 0 ||
+                static_cast<size_t>(binding) >=
+                    m_uniformBufferBindings.size() ||
+                m_uniformBufferBindings[binding] == nullptr ||
+                m_uniformBufferBindings[binding]->buffer == nullptr ||
+                m_uniformBufferBindings[binding]->buffer->isDeleted()) {
+                setGLError(GL_INVALID_OPERATION,
+                           "draw: UniformBlock is not backed by a buffer.");
+                return false;
+            }
+
+            IndexedBufferBinding* b = m_uniformBufferBindings[binding];
+
+            GLint totalBufferSize = 0;
+            gl()->bindBuffer(GL_UNIFORM_BUFFER, b->buffer->glObject());
+            gl()->getBufferParameteriv(GL_UNIFORM_BUFFER, GL_BUFFER_SIZE,
+                                       &totalBufferSize);
+
+            // Restore generic bound buffer
+            Optional<WebGLBuffer*> prevBound =
+                getState()->getBoundBuffer(GL_UNIFORM_BUFFER);
+            gl()->bindBuffer(GL_UNIFORM_BUFFER,
+                             (prevBound.hasValue() && prevBound.value())
+                                 ? prevBound.value()->glObject()
+                                 : 0);
+
+            if (totalBufferSize == 0) {
+                setGLError(GL_INVALID_OPERATION,
+                           "draw: UniformBlock is backed by a buffer with no "
+                           "data store.");
+                return false;
+            }
+
+            GLsizeiptr effectiveSize = totalBufferSize;
+            if (b->isRange) {
+                effectiveSize = b->size;
+            }
+
+            if (effectiveSize < dataSize) {
+                setGLError(GL_INVALID_OPERATION,
+                           "draw: bound UNIFORM_BUFFER size is smaller than "
+                           "active uniform block data size.");
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+void WebGL2RenderingContext::shaderSource(WebGLShader* shader, String* source)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    std::string originalStr = source->toUTF8NonGCString();
+    shader->setSource(originalStr);
+
+    std::string str = originalStr;
+
+    if (str.find("layout(packed)") != std::string::npos ||
+        str.find("layout (packed)") != std::string::npos ||
+        str.find("layout(shared)") != std::string::npos ||
+        str.find("layout (shared)") != std::string::npos) {
+        str = "#error WebGL2 does not allow packed or shared layouts\n" + str;
+    }
+
+    // WebGL2 uniform blocks default to std140 layout if unspecified.
+    // If layout(...) is missing before "uniform BlockName {", inject
+    // "layout(std140) ".
+    std::regex blockRegex(R"((^|[^\w\)])uniform\s+([A-Za-z0-9_]+)\s*\{)");
+    std::string result;
+    size_t lastPos = 0;
+    auto words_begin = std::sregex_iterator(str.begin(), str.end(), blockRegex);
+    auto words_end = std::sregex_iterator();
+
+    for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
+        std::smatch match = *i;
+        size_t matchPos = match.position();
+
+        bool hasLayout = false;
+        if (matchPos > 0) {
+            size_t p = matchPos;
+            while (p > 0 && (str[p - 1] == ' ' || str[p - 1] == '\t' ||
+                             str[p - 1] == '\r' || str[p - 1] == '\n')) {
+                p--;
+            }
+            if (p > 0 && str[p - 1] == ')') {
+                int depth = 1;
+                size_t q = p - 1;
+                while (q > 0 && depth > 0) {
+                    q--;
+                    if (str[q] == ')')
+                        depth++;
+                    else if (str[q] == '(')
+                        depth--;
+                }
+                if (depth == 0) {
+                    size_t w = q;
+                    while (w > 0 && (str[w - 1] == ' ' || str[w - 1] == '\t'))
+                        w--;
+                    if (w >= 6 && str.substr(w - 6, 6) == "layout") {
+                        hasLayout = true;
+                    }
+                }
+            }
+        }
+
+        result.append(str, lastPos, matchPos - lastPos);
+        if (!hasLayout) {
+            std::string prefix = match[1].str();
+            std::string blockName = match[2].str();
+            result += prefix + "layout(std140) uniform " + blockName + " {";
+        } else {
+            result += match.str();
+        }
+        lastPos = matchPos + match.length();
+    }
+    result.append(str, lastPos, str.length() - lastPos);
+    str = result;
+
+    const char* sourceArray[1] = { str.c_str() };
+    gl()->shaderSource(shader->glObject(), 1, sourceArray, nullptr);
+}
+
+void WebGL2RenderingContext::vertexAttribDivisor(GLuint index, GLuint divisor)
+{
+    ENTER_CONTEXT_SCOPE();
+    gl()->vertexAttribDivisor(index, divisor);
+}
+
+void WebGL2RenderingContext::drawArraysInstanced(GLenum mode, GLint first,
+                                                 GLsizei count,
+                                                 GLsizei instanceCount)
+{
+    ENTER_CONTEXT_SCOPE();
+    completePendingJobs();
+    if (!validateDrawCallUBO())
+        return;
+    gl()->drawArraysInstanced(mode, first, count, instanceCount);
+    m_ownerHTMLCanvasElement->setNeedsComposite();
+}
+
+void WebGL2RenderingContext::drawElementsInstanced(GLenum mode, GLsizei count,
+                                                   GLenum type, GLintptr offset,
+                                                   GLsizei instanceCount)
+{
+    ENTER_CONTEXT_SCOPE();
+    completePendingJobs();
+    if (!validateDrawCallUBO())
+        return;
+    gl()->drawElementsInstanced(mode, count, type,
+                                reinterpret_cast<const void*>(offset),
+                                instanceCount);
+    m_ownerHTMLCanvasElement->setNeedsComposite();
+}
+
+void WebGL2RenderingContext::drawRangeElements(GLenum mode, GLuint start,
+                                               GLuint end, GLsizei count,
+                                               GLenum type, GLintptr offset)
+{
+    ENTER_CONTEXT_SCOPE();
+    completePendingJobs();
+    if (!validateDrawCallUBO())
+        return;
+    gl()->drawRangeElements(mode, start, end, count, type,
+                            reinterpret_cast<const void*>(offset));
+    m_ownerHTMLCanvasElement->setNeedsComposite();
+}
 
 void WebGL2RenderingContext::bufferData(GLenum target, GLsizeiptr size,
                                         GLenum usage)
