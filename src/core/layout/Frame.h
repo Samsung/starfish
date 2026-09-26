@@ -771,7 +771,7 @@ private:
     // a reference for Frames
     std::vector<BlockFormattingContext> m_blockFormattingContextInfo;
     std::map<FrameBlockBox*, std::vector<FrameBox*>> m_absolutePositionedBoxes;
-    std::vector<FrameBlockBox*> m_blocksForScrollRectUpdate;
+    GCVector<FrameBlockBox*> m_blocksForScrollRectUpdate;
     std::map<FrameBlockBox*, std::vector<std::pair<FrameBox*, bool>>>
         m_relativePositionedBoxes;
     // TODO move these maps into BlockFormattingContext
@@ -807,7 +807,7 @@ private:
         CachedFlexAutoMinMainSizeVector;
     std::unordered_map<Frame*, CachedFlexAutoMinMainSizeVector>
         m_flexAutoMinMainSizeCache;
-    std::vector<Frame*> m_modifiedStyleFlexItems;
+    GCVector<Frame*> m_modifiedStyleFlexItems;
 
     // <availableWidth, result>
     typedef std::vector<std::tuple<LayoutUnit, LayoutUnit, LayoutUnit>>

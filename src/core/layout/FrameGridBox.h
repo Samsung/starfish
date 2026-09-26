@@ -123,17 +123,17 @@ public:
              size_t columnStart, size_t columnEnd)
         : GridArea(box, idx)
     {
-        m_rowStartLine->setValue(rowStart);
-        m_rowEndLine->setValue(rowEnd);
-        m_columnStartLine->setValue(columnStart);
-        m_columnEndLine->setValue(columnEnd);
+        m_rowStartLine.setValue(rowStart);
+        m_rowEndLine.setValue(rowEnd);
+        m_columnStartLine.setValue(columnStart);
+        m_columnEndLine.setValue(columnEnd);
     }
 
     bool isDefinite()
     {
-        if ((m_rowStartLine->isDefinite() || m_rowEndLine->isDefinite()) &&
-            (m_columnStartLine->isDefinite() ||
-             m_columnEndLine->isDefinite())) {
+        if ((m_rowStartLine.isDefinite() || m_rowEndLine.isDefinite()) &&
+            (m_columnStartLine.isDefinite() ||
+             m_columnEndLine.isDefinite())) {
             return true;
         }
         return false;
@@ -147,42 +147,42 @@ public:
 
     size_t rowStart() const
     {
-        return m_rowStartLine->value();
+        return m_rowStartLine.value();
     }
 
     void setRowStart(size_t v) const
     {
-        m_rowStartLine->setValue(v);
+        m_rowStartLine.setValue(v);
     }
 
     size_t rowEnd() const
     {
-        return m_rowEndLine->value();
+        return m_rowEndLine.value();
     }
 
     void setRowEnd(size_t v) const
     {
-        m_rowEndLine->setValue(v);
+        m_rowEndLine.setValue(v);
     }
 
     size_t columnStart() const
     {
-        return m_columnStartLine->value();
+        return m_columnStartLine.value();
     }
 
     void setColumnStart(size_t v) const
     {
-        m_columnStartLine->setValue(v);
+        m_columnStartLine.setValue(v);
     }
 
     size_t columnEnd() const
     {
-        return m_columnEndLine->value();
+        return m_columnEndLine.value();
     }
 
     void setColumnEnd(size_t v) const
     {
-        m_columnEndLine->setValue(v);
+        m_columnEndLine.setValue(v);
     }
 
     bool isMarginLeftAuto()
@@ -197,8 +197,8 @@ public:
 
     bool hasRowAndColumnValues()
     {
-        if (m_rowStartLine->hasValue() && m_rowEndLine->hasValue() &&
-            m_columnStartLine->hasValue() && m_columnEndLine->hasValue()) {
+        if (m_rowStartLine.hasValue() && m_rowEndLine.hasValue() &&
+            m_columnStartLine.hasValue() && m_columnEndLine.hasValue()) {
             return true;
         }
         return false;
@@ -233,10 +233,11 @@ private:
     bool m_isMarginLeftAuto = false;
     bool m_isMarginRightAuto = false;
 
-    GridLine* m_rowStartLine = new GridLine();
-    GridLine* m_rowEndLine = new GridLine();
-    GridLine* m_columnStartLine = new GridLine();
-    GridLine* m_columnEndLine = new GridLine();
+    // ponytail: stored inline to avoid 4 heap allocs per GridArea
+    GridLine m_rowStartLine;
+    GridLine m_rowEndLine;
+    GridLine m_columnStartLine;
+    GridLine m_columnEndLine;
 };
 
 enum class GridTrackType {
