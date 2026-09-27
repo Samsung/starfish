@@ -27,6 +27,8 @@ namespace Starfish {
 class StyleUtil {
 public:
     static String* fontWeightToString(FontWeightValue weight);
+    static FontWeightValue bolderWeight(FontWeightValue weight);
+    static FontWeightValue lighterWeight(FontWeightValue weight);
     static String* fontStyleToString(FontStyleValue fontStyle);
     static String* textTransformToString(TextTransformValue textTransform);
 };
