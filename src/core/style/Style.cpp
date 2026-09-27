@@ -30,6 +30,7 @@
 #include "StarfishConfig.h"
 
 #include "core/style/Style.h"
+#include "core/style/StyleUtil.h"
 
 #include "Starfish.h"
 #include "core/animation/AnimationTask.h"
@@ -102,42 +103,12 @@ static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
 
 static FontWeightValue lighterWeight(FontWeightValue weight)
 {
-    switch (weight) {
-    case FontWeightValue::OneHundredFontWeightValue:
-    case FontWeightValue::TwoHundredsFontWeightValue:
-    case FontWeightValue::ThreeHundredsFontWeightValue:
-    case FontWeightValue::NormalFontWeightValue:
-    case FontWeightValue::FiveHundredsFontWeightValue:
-        return FontWeightValue::OneHundredFontWeightValue;
-    case FontWeightValue::SixHundredsFontWeightValue:
-    case FontWeightValue::BoldFontWeightValue:
-        return FontWeightValue::NormalFontWeightValue; // 400
-    case FontWeightValue::EightHundredsFontWeightValue:
-    case FontWeightValue::NineHundredsFontWeightValue:
-        return FontWeightValue::BoldFontWeightValue; // 700
-    default:
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    }
+    return StyleUtil::lighterWeight(weight);
 }
 
 static FontWeightValue bolderWeight(FontWeightValue weight)
 {
-    switch (weight) {
-    case FontWeightValue::OneHundredFontWeightValue:
-    case FontWeightValue::TwoHundredsFontWeightValue:
-    case FontWeightValue::ThreeHundredsFontWeightValue:
-        return FontWeightValue::NormalFontWeightValue; // 400
-    case FontWeightValue::NormalFontWeightValue:
-    case FontWeightValue::FiveHundredsFontWeightValue:
-        return FontWeightValue::BoldFontWeightValue; // 700
-    case FontWeightValue::SixHundredsFontWeightValue:
-    case FontWeightValue::BoldFontWeightValue:
-    case FontWeightValue::EightHundredsFontWeightValue:
-    case FontWeightValue::NineHundredsFontWeightValue:
-        return FontWeightValue::NineHundredsFontWeightValue; // 900
-    default:
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    }
+    return StyleUtil::bolderWeight(weight);
 }
 
 static const int strictFontSizeTable[8][8] = {

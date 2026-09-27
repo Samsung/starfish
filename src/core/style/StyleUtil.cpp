@@ -57,6 +57,50 @@ String* StyleUtil::fontWeightToString(FontWeightValue weight)
     }
 }
 
+FontWeightValue StyleUtil::bolderWeight(FontWeightValue weight)
+{
+    switch (weight) {
+    case FontWeightValue::OneHundredFontWeightValue:
+    case FontWeightValue::TwoHundredsFontWeightValue:
+    case FontWeightValue::ThreeHundredsFontWeightValue:
+        return FontWeightValue::NormalFontWeightValue; // 400
+    case FontWeightValue::FourHundredsFontWeightValue:
+    case FontWeightValue::NormalFontWeightValue:
+    case FontWeightValue::FiveHundredsFontWeightValue:
+        return FontWeightValue::BoldFontWeightValue; // 700
+    case FontWeightValue::SixHundredsFontWeightValue:
+    case FontWeightValue::SevenHundredsFontWeightValue:
+    case FontWeightValue::BoldFontWeightValue:
+    case FontWeightValue::EightHundredsFontWeightValue:
+    case FontWeightValue::NineHundredsFontWeightValue:
+        return FontWeightValue::NineHundredsFontWeightValue; // 900
+    default:
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+}
+
+FontWeightValue StyleUtil::lighterWeight(FontWeightValue weight)
+{
+    switch (weight) {
+    case FontWeightValue::OneHundredFontWeightValue:
+    case FontWeightValue::TwoHundredsFontWeightValue:
+    case FontWeightValue::ThreeHundredsFontWeightValue:
+    case FontWeightValue::FourHundredsFontWeightValue:
+    case FontWeightValue::NormalFontWeightValue:
+    case FontWeightValue::FiveHundredsFontWeightValue:
+        return FontWeightValue::OneHundredFontWeightValue;
+    case FontWeightValue::SixHundredsFontWeightValue:
+    case FontWeightValue::SevenHundredsFontWeightValue:
+    case FontWeightValue::BoldFontWeightValue:
+        return FontWeightValue::NormalFontWeightValue; // 400
+    case FontWeightValue::EightHundredsFontWeightValue:
+    case FontWeightValue::NineHundredsFontWeightValue:
+        return FontWeightValue::BoldFontWeightValue; // 700
+    default:
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+}
+
 String* StyleUtil::fontStyleToString(FontStyleValue fontStyle)
 {
     switch (fontStyle) {

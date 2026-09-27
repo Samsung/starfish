@@ -24,6 +24,7 @@
 #include "binding/generated/DOMStringOrCanvasGradientOrCanvasPatternUnion.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/style/Style.h"
+#include "core/style/StyleUtil.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/GradientData.h"
 #include "core/style/CSSGradientValue.h"
@@ -1972,7 +1973,7 @@ void CanvasRenderingContext2DMixIn::setFont(String* font)
 
     float fixedFontSize = 10;
     char fontStyle = FontStyleValue::NormalFontStyleValue;
-    char fontWeight = FontWeightValue::NormalFontWeightValue;
+    char fontWeight = 4;
 
     // font size
     if (size.valueKind() == CSSStyleValuePair::FontSizeValueKind) {
@@ -1990,7 +1991,21 @@ void CanvasRenderingContext2DMixIn::setFont(String* font)
 
     // font weight
     if (weight.valueKind() == CSSStyleValuePair::FontWeightValueKind) {
-        switch (weight.fontWeightValue()) {
+        FontWeightValue targetWeight = weight.fontWeightValue();
+        if (targetWeight == FontWeightValue::BolderFontWeightValue ||
+            targetWeight == FontWeightValue::LighterFontWeightValue) {
+            FontWeightValue baseWeight = FontWeightValue::NormalFontWeightValue;
+            if (m_ownerHTMLCanvasElement->style() != nullptr) {
+                baseWeight = m_ownerHTMLCanvasElement->style()->fontWeight();
+            }
+            if (targetWeight == FontWeightValue::BolderFontWeightValue) {
+                targetWeight = StyleUtil::bolderWeight(baseWeight);
+            } else {
+                targetWeight = StyleUtil::lighterWeight(baseWeight);
+            }
+        }
+
+        switch (targetWeight) {
         case OneHundredFontWeightValue:
             fontWeight = 1;
             break;
@@ -2001,8 +2016,6 @@ void CanvasRenderingContext2DMixIn::setFont(String* font)
             fontWeight = 3;
             break;
         case FourHundredsFontWeightValue:
-            fontWeight = 4;
-            break;
         case NormalFontWeightValue:
             fontWeight = 4;
             break;
@@ -2012,6 +2025,7 @@ void CanvasRenderingContext2DMixIn::setFont(String* font)
         case SixHundredsFontWeightValue:
             fontWeight = 6;
             break;
+        case SevenHundredsFontWeightValue:
         case BoldFontWeightValue:
             fontWeight = 7;
             break;
