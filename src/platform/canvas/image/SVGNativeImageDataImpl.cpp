@@ -141,7 +141,7 @@ public:
         delete img;
     }
 
-    NativeImageData* rasterize()
+    virtual NativeImageData* rasterize() override
     {
         NativeImageData* rasterizedSVGImage =
             BufferedNativeImageData::create(width(), height());
