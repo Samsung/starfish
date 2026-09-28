@@ -63,9 +63,9 @@ public:
     // DECLARE_EVENT_LISTENER(pagehide);
     // DECLARE_EVENT_LISTENER(pageshow);
     // DECLARE_EVENT_LISTENER(popstate);
-    // DECLARE_EVENT_LISTENER(rejectionhandled);
+    DECLARE_EVENT_LISTENER(rejectionhandled);
     // DECLARE_EVENT_LISTENER(storage);
-    // DECLARE_EVENT_LISTENER(unhandledrejection);
+    DECLARE_EVENT_LISTENER(unhandledrejection);
     DECLARE_EVENT_LISTENER(unload);
 #undef VIRTUAL
 #undef OVERRIDE

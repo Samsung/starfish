@@ -1503,12 +1503,21 @@ supported.
 | [MediaQueryListEventInit](https://drafts.csswg.org/cssom-view/#dictdef-mediaquerylisteventinit) | dictionary | MediaQueryListEventInit | Dictionary that is used to create MediaQueryListEvent. |
 | | attribute | media | Returns the value it was initialized to. |
 | | attribute | matches | Returns the value it was initialized to. |
+| [PromiseRejectionEvent](https://html.spec.whatwg.org/multipage/webappapis.html#the-promiserejectionevent-interface) | interface | PromiseRejectionEvent | Represents events that are dispatched when a JavaScript Promise is rejected. |
+| | constructor | PromiseRejectionEvent(DOMString type, PromiseRejectionEventInit eventInitDict) | Creates a new PromiseRejectionEvent object. |
+| | attribute | promise | The Promise that was rejected. |
+| | attribute | reason | The reason the Promise was rejected. |
+| [PromiseRejectionEventInit](https://html.spec.whatwg.org/multipage/webappapis.html#the-promiserejectionevent-interface) | dictionary | PromiseRejectionEventInit | Dictionary that is used to create PromiseRejectionEvent. |
+| | attribute | promise | Required. The Promise that was rejected. |
+| | attribute | reason | The reason the Promise was rejected. |
 | [WindowEventHandlers](https://html.spec.whatwg.org/multipage/webappapis.html#windoweventhandlers) | partial<br>interface | WindowEventHandlers | WindowEventHandlers are the event handlers common to several interfaces like Window, or HTMLBodyElement and  HTMLFrameSetElement. Each of these interfaces can implement additional specific event handlers. |
 | | attribute | onmessage | Fired at an object when it receives a message. |
 | | attribute | onmessageerror | Fired at an object when it receives a message that cannot be deserialized. |
 | | attribute | onhashchange | Fired at the `Window` when the fragment identifier of the URL changes. (Gated by `STARFISH_WEBWORKER_NOT_HOST` — only on the host page, not in workers.) |
+| | attribute | onrejectionhandled | Fired when a rejected JavaScript Promise is handled. |
+| | attribute | onunhandledrejection | Fired when a JavaScript Promise is rejected without a handler. |
 | | attribute | onunload | Fired at the Window object when the page is going away. |
-| | misc | **Unsupported in LWE** (`[Unimplemented]` — never fire) | `onafterprint`, `onbeforeprint`, `onbeforeunload`, `onlanguagechange`, `onoffline`, `ononline`, `onpagehide`, `onpageshow`, `onpopstate`, `onrejectionhandled`, `onstorage`, `onunhandledrejection`. |
+| | misc | **Unsupported in LWE** (`[Unimplemented]` — never fire) | `onafterprint`, `onbeforeprint`, `onbeforeunload`, `onlanguagechange`, `onoffline`, `ononline`, `onpagehide`, `onpageshow`, `onpopstate`, `onstorage`. |
 | [SecurityPolicyViolationEventInit](https://www.w3.org/TR/CSP2/#securitypolicyviolationeventinit-interface) | dictionary | SecurityPolicyViolationEventInit | Dictionary that is used to create SecurityPolicyViolationEvent. |
 | | attribute | blockedURI | Returns the requested URL of the resource that was prevented from loading. |
 | | attribute | violatedDirective | Returns the policy directive that was violated. |
@@ -3055,7 +3064,7 @@ The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` 
 | `document.createEvent('ErrorEvent')` | **Broken** — returns a plain `Event` (logs `STARFISH_UNSUPPORTED`). Use `new ErrorEvent(...)` instead. |
 | `window.onerror` (attribute-style) | Receives 5 args: `(message, source, lineno, colno, error)`. `error` is the original thrown value. Spec-compliant. |
 | `addEventListener('error', fn)` | Receives a single `ErrorEvent` argument. Spec-compliant. |
-| `unhandledrejection` / `rejectionhandled` events | **Not implemented.** `PromiseRejectionEvent` constructor not exposed (`undefined`). `Promise.reject(...)` with no `.catch` is silently dropped — there is no `HostPromiseRejectionTracker` wiring. Always attach a `.catch` to top-level promise chains in LWE webapps. |
+| `unhandledrejection` / `rejectionhandled` events | Fully implemented. Window fires `unhandledrejection` when a rejected promise has no handler, and `rejectionhandled` if a handler is attached later. `PromiseRejectionEvent` is exposed and constructible. Unprevented unhandled rejections are logged to console.error. |
 
 ### Pointer / Keyboard / Touch / Drag events — runtime caveats
 

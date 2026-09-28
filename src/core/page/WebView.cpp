@@ -864,12 +864,37 @@ void WebView::ensureScriptEngineInstance()
                     }
                 }
             });
+
+        m_scriptEngineInstance->engineInstance()->registerPromiseRejectCallback(
+            [](Escargot::ExecutionStateRef* state,
+               Escargot::PromiseObjectRef* promise, Escargot::ValueRef* value,
+               Escargot::VMInstanceRef::PromiseRejectEvent event) {
+                if (!state || !state->context() ||
+                    !state->context()->globalObject()) {
+                    return;
+                }
+                Window* window = static_cast<Window*>(
+                    state->context()->globalObject()->extraData());
+                if (!window) {
+                    return;
+                }
+                if (event == Escargot::VMInstanceRef::PromiseRejectEvent::
+                                 PromiseRejectWithNoHandler) {
+                    window->addAboutToBeNotifiedRejectedPromise(promise, value);
+                } else if (event ==
+                           Escargot::VMInstanceRef::PromiseRejectEvent::
+                               PromiseHandlerAddedAfterReject) {
+                    window->handlePromiseHandlerAddedAfterReject(promise);
+                }
+            });
     }
 }
 
 void WebView::removeScriptEngineInstance()
 {
     if (m_scriptEngineInstance) {
+        m_scriptEngineInstance->engineInstance()
+            ->unregisterPromiseRejectCallback();
         m_scriptEngineInstance->engineInstance()->unregisterPromiseHook();
         m_scriptEngineInstance->dispose();
 

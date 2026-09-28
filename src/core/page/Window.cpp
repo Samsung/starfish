@@ -27,6 +27,7 @@
 #include "core/dom/CustomElementRegistry.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/ErrorEvent.h"
+#include "core/dom/PromiseRejectionEvent.h"
 #include "core/dom/HTMLAnchorElement.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLIFrameElement.h"
@@ -1015,6 +1016,8 @@ DEFINE_EVENT_LISTENER(Window, toggle);
 DEFINE_EVENT_LISTENER(Window, securitypolicyviolation);
 DEFINE_EVENT_LISTENER(Window, message);
 DEFINE_EVENT_LISTENER(Window, messageerror);
+DEFINE_EVENT_LISTENER(Window, rejectionhandled);
+DEFINE_EVENT_LISTENER(Window, unhandledrejection);
 DEFINE_EVENT_LISTENER(Window, unload);
 DEFINE_EVENT_LISTENER(Window, scroll);
 DEFINE_EVENT_LISTENER(Window, ttsstart);
@@ -1193,5 +1196,94 @@ IDBFactory* Window::indexedDB()
     return m_idbFactory;
 }
 #endif
+
+void Window::addAboutToBeNotifiedRejectedPromise(
+    Escargot::PromiseObjectRef* promise, Escargot::ValueRef* reason)
+{
+    m_aboutToBeNotifiedRejectedPromises.push_back(
+        new UnhandledPromiseRejection(promise, reason));
+    schedulePromiseRejectionNotification();
+}
+
+void Window::handlePromiseHandlerAddedAfterReject(
+    Escargot::PromiseObjectRef* promise)
+{
+    for (size_t i = 0; i < m_aboutToBeNotifiedRejectedPromises.size(); i++) {
+        if (m_aboutToBeNotifiedRejectedPromises[i]->promise == promise) {
+            m_aboutToBeNotifiedRejectedPromises.erase(
+                m_aboutToBeNotifiedRejectedPromises.begin() + i);
+            return;
+        }
+    }
+
+    for (size_t i = 0; i < m_outstandingRejectedPromises.size(); i++) {
+        if (m_outstandingRejectedPromises[i]->promise == promise) {
+            auto rejectedItem = m_outstandingRejectedPromises[i];
+            m_outstandingRejectedPromises.erase(
+                m_outstandingRejectedPromises.begin() + i);
+
+            PromiseRejectionEventInit init;
+            init.setPromise(rejectedItem->promise);
+            init.setReason(rejectedItem->reason ? rejectedItem->reason
+                                                : scriptNull());
+            init.setCancelable(false);
+            PromiseRejectionEvent* event = new PromiseRejectionEvent(
+                executionContext(),
+                staticStrings()->m_rejectionhandled.localName(), init);
+            dispatchEvent(event);
+            return;
+        }
+    }
+}
+
+void Window::schedulePromiseRejectionNotification()
+{
+    if (m_hasScheduledPromiseRejectionCheck) {
+        return;
+    }
+    m_hasScheduledPromiseRejectionCheck = true;
+    webView()->messageLoop()->addIdler(
+        this,
+        [](size_t handle, void* data) {
+            Window* window = static_cast<Window*>(data);
+            window->processPromiseRejections();
+        },
+        this);
+}
+
+void Window::processPromiseRejections()
+{
+    m_hasScheduledPromiseRejectionCheck = false;
+    if (m_aboutToBeNotifiedRejectedPromises.empty()) {
+        return;
+    }
+
+    auto list = m_aboutToBeNotifiedRejectedPromises;
+    m_aboutToBeNotifiedRejectedPromises.clear();
+
+    for (size_t i = 0; i < list.size(); i++) {
+        auto item = list[i];
+        m_outstandingRejectedPromises.push_back(item);
+
+        PromiseRejectionEventInit init;
+        init.setPromise(item->promise);
+        init.setReason(item->reason ? item->reason : scriptNull());
+        init.setCancelable(true);
+        PromiseRejectionEvent* event = new PromiseRejectionEvent(
+            executionContext(),
+            staticStrings()->m_unhandledrejection.localName(), init);
+        bool notPrevented = dispatchEvent(event);
+        if (notPrevented) {
+            String* reasonStr =
+                toBrowserString(scriptBindingInstance(), item->reason);
+            String* logMsg =
+                String::fromUTF8("Uncaught (in promise) ")->concat(reasonStr);
+            STARFISH_LOG_ERROR("%s", logMsg->toUTF8NonGCString().data());
+            if (webBase() && webBase()->console()) {
+                webBase()->console()->error(logMsg);
+            }
+        }
+    }
+}
 
 } // namespace Starfish
