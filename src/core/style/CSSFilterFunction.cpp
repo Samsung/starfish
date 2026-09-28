@@ -40,10 +40,7 @@ static bool parseLengthOrColor(const CSSTokenValue& token,
             token.data(), CSSPropertyParser::AllowNegative, &result)) {
         return true;
     }
-    if (CSSPropertyParser::parseNonNamedColor(token.data(), &result)) {
-        return true;
-    }
-    return CSSPropertyParser::parseNamedColor(token.data(), &result);
+    return CSSPropertyParser::parseColor(token.data(), &result);
 }
 
 static bool parseDropShadowFilter(const CSSTokenValue& data,

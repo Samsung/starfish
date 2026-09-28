@@ -9,10 +9,10 @@ http://web-platform.test:8000/css/css-color/animation/opacity-animation-ending-c
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/background-color-hsl-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/background-color-hsl-002.html
 http://web-platform.test:8000/css/css-color/background-color-hsl-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/background-color-hsl-004.html
+http://web-platform.test:8000/css/css-color/background-color-hsl-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/background-color-rgb-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/background-color-rgb-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/background-color-rgb-003.html
+http://web-platform.test:8000/css/css-color/background-color-rgb-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/body-opacity-0-to-1-stacking-context.html
 http://web-platform.test:8000/css/css-color/border-bottom-color.xht
 http://web-platform.test:8000/css/css-color/border-color-currentcolor.html
@@ -82,8 +82,8 @@ http://web-platform.test:8000/css/css-color/hex-001.html
 http://web-platform.test:8000/css/css-color/hex-002.html
 http://web-platform.test:8000/css/css-color/hex-003.html
 http://web-platform.test:8000/css/css-color/hex-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/hsl-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/hsl-002.html
+http://web-platform.test:8000/css/css-color/hsl-001.html
+http://web-platform.test:8000/css/css-color/hsl-002.html
 http://web-platform.test:8000/css/css-color/hsl-003.html
 http://web-platform.test:8000/css/css-color/hsl-004.html
 http://web-platform.test:8000/css/css-color/hsl-005.html
@@ -91,8 +91,8 @@ http://web-platform.test:8000/css/css-color/hsl-006.html
 http://web-platform.test:8000/css/css-color/hsl-007.html
 http://web-platform.test:8000/css/css-color/hsl-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/hsl-clamp-negative-saturation.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/hsla-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/hsla-002.html
+http://web-platform.test:8000/css/css-color/hsla-001.html
+http://web-platform.test:8000/css/css-color/hsla-002.html
 http://web-platform.test:8000/css/css-color/hsla-003.html
 http://web-platform.test:8000/css/css-color/hsla-004.html
 http://web-platform.test:8000/css/css-color/hsla-005.html
@@ -200,7 +200,7 @@ http://web-platform.test:8000/css/css-color/out-of-gamut-legacy-rgb.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/relative-currentcolor-rgb-02.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/relative-currentcolor-xyzd50-01.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/relative-currentcolor-xyzd65-01.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/rgb-001.html
+http://web-platform.test:8000/css/css-color/rgb-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/rgb-002.html
 http://web-platform.test:8000/css/css-color/rgb-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/rgb-004.html
@@ -208,7 +208,7 @@ http://web-platform.test:8000/css/css-color/rgb-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/rgb-006.html
 http://web-platform.test:8000/css/css-color/rgb-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/rgb-008.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/rgba-001.html
+http://web-platform.test:8000/css/css-color/rgba-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/rgba-002.html
 http://web-platform.test:8000/css/css-color/rgba-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/rgba-004.html

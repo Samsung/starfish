@@ -11338,11 +11338,7 @@ bool StyleResolver::mediaQueryAffectedByDeviceChange()
 
 bool CSSStyleValuePair::updateValueUnitColor(const CSSTokenValue& token)
 {
-    if (CSSPropertyParser::parseNonNamedColor(token, this)) {
-        return true;
-    } else {
-        return CSSPropertyParser::parseNamedColor(token, this);
-    }
+    return CSSPropertyParser::parseColor(token, this);
 }
 
 bool CSSStyleValuePair::updateValueUnitBorderColor(const CSSTokenValue& token)

@@ -1837,7 +1837,7 @@ Verified against `src/core/style/CSSStyleLookupTrie.cpp::lookupUnitType`, `src/c
 
 **`env()`.** **Completely unimplemented.** `env(safe-area-inset-top)` is stripped during parsing — the rule body is left empty (`#x { }`). The literal fallback (`env(safe-area-inset-top, 11px)`) is also discarded; the engine does *not* fall back to it. There is no `env()` token consumer anywhere in `src/core/style/`. Webapps must avoid `env()` entirely and inline the safe-area inset (e.g. via a CSS Custom Property the host app injects).
 
-**Color formats.** `parseNonNamedColor` only recognizes `rgb()`, `rgba()`, `hsl()`, `hsla()` (modern slash/space syntax `rgb(R G B / A)` works) and hex literals `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`. Named colors (incl. `rebeccapurple`), `transparent`, and `currentColor` work. `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()`, `color()`, and `color-mix()` all parse-fail and the property falls back to its initial value (`rgb(0,0,0)`); the rule body retains the unparsable text but the value is unused.
+**Color formats.** `parseNonNamedColor` dispatches on the function name and recognizes `rgb()`/`rgba()` and `hsl()`/`hsla()` (each pair is an alias; both the legacy comma form and the modern space form with an optional `/ <alpha>` are accepted, e.g. `rgb(1 2 3)` and `rgb(1 2 3 / 0.5)`) and hex literals `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`. Named colors (incl. `rebeccapurple`), `transparent`, and `currentColor` work. `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()`, `color()`, and `color-mix()` all parse-fail and the property falls back to its initial value (`rgb(0,0,0)`); the rule body retains the unparsable text but the value is unused.
 
 ## Obsolete CSS
 
@@ -1981,7 +1981,7 @@ The CSS section above does not enumerate at-rules. Implementation status:
 | Time | `s`, `ms` | — |
 | Resolution | `dpi`, `dpcm`, `dppx` (work in `@media`) | — |
 | Functional | `calc()`, `min()`, `max()`, `clamp()` (mixed units, nested, with `var()`); `var(--x, fallback)` including nested fallback | **`env(...)` is parser-rejected** — the entire declaration is dropped at parse time; the fallback value is **NOT** honored. |
-| Color | hex 3/4/6/8, `rgb()`, `rgba()`, `rgb(R G B / A)` modern syntax, `hsl()`, `hsla()`, named colors (incl. `rebeccapurple`), `transparent`, `currentColor` | `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()`, `color()`, `color-mix()` — all silently fall back to `rgb(0,0,0)`. |
+| Color | hex 3/4/6/8, `rgb()`/`rgba()` and `hsl()`/`hsla()` in legacy comma or modern space syntax (`rgb(R G B)`, `rgb(R G B / A)`), named colors (incl. `rebeccapurple`), `transparent`, `currentColor` | `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()`, `color()`, `color-mix()` — all silently fall back to `rgb(0,0,0)`. |
 
 ## Cross-origin script API accessSection
 
