@@ -4403,6 +4403,18 @@ void StyleResolver::applyProperty(Element* element,
             style->setCursor(newCssValue.cursorValue());
         }
         break;
+    case CSSStyleValuePair::KeyKind::ColorScheme:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setColorScheme(parentStyle->colorScheme());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->setColorScheme(nullptr);
+        } else {
+            style->setColorScheme(newCssValue.keywordValue());
+        }
+        break;
     case CSSStyleValuePair::KeyKind::MixBlendMode:
         if ((newCssValue.valueKind() ==
              CSSStyleValuePair::ValueKind::Inherit) ||
@@ -12598,6 +12610,85 @@ bool CSSStyleValuePair::updateValueCursor(Document* document,
     } else {
         return false;
     }
+    return true;
+}
+
+// <custom-ident> shape check: an ident-token that is not a CSS-wide keyword
+// (those are rejected by the caller). Escapes are not handled -- the
+// tokenizer does not unescape either, so an escaped ident never round-trips
+// anyway.
+static bool isPlainIdent(const CSSTokenValue& token)
+{
+    if (token.empty()) {
+        return false;
+    }
+    for (size_t i = 0; i < token.size(); i++) {
+        unsigned char c = token[i];
+        bool identChar = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                         c == '_' || c == '-' || c >= 0x80 ||
+                         (i > 0 && c >= '0' && c <= '9');
+        if (!identChar) {
+            return false;
+        }
+    }
+    // `-<digit>` and `--` alone are not idents
+    if (token[0] == '-' &&
+        (token.size() == 1 || (token[1] >= '0' && token[1] <= '9'))) {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueColorScheme(Document* document,
+                                               const CSSTokenVector& tokens)
+{
+    STARFISH_ASSERT(document != nullptr);
+
+    // https://drafts.csswg.org/css-color-adjust-1/#color-scheme-prop
+    //   normal | [ light | dark | <custom-ident> ]+ && only?
+    // The ident list is kept as its canonical serialization (author order,
+    // `only` last) rather than as flags: unknown idents must round-trip
+    // through getComputedStyle, and whether the list names light/dark is
+    // derived from it again when it lands on ComputedStyle.
+    if (tokens.size() == 0) {
+        return false;
+    }
+    if (tokens.size() == 1 && tokens[0].equals("normal")) {
+        setKeywordValue(String::fromUTF8("normal"));
+        return true;
+    }
+
+    StringBuilder builder;
+    bool seenOnly = false;
+    size_t identCount = 0;
+    for (size_t i = 0; i < tokens.size(); i++) {
+        const CSSTokenValue& token = tokens[i];
+        if (token.equals("only")) {
+            // `only` may appear once, either first or last
+            if (seenOnly || (i != 0 && i != tokens.size() - 1)) {
+                return false;
+            }
+            seenOnly = true;
+            continue;
+        }
+        if (token.equals("normal") || token.equals("default") ||
+            token.equals("inherit") || token.equals("initial") ||
+            token.equals("unset") || token.equals("revert") ||
+            token.equals("revert-layer") || !isPlainIdent(token)) {
+            return false;
+        }
+        if (identCount++) {
+            builder.appendChar(' ');
+        }
+        builder.appendString(token.data(), token.size());
+    }
+    if (identCount == 0) {
+        return false;
+    }
+    if (seenOnly) {
+        builder.appendString(" only");
+    }
+    setKeywordValue(builder.finalize());
     return true;
 }
 

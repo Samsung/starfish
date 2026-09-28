@@ -320,7 +320,7 @@ protected:
     void initialize(const ActiveAnimationTaskInit& init);
 
     bool m_isEveryAnimiatedValueResolved : 1;
-    CSSStyleValuePair::KeyKind m_property : 8;
+    CSSStyleValuePair::KeyKind m_property : 9;
 
     AnimationType m_animationType;
     Element* m_targetElement;

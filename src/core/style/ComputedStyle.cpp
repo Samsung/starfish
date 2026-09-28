@@ -39,6 +39,7 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "core/style/CSSProperty.h"
+#include "core/style/MediaQueryEvaluator.h"
 #include "core/style/FilterFunctions.h"
 #include "core/style/GradientData.h"
 #include "core/style/WillChangeData.h"
@@ -108,6 +109,9 @@ void* ComputedStyle::InheritedStylesRareData::operator new(size_t size)
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
                                   m_textShadowDataList));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
+                                  m_colorScheme));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
                                   m_listStyleData.m_counterStyle));
@@ -815,6 +819,18 @@ void ComputedStyle::blockify(Node* current, bool force)
             }
         }
     }
+}
+
+bool ComputedStyle::usedColorSchemeIsDark()
+{
+    if (!m_inheritedStyles.m_rareData ||
+        !m_inheritedStyles.m_rareData->m_colorSchemeDark) {
+        return false;
+    }
+    if (!m_inheritedStyles.m_rareData->m_colorSchemeLight) {
+        return true;
+    }
+    return MediaQueryEvaluator::prefersColorSchemeOverride() == 2;
 }
 
 void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
@@ -2804,6 +2820,11 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     }
     if (newStyle->cursor() != oldStyle->cursor()) {
         damagedKeys[CSSStyleValuePair::KeyKind::Cursor] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageInherited | damage);
+    }
+    if (!newStyle->colorSchemeEquals(oldStyle)) {
+        damagedKeys[CSSStyleValuePair::KeyKind::ColorScheme] = true;
         damage = static_cast<ComputedStyleDamage>(
             ComputedStyleDamage::ComputedStyleDamageInherited | damage);
     }

@@ -845,6 +845,13 @@ class ComputedStyle : public gc {
 
         Unit::Color m_caretColor;
 
+        // color-scheme: canonical ident list, nullptr for `normal`. The two
+        // flags cache whether the list names light/dark, which is what the
+        // used color scheme is derived from.
+        String* m_colorScheme;
+        bool m_colorSchemeLight : 1;
+        bool m_colorSchemeDark : 1;
+
         InheritedStylesRareData()
         {
             m_letterSpacing = Length(Length::Fixed, 0);
@@ -875,6 +882,9 @@ class ComputedStyle : public gc {
                 TextUnderlinePositionValue::AutoTextUnderlinePositionValue;
             m_pointerEventsValue = PointerEventsValue::PointerEventsAutoValue;
             m_cursorValue = CursorValue::CursorAutoValue;
+            m_colorScheme = nullptr;
+            m_colorSchemeLight = false;
+            m_colorSchemeDark = false;
         }
 
         void* operator new(size_t size);
@@ -1504,6 +1514,68 @@ public:
     {
         ensureInheritedRareData()->m_cursorValue = v;
     }
+
+    // nullptr is `normal`
+    String* colorScheme()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_colorScheme;
+        }
+        return nullptr;
+    }
+
+    void setColorScheme(String* v)
+    {
+        if (v && v->equals("normal")) {
+            v = nullptr;
+        }
+        if (!v && !m_inheritedStyles.m_rareData) {
+            return;
+        }
+        InheritedStylesRareData* data = ensureInheritedRareData();
+        data->m_colorScheme = v;
+        data->m_colorSchemeLight = false;
+        data->m_colorSchemeDark = false;
+        if (!v) {
+            return;
+        }
+        // scan the space-separated ident list for light/dark
+        size_t start = 0;
+        size_t len = v->length();
+        for (size_t i = 0; i <= len; i++) {
+            if (i == len || v->charAt(i) == ' ') {
+                size_t n = i - start;
+                if (n == 5 && v->charAt(start) == 'l' &&
+                    v->charAt(start + 1) == 'i' &&
+                    v->charAt(start + 2) == 'g' &&
+                    v->charAt(start + 3) == 'h' &&
+                    v->charAt(start + 4) == 't') {
+                    data->m_colorSchemeLight = true;
+                } else if (n == 4 && v->charAt(start) == 'd' &&
+                           v->charAt(start + 1) == 'a' &&
+                           v->charAt(start + 2) == 'r' &&
+                           v->charAt(start + 3) == 'k') {
+                    data->m_colorSchemeDark = true;
+                }
+                start = i + 1;
+            }
+        }
+    }
+
+    bool colorSchemeEquals(ComputedStyle* other)
+    {
+        String* a = colorScheme();
+        String* b = other->colorScheme();
+        if (!a || !b) {
+            return a == b;
+        }
+        return a->equals(b);
+    }
+
+    // https://drafts.csswg.org/css-color-adjust-1/#color-scheme-processing
+    // The used color scheme: dark only when the element opts into `dark`
+    // and either does not also offer `light` or the user prefers dark.
+    bool usedColorSchemeIsDark();
 
     ResizeValue resize()
     {

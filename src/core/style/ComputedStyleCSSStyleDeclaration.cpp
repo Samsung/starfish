@@ -2320,6 +2320,13 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setValue(CSSStyleValuePair::ValueData(style->cursor()));
         addValuePair(p);
     } break;
+    case CSSStyleValuePair::KeyKind::ColorScheme: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::ColorScheme);
+        String* v = style->colorScheme();
+        p.setKeywordValue(v ? v : String::fromUTF8("normal"));
+        addValuePair(p);
+    } break;
     case CSSStyleValuePair::KeyKind::MaskImage: {
         CSSStyleValuePair maskImage;
         maskImage.setKeyKind(CSSStyleValuePair::KeyKind::MaskImage);
