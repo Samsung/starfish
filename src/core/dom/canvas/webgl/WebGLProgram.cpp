@@ -21,6 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "WebGLProgram.h"
+#include "WebGLShader.h"
 
 namespace Starfish {
 
@@ -32,18 +33,41 @@ WebGLProgram::WebGLProgram(ScriptBindingInstance* instance,
 
 void WebGLProgram::addAttachedShader(WebGLShader* shader)
 {
-    if (std::find(m_webGLShaders.begin(), m_webGLShaders.end(), shader) ==
-        m_webGLShaders.end()) {
-        m_webGLShaders.push_back(shader);
+    if (shader) {
+        for (size_t i = 0; i < 2; ++i) {
+            if (m_attachedShaders[i] == shader) {
+                return;
+            }
+            if (m_attachedShaders[i] == nullptr) {
+                m_attachedShaders[i] = shader;
+                if (shader->source().find("gl_FragColor") !=
+                    std::string::npos) {
+                    m_usesFragColor = true;
+                }
+                return;
+            }
+        }
     }
 }
 
 void WebGLProgram::removeDetachedShader(WebGLShader* shader)
 {
-    auto it = std::find(m_webGLShaders.begin(), m_webGLShaders.end(), shader);
-    if (it != m_webGLShaders.end()) {
-        m_webGLShaders.erase(it);
+    for (size_t i = 0; i < 2; ++i) {
+        if (m_attachedShaders[i] == shader) {
+            m_attachedShaders[i] = nullptr;
+        }
     }
+}
+
+Optional<GCVector<WebGLShader*>> WebGLProgram::getAttachedShaders() const
+{
+    GCVector<WebGLShader*> shaders;
+    for (size_t i = 0; i < 2; ++i) {
+        if (m_attachedShaders[i]) {
+            shaders.push_back(m_attachedShaders[i]);
+        }
+    }
+    return shaders;
 }
 
 } // namespace Starfish

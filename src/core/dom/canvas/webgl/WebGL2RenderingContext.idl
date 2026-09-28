@@ -329,7 +329,7 @@ interface WebGL2RenderingContextBase
     undefined invalidateFramebuffer(GLenum target, sequence<GLenum> attachments);
     undefined invalidateSubFramebuffer(GLenum target, sequence<GLenum> attachments,
                                        GLint x, GLint y, GLsizei width, GLsizei height);
-    [Unimplemented] undefined readBuffer(GLenum src);
+    undefined readBuffer(GLenum src);
 
     /* Renderbuffer objects */
     [Unimplemented] any getInternalformatParameter(GLenum target, GLenum internalformat, GLenum pname);

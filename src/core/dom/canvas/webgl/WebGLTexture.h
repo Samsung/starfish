@@ -42,8 +42,24 @@ public:
         m_isImmutable = immutable;
     }
 
+    GLsizei width() const
+    {
+        return m_width;
+    }
+    GLsizei height() const
+    {
+        return m_height;
+    }
+    void setSize(GLsizei w, GLsizei h)
+    {
+        m_width = w;
+        m_height = h;
+    }
+
 private:
     bool m_isImmutable = false;
+    GLsizei m_width = 0;
+    GLsizei m_height = 0;
 };
 } // namespace Starfish
 

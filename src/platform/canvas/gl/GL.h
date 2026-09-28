@@ -407,6 +407,7 @@ public:
                                                 GLenum internalformat,
                                                 GLsizei width,
                                                 GLsizei height) = 0;
+    virtual void readBuffer(GLenum src) = 0;
 };
 
 } // namespace Starfish
