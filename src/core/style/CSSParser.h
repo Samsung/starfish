@@ -973,220 +973,243 @@ public:
         return true;
     }
 
+    // Splits `s` on `delim` occurring outside parentheses, so a nested
+    // function such as `color-mix(in srgb, red, blue)` stays in one piece.
+    static void splitTopLevel(const CSSTokenValue& s, char delim,
+                              std::vector<CSSTokenValue>& out)
+    {
+        size_t depth = 0;
+        size_t start = 0;
+        for (size_t i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '(') {
+                depth++;
+            } else if (c == ')') {
+                if (depth) {
+                    depth--;
+                }
+            } else if (c == delim && depth == 0) {
+                out.push_back(s.substring(start, i - start));
+                start = i + 1;
+            }
+        }
+        out.push_back(s.substring(start, s.length() - start));
+    }
+
+    // `name(args)` -> the ASCII-lowercased name and the argument text;
+    // false when the token is not a single function.
+    static bool splitFunction(const CSSTokenValue& s, std::string& name,
+                              CSSTokenValue& args)
+    {
+        size_t open = s.indexOf('(');
+        if (open == SIZE_MAX || open == 0 || s.charAt(s.length() - 1) != ')') {
+            return false;
+        }
+        name.assign(s.data(), open);
+        for (size_t i = 0; i < name.length(); i++) {
+            name[i] = tolower(name[i]);
+        }
+        args = s.substring(open + 1, s.length() - open - 2).trim();
+        return true;
+    }
+
+    // Components of a color function: the legacy comma-separated form or
+    // the modern space-separated form with an optional `/ <alpha>`
+    // (css-color-4 #color-syntax). Mixing the two forms is invalid.
+    static bool splitColorArgs(const CSSTokenValue& args,
+                               std::vector<CSSTokenValue>& components,
+                               bool* legacy)
+    {
+        std::vector<CSSTokenValue> parts;
+        if (args.indexOf(',') != SIZE_MAX) {
+            *legacy = true;
+            splitTopLevel(args, ',', parts);
+            for (size_t i = 0; i < parts.size(); i++) {
+                CSSTokenValue part = parts[i].trim();
+                if (part.length() == 0) {
+                    return false;
+                }
+                components.push_back(part);
+            }
+            return true;
+        }
+
+        *legacy = false;
+        std::vector<CSSTokenValue> slash;
+        splitTopLevel(args, '/', slash);
+        if (slash.size() > 2) {
+            return false;
+        }
+        splitTopLevel(slash[0].trim(), ' ', parts);
+        for (size_t i = 0; i < parts.size(); i++) {
+            if (parts[i].length()) {
+                components.push_back(parts[i]);
+            }
+        }
+        if (slash.size() == 2) {
+            CSSTokenValue alpha = slash[1].trim();
+            if (alpha.length() == 0) {
+                return false;
+            }
+            components.push_back(alpha);
+        }
+        return true;
+    }
+
+    // rgb() | rgba(): css-color-4 #rgb-functions. The two names are
+    // aliases; the legacy comma form additionally requires the three
+    // channels to agree on <number> vs <percentage>.
+    static bool parseRgbFunction(const CSSTokenValue& args,
+                                 CSSStyleValuePair* pair)
+    {
+        std::vector<CSSTokenValue> v;
+        bool legacy = false;
+        if (!splitColorArgs(args, v, &legacy)) {
+            return false;
+        }
+        if (v.size() != 3 && v.size() != 4) {
+            return false;
+        }
+        bool hasAlpha = (v.size() == 4);
+
+        unsigned char parsed[4];
+        bool isPercent = false, shouldPercent = false;
+        for (size_t i = 0; i < 3; i++) {
+            if (!parseColorFunctionPart(v[i], false, &parsed[i], &isPercent)) {
+                return false;
+            }
+            if (i == 0) {
+                shouldPercent = isPercent;
+            } else if (legacy && shouldPercent != isPercent) {
+                return false;
+            }
+        }
+        if (hasAlpha &&
+            !parseColorFunctionPart(v[3], true, &parsed[3], &isPercent)) {
+            return false;
+        }
+
+        pair->setColorValue(Unit::Color(parsed[0], parsed[1], parsed[2],
+                                        hasAlpha ? parsed[3] : 255));
+        return true;
+    }
+
+    // hsl() | hsla(): css-color-4 #the-hsl-notation. Hue is <number> or
+    // <angle>; saturation and lightness are <percentage>.
+    static bool parseHslFunction(const CSSTokenValue& args,
+                                 CSSStyleValuePair* pair)
+    {
+        std::vector<CSSTokenValue> v;
+        bool legacy = false;
+        if (!splitColorArgs(args, v, &legacy)) {
+            return false;
+        }
+        if (v.size() != 3 && v.size() != 4) {
+            return false;
+        }
+        bool hasAlpha = (v.size() == 4);
+
+        CSSStyleValuePair p;
+        p.setValueKind(CSSStyleValuePair::ValueKind::Angle);
+        uint32_t option = 0;
+        option |= CSSPropertyParser::AllowNegative;
+        option |= CSSPropertyParser::AllowWithoutUnit;
+        if (!parseAngle(v[0].data(), option, &p)) {
+            return false;
+        }
+        double hue = p.angleValue().toDegreeValue();
+        hue = (((((int)round(hue)) % 360) + 360) % 360);
+
+        double saturation = 0, luminance = 0;
+        if (!parsePercent(v[1], &saturation) ||
+            !parsePercent(v[2], &luminance)) {
+            return false;
+        }
+
+        unsigned char alpha = 0;
+        bool isPercent;
+        if (hasAlpha &&
+            !parseColorFunctionPart(v[3], true, &alpha, &isPercent)) {
+            return false;
+        }
+
+        // floats are rounded to int if given
+        pair->setColorValue(Unit::Color::fromHsla(
+            hue / 360, round(saturation) / 100, round(luminance) / 100,
+            hasAlpha ? alpha : 255));
+        return true;
+    }
+
+    static bool parseHexColor(const CSSTokenValue& str, CSSStyleValuePair* pair)
+    {
+        const char* s = str.data();
+        const unsigned len = str.length();
+
+        if (!(len == 9 || len == 7 || len == 5 || len == 4)) {
+            return false;
+        }
+        for (unsigned i = 1; i < len; i++) {
+            if (!(s[i] >= '0' && s[i] <= '9') &&
+                !(s[i] >= 'A' && s[i] <= 'F') &&
+                !(s[i] >= 'a' && s[i] <= 'f')) {
+                return false;
+            }
+        }
+
+        unsigned int r, g, b, a;
+        if (len == 9) {
+            sscanf(s, "#%02x%02x%02x%02x", &r, &g, &b, &a);
+            pair->setColorValue(Unit::Color(r, g, b, a));
+        } else if (len == 7) {
+            sscanf(s, "#%02x%02x%02x", &r, &g, &b);
+            pair->setColorValue(Unit::Color(r, g, b, 255));
+        } else if (len == 5) {
+            sscanf(s, "#%01x%01x%01x%01x", &r, &g, &b, &a);
+            pair->setColorValue(Unit::Color(r * 17, g * 17, b * 17, a * 17));
+        } else {
+            sscanf(s, "#%01x%01x%01x", &r, &g, &b);
+            pair->setColorValue(Unit::Color(r * 17, g * 17, b * 17, 255));
+        }
+        return true;
+    }
+
+    // <color> other than a <named-color>: hex, `transparent`, or a color
+    // function dispatched by name.
     static bool parseNonNamedColor(const CSSTokenValue& str,
                                    CSSStyleValuePair* pair)
     {
-        bool maybeRGBA = true;
-        bool maybeRGB = true;
-        bool maybeCode = true;
-        bool maybeHSL = true;
-        bool maybeHSLA = true;
-        size_t idx = 0;
-        for (std::string::const_iterator it = str.begin(); it != str.end();
-             ++it) {
-            if (idx == 0 && *it != '#') {
-                maybeCode = false;
-            }
-            if (idx == 0) {
-                if (*it != 'r' && *it != 'R') {
-                    maybeRGBA = false;
-                    maybeRGB = false;
-                } else if (*it != 'h' && *it != 'H') {
-                    maybeHSL = false;
-                    maybeHSLA = false;
-                }
-            } else if (idx == 1) {
-                if (maybeRGB && maybeRGBA && *it != 'g' && *it != 'G') {
-                    maybeRGBA = false;
-                    maybeRGB = false;
-                } else if (maybeHSL && maybeHSLA && *it != 's' && *it != 'S') {
-                    maybeHSL = false;
-                    maybeHSLA = false;
-                }
-            } else if (idx == 2) {
-                if (maybeRGB && maybeRGBA && *it != 'b' && *it != 'B') {
-                    maybeRGBA = false;
-                    maybeRGB = false;
-                } else if (maybeHSL && maybeHSLA && *it != 'l' && *it != 'L') {
-                    maybeHSL = false;
-                    maybeHSLA = false;
-                }
-            } else if (idx == 3) {
-                if (maybeRGB && *it != '(') {
-                    maybeRGB = false;
-                } else {
-                    maybeRGBA = false;
-                }
-                if (maybeRGBA && *it != 'a' && *it != 'A') {
-                    maybeRGBA = false;
-                }
-                if (maybeHSL && *it != '(') {
-                    maybeHSL = false;
-                } else {
-                    maybeHSLA = false;
-                }
-                if (maybeHSLA && *it != 'a' && *it != 'A') {
-                    maybeHSLA = false;
-                }
-            } else if (idx == 4) {
-                if (maybeRGBA && *it != '(') {
-                    maybeRGBA = false;
-                }
-                if (maybeHSLA && *it != '(') {
-                    maybeHSLA = false;
-                }
-            } else {
-                break;
-            }
-            idx++;
-        }
-        if (idx == 0) {
-            maybeRGBA = maybeRGB = maybeCode = maybeHSL = maybeHSLA = false;
-        }
-
-        if (maybeRGBA || maybeRGB || maybeHSL || maybeHSLA) {
-            size_t s1 = str.indexOf('(');
-            size_t s2 = str.indexOf(')');
-            if (s1 == SIZE_MAX || s2 != str.length() - 1 || s1 >= s2) {
-                return false;
-            }
-
-            CSSTokenValue sub = str.substring(s1 + 1, s2 - s1 - 1).trim();
-            size_t commaPos = sub.indexOf(',');
-            size_t slashPos = sub.indexOf('/');
-
-            std::vector<CSSTokenValue> v;
-            if ((0 < commaPos) && (commaPos < sub.size())) {
-                // functional syntax
-                sub.split(',', v);
-            } else if ((0 < slashPos) && (slashPos < sub.size())) {
-                // whitespace syntax
-                std::vector<CSSTokenValue> s;
-                std::vector<CSSTokenValue> rgbVals;
-                sub.split('/', s);
-                s[0].trim().split(' ', rgbVals);
-                for (size_t i = 0; i < rgbVals.size(); i++) {
-                    v.push_back(rgbVals[i]);
-                }
-                CSSTokenValue alpha = s[1].trim();
-                if (alpha.size() > 0) {
-                    v.push_back(alpha);
-                }
-            } else {
-                return false;
-            }
-
-            size_t size = v.size();
-            if (!((maybeRGBA && (size == 4)) ||
-                  (maybeRGB && (size == 3 || size == 4)) ||
-                  (maybeHSL && (size == 3 || size == 4)) ||
-                  (maybeHSLA && (size == 4)))) {
-                return false;
-            }
-
-            bool hasAlpha = (size == 4);
-            if (maybeRGB || maybeRGBA) {
-                unsigned char parsed[4];
-                bool isPercent = false, shouldPercent = false;
-
-                // parse rgb
-                for (size_t i = 0; i < 3; i++) {
-                    if (!parseColorFunctionPart(v[i], false, &parsed[i],
-                                                &isPercent)) {
-                        return false;
-                    }
-                    if (i == 0) {
-                        shouldPercent = isPercent;
-                    } else if (shouldPercent != isPercent) {
-                        return false;
-                    }
-                }
-
-                // parse alpha if exists
-                if (hasAlpha && !parseColorFunctionPart(v[3], true, &parsed[3],
-                                                        &isPercent)) {
-                    return false;
-                }
-
-                pair->setColorValue(Unit::Color(parsed[0], parsed[1], parsed[2],
-                                                hasAlpha ? parsed[3] : 255));
-
-            } else { // HSL or HSLA
-                // parse hue in angle. <number> | <angle>
-                double hue = 0;
-                CSSStyleValuePair p;
-                p.setValueKind(CSSStyleValuePair::ValueKind::Angle);
-                uint32_t option = 0;
-                option |= CSSPropertyParser::AllowNegative;
-                option |= CSSPropertyParser::AllowWithoutUnit;
-                if (!parseAngle(v[0].data(), option, &p)) {
-                    return false;
-                }
-                hue = p.angleValue().toDegreeValue();
-                hue = (((((int)round(hue)) % 360) + 360) % 360);
-
-                // parse saturation and luminance in percentage
-                double saturation = 0, luminance = 0;
-                if (!parsePercent(v[1], &saturation)) {
-                    return false;
-                }
-                if (!parsePercent(v[2], &luminance)) {
-                    return false;
-                }
-
-                // parse alpha if exists
-                unsigned char alpha = 0;
-                bool _isPercent;
-                if (hasAlpha &&
-                    !parseColorFunctionPart(v[3], true, &alpha, &_isPercent)) {
-                    return false;
-                }
-
-                unsigned char r, g, b;
-                // floats are rounded to int if given
-                pair->setColorValue(Unit::Color::fromHsla(
-                    hue / 360, round(saturation) / 100, round(luminance) / 100,
-                    hasAlpha ? alpha : 255));
-            }
-        } else if (maybeCode) {
-            const char* s = str.data();
-            const unsigned len = str.length();
-
-            if (!(len == 9 || len == 7 || len == 5 || len == 4)) {
-                return false;
-            }
-            for (unsigned i = 1; i < len; i++) {
-                if (!(s[i] >= '0' && s[i] <= '9') &&
-                    !(s[i] >= 'A' && s[i] <= 'F') &&
-                    !(s[i] >= 'a' && s[i] <= 'f')) {
-                    return false;
-                }
-            }
-
-            if (len == 9) {
-                unsigned int r, g, b, a;
-                sscanf(s, "#%02x%02x%02x%02x", &r, &g, &b, &a);
-                pair->setColorValue(Unit::Color(r, g, b, a));
-            } else if (len == 7) {
-                unsigned int r, g, b;
-                sscanf(s, "#%02x%02x%02x", &r, &g, &b);
-                pair->setColorValue(Unit::Color(r, g, b, 255));
-            } else if (len == 5) {
-                unsigned int r, g, b, a;
-                sscanf(s, "#%01x%01x%01x%01x", &r, &g, &b, &a);
-                pair->setColorValue(
-                    Unit::Color(r * 17, g * 17, b * 17, a * 17));
-            } else if (len == 4) {
-                unsigned int r, g, b;
-                sscanf(s, "#%01x%01x%01x", &r, &g, &b);
-                pair->setColorValue(Unit::Color(r * 17, g * 17, b * 17, 255));
-            }
-        } else if (str.equals("transparent")) {
-            pair->setColorValue(Unit::Color(0, 0, 0, 0));
-        } else {
+        if (str.length() == 0) {
             return false;
         }
-        return true;
+        if (str.charAt(0) == '#') {
+            return parseHexColor(str, pair);
+        }
+        if (str.equals("transparent")) {
+            pair->setColorValue(Unit::Color(0, 0, 0, 0));
+            return true;
+        }
+
+        std::string name;
+        CSSTokenValue args;
+        if (!splitFunction(str, name, args)) {
+            return false;
+        }
+        if (name == "rgb" || name == "rgba") {
+            return parseRgbFunction(args, pair);
+        }
+        if (name == "hsl" || name == "hsla") {
+            return parseHslFunction(args, pair);
+        }
+        return false;
+    }
+
+    // Any <color>, named or not.
+    static bool parseColor(const CSSTokenValue& str, CSSStyleValuePair* pair)
+    {
+        if (parseNonNamedColor(str, pair)) {
+            return true;
+        }
+        return parseNamedColor(str, pair);
     }
 
     static bool parseNamedColor(const CSSTokenValue& str,
