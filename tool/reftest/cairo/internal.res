@@ -905,6 +905,7 @@ test/cairo/internal-test/event/touch-cancel-clears-state.html
 test/cairo/internal-test/event/touch-compat-mouse-events.html
 test/cairo/internal-test/event/touch-apis-exposed.html
 test/cairo/internal-test/event/pointer-type-by-input.html
+test/cairo/internal-test/event/promise-rejection-events.html
 test/cairo/internal-test/dom/DOMRect01.html
 test/cairo/internal-test/dom/details-toggle-across-iframes.html
 test/cairo/internal-test/resize-observer/observe.html

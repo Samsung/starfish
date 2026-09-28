@@ -29,6 +29,11 @@
 #include "core/extra/Performance.h"
 #include "core/modules/crypto/Crypto.h"
 
+namespace Escargot {
+class PromiseObjectRef;
+class ValueRef;
+} // namespace Escargot
+
 namespace Starfish {
 
 class BrowsingContext;
@@ -409,15 +414,33 @@ public:
     // DECLARE_EVENT_LISTENER(pagehide);
     // DECLARE_EVENT_LISTENER(pageshow);
     // DECLARE_EVENT_LISTENER(popstate);
-    // DECLARE_EVENT_LISTENER(rejectionhandled);
+    DECLARE_EVENT_LISTENER(rejectionhandled);
     // DECLARE_EVENT_LISTENER(storage);
-    // DECLARE_EVENT_LISTENER(unhandledrejection);
+    DECLARE_EVENT_LISTENER(unhandledrejection);
     DECLARE_EVENT_LISTENER(unload);
     DECLARE_EVENT_LISTENER(scroll);
     DECLARE_EVENT_LISTENER(ttsstart);
     DECLARE_EVENT_LISTENER(ttsend);
 #undef VIRTUAL
 #undef OVERRIDE
+
+    struct UnhandledPromiseRejection : public gc {
+        UnhandledPromiseRejection(Escargot::PromiseObjectRef* p,
+                                  Escargot::ValueRef* r)
+            : promise(p)
+            , reason(r)
+        {
+        }
+        Escargot::PromiseObjectRef* promise;
+        Escargot::ValueRef* reason;
+    };
+
+    void addAboutToBeNotifiedRejectedPromise(
+        Escargot::PromiseObjectRef* promise, Escargot::ValueRef* reason);
+    void handlePromiseHandlerAddedAfterReject(
+        Escargot::PromiseObjectRef* promise);
+    void processPromiseRejections();
+    void schedulePromiseRejectionNotification();
 
 private:
     Window(BrowsingContext* browsingContext, ResourceURL* url,
@@ -460,6 +483,9 @@ private:
 #ifdef STARFISH_ENABLE_OBSOLETE_SPEC
     Event* m_currentDispatchingEvent;
 #endif
+    GCVector<UnhandledPromiseRejection*> m_aboutToBeNotifiedRejectedPromises;
+    GCVector<UnhandledPromiseRejection*> m_outstandingRejectedPromises;
+    bool m_hasScheduledPromiseRejectionCheck{ false };
     GCUnorderedMap<void**, Disposer> m_disposers;
 };
 } // namespace Starfish

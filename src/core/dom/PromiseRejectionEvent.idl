@@ -1,0 +1,14 @@
+// https://html.spec.whatwg.org/multipage/webappapis.html#the-promiserejectionevent-interface
+
+[Constructor(DOMString type, PromiseRejectionEventInit eventInitDict),
+ ConstructorCallWith=ExecutionContext,
+ Exposed=(Window,Worker)]
+interface PromiseRejectionEvent : Event {
+  readonly attribute object promise;
+  readonly attribute any reason;
+};
+
+dictionary PromiseRejectionEventInit : EventInit {
+  required object promise;
+  any reason;
+};

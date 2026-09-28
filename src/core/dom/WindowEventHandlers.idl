@@ -15,8 +15,8 @@ interface WindowEventHandlers {
   [Unimplemented] attribute EventHandler onpagehide;
   [Unimplemented] attribute EventHandler onpageshow;
   [Unimplemented] attribute EventHandler onpopstate;
-  [Unimplemented] attribute EventHandler onrejectionhandled;
+  attribute EventHandler onrejectionhandled;
   [Unimplemented] attribute EventHandler onstorage;
-  [Unimplemented] attribute EventHandler onunhandledrejection;
+  attribute EventHandler onunhandledrejection;
   attribute EventHandler onunload;
 };

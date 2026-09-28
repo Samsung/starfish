@@ -38,6 +38,8 @@ DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, resize);
 
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, message);
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, messageerror);
+DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, rejectionhandled);
+DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, unhandledrejection);
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, unload);
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, hashchange);
 

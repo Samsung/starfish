@@ -748,6 +748,8 @@ public:
     QualifiedName m_onend;
     QualifiedName m_onrepeat;
     QualifiedName m_hashchange;
+    QualifiedName m_unhandledrejection;
+    QualifiedName m_rejectionhandled;
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) || \
     defined(STARFISH_ENABLE_WEBRTC) || defined(STARFISH_ENABLE_WEBAUDIO)
