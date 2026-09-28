@@ -50,7 +50,7 @@ interface BaseAudioContext : EventTarget {
   //ConvolverNode createConvolver ();
   //DelayNode createDelay (optional double maxDelayTime = 1.0);
   //DynamicsCompressorNode createDynamicsCompressor ();
-  //GainNode createGain ();
+  GainNode createGain ();
   //IIRFilterNode createIIRFilter (sequence<double> feedforward, sequence<double> feedback);
   //OscillatorNode createOscillator ();
   //PannerNode createPanner ();

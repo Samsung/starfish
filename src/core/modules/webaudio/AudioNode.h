@@ -76,6 +76,11 @@ public:
         return (AudioDestinationNode*)this;
     }
 
+    AudioNode* destinationNode() const
+    {
+        return m_destinationNode;
+    }
+
 protected:
     ExecutionContext* m_executionContext{ nullptr };
 

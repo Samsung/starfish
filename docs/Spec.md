@@ -3440,6 +3440,7 @@ The WebAudio support is in an early stage.
 | | attribute | readonly attribute AudioContextState state | Describes the current state of the AudioContext. | |
 | | attribute | attribute EventHandler onstatechange; | A property used to set the EventHandler for an event that is dispatched to BaseAudioContext when the state of the AudioContext has changed (i.e. when the corresponding promise would have resolved). | |
 | | method | AudioBufferSourceNode createBufferSource(); | Factory method for a AudioBufferSourceNode. | |
+| | method | GainNode createGain(); | Factory method for a GainNode. | |
 | | method | Promise<AudioBuffer> decodeAudioData (ArrayBuffer audioData, optional DecodeSuccessCallback? successCallback, optional DecodeErrorCallback? errorCallback); | Asynchronously decodes the audio file data contained in the ArrayBuffer. | |
 | [AudioContext](https://webaudio.github.io/web-audio-api/#AudioContext) | interface | AudioContext | | |
 | | constructor | constructor (optional AudioContextOptions contextOptions = {}); | | |
@@ -3473,6 +3474,23 @@ The WebAudio support is in an early stage.
 | | constructor | constructor (BaseAudioContext context, optional AudioBufferSourceOptions options = {}); | | |
 | | method | void start (optional double when = 0, optional double offset, optional double duration); | Schedules a sound to playback at an exact time. | Only when = 0 is supported at the moment. |
 | [AudioDestinationNode](https://webaudio.github.io/web-audio-api/#AudioDestinationNode) | interface | AudioDestinationNode | | |
+| [AudioParam](https://webaudio.github.io/web-audio-api/#audioparam) | interface | AudioParam | Represents an audio-related parameter. | |
+| | attribute | float value; | Current value of the parameter. | |
+| | attribute | readonly float defaultValue; | Initial value for the parameter. | |
+| | attribute | readonly float minValue; | Minimum value the parameter can take. | |
+| | attribute | readonly float maxValue; | Maximum value the parameter can take. | |
+| | method | AudioParam setValueAtTime (float value, double startTime); | Schedules a parameter value change at the given time. | |
+| | method | AudioParam linearRampToValueAtTime (float value, double endTime); | Schedules a linear continuous change in parameter value. | |
+| | method | AudioParam exponentialRampToValueAtTime (float value, double endTime); | Schedules an exponential continuous change in parameter value. | |
+| | method | AudioParam setTargetAtTime (float target, double startTime, double timeConstant); | Start exponentially approaching the target value. | |
+| | method | AudioParam setValueCurveAtTime (sequence<float> values, double startTime, double duration); | Sets an array of arbitrary parameter values. | |
+| | method | AudioParam cancelScheduledValues (double cancelTime); | Cancels all scheduled parameter changes. | |
+| | method | AudioParam cancelAndHoldAtTime (double cancelTime); | Cancels scheduled parameter changes and holds current value. | |
+| [GainOptions](https://webaudio.github.io/web-audio-api/#dictdef-gainoptions) | dictionary | GainOptions | | |
+| | attribute | float gain = 1.0; | Initial gain value. | |
+| [GainNode](https://webaudio.github.io/web-audio-api/#GainNode) | interface | GainNode | Represents a change in volume. | |
+| | constructor | constructor (BaseAudioContext context, optional GainOptions options = {}); | | |
+| | attribute | readonly AudioParam gain; | The amount of gain to apply. | |
 
 ## WebSocket
 The following describes WebSocket APIs supported by lightweight web engine. Please, see [WebSocket Spec](https://html.spec.whatwg.org/multipage/web-sockets.html/) for more information.

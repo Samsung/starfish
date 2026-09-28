@@ -49,8 +49,10 @@ MediaPlayer::MediaPlayer(HTMLMediaElement* element)
     , m_currentTimeUpdateTimer(TimerInvalidID)
     , m_playerStateMutex(new Mutex())
 {
-    m_canvasSurface =
-        CanvasSurface::create(m_container->webView()->renderer(), 1, 1);
+    if (m_container) {
+        m_canvasSurface =
+            CanvasSurface::create(m_container->webView()->renderer(), 1, 1);
+    }
 }
 
 void MediaPlayer::processNextOperationQueueInContainer()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2026-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -21,44 +21,31 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
-
-#include "core/modules/webaudio/AudioDestinationNode.h"
-
+#include "core/modules/webaudio/GainNode.h"
 #include "core/dom/ExecutionContext.h"
-
-#include "platform/multimedia/MediaPlayerAudio.h"
 
 namespace Starfish {
 
-AudioDestinationNode::AudioDestinationNode(ExecutionContext* executionContext)
-    : AudioDestinationNode(executionContext, nullptr)
+GainNode::GainNode(ExecutionContext* executionContext,
+                   BaseAudioContext* context)
+    : GainNode(executionContext, context, GainOptions())
 {
 }
 
-AudioDestinationNode::AudioDestinationNode(ExecutionContext* executionContext,
-                                           BaseAudioContext* context)
+GainNode::GainNode(ExecutionContext* executionContext,
+                   BaseAudioContext* context, GainOptions options)
     : AudioNode(executionContext, context)
-    , m_player(MediaPlayerAudio::create(this))
+    , m_gain(new AudioParam(executionContext, options.gain()))
 {
+    m_numberOfInputs = 1;
+    m_numberOfOutputs = 1;
 }
 
-ScriptBindingInstance* AudioDestinationNode::scriptBindingInstance()
+ScriptBindingInstance* GainNode::scriptBindingInstance()
 {
-    return executionContext()->scriptBindingInstance();
+    return m_executionContext->scriptBindingInstance();
 }
 
-void AudioDestinationNode::setBuffer(uint8_t* buffer, uint32_t length)
-{
-    m_player->setBuffer(buffer, length);
-}
-void AudioDestinationNode::play()
-{
-    m_player->play();
-}
-
-void AudioDestinationNode::setVolume(double volume)
-{
-    m_player->setVolume(volume);
-}
 } // namespace Starfish
+
 #endif

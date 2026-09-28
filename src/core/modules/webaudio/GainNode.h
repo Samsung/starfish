@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2026-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -19,37 +19,40 @@
 
 #if defined(STARFISH_ENABLE_WEBAUDIO)
 
-#ifndef __StarfishAudioDestinationNode__
-#define __StarfishAudioDestinationNode__
-
-#include "core/dom/EventTarget.h"
-#include "binding/ScriptWrappable.h"
+#ifndef __StarfishGainNode__
+#define __StarfishGainNode__
 
 #include "core/modules/webaudio/AudioNode.h"
+#include "core/modules/webaudio/AudioParam.h"
 
 namespace Starfish {
-class ExecutionContext;
-class MediaPlayerAudio;
 
-class AudioDestinationNode : public AudioNode {
+struct GainOptions {
+    DEFINE_GETTER_SETTER(float, gain, Gain)
+    float m_gain{ 1.0f };
+};
+
+class GainNode : public AudioNode {
 public:
-    AudioDestinationNode(ExecutionContext* executionContext,
-                         BaseAudioContext* context);
+    GainNode(ExecutionContext* executionContext, BaseAudioContext* context);
+    GainNode(ExecutionContext* executionContext, BaseAudioContext* context,
+             GainOptions options);
+    virtual ~GainNode()
+    {
+    }
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioDestinationNode)
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(GainNode)
 
-    DEFINE_GETTER_SETTER(uint32_t, maxChannelCount, MaxChannelCount)
-
-    void setBuffer(uint8_t* buffer, uint32_t length);
-    void play();
-    void setVolume(double volume);
+    AudioParam* gain() const
+    {
+        return m_gain;
+    }
 
 private:
-    AudioDestinationNode(ExecutionContext* executionContext);
-
-    uint32_t m_maxChannelCount{ 0 };
-    MediaPlayerAudio* m_player{ nullptr };
+    AudioParam* m_gain{ nullptr };
 };
+
 } // namespace Starfish
+
 #endif
 #endif
