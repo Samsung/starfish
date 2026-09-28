@@ -39,7 +39,6 @@
 #include "platform/canvas/gl/GL.h"
 #include "platform/canvas/gl/IncludeGL.h"
 #include <EscargotPublic.h>
-#include <regex>
 
 /* WebGL-specific enums */
 static constexpr GLenum kMAX_CLIENT_WAIT_TIMEOUT_WEBGL = 0x9247;
@@ -1951,53 +1950,94 @@ void WebGL2RenderingContext::shaderSource(WebGLShader* shader, String* source)
     // WebGL2 uniform blocks default to std140 layout if unspecified.
     // If layout(...) is missing before "uniform BlockName {", inject
     // "layout(std140) ".
-    std::regex blockRegex(R"((^|[^\w\)])uniform\s+([A-Za-z0-9_]+)\s*\{)");
     std::string result;
     size_t lastPos = 0;
-    auto words_begin = std::sregex_iterator(str.begin(), str.end(), blockRegex);
-    auto words_end = std::sregex_iterator();
+    size_t pos = 0;
 
-    for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
-        std::smatch match = *i;
-        size_t matchPos = match.position();
+    while ((pos = str.find("uniform", pos)) != std::string::npos) {
+        // Check word boundary before "uniform"
+        if (pos > 0 && (isalnum(str[pos - 1]) || str[pos - 1] == '_')) {
+            pos += 7;
+            continue;
+        }
 
+        // Must be followed by whitespace
+        size_t afterUniform = pos + 7;
+        if (afterUniform >= str.size() ||
+            !(str[afterUniform] == ' ' || str[afterUniform] == '\t' ||
+              str[afterUniform] == '\r' || str[afterUniform] == '\n')) {
+            pos += 7;
+            continue;
+        }
+
+        // Skip whitespace to find blockName
+        size_t nameStart = afterUniform;
+        while (nameStart < str.size() &&
+               (str[nameStart] == ' ' || str[nameStart] == '\t' ||
+                str[nameStart] == '\r' || str[nameStart] == '\n')) {
+            nameStart++;
+        }
+
+        // Parse identifier
+        size_t nameEnd = nameStart;
+        while (nameEnd < str.size() &&
+               (isalnum(str[nameEnd]) || str[nameEnd] == '_')) {
+            nameEnd++;
+        }
+
+        if (nameEnd == nameStart) {
+            pos += 7;
+            continue;
+        }
+
+        // Skip whitespace after blockName
+        size_t bracePos = nameEnd;
+        while (bracePos < str.size() &&
+               (str[bracePos] == ' ' || str[bracePos] == '\t' ||
+                str[bracePos] == '\r' || str[bracePos] == '\n')) {
+            bracePos++;
+        }
+
+        // Must be '{' for uniform block
+        if (bracePos >= str.size() || str[bracePos] != '{') {
+            pos = nameEnd;
+            continue;
+        }
+
+        // Check if layout(...) exists before "uniform"
         bool hasLayout = false;
-        if (matchPos > 0) {
-            size_t p = matchPos;
-            while (p > 0 && (str[p - 1] == ' ' || str[p - 1] == '\t' ||
-                             str[p - 1] == '\r' || str[p - 1] == '\n')) {
-                p--;
+        size_t p = pos;
+        while (p > 0 && (str[p - 1] == ' ' || str[p - 1] == '\t' ||
+                         str[p - 1] == '\r' || str[p - 1] == '\n')) {
+            p--;
+        }
+        if (p > 0 && str[p - 1] == ')') {
+            int depth = 1;
+            size_t q = p - 1;
+            while (q > 0 && depth > 0) {
+                q--;
+                if (str[q] == ')')
+                    depth++;
+                else if (str[q] == '(')
+                    depth--;
             }
-            if (p > 0 && str[p - 1] == ')') {
-                int depth = 1;
-                size_t q = p - 1;
-                while (q > 0 && depth > 0) {
-                    q--;
-                    if (str[q] == ')')
-                        depth++;
-                    else if (str[q] == '(')
-                        depth--;
-                }
-                if (depth == 0) {
-                    size_t w = q;
-                    while (w > 0 && (str[w - 1] == ' ' || str[w - 1] == '\t'))
-                        w--;
-                    if (w >= 6 && str.substr(w - 6, 6) == "layout") {
-                        hasLayout = true;
-                    }
+            if (depth == 0) {
+                size_t w = q;
+                while (w > 0 && (str[w - 1] == ' ' || str[w - 1] == '\t'))
+                    w--;
+                if (w >= 6 && str.substr(w - 6, 6) == "layout") {
+                    hasLayout = true;
                 }
             }
         }
 
-        result.append(str, lastPos, matchPos - lastPos);
+        result.append(str, lastPos, pos - lastPos);
         if (!hasLayout) {
-            std::string prefix = match[1].str();
-            std::string blockName = match[2].str();
-            result += prefix + "layout(std140) uniform " + blockName + " {";
-        } else {
-            result += match.str();
+            result += "layout(std140) ";
         }
-        lastPos = matchPos + match.length();
+        result.append(str, pos, (bracePos + 1) - pos);
+        lastPos = bracePos + 1;
+        pos = lastPos;
     }
     result.append(str, lastPos, str.length() - lastPos);
     str = result;

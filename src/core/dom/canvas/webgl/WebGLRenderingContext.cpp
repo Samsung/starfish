@@ -2401,7 +2401,6 @@ void WebGLRenderingContext::lineWidth(GLfloat width)
 static bool validateUniformBlocksMatch(const GCVector<WebGLShader*>& shaders)
 {
     std::unordered_map<std::string, std::vector<std::string>> blockDefinitions;
-    std::regex blockRegex(R"(uniform\s+([A-Za-z0-9_]+)\s*\{([^}]*)\})");
 
     for (WebGLShader* shader : shaders) {
         if (!shader)
@@ -2410,11 +2409,59 @@ static bool validateUniformBlocksMatch(const GCVector<WebGLShader*>& shaders)
         if (src.empty())
             continue;
 
-        auto begin = std::sregex_iterator(src.begin(), src.end(), blockRegex);
-        auto end = std::sregex_iterator();
-        for (auto it = begin; it != end; ++it) {
-            std::string blockName = (*it)[1].str();
-            std::string body = (*it)[2].str();
+        size_t pos = 0;
+        while ((pos = src.find("uniform", pos)) != std::string::npos) {
+            if (pos > 0 && (isalnum(src[pos - 1]) || src[pos - 1] == '_')) {
+                pos += 7;
+                continue;
+            }
+
+            size_t afterUniform = pos + 7;
+            if (afterUniform >= src.size() ||
+                !(src[afterUniform] == ' ' || src[afterUniform] == '\t' ||
+                  src[afterUniform] == '\r' || src[afterUniform] == '\n')) {
+                pos += 7;
+                continue;
+            }
+
+            size_t nameStart = afterUniform;
+            while (nameStart < src.size() &&
+                   (src[nameStart] == ' ' || src[nameStart] == '\t' ||
+                    src[nameStart] == '\r' || src[nameStart] == '\n')) {
+                nameStart++;
+            }
+
+            size_t nameEnd = nameStart;
+            while (nameEnd < src.size() &&
+                   (isalnum(src[nameEnd]) || src[nameEnd] == '_')) {
+                nameEnd++;
+            }
+
+            if (nameEnd == nameStart) {
+                pos += 7;
+                continue;
+            }
+
+            size_t braceOpen = nameEnd;
+            while (braceOpen < src.size() &&
+                   (src[braceOpen] == ' ' || src[braceOpen] == '\t' ||
+                    src[braceOpen] == '\r' || src[braceOpen] == '\n')) {
+                braceOpen++;
+            }
+
+            if (braceOpen >= src.size() || src[braceOpen] != '{') {
+                pos = nameEnd;
+                continue;
+            }
+
+            size_t braceClose = src.find('}', braceOpen + 1);
+            if (braceClose == std::string::npos) {
+                pos = braceOpen + 1;
+                continue;
+            }
+
+            std::string blockName = src.substr(nameStart, nameEnd - nameStart);
+            std::string body = src.substr(braceOpen + 1, braceClose - (braceOpen + 1));
 
             // Extract tokens (normalize whitespace and semicolons)
             std::vector<std::string> tokens;
@@ -2445,6 +2492,8 @@ static bool validateUniformBlocksMatch(const GCVector<WebGLShader*>& shaders)
                     return false;
                 }
             }
+
+            pos = braceClose + 1;
         }
     }
     return true;
