@@ -784,6 +784,12 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "unhandledrejection"));
     m_rejectionhandled = QualifiedName(
         AtomicString::createAtomicString(starfish, "rejectionhandled"));
+    m_loading =
+        QualifiedName(AtomicString::createAtomicString(starfish, "loading"));
+    m_loadingdone = QualifiedName(
+        AtomicString::createAtomicString(starfish, "loadingdone"));
+    m_loadingerror = QualifiedName(
+        AtomicString::createAtomicString(starfish, "loadingerror"));
 
     m_open = QualifiedName(AtomicString::createAtomicString(starfish, "open"));
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) || defined(STARFISH_ENABLE_WEBRTC)

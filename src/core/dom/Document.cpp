@@ -88,6 +88,7 @@
 #include "core/dom/DOMRect.h"
 #include "core/dom/IntersectionObserverEntry.h"
 #include "core/modules/resize_observer/ResizeObserver.h"
+#include "core/style/FontFaceSet.h"
 #include "core/modules/resize_observer/ResizeObserverEntry.h"
 #include "core/extra/Console.h"
 #include "core/layout/FrameDocument.h"
@@ -151,6 +152,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_fontSelector(FontSelector::create(this,
                                           webView()->platformFontSelector(),
                                           webView()->platformFontCache()))
+    , m_fonts(nullptr)
     , m_preloadScanner(nullptr)
     , m_styleResolver(new StyleResolver(this))
     , m_documentBuilder(nullptr)
@@ -776,6 +778,10 @@ void Document::notifyDomContentLoaded()
         m_preloadScanner = nullptr;
         m_resourceLoader->notifyEndParseDocument();
         m_domContentLoadedFired = true;
+
+        if (m_fonts) {
+            m_fonts->checkReadyState();
+        }
 
         String* eventType = window()
                                 ->starfish()
@@ -3131,4 +3137,13 @@ DEFINE_EVENT_LISTENER(Document, pause);
 DEFINE_EVENT_LISTENER(Document, ratechange);
 DEFINE_EVENT_LISTENER(Document, volumechange);
 #endif
+
+FontFaceSet* Document::fonts()
+{
+    if (!m_fonts) {
+        m_fonts = new FontFaceSet(this);
+    }
+    return m_fonts;
+}
+
 } // namespace Starfish

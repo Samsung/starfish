@@ -68,6 +68,7 @@ class DeferredSVGScriptDownloadClient;
 class PreloadScanner;
 class ContentSecurityPolicy;
 class ExecutionContext;
+class FontFaceSet;
 class IntersectionObserver;
 class ResizeObserver;
 
@@ -486,6 +487,11 @@ public:
         return m_loadedWebFontList;
     }
 
+    GCVector<WebFont>& webFontList()
+    {
+        return m_webFontList;
+    }
+
     NativeImageData* brokenImage();
     AnimationExecutor* animationExecutor()
     {
@@ -496,6 +502,8 @@ public:
     {
         return m_fontSelector;
     }
+
+    FontFaceSet* fonts();
 
     String* characterSet();
     // only used in html document builder
@@ -821,6 +829,7 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentType));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_resourceLoader));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_fontSelector));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_fonts));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_preloadScanner));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_webFontList));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_loadedWebFontList));
@@ -894,6 +903,7 @@ protected:
     String* m_contentType;
     ResourceLoader* m_resourceLoader;
     FontSelector* m_fontSelector;
+    FontFaceSet* m_fonts;
     GCVector<WebFont> m_webFontList;
     GCVector<FontResource*> m_loadedWebFontList;
     PreloadScanner* m_preloadScanner;

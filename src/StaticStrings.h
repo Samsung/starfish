@@ -750,6 +750,9 @@ public:
     QualifiedName m_hashchange;
     QualifiedName m_unhandledrejection;
     QualifiedName m_rejectionhandled;
+    QualifiedName m_loading;
+    QualifiedName m_loadingdone;
+    QualifiedName m_loadingerror;
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) || \
     defined(STARFISH_ENABLE_WEBRTC) || defined(STARFISH_ENABLE_WEBAUDIO)

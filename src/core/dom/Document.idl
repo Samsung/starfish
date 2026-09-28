@@ -126,6 +126,9 @@ interface Document : Node {
   // special event handler IDL attributes that only apply to Document objects
   [LenientThis] attribute EventHandler onreadystatechange;
 
+  // https://drafts.csswg.org/css-font-loading/#dom-fontfacesource-fonts
+  readonly attribute FontFaceSet fonts;
+
 
 
   // [REF4]--------------------------------------------------------------

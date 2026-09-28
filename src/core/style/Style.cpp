@@ -39,6 +39,7 @@
 #include "core/animation/Steps.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
+#include "core/style/FontFaceSet.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLHtmlElement.h"
@@ -10759,6 +10760,7 @@ public:
         resource()->loader()->document()->setNeedsFrameTreeBuildWithoutSelf();
         STARFISH_LOG_INFO("WebFont %s is failed to load..",
                           m_familyName->toUTF8NonGCString().data());
+        resource()->loader()->document()->fonts()->didFinishFontLoading();
     }
 
     virtual void didLoadFinished()
@@ -10776,11 +10778,13 @@ public:
         STARFISH_LOG_INFO("WebFont %s is downloaded",
                           m_familyName->toUTF8NonGCString().data());
         resource()->loader()->document()->updateCanvasWebFontState();
+        resource()->loader()->document()->fonts()->didFinishFontLoading();
     }
 
     virtual void didLoadCanceled()
     {
         ResourceClient::didLoadCanceled();
+        resource()->loader()->document()->fonts()->didFinishFontLoading();
     }
 
     String* m_familyName;
@@ -10994,6 +10998,7 @@ void StyleResolver::recalcWebFonts()
                 res->addResourceClient(new WebFontLoadChecker(res, fontFamily));
 
                 document()->m_loadedWebFontList.push_back(res);
+                document()->fonts()->didStartFontLoading();
             }
 
             WebFont webFont(isFontStyleSpecified, isFontWeightSpecified,
