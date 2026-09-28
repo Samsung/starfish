@@ -257,6 +257,7 @@ public:
     void invalidateSubFramebuffer(GLenum target,
                                   GCAtomicVector<GLenum> attachments, GLint x,
                                   GLint y, GLsizei width, GLsizei height);
+    void readBuffer(GLenum src);
 
     /* Renderbuffer objects */
     void renderbufferStorageMultisample(GLenum target, GLsizei samples,

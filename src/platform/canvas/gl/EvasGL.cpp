@@ -1373,6 +1373,17 @@ public:
         STARFISH_UNSUPPORTED("glRenderbufferStorageMultisample");
     }
 
+    void readBuffer(GLenum src) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glReadBuffer) {
+            m_evasGLAPI->glReadBuffer(src);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glReadBuffer");
+    }
+
     EvasGL(void *p)
         : m_evasGLAPI(static_cast<Evas_GL_API *>(p))
     {

@@ -23,10 +23,10 @@
 #if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
 #include "core/dom/canvas/webgl/WebGLObject.h"
+#include "core/dom/canvas/webgl/WebGLTexture.h"
 
 namespace Starfish {
 
-class WebGLTexture;
 class WebGLRenderbuffer;
 
 class WebGLFramebuffer : public WebGLObject {
@@ -35,6 +35,11 @@ public:
                      WebGLRenderingContext* context, GLuint object)
         : WebGLObject(instance, context, object)
     {
+        m_drawBuffers[0] = 0x8CE0;
+        m_drawBufferCount = 1;
+        for (size_t i = 0; i < 16; ++i) {
+            m_attachedColorTextures[i] = nullptr;
+        }
     }
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLFramebuffer() const override;
@@ -43,9 +48,71 @@ public:
     DEFINE_GETTER_SETTER(WebGLRenderbuffer*, attachedRenderBuffer,
                          AttachedRenderBuffer);
 
+    WebGLTexture* attachedTexture(GLenum attachment) const
+    {
+        if (attachment >= 0x8CE0 && attachment < 0x8CE0 + 16) {
+            return m_attachedColorTextures[attachment - 0x8CE0];
+        }
+        return (attachment == 0x8CE0) ? m_attachedTexture : nullptr;
+    }
+
+    WebGLTexture* attachedColorTexture(size_t index) const
+    {
+        if (index < 16) {
+            return m_attachedColorTextures[index];
+        }
+        return nullptr;
+    }
+
+    const GLenum* drawBuffers() const
+    {
+        return m_drawBuffers;
+    }
+    size_t drawBufferCount() const
+    {
+        return m_drawBufferCount;
+    }
+    void setDrawBuffers(const GCAtomicVector<GLenum>& buffers)
+    {
+        m_drawBufferCount = std::min(buffers.size(), static_cast<size_t>(16));
+        for (size_t i = 0; i < m_drawBufferCount; ++i) {
+            m_drawBuffers[i] = buffers[i];
+        }
+    }
+
+    void setAttachmentTexture(GLenum attachment, WebGLTexture* texture)
+    {
+        if (attachment >= 0x8CE0 && attachment < 0x8CE0 + 16) {
+            m_attachedColorTextures[attachment - 0x8CE0] = texture;
+        }
+    }
+
+    bool hasConsistentDimensions() const
+    {
+        GLsizei commonWidth = -1;
+        GLsizei commonHeight = -1;
+        for (size_t i = 0; i < 16; ++i) {
+            WebGLTexture* tex = m_attachedColorTextures[i];
+            if (tex && !tex->isDeleted() && tex->width() > 0 &&
+                tex->height() > 0) {
+                if (commonWidth == -1) {
+                    commonWidth = tex->width();
+                    commonHeight = tex->height();
+                } else if (commonWidth != tex->width() ||
+                           commonHeight != tex->height()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
 private:
     WebGLTexture* m_attachedTexture = nullptr;
     WebGLRenderbuffer* m_attachedRenderBuffer = nullptr;
+    GLenum m_drawBuffers[16] = { 0x8CE0 };
+    size_t m_drawBufferCount = 1;
+    WebGLTexture* m_attachedColorTextures[16];
 };
 } // namespace Starfish
 

@@ -1276,6 +1276,11 @@ public:
                                          height);
     }
 
+    void readBuffer(GLenum src) override
+    {
+        glReadBuffer(src);
+    }
+
     GenericGL(Renderer *renderer)
     {
 #if defined(STARFISH_WINDOWS) && !defined(STARFISH_WINDOWS_ANGLE)

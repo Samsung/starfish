@@ -641,7 +641,20 @@ GLenum WebGLRenderingContext::checkFramebufferStatus(GLenum target)
         return GL_FRAMEBUFFER_UNSUPPORTED;
     }
 
-    return m_gl->checkFramebufferStatus(target);
+    GLenum status = m_gl->checkFramebufferStatus(target);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        return status;
+    }
+
+    if (!isDefaultFramebufferBound()) {
+        Optional<WebGLFramebuffer*> maybeFb = m_state->webGLFramebuffer();
+        if (maybeFb.hasValue() && maybeFb.value()) {
+            if (!maybeFb.value()->hasConsistentDimensions()) {
+                return GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS;
+            }
+        }
+    }
+    return GL_FRAMEBUFFER_COMPLETE;
 }
 
 void WebGLRenderingContext::clear(uint32_t mask)
@@ -980,7 +993,36 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
         }
     }
 
+    bool restoreDrawBuffers = false;
+    GLenum originalBuffers[16];
+    size_t originalCount = 0;
+    if (!isDefaultFramebufferBound()) {
+        Optional<WebGLProgram*> maybeProg = m_state->webGLProgram();
+        if (maybeProg.hasValue() && maybeProg.value() &&
+            maybeProg.value()->usesFragColor()) {
+            Optional<WebGLFramebuffer*> maybeFb = m_state->webGLFramebuffer();
+            if (maybeFb.hasValue() && maybeFb.value()) {
+                WebGLFramebuffer* fb = maybeFb.value();
+                if (fb->drawBufferCount() > 1) {
+                    restoreDrawBuffers = true;
+                    originalCount = fb->drawBufferCount();
+                    GLenum singleBuf[16];
+                    for (size_t i = 0; i < originalCount; ++i) {
+                        originalBuffers[i] = fb->drawBuffers()[i];
+                        singleBuf[i] =
+                            (i == 0) ? fb->drawBuffers()[0] : GL_NONE;
+                    }
+                    m_gl->drawBuffers(originalCount, singleBuf);
+                }
+            }
+        }
+    }
+
     m_gl->drawArrays(mode, first, count);
+
+    if (restoreDrawBuffers) {
+        m_gl->drawBuffers(originalCount, originalBuffers);
+    }
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
@@ -1015,7 +1057,36 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
         return;
     }
 
+    bool restoreDrawBuffers = false;
+    GLenum originalBuffers[16];
+    size_t originalCount = 0;
+    if (!isDefaultFramebufferBound()) {
+        Optional<WebGLProgram*> maybeProg = m_state->webGLProgram();
+        if (maybeProg.hasValue() && maybeProg.value() &&
+            maybeProg.value()->usesFragColor()) {
+            Optional<WebGLFramebuffer*> maybeFb = m_state->webGLFramebuffer();
+            if (maybeFb.hasValue() && maybeFb.value()) {
+                WebGLFramebuffer* fb = maybeFb.value();
+                if (fb->drawBufferCount() > 1) {
+                    restoreDrawBuffers = true;
+                    originalCount = fb->drawBufferCount();
+                    GLenum singleBuf[16];
+                    for (size_t i = 0; i < originalCount; ++i) {
+                        originalBuffers[i] = fb->drawBuffers()[i];
+                        singleBuf[i] =
+                            (i == 0) ? fb->drawBuffers()[0] : GL_NONE;
+                    }
+                    m_gl->drawBuffers(originalCount, singleBuf);
+                }
+            }
+        }
+    }
+
     m_gl->drawElements(mode, count, type, reinterpret_cast<void*>(offset));
+
+    if (restoreDrawBuffers) {
+        m_gl->drawBuffers(originalCount, originalBuffers);
+    }
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
@@ -1068,6 +1139,18 @@ void WebGLRenderingContext::framebufferRenderbuffer(
 {
     ENTER_CONTEXT_SCOPE();
 
+    GLint maxColorAttachments = 0;
+    m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+    if (maxColorAttachments < 1) {
+        maxColorAttachments = 1;
+    }
+    if (attachment >= GL_COLOR_ATTACHMENT0 &&
+        attachment >=
+            static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + maxColorAttachments)) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
     Optional<WebGLFramebuffer*> webGLFramebuffer = m_state->webGLFramebuffer();
 
     if (maybeRenderbuffer.hasValue()) {
@@ -1101,6 +1184,18 @@ void WebGLRenderingContext::framebufferTexture2D(
 {
     ENTER_CONTEXT_SCOPE();
 
+    GLint maxColorAttachments = 0;
+    m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+    if (maxColorAttachments < 1) {
+        maxColorAttachments = 1;
+    }
+    if (attachment >= GL_COLOR_ATTACHMENT0 &&
+        attachment >=
+            static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + maxColorAttachments)) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
     Optional<WebGLFramebuffer*> webGLFramebuffer = m_state->webGLFramebuffer();
 
     if (maybeTexture.hasValue()) {
@@ -1119,13 +1214,15 @@ void WebGLRenderingContext::framebufferTexture2D(
         GLuint textureId = texture->glObject();
         m_gl->framebufferTexture2D(target, attachment, textarget, textureId,
                                    level);
-        if (webGLFramebuffer) {
-            webGLFramebuffer->setAttachedTexture(texture);
+        if (webGLFramebuffer.hasValue() && webGLFramebuffer.value()) {
+            webGLFramebuffer.value()->setAttachedTexture(texture);
+            webGLFramebuffer.value()->setAttachmentTexture(attachment, texture);
         }
     } else {
         m_gl->framebufferTexture2D(target, attachment, textarget, 0, level);
-        if (webGLFramebuffer) {
-            webGLFramebuffer->setAttachedTexture(nullptr);
+        if (webGLFramebuffer.hasValue() && webGLFramebuffer.value()) {
+            webGLFramebuffer.value()->setAttachedTexture(nullptr);
+            webGLFramebuffer.value()->setAttachmentTexture(attachment, nullptr);
         }
         if (isDefaultFramebufferBound()) {
             setGLError(GL_INVALID_OPERATION);
@@ -1506,18 +1603,7 @@ Optional<GCVector<WebGLShader*>> WebGLRenderingContext::getAttachedShaders(
         return nullptr;
     }
 
-    const GCVector<WebGLShader*>& webGLShaders = program->getWebGLShaders();
-#if !defined(NDEBUG)
-    GLint maxCount;
-    m_gl->getProgramiv(program->glObject(), GL_ATTACHED_SHADERS, &maxCount);
-
-    GLsizei returnedCount;
-    std::vector<GLuint> shaders(maxCount);
-    m_gl->getAttachedShaders(program->glObject(), maxCount, &returnedCount,
-                             shaders.data());
-    STARFISH_ASSERT(shaders.size() == webGLShaders.size());
-#endif
-    return webGLShaders;
+    return program->getAttachedShaders();
 }
 
 GLint WebGLRenderingContext::getAttribLocation(WebGLProgram* program,
@@ -1545,18 +1631,52 @@ GLint WebGLRenderingContext::getAttribLocation(WebGLProgram* program,
 
     return m_gl->getAttribLocation(program->glObject(), CSTR(name));
 }
-
 ScriptValue WebGLRenderingContext::getFramebufferAttachmentParameter(
     GLenum target, GLenum attachment, GLenum pname)
 {
     ENTER_CONTEXT_SCOPE(scriptNull());
 
-    if (attachment != GL_COLOR_ATTACHMENT0 &&
-        attachment != GL_DEPTH_ATTACHMENT &&
-        attachment != GL_STENCIL_ATTACHMENT &&
-        attachment != GL_DEPTH_STENCIL_ATTACHMENT) {
+    GLint maxColorAttachments = 0;
+    m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+    if (maxColorAttachments < 1) {
+        maxColorAttachments = 1;
+    }
+
+    bool isValidAttachment =
+        (attachment >= GL_COLOR_ATTACHMENT0 &&
+         attachment <
+             static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + maxColorAttachments)) ||
+        attachment == GL_DEPTH_ATTACHMENT ||
+        attachment == GL_STENCIL_ATTACHMENT ||
+        attachment == GL_DEPTH_STENCIL_ATTACHMENT;
+
+    if (!isValidAttachment) {
         setGLError(GL_INVALID_ENUM);
         return scriptNull();
+    }
+
+    if (!isDefaultFramebufferBound()) {
+        Optional<WebGLFramebuffer*> maybeFb = m_state->webGLFramebuffer();
+        if (maybeFb.hasValue() && maybeFb.value()) {
+            WebGLFramebuffer* fb = maybeFb.value();
+            WebGLTexture* tex = fb->attachedTexture(attachment);
+            WebGLRenderbuffer* rb = fb->attachedRenderBuffer();
+            if (attachment >= GL_COLOR_ATTACHMENT0 &&
+                attachment < static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + 16)) {
+                if (attachment != GL_COLOR_ATTACHMENT0) {
+                    rb = nullptr;
+                }
+            }
+            if (!tex && !rb) {
+                if (pname == GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE) {
+                    return Escargot::ValueRef::create(
+                        static_cast<GLenum>(GL_NONE));
+                }
+                if (pname == GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME) {
+                    return scriptNull();
+                }
+            }
+        }
     }
 
     GLint params = 0;
@@ -1579,7 +1699,7 @@ ScriptValue WebGLRenderingContext::getFramebufferAttachmentParameter(
     case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME: {
         Optional<WebGLFramebuffer*> webGLFramebuffer =
             m_state->webGLFramebuffer();
-        if (!webGLFramebuffer) {
+        if (!webGLFramebuffer.hasValue() || !webGLFramebuffer.value()) {
             return scriptNull();
         }
         GLint rboOrTextureID;
@@ -1591,9 +1711,16 @@ ScriptValue WebGLRenderingContext::getFramebufferAttachmentParameter(
         m_gl->getFramebufferAttachmentParameteriv(
             target, attachment, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &type);
         if (type == GL_RENDERBUFFER) {
-            return webGLFramebuffer->attachedRenderBuffer()->scriptValue();
+            return webGLFramebuffer.value()
+                ->attachedRenderBuffer()
+                ->scriptValue();
         } else if (type == GL_TEXTURE) {
-            return webGLFramebuffer->attachedTexture()->scriptValue();
+            WebGLTexture* tex =
+                webGLFramebuffer.value()->attachedTexture(attachment);
+            if (tex) {
+                return tex->scriptValue();
+            }
+            return scriptNull();
         }
         STARFISH_LOG_DEBUG("Unknown type %d", type);
         return scriptNull();
@@ -3764,6 +3891,9 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
         setGLError(GL_INVALID_OPERATION, "Texture is immutable.");
         return;
     }
+    if (texture) {
+        texture->setSize(width, height);
+    }
 
     if (m_boundTextures.find(target) == m_boundTextures.end() &&
         !isBoundCubeMapTexture(target)) {
@@ -4164,8 +4294,6 @@ void WebGLRenderingContext::uniformMatrix4fv(
 
 void WebGLRenderingContext::setGLError(GLenum code, const char* message)
 {
-    STARFISH_LOG_ERROR("[SET_GL_ERROR] code=0x%x msg=%s", code,
-                       message ? message : "(null)");
     m_GLErrors.insert(code);
     if (message) {
         TRACE(WEBGL, "Error(%s): %s", glValueString(code), message);

@@ -23,6 +23,7 @@
 #if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
 #include "core/dom/canvas/webgl/WebGLObject.h"
+#include "core/dom/canvas/webgl/WebGLShader.h"
 
 namespace Starfish {
 
@@ -37,9 +38,20 @@ public:
     void addAttachedShader(WebGLShader* shader);
     void removeDetachedShader(WebGLShader* shader);
 
-    const GCVector<WebGLShader*>& getWebGLShaders() const
+    Optional<GCVector<WebGLShader*>> getAttachedShaders() const;
+
+    GCVector<WebGLShader*> getWebGLShaders() const
     {
-        return m_webGLShaders;
+        Optional<GCVector<WebGLShader*>> maybe = getAttachedShaders();
+        if (maybe.hasValue()) {
+            return maybe.value();
+        }
+        return GCVector<WebGLShader*>();
+    }
+
+    bool usesFragColor() const
+    {
+        return m_usesFragColor;
     }
 
     void setLinkFailed(bool linkFailed)
@@ -53,7 +65,8 @@ public:
     }
 
 private:
-    GCVector<WebGLShader*> m_webGLShaders;
+    WebGLShader* m_attachedShaders[2] = { nullptr, nullptr };
+    bool m_usesFragColor = false;
     bool m_linkFailed = false;
 };
 } // namespace Starfish

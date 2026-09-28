@@ -206,9 +206,19 @@ void WebGL2RenderingContext::bindFramebuffer(
 
         gl()->bindFramebuffer(target, frameBuffer->glObject());
         getState()->setWebGLFramebuffer(frameBuffer);
+
+        if (target == GL_FRAMEBUFFER || target == GL_DRAW_FRAMEBUFFER) {
+            gl()->drawBuffers(frameBuffer->drawBufferCount(),
+                              frameBuffer->drawBuffers());
+        }
     } else {
         gl()->bindFramebuffer(target, m_framebufferTexture->fbo());
         getState()->setWebGLFramebuffer(nullptr);
+
+        if (target == GL_FRAMEBUFFER || target == GL_DRAW_FRAMEBUFFER) {
+            GLenum att0 = GL_COLOR_ATTACHMENT0;
+            gl()->drawBuffers(1, &att0);
+        }
     }
 }
 
@@ -322,6 +332,39 @@ Optional<ScriptValue> WebGL2RenderingContext::getParameterImpl(GLenum pname)
         std::vector<GLint> values(1);
         gl()->getIntegerv(pname, &values[0]);
         return createScriptValue(values[0]);
+    }
+    case GL_DRAW_BUFFER0:
+    case GL_DRAW_BUFFER1:
+    case GL_DRAW_BUFFER2:
+    case GL_DRAW_BUFFER3:
+    case GL_DRAW_BUFFER4:
+    case GL_DRAW_BUFFER5:
+    case GL_DRAW_BUFFER6:
+    case GL_DRAW_BUFFER7:
+    case GL_DRAW_BUFFER8:
+    case GL_DRAW_BUFFER9:
+    case GL_DRAW_BUFFER10:
+    case GL_DRAW_BUFFER11:
+    case GL_DRAW_BUFFER12:
+    case GL_DRAW_BUFFER13:
+    case GL_DRAW_BUFFER14:
+    case GL_DRAW_BUFFER15: {
+        size_t index = pname - GL_DRAW_BUFFER0;
+        if (isDefaultFramebufferBound()) {
+            if (index == 0) {
+                return createScriptValue(static_cast<uint32_t>(GL_BACK));
+            }
+            return createScriptValue(static_cast<uint32_t>(GL_NONE));
+        }
+        Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
+        if (maybeFb.hasValue() && maybeFb.value()) {
+            WebGLFramebuffer* fb = maybeFb.value();
+            if (index < fb->drawBufferCount()) {
+                return createScriptValue(
+                    static_cast<uint32_t>(fb->drawBuffers()[index]));
+            }
+        }
+        return createScriptValue(static_cast<uint32_t>(GL_NONE));
     }
     // GLint64
     case kMAX_CLIENT_WAIT_TIMEOUT_WEBGL:
@@ -2078,6 +2121,53 @@ void WebGL2RenderingContext::invalidateSubFramebuffer(
                                    attachments.data(), x, y, width, height);
 }
 
+void WebGL2RenderingContext::readBuffer(GLenum src)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    GLint maxColorAttachments = 0;
+    gl()->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+
+    if (isDefaultFramebufferBound()) {
+        if (src == GL_BACK || src == GL_NONE) {
+            gl()->readBuffer(src);
+            return;
+        }
+        if (src >= GL_COLOR_ATTACHMENT0 &&
+            src < static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + 16)) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (src == GL_NONE) {
+        gl()->readBuffer(src);
+        return;
+    }
+
+    if (src >= GL_COLOR_ATTACHMENT0 &&
+        src < static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + maxColorAttachments)) {
+        gl()->readBuffer(src);
+        return;
+    }
+
+    if (src >=
+            static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + maxColorAttachments) &&
+        src < static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + 16)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    if (src == GL_BACK) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    setGLError(GL_INVALID_ENUM);
+}
+
 void WebGL2RenderingContext::drawBuffers(GCAtomicVector<GLenum> buffers)
 {
     ENTER_CONTEXT_SCOPE();
@@ -2088,7 +2178,40 @@ void WebGL2RenderingContext::drawBuffers(GCAtomicVector<GLenum> buffers)
                    "buffers length exceeds MAX_DRAW_BUFFERS.");
         return;
     }
+
+    if (isDefaultFramebufferBound()) {
+        for (size_t i = 0; i < buffers.size(); ++i) {
+            if (i == 0) {
+                if (buffers[i] != GL_NONE && buffers[i] != GL_BACK) {
+                    setGLError(GL_INVALID_OPERATION);
+                    return;
+                }
+            } else {
+                if (buffers[i] != GL_NONE) {
+                    setGLError(GL_INVALID_OPERATION);
+                    return;
+                }
+            }
+        }
+    } else {
+        for (size_t i = 0; i < buffers.size(); ++i) {
+            if (buffers[i] != GL_NONE &&
+                buffers[i] != static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + i)) {
+                setGLError(GL_INVALID_OPERATION,
+                           "buffers[i] must be NONE or COLOR_ATTACHMENTi");
+                return;
+            }
+        }
+    }
+
     gl()->drawBuffers(buffers.size(), buffers.data());
+
+    if (!isDefaultFramebufferBound()) {
+        Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
+        if (maybeFb.hasValue() && maybeFb.value()) {
+            maybeFb.value()->setDrawBuffers(buffers);
+        }
+    }
 }
 
 void WebGL2RenderingContext::clearBufferfv(GLenum buffer, GLint drawbuffer,
@@ -2406,6 +2529,7 @@ void WebGL2RenderingContext::texStorage2D(GLenum target, GLsizei levels,
 
     if (texture && !hasNewGLError()) {
         texture->setImmutable(true);
+        texture->setSize(width, height);
     }
 }
 
