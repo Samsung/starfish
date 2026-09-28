@@ -581,6 +581,38 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     }
 }
 
+static std::string buildAcceptLanguageHeader(const std::string& locale)
+{
+    std::string primary = locale;
+    std::replace(primary.begin(), primary.end(), '_', '-');
+
+    if (primary.empty()) {
+        return "en-US,en;q=0.9";
+    }
+
+    if (primary == "en-US") {
+        return "en-US,en;q=0.9";
+    } else if (primary == "en") {
+        return "en,en-US;q=0.9";
+    }
+
+    std::string result = primary;
+    size_t hyphen = primary.find('-');
+    if (hyphen != std::string::npos) {
+        std::string baseLang = primary.substr(0, hyphen);
+        result += "," + baseLang + ";q=0.9";
+        if (baseLang != "en") {
+            result += ",en-US;q=0.8,en;q=0.7";
+        } else {
+            result += ",en-US;q=0.8";
+        }
+    } else {
+        result += ",en-US;q=0.9,en;q=0.8";
+    }
+
+    return result;
+}
+
 void NetworkURLResourceRequestJobDelegate::fillHeadersWithGeneralHeaders(
     HTTPHeaderMap& headers)
 {
@@ -610,11 +642,8 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
     }
 
     if (!hasAcceptLanguage) {
-        std::string value;
-        value = m_orgProxy->webBase()->locale();
-        std::replace(value.begin(), value.end(), '_', '-');
-        value = value + " , en-US , en";
-        headers.headerMap()[HTTPHeaderMap::kAcceptLanguage] = value;
+        headers.headerMap()[HTTPHeaderMap::kAcceptLanguage] =
+            buildAcceptLanguageHeader(m_orgProxy->webBase()->locale());
     }
 
     headers.append(HTTPHeaderMap::kUserAgent,
