@@ -42,6 +42,7 @@ public:
 
     void setBuffer(uint8_t* buffer, uint32_t length);
     void play();
+    void setVolume(double volume);
 
 private:
     AudioDestinationNode(ExecutionContext* executionContext);

@@ -32,6 +32,7 @@
 #include "core/modules/webaudio/AudioBuffer.h"
 #include "core/modules/webaudio/AudioBufferSourceNode.h"
 #include "core/modules/webaudio/AudioDestinationNode.h"
+#include "core/modules/webaudio/GainNode.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/WebBase.h"
 
@@ -123,6 +124,11 @@ AudioBufferSourceNode* BaseAudioContext::createBufferSource()
         new AudioBufferSourceNode(m_executionContext, this, options);
 
     return node;
+}
+
+GainNode* BaseAudioContext::createGain()
+{
+    return new GainNode(m_executionContext, this);
 }
 
 // https://webaudio.github.io/web-audio-api/#dom-baseaudiocontext-decodeaudiodata

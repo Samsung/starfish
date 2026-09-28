@@ -909,6 +909,7 @@ test/cairo/internal-test/event/promise-rejection-events.html
 test/cairo/internal-test/dom/DOMRect01.html
 test/cairo/internal-test/dom/details-toggle-across-iframes.html
 test/cairo/internal-test/document/document-fonts-ready.html
+test/cairo/internal-test/webaudio/create-gain.html
 test/cairo/internal-test/resize-observer/observe.html
 test/cairo/internal-test/resize-observer/observe2.html
 test/cairo/internal-test/resize-observer/notify.html

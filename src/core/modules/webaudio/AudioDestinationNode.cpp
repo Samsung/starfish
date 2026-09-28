@@ -55,5 +55,10 @@ void AudioDestinationNode::play()
 {
     m_player->play();
 }
+
+void AudioDestinationNode::setVolume(double volume)
+{
+    m_player->setVolume(volume);
+}
 } // namespace Starfish
 #endif

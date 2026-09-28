@@ -32,6 +32,7 @@ class ValueRef;
 namespace Starfish {
 class ExecutionContext;
 class AudioDestinationNode;
+class GainNode;
 
 enum class AudioContextState { Suspended, Running, Closed };
 
@@ -133,6 +134,7 @@ public:
 #undef OVERRIDE
 
     virtual AudioBufferSourceNode* createBufferSource();
+    virtual GainNode* createGain();
 
     virtual Promise* decodeAudioData(
         ScriptArrayBuffer audioData,

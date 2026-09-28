@@ -28,6 +28,7 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/webaudio/AudioBuffer.h"
 #include "core/modules/webaudio/AudioDestinationNode.h"
+#include "core/modules/webaudio/GainNode.h"
 #include "core/modules/webaudio/BaseAudioContext.h"
 
 #include "platform/multimedia/MediaPlayerAudio.h"
@@ -87,12 +88,18 @@ void AudioBufferSourceNode::start(double when, double offset, double duration)
             [](void* data) {
                 AudioBufferSourceNode* self = (AudioBufferSourceNode*)data;
                 self->m_hasStartCalled = true;
-                if (self->m_destinationNode &&
-                    self->m_destinationNode->isAudioDestinationNode()) {
+                AudioNode* current = self->m_destinationNode;
+                float gain = 1.0f;
+                while (current && current->isGainNode()) {
+                    gain *= current->asGainNode()->gain()->value();
+                    current = current->destinationNode();
+                }
+                if (current && current->isAudioDestinationNode()) {
                     AudioDestinationNode* destinationNode =
-                        self->m_destinationNode->asAudioDestinationNode();
+                        current->asAudioDestinationNode();
                     destinationNode->setBuffer(self->m_buffer->rawBuffer(),
                                                self->m_buffer->length());
+                    destinationNode->setVolume(gain);
                     destinationNode->play();
                 }
                 self->m_hasStartCalled = false;
