@@ -1793,7 +1793,7 @@ void WebGL2RenderingContext::bindVertexArray(
 {
     ENTER_CONTEXT_SCOPE();
 
-    if (!array.hasValue()) {
+    if (!array.hasValue() || array.value() == nullptr) {
         gl()->bindVertexArray(0);
         getState()->setWebGLVertexArrayObject(nullptr);
         return;

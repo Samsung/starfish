@@ -3203,8 +3203,7 @@ void TexImageHelper::draw(const bool needsFlipY,
 
 #if defined(PORT_PIXEL_ORDER_BGRA)
     if (m_isNativeImageDataUsed) {
-        // NativeImageData is formatted as BGRA.
-        if (m_sourceImage.format == GL_RGBA && type == GL_UNSIGNED_BYTE &&
+        if (m_sourceImage.format == GL_BGRA_EXT && type == GL_UNSIGNED_BYTE &&
             WebGLExtensionRegistry::instance()
                 .hasEXT_texture_format_BGRA8888()) {
             m_dataFormat = GL_BGRA_EXT;
@@ -3328,7 +3327,7 @@ void TexImageHelper::drawSubRectangle(
     bool needsColorConversion = false;
 #if defined(PORT_PIXEL_ORDER_BGRA)
     if (m_isNativeImageDataUsed) {
-        if (m_sourceImage.format == GL_RGBA && type == GL_UNSIGNED_BYTE &&
+        if (m_sourceImage.format == GL_BGRA_EXT && type == GL_UNSIGNED_BYTE &&
             WebGLExtensionRegistry::instance()
                 .hasEXT_texture_format_BGRA8888()) {
             m_dataFormat = GL_BGRA_EXT;
