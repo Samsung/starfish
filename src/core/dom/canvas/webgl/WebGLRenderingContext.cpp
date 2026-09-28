@@ -1139,16 +1139,23 @@ void WebGLRenderingContext::framebufferRenderbuffer(
 {
     ENTER_CONTEXT_SCOPE();
 
+    if (isDefaultFramebufferBound()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
     GLint maxColorAttachments = 0;
     m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
     if (maxColorAttachments < 1) {
         maxColorAttachments = 1;
     }
     if (attachment >= GL_COLOR_ATTACHMENT0 &&
-        attachment >=
+        attachment < static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + 16)) {
+        if (attachment >=
             static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + maxColorAttachments)) {
-        setGLError(GL_INVALID_ENUM);
-        return;
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
     }
 
     Optional<WebGLFramebuffer*> webGLFramebuffer = m_state->webGLFramebuffer();
@@ -1172,9 +1179,6 @@ void WebGLRenderingContext::framebufferRenderbuffer(
         if (webGLFramebuffer) {
             webGLFramebuffer->setAttachedRenderBuffer(nullptr);
         }
-        if (isDefaultFramebufferBound()) {
-            setGLError(GL_INVALID_OPERATION);
-        }
     }
 }
 
@@ -1184,16 +1188,23 @@ void WebGLRenderingContext::framebufferTexture2D(
 {
     ENTER_CONTEXT_SCOPE();
 
+    if (isDefaultFramebufferBound()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
     GLint maxColorAttachments = 0;
     m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
     if (maxColorAttachments < 1) {
         maxColorAttachments = 1;
     }
     if (attachment >= GL_COLOR_ATTACHMENT0 &&
-        attachment >=
+        attachment < static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + 16)) {
+        if (attachment >=
             static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + maxColorAttachments)) {
-        setGLError(GL_INVALID_ENUM);
-        return;
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
     }
 
     Optional<WebGLFramebuffer*> webGLFramebuffer = m_state->webGLFramebuffer();
@@ -1223,9 +1234,6 @@ void WebGLRenderingContext::framebufferTexture2D(
         if (webGLFramebuffer.hasValue() && webGLFramebuffer.value()) {
             webGLFramebuffer.value()->setAttachedTexture(nullptr);
             webGLFramebuffer.value()->setAttachmentTexture(attachment, nullptr);
-        }
-        if (isDefaultFramebufferBound()) {
-            setGLError(GL_INVALID_OPERATION);
         }
     }
 }
