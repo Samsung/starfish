@@ -833,9 +833,83 @@ bool ComputedStyle::usedColorSchemeIsDark()
     return MediaQueryEvaluator::prefersColorSchemeOverride() == 2;
 }
 
+void ComputedStyle::resolvePendingColors(ComputedStyle* parentStyle)
+{
+    if (!m_hasPendingColors) {
+        return;
+    }
+    PendingColorList* list = m_rareComputedStyleData.pendingColors().value();
+    bool dark = usedColorSchemeIsDark();
+
+    // `color` first: currentcolor inside it means the inherited color
+    // (css-color-4 #currentcolor-color), and every other property's
+    // currentcolor is the color that results.
+    for (size_t i = 0; i < list->size(); i++) {
+        if ((*list)[i].m_key == CSSStyleValuePair::KeyKind::Color) {
+            setColor((*list)[i].m_color->resolve(parentStyle->color(), dark));
+        }
+    }
+    Unit::Color currentColor = color();
+    for (size_t i = 0; i < list->size(); i++) {
+        Unit::Color c = (*list)[i].m_color->resolve(currentColor, dark);
+        switch ((*list)[i].m_key) {
+        case CSSStyleValuePair::KeyKind::Color:
+            break;
+        case CSSStyleValuePair::KeyKind::BackgroundColor:
+            setBackgroundColor(c);
+            break;
+        case CSSStyleValuePair::KeyKind::BorderTopColor:
+            setBorderTopColor(c);
+            break;
+        case CSSStyleValuePair::KeyKind::BorderRightColor:
+            setBorderRightColor(c);
+            break;
+        case CSSStyleValuePair::KeyKind::BorderBottomColor:
+            setBorderBottomColor(c);
+            break;
+        case CSSStyleValuePair::KeyKind::BorderLeftColor:
+            setBorderLeftColor(c);
+            break;
+        case CSSStyleValuePair::KeyKind::BorderBlockStartColor:
+            setBorderBlockStartColor(c);
+            break;
+        case CSSStyleValuePair::KeyKind::BorderBlockEndColor:
+            setBorderBlockEndColor(c);
+            break;
+        case CSSStyleValuePair::KeyKind::BorderInlineStartColor:
+            setBorderInlineStartColor(c);
+            break;
+        case CSSStyleValuePair::KeyKind::BorderInlineEndColor:
+            setBorderInlineEndColor(c);
+            break;
+        case CSSStyleValuePair::KeyKind::OutlineColor:
+            setOutlineColor(c);
+            break;
+        case CSSStyleValuePair::KeyKind::TextDecorationColor:
+            setTextDecorationColor(c);
+            break;
+        case CSSStyleValuePair::KeyKind::CaretColor:
+            setCaretColor(c);
+            break;
+        case CSSStyleValuePair::KeyKind::Fill:
+            setFill(new StylePaintData(c));
+            break;
+        case CSSStyleValuePair::KeyKind::Stroke:
+            setStroke(new StylePaintData(c));
+            break;
+        default:
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+    }
+    m_rareComputedStyleData.clearPendingColors();
+    m_hasPendingColors = false;
+}
+
 void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
                                        Node* current)
 {
+    resolvePendingColors(parentStyle);
+
     m_originalDisplay = m_display;
     blockify(current, false);
 

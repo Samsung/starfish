@@ -128,10 +128,10 @@ http://web-platform.test:8000/css/css-color/lab-l-over-100-2.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/lch-010.html
 http://web-platform.test:8000/css/css-color/lch-l-over-100-1.html
 http://web-platform.test:8000/css/css-color/lch-l-over-100-2.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/light-dark-currentcolor.html
+http://web-platform.test:8000/css/css-color/light-dark-currentcolor.html
 http://web-platform.test:8000/css/css-color/light-dark-image-none-interpolation.html
 http://web-platform.test:8000/css/css-color/light-dark-image-none.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/light-dark-inheritance.html
+http://web-platform.test:8000/css/css-color/light-dark-inheritance.html
 http://web-platform.test:8000/css/css-color/named-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/oklab-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/oklab-002.html

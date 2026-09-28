@@ -31,6 +31,7 @@
 #include "core/style/ImageValue.h"
 #include "core/style/CSSTime.h"
 #include "core/style/NamedColors.h"
+#include "core/style/UnresolvedColor.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/Length.h"
 #include "core/style/GridTrackSize.h"
@@ -1075,6 +1076,7 @@ public:
         KeywordValueKind,
         ColorValueKind,
         NamedColorValueKind,
+        UnresolvedColorValueKind,
         UrlValueKind,
         PathFunctionValueKind,
         CSSPropertyNameValueKind,
@@ -1638,6 +1640,12 @@ public:
         return m_value.m_namedColor;
     }
 
+    UnresolvedColor* unresolvedColorValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == UnresolvedColorValueKind);
+        return m_value.m_unresolvedColor;
+    }
+
     BorderCollapseValue borderCollapseValue() const
     {
         STARFISH_ASSERT(m_valueKind == BorderCollapseValueKind);
@@ -1988,6 +1996,7 @@ public:
         CSSTransformFunctions* m_transforms;
         Unit::Color m_color;
         NamedColor::NamedColorValue m_namedColor;
+        UnresolvedColor* m_unresolvedColor;
         BorderCollapseValue m_borderCollapse;
         CaptionSideValue m_captionSide;
         TableLayoutValue m_tableLayout;
@@ -2483,6 +2492,12 @@ public:
         m_value.m_namedColor = val;
     }
 
+    void setUnresolvedColorValue(UnresolvedColor* val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::UnresolvedColorValueKind;
+        m_value.m_unresolvedColor = val;
+    }
+
     void setUrlValue(String* val)
     {
         m_valueKind = CSSStyleValuePair::ValueKind::UrlValueKind;
@@ -2726,6 +2741,9 @@ public:
     bool updateValueUnitBorderImageOutset(const CSSTokenVector& tokens);
     bool updateValueUnitBorderImageRepeat(const CSSTokenVector& tokens);
     bool updateValueUnitColor(const CSSTokenValue& token);
+    // <color> for a slot that is consumed before the element style exists
+    // (gradient stops, shadows, stop-color), so light-dark() is rejected.
+    bool updateValueUnitResolvedColor(const CSSTokenValue& token);
     bool updateValueUnitUrlOrNone(const CSSTokenValue& token);
     bool updateValueUnitGradient(const CSSTokenValue& value);
     bool updateValueUnitMargin(const CSSTokenValue& token);

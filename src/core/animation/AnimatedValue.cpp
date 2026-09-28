@@ -43,47 +43,47 @@ Optional<AnimatedValue*> AnimatedValue::create(
         if (neededOriginProperty) {
             return new AnimatedValue(style->color());
         }
-        return AnimatedValue::createAnimatedValueFromColor(property);
+        return AnimatedValue::createAnimatedValueFromColor(style, property);
     case CSSStyleValuePair::BackgroundColor:
         if (neededOriginProperty) {
             return new AnimatedValue(style->backgroundColor());
         }
-        return AnimatedValue::createAnimatedValueFromColor(property);
+        return AnimatedValue::createAnimatedValueFromColor(style, property);
     case CSSStyleValuePair::BorderBottomColor:
         if (neededOriginProperty) {
             return new AnimatedValue(style->border().bottom().color());
         }
-        return AnimatedValue::createAnimatedValueFromColor(property);
+        return AnimatedValue::createAnimatedValueFromColor(style, property);
     case CSSStyleValuePair::BorderLeftColor:
         if (neededOriginProperty) {
             return new AnimatedValue(style->border().left().color());
         }
-        return AnimatedValue::createAnimatedValueFromColor(property);
+        return AnimatedValue::createAnimatedValueFromColor(style, property);
     case CSSStyleValuePair::BorderRightColor:
         if (neededOriginProperty) {
             return new AnimatedValue(style->border().right().color());
         }
-        return AnimatedValue::createAnimatedValueFromColor(property);
+        return AnimatedValue::createAnimatedValueFromColor(style, property);
     case CSSStyleValuePair::BorderTopColor:
         if (neededOriginProperty) {
             return new AnimatedValue(style->border().top().color());
         }
-        return AnimatedValue::createAnimatedValueFromColor(property);
+        return AnimatedValue::createAnimatedValueFromColor(style, property);
     case CSSStyleValuePair::CaretColor:
         if (neededOriginProperty) {
             return new AnimatedValue(style->caretColor());
         }
-        return AnimatedValue::createAnimatedValueFromColor(property);
+        return AnimatedValue::createAnimatedValueFromColor(style, property);
     case CSSStyleValuePair::OutlineColor:
         if (neededOriginProperty) {
             return new AnimatedValue(style->outlineColor());
         }
-        return AnimatedValue::createAnimatedValueFromColor(property);
+        return AnimatedValue::createAnimatedValueFromColor(style, property);
     case CSSStyleValuePair::TextDecorationColor:
         if (neededOriginProperty) {
             return new AnimatedValue(style->textDecorationColor());
         }
-        return AnimatedValue::createAnimatedValueFromColor(property);
+        return AnimatedValue::createAnimatedValueFromColor(style, property);
     case CSSStyleValuePair::Width:
         if (neededOriginProperty) {
             return new AnimatedValue(style->width());
@@ -327,7 +327,8 @@ Optional<AnimatedValue*> AnimatedValue::create(
         if (!neededOriginProperty) {
             if (property.valueKind() ==
                 CSSStyleValuePair::ValueKind::ColorValueKind) {
-                return AnimatedValue::createAnimatedValueFromColor(property);
+                return AnimatedValue::createAnimatedValueFromColor(style,
+                                                                   property);
             }
         }
         FALLTHROUGH;
@@ -377,7 +378,8 @@ Optional<AnimatedValue*> AnimatedValue::createForSVGAnimation(
             return AnimatedValue::createAnimatedValueFromLength(property);
         }
     case CSSStyleValuePair::KeyKind::Fill:
-        return AnimatedValue::createAnimatedValueFromColor(property);
+        return AnimatedValue::createAnimatedValueFromColor(element->style(),
+                                                           property);
     default:
         STARFISH_UNIMPLEMENTED();
         return Optional<AnimatedValue*>();
@@ -387,7 +389,7 @@ Optional<AnimatedValue*> AnimatedValue::createForSVGAnimation(
 }
 
 Optional<AnimatedValue*> AnimatedValue::createAnimatedValueFromColor(
-    const CSSStyleValuePair& property)
+    ComputedStyle* style, const CSSStyleValuePair& property)
 {
     if (property.valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
         return new AnimatedValue(property.colorValue());
@@ -395,6 +397,15 @@ Optional<AnimatedValue*> AnimatedValue::createAnimatedValueFromColor(
                CSSStyleValuePair::ValueKind::NamedColorValueKind) {
         return new AnimatedValue(
             NamedColor::namedColorToColor(property.namedColorValue()));
+    } else if (property.valueKind() ==
+               CSSStyleValuePair::ValueKind::UnresolvedColorValueKind) {
+        // Resolve against the animated element's style, as the cascade
+        // does once the style is final (ComputedStyle::resolvePendingColors).
+        // Deviation: for the `color` property itself css-color-4
+        // #currentcolor-color means the inherited color, which is not
+        // reachable from here; the element's own color stands in.
+        return new AnimatedValue(property.unresolvedColorValue()->resolve(
+            style->color(), style->usedColorSchemeIsDark()));
     } else {
         // FIXME: Leave it as is to avoid regression. However, at some point it
         // will have to be replaced by an empty optional.

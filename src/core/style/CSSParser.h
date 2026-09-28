@@ -973,6 +973,26 @@ public:
         return true;
     }
 
+    static const size_t kMaxColorFunctionNesting = 16;
+
+    static size_t parenthesisDepth(const CSSTokenValue& s)
+    {
+        size_t depth = 0;
+        size_t maxDepth = 0;
+        for (size_t i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '(') {
+                depth++;
+                if (depth > maxDepth) {
+                    maxDepth = depth;
+                }
+            } else if (c == ')' && depth) {
+                depth--;
+            }
+        }
+        return maxDepth;
+    }
+
     // Splits `s` on `delim` occurring outside parentheses, so a nested
     // function such as `color-mix(in srgb, red, blue)` stays in one piece.
     static void splitTopLevel(const CSSTokenValue& s, char delim,
@@ -1200,7 +1220,63 @@ public:
         if (name == "hsl" || name == "hsla") {
             return parseHslFunction(args, pair);
         }
+        if (name == "light-dark") {
+            // Color functions nest recursively; web content is untrusted, so
+            // bound the depth before recursing into the arguments.
+            if (parenthesisDepth(args) >= kMaxColorFunctionNesting) {
+                return false;
+            }
+            Optional<UnresolvedColor*> color = parseLightDark(args);
+            if (!color) {
+                return false;
+            }
+            pair->setUnresolvedColorValue(color.value());
+            return true;
+        }
         return false;
+    }
+
+    // A <color> nested in a color function, as an UnresolvedColor leaf or
+    // subtree.
+    static Optional<UnresolvedColor*> parseColorTree(const CSSTokenValue& str)
+    {
+        CSSStyleValuePair p;
+        if (!parseColor(str, &p)) {
+            return Optional<UnresolvedColor*>();
+        }
+        switch (p.valueKind()) {
+        case CSSStyleValuePair::ValueKind::ColorValueKind:
+            return UnresolvedColor::createLiteral(p.colorValue());
+        case CSSStyleValuePair::ValueKind::NamedColorValueKind:
+            if (p.namedColorValue() ==
+                NamedColor::NamedColorValue::currentColor) {
+                return UnresolvedColor::createCurrentColor();
+            }
+            return UnresolvedColor::createNamed(p.namedColorValue());
+        case CSSStyleValuePair::ValueKind::UnresolvedColorValueKind:
+            return p.unresolvedColorValue();
+        default:
+            return Optional<UnresolvedColor*>();
+        }
+    }
+
+    // light-dark(<color>, <color>): css-color-5 #light-dark
+    static Optional<UnresolvedColor*> parseLightDark(const CSSTokenValue& args)
+    {
+        std::vector<CSSTokenValue> v;
+        splitTopLevel(args, ',', v);
+        if (v.size() != 2) {
+            return Optional<UnresolvedColor*>();
+        }
+        Optional<UnresolvedColor*> light = parseColorTree(v[0].trim());
+        if (!light) {
+            return Optional<UnresolvedColor*>();
+        }
+        Optional<UnresolvedColor*> dark = parseColorTree(v[1].trim());
+        if (!dark) {
+            return Optional<UnresolvedColor*>();
+        }
+        return UnresolvedColor::createLightDark(light.value(), dark.value());
     }
 
     // Any <color>, named or not.
