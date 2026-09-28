@@ -6,7 +6,7 @@ http://web-platform.test:8000/css/css-color/color-initial-canvastext.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/color-mix-missing-components.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/contrast-color-currentcolor-inherited.html
 http://web-platform.test:8000/css/css-color/inheritance.html
-# [auto-fail] http://web-platform.test:8000/css/css-color/light-dark-basic.html
+http://web-platform.test:8000/css/css-color/light-dark-basic.html
 http://web-platform.test:8000/css/css-color/light-dark-currentcolor-in-color.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/light-dark-image.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/nested-color-mix-with-currentcolor.html

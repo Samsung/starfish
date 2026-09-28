@@ -95,6 +95,16 @@ union FontFamilyData {
 
 class FilterFunctions;
 
+// A color property whose specified value could not be resolved during the
+// cascade (see UnresolvedColor); ComputedStyle::resolvePendingColors turns
+// it into the property's computed Unit::Color once `color` and
+// `color-scheme` are final.
+struct PendingColor {
+    CSSStyleValuePair::KeyKind m_key;
+    UnresolvedColor* m_color;
+};
+typedef GCVector<PendingColor> PendingColorList;
+
 class RareComputedStyleData : public gc {
 public:
     enum KeyKind : unsigned {
@@ -190,6 +200,7 @@ public:
         GridTemplateAreas,
 
         WillChange,
+        PendingColors,
 
         MixBlendMode
     };
@@ -238,6 +249,7 @@ public:
         FilterFunctions* m_filter;
         AppearanceValue m_appearance;
         StylePaintData* m_stopColor; // svg
+        PendingColorList* m_pendingColors;
         MutablePropertyValueList* m_mutablePropertyValueList;
         BlendMode m_blendMode;
 
@@ -467,6 +479,11 @@ public:
         {
         }
 
+        RareComputedStyleValue(PendingColorList* v)
+            : m_pendingColors(v)
+        {
+        }
+
         RareComputedStyleValue(MutablePropertyValueList* v)
             : m_mutablePropertyValueList(v)
         {
@@ -605,6 +622,8 @@ public:
     GETTER_VALUE(Length, length, fy, FY, 0);
     GETTER_VALUE(Length, length, fr, FR, 0);
     GETTER_VALUE(StylePaintData*, stopColor, stopColor, StopColor, nullptr);
+    GETTER_VALUE(PendingColorList*, pendingColors, pendingColors, PendingColors,
+                 nullptr);
     GETTER_VALUE(float, floatValue, stopOpacity, StopOpacity, 1);
     GETTER_VALUE(UserSelectValue, userSelect, userSelect, UserSelect,
                  NoneUserSelectValue);
@@ -784,6 +803,7 @@ public:
 #undef GETTER_PTR
 
     CLEARER(Transforms);
+    CLEARER(PendingColors);
     CLEARER(Content);
     CLEARER(CounterReset);
     CLEARER(CounterIncrement);
@@ -1246,6 +1266,34 @@ public:
     {
         m_inheritedStyles.m_color = r;
     }
+
+    void setPendingColor(CSSStyleValuePair::KeyKind key, UnresolvedColor* color)
+    {
+        PendingColorList** list = m_rareComputedStyleData.ensurePendingColors();
+        if (!*list) {
+            *list = new PendingColorList();
+        }
+        PendingColor pending = { key, color };
+        (*list)->push_back(pending);
+        m_hasPendingColors = true;
+    }
+
+    void clearPendingColor(CSSStyleValuePair::KeyKind key)
+    {
+        if (!m_hasPendingColors) {
+            return;
+        }
+        PendingColorList* list =
+            m_rareComputedStyleData.pendingColors().value();
+        for (size_t i = 0; i < list->size(); i++) {
+            if ((*list)[i].m_key == key) {
+                list->erase(list->begin() + i);
+                i--;
+            }
+        }
+    }
+
+    void resolvePendingColors(ComputedStyle* parentStyle);
 
     Unit::Color color()
     {
@@ -5174,6 +5222,7 @@ protected:
         m_zIndexSpecifiedByUser = false;
         m_overflowX = OverflowValue::VisibleOverflow;
         m_overflowY = OverflowValue::VisibleOverflow;
+        m_hasPendingColors = false;
         m_verticalAlign = VerticalAlignValue::BaselineVAlignValue;
         m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
         m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
@@ -5261,6 +5310,7 @@ protected:
     bool m_zIndexSpecifiedByUser : 1;
 
 public:
+    bool m_hasPendingColors : 1;
     // Prototype (measure/tile-cost-breakdown): lazy cache for
     // TextDecorationData::merge. 0 = unknown, 1 = merge is a no-op for this
     // style, 2 = merge has an effect. ComputedStyle instances are rebuilt on

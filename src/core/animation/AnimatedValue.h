@@ -61,7 +61,7 @@ public:
         const CSSStyleValuePair::KeyKind& keyKind);
 
     static Optional<AnimatedValue*> createAnimatedValueFromColor(
-        const CSSStyleValuePair& property);
+        ComputedStyle* style, const CSSStyleValuePair& property);
 
     static Optional<AnimatedValue*> createAnimatedValueFromLength(
         const CSSStyleValuePair& property);
