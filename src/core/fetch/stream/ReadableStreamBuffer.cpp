@@ -104,9 +104,14 @@ void ReadableStreamBuffer::resolveWithType(Promise* promise,
                                     m_buffer.data(), size);
         String* responseText =
             textConverter.convert(m_buffer.data(), size, true);
-        auto json =
-            parseJSON(executionContext->scriptBindingInstance(), responseText);
-        promise->fulfill(json);
+        Optional<ScriptValue> parseError;
+        auto json = parseJSONOrError(executionContext->scriptBindingInstance(),
+                                     responseText, parseError);
+        if (parseError.hasValue()) {
+            promise->reject(parseError.value());
+        } else {
+            promise->fulfill(json);
+        }
     } else if (type == BodyType::ArrayBuffer) {
         void* buffer = malloc(size);
         STARFISH_RELEASE_ASSERT(buffer);
