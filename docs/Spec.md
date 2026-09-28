@@ -418,6 +418,13 @@ section are supported.
 | | attribute | rules | Non-standard. Synonym for cssRules. |
 | | method | unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0) | Inserts a new rule at the specified position in the style sheet, given the textual representation of the rule. |
 | | method | void deleteRule(unsigned long index) | Deletes a rule at the specified position from the style sheet. |
+| [FontFaceSet](https://drafts.csswg.org/css-font-loading/#fontfaceset-interface) | interface | FontFaceSet | An EventTarget representing the set of fonts available to a Document. |
+| | attribute | status | Returns the loading status ("loading" or "loaded"). |
+| | attribute | ready | Returns a Promise that fulfills when font loading completes. |
+| | method | boolean check(DOMString font, optional DOMString text = " ") | Returns whether all fonts in the font specification are loaded. |
+| | attribute | onloading | Event handler for loading event. |
+| | attribute | onloadingdone | Event handler for loadingdone event. |
+| | attribute | onloadingerror | Event handler for loadingerror event. |
 | [CSSRuleList](https://drafts.csswg.org/cssom/#the-cssrulelist-interface) | interface | CSSRuleList | Represents an ordered collection of CSS style rules. |
 | | method | getter CSSRule? item(unsigned long index) | Returns the indexth CSSRule object in the collection. |
 | | attribute | length | Returns the number of CSSRule objects represented by the collection. |
@@ -480,6 +487,7 @@ section are supported.
 | [Document](https://drafts.csswg.org/cssom-view/#extensions-to-the-document-interface) | method | Element? elementFromPoint(double x, double y); | If there is a layout box in the viewport that would be a target for hit testing at coordinates x,y, return the associated element. If the document has a root element, returns the root element. Otherwise returns null |
 | | attribute | scrollingElement | Returns a reference to the Element that scrolls the document. |
 | [Document](https://drafts.csswg.org/cssom/#extensions-to-the-document-interface) | attribute | styleSheets | Returns a StyleSheetList collection representing the document CSS style sheets. |
+| [Document](https://drafts.csswg.org/css-font-loading/#dom-fontfacesource-fonts) | attribute | fonts | Returns the FontFaceSet for that document. |
 | [Document](https://www.w3.org/TR/page-visibility/#sec-document-interface) | attribute | hidden | Returns true if the Document contained by the top level browsing context (root window in the browser's viewport) is not visible at all. |
 | | attribute | visibilityState | Returns one of the following strings: "hidden", or "visible" |
 | [Document](https://fullscreen.spec.whatwg.org/#api) | attribute | fullscreenElement | Returns the element currently displayed fullscreen, or null. `webkitFullscreenElement` is an alias. |

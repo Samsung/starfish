@@ -1,0 +1,15 @@
+// https://drafts.csswg.org/css-font-loading/#fontfaceset-interface
+
+enum FontFaceSetLoadStatus { "loading", "loaded" };
+
+[Exposed=(Window,Worker)]
+interface FontFaceSet : EventTarget {
+  readonly attribute FontFaceSetLoadStatus status;
+  readonly attribute Promise<FontFaceSet> ready;
+
+  boolean check(DOMString font, optional DOMString text = " ");
+
+  attribute EventHandler onloading;
+  attribute EventHandler onloadingdone;
+  attribute EventHandler onloadingerror;
+};
