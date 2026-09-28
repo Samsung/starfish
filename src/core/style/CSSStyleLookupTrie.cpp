@@ -617,6 +617,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             if (memcmp(data, "caption-side", 12) == 0) {
                 return CSSStyleValuePair::KeyKind::CaptionSide;
             }
+            if (memcmp(data, "color-scheme", 12) == 0) {
+                return CSSStyleValuePair::KeyKind::ColorScheme;
+            }
             break;
         case 'p':
             if (memcmp(data, "padding-left", 12) == 0) {
@@ -1959,6 +1962,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
         case 'c':
             if (memcmp(data, "captionSide", 11) == 0) {
                 return CSSStyleValuePair::KeyKind::CaptionSide;
+            }
+            if (memcmp(data, "colorScheme", 11) == 0) {
+                return CSSStyleValuePair::KeyKind::ColorScheme;
             }
             break;
         case 'p':

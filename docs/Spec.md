@@ -1792,6 +1792,8 @@ The following properties are also implemented but were missing from earlier revi
 
 > **Note on `cursor`:** The `cursor` property is parsed into an inherited computed-style value (keyword form only — `url()` image cursors are not supported, the engine draws no cursor). The tracked keywords are `auto`, `default`, `pointer`, `none`, and all other CSS cursor keywords (collapsed to a single `CursorOtherValue` that serializes back to `auto` via `getComputedStyle`, since the concrete keyword is not retained). The `pointer` value drives the tap-sound (link effect) feedback on Tizen; an author setting any non-`pointer` keyword cleanly overrides an inherited `pointer`. No actual cursor is rendered.
 
+> **Note on `color-scheme`:** Parsed per css-color-adjust-1 (`normal | [ light | dark | <custom-ident> ]+ && only?`) into an inherited computed value that keeps the ident list verbatim (`only` moved last), so unknown idents such as `light purple` round-trip through `getComputedStyle`. The value only records which schemes the element supports; the *used* color scheme (`ComputedStyle::usedColorSchemeIsDark`) is `dark` when the list names `dark` and either omits `light` or `prefers-color-scheme: dark` holds. Nothing else consumes it yet: form controls, scrollbars and the canvas background are not re-themed, and `light-dark()` / system colors are not implemented (see the css-color-5 table below).
+
 ### CSS Scrolling / Overflow
 
 Verified against `src/core/style/CSSStyleLookupTrie.cpp`, `src/core/style/Style.cpp::updateValueOverflowX/Y`, `src/core/dom/Element.cpp` (programmatic scroll APIs), and runtime probes (`getComputedStyle` + `scrollTo`/`scrollIntoView` round-trip).
@@ -2956,7 +2958,8 @@ The following font-related CSS properties are **not in the parser trie** at all 
 | `appearance: auto`, `appearance: none` | Supported, only on `FrameInputBox` (text inputs/buttons) — suppresses background/border/content paint. On `input[type=range]` it suppresses only the slider; the CSS background and borders still paint. |
 | `appearance: button / checkbox / radio / menulist / textfield / slider-horizontal / progress-bar / scrollbar* / etc.` | **Silently rejected** — declaration dropped, computed falls back to `auto`. |
 | `-webkit-appearance` / `-moz-appearance` | **NOT recognized** — full declaration dropped with `Unsupported css property` warning. |
-| `accent-color`, `color-scheme`, `forced-color-adjust` | **NOT recognized** — silently dropped. No way to tint native form widgets or signal dark-mode preference. |
+| `color-scheme` | **Parsed and inherited** (`normal | [ light | dark | <custom-ident> ]+ && only?`); `getComputedStyle` serializes the ident list canonically (`only` last). It only records the opt-in — native widgets are not re-themed and no dark UA stylesheet is applied. See the note under the `cursor` note above. |
+| `accent-color`, `forced-color-adjust` | **NOT recognized** — silently dropped. No way to tint native form widgets. |
 | `:placeholder-shown` (pseudo-class) | **WORKS** — both `Element.matches()` and selector matching work (correction to earlier audit). |
 | `::placeholder` (pseudo-element) | **NOT supported** — `checkPseudoElement` lacks the case (logs `Unsupported css pseudo-element: 60`). Style placeholder color via `:placeholder-shown { color: ... }` on the input itself. |
 | Native `<input type=checkbox/radio>` chrome | LWE has no native checkbox/radio painter; `appearance: none` does NOT change the box dimensions. |

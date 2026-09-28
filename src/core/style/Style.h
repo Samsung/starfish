@@ -799,6 +799,7 @@ class CSSFilterFunction;
     F(BorderBottomLeftRadius, borderBottomLeftRadius,                          \
       "border-bottom-left-radius")                                             \
     F(Cursor, cursor, "cursor")                                                \
+    F(ColorScheme, colorScheme, "color-scheme")                                \
     F(MaskImage, maskImage, "mask-image")                                      \
     F(MaskSize, maskSize, "mask-size")                                         \
     F(MaskPositionX, maskPositionX, "mask-position-x")                         \
@@ -2795,7 +2796,7 @@ public:
         CSSStyleValuePair::KeyKind keyKind, const CSSTokenValue& token);
 
 protected:
-    KeyKind m_keyKind : 8;
+    KeyKind m_keyKind : 9;
     ValueKind m_valueKind : 8;
     ValueKind m_temporaryValueKind : 8;
     bool m_flagImportant : 1;
