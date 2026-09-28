@@ -399,6 +399,28 @@ ENDIF()
 
 ADD_SUBDIRECTORY (third_party/escargot)
 
+# escargot resets CMAKE_LIBRARY_OUTPUT_DIRECTORY to its own binary dir for its
+# standalone release layout, so libwalrus.so would land outside
+# ${OUTPUT_DIRECTORY}/lib. Every packaging step (packaging/*.spec copies
+# release/lib/*.so*, then strips and kUEP-signs what it copied) only looks
+# there, so pin walrus back next to the engine library it is NEEDED by.
+# Linking it from lib/ also needs the explicit bare SONAME, for the same
+# reason as skia_matrix above (otherwise DT_NEEDED becomes "lib/libwalrus.so").
+IF (TARGET walrus)
+    SET_TARGET_PROPERTIES (walrus PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+        LINK_FLAGS "-Wl,-soname,libwalrus.so")
+ENDIF()
+# walrus itself gets LWE_*_FORCE_NOLTO through ESCARGOT_*_FROM_EXTERNAL, but
+# the wabt static library it links does not, so on Tizen libwabt.a holds
+# LTO-only objects that the -fno-lto walrus link cannot consume ("plugin
+# needed to handle lto object"): libwalrus.so is then left with undefined
+# wabt symbols that only fail at runtime. Same post-hoc fix as gtest in
+# starfish_shell.cmake.
+IF (TARGET wabt AND LWE_CXXFLAGS_FORCE_NOLTO)
+    TARGET_COMPILE_OPTIONS (wabt PRIVATE ${LWE_CXXFLAGS_FORCE_NOLTO})
+ENDIF()
+
 #######################################################
 # OpenSSL
 #######################################################
