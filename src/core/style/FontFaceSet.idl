@@ -2,7 +2,7 @@
 
 enum FontFaceSetLoadStatus { "loading", "loaded" };
 
-[Exposed=(Window,Worker)]
+[Exposed=Window]
 interface FontFaceSet : EventTarget {
   readonly attribute FontFaceSetLoadStatus status;
   readonly attribute Promise<FontFaceSet> ready;
