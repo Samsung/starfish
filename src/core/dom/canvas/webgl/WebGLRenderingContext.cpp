@@ -28,6 +28,7 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/canvas/webgl/WebGLExtensions.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/image/SVGNativeImageData.h"
 #include "core/util/debug/Trace.h"
 #include "core/util/String.h"
 #include "core/dom/canvas/webgl/gl/GLContext.h"
@@ -3748,6 +3749,7 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
     GLsizei height = 0;
     GLsizei stride = 0;
     NativeImageData* imageData = nullptr;
+    NativeImageData* rasterizedSVGImage = nullptr;
 
     if (source.isNoneValue()) {
         setGLError(GL_INVALID_VALUE);
@@ -3770,9 +3772,19 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
             return;
         }
         if (imageData->isSVGNativeImageData()) {
-            STARFISH_UNIMPLEMENTED("SVGNativeImageData");
-            width = element->width();
-            height = element->height();
+            width = imageData->width();
+            height = imageData->height();
+            if (width == 0 || height == 0) {
+                width = element->width();
+                height = element->height();
+            }
+            if (width > 0 && height > 0) {
+                rasterizedSVGImage =
+                    imageData->asSVGNativeImageData()->rasterize();
+                imageData = rasterizedSVGImage;
+                width = imageData->width();
+                height = imageData->height();
+            }
         } else {
             width = imageData->width();
             height = imageData->height();
@@ -3865,6 +3877,9 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
         if (savedImageHeight != 0) {
             m_gl->pixelStorei(GL_UNPACK_IMAGE_HEIGHT, savedImageHeight);
         }
+    }
+    if (rasterizedSVGImage != nullptr) {
+        delete rasterizedSVGImage;
     }
 }
 
