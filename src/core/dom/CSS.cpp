@@ -27,10 +27,14 @@
 namespace Starfish {
 bool CSS::supports(Document* document, String* property, String* value)
 {
+    // The two-argument form takes a bare declaration; parseSupportCondition
+    // consumes <supports-condition>, so wrap it into a declaration condition.
     StringBuilder builder;
+    builder.appendChar('(');
     builder.appendString(property);
     builder.appendChar(':');
     builder.appendString(value);
+    builder.appendChar(')');
     auto condition = builder.finalize();
 
     return supports(document, condition);

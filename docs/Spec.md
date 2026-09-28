@@ -1941,7 +1941,7 @@ The CSS section above does not enumerate at-rules. Implementation status:
 | `@media` | Supported. |
 | `@font-face` | Supported (descriptors `unicode-range` and `font-display` are NOT). |
 | `@keyframes` | Supported. **`@-webkit-keyframes` is NOT recognized** — only the unprefixed `@keyframes` token is in `CSSParser::parseAtRule`. (Earlier docs claiming the prefixed form worked were incorrect.) |
-| `@supports` | Parsed via `parseSupportsRule`. Condition evaluation works for the basic `<feature> := (prop: value)` form (a declaration is "supported" iff `parseDeclaration` produces non-empty `cssText`), and the boolean operators `and` / `or` / `not` plus parenthesized groups are honored (`m_supportOperand`/`m_supportOperator` stacks). **However:** the JS-side `CSS.supports(prop, value)` returns `false` for many valid declarations (already documented under CSS Houdini), so do not assume @supports and `CSS.supports()` agree. The general-enclosed `<supports-feature>` fallback (function syntax: `selector(...)`, `font-tech(...)`, `font-format(...)`) is recognized as the catch-all but does not check actual support. |
+| `@supports` | Parsed via `parseSupportsRule`. Condition evaluation works for the basic `<feature> := (prop: value)` form (a declaration is "supported" iff `parseDeclaration` produces non-empty `cssText`), and the boolean operators `and` / `or` / `not` plus parenthesized groups are honored (`m_supportOperand`/`m_supportOperator` stacks). The JS-side `CSS.supports(prop, value)` wraps its arguments into the same `(prop: value)` declaration condition, so it agrees with `@supports`. The general-enclosed `<supports-feature>` fallback (function syntax: `selector(...)`, `font-tech(...)`, `font-format(...)`) is recognized as the catch-all but does not check actual support. |
 | `@namespace` | Implemented. Prefixes declared here are resolved by the parser and drive namespace-aware type selector matching (`ns\|E`, `*\|E`, `\|E`, `ns\|*`), including the default-namespace rule. Placement validity (after `@charset`/`@import`, before style rules) is enforced, and the rule is exposed as a `CSSNamespaceRule`. |
 | `@charset` | Parsed at the top of a stylesheet only; affects byte-level decoding (must be the very first rule, no whitespace before). |
 | `@counter-style` | **Recognized as an at-rule by the dispatcher**, but `parseCounterStyleRule` is a `// TODO` stub returning `nullptr` — the rule is silently dropped. |
@@ -2690,7 +2690,7 @@ LWE has **zero** support for CSS Paged Media:
 
 | Construct | Status |
 |-----------|--------|
-| `will-change` | Parses. **Tokens `transform` and `opacity` DO create a stacking context AND set `m_needsGraphicsBuffer`** (`Frame.cpp:1598-1610`) — earlier docs that called this a no-op were wrong. Other tokens (`scroll-position`, `contents`, custom-ident) are stored but inert. **Bug:** `getPropertyValue('will-change')` returns empty string for `auto` (should be `"auto"`). **Bug:** `CSS.supports('will-change', 'transform')` returns `false` despite the property being supported. |
+| `will-change` | Parses. **Tokens `transform` and `opacity` DO create a stacking context AND set `m_needsGraphicsBuffer`** (`Frame.cpp:1598-1610`) — earlier docs that called this a no-op were wrong. Other tokens (`scroll-position`, `contents`, custom-ident) are stored but inert. **Bug:** `getPropertyValue('will-change')` returns empty string for `auto` (should be `"auto"`). |
 | `contain` (any value: `none`/`layout`/`paint`/`size`/`style`/`content`/`strict`/`inline-size`/`block-size`) | **NOT recognized** — declaration silently dropped. No layout/paint isolation available. |
 | `content-visibility: visible / hidden / auto` | **NOT recognized.** `content-visibility: hidden` does NOT hide the subtree. Use `display: none`. |
 | `contain-intrinsic-size` | **NOT recognized.** Cannot reserve space for skipped subtrees. |
@@ -2721,7 +2721,7 @@ CSS Houdini support is **essentially absent**. Only a cosmetic Typed-OM façade 
 | `CSSStyleValue.parse(prop, cssText)` | **🔥 Crashes the engine** — generated binding asserts `result != nullptr` and the C++ stub returns `nullptr` (`CSSStyleValue.cpp:53`); SIGABRT on call. **Do NOT call.** |
 | `CSSStyleValue.parseAll(...)` | Returns empty array (safe). |
 | `CSS.escape(ident)` | **`undefined`** (declared `[Unimplemented]`). Use a polyfill or manual `\` escaping. |
-| `CSS.supports(prop, value)` / `CSS.supports(condition)` | Function exists but **returns `false` for valid declarations** including `color: red`, `display: grid`, `aspect-ratio: 1`, `--x: 1`, all gradient functions including the working `linear-gradient`. **Treat negative results as inconclusive** — feature-detect via setting an inline value and reading `getComputedStyle` instead. |
+| `CSS.supports(prop, value)` / `CSS.supports(condition)` | Both forms evaluate the declaration through the `@supports` parser (`CSSParser::parseSupportCondition`): a declaration is supported iff it parses to a non-empty `cssText`. The two-argument form used to return `false` for every valid declaration because it handed a bare `prop:value` (no parentheses) to the condition parser; it now wraps it as `(prop: value)`. Values the engine drops at parse time (unsupported color functions, `revert`, ...) still report `false`, which is the correct answer. |
 
 ### CSS Image functions — runtime caveats
 
