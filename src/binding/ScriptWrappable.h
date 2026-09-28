@@ -334,6 +334,8 @@ void unregisterJavaScriptNativeInterface(ScriptBindingInstance* instance,
                                          String* exposedObjectName);
 
 ScriptValue parseJSON(ScriptBindingInstance* instance, String* jsonData);
+ScriptValue parseJSONOrError(ScriptBindingInstance* instance, String* jsonData,
+                             Optional<ScriptValue>& error);
 ScriptValue parseJSONStringToScriptValueOrNull(ScriptBindingInstance* instance,
                                                String* jsonData);
 double parseDate(ScriptBindingInstance* instance, String* date);

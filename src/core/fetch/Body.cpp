@@ -305,9 +305,14 @@ Promise* Body::json()
         if (body.isUSVStringValue() ||
             body.isArrayBufferViewOrArrayBufferValue()) {
             String* text = extractTextFromBodyInit();
-            ScriptValue jsonObject =
-                parseJSON(executionContext()->scriptBindingInstance(), text);
-            m_promise->fulfill(jsonObject);
+            Optional<ScriptValue> parseError;
+            ScriptValue jsonObject = parseJSONOrError(
+                executionContext()->scriptBindingInstance(), text, parseError);
+            if (parseError.hasValue()) {
+                m_promise->reject(parseError.value());
+            } else {
+                m_promise->fulfill(jsonObject);
+            }
         } else if (body.isNoneValue()) {
             auto error = scriptTypeError(
                 executionContext()->scriptBindingInstance(),

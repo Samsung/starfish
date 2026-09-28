@@ -911,6 +911,7 @@ test/cairo/internal-test/resize-observer/observe.html
 test/cairo/internal-test/resize-observer/observe2.html
 test/cairo/internal-test/resize-observer/notify.html
 test/cairo/internal-test/fetch/readablestreamdefaultreader_read.html
+test/cairo/internal-test/fetch/response-json-invalid.html
 test/cairo/internal-test/intl/hangle_NFD_to_NFC.html
 test/cairo/internal-test/mutation-observer/attribute_attributeOldValue_false.html
 test/cairo/internal-test/mutation-observer/attribute_attributeOldValue_true.html
