@@ -86,6 +86,11 @@ IF (STARFISH_WINDOWS_ENABLE_MULTIMEDIA)
     LIST (APPEND STARFISH_DEFINES -DSTARFISH_ENABLE_MULTIMEDIA)
 ENDIF()
 
+IF (${WEBGL} STREQUAL "1")
+    MESSAGE (STATUS "WEBGL Enabled for Windows")
+    LIST (APPEND STARFISH_DEFINES -DSTARFISH_ENABLE_WEBGL)
+ENDIF()
+
 # Same generator-expression reasoning as STARFISH_CXXFLAGS_MODE above. Any
 # non-Debug config (Release, RelWithDebInfo, ...) gets the release-type
 # defines, matching the top-level CMakeLists.txt's accepted CMAKE_BUILD_TYPE

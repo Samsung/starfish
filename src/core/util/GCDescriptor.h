@@ -42,12 +42,17 @@ protected:                                                        \
     _NEW_WITH_GC_DESC_ARG1(Class)             \
     Parent::fillGCDescriptor(desc);
 
-#define _VA_MACRO(_1, _2, x, ...) x
+#define _STARFISH_EXPAND(x) x
+#define _VA_MACRO_HELPER(_1, _2, x, ...) x
+#define _VA_MACRO(...) _STARFISH_EXPAND(_VA_MACRO_HELPER(__VA_ARGS__))
 
 // After this macro is used, class access specifier is changed to `protected`.
-#define BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(...)                              \
-    _VA_MACRO(__VA_ARGS__, _NEW_WITH_GC_DESC_ARG2, _NEW_WITH_GC_DESC_ARG1) \
-    (__VA_ARGS__)
+#define BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(...)                       \
+    _STARFISH_EXPAND(_VA_MACRO(__VA_ARGS__, _NEW_WITH_GC_DESC_ARG2, \
+                               _NEW_WITH_GC_DESC_ARG1)(__VA_ARGS__))
+
+#define BEGIN_IMPLEMENT_NEW_WITH_PARENT_GC_DESC(Class, Parent) \
+    _NEW_WITH_GC_DESC_ARG2(Class, Parent)
 
 #define FILL_GC_POINTER(Class, name) \
     GC_set_bit(desc, GC_WORD_OFFSET(Class, name));
