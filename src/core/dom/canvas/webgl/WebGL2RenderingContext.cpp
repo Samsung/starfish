@@ -434,6 +434,44 @@ Optional<ScriptValue> WebGL2RenderingContext::getParameterImpl(GLenum pname)
         STARFISH_ASSERT(static_cast<GLint>(maybe.value()->glObject()) == value);
         return maybe.value()->scriptValue();
     }
+    // WebGLBuffer
+    case GL_COPY_READ_BUFFER_BINDING:
+    case GL_COPY_WRITE_BUFFER_BINDING:
+    case GL_PIXEL_PACK_BUFFER_BINDING:
+    case GL_PIXEL_UNPACK_BUFFER_BINDING:
+    case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
+    case GL_UNIFORM_BUFFER_BINDING: {
+        GLenum target;
+        switch (pname) {
+        case GL_COPY_READ_BUFFER_BINDING:
+            target = GL_COPY_READ_BUFFER;
+            break;
+        case GL_COPY_WRITE_BUFFER_BINDING:
+            target = GL_COPY_WRITE_BUFFER;
+            break;
+        case GL_PIXEL_PACK_BUFFER_BINDING:
+            target = GL_PIXEL_PACK_BUFFER;
+            break;
+        case GL_PIXEL_UNPACK_BUFFER_BINDING:
+            target = GL_PIXEL_UNPACK_BUFFER;
+            break;
+        case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
+            target = GL_TRANSFORM_FEEDBACK_BUFFER;
+            break;
+        case GL_UNIFORM_BUFFER_BINDING:
+            target = GL_UNIFORM_BUFFER;
+            break;
+        default:
+            target = GL_UNIFORM_BUFFER;
+            break;
+        }
+        WebGLBuffer* buffer =
+            getState()->getBoundBuffer(target).valueOr(nullptr);
+        if (buffer && !buffer->isDeleted()) {
+            return buffer->scriptValue();
+        }
+        return scriptNull();
+    }
     default:
         break;
     }
