@@ -4531,7 +4531,17 @@ void StyleResolver::applyProperty(Element* element,
     case CSSStyleValuePair::KeyKind::BackgroundColor:
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            style->setBackgroundColor(parentStyle->backgroundColor());
+            // an inherited `currentcolor` (or a function of it) resolves
+            // against this element's own color (css-color-4 #currentcolor)
+            Optional<UnresolvedColor*> unresolved = parentStyle->pendingColor(
+                CSSStyleValuePair::KeyKind::BackgroundColor);
+            if (unresolved) {
+                style->setPendingColor(
+                    CSSStyleValuePair::KeyKind::BackgroundColor,
+                    unresolved.value());
+            } else {
+                style->setBackgroundColor(parentStyle->backgroundColor());
+            }
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -11409,9 +11419,17 @@ bool CSSStyleValuePair::updateValueUnitColor(const CSSTokenValue& token)
 
 bool CSSStyleValuePair::updateValueUnitResolvedColor(const CSSTokenValue& token)
 {
-    return updateValueUnitColor(token) &&
-           m_valueKind !=
-               CSSStyleValuePair::ValueKind::UnresolvedColorValueKind;
+    if (!updateValueUnitColor(token)) {
+        return false;
+    }
+    if (m_valueKind == CSSStyleValuePair::ValueKind::UnresolvedColorValueKind) {
+        // a color-mix() of plain colors has a value already
+        if (!m_value.m_unresolvedColor->isConstant()) {
+            return false;
+        }
+        setColorValue(m_value.m_unresolvedColor->resolve(Unit::Color(), false));
+    }
+    return true;
 }
 
 bool CSSStyleValuePair::updateValueUnitBorderColor(const CSSTokenValue& token)
@@ -12548,7 +12566,9 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
                *(parser.curPos()) != ')') {
             CSSStyleValuePair color;
             CSSStyleValuePair length;
-            parser.consumeString(CSSPropertyParser::AllowSharp);
+            // AllowNegative: hyphenated function names (color-mix, light-dark)
+            parser.consumeString(CSSPropertyParser::AllowSharp |
+                                 CSSPropertyParser::AllowNegative);
             String* ps = parser.parsedStringToGCString();
             if (*parser.curPos() == '(') {
                 parser.consumeParenthesis();

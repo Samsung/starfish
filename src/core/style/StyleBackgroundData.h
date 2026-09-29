@@ -317,8 +317,7 @@ private:
 class StyleBackgroundData : public gc {
 public:
     StyleBackgroundData()
-        : m_bgColorNeedToUpdate(false)
-        , m_maxLayerImage(0)
+        : m_maxLayerImage(0)
         , m_maxLayerRepeatX(0)
         , m_maxLayerRepeatY(0)
         , m_maxLayerSize(0)
@@ -388,12 +387,6 @@ public:
     void setColor(Unit::Color color)
     {
         m_color = color;
-        m_bgColorNeedToUpdate = false;
-    }
-
-    void setColorToCurrentColor()
-    {
-        m_bgColorNeedToUpdate = true;
     }
 
     uint16_t assureLayerIndex(uint32_t index) const
@@ -713,17 +706,6 @@ public:
         return sizeTypeValue(layer) == b->sizeTypeValue(layer);
     }
 
-    void checkComputed(Unit::Color color)
-    {
-        // background-color
-        // - default : transparent
-        // - currentColor : represents the "calculated" value of the element's
-        // color property
-        if (m_bgColorNeedToUpdate) {
-            setColor(color);
-        }
-    }
-
     void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
                        LayoutSize windowSize, ComputedStyle* cs)
     {
@@ -748,8 +730,6 @@ private:
                                   const StyleBackgroundData& b);
 
     Unit::Color m_color;
-    // background-color type
-    bool m_bgColorNeedToUpdate : 1;
     uint16_t m_maxLayerImage;
     uint16_t m_maxLayerRepeatX;
     uint16_t m_maxLayerRepeatY;

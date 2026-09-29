@@ -1025,10 +1025,7 @@ public:
         if (open == SIZE_MAX || open == 0 || s.charAt(s.length() - 1) != ')') {
             return false;
         }
-        name.assign(s.data(), open);
-        for (size_t i = 0; i < name.length(); i++) {
-            name[i] = tolower(name[i]);
-        }
+        name = asciiLowercase(s.substring(0, open));
         args = s.substring(open + 1, s.length() - open - 2).trim();
         return true;
     }
@@ -1220,13 +1217,15 @@ public:
         if (name == "hsl" || name == "hsla") {
             return parseHslFunction(args, pair);
         }
-        if (name == "light-dark") {
+        if (name == "light-dark" || name == "color-mix") {
             // Color functions nest recursively; web content is untrusted, so
             // bound the depth before recursing into the arguments.
             if (parenthesisDepth(args) >= kMaxColorFunctionNesting) {
                 return false;
             }
-            Optional<UnresolvedColor*> color = parseLightDark(args);
+            Optional<UnresolvedColor*> color = name == "light-dark"
+                                                   ? parseLightDark(args)
+                                                   : parseColorMix(args);
             if (!color) {
                 return false;
             }
@@ -1234,6 +1233,133 @@ public:
             return true;
         }
         return false;
+    }
+
+    static std::string asciiLowercase(const CSSTokenValue& s)
+    {
+        std::string r(s.data(), s.length());
+        for (size_t i = 0; i < r.length(); i++) {
+            r[i] = tolower(r[i]);
+        }
+        return r;
+    }
+
+    static void splitWords(const CSSTokenValue& s,
+                           std::vector<CSSTokenValue>& words)
+    {
+        std::vector<CSSTokenValue> parts;
+        splitTopLevel(s.trim(), ' ', parts);
+        for (size_t i = 0; i < parts.size(); i++) {
+            if (parts[i].length()) {
+                words.push_back(parts[i]);
+            }
+        }
+    }
+
+    // <percentage [0,100]> of a color-mix() argument
+    static bool parseMixPercent(const CSSTokenValue& s, double* percent)
+    {
+        // <number> per css-syntax-3: [+-]? digits [. digits]? | [+-]? . digits
+        size_t n = s.length();
+        if (n < 2 || s.charAt(n - 1) != '%') {
+            return false;
+        }
+        size_t i = 0;
+        if (s.charAt(0) == '+' || s.charAt(0) == '-') {
+            i++;
+        }
+        size_t intDigits = 0, fracDigits = 0;
+        bool dot = false;
+        for (; i < n - 1; i++) {
+            char c = s.charAt(i);
+            if (c >= '0' && c <= '9') {
+                (dot ? fracDigits : intDigits)++;
+            } else if (c == '.' && !dot) {
+                dot = true;
+            } else {
+                return false;
+            }
+        }
+        if (intDigits + fracDigits == 0 || (dot && fracDigits == 0)) {
+            return false;
+        }
+        double value = atof(std::string(s.data(), n - 1).c_str());
+        if (value < 0 || value > 100) {
+            return false;
+        }
+        *percent = value;
+        return true;
+    }
+
+    // [ <color> && <percentage>? ]; `percent` is -1 when omitted
+    static Optional<UnresolvedColor*> parseColorMixArgument(
+        const CSSTokenValue& part, double* percent)
+    {
+        std::vector<CSSTokenValue> words;
+        splitWords(part, words);
+        *percent = -1;
+        if (words.size() == 1) {
+            return parseColorTree(words[0]);
+        }
+        if (words.size() == 2) {
+            if (parseMixPercent(words[1], percent)) {
+                return parseColorTree(words[0]);
+            }
+            if (parseMixPercent(words[0], percent)) {
+                return parseColorTree(words[1]);
+            }
+        }
+        return Optional<UnresolvedColor*>();
+    }
+
+    // color-mix(<color-interpolation-method>, <color> <p>?, <color> <p>?):
+    // css-color-5 #color-mix
+    static Optional<UnresolvedColor*> parseColorMix(const CSSTokenValue& args)
+    {
+        std::vector<CSSTokenValue> parts;
+        splitTopLevel(args, ',', parts);
+        if (parts.size() != 3) {
+            return Optional<UnresolvedColor*>();
+        }
+
+        // in <color-space> [ <hue-interpolation-method> hue ]?
+        std::vector<CSSTokenValue> words;
+        splitWords(parts[0], words);
+        if ((words.size() != 2 && words.size() != 4) ||
+            asciiLowercase(words[0]) != "in") {
+            return Optional<UnresolvedColor*>();
+        }
+        ColorInterpolation::Space space;
+        if (!ColorInterpolation::parseSpace(asciiLowercase(words[1]), &space)) {
+            return Optional<UnresolvedColor*>();
+        }
+        ColorInterpolation::HueMethod hue = ColorInterpolation::Shorter;
+        if (words.size() == 4) {
+            if (!ColorInterpolation::isPolar(space) ||
+                !ColorInterpolation::parseHueMethod(asciiLowercase(words[2]),
+                                                    &hue) ||
+                asciiLowercase(words[3]) != "hue") {
+                return Optional<UnresolvedColor*>();
+            }
+        }
+
+        double p1, p2;
+        Optional<UnresolvedColor*> first = parseColorMixArgument(parts[1], &p1);
+        if (!first) {
+            return Optional<UnresolvedColor*>();
+        }
+        Optional<UnresolvedColor*> second =
+            parseColorMixArgument(parts[2], &p2);
+        if (!second) {
+            return Optional<UnresolvedColor*>();
+        }
+        // both percentages zero is invalid (css-color-5
+        // #color-mix-percent-norm)
+        if (p1 == 0 && p2 == 0) {
+            return Optional<UnresolvedColor*>();
+        }
+        return UnresolvedColor::createColorMix(space, hue, first.value(), p1,
+                                               second.value(), p2);
     }
 
     // A <color> nested in a color function, as an UnresolvedColor leaf or
@@ -1245,12 +1371,16 @@ public:
             return Optional<UnresolvedColor*>();
         }
         switch (p.valueKind()) {
-        case CSSStyleValuePair::ValueKind::ColorValueKind:
-            return UnresolvedColor::createLiteral(p.colorValue());
+        case CSSStyleValuePair::ValueKind::ColorValueKind: {
+            // rebuilt from channels so an hsl() argument serializes as rgb()
+            Unit::Color c = p.colorValue();
+            return UnresolvedColor::createLiteral(
+                Unit::Color(c.r(), c.g(), c.b(), c.a()));
+        }
         case CSSStyleValuePair::ValueKind::NamedColorValueKind:
             if (p.namedColorValue() ==
                 NamedColor::NamedColorValue::currentColor) {
-                return UnresolvedColor::createCurrentColor();
+                return UnresolvedColor::currentColor();
             }
             return UnresolvedColor::createNamed(p.namedColorValue());
         case CSSStyleValuePair::ValueKind::UnresolvedColorValueKind:

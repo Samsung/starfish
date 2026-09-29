@@ -901,8 +901,29 @@ void ComputedStyle::resolvePendingColors(ComputedStyle* parentStyle)
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     }
-    m_rareComputedStyleData.clearPendingColors();
-    m_hasPendingColors = false;
+
+    // Keep what a child inheriting background-color must resolve against
+    // its own color: light-dark() is decided here, only currentcolor stays
+    // unresolved (css-color-4 #currentcolor-color).
+    size_t kept = 0;
+    for (size_t i = 0; i < list->size(); i++) {
+        if ((*list)[i].m_key != CSSStyleValuePair::KeyKind::BackgroundColor) {
+            continue;
+        }
+        UnresolvedColor* folded = (*list)[i].m_color->foldLightDark(dark);
+        if (folded->isConstant()) {
+            continue;
+        }
+        (*list)[kept].m_key = CSSStyleValuePair::KeyKind::BackgroundColor;
+        (*list)[kept].m_color = folded;
+        kept++;
+    }
+    if (kept) {
+        list->resize(kept);
+    } else {
+        m_rareComputedStyleData.clearPendingColors();
+        m_hasPendingColors = false;
+    }
 }
 
 void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
@@ -938,7 +959,6 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
 
     StyleBackgroundData* background = this->background();
     if (background) {
-        background->checkComputed(m_inheritedStyles.m_color);
     }
 
     // `auto` for align-self/justify-self resolves against the *box* parent:

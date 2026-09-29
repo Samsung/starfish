@@ -1293,6 +1293,23 @@ public:
         }
     }
 
+    // The unresolved value a property still carries after resolution (only
+    // background-color keeps one, for inheritance).
+    Optional<UnresolvedColor*> pendingColor(CSSStyleValuePair::KeyKind key)
+    {
+        if (!m_hasPendingColors) {
+            return Optional<UnresolvedColor*>();
+        }
+        PendingColorList* list =
+            m_rareComputedStyleData.pendingColors().value();
+        for (size_t i = 0; i < list->size(); i++) {
+            if ((*list)[i].m_key == key) {
+                return Optional<UnresolvedColor*>((*list)[i].m_color);
+            }
+        }
+        return Optional<UnresolvedColor*>();
+    }
+
     void resolvePendingColors(ComputedStyle* parentStyle);
 
     Unit::Color color()
@@ -1784,7 +1801,8 @@ public:
 
     void setBackgroundColorToCurrentColor()
     {
-        m_rareComputedStyleData.ensureBackground()->setColorToCurrentColor();
+        setPendingColor(CSSStyleValuePair::KeyKind::BackgroundColor,
+                        UnresolvedColor::currentColor());
     }
 
     void setBackgroundImage(ImageValue* image, uint32_t layer)

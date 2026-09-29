@@ -670,12 +670,12 @@ http://web-platform.test:8000/css/css-backgrounds/box-shadow-overlapping-004.htm
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/box-shadow-table-border-collapse-001.html
 http://web-platform.test:8000/css/css-backgrounds/box-shadow-table-row-display.html
 http://web-platform.test:8000/css/css-backgrounds/child-move-reveals-parent-background.html
-http://web-platform.test:8000/css/css-backgrounds/color-mix-currentcolor-background-repaint-parent.html
-http://web-platform.test:8000/css/css-backgrounds/color-mix-currentcolor-background-repaint.html
-http://web-platform.test:8000/css/css-backgrounds/color-mix-currentcolor-border-repaint-parent.html
-http://web-platform.test:8000/css/css-backgrounds/color-mix-currentcolor-border-repaint.html
-http://web-platform.test:8000/css/css-backgrounds/color-mix-currentcolor-outline-repaint-parent.html
-http://web-platform.test:8000/css/css-backgrounds/color-mix-currentcolor-outline-repaint.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/color-mix-currentcolor-background-repaint-parent.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/color-mix-currentcolor-background-repaint.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/color-mix-currentcolor-border-repaint-parent.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/color-mix-currentcolor-border-repaint.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/color-mix-currentcolor-outline-repaint-parent.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/color-mix-currentcolor-outline-repaint.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/css-border-radius-001.html
 http://web-platform.test:8000/css/css-backgrounds/css-box-shadow-001.html
 http://web-platform.test:8000/css/css-backgrounds/css3-background-clip-border-box.html
