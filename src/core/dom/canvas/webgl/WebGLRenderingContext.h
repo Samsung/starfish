@@ -435,6 +435,15 @@ protected:
     GLint getCurrentProgram();
     void completePendingJobs();
 
+    bool hasDepthBuffer() const
+    {
+        return m_attributes.m_depth;
+    }
+    bool hasStencilBuffer() const
+    {
+        return m_attributes.m_stencil;
+    }
+
 private:
     GLTextureMap m_boundTextures;
     GCUnorderedMap<GLenum, WebGLTexture*> m_boundTextureObjects;
