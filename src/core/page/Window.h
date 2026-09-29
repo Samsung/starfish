@@ -31,7 +31,6 @@
 
 namespace Escargot {
 class PromiseObjectRef;
-class ValueRef;
 } // namespace Escargot
 
 namespace Starfish {
@@ -424,23 +423,11 @@ public:
 #undef VIRTUAL
 #undef OVERRIDE
 
-    struct UnhandledPromiseRejection : public gc {
-        UnhandledPromiseRejection(Escargot::PromiseObjectRef* p,
-                                  Escargot::ValueRef* r)
-            : promise(p)
-            , reason(r)
-        {
-        }
-        Escargot::PromiseObjectRef* promise;
-        Escargot::ValueRef* reason;
-    };
-
+    // https://html.spec.whatwg.org/multipage/webappapis.html#the-hostpromiserejectiontracker-implementation
     void addAboutToBeNotifiedRejectedPromise(
-        Escargot::PromiseObjectRef* promise, Escargot::ValueRef* reason);
+        Escargot::PromiseObjectRef* promise);
     void handlePromiseHandlerAddedAfterReject(
         Escargot::PromiseObjectRef* promise);
-    void processPromiseRejections();
-    void schedulePromiseRejectionNotification();
 
 private:
     Window(BrowsingContext* browsingContext, ResourceURL* url,
@@ -483,8 +470,20 @@ private:
 #ifdef STARFISH_ENABLE_OBSOLETE_SPEC
     Event* m_currentDispatchingEvent;
 #endif
-    GCVector<UnhandledPromiseRejection*> m_aboutToBeNotifiedRejectedPromises;
-    GCVector<UnhandledPromiseRejection*> m_outstandingRejectedPromises;
+    void schedulePromiseRejectionNotification();
+    void notifyAboutRejectedPromises();
+    bool dispatchPromiseRejectionEvent(String* type,
+                                       Escargot::PromiseObjectRef* promise,
+                                       bool cancelable);
+
+    GCVector<Escargot::PromiseObjectRef*> m_aboutToBeNotifiedRejectedPromises;
+    // The list being notified; an entry is nulled out when a handler is
+    // attached during dispatch, so it doesn't enter the outstanding set.
+    GCVector<Escargot::PromiseObjectRef*> m_notifyingRejectedPromises;
+    // The spec's outstanding rejected promises *weak* set: each entry is a
+    // disappearing link with a hidden pointer, so a promise nobody references
+    // any more (and its reason) is still collected.
+    GCVector<void**> m_outstandingRejectedPromises;
     bool m_hasScheduledPromiseRejectionCheck{ false };
     GCUnorderedMap<void**, Disposer> m_disposers;
 };

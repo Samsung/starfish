@@ -880,7 +880,7 @@ void WebView::ensureScriptEngineInstance()
                 }
                 if (event == Escargot::VMInstanceRef::PromiseRejectEvent::
                                  PromiseRejectWithNoHandler) {
-                    window->addAboutToBeNotifiedRejectedPromise(promise, value);
+                    window->addAboutToBeNotifiedRejectedPromise(promise);
                 } else if (event ==
                            Escargot::VMInstanceRef::PromiseRejectEvent::
                                PromiseHandlerAddedAfterReject) {

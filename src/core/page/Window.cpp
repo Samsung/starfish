@@ -1198,10 +1198,9 @@ IDBFactory* Window::indexedDB()
 #endif
 
 void Window::addAboutToBeNotifiedRejectedPromise(
-    Escargot::PromiseObjectRef* promise, Escargot::ValueRef* reason)
+    Escargot::PromiseObjectRef* promise)
 {
-    m_aboutToBeNotifiedRejectedPromises.push_back(
-        new UnhandledPromiseRejection(promise, reason));
+    m_aboutToBeNotifiedRejectedPromises.push_back(promise);
     schedulePromiseRejectionNotification();
 }
 
@@ -1209,30 +1208,44 @@ void Window::handlePromiseHandlerAddedAfterReject(
     Escargot::PromiseObjectRef* promise)
 {
     for (size_t i = 0; i < m_aboutToBeNotifiedRejectedPromises.size(); i++) {
-        if (m_aboutToBeNotifiedRejectedPromises[i]->promise == promise) {
+        if (m_aboutToBeNotifiedRejectedPromises[i] == promise) {
             m_aboutToBeNotifiedRejectedPromises.erase(
                 m_aboutToBeNotifiedRejectedPromises.begin() + i);
             return;
         }
     }
 
-    for (size_t i = 0; i < m_outstandingRejectedPromises.size(); i++) {
-        if (m_outstandingRejectedPromises[i]->promise == promise) {
-            auto rejectedItem = m_outstandingRejectedPromises[i];
-            m_outstandingRejectedPromises.erase(
-                m_outstandingRejectedPromises.begin() + i);
-
-            PromiseRejectionEventInit init;
-            init.setPromise(rejectedItem->promise);
-            init.setReason(rejectedItem->reason ? rejectedItem->reason
-                                                : scriptNull());
-            init.setCancelable(false);
-            PromiseRejectionEvent* event = new PromiseRejectionEvent(
-                executionContext(),
-                staticStrings()->m_rejectionhandled.localName(), init);
-            dispatchEvent(event);
+    // Escargot has no [[PromiseIsHandled]] query, so a handler attached while
+    // unhandledrejection is being dispatched is recorded here instead.
+    for (size_t i = 0; i < m_notifyingRejectedPromises.size(); i++) {
+        if (m_notifyingRejectedPromises[i] == promise) {
+            m_notifyingRejectedPromises[i] = nullptr;
             return;
         }
+    }
+
+    for (size_t i = 0; i < m_outstandingRejectedPromises.size(); i++) {
+        void** link = m_outstandingRejectedPromises[i];
+        if (!*link || GC_REVEAL_POINTER(reinterpret_cast<GC_hidden_pointer>(
+                          *link)) != promise) {
+            continue;
+        }
+        GC_unregister_disappearing_link(link);
+        m_outstandingRejectedPromises.erase(
+            m_outstandingRejectedPromises.begin() + i);
+
+        // The spec fires rejectionhandled from a queued task, not from within
+        // the then() call that attached the handler.
+        webView()->messageLoop()->addIdler(
+            this,
+            [](size_t handle, void* data, void* data1) {
+                Window* window = static_cast<Window*>(data);
+                window->dispatchPromiseRejectionEvent(
+                    window->staticStrings()->m_rejectionhandled.localName(),
+                    static_cast<Escargot::PromiseObjectRef*>(data1), false);
+            },
+            this, promise);
+        return;
     }
 }
 
@@ -1245,45 +1258,72 @@ void Window::schedulePromiseRejectionNotification()
     webView()->messageLoop()->addIdler(
         this,
         [](size_t handle, void* data) {
-            Window* window = static_cast<Window*>(data);
-            window->processPromiseRejections();
+            static_cast<Window*>(data)->notifyAboutRejectedPromises();
         },
         this);
 }
 
-void Window::processPromiseRejections()
+bool Window::dispatchPromiseRejectionEvent(String* type,
+                                           Escargot::PromiseObjectRef* promise,
+                                           bool cancelable)
+{
+    PromiseRejectionEventInit init;
+    init.setPromise(promise);
+    init.setReason(promise->promiseResult());
+    init.setCancelable(cancelable);
+    return dispatchEvent(
+        new PromiseRejectionEvent(executionContext(), type, init));
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#notify-about-rejected-promises
+void Window::notifyAboutRejectedPromises()
 {
     m_hasScheduledPromiseRejectionCheck = false;
     if (m_aboutToBeNotifiedRejectedPromises.empty()) {
         return;
     }
 
-    auto list = m_aboutToBeNotifiedRejectedPromises;
-    m_aboutToBeNotifiedRejectedPromises.clear();
+    STARFISH_ASSERT(m_notifyingRejectedPromises.empty());
+    m_notifyingRejectedPromises.swap(m_aboutToBeNotifiedRejectedPromises);
 
-    for (size_t i = 0; i < list.size(); i++) {
-        auto item = list[i];
-        m_outstandingRejectedPromises.push_back(item);
-
-        PromiseRejectionEventInit init;
-        init.setPromise(item->promise);
-        init.setReason(item->reason ? item->reason : scriptNull());
-        init.setCancelable(true);
-        PromiseRejectionEvent* event = new PromiseRejectionEvent(
-            executionContext(),
-            staticStrings()->m_unhandledrejection.localName(), init);
-        bool notPrevented = dispatchEvent(event);
-        if (notPrevented) {
-            String* reasonStr =
-                toBrowserString(scriptBindingInstance(), item->reason);
+    for (size_t i = 0; i < m_notifyingRejectedPromises.size(); i++) {
+        Escargot::PromiseObjectRef* promise = m_notifyingRejectedPromises[i];
+        if (!promise) {
+            continue;
+        }
+        bool notCanceled = dispatchPromiseRejectionEvent(
+            staticStrings()->m_unhandledrejection.localName(), promise, true);
+        if (notCanceled) {
             String* logMsg =
-                String::fromUTF8("Uncaught (in promise) ")->concat(reasonStr);
+                String::fromUTF8("Uncaught (in promise) ")
+                    ->concat(toBrowserString(scriptBindingInstance(),
+                                             promise->promiseResult()));
             STARFISH_LOG_ERROR("%s", logMsg->toUTF8NonGCString().data());
             if (webBase() && webBase()->console()) {
                 webBase()->console()->error(logMsg);
             }
         }
+        if (!m_notifyingRejectedPromises[i]) {
+            continue;
+        }
+
+        STARFISH_ASSERT(GC_base(promise) != 0);
+        void** link = reinterpret_cast<void**>(GC_MALLOC_ATOMIC(sizeof(void*)));
+        *link = reinterpret_cast<void*>(GC_HIDE_POINTER(promise));
+        GC_GENERAL_REGISTER_DISAPPEARING_LINK(link, promise);
+        m_outstandingRejectedPromises.push_back(link);
     }
+    m_notifyingRejectedPromises.clear();
+
+    // Drop the links whose promise has been collected.
+    size_t alive = 0;
+    for (size_t i = 0; i < m_outstandingRejectedPromises.size(); i++) {
+        if (*m_outstandingRejectedPromises[i]) {
+            m_outstandingRejectedPromises[alive++] =
+                m_outstandingRejectedPromises[i];
+        }
+    }
+    m_outstandingRejectedPromises.resize(alive);
 }
 
 } // namespace Starfish

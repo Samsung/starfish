@@ -3072,7 +3072,7 @@ The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` 
 | `document.createEvent('ErrorEvent')` | **Broken** — returns a plain `Event` (logs `STARFISH_UNSUPPORTED`). Use `new ErrorEvent(...)` instead. |
 | `window.onerror` (attribute-style) | Receives 5 args: `(message, source, lineno, colno, error)`. `error` is the original thrown value. Spec-compliant. |
 | `addEventListener('error', fn)` | Receives a single `ErrorEvent` argument. Spec-compliant. |
-| `unhandledrejection` / `rejectionhandled` events | Fully implemented. Window fires `unhandledrejection` when a rejected promise has no handler, and `rejectionhandled` if a handler is attached later. `PromiseRejectionEvent` is exposed and constructible. Unprevented unhandled rejections are logged to console.error. |
+| `unhandledrejection` / `rejectionhandled` events | Window only (`PromiseRejectionEvent` is `Exposed=Window`; workers never fire them). `unhandledrejection` fires from a task after the rejection, `rejectionhandled` from a task once a handler is attached to a promise already reported. Attaching a handler inside an `unhandledrejection` listener does not fire `rejectionhandled`. Uncanceled unhandled rejections are logged to console.error. |
 
 ### Pointer / Keyboard / Touch / Drag events — runtime caveats
 
