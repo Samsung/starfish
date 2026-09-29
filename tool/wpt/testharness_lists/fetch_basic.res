@@ -15,3 +15,5 @@ http://web-platform.test:8000/fetch/api/response/response-stream-disturbed-3.any
 http://web-platform.test:8000/fetch/api/response/response-static-redirect.any.html
 http://web-platform.test:8000/fetch/api/response/response-static-error.any.html
 http://web-platform.test:8000/fetch/api/response/response-error.any.html
+# Unmeasured (no local wpt serve): SyntaxError rejection of Response.json(); measure and uncomment.
+# http://web-platform.test:8000/fetch/api/response/json.any.html
