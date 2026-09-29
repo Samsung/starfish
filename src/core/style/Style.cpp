@@ -4431,7 +4431,7 @@ void StyleResolver::applyProperty(Element* element,
             style->setColorScheme(parentStyle->colorScheme());
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::Initial) {
-            style->setColorScheme(nullptr);
+            style->setColorScheme(Optional<String*>());
         } else {
             style->setColorScheme(newCssValue.keywordValue());
         }
@@ -12711,8 +12711,6 @@ static bool isPlainIdent(const CSSTokenValue& token)
 bool CSSStyleValuePair::updateValueColorScheme(Document* document,
                                                const CSSTokenVector& tokens)
 {
-    STARFISH_ASSERT(document != nullptr);
-
     // https://drafts.csswg.org/css-color-adjust-1/#color-scheme-prop
     //   normal | [ light | dark | <custom-ident> ]+ && only?
     // The ident list is kept as its canonical serialization (author order,

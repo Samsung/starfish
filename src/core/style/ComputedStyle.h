@@ -1563,17 +1563,19 @@ public:
         ensureInheritedRareData()->m_cursorValue = v;
     }
 
-    // nullptr is `normal`
-    String* colorScheme()
+    // Empty for `normal`
+    Optional<String*> colorScheme()
     {
         if (m_inheritedStyles.m_rareData) {
-            return m_inheritedStyles.m_rareData->m_colorScheme;
+            return Optional<String*>(
+                m_inheritedStyles.m_rareData->m_colorScheme);
         }
-        return nullptr;
+        return Optional<String*>();
     }
 
-    void setColorScheme(String* v)
+    void setColorScheme(Optional<String*> scheme)
     {
+        String* v = scheme ? scheme.value() : nullptr;
         if (v && v->equals("normal")) {
             v = nullptr;
         }
@@ -1612,12 +1614,12 @@ public:
 
     bool colorSchemeEquals(ComputedStyle* other)
     {
-        String* a = colorScheme();
-        String* b = other->colorScheme();
+        Optional<String*> a = colorScheme();
+        Optional<String*> b = other->colorScheme();
         if (!a || !b) {
-            return a == b;
+            return !a && !b;
         }
-        return a->equals(b);
+        return a.value()->equals(b.value());
     }
 
     // https://drafts.csswg.org/css-color-adjust-1/#color-scheme-processing
@@ -5220,9 +5222,9 @@ protected:
         m_float = FloatValue::NoneFloatValue;
         m_clear = ClearValue::NoneClearValue;
         m_zIndexSpecifiedByUser = false;
+        m_hasPendingColors = false;
         m_overflowX = OverflowValue::VisibleOverflow;
         m_overflowY = OverflowValue::VisibleOverflow;
-        m_hasPendingColors = false;
         m_verticalAlign = VerticalAlignValue::BaselineVAlignValue;
         m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
         m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
@@ -5308,9 +5310,9 @@ protected:
     int m_styleDamageSourceNodeStateMap : 5;
     int m_styleDamageSourceNodeStateDOMTreeMap : 5;
     bool m_zIndexSpecifiedByUser : 1;
+    bool m_hasPendingColors : 1;
 
 public:
-    bool m_hasPendingColors : 1;
     // Prototype (measure/tile-cost-breakdown): lazy cache for
     // TextDecorationData::merge. 0 = unknown, 1 = merge is a no-op for this
     // style, 2 = merge has an effect. ComputedStyle instances are rebuilt on
