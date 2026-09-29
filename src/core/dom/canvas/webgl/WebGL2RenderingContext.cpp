@@ -1671,6 +1671,7 @@ void WebGL2RenderingContext::uniformBlockBinding(WebGLProgram* program,
 
     gl()->uniformBlockBinding(program->glObject(), uniformBlockIndex,
                               uniformBlockBinding);
+    program->setUniformBlockBinding(uniformBlockIndex, uniformBlockBinding);
 }
 
 Optional<GCAtomicVector<GLuint>> WebGL2RenderingContext::getUniformIndices(
@@ -1866,66 +1867,50 @@ void WebGL2RenderingContext::bindVertexArray(
 
 bool WebGL2RenderingContext::validateDrawCallUBO()
 {
-    GLint programId = getCurrentProgram();
-    if (!programId)
+    Optional<WebGLProgram*> maybeProg = getState()->webGLProgram();
+    if (!maybeProg.hasValue() || !maybeProg.value()) {
         return true;
+    }
 
-    GLint numBlocks = 0;
-    gl()->getProgramiv(programId, GL_ACTIVE_UNIFORM_BLOCKS, &numBlocks);
+    WebGLProgram* program = maybeProg.value();
+    if (!program->hasActiveUniformBlocks()) {
+        return true;
+    }
 
-    for (GLint i = 0; i < numBlocks; i++) {
-        GLint dataSize = 0;
-        gl()->getActiveUniformBlockiv(programId, i, GL_UNIFORM_BLOCK_DATA_SIZE,
-                                      &dataSize);
-        if (dataSize > 0) {
-            GLint binding = 0;
-            gl()->getActiveUniformBlockiv(programId, i,
-                                          GL_UNIFORM_BLOCK_BINDING, &binding);
+    const auto& blocks = program->uniformBlocks();
+    for (size_t i = 0; i < blocks.size(); i++) {
+        GLint dataSize = blocks[i].dataSize;
+        if (dataSize <= 0) {
+            continue;
+        }
 
-            if (binding < 0 ||
-                static_cast<size_t>(binding) >=
-                    m_uniformBufferBindings.size() ||
-                m_uniformBufferBindings[binding] == nullptr ||
-                m_uniformBufferBindings[binding]->buffer == nullptr ||
-                m_uniformBufferBindings[binding]->buffer->isDeleted()) {
-                setGLError(GL_INVALID_OPERATION,
-                           "draw: UniformBlock is not backed by a buffer.");
-                return false;
-            }
+        GLint binding = blocks[i].binding;
+        if (binding < 0 ||
+            static_cast<size_t>(binding) >= m_uniformBufferBindings.size() ||
+            m_uniformBufferBindings[binding] == nullptr ||
+            m_uniformBufferBindings[binding]->buffer == nullptr ||
+            m_uniformBufferBindings[binding]->buffer->isDeleted()) {
+            setGLError(GL_INVALID_OPERATION,
+                       "draw: UniformBlock is not backed by a buffer.");
+            return false;
+        }
 
-            IndexedBufferBinding* b = m_uniformBufferBindings[binding];
+        IndexedBufferBinding* b = m_uniformBufferBindings[binding];
+        GLsizeiptr totalBufferSize = b->buffer->byteLength();
 
-            GLint totalBufferSize = 0;
-            gl()->bindBuffer(GL_UNIFORM_BUFFER, b->buffer->glObject());
-            gl()->getBufferParameteriv(GL_UNIFORM_BUFFER, GL_BUFFER_SIZE,
-                                       &totalBufferSize);
+        if (totalBufferSize == 0) {
+            setGLError(GL_INVALID_OPERATION,
+                       "draw: UniformBlock is backed by a buffer with no "
+                       "data store.");
+            return false;
+        }
 
-            // Restore generic bound buffer
-            Optional<WebGLBuffer*> prevBound =
-                getState()->getBoundBuffer(GL_UNIFORM_BUFFER);
-            gl()->bindBuffer(GL_UNIFORM_BUFFER,
-                             (prevBound.hasValue() && prevBound.value())
-                                 ? prevBound.value()->glObject()
-                                 : 0);
-
-            if (totalBufferSize == 0) {
-                setGLError(GL_INVALID_OPERATION,
-                           "draw: UniformBlock is backed by a buffer with no "
-                           "data store.");
-                return false;
-            }
-
-            GLsizeiptr effectiveSize = totalBufferSize;
-            if (b->isRange) {
-                effectiveSize = b->size;
-            }
-
-            if (effectiveSize < dataSize) {
-                setGLError(GL_INVALID_OPERATION,
-                           "draw: bound UNIFORM_BUFFER size is smaller than "
-                           "active uniform block data size.");
-                return false;
-            }
+        GLsizeiptr effectiveSize = b->isRange ? b->size : totalBufferSize;
+        if (effectiveSize < dataSize) {
+            setGLError(GL_INVALID_OPERATION,
+                       "draw: bound UNIFORM_BUFFER size is smaller than "
+                       "active uniform block data size.");
+            return false;
         }
     }
     return true;
@@ -2424,6 +2409,11 @@ void WebGL2RenderingContext::bufferData(GLenum target,
 
     gl()->bufferData(target, copyByteLength,
                      srcData->rawBuffer() + srcOffset * elementSize, usage);
+
+    Optional<WebGLBuffer*> maybeBound = getState()->getBoundBuffer(target);
+    if (maybeBound.hasValue() && maybeBound.value()) {
+        maybeBound.value()->setByteLength(copyByteLength);
+    }
 }
 
 void WebGL2RenderingContext::bufferSubData(GLenum target,
