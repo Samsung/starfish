@@ -2461,7 +2461,8 @@ static bool validateUniformBlocksMatch(const GCVector<WebGLShader*>& shaders)
             }
 
             std::string blockName = src.substr(nameStart, nameEnd - nameStart);
-            std::string body = src.substr(braceOpen + 1, braceClose - (braceOpen + 1));
+            std::string body =
+                src.substr(braceOpen + 1, braceClose - (braceOpen + 1));
 
             // Extract tokens (normalize whitespace and semicolons)
             std::vector<std::string> tokens;
@@ -2546,6 +2547,10 @@ void WebGLRenderingContext::linkProgram(WebGLProgram* program)
     if (linkStatus != GL_TRUE) {
         program->setLinkFailed(true);
         return;
+    }
+
+    if (webGLVersion() >= 2) {
+        program->updateUniformBlocks(m_gl);
     }
 
     GLint maxVertexAttribs = 0;
@@ -3087,6 +3092,11 @@ void WebGLRenderingContext::bufferData(GLenum target, GLsizeiptr size,
     // target. The buffer is initialized to 0.
     std::vector<unsigned char> zeros(size);
     m_gl->bufferData(target, size, zeros.data(), usage);
+
+    Optional<WebGLBuffer*> maybeBound = m_state->getBoundBuffer(target);
+    if (maybeBound.hasValue() && maybeBound.value()) {
+        maybeBound.value()->setByteLength(size);
+    }
 }
 
 void WebGLRenderingContext::bufferData(GLenum target,
@@ -3100,20 +3110,28 @@ void WebGLRenderingContext::bufferData(GLenum target,
         return;
     }
 
+    GLsizeiptr byteLength = 0;
     if (data.value().isArrayBufferValue()) {
         ScriptArrayBuffer buffer = data.value().getArrayBufferValue();
-        m_gl->bufferData(target, buffer->byteLength(), buffer->rawBuffer(),
-                         usage);
+        byteLength = buffer->byteLength();
+        m_gl->bufferData(target, byteLength, buffer->rawBuffer(), usage);
     } else if (data.value().isArrayBufferViewValue()) {
         ScriptArrayBufferView view = data.value().getArrayBufferViewValue();
-        m_gl->bufferData(target, view->byteLength(), view->rawBuffer(), usage);
+        byteLength = view->byteLength();
+        m_gl->bufferData(target, byteLength, view->rawBuffer(), usage);
     } else if (data.value().isSharedArrayBufferValue()) {
         ScriptSharedArrayBuffer buffer =
             data.value().getSharedArrayBufferValue();
-        m_gl->bufferData(target, buffer->byteLength(), buffer->rawBuffer(),
-                         usage);
+        byteLength = buffer->byteLength();
+        m_gl->bufferData(target, byteLength, buffer->rawBuffer(), usage);
     } else {
         setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    Optional<WebGLBuffer*> maybeBound = m_state->getBoundBuffer(target);
+    if (maybeBound.hasValue() && maybeBound.value()) {
+        maybeBound.value()->setByteLength(byteLength);
     }
 }
 

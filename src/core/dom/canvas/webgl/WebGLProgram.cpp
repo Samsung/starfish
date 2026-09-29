@@ -22,6 +22,8 @@
 #include "StarfishConfig.h"
 #include "WebGLProgram.h"
 #include "WebGLShader.h"
+#include "platform/canvas/gl/GL.h"
+#include "platform/canvas/gl/IncludeGL.h"
 
 namespace Starfish {
 
@@ -68,6 +70,27 @@ Optional<GCVector<WebGLShader*>> WebGLProgram::getAttachedShaders() const
         }
     }
     return shaders;
+}
+
+void WebGLProgram::updateUniformBlocks(GL* gl)
+{
+    m_uniformBlocks.clear();
+    GLint numBlocks = 0;
+    gl->getProgramiv(glObject(), GL_ACTIVE_UNIFORM_BLOCKS, &numBlocks);
+    if (numBlocks <= 0) {
+        return;
+    }
+    m_uniformBlocks.resize(numBlocks);
+    for (GLint i = 0; i < numBlocks; i++) {
+        GLint dataSize = 0;
+        gl->getActiveUniformBlockiv(glObject(), i, GL_UNIFORM_BLOCK_DATA_SIZE,
+                                    &dataSize);
+        GLint binding = 0;
+        gl->getActiveUniformBlockiv(glObject(), i, GL_UNIFORM_BLOCK_BINDING,
+                                    &binding);
+        m_uniformBlocks[i].dataSize = dataSize;
+        m_uniformBlocks[i].binding = binding;
+    }
 }
 
 } // namespace Starfish

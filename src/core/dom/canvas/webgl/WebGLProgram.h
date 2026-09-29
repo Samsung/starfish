@@ -28,9 +28,15 @@
 namespace Starfish {
 
 class WebGLShader;
+class GL;
 
 class WebGLProgram : public WebGLObject {
 public:
+    struct UniformBlockInfo {
+        GLint dataSize = 0;
+        GLint binding = 0;
+    };
+
     WebGLProgram(ScriptBindingInstance* instance,
                  WebGLRenderingContext* context, GLuint object);
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
@@ -54,6 +60,25 @@ public:
         return m_usesFragColor;
     }
 
+    bool hasActiveUniformBlocks() const
+    {
+        return !m_uniformBlocks.empty();
+    }
+
+    const std::vector<UniformBlockInfo>& uniformBlocks() const
+    {
+        return m_uniformBlocks;
+    }
+
+    void setUniformBlockBinding(GLuint index, GLuint binding)
+    {
+        if (index < m_uniformBlocks.size()) {
+            m_uniformBlocks[index].binding = binding;
+        }
+    }
+
+    void updateUniformBlocks(GL* gl);
+
     void setLinkFailed(bool linkFailed)
     {
         m_linkFailed = linkFailed;
@@ -66,6 +91,7 @@ public:
 
 private:
     WebGLShader* m_attachedShaders[2] = { nullptr, nullptr };
+    std::vector<UniformBlockInfo> m_uniformBlocks;
     bool m_usesFragColor = false;
     bool m_linkFailed = false;
 };
