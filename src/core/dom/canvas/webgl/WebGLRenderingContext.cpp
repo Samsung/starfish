@@ -22,6 +22,7 @@
 #include "StarfishConfig.h"
 #include "core/dom/canvas/webgl/WebGLRenderingContext.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
+#include "core/dom/canvas/ImageData.h"
 #include "core/dom/canvas/CanvasImageSource.h"
 #include "core/dom/HTMLImageElement.h"
 #include "core/dom/ImageBitmap.h"
@@ -50,6 +51,7 @@
 #include "binding/generated/ArrayBufferOrSharedArrayBufferOrArrayBufferViewUnion.h"
 #include "binding/generated/ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementUnion.h"
 #include <regex>
+#include <array>
 #include "core/dom/canvas/webgl/WebGLOES_VertexArrayObject.h"
 #include "core/dom/canvas/webgl/WebGLShaderPrecisionFormat.h"
 #include "core/page/WebView.h"
@@ -3304,6 +3306,18 @@ TexImageHelper::TexImageHelper(NativeImageData* imageData, GLenum format)
     m_isNativeImageDataUsed = true;
 }
 
+TexImageHelper::TexImageHelper(::Starfish::ImageData* imageData, GLenum format)
+{
+    m_sourceImage.width = imageData->width();
+    m_sourceImage.height = imageData->height();
+    m_sourceImage.stride = imageData->width() * 4;
+    m_sourceImage.format = format;
+    m_sourceImage.data =
+        imageData->data()->rawBuffer() + imageData->data()->byteOffset();
+    m_isNativeImageDataUsed = false;
+    m_isImageDataUsed = true;
+}
+
 TexImageHelper::~TexImageHelper()
 {
 }
@@ -3350,7 +3364,8 @@ void TexImageHelper::draw(const bool needsFlipY,
     }
 #endif
 
-    const size_t srcBytesPerPixel = m_isNativeImageDataUsed ? 4 : bytesPerPixel;
+    const size_t srcBytesPerPixel =
+        (m_isNativeImageDataUsed || m_isImageDataUsed) ? 4 : bytesPerPixel;
     const size_t srcStride = m_sourceImage.stride;
     const size_t dstBytesPerPixel = bytesPerPixel;
     const bool needsStrideConversion = (srcBytesPerPixel != dstBytesPerPixel);
@@ -3363,7 +3378,7 @@ void TexImageHelper::draw(const bool needsFlipY,
     const size_t dstStride = dstBytesPerPixel * width;
     m_data.resize(height * dstStride);
 
-    std::vector<uint8_t> order;
+    std::array<uint8_t, 4> order;
 
     if (needsColorConversion) {
         order = { 2, 1, 0, 3 };
@@ -3397,8 +3412,11 @@ void TexImageHelper::draw(const bool needsFlipY,
             srcOffset = offset + column * srcBytesPerPixel;
             destOffset = newOffset + column * dstBytesPerPixel;
 
-            if (Pixel::isTwoBytesPerPixel(type)) {
-                if (m_isNativeImageDataUsed) {
+            if (m_isImageDataUsed && type == GL_FLOAT) {
+                writeFloatPixel(destOffset, image, srcOffset,
+                                needsPremultiplyAlpha);
+            } else if (Pixel::isTwoBytesPerPixel(type)) {
+                if (m_isNativeImageDataUsed || m_isImageDataUsed) {
                     uint8_t r = image[srcOffset + order[0]];
                     uint8_t g = image[srcOffset + order[1]];
                     uint8_t b = image[srcOffset + order[2]];
@@ -3474,7 +3492,8 @@ void TexImageHelper::drawSubRectangle(
     }
 #endif
 
-    const size_t srcBytesPerPixel = m_isNativeImageDataUsed ? 4 : bytesPerPixel;
+    const size_t srcBytesPerPixel =
+        (m_isNativeImageDataUsed || m_isImageDataUsed) ? 4 : bytesPerPixel;
     const size_t srcStride = m_sourceImage.stride;
     const size_t dstBytesPerPixel = bytesPerPixel;
 
@@ -3482,7 +3501,7 @@ void TexImageHelper::drawSubRectangle(
     const size_t dstRowStride = dstBytesPerPixel * destWidth;
     m_data.resize(depth * dstSliceStride);
 
-    std::vector<uint8_t> order;
+    std::array<uint8_t, 4> order;
     if (needsColorConversion) {
         order = { 2, 1, 0, 3 };
     } else {
@@ -3521,8 +3540,11 @@ void TexImageHelper::drawSubRectangle(
                 size_t srcOffset = srcRowOffset + srcCol * srcBytesPerPixel;
                 size_t destOffset = dstRowOffset + c * dstBytesPerPixel;
 
-                if (Pixel::isTwoBytesPerPixel(type)) {
-                    if (m_isNativeImageDataUsed) {
+                if (m_isImageDataUsed && type == GL_FLOAT) {
+                    writeFloatPixel(destOffset, image, srcOffset,
+                                    needsPremultiplyAlpha);
+                } else if (Pixel::isTwoBytesPerPixel(type)) {
+                    if (m_isNativeImageDataUsed || m_isImageDataUsed) {
                         uint8_t red = image[srcOffset + order[0]];
                         uint8_t green = image[srcOffset + order[1]];
                         uint8_t blue = image[srcOffset + order[2]];
@@ -3590,6 +3612,23 @@ Optional<GLenum> TexImageHelper::dataFormat() const
 unsigned char TexImageHelper::multiplyAlpha(unsigned char color, float alpha)
 {
     return ((color / 255.f) * alpha) * 255;
+}
+
+void TexImageHelper::writeFloatPixel(size_t destOffset,
+                                     const unsigned char* source,
+                                     size_t srcOffset,
+                                     bool needsPremultiplyAlpha)
+{
+    float alpha = source[srcOffset + 3] / 255.f;
+    float pixel[4] = { source[srcOffset] / 255.f, source[srcOffset + 1] / 255.f,
+                       source[srcOffset + 2] / 255.f, alpha };
+    if (needsPremultiplyAlpha) {
+        pixel[0] *= alpha;
+        pixel[1] *= alpha;
+        pixel[2] *= alpha;
+    }
+    size_t components = m_sourceImage.format == GL_RGB ? 3 : 4;
+    memcpy(m_data.data() + destOffset, pixel, components * sizeof(float));
 }
 
 bool WebGLRenderingContext::isSrcDataValid(ScriptArrayBufferView srcData,
@@ -3750,6 +3789,7 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
     GLsizei stride = 0;
     NativeImageData* imageData = nullptr;
     NativeImageData* rasterizedSVGImage = nullptr;
+    ::Starfish::ImageData* sourceImageData = nullptr;
 
     if (source.isNoneValue()) {
         setGLError(GL_INVALID_VALUE);
@@ -3761,7 +3801,31 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
         width = imageData->width();
         height = imageData->height();
     } else if (source.isImageDataValue()) {
-        STARFISH_UNIMPLEMENTED("ImageData");
+        sourceImageData = source.getImageDataValue();
+        ScriptUint8ClampedArray pixels = sourceImageData->data();
+        if (pixels->buffer()->isArrayBufferObject() &&
+            pixels->buffer()->asArrayBufferObject()->isDetachedBuffer()) {
+            setGLError(GL_INVALID_VALUE, "ImageData buffer is detached");
+            return;
+        }
+        width = sourceImageData->width();
+        height = sourceImageData->height();
+        if (height && size_t(width) > (pixels->byteLength() / 4) / height) {
+            setGLError(GL_INVALID_VALUE, "ImageData buffer is too small");
+            return;
+        }
+        // WebGL's TexImageSource conversion requires the ImageData's RGBA8
+        // pixels to be converted to the requested upload type. Keep other
+        // combinations out of the raw-pointer path until they are converted.
+        if ((format != GL_RGB && format != GL_RGBA) ||
+            (type != GL_UNSIGNED_BYTE && type != GL_FLOAT &&
+             type != GL_UNSIGNED_SHORT_5_6_5 &&
+             type != GL_UNSIGNED_SHORT_4_4_4_4 &&
+             type != GL_UNSIGNED_SHORT_5_5_5_1)) {
+            setGLError(GL_INVALID_OPERATION,
+                       "Unsupported ImageData pixel conversion");
+            return;
+        }
     } else if (source.isHTMLImageElementValue()) {
         TRACE(WEBGL, "source.isHTMLImageElementValue");
         HTMLImageElement* element = source.getHTMLImageElementValue();
@@ -3811,7 +3875,7 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
         return;
     }
 
-    if (imageData == nullptr) {
+    if (imageData == nullptr && sourceImageData == nullptr) {
         STARFISH_ASSERT_NOT_REACHED();
         return;
     }
@@ -3822,7 +3886,9 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
 
     // Handle WebGL-specific pixel storage parameters that affect the behavior
     // of this function.
-    TexImageHelper image(imageData, format);
+    TexImageHelper image = sourceImageData
+                               ? TexImageHelper(sourceImageData, format)
+                               : TexImageHelper(imageData, format);
 
     GLint savedSkipPixels = 0, savedSkipRows = 0, savedRowLength = 0,
           savedImageHeight = 0;
