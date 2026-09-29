@@ -504,6 +504,16 @@ public:
     }
 
     FontFaceSet* fonts();
+    // Web font loading only notifies a FontFaceSet script has asked for.
+    Optional<FontFaceSet*> fontsIfCreated() const
+    {
+        return m_fonts;
+    }
+
+    bool domContentLoadedFired() const
+    {
+        return m_domContentLoadedFired;
+    }
 
     String* characterSet();
     // only used in html document builder

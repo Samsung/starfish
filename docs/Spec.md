@@ -418,13 +418,13 @@ section are supported.
 | | attribute | rules | Non-standard. Synonym for cssRules. |
 | | method | unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0) | Inserts a new rule at the specified position in the style sheet, given the textual representation of the rule. |
 | | method | void deleteRule(unsigned long index) | Deletes a rule at the specified position from the style sheet. |
-| [FontFaceSet](https://drafts.csswg.org/css-font-loading/#fontfaceset-interface) | interface | FontFaceSet | An EventTarget representing the set of fonts available to a Document. |
+| [FontFaceSet](https://drafts.csswg.org/css-font-loading/#fontfaceset-interface) | interface | FontFaceSet | An EventTarget representing the set of fonts available to a Document. Window only. Tracks the document's `@font-face` fonts; the setlike members, `add()`/`delete()`/`clear()`/`load()` and `FontFace` are not supported. |
 | | attribute | status | Returns the loading status ("loading" or "loaded"). |
 | | attribute | ready | Returns a Promise that fulfills when font loading completes. |
-| | method | boolean check(DOMString font, optional DOMString text = " ") | Returns whether all fonts in the font specification are loaded. |
+| | method | boolean check(DOMString font, optional DOMString text = " ") | Returns false if a web font of a listed family is still loading. Throws `SyntaxError` for an unparsable font. Style/weight matching and `text` (unicode-range) are ignored. |
 | | attribute | onloading | Event handler for loading event. |
-| | attribute | onloadingdone | Event handler for loadingdone event. |
-| | attribute | onloadingerror | Event handler for loadingerror event. |
+| | attribute | onloadingdone | Event handler for loadingdone event. Fired as a plain `Event` (no `fontfaces`). |
+| | attribute | onloadingerror | Event handler for loadingerror event. Fired as a plain `Event` (no `fontfaces`) after `loadingdone` when a font failed to load. |
 | [CSSRuleList](https://drafts.csswg.org/cssom/#the-cssrulelist-interface) | interface | CSSRuleList | Represents an ordered collection of CSS style rules. |
 | | method | getter CSSRule? item(unsigned long index) | Returns the indexth CSSRule object in the collection. |
 | | attribute | length | Returns the number of CSSRule objects represented by the collection. |

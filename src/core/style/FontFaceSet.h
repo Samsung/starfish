@@ -26,12 +26,13 @@ namespace Starfish {
 
 class Document;
 class Promise;
-class Timer;
 
+// https://drafts.csswg.org/css-font-loading/#fontfaceset-interface
+// Only the CSS-connected fonts of the document are tracked; the setlike
+// FontFace members are not implemented, so loadingdone/loadingerror are plain
+// Events rather than FontFaceSetLoadEvent carrying the font faces.
 class FontFaceSet : public EventTarget {
 public:
-    enum class LoadStatus { Loading, Loaded };
-
     FontFaceSet(Document* document);
 
     virtual void init(ScriptBindingInstance* instance,
@@ -41,11 +42,11 @@ public:
 
     String* status() const;
     Promise* ready();
-    bool check(String* font, String* text = nullptr);
+    bool check(String* font, String* text);
 
-    void didStartFontLoading();
-    void didFinishFontLoading();
-    void checkReadyState();
+    // Called when a web font starts or stops loading, and when the document
+    // stops being pending on the environment.
+    void didChangeFontLoadingState(bool fontLoadFailed = false);
 
 #define VIRTUAL
 #define OVERRIDE
@@ -56,13 +57,15 @@ public:
 #undef OVERRIDE
 
 private:
-    Document* m_document;
-    LoadStatus m_status{ LoadStatus::Loaded };
-    Promise* m_readyPromise{ nullptr };
-    bool m_fulfilled{ false };
-    uint32_t m_fallbackTimerId{ 0 };
+    bool hasLoadingFonts() const;
+    bool isPendingOnTheEnvironment() const;
+    void fireEvent(String* type);
 
-    void fulfillReadyPromise();
+    Document* m_document;
+    Promise* m_readyPromise{ nullptr };
+    bool m_isLoading : 1;
+    bool m_isReadyPromiseFulfilled : 1;
+    bool m_hasFailedFonts : 1;
 };
 
 } // namespace Starfish

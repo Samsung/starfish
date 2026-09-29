@@ -10760,7 +10760,7 @@ public:
         resource()->loader()->document()->setNeedsFrameTreeBuildWithoutSelf();
         STARFISH_LOG_INFO("WebFont %s is failed to load..",
                           m_familyName->toUTF8NonGCString().data());
-        resource()->loader()->document()->fonts()->didFinishFontLoading();
+        notifyFontFaceSet(true);
     }
 
     virtual void didLoadFinished()
@@ -10778,13 +10778,20 @@ public:
         STARFISH_LOG_INFO("WebFont %s is downloaded",
                           m_familyName->toUTF8NonGCString().data());
         resource()->loader()->document()->updateCanvasWebFontState();
-        resource()->loader()->document()->fonts()->didFinishFontLoading();
+        notifyFontFaceSet(false);
     }
 
     virtual void didLoadCanceled()
     {
         ResourceClient::didLoadCanceled();
-        resource()->loader()->document()->fonts()->didFinishFontLoading();
+        notifyFontFaceSet(false);
+    }
+
+    void notifyFontFaceSet(bool failed)
+    {
+        if (auto fonts = resource()->loader()->document()->fontsIfCreated()) {
+            fonts.value()->didChangeFontLoadingState(failed);
+        }
     }
 
     String* m_familyName;
@@ -10998,7 +11005,9 @@ void StyleResolver::recalcWebFonts()
                 res->addResourceClient(new WebFontLoadChecker(res, fontFamily));
 
                 document()->m_loadedWebFontList.push_back(res);
-                document()->fonts()->didStartFontLoading();
+                if (auto fonts = document()->fontsIfCreated()) {
+                    fonts.value()->didChangeFontLoadingState();
+                }
             }
 
             WebFont webFont(isFontStyleSpecified, isFontWeightSpecified,

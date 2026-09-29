@@ -7,7 +7,7 @@ interface FontFaceSet : EventTarget {
   readonly attribute FontFaceSetLoadStatus status;
   readonly attribute Promise<FontFaceSet> ready;
 
-  boolean check(DOMString font, optional DOMString text = " ");
+  [RaisesException] boolean check(DOMString font, optional DOMString text = " ");
 
   attribute EventHandler onloading;
   attribute EventHandler onloadingdone;

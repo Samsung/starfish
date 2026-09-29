@@ -786,6 +786,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "rejectionhandled"));
     m_loading =
         QualifiedName(AtomicString::createAtomicString(starfish, "loading"));
+    m_loaded =
+        QualifiedName(AtomicString::createAtomicString(starfish, "loaded"));
     m_loadingdone = QualifiedName(
         AtomicString::createAtomicString(starfish, "loadingdone"));
     m_loadingerror = QualifiedName(
