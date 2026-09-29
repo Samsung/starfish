@@ -332,6 +332,7 @@ Optional<ScriptValue> WebGL2RenderingContext::getParameterImpl(GLenum pname)
     case GL_PACK_SKIP_ROWS:
     case GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT:
     case GL_UNPACK_IMAGE_HEIGHT:
+    case GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
     case GL_UNPACK_ROW_LENGTH:
     case GL_UNPACK_SKIP_IMAGES:
     case GL_UNPACK_SKIP_PIXELS:
@@ -2057,11 +2058,29 @@ void WebGL2RenderingContext::vertexAttribDivisor(GLuint index, GLuint divisor)
     gl()->vertexAttribDivisor(index, divisor);
 }
 
+static bool isValidDrawMode(GLenum mode)
+{
+    return mode == GL_POINTS || mode == GL_LINE_STRIP || mode == GL_LINE_LOOP ||
+           mode == GL_LINES || mode == GL_TRIANGLE_STRIP ||
+           mode == GL_TRIANGLE_FAN || mode == GL_TRIANGLES;
+}
+
 void WebGL2RenderingContext::drawArraysInstanced(GLenum mode, GLint first,
                                                  GLsizei count,
                                                  GLsizei instanceCount)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!isValidDrawMode(mode)) {
+        setGLError(GL_INVALID_ENUM, "invalid draw mode");
+        return;
+    }
+
+    if (first < 0 || count < 0 || instanceCount < 0) {
+        setGLError(GL_INVALID_VALUE, "negative count or offset");
+        return;
+    }
+
     completePendingJobs();
     if (!validateDrawCallUBO())
         return;
@@ -2074,6 +2093,29 @@ void WebGL2RenderingContext::drawElementsInstanced(GLenum mode, GLsizei count,
                                                    GLsizei instanceCount)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!isValidDrawMode(mode)) {
+        setGLError(GL_INVALID_ENUM, "invalid draw mode");
+        return;
+    }
+
+    if (type != GL_UNSIGNED_BYTE && type != GL_UNSIGNED_SHORT &&
+        type != GL_UNSIGNED_INT) {
+        setGLError(GL_INVALID_ENUM, "invalid type");
+        return;
+    }
+
+    if (count < 0 || offset < 0 || instanceCount < 0) {
+        setGLError(GL_INVALID_VALUE, "negative count or offset");
+        return;
+    }
+
+    if ((type == GL_UNSIGNED_SHORT && (offset % 2) != 0) ||
+        (type == GL_UNSIGNED_INT && (offset % 4) != 0)) {
+        setGLError(GL_INVALID_OPERATION, "offset not properly aligned");
+        return;
+    }
+
     completePendingJobs();
     if (!validateDrawCallUBO())
         return;
@@ -2088,6 +2130,29 @@ void WebGL2RenderingContext::drawRangeElements(GLenum mode, GLuint start,
                                                GLenum type, GLintptr offset)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!isValidDrawMode(mode)) {
+        setGLError(GL_INVALID_ENUM, "invalid draw mode");
+        return;
+    }
+
+    if (type != GL_UNSIGNED_BYTE && type != GL_UNSIGNED_SHORT &&
+        type != GL_UNSIGNED_INT) {
+        setGLError(GL_INVALID_ENUM, "invalid type");
+        return;
+    }
+
+    if (end < start || count < 0 || offset < 0) {
+        setGLError(GL_INVALID_VALUE, "invalid range, count or offset");
+        return;
+    }
+
+    if ((type == GL_UNSIGNED_SHORT && (offset % 2) != 0) ||
+        (type == GL_UNSIGNED_INT && (offset % 4) != 0)) {
+        setGLError(GL_INVALID_OPERATION, "offset not properly aligned");
+        return;
+    }
+
     completePendingJobs();
     if (!validateDrawCallUBO())
         return;
