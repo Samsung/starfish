@@ -2,6 +2,7 @@
 
 [Constructor(DOMString type, PromiseRejectionEventInit eventInitDict),
  ConstructorCallWith=ExecutionContext,
+ RaisesException=Constructor,
  Exposed=Window]
 interface PromiseRejectionEvent : Event {
   readonly attribute object promise;

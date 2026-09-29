@@ -20,6 +20,7 @@
 #ifndef __StarfishPromiseRejectionEvent__
 #define __StarfishPromiseRejectionEvent__
 
+#include "core/dom/DOMException.h"
 #include "core/dom/Event.h"
 
 namespace Starfish {
@@ -32,7 +33,7 @@ public:
 
 private:
     ScriptObject m_promise{ nullptr };
-    ScriptValue m_reason{ scriptNull() };
+    ScriptValue m_reason{ scriptUndefined() };
 };
 
 class PromiseRejectionEvent : public Event {
@@ -43,6 +44,11 @@ public:
         , m_promise(init.promise())
         , m_reason(init.reason())
     {
+        // The bindings don't enforce required dictionary members.
+        if (!m_promise) {
+            throw new DOMException(context, DOMException::SCRIPT_TYPE_ERR,
+                                   "Required member promise is undefined");
+        }
     }
 
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
