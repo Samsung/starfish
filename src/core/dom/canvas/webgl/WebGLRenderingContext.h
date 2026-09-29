@@ -47,6 +47,7 @@ class WebGLRenderbuffer;
 class WebGLUniformLocation;
 class WebGLRenderingContextState;
 class WebGLShaderPrecisionFormat;
+class ImageData;
 class String;
 class Float32ArrayOrSequenceOfGLfloat;
 class Int32ArrayOrSequenceOfGLint;
@@ -69,6 +70,7 @@ public:
     TexImageHelper(size_t width, size_t height, size_t stride, GLenum format,
                    void* data);
     TexImageHelper(NativeImageData* imageData, GLenum format);
+    TexImageHelper(::Starfish::ImageData* imageData, GLenum format);
     ~TexImageHelper();
 
     void draw(const bool needsFlipY, const bool needsPremultiplyAlpha,
@@ -87,11 +89,14 @@ public:
 
 private:
     unsigned char multiplyAlpha(unsigned char color, float alpha);
+    void writeFloatPixel(size_t destOffset, const unsigned char* source,
+                         size_t srcOffset, bool needsPremultiplyAlpha);
 
     ImageData m_sourceImage;
     std::vector<unsigned char> m_data;
     Optional<GLenum> m_dataFormat;
     bool m_isNativeImageDataUsed;
+    bool m_isImageDataUsed = false;
 };
 
 using Float32List = Float32ArrayOrSequenceOfGLfloat;
