@@ -780,7 +780,7 @@ void Document::notifyDomContentLoaded()
         m_domContentLoadedFired = true;
 
         if (m_fonts) {
-            m_fonts->checkReadyState();
+            m_fonts->didChangeFontLoadingState();
         }
 
         String* eventType = window()

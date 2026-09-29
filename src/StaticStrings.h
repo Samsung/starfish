@@ -751,6 +751,7 @@ public:
     QualifiedName m_unhandledrejection;
     QualifiedName m_rejectionhandled;
     QualifiedName m_loading;
+    QualifiedName m_loaded;
     QualifiedName m_loadingdone;
     QualifiedName m_loadingerror;
 
