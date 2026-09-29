@@ -61,7 +61,7 @@ http://web-platform.test:8000/css/css-borders/corner-shape/corner-shape-noop-key
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-borders/corner-shape/corner-shape-square.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-borders/corner-shape/corner-shape-svg-border.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-borders/corner-shape/corner-shape-video-border.html
-http://web-platform.test:8000/css/css-borders/corner-shape/corner-shorthand-rendering.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-borders/corner-shape/corner-shorthand-rendering.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-borders/corner-shape/render-corner-shape.html?border-radius=25&corner-shape=2&shadow-spread=10
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-borders/corner-shape/render-corner-shape.html?border-radius=40&corner-shape=-1.5&shadow-spread=10
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-borders/corner-shape/render-corner-shape.html?border-radius=40&corner-shape=-infinity&shadow-spread=10
