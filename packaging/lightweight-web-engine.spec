@@ -497,11 +497,11 @@ if [ ! -f "%{binding_install_path}/DONE" ]; then
 fi
 export PYTHONPATH=$PWD/%{binding_install_path}
 
-CXXFLAGS+=' -DSTARFISH_TIZEN_MAJOR_VERSION=%{tizen_version_major} '
-CXXFLAGS+=' -DSTARFISH_TIZEN_VERSION_%{tizen_version_major}_%{tizen_version_minor} '
+CXXFLAGS="$CXXFLAGS -DSTARFISH_TIZEN_MAJOR_VERSION=%{tizen_version_major} "
+CXXFLAGS="$CXXFLAGS -DSTARFISH_TIZEN_VERSION_%{tizen_version_major}_%{tizen_version_minor} "
 %if 0%{?build_option:1}
 %if "%{build_option}" == "evas_gl_transparent_window"
-CXXFLAGS+=' -DSTARFISH_ENABLE_TRANSPARENT_WINDOW '
+CXXFLAGS="$CXXFLAGS -DSTARFISH_ENABLE_TRANSPARENT_WINDOW "
 %endif
 %endif
 
@@ -509,16 +509,16 @@ CXXFLAGS+=' -DSTARFISH_ENABLE_TRANSPARENT_WINDOW '
 # Asan with lto leads internal compiler error
 ##############################################
 %if 0%{?asan} == 1
-CFLAGS+=' -fno-lto '
-CXXFLAGS+=' -fno-lto '
+CFLAGS="$CFLAGS -fno-lto "
+CXXFLAGS="$CXXFLAGS -fno-lto "
 %endif
 
 ##############################################
 # Disable lto option
 ##############################################
 %if 0%{?using_lto} == 0
-CFLAGS+=' -fno-lto '
-CXXFLAGS+=' -fno-lto '
+CFLAGS="$CFLAGS -fno-lto "
+CXXFLAGS="$CXXFLAGS -fno-lto "
 %endif
 
 ##############################################
@@ -526,7 +526,7 @@ CXXFLAGS+=' -fno-lto '
 # (Tizen x86_64 build env kernel headers lack UFFDIO_WRITEPROTECT support)
 ##############################################
 %if "%{rpm}" == "prod_tv"
-CFLAGS+=' -DNO_UFFDWP_VDB '
+CFLAGS="$CFLAGS -DNO_UFFDWP_VDB "
 %endif
 
 ##############################################
@@ -822,7 +822,8 @@ mkdir -p %{buildroot}%{_sysconfdir}/ld.so.conf.d/
 cp lightweight-web-engine.conf %{buildroot}%{_sysconfdir}/ld.so.conf.d/
 
 # symbolic links
-pushd %{buildroot}%{_libdir}/lwe
+_saved_dir_lwe=$(pwd)
+cd %{buildroot}%{_libdir}/lwe
 rm -fr *.so*
 ln -s liblightweight-web-engine.so.1 liblightweight-web-engine.so
 %if "%{?enable_sharedworker}" == "1"
@@ -831,9 +832,10 @@ ln -s liblightweight-web-engine-sharedworker.so.1 liblightweight-web-engine-shar
 %if "%{?enable_serviceworker}" == "1"
 ln -s liblightweight-web-engine-serviceworker.so.1 liblightweight-web-engine-serviceworker.so
 %endif
-popd
+cd "$_saved_dir_lwe"
 
-pushd %{buildroot}%{_libdir}
+_saved_dir_libdir=$(pwd)
+cd %{buildroot}%{_libdir}
 ln -s lwe/liblightweight-web-engine.so liblightweight-web-engine.so
 %if "%{?enable_sharedworker}" == "1"
 ln -s lwe/liblightweight-web-engine-sharedworker.so liblightweight-web-engine-sharedworker.so
@@ -841,7 +843,7 @@ ln -s lwe/liblightweight-web-engine-sharedworker.so liblightweight-web-engine-sh
 %if "%{?enable_serviceworker}" == "1"
 ln -s lwe/liblightweight-web-engine-serviceworker.so liblightweight-web-engine-serviceworker.so
 %endif
-popd
+cd "$_saved_dir_libdir"
 
 ##############################################
 ## Scripts
@@ -853,7 +855,8 @@ popd
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "all"
 %post profile_tv
-pushd %{_libdir}/lwe
+_saved_dir_post=$(pwd)
+cd %{_libdir}/lwe
 for FILE in `ls tv/*.so* | grep -v 'tv.so'`; do
     ln -sf "$FILE" .
 done
@@ -871,21 +874,23 @@ ln -sf tv/liblightweight-web-engine.tv-serviceworker.so liblightweight-web-engin
 ln -sf tv/liblightweight-web-engine.prod.tv.so liblightweight-web-engine.so.1
 ln -sf tv/VERSION VERSION
 %endif # "%{rpm}" == "prod_tv"
-popd
+cd "$_saved_dir_post"
 %endif
 %if "%{rpm}" == "tv"
-pushd %{_bindir}
+_saved_dir_bin=$(pwd)
+cd %{_bindir}
 ln -sf lightweight-web-engine.tv %{bin}
-popd
+cd "$_saved_dir_bin"
 exit 0
 %endif # "%{rpm}" == "tv"
 %if "%{rpm}" == "prod_tv"
-pushd %{_bindir}
+_saved_dir_bin2=$(pwd)
+cd %{_bindir}
 ln -sf lightweight-web-engine.prod.tv %{bin}
 %if "%{?enable_test}" == "1"
 ln -sf imgdiff %{bin}
 %endif
-popd
+cd "$_saved_dir_bin2"
 /sbin/ldconfig
 exit 0
 %endif # "%{rpm}" == "prod_tv"
@@ -893,7 +898,8 @@ exit 0
 #############################################
 %if "%{rpm}" == "headless"
 %post profile_headless
-pushd %{_libdir}/lwe
+_saved_dir_headless=$(pwd)
+cd %{_libdir}/lwe
 for FILE in `ls headless/*.so* | grep -v 'headless.so'`; do
    ln -sf "$FILE" .
 done
@@ -905,12 +911,13 @@ ln -sf headless/liblightweight-web-engine.headless-sharedworker.so liblightweigh
 %if "%{?enable_serviceworker}" == "1"
 ln -sf headless/liblightweight-web-engine.headless-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif
-popd
+cd "$_saved_dir_headless"
 %endif
 %if "%{rpm}" == "headless"
-pushd %{_bindir}
+_saved_dir_headless_bin=$(pwd)
+cd %{_bindir}
 ln -sf lightweight-web-engine.headless %{bin}
-popd
+cd "$_saved_dir_headless_bin"
 /sbin/ldconfig
 exit 0
 %endif
@@ -918,7 +925,8 @@ exit 0
 #############################################
 %if "%{rpm}" == "common" || "%{rpm}" == "all"
 %post profile_common
-pushd %{_libdir}/lwe
+_saved_dir_common=$(pwd)
+cd %{_libdir}/lwe
 for FILE in `ls common/*.so* | grep -v 'common.so'`; do
    ln -sf "$FILE" .
 done
@@ -930,12 +938,13 @@ ln -sf common/liblightweight-web-engine.common-sharedworker.so liblightweight-we
 %if "%{?enable_serviceworker}" == "1"
 ln -sf common/liblightweight-web-engine.common-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif
-popd
+cd "$_saved_dir_common"
 %endif
 %if "%{rpm}" == "common"
-pushd %{_bindir}
+_saved_dir_common_bin=$(pwd)
+cd %{_bindir}
 ln -sf lightweight-web-engine.common %{bin}
-popd
+cd "$_saved_dir_common_bin"
 /sbin/ldconfig
 exit 0
 %endif
@@ -943,13 +952,14 @@ exit 0
 #############################################
 %if "%{rpm}" == "flutter"
 %post profile_flutter
-pushd %{_libdir}/lwe
+_saved_dir_flutter=$(pwd)
+cd %{_libdir}/lwe
 for FILE in `ls flutter/*.so* | grep -v 'flutter.so'`; do
    ln -sf "$FILE" .
 done
 ln -sf flutter/liblightweight-web-engine.flutter.so liblightweight-web-engine.so.1
 ln -sf flutter/VERSION VERSION
-popd
+cd "$_saved_dir_flutter"
 %endif
 %if "%{rpm}" == "flutter"
 /sbin/ldconfig
