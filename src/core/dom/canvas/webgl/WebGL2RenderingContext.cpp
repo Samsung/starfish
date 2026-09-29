@@ -2186,8 +2186,8 @@ void WebGL2RenderingContext::renderbufferStorageMultisample(
 }
 
 static bool filterInvalidateAttachments(
-    GLenum target, const GCAtomicVector<GLenum>& attachments,
-    bool isDefaultFb, WebGLFramebuffer* userFb, bool hasDepth, bool hasStencil,
+    GLenum target, const GCAtomicVector<GLenum>& attachments, bool isDefaultFb,
+    WebGLFramebuffer* userFb, bool hasDepth, bool hasStencil,
     GLint maxColorAttachments, std::vector<GLenum>& validAttachments)
 {
     for (size_t i = 0; i < attachments.size(); ++i) {
@@ -2249,13 +2249,10 @@ void WebGL2RenderingContext::invalidateFramebuffer(
     }
 
     std::vector<GLenum> validAttachments;
-    Optional<WebGLContextAttributes> attrs = getContextAttributes();
-    bool hasDepth = attrs.hasValue() ? attrs.value().m_depth : true;
-    bool hasStencil = attrs.hasValue() ? attrs.value().m_stencil : false;
-
-    if (!filterInvalidateAttachments(
-            target, attachments, isDefaultFramebufferBound(), userFb,
-            hasDepth, hasStencil, maxColorAttachments, validAttachments)) {
+    if (!filterInvalidateAttachments(target, attachments,
+                                     isDefaultFramebufferBound(), userFb,
+                                     hasDepthBuffer(), hasStencilBuffer(),
+                                     maxColorAttachments, validAttachments)) {
         setGLError(GL_INVALID_ENUM);
         return;
     }
@@ -2295,13 +2292,10 @@ void WebGL2RenderingContext::invalidateSubFramebuffer(
     }
 
     std::vector<GLenum> validAttachments;
-    Optional<WebGLContextAttributes> attrs = getContextAttributes();
-    bool hasDepth = attrs.hasValue() ? attrs.value().m_depth : true;
-    bool hasStencil = attrs.hasValue() ? attrs.value().m_stencil : false;
-
-    if (!filterInvalidateAttachments(
-            target, attachments, isDefaultFramebufferBound(), userFb,
-            hasDepth, hasStencil, maxColorAttachments, validAttachments)) {
+    if (!filterInvalidateAttachments(target, attachments,
+                                     isDefaultFramebufferBound(), userFb,
+                                     hasDepthBuffer(), hasStencilBuffer(),
+                                     maxColorAttachments, validAttachments)) {
         setGLError(GL_INVALID_ENUM);
         return;
     }
