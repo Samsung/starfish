@@ -24,6 +24,8 @@
 
 #include "core/modules/webaudio/AudioBufferSourceNode.h"
 
+#include <cmath>
+
 #include "core/dom/DOMException.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/webaudio/AudioBuffer.h"
@@ -99,7 +101,9 @@ void AudioBufferSourceNode::start(double when, double offset, double duration)
                         current->asAudioDestinationNode();
                     destinationNode->setBuffer(self->m_buffer->rawBuffer(),
                                                self->m_buffer->length());
-                    destinationNode->setVolume(gain);
+                    // A negative gain inverts the phase, which a player
+                    // volume can't express; keep only the magnitude.
+                    destinationNode->setVolume(std::fabs(gain));
                     destinationNode->play();
                 }
                 self->m_hasStartCalled = false;

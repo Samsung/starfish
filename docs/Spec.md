@@ -3474,7 +3474,7 @@ The WebAudio support is in an early stage.
 | | constructor | constructor (BaseAudioContext context, optional AudioBufferSourceOptions options = {}); | | |
 | | method | void start (optional double when = 0, optional double offset, optional double duration); | Schedules a sound to playback at an exact time. | Only when = 0 is supported at the moment. |
 | [AudioDestinationNode](https://webaudio.github.io/web-audio-api/#AudioDestinationNode) | interface | AudioDestinationNode | | |
-| [AudioParam](https://webaudio.github.io/web-audio-api/#audioparam) | interface | AudioParam | Represents an audio-related parameter. | |
+| [AudioParam](https://webaudio.github.io/web-audio-api/#audioparam) | interface | AudioParam | Represents an audio-related parameter. | No automation timeline: scheduling methods apply their end value immediately and ignore the time arguments; cancel methods are no-ops. `GainNode.gain` is read once when a source starts playing. |
 | | attribute | float value; | Current value of the parameter. | |
 | | attribute | readonly float defaultValue; | Initial value for the parameter. | |
 | | attribute | readonly float minValue; | Minimum value the parameter can take. | |
