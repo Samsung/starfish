@@ -210,6 +210,9 @@ void WebGL2RenderingContext::bindFramebuffer(
             gl()->drawBuffers(frameBuffer->drawBufferCount(),
                               frameBuffer->drawBuffers());
         }
+        if (target == GL_FRAMEBUFFER || target == GL_READ_FRAMEBUFFER) {
+            gl()->readBuffer(frameBuffer->readBuffer());
+        }
     } else {
         gl()->bindFramebuffer(target, m_framebufferTexture->fbo());
         getState()->setWebGLFramebuffer(nullptr);
@@ -217,6 +220,11 @@ void WebGL2RenderingContext::bindFramebuffer(
         if (target == GL_FRAMEBUFFER || target == GL_DRAW_FRAMEBUFFER) {
             GLenum att0 = GL_COLOR_ATTACHMENT0;
             gl()->drawBuffers(1, &att0);
+        }
+        if (target == GL_FRAMEBUFFER || target == GL_READ_FRAMEBUFFER) {
+            gl()->readBuffer(m_defaultReadBuffer == GL_BACK
+                                 ? GL_COLOR_ATTACHMENT0
+                                 : GL_NONE);
         }
     }
 }
@@ -364,6 +372,18 @@ Optional<ScriptValue> WebGL2RenderingContext::getParameterImpl(GLenum pname)
             }
         }
         return createScriptValue(static_cast<uint32_t>(GL_NONE));
+    }
+    case GL_READ_BUFFER: {
+        if (isDefaultFramebufferBound()) {
+            return createScriptValue(
+                static_cast<uint32_t>(m_defaultReadBuffer));
+        }
+        Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
+        if (maybeFb.hasValue() && maybeFb.value()) {
+            return createScriptValue(
+                static_cast<uint32_t>(maybeFb.value()->readBuffer()));
+        }
+        return createScriptValue(static_cast<uint32_t>(GL_COLOR_ATTACHMENT0));
     }
     // GLint64
     case kMAX_CLIENT_WAIT_TIMEOUT_WEBGL:
@@ -2121,6 +2141,41 @@ void WebGL2RenderingContext::framebufferTextureLayer(
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
+ScriptValue WebGL2RenderingContext::getInternalformatParameter(
+    GLenum target, GLenum internalformat, GLenum pname)
+{
+    ENTER_CONTEXT_SCOPE(scriptNull());
+
+    if (target != GL_RENDERBUFFER) {
+        setGLError(GL_INVALID_ENUM, "target must be RENDERBUFFER");
+        return scriptNull();
+    }
+
+    if (pname != GL_SAMPLES) {
+        setGLError(GL_INVALID_ENUM, "pname must be SAMPLES");
+        return scriptNull();
+    }
+
+    GLint numSampleCounts = 0;
+    gl()->getInternalformativ(target, internalformat, GL_NUM_SAMPLE_COUNTS, 1,
+                              &numSampleCounts);
+    if (hasNewGLError() || numSampleCounts <= 0) {
+        return createScriptValue(
+            createTypedArray<Escargot::Int32ArrayObjectRef>(
+                scriptBindingInstance(), std::vector<int32_t>()));
+    }
+
+    std::vector<int32_t> samples(numSampleCounts);
+    gl()->getInternalformativ(target, internalformat, GL_SAMPLES,
+                              numSampleCounts, samples.data());
+    if (hasNewGLError()) {
+        return scriptNull();
+    }
+
+    return createScriptValue(createTypedArray<Escargot::Int32ArrayObjectRef>(
+        scriptBindingInstance(), samples));
+}
+
 void WebGL2RenderingContext::renderbufferStorageMultisample(
     GLenum target, GLsizei samples, GLenum internalformat, GLsizei width,
     GLsizei height)
@@ -2130,11 +2185,85 @@ void WebGL2RenderingContext::renderbufferStorageMultisample(
                                          height);
 }
 
+static bool filterInvalidateAttachments(
+    GLenum target, const GCAtomicVector<GLenum>& attachments,
+    bool isDefaultFb, WebGLFramebuffer* userFb, bool hasDepth, bool hasStencil,
+    GLint maxColorAttachments, std::vector<GLenum>& validAttachments)
+{
+    for (size_t i = 0; i < attachments.size(); ++i) {
+        GLenum a = attachments[i];
+        if (isDefaultFb) {
+            if (a == GL_COLOR) {
+                validAttachments.push_back(GL_COLOR_ATTACHMENT0);
+            } else if (a == GL_DEPTH) {
+                if (hasDepth) {
+                    validAttachments.push_back(GL_DEPTH_ATTACHMENT);
+                }
+            } else if (a == GL_STENCIL) {
+                if (hasStencil) {
+                    validAttachments.push_back(GL_STENCIL_ATTACHMENT);
+                }
+            } else {
+                return false;
+            }
+        } else {
+            if (a >= GL_COLOR_ATTACHMENT0 &&
+                a < static_cast<GLenum>(GL_COLOR_ATTACHMENT0 +
+                                        maxColorAttachments)) {
+                if (userFb && userFb->attachedTexture(a)) {
+                    validAttachments.push_back(a);
+                }
+            } else if (a == GL_DEPTH_ATTACHMENT || a == GL_STENCIL_ATTACHMENT ||
+                       a == GL_DEPTH_STENCIL_ATTACHMENT) {
+                if (userFb && userFb->attachedRenderBuffer()) {
+                    validAttachments.push_back(a);
+                }
+            } else {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 void WebGL2RenderingContext::invalidateFramebuffer(
     GLenum target, GCAtomicVector<GLenum> attachments)
 {
     ENTER_CONTEXT_SCOPE();
-    gl()->invalidateFramebuffer(target, attachments.size(), attachments.data());
+
+    if (target != GL_FRAMEBUFFER && target != GL_READ_FRAMEBUFFER &&
+        target != GL_DRAW_FRAMEBUFFER) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    GLint maxColorAttachments = 0;
+    gl()->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+
+    WebGLFramebuffer* userFb = nullptr;
+    if (!isDefaultFramebufferBound()) {
+        Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
+        if (maybeFb.hasValue()) {
+            userFb = maybeFb.value();
+        }
+    }
+
+    std::vector<GLenum> validAttachments;
+    Optional<WebGLContextAttributes> attrs = getContextAttributes();
+    bool hasDepth = attrs.hasValue() ? attrs.value().m_depth : true;
+    bool hasStencil = attrs.hasValue() ? attrs.value().m_stencil : false;
+
+    if (!filterInvalidateAttachments(
+            target, attachments, isDefaultFramebufferBound(), userFb,
+            hasDepth, hasStencil, maxColorAttachments, validAttachments)) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (!validAttachments.empty()) {
+        gl()->invalidateFramebuffer(target, validAttachments.size(),
+                                    validAttachments.data());
+    }
 }
 
 void WebGL2RenderingContext::invalidateSubFramebuffer(
@@ -2142,8 +2271,46 @@ void WebGL2RenderingContext::invalidateSubFramebuffer(
     GLsizei width, GLsizei height)
 {
     ENTER_CONTEXT_SCOPE();
-    gl()->invalidateSubFramebuffer(target, attachments.size(),
-                                   attachments.data(), x, y, width, height);
+
+    if (target != GL_FRAMEBUFFER && target != GL_READ_FRAMEBUFFER &&
+        target != GL_DRAW_FRAMEBUFFER) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (width < 0 || height < 0) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    GLint maxColorAttachments = 0;
+    gl()->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+
+    WebGLFramebuffer* userFb = nullptr;
+    if (!isDefaultFramebufferBound()) {
+        Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
+        if (maybeFb.hasValue()) {
+            userFb = maybeFb.value();
+        }
+    }
+
+    std::vector<GLenum> validAttachments;
+    Optional<WebGLContextAttributes> attrs = getContextAttributes();
+    bool hasDepth = attrs.hasValue() ? attrs.value().m_depth : true;
+    bool hasStencil = attrs.hasValue() ? attrs.value().m_stencil : false;
+
+    if (!filterInvalidateAttachments(
+            target, attachments, isDefaultFramebufferBound(), userFb,
+            hasDepth, hasStencil, maxColorAttachments, validAttachments)) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (!validAttachments.empty()) {
+        gl()->invalidateSubFramebuffer(target, validAttachments.size(),
+                                       validAttachments.data(), x, y, width,
+                                       height);
+    }
 }
 
 void WebGL2RenderingContext::readBuffer(GLenum src)
@@ -2154,8 +2321,14 @@ void WebGL2RenderingContext::readBuffer(GLenum src)
     gl()->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
 
     if (isDefaultFramebufferBound()) {
-        if (src == GL_BACK || src == GL_NONE) {
-            gl()->readBuffer(src);
+        if (src == GL_BACK) {
+            m_defaultReadBuffer = GL_BACK;
+            gl()->readBuffer(GL_COLOR_ATTACHMENT0);
+            return;
+        }
+        if (src == GL_NONE) {
+            m_defaultReadBuffer = GL_NONE;
+            gl()->readBuffer(GL_NONE);
             return;
         }
         if (src >= GL_COLOR_ATTACHMENT0 &&
@@ -2168,12 +2341,20 @@ void WebGL2RenderingContext::readBuffer(GLenum src)
     }
 
     if (src == GL_NONE) {
-        gl()->readBuffer(src);
+        Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
+        if (maybeFb.hasValue() && maybeFb.value()) {
+            maybeFb.value()->setReadBuffer(GL_NONE);
+        }
+        gl()->readBuffer(GL_NONE);
         return;
     }
 
     if (src >= GL_COLOR_ATTACHMENT0 &&
         src < static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + maxColorAttachments)) {
+        Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
+        if (maybeFb.hasValue() && maybeFb.value()) {
+            maybeFb.value()->setReadBuffer(src);
+        }
         gl()->readBuffer(src);
         return;
     }
@@ -3287,11 +3468,27 @@ static bool isSupportedReadPixelsType(GLenum type, size_t& alignment)
     }
 }
 
+bool WebGL2RenderingContext::isReadBufferNone()
+{
+    if (isDefaultFramebufferBound()) {
+        return m_defaultReadBuffer == GL_NONE;
+    }
+    Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
+    if (maybeFb.hasValue() && maybeFb.value()) {
+        return maybeFb.value()->readBuffer() == GL_NONE;
+    }
+    return false;
+}
+
 void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
                                         GLsizei height, GLenum format,
                                         GLenum type,
                                         Optional<ScriptArrayBufferView> dstData)
 {
+    if (isReadBufferNone()) {
+        setGLError(GL_INVALID_OPERATION, "readBuffer is GL_NONE");
+        return;
+    }
     WebGLRenderingContext::readPixels(x, y, width, height, format, type,
                                       dstData);
 }
@@ -3301,6 +3498,11 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
                                         GLenum type, GLintptr offset)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (isReadBufferNone()) {
+        setGLError(GL_INVALID_OPERATION, "readBuffer is GL_NONE");
+        return;
+    }
 
     if (width < 0 || height < 0 || offset < 0) {
         setGLError(GL_INVALID_VALUE);
@@ -3348,6 +3550,11 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
                                         unsigned long long dstOffset)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (isReadBufferNone()) {
+        setGLError(GL_INVALID_OPERATION, "readBuffer is GL_NONE");
+        return;
+    }
 
     if (width < 0 || height < 0) {
         setGLError(GL_INVALID_VALUE);

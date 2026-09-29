@@ -260,6 +260,8 @@ public:
     void readBuffer(GLenum src);
 
     /* Renderbuffer objects */
+    ScriptValue getInternalformatParameter(GLenum target, GLenum internalformat,
+                                           GLenum pname);
     void renderbufferStorageMultisample(GLenum target, GLsizei samples,
                                         GLenum internalformat, GLsizei width,
                                         GLsizei height);
@@ -430,6 +432,8 @@ private:
     }
 
     GLenum m_currentVertexAttribType = GL_FLOAT;
+    GLenum m_defaultReadBuffer = 0x405; /* GL_BACK */
+    bool isReadBufferNone();
 
     class IndexedBufferBinding : public gc {
     public:

@@ -80,6 +80,15 @@ public:
         }
     }
 
+    GLenum readBuffer() const
+    {
+        return m_readBuffer;
+    }
+    void setReadBuffer(GLenum buffer)
+    {
+        m_readBuffer = buffer;
+    }
+
     void setAttachmentTexture(GLenum attachment, WebGLTexture* texture)
     {
         if (attachment >= 0x8CE0 && attachment < 0x8CE0 + 16) {
@@ -112,6 +121,7 @@ private:
     WebGLRenderbuffer* m_attachedRenderBuffer = nullptr;
     GLenum m_drawBuffers[16] = { 0x8CE0 };
     size_t m_drawBufferCount = 1;
+    GLenum m_readBuffer = 0x8CE0;
     WebGLTexture* m_attachedColorTextures[16];
 };
 } // namespace Starfish

@@ -332,7 +332,7 @@ interface WebGL2RenderingContextBase
     undefined readBuffer(GLenum src);
 
     /* Renderbuffer objects */
-    [Unimplemented] any getInternalformatParameter(GLenum target, GLenum internalformat, GLenum pname);
+    any getInternalformatParameter(GLenum target, GLenum internalformat, GLenum pname);
     undefined renderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalformat,
                                                              GLsizei width, GLsizei height);
 
