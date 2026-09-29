@@ -433,6 +433,8 @@ private:
 
     GLenum m_currentVertexAttribType = GL_FLOAT;
     GLenum m_defaultReadBuffer = 0x405; /* GL_BACK */
+    Optional<WebGLFramebuffer*> m_readFramebuffer;
+    Optional<WebGLFramebuffer*> m_drawFramebuffer;
     bool isReadBufferNone();
 
     class IndexedBufferBinding : public gc {

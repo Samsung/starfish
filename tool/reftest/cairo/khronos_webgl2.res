@@ -1567,18 +1567,18 @@ test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/renderbuffers/readbuf
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/attrib-type-match.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/blitframebuffer-filter-outofbounds.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/blitframebuffer-filter-srgb.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/blitframebuffer-multisampled-readbuffer.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/blitframebuffer-scissor-enabled.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/blitframebuffer-multisampled-readbuffer.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/blitframebuffer-scissor-enabled.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/blitframebuffer-test.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/canvas-resizing-with-pbo-bound.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/clear-func-buffer-type-match.html
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/draw-buffers.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/element-index-uint.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/framebuffer-completeness-unaffected.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/element-index-uint.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/framebuffer-completeness-unaffected.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/framebuffer-unsupported.html
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/instanced-arrays.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/out-of-bounds-index-buffers-after-copying.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/rgb-format-support.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/out-of-bounds-index-buffers-after-copying.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/rgb-format-support.html
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/uniform-block-buffer-size.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/samplers/samplers.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/samplers/sampler-drawing-test.html

@@ -206,6 +206,15 @@ void WebGL2RenderingContext::bindFramebuffer(
         gl()->bindFramebuffer(target, frameBuffer->glObject());
         getState()->setWebGLFramebuffer(frameBuffer);
 
+        if (target == GL_FRAMEBUFFER) {
+            m_readFramebuffer = maybeFramebuffer;
+            m_drawFramebuffer = maybeFramebuffer;
+        } else if (target == GL_READ_FRAMEBUFFER) {
+            m_readFramebuffer = maybeFramebuffer;
+        } else if (target == GL_DRAW_FRAMEBUFFER) {
+            m_drawFramebuffer = maybeFramebuffer;
+        }
+
         if (target == GL_FRAMEBUFFER || target == GL_DRAW_FRAMEBUFFER) {
             gl()->drawBuffers(frameBuffer->drawBufferCount(),
                               frameBuffer->drawBuffers());
@@ -216,6 +225,15 @@ void WebGL2RenderingContext::bindFramebuffer(
     } else {
         gl()->bindFramebuffer(target, m_framebufferTexture->fbo());
         getState()->setWebGLFramebuffer(nullptr);
+
+        if (target == GL_FRAMEBUFFER) {
+            m_readFramebuffer = maybeFramebuffer;
+            m_drawFramebuffer = maybeFramebuffer;
+        } else if (target == GL_READ_FRAMEBUFFER) {
+            m_readFramebuffer = maybeFramebuffer;
+        } else if (target == GL_DRAW_FRAMEBUFFER) {
+            m_drawFramebuffer = maybeFramebuffer;
+        }
 
         if (target == GL_FRAMEBUFFER || target == GL_DRAW_FRAMEBUFFER) {
             GLenum att0 = GL_COLOR_ATTACHMENT0;
@@ -2171,6 +2189,19 @@ void WebGL2RenderingContext::blitFramebuffer(GLint srcX0, GLint srcY0,
 
     if (filter != GL_NEAREST && filter != GL_LINEAR) {
         setGLError(GL_INVALID_ENUM, "filter must be GL_NEAREST or GL_LINEAR.");
+        return;
+    }
+
+    if ((mask & ~(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+                  GL_STENCIL_BUFFER_BIT)) != 0) {
+        setGLError(GL_INVALID_VALUE, "invalid mask bitfield.");
+        return;
+    }
+
+    if (filter == GL_LINEAR &&
+        (mask & (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)) != 0) {
+        setGLError(GL_INVALID_OPERATION,
+                   "linear filter not allowed for depth/stencil blit.");
         return;
     }
 

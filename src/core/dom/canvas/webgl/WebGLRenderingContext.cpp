@@ -1037,9 +1037,22 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
     completePendingJobs();
 
     if (count > 0) {
-        // TODO: verify a non-null WebGLBuffer is bound to the
-        // ELEMENT_ARRAY_BUFFER binding point if count is greater than zero. If
-        // not, an INVALID_OPERATION error will be generated.
+        Optional<WebGLBuffer*> elementBuffer =
+            getState()->getBoundBuffer(GL_ELEMENT_ARRAY_BUFFER);
+        if (!elementBuffer.hasValue() || !elementBuffer.value()) {
+            setGLError(GL_INVALID_OPERATION,
+                       "drawElements: no buffer bound to ELEMENT_ARRAY_BUFFER");
+            return;
+        }
+    }
+
+    for (GLuint array : getState()->arraysEnabled()) {
+        if (!m_state->getBufferBoundToVertexAttributes(array)) {
+            setGLError(
+                GL_INVALID_OPERATION,
+                "drawElements: vertex attribute enabled without bound buffer");
+            return;
+        }
     }
 
     if (offset < 0) {
