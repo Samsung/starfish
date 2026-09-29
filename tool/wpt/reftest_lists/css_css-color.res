@@ -26,14 +26,14 @@ http://web-platform.test:8000/css/css-color/color-002.html
 http://web-platform.test:8000/css/css-color/color-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/color-layers-no-blend-mode.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/color-mix-basic-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/color-mix-currentcolor-001.html
+http://web-platform.test:8000/css/css-color/color-mix-currentcolor-001.html
 http://web-platform.test:8000/css/css-color/color-mix-currentcolor-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/color-mix-currentcolor-003.html
 http://web-platform.test:8000/css/css-color/color-mix-currentcolor-nested-for-color-property.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/color-mix-currentcolor-visited.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/color-mix-non-srgb-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/color-mix-percents-01.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/color-mix-percents-02.html
+http://web-platform.test:8000/css/css-color/color-mix-non-srgb-001.html
+http://web-platform.test:8000/css/css-color/color-mix-percents-01.html
+http://web-platform.test:8000/css/css-color/color-mix-percents-02.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/composited-filters-under-opacity.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/contrast-color-001.html
 http://web-platform.test:8000/css/css-color/currentcolor-001.html
