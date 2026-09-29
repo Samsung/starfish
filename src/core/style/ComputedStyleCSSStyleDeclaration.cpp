@@ -2323,8 +2323,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::ColorScheme: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::ColorScheme);
-        String* v = style->colorScheme();
-        p.setKeywordValue(v ? v : String::fromUTF8("normal"));
+        Optional<String*> v = style->colorScheme();
+        p.setKeywordValue(v ? v.value() : String::fromUTF8("normal"));
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::MaskImage: {
