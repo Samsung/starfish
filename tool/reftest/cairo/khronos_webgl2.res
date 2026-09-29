@@ -1561,9 +1561,9 @@ test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/reading/read-pixels-i
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/renderbuffers/framebuffer-object-attachment.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/renderbuffers/framebuffer-test.html
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/renderbuffers/framebuffer-texture-layer.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/renderbuffers/invalidate-framebuffer.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/renderbuffers/invalidate-framebuffer.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/renderbuffers/multisampled-renderbuffer-initialization.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/renderbuffers/readbuffer.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/renderbuffers/readbuffer.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/attrib-type-match.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/blitframebuffer-filter-outofbounds.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/blitframebuffer-filter-srgb.html
