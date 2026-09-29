@@ -63,6 +63,11 @@ public:
         return m_maxValue;
     }
 
+    // https://webaudio.github.io/web-audio-api/#dfn-automation-event
+    // There is no automation timeline yet: each scheduling call applies its
+    // end value immediately and the time arguments are ignored, and the
+    // cancel calls have nothing to cancel. Consumers read value() once, when
+    // playback starts, rather than per render quantum.
     AudioParam* setValueAtTime(float value, double startTime)
     {
         m_value = value;
