@@ -1576,14 +1576,14 @@ test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/draw-buffer
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/element-index-uint.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/framebuffer-completeness-unaffected.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/framebuffer-unsupported.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/instanced-arrays.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/instanced-arrays.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/out-of-bounds-index-buffers-after-copying.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/rgb-format-support.html
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/rendering/uniform-block-buffer-size.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/samplers/samplers.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/samplers/sampler-drawing-test.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/state/gl-enum-tests.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/state/gl-get-calls.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/state/gl-get-calls.html
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/state/gl-getstring.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/state/gl-object-get-calls.html
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/sync/sync-webgl-specific.html
