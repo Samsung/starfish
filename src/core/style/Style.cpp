@@ -3847,7 +3847,7 @@ void StyleResolver::applyProperty(Element* element,
         if ((newCssValue.valueKind() ==
              CSSStyleValuePair::ValueKind::Inherit) ||
             (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
-            style->setColor(parentStyle->m_inheritedStyles.m_color);
+            style->inheritColorFrom(parentStyle);
             style->m_gotInheritedColor = true;
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::Initial) {
@@ -3864,8 +3864,7 @@ void StyleResolver::applyProperty(Element* element,
                             CSSStyleValuePair::ValueKind::NamedColorValueKind);
             if (newCssValue.namedColorValue() ==
                 NamedColor::NamedColorValue::currentColor) {
-                style->m_inheritedStyles.m_color =
-                    parentStyle->m_inheritedStyles.m_color;
+                style->inheritColorFrom(parentStyle);
             } else {
                 style->setColor(NamedColor::namedColorToColor(
                     newCssValue.namedColorValue()));

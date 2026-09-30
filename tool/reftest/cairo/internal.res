@@ -237,6 +237,7 @@ test/cairo/internal-test/css/table/table_fixed_12.html
 test/cairo/internal-test/css/table/table_fixed_04.html
 test/cairo/internal-test/css/table/table_fixed_11.html
 test/cairo/internal-test/css/color/color_rgb_rgba_hex.html
+test/cairo/internal-test/css/color/color_rgb_channel_rounding.html
 test/cairo/internal-test/css/whitespace/white_space_rules.html
 test/cairo/internal-test/css/table/table_fixed_05.html
 test/cairo/internal-test/css/clear/ignore-margin-collapse5.html

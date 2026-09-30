@@ -43,7 +43,7 @@ FilterFlood::FilterFlood(Filter* filter,
 
     CSSTokenValue token(floodColor->toUTF8NonGCString());
     CSSStyleValuePair pair;
-    if (pair.updateValueUnitColor(token)) {
+    if (pair.updateValueUnitResolvedColor(token)) {
         if (pair.valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
             m_floodColor = pair.colorValue();
         } else if (pair.valueKind() ==

@@ -253,7 +253,7 @@ static inline bool stringToColor(String* color, Unit::Color& out)
 
     CSSTokenValue token(color->toUTF8NonGCString());
     CSSStyleValuePair pair;
-    if (pair.updateValueUnitColor(token) == true) {
+    if (pair.updateValueUnitResolvedColor(token) == true) {
         if (pair.valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
             out = pair.colorValue();
             return true;

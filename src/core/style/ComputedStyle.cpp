@@ -114,6 +114,9 @@ void* ComputedStyle::InheritedStylesRareData::operator new(size_t size)
                                   m_colorScheme));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
+                                  m_extendedColor));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
                                   m_listStyleData.m_counterStyle));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
@@ -844,15 +847,31 @@ void ComputedStyle::resolvePendingColors(ComputedStyle* parentStyle)
     // `color` first: currentcolor inside it means the inherited color
     // (css-color-4 #currentcolor-color), and every other property's
     // currentcolor is the color that results.
+    Optional<ExtendedColor*> parentExtended = parentStyle->extendedColor();
+    ExtendedColor parentColor =
+        parentExtended ? *parentExtended.value()
+                       : ExtendedColor::fromSrgb8(parentStyle->color());
     for (size_t i = 0; i < list->size(); i++) {
         if ((*list)[i].m_key == CSSStyleValuePair::KeyKind::Color) {
-            setColor((*list)[i].m_color->resolve(parentStyle->color(), dark));
+            ExtendedColor computed =
+                (*list)[i].m_color->resolveExtended(parentColor, dark);
+            setColor(computed.toSrgb8());
+            if (!computed.m_legacy) {
+                setExtendedColor(new ExtendedColor(computed));
+            }
         }
     }
-    Unit::Color currentColor = color();
+    Optional<ExtendedColor*> ownExtended = extendedColor();
+    ExtendedColor currentColor =
+        ownExtended ? *ownExtended.value() : ExtendedColor::fromSrgb8(color());
+    size_t kept = 0;
     for (size_t i = 0; i < list->size(); i++) {
-        Unit::Color c = (*list)[i].m_color->resolve(currentColor, dark);
-        switch ((*list)[i].m_key) {
+        PendingColor& pending = (*list)[i];
+        CSSStyleValuePair::KeyKind key = pending.m_key;
+        ExtendedColor computed =
+            pending.m_color->resolveExtended(currentColor, dark);
+        Unit::Color c = computed.toSrgb8();
+        switch (key) {
         case CSSStyleValuePair::KeyKind::Color:
             break;
         case CSSStyleValuePair::KeyKind::BackgroundColor:
@@ -900,23 +919,28 @@ void ComputedStyle::resolvePendingColors(ComputedStyle* parentStyle)
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
-    }
 
-    // Keep what a child inheriting background-color must resolve against
-    // its own color: light-dark() is decided here, only currentcolor stays
-    // unresolved (css-color-4 #currentcolor-color).
-    size_t kept = 0;
-    for (size_t i = 0; i < list->size(); i++) {
-        if ((*list)[i].m_key != CSSStyleValuePair::KeyKind::BackgroundColor) {
+        // Keep what is still needed after resolution: the part a child
+        // inheriting background-color must resolve against its own color
+        // (light-dark() is decided here, only currentcolor stays unresolved,
+        // css-color-4 #currentcolor-color), and a non-legacy computed value
+        // for serialization (`color` keeps its own in the inherited data).
+        UnresolvedColor* inheritable = nullptr;
+        if (key == CSSStyleValuePair::KeyKind::BackgroundColor) {
+            UnresolvedColor* folded = pending.m_color->foldLightDark(dark);
+            if (!folded->isConstant()) {
+                inheritable = folded;
+            }
+        }
+        bool keepComputed =
+            !computed.m_legacy && key != CSSStyleValuePair::KeyKind::Color;
+        if (!inheritable && !keepComputed) {
             continue;
         }
-        UnresolvedColor* folded = (*list)[i].m_color->foldLightDark(dark);
-        if (folded->isConstant()) {
-            continue;
-        }
-        (*list)[kept].m_key = CSSStyleValuePair::KeyKind::BackgroundColor;
-        (*list)[kept].m_color = folded;
-        kept++;
+        PendingColor& slot = (*list)[kept++];
+        slot.m_key = key;
+        slot.m_color = inheritable;
+        slot.m_computed = keepComputed ? new ExtendedColor(computed) : nullptr;
     }
     if (kept) {
         list->resize(kept);

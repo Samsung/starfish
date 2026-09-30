@@ -24,46 +24,27 @@ namespace Starfish {
 namespace Unit {
     String* Color::toString() const
     {
-        char buf[256];
-        if (m_isHsl) {
-            double hVal = 0, sVal = 0, lVal = 0;
-            toHsl(&hVal, &sVal, &lVal);
-            // floats are rounded to int
-            int h = (int)round(hVal * 360);
-            int s = (int)round(sVal * 100);
-            int l = (int)round(lVal * 100);
-
-            if (m_a == 255) {
-                snprintf(buf, sizeof(buf), "hsl(%d, %d%%, %d%%)", h, s, l);
-            } else {
-                float a = (float)m_a / 255;
-                if (a > 0.05) {
-                    snprintf(buf, sizeof(buf), "hsla(%d, %d%%, %d%%, %.1f)", h,
-                             s, l, a);
-                } else {
-                    snprintf(buf, sizeof(buf), "hsla(%d, %d%%, %d%%, 0)", h, s,
-                             l);
-                }
-            }
+        // css-color-4 #serializing-sRGB-values: legacy sRGB colors
+        // serialize as rgb()/rgba(); the alpha uses the fewest decimals
+        // that round-trip its 8-bit value.
+        char buf[64];
+        if (m_a == 255) {
+            snprintf(buf, sizeof(buf), "rgb(%d, %d, %d)", m_r, m_g, m_b);
         } else {
-            // rgb
-            if (m_a == 255) {
-                snprintf(buf, sizeof(buf), "rgb(%d, %d, %d)", m_r, m_g, m_b);
-            } else {
-                float a = (float)m_a / 255;
-                if (a > 0.05) {
-                    snprintf(buf, sizeof(buf), "rgba(%d, %d, %d, %.1f)", m_r,
-                             m_g, m_b, a);
-                } else {
-                    snprintf(buf, sizeof(buf), "rgba(%d, %d, %d, 0)", m_r, m_g,
-                             m_b);
+            char alpha[16] = "0";
+            if (m_a) {
+                for (int decimals = 1; decimals <= 3; decimals++) {
+                    snprintf(alpha, sizeof(alpha), "%.*f", decimals,
+                             m_a / 255.0);
+                    if ((int)round(atof(alpha) * 255) == m_a) {
+                        break;
+                    }
                 }
             }
+            snprintf(buf, sizeof(buf), "rgba(%d, %d, %d, %s)", m_r, m_g, m_b,
+                     alpha);
         }
-
-        String* toStr =
-            String::createASCIIString(buf, strnlen(buf, sizeof(buf)));
-        return toStr;
+        return String::createASCIIString(buf, strnlen(buf, sizeof(buf)));
     }
 
     String* Color::toHTMLColorCodeString() const

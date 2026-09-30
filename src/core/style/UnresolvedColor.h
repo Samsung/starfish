@@ -32,12 +32,15 @@ namespace Starfish {
 // inside such a function are kept as leaves of the same tree, so the whole
 // specified value can be serialized and resolved once the style is final.
 // color-mix() (css-color-5 #color-mix) is a node of the same tree so that
-// its arguments may be any of the above. Nodes are immutable.
+// its arguments may be any of the above, and a color in a non-legacy space
+// (lab(), color(), ...) is a leaf that keeps its float components for
+// serialization. Nodes are immutable.
 class UnresolvedColor : public gc {
 public:
     enum Kind : unsigned char {
         LiteralKind,
         NamedKind,
+        ExtendedKind,
         CurrentColorKind,
         LightDarkKind,
         ColorMixKind,
@@ -54,6 +57,13 @@ public:
     {
         UnresolvedColor* c = new UnresolvedColor(NamedKind);
         c->m_named = named;
+        return c;
+    }
+
+    static UnresolvedColor* createExtended(const ExtendedColor& color)
+    {
+        UnresolvedColor* c = new UnresolvedColor(ExtendedKind);
+        new (&c->m_extended) ExtendedColor(color);
         return c;
     }
 
@@ -99,6 +109,7 @@ public:
         switch (m_kind) {
         case LiteralKind:
         case NamedKind:
+        case ExtendedKind:
             return true;
         case CurrentColorKind:
         case LightDarkKind:
@@ -110,6 +121,41 @@ public:
         return false;
     }
 
+    // The computed color with its color space and float components.
+    ExtendedColor resolveExtended(const ExtendedColor& currentColor,
+                                  bool dark) const
+    {
+        switch (m_kind) {
+        case LiteralKind:
+            return ExtendedColor::fromSrgb8(m_color);
+        case NamedKind:
+            return ExtendedColor::fromSrgb8(
+                NamedColor::namedColorToColor(m_named));
+        case ExtendedKind:
+            return m_extended;
+        case CurrentColorKind:
+            return currentColor;
+        case LightDarkKind:
+            return (dark ? m_children.m_second : m_children.m_first)
+                ->resolveExtended(currentColor, dark);
+        case ColorMixKind: {
+            double p1, p2;
+            mixPercentages(&p1, &p2);
+            double sum = p1 + p2;
+            return mixColors(
+                (ColorInterpolation::Space)m_space,
+                (ColorInterpolation::HueMethod)m_hueMethod,
+                m_children.m_first->resolveExtended(currentColor, dark),
+                p1 / sum,
+                m_children.m_second->resolveExtended(currentColor, dark),
+                p2 / sum, sum < 100 ? sum / 100 : 1);
+        }
+        }
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return ExtendedColor();
+    }
+
+    // The computed color as 8-bit sRGB, for painting.
     Unit::Color resolve(const Unit::Color& currentColor, bool dark) const
     {
         switch (m_kind) {
@@ -119,23 +165,10 @@ public:
             return NamedColor::namedColorToColor(m_named);
         case CurrentColorKind:
             return currentColor;
-        case LightDarkKind:
-            return (dark ? m_children.m_second : m_children.m_first)
-                ->resolve(currentColor, dark);
-        case ColorMixKind: {
-            double p1, p2;
-            mixPercentages(&p1, &p2);
-            double sum = p1 + p2;
-            return ColorInterpolation::mix(
-                (ColorInterpolation::Space)m_space,
-                (ColorInterpolation::HueMethod)m_hueMethod,
-                m_children.m_first->resolve(currentColor, dark), p1 / sum,
-                m_children.m_second->resolve(currentColor, dark), p2 / sum,
-                sum < 100 ? sum / 100 : 1);
+        default:
+            return resolveExtended(ExtendedColor::fromSrgb8(currentColor), dark)
+                .toSrgb8();
         }
-        }
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        return Unit::Color();
     }
 
     // The tree with every light-dark() decided for `dark`: that choice is
@@ -146,6 +179,7 @@ public:
         switch (m_kind) {
         case LiteralKind:
         case NamedKind:
+        case ExtendedKind:
         case CurrentColorKind:
             return this;
         case LightDarkKind:
@@ -177,6 +211,13 @@ public:
             return m_color == other->m_color;
         case NamedKind:
             return m_named == other->m_named;
+        case ExtendedKind:
+            return m_extended.m_space == other->m_extended.m_space &&
+                   m_extended.m_missing == other->m_extended.m_missing &&
+                   m_extended.m_c[0] == other->m_extended.m_c[0] &&
+                   m_extended.m_c[1] == other->m_extended.m_c[1] &&
+                   m_extended.m_c[2] == other->m_extended.m_c[2] &&
+                   m_extended.m_alpha == other->m_extended.m_alpha;
         case CurrentColorKind:
             return true;
         case LightDarkKind:
@@ -203,6 +244,8 @@ public:
             return m_color.toString();
         case NamedKind:
             return NamedColor::namedColorToString(m_named);
+        case ExtendedKind:
+            return m_extended.toString();
         case CurrentColorKind:
             return String::fromUTF8("currentcolor");
         case LightDarkKind: {
@@ -286,7 +329,7 @@ private:
     }
 
     Kind m_kind;
-    // color-mix() only; kept beside the kind so the union stays two words
+    // color-mix() only; kept beside the kind so the union stays small
     unsigned char m_space;
     unsigned char m_hueMethod;
     // One payload per kind; the object is GC-scanned conservatively, so the
@@ -294,6 +337,7 @@ private:
     union {
         Unit::Color m_color;
         NamedColor::NamedColorValue m_named;
+        ExtendedColor m_extended;
         struct {
             UnresolvedColor* m_first;
             UnresolvedColor* m_second;

@@ -340,6 +340,30 @@ bool EventTarget::hasListenerForTypeOnPath(const String* eventType)
     return true;
 }
 
+// Invoke `target`'s listeners for the current phase; shared by the full
+// flat-tree dispatch and the worker-host single-target dispatch, so it must
+// stay outside the host/non-host guard below.
+static void invokeEventListeners(EventTarget* target, Event* event,
+                                 bool capture)
+{
+    auto originals = target->getEventListeners(event->type());
+    if (!originals) {
+        return;
+    }
+    // Iterate a copy: listeners can be removed during iteration
+    GCVector<EventListener*> copies = GCVector<EventListener*>(*originals);
+    for (auto listener : copies) {
+        STARFISH_ASSERT(listener);
+        if (event->stopImmediatePropagationValue()) {
+            break;
+        }
+        if (listener->capture() == capture && !listener->isRemoved()) {
+            event->setCurrentTarget(target);
+            listener->call(event);
+        }
+    }
+}
+
 #if defined(STARFISH_WEBWORKER_NOT_HOST)
 // Whether `ancestor` is a shadow-including inclusive ancestor of `node`:
 // an inclusive ancestor in the ordinary tree, or - recursing across shadow
@@ -381,6 +405,10 @@ EventTarget* EventTarget::retarget(EventTarget* a, EventTarget* b)
     }
 }
 
+// https://dom.spec.whatwg.org/#concept-event-listener-invoke for one pass:
+// the capture pass runs a target's capture listeners and the bubble pass its
+// non-capture ones. The target itself is no exception, so at the target the
+// capture listeners run first regardless of registration order.
 static EventPathStruct makeEventPathStruct(
     EventTarget* target, EventTarget* invocationTarget,
     Optional<EventTarget*> originalRelatedTarget, bool rootOfClosedTree,
@@ -657,36 +685,26 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
             activationTarget->legacyPreActivationBehavior();
         }
 
-        for (size_t i = eventPath.size(); i > 1; i--) {
+        // eventPath[0] is origin's own struct when origin participates in
+        // the path (an element, shadow root, document or window, see the
+        // build loop above). A Text node or a plain EventTarget such as
+        // XMLHttpRequest is not in the path; its listeners are still invoked
+        // at the target below.
+        bool originInPath =
+            !eventPath.empty() && eventPath[0].invocationTarget == origin;
+        size_t firstAncestor = originInPath ? 1 : 0;
+
+        for (size_t i = eventPath.size(); i > firstAncestor; i--) {
             if (event->stopPropagationValue()) {
                 break;
             }
             const EventPathStruct& pathStruct = eventPath[i - 1];
-            EventTarget* eventTarget = pathStruct.invocationTarget;
             // https://dom.spec.whatwg.org/#concept-event-dispatch "invoke":
             // retarget event.target to this struct's shadow-adjusted target
             // before calling its listeners.
             event->setTarget(pathStruct.shadowAdjustedTarget.value());
             event->setRelatedTargetForDispatch(pathStruct.relatedTarget);
-            auto originals = eventTarget->getEventListeners(event->type());
-            if (originals) {
-                // Iterate Copied Vector : listeners can be removed during
-                // iteration
-                GCVector<EventListener*> copies =
-                    GCVector<EventListener*>(*originals);
-                for (auto listener : copies) {
-                    STARFISH_ASSERT(listener);
-                    if (event->stopImmediatePropagationValue()) {
-                        break;
-                    }
-                    if (listener->capture() && !listener->isRemoved()) {
-                        // STARFISH_LOG_INFO("[CAPTURING_PHASE] node: %s",
-                        // node->localName()->toUTF8NonGCString().data());
-                        event->setCurrentTarget(eventTarget);
-                        listener->call(event);
-                    }
-                }
-            }
+            invokeEventListeners(pathStruct.invocationTarget, event, true);
         }
 
         // 7. Initialize event's eventPhase attribute to AT_TARGET.
@@ -694,40 +712,25 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
         // retarget(origin, origin) is always origin (a target always sees
         // itself untargeted); restore it explicitly since the capture loop
         // above may have left event.target retargeted to an ancestor's
-        // shadow-adjusted target. eventPath[0] is origin's own struct when
-        // present (see the build loop above), so its relatedTarget is the
-        // correspondingly-restored value; eventPath can still be empty here
-        // for a reason unrelated to path shortening (origin is neither a
-        // Node nor a Window, e.g. XMLHttpRequest, so the build loop never
-        // covered it at all) -- in that case relatedTarget was never
-        // retargeted to begin with, so leave it untouched.
+        // shadow-adjusted target, and origin's own struct carries the
+        // correspondingly-restored relatedTarget. An origin outside the path
+        // never had its relatedTarget retargeted, so leave it untouched.
         event->setTarget(origin);
-        if (!eventPath.empty()) {
+        if (originInPath) {
             event->setRelatedTargetForDispatch(eventPath[0].relatedTarget);
         }
 
-        // 8. Invoke the event listeners of event's target attribute value with
-        // event, if event's stop propagation flag is unset.
-        auto originals = origin->getEventListeners(event->type());
-        if (originals) {
-            if (!event->stopPropagationValue()) {
-                // Iterate Copied Vector : listeners can be removed during
-                // iteration
-                GCVector<EventListener*> copies =
-                    GCVector<EventListener*>(*originals);
-                for (auto listener : copies) {
-                    STARFISH_ASSERT(listener);
-                    if (event->stopImmediatePropagationValue()) {
-                        break;
-                    }
-                    if (!listener->isRemoved()) {
-                        // STARFISH_LOG_INFO("[AT_TARGET] node: %s",
-                        // origin->localName()->toUTF8NonGCString().data());
-                        event->setCurrentTarget(origin);
-                        listener->call(event);
-                    }
-                }
-            }
+        // 8. The target's own listeners: the capture ones close the capture
+        // pass and the non-capture ones open the bubble pass, so they run in
+        // that order regardless of registration order, both with eventPhase
+        // AT_TARGET, and the non-capture ones run even when the event does
+        // not bubble (https://dom.spec.whatwg.org/#concept-event-dispatch
+        // steps 5.9-5.10).
+        if (!event->stopPropagationValue()) {
+            invokeEventListeners(origin, event, true);
+        }
+        if (!event->stopPropagationValue()) {
+            invokeEventListeners(origin, event, false);
         }
 
         // 9. If event's bubbles attribute value is true, run these substeps:
@@ -737,38 +740,19 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
         // event event as long as event's stop propagation flag is unset.
         if (event->bubbles()) {
             event->setEventPhase(Event::BUBBLING_PHASE);
-            for (size_t i = 1; i < eventPath.size(); i++) {
+            for (size_t i = firstAncestor; i < eventPath.size(); i++) {
                 if (event->stopPropagationValue()) {
                     break;
                 }
                 const EventPathStruct& pathStruct = eventPath[i];
-                EventTarget* eventTarget = pathStruct.invocationTarget;
                 // See the CAPTURING_PHASE loop above for the retargeting
                 // rationale.
                 event->setTarget(pathStruct.shadowAdjustedTarget.value());
                 event->setRelatedTargetForDispatch(pathStruct.relatedTarget);
-                auto originals = eventTarget->getEventListeners(event->type());
-                if (originals) {
-                    // Iterate Copied Vector : listeners can be removed during
-                    // iteration
-                    GCVector<EventListener*> copies =
-                        GCVector<EventListener*>(*originals);
-                    for (auto listener : copies) {
-                        STARFISH_ASSERT(listener);
-                        if (event->stopImmediatePropagationValue()) {
-                            break;
-                        }
-                        if (!listener->capture() && !listener->isRemoved()) {
-                            // STARFISH_LOG_INFO("[BUBBLING_PHASE] node: %s",
-                            // node->localName()->toUTF8NonGCString().data());
-                            event->setCurrentTarget(eventTarget);
-                            listener->call(event);
-                        }
-                    }
-                }
+                invokeEventListeners(pathStruct.invocationTarget, event, false);
             }
         }
-    } // if (!eventPath.empty())
+    } // if (!suppressDispatchEntirely)
 #if defined(STARFISH_WEBWORKER_NOT_HOST)
     if (event->defaultPrevented()) {
         if (event->type()->equals("keydown")) {
@@ -843,24 +827,13 @@ bool EventTarget::dispatchEventForTarget(EventTarget* origin, Event* event)
 {
     event->setTarget(origin);
     event->setEventPhase(Event::AT_TARGET);
-    // Invoke event listeners
-    auto originals = getEventListeners(event->type());
-    if (originals) {
-        if (!event->stopPropagationValue()) {
-            // Iterate Copied Vector : listeners can be removed during iteration
-            GCVector<EventListener*> copies =
-                GCVector<EventListener*>(*originals);
-            for (auto listener : copies) {
-                STARFISH_ASSERT(listener);
-                if (event->stopImmediatePropagationValue()) {
-                    break;
-                }
-                if (!listener->isRemoved()) {
-                    event->setCurrentTarget(this);
-                    listener->call(event);
-                }
-            }
-        }
+    // Same at-target order as the full dispatch above: capture listeners,
+    // then non-capture ones.
+    if (!event->stopPropagationValue()) {
+        invokeEventListeners(this, event, true);
+    }
+    if (!event->stopPropagationValue()) {
+        invokeEventListeners(this, event, false);
     }
     event->setEventPhase(Event::NONE);
     return (event->cancelable() && event->defaultPrevented()) ? false : true;

@@ -14,6 +14,8 @@ http://web-platform.test:8000/dom/ranges/Range-constructor.html
 http://web-platform.test:8000/dom/ranges/Range-commonAncestorContainer-2.html
 http://web-platform.test:8000/dom/ranges/Range-comparePoint-2.html
 http://web-platform.test:8000/dom/events/Event-dispatch-order.html
+http://web-platform.test:8000/dom/events/Event-dispatch-order-at-target.html
+http://web-platform.test:8000/dom/events/Event-dispatch-listener-order.window.html
 http://web-platform.test:8000/dom/events/Event-dispatch-multiple-stopPropagation.html
 http://web-platform.test:8000/dom/events/Event-dispatch-throwing.html
 # [auto-fail] http://web-platform.test:8000/dom/events/Event-dispatch-redispatch.html
