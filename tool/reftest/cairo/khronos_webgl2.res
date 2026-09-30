@@ -1810,28 +1810,28 @@ test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image/tex-3d
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rg16f-rg-float.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rg32f-rg-float.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rg8ui-rg_integer-unsigned_byte.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb8-rgb-unsigned_byte.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-srgb8-rgb-unsigned_byte.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb565-rgb-unsigned_byte.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb565-rgb-unsigned_short_5_6_5.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb8-rgb-unsigned_byte.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-srgb8-rgb-unsigned_byte.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb565-rgb-unsigned_byte.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb565-rgb-unsigned_short_5_6_5.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-r11f_g11f_b10f-rgb-unsigned_int_10f_11f_11f_rev.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-r11f_g11f_b10f-rgb-half_float.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-r11f_g11f_b10f-rgb-float.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-r11f_g11f_b10f-rgb-float.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb9_e5-rgb-half_float.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb9_e5-rgb-float.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb9_e5-rgb-float.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb16f-rgb-half_float.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb16f-rgb-float.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb32f-rgb-float.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb16f-rgb-float.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb32f-rgb-float.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb8ui-rgb_integer-unsigned_byte.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgba8-rgba-unsigned_byte.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-srgb8_alpha8-rgba-unsigned_byte.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb5_a1-rgba-unsigned_byte.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb5_a1-rgba-unsigned_short_5_5_5_1.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgba4-rgba-unsigned_byte.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgba4-rgba-unsigned_short_4_4_4_4.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgba8-rgba-unsigned_byte.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-srgb8_alpha8-rgba-unsigned_byte.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb5_a1-rgba-unsigned_byte.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgb5_a1-rgba-unsigned_short_5_5_5_1.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgba4-rgba-unsigned_byte.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgba4-rgba-unsigned_short_4_4_4_4.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgba16f-rgba-half_float.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgba16f-rgba-float.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgba32f-rgba-float.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgba16f-rgba-float.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgba32f-rgba-float.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-2d-rgba8ui-rgba_integer-unsigned_byte.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-3d-r8-red-unsigned_byte.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/image_data/tex-3d-r16f-red-half_float.html
