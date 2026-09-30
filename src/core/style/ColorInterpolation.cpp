@@ -96,6 +96,13 @@ namespace {
         out[2] = r[2];
     }
 
+    void copy3(const double in[3], double out[3])
+    {
+        out[0] = in[0];
+        out[1] = in[1];
+        out[2] = in[2];
+    }
+
     double srgbToLinear(double c)
     {
         double sign = c < 0 ? -1 : 1;
@@ -171,9 +178,10 @@ namespace {
 
     void hwbToRgb(const double hwb[3], double rgb[3])
     {
-        double w = hwb[1] / 100;
-        double b = hwb[2] / 100;
-        if (w + b >= 1) {
+        // computed in percent so that e.g. 30% + 50% stays exact in binary
+        double w = hwb[1];
+        double b = hwb[2];
+        if (w + b >= 100) {
             double gray = w / (w + b);
             rgb[0] = rgb[1] = rgb[2] = gray;
             return;
@@ -181,7 +189,7 @@ namespace {
         double hsl[3] = { hwb[0], 100, 50 };
         hslToRgb(hsl, rgb);
         for (int i = 0; i < 3; i++) {
-            rgb[i] = rgb[i] * (1 - w - b) + w;
+            rgb[i] = (rgb[i] * (100 - w - b) + w) / 100;
         }
     }
 
@@ -252,142 +260,48 @@ namespace {
         lab[2] = lch[1] * std::sin(h);
     }
 
-    int hueIndex(ColorInterpolation::Space space)
+    // Every conversion goes through XYZ D65.
+    void toXyzD65(ColorInterpolation::Space space, const double in[3],
+                  double xyz[3])
     {
-        switch (space) {
-        case ColorInterpolation::Hsl:
-        case ColorInterpolation::Hwb:
-            return 0;
-        case ColorInterpolation::Lch:
-        case ColorInterpolation::Oklch:
-            return 2;
-        default:
-            return -1;
-        }
-    }
-
-    // Converts an sRGB color to `space`; returns whether the hue component is
-    // powerless (css-color-4 #interpolation-missing: it then takes the other
-    // color's hue).
-    bool toSpace(ColorInterpolation::Space space, const Unit::Color& color,
-                 double out[3])
-    {
-        double rgb[3] = { color.R(), color.G(), color.B() };
+        double rgb[3], linear[3];
         switch (space) {
         case ColorInterpolation::Srgb:
-            out[0] = rgb[0];
-            out[1] = rgb[1];
-            out[2] = rgb[2];
-            return false;
         case ColorInterpolation::Hsl:
-            rgbToHsl(rgb, out);
-            return out[1] == 0 || out[2] == 0 || out[2] == 100;
         case ColorInterpolation::Hwb:
-            rgbToHwb(rgb, out);
-            return out[1] + out[2] >= 100;
-        default:
-            break;
-        }
-
-        double linear[3];
-        for (int i = 0; i < 3; i++) {
-            linear[i] = srgbToLinear(rgb[i]);
-        }
-        if (space == ColorInterpolation::SrgbLinear) {
-            out[0] = linear[0];
-            out[1] = linear[1];
-            out[2] = linear[2];
-            return false;
-        }
-
-        double xyz[3];
-        multiply(kLinearSrgbToXyzD65, linear, xyz);
-        switch (space) {
-        case ColorInterpolation::Xyz:
-        case ColorInterpolation::XyzD65:
-            out[0] = xyz[0];
-            out[1] = xyz[1];
-            out[2] = xyz[2];
-            return false;
-        case ColorInterpolation::XyzD50:
-            multiply(kXyzD65ToD50, xyz, out);
-            return false;
-        case ColorInterpolation::Lab:
-        case ColorInterpolation::Lch: {
-            double d50[3], lab[3];
-            multiply(kXyzD65ToD50, xyz, d50);
-            xyzD50ToLab(d50, lab);
-            if (space == ColorInterpolation::Lab) {
-                out[0] = lab[0];
-                out[1] = lab[1];
-                out[2] = lab[2];
-                return false;
+            if (space == ColorInterpolation::Hsl) {
+                hslToRgb(in, rgb);
+            } else if (space == ColorInterpolation::Hwb) {
+                hwbToRgb(in, rgb);
+            } else {
+                copy3(in, rgb);
             }
-            labToLch(lab, out);
-            return out[1] < 1e-4;
-        }
-        case ColorInterpolation::Oklab:
-        case ColorInterpolation::Oklch: {
-            double oklab[3];
-            xyzD65ToOklab(xyz, oklab);
-            if (space == ColorInterpolation::Oklab) {
-                out[0] = oklab[0];
-                out[1] = oklab[1];
-                out[2] = oklab[2];
-                return false;
+            for (int i = 0; i < 3; i++) {
+                linear[i] = srgbToLinear(rgb[i]);
             }
-            labToLch(oklab, out);
-            return out[1] < 1e-4;
-        }
-        default:
-            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            return false;
-        }
-    }
-
-    void fromSpace(ColorInterpolation::Space space, const double in[3],
-                   double rgb[3])
-    {
-        double xyz[3];
-        switch (space) {
-        case ColorInterpolation::Srgb:
-            rgb[0] = in[0];
-            rgb[1] = in[1];
-            rgb[2] = in[2];
-            return;
-        case ColorInterpolation::Hsl:
-            hslToRgb(in, rgb);
-            return;
-        case ColorInterpolation::Hwb:
-            hwbToRgb(in, rgb);
+            multiply(kLinearSrgbToXyzD65, linear, xyz);
             return;
         case ColorInterpolation::SrgbLinear:
-            for (int i = 0; i < 3; i++) {
-                rgb[i] = linearToSrgb(in[i]);
-            }
+            multiply(kLinearSrgbToXyzD65, in, xyz);
             return;
         case ColorInterpolation::Xyz:
         case ColorInterpolation::XyzD65:
-            xyz[0] = in[0];
-            xyz[1] = in[1];
-            xyz[2] = in[2];
-            break;
+            copy3(in, xyz);
+            return;
         case ColorInterpolation::XyzD50:
             multiply(kXyzD50ToD65, in, xyz);
-            break;
+            return;
         case ColorInterpolation::Lab:
         case ColorInterpolation::Lch: {
             double lab[3], d50[3];
             if (space == ColorInterpolation::Lch) {
                 lchToLab(in, lab);
             } else {
-                lab[0] = in[0];
-                lab[1] = in[1];
-                lab[2] = in[2];
+                copy3(in, lab);
             }
             labToXyzD50(lab, d50);
             multiply(kXyzD50ToD65, d50, xyz);
-            break;
+            return;
         }
         case ColorInterpolation::Oklab:
         case ColorInterpolation::Oklch: {
@@ -395,19 +309,188 @@ namespace {
             if (space == ColorInterpolation::Oklch) {
                 lchToLab(in, oklab);
             } else {
-                oklab[0] = in[0];
-                oklab[1] = in[1];
-                oklab[2] = in[2];
+                copy3(in, oklab);
             }
             oklabToXyzD65(oklab, xyz);
-            break;
+            return;
         }
         }
-        double linear[3];
-        multiply(kXyzD65ToLinearSrgb, xyz, linear);
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    void fromXyzD65(ColorInterpolation::Space space, const double xyz[3],
+                    double out[3])
+    {
+        double linear[3], rgb[3];
+        switch (space) {
+        case ColorInterpolation::Srgb:
+        case ColorInterpolation::Hsl:
+        case ColorInterpolation::Hwb:
+            multiply(kXyzD65ToLinearSrgb, xyz, linear);
+            for (int i = 0; i < 3; i++) {
+                rgb[i] = linearToSrgb(linear[i]);
+            }
+            if (space == ColorInterpolation::Hsl) {
+                rgbToHsl(rgb, out);
+            } else if (space == ColorInterpolation::Hwb) {
+                rgbToHwb(rgb, out);
+            } else {
+                copy3(rgb, out);
+            }
+            return;
+        case ColorInterpolation::SrgbLinear:
+            multiply(kXyzD65ToLinearSrgb, xyz, out);
+            return;
+        case ColorInterpolation::Xyz:
+        case ColorInterpolation::XyzD65:
+            copy3(xyz, out);
+            return;
+        case ColorInterpolation::XyzD50:
+            multiply(kXyzD65ToD50, xyz, out);
+            return;
+        case ColorInterpolation::Lab:
+        case ColorInterpolation::Lch: {
+            double d50[3], lab[3];
+            multiply(kXyzD65ToD50, xyz, d50);
+            xyzD50ToLab(d50, lab);
+            if (space == ColorInterpolation::Lch) {
+                labToLch(lab, out);
+            } else {
+                copy3(lab, out);
+            }
+            return;
+        }
+        case ColorInterpolation::Oklab:
+        case ColorInterpolation::Oklch: {
+            double oklab[3];
+            xyzD65ToOklab(xyz, oklab);
+            if (space == ColorInterpolation::Oklch) {
+                labToLch(oklab, out);
+            } else {
+                copy3(oklab, out);
+            }
+            return;
+        }
+        }
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    bool sameFamily(ColorInterpolation::Space a, ColorInterpolation::Space b)
+    {
+        if (a == b) {
+            return true;
+        }
+        if ((a == ColorInterpolation::Xyz || a == ColorInterpolation::XyzD65) &&
+            (b == ColorInterpolation::Xyz || b == ColorInterpolation::XyzD65)) {
+            return true;
+        }
+        return false;
+    }
+
+    // Whether the hue of `c` (already in a polar `space`) is powerless
+    // (css-color-4 #powerless): the color is achromatic.
+    bool huePowerless(ColorInterpolation::Space space, const double c[3])
+    {
+        switch (space) {
+        case ColorInterpolation::Hsl:
+            return c[1] == 0 || c[2] <= 0 || c[2] >= 100;
+        case ColorInterpolation::Hwb:
+            return c[1] + c[2] >= 100;
+        case ColorInterpolation::Lch:
+        case ColorInterpolation::Oklch:
+            return c[1] < 1e-4;
+        default:
+            return false;
+        }
+    }
+
+    // css-color-4 #interpolation-missing: the category a component belongs
+    // to, so that a missing component carries over to the analogous one of
+    // another space.
+    enum ComponentCategory {
+        Red,
+        Green,
+        Blue,
+        X,
+        Y,
+        Z,
+        Lightness,
+        OpponentA,
+        OpponentB,
+        Chroma,
+        Hue,
+        Saturation,
+        HslLightness,
+        Whiteness,
+        Blackness,
+    };
+
+    ComponentCategory category(ColorInterpolation::Space space, int i)
+    {
+        switch (space) {
+        case ColorInterpolation::Srgb:
+        case ColorInterpolation::SrgbLinear:
+            return i == 0 ? Red : (i == 1 ? Green : Blue);
+        case ColorInterpolation::Xyz:
+        case ColorInterpolation::XyzD50:
+        case ColorInterpolation::XyzD65:
+            return i == 0 ? X : (i == 1 ? Y : Z);
+        case ColorInterpolation::Lab:
+        case ColorInterpolation::Oklab:
+            return i == 0 ? Lightness : (i == 1 ? OpponentA : OpponentB);
+        case ColorInterpolation::Lch:
+        case ColorInterpolation::Oklch:
+            return i == 0 ? Lightness : (i == 1 ? Chroma : Hue);
+        case ColorInterpolation::Hsl:
+            return i == 0 ? Hue : (i == 1 ? Saturation : HslLightness);
+        case ColorInterpolation::Hwb:
+            return i == 0 ? Hue : (i == 1 ? Whiteness : Blackness);
+        }
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return Red;
+    }
+
+    unsigned char analogousMissing(ColorInterpolation::Space from,
+                                   unsigned char missing,
+                                   ColorInterpolation::Space to)
+    {
+        unsigned char result = 0;
+        for (int j = 0; j < 3; j++) {
+            for (int i = 0; i < 3; i++) {
+                if ((missing & (1 << i)) &&
+                    category(from, i) == category(to, j)) {
+                    result |= 1 << j;
+                }
+            }
+        }
+        return result;
+    }
+
+    // Converts `color` to `space` for interpolation. Missing components are
+    // 0 for the conversion and carried over to the analogous components of
+    // `space` (css-color-4 #interpolation-missing). A powerless hue becomes
+    // missing. Returns the missing mask.
+    unsigned char toSpace(ColorInterpolation::Space space,
+                          const ExtendedColor& color, double out[3])
+    {
+        double in[3];
         for (int i = 0; i < 3; i++) {
-            rgb[i] = linearToSrgb(linear[i]);
+            in[i] = color.missing(i) ? 0 : color.m_c[i];
         }
+        unsigned char missing =
+            analogousMissing(color.m_space, color.m_missing & 7, space);
+        if (sameFamily(color.m_space, space)) {
+            copy3(in, out);
+        } else {
+            double xyz[3];
+            toXyzD65(color.m_space, in, xyz);
+            fromXyzD65(space, xyz, out);
+        }
+        int hue = ColorInterpolation::hueIndex(space);
+        if (hue >= 0 && !(missing & (1 << hue)) && huePowerless(space, out)) {
+            missing |= 1 << hue;
+        }
+        return missing;
     }
 
     // css-color-4 #hue-interpolation
@@ -447,13 +530,35 @@ namespace {
 
     unsigned char toChannel(double v)
     {
-        if (v <= 0) {
+        if (!(v > 0)) {
             return 0;
         }
         if (v >= 1) {
             return 255;
         }
         return (unsigned char)std::lround(v * 255);
+    }
+
+    // css-color-4 numbers serialize with enough digits for the tests' epsilon
+    // and no trailing zeros
+    void appendNumber(StringBuilder& builder, double v)
+    {
+        char buf[32];
+        if (std::fabs(v) < 5e-7) {
+            v = 0;
+        }
+        snprintf(buf, sizeof(buf), "%.6g", v);
+        builder.appendString(String::createASCIIString(buf, strlen(buf)));
+    }
+
+    void appendComponent(StringBuilder& builder, const ExtendedColor& color,
+                         int i)
+    {
+        if (color.missing(i)) {
+            builder.appendString("none");
+        } else {
+            appendNumber(builder, color.m_c[i]);
+        }
     }
 
 } // namespace
@@ -543,29 +648,151 @@ const char* ColorInterpolation::hueMethodName(HueMethod method)
     return "";
 }
 
+int ColorInterpolation::hueIndex(Space space)
+{
+    switch (space) {
+    case Hsl:
+    case Hwb:
+        return 0;
+    case Lch:
+    case Oklch:
+        return 2;
+    default:
+        return -1;
+    }
+}
+
 bool ColorInterpolation::isPolar(Space space)
 {
     return hueIndex(space) >= 0;
 }
 
-Unit::Color ColorInterpolation::mix(Space space, HueMethod method,
-                                    const Unit::Color& a, double weightA,
-                                    const Unit::Color& b, double weightB,
-                                    double alphaMultiplier)
+void ColorInterpolation::hslToSrgb(const double hsl[3], double rgb[3])
+{
+    hslToRgb(hsl, rgb);
+}
+
+void ColorInterpolation::hwbToSrgb(const double hwb[3], double rgb[3])
+{
+    hwbToRgb(hwb, rgb);
+}
+
+Unit::Color ExtendedColor::toSrgb8() const
+{
+    double in[3];
+    for (int i = 0; i < 3; i++) {
+        in[i] = missing(i) ? 0 : m_c[i];
+    }
+    return toSrgb8(m_space, in, alphaMissing() ? 0 : m_alpha);
+}
+
+Unit::Color ExtendedColor::toSrgb8(ColorInterpolation::Space space,
+                                   const double in[3], double alpha)
+{
+    double rgb[3];
+    switch (space) {
+    case ColorInterpolation::Srgb:
+        copy3(in, rgb);
+        break;
+    case ColorInterpolation::Hsl:
+        hslToRgb(in, rgb);
+        break;
+    case ColorInterpolation::Hwb:
+        hwbToRgb(in, rgb);
+        break;
+    default: {
+        double xyz[3];
+        toXyzD65(space, in, xyz);
+        fromXyzD65(ColorInterpolation::Srgb, xyz, rgb);
+        break;
+    }
+    }
+    return Unit::Color(toChannel(rgb[0]), toChannel(rgb[1]), toChannel(rgb[2]),
+                       toChannel(alpha));
+}
+
+String* ExtendedColor::toString() const
+{
+    if (m_legacy) {
+        return toSrgb8().toString();
+    }
+    STARFISH_ASSERT(m_space != ColorInterpolation::Hsl &&
+                    m_space != ColorInterpolation::Hwb &&
+                    m_space != ColorInterpolation::Xyz);
+    StringBuilder builder;
+    switch (m_space) {
+    case ColorInterpolation::Lab:
+        builder.appendString("lab(");
+        break;
+    case ColorInterpolation::Lch:
+        builder.appendString("lch(");
+        break;
+    case ColorInterpolation::Oklab:
+        builder.appendString("oklab(");
+        break;
+    case ColorInterpolation::Oklch:
+        builder.appendString("oklch(");
+        break;
+    default: {
+        builder.appendString("color(");
+        const char* space = ColorInterpolation::spaceName(m_space);
+        builder.appendString(space, strlen(space));
+        builder.appendChar(' ');
+        break;
+    }
+    }
+    for (int i = 0; i < 3; i++) {
+        if (i) {
+            builder.appendChar(' ');
+        }
+        appendComponent(builder, *this, i);
+    }
+    if (alphaMissing()) {
+        builder.appendString(" / none");
+    } else if (m_alpha < 1) {
+        builder.appendString(" / ");
+        appendNumber(builder, m_alpha);
+    }
+    builder.appendChar(')');
+    return builder.finalize();
+}
+
+ExtendedColor mixColors(ColorInterpolation::Space space,
+                        ColorInterpolation::HueMethod method,
+                        const ExtendedColor& a, double weightA,
+                        const ExtendedColor& b, double weightB,
+                        double alphaMultiplier)
 {
     double ca[3], cb[3];
-    bool hueMissingA = toSpace(space, a, ca);
-    bool hueMissingB = toSpace(space, b, cb);
-    double alphaA = a.A();
-    double alphaB = b.A();
+    unsigned char missingA = toSpace(space, a, ca);
+    unsigned char missingB = toSpace(space, b, cb);
+    double alphaA = a.alphaMissing() ? 0 : a.m_alpha;
+    double alphaB = b.alphaMissing() ? 0 : b.m_alpha;
+    bool alphaMissingA = a.alphaMissing();
+    bool alphaMissingB = b.alphaMissing();
 
-    int hue = hueIndex(space);
-    if (hue >= 0) {
-        if (hueMissingA && !hueMissingB) {
-            ca[hue] = cb[hue];
-        } else if (hueMissingB && !hueMissingA) {
-            cb[hue] = ca[hue];
+    // css-color-4 #interpolation-missing: a missing component takes the
+    // other color's value; missing on both sides stays missing.
+    unsigned char missing = missingA & missingB;
+    for (int i = 0; i < 3; i++) {
+        if ((missingA & (1 << i)) && !(missingB & (1 << i))) {
+            ca[i] = cb[i];
+        } else if ((missingB & (1 << i)) && !(missingA & (1 << i))) {
+            cb[i] = ca[i];
         }
+    }
+    // a missing alpha takes the other color's; missing on both sides is
+    // opaque for the mix and missing in the result
+    if (alphaMissingA && !alphaMissingB) {
+        alphaA = alphaB;
+    } else if (alphaMissingB && !alphaMissingA) {
+        alphaB = alphaA;
+    } else if (alphaMissingA && alphaMissingB) {
+        alphaA = alphaB = 1;
+    }
+
+    int hue = ColorInterpolation::hueIndex(space);
+    if (hue >= 0) {
         adjustHues(method, &ca[hue], &cb[hue]);
     }
 
@@ -584,10 +811,39 @@ Unit::Color ColorInterpolation::mix(Space space, HueMethod method,
         out[hue] = normalizeHue(out[hue]);
     }
 
-    double rgb[3];
-    fromSpace(space, out, rgb);
-    return Unit::Color(toChannel(rgb[0]), toChannel(rgb[1]), toChannel(rgb[2]),
-                       toChannel(alpha * alphaMultiplier));
+    ExtendedColor result;
+    result.m_legacy = false;
+    // hsl/hwb results are sRGB colors; `xyz` is an alias of xyz-d65
+    if (space == ColorInterpolation::Hsl || space == ColorInterpolation::Hwb) {
+        double rgb[3];
+        double in[3];
+        for (int i = 0; i < 3; i++) {
+            in[i] = (missing & (1 << i)) ? 0 : out[i];
+        }
+        if (space == ColorInterpolation::Hsl) {
+            hslToRgb(in, rgb);
+        } else {
+            hwbToRgb(in, rgb);
+        }
+        result.m_space = ColorInterpolation::Srgb;
+        copy3(rgb, out);
+        missing = 0;
+    } else if (space == ColorInterpolation::Xyz) {
+        result.m_space = ColorInterpolation::XyzD65;
+    } else {
+        result.m_space = space;
+    }
+    for (int i = 0; i < 3; i++) {
+        result.m_c[i] = out[i];
+    }
+    result.m_missing = missing;
+    if (alphaMissingA && alphaMissingB) {
+        result.m_missing |= 1 << 3;
+        result.m_alpha = 0;
+    } else {
+        result.m_alpha = std::max(0.0, std::min(1.0, alpha * alphaMultiplier));
+    }
+    return result;
 }
 
 } // namespace Starfish

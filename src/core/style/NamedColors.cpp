@@ -369,7 +369,8 @@ String* NamedColor::namedColorToString(NamedColorValue namedColor)
         NAMED_COLOR_FOR_EACH(ADD_COLOR_ITEM)
 #undef ADD_COLOR_ITEM
     case NamedColorValue::currentColor:
-        return String::createASCIIString("currentColor");
+        // css-color-4 #resolving-color-values: serialized lowercase
+        return String::createASCIIString("currentcolor");
     default:
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
@@ -377,6 +378,10 @@ String* NamedColor::namedColorToString(NamedColorValue namedColor)
 
 Unit::Color NamedColor::namedColorToColor(NamedColorValue namedColor)
 {
+    // the table holds rgb only; `transparent` is rgba(0, 0, 0, 0)
+    if (namedColor == NamedColorValue::transparentNamedColor) {
+        return Unit::Color(0, 0, 0, 0);
+    }
     switch (namedColor) {
 #define ADD_COLOR_ITEM(name, value)                 \
     case NamedColorValue::name##NamedColor: {       \

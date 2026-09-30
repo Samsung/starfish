@@ -894,85 +894,6 @@ public:
         return false;
     }
 
-    static bool parseColorFunctionPart(const CSSTokenValue& s, bool isAlpha,
-                                       unsigned char* ret, bool* isPercent)
-    {
-        auto ss = s.trim();
-        CSSPropertyParser parser((char*)ss.data(), ss.length());
-
-        bool hasPoint = false;
-        parser.consumeWhitespaces();
-        if (!parser.consumeNumber(&hasPoint)) {
-            return false;
-        }
-
-        float number = parser.parsedNumber();
-        bool percent = false;
-        if (parser.consumeIfNext('%')) {
-            percent = true;
-        }
-
-        // NOTE: decimal-point is disallowed for rgb value.
-        if (!isAlpha && !percent && hasPoint) {
-            return false;
-        }
-
-        parser.consumeWhitespaces();
-        if (!parser.isEnd()) {
-            return false;
-        }
-
-        number = number < 0 ? 0 : number;
-        if (percent) {
-            if (number > 100) {
-                number = 100;
-            }
-            number = 255 * number / 100;
-        } else if (isAlpha) {
-            if (number > 1) {
-                number = 1;
-            }
-            number = number * 255;
-        } else if (number > 255) {
-            number = 255;
-        }
-        *ret = number;
-        *isPercent = percent;
-        return true;
-    }
-
-    static bool parsePercent(const CSSTokenValue& s, double* ret)
-    {
-        auto ss = s.trim();
-        CSSPropertyParser parser((char*)ss.data(), ss.length());
-
-        bool hasPoint = false;
-        parser.consumeWhitespaces();
-        if (!parser.consumeNumber(&hasPoint)) {
-            return false;
-        }
-
-        float number = parser.parsedNumber();
-        bool percent = false;
-        if (parser.consumeIfNext('%')) {
-            percent = true;
-        }
-        if (!percent) {
-            return false;
-        }
-
-        parser.consumeWhitespaces();
-        if (!parser.isEnd()) {
-            return false;
-        }
-
-        number = number < 0 ? 0 : number;
-        number = number > 100 ? 100 : number;
-
-        *ret = number;
-        return true;
-    }
-
     static const size_t kMaxColorFunctionNesting = 16;
 
     static size_t parenthesisDepth(const CSSTokenValue& s)
@@ -1035,8 +956,9 @@ public:
     // (css-color-4 #color-syntax). Mixing the two forms is invalid.
     static bool splitColorArgs(const CSSTokenValue& args,
                                std::vector<CSSTokenValue>& components,
-                               bool* legacy)
+                               bool* legacy, size_t* alphaIndex)
     {
+        *alphaIndex = SIZE_MAX;
         std::vector<CSSTokenValue> parts;
         if (args.indexOf(',') != SIZE_MAX) {
             *legacy = true;
@@ -1068,92 +990,386 @@ public:
             if (alpha.length() == 0) {
                 return false;
             }
+            *alphaIndex = components.size();
             components.push_back(alpha);
         }
         return true;
     }
 
-    // rgb() | rgba(): css-color-4 #rgb-functions. The two names are
-    // aliases; the legacy comma form additionally requires the three
-    // channels to agree on <number> vs <percentage>.
-    static bool parseRgbFunction(const CSSTokenValue& args,
-                                 CSSStyleValuePair* pair)
+    // <number> per css-syntax-3, including an exponent
+    static bool parseStrictNumber(const char* s, size_t n, double* value)
     {
-        std::vector<CSSTokenValue> v;
-        bool legacy = false;
-        if (!splitColorArgs(args, v, &legacy)) {
-            return false;
+        size_t i = 0;
+        if (i < n && (s[i] == '+' || s[i] == '-')) {
+            i++;
         }
-        if (v.size() != 3 && v.size() != 4) {
-            return false;
+        size_t digits = 0;
+        while (i < n && s[i] >= '0' && s[i] <= '9') {
+            i++;
+            digits++;
         }
-        bool hasAlpha = (v.size() == 4);
-
-        unsigned char parsed[4];
-        bool isPercent = false, shouldPercent = false;
-        for (size_t i = 0; i < 3; i++) {
-            if (!parseColorFunctionPart(v[i], false, &parsed[i], &isPercent)) {
+        if (i < n && s[i] == '.') {
+            i++;
+            size_t frac = 0;
+            while (i < n && s[i] >= '0' && s[i] <= '9') {
+                i++;
+                frac++;
+            }
+            if (!frac) {
                 return false;
             }
-            if (i == 0) {
-                shouldPercent = isPercent;
-            } else if (legacy && shouldPercent != isPercent) {
-                return false;
-            }
+            digits += frac;
         }
-        if (hasAlpha &&
-            !parseColorFunctionPart(v[3], true, &parsed[3], &isPercent)) {
+        if (!digits) {
             return false;
         }
-
-        pair->setColorValue(Unit::Color(parsed[0], parsed[1], parsed[2],
-                                        hasAlpha ? parsed[3] : 255));
+        if (i < n && (s[i] == 'e' || s[i] == 'E')) {
+            size_t j = i + 1;
+            if (j < n && (s[j] == '+' || s[j] == '-')) {
+                j++;
+            }
+            size_t exp = 0;
+            while (j < n && s[j] >= '0' && s[j] <= '9') {
+                j++;
+                exp++;
+            }
+            if (exp) {
+                i = j;
+            }
+        }
+        if (i != n) {
+            return false;
+        }
+        *value = atof(std::string(s, n).c_str());
         return true;
     }
 
-    // hsl() | hsla(): css-color-4 #the-hsl-notation. Hue is <number> or
-    // <angle>; saturation and lightness are <percentage>.
+    // One argument of a color function (css-color-4 #color-syntax).
+    struct ColorComponent {
+        enum Kind { Number, Percent, Angle, None };
+        Kind m_kind;
+        double m_value; // number, percent (100 = 100%), or degrees
+    };
+
+    static bool parseColorComponent(const CSSTokenValue& s, bool allowAngle,
+                                    ColorComponent* out)
+    {
+        if (s.equals("none")) {
+            out->m_kind = ColorComponent::None;
+            out->m_value = 0;
+            return true;
+        }
+        size_t n = s.length();
+        if (n >= 2 && s.charAt(n - 1) == '%') {
+            if (!parseStrictNumber(s.data(), n - 1, &out->m_value)) {
+                return false;
+            }
+            out->m_kind = ColorComponent::Percent;
+            return true;
+        }
+        if (parseStrictNumber(s.data(), n, &out->m_value)) {
+            out->m_kind =
+                allowAngle ? ColorComponent::Angle : ColorComponent::Number;
+            return true;
+        }
+        if (allowAngle) {
+            CSSStyleValuePair p;
+            p.setValueKind(CSSStyleValuePair::ValueKind::Angle);
+            if (!parseAngle(s.data(), CSSPropertyParser::AllowNegative, &p)) {
+                return false;
+            }
+            out->m_kind = ColorComponent::Angle;
+            out->m_value = p.angleValue().toDegreeValue();
+            return true;
+        }
+        return false;
+    }
+
+    // A component's value with `ref` standing for 100%; `none` is 0.
+    static double componentValue(const ColorComponent& c, double ref)
+    {
+        switch (c.m_kind) {
+        case ColorComponent::Percent:
+            return c.m_value / 100 * ref;
+        case ColorComponent::None:
+            return 0;
+        default:
+            return c.m_value;
+        }
+    }
+
+    // <alpha-value>: <number> | <percentage> | none, clamped to [0, 1]
+    static bool parseAlphaComponent(const CSSTokenValue& s, double* alpha,
+                                    bool* missing)
+    {
+        ColorComponent c;
+        if (!parseColorComponent(s, false, &c)) {
+            return false;
+        }
+        *missing = c.m_kind == ColorComponent::None;
+        double v = componentValue(c, 1);
+        *alpha = v < 0 ? 0 : (v > 1 ? 1 : v);
+        return true;
+    }
+
+    static double clampTo(double v, double low, double high)
+    {
+        return v < low ? low : (v > high ? high : v);
+    }
+
+    // Components of rgb()/hsl()/hwb()/lab()/lch()/oklab()/oklch()/color():
+    // three channels and an optional alpha. `hasSpaceIdent` takes the
+    // leading color space of color().
+    static bool parseFunctionComponents(const CSSTokenValue& args,
+                                        int angleIndex, bool* legacy,
+                                        ColorComponent components[3],
+                                        double* alpha, bool* alphaMissing,
+                                        std::string* spaceIdent)
+    {
+        std::vector<CSSTokenValue> v;
+        size_t alphaIndex;
+        if (!splitColorArgs(args, v, legacy, &alphaIndex)) {
+            return false;
+        }
+        size_t first = 0;
+        if (spaceIdent) {
+            if (*legacy || v.size() < 1) {
+                return false;
+            }
+            *spaceIdent = asciiLowercase(v[0]);
+            first = 1;
+        }
+        size_t count = v.size() - first;
+        if (count != 3 && count != 4) {
+            return false;
+        }
+        // modern syntax: exactly three channels, alpha only after `/`
+        if (!*legacy &&
+            !(alphaIndex == SIZE_MAX ? count == 3 : alphaIndex == first + 3)) {
+            return false;
+        }
+        for (int i = 0; i < 3; i++) {
+            bool isHue = i == angleIndex;
+            if (!parseColorComponent(v[first + i], isHue, &components[i])) {
+                return false;
+            }
+            // a hue is <angle> | <number> | none
+            if (isHue && components[i].m_kind == ColorComponent::Percent) {
+                return false;
+            }
+            // `none` is modern syntax only
+            if (*legacy && components[i].m_kind == ColorComponent::None) {
+                return false;
+            }
+        }
+        *alpha = 1;
+        *alphaMissing = false;
+        if (count == 4) {
+            if (!parseAlphaComponent(v[first + 3], alpha, alphaMissing)) {
+                return false;
+            }
+            if (*legacy && *alphaMissing) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // A legacy sRGB color computes to 8-bit rgb(); one with `none`
+    // components keeps them (as an ExtendedColor in `space`) because
+    // color-mix() carries missing components over (css-color-4 #missing).
+    static void setLegacyResult(CSSStyleValuePair* pair,
+                                ColorInterpolation::Space space,
+                                const double components[3],
+                                const ColorComponent parsed[3], double alpha,
+                                bool alphaMissing)
+    {
+        ExtendedColor c;
+        c.m_space = space;
+        c.m_c[0] = components[0];
+        c.m_c[1] = components[1];
+        c.m_c[2] = components[2];
+        c.m_alpha = alpha;
+        for (int i = 0; i < 3; i++) {
+            if (parsed[i].m_kind == ColorComponent::None) {
+                c.m_missing |= 1 << i;
+            }
+        }
+        if (alphaMissing) {
+            c.m_missing |= 1 << 3;
+        }
+        if (c.m_missing) {
+            pair->setUnresolvedColorValue(UnresolvedColor::createExtended(c));
+        } else {
+            pair->setColorValue(
+                ExtendedColor::toSrgb8(space, components, alpha));
+        }
+    }
+
+    // rgb() | rgba(): css-color-4 #rgb-functions. The legacy comma form
+    // requires the channels to agree on <number> vs <percentage>.
+    static bool parseRgbFunction(const CSSTokenValue& args,
+                                 CSSStyleValuePair* pair)
+    {
+        bool legacy;
+        ColorComponent c[3];
+        double alpha;
+        bool alphaMissing;
+        if (!parseFunctionComponents(args, -1, &legacy, c, &alpha,
+                                     &alphaMissing, nullptr)) {
+            return false;
+        }
+        if (legacy &&
+            (c[1].m_kind != c[0].m_kind || c[2].m_kind != c[0].m_kind)) {
+            return false;
+        }
+        double rgb[3];
+        for (int i = 0; i < 3; i++) {
+            rgb[i] = clampTo(componentValue(c[i], 255), 0, 255) / 255;
+        }
+        setLegacyResult(pair, ColorInterpolation::Srgb, rgb, c, alpha,
+                        alphaMissing);
+        return true;
+    }
+
+    // hsl() | hsla(): css-color-4 #the-hsl-notation
     static bool parseHslFunction(const CSSTokenValue& args,
                                  CSSStyleValuePair* pair)
     {
-        std::vector<CSSTokenValue> v;
-        bool legacy = false;
-        if (!splitColorArgs(args, v, &legacy)) {
+        bool legacy;
+        ColorComponent c[3];
+        double alpha;
+        bool alphaMissing;
+        if (!parseFunctionComponents(args, 0, &legacy, c, &alpha, &alphaMissing,
+                                     nullptr)) {
             return false;
         }
-        if (v.size() != 3 && v.size() != 4) {
+        if (legacy && (c[1].m_kind != ColorComponent::Percent ||
+                       c[2].m_kind != ColorComponent::Percent)) {
             return false;
         }
-        bool hasAlpha = (v.size() == 4);
+        double hsl[3] = { componentValue(c[0], 0),
+                          clampTo(componentValue(c[1], 100), 0, 100),
+                          clampTo(componentValue(c[2], 100), 0, 100) };
+        setLegacyResult(pair, ColorInterpolation::Hsl, hsl, c, alpha,
+                        alphaMissing);
+        return true;
+    }
 
-        CSSStyleValuePair p;
-        p.setValueKind(CSSStyleValuePair::ValueKind::Angle);
-        uint32_t option = 0;
-        option |= CSSPropertyParser::AllowNegative;
-        option |= CSSPropertyParser::AllowWithoutUnit;
-        if (!parseAngle(v[0].data(), option, &p)) {
+    // hwb(): css-color-4 #the-hwb-notation
+    static bool parseHwbFunction(const CSSTokenValue& args,
+                                 CSSStyleValuePair* pair)
+    {
+        bool legacy;
+        ColorComponent c[3];
+        double alpha;
+        bool alphaMissing;
+        if (!parseFunctionComponents(args, 0, &legacy, c, &alpha, &alphaMissing,
+                                     nullptr) ||
+            legacy) {
             return false;
         }
-        double hue = p.angleValue().toDegreeValue();
-        hue = (((((int)round(hue)) % 360) + 360) % 360);
+        double hwb[3] = { componentValue(c[0], 0),
+                          clampTo(componentValue(c[1], 100), 0, 100),
+                          clampTo(componentValue(c[2], 100), 0, 100) };
+        setLegacyResult(pair, ColorInterpolation::Hwb, hwb, c, alpha,
+                        alphaMissing);
+        return true;
+    }
 
-        double saturation = 0, luminance = 0;
-        if (!parsePercent(v[1], &saturation) ||
-            !parsePercent(v[2], &luminance)) {
+    // lab() | lch() | oklab() | oklch(): css-color-4 #specifying-lab-lch and
+    // #specifying-oklab-oklch. Kept as an ExtendedColor so the computed
+    // value serializes in the same form.
+    static bool parseLabFamily(ColorInterpolation::Space space,
+                               const CSSTokenValue& args,
+                               CSSStyleValuePair* pair)
+    {
+        bool polar = space == ColorInterpolation::Lch ||
+                     space == ColorInterpolation::Oklch;
+        bool ok = space == ColorInterpolation::Oklab ||
+                  space == ColorInterpolation::Oklch;
+        bool legacy;
+        ColorComponent c[3];
+        double alpha;
+        bool alphaMissing;
+        if (!parseFunctionComponents(args, polar ? 2 : -1, &legacy, c, &alpha,
+                                     &alphaMissing, nullptr) ||
+            legacy) {
             return false;
         }
+        double lRef = ok ? 1 : 100;
+        double abRef = ok ? 0.4 : 125;
+        double cRef = ok ? 0.4 : 150;
+        ExtendedColor color;
+        color.m_legacy = false;
+        color.m_space = space;
+        color.m_c[0] = clampTo(componentValue(c[0], lRef), 0, lRef);
+        if (polar) {
+            color.m_c[1] = std::max(0.0, componentValue(c[1], cRef));
+            color.m_c[2] = componentValue(c[2], 0);
+            color.m_c[2] =
+                std::fmod(std::fmod(color.m_c[2], 360.0) + 360.0, 360.0);
+        } else {
+            color.m_c[1] = componentValue(c[1], abRef);
+            color.m_c[2] = componentValue(c[2], abRef);
+        }
+        color.m_alpha = alpha;
+        for (int i = 0; i < 3; i++) {
+            if (c[i].m_kind == ColorComponent::None) {
+                color.m_missing |= 1 << i;
+            }
+        }
+        if (alphaMissing) {
+            color.m_missing |= 1 << 3;
+        }
+        pair->setUnresolvedColorValue(UnresolvedColor::createExtended(color));
+        return true;
+    }
 
-        unsigned char alpha = 0;
-        bool isPercent;
-        if (hasAlpha &&
-            !parseColorFunctionPart(v[3], true, &alpha, &isPercent)) {
+    // color(): css-color-4 #color-function, for the predefined spaces
+    // whose conversion the engine knows.
+    static bool parseColorFunction(const CSSTokenValue& args,
+                                   CSSStyleValuePair* pair)
+    {
+        bool legacy;
+        ColorComponent c[3];
+        double alpha;
+        bool alphaMissing;
+        std::string spaceIdent;
+        if (!parseFunctionComponents(args, -1, &legacy, c, &alpha,
+                                     &alphaMissing, &spaceIdent)) {
             return false;
         }
-
-        // floats are rounded to int if given
-        pair->setColorValue(Unit::Color::fromHsla(
-            hue / 360, round(saturation) / 100, round(luminance) / 100,
-            hasAlpha ? alpha : 255));
+        ColorInterpolation::Space space;
+        if (!ColorInterpolation::parseSpace(spaceIdent, &space)) {
+            return false;
+        }
+        switch (space) {
+        case ColorInterpolation::Srgb:
+        case ColorInterpolation::SrgbLinear:
+        case ColorInterpolation::XyzD50:
+        case ColorInterpolation::XyzD65:
+            break;
+        case ColorInterpolation::Xyz:
+            space = ColorInterpolation::XyzD65;
+            break;
+        default:
+            return false;
+        }
+        ExtendedColor color;
+        color.m_legacy = false;
+        color.m_space = space;
+        for (int i = 0; i < 3; i++) {
+            color.m_c[i] = componentValue(c[i], 1);
+            if (c[i].m_kind == ColorComponent::None) {
+                color.m_missing |= 1 << i;
+            }
+        }
+        color.m_alpha = alpha;
+        if (alphaMissing) {
+            color.m_missing |= 1 << 3;
+        }
+        pair->setUnresolvedColorValue(UnresolvedColor::createExtended(color));
         return true;
     }
 
@@ -1190,7 +1406,7 @@ public:
         return true;
     }
 
-    // <color> other than a <named-color>: hex, `transparent`, or a color
+    // <color> other than a <named-color>: hex or a color
     // function dispatched by name.
     static bool parseNonNamedColor(const CSSTokenValue& str,
                                    CSSStyleValuePair* pair)
@@ -1200,10 +1416,6 @@ public:
         }
         if (str.charAt(0) == '#') {
             return parseHexColor(str, pair);
-        }
-        if (str.equals("transparent")) {
-            pair->setColorValue(Unit::Color(0, 0, 0, 0));
-            return true;
         }
 
         std::string name;
@@ -1216,6 +1428,24 @@ public:
         }
         if (name == "hsl" || name == "hsla") {
             return parseHslFunction(args, pair);
+        }
+        if (name == "hwb") {
+            return parseHwbFunction(args, pair);
+        }
+        if (name == "lab") {
+            return parseLabFamily(ColorInterpolation::Lab, args, pair);
+        }
+        if (name == "lch") {
+            return parseLabFamily(ColorInterpolation::Lch, args, pair);
+        }
+        if (name == "oklab") {
+            return parseLabFamily(ColorInterpolation::Oklab, args, pair);
+        }
+        if (name == "oklch") {
+            return parseLabFamily(ColorInterpolation::Oklch, args, pair);
+        }
+        if (name == "color") {
+            return parseColorFunction(args, pair);
         }
         if (name == "light-dark" || name == "color-mix") {
             // Color functions nest recursively; web content is untrusted, so

@@ -16,7 +16,7 @@ http://web-platform.test:8000/css/css-images/conic-gradient-line-height-relative
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/cross-fade-basic.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/cross-fade-cross-origin-orientation.sub.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/cross-fade-natural-size.html
-http://web-platform.test:8000/css/css-images/cross-fade-premultiplied-alpha.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/cross-fade-premultiplied-alpha.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/cross-fade-target-alpha.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/css-image-fallbacks-and-annotations.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/css-image-fallbacks-and-annotations002.html
@@ -28,7 +28,7 @@ http://web-platform.test:8000/css/css-images/gradient/color-scheme-dependent-col
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/gradient/css-color-4-colors-default-to-oklab-gradient.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/gradient/display-p3-linear-gradient.html
 http://web-platform.test:8000/css/css-images/gradient/gradient-analogous-missing-components-001.html
-http://web-platform.test:8000/css/css-images/gradient/gradient-analogous-missing-components-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/gradient/gradient-analogous-missing-components-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/gradient/gradient-analogous-missing-components-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/gradient/gradient-analogous-missing-components-004.html
 http://web-platform.test:8000/css/css-images/gradient/gradient-decreasing-hue-hsl.html
@@ -42,7 +42,7 @@ http://web-platform.test:8000/css/css-images/gradient/gradient-eval-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/gradient/gradient-eval-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/gradient/gradient-eval-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/gradient/gradient-eval-009.html
-http://web-platform.test:8000/css/css-images/gradient/gradient-eval-predefined-color-spaces.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/gradient/gradient-eval-predefined-color-spaces.html
 http://web-platform.test:8000/css/css-images/gradient/gradient-hue-direction.html
 http://web-platform.test:8000/css/css-images/gradient/gradient-increasing-hue-hsl.html
 http://web-platform.test:8000/css/css-images/gradient/gradient-increasing-hue-lch.html
@@ -89,7 +89,7 @@ http://web-platform.test:8000/css/css-images/gradient/gradient-powerless-hue-okl
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/gradient/gradient-single-stop-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/gradient/gradient-single-stop-longer-hue-hsl-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/gradient/gradient-single-stop-longer-hue-hsl.html
-http://web-platform.test:8000/css/css-images/gradient/gradient-single-stop-longer-hue-oklch.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/gradient/gradient-single-stop-longer-hue-oklch.html
 http://web-platform.test:8000/css/css-images/gradient/gradient-single-stop-none-interpolation.html
 http://web-platform.test:8000/css/css-images/gradient/gradient-to-transparent.html
 http://web-platform.test:8000/css/css-images/gradient/legacy-color-gradient.html

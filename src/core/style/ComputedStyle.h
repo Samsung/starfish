@@ -101,7 +101,12 @@ class FilterFunctions;
 // `color-scheme` are final.
 struct PendingColor {
     CSSStyleValuePair::KeyKind m_key;
+    // the value still to resolve (or, after resolution, the part a child
+    // inherits unresolved); nullptr once fully resolved
     UnresolvedColor* m_color;
+    // the computed value when it is not a legacy sRGB color, kept for
+    // getComputedStyle() serialization; nullptr otherwise
+    ExtendedColor* m_computed;
 };
 typedef GCVector<PendingColor> PendingColorList;
 
@@ -869,6 +874,11 @@ class ComputedStyle : public gc {
         // flags cache whether the list names light/dark, which is what the
         // used color scheme is derived from.
         String* m_colorScheme;
+
+        // `color` computed from a non-legacy color (lab(), color-mix(), ...):
+        // its color space and float components, inherited along with
+        // m_color for serialization. nullptr for a legacy color.
+        ExtendedColor* m_extendedColor;
         bool m_colorSchemeLight : 1;
         bool m_colorSchemeDark : 1;
 
@@ -902,6 +912,7 @@ class ComputedStyle : public gc {
                 TextUnderlinePositionValue::AutoTextUnderlinePositionValue;
             m_pointerEventsValue = PointerEventsValue::PointerEventsAutoValue;
             m_cursorValue = CursorValue::CursorAutoValue;
+            m_extendedColor = nullptr;
             m_colorScheme = nullptr;
             m_colorSchemeLight = false;
             m_colorSchemeDark = false;
@@ -1265,6 +1276,37 @@ public:
     void setColor(Unit::Color r)
     {
         m_inheritedStyles.m_color = r;
+        if (m_inheritedStyles.m_rareData &&
+            m_inheritedStyles.m_rareData->m_extendedColor) {
+            ensureInheritedRareData()->m_extendedColor = nullptr;
+        }
+    }
+
+    Optional<ExtendedColor*> extendedColor()
+    {
+        if (m_inheritedStyles.m_rareData &&
+            m_inheritedStyles.m_rareData->m_extendedColor) {
+            return Optional<ExtendedColor*>(
+                m_inheritedStyles.m_rareData->m_extendedColor);
+        }
+        return Optional<ExtendedColor*>();
+    }
+
+    void setExtendedColor(Optional<ExtendedColor*> color)
+    {
+        bool hasOne = m_inheritedStyles.m_rareData &&
+                      m_inheritedStyles.m_rareData->m_extendedColor;
+        if (!color && !hasOne) {
+            return;
+        }
+        ensureInheritedRareData()->m_extendedColor =
+            color ? color.value() : nullptr;
+    }
+
+    void inheritColorFrom(ComputedStyle* parentStyle)
+    {
+        m_inheritedStyles.m_color = parentStyle->m_inheritedStyles.m_color;
+        setExtendedColor(parentStyle->extendedColor());
     }
 
     void setPendingColor(CSSStyleValuePair::KeyKind key, UnresolvedColor* color)
@@ -1273,7 +1315,10 @@ public:
         if (!*list) {
             *list = new PendingColorList();
         }
-        PendingColor pending = { key, color };
+        PendingColor pending;
+        pending.m_key = key;
+        pending.m_color = color;
+        pending.m_computed = nullptr;
         (*list)->push_back(pending);
         m_hasPendingColors = true;
     }
@@ -1303,11 +1348,33 @@ public:
         PendingColorList* list =
             m_rareComputedStyleData.pendingColors().value();
         for (size_t i = 0; i < list->size(); i++) {
-            if ((*list)[i].m_key == key) {
+            if ((*list)[i].m_key == key && (*list)[i].m_color) {
                 return Optional<UnresolvedColor*>((*list)[i].m_color);
             }
         }
         return Optional<UnresolvedColor*>();
+    }
+
+    // The non-legacy computed value of a color property, for serialization.
+    Optional<ExtendedColor> computedExtendedColor(
+        CSSStyleValuePair::KeyKind key)
+    {
+        if (key == CSSStyleValuePair::KeyKind::Color) {
+            Optional<ExtendedColor*> c = extendedColor();
+            return c ? Optional<ExtendedColor>(*c.value())
+                     : Optional<ExtendedColor>();
+        }
+        if (!m_hasPendingColors) {
+            return Optional<ExtendedColor>();
+        }
+        PendingColorList* list =
+            m_rareComputedStyleData.pendingColors().value();
+        for (size_t i = 0; i < list->size(); i++) {
+            if ((*list)[i].m_key == key && (*list)[i].m_computed) {
+                return Optional<ExtendedColor>(*(*list)[i].m_computed);
+            }
+        }
+        return Optional<ExtendedColor>();
     }
 
     void resolvePendingColors(ComputedStyle* parentStyle);

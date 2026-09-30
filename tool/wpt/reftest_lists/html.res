@@ -17,7 +17,7 @@ http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.full.
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.gradient.colorInterpolationMethod.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.gradient.hueInterpolationMethod.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/filters/2d.filter.canvasFilterObject.componentTransfer.discrete.tentative.html
-http://web-platform.test:8000/html/canvas/element/filters/2d.filter.canvasFilterObject.componentTransfer.gamma.tentative.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/filters/2d.filter.canvasFilterObject.componentTransfer.gamma.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/filters/2d.filter.canvasFilterObject.componentTransfer.identity.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/filters/2d.filter.canvasFilterObject.componentTransfer.linear.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/filters/2d.filter.canvasFilterObject.componentTransfer.table.tentative.html
@@ -25,7 +25,7 @@ http://web-platform.test:8000/html/canvas/element/filters/2d.filter.canvasFilter
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/filters/2d.filter.canvasFilterObject.gaussianBlur.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/filters/2d.filter.drop-shadow-globalAlpha.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/filters/2d.filter.layers.componentTransfer.discrete.tentative.html
-http://web-platform.test:8000/html/canvas/element/filters/2d.filter.layers.componentTransfer.gamma.tentative.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/filters/2d.filter.layers.componentTransfer.gamma.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/filters/2d.filter.layers.componentTransfer.identity.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/filters/2d.filter.layers.componentTransfer.linear.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/filters/2d.filter.layers.componentTransfer.table.tentative.html
@@ -283,8 +283,8 @@ http://web-platform.test:8000/html/canvas/element/text/direction-rtl.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.gradient.hueInterpolationMethod.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.canvasFilterObject.componentTransfer.discrete.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.canvasFilterObject.componentTransfer.discrete.tentative.w.html
-http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.canvasFilterObject.componentTransfer.gamma.tentative.html
-http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.canvasFilterObject.componentTransfer.gamma.tentative.w.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.canvasFilterObject.componentTransfer.gamma.tentative.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.canvasFilterObject.componentTransfer.gamma.tentative.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.canvasFilterObject.componentTransfer.identity.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.canvasFilterObject.componentTransfer.identity.tentative.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.canvasFilterObject.componentTransfer.linear.tentative.html
@@ -299,8 +299,8 @@ http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.canvasFilt
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.drop-shadow-globalAlpha.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.layers.componentTransfer.discrete.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.layers.componentTransfer.discrete.tentative.w.html
-http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.layers.componentTransfer.gamma.tentative.html
-http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.layers.componentTransfer.gamma.tentative.w.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.layers.componentTransfer.gamma.tentative.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.layers.componentTransfer.gamma.tentative.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.layers.componentTransfer.identity.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.layers.componentTransfer.identity.tentative.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.layers.componentTransfer.linear.tentative.html

@@ -3128,13 +3128,16 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         ADD_VALUE_PAIR(Appearance, AppearanceValueKind, appearance)
 #undef ADD_VALUE_PAIR
 
-#define ADD_COLOR_PAIR(KEY, GETTER)                                     \
-    case CSSStyleValuePair::KeyKind::KEY: {                             \
-        CSSStyleValuePair p;                                            \
-        p.setKeyKind(CSSStyleValuePair::KeyKind::KEY);                  \
-        p.setValueKind(CSSStyleValuePair::ValueKind::KeywordValueKind); \
-        p.setValue(style->GETTER().toString());                         \
-        addValuePair(p);                                                \
+#define ADD_COLOR_PAIR(KEY, GETTER)                                        \
+    case CSSStyleValuePair::KeyKind::KEY: {                                \
+        CSSStyleValuePair p;                                               \
+        p.setKeyKind(CSSStyleValuePair::KeyKind::KEY);                     \
+        p.setValueKind(CSSStyleValuePair::ValueKind::KeywordValueKind);    \
+        Optional<ExtendedColor> extended =                                 \
+            style->computedExtendedColor(CSSStyleValuePair::KeyKind::KEY); \
+        p.setValue(extended ? extended.value().toString()                  \
+                            : style->GETTER().toString());                 \
+        addValuePair(p);                                                   \
     } break;
         ADD_COLOR_PAIR(Color, color)
         ADD_COLOR_PAIR(BackgroundColor, backgroundColor)

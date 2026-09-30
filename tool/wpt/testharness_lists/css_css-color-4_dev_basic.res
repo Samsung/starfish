@@ -2,23 +2,23 @@
 # [auto-fail] http://web-platform.test:8000/css/css-color/animation/color-interpolation.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/animation/opacity-interpolation.html
 http://web-platform.test:8000/css/css-color/color-initial-canvastext.html
-# [auto-fail] http://web-platform.test:8000/css/css-color/color-mix-currentcolor-visited-getcomputedstyle.html
-# [auto-fail] http://web-platform.test:8000/css/css-color/color-mix-missing-components.html
+http://web-platform.test:8000/css/css-color/color-mix-currentcolor-visited-getcomputedstyle.html
+http://web-platform.test:8000/css/css-color/color-mix-missing-components.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/contrast-color-currentcolor-inherited.html
 http://web-platform.test:8000/css/css-color/inheritance.html
 http://web-platform.test:8000/css/css-color/light-dark-basic.html
 http://web-platform.test:8000/css/css-color/light-dark-currentcolor-in-color.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/light-dark-image.html
-# [auto-fail] http://web-platform.test:8000/css/css-color/nested-color-mix-with-currentcolor.html
+http://web-platform.test:8000/css/css-color/nested-color-mix-with-currentcolor.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/parsing/alpha-color-computed.html
 http://web-platform.test:8000/css/css-color/parsing/alpha-color-parsing-invalid.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/parsing/alpha-color-parsing-valid.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/parsing/color-computed-color-function.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/parsing/color-computed-color-mix-function.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/parsing/color-computed-contrast-color-function.html
-# [auto-fail] http://web-platform.test:8000/css/css-color/parsing/color-computed-hex-color.html
+http://web-platform.test:8000/css/css-color/parsing/color-computed-hex-color.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/parsing/color-computed-hsl.html
-# [auto-fail] http://web-platform.test:8000/css/css-color/parsing/color-computed.html
+http://web-platform.test:8000/css/css-color/parsing/color-computed.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/parsing/color-computed-hwb.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/parsing/color-computed-lab.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/parsing/color-computed-named-color.html
@@ -42,7 +42,7 @@ http://web-platform.test:8000/css/css-color/parsing/color-invalid-rgb.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/parsing/color-valid-color-mix-function.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/parsing/color-valid-contrast-color-function.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/parsing/color-valid-hsl.html
-# [auto-fail] http://web-platform.test:8000/css/css-color/parsing/color-valid.html
+http://web-platform.test:8000/css/css-color/parsing/color-valid.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/parsing/color-valid-hwb.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/parsing/color-valid-lab.html
 # [auto-fail] http://web-platform.test:8000/css/css-color/parsing/color-valid-relative-color.html
