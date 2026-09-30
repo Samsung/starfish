@@ -372,10 +372,9 @@ namespace WindowOrWorkerGlobalScope {
                     executionContext, promise,
                     DOMException::Code::INVALID_STATE_ERR);
             }
-            NativeImageData* srcImage = createNativeImageDataWithDecoding(
+            srcImage = createNativeImageDataWithDecoding(
                 (const char*)blob->data(), (size_t)blob->size(),
                 needsDownScaleImageResourceLargerThan, devicePixelRatio);
-            NativeImageData* destImage = nullptr;
 
             // 3.If imageData is not in a supported image file format (e.g.,
             // it's not an image at all), or if imageData is corrupted in some

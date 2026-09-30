@@ -356,6 +356,7 @@ http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-c
 http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/drawimage_svg_image_with_foreign_object_does_not_taint.html
 http://web-platform.test:8000/html/canvas/element/manual/drawing-paths-to-the-canvas/canvas_complexshapes_ispointInpath_001.htm
 http://web-platform.test:8000/html/canvas/element/manual/image-smoothing/imagesmoothing.html
+http://web-platform.test:8000/html/canvas/element/manual/imagebitmap/createImageBitmap-blob-invalidtype.html
 http://web-platform.test:8000/html/canvas/element/manual/line-styles/setLineDash.html
 http://web-platform.test:8000/html/canvas/element/manual/the-canvas-state/2d.state.saverestore.imageSmoothingEnabled.html
 http://web-platform.test:8000/html/canvas/element/path-objects/2d.path.arc.angle.1.html
