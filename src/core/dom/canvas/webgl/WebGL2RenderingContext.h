@@ -37,6 +37,9 @@ public:
                GLuint object);
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLQuery() const override;
+
+    BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLQuery, WebGLObject);
+    END_IMPLEMENT_NEW_WITH_GC_DESC();
 };
 
 class WebGLSampler : public WebGLObject {
@@ -45,6 +48,9 @@ public:
                  WebGLRenderingContext* context, GLuint object);
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLSampler() const override;
+
+    BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLSampler, WebGLObject);
+    END_IMPLEMENT_NEW_WITH_GC_DESC();
 };
 
 class WebGLSync : public WebGLObject {
@@ -59,6 +65,9 @@ public:
         return m_glObject;
     }
 
+    BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLSync, WebGLObject);
+    END_IMPLEMENT_NEW_WITH_GC_DESC();
+
 private:
     GLsync m_glObject;
 };
@@ -69,6 +78,9 @@ public:
                            WebGLRenderingContext* context, GLuint object);
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLTransformFeedback() const override;
+
+    BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLTransformFeedback, WebGLObject);
+    END_IMPLEMENT_NEW_WITH_GC_DESC();
 };
 
 class WebGLVertexArrayObject : public WebGLObject {
@@ -82,11 +94,13 @@ public:
     {
         return m_hasEverBound;
     }
-
     void setHasEverBound()
     {
         m_hasEverBound = true;
     }
+
+    BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLVertexArrayObject, WebGLObject);
+    END_IMPLEMENT_NEW_WITH_GC_DESC();
 
 private:
     bool m_hasEverBound = false;
@@ -101,6 +115,8 @@ public:
 
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGL2RenderingContext,
                                      WebGLRenderingContext);
+    FILL_GC_POINTER(WebGL2RenderingContext, m_readFramebuffer);
+    FILL_GC_POINTER(WebGL2RenderingContext, m_drawFramebuffer);
     FILL_GC_POINTER(WebGL2RenderingContext, m_uniformBufferBindings);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 

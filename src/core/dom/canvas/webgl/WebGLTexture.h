@@ -56,6 +56,9 @@ public:
         m_height = h;
     }
 
+    BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLTexture, WebGLObject);
+    END_IMPLEMENT_NEW_WITH_GC_DESC();
+
 private:
     bool m_isImmutable = false;
     GLsizei m_width = 0;

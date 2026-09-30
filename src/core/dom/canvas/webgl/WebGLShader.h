@@ -42,6 +42,9 @@ public:
         return m_source;
     }
 
+    BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLShader, WebGLObject);
+    END_IMPLEMENT_NEW_WITH_GC_DESC();
+
 private:
     std::string m_source;
 };

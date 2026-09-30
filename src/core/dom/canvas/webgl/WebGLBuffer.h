@@ -47,6 +47,9 @@ public:
         return m_byteLength;
     }
 
+    BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLBuffer, WebGLObject);
+    END_IMPLEMENT_NEW_WITH_GC_DESC();
+
 private:
     GLenum m_target = GL_NONE;
     GLsizeiptr m_byteLength = 0;

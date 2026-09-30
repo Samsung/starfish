@@ -80,7 +80,6 @@ void WebGLProgram::updateUniformBlocks(GL* gl)
     if (numBlocks <= 0) {
         return;
     }
-    m_uniformBlocks.resize(numBlocks);
     for (GLint i = 0; i < numBlocks; i++) {
         GLint dataSize = 0;
         gl->getActiveUniformBlockiv(glObject(), i, GL_UNIFORM_BLOCK_DATA_SIZE,
@@ -88,8 +87,10 @@ void WebGLProgram::updateUniformBlocks(GL* gl)
         GLint binding = 0;
         gl->getActiveUniformBlockiv(glObject(), i, GL_UNIFORM_BLOCK_BINDING,
                                     &binding);
-        m_uniformBlocks[i].dataSize = dataSize;
-        m_uniformBlocks[i].binding = binding;
+        UniformBlockInfo info;
+        info.dataSize = dataSize;
+        info.binding = binding;
+        m_uniformBlocks.push_back(info);
     }
 }
 
