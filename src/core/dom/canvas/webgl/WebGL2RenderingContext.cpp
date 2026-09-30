@@ -2538,13 +2538,25 @@ void WebGL2RenderingContext::drawBuffers(GCAtomicVector<GLenum> buffers)
         }
     }
 
+    if (isDefaultFramebufferBound()) {
+        // The WebGL default framebuffer is emulated with m_framebufferTexture's
+        // FBO, so GL_BACK is not a name GL accepts here -- the driver wants
+        // COLOR_ATTACHMENTi or NONE and rejects anything else. Translate, the
+        // same way bindFramebuffer() and readBuffer() already do.
+        std::vector<GLenum> translated(buffers.size(), GL_NONE);
+        for (size_t i = 0; i < buffers.size(); ++i) {
+            translated[i] =
+                buffers[i] == GL_BACK ? GL_COLOR_ATTACHMENT0 : GL_NONE;
+        }
+        gl()->drawBuffers(translated.size(), translated.data());
+        return;
+    }
+
     gl()->drawBuffers(buffers.size(), buffers.data());
 
-    if (!isDefaultFramebufferBound()) {
-        Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
-        if (maybeFb.hasValue() && maybeFb.value()) {
-            maybeFb.value()->setDrawBuffers(buffers);
-        }
+    Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
+    if (maybeFb.hasValue() && maybeFb.value()) {
+        maybeFb.value()->setDrawBuffers(buffers);
     }
 }
 

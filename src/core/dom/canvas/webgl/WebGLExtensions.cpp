@@ -53,6 +53,14 @@ void WebGLExtensionRegistry::initialize(GL* gl)
     // 1. Get a list of extensions supported on this device
     const char* raw =
         reinterpret_cast<const char*>(gl->getString(GL_EXTENSIONS));
+    if (raw == nullptr) {
+        // Without a current context getString returns null, and the registry
+        // would silently come up empty -- every extension reported as
+        // unsupported. Say so instead of leaving it to guesswork.
+        STARFISH_LOG_ERROR(
+            "GL_EXTENSIONS is unavailable (no current GL context?); no WebGL "
+            "extension will be reported as supported.");
+    }
     const std::string extensions = raw ? raw : "";
 
     // WebGL uses extension names without the 'GL_' prefix.
@@ -60,6 +68,11 @@ void WebGLExtensionRegistry::initialize(GL* gl)
     std::stringstream ss(extensions);
     std::string token;
     while (getline(ss, token, ' ')) {
+        // A trailing or doubled separator is legal in the extension string and
+        // yields an empty token; it is not a malformed name.
+        if (token.empty()) {
+            continue;
+        }
         if (token.substr(0, 3) == "GL_") {
             tokens.push_back(token.substr(3));
         } else {
