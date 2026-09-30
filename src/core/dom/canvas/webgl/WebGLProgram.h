@@ -65,7 +65,7 @@ public:
         return !m_uniformBlocks.empty();
     }
 
-    const std::vector<UniformBlockInfo>& uniformBlocks() const
+    const GCAtomicVector<UniformBlockInfo>& uniformBlocks() const
     {
         return m_uniformBlocks;
     }
@@ -89,9 +89,15 @@ public:
         return m_linkFailed;
     }
 
+    BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLProgram, WebGLObject);
+    GC_set_bit(desc, GC_WORD_OFFSET(WebGLProgram, m_attachedShaders));
+    GC_set_bit(desc, GC_WORD_OFFSET(WebGLProgram, m_attachedShaders) + 1);
+    FILL_GC_POINTER(WebGLProgram, m_uniformBlocks);
+    END_IMPLEMENT_NEW_WITH_GC_DESC();
+
 private:
     WebGLShader* m_attachedShaders[2] = { nullptr, nullptr };
-    std::vector<UniformBlockInfo> m_uniformBlocks;
+    GCAtomicVector<UniformBlockInfo> m_uniformBlocks;
     bool m_usesFragColor = false;
     bool m_linkFailed = false;
 };

@@ -35,6 +35,9 @@ public:
     }
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLRenderbuffer() const override;
+
+    BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLRenderbuffer, WebGLObject);
+    END_IMPLEMENT_NEW_WITH_GC_DESC();
 };
 } // namespace Starfish
 

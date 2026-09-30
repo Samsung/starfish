@@ -48,6 +48,9 @@ public:
         m_hasEverBound = true;
     }
 
+    BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLVertexArrayObjectOES, WebGLObject);
+    END_IMPLEMENT_NEW_WITH_GC_DESC();
+
 private:
     bool m_hasEverBound = false;
 };

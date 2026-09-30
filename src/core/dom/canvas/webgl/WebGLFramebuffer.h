@@ -116,6 +116,16 @@ public:
         return true;
     }
 
+    BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLFramebuffer, WebGLObject);
+    FILL_GC_POINTER(WebGLFramebuffer, m_attachedTexture);
+    FILL_GC_POINTER(WebGLFramebuffer, m_attachedRenderBuffer);
+    for (size_t i = 0; i < 16; ++i) {
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(WebGLFramebuffer, m_attachedColorTextures) +
+                       i);
+    }
+    END_IMPLEMENT_NEW_WITH_GC_DESC();
+
 private:
     WebGLTexture* m_attachedTexture = nullptr;
     WebGLRenderbuffer* m_attachedRenderBuffer = nullptr;
