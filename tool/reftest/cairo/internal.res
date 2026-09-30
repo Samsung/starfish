@@ -811,6 +811,7 @@ test/cairo/internal-test/canvas/toDataURL-with-pack-params.html
 test/cairo/internal-test/canvas/font-weight-values.html
 test/cairo/internal-test/canvas/webgl-teximage-svg.html
 test/cairo/internal-test/canvas/webgl-imagedata-texture.html
+test/cairo/internal-test/canvas/webgl2-cube-face-tex-image-overloads.html
 test/cairo/internal-test/css/overflow/overflow-pseudo-element.html
 #test/cairo/internal-test/iframe/iframe-hittest.html
 test/cairo/internal-test/iframe/webgl-blend-in-iframe.html

@@ -1965,6 +1965,14 @@ bool WebGLRenderingContext::hasBoundTexture(GLenum target) const
         binding = GL_TEXTURE_BINDING_2D_ARRAY;
         break;
     case GL_TEXTURE_CUBE_MAP:
+    // A cube-map face is a 2D image target of the texture bound to
+    // TEXTURE_CUBE_MAP (WebGL 2.0 texImage2D/texSubImage2D accept faces).
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
         binding = GL_TEXTURE_BINDING_CUBE_MAP;
         break;
     default:
