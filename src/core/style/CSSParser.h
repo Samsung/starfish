@@ -1326,8 +1326,7 @@ public:
         return true;
     }
 
-    // color(): css-color-4 #color-function, for the predefined spaces
-    // whose conversion the engine knows.
+    // color(): css-color-4 #color-function
     static bool parseColorFunction(const CSSTokenValue& args,
                                    CSSStyleValuePair* pair)
     {
@@ -1347,6 +1346,11 @@ public:
         switch (space) {
         case ColorInterpolation::Srgb:
         case ColorInterpolation::SrgbLinear:
+        case ColorInterpolation::DisplayP3:
+        case ColorInterpolation::DisplayP3Linear:
+        case ColorInterpolation::A98Rgb:
+        case ColorInterpolation::ProphotoRgb:
+        case ColorInterpolation::Rec2020:
         case ColorInterpolation::XyzD50:
         case ColorInterpolation::XyzD65:
             break;
@@ -1354,6 +1358,7 @@ public:
             space = ColorInterpolation::XyzD65;
             break;
         default:
+            // hsl, hwb, lab, ... are not <predefined-rgb> / <xyz-space>
             return false;
         }
         ExtendedColor color;
