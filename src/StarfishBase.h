@@ -588,6 +588,36 @@ const char* getWindowsTempDir();
     (typenameWithoutPointer*)(LIKELY(bytes < 4096) ? alloca(bytes) \
                                                    : GC_MALLOC(bytes))
 
+/* LOG2 */
+#if defined(COMPILER_GCC) || defined(COMPILER_CLANG)
+#define STARFISH_FAST_LOG2_UINT(x) \
+    ((unsigned)(8 * sizeof(unsigned long long) - __builtin_clzll((x)) - 1))
+#elif defined(COMPILER_MSVC)
+#include <intrin.h>
+#if defined(_M_X64) || defined(_M_ARM64)
+#define STARFISH_FAST_LOG2_UINT(x)            \
+    ([](unsigned long long val) -> unsigned { \
+        unsigned long idx;                    \
+        _BitScanReverse64(&idx, val);         \
+        return (unsigned)idx;                 \
+    }((x)))
+#else
+#define STARFISH_FAST_LOG2_UINT(x)                     \
+    ([](unsigned long long val) -> unsigned {          \
+        unsigned long idx;                             \
+        unsigned long hi = (unsigned long)(val >> 32); \
+        if (hi != 0) {                                 \
+            _BitScanReverse(&idx, hi);                 \
+            return (unsigned)(idx + 32);               \
+        }                                              \
+        _BitScanReverse(&idx, (unsigned long)val);     \
+        return (unsigned)idx;                          \
+    }((x)))
+#endif
+#else
+#define STARFISH_FAST_LOG2_UINT(x) log2l(x)
+#endif
+
 enum NullOptionType { NullOption };
 
 // Intentionally does NOT inherit gc. Optional<T> is never heap-allocated
