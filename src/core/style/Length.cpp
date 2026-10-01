@@ -29,7 +29,8 @@
 
 namespace Starfish {
 void Length::changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
-                                   Font* font, LayoutUnit viewportWidth,
+                                   Optional<Font*> font,
+                                   LayoutUnit viewportWidth,
                                    LayoutUnit viewportHeight,
                                    Optional<ComputedStyle*> cs)
 {
@@ -48,7 +49,6 @@ void Length::changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
             rootFontSize = unused;
         }
 
-        STARFISH_ASSERT(font);
         m_data =
             fontPercentValue(curFontSize.fixed(), rootFontSize.fixed(), font);
         m_type = Fixed;
@@ -210,13 +210,27 @@ float Length::specifiedFontValue(Element* e)
 }
 
 float Length::fontPercentValue(LayoutUnit curFontSize, LayoutUnit rootFontSize,
-                               Font* font) const
+                               Optional<Font*> font) const
 {
     if (m_type == Em) {
         return fontPercent() * curFontSize;
     } else if (m_type == Ex) {
+        // CSS Values 4 §6.1.1: "In the cases where it is impossible or
+        // impractical to determine the x-height, a value of 0.5em must be
+        // assumed." When font is absent (e.g. a display:none subtree whose
+        // style is resolved on-demand without loading resources), fall back
+        // to 0.5em rather than dereferencing a null font.
+        if (!font) {
+            return fontPercent() * curFontSize * 0.5;
+        }
         return fontPercent() * curFontSize * font->metrics().m_xheightRate;
     } else if (m_type == Ch) {
+        // CSS Values 4 §6.1.1: "In the cases where it is impossible or
+        // impractical to determine the measure of the '0' glyph, it must be
+        // assumed to be 0.5em wide by 1em tall."
+        if (!font) {
+            return fontPercent() * curFontSize * 0.5;
+        }
         LayoutUnit size =
             font->measureText(StringView(String::createUTF32String(U'\u0030')));
         return fontPercent() * size.toDouble();
