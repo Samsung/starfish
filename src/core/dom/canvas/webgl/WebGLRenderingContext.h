@@ -390,6 +390,7 @@ private:
 protected:
     bool isFromCurrentProgram(WebGLUniformLocation* uniform);
     bool isExtensionEnabled(const char* requestedName);
+    bool isFormatGenerateMipmapSupported(GLenum internalFormat);
 
 protected:
     bool isDefaultFramebufferBound();
