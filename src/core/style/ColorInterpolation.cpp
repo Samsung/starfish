@@ -79,6 +79,59 @@ namespace {
         { -0.0763729366746601, -0.4214933324022432, 1.5869240198367816 },
     };
 
+    // Predefined RGB spaces (css-color-4 #predefined), matrices as the exact
+    // rationals of the sample code.
+    const double kLinearP3ToXyzD65[3][3] = {
+        { 608311.0 / 1250200, 189793.0 / 714400, 198249.0 / 1000160 },
+        { 35783.0 / 156275, 247089.0 / 357200, 198249.0 / 2500400 },
+        { 0.0, 32229.0 / 714400, 5220557.0 / 5000800 },
+    };
+
+    const double kXyzD65ToLinearP3[3][3] = {
+        { 446124.0 / 178915, -333277.0 / 357830, -72051.0 / 178915 },
+        { -14852.0 / 17905, 63121.0 / 35810, 423.0 / 17905 },
+        { 11844.0 / 330415, -50337.0 / 660830, 316169.0 / 330415 },
+    };
+
+    const double kLinearA98ToXyzD65[3][3] = {
+        { 573536.0 / 994567, 263643.0 / 1420810, 187206.0 / 994567 },
+        { 591459.0 / 1989134, 6239551.0 / 9945670, 374412.0 / 4972835 },
+        { 53769.0 / 1989134, 351524.0 / 4972835, 4929758.0 / 4972835 },
+    };
+
+    const double kXyzD65ToLinearA98[3][3] = {
+        { 1829569.0 / 896150, -506331.0 / 896150, -308931.0 / 896150 },
+        { -851781.0 / 878810, 1648619.0 / 878810, 36519.0 / 878810 },
+        { 16779.0 / 1248040, -147721.0 / 1248040, 1266979.0 / 1248040 },
+    };
+
+    // ProPhoto is defined against D50
+    const double kLinearProphotoToXyzD50[3][3] = {
+        { 0.79776664490064230, 0.13518129740053308, 0.03134773412839220 },
+        { 0.28807482881940130, 0.71183523424187300, 0.00008993693872564 },
+        { 0.0, 0.0, 0.82510460251046020 },
+    };
+
+    const double kXyzD50ToLinearProphoto[3][3] = {
+        { 1.34578688164715830, -0.25557208737979464, -0.05110186497554526 },
+        { -0.54463070512490190, 1.50824774284514680, 0.02052744743642139 },
+        { 0.0, 0.0, 1.21196754563894520 },
+    };
+
+    const double kLinear2020ToXyzD65[3][3] = {
+        { 63426534.0 / 99577255, 20160776.0 / 139408157,
+          47086771.0 / 278816314 },
+        { 26158966.0 / 99577255, 472592308.0 / 697040785,
+          8267143.0 / 139408157 },
+        { 0.0, 19567812.0 / 697040785, 295819943.0 / 278816314 },
+    };
+
+    const double kXyzD65ToLinear2020[3][3] = {
+        { 30757411.0 / 17917100, -6372589.0 / 17917100, -4539589.0 / 17917100 },
+        { -19765991.0 / 29648200, 47925759.0 / 29648200, 467509.0 / 29648200 },
+        { 792561.0 / 44930125, -1921689.0 / 44930125, 42328811.0 / 44930125 },
+    };
+
     // D50 reference white
     const double kD50[3] = { 0.3457 / 0.3585, 1.0,
                              (1.0 - 0.3457 - 0.3585) / 0.3585 };
@@ -121,6 +174,167 @@ namespace {
             return c * 12.92;
         }
         return sign * (1.055 * std::pow(abs, 1 / 2.4) - 0.055);
+    }
+
+    double signedPow(double c, double exponent)
+    {
+        double sign = c < 0 ? -1 : 1;
+        return sign * std::pow(std::fabs(c), exponent);
+    }
+
+    // ProPhoto RGB transfer function (css-color-4 sample code)
+    double prophotoToLinear(double c)
+    {
+        const double et2 = 16.0 / 512;
+        return std::fabs(c) <= et2 ? c / 16 : signedPow(c, 1.8);
+    }
+
+    double linearToProphoto(double c)
+    {
+        const double et = 1.0 / 512;
+        return std::fabs(c) >= et ? signedPow(c, 1 / 1.8) : 16 * c;
+    }
+
+    // ITU-R BT.2020-2 transfer function (css-color-4 #predefined-rec2020)
+    double rec2020ToLinear(double c)
+    {
+        const double alpha = 1.09929682680944;
+        const double beta = 0.018053968510807;
+        double sign = c < 0 ? -1 : 1;
+        double abs = std::fabs(c);
+        if (abs < beta * 4.5) {
+            return c / 4.5;
+        }
+        return sign * std::pow((abs + alpha - 1) / alpha, 1 / 0.45);
+    }
+
+    double linearToRec2020(double c)
+    {
+        const double alpha = 1.09929682680944;
+        const double beta = 0.018053968510807;
+        double sign = c < 0 ? -1 : 1;
+        double abs = std::fabs(c);
+        if (abs < beta) {
+            return 4.5 * c;
+        }
+        return sign * (alpha * std::pow(abs, 0.45) - (alpha - 1));
+    }
+
+    // The transfer function of each RGB space, to and from linear light;
+    // display-p3 shares sRGB's curve.
+    double rgbToLinear(ColorInterpolation::Space space, double c)
+    {
+        switch (space) {
+        case ColorInterpolation::Srgb:
+        case ColorInterpolation::DisplayP3:
+            return srgbToLinear(c);
+        case ColorInterpolation::SrgbLinear:
+        case ColorInterpolation::DisplayP3Linear:
+            return c;
+        case ColorInterpolation::A98Rgb:
+            return signedPow(c, 563.0 / 256);
+        case ColorInterpolation::ProphotoRgb:
+            return prophotoToLinear(c);
+        case ColorInterpolation::Rec2020:
+            return rec2020ToLinear(c);
+        default:
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            return c;
+        }
+    }
+
+    double linearToRgb(ColorInterpolation::Space space, double c)
+    {
+        switch (space) {
+        case ColorInterpolation::Srgb:
+        case ColorInterpolation::DisplayP3:
+            return linearToSrgb(c);
+        case ColorInterpolation::SrgbLinear:
+        case ColorInterpolation::DisplayP3Linear:
+            return c;
+        case ColorInterpolation::A98Rgb:
+            return signedPow(c, 256.0 / 563);
+        case ColorInterpolation::ProphotoRgb:
+            return linearToProphoto(c);
+        case ColorInterpolation::Rec2020:
+            return linearToRec2020(c);
+        default:
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            return c;
+        }
+    }
+
+    // The matrices of an RGB space, or nullptr for a non-RGB one. ProPhoto's
+    // are defined against D50 and need the Bradford adaptation.
+    struct RgbSpaceMatrices {
+        const double (*m_toXyz)[3];
+        const double (*m_fromXyz)[3];
+        bool m_viaD50;
+    };
+
+    const RgbSpaceMatrices* rgbSpaceMatrices(ColorInterpolation::Space space)
+    {
+        static const RgbSpaceMatrices srgb = { kLinearSrgbToXyzD65,
+                                               kXyzD65ToLinearSrgb, false };
+        static const RgbSpaceMatrices p3 = { kLinearP3ToXyzD65,
+                                             kXyzD65ToLinearP3, false };
+        static const RgbSpaceMatrices a98 = { kLinearA98ToXyzD65,
+                                              kXyzD65ToLinearA98, false };
+        static const RgbSpaceMatrices prophoto = { kLinearProphotoToXyzD50,
+                                                   kXyzD50ToLinearProphoto,
+                                                   true };
+        static const RgbSpaceMatrices rec2020 = { kLinear2020ToXyzD65,
+                                                  kXyzD65ToLinear2020, false };
+        switch (space) {
+        case ColorInterpolation::Srgb:
+        case ColorInterpolation::SrgbLinear:
+            return &srgb;
+        case ColorInterpolation::DisplayP3:
+        case ColorInterpolation::DisplayP3Linear:
+            return &p3;
+        case ColorInterpolation::A98Rgb:
+            return &a98;
+        case ColorInterpolation::ProphotoRgb:
+            return &prophoto;
+        case ColorInterpolation::Rec2020:
+            return &rec2020;
+        default:
+            return nullptr;
+        }
+    }
+
+    void rgbToXyzD65(ColorInterpolation::Space space, const double rgb[3],
+                     double xyz[3])
+    {
+        const RgbSpaceMatrices* m = rgbSpaceMatrices(space);
+        double linear[3];
+        for (int i = 0; i < 3; i++) {
+            linear[i] = rgbToLinear(space, rgb[i]);
+        }
+        if (m->m_viaD50) {
+            double d50[3];
+            multiply(m->m_toXyz, linear, d50);
+            multiply(kXyzD50ToD65, d50, xyz);
+        } else {
+            multiply(m->m_toXyz, linear, xyz);
+        }
+    }
+
+    void xyzD65ToRgb(ColorInterpolation::Space space, const double xyz[3],
+                     double rgb[3])
+    {
+        const RgbSpaceMatrices* m = rgbSpaceMatrices(space);
+        double linear[3];
+        if (m->m_viaD50) {
+            double d50[3];
+            multiply(kXyzD65ToD50, xyz, d50);
+            multiply(m->m_fromXyz, d50, linear);
+        } else {
+            multiply(m->m_fromXyz, xyz, linear);
+        }
+        for (int i = 0; i < 3; i++) {
+            rgb[i] = linearToRgb(space, linear[i]);
+        }
     }
 
     double normalizeHue(double h)
@@ -264,25 +478,24 @@ namespace {
     void toXyzD65(ColorInterpolation::Space space, const double in[3],
                   double xyz[3])
     {
-        double rgb[3], linear[3];
+        double rgb[3];
         switch (space) {
-        case ColorInterpolation::Srgb:
         case ColorInterpolation::Hsl:
-        case ColorInterpolation::Hwb:
-            if (space == ColorInterpolation::Hsl) {
-                hslToRgb(in, rgb);
-            } else if (space == ColorInterpolation::Hwb) {
-                hwbToRgb(in, rgb);
-            } else {
-                copy3(in, rgb);
-            }
-            for (int i = 0; i < 3; i++) {
-                linear[i] = srgbToLinear(rgb[i]);
-            }
-            multiply(kLinearSrgbToXyzD65, linear, xyz);
+            hslToRgb(in, rgb);
+            rgbToXyzD65(ColorInterpolation::Srgb, rgb, xyz);
             return;
+        case ColorInterpolation::Hwb:
+            hwbToRgb(in, rgb);
+            rgbToXyzD65(ColorInterpolation::Srgb, rgb, xyz);
+            return;
+        case ColorInterpolation::Srgb:
         case ColorInterpolation::SrgbLinear:
-            multiply(kLinearSrgbToXyzD65, in, xyz);
+        case ColorInterpolation::DisplayP3:
+        case ColorInterpolation::DisplayP3Linear:
+        case ColorInterpolation::A98Rgb:
+        case ColorInterpolation::Rec2020:
+        case ColorInterpolation::ProphotoRgb:
+            rgbToXyzD65(space, in, xyz);
             return;
         case ColorInterpolation::Xyz:
         case ColorInterpolation::XyzD65:
@@ -321,25 +534,24 @@ namespace {
     void fromXyzD65(ColorInterpolation::Space space, const double xyz[3],
                     double out[3])
     {
-        double linear[3], rgb[3];
+        double rgb[3];
         switch (space) {
-        case ColorInterpolation::Srgb:
         case ColorInterpolation::Hsl:
-        case ColorInterpolation::Hwb:
-            multiply(kXyzD65ToLinearSrgb, xyz, linear);
-            for (int i = 0; i < 3; i++) {
-                rgb[i] = linearToSrgb(linear[i]);
-            }
-            if (space == ColorInterpolation::Hsl) {
-                rgbToHsl(rgb, out);
-            } else if (space == ColorInterpolation::Hwb) {
-                rgbToHwb(rgb, out);
-            } else {
-                copy3(rgb, out);
-            }
+            xyzD65ToRgb(ColorInterpolation::Srgb, xyz, rgb);
+            rgbToHsl(rgb, out);
             return;
+        case ColorInterpolation::Hwb:
+            xyzD65ToRgb(ColorInterpolation::Srgb, xyz, rgb);
+            rgbToHwb(rgb, out);
+            return;
+        case ColorInterpolation::Srgb:
         case ColorInterpolation::SrgbLinear:
-            multiply(kXyzD65ToLinearSrgb, xyz, out);
+        case ColorInterpolation::DisplayP3:
+        case ColorInterpolation::DisplayP3Linear:
+        case ColorInterpolation::A98Rgb:
+        case ColorInterpolation::Rec2020:
+        case ColorInterpolation::ProphotoRgb:
+            xyzD65ToRgb(space, xyz, out);
             return;
         case ColorInterpolation::Xyz:
         case ColorInterpolation::XyzD65:
@@ -430,6 +642,11 @@ namespace {
         switch (space) {
         case ColorInterpolation::Srgb:
         case ColorInterpolation::SrgbLinear:
+        case ColorInterpolation::DisplayP3:
+        case ColorInterpolation::DisplayP3Linear:
+        case ColorInterpolation::A98Rgb:
+        case ColorInterpolation::ProphotoRgb:
+        case ColorInterpolation::Rec2020:
             return i == 0 ? Red : (i == 1 ? Green : Blue);
         case ColorInterpolation::Xyz:
         case ColorInterpolation::XyzD50:
@@ -569,12 +786,22 @@ bool ColorInterpolation::parseSpace(const std::string& name, Space* space)
         const char* name;
         Space space;
     } const table[] = {
-        { "srgb", Srgb },      { "srgb-linear", SrgbLinear },
-        { "hsl", Hsl },        { "hwb", Hwb },
-        { "lab", Lab },        { "oklab", Oklab },
-        { "lch", Lch },        { "oklch", Oklch },
-        { "xyz", Xyz },        { "xyz-d50", XyzD50 },
+        { "srgb", Srgb },
+        { "srgb-linear", SrgbLinear },
+        { "hsl", Hsl },
+        { "hwb", Hwb },
+        { "lab", Lab },
+        { "oklab", Oklab },
+        { "lch", Lch },
+        { "oklch", Oklch },
+        { "xyz", Xyz },
+        { "xyz-d50", XyzD50 },
         { "xyz-d65", XyzD65 },
+        { "display-p3", DisplayP3 },
+        { "display-p3-linear", DisplayP3Linear },
+        { "a98-rgb", A98Rgb },
+        { "prophoto-rgb", ProphotoRgb },
+        { "rec2020", Rec2020 },
     };
     for (size_t i = 0; i < sizeof(table) / sizeof(table[0]); i++) {
         if (name == table[i].name) {
@@ -627,6 +854,16 @@ const char* ColorInterpolation::spaceName(Space space)
         return "xyz-d50";
     case XyzD65:
         return "xyz-d65";
+    case DisplayP3:
+        return "display-p3";
+    case DisplayP3Linear:
+        return "display-p3-linear";
+    case A98Rgb:
+        return "a98-rgb";
+    case ProphotoRgb:
+        return "prophoto-rgb";
+    case Rec2020:
+        return "rec2020";
     }
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return "";

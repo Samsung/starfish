@@ -40,6 +40,11 @@ public:
         Xyz,
         XyzD50,
         XyzD65,
+        DisplayP3,
+        DisplayP3Linear,
+        A98Rgb,
+        ProphotoRgb,
+        Rec2020,
     };
 
     enum HueMethod : unsigned char {

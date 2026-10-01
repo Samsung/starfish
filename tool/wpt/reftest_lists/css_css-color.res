@@ -1,7 +1,7 @@
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/a98rgb-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/a98rgb-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/a98rgb-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/a98rgb-004.html
+http://web-platform.test:8000/css/css-color/a98rgb-001.html
+http://web-platform.test:8000/css/css-color/a98rgb-002.html
+http://web-platform.test:8000/css/css-color/a98rgb-003.html
+http://web-platform.test:8000/css/css-color/a98rgb-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/animation/contrast-color-interpolation.html
 http://web-platform.test:8000/css/css-color/animation/opacity-animation-ending-correctly-001.html
 http://web-platform.test:8000/css/css-color/animation/opacity-animation-ending-correctly-002.html
@@ -65,18 +65,18 @@ http://web-platform.test:8000/css/css-color/currentcolor-visited-fallback.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/deprecated-sameas-021.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/deprecated-sameas-022.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/deprecated-sameas-023.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/display-p3-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/display-p3-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/display-p3-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/display-p3-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/display-p3-005.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/display-p3-006.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/display-p3-linear-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/display-p3-linear-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/display-p3-linear-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/display-p3-linear-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/display-p3-linear-005.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/display-p3-linear-006.html
+http://web-platform.test:8000/css/css-color/display-p3-001.html
+http://web-platform.test:8000/css/css-color/display-p3-002.html
+http://web-platform.test:8000/css/css-color/display-p3-003.html
+http://web-platform.test:8000/css/css-color/display-p3-004.html
+http://web-platform.test:8000/css/css-color/display-p3-005.html
+http://web-platform.test:8000/css/css-color/display-p3-006.html
+http://web-platform.test:8000/css/css-color/display-p3-linear-001.html
+http://web-platform.test:8000/css/css-color/display-p3-linear-002.html
+http://web-platform.test:8000/css/css-color/display-p3-linear-003.html
+http://web-platform.test:8000/css/css-color/display-p3-linear-004.html
+http://web-platform.test:8000/css/css-color/display-p3-linear-005.html
+http://web-platform.test:8000/css/css-color/display-p3-linear-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/filters-under-will-change-opacity.html
 http://web-platform.test:8000/css/css-color/hex-001.html
 http://web-platform.test:8000/css/css-color/hex-002.html
@@ -174,16 +174,16 @@ http://web-platform.test:8000/css/css-color/out-of-gamut-legacy-rgb.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/predefined-011.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/predefined-012.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/predefined-016.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/prophoto-rgb-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/prophoto-rgb-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/prophoto-rgb-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/prophoto-rgb-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/prophoto-rgb-005.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/rec2020-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/rec2020-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/rec2020-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/rec2020-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/rec2020-005.html
+http://web-platform.test:8000/css/css-color/prophoto-rgb-001.html
+http://web-platform.test:8000/css/css-color/prophoto-rgb-002.html
+http://web-platform.test:8000/css/css-color/prophoto-rgb-003.html
+http://web-platform.test:8000/css/css-color/prophoto-rgb-004.html
+http://web-platform.test:8000/css/css-color/prophoto-rgb-005.html
+http://web-platform.test:8000/css/css-color/rec2020-001.html
+http://web-platform.test:8000/css/css-color/rec2020-002.html
+http://web-platform.test:8000/css/css-color/rec2020-003.html
+http://web-platform.test:8000/css/css-color/rec2020-004.html
+http://web-platform.test:8000/css/css-color/rec2020-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/relative-currentcolor-a98rgb-01.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/relative-currentcolor-displayp3-01.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/relative-currentcolor-hsl-01.html
