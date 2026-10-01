@@ -298,36 +298,36 @@ void GridArea::parseGridRowAndColumnValues(GridFormattingContext& ctx)
         m_rowStartLine = parseGridLine(gridRowStart);
         m_rowEndLine = parseGridLine(gridRowEnd);
 
-        if (m_rowStartLine->hasSpan()) {
-            if (m_rowStartLine->spanValue() < 1) {
+        if (m_rowStartLine.hasSpan()) {
+            if (m_rowStartLine.spanValue() < 1) {
                 STARFISH_LOG_WARN("invalid value given");
             }
-        } else if (m_rowStartLine->hasCustomIdent()) {
+        } else if (m_rowStartLine.hasCustomIdent()) {
             GridArea* namedArea =
-                ctx.getNamedGridArea(m_rowStartLine->customIdent());
+                ctx.getNamedGridArea(m_rowStartLine.customIdent());
             if (namedArea) {
-                m_rowStartLine->setValue(namedArea->rowStart());
+                m_rowStartLine.setValue(namedArea->rowStart());
             }
         }
 
-        if (m_rowEndLine->hasSpan()) {
-            if (m_rowEndLine->spanValue() < 1) {
+        if (m_rowEndLine.hasSpan()) {
+            if (m_rowEndLine.spanValue() < 1) {
                 STARFISH_LOG_WARN("invalid value given");
             }
-        } else if (m_rowEndLine->hasCustomIdent()) {
+        } else if (m_rowEndLine.hasCustomIdent()) {
             GridArea* namedArea =
-                ctx.getNamedGridArea(m_rowEndLine->customIdent());
+                ctx.getNamedGridArea(m_rowEndLine.customIdent());
             if (namedArea) {
-                m_rowEndLine->setValue(namedArea->rowEnd());
+                m_rowEndLine.setValue(namedArea->rowEnd());
             }
         }
 
-        if (m_rowStartLine->value() > 0 && m_rowEndLine->isAuto()) {
-            m_rowEndLine->setValue(m_rowStartLine->value() +
-                                   m_rowStartLine->spanValue());
-        } else if (m_rowStartLine->isAuto() && m_rowEndLine->value() > 0) {
-            m_rowStartLine->setValue(m_rowEndLine->value() -
-                                     m_rowEndLine->spanValue());
+        if (m_rowStartLine.value() > 0 && m_rowEndLine.isAuto()) {
+            m_rowEndLine.setValue(m_rowStartLine.value() +
+                                   m_rowStartLine.spanValue());
+        } else if (m_rowStartLine.isAuto() && m_rowEndLine.value() > 0) {
+            m_rowStartLine.setValue(m_rowEndLine.value() -
+                                     m_rowEndLine.spanValue());
         }
     }
 
@@ -338,37 +338,37 @@ void GridArea::parseGridRowAndColumnValues(GridFormattingContext& ctx)
         m_columnStartLine = parseGridLine(gridColumnStart);
         m_columnEndLine = parseGridLine(gridColumnEnd);
 
-        if (m_columnStartLine->hasSpan()) {
-            if (m_columnStartLine->spanValue() < 1) {
+        if (m_columnStartLine.hasSpan()) {
+            if (m_columnStartLine.spanValue() < 1) {
                 STARFISH_LOG_WARN("invalid span value given");
             }
-        } else if (m_columnStartLine->hasCustomIdent()) {
+        } else if (m_columnStartLine.hasCustomIdent()) {
             GridArea* namedArea =
-                ctx.getNamedGridArea(m_columnStartLine->customIdent());
+                ctx.getNamedGridArea(m_columnStartLine.customIdent());
             if (namedArea) {
-                m_columnStartLine->setValue(namedArea->columnStart());
+                m_columnStartLine.setValue(namedArea->columnStart());
             }
         }
 
-        if (m_columnEndLine->hasSpan()) {
-            if (m_columnEndLine->spanValue() < 1) {
+        if (m_columnEndLine.hasSpan()) {
+            if (m_columnEndLine.spanValue() < 1) {
                 STARFISH_LOG_WARN("invalid value given");
             }
-        } else if (m_columnEndLine->hasCustomIdent()) {
+        } else if (m_columnEndLine.hasCustomIdent()) {
             GridArea* namedArea =
-                ctx.getNamedGridArea(m_columnEndLine->customIdent());
+                ctx.getNamedGridArea(m_columnEndLine.customIdent());
             if (namedArea) {
-                m_columnEndLine->setValue(namedArea->columnEnd());
+                m_columnEndLine.setValue(namedArea->columnEnd());
             }
         }
 
-        if (m_columnStartLine->value() > 0 && m_columnEndLine->isAuto()) {
-            m_columnEndLine->setValue(m_columnStartLine->value() +
-                                      m_columnStartLine->spanValue());
-        } else if (m_columnStartLine->isAuto() &&
-                   m_columnEndLine->value() > 0) {
-            m_columnStartLine->setValue(m_columnEndLine->value() -
-                                        m_columnEndLine->spanValue());
+        if (m_columnStartLine.value() > 0 && m_columnEndLine.isAuto()) {
+            m_columnEndLine.setValue(m_columnStartLine.value() +
+                                      m_columnStartLine.spanValue());
+        } else if (m_columnStartLine.isAuto() &&
+                   m_columnEndLine.value() > 0) {
+            m_columnStartLine.setValue(m_columnEndLine.value() -
+                                        m_columnEndLine.spanValue());
         }
     }
 }
@@ -376,23 +376,23 @@ void GridArea::parseGridRowAndColumnValues(GridFormattingContext& ctx)
 void GridArea::resolveDefinitePositionValues()
 {
     {
-        if (m_rowStartLine->isDefinite() && m_rowEndLine->isDefinite()) {
+        if (m_rowStartLine.isDefinite() && m_rowEndLine.isDefinite()) {
             if (rowStart() >= rowEnd()) {
                 setRowEnd(rowStart() + 1);
             }
-        } else if (m_rowStartLine->isDefinite()) {
-            if (m_rowEndLine->isAuto()) {
+        } else if (m_rowStartLine.isDefinite()) {
+            if (m_rowEndLine.isAuto()) {
                 setRowEnd(rowStart() + 1);
-            } else if (m_rowEndLine->hasSpan()) {
-                setRowEnd(rowStart() + m_rowEndLine->spanValue());
+            } else if (m_rowEndLine.hasSpan()) {
+                setRowEnd(rowStart() + m_rowEndLine.spanValue());
             } else {
                 STARFISH_LOG_WARN("missing values");
             }
-        } else if (m_rowEndLine->isDefinite()) {
-            if (m_rowStartLine->isAuto()) {
+        } else if (m_rowEndLine.isDefinite()) {
+            if (m_rowStartLine.isAuto()) {
                 setRowStart(rowEnd() - 1);
-            } else if (m_rowStartLine->hasSpan()) {
-                setRowStart(rowEnd() - m_rowStartLine->spanValue());
+            } else if (m_rowStartLine.hasSpan()) {
+                setRowStart(rowEnd() - m_rowStartLine.spanValue());
             } else {
                 STARFISH_LOG_WARN("missing values");
             }
@@ -400,23 +400,23 @@ void GridArea::resolveDefinitePositionValues()
     }
 
     {
-        if (m_columnStartLine->isDefinite() && m_columnEndLine->isDefinite()) {
+        if (m_columnStartLine.isDefinite() && m_columnEndLine.isDefinite()) {
             if (columnStart() >= columnEnd()) {
                 setColumnEnd(columnStart() + 1);
             }
-        } else if (m_columnStartLine->isDefinite()) {
-            if (m_columnEndLine->isAuto()) {
+        } else if (m_columnStartLine.isDefinite()) {
+            if (m_columnEndLine.isAuto()) {
                 setColumnEnd(columnStart() + 1);
-            } else if (m_columnEndLine->hasSpan()) {
-                setColumnEnd(columnStart() + m_columnEndLine->spanValue());
+            } else if (m_columnEndLine.hasSpan()) {
+                setColumnEnd(columnStart() + m_columnEndLine.spanValue());
             } else {
                 STARFISH_LOG_WARN("missing values");
             }
-        } else if (m_columnEndLine->isDefinite()) {
-            if (m_columnStartLine->isAuto()) {
+        } else if (m_columnEndLine.isDefinite()) {
+            if (m_columnStartLine.isAuto()) {
                 setColumnStart(columnEnd() - 1);
-            } else if (m_columnStartLine->hasSpan()) {
-                setColumnStart(columnEnd() - m_columnStartLine->spanValue());
+            } else if (m_columnStartLine.hasSpan()) {
+                setColumnStart(columnEnd() - m_columnStartLine.spanValue());
             } else {
                 STARFISH_LOG_WARN("missing values");
             }
@@ -476,12 +476,12 @@ size_t GridArea::rowSpanValue()
 {
     if (rowStart() > 0 && rowEnd() > 0) {
         return rowEnd() - rowStart();
-    } else if (m_rowStartLine->hasSpan() && !m_rowEndLine->hasSpan()) {
-        return m_rowStartLine->spanValue();
-    } else if (!m_rowStartLine->hasSpan() && m_rowEndLine->hasSpan()) {
-        return m_rowEndLine->spanValue();
+    } else if (m_rowStartLine.hasSpan() && !m_rowEndLine.hasSpan()) {
+        return m_rowStartLine.spanValue();
+    } else if (!m_rowStartLine.hasSpan() && m_rowEndLine.hasSpan()) {
+        return m_rowEndLine.spanValue();
     } else {
-        return m_rowStartLine->spanValue();
+        return m_rowStartLine.spanValue();
     }
 }
 
@@ -489,12 +489,12 @@ size_t GridArea::columnSpanValue()
 {
     if (columnStart() > 0 && columnEnd() > 0) {
         return columnEnd() - columnStart();
-    } else if (m_columnStartLine->hasSpan() && !m_columnEndLine->hasSpan()) {
-        return m_columnStartLine->spanValue();
-    } else if (!m_columnStartLine->hasSpan() && m_columnEndLine->hasSpan()) {
-        return m_columnEndLine->spanValue();
+    } else if (m_columnStartLine.hasSpan() && !m_columnEndLine.hasSpan()) {
+        return m_columnStartLine.spanValue();
+    } else if (!m_columnStartLine.hasSpan() && m_columnEndLine.hasSpan()) {
+        return m_columnEndLine.spanValue();
     } else {
-        return m_columnStartLine->spanValue();
+        return m_columnStartLine.spanValue();
     }
 }
 
