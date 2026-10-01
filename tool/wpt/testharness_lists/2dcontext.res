@@ -1,16 +1,137 @@
-http://web-platform.test:8000/html/canvas/element/manual/drawing-paths-to-the-canvas/canvas_complexshapes_ispointInpath_001.htm
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.source-in.html
 # [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.copy.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.source-out.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.source-atop.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.destination-in.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.lighter.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.destination-over.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.destination-out.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.globalAlpha.canvas.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.xor.html
 # [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.destination-atop.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.destination-in.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.destination-out.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.destination-over.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.lighter.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.source-atop.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.source-in.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.source-out.html
 # [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.source-over.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.canvas.xor.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.copy.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.destination-atop.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.destination-in.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.destination-out.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.destination-over.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.lighter.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.source-atop.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.source-in.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.source-out.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.source-over.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.xor.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.globalAlpha.canvas.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.globalAlpha.default.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.globalAlpha.fill.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.globalAlpha.image.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.globalAlpha.invalid.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.globalAlpha.range.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.copy.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.destination-atop.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.destination-in.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.destination-out.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.destination-over.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.lighter.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.source-atop.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.source-in.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.source-out.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.source-over.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.xor.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.casesensitive.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.clear.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.darker.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.default.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.get.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.highlight.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.nullsuffix.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.over.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.unrecognised.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.copy.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.destination-atop.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.destination-in.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.destination-out.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.destination-over.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.lighter.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.source-atop.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.source-in.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.source-out.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.source-over.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.xor.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.copy.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.destination-atop.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.destination-in.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.destination-out.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.destination-over.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.lighter.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.source-atop.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.source-in.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.source-out.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.source-over.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.xor.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.uncovered.fill.copy.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.uncovered.fill.destination-atop.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.uncovered.fill.destination-in.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.uncovered.fill.source-in.html
+http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.uncovered.fill.source-out.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.3arg.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.5arg.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.9arg.basic.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.9arg.destpos.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.9arg.destsize.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.9arg.sourcepos.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.9arg.sourcesize.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.alpha.html
+http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.broken.html
+http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.canvas.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.clip.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.composite.html
+http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.incomplete.emptysrc.html
+http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.incomplete.immediate.html
+http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.incomplete.nosrc.html
+http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.incomplete.reload.html
+http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.incomplete.removedsrc.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.negativedest.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.negativedir.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.negativesource.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.nonfinite.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.nowrap.html
+http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.null.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.path.html
+http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.self.1.html
+http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.self.2.html
+http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.svg.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.transform.html
+http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.wrongtype.html
+http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.zerocanvas.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.basic.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.clip.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.globalalpha.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.globalcomposite.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.negative.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.nonfinite.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.path.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.transform.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.zero.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.fillRect.basic.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.fillRect.clip.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.fillRect.negative.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.fillRect.nonfinite.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.fillRect.path.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.fillRect.transform.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.fillRect.zero.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.basic.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.clip.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.globalalpha.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.globalcomposite.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.negative.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.nonfinite.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.path.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.transform.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.zero.1.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.zero.2.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.zero.3.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.zero.4.html
+http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.zero.5.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.default.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.get.solid.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.invalidstring.html
@@ -48,15 +169,7 @@ http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fill
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.parse.hsl-4.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.parse.hsl-5.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.parse.hsl-6.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsl-clamp-1.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsl-clamp-3.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsl-clamp-4.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.parse.hsla-1.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-1.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-3.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-4.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-5.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-6.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.parse.invalid.css-color-4-hsl-1.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.parse.invalid.css-color-4-hsl-2.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.parse.invalid.css-color-4-hsl-3.html
@@ -207,26 +320,44 @@ http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.patt
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.pattern.repeat.unrecognised.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.pattern.repeat.unrecognisednull.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.strokeStyle.default.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.order.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.rotate.direction.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.rotate.nonfinite.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.rotate.radians.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.rotate.wrapnegative.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.rotate.zero.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.scale.basic.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.scale.large.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.scale.multiple.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.scale.negative.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.scale.nonfinite.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.scale.zero.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.setTransform.multiple.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.setTransform.nonfinite.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.setTransform.skewed.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.transform.identity.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.transform.multiply.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.transform.nonfinite.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.translate.basic.html
-http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.translate.nonfinite.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.cap.butt.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.cap.closed.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.cap.invalid.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.cap.open.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.cap.round.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.cap.square.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.cap.valid.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.cross.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.defaults.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.join.bevel.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.join.closed.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.join.invalid.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.join.miter.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.join.open.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.join.parallel.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.join.round.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.join.valid.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.miter.acute.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.miter.exceeded.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.miter.invalid.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.miter.lineedge.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.miter.obtuse.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.miter.rightangle.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.miter.valid.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.miter.within.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.union.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.width.basic.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.width.invalid.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.width.scaledefault.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.width.transformed.html
+http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.width.valid.html
+http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/drawimage_html_image.html
+http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/drawimage_svg_image_1.html
+http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/drawimage_svg_image_with_foreign_object_does_not_taint.html
+http://web-platform.test:8000/html/canvas/element/manual/drawing-paths-to-the-canvas/canvas_complexshapes_ispointInpath_001.htm
+http://web-platform.test:8000/html/canvas/element/manual/image-smoothing/imagesmoothing.html
+http://web-platform.test:8000/html/canvas/element/manual/line-styles/setLineDash.html
+http://web-platform.test:8000/html/canvas/element/manual/the-canvas-state/2d.state.saverestore.imageSmoothingEnabled.html
 http://web-platform.test:8000/html/canvas/element/path-objects/2d.path.arc.angle.1.html
 http://web-platform.test:8000/html/canvas/element/path-objects/2d.path.arc.angle.2.html
 http://web-platform.test:8000/html/canvas/element/path-objects/2d.path.arc.angle.3.html
@@ -354,119 +485,6 @@ http://web-platform.test:8000/html/canvas/element/path-objects/2d.path.stroke.un
 http://web-platform.test:8000/html/canvas/element/path-objects/2d.path.transformation.basic.html
 http://web-platform.test:8000/html/canvas/element/path-objects/2d.path.transformation.changing.html
 http://web-platform.test:8000/html/canvas/element/path-objects/2d.path.transformation.multiple.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.cap.butt.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.cap.closed.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.cap.invalid.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.cap.open.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.cap.round.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.cap.square.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.cap.valid.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.cross.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.defaults.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.join.bevel.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.join.closed.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.join.invalid.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.join.miter.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.join.open.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.join.parallel.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.join.round.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.join.valid.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.miter.acute.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.miter.exceeded.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.miter.invalid.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.miter.lineedge.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.miter.obtuse.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.miter.rightangle.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.miter.valid.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.miter.within.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.union.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.width.basic.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.width.invalid.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.width.scaledefault.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.width.transformed.html
-http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.width.valid.html
-http://web-platform.test:8000/html/canvas/element/manual/line-styles/setLineDash.html
-http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.bitmap.html
-http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.clip.html
-http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.fillStyle.html
-http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.font.html
-http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.globalAlpha.html
-http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.globalCompositeOperation.html
-http://web-platform.test:8000/html/canvas/element/manual/the-canvas-state/2d.state.saverestore.imageSmoothingEnabled.html
-http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.lineCap.html
-http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.lineJoin.html
-http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.lineWidth.html
-http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.miterLimit.html
-http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.path.html
-http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.stack.html
-http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.stackdepth.html
-http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.strokeStyle.html
-http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.textAlign.html
-http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.textBaseline.html
-http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.transformation.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.copy.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.destination-atop.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.destination-in.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.destination-out.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.destination-over.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.lighter.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.source-atop.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.source-in.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.source-out.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.source-over.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.clip.xor.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.globalAlpha.default.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.globalAlpha.fill.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.globalAlpha.image.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.globalAlpha.invalid.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.globalAlpha.range.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.copy.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.destination-atop.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.destination-in.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.destination-out.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.destination-over.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.lighter.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.source-atop.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.source-in.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.source-out.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.source-over.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.image.xor.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.casesensitive.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.clear.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.darker.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.default.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.get.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.highlight.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.nullsuffix.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.over.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.operation.unrecognised.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.copy.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.destination-atop.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.destination-in.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.destination-out.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.destination-over.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.lighter.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.source-atop.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.source-in.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.source-out.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.source-over.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.solid.xor.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.copy.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.destination-atop.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.destination-in.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.destination-out.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.destination-over.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.lighter.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.source-atop.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.source-in.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.source-out.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.source-over.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.transparent.xor.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.uncovered.fill.copy.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.uncovered.fill.destination-atop.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.uncovered.fill.destination-in.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.uncovered.fill.source-in.html
-http://web-platform.test:8000/html/canvas/element/compositing/2d.composite.uncovered.fill.source-out.html
 http://web-platform.test:8000/html/canvas/element/pixel-manipulation/2d.imageData.create1.basic.html
 http://web-platform.test:8000/html/canvas/element/pixel-manipulation/2d.imageData.create1.initial.html
 http://web-platform.test:8000/html/canvas/element/pixel-manipulation/2d.imageData.create1.this.html
@@ -522,94 +540,6 @@ http://web-platform.test:8000/html/canvas/element/pixel-manipulation/2d.imageDat
 http://web-platform.test:8000/html/canvas/element/pixel-manipulation/2d.imageData.put.unaffected.html
 http://web-platform.test:8000/html/canvas/element/pixel-manipulation/2d.imageData.put.unchanged.html
 http://web-platform.test:8000/html/canvas/element/pixel-manipulation/2d.imageData.put.wrongtype.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.basic.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.clip.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.globalalpha.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.globalcomposite.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.negative.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.nonfinite.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.path.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.transform.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.clearRect.zero.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.fillRect.basic.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.fillRect.clip.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.fillRect.negative.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.fillRect.nonfinite.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.fillRect.path.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.fillRect.transform.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.fillRect.zero.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.basic.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.clip.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.globalalpha.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.globalcomposite.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.negative.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.nonfinite.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.path.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.transform.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.zero.1.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.zero.2.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.zero.3.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.zero.4.html
-http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.zero.5.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.3arg.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.5arg.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.9arg.basic.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.9arg.destpos.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.9arg.destsize.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.9arg.sourcepos.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.9arg.sourcesize.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.alpha.html
-http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.broken.html
-http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.canvas.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.clip.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.composite.html
-http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.incomplete.emptysrc.html
-http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.incomplete.immediate.html
-http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.incomplete.nosrc.html
-http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.incomplete.reload.html
-http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.incomplete.removedsrc.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.negativedest.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.negativedir.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.negativesource.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.nonfinite.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.nowrap.html
-http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.null.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.path.html
-http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.self.1.html
-http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.self.2.html
-http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.svg.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.transform.html
-http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.wrongtype.html
-http://web-platform.test:8000/html/canvas/element/drawing-images-to-the-canvas/2d.drawImage.zerocanvas.html
-http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/drawimage_html_image.html
-http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/drawimage_svg_image_1.html
-http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/drawimage_svg_image_with_foreign_object_does_not_taint.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.center.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.end.ltr.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.end.rtl.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.left.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.right.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.start.ltr.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.start.rtl.html
-http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.basic-manual.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.maxWidth.NaN.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.maxWidth.bound.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.maxWidth.fontface.html
-http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.maxWidth.large-manual.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.maxWidth.negative.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.maxWidth.small.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.maxWidth.zero.html
-http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.unaffected.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fontface.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fontface.repeat.html
-http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.kern.consistent-manual.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.space.basic.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.space.collapse.nonspace.html
-http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.stroke.basic-manual.html
-http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.stroke.unaffected.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.measure.width.basic.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.measure.width.empty.html
-http://web-platform.test:8000/html/canvas/element/manual/image-smoothing/imagesmoothing.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.alpha.1.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.alpha.2.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.alpha.3.html
@@ -655,3 +585,73 @@ http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.stroke.cap.2
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.stroke.join.1.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.stroke.join.2.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.stroke.join.3.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.center.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.end.ltr.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.end.rtl.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.left.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.right.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.start.ltr.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.start.rtl.html
+http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.basic-manual.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.maxWidth.NaN.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.maxWidth.bound.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.maxWidth.fontface.html
+http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.maxWidth.large-manual.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.maxWidth.negative.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.maxWidth.small.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.maxWidth.zero.html
+http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fill.unaffected.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fontface.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.fontface.repeat.html
+http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.kern.consistent-manual.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.space.basic.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.space.collapse.nonspace.html
+http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.stroke.basic-manual.html
+http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.stroke.unaffected.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.measure.width.basic.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.measure.width.empty.html
+http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.bitmap.html
+http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.clip.html
+http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.fillStyle.html
+http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.font.html
+http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.globalAlpha.html
+http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.globalCompositeOperation.html
+http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.lineCap.html
+http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.lineJoin.html
+http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.lineWidth.html
+http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.miterLimit.html
+http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.path.html
+http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.stack.html
+http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.stackdepth.html
+http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.strokeStyle.html
+http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.textAlign.html
+http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.textBaseline.html
+http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.transformation.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.order.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.rotate.direction.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.rotate.nonfinite.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.rotate.radians.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.rotate.wrapnegative.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.rotate.zero.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.scale.basic.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.scale.large.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.scale.multiple.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.scale.negative.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.scale.nonfinite.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.scale.zero.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.setTransform.multiple.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.setTransform.nonfinite.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.setTransform.skewed.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.transform.identity.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.transform.multiply.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.transform.nonfinite.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.translate.basic.html
+http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.translate.nonfinite.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsl-clamp-1.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsl-clamp-3.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsl-clamp-4.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-1.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-3.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-4.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-5.html
+# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-6.html
