@@ -481,7 +481,7 @@ protected:
         if (size == 0) {
             return 1;
         }
-        size_t base = log2l(size);
+        size_t base = STARFISH_FAST_LOG2_UINT(size);
         size_t capacity = 1 << (base + 1);
         return capacity;
     }
