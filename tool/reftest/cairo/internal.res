@@ -479,6 +479,7 @@ test/cairo/internal-test/css/dialog/dialog_modal_02.html
 test/cairo/internal-test/css/dialog/dialog_modal_03.html
 test/cairo/internal-test/css/style/lookup-computed-style.html
 test/cairo/internal-test/css/style/getComputedStyle-display-none-subtree.html
+test/cairo/internal-test/css/style/getComputedStyle-display-none-font-relative.html
 test/cairo/internal-test/css/text/text-decoration-color-001a.html
 test/cairo/internal-test/css/text/text-decoration-line-001.html
 test/cairo/internal-test/css/text/text-decoration-001.html

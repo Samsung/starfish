@@ -1061,7 +1061,12 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
                                 windowSize.width(), windowSize.height(), this);
         setLetterSpacing(v);
-        loadFont(current, true);
+        // loadFont may trigger a web-font fetch. Skip it when font is absent
+        // (non-rendered element path with loadResources=false) to honor the
+        // "no fetch" contract of resolveStyleOfNonRenderedElement.
+        if (font) {
+            loadFont(current, true);
+        }
     }
 
     if (!lineHeight().isComputed()) {

@@ -90,7 +90,7 @@ public:
     }
 
     void changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
-                               Font* font, LayoutUnit viewportWidth,
+                               Optional<Font*> font, LayoutUnit viewportWidth,
                                LayoutUnit viewportHeight,
                                Optional<ComputedStyle*> cs);
 
@@ -301,7 +301,7 @@ public:
     }
 
     float fontPercentValue(LayoutUnit curFontSize, LayoutUnit rootFontSize,
-                           Font* font) const;
+                           Optional<Font*> font) const;
     float fontPercentValue(Node* n, bool isFontSize) const;
 
     bool isZero() const
