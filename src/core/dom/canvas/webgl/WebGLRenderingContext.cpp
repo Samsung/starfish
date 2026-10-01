@@ -194,6 +194,7 @@ void WebGLRenderingContext::initialize()
     // (context.drawingBufferWidth, context.drawingBufferHeight).
 
     viewport(0, 0, drawingBufferWidth(), drawingBufferHeight());
+    scissor(0, 0, drawingBufferWidth(), drawingBufferHeight());
 
     // bind default frame buffer
     GLContextScope contextScope(m_context);
@@ -771,6 +772,10 @@ void WebGLRenderingContext::copyTexImage2D(GLenum target, GLint level,
 
     m_gl->copyTexImage2D(target, level, internalformat, x, y, width, height,
                          border);
+    if (texture && !hasNewGLError()) {
+        texture->setImageLevelInfo(target, level, internalformat, width, height,
+                                   1);
+    }
 }
 
 void WebGLRenderingContext::copyTexSubImage2D(GLenum target, GLint level,
@@ -1489,6 +1494,29 @@ void WebGLRenderingContext::generateMipmap(GLenum target)
 {
     ENTER_CONTEXT_SCOPE();
 
+    if (isWebGL2RenderingContext()) {
+        WebGLTexture* texture = getBoundTextureObject(target);
+        if (texture) {
+            GLenum imageTarget = target == GL_TEXTURE_CUBE_MAP
+                                     ? GL_TEXTURE_CUBE_MAP_POSITIVE_X
+                                     : target;
+            const TextureImageLevelInfo* info =
+                texture->getImageLevelInfo(imageTarget, texture->baseLevel());
+            if (info && info->isDefined) {
+                GLenum fmt = info->internalFormat;
+                bool isFloat32 = (fmt == GL_RGBA32F || fmt == GL_RGB32F ||
+                                  fmt == GL_RG32F || fmt == GL_R32F);
+                if (isFloat32 &&
+                    !isExtensionEnabled("OES_texture_float_linear")) {
+                    setGLError(GL_INVALID_OPERATION,
+                               "generateMipmap: float texture not filterable "
+                               "without OES_texture_float_linear");
+                    return;
+                }
+            }
+        }
+    }
+
     m_gl->generateMipmap(target);
 }
 
@@ -1861,8 +1889,8 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
     case GL_COMPRESSED_TEXTURE_FORMATS: {
         STARFISH_ASSERT(WebGLExtensionRegistry::instance()
                             .hasTextureCompressionExtension() == false);
-        return createTypedArray<Int32ArrayObjectRef>(scriptBindingInstance(),
-                                                     std::vector<int>());
+        return createTypedArray<Uint32ArrayObjectRef>(scriptBindingInstance(),
+                                                      std::vector<uint32_t>());
     }
     default:
         STARFISH_UNSUPPORTED("pname: 0x%04X(%s)", pname, __PRETTY_FUNCTION__);
@@ -2277,8 +2305,13 @@ String* WebGLRenderingContext::getShaderSource(WebGLShader* shader)
 
 WebGLTexture* WebGLRenderingContext::getBoundTextureObject(GLenum target) const
 {
+    GLenum bindTarget = target;
+    if (target >= GL_TEXTURE_CUBE_MAP_POSITIVE_X &&
+        target <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z) {
+        bindTarget = GL_TEXTURE_CUBE_MAP;
+    }
     auto it = m_boundTextureObjects.find(
-        textureBindingKey(m_activeTextureUnit, target));
+        textureBindingKey(m_activeTextureUnit, bindTarget));
     if (it != m_boundTextureObjects.end()) {
         return it->second;
     }
@@ -4459,6 +4492,11 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
             m_gl->texImage2D(target, level, internalFormat, width, height, 0,
                              format, type, blackData.data());
         });
+
+    if (texture && !hasNewGLError()) {
+        texture->setImageLevelInfo(target, level, internalFormat, width, height,
+                                   1);
+    }
 }
 
 void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
@@ -4509,6 +4547,12 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
                 target, level, helper->dataFormat().valueOr(internalFormat),
                 helper->sourceImage().width, helper->sourceImage().height, 0,
                 helper->dataFormat().valueOr(format), type, helper->data());
+            if (texture && !hasNewGLError()) {
+                texture->setImageLevelInfo(
+                    target, level, helper->dataFormat().valueOr(internalFormat),
+                    helper->sourceImage().width, helper->sourceImage().height,
+                    1);
+            }
         });
 }
 
