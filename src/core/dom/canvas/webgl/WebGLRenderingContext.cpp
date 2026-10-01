@@ -93,6 +93,7 @@ WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
     m_unpackFlipY = false;
     m_unpackPremultiplyAlpha = false;
     m_unpackColorspaceConversion = kBROWSER_DEFAULT_WEBGL;
+    m_activeTextureUnit = GL_TEXTURE0;
     m_isContextLost = false;
     m_hasPendingJobsBetweenFrames = false;
     m_pendingClearMask = 0;
@@ -411,7 +412,8 @@ Optional<GCVector<String*>> WebGLRenderingContext::getSupportedExtensions()
 {
     ENTER_CONTEXT_SCOPE(Optional<GCVector<String*>>());
 
-    return WebGLExtensionRegistry::instance().getSupportedExtensions();
+    return WebGLExtensionRegistry::instance().getSupportedExtensions(
+        isWebGL2RenderingContext());
 }
 
 bool WebGLRenderingContext::isContextLost()
@@ -438,7 +440,8 @@ Optional<ScriptObject> WebGLRenderingContext::getExtension(
     }
 
     Optional<ExtensionGenerator> maybeGenerator =
-        WebGLExtensionRegistry::instance().getGenerator(name);
+        WebGLExtensionRegistry::instance().getGenerator(
+            name, isWebGL2RenderingContext());
 
     if (!maybeGenerator.hasValue()) {
         return Optional<ScriptObject>();
@@ -454,6 +457,12 @@ void WebGLRenderingContext::activeTexture(GLenum texture)
     ENTER_CONTEXT_SCOPE();
 
     m_gl->activeTexture(texture);
+
+    if (!hasNewGLError()) {
+        // Texture bindings are per unit; TEXTURE_BINDING_2D and friends must
+        // report the object bound to the unit selected here.
+        m_activeTextureUnit = texture;
+    }
 }
 
 void WebGLRenderingContext::attachShader(WebGLProgram* program,
@@ -572,8 +581,10 @@ void WebGLRenderingContext::bindRenderbuffer(
         }
 
         m_gl->bindRenderbuffer(target, renderBuffer->glObject());
+        m_boundRenderbuffer = renderBuffer;
     } else {
         m_gl->bindRenderbuffer(target, 0);
+        m_boundRenderbuffer.reset();
     }
 }
 
@@ -597,11 +608,13 @@ void WebGLRenderingContext::bindTexture(GLenum target,
 
         m_gl->bindTexture(target, texture->glObject());
         m_boundTextures[target] = texture->glObject();
-        m_boundTextureObjects[target] = texture;
+        m_boundTextureObjects[textureBindingKey(m_activeTextureUnit, target)] =
+            texture;
     } else {
         m_gl->bindTexture(target, 0);
         m_boundTextures.erase(target);
-        m_boundTextureObjects.erase(target);
+        m_boundTextureObjects.erase(
+            textureBindingKey(m_activeTextureUnit, target));
     }
 }
 
@@ -968,6 +981,204 @@ void WebGLRenderingContext::disableVertexAttribArray(GLuint index)
     getState()->disableVertexAttribArray(index);
 }
 
+bool WebGLRenderingContext::isValidDrawMode(GLenum mode)
+{
+    return mode == GL_POINTS || mode == GL_LINE_STRIP || mode == GL_LINE_LOOP ||
+           mode == GL_LINES || mode == GL_TRIANGLE_STRIP ||
+           mode == GL_TRIANGLE_FAN || mode == GL_TRIANGLES;
+}
+
+void WebGLRenderingContext::vertexAttribDivisor(GLuint index, GLuint divisor)
+{
+    ENTER_CONTEXT_SCOPE();
+    m_gl->vertexAttribDivisor(index, divisor);
+}
+
+bool WebGLRenderingContext::hasOnlyNonZeroAttribDivisors()
+{
+    // Only arrays the program actually reads matter: an array can be left
+    // enabled at a location this program does not use, and counting it would
+    // reject a legal draw.
+    GLint program = getCurrentProgram();
+    if (!program) {
+        return false;
+    }
+
+    GLint activeAttribCount = 0;
+    m_gl->getProgramiv(program, GL_ACTIVE_ATTRIBUTES, &activeAttribCount);
+    if (activeAttribCount <= 0) {
+        return false;
+    }
+
+    GLint maxNameLength = 0;
+    m_gl->getProgramiv(program, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &maxNameLength);
+    if (maxNameLength <= 0) {
+        return false;
+    }
+    std::vector<char> name(static_cast<size_t>(maxNameLength) + 1);
+
+    bool sawEnabledArray = false;
+    for (GLint i = 0; i < activeAttribCount; ++i) {
+        GLsizei nameLength = 0;
+        GLint size = 0;
+        GLenum type = 0;
+        m_gl->getActiveAttrib(program, static_cast<GLuint>(i), maxNameLength,
+                              &nameLength, &size, &type, name.data());
+        name[static_cast<size_t>(nameLength)] = '\0';
+
+        int location = m_gl->getAttribLocation(program, name.data());
+        if (location < 0) {
+            // Built-ins such as gl_VertexID have no array behind them.
+            continue;
+        }
+
+        GLint enabled = 0;
+        m_gl->getVertexAttribiv(static_cast<GLuint>(location),
+                                GL_VERTEX_ATTRIB_ARRAY_ENABLED, &enabled);
+        if (!enabled) {
+            continue;
+        }
+
+        GLint divisor = 0;
+        m_gl->getVertexAttribiv(static_cast<GLuint>(location),
+                                GL_VERTEX_ATTRIB_ARRAY_DIVISOR, &divisor);
+        if (divisor == 0) {
+            return false;
+        }
+        sawEnabledArray = true;
+    }
+    return sawEnabledArray;
+}
+
+bool WebGLRenderingContext::hasEnoughElementArrayData(GLsizei count,
+                                                      GLenum type,
+                                                      GLintptr offset)
+{
+    int64_t indexSize = 0;
+    switch (type) {
+    case GL_UNSIGNED_BYTE:
+        indexSize = 1;
+        break;
+    case GL_UNSIGNED_SHORT:
+        indexSize = 2;
+        break;
+    case GL_UNSIGNED_INT:
+        indexSize = 4;
+        break;
+    default:
+        // An unknown type is GL's to reject.
+        return true;
+    }
+
+    Optional<WebGLBuffer*> elementBuffer =
+        getState()->getBoundBuffer(GL_ELEMENT_ARRAY_BUFFER);
+    if (!elementBuffer.hasValue() || !elementBuffer.value()) {
+        // The missing binding is reported separately.
+        return true;
+    }
+
+    // count is a GLsizei, so the byte count needs the wider type.
+    int64_t needed = static_cast<int64_t>(count) * indexSize;
+    return static_cast<int64_t>(offset) + needed <=
+           static_cast<int64_t>(elementBuffer.value()->byteLength());
+}
+
+void WebGLRenderingContext::drawArraysInstanced(GLenum mode, GLint first,
+                                                GLsizei count,
+                                                GLsizei instanceCount)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (!isValidDrawMode(mode)) {
+        setGLError(GL_INVALID_ENUM, "invalid draw mode");
+        return;
+    }
+
+    if (first < 0 || count < 0 || instanceCount < 0) {
+        setGLError(GL_INVALID_VALUE, "negative count or offset");
+        return;
+    }
+
+    // ANGLE_instanced_arrays keeps the ES 2.0 rule that something must still
+    // advance per vertex; ES 3.0 dropped it, so WebGL 2 allows this draw.
+    if (!isWebGL2RenderingContext() && hasOnlyNonZeroAttribDivisors()) {
+        setGLError(GL_INVALID_OPERATION,
+                   "all enabled vertex attribute arrays have a non-zero "
+                   "divisor");
+        return;
+    }
+
+    completePendingJobs();
+    if (!validateDrawCallUBO())
+        return;
+    m_gl->drawArraysInstanced(mode, first, count, instanceCount);
+    m_ownerHTMLCanvasElement->setNeedsComposite();
+}
+
+void WebGLRenderingContext::drawElementsInstanced(GLenum mode, GLsizei count,
+                                                  GLenum type, GLintptr offset,
+                                                  GLsizei instanceCount)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (!isValidDrawMode(mode)) {
+        setGLError(GL_INVALID_ENUM, "invalid draw mode");
+        return;
+    }
+
+    if (type != GL_UNSIGNED_BYTE && type != GL_UNSIGNED_SHORT &&
+        type != GL_UNSIGNED_INT) {
+        setGLError(GL_INVALID_ENUM, "invalid type");
+        return;
+    }
+
+    if (count < 0 || offset < 0 || instanceCount < 0) {
+        setGLError(GL_INVALID_VALUE, "negative count or offset");
+        return;
+    }
+
+    if ((type == GL_UNSIGNED_SHORT && (offset % 2) != 0) ||
+        (type == GL_UNSIGNED_INT && (offset % 4) != 0)) {
+        setGLError(GL_INVALID_OPERATION, "offset not properly aligned");
+        return;
+    }
+
+    // ANGLE_instanced_arrays keeps the ES 2.0 rule that something must still
+    // advance per vertex; ES 3.0 dropped it, so WebGL 2 allows this draw.
+    if (!isWebGL2RenderingContext() && hasOnlyNonZeroAttribDivisors()) {
+        setGLError(GL_INVALID_OPERATION,
+                   "all enabled vertex attribute arrays have a non-zero "
+                   "divisor");
+        return;
+    }
+
+    if (count > 0) {
+        Optional<WebGLBuffer*> elementBuffer =
+            getState()->getBoundBuffer(GL_ELEMENT_ARRAY_BUFFER);
+        if (!elementBuffer.hasValue() || !elementBuffer.value()) {
+            setGLError(GL_INVALID_OPERATION,
+                       "drawElementsInstanced: no buffer bound to "
+                       "ELEMENT_ARRAY_BUFFER");
+            return;
+        }
+    }
+
+    if (!hasEnoughElementArrayData(count, type, offset)) {
+        setGLError(GL_INVALID_OPERATION,
+                   "drawElementsInstanced: indices reach past "
+                   "ELEMENT_ARRAY_BUFFER");
+        return;
+    }
+
+    completePendingJobs();
+    if (!validateDrawCallUBO())
+        return;
+    m_gl->drawElementsInstanced(mode, count, type,
+                                reinterpret_cast<const void*>(offset),
+                                instanceCount);
+    m_ownerHTMLCanvasElement->setNeedsComposite();
+}
+
 void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
 {
     ENTER_CONTEXT_SCOPE();
@@ -1073,6 +1284,12 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
         // If the CURRENT_PROGRAM is null, an INVALID_OPERATION error will be
         // generated.
         setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    if (!hasEnoughElementArrayData(count, type, offset)) {
+        setGLError(GL_INVALID_OPERATION,
+                   "drawElements: indices reach past ELEMENT_ARRAY_BUFFER");
         return;
     }
 
@@ -1401,7 +1618,25 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         m_gl->getIntegerv(pname, &values[0]);
         return ValueRef::create(values[0]);
     }
+    // GLuint
+    case GL_STENCIL_BACK_VALUE_MASK:
+    case GL_STENCIL_BACK_WRITEMASK:
+    case GL_STENCIL_VALUE_MASK:
+    case GL_STENCIL_WRITEMASK: {
+        GLint value = 0;
+        m_gl->getIntegerv(pname, &value);
+        return createScriptValue(static_cast<uint32_t>(value));
+    }
     // GLfloat
+    case GL_DEPTH_CLEAR_VALUE:
+    case GL_LINE_WIDTH:
+    case GL_POLYGON_OFFSET_FACTOR:
+    case GL_POLYGON_OFFSET_UNITS:
+    case GL_SAMPLE_COVERAGE_VALUE: {
+        GLfloat value = 0;
+        m_gl->getFloatv(pname, &value);
+        return createScriptValue(value);
+    }
     case GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT: {
         if (!isExtensionEnabled("EXT_texture_filter_anisotropic")) {
             setGLError(GL_INVALID_ENUM);
@@ -1476,7 +1711,66 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
                         (static_cast<GLuint>(value) == buffer->glObject()));
         return buffer ? buffer->scriptValue() : scriptNull();
     }
+    // WebGLTexture
+    case GL_TEXTURE_BINDING_2D:
+    case GL_TEXTURE_BINDING_CUBE_MAP: {
+        GLint value = 0;
+        m_gl->getIntegerv(pname, &value);
+        if (value == 0) {
+            return scriptNull();
+        }
+        WebGLTexture* texture = getBoundTextureObject(
+            pname == GL_TEXTURE_BINDING_2D ? GL_TEXTURE_2D
+                                           : GL_TEXTURE_CUBE_MAP);
+        // The engine binds textures of its own on this context, so trust GL
+        // over the tracked object when the two disagree.
+        if (texture == nullptr || texture->isDeleted() ||
+            static_cast<GLint>(texture->glObject()) != value) {
+            return scriptNull();
+        }
+        return texture->scriptValue();
+    }
+    // WebGLRenderbuffer
+    case GL_RENDERBUFFER_BINDING: {
+        GLint value = 0;
+        m_gl->getIntegerv(pname, &value);
+        if (value == 0 || !m_boundRenderbuffer.hasValue() ||
+            m_boundRenderbuffer.value()->isDeleted() ||
+            static_cast<GLint>(m_boundRenderbuffer.value()->glObject()) !=
+                value) {
+            return scriptNull();
+        }
+        return m_boundRenderbuffer.value()->scriptValue();
+    }
     // GLenum
+    case GL_ACTIVE_TEXTURE:
+    case GL_BLEND_DST_ALPHA:
+    case GL_BLEND_DST_RGB:
+    // GL_BLEND_EQUATION_RGB and GL_BLEND_EQUATION are the same enum.
+    case GL_BLEND_EQUATION_RGB:
+    case GL_BLEND_EQUATION_ALPHA:
+    case GL_BLEND_SRC_ALPHA:
+    case GL_BLEND_SRC_RGB:
+    case GL_CULL_FACE_MODE:
+    case GL_DEPTH_FUNC:
+    case GL_FRONT_FACE:
+    case GL_GENERATE_MIPMAP_HINT:
+    case GL_STENCIL_BACK_FAIL:
+    case GL_STENCIL_BACK_FUNC:
+    case GL_STENCIL_BACK_PASS_DEPTH_FAIL:
+    case GL_STENCIL_BACK_PASS_DEPTH_PASS:
+    case GL_STENCIL_FAIL:
+    case GL_STENCIL_FUNC:
+    case GL_STENCIL_PASS_DEPTH_FAIL:
+    case GL_STENCIL_PASS_DEPTH_PASS: {
+        GLint value = 0;
+        m_gl->getIntegerv(pname, &value);
+        return createScriptValue(static_cast<uint32_t>(value));
+    }
+    case kUNPACK_COLORSPACE_CONVERSION_WEBGL: {
+        return createScriptValue(
+            static_cast<uint32_t>(m_unpackColorspaceConversion));
+    }
     case kIMPLEMENTATION_COLOR_READ_TYPE: {
         GLint readType = GL_UNSIGNED_BYTE;
         m_gl->getIntegerv(kIMPLEMENTATION_COLOR_READ_TYPE, &readType);
@@ -1520,6 +1814,34 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
     case kUNPACK_PREMULTIPLY_ALPHA_WEBGL: {
         return createScriptValue(m_unpackPremultiplyAlpha);
     }
+    // sequence<GLboolean> (with 4 elements)
+    case GL_COLOR_WRITEMASK: {
+        std::vector<GLboolean> values(4);
+        m_gl->getBooleanv(pname, &values[0]);
+        std::vector<bool> mask;
+        mask.reserve(values.size());
+        for (GLboolean value : values) {
+            mask.push_back(static_cast<bool>(value));
+        }
+        return createArray(scriptBindingInstance(), mask);
+    }
+    // Float32Array (with 2 elements)
+    case GL_ALIASED_LINE_WIDTH_RANGE:
+    case GL_ALIASED_POINT_SIZE_RANGE:
+    case GL_DEPTH_RANGE: {
+        std::vector<GLfloat> values(2);
+        m_gl->getFloatv(pname, &values[0]);
+        return createTypedArray<Float32ArrayObjectRef>(scriptBindingInstance(),
+                                                       values);
+    }
+    // Float32Array (with 4 elements)
+    case GL_BLEND_COLOR:
+    case GL_COLOR_CLEAR_VALUE: {
+        std::vector<GLfloat> values(4);
+        m_gl->getFloatv(pname, &values[0]);
+        return createTypedArray<Float32ArrayObjectRef>(scriptBindingInstance(),
+                                                       values);
+    }
     // Int32Array (with 2 elements)
     case GL_MAX_VIEWPORT_DIMS: {
         std::vector<int> values(2);
@@ -1544,6 +1866,10 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
     }
     default:
         STARFISH_UNSUPPORTED("pname: 0x%04X(%s)", pname, __PRETTY_FUNCTION__);
+        // An unknown pname is an INVALID_ENUM, not a silent null: content that
+        // reads the result (`getParameter(p).toString()`) must see the error
+        // rather than a TypeError.
+        setGLError(GL_INVALID_ENUM);
         return scriptNull();
     }
     return scriptNull();
@@ -1951,7 +2277,8 @@ String* WebGLRenderingContext::getShaderSource(WebGLShader* shader)
 
 WebGLTexture* WebGLRenderingContext::getBoundTextureObject(GLenum target) const
 {
-    auto it = m_boundTextureObjects.find(target);
+    auto it = m_boundTextureObjects.find(
+        textureBindingKey(m_activeTextureUnit, target));
     if (it != m_boundTextureObjects.end()) {
         return it->second;
     }
@@ -2311,6 +2638,18 @@ ScriptValue WebGLRenderingContext::getVertexAttrib(GLuint index, GLenum pname)
         GLint value = 0;
         m_gl->getVertexAttribiv(index, pname, &value);
         return ValueRef::create(value == 1 ? true : false);
+    }
+    case GL_VERTEX_ATTRIB_ARRAY_DIVISOR: {
+        // GL_VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE: core in WebGL 2, only
+        // readable through the extension in WebGL 1.
+        if (!isWebGL2RenderingContext() &&
+            !isExtensionEnabled("ANGLE_instanced_arrays")) {
+            setGLError(GL_INVALID_ENUM);
+            return scriptNull();
+        }
+        GLint value = 0;
+        m_gl->getVertexAttribiv(index, pname, &value);
+        return ValueRef::create(value);
     }
     default:
         setGLError(GL_INVALID_ENUM);

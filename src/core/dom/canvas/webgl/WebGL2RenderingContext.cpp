@@ -434,6 +434,23 @@ Optional<ScriptValue> WebGL2RenderingContext::getParameterImpl(GLenum pname)
         STARFISH_ASSERT(static_cast<GLint>(maybe.value()->glObject()) == value);
         return maybe.value()->scriptValue();
     }
+    // WebGLTexture
+    case GL_TEXTURE_BINDING_3D:
+    case GL_TEXTURE_BINDING_2D_ARRAY: {
+        GLint value = 0;
+        gl()->getIntegerv(pname, &value);
+        if (value == 0) {
+            return scriptNull();
+        }
+        WebGLTexture* texture = getBoundTextureObject(
+            pname == GL_TEXTURE_BINDING_3D ? GL_TEXTURE_3D
+                                           : GL_TEXTURE_2D_ARRAY);
+        if (texture == nullptr || texture->isDeleted() ||
+            static_cast<GLint>(texture->glObject()) != value) {
+            return scriptNull();
+        }
+        return texture->scriptValue();
+    }
     // WebGLBuffer
     case GL_COPY_READ_BUFFER_BINDING:
     case GL_COPY_WRITE_BUFFER_BINDING:
@@ -2106,79 +2123,6 @@ void WebGL2RenderingContext::shaderSource(WebGLShader* shader, String* source)
 
     const char* sourceArray[1] = { str.c_str() };
     gl()->shaderSource(shader->glObject(), 1, sourceArray, nullptr);
-}
-
-void WebGL2RenderingContext::vertexAttribDivisor(GLuint index, GLuint divisor)
-{
-    ENTER_CONTEXT_SCOPE();
-    gl()->vertexAttribDivisor(index, divisor);
-}
-
-static bool isValidDrawMode(GLenum mode)
-{
-    return mode == GL_POINTS || mode == GL_LINE_STRIP || mode == GL_LINE_LOOP ||
-           mode == GL_LINES || mode == GL_TRIANGLE_STRIP ||
-           mode == GL_TRIANGLE_FAN || mode == GL_TRIANGLES;
-}
-
-void WebGL2RenderingContext::drawArraysInstanced(GLenum mode, GLint first,
-                                                 GLsizei count,
-                                                 GLsizei instanceCount)
-{
-    ENTER_CONTEXT_SCOPE();
-
-    if (!isValidDrawMode(mode)) {
-        setGLError(GL_INVALID_ENUM, "invalid draw mode");
-        return;
-    }
-
-    if (first < 0 || count < 0 || instanceCount < 0) {
-        setGLError(GL_INVALID_VALUE, "negative count or offset");
-        return;
-    }
-
-    completePendingJobs();
-    if (!validateDrawCallUBO())
-        return;
-    gl()->drawArraysInstanced(mode, first, count, instanceCount);
-    m_ownerHTMLCanvasElement->setNeedsComposite();
-}
-
-void WebGL2RenderingContext::drawElementsInstanced(GLenum mode, GLsizei count,
-                                                   GLenum type, GLintptr offset,
-                                                   GLsizei instanceCount)
-{
-    ENTER_CONTEXT_SCOPE();
-
-    if (!isValidDrawMode(mode)) {
-        setGLError(GL_INVALID_ENUM, "invalid draw mode");
-        return;
-    }
-
-    if (type != GL_UNSIGNED_BYTE && type != GL_UNSIGNED_SHORT &&
-        type != GL_UNSIGNED_INT) {
-        setGLError(GL_INVALID_ENUM, "invalid type");
-        return;
-    }
-
-    if (count < 0 || offset < 0 || instanceCount < 0) {
-        setGLError(GL_INVALID_VALUE, "negative count or offset");
-        return;
-    }
-
-    if ((type == GL_UNSIGNED_SHORT && (offset % 2) != 0) ||
-        (type == GL_UNSIGNED_INT && (offset % 4) != 0)) {
-        setGLError(GL_INVALID_OPERATION, "offset not properly aligned");
-        return;
-    }
-
-    completePendingJobs();
-    if (!validateDrawCallUBO())
-        return;
-    gl()->drawElementsInstanced(mode, count, type,
-                                reinterpret_cast<const void*>(offset),
-                                instanceCount);
-    m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
 void WebGL2RenderingContext::drawRangeElements(GLenum mode, GLuint start,

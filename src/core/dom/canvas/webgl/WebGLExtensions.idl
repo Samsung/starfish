@@ -36,9 +36,17 @@ interface EXT_texture_filter_anisotropic {
 [STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), LegacyNoInterfaceObject]
 interface OES_texture_float_linear { };
 
+// 10. OES_element_index_uint
+[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), LegacyNoInterfaceObject]
+interface OES_element_index_uint { };
+
 // 25. EXT_blend_minmax
 [STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), LegacyNoInterfaceObject]
 interface EXT_blend_minmax {
   const GLenum MIN_EXT = 0x8007;
   const GLenum MAX_EXT = 0x8008;
 };
+
+// 31. EXT_color_buffer_float (WebGL 2 only)
+[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), LegacyNoInterfaceObject]
+interface EXT_color_buffer_float { };

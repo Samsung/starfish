@@ -189,6 +189,12 @@ public:
     void disableVertexAttribArray(GLuint index);
     void drawArrays(GLenum mode, GLint first, GLsizei count);
     void drawElements(GLenum mode, GLsizei count, GLenum type, GLintptr offset);
+    // Core in WebGL 2, reached through ANGLE_instanced_arrays in WebGL 1.
+    void vertexAttribDivisor(GLuint index, GLuint divisor);
+    void drawArraysInstanced(GLenum mode, GLint first, GLsizei count,
+                             GLsizei instanceCount);
+    void drawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
+                               GLintptr offset, GLsizei instanceCount);
     void enable(GLenum cap);
     void enableVertexAttribArray(GLuint index);
     void finish();
@@ -344,6 +350,7 @@ public:
     FILL_GC_POINTER(WebGLRenderingContext, m_state);
     FILL_GC_POINTER(WebGLRenderingContext, m_unpackColorSpace);
     FILL_GC_POINTER(WebGLRenderingContext, m_drawingBufferColorSpace);
+    FILL_GC_POINTER(WebGLRenderingContext, m_boundRenderbuffer);
     FILL_GC_COLLECTION(WebGLRenderingContext, m_enabledExtensions);
     FILL_GC_COLLECTION(WebGLRenderingContext, m_boundTextureObjects);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
@@ -396,6 +403,14 @@ protected:
     bool hasBoundTexture(GLenum target) const;
     WebGLTexture* getBoundTextureObject(GLenum target) const;
 
+    // A texture binding is identified by the texture unit it was made on and
+    // the target it was made to.
+    static uint64_t textureBindingKey(GLenum unit, GLenum target)
+    {
+        return (static_cast<uint64_t>(unit) << 32) |
+               static_cast<uint64_t>(target);
+    }
+
     GLenum getUniformType(WebGLProgram* program,
                           WebGLUniformLocation* location);
     Optional<ScriptValue> getUniformImpl(WebGLProgram* program,
@@ -434,6 +449,13 @@ protected:
     GLErrorSet m_GLErrors;
     GLint getCurrentProgram();
     void completePendingJobs();
+    static bool isValidDrawMode(GLenum mode);
+    // True when every enabled attribute array advances per instance, which an
+    // instanced draw is not allowed to do under ANGLE_instanced_arrays.
+    bool hasOnlyNonZeroAttribDivisors();
+    // Whether the buffer bound to ELEMENT_ARRAY_BUFFER actually holds the
+    // indices a draw asks for. Reading past it crashes some drivers.
+    bool hasEnoughElementArrayData(GLsizei count, GLenum type, GLintptr offset);
 
     bool hasDepthBuffer() const
     {
@@ -446,7 +468,9 @@ protected:
 
 private:
     GLTextureMap m_boundTextures;
-    GCUnorderedMap<GLenum, WebGLTexture*> m_boundTextureObjects;
+    // Keyed by textureBindingKey(unit, target).
+    GCUnorderedMap<uint64_t, WebGLTexture*> m_boundTextureObjects;
+    GLenum m_activeTextureUnit;
     bool m_unpackFlipY;
     bool m_unpackPremultiplyAlpha;
     GLenum m_unpackColorspaceConversion;
@@ -458,6 +482,7 @@ private:
     WebGLRenderingContextState* m_state;
     String* m_unpackColorSpace;
     String* m_drawingBufferColorSpace;
+    Optional<WebGLRenderbuffer*> m_boundRenderbuffer;
     GLExtensionMap m_enabledExtensions;
 };
 } // namespace Starfish
