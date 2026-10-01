@@ -489,6 +489,23 @@ Optional<ScriptValue> WebGL2RenderingContext::getParameterImpl(GLenum pname)
         }
         return scriptNull();
     }
+    case GL_READ_FRAMEBUFFER_BINDING: {
+        if (!m_readFramebuffer.hasValue() ||
+            m_readFramebuffer.value()->isDeleted()) {
+            return scriptNull();
+        }
+        return m_readFramebuffer.value()->scriptValue();
+    }
+    case GL_DRAW_FRAMEBUFFER_BINDING: {
+        if (!m_drawFramebuffer.hasValue() ||
+            m_drawFramebuffer.value()->isDeleted()) {
+            return scriptNull();
+        }
+        return m_drawFramebuffer.value()->scriptValue();
+    }
+    case GL_SAMPLER_BINDING:
+    case GL_TRANSFORM_FEEDBACK_BINDING:
+        return scriptNull();
     default:
         break;
     }
@@ -892,6 +909,16 @@ void WebGL2RenderingContext::texParameterf(GLenum target, GLenum pname,
     }
 
     gl()->texParameterf(target, pname, param);
+    if (!hasNewGLError()) {
+        WebGLTexture* texture = getBoundTextureObject(target);
+        if (texture) {
+            if (pname == GL_TEXTURE_BASE_LEVEL) {
+                texture->setBaseLevel(static_cast<GLint>(param));
+            } else if (pname == GL_TEXTURE_MAX_LEVEL) {
+                texture->setMaxLevel(static_cast<GLint>(param));
+            }
+        }
+    }
 }
 
 void WebGL2RenderingContext::texParameteri(GLenum target, GLenum pname,
@@ -928,6 +955,16 @@ void WebGL2RenderingContext::texParameteri(GLenum target, GLenum pname,
     }
 
     gl()->texParameteri(target, pname, param);
+    if (!hasNewGLError()) {
+        WebGLTexture* texture = getBoundTextureObject(target);
+        if (texture) {
+            if (pname == GL_TEXTURE_BASE_LEVEL) {
+                texture->setBaseLevel(param);
+            } else if (pname == GL_TEXTURE_MAX_LEVEL) {
+                texture->setMaxLevel(param);
+            }
+        }
+    }
 }
 
 // WebGL2RenderingContextBase
@@ -2823,8 +2860,7 @@ void WebGL2RenderingContext::texStorage2D(GLenum target, GLsizei levels,
     gl()->texStorage2D(target, levels, internalformat, width, height);
 
     if (texture && !hasNewGLError()) {
-        texture->setImmutable(true);
-        texture->setSize(width, height);
+        texture->setStorage2D(target, levels, internalformat, width, height);
     }
 }
 
@@ -2879,7 +2915,8 @@ void WebGL2RenderingContext::texStorage3D(GLenum target, GLsizei levels,
     gl()->texStorage3D(target, levels, internalformat, width, height, depth);
 
     if (texture && !hasNewGLError()) {
-        texture->setImmutable(true);
+        texture->setStorage3D(target, levels, internalformat, width, height,
+                              depth);
     }
 }
 
@@ -2931,6 +2968,10 @@ void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
 
     gl()->texImage2D(target, level, internalformat, width, height, border,
                      format, type, reinterpret_cast<const void*>(pboOffset));
+    if (texture && !hasNewGLError()) {
+        texture->setImageLevelInfo(target, level, internalformat, width, height,
+                                   1);
+    }
 }
 
 void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
@@ -2941,6 +2982,7 @@ void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
 {
     ENTER_CONTEXT_SCOPE();
 
+    WebGLTexture* texture = getBoundTextureObject(target);
     if (!hasBoundTexture(target)) {
         setGLError(
             GL_INVALID_OPERATION,
@@ -2973,6 +3015,11 @@ void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
                 helper->data());
         },
         0, skipPixels, skipRows, width, height, 1, 0);
+
+    if (texture && !hasNewGLError()) {
+        texture->setImageLevelInfo(target, level, internalformat, width, height,
+                                   1);
+    }
 }
 
 void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
@@ -3022,6 +3069,11 @@ void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
             gl()->texImage2D(target, level, internalformat, width, height, 0,
                              format, type, blackData.data());
         });
+
+    if (texture && !hasNewGLError()) {
+        texture->setImageLevelInfo(target, level, internalformat, width, height,
+                                   1);
+    }
 }
 
 void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
@@ -3055,6 +3107,11 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
     gl()->texImage3D(target, level, internalformat, width, height, depth,
                      border, format, type,
                      reinterpret_cast<const void*>(pboOffset));
+
+    if (texture && !hasNewGLError()) {
+        texture->setImageLevelInfo(target, level, internalformat, width, height,
+                                   depth);
+    }
 }
 
 void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
@@ -3065,6 +3122,7 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
 {
     ENTER_CONTEXT_SCOPE();
 
+    WebGLTexture* texture = getBoundTextureObject(target);
     if (!hasBoundTexture(target)) {
         setGLError(
             GL_INVALID_OPERATION,
@@ -3099,6 +3157,11 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
                 type, helper->data());
         },
         height, skipPixels, skipRows, width, height, depth, imageHeight);
+
+    if (texture && !hasNewGLError()) {
+        texture->setImageLevelInfo(target, level, internalformat, width, height,
+                                   depth);
+    }
 }
 
 void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
@@ -3110,6 +3173,7 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
 {
     ENTER_CONTEXT_SCOPE();
 
+    WebGLTexture* texture = getBoundTextureObject(target);
     if (target != GL_TEXTURE_3D && target != GL_TEXTURE_2D_ARRAY) {
         setGLError(GL_INVALID_ENUM, "target is invalid.");
         return;
@@ -3142,6 +3206,11 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
             gl()->texImage3D(target, level, internalformat, width, height,
                              depth, 0, format, type, blackData.data());
         });
+
+    if (texture && !hasNewGLError()) {
+        texture->setImageLevelInfo(target, level, internalformat, width, height,
+                                   depth);
+    }
 }
 
 void WebGL2RenderingContext::texImage3D(
@@ -3151,6 +3220,7 @@ void WebGL2RenderingContext::texImage3D(
 {
     ENTER_CONTEXT_SCOPE();
 
+    WebGLTexture* texture = getBoundTextureObject(target);
     if (target != GL_TEXTURE_3D && target != GL_TEXTURE_2D_ARRAY) {
         setGLError(GL_INVALID_ENUM, "target is invalid.");
         return;
@@ -3188,6 +3258,11 @@ void WebGL2RenderingContext::texImage3D(
             gl()->texImage3D(target, level, internalformat, width, height,
                              depth, 0, format, type, blackData.data());
         });
+
+    if (texture && !hasNewGLError()) {
+        texture->setImageLevelInfo(target, level, internalformat, width, height,
+                                   depth);
+    }
 }
 
 void WebGL2RenderingContext::texSubImage3D(GLenum target, GLint level,
