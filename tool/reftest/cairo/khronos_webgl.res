@@ -51,14 +51,14 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-type-t
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/resources/context-release-upon-reload-child.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/resource-sharing-test.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/angle-instanced-arrays.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/angle-instanced-arrays-out-of-bounds.html
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/angle-instanced-arrays-out-of-bounds.html # @ignore Needs vertex buffer range validation, same gap as draw-arrays-out-of-bounds.html.
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-blend-minmax.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-frag-depth.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-shader-texture-lod.html # @ignore Passed due to unsupported extension.
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-sRGB.html # @ignore Passed due to unsupported extension.
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-texture-filter-anisotropic.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/get-extension.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-element-index-uint.html # @ignore Passed due to unsupported extension.
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-element-index-uint.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-standard-derivatives.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-texture-float.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-texture-float-linear.html

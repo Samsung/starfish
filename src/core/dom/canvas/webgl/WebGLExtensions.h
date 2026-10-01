@@ -40,6 +40,15 @@ class GL;
 using ExtensionGenerator = std::function<Escargot::ObjectRef*(
     ScriptBindingInstance*, WebGLRenderingContext*)>;
 
+// Some extensions are only defined for one context version: what they add is
+// core in the other one (OES_element_index_uint, ANGLE_instanced_arrays) or
+// does not exist there at all (EXT_color_buffer_float).
+enum class WebGLExtensionAvailability {
+    AnyVersion,
+    WebGL1Only,
+    WebGL2Only,
+};
+
 class WebGLExtensionRegistry {
 public:
     static WebGLExtensionRegistry& instance();
@@ -50,8 +59,9 @@ public:
         return m_isInitialized;
     }
 
-    Optional<ExtensionGenerator> getGenerator(const std::string& name);
-    GCVector<String*> getSupportedExtensions();
+    Optional<ExtensionGenerator> getGenerator(const std::string& name,
+                                              bool isWebGL2);
+    GCVector<String*> getSupportedExtensions(bool isWebGL2);
 
     WebGLExtensionRegistry(const WebGLExtensionRegistry&) = delete;
     WebGLExtensionRegistry(const WebGLExtensionRegistry&&) = delete;
@@ -72,7 +82,24 @@ public:
 private:
     WebGLExtensionRegistry();
 
-    std::unordered_map<std::string, ExtensionGenerator, CaseInsensitiveHash,
+    struct ExtensionEntry {
+        ExtensionGenerator generator;
+        WebGLExtensionAvailability availability;
+
+        bool isAvailableTo(bool isWebGL2) const
+        {
+            switch (availability) {
+            case WebGLExtensionAvailability::WebGL1Only:
+                return !isWebGL2;
+            case WebGLExtensionAvailability::WebGL2Only:
+                return isWebGL2;
+            default:
+                return true;
+            }
+        }
+    };
+
+    std::unordered_map<std::string, ExtensionEntry, CaseInsensitiveHash,
                        CaseInsensitiveEqual>
         m_interfaceGenerators;
 

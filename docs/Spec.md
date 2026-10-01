@@ -2399,7 +2399,9 @@ Apps relying on the right-hand list get **no protection** — the directive is p
 
 `OES_texture_float`, `OES_texture_half_float`, `OES_texture_float_linear`, `OES_standard_derivatives`, `OES_vertex_array_object`, `WEBGL_depth_texture`, `EXT_blend_minmax`, `EXT_texture_filter_anisotropic`.
 
-**Common extensions NOT implemented** (will return `null`): `WEBGL_lose_context`, `WEBGL_debug_renderer_info`, `WEBGL_compressed_texture_*` (s3tc/etc1/astc/pvrtc), `OES_element_index_uint`, `EXT_color_buffer_float`, `ANGLE_instanced_arrays`, `OES_texture_half_float_linear`, `EXT_sRGB`, `KHR_parallel_shader_compile`.
+Version-specific: `OES_element_index_uint` and `ANGLE_instanced_arrays` are exposed to WebGL 1 contexts only (both are core in WebGL 2), and `EXT_color_buffer_float` to WebGL 2 contexts only. All three are also reported when the driver makes the feature core (ES 3.0 / desktop GL 3.x) without advertising the `GL_*` token.
+
+**Common extensions NOT implemented** (will return `null`): `WEBGL_lose_context`, `WEBGL_debug_renderer_info`, `WEBGL_compressed_texture_*` (s3tc/etc1/astc/pvrtc), `OES_texture_half_float_linear`, `EXT_sRGB`, `KHR_parallel_shader_compile`.
 
 ### Performance
 
