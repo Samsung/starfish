@@ -172,11 +172,12 @@ public:
             return RenderResult();
         }
 
-        if (!m_compositorContext) {
-            // calling makeCurrent will create compositor context
-            makeCurrent();
-            STARFISH_ASSERT(m_compositorContext);
-        }
+        // Keep the native binding and WebGL's cached current context in sync.
+        // Embedders may have changed the native binding since the previous
+        // frame, and requestAnimationFrame callbacks below can issue WebGL
+        // commands before another compositor operation calls makeCurrent().
+        makeCurrent();
+        STARFISH_ASSERT(m_compositorContext);
 
         m_compositorContext->willRendering();
         if (m_renderingPrepareCallback) {
