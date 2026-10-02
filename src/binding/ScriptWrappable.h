@@ -37,6 +37,7 @@ class FunctionObjectRef;
 class ArrayObjectRef;
 class ScriptRef;
 class ScriptParserRef;
+class ScriptSourceRef;
 class ExecutionStateRef;
 class ArrayBufferObjectRef;
 class ArrayBufferViewRef;
@@ -81,6 +82,8 @@ class Window;
 class String;
 class Promise;
 class WorkerGlobalScope;
+class TextResource;
+class RawTextResource;
 
 // https://heycam.github.io/webidl/#common-DOMTimeStamp
 typedef uint64_t DOMTimeStamp;
@@ -248,9 +251,30 @@ ScriptValue callHandleNodeFilterFunction(ScriptBindingInstance* instance,
 ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName = String::emptyString,
                            bool* result = nullptr);
+
+ScriptValue evaluateScript(ScriptBindingInstance* instance,
+                           Escargot::ScriptSourceRef* source,
+                           String* fileName = String::emptyString,
+                           bool* result = nullptr);
+
 Optional<ScriptModule> initModule(ScriptBindingInstance* instance,
                                   String* string,
                                   String* fileName = String::emptyString);
+
+Optional<ScriptModule> initModule(ScriptBindingInstance* instance,
+                                  Escargot::ScriptSourceRef* source,
+                                  String* fileName = String::emptyString);
+
+Escargot::ScriptSourceRef* createScriptSource(ScriptBindingInstance* instance,
+                                              String* str);
+Escargot::ScriptSourceRef* createScriptSource(ScriptBindingInstance* instance,
+                                              const char* data, size_t length,
+                                              String* encoding = nullptr);
+Escargot::ScriptSourceRef* createScriptSource(ScriptBindingInstance* instance,
+                                              TextResource* resource);
+Escargot::ScriptSourceRef* createScriptSource(ScriptBindingInstance* instance,
+                                              RawTextResource* resource);
+
 GCVector<String*> moduleRequests(ScriptModule module);
 bool executeModule(ScriptBindingInstance* instance, ScriptModule module);
 bool isExecutableModule(ScriptModule module);

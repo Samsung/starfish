@@ -22,6 +22,9 @@
 #include "binding/ScriptWrappable.h"
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptEngineInstance.h"
+#include "core/util/TextConverter.h"
+#include "platform/loader/TextResource.h"
+#include "platform/loader/RawTextResource.h"
 
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/ErrorEvent.h"
@@ -1490,12 +1493,11 @@ static void initDebuggerIfNeeds(ScriptBindingInstance* instance)
 }
 
 static Escargot::ScriptParserRef::InitializeScriptResult initializeScript(
-    ScriptBindingInstance* instance, String* string, String* fileName,
-    bool isModule)
+    ScriptBindingInstance* instance, Escargot::ScriptSourceRef* source,
+    String* fileName, bool isModule)
 {
     ContextRef* ctx = instance->scriptContext();
 #if defined(STARFISH_ENABLE_DEBUGGER)
-    StringRef* source = toJSString(string);
     std::string fileNameForDebugger;
 
     if (fileName->length()) {
@@ -1514,20 +1516,140 @@ static Escargot::ScriptParserRef::InitializeScriptResult initializeScript(
                                     fileNameForDebugger.length())),
         isModule);
 #else
-    StringRef* source;
-    if (StringRef::isCompressibleStringEnabled() &&
-        string->length() > 1024 * 512) {
-        source = createCompressibleScriptString(ctx->vmInstance(), string);
-    } else {
-        source = toJSString(string);
-    }
     return ctx->scriptParser()->initializeScript(source, toJSString(fileName),
                                                  isModule);
 #endif
 }
 
-ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
-                           String* fileName, bool* result)
+Escargot::ScriptSourceRef* createScriptSource(ScriptBindingInstance* instance,
+                                              String* str)
+{
+    if (UNLIKELY(!str || str->isEmpty())) {
+        return Escargot::ScriptSourceRef::createFromASCII("", 0);
+    }
+    auto data = str->bufferAccessData();
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
+        return Escargot::ScriptSourceRef::createFromASCII(data.asciiData(),
+                                                          data.length);
+    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+        // For large scripts (> 512KB), convert to UTF-8 so Escargot can stream
+        // through bounded parser windows and compact the source afterwards
+        // instead of retaining full UTF-16 in memory.
+        if (str->length() > 1024 * 512) {
+            std::string u8 = str->toUTF8NonGCString();
+            return Escargot::ScriptSourceRef::createFromUTF8(u8.data(),
+                                                             u8.length());
+        }
+        return Escargot::ScriptSourceRef::createFromUTF16(data.utf16Data(),
+                                                          data.length);
+    } else {
+        std::string u8 = str->toUTF8NonGCString();
+        return Escargot::ScriptSourceRef::createFromUTF8(u8.data(),
+                                                         u8.length());
+    }
+}
+
+Escargot::ScriptSourceRef* createScriptSource(ScriptBindingInstance* instance,
+                                              const char* data, size_t length,
+                                              String* encoding)
+{
+    if (length == 0) {
+        return Escargot::ScriptSourceRef::createFromASCII("", 0);
+    }
+
+    if (!encoding || encoding->isEmpty()) {
+        if (length >= 3 && (uint8_t)data[0] == 0xEF &&
+            (uint8_t)data[1] == 0xBB && (uint8_t)data[2] == 0xBF) {
+            return Escargot::ScriptSourceRef::createFromUTF8(data + 3,
+                                                             length - 3);
+        }
+        return Escargot::ScriptSourceRef::createFromUTF8(data, length);
+    }
+
+    auto encStr = encoding->toUTF8NonGCString();
+    const char* enc = encStr.c_str();
+
+    if (ucnv_compareNames(enc, "us-ascii") == 0 ||
+        ucnv_compareNames(enc, "ascii") == 0) {
+        return Escargot::ScriptSourceRef::createFromASCII(data, length);
+    }
+
+    if (ucnv_compareNames(enc, "iso-8859-1") == 0 ||
+        ucnv_compareNames(enc, "latin1") == 0 ||
+        ucnv_compareNames(enc, "windows-1252") == 0 ||
+        ucnv_compareNames(enc, "cp1252") == 0 ||
+        ucnv_compareNames(enc, "iso8859-1") == 0) {
+        Escargot::StringRef* str = Escargot::StringRef::createFromLatin1(
+            reinterpret_cast<const unsigned char*>(data), length);
+        return Escargot::ScriptSourceRef::createFromString(str);
+    }
+
+    if (ucnv_compareNames(enc, "utf-8") == 0 ||
+        ucnv_compareNames(enc, "utf8") == 0 ||
+        ucnv_compareNames(enc, "unicode-1-1-utf-8") == 0) {
+        if (length >= 3 && (uint8_t)data[0] == 0xEF &&
+            (uint8_t)data[1] == 0xBB && (uint8_t)data[2] == 0xBF) {
+            return Escargot::ScriptSourceRef::createFromUTF8(data + 3,
+                                                             length - 3);
+        }
+        return Escargot::ScriptSourceRef::createFromUTF8(data, length);
+    }
+
+    if (ucnv_compareNames(enc, "utf-16") == 0 ||
+        ucnv_compareNames(enc, "utf-16le") == 0 ||
+        ucnv_compareNames(enc, "utf-16be") == 0 ||
+        ucnv_compareNames(enc, "utf16") == 0 ||
+        ucnv_compareNames(enc, "ucs-2") == 0) {
+        const char16_t* u16data = reinterpret_cast<const char16_t*>(data);
+        size_t u16len = length / 2;
+        if (length >= 2 && (uint8_t)data[0] == 0xFF &&
+            (uint8_t)data[1] == 0xFE) {
+            u16data++;
+            u16len--;
+        } else if (length >= 2 && (uint8_t)data[0] == 0xFE &&
+                   (uint8_t)data[1] == 0xFF) {
+            goto CONVERT;
+        }
+        return Escargot::ScriptSourceRef::createFromUTF16(u16data, u16len);
+    }
+
+CONVERT:
+    TextConverter converter(encoding);
+    String* converted = converter.convert(data, length, true);
+    return createScriptSource(instance, converted);
+}
+
+Escargot::ScriptSourceRef* createScriptSource(ScriptBindingInstance* instance,
+                                              RawTextResource* resource)
+{
+    if (UNLIKELY(!resource)) {
+        return Escargot::ScriptSourceRef::createFromASCII("", 0);
+    }
+    const std::string& raw = resource->rawData();
+    String* enc = resource->characterEncoding();
+    if (!raw.empty()) {
+        auto* src = createScriptSource(instance, raw.data(), raw.size(), enc);
+        resource->clearRawData();
+        return src;
+    }
+    return createScriptSource(instance, resource->text());
+}
+
+Escargot::ScriptSourceRef* createScriptSource(ScriptBindingInstance* instance,
+                                              TextResource* resource)
+{
+    if (UNLIKELY(!resource)) {
+        return Escargot::ScriptSourceRef::createFromASCII("", 0);
+    }
+    if (resource->isRawTextResource()) {
+        return createScriptSource(instance, resource->asRawTextResource());
+    }
+    return createScriptSource(instance, resource->text());
+}
+
+ScriptValue evaluateScript(ScriptBindingInstance* instance,
+                           Escargot::ScriptSourceRef* source, String* fileName,
+                           bool* result)
 {
     INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kScript,
                                      "evaluate javascript string");
@@ -1546,7 +1668,7 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     size_t parseStart = longTickCount();
 #endif
 
-    auto scriptRef = initializeScript(instance, string, fileName, false);
+    auto scriptRef = initializeScript(instance, source, fileName, false);
     if (!scriptRef.isSuccessful()) {
         STARFISH_LOG_ERROR(
             "Script parse error: %s %s", fileName->toUTF8NonGCString().data(),
@@ -1609,8 +1731,16 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     }
 }
 
+ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
+                           String* fileName, bool* result)
+{
+    return evaluateScript(instance, createScriptSource(instance, string),
+                          fileName, result);
+}
+
 Optional<ScriptModule> initModule(ScriptBindingInstance* instance,
-                                  String* string, String* fileName)
+                                  Escargot::ScriptSourceRef* source,
+                                  String* fileName)
 {
     INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kScript,
                                      "init javascript module");
@@ -1621,7 +1751,7 @@ Optional<ScriptModule> initModule(ScriptBindingInstance* instance,
     size_t parseStart = longTickCount();
 #endif
 
-    auto scriptRef = initializeScript(instance, string, fileName, true);
+    auto scriptRef = initializeScript(instance, source, fileName, true);
     if (!scriptRef.isSuccessful()) {
         STARFISH_LOG_ERROR(
             "Script parse error: %s %s", fileName->toUTF8NonGCString().data(),
@@ -1637,6 +1767,12 @@ Optional<ScriptModule> initModule(ScriptBindingInstance* instance,
     STARFISH_LOG_INFO("js parse %f ms", time);
 #endif
     return scriptRef.script.value();
+}
+
+Optional<ScriptModule> initModule(ScriptBindingInstance* instance,
+                                  String* string, String* fileName)
+{
+    return initModule(instance, createScriptSource(instance, string), fileName);
 }
 
 GCVector<String*> moduleRequests(ScriptModule module)

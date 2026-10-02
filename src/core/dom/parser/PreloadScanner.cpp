@@ -134,7 +134,7 @@ PreloadScanner::PreloadScanner(Document* document, String* source)
                         String::createASCIIStringFromUTF32SourceIfPossible(src),
                         m_document->baseURL()->baseURI());
                     m_preloadedJS.push_back(
-                        m_document->resourceLoader().fetchText(
+                        m_document->resourceLoader().fetchRawText(
                             url,
                             String::createASCIIStringFromUTF32SourceIfPossible(
                                 encoding)));

@@ -28,6 +28,8 @@ namespace Starfish {
 
 class TextResource : public Resource {
     friend class ResourceLoader;
+
+protected:
     TextResource(ResourceURL* url, ResourceLoader* loader,
                  String* preferredEncoding)
         : Resource(url, loader)
@@ -50,19 +52,24 @@ public:
         }
     }
 
-    virtual bool isTextResource()
+    virtual bool isTextResource() override
     {
         return true;
     }
 
-    virtual void didDataReceived(const char* buffer, size_t length);
+    virtual bool isRawTextResource() override
+    {
+        return false;
+    }
 
-    virtual size_t contentSize()
+    virtual void didDataReceived(const char* buffer, size_t length) override;
+
+    virtual size_t contentSize() override
     {
         return m_text->contentLength();
     }
 
-    virtual Type type()
+    virtual Type type() override
     {
         return Type::TextResourceType;
     }

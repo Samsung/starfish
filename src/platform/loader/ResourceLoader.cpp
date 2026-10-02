@@ -73,6 +73,13 @@ TextResource* ResourceLoader::fetchText(ResourceURL* url,
     return res;
 }
 
+RawTextResource* ResourceLoader::fetchRawText(ResourceURL* url,
+                                              String* preferredEncoding)
+{
+    RawTextResource* res = new RawTextResource(url, this, preferredEncoding);
+    return res;
+}
+
 ImageResource* ResourceLoader::fetchImage(ResourceURL* url)
 {
     ImageResource* res = new ImageResource(url, this);

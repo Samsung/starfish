@@ -31,9 +31,12 @@ void TextResource::didDataReceived(const char* buffer, size_t length)
     if (!m_converter) {
         if (m_preferredEncoding->equals(String::emptyString)) {
             m_converter = new TextConverter(
-                m_resourceRequest->responseMimeType(),
-                m_resourceRequest->executionContext()->characterSet(), buffer,
-                length);
+                m_resourceRequest ? m_resourceRequest->responseMimeType()
+                                  : String::emptyString,
+                m_resourceRequest && m_resourceRequest->executionContext()
+                    ? m_resourceRequest->executionContext()->characterSet()
+                    : nullptr,
+                buffer, length);
         } else {
             m_converter = new TextConverter(m_preferredEncoding);
         }
