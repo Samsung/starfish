@@ -215,6 +215,149 @@ static bool parseUnitRepeatStyle(const CSSTokenVector& tokens,
     return true;
 }
 
+static void addMaskCSSValuePairs(CSSStyleDeclaration* target,
+                                 CSSStyleValuePair image,
+                                 CSSStyleValuePair repeatX,
+                                 CSSStyleValuePair repeatY,
+                                 CSSStyleValuePair positionX,
+                                 CSSStyleValuePair positionY,
+                                 CSSStyleValuePair size)
+{
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::MaskImage, image);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::MaskRepeatX, repeatX);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::MaskRepeatY, repeatY);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::MaskPositionX,
+                            positionX);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::MaskPositionY,
+                            positionY);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::MaskSize, size);
+}
+
+// <geometry-box> | no-clip | <compositing-operator> | <masking-mode>
+// There is no longhand for these components yet, so they are accepted
+// (to keep the rest of the shorthand valid) but ignored.
+static bool isIgnorableMaskComponent(const CSSTokenValue& token)
+{
+    return token.equals("border-box") || token.equals("padding-box") ||
+           token.equals("content-box") || token.equals("fill-box") ||
+           token.equals("stroke-box") || token.equals("view-box") ||
+           token.equals("no-clip") || token.equals("add") ||
+           token.equals("subtract") || token.equals("intersect") ||
+           token.equals("exclude") || token.equals("alpha") ||
+           token.equals("luminance") || token.equals("match-source");
+}
+
+static bool parseMaskShorthand(const CSSTokenVector& tokens,
+                               CSSStyleValuePair* image,
+                               CSSStyleValuePair* repeatX,
+                               CSSStyleValuePair* repeatY,
+                               CSSStyleValuePair* positionX,
+                               CSSStyleValuePair* positionY,
+                               CSSStyleValuePair* size)
+{
+    // <mask-layer> = <mask-reference> || <position> [ / <bg-size> ]? ||
+    //                <repeat-style> || <geometry-box> || [ <geometry-box> |
+    //                no-clip ] || <compositing-operator> || <masking-mode>
+    size_t len = tokens.size();
+    if (len < 1) {
+        return false;
+    }
+
+    image->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    repeatX->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    repeatY->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    positionX->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    positionY->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    size->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+
+    bool hasImage = false, hasRepeat = false, hasPosition = false,
+         hasSize = false;
+    bool hasPositionPrev = false, shouldSize = false;
+    CSSStyleValuePair temp, tempX, tempY;
+    CSSTokenVector toks;
+
+    for (size_t i = 0; i < len; i++) {
+        if (hasPositionPrev) {
+            hasPositionPrev = false;
+            if (tokens[i].equals("/")) {
+                shouldSize = true;
+                continue;
+            }
+        }
+        // 1. Verify 2 tokens (current and next token at once)
+        // e.g. mask: top center; -> means mask-position(x:top, y:center)
+        if (i + 1 < len) {
+            toks.clear();
+            toks.push_back(tokens[i]);
+            toks.push_back(tokens[i + 1]);
+            if (shouldSize) {
+                STARFISH_ASSERT(!hasSize);
+                if (temp.updateValueBackgroundSize(toks, false)) {
+                    shouldSize = false;
+                    *size = temp;
+                    hasSize = true;
+                    i++;
+                    continue;
+                }
+            } else if (!hasPosition &&
+                       CSSStyleDeclaration::parseUnitPositionShorthand(
+                           toks, CSSStyleValuePair::KeyKind::MaskPosition,
+                           &tempX, &tempY, false)) {
+                hasPositionPrev = true;
+                *positionX = tempX;
+                *positionY = tempY;
+                hasPosition = true;
+                i++;
+                continue;
+            } else if (!hasRepeat &&
+                       parseUnitRepeatStyle(toks, &tempX, &tempY, false)) {
+                *repeatX = tempX;
+                *repeatY = tempY;
+                hasRepeat = true;
+                i++;
+                continue;
+            }
+        }
+        // 2. Verify single token
+        toks.clear();
+        toks.push_back(tokens[i]);
+        if (shouldSize) {
+            STARFISH_ASSERT(!hasSize);
+            if (temp.updateValueBackgroundSize(toks, false)) {
+                shouldSize = false;
+                *size = temp;
+                hasSize = true;
+                continue;
+            }
+        } else if (!hasImage && temp.updateValueMaskImage(toks, false)) {
+            *image = temp;
+            hasImage = true;
+            continue;
+        } else if (!hasPosition &&
+                   CSSStyleDeclaration::parseUnitPositionShorthand(
+                       toks, CSSStyleValuePair::KeyKind::MaskPosition, &tempX,
+                       &tempY, false)) {
+            hasPositionPrev = true;
+            *positionX = tempX;
+            *positionY = tempY;
+            hasPosition = true;
+            continue;
+        } else if (!hasRepeat &&
+                   parseUnitRepeatStyle(toks, &tempX, &tempY, false)) {
+            *repeatX = tempX;
+            *repeatY = tempY;
+            hasRepeat = true;
+            continue;
+        } else if (isIgnorableMaskComponent(tokens[i])) {
+            continue;
+        }
+
+        return false;
+    }
+
+    return !shouldSize;
+}
+
 static bool parseBackgroundShorthand(
     const CSSTokenVector& tokens, CSSStyleValuePair* color,
     CSSStyleValuePair* image, CSSStyleValuePair* repeatX,
@@ -444,6 +587,63 @@ static String* printBackground(String* image, String* position, String* size,
             builder.appendString(String::spaceString);
         }
         builder.appendString(color);
+    }
+
+    return builder.finalize();
+}
+
+static String* printMask(String* image, String* position, String* size,
+                         String* repeat)
+{
+    const int maxCount = 4;
+    int initialCount = 0, inheritCount = 0;
+    initialCount += (image->equals(String::initialString) ? 1 : 0);
+    initialCount += (position->equals(String::initialString) ? 1 : 0);
+    initialCount += (size->equals(String::initialString) ? 1 : 0);
+    initialCount += (repeat->equals(String::initialString) ? 1 : 0);
+
+    inheritCount += (image->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (position->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (size->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (repeat->equals(String::inheritString) ? 1 : 0);
+
+    if (initialCount == maxCount) {
+        return String::initialString;
+    }
+    if (inheritCount == maxCount) {
+        return String::inheritString;
+    }
+    if (inheritCount > 0) {
+        return String::emptyString;
+    }
+
+    StringBuilder builder;
+
+    if (image->length() != 0 && !image->equals(String::initialString)) {
+        builder.appendString(image);
+    }
+    if (position->length() != 0 && !position->equals(String::initialString)) {
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
+        }
+        builder.appendString(position);
+    }
+    if (size->length() != 0 && !size->equals(String::initialString)) {
+        if (position->length() == 0 ||
+            position->equals(String::initialString)) {
+            if (builder.contentLength() > 0) {
+                builder.appendString(String::spaceString);
+            }
+            builder.appendString("0% 0%");
+        }
+        builder.appendString(" / ");
+        builder.appendString(size);
+    }
+    if (repeat->length() != 0 && !repeat->equals(String::initialString)) {
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
+        }
+        builder.appendString(repeat);
     }
 
     return builder.finalize();
@@ -5560,47 +5760,102 @@ void CSSStyleDeclaration::removeAnimation()
 
 String* CSSStyleDeclaration::Mask()
 {
-    // Mask is only supported as SVG attribute.
-    if (hasCSSValuePair(CSSStyleValuePair::MaskImage)) {
-        CSSStyleValuePair v = getCSSValuePair(CSSStyleValuePair::MaskImage);
-        return v.toString();
+    StringBuilder builder;
+    String* images = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::MaskImage);
+    String* sizes = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::MaskSize);
+
+    String* positions = getPropertyValueInternalFor<PropertyType::kShorthand>(
+        CSSStyleValuePair::KeyKind::MaskPosition);
+    String* repeats = getPropertyValueInternalFor<PropertyType::kShorthand>(
+        CSSStyleValuePair::KeyKind::MaskRepeat);
+
+    GCVector<StringView> vImages, vPositions, vSizes, vRepeats;
+    StringUtils::tokenize(images, ",", 1, vImages);
+    StringUtils::tokenize(positions, ",", 1, vPositions);
+    StringUtils::tokenize(sizes, ",", 1, vSizes);
+    StringUtils::tokenize(repeats, ",", 1, vRepeats);
+
+    size_t max = vImages.size();
+    if (max < vPositions.size()) {
+        max = vPositions.size();
     }
-    return String::emptyString;
+    if (max < vSizes.size()) {
+        max = vSizes.size();
+    }
+    if (max < vRepeats.size()) {
+        max = vRepeats.size();
+    }
+
+    for (unsigned int i = 0; i < max; i++) {
+        String* image =
+            (i < vImages.size()) ? vImages[i].trim() : String::emptyString;
+        String* position = (i < vPositions.size()) ? vPositions[i].trim()
+                                                   : String::emptyString;
+        String* size =
+            (i < vSizes.size()) ? vSizes[i].trim() : String::emptyString;
+        String* repeat =
+            (i < vRepeats.size()) ? vRepeats[i].trim() : String::emptyString;
+        builder.appendString(printMask(image, position, size, repeat));
+        if (i != max - 1) {
+            builder.appendString(", ");
+        }
+    }
+    return builder.finalize();
 }
 
 void CSSStyleDeclaration::setMask(const char* value, size_t length,
                                   bool isImportant)
 {
-    // Mask is only supported as SVG attribute.
     STARFISH_ASSERT(value != nullptr);
 
+    if (length == 0) {
+        removeMask();
+        return;
+    }
+
     CSSTokenVector tokens;
-    tokenizeCSSValue(tokens, value, length);
+    tokenizeCSSValue(tokens, value, length, "/", 1);
+    if (tokens.size() == 0) {
+        return;
+    }
 
-    CSSStyleValuePair mask;
-    if (mask.updateValueVarReferences(tokens)) {
-        mask.setValue(String::fromUTF8(value, length));
-        mask.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::MaskImage, mask);
+    CSSStyleValuePair v, image, repeatX, repeatY, positionX, positionY, size;
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, length));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::Mask, v);
+        return;
+    } else if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addMaskCSSValuePairs(this, v, v, v, v, v, v);
     } else {
-        mask.setFlagImportant(isImportant);
-        if (mask.updateValueMaskImage(tokens, false)) {
-            STARFISH_ASSERT(mask.valueKind() ==
-                            CSSStyleValuePair::ValueKind::ValueListKind);
-            STARFISH_ASSERT(mask.multiValue()->size() == 1);
-
-            if (mask.multiValue()->at(0).valueKind() ==
-                CSSStyleValuePair::ValueKind::UrlValueKind) {
-                addCSSValuePair(CSSStyleValuePair::MaskImage, mask);
-            }
+        // TODO: support comma-separated mask layers
+        if (!parseMaskShorthand(tokens, &image, &repeatX, &repeatY, &positionX,
+                                &positionY, &size)) {
+            return;
         }
+        image.setFlagImportant(isImportant);
+        repeatX.setFlagImportant(isImportant);
+        repeatY.setFlagImportant(isImportant);
+        positionX.setFlagImportant(isImportant);
+        positionY.setFlagImportant(isImportant);
+        size.setFlagImportant(isImportant);
+        addMaskCSSValuePairs(this, image, repeatX, repeatY, positionX,
+                             positionY, size);
     }
 }
 
 void CSSStyleDeclaration::removeMask()
 {
-    // Mask is only supported as SVG attribute.
     removeCSSValuePair(CSSStyleValuePair::KeyKind::MaskImage);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::MaskRepeatX);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::MaskRepeatY);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::MaskPositionX);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::MaskPositionY);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::MaskSize);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::Mask);
 }
 
 String* CSSStyleDeclaration::MaskPosition()

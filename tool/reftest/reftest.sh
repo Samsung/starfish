@@ -181,6 +181,11 @@ function main {
         TESTSUITE=8
         tc=$(cat tool/reftest/internal_manual.res)
         doTest "$@"
+    elif [[ "$1" = *"/internal.res" ]]; then
+        TESTSUITENAME="Internal Tests"
+        TESTSUITE=7
+        tc=$(cat $1)
+        doTest "$@"
     else
         echo "Unsupported tests"
         exit

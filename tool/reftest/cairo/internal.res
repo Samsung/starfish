@@ -575,6 +575,7 @@ test/cairo/internal-test/css/masking/test_mask_border_radius.html
 test/cairo/internal-test/css/masking/test_mask_parent_clip.html
 test/cairo/internal-test/css/masking/linear-gradient-mask-image-01.html
 test/cairo/internal-test/css/masking/svg-mask-image-01.html
+test/cairo/internal-test/css/masking/mask-shorthand-gradient-01.html
 test/cairo/internal-test/css/masking/mask-image-1a.htm
 #test/cairo/internal-test/css/masking/mask-image-1b.htm
 #test/cairo/internal-test/css/masking/mask-image-1c.htm
