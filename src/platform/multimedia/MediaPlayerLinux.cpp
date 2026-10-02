@@ -380,7 +380,25 @@ bool FfmpegWrapperPlayer::unprepare()
 
 void FfmpegWrapperPlayer::destroy()
 {
-    STARFISH_UNIMPLEMENTED();
+    // This object is allocated with PointerFreeGC, so the destructor never
+    // runs; the decoding thread must be joined here or it keeps calling the
+    // frame callback on the already-disposed MediaPlayerLinux.
+    {
+        std::lock_guard<std::mutex> lock(m_stateMutex);
+        m_state = State::STOPPED;
+        m_stopRequested = true;
+    }
+    m_statecv.notify_all();
+    if (m_decodingThread.joinable()) {
+        m_decodingThread.join();
+    }
+
+    if (m_codecCtx != nullptr) {
+        avcodec_free_context(&m_codecCtx);
+    }
+    if (m_fmtCtx != nullptr) {
+        avformat_close_input(&m_fmtCtx);
+    }
 }
 
 bool FfmpegWrapperPlayer::prepare(
@@ -397,6 +415,17 @@ bool FfmpegWrapperPlayer::prepare(
     if (m_url) {
         PLAYER_LOGI("[FfmpegWrapperPlayer] Opening url : %s\n",
                     m_url->urlString()->toUTF8NonGCString().c_str());
+
+        // Let destroy() abort a network read that would otherwise block the
+        // decoding thread, and so the join, until data arrives.
+        m_fmtCtx = avformat_alloc_context();
+        if (m_fmtCtx == nullptr) {
+            return false;
+        }
+        m_fmtCtx->interrupt_callback.callback = [](void* data) -> int {
+            return ((FfmpegWrapperPlayer*)data)->m_stopRequested.load();
+        };
+        m_fmtCtx->interrupt_callback.opaque = this;
 
         if (avformat_open_input(&m_fmtCtx,
                                 m_url->urlString()->toUTF8NonGCString().c_str(),
