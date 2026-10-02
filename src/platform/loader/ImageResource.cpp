@@ -229,6 +229,7 @@ void ImageResource::didLoadFinished()
             d->needsDownScaleImageResourceLargerThan =
                 needsDownScaleImageResourceLargerThan;
             d->devicePixelRatio = devicePixelRatio;
+            m_pendingDecodeData = d;
 
             m_resourceRequest->executionContext()
                 ->document()
@@ -295,8 +296,12 @@ void ImageResource::didLoadFinished()
                                             d->needsDownScaleImageResourceLargerThan,
                                             d->devicePixelRatio);
                                     if (!d->imageResource->m_imageData) {
+                                        d->imageResource->m_pendingDecodeData =
+                                            nullptr;
                                         d->imageResource
                                             ->Resource::didLoadFailed();
+                                        d->~ImageDecodeData();
+                                        GC_FREE(d);
                                         return;
                                     }
                                     d->imageResource
@@ -304,6 +309,8 @@ void ImageResource::didLoadFinished()
                                 } else {
                                     d->imageResource->Resource::didLoadFailed();
                                 }
+                                d->imageResource->m_pendingDecodeData = nullptr;
+                                d->~ImageDecodeData();
                                 GC_FREE(d);
                             },
                             d);

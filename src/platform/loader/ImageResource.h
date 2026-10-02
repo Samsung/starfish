@@ -96,6 +96,9 @@ protected:
     NativeImageData* m_imageData;
     MockHTMLIFrameElement* m_mockFrameForSVGDocument;
     float m_devicePixelRatioAtFetch;
+#if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
+    void* m_pendingDecodeData{ nullptr };
+#endif
 };
 } // namespace Starfish
 
