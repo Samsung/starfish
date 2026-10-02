@@ -1755,6 +1755,8 @@ void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind keyKind,
                 if (!m_cssValues[i].valueEquals(value)) {
                     removeRootPointerValue(m_cssValues[i]);
                     m_cssValues[i].setValueKind(value.valueKind());
+                    m_cssValues[i].setTemporaryValueKind(
+                        value.temporaryValueKind());
                     m_cssValues[i].setValue(value.value());
                     m_cssValues[i].setFlagImportant(value.flagImportant());
                     rootPointerValueIfExists(value);
@@ -2250,7 +2252,10 @@ bool CSSStyleDeclaration::setPropertyInternalFor<
     } else if (cssStyleValuePair.updateValueVarReferences(tokens)) {
         String* s = String::fromUTF8(value, valueLength);
         cssStyleValuePair.setValue(s);
-        if (s->startsWith("calc", false)) {
+        // Only a value that is a single calc() is unwrapped and rewrapped
+        // around substitution; a list that merely starts with one (e.g.
+        // "calc(var(--x)) 1px") must be substituted as is.
+        if (tokens.size() == 1 && s->startsWith("calc", false)) {
             cssStyleValuePair.setTemporaryValueKind(
                 CSSStyleValuePair::ValueKind::CalcValueKind);
         }

@@ -559,6 +559,32 @@ static bool needsToFindVarFunction(const CSSTokenValue& token, int startPos,
     return false;
 }
 
+// Whether |value| is exactly one calc(), not a list that starts with one.
+static bool isSingleCalcFunction(const CSSTokenValue& value)
+{
+    if (value.find("calc(") != 0) {
+        return false;
+    }
+    size_t i = 0;
+    int depth = 0;
+    for (; i < value.size(); i++) {
+        if (value[i] == '(') {
+            depth++;
+        } else if (value[i] == ')' && --depth == 0) {
+            break;
+        }
+    }
+    if (i == value.size()) {
+        return false;
+    }
+    for (i++; i < value.size(); i++) {
+        if (!String::isSpaceOrNewline(value[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 static bool hasValidVarFunction(const CSSTokenValue& token)
 {
     // we can give pass nullptr into CSSVariableSyntaxTreeBuilder
@@ -3515,7 +3541,7 @@ CSSStyleDeclaration* StyleResolver::resolveVarValue(
             CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
         STARFISH_ASSERT(declaration->cssValues().size() == 1);
         CSSStyleValuePair newCssValuePair = declaration->cssValues()[0];
-        if (newCssValue.find("calc(") == 0) {
+        if (isSingleCalcFunction(newCssValue)) {
             newCssValuePair.setTemporaryValueKind(
                 CSSStyleValuePair::ValueKind::CalcValueKind);
         }
@@ -15621,7 +15647,7 @@ bool CSSStyleValuePair::updateValueShadow(const CSSTokenVector& tokens,
                    currentShadowSize < shadowSizeLimit) {
                 CSSStyleValuePair temp;
 
-                if (temp.updateValueUnitLength(tokens[j], option)) {
+                if (temp.updateValueUnitLengthOrCalc(tokens[j], option)) {
                     if (didParseLength) {
                         return false;
                     }
@@ -15632,10 +15658,31 @@ bool CSSStyleValuePair::updateValueShadow(const CSSTokenVector& tokens,
 
                     CSSStyleValuePair length;
                     size_t len2 = 1;
-                    for (; (j < tokens.size()) && (len2 <= lengthSizeLimit) &&
-                           length.updateValueUnitLength(tokens[j], option);
+                    for (;
+                         (j < tokens.size()) && (len2 <= lengthSizeLimit) &&
+                         length.updateValueUnitLengthOrCalc(tokens[j], option);
                          j++, len2++) {
-                        std::string str = tokens[j];
+                        if (length.hasUnresolvedVarReference()) {
+                            // A calc() containing a var() parses with
+                            // resolution deferred (VarFunctionValueKind
+                            // holding the original String*), which
+                            // ShadowData::setLengths() would read as a
+                            // CalcData*. Fail so the caller falls back to the
+                            // var-resolution path, which reparses the value
+                            // once the var() is substituted.
+                            return false;
+                        }
+                        // Shadows accept <length>, including math functions,
+                        // but not percentages or unitless calc() results.
+                        // https://www.w3.org/TR/css-backgrounds-3/#the-box-shadow
+                        if (length.valueKind() == CalcValueKind &&
+                            !length.calcValue()->calcValueType().isLength()) {
+                            return false;
+                        }
+                        if (len2 == 3 && length.valueKind() == Length &&
+                            length.cssLengthValue().value() < 0) {
+                            return false;
+                        }
                         lengths.multiValue()->push_back(length);
                         currentShadowSize++;
                     }
