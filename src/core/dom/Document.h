@@ -441,6 +441,7 @@ public:
     // method for script element
     void resumeDocumentParsing();
     void endDocumentParsing();
+    void executeDeferredScripts();
     void notifyDomContentLoaded();
 
     DocumentBuilder* documentBuilder()
