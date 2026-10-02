@@ -46,6 +46,8 @@ typedef LWE::WebContainer* LWEType;
 typedef LWE::WebView* LWEType;
 #endif
 
+class AppLoop;
+
 class MiniBrowser {
 public:
     struct Geometry {
@@ -147,6 +149,8 @@ public:
     int runMainLoop();
 
     int runMainLoopWithTimeout(double timeoutInSec);
+
+    AppLoop* appLoop();
 
     void runConsole();
 
