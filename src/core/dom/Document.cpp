@@ -701,6 +701,7 @@ void Document::endDocumentParsing()
         m_pendingDocumentParsingIdlerHandle = MessageLoopInvalidID;
     }
     m_documentBuilder = nullptr;
+    executeDeferredScripts();
 }
 
 static void executeModule(Document* document,
