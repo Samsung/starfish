@@ -171,3 +171,27 @@ http://web-platform.test:8000/dom/nodes/Node-nodeValue.html
 # [auto-fail] http://web-platform.test:8000/dom/nodes/CharacterData-remove.html
 http://web-platform.test:8000/dom/nodes/MutationObserver-disconnect.html
 http://web-platform.test:8000/dom/nodes/Node-appendChild.html
+http://web-platform.test:8000/dom/nodes/Comment-in-doctype.xhtml
+http://web-platform.test:8000/dom/nodes/Document-createCDATASection-xhtml.xhtml
+# [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/dom/nodes/Document-createProcessingInstruction-xhtml.xhtml
+# [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/dom/nodes/Document-getElementsByTagName-xhtml.xhtml
+http://web-platform.test:8000/dom/nodes/DocumentType-literal-xhtml.xhtml
+http://web-platform.test:8000/dom/nodes/Element-childElement-null-xhtml.xhtml
+http://web-platform.test:8000/dom/nodes/Element-childElementCount-dynamic-add-xhtml.xhtml
+http://web-platform.test:8000/dom/nodes/Element-childElementCount-dynamic-remove-xhtml.xhtml
+http://web-platform.test:8000/dom/nodes/Element-childElementCount-nochild-xhtml.xhtml
+http://web-platform.test:8000/dom/nodes/Element-childElementCount-xhtml.xhtml
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/dom/nodes/Element-firstElementChild-entity-xhtml.xhtml
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/dom/nodes/Element-firstElementChild-namespace-xhtml.xhtml
+http://web-platform.test:8000/dom/nodes/Element-firstElementChild-xhtml.xhtml
+http://web-platform.test:8000/dom/nodes/Element-lastElementChild-xhtml.xhtml
+http://web-platform.test:8000/dom/nodes/Element-nextElementSibling-xhtml.xhtml
+http://web-platform.test:8000/dom/nodes/Element-previousElementSibling-xhtml.xhtml
+http://web-platform.test:8000/dom/nodes/Element-siblingElement-null-xhtml.xhtml
+# [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/dom/nodes/Node-isEqualNode-xhtml.xhtml
+# [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/dom/nodes/Node-lookupPrefix.xhtml
+http://web-platform.test:8000/dom/nodes/Node-nodeName-xhtml.xhtml
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/dom/nodes/ProcessingInstruction-escapes-1.xhtml
+http://web-platform.test:8000/dom/nodes/ProcessingInstruction-in-doctype.xhtml
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/dom/nodes/ProcessingInstruction-literal-1.xhtml
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/dom/nodes/ProcessingInstruction-literal-2.xhtml

@@ -32,10 +32,12 @@ Prerequisite: WPT subdomains must resolve to loopback. Generate once with
 """
 
 import os
+import shutil
 import signal
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 from contextlib import contextmanager
 
@@ -142,8 +144,21 @@ def wpt_serve(wpt_root, inject_script=DEFAULT_INJECT, http2=False,
     cmd = [sys.executable, wpt_bin, "serve"]
     if not http2:
         cmd.append("--no-h2")
+    alias_dir = None
     if inject_script:
         cmd += ["--inject-script", inject_script]
+        # --inject-script only rewrites text/html responses, so .xhtml/.xml
+        # testharness pages would never load the bridge and time out. Serve it
+        # as /resources/testharnessreport.js as well -- the vendor hook every
+        # testharness page loads (what wptrunner itself replaces). A file
+        # alias maps the URL's directory onto `local-dir` and looks the file
+        # up by name there, so stage a copy under that name.
+        alias_dir = tempfile.mkdtemp(prefix="wpt_alias_")
+        shutil.copyfile(inject_script,
+                        os.path.join(alias_dir, "testharnessreport.js"))
+        with open(os.path.join(alias_dir, "aliases.txt"), "w") as f:
+            f.write("/resources/testharnessreport.js, %s\n" % alias_dir)
+        cmd += ["--alias_file", os.path.join(alias_dir, "aliases.txt")]
 
     # Ensure wpt serve connects directly to loopback, bypassing any proxy.
     wpt_domains = ".web-platform.test,.not-web-platform.test"
@@ -181,6 +196,8 @@ def wpt_serve(wpt_root, inject_script=DEFAULT_INJECT, http2=False,
     finally:
         _terminate(proc, verbose=verbose)
         log.close()
+        if alias_dir is not None:
+            shutil.rmtree(alias_dir, ignore_errors=True)
 
 
 def _terminate(proc, verbose=False):

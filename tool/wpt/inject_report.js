@@ -1,7 +1,11 @@
 // Bridge between WPT's testharness.js/crashtest pages and the Starfish test
 // shell.
 //
-// Injected into every served page via `wpt serve --inject-script`. On test
+// Injected into every served text/html page via `wpt serve --inject-script`
+// and also served in place of /resources/testharnessreport.js (the vendor
+// hook testharness.js loads; aliased by tool/wpt/scripts/wpt_server.py) so
+// that testharness pages the injector skips -- it only touches text/html
+// responses, so .xhtml / .xml tests never see it -- still report. On test
 // completion it prints one machine-parseable line per subtest plus a summary,
 // then terminates the shell through the engine's existing wptTestEnd() hook
 // (which exits when HIDE_WINDOW is set). The runner parses the `WPTR ` lines.
@@ -12,6 +16,14 @@
 //   WPTR DONE status=<0=OK|1=ERROR|2=TIMEOUT|3=PRECONDITION_FAILED> count=<n>
 //   WPTR CRASHOK                                    (crashtest path only)
 (function () {
+    // A text/html testharness page receives this script twice (injected and
+    // as testharnessreport.js); the second copy must not register again or
+    // every subtest would be reported twice.
+    if (window.__starfishWPTRLoaded) {
+        return;
+    }
+    window.__starfishWPTRLoaded = true;
+
     function finish() {
         if (typeof wptTestEnd === 'function') {
             wptTestEnd();

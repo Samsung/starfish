@@ -205,7 +205,7 @@ static bool hasDirectText(Element* element)
 {
     for (Node* child = element->firstChild(); child;
          child = child->nextSibling()) {
-        if (child->nodeType() == Node::TEXT_NODE) {
+        if (child->isText()) {
             String* data = static_cast<CharacterData*>(child)->data();
             if (data && !data->containsOnlyWhitespace()) {
                 return true;

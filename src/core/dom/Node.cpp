@@ -367,6 +367,7 @@ Optional<String*> Node::nodeValue() const
     case ATTRIBUTE_NODE:
         return asAttr()->value();
     case TEXT_NODE:
+    case CDATA_SECTION_NODE:
     case COMMENT_NODE:
         return asCharacterData()->data();
     case PROCESSING_INSTRUCTION_NODE:
@@ -388,6 +389,7 @@ void Node::setNodeValue(Optional<String*> val)
         asAttr()->setValue(str);
         break;
     case TEXT_NODE:
+    case CDATA_SECTION_NODE:
     case COMMENT_NODE:
         asCharacterData()->setData(str);
         break;
@@ -427,6 +429,7 @@ Optional<String*> Node::textContent() const
     case ATTRIBUTE_NODE:
         return asAttr()->value();
     case TEXT_NODE:
+    case CDATA_SECTION_NODE:
     case COMMENT_NODE:
     case PROCESSING_INSTRUCTION_NODE:
         return asCharacterData()->data();
@@ -470,6 +473,7 @@ void Node::setTextContent(Optional<String*> val)
         asAttr()->setValue(str);
         break;
     case TEXT_NODE:
+    case CDATA_SECTION_NODE:
     case COMMENT_NODE:
     case PROCESSING_INSTRUCTION_NODE:
         asCharacterData()->setData(str);
@@ -670,6 +674,7 @@ bool Node::isEqualNode(Optional<Node*> otherInput)
         break;
     }
     case TEXT_NODE:
+    case CDATA_SECTION_NODE:
     case COMMENT_NODE:
         STARFISH_ASSERT(nodeValue().hasValue());
         STARFISH_ASSERT(other->nodeValue().hasValue());
@@ -2167,7 +2172,7 @@ HTMLCollection* Node::getElementsByTagName(QualifiedName qualifiedName)
     if (list) {
         return list;
     }
-    if (document()->isXMLDocument()) {
+    if (document()->typeIsXML()) {
         list = new HTMLCollection(this, NodeListImpl::XMLTagNameFilter,
                                   new QualifiedName(qualifiedName), true);
     } else {

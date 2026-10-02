@@ -292,8 +292,13 @@ Data flows:
                                                  (serves both)  (results ─▶ # [auto-fail])
 
 ### tool/wpt/inject_report.js
-Injected into every served page by `wpt serve --inject-script`. For a
-testharness page it registers `add_completion_callback`; when the test
+Injected into every served `text/html` page by `wpt serve --inject-script`,
+and also served as `/resources/testharnessreport.js` (the vendor hook every
+testharness page loads; `wpt_server.py` aliases it) because the injector
+leaves non-HTML responses alone — without the alias an `.xhtml`/`.xml`
+testharness page never reports and shows up as `TIMEOUT`. An HTML page
+therefore receives the script twice; a window flag makes the second copy a
+no-op. For a testharness page it registers `add_completion_callback`; when the test
 finishes it prints one line per subtest and a summary, then exits the shell
 through the engine's `wptTestEnd()` hook (which quits when `HIDE_WINDOW` is
 set):
@@ -318,7 +323,10 @@ other script parses page output.
 On-demand `wpt serve` as a context manager, `wpt_serve(wpt_root, ...)`, plus a
 CLI (`python3 tool/wpt/scripts/wpt_server.py` serves until Ctrl-C).
 Responsibilities:
-- start `wpt serve --no-h2 --inject-script inject_report.js` in its own session;
+- start `wpt serve --no-h2 --inject-script inject_report.js --alias_file ...`
+  in its own session, the alias file mapping `/resources/testharnessreport.js`
+  to a temp dir holding a copy of `inject_report.js` under that name (a file
+  alias looks the file up by name inside `local-dir`);
 - consider it healthy only after several consecutive good HTTP probes, and fail
   fast if it dies during boot;
 - reclaim the ports first if a stale server is lingering (a leftover holding an

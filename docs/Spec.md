@@ -87,6 +87,13 @@ is not enforced, DTD-declared entities and non-HTML namespace prefixes are
 not supported, and the XML declaration / processing instructions are parsed
 as (bogus) comments.
 
+For DOM purposes such a document's type is "xml" (an *XML document* in DOM
+spec terms): `createCDATASection()` is allowed, `createElement()`,
+`getElementsByTagName()`, `tagName` and attribute names are case-sensitive
+and not lowercased, `document.open()`/`write()`/`close()` throw
+`InvalidStateError`, and the document always stays in no-quirks mode. The
+`document` object itself is still an `HTMLDocument` instance.
+
 
 | HTML Tag | Attribute | Allowed Value | Note |
 |----------|-----------|---------------|------|

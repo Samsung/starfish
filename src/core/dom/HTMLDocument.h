@@ -35,13 +35,17 @@ public:
                    doesParticipateInRendering)
     {
         m_contentType = String::createASCIIString("text/html");
+        m_typeIsXML = false;
     }
 
     HTMLDocument(HTMLDocument& doc)
         : Document(doc.m_window, doc.scriptBindingInstance(), doc.documentURI(),
                    doc.characterSet(), false)
     {
-        m_contentType = String::createASCIIString("text/html");
+        // https://dom.spec.whatwg.org/#concept-node-clone
+        // A cloned document keeps the original's type and content type.
+        m_contentType = doc.m_contentType;
+        m_typeIsXML = doc.m_typeIsXML;
     }
 
     void* operator new(size_t size);

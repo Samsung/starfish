@@ -254,7 +254,7 @@ private:
     void addSubtree(Node* domNode, AXNode* parentAXNode,
                     const InheritedState& parentState)
     {
-        if (domNode->nodeType() == Node::TEXT_NODE) {
+        if (domNode->isText()) {
             addTextNode(domNode, parentAXNode, parentState);
             return;
         }

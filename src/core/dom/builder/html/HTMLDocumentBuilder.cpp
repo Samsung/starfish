@@ -525,8 +525,17 @@ public:
             m_builder.document()->setReferrer(
                 m_resource->resourceRequest()->referrer());
         }
-        if (m && !m->isEmpty() && !m->contains("charset", false)) {
-            m_builder.document()->setContentType(m);
+        // The document's content type is the response MIME type's essence
+        // (https://dom.spec.whatwg.org/#concept-document-content-type);
+        // `m` above is the charset, not the type, so don't derive it from
+        // there. An XML MIME type response is loaded as a document whose type
+        // is "xml", even though the HTML parser still parses it here
+        // (https://html.spec.whatwg.org/multipage/document-lifecycle.html#read-xml).
+        String* mimeEssence = mimetype.stringWithoutParameter();
+        if (!mimeEssence->isEmpty()) {
+            m_builder.document()->setContentType(mimeEssence);
+            m_builder.document()->setTypeIsXML(
+                MimeType::isXMLMIMEType(mimeEssence));
         }
         m_builder.document()->resourceLoader().updateDocumentOpenTime();
         load();
