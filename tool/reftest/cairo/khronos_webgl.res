@@ -63,7 +63,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-element
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-texture-float.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-texture-float-linear.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-texture-float-with-canvas.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-texture-float-with-image-data.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-texture-float-with-image-data.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-texture-float-with-image.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-texture-float-with-video.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-texture-half-float.html
