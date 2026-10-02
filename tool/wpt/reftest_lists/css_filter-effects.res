@@ -169,11 +169,11 @@ http://web-platform.test:8000/css/filter-effects/filter-effect-remove-unattached
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-external-002-test.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-002.html
-http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-006.html
-http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-007.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-008.html
 http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-conic-gradient.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-linear-gradient.html

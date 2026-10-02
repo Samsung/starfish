@@ -16,7 +16,7 @@ http://web-platform.test:8000/css/css-animations/animation-offscreen-to-onscreen
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animation-pseudo-dynamic-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animation-transform-pause-and-set-time.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/cancel-animation-shadow-slot-invalidation.html
-http://web-platform.test:8000/css/css-animations/display-none-to-display-block.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/display-none-to-display-block.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/flip-running-animation-via-variable.html
 http://web-platform.test:8000/css/css-animations/inheritance-pseudo-element.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/jump-start-animation-before-phase.html

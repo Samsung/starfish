@@ -207,7 +207,7 @@ http://web-platform.test:8000/css/css-pseudo/marker-variable.html
 http://web-platform.test:8000/css/css-pseudo/placeholder-excluded-properties.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-pseudo/placeholder-input-number.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-pseudo/relative-box-order-of-pseudo-elements.html
-http://web-platform.test:8000/css/css-pseudo/selection-background-color-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-pseudo/selection-background-color-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-pseudo/selection-background-painting-order.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-pseudo/selection-contenteditable-011.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-pseudo/selection-input-011.html

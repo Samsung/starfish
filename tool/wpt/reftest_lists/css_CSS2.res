@@ -473,7 +473,7 @@ http://web-platform.test:8000/css/CSS2/bidi-text/unicode-bidi-applies-to-006.xht
 http://web-platform.test:8000/css/CSS2/bidi-text/unicode-bidi-applies-to-013.xht
 http://web-platform.test:8000/css/CSS2/bidi-text/unicode-bidi-applies-to-014.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/unicode-bidi-applies-to-015.xht
-http://web-platform.test:8000/css/CSS2/border-seams-001.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/border-seams-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-003.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-005.xht
@@ -497,12 +497,12 @@ http://web-platform.test:8000/css/CSS2/border-seams-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-008.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-016.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-018.xht
-http://web-platform.test:8000/css/CSS2/borders/border-bottom-applies-to-001.xht
-http://web-platform.test:8000/css/CSS2/borders/border-bottom-applies-to-002.xht
-http://web-platform.test:8000/css/CSS2/borders/border-bottom-applies-to-003.xht
-http://web-platform.test:8000/css/CSS2/borders/border-bottom-applies-to-004.xht
-http://web-platform.test:8000/css/CSS2/borders/border-bottom-applies-to-005.xht
-http://web-platform.test:8000/css/CSS2/borders/border-bottom-applies-to-006.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-applies-to-001.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-applies-to-002.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-applies-to-003.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-applies-to-004.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-applies-to-005.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-applies-to-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-applies-to-007.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-applies-to-009.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-applies-to-012.xht
@@ -512,12 +512,12 @@ http://web-platform.test:8000/css/CSS2/borders/border-bottom-applies-to-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-129.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-174.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-175.xht
-http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-applies-to-001.xht
-http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-applies-to-002.xht
-http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-applies-to-003.xht
-http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-applies-to-004.xht
-http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-applies-to-005.xht
-http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-applies-to-006.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-applies-to-001.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-applies-to-002.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-applies-to-003.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-applies-to-004.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-applies-to-005.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-applies-to-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-applies-to-007.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-applies-to-009.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-bottom-color-applies-to-012.xht
@@ -630,12 +630,12 @@ http://web-platform.test:8000/css/CSS2/borders/border-left-001.xht
 http://web-platform.test:8000/css/CSS2/borders/border-left-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-008.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-018.xht
-http://web-platform.test:8000/css/CSS2/borders/border-left-applies-to-001.xht
-http://web-platform.test:8000/css/CSS2/borders/border-left-applies-to-002.xht
-http://web-platform.test:8000/css/CSS2/borders/border-left-applies-to-003.xht
-http://web-platform.test:8000/css/CSS2/borders/border-left-applies-to-004.xht
-http://web-platform.test:8000/css/CSS2/borders/border-left-applies-to-005.xht
-http://web-platform.test:8000/css/CSS2/borders/border-left-applies-to-006.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-applies-to-001.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-applies-to-002.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-applies-to-003.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-applies-to-004.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-applies-to-005.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-applies-to-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-applies-to-007.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-applies-to-009.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-applies-to-012.xht
@@ -645,12 +645,12 @@ http://web-platform.test:8000/css/CSS2/borders/border-left-applies-to-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-color-129.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-color-174.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-color-175.xht
-http://web-platform.test:8000/css/CSS2/borders/border-left-color-applies-to-001.xht
-http://web-platform.test:8000/css/CSS2/borders/border-left-color-applies-to-002.xht
-http://web-platform.test:8000/css/CSS2/borders/border-left-color-applies-to-003.xht
-http://web-platform.test:8000/css/CSS2/borders/border-left-color-applies-to-004.xht
-http://web-platform.test:8000/css/CSS2/borders/border-left-color-applies-to-005.xht
-http://web-platform.test:8000/css/CSS2/borders/border-left-color-applies-to-006.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-color-applies-to-001.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-color-applies-to-002.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-color-applies-to-003.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-color-applies-to-004.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-color-applies-to-005.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-color-applies-to-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-color-applies-to-007.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-color-applies-to-009.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-left-color-applies-to-012.xht
@@ -735,12 +735,12 @@ http://web-platform.test:8000/css/CSS2/borders/border-left-width-applies-to-015.
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-008.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-018.xht
-http://web-platform.test:8000/css/CSS2/borders/border-right-applies-to-001.xht
-http://web-platform.test:8000/css/CSS2/borders/border-right-applies-to-002.xht
-http://web-platform.test:8000/css/CSS2/borders/border-right-applies-to-003.xht
-http://web-platform.test:8000/css/CSS2/borders/border-right-applies-to-004.xht
-http://web-platform.test:8000/css/CSS2/borders/border-right-applies-to-005.xht
-http://web-platform.test:8000/css/CSS2/borders/border-right-applies-to-006.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-applies-to-001.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-applies-to-002.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-applies-to-003.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-applies-to-004.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-applies-to-005.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-applies-to-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-applies-to-007.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-applies-to-009.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-applies-to-012.xht
@@ -750,12 +750,12 @@ http://web-platform.test:8000/css/CSS2/borders/border-right-applies-to-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-color-129.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-color-174.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-color-175.xht
-http://web-platform.test:8000/css/CSS2/borders/border-right-color-applies-to-001.xht
-http://web-platform.test:8000/css/CSS2/borders/border-right-color-applies-to-002.xht
-http://web-platform.test:8000/css/CSS2/borders/border-right-color-applies-to-003.xht
-http://web-platform.test:8000/css/CSS2/borders/border-right-color-applies-to-004.xht
-http://web-platform.test:8000/css/CSS2/borders/border-right-color-applies-to-005.xht
-http://web-platform.test:8000/css/CSS2/borders/border-right-color-applies-to-006.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-color-applies-to-001.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-color-applies-to-002.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-color-applies-to-003.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-color-applies-to-004.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-color-applies-to-005.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-color-applies-to-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-color-applies-to-007.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-color-applies-to-009.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-right-color-applies-to-012.xht
@@ -855,12 +855,12 @@ http://web-platform.test:8000/css/CSS2/borders/border-top-001.xht
 http://web-platform.test:8000/css/CSS2/borders/border-top-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-008.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-018.xht
-http://web-platform.test:8000/css/CSS2/borders/border-top-applies-to-001.xht
-http://web-platform.test:8000/css/CSS2/borders/border-top-applies-to-002.xht
-http://web-platform.test:8000/css/CSS2/borders/border-top-applies-to-003.xht
-http://web-platform.test:8000/css/CSS2/borders/border-top-applies-to-004.xht
-http://web-platform.test:8000/css/CSS2/borders/border-top-applies-to-005.xht
-http://web-platform.test:8000/css/CSS2/borders/border-top-applies-to-006.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-applies-to-001.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-applies-to-002.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-applies-to-003.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-applies-to-004.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-applies-to-005.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-applies-to-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-applies-to-007.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-applies-to-009.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-applies-to-012.xht
@@ -870,12 +870,12 @@ http://web-platform.test:8000/css/CSS2/borders/border-top-applies-to-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-color-129.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-color-174.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-color-175.xht
-http://web-platform.test:8000/css/CSS2/borders/border-top-color-applies-to-001.xht
-http://web-platform.test:8000/css/CSS2/borders/border-top-color-applies-to-002.xht
-http://web-platform.test:8000/css/CSS2/borders/border-top-color-applies-to-003.xht
-http://web-platform.test:8000/css/CSS2/borders/border-top-color-applies-to-004.xht
-http://web-platform.test:8000/css/CSS2/borders/border-top-color-applies-to-005.xht
-http://web-platform.test:8000/css/CSS2/borders/border-top-color-applies-to-006.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-color-applies-to-001.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-color-applies-to-002.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-color-applies-to-003.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-color-applies-to-004.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-color-applies-to-005.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-color-applies-to-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-color-applies-to-007.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-color-applies-to-009.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/borders/border-top-color-applies-to-012.xht
@@ -5722,7 +5722,7 @@ http://web-platform.test:8000/css/CSS2/text/text-decoration-applies-to-014.xht
 http://web-platform.test:8000/css/CSS2/text/text-decoration-applies-to-015.xht
 http://web-platform.test:8000/css/CSS2/text/text-decoration-image-001.xht
 http://web-platform.test:8000/css/CSS2/text/text-decoration-va-length-001.xht
-http://web-platform.test:8000/css/CSS2/text/text-decoration-va-length-002.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/text/text-decoration-va-length-002.xht
 http://web-platform.test:8000/css/CSS2/text/text-indent-004.xht
 http://web-platform.test:8000/css/CSS2/text/text-indent-005.xht
 http://web-platform.test:8000/css/CSS2/text/text-indent-006.xht

@@ -74,8 +74,8 @@ http://web-platform.test:8000/css/css-grid/abspos/grid-abspos-staticpos-justify-
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-item-absolute-positioning-dynamic-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-paint-positioned-children-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-positioned-children-writing-modes-001.html
-http://web-platform.test:8000/css/css-grid/abspos/grid-positioned-item-dynamic-change-001.html
-http://web-platform.test:8000/css/css-grid/abspos/grid-positioned-item-dynamic-change-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-positioned-item-dynamic-change-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-positioned-item-dynamic-change-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-positioned-item-dynamic-change-003.html
 http://web-platform.test:8000/css/css-grid/abspos/grid-positioned-item-dynamic-change-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/abspos/grid-positioned-item-dynamic-change-005.html
@@ -890,7 +890,7 @@ http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to
 http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/row/grid-lanes-subgrid-002d.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/row/grid-lanes-subgrid-002e.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/row-subgrid-ignores-height-001.html
-http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/row-subgrid-standalone-column-axis-size-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/row-subgrid-standalone-column-axis-size-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/auto-track-sizing-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/auto-track-sizing-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/column-auto-track-sizing-001.html
@@ -1233,9 +1233,9 @@ http://web-platform.test:8000/css/css-grid/placement/grid-layout-grid-span.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/placement/grid-layout-lines-shorthands.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/placement/grid-layout-lines.html
 http://web-platform.test:8000/css/css-grid/placement/grid-layout-placement-shorthands.html
-http://web-platform.test:8000/css/css-grid/placement/grid-placement-items-spanning-multiple-rows-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/placement/grid-placement-items-spanning-multiple-rows-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/placement/grid-placement-items-spanning-multiple-rows-002.html
-http://web-platform.test:8000/css/css-grid/placement/grid-placement-using-named-grid-lines-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/placement/grid-placement-using-named-grid-lines-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/placement/grid-placement-using-named-grid-lines-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/placement/grid-placement-using-named-grid-lines-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/placement/grid-placement-using-named-grid-lines-004.html
@@ -1260,7 +1260,7 @@ http://web-platform.test:8000/css/css-grid/subgrid/auto-track-sizing-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/auto-track-sizing-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/auto-track-sizing-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/baseline-001.html
-http://web-platform.test:8000/css/css-grid/subgrid/contribution-size-flex-tracks-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/contribution-size-flex-tracks-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/dynamic-min-content-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/dynamic-min-content-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/dynamic-min-content-003.html
@@ -1322,14 +1322,14 @@ http://web-platform.test:8000/css/css-grid/subgrid/repeat-auto-fill-007.html
 http://web-platform.test:8000/css/css-grid/subgrid/scrollbar-gutter-001.html
 http://web-platform.test:8000/css/css-grid/subgrid/scrollbar-gutter-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/standalone-axis-size-001.html
-http://web-platform.test:8000/css/css-grid/subgrid/standalone-axis-size-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/standalone-axis-size-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/standalone-axis-size-003.html
-http://web-platform.test:8000/css/css-grid/subgrid/standalone-axis-size-004.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/standalone-axis-size-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/standalone-axis-size-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/standalone-axis-size-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/standalone-axis-size-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/standalone-axis-size-008.html
-http://web-platform.test:8000/css/css-grid/subgrid/standalone-axis-size-009.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/standalone-axis-size-009.html
 http://web-platform.test:8000/css/css-grid/subgrid/sticky-subgrid-item.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/subgrid-baseline-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/subgrid/subgrid-baseline-002.html

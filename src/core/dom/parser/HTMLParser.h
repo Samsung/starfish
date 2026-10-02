@@ -25,6 +25,7 @@
 #include "core/dom/parser/HTMLTokenizer.h"
 #include "core/dom/parser/HTMLInputStream.h"
 #include "core/dom/parser/HTMLTreeBuilder.h"
+#include "core/extra/MimeType.h"
 
 namespace Starfish {
 
@@ -43,6 +44,8 @@ public:
         m_source = sourceString;
         m_input.appendToEnd(SegmentedString(sourceString));
         m_token = new HTMLToken();
+        m_tokenizer.setIsXMLContent(
+            MimeType::isXMLMIMEType(m_document->contentType()));
     }
 
     HTMLParser(Starfish* starfish, DocumentFragment* df,
@@ -55,6 +58,8 @@ public:
         m_source = sourceString;
         m_input.appendToEnd(SegmentedString(sourceString));
         m_token = new HTMLToken();
+        m_tokenizer.setIsXMLContent(
+            MimeType::isXMLMIMEType(m_document->contentType()));
     }
 
     void startParse();

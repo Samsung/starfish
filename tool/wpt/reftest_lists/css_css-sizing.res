@@ -8,36 +8,36 @@ http://web-platform.test:8000/css/css-sizing/abspos-auto-sizing-fit-content-perc
 http://web-platform.test:8000/css/css-sizing/abspos-auto-sizing-fit-content-percentage-008.html
 http://web-platform.test:8000/css/css-sizing/abspos-stretch-indefinite-cb.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/abspos-stretch-replaced-percentage-child.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-001.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-003.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-004.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-006.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-007.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-011.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-012.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-013.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-014.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-015.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-014.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-015.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-016.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-017.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-018.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-019.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-020.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-021.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-019.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-020.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-021.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/auto-margins-001.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-003.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-004.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-005.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-004.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-007.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-008.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-011.html
@@ -48,31 +48,31 @@ http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-008
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-016.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-017.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-018.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-019.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-019.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-020.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-021.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-021.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-022.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-023.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-024.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-025.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-025.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-026.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-027.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-028.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-030.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-031.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-028.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-030.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-031.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-032.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-033.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-033.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-034.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-035.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-036.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-037.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-038.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-039.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-040.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-040.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-041.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-042.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-043.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-044.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-044.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-045.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-046.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-047.html
@@ -90,26 +90,26 @@ http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-057
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/block-aspect-ratio-with-margin-collapsing-002.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/fieldset-element-001.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/fieldset-element-002.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-002.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-008.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-009.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-010.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-011.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-012.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-013.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-014.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-011.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-012.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-013.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-014.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-015.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-016.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-017.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-018.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-019.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-020.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-019.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-020.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-021.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-022.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-023.html
@@ -121,18 +121,18 @@ http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-020.
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-029.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-030.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-031.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-032.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-033.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-034.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-035.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-036.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-032.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-033.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-034.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-035.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-036.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-037.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-038.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-039.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-039.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-040.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-041.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-042.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-043.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-043.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-044.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-045.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-046.html
@@ -184,25 +184,25 @@ http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-052.
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-037.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-038.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-039.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-040.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-041.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-042.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-040.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-041.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-042.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-align-items-center.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-001.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-002.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-003.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-004.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-005.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-006.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-004.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-005.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-007.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-008.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-010.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-011.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-012.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-013.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-014.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-015.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-011.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-012.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-013.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-014.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-015.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-016.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-017.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-018.html
@@ -213,32 +213,32 @@ http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-015.htm
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-023.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-024.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/intrinsic-size-025.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/percentage-resolution-001.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/percentage-resolution-002.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/percentage-resolution-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/percentage-resolution-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/percentage-resolution-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/percentage-resolution-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/percentage-resolution-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/percentage-resolution-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-003.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-004.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-005.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-006.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-004.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-005.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-011.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-012.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-012.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-013.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-014.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-015.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-016.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-017.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-018.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-018.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-019.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-020.html
-http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-021.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-020.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-021.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-022.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-023.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-024.html

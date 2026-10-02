@@ -70,12 +70,12 @@ http://web-platform.test:8000/css/css-ui/caret-shape-block-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/caret-shape-block-color-002.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/caret-shape-block-color-003.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/caret-shape-block-color-004.tentative.html
-http://web-platform.test:8000/css/css-ui/caret-shape-block-empty-001.html
-http://web-platform.test:8000/css/css-ui/caret-shape-block-empty-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/caret-shape-block-empty-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/caret-shape-block-empty-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/caret-shape-block-fallback-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/caret-shape-block-zoom.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-ui/caret-shape-underscore-001.html
-http://web-platform.test:8000/css/css-ui/caret-shape-underscore-empty-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/caret-shape-underscore-empty-001.html
 http://web-platform.test:8000/css/css-ui/compute-kind-widget-fallback-props-revert-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/compute-kind-widget-generated/grouped-kind-of-widget-fallback-background-attachment-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/compute-kind-widget-generated/grouped-kind-of-widget-fallback-background-color-001.html

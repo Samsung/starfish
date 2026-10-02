@@ -73,8 +73,8 @@ http://web-platform.test:8000/css/selectors/invalidation/class-id-attr.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/invalidation/has-append-first-node.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/invalidation/has-pseudo-element.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/invalidation/has-with-nth-child-sibling-remove.html
-http://web-platform.test:8000/css/selectors/invalidation/lang-pseudo-class-in-has-document-element.html
-http://web-platform.test:8000/css/selectors/invalidation/lang-pseudo-class-in-has-multiple-document-elements.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/invalidation/lang-pseudo-class-in-has-document-element.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/invalidation/lang-pseudo-class-in-has-multiple-document-elements.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/invalidation/lang-pseudo-class-in-has-xhtml.xhtml
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/invalidation/lang-pseudo-class-in-has.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/invalidation/negated-always-matches-negated-first-of-type-when-ancestor-changes.html

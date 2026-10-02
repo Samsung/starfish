@@ -207,6 +207,20 @@ public:
         m_shouldAllowCDATA = value;
     }
 
+    // XML allows a CDATA section wherever character data may occur
+    // (https://www.w3.org/TR/xml/#sec-cdata-sect). XML content (e.g.
+    // application/xhtml+xml) is tokenized with this HTML tokenizer, so in
+    // that mode "<![CDATA[" is recognized in every text state - including
+    // RCDATA, RAWTEXT and script data - and not only in foreign content.
+    bool isXMLContent() const
+    {
+        return m_isXMLContent;
+    }
+    void setIsXMLContent(bool value)
+    {
+        m_isXMLContent = value;
+    }
+
     State state() const
     {
         return m_state;
@@ -290,9 +304,22 @@ private:
         return m_token->type() == HTMLToken::Character;
     }
 
+    inline bool isCDATASectionAllowed() const
+    {
+        return m_shouldAllowCDATA || m_isXMLContent;
+    }
+    // Consumes "![CDATA[" (the current input character is the '!' after
+    // '<') and records the state to resume in after the section ends.
+    inline SegmentedString::LookAheadResult tryConsumeCDATASectionStart(
+        SegmentedString& source, State returnState);
+
     State m_state;
     bool m_forceNullCharacterReplacement;
     bool m_shouldAllowCDATA;
+    bool m_isXMLContent;
+    // The HTML CDATA section states always resume in the data state; XML
+    // content also enters them from RCDATA, RAWTEXT and script data.
+    State m_cdataSectionReturnState;
 
     // m_token is owned by the caller. If nextToken is not on the stack,
     // this member might be pointing to unallocated memory.

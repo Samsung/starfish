@@ -29,6 +29,8 @@ public:
     MimeType();
 
     static MimeType parseFromString(String* str);
+    // https://mimesniff.spec.whatwg.org/#xml-mime-type
+    static bool isXMLMIMEType(String* str);
 
     bool isValid();
     bool hasParameter();
