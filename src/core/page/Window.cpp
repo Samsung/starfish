@@ -354,6 +354,7 @@ void Window::postMessage(Window* source, ScriptValue message,
                 event->setSource(MessageEventSource::createWindow(source));
                 event->setOrigin(source->location()->origin());
                 window->dispatchEventByUA(event);
+                delete serializedRecord;
             },
             this, serializedRecord, source);
     }

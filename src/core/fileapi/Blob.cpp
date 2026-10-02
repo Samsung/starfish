@@ -149,7 +149,13 @@ ScriptBindingInstance* Blob::scriptBindingInstance()
 
 SerializedData* Blob::serialize(SerializingMap& memory)
 {
-    return new SerializedBlobData(m_blobData);
+    std::string typeStr;
+    if (m_blobData.m_type) {
+        typeStr = m_blobData.m_type->toUTF8NonGCString();
+    }
+    return new SerializedBlobData(
+        typeStr, reinterpret_cast<const uint8_t*>(m_blobData.m_data),
+        static_cast<size_t>(m_blobData.m_size), m_blobData.m_isClosed);
 }
 
 void Blob::addBlobToBlobURLStore()
@@ -226,5 +232,23 @@ Promise* Blob::arrayBuffer()
     promise->fulfill((ScriptValue)arrayBuffer);
 
     return promise;
+}
+
+ScriptWrappable* SerializedBlobData::createDeserializingInstance(
+    ExecutionContext* executionContext) const
+{
+    String* typeStr = String::emptyString;
+    if (!m_type.empty()) {
+        typeStr = String::fromUTF8(m_type.data(), m_type.length());
+    }
+    char* buffer = nullptr;
+    if (!m_data.empty()) {
+        buffer = reinterpret_cast<char*>(
+            GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(m_data.size()));
+        memcpy(buffer, m_data.data(), m_data.size());
+    }
+    Blob::BlobData blobData(m_data.size(), typeStr, buffer, m_isClosed, false,
+                            false);
+    return new Blob(executionContext, blobData);
 }
 } // namespace Starfish

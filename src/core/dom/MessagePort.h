@@ -42,6 +42,9 @@ public:
     }
     void clearAllTasks()
     {
+        for (auto* msg : m_innerQueue) {
+            delete msg;
+        }
         m_innerQueue.clear();
         m_innerQueue.shrink_to_fit();
     }

@@ -149,7 +149,7 @@ void WorkerProxy::removeSerializedMessage(
     auto iter = std::find(m_serializedMessages.begin(),
                           m_serializedMessages.end(), serializedMessage);
     if (iter != m_serializedMessages.end()) {
-        GC_FREE(serializedMessage);
+        delete serializedMessage;
         m_serializedMessages.erase(iter);
     }
 }
@@ -162,7 +162,7 @@ void WorkerProxy::clearSerializedMessages()
     // freed and remains in the vector.
     for (SerializeWithTransferResult* serializedMessage :
          m_serializedMessages) {
-        GC_FREE(serializedMessage);
+        delete serializedMessage;
     }
 
     m_serializedMessages.clear();
