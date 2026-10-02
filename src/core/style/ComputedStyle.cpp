@@ -1304,63 +1304,48 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
 #undef TO_FIXED
     }
 
+    // Shadow offsets, blur and spread are absolute lengths at computed-value
+    // time (CSS Backgrounds 3 #the-box-shadow); percentages are not allowed.
+    auto computeShadowLength = [&](Length value) {
+        if (!value.isComputed()) {
+            value.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                        windowSize.width(), windowSize.height(),
+                                        this);
+            if (value.isCalc()) {
+                value = Length(Length::Fixed,
+                               value.specifiedValue(LayoutUnit(), current));
+            }
+        }
+        return value;
+    };
+    // Math functions are range-clamped at computed-value time; a literal
+    // negative blur is rejected at parse time, so only resolved lengths
+    // need clamping. Viewport lengths stay unresolved here.
+    // https://www.w3.org/TR/css-values-4/#calc-range
+    auto computeShadowRadius = [&](Length value) {
+        value = computeShadowLength(value);
+        if (value.isFixed() && value.fixed() < 0) {
+            value = Length(Length::Fixed, 0);
+        }
+        return value;
+    };
+
     if (textShadow()) {
         for (auto& shadow :
              m_inheritedStyles.m_rareData->m_textShadowDataList) {
-            if (!shadow.offsetX().isComputed()) {
-                auto v = shadow.offsetX();
-                v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
-                                        windowSize.width(), windowSize.height(),
-                                        this);
-                shadow.setOffsetX(v);
-            }
-            if (!shadow.offsetY().isComputed()) {
-                auto v = shadow.offsetY();
-                v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
-                                        windowSize.width(), windowSize.height(),
-                                        this);
-                shadow.setOffsetY(v);
-            }
-            if (!shadow.radius().isComputed()) {
-                auto v = shadow.radius();
-                v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
-                                        windowSize.width(), windowSize.height(),
-                                        this);
-                shadow.setRadius(v);
-            }
+            shadow.setOffsetX(computeShadowLength(shadow.offsetX()));
+            shadow.setOffsetY(computeShadowLength(shadow.offsetY()));
+            shadow.setRadius(computeShadowRadius(shadow.radius()));
         }
     }
 
     if (boxShadow()) {
         for (auto& shadow : (*m_rareComputedStyleData.boxShadow())) {
-            if (!shadow.offsetX().isComputed()) {
-                auto v = shadow.offsetX();
-                v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
-                                        windowSize.width(), windowSize.height(),
-                                        this);
-                shadow.setOffsetX(v);
-            }
-            if (!shadow.offsetY().isComputed()) {
-                auto v = shadow.offsetY();
-                v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
-                                        windowSize.width(), windowSize.height(),
-                                        this);
-                shadow.setOffsetY(v);
-            }
-            if (!shadow.radius().isComputed()) {
-                auto v = shadow.radius();
-                v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
-                                        windowSize.width(), windowSize.height(),
-                                        this);
-                shadow.setRadius(v);
-            }
-            if (!shadow.spreadDistance().isComputed()) {
-                auto v = shadow.spreadDistance();
-                v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
-                                        windowSize.width(), windowSize.height(),
-                                        this);
-                shadow.setSpreadDistance(v);
-            }
+            shadow.setOffsetX(computeShadowLength(shadow.offsetX()));
+            shadow.setOffsetY(computeShadowLength(shadow.offsetY()));
+            shadow.setRadius(computeShadowRadius(shadow.radius()));
+            shadow.setSpreadDistance(
+                computeShadowLength(shadow.spreadDistance()));
         }
     }
 

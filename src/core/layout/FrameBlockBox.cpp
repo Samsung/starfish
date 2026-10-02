@@ -121,10 +121,13 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
             if (isFlexItem()) {
                 bool isColumnFlexDirection =
                     cb->asFrameFlexibleBox()->isColumnDirection();
+                // CSS Flexbox 1 section 9.4: only stretch-aligned items
+                // use the flex line's cross size; align-self overrides
+                // the container's align-items.
                 bool needToStrechWidth =
                     cb->style()->flexWrap() ==
                         FlexWrapValue::NoWrapFlexWrapValue &&
-                    cb->style()->alignItems() == StretchAlignItemValue;
+                    style()->alignSelf() == StretchAlignItemValue;
 
                 shouldComputeWithNormalBlockWidthRule =
                     isColumnFlexDirection && needToStrechWidth;

@@ -1,3 +1,5 @@
+test/cairo/internal-test/css/flex/align-self-column-auto-width.html
+test/cairo/internal-test/css/box-shadow/calc-shadow-lengths.html
 test/cairo/internal-test/css/all/all_repeated_use.html
 test/cairo/internal-test/css/constructable-stylesheet/constructable-stylesheets-insertRule.html
 test/cairo/internal-test/css/constructable-stylesheet/constructor_options_test.html
