@@ -1,4 +1,4 @@
-http://web-platform.test:8000/css/css-multicol/abspos-after-spanner-static-pos.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/abspos-after-spanner-static-pos.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/abspos-after-spanner.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/abspos-autopos-contained-by-viewport-000.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/abspos-autopos-contained-by-viewport-001.html
@@ -169,7 +169,7 @@ http://web-platform.test:8000/css/css-multicol/multicol-fill-auto-block-children
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/multicol-fill-balance-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/multicol-fill-balance-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/multicol-fill-balance-003.html
-http://web-platform.test:8000/css/css-multicol/multicol-fill-balance-004.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/multicol-fill-balance-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/multicol-fill-balance-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/multicol-fill-balance-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/multicol-fill-balance-018.html

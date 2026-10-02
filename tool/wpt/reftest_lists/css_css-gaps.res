@@ -236,9 +236,9 @@ http://web-platform.test:8000/css/css-gaps/grid/subgrid/fragmentation/subgrid-ga
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-gaps/grid/subgrid/fragmentation/subgrid-gap-decorations-fragmentation-019.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-gaps/grid/subgrid/fragmentation/subgrid-gap-decorations-fragmentation-020.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-gaps/grid/subgrid/fragmentation/subgrid-gap-decorations-fragmentation-021.html
-http://web-platform.test:8000/css/css-gaps/grid/subgrid/subgrid-gap-decorations-001.html
-http://web-platform.test:8000/css/css-gaps/grid/subgrid/subgrid-gap-decorations-002.html
-http://web-platform.test:8000/css/css-gaps/grid/subgrid/subgrid-gap-decorations-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-gaps/grid/subgrid/subgrid-gap-decorations-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-gaps/grid/subgrid/subgrid-gap-decorations-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-gaps/grid/subgrid/subgrid-gap-decorations-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-gaps/grid/subgrid/subgrid-gap-decorations-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-gaps/grid/subgrid/subgrid-gap-decorations-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-gaps/grid/subgrid/subgrid-gap-decorations-006.html

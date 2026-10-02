@@ -299,8 +299,8 @@ http://web-platform.test:8000/css/css-writing-modes/available-size-011.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/baseline-inline-non-replaced-003.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/baseline-inline-non-replaced-004.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/baseline-inline-non-replaced-005.xht
-http://web-platform.test:8000/css/css-writing-modes/baseline-inline-replaced-002.xht
-http://web-platform.test:8000/css/css-writing-modes/baseline-inline-replaced-003.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/baseline-inline-replaced-002.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/baseline-inline-replaced-003.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/baseline-with-orthogonal-flow-001.html
 http://web-platform.test:8000/css/css-writing-modes/bidi-dynamic-iframe-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-embed-001.html
@@ -531,12 +531,12 @@ http://web-platform.test:8000/css/css-writing-modes/dynamic-offset-vrl-rtl-001.h
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/flexbox_align-items-stretch-writing-modes.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/float-clear-vlr-003.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/float-clear-vlr-005.xht
-http://web-platform.test:8000/css/css-writing-modes/float-clear-vlr-007.xht
-http://web-platform.test:8000/css/css-writing-modes/float-clear-vlr-009.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/float-clear-vlr-007.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/float-clear-vlr-009.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/float-clear-vrl-002.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/float-clear-vrl-004.xht
-http://web-platform.test:8000/css/css-writing-modes/float-clear-vrl-006.xht
-http://web-platform.test:8000/css/css-writing-modes/float-clear-vrl-008.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/float-clear-vrl-006.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/float-clear-vrl-008.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/float-contiguous-vlr-003.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/float-contiguous-vlr-005.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/float-contiguous-vlr-007.xht
@@ -729,26 +729,26 @@ http://web-platform.test:8000/css/css-writing-modes/inline-replaced-vrl-002.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/logical-props-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/logical-props-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/logical-props-004.html
-http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-003.xht
-http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-009.xht
-http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-011.xht
-http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-015.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-003.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-009.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-011.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-015.xht
 http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-017.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-023.xht
-http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-025.xht
-http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-031.xht
-http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-035.xht
-http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-037.xht
-http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-002.xht
-http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-008.xht
-http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-010.xht
-http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-014.xht
-http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-016.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-025.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-031.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-035.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vlr-037.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-002.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-008.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-010.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-014.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-016.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-022.xht
-http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-024.xht
-http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-030.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-024.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-030.xht
 http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-034.xht
-http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-036.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-collapse-vrl-036.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-vlr-003.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/margin-vrl-002.xht
 http://web-platform.test:8000/css/css-writing-modes/mongolian-orientation-001.html

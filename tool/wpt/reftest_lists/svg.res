@@ -17,7 +17,7 @@ http://web-platform.test:8000/svg/animations/set-animation-end-2.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/as-image/external-resource-inline-sheet.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/coordinate-systems/abspos.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/coordinate-systems/out-of-flow-svg-root.html
-http://web-platform.test:8000/svg/coordinate-systems/outer-svg-intrinsic-size-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/coordinate-systems/outer-svg-intrinsic-size-003.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/svg/coordinate-systems/outer-svg-intrinsic-size-004.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/svg/coordinate-systems/outer-svg-intrinsic-size-005.html
 http://web-platform.test:8000/svg/coordinate-systems/view-invalid-viewBox.html

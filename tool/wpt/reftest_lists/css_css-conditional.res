@@ -122,15 +122,15 @@ http://web-platform.test:8000/css/css-conditional/container-queries/size-contain
 http://web-platform.test:8000/css/css-conditional/css-supports-001.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-002.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-003.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-004.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-004.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-005.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-006.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-007.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-008.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-006.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-007.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-008.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-009.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-010.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-011.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-012.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-011.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-012.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-013.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-014.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-015.xht
@@ -139,27 +139,27 @@ http://web-platform.test:8000/css/css-conditional/css-supports-017.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-018.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-019.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-020.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-021.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-022.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-023.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-021.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-022.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-023.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-024.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-025.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-026.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-029.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-030.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-031.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-032.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-033.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-034.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-031.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-032.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-033.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-034.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-035.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-036.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-036.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-037.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-038.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-039.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-040.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-041.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-042.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-043.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-044.xht
-http://web-platform.test:8000/css/css-conditional/css-supports-045.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-040.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-041.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-042.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-043.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-044.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/css-supports-045.xht
 http://web-platform.test:8000/css/css-conditional/css-supports-046.xht

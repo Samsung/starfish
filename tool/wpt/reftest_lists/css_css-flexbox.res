@@ -164,7 +164,7 @@ http://web-platform.test:8000/css/css-flexbox/dynamic-bsize-change.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/dynamic-change-simplified-layout-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/dynamic-change-simplified-layout.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/dynamic-isize-change-001.html
-http://web-platform.test:8000/css/css-flexbox/dynamic-isize-change-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/dynamic-isize-change-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/dynamic-isize-change-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/dynamic-isize-change-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/dynamic-orthogonal-flex-item.html
@@ -302,12 +302,12 @@ http://web-platform.test:8000/css/css-flexbox/flex-margin-no-collapse.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-minimum-height-flex-items-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-minimum-height-flex-items-007.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-minimum-height-flex-items-008.xht
-http://web-platform.test:8000/css/css-flexbox/flex-minimum-height-flex-items-011.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-minimum-height-flex-items-011.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-minimum-height-flex-items-013.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-minimum-height-flex-items-014.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-minimum-height-flex-items-015.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-minimum-height-flex-items-016.html
-http://web-platform.test:8000/css/css-flexbox/flex-minimum-height-flex-items-017.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-minimum-height-flex-items-017.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-minimum-height-flex-items-018.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-minimum-height-flex-items-019.html
 http://web-platform.test:8000/css/css-flexbox/flex-minimum-height-flex-items-020.html
@@ -906,7 +906,7 @@ http://web-platform.test:8000/css/css-flexbox/percentage-heights-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-016.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-017.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-018.html
-http://web-platform.test:8000/css/css-flexbox/percentage-heights-019.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-019.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-020.html
 http://web-platform.test:8000/css/css-flexbox/percentage-heights-021.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-022.html

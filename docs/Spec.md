@@ -77,6 +77,16 @@ this section are supported. In addition, LWE supports only HTML5 documents, and
 it assumes all input documents are HTML5 documents even if `!DOCTYPE` is not
 explicitly specified.
 
+Documents served with an XML MIME type (`application/xhtml+xml`, `text/xml`,
+`application/xml`, `*/*+xml`) are also parsed with the HTML parser — there
+is no XML parser for navigated documents. The only XML-specific parsing
+behavior is that CDATA sections (`<![CDATA[ ... ]]>`) are recognized in all
+text content, including `<style>`, `<script>`, `<title>` and `<textarea>`,
+as XML allows them wherever character data may occur. XML well-formedness
+is not enforced, DTD-declared entities and non-HTML namespace prefixes are
+not supported, and the XML declaration / processing instructions are parsed
+as (bogus) comments.
+
 
 | HTML Tag | Attribute | Allowed Value | Note |
 |----------|-----------|---------------|------|

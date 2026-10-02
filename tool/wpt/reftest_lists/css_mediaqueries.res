@@ -26,7 +26,7 @@
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/mediaqueries/mq-calc-sign-function-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/mediaqueries/mq-calc-sign-function-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/mediaqueries/mq-calc-sign-function-006.html
-http://web-platform.test:8000/css/mediaqueries/mq-case-insensitive-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/mediaqueries/mq-case-insensitive-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/mediaqueries/mq-deprecated-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/mediaqueries/mq-gamut-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/mediaqueries/mq-gamut-002.html

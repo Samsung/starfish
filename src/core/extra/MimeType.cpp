@@ -66,6 +66,20 @@ String* MimeType::stringWithoutParameter()
     return String::emptyString;
 }
 
+bool MimeType::isXMLMIMEType(String* str)
+{
+    MimeType mimeType = parseFromString(str);
+    if (!mimeType.isValid()) {
+        return false;
+    }
+    // https://mimesniff.spec.whatwg.org/#xml-mime-type
+    if (mimeType.subtype()->endsWith("+xml")) {
+        return true;
+    }
+    String* essence = mimeType.stringWithoutParameter();
+    return essence->equals("text/xml") || essence->equals("application/xml");
+}
+
 MimeType MimeType::parseFromString(String* str)
 {
     MimeType invalid, result;

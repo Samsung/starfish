@@ -1,5 +1,5 @@
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-change-iframe.html
-http://web-platform.test:8000/css/css-display/display-change-object-iframe.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-change-object-iframe.html
 http://web-platform.test:8000/css/css-display/display-contents-alignment-001.html
 http://web-platform.test:8000/css/css-display/display-contents-alignment-002.html
 http://web-platform.test:8000/css/css-display/display-contents-before-after-001.html

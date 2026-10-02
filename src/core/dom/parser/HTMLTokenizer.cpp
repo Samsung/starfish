@@ -98,6 +98,19 @@ static inline bool isEndTagBufferingState(HTMLTokenizer::State state)
 #define HTML_RECONSUME_IN(stateName) RECONSUME_IN(HTMLTokenizer, stateName)
 #define HTML_ADVANCE_TO(stateName) ADVANCE_TO(HTMLTokenizer, stateName)
 #define HTML_SWITCH_TO(stateName) SWITCH_TO(HTMLTokenizer, stateName)
+#define HTML_ADVANCE_TO_CDATA_SECTION_RETURN_STATE() \
+    do {                                             \
+        switch (m_cdataSectionReturnState) {         \
+        case HTMLTokenizer::RCDATAState:             \
+            HTML_ADVANCE_TO(RCDATAState);            \
+        case HTMLTokenizer::RAWTEXTState:            \
+            HTML_ADVANCE_TO(RAWTEXTState);           \
+        case HTMLTokenizer::ScriptDataState:         \
+            HTML_ADVANCE_TO(ScriptDataState);        \
+        default:                                     \
+            HTML_ADVANCE_TO(DataState);              \
+        }                                            \
+    } while (false)
 
 HTMLTokenizer::HTMLTokenizer()
     : m_inputStreamPreprocessor(this)
@@ -115,6 +128,8 @@ void HTMLTokenizer::reset()
     m_token = 0;
     m_forceNullCharacterReplacement = false;
     m_shouldAllowCDATA = false;
+    m_isXMLContent = false;
+    m_cdataSectionReturnState = HTMLTokenizer::DataState;
     m_additionalAllowedCharacter = '\0';
 }
 
@@ -148,6 +163,19 @@ void HTMLTokenizer::restoreFromCheckpoint(const Checkpoint& checkpoint)
     m_additionalAllowedCharacter = checkpoint.additionalAllowedCharacter;
     m_inputStreamPreprocessor.reset(checkpoint.skipNextNewLine);
     m_shouldAllowCDATA = checkpoint.shouldAllowCDATA;
+}
+
+inline SegmentedString::LookAheadResult
+HTMLTokenizer::tryConsumeCDATASectionStart(SegmentedString& source,
+                                           State returnState)
+{
+    SegmentedString::LookAheadResult result =
+        source.lookAhead(String::createASCIIString("![CDATA["));
+    if (result == SegmentedString::DidMatch) {
+        advanceStringAndASSERT(source, "![CDATA[");
+        m_cdataSectionReturnState = returnState;
+    }
+    return result;
 }
 
 inline bool HTMLTokenizer::processEntity(SegmentedString& source)
@@ -398,6 +426,16 @@ bool HTMLTokenizer::nextToken(SegmentedString& source, HTMLToken& token)
 
         HTML_BEGIN_STATE(RCDATALessThanSignState)
         {
+            if (cc == '!' && m_isXMLContent) {
+                SegmentedString::LookAheadResult result =
+                    tryConsumeCDATASectionStart(source,
+                                                HTMLTokenizer::RCDATAState);
+                if (result == SegmentedString::DidMatch) {
+                    HTML_SWITCH_TO(CDATASectionState);
+                } else if (result == SegmentedString::NotEnoughCharacters) {
+                    return haveBufferedCharacterToken();
+                }
+            }
             if (cc == '/') {
                 m_temporaryBuffer.clear();
                 STARFISH_ASSERT(m_bufferedEndTagName.size() == 0);
@@ -467,6 +505,16 @@ bool HTMLTokenizer::nextToken(SegmentedString& source, HTMLToken& token)
 
         HTML_BEGIN_STATE(RAWTEXTLessThanSignState)
         {
+            if (cc == '!' && m_isXMLContent) {
+                SegmentedString::LookAheadResult result =
+                    tryConsumeCDATASectionStart(source,
+                                                HTMLTokenizer::RAWTEXTState);
+                if (result == SegmentedString::DidMatch) {
+                    HTML_SWITCH_TO(CDATASectionState);
+                } else if (result == SegmentedString::NotEnoughCharacters) {
+                    return haveBufferedCharacterToken();
+                }
+            }
             if (cc == '/') {
                 m_temporaryBuffer.clear();
                 STARFISH_ASSERT(m_bufferedEndTagName.size() == 0);
@@ -536,6 +584,16 @@ bool HTMLTokenizer::nextToken(SegmentedString& source, HTMLToken& token)
 
         HTML_BEGIN_STATE(ScriptDataLessThanSignState)
         {
+            if (cc == '!' && m_isXMLContent) {
+                SegmentedString::LookAheadResult result =
+                    tryConsumeCDATASectionStart(source,
+                                                HTMLTokenizer::ScriptDataState);
+                if (result == SegmentedString::DidMatch) {
+                    HTML_SWITCH_TO(CDATASectionState);
+                } else if (result == SegmentedString::NotEnoughCharacters) {
+                    return haveBufferedCharacterToken();
+                }
+            }
             if (cc == '/') {
                 m_temporaryBuffer.clear();
                 STARFISH_ASSERT(m_bufferedEndTagName.size() == 0);
@@ -1182,11 +1240,12 @@ bool HTMLTokenizer::nextToken(SegmentedString& source, HTMLToken& token)
                 } else if (result == SegmentedString::NotEnoughCharacters) {
                     return haveBufferedCharacterToken();
                 }
-            } else if (cc == '[' && shouldAllowCDATA()) {
+            } else if (cc == '[' && isCDATASectionAllowed()) {
                 SegmentedString::LookAheadResult result =
                     source.lookAhead(String::createASCIIString("[CDATA["));
                 if (result == SegmentedString::DidMatch) {
                     advanceStringAndASSERT(source, "[CDATA[");
+                    m_cdataSectionReturnState = HTMLTokenizer::DataState;
                     HTML_SWITCH_TO(CDATASectionState);
                 } else if (result == SegmentedString::NotEnoughCharacters) {
                     return haveBufferedCharacterToken();
@@ -1698,7 +1757,7 @@ bool HTMLTokenizer::nextToken(SegmentedString& source, HTMLToken& token)
         HTML_BEGIN_STATE(CDATASectionDoubleRightSquareBracketState)
         {
             if (cc == '>') {
-                HTML_ADVANCE_TO(DataState);
+                HTML_ADVANCE_TO_CDATA_SECTION_RETURN_STATE();
             } else {
                 bufferCharacter(']');
                 bufferCharacter(']');

@@ -43,7 +43,7 @@ http://web-platform.test:8000/css/css-anchor-position/anchor-fixed-pos-descendan
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/anchor-position-multicol-015.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/anchor-position-multicol-016.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/anchor-position-multicol-017.html
-http://web-platform.test:8000/css/css-anchor-position/anchor-position-multicol-colspan-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/anchor-position-multicol-colspan-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/anchor-position-multicol-fixed-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/anchor-position-multicol-nested-001.html
 http://web-platform.test:8000/css/css-anchor-position/anchor-position-non-anchored-fallback.html

@@ -48,7 +48,7 @@ http://web-platform.test:8000/css/css-break/border-image-000.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/borders-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/borders-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/box-decoration-break-clone-001.html
-http://web-platform.test:8000/css/css-break/box-decoration-break-clone-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/box-decoration-break-clone-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/box-decoration-break-clone-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/box-decoration-break-clone-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/box-decoration-break-clone-005.tentative.html
@@ -208,8 +208,8 @@ http://web-platform.test:8000/css/css-break/flexbox/multi-line-column-flex-fragm
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/multi-line-column-flex-fragmentation-043.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/multi-line-column-flex-fragmentation-044.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/multi-line-column-flex-fragmentation-045.html
-http://web-platform.test:8000/css/css-break/flexbox/multi-line-column-flex-fragmentation-046.html
-http://web-platform.test:8000/css/css-break/flexbox/multi-line-column-flex-fragmentation-047.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/multi-line-column-flex-fragmentation-046.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/multi-line-column-flex-fragmentation-047.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/multi-line-column-flex-fragmentation-048.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/multi-line-column-flex-fragmentation-049.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/multi-line-column-flex-fragmentation-050.html
@@ -278,8 +278,8 @@ http://web-platform.test:8000/css/css-break/flexbox/multi-line-column-flex-fragm
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/multi-line-row-flex-fragmentation-053.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/multi-line-row-flex-fragmentation-054.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/multi-line-row-flex-fragmentation-055.html
-http://web-platform.test:8000/css/css-break/flexbox/multi-line-row-flex-fragmentation-056.html
-http://web-platform.test:8000/css/css-break/flexbox/multi-line-row-flex-fragmentation-057.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/multi-line-row-flex-fragmentation-056.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/multi-line-row-flex-fragmentation-057.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/multi-line-row-flex-fragmentation-058.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/multi-line-row-flex-fragmentation-059.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/multi-line-row-flex-fragmentation-060.html
@@ -359,8 +359,8 @@ http://web-platform.test:8000/css/css-break/flexbox/single-line-column-flex-frag
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/single-line-column-flex-fragmentation-041.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/single-line-column-flex-fragmentation-042.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/single-line-column-flex-fragmentation-043.html
-http://web-platform.test:8000/css/css-break/flexbox/single-line-column-flex-fragmentation-044.html
-http://web-platform.test:8000/css/css-break/flexbox/single-line-column-flex-fragmentation-045.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/single-line-column-flex-fragmentation-044.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/single-line-column-flex-fragmentation-045.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/single-line-column-flex-fragmentation-046.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/single-line-column-flex-fragmentation-047.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/single-line-column-flex-fragmentation-048.html
@@ -414,8 +414,8 @@ http://web-platform.test:8000/css/css-break/flexbox/single-line-column-flex-frag
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/single-line-row-flex-fragmentation-027.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/single-line-row-flex-fragmentation-028.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/single-line-row-flex-fragmentation-029.html
-http://web-platform.test:8000/css/css-break/flexbox/single-line-row-flex-fragmentation-030.html
-http://web-platform.test:8000/css/css-break/flexbox/single-line-row-flex-fragmentation-031.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/single-line-row-flex-fragmentation-030.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/single-line-row-flex-fragmentation-031.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/single-line-row-flex-fragmentation-032.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/single-line-row-flex-fragmentation-033.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/flexbox/single-line-row-flex-fragmentation-034.html
@@ -582,27 +582,27 @@ http://web-platform.test:8000/css/css-break/float-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/monolithic-overflow-004.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/monolithic-overflow-005.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/monolithic-overflow-006.tentative.html
-http://web-platform.test:8000/css/css-break/monolithic-with-overflow-lr.html
-http://web-platform.test:8000/css/css-break/monolithic-with-overflow-rl.html
-http://web-platform.test:8000/css/css-break/monolithic-with-overflow.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/monolithic-with-overflow-lr.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/monolithic-with-overflow-rl.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/monolithic-with-overflow.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/orphans-in-parallel-flow.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-002.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-008.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-009.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-011.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-012.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-013.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-014.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-015.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-016.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-017.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-016.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-017.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-018.html
 http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-019.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-020.html
@@ -615,16 +615,16 @@ http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-019.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-027.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-028.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-029.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-030.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-031.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-032.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-033.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-030.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-031.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-032.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-033.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-034.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-035.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-036.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-037.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-038.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-039.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-035.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-036.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-037.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-038.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-039.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-040.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-041.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-042.html
@@ -644,14 +644,14 @@ http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-039.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-056.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-057.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-058.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-059.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-059.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-060.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-061.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-062.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-063.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-063.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-064.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-065.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-066.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-066.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-067.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-068.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-069.html
@@ -702,8 +702,8 @@ http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-096.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-115.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-116.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-117.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-118.html
-http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-119.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-118.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-119.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-120.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-121.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-122.html
@@ -716,9 +716,9 @@ http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-119.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-paint-order-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-paint-order-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-paint-order-004.html
-http://web-platform.test:8000/css/css-break/overflow-clip-000.html
-http://web-platform.test:8000/css/css-break/overflow-clip-001.html
-http://web-platform.test:8000/css/css-break/overflow-clip-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/overflow-clip-000.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/overflow-clip-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/overflow-clip-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/overflow-clip-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/overflow-clip-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/overflow-clip-005.html

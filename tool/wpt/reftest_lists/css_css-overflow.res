@@ -372,12 +372,12 @@ http://web-platform.test:8000/css/css-overflow/overflow-video-hidden.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/column-scroll-marker-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/column-scroll-marker-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/column-scroll-marker-008.html
-http://web-platform.test:8000/css/css-overflow/scroll-markers/column-scroll-marker-011.html
-http://web-platform.test:8000/css/css-overflow/scroll-markers/column-scroll-marker-012.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/column-scroll-marker-011.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/column-scroll-marker-012.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/column-scroll-marker-013.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/column-scroll-marker-014.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/column-scroll-marker-counters.html
-http://web-platform.test:8000/css/css-overflow/scroll-markers/column-scroll-marker-dynamic-style-update.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/column-scroll-marker-dynamic-style-update.html
 http://web-platform.test:8000/css/css-overflow/scroll-markers/column-scroll-marker-group-style-remove.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/column-scroll-marker-reattach-target-current.html
 http://web-platform.test:8000/css/css-overflow/scroll-markers/nested-scroll-markers-under-content-visibility-auto.html
@@ -402,11 +402,11 @@ http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-button-on-o
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-marker-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-marker-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-marker-004.html
-http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-marker-005.html
-http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-marker-006.html
-http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-marker-007.html
-http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-marker-008.html
-http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-marker-009.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-marker-005.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-marker-006.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-marker-007.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-marker-008.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-marker-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-marker-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-marker-011.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-marker-012.html

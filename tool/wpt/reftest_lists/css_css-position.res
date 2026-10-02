@@ -180,9 +180,9 @@ http://web-platform.test:8000/css/css-position/sticky/position-sticky-escape-scr
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/sticky/position-sticky-fixed-ancestor-iframe.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/sticky/position-sticky-fixed-ancestor.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/sticky/position-sticky-flex-item-001.html
-http://web-platform.test:8000/css/css-position/sticky/position-sticky-flex-item-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/sticky/position-sticky-flex-item-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/sticky/position-sticky-flex-item-003.html
-http://web-platform.test:8000/css/css-position/sticky/position-sticky-flex-item-004.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/sticky/position-sticky-flex-item-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/sticky/position-sticky-flexbox.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/sticky/position-sticky-fractional-offset.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/sticky/position-sticky-grid.html

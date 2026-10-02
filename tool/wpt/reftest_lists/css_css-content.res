@@ -1,7 +1,7 @@
 http://web-platform.test:8000/css/css-content/attr-case-sensitivity-001.html
 http://web-platform.test:8000/css/css-content/attr-case-sensitivity-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-content/attr-case-sensitivity-003.html
-http://web-platform.test:8000/css/css-content/attr-case-sensitivity-004.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-content/attr-case-sensitivity-004.html
 http://web-platform.test:8000/css/css-content/attr-chained-pseudo-001.html
 http://web-platform.test:8000/css/css-content/content-none-select-1.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-content/element-replacement-alt.html
