@@ -143,7 +143,8 @@ public:
         }
 
         Document* document = executionContext->document();
-        TextResource* res = document->resourceLoader().fetchText(targetURL);
+        RawTextResource* res =
+            document->resourceLoader().fetchRawText(targetURL);
         res->addResourceClient(new DeferredScriptDownloadClient(res, document));
 
         RequestData* reqData = new RequestData();
@@ -235,10 +236,12 @@ public:
                              ->toUTF8NonGCString();
                 bool isModule = client->m_isModule;
                 if (isJavaScriptType(s.data(), s.length())) {
-                    String* text = client->m_resource->asTextResource()->text();
                     if (isModule) {
                         Optional<ScriptModule> module = initModule(
-                            m_document->window()->scriptBindingInstance(), text,
+                            m_document->window()->scriptBindingInstance(),
+                            createScriptSource(
+                                m_document->window()->scriptBindingInstance(),
+                                client->resource()->asTextResource()),
                             client->resource()->url()->urlString());
                         auto& moduleScripts = m_document->moduleScripts();
                         if (module) {
@@ -279,10 +282,13 @@ public:
                             client->m_element->document(),
                             client->m_element.value());
                         ScriptProfileLogger logger;
-                        evaluateString(
+                        evaluateScript(
                             client->m_element->window()
                                 ->scriptBindingInstance(),
-                            text,
+                            createScriptSource(
+                                client->m_element->window()
+                                    ->scriptBindingInstance(),
+                                client->resource()->asTextResource()),
                             ResourceClient::resource()->url()->urlString());
                     }
                 }
@@ -298,9 +304,11 @@ public:
                 auto s = client->m_responseMIMEType->toASCIILower()
                              ->toUTF8NonGCString();
                 if (isJavaScriptType(s.data(), s.length())) {
-                    String* text = client->m_resource->asTextResource()->text();
                     Optional<ScriptModule> module = initModule(
-                        m_document->window()->scriptBindingInstance(), text,
+                        m_document->window()->scriptBindingInstance(),
+                        createScriptSource(
+                            m_document->window()->scriptBindingInstance(),
+                            client->resource()->asTextResource()),
                         client->resource()->url()->urlString());
                     auto& moduleScripts = m_document->moduleScripts();
                     if (module) {
@@ -428,12 +436,14 @@ public:
                      ->toASCIILower()
                      ->toUTF8NonGCString();
         if (isJavaScriptType(s.data(), s.length())) {
-            String* text = m_resource->asTextResource()->text();
             Document::CurrentScriptManager currentScriptManager(
                 m_element->document(), m_element);
             ScriptProfileLogger logger;
-            evaluateString(m_element->window()->scriptBindingInstance(), text,
-                           ResourceClient::resource()->url()->urlString());
+            evaluateScript(
+                m_element->window()->scriptBindingInstance(),
+                createScriptSource(m_element->window()->scriptBindingInstance(),
+                                   m_resource->asTextResource()),
+                ResourceClient::resource()->url()->urlString());
         }
         didScriptLoaded();
     }
@@ -494,8 +504,8 @@ static void buildScriptResourceRequest(HTMLScriptElement* element,
                           ->getAttributeOrEmpty(
                               element->starfish()->staticStrings()->m_charset)
                           ->trim();
-    TextResource* res =
-        element->document()->resourceLoader().fetchText(targetURL, charset);
+    RawTextResource* res =
+        element->document()->resourceLoader().fetchRawText(targetURL, charset);
     if (module || (!async && defer)) {
         res->addResourceClient(
             new DeferredScriptDownloadClient(element, res, fromParser, module));

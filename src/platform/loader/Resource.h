@@ -28,6 +28,7 @@
 namespace Starfish {
 
 class TextResource;
+class RawTextResource;
 class ImageResource;
 class FontResource;
 class ResourceLoader;
@@ -51,6 +52,7 @@ public:
         ResourceType,
         ImageResourceType,
         TextResourceType,
+        RawTextResourceType,
         FontResourceType,
     };
 
@@ -89,6 +91,11 @@ public:
         return false;
     }
 
+    virtual bool isRawTextResource()
+    {
+        return false;
+    }
+
     virtual bool isImageResource()
     {
         return false;
@@ -103,6 +110,12 @@ public:
     {
         STARFISH_ASSERT(isTextResource());
         return (TextResource*)this;
+    }
+
+    RawTextResource* asRawTextResource()
+    {
+        STARFISH_ASSERT(isRawTextResource());
+        return (RawTextResource*)this;
     }
 
     ImageResource* asImageResource()

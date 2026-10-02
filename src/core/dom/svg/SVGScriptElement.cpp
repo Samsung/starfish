@@ -145,14 +145,17 @@ public:
             auto s =
                 client->m_responseMIMEType->toASCIILower()->toUTF8NonGCString();
             if (isJavaScriptType(s.data(), s.length())) {
-                String* text = client->m_resource->asTextResource()->text();
                 client->m_element->document()->appendCurrentScript(
                     client->m_element);
                 {
                     ScriptProfileLogger logger;
-                    evaluateString(
+                    evaluateScript(
                         client->m_element->window()->scriptBindingInstance(),
-                        text, ResourceClient::resource()->url()->urlString());
+                        createScriptSource(
+                            client->m_element->window()
+                                ->scriptBindingInstance(),
+                            client->m_resource->asTextResource()),
+                        ResourceClient::resource()->url()->urlString());
                 }
                 client->m_element->document()->popCurrentScript();
             }
@@ -215,12 +218,14 @@ public:
                      ->toASCIILower()
                      ->toUTF8NonGCString();
         if (isJavaScriptType(s.data(), s.length())) {
-            String* text = m_resource->asTextResource()->text();
             Document::CurrentScriptManager currentScriptManager(
                 m_element->document(), m_element);
             ScriptProfileLogger logger;
-            evaluateString(m_element->window()->scriptBindingInstance(), text,
-                           ResourceClient::resource()->url()->urlString());
+            evaluateScript(
+                m_element->window()->scriptBindingInstance(),
+                createScriptSource(m_element->window()->scriptBindingInstance(),
+                                   m_resource->asTextResource()),
+                ResourceClient::resource()->url()->urlString());
         }
         didScriptLoaded();
     }
@@ -354,8 +359,8 @@ bool SVGScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             String* charset =
                 getAttributeOrEmpty(starfish()->staticStrings()->m_charset)
                     ->trim();
-            TextResource* res =
-                document()->resourceLoader().fetchText(rurl, charset);
+            RawTextResource* res =
+                document()->resourceLoader().fetchRawText(rurl, charset);
             if (!async() && defer()) {
                 res->addResourceClient(
                     new DeferredSVGScriptDownloadClient(this, res));

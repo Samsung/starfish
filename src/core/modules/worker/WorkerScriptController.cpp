@@ -55,9 +55,16 @@ public:
         if (request->readyState() == ReadyState::Done) {
             if (request->isError() == false && request->status() == 200) {
                 auto& response = request->response();
-                String* text =
-                    String::fromUTF8(response.data(), response.size());
-                if (m_workerScriptController->evaluatefromString(text)) {
+                auto* scriptSource = createScriptSource(
+                    m_workerScriptController->scriptBindingInstance(),
+                    response.data(), response.size(), String::emptyString);
+
+                bool result = false;
+                evaluateScript(
+                    m_workerScriptController->scriptBindingInstance(),
+                    scriptSource, String::emptyString, &result);
+
+                if (result) {
                     m_scriptLoadResult = ScriptLoadResult::Success;
                 } else {
                     m_scriptLoadResult = ScriptLoadResult::ScriptError;

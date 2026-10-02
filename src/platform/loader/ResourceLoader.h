@@ -23,6 +23,7 @@
 #include "binding/DocumentHoldable.h"
 #include "platform/loader/Resource.h"
 #include "platform/loader/TextResource.h"
+#include "platform/loader/RawTextResource.h"
 #include "platform/loader/ImageResource.h"
 #include "platform/loader/FontResource.h"
 #include "platform/loader/HeaderResource.h"
@@ -51,6 +52,8 @@ public:
     Resource* fetch(ResourceURL* url);
     TextResource* fetchText(ResourceURL* url,
                             String* preferredEncoding = String::emptyString);
+    RawTextResource* fetchRawText(
+        ResourceURL* url, String* preferredEncoding = String::emptyString);
     ImageResource* fetchImage(ResourceURL* url);
     FontResource* fetchFont(ResourceURL* url);
     HeaderResource* fetchHeader(ResourceURL* url);

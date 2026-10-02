@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2026-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -21,13 +21,34 @@
 #include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/ExecutionContext.h"
-#include "platform/loader/TextResource.h"
+#include "platform/loader/RawTextResource.h"
 #include "core/page/Window.h"
 
 namespace Starfish {
 
-void TextResource::didDataReceived(const char* buffer, size_t length)
+static void rawTextResourceClear(void* obj, void* cd)
 {
+    RawTextResource* self = reinterpret_cast<RawTextResource*>(obj);
+    self->clearNativeResources();
+}
+
+void* RawTextResource::operator new(size_t size)
+{
+    constexpr static GC_finalizer_closure data = { rawTextResourceClear,
+                                                   nullptr };
+    return GC_finalized_malloc(size, &data);
+}
+
+void RawTextResource::clearNativeResources()
+{
+    std::string().swap(m_rawData);
+}
+
+void RawTextResource::didDataReceived(const char* buffer, size_t length)
+{
+    if (length != 0) {
+        m_rawData.append(buffer, length);
+    }
     if (!m_converter) {
         if (m_preferredEncoding->equals(String::emptyString)) {
             m_converter = new TextConverter(
@@ -41,10 +62,21 @@ void TextResource::didDataReceived(const char* buffer, size_t length)
             m_converter = new TextConverter(m_preferredEncoding);
         }
     }
-    if (length != 0) {
-        m_text = m_text->concat(m_converter->convert(buffer, length, true));
-    }
 
     Resource::didDataReceived(buffer, length);
 }
+
+String* RawTextResource::text()
+{
+    if (m_text->isEmpty() && !m_rawData.empty()) {
+        if (m_converter) {
+            m_text =
+                m_converter->convert(m_rawData.data(), m_rawData.size(), true);
+        } else {
+            m_text = String::fromUTF8(m_rawData.data(), m_rawData.size());
+        }
+    }
+    return m_text;
+}
+
 } // namespace Starfish
