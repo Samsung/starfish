@@ -20,6 +20,8 @@
 #ifndef __StarfishBlob__
 #define __StarfishBlob__
 
+#include <string>
+#include <vector>
 #include "binding/ScriptWrappable.h"
 #include "core/serialize/Serializer.h"
 #include "binding/generated/BufferSourceOrBlobOrDOMStringUnion.h"
@@ -150,19 +152,42 @@ protected:
 
 class SerializedBlobData : public SerializedPlatformObjectData {
 public:
-    SerializedBlobData(Blob::BlobData data)
-        : m_data(data)
+    SerializedBlobData(const std::string& type, const uint8_t* data,
+                       size_t size, bool isClosed)
+        : m_type(type)
+        , m_isClosed(isClosed)
+    {
+        if (data && size) {
+            m_data.assign(data, data + size);
+        }
+    }
+
+    virtual ~SerializedBlobData() override
     {
     }
 
     ScriptWrappable* createDeserializingInstance(
-        ExecutionContext* executionContext) const override
+        ExecutionContext* executionContext) const override;
+
+    const std::string& type() const
     {
-        return new Blob(executionContext, m_data);
+        return m_type;
+    }
+
+    const std::vector<uint8_t>& data() const
+    {
+        return m_data;
+    }
+
+    bool isClosed() const
+    {
+        return m_isClosed;
     }
 
 private:
-    Blob::BlobData m_data;
+    std::string m_type;
+    std::vector<uint8_t> m_data;
+    bool m_isClosed{ false };
 };
 } // namespace Starfish
 

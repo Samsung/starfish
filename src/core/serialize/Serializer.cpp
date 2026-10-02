@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include <EscargotPublic.h>
 using namespace Escargot;
+#include <unordered_set>
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/ExecutionContext.h"
@@ -49,7 +50,6 @@ void* SerializedStringData::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(SerializedStringData)] = { 0 };
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(SerializedStringData, m_data));
         descr =
             GC_make_descriptor(obj_bitmap, GC_WORD_LEN(SerializedStringData));
         typeInited = true;
@@ -504,7 +504,7 @@ static SerializedTypedData* serializeInternal(
         }
     } else if (value->isString()) {
         type = SerializedTypedData::StringPrimitive;
-        data = new SerializedStringData(value->asString());
+        data = new SerializedStringData(value->asString()->toStdUTF8String());
     } else if (value->isObject()) {
         primitive = false;
         ScriptObject obj = value->asObject();
@@ -519,7 +519,7 @@ static SerializedTypedData* serializeInternal(
         } else if (obj->isStringObject()) {
             type = SerializedTypedData::String;
             data = new SerializedStringData(
-                obj->asStringObject()->primitiveValue());
+                obj->asStringObject()->primitiveValue()->toStdUTF8String());
         } else if (obj->isDateObject()) {
             type = SerializedTypedData::Date;
             data = new SerializedPrimitiveValueData(
@@ -632,7 +632,9 @@ static ScriptValue deserializeInternal(ExecutionContext* executionContext,
         result = ValueRef::create(
             value->data()->asSerializedPrimitiveValueData()->numberData());
     } else if (value->isStringPrimitive()) {
-        result = value->data()->asSerializedStringData()->stringData();
+        const std::string& str =
+            value->data()->asSerializedStringData()->stringData();
+        result = createScriptString(str.data(), str.length());
     } else if (value->isBoolean()) {
         BooleanObjectRef* booleanObj = BooleanObjectRef::create(state);
         booleanObj->setPrimitiveValue(
@@ -649,8 +651,10 @@ static ScriptValue deserializeInternal(ExecutionContext* executionContext,
         result = numberObj;
     } else if (value->isString()) {
         StringObjectRef* stringObj = StringObjectRef::create(state);
+        const std::string& str =
+            value->data()->asSerializedStringData()->stringData();
         stringObj->setPrimitiveValue(
-            state, value->data()->asSerializedStringData()->stringData());
+            state, createScriptString(str.data(), str.length()));
         result = stringObj;
     } else if (value->isDate()) {
         DateObjectRef* dateObj = DateObjectRef::create(state);
@@ -877,5 +881,84 @@ void Serializer::deserializeWithTransfer(
     } else {
         throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR);
     }
+}
+
+static void destroySerializedTypedData(
+    SerializedTypedData* typedData,
+    std::unordered_set<SerializedTypedData*>& visitedTyped,
+    std::unordered_set<SerializedData*>& visitedData);
+
+static void destroySerializedData(
+    SerializedData* data,
+    std::unordered_set<SerializedTypedData*>& visitedTyped,
+    std::unordered_set<SerializedData*>& visitedData)
+{
+    if (!data || !visitedData.insert(data).second) {
+        return;
+    }
+
+    if (data->isSerializedArrayData()) {
+        auto* arrayData = data->asSerializedArrayData();
+        for (size_t i = 0; i < arrayData->length(); i++) {
+            destroySerializedTypedData(arrayData->value(i), visitedTyped,
+                                       visitedData);
+        }
+    } else if (data->isSerializedObjectData()) {
+        auto* objData = data->asSerializedObjectData();
+        for (size_t i = 0; i < objData->length(); i++) {
+            destroySerializedTypedData(objData->keyAndValue(i).second,
+                                       visitedTyped, visitedData);
+        }
+    } else if (data->isSerializedMapData()) {
+        auto* mapData = data->asSerializedMapData();
+        for (size_t i = 0; i < mapData->length(); i++) {
+            destroySerializedTypedData(mapData->keyAndValue(i).first,
+                                       visitedTyped, visitedData);
+            destroySerializedTypedData(mapData->keyAndValue(i).second,
+                                       visitedTyped, visitedData);
+        }
+    } else if (data->isSerializedSetData()) {
+        auto* setData = data->asSerializedSetData();
+        for (size_t i = 0; i < setData->length(); i++) {
+            destroySerializedTypedData(setData->value(i), visitedTyped,
+                                       visitedData);
+        }
+    }
+
+    delete data;
+}
+
+static void destroySerializedTypedData(
+    SerializedTypedData* typedData,
+    std::unordered_set<SerializedTypedData*>& visitedTyped,
+    std::unordered_set<SerializedData*>& visitedData)
+{
+    if (!typedData || !visitedTyped.insert(typedData).second) {
+        return;
+    }
+
+    destroySerializedData(typedData->data(), visitedTyped, visitedData);
+    delete typedData;
+}
+
+void SerializeWithTransferResult::destroy()
+{
+    std::unordered_set<SerializedTypedData*> visitedTyped;
+    std::unordered_set<SerializedData*> visitedData;
+
+    if (m_serialized) {
+        destroySerializedTypedData(m_serialized, visitedTyped, visitedData);
+        m_serialized = nullptr;
+    }
+
+    for (auto* transfer : m_serializedTransfer) {
+        destroySerializedTypedData(transfer, visitedTyped, visitedData);
+    }
+    m_serializedTransfer.clear();
+}
+
+SerializeWithTransferResult::~SerializeWithTransferResult()
+{
+    destroy();
 }
 } // namespace Starfish

@@ -20,6 +20,7 @@
 #ifndef __StarfishSerializer__
 #define __StarfishSerializer__
 
+#include <string>
 #include "binding/ScriptWrappable.h"
 
 // https://html.spec.whatwg.org/multipage/structured-data.html#safe-passing-of-structured-data
@@ -268,7 +269,6 @@ private:
         int32_t m_int32Data;
         uint32_t m_uint32Data;
         double m_numberData;
-        ScriptString m_stringData;
     };
 
     Data m_data;
@@ -276,8 +276,13 @@ private:
 
 class SerializedStringData : public SerializedData {
 public:
-    SerializedStringData(ScriptString data)
+    SerializedStringData(const std::string& data)
         : m_data(data)
+    {
+    }
+
+    SerializedStringData(std::string&& data)
+        : m_data(std::move(data))
     {
     }
 
@@ -289,18 +294,18 @@ public:
         return true;
     }
 
-    ScriptString stringData() const
+    const std::string& stringData() const
     {
         return m_data;
     }
 
-    void setStringData(ScriptString data)
+    void setStringData(const std::string& data)
     {
         m_data = data;
     }
 
 private:
-    ScriptString m_data;
+    std::string m_data;
 };
 
 class SerializedArrayData : public SerializedData {
@@ -324,6 +329,11 @@ public:
     }
 
     SerializedTypedData*& operator[](size_t key)
+    {
+        return m_data[key];
+    }
+
+    SerializedTypedData* value(size_t key) const
     {
         return m_data[key];
     }
@@ -786,6 +796,11 @@ protected:
 
 class SerializeWithTransferResult : public gc {
 public:
+    SerializeWithTransferResult() = default;
+    virtual ~SerializeWithTransferResult();
+
+    void destroy();
+
     SerializedTypedData* m_serialized{ nullptr };
     GCVector<TransferedTypedData*> m_serializedTransfer;
     ScriptValueDeserializer m_deserializer{ nullptr };

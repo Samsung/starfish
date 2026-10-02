@@ -154,6 +154,7 @@ void MessagePort::registerDispatchMessageTask(
                 new MessageEvent(self->executionContext(), serializedMessage);
 
             self->dispatchEventByUA(event);
+            delete serializedMessage;
         },
         this, serializedMessage);
 }
