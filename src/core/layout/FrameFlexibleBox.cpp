@@ -1775,7 +1775,7 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
 
             flexItem->asFrameReplaced()->computeIntrinsicSize(
                 ctx, intrinsicWidth, intrinsicHeight, hasAspectRatio,
-                parentContentWidth, parentHeightLength);
+                parentContentWidth, parentHeightLength, false);
 
             if (availableCrossSize != intMaxForLayoutUnit && hasAspectRatio) {
                 if (isMainAxisInInlineAxis) {

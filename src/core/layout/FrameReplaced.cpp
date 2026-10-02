@@ -165,6 +165,14 @@ IntrinsicSizeUsedInLayout FrameReplaced::computeIntrinsicSizeForLayout()
     return result;
 }
 
+bool FrameReplaced::hasPercentageWidthAttribute()
+{
+    String* widthString = node()->asElement()->getAttributeOrEmpty(
+        node()->starfish()->staticStrings()->m_width);
+    return !widthString->isEmpty() &&
+           widthString->lastIndexOf('%') == widthString->length() - 1;
+}
+
 std::pair<LayoutUnit, LayoutUnit>
 FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
     LayoutContext& ctx, LayoutUnit w, LayoutUnit h, LayoutUnit parentWidth,
@@ -325,7 +333,7 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
     }
 
     computeIntrinsicSize(ctx, intrinsicWidth, intrinsicHeight, hasAspectRatio,
-                         parentContentWidth, parentHeightLength);
+                         parentContentWidth, parentHeightLength, false);
 
     LayoutUnit w, h;
     bool isBrokenImageWithAuto = false;
@@ -560,19 +568,23 @@ void FrameReplaced::layout(LayoutContext& ctx,
     }
 }
 
-void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
-                                         LayoutUnit& intrinsicWidth,
-                                         LayoutUnit& intrinsicHeight,
-                                         bool& hasAspectRatio,
-                                         LayoutUnit parentContentWidth,
-                                         Length parentContentHeight)
+void FrameReplaced::computeIntrinsicSize(
+    LayoutContext& ctx, LayoutUnit& intrinsicWidth, LayoutUnit& intrinsicHeight,
+    bool& hasAspectRatio, LayoutUnit parentContentWidth,
+    Length parentContentHeight, bool underComputingPreferredWidth)
 {
     IntrinsicSizeUsedInLayout s = computeIntrinsicSizeForLayout();
     hasAspectRatio = s.m_hasAspectRatio;
     const auto& a = s.m_intrinsicSizeIsSpecifiedByAttributeOfElement;
     const auto& b = s.m_intrinsicContentSize;
+    // The width attribute maps to the 'width' property, and the containing
+    // block width is not known yet while computing preferred widths, so a
+    // percentage there behaves as auto, as a percentage 'width' does.
+    bool widthIsUnresolvable =
+        parentContentWidth == intMaxForLayoutUnit ||
+        (underComputingPreferredWidth && !a.first.isDefinite(false));
 
-    if (a.first.isAuto() || parentContentWidth == intMaxForLayoutUnit) {
+    if (a.first.isAuto() || widthIsUnresolvable) {
         if (a.second.isAuto()) {
             NativeImageData* imageData = nullptr;
             if (isFrameReplacedImage()) {
