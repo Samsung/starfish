@@ -676,7 +676,11 @@ void FfmpegWrapperPlayer::decodingThread()
             PLAYER_LOGI("[FfmpegWrapperPlayer] Read video packet. Size: %d\n",
                         pkt->size);
         } else {
+            // m_codecCtx decodes only the video stream; feeding it another
+            // stream's packets corrupts its bitstream parsing.
             PLAYER_LOGI("[FfmpegWrapperPlayer] Skipped non-video packet\n");
+            av_packet_free(&pkt);
+            continue;
         }
 
         ret = avcodec_send_packet(m_codecCtx, pkt);
@@ -1390,7 +1394,7 @@ void MediaPlayerLinux::setNativePlayerDisplayModeWithGL()
                 LinuxMediaPacket* oldPacket = player->m_lastDecodedVideoPacket;
                 player->m_lastDecodedVideoPacket = packet;
                 if (oldPacket != nullptr) {
-                    free(oldPacket);
+                    player->freeFramePacketLocked(oldPacket);
                 }
             }
             player->window()
