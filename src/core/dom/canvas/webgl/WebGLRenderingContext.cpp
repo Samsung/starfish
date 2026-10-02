@@ -4473,7 +4473,8 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
         },
         [&](const std::vector<GLubyte>& blackData) {
 #if defined(PORT_PIXEL_ORDER_BGRA)
-            if (webGLVersion() == 1 && format == GL_RGBA) {
+            if (webGLVersion() == 1 && format == GL_RGBA &&
+                type == GL_UNSIGNED_BYTE) {
                 if (WebGLExtensionRegistry::instance()
                         .hasEXT_texture_format_BGRA8888()) {
                     // According to OpenGL ES specification, the format must
@@ -4572,7 +4573,8 @@ void WebGLRenderingContext::texSubImage2D(
         },
         [&](const std::vector<GLubyte>& blackData) {
 #if defined(PORT_PIXEL_ORDER_BGRA)
-            if (webGLVersion() == 1 && format == GL_RGBA) {
+            if (webGLVersion() == 1 && format == GL_RGBA &&
+                type == GL_UNSIGNED_BYTE) {
                 if (WebGLExtensionRegistry::instance()
                         .hasEXT_texture_format_BGRA8888()) {
                     // According to OpenGL ES specification, the format must
