@@ -133,10 +133,12 @@ public:
     void computeIntrinsicSize(LayoutContext& ctx, LayoutUnit& intrinsicWidth,
                               LayoutUnit& intrinsicHeight, bool& hasAspectRatio,
                               LayoutUnit parentContentWidth,
-                              Length parentContentHeight);
+                              Length parentContentHeight,
+                              bool underComputingPreferredWidth);
 
     virtual IntrinsicSize intrinsicSize() = 0;
     IntrinsicSizeUsedInLayout computeIntrinsicSizeForLayout();
+    bool hasPercentageWidthAttribute();
     void computeContentWidthAndHeight(LayoutContext& ctx, FrameBox* cb);
 
     virtual void paintReplaced(Canvas* canvas)

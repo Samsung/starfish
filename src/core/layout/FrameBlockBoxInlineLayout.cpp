@@ -4576,8 +4576,8 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
     }
 
     computeIntrinsicSize(ctx.layoutContext(), intrinsicWidth, intrinsicHeight,
-                         hasAspectRatio, parentContentWidth,
-                         parentHeightLength);
+                         hasAspectRatio, parentContentWidth, parentHeightLength,
+                         true);
 
     if (width.isDefinite(false)) {
         LayoutUnit unused;
@@ -4613,7 +4613,10 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
         ctx.handleFloatingBox(this, w);
     } else {
         w = ctx.widthAppliedByTextIndent(w);
-        if (width.isPercent()) {
+        // A percentage width, from CSS or the width attribute it overrides,
+        // makes the min-content contribution compressible.
+        if (width.isPercent() ||
+            (width.isAuto() && hasPercentageWidthAttribute())) {
             LayoutUnit minWidth = (w == 0) ? 0 : 1;
             ctx.updatePreferredMinWidth(minWidth);
         } else {

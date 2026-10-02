@@ -258,6 +258,7 @@ test/cairo/internal-test/css/preferred-width/preferred-width-2.html
 test/cairo/internal-test/css/preferred-width/preferred-width-3.html
 test/cairo/internal-test/css/preferred-width/preferred-width-4.html
 test/cairo/internal-test/css/preferred-width/preferred-width-5.html
+test/cairo/internal-test/css/preferred-width/preferred-width-img-percent-attribute.html
 test/cairo/internal-test/css/margin/margin_block.html
 test/cairo/internal-test/css/style/script-tag-add-onload.html
 test/cairo/internal-test/css/style/link-tag-add.html
