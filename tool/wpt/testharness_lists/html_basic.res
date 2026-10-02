@@ -375,6 +375,9 @@ http://web-platform.test:8000/html/browsers/browsing-the-web/scroll-to-fragid/sc
 http://web-platform.test:8000/html/browsers/browsing-the-web/scroll-to-fragid/003.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/scroll-to-fragid/002.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/scroll-to-fragid/001.html
+http://web-platform.test:8000/html/browsers/browsing-the-web/read-media/pageload-video.html
+http://web-platform.test:8000/html/browsers/browsing-the-web/read-media/pageload-image.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/browsers/browsing-the-web/read-media/cross-origin-video.html
 # [auto-fail] http://web-platform.test:8000/html/browsers/browsing-the-web/navigating-across-documents/source/navigate-child-src-about-blank.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/navigating-across-documents/source/navigate-child-function-src.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/navigating-across-documents/source/navigate-child-function.html

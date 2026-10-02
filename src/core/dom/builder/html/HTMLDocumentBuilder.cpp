@@ -33,6 +33,7 @@
 #include "core/dom/parser/HTMLParser.h"
 #include "core/dom/parser/PreloadScanner.h"
 #include "core/dom/HTMLFormElement.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/extra/MimeType.h"
 #include "core/dom/WebOrigin.h"
@@ -138,10 +139,48 @@ public:
         , m_parser(nullptr)
         , m_htmlSource(String::emptyString)
         , m_isAllowedResponse(true)
+        , m_mediaElementName(nullptr)
     {
     }
 
     virtual void didHeaderReceived(
+        const std::unordered_map<std::string, std::string>& headers)
+    {
+        processHeaders(headers);
+        if (!m_isAllowedResponse) {
+            return;
+        }
+
+        auto mimetype = MimeType::parseFromString(
+            m_resource->resourceRequest()->responseMimeType());
+        m_mediaElementName = mediaElementNameForType(mimetype);
+        if (!m_mediaElementName) {
+            return;
+        }
+
+        // The media element fetches its source by itself, so waiting for the
+        // navigation body would download the file twice and keep the first
+        // copy in memory. Finish the document now and drop the body instead.
+        // Canceling inside this callback would mutate the client list that
+        // Resource is iterating, so it is deferred.
+        size_t handle =
+            m_builder.document()->window()->webView()->messageLoop()->addIdler(
+                m_builder.document()->window(),
+                [](size_t handle, void* data) {
+                    HTMLResourceClient* self = (HTMLResourceClient*)data;
+                    Resource* resource = self->m_resource;
+                    resource->removeIdlerHandle(handle);
+                    if (resource->state() != Resource::State::Receiving) {
+                        return;
+                    }
+                    self->finishLoading();
+                    resource->cancel();
+                },
+                this);
+        m_resource->pushIdlerHandle(handle);
+    }
+
+    void processHeaders(
         const std::unordered_map<std::string, std::string>& headers)
     {
         auto browsingContext =
@@ -295,13 +334,20 @@ public:
 
     virtual void didDataReceived(const char* buffer, size_t length)
     {
+        if (m_mediaElementName) {
+            return;
+        }
         m_buffer.insert(m_buffer.end(), &buffer[0], &buffer[length]);
     }
 
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
+        finishLoading();
+    }
 
+    void finishLoading()
+    {
         m_builder.m_document->window()->performance()->timing()->m_responseEnd =
             timestamp();
 
@@ -494,11 +540,15 @@ public:
         if (!m_isAllowedResponse) {
             m_htmlSource = String::emptyString;
         } else if (m_htmlSource->isEmpty()) {
-            if (mimetype.stringWithoutParameter()->startsWith("image/",
-                                                              false)) {
+            if (m_mediaElementName) {
+                m_htmlSource = createMediaHTMLSource();
+            } else if (mimetype.stringWithoutParameter()->startsWith("image/",
+                                                                     false)) {
                 String* urlString = resource()->url()->urlString();
                 StringBuilder sb;
-                sb.appendString("<html><head></head><body><img src=\"");
+                // Media documents are in no-quirks mode.
+                sb.appendString(
+                    "<!DOCTYPE html><html><head></head><body><img src=\"");
                 sb.appendString(urlString);
                 sb.appendString("\" alt=\"");
                 sb.appendString(urlString);
@@ -551,12 +601,63 @@ protected:
     HTMLParser* m_parser;
     String* m_htmlSource;
     bool m_isAllowedResponse;
+    // Tag of the element hosting a navigated video/audio response, or nullptr
+    // when the response is not a media document.
+    const char* m_mediaElementName;
 
 private:
     String* createBlankHTMLSource()
     {
         return String::createASCIIString(
             "<html><head></head><body></body></html>");
+    }
+
+    // HTML "Page load processing model for media": the body holds only the
+    // media element, whose src is the response URL. A user agent may style
+    // the document, so the element is centered and fit to the viewport.
+    String* createMediaHTMLSource()
+    {
+        StringBuilder sb;
+        sb.appendString(
+            "<!DOCTYPE html><html><head><style>"
+            "html,body{height:100%}"
+            "body{margin:0;background:#262626;display:flex;"
+            "align-items:center;justify-content:center}"
+            "video{max-width:100%;max-height:100%}"
+            "</style></head><body><");
+        sb.appendString(m_mediaElementName, strlen(m_mediaElementName));
+        sb.appendString(" controls autoplay src=\"");
+        String* url = resource()->url()->urlString();
+        for (size_t i = 0; i < url->length(); i++) {
+            char32_t ch = url->charAt(i);
+            if (ch == '&') {
+                sb.appendString("&amp;");
+            } else if (ch == '"') {
+                sb.appendString("&quot;");
+            } else {
+                sb.appendChar(ch);
+            }
+        }
+        sb.appendString("\"></");
+        sb.appendString(m_mediaElementName, strlen(m_mediaElementName));
+        sb.appendString("></body></html>");
+        return sb.finalize();
+    }
+
+    static const char* mediaElementNameForType(MimeType& mimetype)
+    {
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
+        // Whether the type is actually playable is left to the media element;
+        // its error state stands in for the spec's "not supported" fallback,
+        // as there is no download path to fall back to.
+        if (mimetype.type()->equals("video")) {
+            return "video";
+        }
+        if (mimetype.type()->equals("audio")) {
+            return "audio";
+        }
+#endif
+        return nullptr;
     }
 };
 
