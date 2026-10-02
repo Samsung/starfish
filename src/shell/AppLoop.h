@@ -20,6 +20,9 @@
 #ifndef __StarfishShellAppLoop__
 #define __StarfishShellAppLoop__
 
+#include <cstdio>
+#include <cstdlib>
+#include <functional>
 #include <memory>
 
 namespace StarfishShell {
@@ -33,6 +36,17 @@ public:
     virtual int start(double timeoutInSec = 0) = 0;
     virtual void stop() = 0;
     virtual void deinit() = 0;
+
+    // Runs `task` on the thread that is inside start(). Callable from any
+    // thread. Loops built on a toolkit that already has a thread-safe way
+    // to reach its main loop (g_idle_add, ecore_thread_main_loop_begin, ...)
+    // don't need this yet; the default aborts rather than silently dropping
+    // the task so a missing override is caught the first time it's used.
+    virtual void postTask(std::function<void()> task)
+    {
+        fprintf(stderr, "AppLoop::postTask is not supported by this loop\n");
+        abort();
+    }
 
 protected:
     AppLoop() = default;

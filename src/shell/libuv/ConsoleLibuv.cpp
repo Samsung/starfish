@@ -20,13 +20,9 @@
 #include "ShellConfig.h"
 
 #if defined(STARFISH_SHELL_X11) && defined(STARFISH_UV_CAIRO_GL)
+#include "AppLoop.h"
 #include "Console.h"
-
-#include <uv.h>
-
-#include <stdio.h>
-#include <pthread.h>
-#include <unistd.h>
+#include "MiniBrowser.h"
 
 namespace StarfishShell {
 
@@ -35,32 +31,18 @@ public:
     ConsoleLibuv(MiniBrowser* browser)
         : Console(browser)
     {
-        m_idlerThreadAsyncHandle =
-            static_cast<uv_async_t*>(malloc(sizeof(uv_async_t)));
-        uv_async_init(uv_default_loop(), m_idlerThreadAsyncHandle,
-                      [](uv_async_t* handle) {
-                          Param* param = reinterpret_cast<Param*>(handle->data);
-                          param->console->write(param->input);
-                          delete param;
-                      });
     }
 
-    ~ConsoleLibuv()
-    {
-        if (m_idlerThreadAsyncHandle) {
-            uv_close(reinterpret_cast<uv_handle_t*>(m_idlerThreadAsyncHandle),
-                     [](uv_handle_t* handle) { free(handle); });
-        }
-    }
-
+    // Called on the stdin reader thread. write() drives the browser, so it
+    // has to run on the shell's own thread like every other console backend
+    // does -- not on LWE's loop thread, which the shell doesn't own.
     void send(Param* param) override
     {
-        m_idlerThreadAsyncHandle->data = param;
-        uv_async_send(m_idlerThreadAsyncHandle);
+        m_browser->appLoop()->postTask([param]() {
+            param->console->write(param->input);
+            delete param;
+        });
     }
-
-private:
-    uv_async_t* m_idlerThreadAsyncHandle = nullptr;
 };
 
 Console* Console::create(MiniBrowser* browser)

@@ -318,6 +318,11 @@ int MiniBrowser::runMainLoop()
     return m_window->appLoop()->start();
 }
 
+AppLoop* MiniBrowser::appLoop()
+{
+    return m_window->appLoop();
+}
+
 int MiniBrowser::runMainLoopWithTimeout(double timeoutInSec)
 {
     return m_window->appLoop()->start(timeoutInSec);

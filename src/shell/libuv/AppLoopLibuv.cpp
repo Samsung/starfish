@@ -32,6 +32,10 @@
 
 #include <sys/time.h>
 
+#include <deque>
+#include <functional>
+#include <mutex>
+
 namespace {
 
 volatile sig_atomic_t doneFlag = 0;
@@ -63,10 +67,21 @@ public:
     virtual int start(double timeoutInSec = 0) override;
     virtual void stop() override;
     virtual void deinit() override;
+    virtual void postTask(std::function<void()> task) override;
 
 private:
+    void runPendingTasks();
+
     uint64_t m_timeoutInMs = 0;
     uint64_t m_startTimeInMs = 0;
+
+    // With the libuv backend LWE runs the event loop on its own thread, so
+    // this loop is only a wait loop and has no queue of its own. Shell code
+    // that needs to run on this thread (the console's stdin reader, for
+    // one) posts here instead of reaching into LWE's uv loop, whose handle
+    // API is not thread-safe.
+    std::mutex m_tasksMutex;
+    std::deque<std::function<void()>> m_tasks;
 };
 
 AppLoopSimple::AppLoopSimple()
@@ -104,6 +119,7 @@ int AppLoopSimple::start(double timeoutInSec)
     }
 
     while (!doneFlag) {
+        runPendingTasks();
         usleep(100);
         if (m_timeoutInMs > 0) {
             uint64_t current = timestamp();
@@ -124,6 +140,24 @@ void AppLoopSimple::stop()
 void AppLoopSimple::deinit()
 {
     // Do nothing.
+}
+
+void AppLoopSimple::postTask(std::function<void()> task)
+{
+    std::lock_guard<std::mutex> lock(m_tasksMutex);
+    m_tasks.push_back(std::move(task));
+}
+
+void AppLoopSimple::runPendingTasks()
+{
+    std::deque<std::function<void()>> tasks;
+    {
+        std::lock_guard<std::mutex> lock(m_tasksMutex);
+        tasks.swap(m_tasks);
+    }
+    for (auto& task : tasks) {
+        task();
+    }
 }
 
 std::unique_ptr<AppLoop> AppLoop::create()
