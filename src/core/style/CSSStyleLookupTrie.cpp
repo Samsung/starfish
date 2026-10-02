@@ -678,13 +678,16 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
                 return CSSStyleValuePair::KeyKind::JustifySelf;
             }
             break;
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
         case '-':
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
             if (memcmp(data, "-webkit-flex", 12) == 0) {
                 return CSSStyleValuePair::KeyKind::Flex;
             }
-            break;
 #endif
+            if (memcmp(data, "-webkit-mask", 12) == 0) {
+                return CSSStyleValuePair::KeyKind::Mask;
+            }
+            break;
         }
         break;
     case 13:
@@ -1050,9 +1053,10 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
                 return CSSStyleValuePair::KeyKind::StrokeDashoffset;
             }
             break;
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) || \
-    defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX)
         case '-':
+            if (memcmp(data, "-webkit-mask-size", 17) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskSize;
+            }
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
             if (memcmp(data, "-webkit-flex-flow", 17) == 0) {
                 return CSSStyleValuePair::KeyKind::FlexFlow;
@@ -1070,7 +1074,6 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             }
 #endif
             break;
-#endif
         }
         break;
     case 18:
@@ -1127,11 +1130,10 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
                 return CSSStyleValuePair::KeyKind::PaddingInlineEnd;
             }
             break;
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) ||       \
-    defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX) || \
-    defined(STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX) ||        \
-    defined(STARFISH_ENABLE_CSS_WEBKIT_LINE_PREFIX)
         case '-':
+            if (memcmp(data, "-webkit-mask-image", 18) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskImage;
+            }
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
             if (memcmp(data, "-webkit-flex-basis", 18) == 0) {
                 return CSSStyleValuePair::KeyKind::FlexBasis;
@@ -1156,7 +1158,6 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             }
 #endif
             break;
-#endif
         }
         break;
     case 19:
@@ -1245,16 +1246,19 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
                 return CSSStyleValuePair::KeyKind::GridTemplateAreas;
             }
             break;
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
         case '-':
+            if (memcmp(data, "-webkit-mask-repeat", 19) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskRepeat;
+            }
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
             if (memcmp(data, "-webkit-flex-shrink", 19) == 0) {
                 return CSSStyleValuePair::KeyKind::FlexShrink;
             }
             if (memcmp(data, "-webkit-align-items", 19) == 0) {
                 return CSSStyleValuePair::KeyKind::AlignItems;
             }
-            break;
 #endif
+            break;
         }
         break;
 
@@ -1320,13 +1324,16 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
                 return CSSStyleValuePair::KeyKind::TextDecorationStyle;
             }
             break;
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
         case '-':
+            if (memcmp(data, "-webkit-mask-position", 21) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskPosition;
+            }
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
             if (memcmp(data, "-webkit-align-content", 21) == 0) {
                 return CSSStyleValuePair::KeyKind::AlignContent;
             }
-            break;
 #endif
+            break;
         }
         break;
     case 22:
@@ -1932,6 +1939,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             if (memcmp(data, "whiteSpace", 10) == 0) {
                 return CSSStyleValuePair::KeyKind::WhiteSpace;
             }
+            if (memcmp(data, "webkitMask", 10) == 0) {
+                return CSSStyleValuePair::KeyKind::Mask;
+            }
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
             if (memcmp(data, "webkitFlex", 10) == 0) {
                 return CSSStyleValuePair::KeyKind::Flex;
@@ -2235,6 +2245,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
         case 'w':
+            if (memcmp(data, "webkitMaskSize", 14) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskSize;
+            }
             if (memcmp(data, "webkitFlexFlow", 14) == 0) {
                 return CSSStyleValuePair::KeyKind::FlexFlow;
             }
@@ -2298,10 +2311,10 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
                 return CSSStyleValuePair::KeyKind::StrokeDasharray;
             }
             break;
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) ||      \
-    defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX) || \
-    defined(STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX)
         case 'w':
+            if (memcmp(data, "webkitMaskImage", 15) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskImage;
+            }
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX)
             if (memcmp(data, "webkitBoxOrient", 15) == 0) {
                 return CSSStyleValuePair::KeyKind::BoxOrient;
@@ -2321,7 +2334,6 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             }
 #endif
             break;
-#endif
         }
         break;
     case 16:
@@ -2376,9 +2388,10 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             }
             break;
 
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) || \
-    defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX)
         case 'w':
+            if (memcmp(data, "webkitMaskRepeat", 16) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskRepeat;
+            }
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
             if (memcmp(data, "webkitFlexShrink", 16) == 0) {
                 return CSSStyleValuePair::KeyKind::FlexShrink;
@@ -2393,7 +2406,6 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             }
 #endif
             break;
-#endif
         }
         break;
     case 17:
@@ -2492,6 +2504,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
         case 'w':
+            if (memcmp(data, "webkitMaskPosition", 18) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskPosition;
+            }
             if (memcmp(data, "webkitAlignContent", 18) == 0) {
                 return CSSStyleValuePair::KeyKind::AlignContent;
             }
