@@ -35,6 +35,11 @@ public:
                       void* domObjectPointer) override;
     virtual bool isCDATASection() const override;
 
+    virtual NodeType nodeType() const override
+    {
+        return Node::CDATA_SECTION_NODE;
+    }
+
     virtual String* nodeName() override;
     virtual String* localName() override;
 

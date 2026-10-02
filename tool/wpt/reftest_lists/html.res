@@ -672,8 +672,8 @@ http://web-platform.test:8000/html/rendering/bindings/the-textarea-element-0/col
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/bindings/the-textarea-element-0/cols-zero.html
 http://web-platform.test:8000/html/rendering/bindings/the-textarea-element-0/rows-default.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/bindings/the-textarea-element-0/rows-zero.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/cdata-001.xhtml
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/cdata-002.xhtml
+http://web-platform.test:8000/html/rendering/cdata-001.xhtml
+http://web-platform.test:8000/html/rendering/cdata-002.xhtml
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/non-replaced-elements/flow-content-0/div-align.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/non-replaced-elements/flow-content-0/figure.html
 http://web-platform.test:8000/html/rendering/non-replaced-elements/form-controls/datetime-dynamic-type-change.html

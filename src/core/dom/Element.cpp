@@ -96,7 +96,7 @@ static bool isInHTMLNamespaceAndHTMLDocument(Element* e)
 {
     if (e->namespaceURI().hasValue() &&
         e->namespaceURI().getValue()->equals(HTML_NAMESPACE) &&
-        e->document()->isHTMLDocument()) {
+        !e->document()->typeIsXML()) {
         return true;
     }
     return false;

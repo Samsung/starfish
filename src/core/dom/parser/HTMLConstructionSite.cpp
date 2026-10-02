@@ -529,6 +529,12 @@ void HTMLConstructionSite::setDefaultCompatibilityMode()
 void HTMLConstructionSite::setCompatibilityMode(
     Document::CompatibilityMode mode)
 {
+    // https://dom.spec.whatwg.org/#concept-document-quirks
+    // Only the HTML parser moves a document out of no-quirks mode; a
+    // document whose type is "xml" keeps it regardless of its DOCTYPE.
+    if (m_document->typeIsXML()) {
+        return;
+    }
     m_inQuirksMode = (mode == Document::QuirksMode);
     m_document->setCompatibilityMode(mode);
 }

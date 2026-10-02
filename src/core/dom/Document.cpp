@@ -129,6 +129,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     : Node(this)
     , m_inParsing(false)
     , m_didLoadBrokenImage(false)
+    , m_typeIsXML(true)
     , m_doesParticipateInRendering(doesParticipateInRendering)
     , m_designMode(false)
     , m_compatibilityMode(Document::NoQuirksMode)
@@ -389,7 +390,7 @@ Document* Document::open(Document* responsibleDoc, String* type,
 
     // If document is an XML document, then throw an "InvalidStateError"
     // DOMException exception.
-    if (isXMLDocument()) {
+    if (typeIsXML()) {
         throw new DOMException(executionContext(),
                                DOMException::Code::INVALID_STATE_ERR);
     }
@@ -571,7 +572,7 @@ void Document::close()
 {
     // If the Document object is an XML document, then throw an
     // "InvalidStateError" DOMException and abort these steps.
-    if (isXMLDocument()) {
+    if (typeIsXML()) {
         throw new DOMException(executionContext(),
                                DOMException::Code::INVALID_STATE_ERR);
     }
@@ -610,7 +611,7 @@ void Document::write(Document* responsibleDoc, const GCVector<String*>& str)
     // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-write
     // If document is an XML document, then throw an "InvalidStateError"
     // DOMException.
-    if (isXMLDocument()) {
+    if (typeIsXML()) {
         throw new DOMException(executionContext(),
                                DOMException::Code::INVALID_STATE_ERR);
     }
@@ -1060,8 +1061,11 @@ Element* Document::createElement(String* localName)
                                nullptr);
     }
 
+    // https://dom.spec.whatwg.org/#dom-document-createelement
     AtomicString localNameAtomic;
-    if (isHTMLDocument()) {
+    if (!typeIsXML()) {
+        // If this is an HTML document, then set localName to localName in
+        // ASCII lowercase.
         AtomicString namespaceURI = AtomicString::createAtomicString(
             window()->starfish(), HTML_NAMESPACE);
         localNameAtomic = AtomicString::createAttrAtomicString(
@@ -1071,10 +1075,12 @@ Element* Document::createElement(String* localName)
     } else {
         localNameAtomic =
             AtomicString::createAtomicString(window()->starfish(), localName);
+        // If this is an HTML document or this's content type is
+        // "application/xhtml+xml", then set namespace to the HTML namespace.
         if (contentType()->equals("application/xhtml+xml")) {
             AtomicString namespaceURI = AtomicString::createAtomicString(
                 window()->starfish(), HTML_NAMESPACE);
-            return new NamedElement(
+            return HTMLDocument::createHTMLElement(
                 this, QualifiedName(namespaceURI, localNameAtomic));
         }
     }
@@ -1183,7 +1189,9 @@ Text* Document::createTextNode(String* data)
 
 CDATASection* Document::createCDATASection(String* data)
 {
-    if (isHTMLDocument()) {
+    // If this is an HTML document, then throw a "NotSupportedError"
+    // DOMException.
+    if (!typeIsXML()) {
         throw new DOMException(
             executionContext(), DOMException::Code::NOT_SUPPORTED_ERR,
             "This operation is not supported for HTML documents.");
@@ -2015,7 +2023,7 @@ NativeImageData* Document::brokenImage()
 
 QualifiedName Document::createAttributeName(String* name)
 {
-    if (isXMLDocument()) {
+    if (typeIsXML()) {
         return QualifiedName(
             AtomicString::createAtomicString(window()->starfish(), name));
     } else {

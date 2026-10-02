@@ -146,6 +146,16 @@ static rapidxml::xml_node<char>* createXMLNodeFromElement(
             char* allocateValue = xmlDocument.allocate_string(utf8Data.data());
             childXMLNode = xmlDocument.allocate_node(
                 rapidxml::node_type::node_comment, "", allocateValue);
+        } else if (child->isCDATASection() && child->document()->typeIsXML()) {
+            // XML serialization keeps a CDATA section as one
+            // (https://w3c.github.io/DOM-Parsing/#xml-serializing-a-cdatasection-node);
+            // the HTML fragment serialization used for HTML documents treats
+            // it as a Text node and escapes it instead (falls through below).
+            auto utf8Data =
+                child->asCharacterData()->data()->toUTF8NonGCString();
+            char* allocateValue = xmlDocument.allocate_string(utf8Data.data());
+            childXMLNode = xmlDocument.allocate_node(
+                rapidxml::node_type::node_cdata, "", allocateValue);
         } else if (child->isText()) {
             auto utf8Data =
                 child->asCharacterData()->data()->toUTF8NonGCString();

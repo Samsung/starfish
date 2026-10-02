@@ -525,6 +525,23 @@ public:
         return m_contentType;
     }
 
+    // https://dom.spec.whatwg.org/#concept-document-type
+    // A document's type is "xml" or "html"; the spec's "XML document" and
+    // "HTML document" refer to this type, not to the interface the object
+    // implements. The window's document stays an HTMLDocument object even
+    // when the navigated response has an XML MIME type
+    // (https://html.spec.whatwg.org/multipage/document-lifecycle.html#read-xml),
+    // so rules phrased "if this is an HTML document" must check this type
+    // rather than isHTMLDocument() / isXMLDocument().
+    bool typeIsXML() const
+    {
+        return m_typeIsXML;
+    }
+    void setTypeIsXML(bool typeIsXML)
+    {
+        m_typeIsXML = typeIsXML;
+    }
+
     void setContentType(String* c)
     {
         m_contentType = c;
@@ -886,7 +903,7 @@ protected:
 
     bool m_inParsing : 1;
     bool m_didLoadBrokenImage : 1;
-    bool m_isXMLDocument : 1;
+    bool m_typeIsXML : 1;
     bool m_doesParticipateInRendering : 1;
     bool m_designMode : 1;
 

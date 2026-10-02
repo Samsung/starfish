@@ -549,7 +549,7 @@ String* SVGScriptElement::text()
     String* str = String::emptyString;
     for (Node* child = firstChild(); child != nullptr;
          child = child->nextSibling()) {
-        if (child->nodeType() == TEXT_NODE) {
+        if (child->isText()) {
             STARFISH_ASSERT(child->textContent().hasValue());
             str = str->concat(child->textContent().getValue());
         }

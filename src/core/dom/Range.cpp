@@ -741,11 +741,11 @@ DocumentFragment* Range::cloneContents()
 void Range::surroundContents(Node* newParent)
 {
     Node* start = startContainer();
-    if (start->nodeType() == Node::TEXT_NODE) {
+    if (start->isText()) {
         start = start->parentNode();
     }
     Node* end = endContainer();
-    if (end->nodeType() == Node::TEXT_NODE) {
+    if (end->isText()) {
         end = end->parentNode();
     }
     if (start != end) {
