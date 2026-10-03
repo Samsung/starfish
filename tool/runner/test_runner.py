@@ -125,6 +125,21 @@ def vendor_test_webkit():
     run_test(["vendor_pixel", "tool/reftest/cairo/webkit_fast_etc_manual.res", "cairo", "--font-dep"])
 
 
+# Khronos WebGL conformance suites (khronos_test) -- see docs/khronos_webgl.md.
+# The tests are served unmodified out of the third_party/webgl submodule,
+# with the submodule root as the server root, so the lists hold the full
+# http://localhost:11010/<suite dir>/... URL of each test (like the WPT lists)
+# and a line is runnable as-is once the server is up.
+# tool/khronos/inject_report.js, prepended to the two harness scripts by
+# http_server.py, turns the harness's own reporting hook into the PASS/FAIL
+# lines the basic driver counts and ends the shell with testEnd().
+KHRONOS_WEBGL_ROOT = "third_party/webgl"
+KHRONOS_ADDRESS = "localhost"
+KHRONOS_PORT = 11010  # baked into the lists; re-prefix them if this changes
+KHRONOS_INJECT_SCRIPT = "tool/khronos/inject_report.js"
+# Every test page loads exactly one of these two harnesses.
+KHRONOS_INJECT_INTO = ("/js-test-pre.js", "/more/unit.js")
+
 # Unlike the other run_test() call sites in this file, the Khronos WebGL
 # conformance suite is not capped by -p and so runs at full
 # multiprocessing.cpu_count() parallelism (e.g. 56 on this CI host). Each
@@ -133,8 +148,8 @@ def vendor_test_webkit():
 # oversubscribe the CPU (llvmpipe itself spawns a rasterizer thread pool
 # per context) badly enough that individual tests that pass fine in
 # isolation start hanging/timing out under full-width parallel load. Cap
-# this suite specifically -- the other vendor suites (blink/gecko/webkit)
-# are plain DOM/CSS tests with no GL driver involved and don't need this.
+# this suite specifically -- the vendor suites (blink/gecko/webkit) are
+# plain DOM/CSS tests with no GL driver involved and don't need this.
 KHRONOS_WEBGL_JOBS = 4
 
 # Per-test timeout (seconds) for the Khronos WebGL suites only. The basic
@@ -147,48 +162,46 @@ KHRONOS_WEBGL_JOBS = 4
 # (DOM/CSS) suites keep the tighter default.
 KHRONOS_WEBGL_TIMEOUT_SEC = 1200
 
-def run_vendor_test_khronos(root, name):
+def run_vendor_test_khronos(name):
     from http_server import popen_server
 
-    ROOT = root
-    DIR = working_directory
-    ADDRESS = "localhost"
-    PORT = 11010
-
     env = dict(os.environ)
-
-    if not env.get(ENVOPTS.REPLACE_STR):
-        env[ENVOPTS.REPLACE_STR] = f"{ROOT}/\\http://{ADDRESS}:{PORT}/"
-
     if not env.get(ENVOPTS.TIMEOUT):
         env[ENVOPTS.TIMEOUT] = str(KHRONOS_WEBGL_TIMEOUT_SEC)
 
-    with popen_server(ROOT, DIR, ADDRESS, port=PORT, silent=True):
+    with popen_server(KHRONOS_WEBGL_ROOT, working_directory, KHRONOS_ADDRESS,
+                      port=KHRONOS_PORT, silent=True,
+                      inject_script=KHRONOS_INJECT_SCRIPT,
+                      inject_into=KHRONOS_INJECT_INTO):
         run_test(["basic", name, "common", f"-p{KHRONOS_WEBGL_JOBS}"], env)
 
 
 def vendor_test_khronos():
-    run_vendor_test_khronos("test/cairo/reftest/vendor/khronos/webgl/1.0.3",
-                            "tool/reftest/cairo/khronos_webgl.res")
+    run_vendor_test_khronos("tool/reftest/cairo/khronos_webgl.res")
 
 
 def vendor_test_khronos2():
-    run_vendor_test_khronos("test/cairo/reftest/vendor/khronos/webgl/2.0.0",
-                            "tool/reftest/cairo/khronos_webgl2.res")
+    run_vendor_test_khronos("tool/reftest/cairo/khronos_webgl2.res")
 
 
 def vendor_test_khronossdk():
-    run_vendor_test_khronos("test/cairo/reftest/vendor/khronos/webgl/sdk",
-                            "tool/reftest/cairo/khronos_webglsdk.res")
+    run_vendor_test_khronos("tool/reftest/cairo/khronos_webglsdk.res")
+
+
+# Not part of vendor_test()/reftest_all(): CI runs this in its own job, since
+# the reftest job works from a .git-less source tarball and only ever fetches
+# test/, while this needs the third_party/webgl submodule (restored like
+# third_party/wpt). It is also slow enough to be worth isolating locally.
+def khronos_test():
+    vendor_test_khronos()
+    vendor_test_khronos2()
+    vendor_test_khronossdk()
 
 
 def vendor_test():
     vendor_test_blink()
     vendor_test_gecko()
     vendor_test_webkit()
-    vendor_test_khronos()
-    vendor_test_khronos2()
-    vendor_test_khronossdk()
 
 
 def wpt_css_css21():
@@ -481,6 +494,7 @@ def reftest_all():
 def test_all():
     internal_test()
     reftest_all()
+    khronos_test()
 
 
 def print_columns(iterable, num_columns):

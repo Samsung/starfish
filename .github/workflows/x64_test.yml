@@ -287,6 +287,61 @@ jobs:
         run: |
           xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py reftest_all || exit 1
 
+  # Khronos WebGL conformance suites (test_runner.py khronos_test), served
+  # unmodified out of the third_party/webgl submodule -- see
+  # docs/khronos_webgl.md. Its own job rather than part of test_reftest_all:
+  # that job runs from a .git-less source tarball and only ever fetches
+  # test/, while this submodule is restored the same way third_party/wpt is
+  # (tool/ci/cache_webgl.sh). It is also the one suite that drives a GL
+  # context per Starfish process (test_runner.py caps it at 4 jobs for
+  # llvmpipe), so keeping it apart leaves the DOM/CSS reftest budget alone.
+  test_khronos_webgl:
+    needs: build_x64
+    timeout-minutes: 60
+    runs-on: [ code-linux, code-2xlarge ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+
+    steps:
+      - name: Checkout source..
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          allow-unsafe-pr-checkout: true
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
+      - name: Checkout WebGL conformance submodule
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: ./tool/ci/cache_webgl.sh
+
+      - uses: CODE-Actions/download-artifact@v2
+        with:
+          name: starfish-x64_gcc_debug
+
+      - name: Prepare Test
+        run: |
+          chmod a+x $PWD/out/debug/bin/lightweight-web-engine
+          ln -s -f $PWD/out/debug/bin/lightweight-web-engine Starfish
+          ln -s $PWD/out/debug/lib/libnanomsg.so ./out/debug/lib/libnanomsg.so.5
+          ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.1.1
+          ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.1.1
+          ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.3
+          ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.3
+
+      - name: Run khronos_test
+        env:
+          LP_NUM_THREADS: "4"
+        run: |
+          xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py khronos_test || exit 1
+
   test_wpt_serve_testharness_and_crashtest:
     needs: build_x64
     timeout-minutes: 60

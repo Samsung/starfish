@@ -94,7 +94,7 @@ GLboolean OES_vertex_array_object::isVertexArrayOES(
     }
 
     if (!value->hasEverBound()) {
-        // test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-vertex-array-object.html
+        // third_party/webgl/conformance-suites/1.0.3/conformance/extensions/oes-vertex-array-object.html
         // runObjectTest expects false if never bound.
         return false;
     }
