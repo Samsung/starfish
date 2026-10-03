@@ -324,6 +324,9 @@ xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py
 # C. Vendor Test
 ./tool/runner/test_runner.py vendor_test or vendor_test_[blink|webkit|gecko]
 
+# C-1. Khronos WebGL conformance (needs a -DWEBGL=1 build; see docs/khronos_webgl.md)
+./tool/runner/test_runner.py khronos_test or vendor_test_[khronos|khronos2|khronossdk]
+
 # D. Bidi Test
 ./tool/runner/test_runner.py bidi_test
 
@@ -347,6 +350,15 @@ ELM_ENGINE="shot:file=[capture.png]" ./run.sh [filepath=*.html] --pixel-test --w
 test/tool/nwjs-no-AA/nw tool/pixel_test/nw_capture/ -l [filepath=**.res] pc
 test/tool/nwjs-no-AA/nw tool/pixel_test/nw_capture/ -f [filepath=**.html] pc
 ```
+
+### Khronos WebGL Conformance Tests
+
+The [Khronos WebGL conformance suites](https://github.com/KhronosGroup/WebGL)
+(1.0.3, 2.0.0 and the development `sdk/tests`) are pinned as the
+`third_party/webgl` submodule and served unmodified; `./tool/runner/test_runner.py
+khronos_test` runs the curated lists in `tool/reftest/cairo/khronos_webgl*.res`
+against a `-DWEBGL=1` build. See `docs/khronos_webgl.md` for how results are
+collected and how to move the pin.
 
 ### Web Platform Tests
 

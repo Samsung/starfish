@@ -34,6 +34,9 @@ fi
 # with it: it was only ever needed to tolerate the proxy's own certificate,
 # not github.com's or github.sec.samsung.net's.
 git config submodule.third_party/wpt.update none
+# Same split for the Khronos WebGL suites (tool/ci/cache_webgl.sh): only the
+# khronos_test job needs them.
+git config submodule.third_party/webgl.update none
 retry_submodule_update 3 -- --init "${PATHS[@]}"
 (cd third_party/escargot && retry_submodule_update 3 -- --init third_party)
 (cd third_party/escargot/third_party/walrus && retry_submodule_update 3 -- --init third_party/sljit)
@@ -53,6 +56,7 @@ retry_submodule_update 3 -- --init "${PATHS[@]}"
 # before this job ends, same as the old prepare_source_without_thirdparty.sh
 # used to.
 git config --unset submodule.third_party/wpt.update
+git config --unset submodule.third_party/webgl.update
 
 # Each submodule's .git is a thin gitlink FILE pointing at this checkout's
 # own .git/modules/<path> -- meaningless once tarred and extracted into a
@@ -110,6 +114,7 @@ tarball=$(mktemp)
 # tarball -- pure leftover, never read by anything this cache serves.
 tar czf "$tarball" \
   --exclude='third_party/wpt' \
+  --exclude='third_party/webgl' \
   --exclude='third_party/escargot/test/*' \
   "${PATHS[@]}"
 submodule_cache_push "$id" "$tarball" cache.tar.gz

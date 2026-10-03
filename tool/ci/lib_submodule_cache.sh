@@ -1,6 +1,6 @@
 # Shared helpers for submodule caching against BART (this org's internal
 # JFrog Artifactory instance, https://bart.sec.samsung.net/artifactory).
-# Sourced by cache_starfish_thirdparty.sh, cache_wpt.sh, and
+# Sourced by cache_starfish_thirdparty.sh, cache_wpt.sh, cache_webgl.sh, and
 # cache_android_lwe_submodules.sh -- not meant to be executed directly.
 #
 # Third attempt at this (see git history for the first two): GitHub Actions
@@ -294,4 +294,53 @@ submodule_cache_fetch() {
 # is safe.
 submodule_cache_push() {
   "${CACHE_CURL[@]}" -o /dev/null -T "$2" "${BART_BASE_URL}/$1/$3"
+}
+
+# cache_public_submodule <cache-name> <path> -- producer/self-heal for ONE
+# submodule hosted on plain public github.com that is kept out of
+# cache_starfish_thirdparty.sh's shared tarball (because only a few jobs
+# need it): restores it from its own BART cache tarball when one exists for
+# the current pin, otherwise fetches it from upstream, makes it standalone
+# and publishes the tarball. Prints the cache id on success. Wrapped by
+# cache_wpt.sh (third_party/wpt) and cache_webgl.sh (third_party/webgl) --
+# the per-submodule reasoning lives in those wrappers' headers.
+#
+# No proxy is needed for github.com; the cache is purely resilience against
+# this network's frequent mid-fetch drops on a large clone.
+cache_public_submodule() {
+  local name="$1" path="$2" key id tarball
+  key=$(submodule_cache_key "$path")
+  id=$(submodule_cache_id "$name" "$key")
+
+  if submodule_cache_exists "$id" cache.tar.gz; then
+    tarball=$(mktemp)
+    submodule_cache_fetch "$id" cache.tar.gz "$tarball"
+    tar xzf "$tarball"
+    rm -f "$tarball"
+    echo "$id"
+    return 0
+  fi
+
+  # Defensive unset first: cache_starfish_thirdparty.sh sets update=none for
+  # this path locally (it isn't part of that cache) and normally unsets it
+  # before finishing, but self-hosted runners reuse their on-disk
+  # workspace/.git across unrelated jobs of this repo -- if that ever leaks
+  # into whatever workspace this runs in anyway, git would honor update=none
+  # and silently no-op the fetch below (exit 0, nothing fetched) instead of
+  # erroring. Confirmed on a real run before cache_wpt.sh existed. Clearing
+  # it here means this doesn't depend on some other job's cleanup succeeding.
+  git config --unset "submodule.$path.update" 2>/dev/null || true
+  retry_submodule_update 3 -- --init "$path"
+
+  # Same dangling-gitlink problem starfish's own cache script fixes -- make
+  # it self-contained before archiving so it survives being extracted into a
+  # completely different checkout by whichever job hits the cache next.
+  submodule_make_standalone "$path"
+  submodule_sync_standalone "$path"
+
+  tarball=$(mktemp)
+  tar czf "$tarball" "$path"
+  submodule_cache_push "$id" "$tarball" cache.tar.gz
+  rm -f "$tarball"
+  echo "$id"
 }

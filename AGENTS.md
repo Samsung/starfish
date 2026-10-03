@@ -13,6 +13,7 @@ of spec compliance.
 | Build, cross-compile, per-platform steps, testing setup | `README.md` |
 | C++ style (headers, formatting, classes, nullability, GC) | `docs/Coding_Style_Guide.md` |
 | WPT structure, tooling, `.res` list workflow | `docs/wpt.md` |
+| Khronos WebGL conformance suites (`third_party/webgl` submodule, `khronos_test`, pin upgrades) | `docs/khronos_webgl.md` |
 | Supported web surface (HTML tags, DOM interfaces, CSS properties, build-conditional flags) | `docs/Spec.md` |
 | Full test suite list | `./tool/runner/test_runner.py -h` |
 | Module map of `platform/`, `public/`, `binding/`, `shell/`, `launcher/` with feature → file:line navigation (generated snapshot; `src/core/` is not covered) | `code2spec/code2spec-quick-reference.md`, then `code2spec/modules/<module>.md` |
@@ -94,6 +95,7 @@ After a change, run the closest suites first:
 | fetch / xhr / canvas / svg / ... | matching `wpt_serve_*` suite | |
 | worker / serviceworker | `wpt_serve_testharness_worker` / `_serviceworker` | Excluded from the aggregate suite (needs daemon peers) |
 | Layout, paint, rendering | `wpt_serve_reftest`, or `reftest_all` for a full pass | `reftest_all` is slow; prefer targeted suites while iterating |
+| `core/dom/canvas/webgl`, `platform/canvas/gl` | `khronos_test`, or one of `vendor_test_khronos` / `_khronos2` / `_khronossdk` | Needs `-DWEBGL=1`; not in `reftest_all` (own CI job) |
 
 Conventions:
 

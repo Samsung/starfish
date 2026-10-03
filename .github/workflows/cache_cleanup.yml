@@ -9,7 +9,8 @@ name: Weekly submodule cache cleanup + rebuild
 #
 # Rebuild is split into the same scripts squash_thirdparty/android.yml/the
 # WPT test jobs call directly (tool/ci/cache_starfish_thirdparty.sh,
-# tool/ci/cache_android_lwe_submodules.sh, tool/ci/cache_wpt.sh) -- each run
+# tool/ci/cache_android_lwe_submodules.sh, tool/ci/cache_wpt.sh,
+# tool/ci/cache_webgl.sh) -- each run
 # on the runner pool its own submodule remotes actually need (proxied vs.
 # direct internet), so this workflow doesn't duplicate that logic, just
 # re-invokes it.
@@ -192,3 +193,36 @@ jobs:
         env:
           BART_API_KEY: ${{ secrets.BART_API_KEY }}
         run: ./tool/ci/cache_wpt.sh
+
+  rebuild_webgl:
+    needs: cleanup
+    # Same as rebuild_wpt for the Khronos WebGL conformance submodule
+    # (tool/ci/cache_webgl.sh, restored by x64_test.yml's khronos_test job).
+    runs-on: [ self-hosted, linux ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    timeout-minutes: 30
+    steps:
+      # Same reasoning as rebuild_starfish_thirdparty above: this pool
+      # reuses its on-disk checkout across runs and is exposed to the same
+      # checkout-internal submodule-foreach failure on a stuck HEAD; an
+      # unconditional fresh clone is cheap enough for a weekly/manual job.
+      - name: Force a fresh clone
+        run: cd /__w/starfish/starfish 2>/dev/null && rm -rf .git || true
+
+      - name: Checkout source (master)
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
+      - name: Rebuild webgl cache
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: ./tool/ci/cache_webgl.sh

@@ -120,3 +120,8 @@
 	url = https://github.com/web-platform-tests/wpt.git
 	ignore = dirty
 	shallow = true
+[submodule "third_party/webgl"]
+	path = third_party/webgl
+	url = https://github.com/KhronosGroup/WebGL.git
+	ignore = dirty
+	shallow = true
