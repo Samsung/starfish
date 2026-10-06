@@ -1,0 +1,24 @@
+// https://www.w3.org/TR/webaudio-1.0/#dictdef-offlineaudiocontextoptions
+// Web Audio 1.0 shape: the editor's draft makes length nullable for
+// undefined-length rendering via startRendering(chunkSize), which is not
+// implemented, so length stays required here.
+[ STARFISH_ENABLE_WEBAUDIO ]
+dictionary OfflineAudioContextOptions {
+  unsigned long numberOfChannels = 1;
+  required unsigned long length;
+  required float sampleRate;
+};
+
+// https://webaudio.github.io/web-audio-api/#OfflineAudioContext
+[ STARFISH_ENABLE_WEBAUDIO,
+  CustomConstructor(OfflineAudioContextOptions contextOptions),
+  CustomConstructor(unsigned long numberOfChannels, unsigned long length, float sampleRate),
+  ConstructorCallWith=ExecutionContext,
+  Exposed=Window ]
+interface OfflineAudioContext : BaseAudioContext {
+  readonly attribute unsigned long length;
+  attribute EventHandler oncomplete;
+  Promise<AudioBuffer> startRendering ();
+  Promise<void> suspend (double suspendTime);
+  Promise<void> resume ();
+};

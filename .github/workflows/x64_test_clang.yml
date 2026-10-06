@@ -78,6 +78,17 @@ jobs:
             ./build.ninja
             ./rules.ninja
 
+      # Needs the configured build tree (for its compile flags) and Clang's
+      # ThreadSanitizer runtime; it instruments only the native Web Audio
+      # graph/queue sources, not the browser.
+      - name: Run Web Audio graph thread test (TSan)
+        run: |
+          if echo 'int main() { return 0; }' | clang++ -fsanitize=thread -x c++ - -o /tmp/tsan-probe; then
+            xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/webaudio/test_graph_thread.py --build-dir . --compiler clang++ || exit 1
+          else
+            echo "::warning::Clang ThreadSanitizer runtime unavailable; skipped tool/webaudio/test_graph_thread.py"
+          fi
+
       - name: Leave comment
         if: ${{ failure() }}
         uses: CODE-Actions/github-script@v3

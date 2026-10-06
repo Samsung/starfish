@@ -26,6 +26,7 @@
 
 #include "core/dom/DOMException.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/Event.h"
 
 namespace Starfish {
 AudioScheduledSourceNode::AudioScheduledSourceNode(
@@ -39,6 +40,23 @@ ScriptBindingInstance* AudioScheduledSourceNode::scriptBindingInstance()
     return executionContext()->scriptBindingInstance();
 }
 
+// https://webaudio.github.io/web-audio-api/#dom-audioscheduledsourcenode-start
+void AudioScheduledSourceNode::start(double when)
+{
+    if (m_hasStartCalled) {
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_STATE_ERR,
+                               "Source has already started");
+    }
+    if (when < 0) {
+        throw new DOMException(executionContext(),
+                               DOMException::SCRIPT_RANGE_ERR,
+                               "Start time must be non-negative");
+    }
+    m_startTime = when;
+    m_hasStartCalled = true;
+}
+
 // https://webaudio.github.io/web-audio-api/#dom-audioscheduledsourcenode-stop
 void AudioScheduledSourceNode::stop(double when)
 {
@@ -47,11 +65,23 @@ void AudioScheduledSourceNode::stop(double when)
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
     }
-
-    // TODO: Timer
+    if (when < 0) {
+        throw new DOMException(executionContext(),
+                               DOMException::SCRIPT_RANGE_ERR,
+                               "Stop time must be non-negative");
+    }
+    m_stopTime = when;
+    m_hasStopCalled = true;
 }
 
 DEFINE_EVENT_LISTENER(AudioScheduledSourceNode, ended);
+
+void AudioScheduledSourceNode::dispatchEnded()
+{
+    Event* event =
+        new Event(executionContext(), staticStrings()->m_ended.localName());
+    dispatchEventByUA(event);
+}
 
 } // namespace Starfish
 

@@ -29,7 +29,7 @@
 
 namespace Starfish {
 class ExecutionContext;
-class MediaPlayerAudio;
+class AudioDestinationHandler;
 
 class AudioDestinationNode : public AudioNode {
 public:
@@ -39,16 +39,18 @@ public:
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioDestinationNode)
 
     DEFINE_GETTER_SETTER(uint32_t, maxChannelCount, MaxChannelCount)
+    void setChannelCount(uint32_t value) override;
 
-    void setBuffer(uint8_t* buffer, uint32_t length);
-    void play();
-    void setVolume(double volume);
+    // Pins channelCount and maxChannelCount to an OfflineAudioContext's
+    // numberOfChannels; the count can no longer change afterwards.
+    void configureOfflineChannelCount(uint32_t value);
 
 private:
     AudioDestinationNode(ExecutionContext* executionContext);
 
-    uint32_t m_maxChannelCount{ 0 };
-    MediaPlayerAudio* m_player{ nullptr };
+    uint32_t m_maxChannelCount{ 2 };
+    bool m_channelCountFixed{ false };
+    AudioDestinationHandler* m_destinationHandler{ nullptr };
 };
 } // namespace Starfish
 #endif

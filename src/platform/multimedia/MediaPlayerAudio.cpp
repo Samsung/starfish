@@ -35,6 +35,10 @@
 #include "core/fetch/RequestData.h"
 #include "platform/loader/ResourceLoader.h"
 
+#include <algorithm>
+#include <cstdlib>
+#include <limits>
+
 namespace Starfish {
 
 class AudioDownloadClient : public ResourceClient {
@@ -50,6 +54,9 @@ public:
         ResourceClient::didLoadFailed();
         RequestErrorType error = m_resource->requestErrorType();
         STARFISH_LOG_ERROR("AudioDownloadClient::%s: %d", __func__, (int)error);
+        if (m_element->alive()) {
+            m_element->onAudioDownloadFailed();
+        }
     }
 
     virtual void didLoadFinished()
@@ -58,14 +65,79 @@ public:
 
         ResourceClient::didLoadFinished();
 
-        m_element->m_audioData =
+        if (!m_element->alive()) {
+            return;
+        }
+
+        if (m_rejected) {
+            return;
+        }
+        ResponseBody& response =
             m_element->m_audioResource->resourceRequest()->response();
+        if (!m_element->acceptsEncodedSize(response.size())) {
+            ResponseBody().swap(response);
+            m_element->onAudioDownloadFailed();
+            return;
+        }
+        // The request is released after this callback; take its body rather
+        // than holding a second copy of the encoded resource.
+        m_element->m_audioData = std::move(response);
 
         m_element->onAudioDownloadCompleted();
     }
 
+    virtual void didHeaderReceived(
+        const std::unordered_map<std::string, std::string>& headers)
+    {
+        if (!m_element->alive() || m_rejected) {
+            return;
+        }
+        for (const auto& header : headers) {
+            if (!StringUtils::equalsIgnoreCase(header.first,
+                                               "content-length")) {
+                continue;
+            }
+            const char* value = header.second.c_str();
+            char* end = nullptr;
+            unsigned long long length = strtoull(value, &end, 10);
+            if (end != value &&
+                !m_element->acceptsEncodedSize(
+                    static_cast<size_t>(std::min<unsigned long long>(
+                        length, std::numeric_limits<size_t>::max())))) {
+                reject();
+            }
+            return;
+        }
+    }
+
 protected:
+    // Fail an oversized resource as soon as its declared length is known
+    // instead of buffering it to completion.
+    // https://html.spec.whatwg.org/#media-data-processing-steps-list
+    void reject()
+    {
+        m_rejected = true;
+        m_element->onAudioDownloadFailed();
+        // Canceling inside this callback would mutate the client list that
+        // Resource is iterating, so it is deferred.
+        size_t handle =
+            m_element->container()->webView()->messageLoop()->addIdler(
+                m_element->container()->window(),
+                [](size_t handle, void* data) {
+                    auto* self = static_cast<AudioDownloadClient*>(data);
+                    Resource* resource = self->m_resource;
+                    resource->removeIdlerHandle(handle);
+                    if (resource->state() == Resource::BeforeSend ||
+                        resource->state() == Resource::Receiving) {
+                        resource->cancel();
+                    }
+                },
+                this);
+        m_resource->pushIdlerHandle(handle);
+    }
+
     MediaPlayerAudio* m_element{ nullptr };
+    bool m_rejected{ false };
 };
 
 MediaPlayerAudio::MediaPlayerAudio(AudioNode* element)
@@ -86,13 +158,20 @@ void MediaPlayerAudio::play()
 void MediaPlayerAudio::destroy()
 {
     STARFISH_LOG_INFO("MediaPlayerAudio::%s", __func__);
+    m_alive = false;
+    ReadableStreamChunk().swap(m_audioData);
+}
+
+void MediaPlayerAudio::onAudioDownloadFailed()
+{
+    notifyMediaSourceFailure();
 }
 
 void MediaPlayerAudio::setBuffer(uint8_t* buffer, uint32_t length)
 {
     STARFISH_LOG_INFO("MediaPlayerAudio::%s", __func__);
 
-    m_audioData.reserve(length);
+    m_audioData.resize(length);
     memcpy(m_audioData.data(), buffer, length);
 }
 
@@ -110,8 +189,7 @@ void MediaPlayerAudio::prepare(ResourceURL* url)
 
 void MediaPlayerAudio::downloadAudioData(ResourceURL* url)
 {
-    STARFISH_LOG_INFO("MediaPlayerAudio::%s: %s", __func__,
-                      url->urlString()->toUTF8NonGCString().data());
+    STARFISH_LOG_INFO("MediaPlayerAudio::%s", __func__);
 
     m_audioResource = m_container->document()->resourceLoader().fetch(url);
     m_audioResource->addResourceClient(
@@ -134,6 +212,9 @@ void MediaPlayerAudio::onAudioDownloadCompleted()
         m_container->window(),
         [](size_t, void* data) {
             MediaPlayerAudio* self = (MediaPlayerAudio*)data;
+            if (!self->alive()) {
+                return;
+            }
             self->processNextOperationQueueInContainer();
             self->container()->mediaPlayerNotifyUpdateReadyStateItsContainer(
                 HTMLMediaElement::HAVE_METADATA);

@@ -1,37 +1,20 @@
-/*
- * Copyright (c) 2026-present Samsung Electronics Co., Ltd
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
- *  USA
- */
+// https://webaudio.github.io/web-audio-api/#enumdef-automationrate
+[ STARFISH_ENABLE_WEBAUDIO ]
+enum AutomationRate { "a-rate", "k-rate" };
 
-// https://webaudio.github.io/web-audio-api/#audioparam
-
-[ STARFISH_ENABLE_WEBAUDIO,
-  Exposed=Window ]
+// https://webaudio.github.io/web-audio-api/#AudioParam
+[ STARFISH_ENABLE_WEBAUDIO, Exposed=Window ]
 interface AudioParam {
-  attribute float value;
+  [RaisesException] attribute float value;
+  [Rename=automationRateStr, RaisesException] attribute AutomationRate automationRate;
   readonly attribute float defaultValue;
   readonly attribute float minValue;
   readonly attribute float maxValue;
-
-  AudioParam setValueAtTime (float value, double startTime);
-  AudioParam linearRampToValueAtTime (float value, double endTime);
-  AudioParam exponentialRampToValueAtTime (float value, double endTime);
-  AudioParam setTargetAtTime (float target, double startTime, double timeConstant);
-  AudioParam setValueCurveAtTime (sequence<float> values, double startTime, double duration);
-  AudioParam cancelScheduledValues (double cancelTime);
-  AudioParam cancelAndHoldAtTime (double cancelTime);
+  [RaisesException] AudioParam setValueAtTime(float value, double startTime);
+  [RaisesException] AudioParam linearRampToValueAtTime(float value, double endTime);
+  [RaisesException] AudioParam exponentialRampToValueAtTime(float value, double endTime);
+  [RaisesException] AudioParam setTargetAtTime(float target, double startTime, float timeConstant);
+  [RaisesException] AudioParam setValueCurveAtTime(sequence<float> values, double startTime, double duration);
+  [RaisesException] AudioParam cancelScheduledValues(double cancelTime);
+  [RaisesException] AudioParam cancelAndHoldAtTime(double cancelTime);
 };

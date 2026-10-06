@@ -1,0 +1,14 @@
+// https://webaudio.github.io/web-audio-api/#dictdef-channelmergeroptions
+[ STARFISH_ENABLE_WEBAUDIO ]
+dictionary ChannelMergerOptions : AudioNodeOptions {
+  unsigned long numberOfInputs = 6;
+};
+
+// https://webaudio.github.io/web-audio-api/#ChannelMergerNode
+[ STARFISH_ENABLE_WEBAUDIO,
+  Constructor(BaseAudioContext context, optional ChannelMergerOptions options),
+  ConstructorCallWith=ExecutionContext,
+  RaisesException=Constructor,
+  Exposed=Window ]
+interface ChannelMergerNode : AudioNode {
+};

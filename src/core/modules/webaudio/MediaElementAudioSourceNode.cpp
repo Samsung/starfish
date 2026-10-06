@@ -21,12 +21,17 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "core/modules/webaudio/render/AudioGraph.h"
 
 #include "core/modules/webaudio/MediaElementAudioSourceNode.h"
 
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/DOMException.h"
+#include "core/dom/HTMLMediaElement.h"
 #include "core/modules/webaudio/AudioNode.h"
 #include "core/modules/webaudio/AudioContext.h"
+#include "core/modules/webaudio/render/AudioHandlers.h"
+#include "platform/multimedia/MediaPlayer.h"
 
 namespace Starfish {
 MediaElementAudioSourceNode::MediaElementAudioSourceNode(
@@ -34,7 +39,34 @@ MediaElementAudioSourceNode::MediaElementAudioSourceNode(
     MediaElementAudioSourceOptions options)
     : AudioNode(executionContext, context)
 {
+    AudioGraphLock graphLock(context->graph());
     m_mediaElement = options.m_mediaElement;
+    if (!m_mediaElement) {
+        throw new DOMException(executionContext, DOMException::SCRIPT_TYPE_ERR,
+                               "mediaElement is required");
+    }
+    if (m_mediaElement->audioSourceNode()) {
+        throw new DOMException(executionContext,
+                               DOMException::INVALID_STATE_ERR,
+                               "Media element already has an audio source");
+    }
+    m_mediaElement->setAudioSourceNode(this);
+    m_numberOfInputs = 0;
+    m_numberOfOutputs = 1;
+    m_handler = context->graph()->addHandler(std::unique_ptr<AudioHandler>(
+        new MediaElementSourceHandler(context->sampleRate())));
+    m_sourceHandler = static_cast<MediaElementSourceHandler*>(m_handler);
+    MediaPlayer* player = m_mediaElement->activeMediaPlayer();
+    if (player) {
+        setPlaybackState(player->audioPlaybackState());
+    }
+}
+
+void MediaElementAudioSourceNode::setPlaybackState(
+    MediaAudioPlaybackState* state)
+{
+    AudioGraphLock graphLock(context()->graph());
+    m_sourceHandler->setPlaybackState(state);
 }
 
 ScriptBindingInstance* MediaElementAudioSourceNode::scriptBindingInstance()
@@ -42,13 +74,6 @@ ScriptBindingInstance* MediaElementAudioSourceNode::scriptBindingInstance()
     return executionContext()->scriptBindingInstance();
 }
 
-// https://webaudio.github.io/web-audio-api/#dom-audionode-connect
-AudioNode* MediaElementAudioSourceNode::connect(AudioNode* destinationNode,
-                                                uint32_t output, uint32_t input)
-{
-    AudioNode::connect(destinationNode, output, input);
-    return destinationNode;
-}
 } // namespace Starfish
 
 #endif

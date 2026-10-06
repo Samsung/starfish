@@ -25,11 +25,39 @@
 
 #include "platform/multimedia/MediaPlayerAudio.h"
 
+#include <chrono>
+
 namespace Starfish {
 class HTMLMediaElement;
 class AudioNode;
+class AudioBufferData;
+class AudioBus;
+class AudioOutputDevice;
+class MediaAudioPlaybackState;
+class MediaAudioDecodeWork;
+class MediaPlayerAudioLinux;
+class WebView;
+class Window;
+
+class MediaAudioDecodeJob : public gc {
+public:
+    MediaAudioDecodeJob(MediaPlayerAudioLinux* player, WebView* webView,
+                        Window* window, MediaAudioDecodeWork* work);
+    Window* window() const;
+    void cancel();
+    void complete();
+    void discard();
+
+private:
+    MediaPlayerAudioLinux* m_player;
+    WebView* m_webView;
+    Window* m_window;
+    MediaAudioDecodeWork* m_work;
+};
 
 class MediaPlayerAudioLinux : public MediaPlayerAudio {
+    friend class MediaAudioDecodeJob;
+
 public:
     MediaPlayerAudioLinux(AudioNode* element);
     MediaPlayerAudioLinux(HTMLMediaElement* element);
@@ -37,26 +65,39 @@ public:
 
     virtual void destroy() override;
     virtual void play() override;
-    virtual void pause() override {};
-    virtual void seek(double time) override {};
+    void pause() override;
+    void seek(double time) override;
+    void setLoop(bool loop) override;
+    MediaAudioPlaybackState* audioPlaybackState() override;
 
     void prepare(ResourceURL* url) override;
+    void onAudioDownloadCompleted() override;
 
-    virtual double currentTime()
-    {
-        return 0;
-    }
+    double currentTime() override;
 
-    virtual double duration()
-    {
-        return 0;
-    }
+    double duration() override;
 
-    virtual void setVolume(double volume) override {};
-    virtual void setMuted(bool muted) override {};
+    void setVolume(double volume) override;
+    void setMuted(bool muted) override;
+    void setPlaybackRate(double rate) override;
     virtual void prepareMediaSource() override {};
 
 private:
+    bool acceptsEncodedSize(size_t size) const override
+    {
+        return size <= 32 * 1024 * 1024;
+    }
+    void didDecodeAudio(AudioBufferData* pcm);
+    void playbackTick();
+
+    MediaAudioDecodeJob* m_decodeJob{ nullptr };
+    MediaAudioPlaybackState* m_playbackState{ nullptr };
+    AudioOutputDevice* m_outputDevice{ nullptr };
+    AudioBus* m_outputBus{ nullptr };
+    uint64_t m_nextOutputFrame{ 0 };
+    std::chrono::steady_clock::time_point m_outputClockStart;
+    double m_outputPosition{ 0 };
+    unsigned m_tickCount{ 0 };
 };
 } // namespace Starfish
 

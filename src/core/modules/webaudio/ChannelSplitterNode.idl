@@ -1,0 +1,14 @@
+// https://webaudio.github.io/web-audio-api/#dictdef-channelsplitteroptions
+[ STARFISH_ENABLE_WEBAUDIO ]
+dictionary ChannelSplitterOptions : AudioNodeOptions {
+  unsigned long numberOfOutputs = 6;
+};
+
+// https://webaudio.github.io/web-audio-api/#ChannelSplitterNode
+[ STARFISH_ENABLE_WEBAUDIO,
+  Constructor(BaseAudioContext context, optional ChannelSplitterOptions options),
+  ConstructorCallWith=ExecutionContext,
+  RaisesException=Constructor,
+  Exposed=Window ]
+interface ChannelSplitterNode : AudioNode {
+};

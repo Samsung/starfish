@@ -21,6 +21,7 @@ emitted by tool/wpt/inject_report.js:
 
     WPTR PASS <name>
     WPTR FAIL <name>
+    WPTR DETAIL <name>: <message>   (diagnostic only; not parsed)
     WPTR DONE status=<0|1|2|3> count=<n>
 
 Verdict per test:
@@ -28,7 +29,8 @@ Verdict per test:
     FAIL  -> any FAIL subtest, harness status!=0, no completion, or shell crash
 
 Needs no stored expected `.txt` files, so it works without the internal
-`test/` submodule.
+`test/` submodule. The browser is `./Starfish` unless the `STARFISH_BIN`
+environment variable names another binary (e.g. an FFmpeg build).
 
     python3 tool/wpt/scripts/wpt_runner.py \
         tool/wpt/testharness_lists --wpt-root /path/to/wpt
@@ -57,7 +59,8 @@ from wpt_server import wpt_serve, DEFAULT_WPT_ROOT  # noqa: E402
 from wpt_reftest import (run_reftest, load_manifest, ensure_manifest,  # noqa: E402
                          ensure_imgdiff)
 
-STARFISH = os.path.join(REPO_ROOT, "Starfish")
+STARFISH = os.path.abspath(os.environ.get(
+    "STARFISH_BIN", os.path.join(REPO_ROOT, "Starfish")))
 TMP_DIR = "/tmp"
 
 # glibc's stdio is fully block-buffered (not line-buffered) whenever stdout

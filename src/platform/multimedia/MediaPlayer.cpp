@@ -62,6 +62,15 @@ void MediaPlayer::processNextOperationQueueInContainer()
     }
 }
 
+void MediaPlayer::notifyMediaSourceFailure()
+{
+    if (!alive()) {
+        return;
+    }
+    m_foundError = true;
+    m_container->dedicatedMediaSourceFailure();
+}
+
 void MediaPlayer::appendToOperationQueueInContainer(
     MediaOperationQueueData* data)
 {

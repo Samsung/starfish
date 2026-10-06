@@ -1,0 +1,13 @@
+[ STARFISH_ENABLE_WEBAUDIO ]
+dictionary OfflineAudioCompletionEventInit : EventInit {
+  required AudioBuffer renderedBuffer;
+};
+
+// https://webaudio.github.io/web-audio-api/#OfflineAudioCompletionEvent
+[ STARFISH_ENABLE_WEBAUDIO,
+  Constructor (DOMString type, OfflineAudioCompletionEventInit eventInitDict),
+  ConstructorCallWith=ExecutionContext,
+  Exposed=Window ]
+interface OfflineAudioCompletionEvent : Event {
+  readonly attribute AudioBuffer renderedBuffer;
+};

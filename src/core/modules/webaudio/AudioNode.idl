@@ -32,24 +32,32 @@ enum ChannelInterpretation {
   "discrete"
 };
 
+// https://webaudio.github.io/web-audio-api/#dictdef-audionodeoptions
+[ STARFISH_ENABLE_WEBAUDIO ]
+dictionary AudioNodeOptions {
+  unsigned long channelCount;
+  ChannelCountMode channelCountMode;
+  ChannelInterpretation channelInterpretation;
+};
+
 // https://webaudio.github.io/web-audio-api/#audionode
 [ STARFISH_ENABLE_WEBAUDIO,
   ConstructorCallWith=ExecutionContext,
   Exposed=Window ]
 interface AudioNode : EventTarget {
   [RaisesException] AudioNode connect (AudioNode destinationNode, optional unsigned long output = 0, optional unsigned long input = 0);
-  //void connect (AudioParam destinationParam, optional unsigned long output = 0);
-  //void disconnect ();
-  //void disconnect (unsigned long output);
-  //void disconnect (AudioNode destinationNode);
-  //void disconnect (AudioNode destinationNode, unsigned long output);
-  //void disconnect (AudioNode destinationNode, unsigned long output, unsigned long input);
-  //void disconnect (AudioParam destinationParam);
-  //void disconnect (AudioParam destinationParam, unsigned long output);
+  [RaisesException] void connect (AudioParam destinationParam, optional unsigned long output = 0);
+  void disconnect ();
+  [RaisesException] void disconnect (unsigned long output);
+  [RaisesException] void disconnect (AudioNode destinationNode);
+  [RaisesException] void disconnect (AudioNode destinationNode, unsigned long output);
+  [RaisesException] void disconnect (AudioNode destinationNode, unsigned long output, unsigned long input);
+  [RaisesException] void disconnect (AudioParam destinationParam);
+  [RaisesException] void disconnect (AudioParam destinationParam, unsigned long output);
   readonly attribute BaseAudioContext context;
   readonly attribute unsigned long numberOfInputs;
   readonly attribute unsigned long numberOfOutputs;
-  attribute unsigned long channelCount;
-  [Rename=channelCountModeStr] attribute ChannelCountMode channelCountMode;
-  [Rename=channelInterpretationStr] attribute ChannelInterpretation channelInterpretation;
+  [RaisesException] attribute unsigned long channelCount;
+  [Rename=channelCountModeStr, RaisesException] attribute ChannelCountMode channelCountMode;
+  [Rename=channelInterpretationStr, RaisesException] attribute ChannelInterpretation channelInterpretation;
 };

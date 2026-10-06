@@ -1,0 +1,16 @@
+// https://webaudio.github.io/web-audio-api/#dictdef-delayoptions
+[ STARFISH_ENABLE_WEBAUDIO ]
+dictionary DelayOptions : AudioNodeOptions {
+  double maxDelayTime = 1;
+  double delayTime = 0;
+};
+
+// https://webaudio.github.io/web-audio-api/#DelayNode
+[ STARFISH_ENABLE_WEBAUDIO,
+  Constructor(BaseAudioContext context, optional DelayOptions options),
+  ConstructorCallWith=ExecutionContext,
+  RaisesException=Constructor,
+  Exposed=Window ]
+interface DelayNode : AudioNode {
+  readonly attribute AudioParam delayTime;
+};

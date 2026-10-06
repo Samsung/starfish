@@ -494,6 +494,7 @@ public:
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;
+    QualifiedName m_muted;
     QualifiedName m_autoplay;
     QualifiedName m_preload;
     QualifiedName m_controls;
@@ -765,6 +766,9 @@ public:
 #endif
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
     QualifiedName m_fetch;
+#endif
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    QualifiedName m_complete;
 #endif
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_cuechange;

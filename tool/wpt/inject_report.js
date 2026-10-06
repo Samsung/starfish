@@ -13,6 +13,7 @@
 // Output contract (each prefixed with `WPTR ` inside a console.log):
 //   WPTR PASS <subtest name>
 //   WPTR FAIL <subtest name>
+//   WPTR DETAIL <subtest name>: <failure message, max 500 chars>
 //   WPTR DONE status=<0=OK|1=ERROR|2=TIMEOUT|3=PRECONDITION_FAILED> count=<n>
 //   WPTR CRASHOK                                    (crashtest path only)
 (function () {
@@ -35,6 +36,10 @@
         for (var i = 0; i < tests.length; i++) {
             var t = tests[i];
             console.log('WPTR ' + (t.status === 0 ? 'PASS' : 'FAIL') + ' ' + t.name);
+            if (t.status !== 0 && t.message) {
+                console.log('WPTR DETAIL ' + t.name + ': ' +
+                            String(t.message).replace(/\s+/g, ' ').slice(0, 500));
+            }
         }
         console.log('WPTR DONE status=' + status.status + ' count=' + tests.length);
         finish();
@@ -43,6 +48,10 @@
         if (typeof add_completion_callback !== 'function') {
             return false;
         }
+        // The shell consumes WPTR results. The visual report also retains a
+        // stack for every successful assertion and builds a DOM table, which
+        // can exhaust the timeout for sample-by-sample audio checks.
+        setup({output: false});
         add_completion_callback(emit);
         return true;
     }
@@ -100,12 +109,24 @@
         return;
     }
 
-    // The injected script runs before testharness.js defines
-    // add_completion_callback, so poll briefly until it is available.
+    // Configure the harness at its script's load event, before subsequent
+    // test scripts run. Polling alone can miss synchronous assertions.
+    // A <script>'s load event does not bubble and, per DOM "get the parent",
+    // never reaches Window (Document's parent is null for `load`), so the
+    // capture listener belongs on the document.
+    // https://dom.spec.whatwg.org/#interface-document
     if (!register()) {
+        var onScriptLoad = function () {
+            if (register()) {
+                document.removeEventListener('load', onScriptLoad, true);
+                clearInterval(iv);
+            }
+        };
+        document.addEventListener('load', onScriptLoad, true);
         var tries = 0;
         var iv = setInterval(function () {
             if (register() || ++tries > 1000) {
+                document.removeEventListener('load', onScriptLoad, true);
                 clearInterval(iv);
             }
         }, 5);

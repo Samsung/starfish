@@ -41,93 +41,14 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "platform/multimedia/MediaPlayerLinux.h"
+#include "platform/multimedia/PulseSimple.h"
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+#include "core/modules/webaudio/MediaElementAudioSourceNode.h"
+#include "core/modules/webaudio/render/AudioHandlers.h"
+#endif
 
 #include <chrono>
-#include <dlfcn.h>
 #include <time.h>
-
-namespace {
-
-// PulseAudio Simple API loaded at runtime via dlopen so we do not have to add
-// a build-time dependency on libpulse-dev. See pulse/simple.h / pulse/sample.h.
-typedef enum {
-    PA_SAMPLE_S16LE = 3,
-} pa_sample_format_t;
-
-typedef enum {
-    PA_STREAM_PLAYBACK = 1,
-} pa_stream_direction_t;
-
-struct pa_sample_spec {
-    pa_sample_format_t format;
-    uint32_t rate;
-    uint8_t channels;
-};
-
-typedef struct pa_simple pa_simple;
-typedef struct pa_channel_map pa_channel_map;
-
-struct pa_buffer_attr {
-    uint32_t maxlength;
-    uint32_t tlength;
-    uint32_t prebuf;
-    uint32_t minreq;
-    uint32_t fragsize;
-};
-
-typedef pa_simple* (*pa_simple_new_fn)(const char*, const char*,
-                                       pa_stream_direction_t, const char*,
-                                       const char*, const pa_sample_spec*,
-                                       const pa_channel_map*,
-                                       const pa_buffer_attr*, int*);
-typedef int (*pa_simple_write_fn)(pa_simple*, const void*, size_t, int*);
-typedef int (*pa_simple_drain_fn)(pa_simple*, int*);
-typedef void (*pa_simple_free_fn)(pa_simple*);
-
-struct PulseSimpleApi {
-    pa_simple_new_fn pa_simple_new;
-    pa_simple_write_fn pa_simple_write;
-    pa_simple_drain_fn pa_simple_drain;
-    pa_simple_free_fn pa_simple_free;
-};
-
-static PulseSimpleApi* loadPulseSimple(void*& handleOut)
-{
-    static PulseSimpleApi s_api;
-    static void* s_handle = nullptr;
-    static bool s_loaded = false;
-    static bool s_failed = false;
-    if (s_failed) {
-        return nullptr;
-    }
-    if (s_loaded) {
-        handleOut = s_handle;
-        return &s_api;
-    }
-    s_handle = dlopen("libpulse-simple.so.0", RTLD_NOW | RTLD_GLOBAL);
-    if (s_handle == nullptr) {
-        s_failed = true;
-        return nullptr;
-    }
-    s_api.pa_simple_new = (pa_simple_new_fn)dlsym(s_handle, "pa_simple_new");
-    s_api.pa_simple_write =
-        (pa_simple_write_fn)dlsym(s_handle, "pa_simple_write");
-    s_api.pa_simple_drain =
-        (pa_simple_drain_fn)dlsym(s_handle, "pa_simple_drain");
-    s_api.pa_simple_free = (pa_simple_free_fn)dlsym(s_handle, "pa_simple_free");
-    if (s_api.pa_simple_new == nullptr || s_api.pa_simple_write == nullptr ||
-        s_api.pa_simple_free == nullptr) {
-        dlclose(s_handle);
-        s_handle = nullptr;
-        s_failed = true;
-        return nullptr;
-    }
-    s_loaded = true;
-    handleOut = s_handle;
-    return &s_api;
-}
-
-} // namespace
 
 namespace Starfish {
 
@@ -1020,7 +941,52 @@ MediaPlayerLinux::MediaPlayerLinux(HTMLMediaElement* element)
     STARFISH_ASSERT(element != nullptr);
 
     m_nativePlayer = new (PointerFreeGC) FfmpegWrapperPlayer();
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    if (element->audioSourceNode()) {
+        element->audioSourceNode()->setPlaybackState(audioPlaybackState());
+    }
+#endif
 }
+
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+MediaAudioPlaybackState* MediaPlayerLinux::audioPlaybackState()
+{
+    std::lock_guard<std::mutex> lock(m_audioWriteMutex);
+    if (!m_audioPlaybackState) {
+        m_audioPlaybackState = new MediaAudioPlaybackState;
+        m_audioPlaybackState->setStreamingPosition(
+            currentTime(), playbackState() == PLAYBACK_STATE_PLAYING);
+        m_audioPlaybackState->setVolume(m_container->volume());
+        m_audioPlaybackState->setMuted(m_container->muted());
+        // MSE bytes are supplied by script. Progressive network media must
+        // remain opaque until its final CORS response label is available.
+        // https://webaudio.github.io/web-audio-api/#MediaElementAudioSourceNode-security
+        m_audioPlaybackState->setOriginClean(isMSE());
+        // Only subsequent decoded frames can enter the graph: frames already
+        // sent to the old sink are unavailable. Late attachment may therefore
+        // be silent for the remaining decode-lookahead interval.
+        for (auto& item : m_audioWriteQueue) {
+            av_free(item.first);
+        }
+        m_audioWriteQueue.clear();
+        m_audioWriteQueueBytes = 0;
+        m_audioWriteCv.notify_all();
+    }
+    return m_audioPlaybackState.value();
+}
+
+void MediaPlayerLinux::syncAudioPlaybackState()
+{
+    std::lock_guard<std::mutex> lock(m_audioWriteMutex);
+    if (m_audioPlaybackState) {
+        m_audioPlaybackState->setStreamingPosition(
+            currentTime(), playbackState() == PLAYBACK_STATE_PLAYING);
+        m_audioPlaybackState->setVolume(m_container->volume());
+        m_audioPlaybackState->setMuted(m_container->muted());
+        m_audioPlaybackState->setOriginClean(isMSE());
+    }
+}
+#endif
 
 void MediaPlayerLinux::handlePlayerError()
 {
@@ -1185,6 +1151,11 @@ void MediaPlayerLinux::seekOperation(int timeInMS)
         // Drop pending audio so no stale pre-seek samples play out.
         {
             std::lock_guard<std::mutex> lk(m_audioWriteMutex);
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+            if (m_audioPlaybackState) {
+                m_audioPlaybackState->clearStreamingPCM();
+            }
+#endif
             for (auto& item : m_audioWriteQueue) {
                 if (item.first != nullptr) {
                     av_free(item.first);
@@ -1203,6 +1174,9 @@ void MediaPlayerLinux::seekOperation(int timeInMS)
         } else {
             m_clockStartMs = 0;
         }
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+        syncAudioPlaybackState();
+#endif
         fillBufferIfNeeded(StreamTypeAudio);
         fillBufferIfNeeded(StreamTypeVideo);
         // Complete the seek off the current operation-queue call stack so the
@@ -1332,6 +1306,9 @@ static void updateTimeCallback(void* data)
         return;
     }
     double position = self->currentTime();
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    self->syncAudioPlaybackState();
+#endif
     if (self->isMSE() == true &&
         position == self->container()->officialPlaybackPosition() &&
         self->isMSEBufferEOS() == true) {
@@ -1371,6 +1348,9 @@ void MediaPlayerLinux::play()
         m_clockStartMs = (uint64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
     }
     m_nativePlayer->play();
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    syncAudioPlaybackState();
+#endif
     m_container->executionContext()->addPointerInRootSet(this);
     m_currentTimeUpdateTimer = m_container->window()->setInterval(
         updateTimeCallback, isMSE() ? 16 : 250, this);
@@ -1391,6 +1371,9 @@ void MediaPlayerLinux::pause()
     }
     PLAYER_LOGI("pause()");
     setPlaybackState(PLAYBACK_STATE_PAUSED);
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    syncAudioPlaybackState();
+#endif
     if (m_container != nullptr) {
         m_container->executionContext()->removePointerFromRootSet(this);
         m_container->window()->clearInterval(m_currentTimeUpdateTimer);
@@ -1676,6 +1659,12 @@ void MediaPlayerLinux::dispose()
         m_swsCtx = nullptr;
     }
     teardownAudioSink();
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    if (m_audioPlaybackState) {
+        m_audioPlaybackState->release();
+        m_audioPlaybackState = NullOption;
+    }
+#endif
     if (m_activeMediaSource != nullptr) {
         m_activeMediaSource->removeClient(m_mseClient);
         m_activeMediaSource = nullptr;
@@ -1702,6 +1691,9 @@ void MediaPlayerLinux::dispose()
 
 void MediaPlayerLinux::setVolume(double volume)
 {
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    syncAudioPlaybackState();
+#endif
     PLAYER_LOGI("MediaPlayerLinux::setVolume(%f)", volume);
     if (m_nativePlayer == nullptr) {
         return;
@@ -1721,6 +1713,9 @@ void MediaPlayerLinux::setVolume(double volume)
 
 void MediaPlayerLinux::setMuted(bool muted)
 {
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    syncAudioPlaybackState();
+#endif
     PLAYER_LOGI("MediaPlayerLinux::setMuted(%s)", muted ? "true" : "false");
     if (m_nativePlayer == nullptr) {
         return;
@@ -1847,6 +1842,9 @@ static void* threadFillingBuffer(void* data)
 
 void MediaPlayerLinux::prepareMediaSource()
 {
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    syncAudioPlaybackState();
+#endif
     PLAYER_LOGI("MediaPlayerLinux::prepareMediaSource\n");
     initAudioStreamInfo();
     if (m_foundError == true) {
@@ -2520,8 +2518,23 @@ void MediaPlayerLinux::ensureAudioSink(int channels, int sampleRate)
             {
                 std::unique_lock<std::mutex> lk(m_audioWriteMutex);
                 m_audioWriteCv.wait(lk, [this]() {
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+                    if (m_audioPlaybackState) {
+                        return true;
+                    }
+#endif
                     return m_audioWriterStop || !m_audioWriteQueue.empty();
                 });
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+                if (m_audioPlaybackState) {
+                    // Web Audio reroutes the element, including samples
+                    // already buffered by its former device output.
+                    lk.unlock();
+                    int err = 0;
+                    api->pa_simple_flush((pa_simple*)m_audioSinkHandle, &err);
+                    return;
+                }
+#endif
                 if (m_audioWriteQueue.empty()) {
                     if (m_audioWriterStop) {
                         return;
@@ -2593,7 +2606,8 @@ void MediaPlayerLinux::teardownAudioSink()
     m_swrSrcFmt = -1;
 }
 
-void MediaPlayerLinux::publishDecodedAudioFrame(AVFrame* frame)
+void MediaPlayerLinux::publishDecodedAudioFrame(AVFrame* frame,
+                                                double fallbackPosition)
 {
     if (frame == nullptr || frame->nb_samples <= 0) {
         return;
@@ -2601,13 +2615,37 @@ void MediaPlayerLinux::publishDecodedAudioFrame(AVFrame* frame)
     int channels = frame->ch_layout.nb_channels;
     int sampleRate = frame->sample_rate;
     int srcFmt = frame->format;
-    if (channels <= 0 || sampleRate <= 0) {
+    if (channels <= 0 || channels > 32 || sampleRate <= 0) {
         return;
     }
 
-    ensureAudioSink(channels, sampleRate);
-    if (m_audioSinkHandle == nullptr) {
-        return;
+    bool routed = false;
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    // Hold a reference across the unlocked conversion below, independent of
+    // when the player drops its own.
+    struct PlaybackReference {
+        ~PlaybackReference()
+        {
+            if (state) {
+                state->release();
+            }
+        }
+        MediaAudioPlaybackState* state{ nullptr };
+    } playback;
+    {
+        std::lock_guard<std::mutex> lk(m_audioWriteMutex);
+        if (m_audioPlaybackState) {
+            playback.state = m_audioPlaybackState.value();
+            playback.state->retain();
+        }
+        routed = !!playback.state;
+    }
+#endif
+    if (!routed) {
+        ensureAudioSink(channels, sampleRate);
+        if (m_audioSinkHandle == nullptr) {
+            return;
+        }
     }
 
     if (m_swrCtx == nullptr || m_swrChannels != channels ||
@@ -2639,8 +2677,12 @@ void MediaPlayerLinux::publishDecodedAudioFrame(AVFrame* frame)
 
     int outSamples = frame->nb_samples;
     int bytesPerSample = 2; // S16
-    int outBufSize = outSamples * channels * bytesPerSample;
-    uint8_t* outBuf = (uint8_t*)av_malloc((size_t)outBufSize);
+    int outBufSize = av_samples_get_buffer_size(nullptr, channels, outSamples,
+                                                AV_SAMPLE_FMT_S16, 1);
+    if (outBufSize < 0) {
+        return;
+    }
+    uint8_t* outBuf = (uint8_t*)av_malloc(outBufSize);
     if (outBuf == nullptr) {
         return;
     }
@@ -2653,7 +2695,22 @@ void MediaPlayerLinux::publishDecodedAudioFrame(AVFrame* frame)
         return;
     }
 
-    size_t writeBytes = (size_t)(converted * channels * bytesPerSample);
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    if (routed) {
+        int64_t timestamp = frame->best_effort_timestamp;
+        if (timestamp == AV_NOPTS_VALUE) {
+            timestamp = frame->pts;
+        }
+        double position =
+            timestamp == AV_NOPTS_VALUE ? fallbackPosition : timestamp / 1000.0;
+        playback.state->appendStreamingPCM(
+            reinterpret_cast<const int16_t*>(outBuf), converted, channels,
+            sampleRate, position);
+        av_free(outBuf);
+        return;
+    }
+#endif
+    size_t writeBytes = (size_t)converted * channels * bytesPerSample;
     {
         std::lock_guard<std::mutex> lk(m_audioWriteMutex);
         // Cap pending audio at ~5 seconds worth (sampleRate * channels * 2 *
@@ -2724,7 +2781,7 @@ void MediaPlayerLinux::decodeAndDeliverPacket(MediaPlayerSourceStream* stream,
         if (stream->isVideo()) {
             publishDecodedFrame(frame);
         } else if (stream->isAudio()) {
-            publishDecodedAudioFrame(frame);
+            publishDecodedAudioFrame(frame, packet->m_pts / 1000.0);
         }
         av_frame_free(&frame);
     }

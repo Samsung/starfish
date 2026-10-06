@@ -35,7 +35,10 @@ class AudioScheduledSourceNode : public AudioNode {
 public:
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioScheduledSourceNode)
 
+    virtual void start(double when = 0);
     virtual void stop(double when = 0);
+    virtual bool renderScheduledQuantum() = 0;
+    void dispatchEnded();
 
 #define VIRTUAL
 #define OVERRIDE
@@ -50,6 +53,8 @@ protected:
 
     bool m_hasStartCalled{ false };
     bool m_hasStopCalled{ false };
+    double m_startTime{ 0 };
+    double m_stopTime{ 0 };
 
 private:
 };

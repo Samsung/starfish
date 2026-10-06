@@ -73,6 +73,12 @@
 #include "core/storage/StorageNamespace.h"
 #include "core/storage/WebStorageNamespaceProvider.h"
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+#include "core/modules/webaudio/BaseAudioContext.h"
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(STARFISH_TIZEN)
+#include "platform/multimedia/MediaPlayerAudioLinux.h"
+#endif
+#endif
 #include "core/layout/PaintPassMemo.h"
 #include "core/modules/renderer/Renderer.h"
 #include "core/modules/profiling/FrameRateCounter.h"
@@ -568,6 +574,13 @@ void* WebView::operator new(size_t size)
 #if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
         GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_imageDecodeThreadPool));
 #endif
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_audioDecodeThreadPool));
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_pendingAudioDecodes));
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(STARFISH_TIZEN)
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_pendingMediaAudioDecodes));
+#endif
+#endif
         GC_set_bit(desc,
                    GC_WORD_OFFSET(WebView, m_activeImageURLsInRenderingMutex));
 
@@ -749,6 +762,64 @@ void WebView::applyJavaScriptNativeInterface(ScriptBindingInstance* instance)
     }
 }
 
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+ThreadPool* WebView::audioDecodeThreadPool()
+{
+    if (!m_audioDecodeThreadPool) {
+        m_audioDecodeThreadPool = new ThreadPool(2, m_messageLoop);
+    }
+    return m_audioDecodeThreadPool.value();
+}
+
+void WebView::registerAudioDecodeRequest(AudioDecodeRequest* request)
+{
+    m_pendingAudioDecodes.push_back(request);
+}
+
+void WebView::unregisterAudioDecodeRequest(AudioDecodeRequest* request)
+{
+    auto it = std::find(m_pendingAudioDecodes.begin(),
+                        m_pendingAudioDecodes.end(), request);
+    STARFISH_ASSERT(it != m_pendingAudioDecodes.end());
+    m_pendingAudioDecodes.erase(it);
+}
+
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(STARFISH_TIZEN)
+void WebView::registerMediaAudioDecodeJob(MediaAudioDecodeJob* job)
+{
+    m_pendingMediaAudioDecodes.push_back(job);
+}
+
+void WebView::unregisterMediaAudioDecodeJob(MediaAudioDecodeJob* job)
+{
+    auto it = std::find(m_pendingMediaAudioDecodes.begin(),
+                        m_pendingMediaAudioDecodes.end(), job);
+    STARFISH_ASSERT(it != m_pendingMediaAudioDecodes.end());
+    m_pendingMediaAudioDecodes.erase(it);
+}
+#endif
+
+bool WebView::cancelAudioDecodesForWindow(Window* window)
+{
+    bool cancelled = false;
+    for (AudioDecodeRequest* request : m_pendingAudioDecodes) {
+        if (request->window() == window) {
+            request->cancel();
+            cancelled = true;
+        }
+    }
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(STARFISH_TIZEN)
+    for (MediaAudioDecodeJob* job : m_pendingMediaAudioDecodes) {
+        if (job->window() == window) {
+            job->cancel();
+            cancelled = true;
+        }
+    }
+#endif
+    return cancelled;
+}
+#endif
+
 void WebView::destroy()
 {
     STARFISH_LOG_INFO("WebView::destroy");
@@ -769,6 +840,19 @@ void WebView::destroy()
     pause();
 
     // Drain before document/globals below are disposed.
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    for (AudioDecodeRequest* request : m_pendingAudioDecodes) {
+        request->cancel();
+    }
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(STARFISH_TIZEN)
+    for (MediaAudioDecodeJob* job : m_pendingMediaAudioDecodes) {
+        job->cancel();
+    }
+#endif
+    if (m_audioDecodeThreadPool) {
+        m_audioDecodeThreadPool->destroy(true);
+    }
+#endif
 #if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
     m_imageDecodeThreadPool->destroy(true);
 #endif
@@ -813,6 +897,20 @@ void WebView::destroy()
 
     m_threadPool->destroy();
     m_messageLoop->destroy();
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    // Queued work discarded by ThreadPool::destroy() has no completion idler.
+    // Any other completion not run by the backend is released here as well.
+    for (AudioDecodeRequest* request : m_pendingAudioDecodes) {
+        request->discard();
+    }
+    m_pendingAudioDecodes.clear();
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(STARFISH_TIZEN)
+    for (MediaAudioDecodeJob* job : m_pendingMediaAudioDecodes) {
+        job->discard();
+    }
+    m_pendingMediaAudioDecodes.clear();
+#endif
+#endif
 
     m_timer->clear(nullptr);
     m_timer->destroy();

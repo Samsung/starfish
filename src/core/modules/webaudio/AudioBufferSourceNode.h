@@ -31,11 +31,23 @@ namespace Starfish {
 class ExecutionContext;
 class BaseAudioContext;
 class AudioBuffer;
+class AudioParam;
+class AudioBufferSourceHandler;
 
 struct AudioBufferSourceOptions {
     DEFINE_GETTER_SETTER(Optional<AudioBuffer*>, buffer, Buffer);
+    DEFINE_GETTER_SETTER(float, detune, Detune);
+    DEFINE_GETTER_SETTER(float, playbackRate, PlaybackRate);
+    DEFINE_GETTER_SETTER(bool, loop, Loop);
+    DEFINE_GETTER_SETTER(double, loopStart, LoopStart);
+    DEFINE_GETTER_SETTER(double, loopEnd, LoopEnd);
 
     Optional<AudioBuffer*> m_buffer;
+    float m_detune{ 0 };
+    float m_playbackRate{ 1 };
+    bool m_loop{ false };
+    double m_loopStart{ 0 };
+    double m_loopEnd{ 0 };
 };
 
 class AudioBufferSourceNode : public AudioScheduledSourceNode {
@@ -48,12 +60,32 @@ public:
 
     DEFINE_GETTER(Optional<AudioBuffer*>, buffer);
     void setBuffer(Optional<AudioBuffer*> buffer);
+    DEFINE_GETTER(AudioParam*, detune);
+    DEFINE_GETTER(AudioParam*, playbackRate);
+    DEFINE_GETTER(bool, loop);
+    void setLoop(bool loop);
+    DEFINE_GETTER(double, loopStart);
+    void setLoopStart(double loopStart);
+    DEFINE_GETTER(double, loopEnd);
+    void setLoopEnd(double loopEnd);
 
-    void start(double when = 0, double offset = 0, double duration = 0);
+    void start(double when = 0);
+    void start(double when, double offset);
+    void start(double when, double offset, double duration);
+    void stop(double when = 0) override;
+    bool renderScheduledQuantum() override;
 
 private:
     Optional<AudioBuffer*> m_buffer;
+    AudioParam* m_detune{ nullptr };
+    AudioParam* m_playbackRate{ nullptr };
+    bool m_loop{ false };
+    double m_loopStart{ 0 };
+    double m_loopEnd{ 0 };
     bool m_bufferSet{ false };
+    double m_offset{ 0 };
+    Optional<double> m_duration;
+    AudioBufferSourceHandler* m_sourceHandler{ nullptr };
 };
 } // namespace Starfish
 #endif

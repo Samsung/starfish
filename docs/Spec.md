@@ -213,7 +213,7 @@ The HTML parser and DOM expose the following tags as well; they were missing fro
 |  [del](https://html.spec.whatwg.org/multipage/edits.html#the-del-element) | cite, datetime | &lt;URL&gt;, &lt;string&gt; | Maps to HTMLModElement. |
 |  [map](https://html.spec.whatwg.org/multipage/image-maps.html#the-map-element) | name | &lt;string&gt; | Maps to HTMLMapElement; image-map hit-testing is layout-only. |
 |  [area](https://html.spec.whatwg.org/multipage/image-maps.html#the-area-element) | href, alt, coords, shape | | Maps to HTMLAreaElement; companion to `<map>`. |
-|  [template](https://html.spec.whatwg.org/multipage/scripting.html#the-template-element) |  |  | Maps to HTMLTemplateElement. The `content` DocumentFragment is exposed; element does not render its children. |
+|  [template](https://html.spec.whatwg.org/multipage/scripting.html#the-template-element) | shadowRootMode | "open" \| "closed" | Maps to HTMLTemplateElement. The `content` DocumentFragment is exposed; element does not render its children. `shadowRootMode` enables Declarative Shadow DOM (attach a shadow root from HTML). **`shadowRootDelegatesFocus`, `shadowRootClonable`, `shadowRootSerializable` are `[Unimplemented]`**. |
 |  [slot](https://html.spec.whatwg.org/multipage/scripting.html#the-slot-element) | name | &lt;string&gt; | Maps to HTMLSlotElement. Slotting works inside a shadow tree: `assignedNodes()`/`assignedElements()` (with `{flatten}`), fallback content, slot reassignment, and the `slotchange` event are implemented. |
 |  [track](https://html.spec.whatwg.org/multipage/media.html#the-track-element) | kind, src, srclang, label, default |  | Maps to HTMLTrackElement. **Build flag:** `STARFISH_ENABLE_MULTIMEDIA`. |
 
@@ -243,10 +243,10 @@ section are supported.
 > - `AudioContext`, `BaseAudioContext`, `AudioBuffer*`, `AudioNode*` — `STARFISH_ENABLE_WEBAUDIO` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64`)
 > - `WebSocket` — `STARFISH_ENABLE_WEBSOCKET` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64`)
 > - `WebGL*`, `EXT_*`, `OES_*`, `WEBGL_*` — `WEBGL=1`
-> - `Worker`, `WorkerGlobalScope`, `DedicatedWorkerGlobalScope` — `WORKER=1`
+> - `Worker`, `WorkerGlobalScope`, `DedicatedWorkerGlobalScope`, `WorkerLocation` — `WORKER=1`
 > - `SharedWorker`, `SharedWorkerGlobalScope` — `SHARED_WORKER=1`
-> - `ServiceWorker`, `ServiceWorkerRegistration`, `Notification`, `PushManager`, `Cache`, `caches`, `FetchEvent`, `ExtendableEvent` — `SERVICE_WORKER=1`
-> - `IDBFactory`, `IDBDatabase`, `IDBObjectStore`, … — `IDB=1`
+> - `ServiceWorker`, `ServiceWorkerRegistration`, `ServiceWorkerContainer` ([Unimplemented]), `ServiceWorkerGlobalScope`, `Notification`, `PushManager`, `PushSubscription`, `PushSubscriptionOptions`, `Cache`, `caches`, `FetchEvent`, `ExtendableEvent` — `SERVICE_WORKER=1`
+> - `IDBFactory`, `IDBDatabase`, `IDBObjectStore`, `IDBCursor` ([Unimplemented]), `IDBIndex`, `IDBKeyRange` ([Unimplemented]), `IDBOpenDBRequest` ([Unimplemented]), `IDBRequest`, `IDBTransaction` ([Unimplemented]) — `IDB=1`
 > - `SpeechSynthesis`, `SpeechSynthesisUtterance`, `SpeechSynthesisVoice`, `SpeechSynthesisEvent` — `STARFISH_ENABLE_TTS` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64`)
 >
 > The `CMAKE_SYSTEM_NAME=Linux CMAKE_SYSTEM_PROCESSOR=x86_64` release build that `README.md` builds ships with `WEBGL=0`, `WEBRTC=0`, `WORKER=0`, `SHARED_WORKER=0`, `SERVICE_WORKER=0`, `IDB=0`, plus TTS/WebAudio/WebSocket on. Other hosts and arches differ — see [Build-Conditional Surface](#build-conditional-surface) for the full table.
@@ -585,6 +585,29 @@ section are supported.
 |    |  attribute  |  right  |  Return max(x coordinate, x coordinate + width dimension) of the object  |
 |    |  attribute  |  bottom  |  Return max(y coordinate, y coordinate + height dimension) of the object  |
 |    |  attribute  |  left  |  Return min(x coordinate, x coordinate + width dimension) of the object  |
+| [DOMMatrixReadOnly](https://drafts.fxtf.org/geometry/#dommatrixreadonly) | interface | DOMMatrixReadOnly | Represents the read-only base of a 4×4 matrix. `DOMMatrix` inherits all members. |
+|  | static method | DOMMatrixReadOnly fromMatrix(optional DOMMatrixInit other) | Creates a new DOMMatrixReadOnly from a DOMMatrixInit dictionary. |
+|  | static method | DOMMatrixReadOnly fromFloat32Array(Float32Array array32) | Creates a new DOMMatrixReadOnly from a Float32Array. |
+|  | static method | DOMMatrixReadOnly fromFloat64Array(Float64Array array64) | Creates a new DOMMatrixReadOnly from a Float64Array. |
+|  | attribute | a, b, c, d, e, f | 2D matrix aliases for m11, m12, m21, m22, m41, m42. |
+|  | attribute | m11–m44 | The 16 elements of the 4×4 matrix (read-only). |
+|  | attribute | is2D | Whether the matrix can be represented in 2D. |
+|  | attribute | isIdentity | Whether the matrix is the identity matrix. |
+|  | method | DOMMatrix translate / scale / scaleNonUniform / scale3d / rotate / rotateFromVector / rotateAxisAngle / skewX / skewY / multiply / flipX / flipY / inverse | Immutable transform methods returning new DOMMatrix. |
+|  | method | Float32Array toFloat32Array() / Float64Array toFloat64Array() | Serializes the matrix to a typed array. |
+|  | method | **`transformPoint(optional DOMPointInit)` is `[Unimplemented]`** | Would return a DOMPoint transformed by this matrix. |
+|  | method | **`toJSON()` is `[Unimplemented]`** | Would return a JSON-serializable object. |
+|  | stringifier | | Returns the matrix as a `matrix(…)` or `matrix3d(…)` string. |
+| [DOMMatrix](https://drafts.fxtf.org/geometry/#DOMMatrix) | interface | DOMMatrix | Mutable 4×4 matrix; inherits DOMMatrixReadOnly. `LegacyWindowAlias`: `SVGMatrix`, `WebKitCSSMatrix`. |
+|  | constructor | DOMMatrix(optional (DOMString or sequence\<unrestricted double\>) init) | Creates a matrix from a transform string or array of 6/16 numbers. |
+|  | static method | DOMMatrix fromMatrix / fromFloat32Array / fromFloat64Array | Factory methods (mutable variants). |
+|  | attribute | a–f, m11–m44 (inherit, mutable) | Same elements as DOMMatrixReadOnly but writable. |
+|  | method | DOMMatrix multiplySelf / preMultiplySelf / translateSelf / scaleSelf / scale3dSelf / skewXSelf / skewYSelf / invertSelf | Mutable transform methods (modify in place, return self). |
+|  | method | **`rotateSelf` is `[Unimplemented]`** | Would apply a rotation to the matrix in place. |
+|  | method | **`rotateFromVectorSelf` is `[Unimplemented]`** | Would apply a rotation from a vector in place. |
+|  | method | **`rotateAxisAngleSelf` is `[Unimplemented]`** | Would apply a rotation around an arbitrary axis in place. |
+|  | method | **`setMatrixValue(DOMString transformList)` is `[Unimplemented]`** | Would replace the matrix from a CSS transform string. |
+
 |  [DOMTokenList](https://dom.spec.whatwg.org/#interface-domtokenlist)  |  attribute  |  length  |  Returns the number of tokens. |
 |    | method | DOMString? item(unsigned long index) (or tokenlist[index])  |  Returns the token with the index index number. |
 |    | method | boolean contains(DOMString token)  |  Returns true if token is present, and false otherwise. |
@@ -702,6 +725,10 @@ section are supported.
 |  | attribute | bgColor | Is a DOMString that represents the background color for the document. |
 |  | attribute | background | Is a DOMString that represents the description of the location of the background image resource. |
 |  | attribute | text | Is a DOMString that represents the foreground color of text. |
+|  | attribute | fgColor | Obsolete DOMString for the document foreground (text) color. |
+|  | attribute | linkColor | Obsolete DOMString for the color of unvisited hyperlinks. |
+|  | attribute | vlinkColor | Obsolete DOMString for the color of visited hyperlinks. |
+|  | attribute | alinkColor | Obsolete DOMString for the color of active hyperlinks. |
 | [HTMLBaseElement](https://html.spec.whatwg.org/multipage/semantics.html#the-base-element) | interface | HTMLBaseElement | The base element specifies the base URL to use for all relative URLs contained within a document. |
 |  | attribute | href | The base URL to be used throughout the document for relative URL addresses. |
 |  | attribute | target | A name or keyword indicating the default location to display the result when hyperlinks or forms cause navigation |
@@ -772,6 +799,7 @@ section are supported.
 |  | attribute | length | A long reflecting  the number of controls in the form. |
 | [HTMLHeadElement](https://html.spec.whatwg.org/multipage/semantics.html#the-head-element) | interface | HTMLHeadElement | The head element represents a collection of metadata for the Document. |
 | [HTMLHRElement](https://html.spec.whatwg.org/multipage/grouping-content.html#the-hr-element) | interface | HTMLHRElement | The hr element represents a thematic break between paragraph-level elements. |
+|  | attribute | noShade | Obsolete boolean attribute; sets the rule to a solid color rather than a shaded groove. |
 | [HTMLHeadingElement](https://html.spec.whatwg.org/#htmlheadingelement) | interface | HTMLHeadingElement | The h1, h2, h3, h4, h5 and h6 elements represent headings for their sections. |
 |  | attribute | align | Returns the current value of the align content attribute. |
 | [HTMLHtmlElement](https://html.spec.whatwg.org/multipage/semantics.html#the-html-element) | interface | HTMLHtmlElement | The html element represents the root of an HTML document. |
@@ -993,6 +1021,8 @@ section are supported.
 |    | attribute |  scope  |  Indicates the scope of a \<th\> cell.  |
 |    | attribute |  abbr  |  Speicify an alternative label for the header cell.  |
 |    | attribute |  align  |  Returns an enumerated value reflecting the align attribute.  |
+|    | attribute |  ch  |  Obsolete alignment character for cell content.  |
+|    | attribute |  chOff  |  Obsolete offset of the alignment character.  |
 |    | attribute |  axis  |  Contains a name grouping cells in virtual. It reflects the obsolete axis attribute.  |
 |    | attribute |  height  |  Contains a length of pixel of the hinted height of the cell.  |
 |    | attribute |  width  |  Specify the number of pixels wide the cell should be drawn, if possible.  |
@@ -1305,6 +1335,8 @@ section are supported.
 |  | attribute | name | Gets/sets the name of the window. |
 |  | attribute | location | Return this Window object's Location object. |
 |  | attribute | history | Return the object implementing the History interface for this Window object's associated Document. |
+|  | attribute | localStorage | Returns the `Storage` object for the origin's persistent storage area. |
+|  | attribute | sessionStorage | Returns the `Storage` object for the origin's session storage area (cleared when the browsing context is destroyed). |
 |  | attribute | navigator | Return an instance of the Navigator interface, which represents the identity and state of the user agent (the client), and allows Web pages to register themselves as potential protocol and content handlers |
 |  | attribute | frames | Return Window object's browsing context's WindowProxy object. |
 |  | attribute | length | Return the number of document-tree child browsing contexts of this Window object. |
@@ -2093,7 +2125,7 @@ This section describes the list of supported `Directives` and their correspondin
 This section describes SVG support in LWE. Inline `<svg>...</svg>` in
 HTML, standalone `.svg` documents (`image/svg+xml`), and SVG-as-image
 (`<img src="*.svg">`, CSS `background-image: url(*.svg)`) are all
-rendered. 45 element subclasses are registered in
+rendered. 44 element subclasses are registered in
 `SVGDocument::createSVGElement`, each with a dedicated `SVG*Element`
 C++ class and a corresponding `FrameSVG*Box` layout box. Please see
 [SVG 2 Spec](https://www.w3.org/TR/SVG2/) for more information.
@@ -2286,7 +2318,9 @@ Extensions to the Navigator Object: The navigator is extended by the following a
 | |	attribute	| onLine	| Returns whether the user agent considers itself to be online. LWE always returns `true`. |
 | |	method	| boolean javaEnabled() | Always returns `false` (Java applets are not supported). |
 | |	misc	| **Unsupported in LWE** (`[Unimplemented]`) | `productSub`, `languages`, `plugins`, `mimeTypes`. |
-| |	misc	| **Not exposed at all** | `mediaDevices`, `clipboard`, `share`, `permissions`, `bluetooth`, `usb`, `xr`, `hardwareConcurrency`, `deviceMemory`, `connection`, `userAgentData`, `serviceWorker` (build-conditional under `STARFISH_ENABLE_SERVICE_WORKER`), `getBattery`/`battery`. |
+| |	misc	| **Not exposed at all** | `clipboard`, `share`, `permissions`, `bluetooth`, `usb`, `xr`, `hardwareConcurrency`, `deviceMemory`, `connection`, `userAgentData`, `serviceWorker` (build-conditional under `STARFISH_ENABLE_SERVICE_WORKER`), `getBattery`/`battery`. |
+| |	attribute	| mediaCapabilities | Returns a `MediaCapabilities` object (gated by `STARFISH_ENABLE_MULTIMEDIA`). `decodingInfo()` is implemented; `encodingInfo()` is `[Unimplemented]`. |
+| |	attribute	| mediaDevices | Returns a `MediaDevices` object (gated by `STARFISH_ENABLE_WEBRTC`). `getUserMedia()` / `enumerateDevices()` are `[Unimplemented]`. |
 | [NavigatorID](https://html.spec.whatwg.org/multipage/#navigatorid) | interface | | NavigatorID is used for identifying Navigator. |
 | | attribute | appCodeName | Returns the string "Mozilla". |
 | | attribute | appName | Returns the string "Netscape". |
@@ -3140,7 +3174,7 @@ The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` 
 
 ### SVG family — runtime caveats
 
-64 `SVG*.idl` files exist under `src/core/dom/svg/`; 45 element subclasses are registered in `SVGDocument::createSVGElement`. Inline `<svg>...</svg>` and `createElementNS('http://www.w3.org/2000/svg', tag)` produce correctly namespaced `SVG*Element` instances (NOT `HTMLUnknownElement`). `SVGAnimatedLength.baseVal.value` reads parsed attribute values; presentation attributes map to CSS (`getComputedStyle(rect).fill === 'rgb(255,0,0)'`); `<svg width/height>` allocates a real layout box (`getBoundingClientRect()` returns it). SVG elements are rendered — see the [SVG](#svg) section for the full supported surface.
+64 `SVG*.idl` files exist under `src/core/dom/svg/`; 44 element subclasses are registered in `SVGDocument::createSVGElement`. Inline `<svg>...</svg>` and `createElementNS('http://www.w3.org/2000/svg', tag)` produce correctly namespaced `SVG*Element` instances (NOT `HTMLUnknownElement`). `SVGAnimatedLength.baseVal.value` reads parsed attribute values; presentation attributes map to CSS (`getComputedStyle(rect).fill === 'rgb(255,0,0)'`); `<svg width/height>` allocates a real layout box (`getBoundingClientRect()` returns it). SVG elements are rendered — see the [SVG](#svg) section for the full supported surface.
 
 **Known limitations** (methods authors typically expect but are missing):
 
@@ -3446,10 +3480,100 @@ The WebRTC support is in an early stage.
 | | method | void addTrack(MediaStreamTrack track) | Adds the given MediaStreamTrack to this MediaStream. | |
 | [MediaStreamTrack](https://w3c.github.io/mediacapture-main/#mediastreamtrack) | interface | MediaStreamTrack | | |
 | | attribute | kind of type DOMString, readonly | The kind attribute MUST return the string "audio" if this object represents an audio track or "video" if this object represents a video track. | |
+| [RTCRtpReceiver](https://w3c.github.io/webrtc-pc/#dom-rtcrtpreceiver) | interface | RTCRtpReceiver | | |
+| | attribute | track (of type MediaStreamTrack, readonly, nullable) | The track that is associated with this RTCRtpReceiver object. | |
+| [RTCDtlsTransport](https://w3c.github.io/webrtc-pc/#dom-rtcdtlstransport) | interface | RTCDtlsTransport | | |
+| | attribute | RTCSctpTransport? transport (readonly) | The SCTP transport using this DTLS transport, if any. | |
+| [RTCSctpTransport](https://w3c.github.io/webrtc-pc/#dom-rtcsctptransport) | interface | RTCSctpTransport | | |
+| | attribute | RTCDtlsTransport transport (readonly) | The underlying RTCDtlsTransport. | |
+| | attribute | RTCSctpTransportState state (readonly) | The current state of the SCTP transport. | |
+| | attribute | unrestricted double maxMessageSize (readonly) | The maximum message size this transport can send. | |
+| [RTCStatsReport](https://w3c.github.io/webrtc-pc/#dom-rtcstatsreport) | interface | RTCStatsReport | A maplike report of RTCStats objects keyed by DOMString id. | |
+| [RTCPeerConnectionIceEvent](https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnectioniceevent) | interface | RTCPeerConnectionIceEvent | | |
+| | attribute | RTCIceCandidate? candidate (readonly) | The candidate associated with the event, or null. | |
+| [RTCPeerConnectionIceErrorEvent](https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnectioniceerrorevent) | interface | RTCPeerConnectionIceErrorEvent | | |
+| | attribute | DOMString hostCandidate (readonly) | The local IP address and port used for the candidate. | |
+| | attribute | DOMString url (readonly) | The URL of the STUN/TURN server. | |
+| [RTCTrackEvent](https://w3c.github.io/webrtc-pc/#dom-rtctrackevent) | interface | RTCTrackEvent | Fired when a new RTCRtpReceiver is added. | |
+| | attribute | RTCRtpReceiver receiver (readonly) | The receiver associated with the event. | |
+| | attribute | MediaStreamTrack track (readonly) | The track associated with the event. | |
+| | attribute | RTCRtpTransceiver transceiver (readonly) | The transceiver associated with the event. | |
 
 ## WebAudio
 The following describes WebAudio APIs supported by lightweight web engine. Please, see [WebAudio Spec](https://webaudio.github.io/web-audio-api/) for more information.
 The WebAudio support is in an early stage.
+
+`decodeAudioData()` accepts RIFF/WAVE PCM (8/16/24/32-bit), IEEE float
+(32/64-bit), and WAVE_FORMAT_EXTENSIBLE variants of those formats on all
+WebAudio builds. Linux builds with `USE_FFMPEG_MEDIA_PLAYER=1` additionally
+decode compressed audio from memory with FFmpeg and resample it to the
+context's sample rate. Only these codecs are accepted: AAC, MP3, FLAC,
+Vorbis, Opus, a set of `pcm_*` variants, `adpcm_ms`, and `adpcm_ima_wav`.
+Non-audio streams are discarded, and inputs with more than 16 streams are
+rejected.
+The compressed decoder accepts AAC, FLAC, Matroska/WebM, MP4/MOV, MP3,
+Ogg, and WAVE containers. Playlists and secondary file or network access
+from demuxers are rejected; decoding is confined to the supplied bytes.
+Without that option, compressed formats are rejected. WAV data uses linear
+interpolation when resampling. Compressed decoding is limited to 32 MiB of
+output PCM to bound transient copies. `decodeAudioData()` detaches the input
+`ArrayBuffer` and decodes directly from its detached storage without copying
+it.
+`AudioBuffer` allocation is limited to 128 MiB to preserve the low-memory
+profile. Every node type listed below renders in both `OfflineAudioContext`
+and real-time `AudioContext` graphs, including fan-in mixing, channel
+up/down-mixing, scheduled start/stop, and `AudioParam` automation (all seven
+scheduling methods, a-rate and k-rate, plus modulation from connected node
+outputs). `OfflineAudioContext` additionally supports suspension at
+render-quantum boundaries. It follows the Web Audio 1.0 constructor shape:
+`OfflineAudioContextOptions.length` is required, and undefined-length
+rendering through `startRendering(chunkSize)` is not implemented.
+`suspend()`, `resume()` and `close()` settle their promises in a queued task
+after the state change, then fire `statechange` in a separate task; offline
+completion resolves `startRendering()` before firing `complete`.
+Real-time `AudioContext` sends stereo PCM to PulseAudio on Linux when its
+Simple API is available; otherwise it advances its clock with silent output.
+Real-time rendering runs on a native per-context thread, with a separate
+blocking PulseAudio writer thread. The PulseAudio connection is opened on
+that writer thread, so the main thread does not block on it. At most 8
+PulseAudio clients are open at once; further output devices fall back to
+silent output. Rendered quanta pass through an 8-slot queue and are dropped
+only when it is full. Node and AudioParam connections use a
+bounded native command queue, applied before rendering or synchronous graph
+controls. Connection validation remains synchronous. Other graph updates and
+render quanta share a per-context mutex; expensive controls and queue
+saturation can still delay rendering or the control thread.
+This is not a lock-free real-time implementation. Completion events remain
+on the main event loop, as does chunked offline rendering; a real-time
+context polls for source completion only while a started source is pending.
+Suspend, close, and document teardown join the render thread but not the
+PulseAudio writer thread. Tizen hardware output is not
+yet connected.
+AudioBufferSourceNode acquires immutable PCM on `start()` (or when its buffer
+is assigned after `start()`), detaching old channel views and copying only
+when script next modifies the AudioBuffer.
+`MediaElementAudioSourceNode` rejects a second source for the same media
+element. On Linux, an `<audio src>` resource is decoded off the main thread
+and its PCM is routed into the Web Audio graph; the element's volume, mute,
+rate, seeking, and loop state continue to apply. Creation of the source
+suppresses the element's direct audio output. Encoded resources larger than
+32 MiB are rejected early from `Content-Length` (as a media error) and again
+after download; the response body is moved to the decoder, not copied.
+Decoded PCM is capped at 32 MiB (8M float samples) per element. The graph
+receives silence for opaque cross-origin and redirected resources because the
+media loader does not yet provide a trustworthy final CORS label. This also means
+that a CORS-approved cross-origin resource or a same-origin redirect remains
+silent in the graph. With the Linux FFmpeg player, MediaSource decoded audio
+on a `<video>` element also feeds this node. The `<audio>` resource-selection
+path does not yet select the MSE player. Streaming
+PCM storage is allocated only when a source is attached and bounded to 1 MiB
+and 64 chunks per element. Volume, mute, pause and seeking apply to this path;
+MSE playback-rate changes are not yet supported by the player's clock.
+Attaching during playback can initially produce silence until the existing
+decode-lookahead window passes (400 ms by default); previously delivered
+device samples are not copied back into the graph.
+Progressive video, MediaStream, and Tizen media-player PCM routes are not yet
+connected to this node.
 
 > **Build flag:** WebAudio is gated by `STARFISH_ENABLE_WEBAUDIO` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64`; also implicitly enabled when `WEBRTC=1`). Without it, `AudioContext`/`BaseAudioContext`/`AudioBuffer*`/`AudioNode` globals are not exposed. See [Build-Conditional Surface](#build-conditional-surface).
 
@@ -3459,24 +3583,72 @@ The WebAudio support is in an early stage.
 | | callback | DecodeErrorCallback = void (DOMException error); | | |
 | | callback | DecodeSuccessCallback = void (AudioBuffer decodedData); | | |
 | | attribute | readonly AudioDestinationNode destination | An AudioDestinationNode with a single input representing the final destination for all audio. | |
+| | attribute | readonly float sampleRate | The context's sample rate in hertz. | |
+| | attribute | readonly double currentTime | Time advanced by completed render quanta. | Real-time contexts use PulseAudio on Linux or a silent fallback. |
+| | attribute | readonly AudioListener listener | The context's spatial-audio listener. | Same object for the lifetime of the context. |
 | | attribute | readonly attribute AudioContextState state | Describes the current state of the AudioContext. | |
 | | attribute | attribute EventHandler onstatechange; | A property used to set the EventHandler for an event that is dispatched to BaseAudioContext when the state of the AudioContext has changed (i.e. when the corresponding promise would have resolved). | |
 | | method | AudioBufferSourceNode createBufferSource(); | Factory method for a AudioBufferSourceNode. | |
+| | method | ChannelMergerNode createChannelMerger(optional unsigned long numberOfInputs = 6); ChannelSplitterNode createChannelSplitter(optional unsigned long numberOfOutputs = 6); | Factory methods for channel routing. | |
+| | method | ConstantSourceNode createConstantSource(); | Factory method for a ConstantSourceNode. | |
+| | method | OscillatorNode createOscillator(); | Factory method for an oscillator source. | |
+| | method | PeriodicWave createPeriodicWave(sequence&lt;float&gt; real, sequence&lt;float&gt; imag, optional PeriodicWaveConstraints constraints); | Factory method for a custom oscillator waveform. | |
+| | method | DelayNode createDelay(optional double maxDelayTime = 1.0); | Factory method for a delay line. | |
+| | method | IIRFilterNode createIIRFilter(sequence&lt;double&gt; feedforward, sequence&lt;double&gt; feedback); | Factory method for a fixed-coefficient IIR filter. | |
+| | method | BiquadFilterNode createBiquadFilter(); | Factory method for a second-order filter. | |
+| | method | WaveShaperNode createWaveShaper(); | Factory method for a nonlinear shaping node. | |
+| | method | AnalyserNode createAnalyser(); | Factory method for time- and frequency-domain analysis. | |
+| | method | DynamicsCompressorNode createDynamicsCompressor(); | Factory method for dynamics compression. | |
 | | method | GainNode createGain(); | Factory method for a GainNode. | |
+| | method | StereoPannerNode createStereoPanner(); | Factory method for a StereoPannerNode. | |
+| | method | PannerNode createPanner(); | Factory method for a spatial panner. | |
+| | method | ConvolverNode createConvolver(); | Factory method for an impulse-response convolver. | |
+| | method | AudioBuffer createBuffer(unsigned long numberOfChannels, unsigned long length, float sampleRate); | Creates a zero-filled PCM buffer. | |
 | | method | Promise<AudioBuffer> decodeAudioData (ArrayBuffer audioData, optional DecodeSuccessCallback? successCallback, optional DecodeErrorCallback? errorCallback); | Asynchronously decodes the audio file data contained in the ArrayBuffer. | |
+| [AudioListener](https://webaudio.github.io/web-audio-api/#AudioListener) | interface | AudioListener | Nine position and orientation AudioParams, plus setPosition() and setOrientation(). | Allocated only on first access or PannerNode creation. |
 | [AudioContext](https://webaudio.github.io/web-audio-api/#AudioContext) | interface | AudioContext | | |
 | | constructor | constructor (optional AudioContextOptions contextOptions = {}); | | |
+| | attribute | readonly double baseLatency; | Estimated graph-to-host processing latency in seconds. | Based on the fixed 128-frame render quantum and bounded output handoff. |
+| | attribute | readonly double outputLatency; | Estimated host-to-device output delay in seconds. | Measured from PulseAudio's queued latency on Linux; zero before measurement or with null output. |
+| | method | AudioTimestamp getOutputTimestamp(); | Returns the estimated device playback position in context and Performance time coordinates. | Zero before the first device measurement; Linux PulseAudio only. |
 | | method | Promise<void> close (); | Closes the AudioContext, releasing the system resources being used. | |
+| | method | Promise<void> suspend (); Promise<void> resume (); | Pauses and resumes real-time graph rendering. | PulseAudio on Linux or silent fallback. No autoplay policy: a new context is always allowed to start. |
+| | method | MediaElementAudioSourceNode createMediaElementSource(HTMLMediaElement mediaElement); | Factory method for a MediaElementAudioSourceNode. | |
+| [AudioContextOptions](https://webaudio.github.io/web-audio-api/#dictdef-audiocontextoptions) | dictionary | AudioContextOptions | Constructor options. | |
+| [AudioTimestamp](https://webaudio.github.io/web-audio-api/#dictdef-audiotimestamp) | dictionary | AudioTimestamp | `contextTime` and `performanceTime` for the estimated output position. | |
+| | attribute | (AudioContextLatencyCategory or double) latencyHint = "interactive"; | Advisory latency category or seconds. | The current fixed-quantum output does not vary its buffering by hint. |
+| | attribute | float sampleRate; | Requested context sample rate in hertz. | Valid range: 3000–768000. |
+| [AudioContextLatencyCategory](https://webaudio.github.io/web-audio-api/#enumdef-audiocontextlatencycategory) | enum | AudioContextLatencyCategory | `"balanced"`, `"interactive"`, `"playback"` | |
+| [OfflineAudioContext](https://webaudio.github.io/web-audio-api/#OfflineAudioContext) | interface | OfflineAudioContext | Renders a connected graph into an AudioBuffer. | Fixed-length rendering only. |
+| | constructor | constructor(OfflineAudioContextOptions contextOptions); | Creates an offline context from an options object. | A missing `length` or `sampleRate` throws TypeError. |
+| | constructor | constructor(unsigned long numberOfChannels, unsigned long length, float sampleRate); | Creates a fixed-length offline context. | |
+| | attribute | readonly unsigned long length; | Number of output sample frames. | |
+| | attribute | EventHandler oncomplete; | Receives the rendered buffer after rendering finishes. | |
+| | method | Promise<AudioBuffer> startRendering(); | Starts offline rendering once and resolves with the output buffer. | |
+| | method | Promise<void> suspend(double suspendTime); | Suspends rendering at the next requested render-quantum boundary. | Fixed-length contexts only. |
+| | method | Promise<void> resume(); | Resumes a suspended offline render. | Rendering must have started. |
+| [OfflineAudioContextOptions](https://www.w3.org/TR/webaudio-1.0/#dictdef-offlineaudiocontextoptions) | dictionary | OfflineAudioContextOptions | Constructor options. | Web Audio 1.0 shape; fixed render quantum, `renderSizeHint` is not exposed. |
+| | attribute | unsigned long numberOfChannels = 1; | Output channels. | |
+| | attribute | required unsigned long length; | Render length in frames. | The editor's draft `unsigned long? length = null` (undefined-length rendering) is not implemented; 0 throws NotSupportedError. |
+| | attribute | required float sampleRate; | Render sample rate. | |
+| [OfflineAudioCompletionEventInit](https://webaudio.github.io/web-audio-api/#dictdef-offlineaudiocompletioneventinit) | dictionary | OfflineAudioCompletionEventInit | Contains the rendered buffer. | |
+| | attribute | AudioBuffer renderedBuffer; | Required rendered buffer. | |
+| [OfflineAudioCompletionEvent](https://webaudio.github.io/web-audio-api/#OfflineAudioCompletionEvent) | interface | OfflineAudioCompletionEvent | Legacy completion event. | |
+| | constructor | constructor(DOMString type, OfflineAudioCompletionEventInit eventInitDict); | Creates a completion event. | |
+| | attribute | readonly AudioBuffer renderedBuffer; | The rendered PCM buffer. | |
 | [AudioBufferOptions](https://webaudio.github.io/web-audio-api/#dictdef-audiobufferoptions) | dictionary | AudioBufferOptions | | |
-| | attribute | long numberOfChannels = 1; | The number of channels for the buffer.  | |
-| | attribute | unsigned long length; | The length in sample frames of the buffer. | |
-| | attribute | float sampleRate; | The sample rate in Hz for the buffer. | |
+| | attribute | unsigned long numberOfChannels = 1; | The number of channels for the buffer.  | |
+| | attribute | required unsigned long length; | The length in sample frames of the buffer. | |
+| | attribute | required float sampleRate; | The sample rate in Hz for the buffer. | |
 | [AudioBuffer](https://webaudio.github.io/web-audio-api/#AudioBuffer) | interface | AudioBuffer | | |
 | | constructor | constructor (AudioBufferOptions options); | | |
 | | attribute | readonly attribute float sampleRate; | The sample-rate for the PCM audio data in samples per second. | |
 | | attribute | readonly attribute unsigned long length; | Length of the PCM audio data in sample-frames.  | |
 | | attribute | readonly attribute double duration; | Duration of the PCM audio data in seconds. | |
 | | attribute | readonly attribute unsigned long numberOfChannels; | The number of discrete audio channels. | |
+| | method | Float32Array getChannelData(unsigned long channel); | Accesses a channel's PCM samples. | After a node acquires the contents, the PCM is copied only if a node still shares it. |
+| | method | void copyFromChannel(Float32Array destination, unsigned long channelNumber, optional unsigned long bufferOffset = 0); | Copies channel samples into an array. | |
+| | method | void copyToChannel(Float32Array source, unsigned long channelNumber, optional unsigned long bufferOffset = 0); | Copies array samples into a channel. | |
 | [ChannelCountMode](https://webaudio.github.io/web-audio-api/#enumdef-channelcountmode) | enum | ChannelCountMode | | |
 | | value | "max" | computedNumberOfChannels is the maximum of the number of channels of all connections to an input. | |
 | | value | "clamped-max" | computedNumberOfChannels is determined as for "max" and then clamped to a maximum value of the given channelCount. | |
@@ -3484,35 +3656,116 @@ The WebAudio support is in an early stage.
 | [ChannelInterpretation](https://webaudio.github.io/web-audio-api/#enumdef-channelinterpretation) | enum | ChannelInterpretation | | |
 | | value | "speakers" | use up-mix equations or down-mix equations. | |
 | | value | "discrete" | Up-mix by filling channels until they run out then zero out remaining channels. | |
+| [AudioNodeOptions](https://webaudio.github.io/web-audio-api/#dictdef-audionodeoptions) | dictionary | AudioNodeOptions | Common channel configuration options. | Applied by every node constructor whose options dictionary inherits it. |
+| | attribute | unsigned long channelCount; | Requested channel count. | |
+| | attribute | ChannelCountMode channelCountMode; | Requested count mode. | |
+| | attribute | ChannelInterpretation channelInterpretation; | Requested channel interpretation. | |
 | [AudioNode](https://webaudio.github.io/web-audio-api/#audionode) | interface | AudioNode | | |
 | | attribute | readonly BaseAudioContext context;| The BaseAudioContext which owns this AudioNode. | |
-| | method | AudioNode connect (AudioNode destinationNode, optional unsigned long output = 0, optional unsigned long input = 0); | There can only be one connection between a given output of one specific node and a given input of another specific node. | |
+| | attribute | readonly unsigned long numberOfInputs; readonly unsigned long numberOfOutputs; | Input and output counts. | |
+| | attribute | unsigned long channelCount; ChannelCountMode channelCountMode; ChannelInterpretation channelInterpretation; | Channel up/down-mixing configuration. | Per-node constraints from the spec throw on invalid values. |
+| | method | AudioNode connect (AudioNode destinationNode, optional unsigned long output = 0, optional unsigned long input = 0); void connect(AudioParam destinationParam, optional unsigned long output = 0); | Connects an output to a node input or a parameter. | Parameter inputs are down-mixed to mono. |
+| | method | void disconnect(); void disconnect(unsigned long output); void disconnect(AudioNode destinationNode); void disconnect(AudioNode destinationNode, unsigned long output); void disconnect(AudioNode destinationNode, unsigned long output, unsigned long input); void disconnect(AudioParam destinationParam); void disconnect(AudioParam destinationParam, unsigned long output); | Removes outgoing node or parameter connections. | |
+| [AutomationRate](https://webaudio.github.io/web-audio-api/#enumdef-automationrate) | enum | AutomationRate | "a-rate", "k-rate" | |
+| [AudioParam](https://webaudio.github.io/web-audio-api/#AudioParam) | interface | AudioParam | Controls a node parameter. | Connected node outputs modulate rendered values. |
+| | attribute | float value; | Current intrinsic parameter value at the latest render-quantum boundary. | Direct assignment updates it immediately. |
+| | attribute | AutomationRate automationRate; | Audio-rate or quantum-rate evaluation. | Parameters the spec fixes to k-rate (DynamicsCompressorNode, AudioBufferSourceNode) reject "a-rate". |
+| | attribute | readonly float defaultValue, minValue, maxValue; | Default and nominal range. | |
+| | method | AudioParam setValueAtTime(float value, double startTime); | Schedules a value change. | |
+| | method | AudioParam linearRampToValueAtTime(float value, double endTime); | Schedules a linear ramp. | |
+| | method | AudioParam exponentialRampToValueAtTime(float value, double endTime); | Schedules an exponential ramp. | |
+| | method | AudioParam setTargetAtTime(float target, double startTime, float timeConstant); | Schedules an exponential approach to a target. | |
+| | method | AudioParam setValueCurveAtTime(sequence&lt;float&gt; values, double startTime, double duration); | Schedules an interpolated value curve. | |
+| | method | AudioParam cancelScheduledValues(double cancelTime); AudioParam cancelAndHoldAtTime(double cancelTime); | Cancels future events or holds the computed value. | |
+| [GainOptions](https://webaudio.github.io/web-audio-api/#dictdef-gainoptions) | dictionary | GainOptions | AudioNodeOptions plus initial gain. | |
+| | attribute | float gain = 1.0; | Initial gain value. | |
+| [GainNode](https://webaudio.github.io/web-audio-api/#GainNode) | interface | GainNode | Multiplies each input sample by gain. | |
+| | constructor | constructor(BaseAudioContext context, optional GainOptions options); | Creates a gain node. | |
+| | attribute | readonly AudioParam gain; | Gain parameter. | |
+| [StereoPannerOptions](https://webaudio.github.io/web-audio-api/#dictdef-stereopanneroptions) | dictionary | StereoPannerOptions | AudioNodeOptions plus initial pan. | |
+| | attribute | float pan = 0; | Initial stereo position. | |
+| [StereoPannerNode](https://webaudio.github.io/web-audio-api/#StereoPannerNode) | interface | StereoPannerNode | Equal-power mono/stereo panning to stereo output. | |
+| | constructor | constructor(BaseAudioContext context, optional StereoPannerOptions options); | Creates a stereo panner. | |
+| | attribute | readonly AudioParam pan; | Pan parameter, nominally -1 to +1. | |
+| [PanningModelType](https://webaudio.github.io/web-audio-api/#enumdef-panningmodeltype) | enum | PanningModelType | `equalpower`, `HRTF` | HRTF uses the equal-power renderer. |
+| [DistanceModelType](https://webaudio.github.io/web-audio-api/#enumdef-distancemodeltype) | enum | DistanceModelType | `linear`, `inverse`, `exponential` | |
+| [PannerOptions](https://webaudio.github.io/web-audio-api/#dictdef-panneroptions) | dictionary | PannerOptions | Spatial position, orientation, distance, cone, and channel options. | |
+| [PannerNode](https://webaudio.github.io/web-audio-api/#PannerNode) | interface | PannerNode | Spatial equal-power panning with three distance models and a sound cone. | HRTF selection renders with equal-power instead of impulse-response convolution to avoid a large HRTF database. |
+| | constructor | constructor(BaseAudioContext context, optional PannerOptions options); | Creates a spatial panner. | |
+| [ConvolverOptions](https://webaudio.github.io/web-audio-api/#dictdef-convolveroptions) | dictionary | ConvolverOptions | AudioNodeOptions with nullable buffer and disableNormalization. | |
+| [ConvolverNode](https://webaudio.github.io/web-audio-api/#ConvolverNode) | interface | ConvolverNode | Mono/stereo or true-stereo convolution with buffer and normalize attributes. | Impulse responses are limited to the shorter of five seconds or 131072 frames to bound FFT partition memory. |
+| | constructor | constructor(BaseAudioContext context, optional ConvolverOptions options); | Creates a convolver. | |
+| | attribute | AudioBuffer? buffer; boolean normalize; | Sets an acquired impulse response and its next-buffer normalization policy. | Buffer setting accepts 1, 2, or 4 channels at the context sample rate. |
+| [ConstantSourceOptions](https://webaudio.github.io/web-audio-api/#dictdef-constantsourceoptions) | dictionary | ConstantSourceOptions | AudioNodeOptions plus initial offset. | |
+| | attribute | float offset = 1; | Initial output value. | |
+| [ConstantSourceNode](https://webaudio.github.io/web-audio-api/#ConstantSourceNode) | interface | ConstantSourceNode | Scheduled constant-valued mono source. | |
+| | constructor | constructor(BaseAudioContext context, optional ConstantSourceOptions options); | Creates a constant source. | |
+| | attribute | readonly AudioParam offset; | Sample-accurate output value. | |
+| [OscillatorType](https://webaudio.github.io/web-audio-api/#enumdef-oscillatortype) | enum | OscillatorType | `sine`, `square`, `sawtooth`, `triangle`, `custom` | Directly selecting `custom` throws; use `setPeriodicWave()`. |
+| [OscillatorOptions](https://webaudio.github.io/web-audio-api/#dictdef-oscillatoroptions) | dictionary | OscillatorOptions | AudioNodeOptions plus initial `type`, `frequency`, `detune`, and `periodicWave`. | A wave overrides the type option. |
+| [OscillatorNode](https://webaudio.github.io/web-audio-api/#OscillatorNode) | interface | OscillatorNode | Scheduled mono oscillator with a-rate frequency and detune. | Built-in and custom periodic waveforms. |
+| | constructor | constructor(BaseAudioContext context, optional OscillatorOptions options); | Creates an oscillator. | |
+| | attribute | OscillatorType type; readonly AudioParam frequency; readonly AudioParam detune; | Selects a basic waveform and its computed frequency. | `type = "custom"` throws InvalidStateError. |
+| | method | void setPeriodicWave(PeriodicWave periodicWave); | Selects a custom waveform without resetting oscillator phase. | |
+| [PeriodicWaveConstraints](https://webaudio.github.io/web-audio-api/#dictdef-periodicwaveconstraints) | dictionary | PeriodicWaveConstraints | `disableNormalization` defaults to false. | |
+| [PeriodicWaveOptions](https://webaudio.github.io/web-audio-api/#dictdef-periodicwaveoptions) | dictionary | PeriodicWaveOptions | Optional real and imaginary Fourier coefficients. | At most 8192 coefficients. |
+| [PeriodicWave](https://webaudio.github.io/web-audio-api/#PeriodicWave) | interface | PeriodicWave | Custom periodic waveform associated with a context. | |
+| | constructor | constructor(BaseAudioContext context, optional PeriodicWaveOptions options); | Copies coefficient arrays and ignores their DC terms. | |
+| [DelayOptions](https://webaudio.github.io/web-audio-api/#dictdef-delayoptions) | dictionary | DelayOptions | AudioNodeOptions plus `maxDelayTime` and initial `delayTime`. | |
+| [DelayNode](https://webaudio.github.io/web-audio-api/#DelayNode) | interface | DelayNode | A-rate delay line with a sparse, lazily allocated history. | Feedback cycles and history remixing beyond mono/stereo are incomplete. |
+| | constructor | constructor(BaseAudioContext context, optional DelayOptions options); | Accepts a maximum delay greater than 0 and less than 180 seconds. | |
+| | attribute | readonly AudioParam delayTime; | Delay duration in seconds, nominally 0 through `maxDelayTime`. | |
+| [IIRFilterOptions](https://webaudio.github.io/web-audio-api/#dictdef-iirfilteroptions) | dictionary | IIRFilterOptions | Required feedforward and feedback coefficient sequences. | 1–20 coefficients per sequence. |
+| [IIRFilterNode](https://webaudio.github.io/web-audio-api/#IIRFilterNode) | interface | IIRFilterNode | Fixed-coefficient IIR filtering with per-channel state. | |
+| | constructor | constructor(BaseAudioContext context, IIRFilterOptions options); | Creates a filter from its coefficients. | |
+| | method | void getFrequencyResponse(Float32Array frequencyHz, Float32Array magResponse, Float32Array phaseResponse); | Computes the magnitude and phase response. | |
+| [BiquadFilterType](https://webaudio.github.io/web-audio-api/#enumdef-biquadfiltertype) | enum | BiquadFilterType | `lowpass`, `highpass`, `bandpass`, `lowshelf`, `highshelf`, `peaking`, `notch`, `allpass` | |
+| [BiquadFilterOptions](https://webaudio.github.io/web-audio-api/#dictdef-biquadfilteroptions) | dictionary | BiquadFilterOptions | AudioNodeOptions plus initial type, Q, detune, frequency, and gain. | |
+| [BiquadFilterNode](https://webaudio.github.io/web-audio-api/#BiquadFilterNode) | interface | BiquadFilterNode | Eight second-order filter types with a-rate parameters. | |
+| | constructor | constructor(BaseAudioContext context, optional BiquadFilterOptions options); | Creates a configurable biquad. | |
+| | attribute | BiquadFilterType type; readonly AudioParam frequency; readonly AudioParam detune; readonly AudioParam Q; readonly AudioParam gain; | Filter type and parameters. | |
+| | method | void getFrequencyResponse(Float32Array frequencyHz, Float32Array magResponse, Float32Array phaseResponse); | Computes the current magnitude and phase response. | |
+| [OverSampleType](https://webaudio.github.io/web-audio-api/#enumdef-oversampletype) | enum | OverSampleType | `none`, `2x`, `4x` | |
+| [WaveShaperOptions](https://webaudio.github.io/web-audio-api/#dictdef-waveshaperoptions) | dictionary | WaveShaperOptions | AudioNodeOptions plus optional curve and oversampling mode. | |
+| [WaveShaperNode](https://webaudio.github.io/web-audio-api/#WaveShaperNode) | interface | WaveShaperNode | Linear curve interpolation with optional 2x/4x resampling. | Lightweight linear/box resampling filters. |
+| | constructor | constructor(BaseAudioContext context, optional WaveShaperOptions options); | Creates a wave shaper. | |
+| | attribute | Float32Array? curve; OverSampleType oversample; | Shaping curve and oversampling mode. | A non-null curve may be assigned only once. |
+| [AnalyserOptions](https://webaudio.github.io/web-audio-api/#dictdef-analyseroptions) | dictionary | AnalyserOptions | AudioNodeOptions plus FFT size, dB bounds, and smoothing. | |
+| [AnalyserNode](https://webaudio.github.io/web-audio-api/#AnalyserNode) | interface | AnalyserNode | Pass-through audio node with time-domain and FFT analysis. | The 32768-frame history and FFT scratch buffers are allocated lazily. |
+| | constructor | constructor(BaseAudioContext context, optional AnalyserOptions options); | Creates an analyser. | |
+| | attribute | unsigned long fftSize; readonly unsigned long frequencyBinCount; double minDecibels; double maxDecibels; double smoothingTimeConstant; | Analysis size and scaling controls. | |
+| | method | void getFloatFrequencyData(Float32Array array); void getByteFrequencyData(Uint8Array array); void getFloatTimeDomainData(Float32Array array); void getByteTimeDomainData(Uint8Array array); | Reads the most recent analysis data. | |
+| [DynamicsCompressorOptions](https://webaudio.github.io/web-audio-api/#dictdef-dynamicscompressoroptions) | dictionary | DynamicsCompressorOptions | AudioNodeOptions plus initial threshold, knee, ratio, attack, and release. | |
+| [DynamicsCompressorNode](https://webaudio.github.io/web-audio-api/#DynamicsCompressorNode) | interface | DynamicsCompressorNode | Fixed-lookahead compression with k-rate parameters and reduction metering. | Lightweight quadratic knee and one-pole envelope. |
+| | constructor | constructor(BaseAudioContext context, optional DynamicsCompressorOptions options); | Creates a compressor. | |
+| | attribute | readonly AudioParam threshold; readonly AudioParam knee; readonly AudioParam ratio; readonly float reduction; readonly AudioParam attack; readonly AudioParam release; | Compression controls and metering. | |
+| [ChannelMergerNode](https://webaudio.github.io/web-audio-api/#ChannelMergerNode) | interface | ChannelMergerNode | Down-mixes each input to mono and assembles channels in input order. | |
+| | constructor | constructor(BaseAudioContext context, optional ChannelMergerOptions options); | Accepts 1–32 inputs. | |
+| [ChannelMergerOptions](https://webaudio.github.io/web-audio-api/#dictdef-channelmergeroptions) | dictionary | ChannelMergerOptions | Inherits AudioNodeOptions; numberOfInputs defaults to 6. | |
+| [ChannelSplitterNode](https://webaudio.github.io/web-audio-api/#ChannelSplitterNode) | interface | ChannelSplitterNode | Exposes input channels as separate mono outputs. | |
+| | constructor | constructor(BaseAudioContext context, optional ChannelSplitterOptions options); | Accepts 1–32 outputs. | |
+| [ChannelSplitterOptions](https://webaudio.github.io/web-audio-api/#dictdef-channelsplitteroptions) | dictionary | ChannelSplitterOptions | Inherits AudioNodeOptions; numberOfOutputs defaults to 6. | |
 | [AudioScheduledSourceNode](https://webaudio.github.io/web-audio-api/#AudioScheduledSourceNode) | interface | AudioScheduledSourceNode | | |
 | | attribute | EventHandler onended; | A property used to set the EventHandler (described in HTML[HTML]) for the ended event that is dispatched for AudioScheduledSourceNode node types. | |
-| | method | void stop(optional double when = 0); | Schedules a sound to stop playback at an exact time. | Only when = 0 is supported at the moment. |
+| | method | void start(optional double when = 0); | Schedules a source to begin playback. | |
+| | method | void stop(optional double when = 0); | Schedules a non-negative stop time after start. | Sources dispatch `ended` after rendering finishes. |
 | [AudioBufferSourceOptions](https://webaudio.github.io/web-audio-api/#AudioBufferSourceNode) | dictionary | AudioBufferSourceOptions | | |
 | | attribute | AudioBuffer? buffer; | Represents the audio asset to be played. | |
+| | attribute | float playbackRate = 1; float detune = 0; | Initial k-rate playback parameters. | |
+| | attribute | boolean loop = false; double loopStart = 0; double loopEnd = 0; | Initial loop controls in buffer time. | |
 | [AudioBufferSourceNode](https://webaudio.github.io/web-audio-api/#AudioBufferSourceNode) | interface | AudioBufferSourceNode | | |
 | | constructor | constructor (BaseAudioContext context, optional AudioBufferSourceOptions options = {}); | | |
-| | method | void start (optional double when = 0, optional double offset, optional double duration); | Schedules a sound to playback at an exact time. | Only when = 0 is supported at the moment. |
+| | attribute | AudioBuffer? buffer; | The buffer to play. | A non-null buffer may be assigned only once. |
+| | attribute | readonly AudioParam playbackRate; readonly AudioParam detune; | K-rate playback speed and cent offset. | |
+| | attribute | boolean loop; double loopStart; double loopEnd; | Controls repeated playback of a buffer region. | |
+| | method | void start (optional double when = 0, optional double offset, optional double duration); | Schedules start, offset and optional duration. | |
 | [AudioDestinationNode](https://webaudio.github.io/web-audio-api/#AudioDestinationNode) | interface | AudioDestinationNode | | |
-| [AudioParam](https://webaudio.github.io/web-audio-api/#audioparam) | interface | AudioParam | Represents an audio-related parameter. | No automation timeline: scheduling methods apply their end value immediately and ignore the time arguments; cancel methods are no-ops. `GainNode.gain` is read once when a source starts playing. |
-| | attribute | float value; | Current value of the parameter. | |
-| | attribute | readonly float defaultValue; | Initial value for the parameter. | |
-| | attribute | readonly float minValue; | Minimum value the parameter can take. | |
-| | attribute | readonly float maxValue; | Maximum value the parameter can take. | |
-| | method | AudioParam setValueAtTime (float value, double startTime); | Schedules a parameter value change at the given time. | |
-| | method | AudioParam linearRampToValueAtTime (float value, double endTime); | Schedules a linear continuous change in parameter value. | |
-| | method | AudioParam exponentialRampToValueAtTime (float value, double endTime); | Schedules an exponential continuous change in parameter value. | |
-| | method | AudioParam setTargetAtTime (float target, double startTime, double timeConstant); | Start exponentially approaching the target value. | |
-| | method | AudioParam setValueCurveAtTime (sequence<float> values, double startTime, double duration); | Sets an array of arbitrary parameter values. | |
-| | method | AudioParam cancelScheduledValues (double cancelTime); | Cancels all scheduled parameter changes. | |
-| | method | AudioParam cancelAndHoldAtTime (double cancelTime); | Cancels scheduled parameter changes and holds current value. | |
-| [GainOptions](https://webaudio.github.io/web-audio-api/#dictdef-gainoptions) | dictionary | GainOptions | | |
-| | attribute | float gain = 1.0; | Initial gain value. | |
-| [GainNode](https://webaudio.github.io/web-audio-api/#GainNode) | interface | GainNode | Represents a change in volume. | |
-| | constructor | constructor (BaseAudioContext context, optional GainOptions options = {}); | | |
-| | attribute | readonly AudioParam gain; | The amount of gain to apply. | |
+| | attribute | readonly unsigned long maxChannelCount; | Maximum settable channelCount. | 2 for `AudioContext`; `numberOfChannels` for `OfflineAudioContext`, whose destination channelCount cannot change (InvalidStateError). |
+| [MediaElementAudioSourceOptions](https://webaudio.github.io/web-audio-api/#dictdef-mediaelementaudiosourceoptions) | dictionary | MediaElementAudioSourceOptions | | |
+| | attribute | required HTMLMediaElement mediaElement; | The media element to route. | |
+| [MediaElementAudioSourceNode](https://webaudio.github.io/web-audio-api/#MediaElementAudioSourceNode) | interface | MediaElementAudioSourceNode | | |
+| | constructor | constructor (AudioContext context, MediaElementAudioSourceOptions options) | Creates a MediaElementAudioSourceNode from an HTMLMediaElement. | |
+| | attribute | readonly HTMLMediaElement mediaElement | The media element originally passed to the constructor. | |
 
 ## WebSocket
 The following describes WebSocket APIs supported by lightweight web engine. Please, see [WebSocket Spec](https://html.spec.whatwg.org/multipage/web-sockets.html/) for more information.

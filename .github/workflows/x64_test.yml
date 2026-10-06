@@ -195,6 +195,14 @@ jobs:
         run: |
           xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py internal_test || exit 1
 
+      # Web Audio output through an isolated PulseAudio null sink; no audio
+      # hardware is used. The test skips itself when pulseaudio, pactl or
+      # parec is not installed in the image. FFmpeg-only Web Audio checks
+      # under tool/webaudio/ stay manual (see README.md).
+      - name: Run Web Audio media output test
+        run: |
+          xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/webaudio/test_media_output.py -v || exit 1
+
   test_reftest_all:
     needs: build_x64
     timeout-minutes: 60

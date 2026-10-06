@@ -1,0 +1,24 @@
+// https://webaudio.github.io/web-audio-api/#dictdef-dynamicscompressoroptions
+[ STARFISH_ENABLE_WEBAUDIO ]
+dictionary DynamicsCompressorOptions : AudioNodeOptions {
+  float attack = 0.003;
+  float knee = 30;
+  float ratio = 12;
+  float release = 0.25;
+  float threshold = -24;
+};
+
+// https://webaudio.github.io/web-audio-api/#DynamicsCompressorNode
+[ STARFISH_ENABLE_WEBAUDIO,
+  Constructor(BaseAudioContext context, optional DynamicsCompressorOptions options),
+  ConstructorCallWith=ExecutionContext,
+  RaisesException=Constructor,
+  Exposed=Window ]
+interface DynamicsCompressorNode : AudioNode {
+  readonly attribute AudioParam threshold;
+  readonly attribute AudioParam knee;
+  readonly attribute AudioParam ratio;
+  readonly attribute float reduction;
+  readonly attribute AudioParam attack;
+  readonly attribute AudioParam release;
+};

@@ -51,6 +51,7 @@ public:
 
     virtual void setBuffer(uint8_t* buffer, uint32_t length);
     virtual void prepare(ResourceURL* url);
+    virtual void onAudioDownloadFailed();
 
     virtual double currentTime()
     {
@@ -75,6 +76,10 @@ protected:
     Resource* m_audioResource{ nullptr };
     ReadableStreamChunk m_audioData;
 
+    virtual bool acceptsEncodedSize(size_t) const
+    {
+        return true;
+    }
     virtual void downloadAudioData(ResourceURL* url);
     virtual void onAudioDownloadCompleted();
 };
