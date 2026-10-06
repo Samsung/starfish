@@ -846,6 +846,7 @@ test/cairo/internal-test/css/overflow/scroll-buf-opt-scroll-test-1.html
 test/cairo/internal-test/css/overflow/scroll-buf-opt-fixed-test-1.html
 test/cairo/internal-test/css/overflow/scroll-buf-opt-abs-test-1.html
 test/cairo/internal-test/css/overflow/scroll-buf-opt-mask-test-1.html
+test/cairo/internal-test/css/overflow/translucent-bg-composited-test-1.html
 test/cairo/internal-test/css/overflow/overflowhittest.html
 test/cairo/internal-test/css/overflow/overflowhittest2.html
 test/cairo/internal-test/css/overflow/overflowhittest3.html

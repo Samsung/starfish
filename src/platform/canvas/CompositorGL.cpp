@@ -4062,6 +4062,15 @@ public:
                opacity >= 1.0f && color.a() == 255;
     }
 
+    // Fills blend as premultiplied SrcOver, but Unit::Color holds straight
+    // alpha, so the color channels must be scaled by alpha before upload.
+    void uploadFillColor(GLint uniform, const Unit::Color& color, float opacity)
+    {
+        float a = opacity * color.A();
+        gl()->uniform4f(uniform, a * color.R(), a * color.G(), a * color.B(),
+                        a);
+    }
+
     void updateBlendMode()
     {
         BlendMode blendMode = m_state.back().blendMode;
@@ -4289,11 +4298,11 @@ public:
                     drawRect.maxY() >= (float)screenHeight() - eps;
                 if (fullCover && lastState.blendMode == BlendMode::Normal) {
                     // Premultiplied SrcOver (GL_ONE, GL_ONE_MINUS_SRC_ALPHA),
-                    // src = opacity * color (matches the rect shader uniform):
-                    //   out = opacity*color + clear*(1 - opacity*color.a)
+                    // src = premultiplied color (matches uploadFillColor):
+                    //   sa = opacity*color.a
+                    //   out = sa*color.rgb + clear*(1 - sa)
                     // Round each fold to 8-bit to match the GPU's per-op write.
-                    double op = lastState.opacity;
-                    double sa = op * currentColor.A();
+                    double sa = lastState.opacity * currentColor.A();
                     double inv = 1.0 - sa;
                     auto q = [](double v) -> unsigned char {
                         v = v * 255.0 + 0.5;
@@ -4304,14 +4313,13 @@ public:
                         return (unsigned char)v;
                     };
                     m_pendingClearColor =
-                        Unit::Color(q(op * currentColor.R() +
+                        Unit::Color(q(sa * currentColor.R() +
                                       m_pendingClearColor.R() * inv),
-                                    q(op * currentColor.G() +
+                                    q(sa * currentColor.G() +
                                       m_pendingClearColor.G() * inv),
-                                    q(op * currentColor.B() +
+                                    q(sa * currentColor.B() +
                                       m_pendingClearColor.B() * inv),
-                                    q(op * currentColor.A() +
-                                      m_pendingClearColor.A() * inv));
+                                    q(sa + m_pendingClearColor.A() * inv));
                     return; // fill absorbed into the deferred clear
                 }
                 emitPendingClear();
@@ -4335,10 +4343,8 @@ public:
             gl()->uniform2fv(m_compositorContext->m_rectShaderProgramPosition,
                              4, position);
 
-            float a = lastState.opacity;
-            gl()->uniform4f(m_compositorContext->m_rectShaderProgramColor,
-                            a * currentColor.R(), a * currentColor.G(),
-                            a * currentColor.B(), a * currentColor.A());
+            uploadFillColor(m_compositorContext->m_rectShaderProgramColor,
+                            currentColor, lastState.opacity);
 
             gl()->enableVertexAttribArray(
                 m_compositorContext->m_rectShaderProgramTexIdx);
@@ -4376,11 +4382,9 @@ public:
                         m_compositorContext->m_rectShaderProgramPosition, 4,
                         position);
 
-                    float a = lastState.opacity;
-                    gl()->uniform4f(
+                    uploadFillColor(
                         m_compositorContext->m_rectShaderProgramColor,
-                        a * currentColor.R(), a * currentColor.G(),
-                        a * currentColor.B(), a * currentColor.A());
+                        currentColor, lastState.opacity);
 
                     gl()->enableVertexAttribArray(
                         m_compositorContext->m_rectShaderProgramTexIdx);
@@ -4588,9 +4592,8 @@ public:
         gl()->enableVertexAttribArray(
             m_compositorContext->m_polygonShaderProgramCoverage);
 
-        gl()->uniform4f(m_compositorContext->m_polygonShaderProgramColor,
-                        opacity * color.R(), opacity * color.G(),
-                        opacity * color.B(), opacity * color.A());
+        uploadFillColor(m_compositorContext->m_polygonShaderProgramColor, color,
+                        opacity);
 
         gl()->drawArrays(GL_TRIANGLES, 0, vertexCount);
 
