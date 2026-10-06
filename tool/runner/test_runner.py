@@ -15,6 +15,7 @@
 # limitations under the License.
 
 
+import fnmatch
 import os
 import subprocess
 import sys
@@ -267,12 +268,9 @@ def wpt_all():
 _WPT_TESTHARNESS_LISTS_DIR = os.path.join(working_directory, "tool/wpt/testharness_lists")
 
 
-def _wpt_serve_run(*patterns, jobs=8, timeout=20, daemons=(), exclude=()):
+def _wpt_collect(patterns, exclude):
     import glob
-    import shutil
-    import tempfile
     import wpt_runner
-    from wpt_server import wpt_serve, DEFAULT_WPT_ROOT, WptServerError
 
     if patterns:
         targets = []
@@ -282,13 +280,43 @@ def _wpt_serve_run(*patterns, jobs=8, timeout=20, daemons=(), exclude=()):
         targets = sorted(glob.glob(os.path.join(_WPT_TESTHARNESS_LISTS_DIR, "*.res")))
     if exclude:
         targets = [t for t in targets
-                   if os.path.basename(t) not in exclude]
+                   if not any(fnmatch.fnmatch(os.path.basename(t), e) for e in exclude)]
 
     items = []
     for t in targets:
         items.extend(wpt_runner.collect(t, force=False))
-    label = ", ".join(patterns) if patterns else "all"
-    print_table("Running WPT (on-demand)", "%d tests [%s]" % (len(items), label))
+    return items
+
+
+def _wpt_serve_run(*patterns, jobs=8, timeout=20, daemons=(), exclude=()):
+    _wpt_serve_run_groups([(patterns, exclude, jobs, timeout)], daemons=daemons)
+
+
+def _wpt_serve_run_groups(groups, daemons=()):
+    """Run (patterns, exclude, jobs, timeout) groups under one `wpt serve`.
+
+    Each group keeps its own concurrency and per-test timeout; pass/fail is
+    aggregated, and the run exits with TEST_FAILED if any group regressed.
+    """
+    import shutil
+    import tempfile
+    from collections import Counter
+    import wpt_runner
+    from wpt_server import wpt_serve, DEFAULT_WPT_ROOT, WptServerError
+
+    batches = []
+    for patterns, exclude, jobs, timeout in groups:
+        items = _wpt_collect(patterns, exclude)
+        label = ", ".join(patterns) if patterns else "all"
+        if exclude:
+            label += " except " + ", ".join(exclude)
+        print_table("Running WPT (on-demand)",
+                    "%d tests [%s] jobs=%d timeout=%ds" % (len(items), label, jobs, timeout))
+        batches.append((items, jobs, timeout))
+    total = sum(len(items) for items, _, _ in batches)
+    npass = 0
+    reasons = Counter()
+    per_list = {}
     runners = [WorkerRunner(name) for name in daemons]
     # daemons (SharedWorker/ServiceWorker) are one long-lived process shared
     # by every job in this run, so every client Starfish invocation must
@@ -308,12 +336,22 @@ def _wpt_serve_run(*patterns, jobs=8, timeout=20, daemons=(), exclude=()):
                 try:
                     for r in runners:
                         r.run(shared_storage_dir)
-                    # verbose=True: this suite gates CI, so a crash here means a
-                    # crash on the CI machine -- surface the captured backtrace
-                    # in the (only) log we get, the CI job's own live stdout.
-                    npass, reasons, per_list = wpt_runner.run_all(
-                        items, jobs, timeout, None, verbose=True,
-                        storage_dir=shared_storage_dir)
+                    for items, jobs, timeout in batches:
+                        if not items:
+                            continue
+                        # verbose=True: this suite gates CI, so a crash here
+                        # means a crash on the CI machine -- surface the
+                        # captured backtrace in the (only) log we get, the CI
+                        # job's own live stdout.
+                        n, r, pl = wpt_runner.run_all(
+                            items, jobs, timeout, None, verbose=True,
+                            storage_dir=shared_storage_dir)
+                        npass += n
+                        reasons.update(r)
+                        for name, (pn, tn) in pl.items():
+                            acc = per_list.setdefault(name, [0, 0])
+                            acc[0] += pn
+                            acc[1] += tn
                 finally:
                     for r in runners:
                         r.terminate()
@@ -327,13 +365,13 @@ def _wpt_serve_run(*patterns, jobs=8, timeout=20, daemons=(), exclude=()):
             shutil.rmtree(shared_storage_dir, ignore_errors=True)
 
     global ran_test_count
-    ran_test_count += len(items)
+    ran_test_count += total
     if len(per_list) > 1:
         for name in sorted(per_list):
             pn, tn = per_list[name]
             print("  %-44s %d/%d" % (name, pn, tn))
-    print("WPT pass %d/%d" % (npass, len(items)))
-    if npass != len(items):
+    print("WPT pass %d/%d" % (npass, total))
+    if npass != total:
         for reason, n in reasons.most_common():
             print("  %5d  %s" % (n, reason))
         sys.exit(ERRORCODE.TEST_FAILED)
@@ -383,6 +421,20 @@ def wpt_serve_testharness_webrtc():
     _wpt_serve_run("webrtc.res")
 
 
+# Offline audio renders can consume substantial memory per case; keep
+# concurrent renderers low so the timeout remains meaningful on CI hosts.
+_WPT_WEBAUDIO_GROUP = (("webaudio_*.res",), (), 2, 60)
+
+
+def wpt_serve_testharness_webaudio():
+    _wpt_serve_run_groups([_WPT_WEBAUDIO_GROUP])
+
+
+def wpt_serve_testharness_webaudio_ffmpeg():
+    # Optional: run with a Starfish binary built with USE_FFMPEG_MEDIA_PLAYER=1.
+    _wpt_serve_run("ffmpeg_webaudio_decode.res", jobs=2, timeout=60)
+
+
 def wpt_serve_testharness_intersection_observer():
     _wpt_serve_run("intersection-observer.res")
 
@@ -410,7 +462,14 @@ def wpt_serve_testharness():
     # peers, which this aggregate's CI job (x64_test.yml) does not build. They
     # are gated separately by the daemon-equipped wpt_serve_testharness_worker/
     # _serviceworker suites, so exclude them here and skip daemon startup.
-    _wpt_serve_run(exclude=("worker.res", "serviceworker.res"))
+    # Compressed decoding requires an opt-in Linux ffmpeg build.
+    # Web Audio lists run in the same `wpt serve` session, but with the
+    # dedicated wpt_serve_testharness_webaudio concurrency and timeout.
+    _wpt_serve_run_groups([
+        ((), ("worker.res", "serviceworker.res", "ffmpeg_webaudio_decode.res",
+              "webaudio_*.res"), 8, 20),
+        _WPT_WEBAUDIO_GROUP,
+    ])
 
 
 # WPT reftest / crashtest via on-demand `wpt serve` -- see docs/wpt.md.
@@ -520,6 +579,7 @@ if __name__ == "__main__":
         if callable(value) and value.__module__ == __name__:
             if key not in ["file_len", "print_columns", "print_table",
                            "run_test", "run_vendor_test_khronos", "_wpt_serve_run",
+                           "_wpt_serve_run_groups", "_wpt_collect",
                            "_wpt_manifest_run"]:
                 test_functions.append(key)
     print_columns(sorted(test_functions), 4)
@@ -571,4 +631,3 @@ if __name__ == "__main__":
         test_all()
 
     print((str(ran_test_count) + " test cases rans successfully"))
-

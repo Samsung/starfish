@@ -35,6 +35,8 @@ sudo apt-get install -y asciidoc xmlto
 > * `Jinja2` is installed via the distro package `python3-jinja2` (the old `python-pip` / `pip install Jinja2` no longer applies).
 > * `libfreetype-dev` / `libfontconfig-dev` are the current names (the `*6-dev` / `*1-dev` variants are transitional).
 > * `libegl-dev` / `libgles-dev` replace the old `libegl1-mesa-dev` / `libgles2-mesa-dev`.
+> * For `-DUSE_FFMPEG_MEDIA_PLAYER=1`, also install `libavcodec-dev`,
+>   `libavformat-dev`, `libavutil-dev`, and `libswresample-dev`.
 
 ### Download Starfish and compile third party libraries
 
@@ -103,6 +105,10 @@ Default values are in **bold**.
 * -DCLI=[ **0** | 1 ]<br>
   Build the CLI on Linux. Requires a shell executable and
   -DSTARFISH_ENABLE_CDP=1.
+* -DUSE_FFMPEG_MEDIA_PLAYER=[ **0** | 1 ]<br>
+  Linux only. Use the FFmpeg-based media player and enable Web Audio with
+  compressed `decodeAudioData()`; needs the FFmpeg development packages
+  listed above.
 
 ### Directory Structure
 Starfish is compiled to ``out/release`` (or ``out/debug``) directory.
@@ -332,6 +338,71 @@ xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py
 
 # E. Internal Test
 ./tool/runner/test_runner.py internal_test
+# The direct internal-test driver accepts STARFISH_BIN to choose a build
+# without changing the repository's ./Starfish symlink.
+STARFISH_BIN="$PWD/out/release/bin/Starfish" xvfb-run -s '-screen 0 1920x1080x24' -a \
+  python3 tool/drivers/run_test.py basic tool/reftest/cairo/internal.res common -p8
+
+# Web Audio (x86_64 builds enable STARFISH_ENABLE_WEBAUDIO by default).
+# CI (.github/workflows/x64_test.yml, x64_test_clang.yml) runs:
+#  - webaudio_*.res WPT lists, inside wpt_serve_testharness (2 jobs, 60 s
+#    per test, same wpt serve session as the other lists);
+#  - tool/webaudio/test_media_output.py (skips without pulseaudio/parec);
+#  - tool/webaudio/test_graph_thread.py in the clang build job (skipped with
+#    a warning when Clang's TSan runtime is missing).
+# Everything needing FFmpeg (compressed decoding, MSE, decoder Valgrind)
+# is manual: CI builds without USE_FFMPEG_MEDIA_PLAYER.
+xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py wpt_serve_testharness_webaudio
+
+# The FFmpeg-only checks below use a second build directory:
+cmake -Bout/ffmpeg -DCMAKE_BUILD_TYPE=Release -DBACKEND=glib_cairo_gl -DSHELL=x11 \
+  -DTARGETNAME=Starfish -DUSE_FFMPEG_MEDIA_PLAYER=1 -G Ninja
+ninja -C out/ffmpeg starfish.executable
+
+# Compressed-audio decodeAudioData WPT (manual).
+STARFISH_BIN="$PWD/out/ffmpeg/bin/Starfish" xvfb-run -s '-screen 0 1920x1080x24' -a \
+  ./tool/runner/test_runner.py wpt_serve_testharness_webaudio_ffmpeg
+
+# On Linux, AudioContext uses libpulse-simple.so.0 at runtime when available;
+# otherwise it renders silently. No PulseAudio development package is needed.
+# Each real-time AudioContext or playing <audio> element opens its own
+# PulseAudio client; at most 8 are open at once (further ones render
+# silently against the wall clock).
+# To check audible output manually, open
+# test/cairo/internal-test/webaudio/manual-pulse-output.html and press Play.
+# OfflineAudioContext returns rendered PCM without an output device.
+
+# Linux media PCM regression (CI): needs pulseaudio, pactl, and parec.
+# Starts an isolated null sink; no sound is sent to physical speakers.
+# Checks loop playback rates and real PCM/automation while JavaScript blocks.
+# Also repeats context creation, graph mutation, suspend/resume, and close.
+STARFISH_BIN="$PWD/out/release/bin/Starfish" xvfb-run -s '-screen 0 1920x1080x24' -a \
+  python3 tool/webaudio/test_media_output.py
+
+# Linux MSE -> Web Audio PCM regression (manual): requires the FFmpeg build
+# above and the ffmpeg CLI (generates an AAC fixture). No audio device is needed.
+STARFISH_BIN="$PWD/out/ffmpeg/bin/Starfish" xvfb-run -s '-screen 0 1920x1080x24' -a \
+  python3 tool/webaudio/test_mse_source.py
+
+# Valid compressed WAVE fallback (manual): requires the FFmpeg build and
+# ffmpeg CLI.
+STARFISH_BIN="$PWD/out/ffmpeg/bin/Starfish" xvfb-run -s '-screen 0 1920x1080x24' -a \
+  python3 tool/webaudio/test_compressed_wave.py
+
+# Native decoder cleanup and local-file rejection (manual): requires the
+# FFmpeg build directory above, FFmpeg development libraries/CLI, Valgrind
+# and a C++ compiler. Compiles only decoder sources into a temporary directory.
+xvfb-run -s '-screen 0 1920x1080x24' -a \
+  python3 tool/webaudio/test_decoder_memory.py --build-dir out/ffmpeg
+
+# Native graph/connection-queue ThreadSanitizer stress test (CI, clang job):
+# requires Clang 18 with its TSan runtime and an existing configured Ninja
+# build. Compiles into a temporary directory; does not replace the browser
+# build's objects. Covers AudioGraph, AudioBus and AudioParamTimeline with a
+# silent device, not DOM/GC, PulseAudio or all DSP handlers. Override
+# --compiler if needed.
+xvfb-run -s '-screen 0 1920x1080x24' -a \
+  python3 tool/webaudio/test_graph_thread.py --build-dir out/release
 
 # F. CDP Test
 ./tool/cdp_test/run.py all --worker

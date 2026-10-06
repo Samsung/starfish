@@ -167,7 +167,7 @@ public:
 
     void setVolume(double volume);
     void setMuted(bool muted);
-    void setLoop(bool loop);
+    void setLoop(bool loop) override;
 
     virtual void prepare(ResourceURL* url);
     virtual void setNativePlayerDefaultOptions(ResourceURL* url);

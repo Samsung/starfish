@@ -17,26 +17,38 @@
  *  USA
  */
 
+// https://webaudio.github.io/web-audio-api/#enumdef-audiocontextlatencycategory
+[ STARFISH_ENABLE_WEBAUDIO ]
+enum AudioContextLatencyCategory { "balanced", "interactive", "playback" };
+
 // https://webaudio.github.io/web-audio-api/#dictdef-audiocontextoptions
 [ STARFISH_ENABLE_WEBAUDIO ]
 dictionary AudioContextOptions {
-  //(AudioContextLatencyCategory or double) latencyHint = "interactive";
-  //float sampleRate;
+  (double or AudioContextLatencyCategory) latencyHint = "interactive";
+  float sampleRate;
+};
+
+// https://webaudio.github.io/web-audio-api/#dictdef-audiotimestamp
+[ STARFISH_ENABLE_WEBAUDIO ]
+dictionary AudioTimestamp {
+  double contextTime;
+  DOMHighResTimeStamp performanceTime;
 };
 
 // https://webaudio.github.io/web-audio-api/#AudioContext
 [ STARFISH_ENABLE_WEBAUDIO,
   Constructor (optional AudioContextOptions contextOptions),
   ConstructorCallWith=ExecutionContext,
+  RaisesException=Constructor,
   Exposed=Window ]
 interface AudioContext : BaseAudioContext {
-  //readonly attribute double baseLatency;
-  //readonly attribute double outputLatency;
-  //AudioTimestamp getOutputTimestamp ();
-  //Promise<void> resume ();
-  //Promise<void> suspend ();
+  readonly attribute double baseLatency;
+  readonly attribute double outputLatency;
+  AudioTimestamp getOutputTimestamp ();
+  Promise<void> resume ();
+  Promise<void> suspend ();
   Promise<void> close ();
-  MediaElementAudioSourceNode createMediaElementSource (HTMLMediaElement mediaElement);
+  [RaisesException] MediaElementAudioSourceNode createMediaElementSource (HTMLMediaElement mediaElement);
   //MediaStreamAudioSourceNode createMediaStreamSource (MediaStream mediaStream);
   //MediaStreamTrackAudioSourceNode createMediaStreamTrackSource (MediaStreamTrack mediaStreamTrack);
   //MediaStreamAudioDestinationNode createMediaStreamDestination ();

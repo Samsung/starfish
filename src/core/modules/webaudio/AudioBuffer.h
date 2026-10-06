@@ -29,22 +29,44 @@
 
 namespace Starfish {
 class ExecutionContext;
+class AudioBufferData;
 
 struct AudioBufferOptions {
     DEFINE_GETTER_SETTER(uint32_t, numberOfChannels, NumberOfChannels)
-    DEFINE_GETTER_SETTER(uint32_t, length, Length)
-    DEFINE_GETTER_SETTER(double, sampleRate, SampleRate)
+    DEFINE_GETTER(uint32_t, length)
+    DEFINE_GETTER(double, sampleRate)
+
+    void setLength(uint32_t value)
+    {
+        m_length = value;
+        m_hasLength = true;
+    }
+    void setSampleRate(double value)
+    {
+        m_sampleRate = value;
+        m_hasSampleRate = true;
+    }
+    bool hasLength() const
+    {
+        return m_hasLength;
+    }
+    bool hasSampleRate() const
+    {
+        return m_hasSampleRate;
+    }
 
     uint32_t m_numberOfChannels{ 1 };
     uint32_t m_length{ 0 };
     double m_sampleRate{ 0 };
+    bool m_hasLength{ false };
+    bool m_hasSampleRate{ false };
 };
 
 class AudioBuffer : public ScriptWrappable {
 public:
     AudioBuffer(ExecutionContext* executionContext, AudioBufferOptions options);
-    AudioBuffer(ExecutionContext* executionContext,
-                std::unique_ptr<uint8_t> buffer, uint32_t length);
+    AudioBuffer(ExecutionContext* executionContext, AudioBufferData* data,
+                double sampleRate);
     virtual ~AudioBuffer();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioBuffer)
@@ -54,11 +76,25 @@ public:
     DEFINE_GETTER(double, duration)
     DEFINE_GETTER(uint32_t, numberOfChannels)
 
-    uint8_t* rawBuffer();
+    ScriptFloat32Array getChannelData(uint32_t channel);
+    void copyFromChannel(ScriptFloat32Array destination, uint32_t channelNumber,
+                         uint32_t bufferOffset = 0);
+    void copyToChannel(ScriptFloat32Array source, uint32_t channelNumber,
+                       uint32_t bufferOffset = 0);
+    void acquireContents();
+
+    AudioBufferData* data() const
+    {
+        return m_data;
+    }
 
 private:
+    void ensureMutableData();
+
     ExecutionContext* m_executionContext{ nullptr };
-    std::unique_ptr<uint8_t> m_buffer;
+    AudioBufferData* m_data{ nullptr };
+    GCVector<ScriptFloat32Array> m_channelViews;
+    bool m_dataAcquired{ false };
     double m_sampleRate{ 0 };
     uint32_t m_length{ 0 };
     double m_duration{ 0 };

@@ -334,6 +334,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_default =
         QualifiedName(AtomicString::createAtomicString(starfish, "default"));
     m_loop = QualifiedName(AtomicString::createAtomicString(starfish, "loop"));
+    m_muted =
+        QualifiedName(AtomicString::createAtomicString(starfish, "muted"));
     m_autoplay =
         QualifiedName(AtomicString::createAtomicString(starfish, "autoplay"));
     m_preload =
@@ -794,7 +796,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "loadingerror"));
 
     m_open = QualifiedName(AtomicString::createAtomicString(starfish, "open"));
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) || defined(STARFISH_ENABLE_WEBRTC)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) || \
+    defined(STARFISH_ENABLE_WEBRTC) || defined(STARFISH_ENABLE_WEBAUDIO)
     m_statechange = QualifiedName(
         AtomicString::createAtomicString(starfish, "statechange"));
     m_updatefound = QualifiedName(
@@ -807,6 +810,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
     m_fetch =
         QualifiedName(AtomicString::createAtomicString(starfish, "fetch"));
+#endif
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    m_complete =
+        QualifiedName(AtomicString::createAtomicString(starfish, "complete"));
 #endif
     m_ttsstart =
         QualifiedName(AtomicString::createAtomicString(starfish, "ttsstart"));

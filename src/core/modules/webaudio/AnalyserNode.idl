@@ -1,0 +1,26 @@
+// https://webaudio.github.io/web-audio-api/#dictdef-analyseroptions
+[ STARFISH_ENABLE_WEBAUDIO ]
+dictionary AnalyserOptions : AudioNodeOptions {
+  unsigned long fftSize = 2048;
+  double maxDecibels = -30;
+  double minDecibels = -100;
+  double smoothingTimeConstant = 0.8;
+};
+
+// https://webaudio.github.io/web-audio-api/#AnalyserNode
+[ STARFISH_ENABLE_WEBAUDIO,
+  Constructor(BaseAudioContext context, optional AnalyserOptions options),
+  ConstructorCallWith=ExecutionContext,
+  RaisesException=Constructor,
+  Exposed=Window ]
+interface AnalyserNode : AudioNode {
+  void getFloatFrequencyData(Float32Array array);
+  void getByteFrequencyData(Uint8Array array);
+  void getFloatTimeDomainData(Float32Array array);
+  void getByteTimeDomainData(Uint8Array array);
+  [RaisesException] attribute unsigned long fftSize;
+  readonly attribute unsigned long frequencyBinCount;
+  [RaisesException] attribute double minDecibels;
+  [RaisesException] attribute double maxDecibels;
+  [RaisesException] attribute double smoothingTimeConstant;
+};

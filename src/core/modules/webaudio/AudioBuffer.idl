@@ -29,13 +29,14 @@ dictionary AudioBufferOptions {
 [ STARFISH_ENABLE_WEBAUDIO,
   Constructor (AudioBufferOptions options),
   ConstructorCallWith=ExecutionContext,
+  RaisesException=Constructor,
   Exposed=Window ]
 interface AudioBuffer {
   readonly attribute float sampleRate;
   readonly attribute unsigned long length;
   readonly attribute double duration;
   readonly attribute unsigned long numberOfChannels;
-  //Float32Array getChannelData (unsigned long channel);
-  //void copyFromChannel (Float32Array destination, unsigned long channelNumber, optional unsigned long bufferOffset = 0);
-  //void copyToChannel (Float32Array source, unsigned long channelNumber, optional unsigned long bufferOffset = 0);
+  [RaisesException] Float32Array getChannelData (unsigned long channel);
+  [RaisesException] void copyFromChannel (Float32Array destination, unsigned long channelNumber, optional unsigned long bufferOffset = 0);
+  [RaisesException] void copyToChannel (Float32Array source, unsigned long channelNumber, optional unsigned long bufferOffset = 0);
 };

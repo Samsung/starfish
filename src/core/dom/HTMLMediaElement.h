@@ -37,6 +37,9 @@ class TextTrackList;
 class TimeRanges;
 class URL;
 class MediaError;
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+class MediaElementAudioSourceNode;
+#endif
 
 #if defined(STARFISH_ENABLE_WEBRTC)
 // TODO: Rename the unofficial use of MediaStream in MediaPlayerTizen
@@ -238,6 +241,16 @@ class HTMLMediaElement : public HTMLElement {
     friend class MediaOperationQueueDataBatchedDispatchEvent;
 
 public:
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    MediaElementAudioSourceNode* audioSourceNode() const
+    {
+        return m_audioSourceNode;
+    }
+    void setAudioSourceNode(MediaElementAudioSourceNode* node)
+    {
+        m_audioSourceNode = node;
+    }
+#endif
     enum NetworkState {
         NETWORK_EMPTY,
         NETWORK_IDLE,
@@ -419,9 +432,13 @@ protected:
     double m_officialPlaybackPosition;
     double m_defaultPlaybackStartPosition;
     bool m_muted;
+    bool m_mutedSetByScript{ false };
     double m_volume;
     double m_pendingSeek;
     MediaPlayer* m_mediaPlayer;
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    MediaElementAudioSourceNode* m_audioSourceNode{ nullptr };
+#endif
     String* m_currentSrc;
     MediaProvider* m_mediaProvider{ nullptr };
     TextTrackList* m_textTracks;

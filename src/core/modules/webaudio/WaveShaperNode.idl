@@ -1,0 +1,21 @@
+// https://webaudio.github.io/web-audio-api/#enumdef-oversampletype
+[ STARFISH_ENABLE_WEBAUDIO ]
+enum OverSampleType { "none", "2x", "4x" };
+
+// https://webaudio.github.io/web-audio-api/#dictdef-waveshaperoptions
+[ STARFISH_ENABLE_WEBAUDIO ]
+dictionary WaveShaperOptions : AudioNodeOptions {
+  sequence<float> curve;
+  OverSampleType oversample = "none";
+};
+
+// https://webaudio.github.io/web-audio-api/#WaveShaperNode
+[ STARFISH_ENABLE_WEBAUDIO,
+  Constructor(BaseAudioContext context, optional WaveShaperOptions options),
+  ConstructorCallWith=ExecutionContext,
+  RaisesException=Constructor,
+  Exposed=Window ]
+interface WaveShaperNode : AudioNode {
+  [RaisesException] attribute Float32Array? curve;
+  attribute OverSampleType oversample;
+};

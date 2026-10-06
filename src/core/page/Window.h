@@ -54,6 +54,9 @@ class Scrolling;
 class LayoutUnit;
 class CustomElementRegistry;
 class IDBFactory;
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+class AudioContext;
+#endif
 
 typedef void (*TimerHandler)(void* data);
 using Disposer = std::function<void()>;
@@ -286,6 +289,10 @@ public:
     Crypto* crypto();
 
     void registerDisposer(void* holder, Disposer function);
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    void registerAudioContext(AudioContext* context);
+    void unregisterAudioContext(AudioContext* context);
+#endif
 
 #ifdef STARFISH_ENABLE_OBSOLETE_SPEC
     Event* event();
@@ -486,6 +493,9 @@ private:
     GCVector<void**> m_outstandingRejectedPromises;
     bool m_hasScheduledPromiseRejectionCheck{ false };
     GCUnorderedMap<void**, Disposer> m_disposers;
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    GCVector<AudioContext*> m_activeAudioContexts;
+#endif
 };
 } // namespace Starfish
 

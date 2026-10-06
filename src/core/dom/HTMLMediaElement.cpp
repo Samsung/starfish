@@ -45,6 +45,9 @@
 #include "core/csp/ContentSecurityPolicy.h"
 #include "platform/multimedia/MediaPlayer.h"
 #include "platform/multimedia/MediaPlayerAudio.h"
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+#include "core/modules/webaudio/MediaElementAudioSourceNode.h"
+#endif
 #include "platform/multimedia/MediaPlayerWebRtc.h"
 #include "core/modules/mediastream/MediaStream.h"
 
@@ -111,6 +114,9 @@ void* HTMLMediaElement::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLMediaElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_mediaPlayer));
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_audioSourceNode));
+#endif
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_currentSrc));
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_textTracks));
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_currentOperation));
@@ -180,6 +186,12 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name,
         MediaPlayer* player = activeMediaPlayer();
         if (player) {
             player->setLoop(!attributeRemoved);
+        }
+    } else if (name == ss->m_muted && !m_mutedSetByScript) {
+        m_muted = !attributeRemoved;
+        MediaPlayer* player = activeMediaPlayer();
+        if (player) {
+            player->setMuted(m_muted);
         }
     } else if (name == ss->m_onloadeddata) {
         setAttributeEventListener(ss->m_loadeddata, value, this);
@@ -315,6 +327,11 @@ void HTMLMediaElement::load()
 void HTMLMediaElement::closeMediaPlayer()
 {
     if (m_mediaPlayer) {
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+        if (m_audioSourceNode) {
+            m_audioSourceNode->setPlaybackState(nullptr);
+        }
+#endif
         // Surfaces the single chokepoint where every JS-side reset path
         // (load(), src change, resourceSelection) tears down the player
         // and detaches any attached MediaSource.
@@ -354,6 +371,9 @@ void HTMLMediaElement::initMediaPlayer(ResourceURL* url)
     }
 
     m_mediaPlayer->setLoop(loop());
+    m_mediaPlayer->setVolume(m_volume);
+    m_mediaPlayer->setMuted(m_muted);
+    m_mediaPlayer->setPlaybackRate(m_playbackRate);
     m_isSeeking = false;
     m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
 }
@@ -1032,7 +1052,9 @@ void HTMLMediaElement::setVolume(double volume)
 
 void HTMLMediaElement::setMuted(bool muted)
 {
+    m_mutedSetByScript = true;
     if (m_muted != muted) {
+        m_muted = muted;
         if (activeMediaPlayer()) {
             m_mediaPlayer->setMuted(muted);
         }

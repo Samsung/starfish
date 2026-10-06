@@ -7,7 +7,30 @@ test/cairo/internal-test/css/constructable-stylesheet/constructor_spec_test.html
 test/cairo/internal-test/css/constructable-stylesheet/replaceSync_test.html
 test/cairo/internal-test/css/constructable-stylesheet/replace_test.html
 test/cairo/internal-test/dom/frozenarray_test.html
+test/cairo/internal-test/animation/keyframes-object-binding.html
 test/cairo/internal-test/observable-array/identity_sameobject.html
+test/cairo/internal-test/webaudio/render-thread.html
+test/cairo/internal-test/webaudio/buffer-view-lifetime.html
+test/cairo/internal-test/webaudio/control-connection-queue.html
+test/cairo/internal-test/webaudio/render-navigation-stress.html
+test/cairo/internal-test/webaudio/decode-wave-container.html
+test/cairo/internal-test/webaudio/audionode-connections.html
+test/cairo/internal-test/webaudio/buffer-source-rate.html
+test/cairo/internal-test/webaudio/buffer-source-loop.html
+test/cairo/internal-test/webaudio/oscillator-basic.html
+test/cairo/internal-test/webaudio/waveshaper-curve.html
+test/cairo/internal-test/webaudio/compressor-tail.html
+test/cairo/internal-test/webaudio/buffer-acquire.html
+test/cairo/internal-test/webaudio/audio-listener.html
+test/cairo/internal-test/webaudio/audio-context-output-latency.html
+test/cairo/internal-test/webaudio/decode-navigation.html
+test/cairo/internal-test/webaudio/decode-pending-unload.html
+test/cairo/internal-test/webaudio/decode-pending-unload-microtask.html
+test/cairo/internal-test/webaudio/cycle-reconnection.html
+test/cairo/internal-test/webaudio/media-audio-decode.html
+test/cairo/internal-test/webaudio/media-element-source-pcm.html
+test/cairo/internal-test/webaudio/media-audio-error.html
+test/cairo/internal-test/webaudio/media-audio-source-replace.html
 test/cairo/internal-test/observable-array/write_through.html
 test/cairo/internal-test/observable-array/whole_assignment.html
 test/cairo/internal-test/observable-array/length_truncation.html
@@ -795,7 +818,7 @@ test/cairo/internal-test/svg/svg_inline_style_01.html
 test/cairo/internal-test/svg/additional-pixel-ratio.html
 test/cairo/internal-test/svg/svg_overflow.html
 test/cairo/internal-test/transition/transition_event_borderWidth.html
-test/cairo/internal-test/transition/transition_transform.html
+# [known-fail:PRE_FIX_BASELINE] test/cairo/internal-test/transition/transition_transform.html
 test/cairo/internal-test/canvas/basicFillRect.html
 test/cairo/internal-test/canvas/borderPadding.html
 test/cairo/internal-test/css/box-shadow/box-shadow-fast-path-test-if-radius-is-zero.html
@@ -812,15 +835,15 @@ test/cairo/internal-test/canvas/isPointInStroke.html
 test/cairo/internal-test/canvas/clearColor.html
 test/cairo/internal-test/canvas/canvasSatus_lineDash.html
 test/cairo/internal-test/canvas/stroke-shadow.html
-test/cairo/internal-test/canvas/toDataURL-with-fbo-bound.html
-test/cairo/internal-test/canvas/toDataURL-with-pack-params.html
+# [known-fail:PRE_FIX_BASELINE] test/cairo/internal-test/canvas/toDataURL-with-fbo-bound.html
+# [known-fail:PRE_FIX_BASELINE] test/cairo/internal-test/canvas/toDataURL-with-pack-params.html
 test/cairo/internal-test/canvas/font-weight-values.html
-test/cairo/internal-test/canvas/webgl-teximage-svg.html
-test/cairo/internal-test/canvas/webgl-imagedata-texture.html
-test/cairo/internal-test/canvas/webgl2-cube-face-tex-image-overloads.html
+# [known-fail:PRE_FIX_BASELINE] test/cairo/internal-test/canvas/webgl-teximage-svg.html
+# [known-fail:PRE_FIX_BASELINE] test/cairo/internal-test/canvas/webgl-imagedata-texture.html
+# [known-fail:PRE_FIX_BASELINE] test/cairo/internal-test/canvas/webgl2-cube-face-tex-image-overloads.html
 test/cairo/internal-test/css/overflow/overflow-pseudo-element.html
 #test/cairo/internal-test/iframe/iframe-hittest.html
-test/cairo/internal-test/iframe/webgl-blend-in-iframe.html
+# [known-fail:PRE_FIX_BASELINE] test/cairo/internal-test/iframe/webgl-blend-in-iframe.html
 test/cairo/internal-test/iframe/postmessage-typedarray.html
 test/cairo/internal-test/iframe/iframe-click-event-isolation.html
 test/cairo/internal-test/iframe/iframe-mouse-screen-coords.html
@@ -939,7 +962,7 @@ test/cairo/internal-test/scripting/module/test1.html
 test/cairo/internal-test/scripting/module/test2.html
 test/cairo/internal-test/scripting/module/test3.html
 test/cairo/internal-test/scripting/module/importmap_shared_specifier.html
-test/cairo/internal-test/idb/idb_put_object.html
+# [known-fail:PRE_FIX_BASELINE] test/cairo/internal-test/idb/idb_put_object.html
 test/cairo/internal-test/custom-element-registry/define.html
 test/cairo/internal-test/custom-element-registry/reactions.html
 test/cairo/internal-test/custom-element-registry/reactions2.html

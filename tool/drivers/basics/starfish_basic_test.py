@@ -127,7 +127,7 @@ def case_runner(tc):
     storage_dir = tempfile.mkdtemp(prefix="starfish-storage-")
     try:
         # Run starfish
-        starfish_command = ["./Starfish", tc_file, "--hide-window", __opts.width, __opts.height, __opts.regression, "--disable-console",
+        starfish_command = [os.environ.get("STARFISH_BIN", "./Starfish"), tc_file, "--hide-window", __opts.width, __opts.height, __opts.regression, "--disable-console",
                             TIMEOUT_OPT_PREFIX + str(native_timeout), "--storage-dir=" + storage_dir]
         # Bind before the try so the except handler stays safe even when
         # open_subprocess raises before returning (e.g. Popen fails to launch).

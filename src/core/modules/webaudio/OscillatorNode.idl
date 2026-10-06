@@ -1,0 +1,25 @@
+// https://webaudio.github.io/web-audio-api/#enumdef-oscillatortype
+[ STARFISH_ENABLE_WEBAUDIO ]
+enum OscillatorType { "sine", "square", "sawtooth", "triangle", "custom" };
+
+// https://webaudio.github.io/web-audio-api/#dictdef-oscillatoroptions
+[ STARFISH_ENABLE_WEBAUDIO ]
+dictionary OscillatorOptions : AudioNodeOptions {
+  OscillatorType type = "sine";
+  float frequency = 440;
+  float detune = 0;
+  PeriodicWave periodicWave;
+};
+
+// https://webaudio.github.io/web-audio-api/#OscillatorNode
+[ STARFISH_ENABLE_WEBAUDIO,
+  Constructor(BaseAudioContext context, optional OscillatorOptions options),
+  ConstructorCallWith=ExecutionContext,
+  RaisesException=Constructor,
+  Exposed=Window ]
+interface OscillatorNode : AudioScheduledSourceNode {
+  [RaisesException=Setter] attribute OscillatorType type;
+  readonly attribute AudioParam frequency;
+  readonly attribute AudioParam detune;
+  [RaisesException] void setPeriodicWave(PeriodicWave periodicWave);
+};

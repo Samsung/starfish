@@ -31,11 +31,13 @@ namespace Starfish {
 class ExecutionContext;
 class HTMLMediaElement;
 class AudioContext;
+class MediaAudioPlaybackState;
+class MediaElementSourceHandler;
 
 struct MediaElementAudioSourceOptions {
     DEFINE_GETTER_SETTER(HTMLMediaElement*, mediaElement, MediaElement);
 
-    HTMLMediaElement* m_mediaElement;
+    HTMLMediaElement* m_mediaElement{ nullptr };
 };
 
 class MediaElementAudioSourceNode : public AudioNode {
@@ -46,13 +48,12 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(MediaElementAudioSourceNode);
 
-    AudioNode* connect(AudioNode* destinationNode, uint32_t output = 0,
-                       uint32_t input = 0) override;
-
     DEFINE_GETTER(HTMLMediaElement*, mediaElement);
+    void setPlaybackState(MediaAudioPlaybackState* state);
 
 private:
     HTMLMediaElement* m_mediaElement{ nullptr };
+    MediaElementSourceHandler* m_sourceHandler{ nullptr };
 };
 } // namespace Starfish
 #endif

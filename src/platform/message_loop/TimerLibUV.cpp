@@ -84,6 +84,23 @@ size_t TimerLibUV::addTimer(unsigned delay, GlobalScope* globalScope,
     td->m_timerID->type = UV_UNKNOWN_HANDLE;
 
     uv_timer_init(uvLoop(), td->m_timerID);
+    // Count the timeout from registration, even after a long-running task:
+    // uv_timer_start() measures from the loop's cached time, so add the time
+    // elapsed since it was taken, read from libuv's own clock. The cached
+    // time is restored because idlers are zero-delay uv timers; advancing it
+    // inside a timer callback would let re-armed idlers come due within the
+    // same timer pass, which then never yields to rendering or I/O. A zero
+    // delay has already elapsed at registration, so it keeps its place in
+    // the current timer pass, ahead of the next rendering opportunity.
+    // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#run-steps-after-a-timeout
+    uint64_t lag = 0;
+    if (delay) {
+        uv_loop_t* loop = uvLoop();
+        const uint64_t loopTime = uv_now(loop);
+        uv_update_time(loop);
+        lag = uv_now(loop) - loopTime;
+        loop->time = loopTime;
+    }
     if (repetitive) {
         if (delay == 0) {
             delay = 1;
@@ -95,7 +112,7 @@ size_t TimerLibUV::addTimer(unsigned delay, GlobalScope* globalScope,
                 auto a = td->m_timer->m_timeoutHandler.find(td->m_id);
                 td->m_handler(td->m_data);
             },
-            static_cast<uint64_t>(delay), static_cast<uint64_t>(delay));
+            static_cast<uint64_t>(delay) + lag, static_cast<uint64_t>(delay));
     } else {
         uv_timer_start(
             td->m_timerID,
@@ -110,7 +127,7 @@ size_t TimerLibUV::addTimer(unsigned delay, GlobalScope* globalScope,
                 uv_timer_stop(handle);
                 uv_close((uv_handle_t*)handle, on_close_handle);
             },
-            static_cast<uint64_t>(delay), 0);
+            static_cast<uint64_t>(delay) + lag, 0);
     }
     m_timeoutHandler.insert(std::make_pair(id, td));
     return id;

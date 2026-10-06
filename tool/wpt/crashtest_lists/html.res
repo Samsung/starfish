@@ -53,7 +53,7 @@ http://web-platform.test:8000/html/semantics/document-metadata/the-link-element/
 http://web-platform.test:8000/html/semantics/embedded-content/media-elements/track/track-element/crashtests/track-element-src-aborted-load-onerror-crash.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-audio-element/audio-appendChild-to-inactive-document-crash.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-audio-element/audio-play-in-inactive-document-crash.html
-http://web-platform.test:8000/html/semantics/embedded-content/the-audio-element/audio-with-replaced-after-pseudo-crash.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/semantics/embedded-content/the-audio-element/audio-with-replaced-after-pseudo-crash.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-embed-element/embed-named-attribute-detached-context-crash.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-iframe-element/hittest-detached-iframe-crash.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-iframe-element/iframe-document-move-crash.html

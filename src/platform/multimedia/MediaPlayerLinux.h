@@ -318,7 +318,11 @@ public:
 
     void setVolume(double volume);
     void setMuted(bool muted);
-    void setLoop(bool loop);
+    void setLoop(bool loop) override;
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    MediaAudioPlaybackState* audioPlaybackState() override;
+    void syncAudioPlaybackState();
+#endif
 
     virtual void prepare(ResourceURL* url);
     virtual void setNativePlayerDefaultOptions(ResourceURL* url);
@@ -416,7 +420,7 @@ public:
     void decodeAndDeliverPacket(MediaPlayerSourceStream* stream,
                                 MediaPacket* packet);
     void publishDecodedFrame(AVFrame* frame);
-    void publishDecodedAudioFrame(AVFrame* frame);
+    void publishDecodedAudioFrame(AVFrame* frame, double fallbackPosition);
     void promoteVideoFrameForCurrentTime();
     void ensureAudioSink(int channels, int sampleRate);
     void teardownAudioSink();
@@ -470,6 +474,11 @@ public:
     std::thread* m_audioWriterThread;
     volatile bool m_audioWriterStop;
     size_t m_audioWriteQueueBytes;
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    // Published under m_audioWriteMutex; released after both native threads
+    // have stopped. PCM storage is allocated only for a Web Audio source.
+    Optional<MediaAudioPlaybackState*> m_audioPlaybackState;
+#endif
 
     static void seekedCallback(void* data)
     {

@@ -22,6 +22,7 @@
 
 #include "core/page/Window.h"
 #include "binding/ScriptBindingInstance.h"
+#include "binding/ScriptEngineInstance.h"
 #include "binding/ScriptBindingWindowInstance.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/dom/CustomElementRegistry.h"
@@ -53,6 +54,10 @@
 #include "core/page/Screen.h"
 #include "core/page/WebView.h"
 #include "core/page/GlobalScope.h"
+#include <algorithm>
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+#include "core/modules/webaudio/AudioContext.h"
+#endif
 #if defined(STARFISH_ENABLE_TEST) && defined(STARFISH_ENABLE_TTS)
 #include "core/modules/tts/TTS.h"
 #endif
@@ -190,8 +195,45 @@ void Window::registerDisposer(void* object, Disposer function)
     m_disposers[link] = function;
 }
 
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+void Window::registerAudioContext(AudioContext* context)
+{
+    m_activeAudioContexts.push_back(context);
+}
+
+void Window::unregisterAudioContext(AudioContext* context)
+{
+    auto it = std::find(m_activeAudioContexts.begin(),
+                        m_activeAudioContexts.end(), context);
+    if (it != m_activeAudioContexts.end()) {
+        m_activeAudioContexts.erase(it);
+    }
+}
+
+#endif
+
 void Window::dispose()
 {
+    bool deferScriptBindingDestroy = false;
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    // https://webaudio.github.io/web-audio-api/#unloading-a-document
+    // Unloading rejects pending context and decode promises. Run their
+    // reactions before ScriptBindingInstance::destroy() clears jobs for this
+    // Window's realm.
+    bool rejectedAudioPromises = false;
+    for (AudioContext* context : m_activeAudioContexts) {
+        rejectedAudioPromises |= context->shutdownForNavigation();
+    }
+    m_activeAudioContexts.clear();
+    rejectedAudioPromises |= webView()->cancelAudioDecodesForWindow(this);
+    if (rejectedAudioPromises && m_scriptBindingInstance) {
+        MicroTaskExecutionManager microtasks(
+            m_scriptBindingInstance->engineInstance());
+        microtasks.forceInvokeDrainMicroTaskQueue();
+        deferScriptBindingDestroy =
+            m_scriptBindingInstance->engineInstance()->inDrainMicroTaskQueue();
+    }
+#endif
     GCVector<Element*> iframeCollection;
     Traverse::collectDescendants(
         iframeCollection, document(),
@@ -222,7 +264,20 @@ void Window::dispose()
 #endif
 
     if (m_scriptBindingInstance) {
-        m_scriptBindingInstance->destroy();
+        ScriptBindingInstance* binding = m_scriptBindingInstance;
+        if (deferScriptBindingDestroy) {
+            // A Promise reaction may unload its own document. Clearing that
+            // realm's queued jobs before the current checkpoint finishes
+            // would discard the pending decode rejection reactions.
+            webView()->messageLoop()->addIdler(
+                nullptr,
+                [](size_t, void* data) {
+                    static_cast<ScriptBindingInstance*>(data)->destroy();
+                },
+                binding);
+        } else {
+            binding->destroy();
+        }
     }
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
     ServiceWorkerProcessManager::instance()->deregisterActiveGlobalScope(uid());

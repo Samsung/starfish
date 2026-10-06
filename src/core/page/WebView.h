@@ -48,6 +48,7 @@ enum StarfishDeviceKind {
 
 class Document;
 class BrowsingContext;
+class Window;
 class StorageNamespaceProvider;
 class StorageNamespace;
 class HistoryManager;
@@ -73,6 +74,12 @@ class PlatformKeyEventData;
 class EventTarget;
 class Scrolling;
 class BufferedNativeImageData;
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+class AudioDecodeRequest;
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(STARFISH_TIZEN)
+class MediaAudioDecodeJob;
+#endif
+#endif
 
 // Everything that shapes a blurred box-shadow image: the box's border box
 // and border widths, the shadow's offsets, blur, spread and colour, the
@@ -609,6 +616,16 @@ public:
         return m_imageDecodeThreadPool;
     }
 #endif
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    ThreadPool* audioDecodeThreadPool();
+    void registerAudioDecodeRequest(AudioDecodeRequest* request);
+    void unregisterAudioDecodeRequest(AudioDecodeRequest* request);
+    bool cancelAudioDecodesForWindow(Window* window);
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(STARFISH_TIZEN)
+    void registerMediaAudioDecodeJob(MediaAudioDecodeJob* job);
+    void unregisterMediaAudioDecodeJob(MediaAudioDecodeJob* job);
+#endif
+#endif
     // active image URLs functions
     // active image URLs are updated while painting(in rendering)
     void clearActiveImageURLsInRenderingSet();
@@ -788,6 +805,13 @@ private:
 
 #if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
     ThreadPool* m_imageDecodeThreadPool;
+#endif
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    Optional<ThreadPool*> m_audioDecodeThreadPool;
+    GCVector<AudioDecodeRequest*> m_pendingAudioDecodes;
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(STARFISH_TIZEN)
+    GCVector<MediaAudioDecodeJob*> m_pendingMediaAudioDecodes;
+#endif
 #endif
     std::unordered_set<std::string> m_activeImageURLsInRendering;
     Mutex* m_activeImageURLsInRenderingMutex;

@@ -197,11 +197,12 @@ void ThreadPool::clearWorkLocked(ExecutionContext* ctx)
     auto iter = m_workerQueue.begin();
     while (iter != m_workerQueue.end()) {
         if ((iter->second)->ctx == ctx || ctx == nullptr) {
-            if (iter->second->dataPointerComesFromNoGC) {
-                GC_FREE(iter->second->data);
-                iter->second->data = nullptr;
+            WorkerData* work = iter->second;
+            if (work->dataPointerComesFromNoGC) {
+                GC_FREE(work->data);
             }
             iter = m_workerQueue.erase(iter);
+            GC_FREE(work);
         } else {
             iter++;
         }

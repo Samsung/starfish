@@ -1,0 +1,17 @@
+// https://webaudio.github.io/web-audio-api/#dictdef-convolveroptions
+[ STARFISH_ENABLE_WEBAUDIO ]
+dictionary ConvolverOptions : AudioNodeOptions {
+  AudioBuffer? buffer;
+  boolean disableNormalization = false;
+};
+
+// https://webaudio.github.io/web-audio-api/#ConvolverNode
+[ STARFISH_ENABLE_WEBAUDIO,
+  Constructor(BaseAudioContext context, optional ConvolverOptions options),
+  ConstructorCallWith=ExecutionContext,
+  RaisesException=Constructor,
+  Exposed=Window ]
+interface ConvolverNode : AudioNode {
+  [RaisesException] attribute AudioBuffer? buffer;
+  attribute boolean normalize;
+};

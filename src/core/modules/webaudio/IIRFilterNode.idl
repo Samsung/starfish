@@ -1,0 +1,16 @@
+// https://webaudio.github.io/web-audio-api/#dictdef-iirfilteroptions
+[ STARFISH_ENABLE_WEBAUDIO ]
+dictionary IIRFilterOptions : AudioNodeOptions {
+  required sequence<double> feedforward;
+  required sequence<double> feedback;
+};
+
+// https://webaudio.github.io/web-audio-api/#IIRFilterNode
+[ STARFISH_ENABLE_WEBAUDIO,
+  Constructor(BaseAudioContext context, IIRFilterOptions options),
+  ConstructorCallWith=ExecutionContext,
+  RaisesException=Constructor,
+  Exposed=Window ]
+interface IIRFilterNode : AudioNode {
+  [RaisesException] void getFrequencyResponse (Float32Array frequencyHz, Float32Array magResponse, Float32Array phaseResponse);
+};

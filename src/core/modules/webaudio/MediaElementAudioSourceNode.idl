@@ -25,6 +25,7 @@ dictionary MediaElementAudioSourceOptions {
 [ STARFISH_ENABLE_WEBAUDIO,
   ConstructorCallWith=ExecutionContext,
   constructor (AudioContext context, MediaElementAudioSourceOptions options),
+  RaisesException=Constructor,
   Exposed=Window ]
 interface MediaElementAudioSourceNode : AudioNode {
   [SameObject] readonly attribute HTMLMediaElement mediaElement;

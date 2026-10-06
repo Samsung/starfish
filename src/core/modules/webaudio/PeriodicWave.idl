@@ -1,0 +1,21 @@
+// https://webaudio.github.io/web-audio-api/#dictdef-periodicwaveconstraints
+[ STARFISH_ENABLE_WEBAUDIO ]
+dictionary PeriodicWaveConstraints {
+  boolean disableNormalization = false;
+};
+
+// https://webaudio.github.io/web-audio-api/#dictdef-periodicwaveoptions
+[ STARFISH_ENABLE_WEBAUDIO ]
+dictionary PeriodicWaveOptions : PeriodicWaveConstraints {
+  sequence<float> real;
+  sequence<float> imag;
+};
+
+// https://webaudio.github.io/web-audio-api/#PeriodicWave
+[ STARFISH_ENABLE_WEBAUDIO,
+  Constructor(BaseAudioContext context, optional PeriodicWaveOptions options),
+  ConstructorCallWith=ExecutionContext,
+  RaisesException=Constructor,
+  Exposed=Window ]
+interface PeriodicWave {
+};

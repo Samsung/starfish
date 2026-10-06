@@ -1,0 +1,16 @@
+http://web-platform.test:8000/webaudio/the-audio-api/the-pannernode-interface/ctor-panner.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-pannernode-interface/pannernode-basic.window.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-pannernode-interface/pannernode-setposition-throws.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-pannernode-interface/panner-equalpower.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-pannernode-interface/panner-equalpower-stereo.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-pannernode-interface/panner-azimuth.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-pannernode-interface/distance-linear.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-pannernode-interface/distance-inverse.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-pannernode-interface/distance-exponential.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-pannernode-interface/panner-distance-clamping.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-pannernode-interface/panner-rolloff-clamping.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-pannernode-interface/panner-automation-basic.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-pannernode-interface/panner-automation-position.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-pannernode-interface/panner-automation-equalpower-stereo.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-pannernode-interface/automation-changes.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-pannernode-interface/test-pannernode-automation.html

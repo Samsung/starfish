@@ -58,6 +58,9 @@ class Mutex;
 class URL;
 class Window;
 class MediaPlayerWebRtc;
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+class MediaAudioPlaybackState;
+#endif
 
 class MediaPlayer : public gc {
 public:
@@ -102,7 +105,7 @@ public:
     {
         return m_alive && !m_foundError;
     }
-    void setLoop(bool loop)
+    virtual void setLoop(bool loop)
     {
         m_isLooping = loop;
     }
@@ -115,6 +118,13 @@ public:
     {
         return false;
     }
+
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    virtual MediaAudioPlaybackState* audioPlaybackState()
+    {
+        return nullptr;
+    }
+#endif
 
     MediaPlayerWebRtc* asMediaPlayerWebRtc()
     {
@@ -200,6 +210,7 @@ protected:
     void updateElementReadyState(HTMLMediaElement::ReadyState state);
     void processNextOperationQueueInContainer();
     void appendToOperationQueueInContainer(MediaOperationQueueData* data);
+    void notifyMediaSourceFailure();
     SourceBuffer* activeSourceBuffer(StreamType type);
     uint64_t activeStreamIndex(StreamType type);
     bool m_alive;
