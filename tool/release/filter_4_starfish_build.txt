@@ -53,6 +53,7 @@ P /.circleci
 + /third_party/webrtc/src/libwebrtc/libs/tizen/arm/release/libwebrtc.so
 + /third_party/libwebp
 - /third_party/wpt
+- /third_party/webgl
 
 - .git
 - .gitignore
