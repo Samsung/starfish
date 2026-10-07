@@ -1014,7 +1014,7 @@ http://web-platform.test:8000/css/css-writing-modes/text-combine-upright-compres
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/text-combine-upright-compression-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/text-combine-upright-compression-006a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/text-combine-upright-compression-007.html
-http://web-platform.test:8000/css/css-writing-modes/text-combine-upright-decorations-001.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-writing-modes/text-combine-upright-decorations-001.html
 http://web-platform.test:8000/css/css-writing-modes/text-combine-upright-gen-con-001.html
 http://web-platform.test:8000/css/css-writing-modes/text-combine-upright-inherit-all-001.html
 http://web-platform.test:8000/css/css-writing-modes/text-combine-upright-inherit-all-002.html

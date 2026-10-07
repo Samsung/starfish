@@ -13,13 +13,13 @@ http://web-platform.test:8000/css/css-transforms/3dtransform-and-position-sticky
 http://web-platform.test:8000/css/css-transforms/3dtransform-and-position-sticky-002.html
 http://web-platform.test:8000/css/css-transforms/add-child-in-empty-layer.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/animation/canvas-webgl-translate-in-animation.html
-http://web-platform.test:8000/css/css-transforms/animation/rotate-animation-on-svg.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-transforms/animation/rotate-animation-on-svg.html
 http://web-platform.test:8000/css/css-transforms/animation/rotate-animation-with-will-change-transform-001.html
-http://web-platform.test:8000/css/css-transforms/animation/rotate-explicit-and-implicit-keyframes.html
-http://web-platform.test:8000/css/css-transforms/animation/rotate-transform-equivalent.html
-http://web-platform.test:8000/css/css-transforms/animation/scale-and-rotate-both-specified-on-animation-keyframes.html
-http://web-platform.test:8000/css/css-transforms/animation/scale-animation-on-svg.html
-http://web-platform.test:8000/css/css-transforms/animation/scale-explicit-and-implicit-keyframes.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-transforms/animation/rotate-explicit-and-implicit-keyframes.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-transforms/animation/rotate-transform-equivalent.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-transforms/animation/scale-and-rotate-both-specified-on-animation-keyframes.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-transforms/animation/scale-animation-on-svg.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-transforms/animation/scale-explicit-and-implicit-keyframes.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/animation/singular-scale-nested.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/animation/transform-additive-animation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/animation/transform-box-will-change-transform-layer.html
@@ -36,9 +36,9 @@ http://web-platform.test:8000/css/css-transforms/animation/transform-interpolati
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/animation/transform-percent-with-width-and-height-separate.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/animation/transform-percent-with-width-and-height.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/animation/translate-animation-on-svg.html
-http://web-platform.test:8000/css/css-transforms/animation/translate-explicit-and-implicit-keyframes.html
-http://web-platform.test:8000/css/css-transforms/animation/translate-percent-with-width-and-height-separate.html
-http://web-platform.test:8000/css/css-transforms/animation/translate-percent-with-width-and-height.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-transforms/animation/translate-explicit-and-implicit-keyframes.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-transforms/animation/translate-percent-with-width-and-height-separate.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-transforms/animation/translate-percent-with-width-and-height.html
 http://web-platform.test:8000/css/css-transforms/backface-visibility-001.html
 http://web-platform.test:8000/css/css-transforms/backface-visibility-hidden-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/backface-visibility-hidden-002.html
@@ -378,8 +378,8 @@ http://web-platform.test:8000/css/css-transforms/subpixel-transform-changes-004.
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-transforms/text-perspective-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/transform-3d-rotateY-stair-above-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/transform-3d-rotateY-stair-below-001.xht
-http://web-platform.test:8000/css/css-transforms/transform-3d-scales-different-x-y-dynamic-001.html
-http://web-platform.test:8000/css/css-transforms/transform-3d-scales-different-x-y-dynamic-002.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-transforms/transform-3d-scales-different-x-y-dynamic-001.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-transforms/transform-3d-scales-different-x-y-dynamic-002.html
 http://web-platform.test:8000/css/css-transforms/transform-abspos-001.html
 http://web-platform.test:8000/css/css-transforms/transform-abspos-002.html
 http://web-platform.test:8000/css/css-transforms/transform-abspos-003.html

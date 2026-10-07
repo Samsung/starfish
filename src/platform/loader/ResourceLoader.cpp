@@ -48,6 +48,29 @@
 
 namespace Starfish {
 
+#ifdef STARFISH_ENABLE_TEST
+// A reftest keeps class="reftest-wait" on its root element until its
+// asynchronous work has settled, and only the page rendered after the class is
+// gone is the one to capture
+// (https://web-platform-tests.org/writing-tests/reftests.html). A page that
+// never clears it runs into the test driver's timeout, which is the verdict.
+static const unsigned ReftestWaitPollIntervalInMS = 50;
+
+static void startTestAfterLoad(void* data)
+{
+    Window* window = static_cast<Window*>(data);
+    Element* root = window->document()->documentElement();
+    if (root && root->hasClassName(String::fromUTF8("reftest-wait"))) {
+        window->setTimeout(startTestAfterLoad, ReftestWaitPollIntervalInMS,
+                           window);
+        return;
+    }
+    g_fireOnloadEvent = true;
+    window->document()->setNeedsPainting();
+    window->testStart();
+}
+#endif
+
 ResourceLoader::ResourceLoader(Document* document)
     : DocumentHoldable(document)
     , m_isDocumentInOpenState(false)
@@ -628,14 +651,8 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                             // setTimeout(0,...) in
                             // onload
                             // handler
-                            doc->window()->setTimeout(
-                                [](void* data) {
-                                    Window* window = static_cast<Window*>(data);
-                                    g_fireOnloadEvent = true;
-                                    window->document()->setNeedsPainting();
-                                    window->testStart();
-                                },
-                                250, doc->window());
+                            doc->window()->setTimeout(startTestAfterLoad, 250,
+                                                      doc->window());
                         }
 #endif
                     },

@@ -11,7 +11,7 @@
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/auto-name.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/backdrop-filter-animated.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/backdrop-filter-captured.html
-http://web-platform.test:8000/css/css-view-transitions/backdrop-filter-while-promise-pending.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-view-transitions/backdrop-filter-while-promise-pending.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/block-with-overflowing-text.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/break-inside-avoid-child.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/capture-old-state-error-flag-cleanup.html
@@ -41,7 +41,7 @@ http://web-platform.test:8000/css/css-view-transitions/backdrop-filter-while-pro
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/element-is-grouping-during-animation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/element-stops-grouping-after-animation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/element-with-overflow.html
-http://web-platform.test:8000/css/css-view-transitions/empty-render-target-capture.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-view-transitions/empty-render-target-capture.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/escaped-name.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/exit-transition-with-anonymous-layout-object.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/far-away-capture.html
@@ -222,7 +222,7 @@ http://web-platform.test:8000/css/css-view-transitions/navigation/chromium-paint
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/pseudo-with-classes-old-with-class-new-without.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/pseudo-with-classes-view-transition-group.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/pseudo-with-classes-view-transition-image-pair.html
-http://web-platform.test:8000/css/css-view-transitions/reset-state-after-scrolled-view-transition.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-view-transitions/reset-state-after-scrolled-view-transition.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/root-captured-as-different-tag.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/root-style-change-during-animation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/root-to-shared-animation-end.html
@@ -236,14 +236,14 @@ http://web-platform.test:8000/css/css-view-transitions/reset-state-after-scrolle
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/box-decoration-painting.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/centered-paint-offset.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/clip-on-target-in-callback-2.html
-http://web-platform.test:8000/css/css-view-transitions/scoped/clip-on-target-in-callback.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-view-transitions/scoped/clip-on-target-in-callback.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/clipper-non-containing-block.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/display-change-during-transition.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/display-change.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/fractional-border-shift.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/from-scale-zero.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/implicit-contain.html
-http://web-platform.test:8000/css/css-view-transitions/scoped/ink-overflow-on-target.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-view-transitions/scoped/ink-overflow-on-target.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/nested-scope.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/new-content.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/old-content.html
@@ -253,11 +253,11 @@ http://web-platform.test:8000/css/css-view-transitions/scoped/ink-overflow-on-ta
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/pause-rendering.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/rotation-on-scoped-element.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/scope-during-transition-2.html
-http://web-platform.test:8000/css/css-view-transitions/scoped/scrolled-target-position-rtl.html
-http://web-platform.test:8000/css/css-view-transitions/scoped/scrolled-target-position.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-view-transitions/scoped/scrolled-target-position-rtl.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-view-transitions/scoped/scrolled-target-position.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/scroller-with-child.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/shadow-dom.html
-http://web-platform.test:8000/css/css-view-transitions/scoped/target-in-scrolled-container.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-view-transitions/scoped/target-in-scrolled-container.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/to-scale-zero.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scoped/transform-clip.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-view-transitions/scroller-child-abspos.html

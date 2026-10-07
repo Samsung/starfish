@@ -53,19 +53,19 @@ http://web-platform.test:8000/css/css-ui/caret-color-bar-shape-text-color.html
 http://web-platform.test:8000/css/css-ui/caret-color-underscore-shape-text-color.html
 http://web-platform.test:8000/css/css-ui/caret-eol-001.html
 http://web-platform.test:8000/css/css-ui/caret-eol-002.html
-http://web-platform.test:8000/css/css-ui/caret-eol-003.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-ui/caret-eol-003.html
 http://web-platform.test:8000/css/css-ui/caret-eol-004.tentative.html
-http://web-platform.test:8000/css/css-ui/caret-shape-block-001-rtl-sideways-lr.html
-http://web-platform.test:8000/css/css-ui/caret-shape-block-001-rtl-sideways-rl.html
-http://web-platform.test:8000/css/css-ui/caret-shape-block-001-rtl-vlr.html
-http://web-platform.test:8000/css/css-ui/caret-shape-block-001-rtl-vrl.html
-http://web-platform.test:8000/css/css-ui/caret-shape-block-001-rtl.html
-http://web-platform.test:8000/css/css-ui/caret-shape-block-001-sideways-lr.html
-http://web-platform.test:8000/css/css-ui/caret-shape-block-001-sideways-rl.html
-http://web-platform.test:8000/css/css-ui/caret-shape-block-001-vlr.html
-http://web-platform.test:8000/css/css-ui/caret-shape-block-001-vrl.html
-http://web-platform.test:8000/css/css-ui/caret-shape-block-001.html
-http://web-platform.test:8000/css/css-ui/caret-shape-block-002.html
+# [auto-fail:REF_LOAD_FAIL(TIMEOUT)] http://web-platform.test:8000/css/css-ui/caret-shape-block-001-rtl-sideways-lr.html
+# [auto-fail:REF_LOAD_FAIL(TIMEOUT)] http://web-platform.test:8000/css/css-ui/caret-shape-block-001-rtl-sideways-rl.html
+# [auto-fail:REF_LOAD_FAIL(TIMEOUT)] http://web-platform.test:8000/css/css-ui/caret-shape-block-001-rtl-vlr.html
+# [auto-fail:REF_LOAD_FAIL(TIMEOUT)] http://web-platform.test:8000/css/css-ui/caret-shape-block-001-rtl-vrl.html
+# [auto-fail:REF_LOAD_FAIL(TIMEOUT)] http://web-platform.test:8000/css/css-ui/caret-shape-block-001-rtl.html
+# [auto-fail:REF_LOAD_FAIL(TIMEOUT)] http://web-platform.test:8000/css/css-ui/caret-shape-block-001-sideways-lr.html
+# [auto-fail:REF_LOAD_FAIL(TIMEOUT)] http://web-platform.test:8000/css/css-ui/caret-shape-block-001-sideways-rl.html
+# [auto-fail:REF_LOAD_FAIL(TIMEOUT)] http://web-platform.test:8000/css/css-ui/caret-shape-block-001-vlr.html
+# [auto-fail:REF_LOAD_FAIL(TIMEOUT)] http://web-platform.test:8000/css/css-ui/caret-shape-block-001-vrl.html
+# [auto-fail:REF_LOAD_FAIL(TIMEOUT)] http://web-platform.test:8000/css/css-ui/caret-shape-block-001.html
+# [auto-fail:REF_LOAD_FAIL(TIMEOUT)] http://web-platform.test:8000/css/css-ui/caret-shape-block-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/caret-shape-block-color-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/caret-shape-block-color-002.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/caret-shape-block-color-003.tentative.html
@@ -910,7 +910,7 @@ http://web-platform.test:8000/css/css-ui/outline-022.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/outline-026.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/outline-027.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/outline-028.html
-http://web-platform.test:8000/css/css-ui/outline-auto-dynamic-change.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-ui/outline-auto-dynamic-change.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/outline-auto-width-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/outline-color-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/outline-color-002.html
@@ -928,7 +928,7 @@ http://web-platform.test:8000/css/css-ui/outline-offset.html
 http://web-platform.test:8000/css/css-ui/outline-style-inherit.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/outline-with-padding-001.html
 http://web-platform.test:8000/css/css-ui/pointer-events-no-scrollbars-001.html
-http://web-platform.test:8000/css/css-ui/pointer-events-no-scrollbars-002.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-ui/pointer-events-no-scrollbars-002.html
 http://web-platform.test:8000/css/css-ui/resize-change-margin.html
 http://web-platform.test:8000/css/css-ui/resize-child-will-change-transform.html
 http://web-platform.test:8000/css/css-ui/resize-generated-content.html

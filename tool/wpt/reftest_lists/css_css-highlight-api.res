@@ -62,14 +62,14 @@ http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-pa
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-iframe-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-iframe-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-iframe-005.html
-http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-iframe-006.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-iframe-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-inheritance-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-inheritance-002.html
 http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-inheritance-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-insert-node-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-insert-node-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-invalidation-001.html
-http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-invalidation-002.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-invalidation-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-invalidation-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-invalidation-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-invalidation-005.html
@@ -89,8 +89,8 @@ http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-pa
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-staticrange-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-staticrange-005.html
 http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-text-decoration-001.html
-http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-text-decoration-dynamic-001.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-text-decoration-dynamic-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-text-shadow-invalidation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-text-shadow.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-highlight-api/painting/custom-highlight-painting-vertical-writing-mode-001.html
-http://web-platform.test:8000/css/css-highlight-api/painting/invalidation/css-highlight-invalidation-001.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-highlight-api/painting/invalidation/css-highlight-invalidation-001.html

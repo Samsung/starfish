@@ -139,7 +139,7 @@ http://web-platform.test:8000/css/css-images/image-orientation/image-orientation
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-none-cross-origin-border-image.sub.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-none-cross-origin-canvas.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-none-cross-origin-svg.html
-http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-none-cross-origin.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-none-cross-origin.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-none-image-document.html
 http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-none.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-orientation/svg-image-orientation-aspect-ratio.html

@@ -129,7 +129,7 @@ http://web-platform.test:8000/css/css-color/lab-l-over-100-2.html
 http://web-platform.test:8000/css/css-color/lch-l-over-100-1.html
 http://web-platform.test:8000/css/css-color/lch-l-over-100-2.html
 http://web-platform.test:8000/css/css-color/light-dark-currentcolor.html
-http://web-platform.test:8000/css/css-color/light-dark-image-none-interpolation.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-color/light-dark-image-none-interpolation.html
 http://web-platform.test:8000/css/css-color/light-dark-image-none.html
 http://web-platform.test:8000/css/css-color/light-dark-inheritance.html
 http://web-platform.test:8000/css/css-color/named-001.html

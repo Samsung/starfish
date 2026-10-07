@@ -3,7 +3,7 @@ http://web-platform.test:8000/web-animations/animation-model/keyframe-effects/ef
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/web-animations/animation-model/keyframe-effects/transform-and-opacity-on-inline-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/web-animations/animation-model/side-effects-of-animations-current.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/web-animations/animation-model/side-effects-of-animations-in-effect.html
-http://web-platform.test:8000/web-animations/animation-model/side-effects-of-animations-none.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/web-animations/animation-model/side-effects-of-animations-none.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/web-animations/responsive/background-color-animation-plus-opacity.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/web-animations/responsive/multiple-properties-delayed-important.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/web-animations/responsive/neutral-keyframe.html
@@ -11,8 +11,8 @@ http://web-platform.test:8000/web-animations/animation-model/side-effects-of-ani
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/web-animations/responsive/toggle-animated-iframe-visibility.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/web-animations/responsive/tramsform-with-delayed-important.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/web-animations/timing-model/animations/document-timeline-animation.html
-http://web-platform.test:8000/web-animations/timing-model/animations/infinite-duration-animation.html
-http://web-platform.test:8000/web-animations/timing-model/animations/reverse-running-animation.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/web-animations/timing-model/animations/infinite-duration-animation.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/web-animations/timing-model/animations/reverse-running-animation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/web-animations/timing-model/animations/sync-start-times.html
-http://web-platform.test:8000/web-animations/timing-model/animations/update-playback-rate-fast.html
-http://web-platform.test:8000/web-animations/timing-model/animations/update-playback-rate-zero.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/web-animations/timing-model/animations/update-playback-rate-fast.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/web-animations/timing-model/animations/update-playback-rate-zero.html

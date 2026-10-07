@@ -13,7 +13,7 @@ http://web-platform.test:8000/css/css-fonts/first-available-font-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-default-02.html
 http://web-platform.test:8000/css/css-fonts/font-default-03.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-default-04.html
-http://web-platform.test:8000/css/css-fonts/font-display/font-display-change.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-fonts/font-display/font-display-change.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-display/font-display-feature-policy-02.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-display/font-display-preload.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-display/font-display.html
@@ -109,13 +109,13 @@ http://web-platform.test:8000/css/css-fonts/font-palette-36.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/font-palette-7.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/font-palette-8.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/font-palette-9.html
-http://web-platform.test:8000/css/css-fonts/font-palette-add-2.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-fonts/font-palette-add-2.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/font-palette-add.html
 http://web-platform.test:8000/css/css-fonts/font-palette-empty-font-family.html
-http://web-platform.test:8000/css/css-fonts/font-palette-modify-2.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-fonts/font-palette-modify-2.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/font-palette-modify.html
 http://web-platform.test:8000/css/css-fonts/font-palette-non-ident-font-family.html
-http://web-platform.test:8000/css/css-fonts/font-palette-remove-2.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-fonts/font-palette-remove-2.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/font-palette-remove.html
 http://web-platform.test:8000/css/css-fonts/font-palette-values-relative-colors.html
 http://web-platform.test:8000/css/css-fonts/font-palette.html
@@ -293,9 +293,9 @@ http://web-platform.test:8000/css/css-fonts/math-script-level-and-math-style/mat
 http://web-platform.test:8000/css/css-fonts/math-script-level-and-math-style/math-script-level-font-size-clamping-001.tentative.html
 http://web-platform.test:8000/css/css-fonts/metrics-override-normal-keyword.html
 http://web-platform.test:8000/css/css-fonts/oblique-last-resort-weight-selection.html
-http://web-platform.test:8000/css/css-fonts/palette-values-rule-add-2.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-fonts/palette-values-rule-add-2.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/palette-values-rule-add.html
-http://web-platform.test:8000/css/css-fonts/palette-values-rule-delete-2.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-fonts/palette-values-rule-delete-2.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/palette-values-rule-delete.html
 http://web-platform.test:8000/css/css-fonts/quoted-generic-ignored.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/rcap-in-monospace.html

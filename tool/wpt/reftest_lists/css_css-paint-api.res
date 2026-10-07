@@ -21,7 +21,7 @@
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-paint-api/invalid-image-constructor-error.https.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-paint-api/invalid-image-paint-error.https.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-paint-api/invalid-image-pending-script.https.html
-http://web-platform.test:8000/css/css-paint-api/no-op-animation.https.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-paint-api/no-op-animation.https.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-paint-api/non-registered-property-value.https.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-paint-api/one-custom-property-animation-half-opaque.https.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-paint-api/one-custom-property-animation.https.html

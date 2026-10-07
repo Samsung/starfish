@@ -36,7 +36,8 @@ sudo apt-get install -y asciidoc xmlto
 > * `libfreetype-dev` / `libfontconfig-dev` are the current names (the `*6-dev` / `*1-dev` variants are transitional).
 > * `libegl-dev` / `libgles-dev` replace the old `libegl1-mesa-dev` / `libgles2-mesa-dev`.
 > * For `-DUSE_FFMPEG_MEDIA_PLAYER=1`, also install `libavcodec-dev`,
->   `libavformat-dev`, `libavutil-dev`, and `libswresample-dev`.
+>   `libavformat-dev`, `libavutil-dev`, `libswscale-dev`, and
+>   `libswresample-dev`.
 
 ### Download Starfish and compile third party libraries
 
@@ -114,7 +115,9 @@ Default values are in **bold**.
   Use the common FFmpeg software media player. The default is `1` on Windows
   and `0` on Linux. Linux also enables Web Audio compressed `decodeAudioData()`
   and needs the FFmpeg development packages listed above. Windows installs
-  the pinned LGPL shared prebuilt package through vcpkg.
+  the pinned LGPL shared prebuilt package through vcpkg. CI's Linux x64 jobs
+  build with it, so the test lists expect real video frames: measure them on
+  a build with this option.
 
 ### Directory Structure
 Starfish is compiled to ``out/release`` (or ``out/debug``) directory.
@@ -467,7 +470,7 @@ STARFISH_BIN="$PWD/out/release/bin/Starfish" xvfb-run -s '-screen 0 1920x1080x24
 #  - tool/webaudio/test_graph_thread.py in the clang build job (skipped with
 #    a warning when Clang's TSan runtime is missing).
 # Everything needing FFmpeg (compressed decoding, MSE, decoder Valgrind)
-# is manual: CI builds without USE_FFMPEG_MEDIA_PLAYER.
+# is manual, although CI builds with USE_FFMPEG_MEDIA_PLAYER=1.
 xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py wpt_serve_testharness_webaudio
 
 # The FFmpeg-only checks below use a second build directory:
