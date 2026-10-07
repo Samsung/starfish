@@ -55,6 +55,8 @@ RUN mkdir -p /etc/ssh && \
 # Starfish build dependencies (from README "Install required packages")
 # ---------------------------------------------------------------------------
 # libjpeg-dev: provides jpeglib.h (libturbojpeg0-dev only provides turbojpeg.h)
+# libav*/libsw*: FFmpeg for -DUSE_FFMPEG_MEDIA_PLAYER=1 builds, which decode
+# <video>/<audio> for real in tests; the -dev packages pull in the runtime libs.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libglib2.0-dev \
         libcairo2-dev \
@@ -79,6 +81,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libcap-dev \
         libasound2-dev \
         zlib1g-dev \
+        libavcodec-dev \
+        libavformat-dev \
+        libavutil-dev \
+        libswscale-dev \
+        libswresample-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # ---------------------------------------------------------------------------
