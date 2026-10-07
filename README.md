@@ -106,9 +106,10 @@ Default values are in **bold**.
   Build the CLI on Linux. Requires a shell executable and
   -DSTARFISH_ENABLE_CDP=1.
 * -DUSE_FFMPEG_MEDIA_PLAYER=[ **0** | 1 ]<br>
-  Linux only. Use the FFmpeg-based media player and enable Web Audio with
-  compressed `decodeAudioData()`; needs the FFmpeg development packages
-  listed above.
+  Use the common FFmpeg software media player. The default is `1` on Windows
+  and `0` on Linux. Linux also enables Web Audio compressed `decodeAudioData()`
+  and needs the FFmpeg development packages listed above. Windows installs
+  the pinned LGPL shared prebuilt package through vcpkg.
 
 ### Directory Structure
 Starfish is compiled to ``out/release`` (or ``out/debug``) directory.
@@ -226,7 +227,14 @@ configure installs the dependencies in `vcpkg.json` at the registry baseline
 pinned by `vcpkg-configuration.json`. That same file registers
 `vcpkg/ports-public` as an overlay, so the repository's patched ports (cairo,
 libwebsockets) are picked up by every build -- native or Docker -- without a
-command line flag. No checked-in prebuilt third-party directory is required.
+command line flag. FFmpeg is the prebuilt exception: initialize its pinned
+submodule before configuring; the overlay installs the selected x86/x64
+binaries and generates x64 MSVC import libraries with `lib.exe`. It does not
+compile FFmpeg or run GNU build tools.
+
+```bat
+git submodule update --init third_party/windows/ffmpeg
+```
 
 ```bat
 git clone https://github.com/microsoft/vcpkg C:\src\vcpkg
@@ -287,6 +295,47 @@ The x86/x64 LGPL shared FFmpeg prebuilt packages are pinned separately in
 `modules/third_party/windows/ffmpeg`. It retains the five media libraries,
 development files, license, source archives, and archive checksums, so its
 availability does not depend on upstream nightly release retention.
+`USE_FFMPEG_MEDIA_PLAYER=1` and `STARFISH_WINDOWS_ENABLE_MULTIMEDIA=ON` select
+`MediaPlayerFFmpeg` by default. The five runtime DLLs are deployed next to
+`Starfish.dll`, with license and package provenance in `licenses/ffmpeg`;
+Windows audio uses shared-mode WASAPI with interleaved S16 PCM,
+while Linux uses PulseAudio. An unavailable audio endpoint leaves decoding and
+video playback usable. Windows Web Audio remains gated separately.
+`-DUSE_FFMPEG_MEDIA_PLAYER=0` selects the mock Windows player;
+`-DSTARFISH_WINDOWS_ENABLE_MULTIMEDIA=OFF` removes the multimedia surface.
+The prebuilt dependency remains part of the vcpkg manifest in both cases.
+
+With the Windows shell enabled, verify the libraries and audio cancellation:
+
+```bat
+cmake --build build\windows-x64 --target starfish.windows_ffmpeg_smoke starfish.windows_mp4_fragment_smoke --parallel
+build\windows-x64\Release\MP4FragmentSmoke.exe
+build\windows-x64\Release\FFmpegSmoke.exe --audio
+python tool\windows\test_progressive_media.py --browser build\windows-x64\Release\StarfishShell.exe
+python tool\windows\test_media_rendering.py --browser build\windows-x64\Release\StarfishShell.exe
+```
+
+Use `build\windows-x86` for the x86 build. The library probe tests PCM decoding,
+resampling and RGBA conversion; `--audio` also checks cancellation and reset
+with the default endpoint, reporting explicitly when no endpoint exists.
+The browser regression checks audio-only WAV, software H.264/AAC video,
+playback timing, pause, paused seek and ended. It uses local fixtures and a
+local HTTP server, and also runs on Linux under the usual `xvfb-run` wrapper.
+The rendering regression checks progressive H.264 and MSE H.264/AV1, including
+actual Windows framebuffer colors. Screenshot mode uses an offscreen ANGLE
+buffer, so these checks also run from SSH or CI without an interactive desktop.
+
+To check a YouTube iframe with sound in an interactive Windows desktop:
+
+```bat
+python tool\windows\run_youtube_iframe.py --browser build\windows-x64\Release\StarfishShell.exe
+```
+
+Use `--video VIDEO_ID` to select another video. The helper serves the iframe
+over local HTTP and bypasses the corporate proxy only for loopback addresses;
+YouTube requests continue to use the configured proxy. Its status reports
+playing time, mute and volume. `STARFISH_FFMPEG_TRACE=1` logs decoder, audio
+endpoint and texture initialization for diagnosis.
 
 For repeated builds, enable a vcpkg binary cache, for example:
 

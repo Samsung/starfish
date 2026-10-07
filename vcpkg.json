@@ -22,6 +22,7 @@
     "giflib",
     "angle",
     "libpng",
-    "pthreads"
+    "pthreads",
+    "starfish-ffmpeg-prebuilt"
   ]
 }

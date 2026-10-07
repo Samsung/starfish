@@ -39,7 +39,7 @@
 #endif
 
 #if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
-#include "platform/multimedia/MediaPlayerLinux.h"
+#include "platform/multimedia/MediaPlayerFFmpeg.h"
 #endif
 
 #include <array>
@@ -3681,7 +3681,7 @@ public:
     // textures alive, so upload into the storage that already holds the
     // previous frame instead. Returns false when there is no such storage yet
     // or the frame geometry changed, leaving the caller on the full path.
-    bool uploadVideoFrameToAttachedTexture(LinuxMediaPacket* packet)
+    bool uploadVideoFrameToAttachedTexture(FFmpegMediaPacket* packet)
     {
         if (!m_isEGLImageExternal || m_isEGLBufferOwner ||
             m_textureFragments.size() != 1 ||
@@ -3691,12 +3691,7 @@ public:
 
         size_t w = packet->width();
         size_t h = packet->height();
-        float devicePixelRatio =
-            m_renderer->webView()->screenInfo().devicePixelRatio;
-        if (std::max((size_t)1, (size_t)(w * devicePixelRatio)) !=
-                m_bufferWidth ||
-            std::max((size_t)1, (size_t)(h * devicePixelRatio)) !=
-                m_bufferHeight) {
+        if (w != m_bufferWidth || h != m_bufferHeight) {
             return false;
         }
 
@@ -3726,7 +3721,7 @@ public:
     {
 #if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
         if (uploadVideoFrameToAttachedTexture(
-                static_cast<LinuxMediaPacket*>(buffer))) {
+                static_cast<FFmpegMediaPacket*>(buffer))) {
             return;
         }
 #endif
@@ -3753,7 +3748,7 @@ public:
         h = outDesc.height;
         m_buffer = nullptr;
 #elif defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
-        LinuxMediaPacket* packet = static_cast<LinuxMediaPacket*>(buffer);
+        FFmpegMediaPacket* packet = static_cast<FFmpegMediaPacket*>(buffer);
         uint8_t* pixelData = packet->buffer();
         w = packet->width();
         h = packet->height();
@@ -3767,8 +3762,19 @@ public:
         float devicePixelRatio =
             m_renderer->webView()->screenInfo().devicePixelRatio;
 
+#if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
+        // Decoder storage is already measured in pixels. Scaling its upload
+        // dimensions by the display DPI reads beyond the supplied RGBA frame.
+        m_bufferWidth = w;
+        m_bufferHeight = h;
+        if (getenv("STARFISH_FFMPEG_TRACE")) {
+            STARFISH_LOG_INFO("FFmpeg texture frame=%zux%zu dpi=%f", w, h,
+                              devicePixelRatio);
+        }
+#else
         m_bufferWidth = std::max((size_t)1, (size_t)(w * devicePixelRatio));
         m_bufferHeight = std::max((size_t)1, (size_t)(h * devicePixelRatio));
+#endif
 
         ensureGenerateTexture();
     }

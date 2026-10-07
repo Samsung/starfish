@@ -40,8 +40,8 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
-#include "platform/multimedia/MediaPlayerLinux.h"
-#include "platform/multimedia/PulseSimple.h"
+#include "platform/multimedia/MediaPlayerFFmpeg.h"
+#include "platform/multimedia/FFmpegAudioOutput.h"
 #if defined(STARFISH_ENABLE_WEBAUDIO)
 #include "core/modules/webaudio/MediaElementAudioSourceNode.h"
 #include "core/modules/webaudio/render/AudioHandlers.h"
@@ -51,6 +51,13 @@
 #include <time.h>
 
 namespace Starfish {
+
+static uint64_t monotonicMilliseconds()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+               std::chrono::steady_clock::now().time_since_epoch())
+        .count();
+}
 
 #define STARFISH_VIDEO_MAX_WIDTH 1920
 #define STARFISH_VIDEO_MAX_HEIGHT 1080
@@ -95,9 +102,9 @@ static uint64_t decodeLookaheadMs()
         return;                       \
     }
 
-void MediaPlayerLinux::printNativePlayerError(int errorCode)
+void MediaPlayerFFmpeg::printNativePlayerError(int errorCode)
 {
-    PLAYER_LOGI("MediaPlayerLinux::printNativePlayerError\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::printNativePlayerError\n");
     switch (errorCode) {
 #define F(errorenum)                   \
     case errorenum:                    \
@@ -113,21 +120,21 @@ void MediaPlayerLinux::printNativePlayerError(int errorCode)
 static void completeCallback(void* data)
 {
     PLAYER_LOGI("completeCallback\n");
-    MediaPlayerLinux* player = (MediaPlayerLinux*)data;
+    MediaPlayerFFmpeg* player = (MediaPlayerFFmpeg*)data;
     player->handleEnded();
 }
 
 static void preparedCallback(void* data)
 {
     PLAYER_LOGI("preparedCallback\n");
-    MediaPlayerLinux* self = (MediaPlayerLinux*)data;
+    MediaPlayerFFmpeg* self = (MediaPlayerFFmpeg*)data;
     self->handlePrepared();
 }
 
 static void seekedCallback(void* data)
 {
     PLAYER_LOGI("player_set_play_position_cb");
-    MediaPlayerLinux* self = (MediaPlayerLinux*)data;
+    MediaPlayerFFmpeg* self = (MediaPlayerFFmpeg*)data;
     self->handleSeeked();
 }
 static void printMediaPacketError(int errorCode)
@@ -180,7 +187,7 @@ FfmpegWrapperPlayer::FfmpegWrapperPlayer()
 {
     // Allocated via `new (PointerFreeGC)` (GC_MALLOC_ATOMIC), which is
     // allowed to hand back non-zeroed memory — especially when the GC
-    // recycles a slot freed by a prior MediaPlayerLinux destroy/dispose
+    // recycles a slot freed by a prior MediaPlayerFFmpeg destroy/dispose
     // cycle. Without these explicit initializers, `m_url` carried stale
     // pointer bits from the previous owner, `if (m_url)` was true in
     // prepare(), and the YouTube MSE path crashed in
@@ -211,7 +218,7 @@ void FfmpegWrapperPlayer::setUrl(ResourceURL* url)
 }
 
 bool FfmpegWrapperPlayer::setVideoFrameDecodedCB(
-    std::function<void(LinuxMediaPacket* buffer, void* data)>
+    std::function<void(FFmpegMediaPacket* buffer, void* data)>
         framedecodedCallback,
     void* data)
 {
@@ -279,7 +286,8 @@ bool FfmpegWrapperPlayer::setPlayPosition(
 {
     {
         std::lock_guard<std::mutex> lock(m_stateMutex);
-        if (m_fmtCtx == nullptr || m_videoStreamIndex < 0) {
+        if (m_fmtCtx == nullptr ||
+            (m_videoStreamIndex < 0 && m_audioStreamIndex < 0)) {
             return false;
         }
         m_seekTargetMs.store(milliseconds < 0 ? 0 : milliseconds);
@@ -303,7 +311,7 @@ void FfmpegWrapperPlayer::destroy()
 {
     // This object is allocated with PointerFreeGC, so the destructor never
     // runs; the decoding thread must be joined here or it keeps calling the
-    // frame callback on the already-disposed MediaPlayerLinux.
+    // frame callback on the already-disposed MediaPlayerFFmpeg.
     {
         std::lock_guard<std::mutex> lock(m_stateMutex);
         m_state = State::STOPPED;
@@ -317,6 +325,9 @@ void FfmpegWrapperPlayer::destroy()
     if (m_codecCtx != nullptr) {
         avcodec_free_context(&m_codecCtx);
     }
+    if (m_audioCodecCtx) {
+        avcodec_free_context(&m_audioCodecCtx);
+    }
     if (m_fmtCtx != nullptr) {
         avformat_close_input(&m_fmtCtx);
     }
@@ -325,7 +336,7 @@ void FfmpegWrapperPlayer::destroy()
 bool FfmpegWrapperPlayer::prepare(
     const std::function<void(void* data)>& preparedCallback, void* data)
 {
-    std::lock_guard<std::mutex> lock(m_stateMutex);
+    std::unique_lock<std::mutex> lock(m_stateMutex);
 
     if (m_state != State::STOPPED) {
         PLAYER_LOGI(
@@ -364,42 +375,32 @@ bool FfmpegWrapperPlayer::prepare(
             return false;
         }
 
-        m_videoStreamIndex = av_find_best_stream(m_fmtCtx, AVMEDIA_TYPE_VIDEO,
-                                                 -1, -1, nullptr, 0);
-        if (m_videoStreamIndex < 0) {
-            PLAYER_LOGI(
-                "[FfmpegWrapperPlayer] Error: Could not find video stream\n");
+        auto openStream = [this](AVMediaType type, int& index,
+                                 AVCodecContext*& context) {
+            index = av_find_best_stream(m_fmtCtx, type, -1, -1, nullptr, 0);
+            if (index < 0) {
+                return true;
+            }
+            AVCodecParameters* parameters = m_fmtCtx->streams[index]->codecpar;
+            const AVCodec* codec = avcodec_find_decoder(parameters->codec_id);
+            if (!codec) {
+                return false;
+            }
+            context = avcodec_alloc_context3(codec);
+            return context &&
+                   avcodec_parameters_to_context(context, parameters) >= 0 &&
+                   avcodec_open2(context, codec, nullptr) >= 0;
+        };
+        if (!openStream(AVMEDIA_TYPE_VIDEO, m_videoStreamIndex, m_codecCtx) ||
+            !openStream(AVMEDIA_TYPE_AUDIO, m_audioStreamIndex,
+                        m_audioCodecCtx) ||
+            (m_videoStreamIndex < 0 && m_audioStreamIndex < 0)) {
             return false;
-        }
-        PLAYER_LOGI("[FfmpegWrapperPlayer] Found video stream at index: %d \n",
-                    m_videoStreamIndex);
-
-        AVCodecParameters* codec_par =
-            m_fmtCtx->streams[m_videoStreamIndex]->codecpar;
-        const AVCodec* codec = avcodec_find_decoder(codec_par->codec_id);
-        if (!codec) {
-            PLAYER_LOGI("[FfmpegWrapperPlayer] Error: Codec not found\n");
-        }
-        PLAYER_LOGI("[FfmpegWrapperPlayer] Found codec: %s \n", codec->name);
-
-        m_codecCtx = avcodec_alloc_context3(codec);
-        if (!m_codecCtx) {
-            PLAYER_LOGI(
-                "[FfmpegWrapperPlayer] Could not allocate codec context\n");
-        }
-
-        if (avcodec_parameters_to_context(m_codecCtx, codec_par) < 0) {
-            PLAYER_LOGI(
-                "[FfmpegWrapperPlayer] Could not copy codec parameters to "
-                "context\n");
-        }
-
-        if (avcodec_open2(m_codecCtx, codec, nullptr) < 0) {
-            PLAYER_LOGI("[FfmpegWrapperPlayer] Error: Could not open codec\n");
         }
     }
 
     m_state = State::PREPARED;
+    lock.unlock();
     preparedCallback(data);
 
     return true;
@@ -416,7 +417,7 @@ bool FfmpegWrapperPlayer::play()
 {
     PLAYER_LOGI("FfmpegWrapperPlayer::play\n");
 
-    // std::lock_guard<std::mutex> lock(m_stateMutex);
+    std::lock_guard<std::mutex> lock(m_stateMutex);
 
     if (m_state != State::PREPARED && m_state != State::PAUSED) {
         PLAYER_LOGI(
@@ -454,7 +455,7 @@ bool FfmpegWrapperPlayer::pause()
         PLAYER_LOGI(
             "[FfmpegWrapperPlayer] Error: Cannot pause - player is not in "
             "playing state (current state: %d)\n",
-            (int)m_state);
+            static_cast<int>(m_state.load()));
         return false;
     }
 
@@ -513,7 +514,7 @@ void FfmpegWrapperPlayer::setMemoryBuffer(void* buffer, int size)
 
 player_state_e FfmpegWrapperPlayer::getState()
 {
-    switch (m_state) {
+    switch (m_state.load()) {
     case State::STOPPED:
         return PLAYER_STATE_IDLE;
     case State::PREPARED:
@@ -544,184 +545,196 @@ double FfmpegWrapperPlayer::getDuration()
 
 void FfmpegWrapperPlayer::decodingThread()
 {
-    PLAYER_LOGI("[FfmpegWrapperPlayer] Decoding thread started\n");
-
-    // Processing loop
-    std::vector<uint8_t> packet_data;
-    std::vector<AVFrame*> frames;
-    int64_t pts, dts;
-    bool is_video;
-    struct SwsContext* swsCtx = nullptr;
-
+    AVPacket* packet = av_packet_alloc();
+    AVFrame* frame = av_frame_alloc();
+    SwsContext* scale = nullptr;
+    if (!packet || !frame) {
+        av_packet_free(&packet);
+        av_frame_free(&frame);
+        return;
+    }
+    auto epoch = std::chrono::steady_clock::now();
+    int64_t offsetMs = m_currentPositionMs.load();
+    bool resetClock = true;
+    bool eof = false;
+    int64_t seekFloorMs = 0;
+    auto deliver = [&](AVCodecContext* codec, int index) {
+        while (avcodec_receive_frame(codec, frame) >= 0) {
+            int64_t timestamp = frame->best_effort_timestamp;
+            if (timestamp == AV_NOPTS_VALUE) {
+                timestamp = frame->pts;
+            }
+            int64_t position =
+                timestamp == AV_NOPTS_VALUE
+                    ? m_currentPositionMs.load()
+                    : av_rescale_q(timestamp,
+                                   m_fmtCtx->streams[index]->time_base,
+                                   AVRational{ 1, 1000 });
+            position = std::max<int64_t>(0, position);
+            if (position < seekFloorMs) {
+                av_frame_unref(frame);
+                continue;
+            }
+            {
+                std::unique_lock<std::mutex> lock(m_stateMutex);
+                if (resetClock) {
+                    epoch = std::chrono::steady_clock::now();
+                    offsetMs = m_currentPositionMs.load();
+                    resetClock = false;
+                }
+                // Pace both audio-only and video streams by their timestamps.
+                // Control changes interrupt the wait, including paused seeks.
+                m_statecv.wait_until(
+                    lock,
+                    epoch + std::chrono::milliseconds(position - offsetMs),
+                    [this]() {
+                        return m_stopRequested || m_seekRequested ||
+                               m_state != State::PLAYING;
+                    });
+                if (m_stopRequested || m_seekRequested ||
+                    m_state != State::PLAYING) {
+                    av_frame_unref(frame);
+                    resetClock = true;
+                    return;
+                }
+            }
+            m_currentPositionMs.store(position);
+            if (index == m_audioStreamIndex) {
+                // The common PCM publisher uses milliseconds for MSE frames.
+                frame->best_effort_timestamp = position;
+                if (m_audioDecodedCallback) {
+                    m_audioDecodedCallback(frame);
+                }
+            } else {
+                int width = frame->width;
+                int height = frame->height;
+                if (width <= 0 || height <= 0 ||
+                    width > STARFISH_VIDEO_MAX_WIDTH ||
+                    height > STARFISH_VIDEO_MAX_HEIGHT) {
+                    av_frame_unref(frame);
+                    continue;
+                }
+                scale = sws_getCachedContext(
+                    scale, width, height,
+                    static_cast<AVPixelFormat>(frame->format), width, height,
+                    AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr);
+                uint8_t* buffer =
+                    static_cast<uint8_t*>(malloc(width * height * 4));
+                if (scale && buffer) {
+                    uint8_t* planes[] = { buffer, nullptr, nullptr, nullptr };
+                    int strides[] = { width * 4, 0, 0, 0 };
+                    sws_scale(scale, frame->data, frame->linesize, 0, height,
+                              planes, strides);
+                    FFmpegMediaPacket* decoded =
+                        new FFmpegMediaPacket(width, height, width * 4);
+                    decoded->setBuffer(buffer);
+                    if (m_framedecodedCallback) {
+                        m_framedecodedCallback(decoded,
+                                               m_framedecodedCallbackData);
+                    }
+                } else {
+                    free(buffer);
+                }
+            }
+            av_frame_unref(frame);
+        }
+    };
     while (!m_stopRequested) {
-        // Check if we're in playing state
         {
             std::unique_lock<std::mutex> lock(m_stateMutex);
-            m_statecv.wait(lock, [this] {
-                return m_state == State::PLAYING || m_stopRequested;
+            m_statecv.wait(lock, [this]() {
+                return m_stopRequested || m_seekRequested ||
+                       m_state == State::PLAYING;
             });
-
             if (m_stopRequested) {
                 break;
             }
         }
-
-        // Perform a pending seek here so the demuxer is only ever touched from
-        // this thread.
         if (m_seekRequested.exchange(false)) {
-            int64_t targetMs = m_seekTargetMs.load();
-            AVRational tb = m_fmtCtx->streams[m_videoStreamIndex]->time_base;
-            int64_t ts = (int64_t)((targetMs / 1000.0) / av_q2d(tb));
-            int seekRet = av_seek_frame(m_fmtCtx, m_videoStreamIndex, ts,
-                                        AVSEEK_FLAG_BACKWARD);
-            if (seekRet < 0) {
-                // Seek failed: the demuxer position is unchanged, so do not
-                // advertise the target as the current position or drop frames.
-                // Still fire the completion callback below so the player does
-                // not wait forever for a seek that will never complete.
-                STARFISH_LOG_ERROR(
-                    "av_seek_frame failed (%d) for target %ld ms\n", seekRet,
-                    (long)targetMs);
-            } else {
-                avcodec_flush_buffers(m_codecCtx);
-                m_currentPositionMs.store((uint64_t)targetMs);
-
-                // Drop frames decoded before the seek.
-                for (AVFrame* f : frames) {
-                    av_frame_free(&f);
+            int64_t target = m_seekTargetMs.load();
+            int result = av_seek_frame(m_fmtCtx, -1, target * 1000,
+                                       AVSEEK_FLAG_BACKWARD);
+            if (result >= 0) {
+                if (m_codecCtx) {
+                    avcodec_flush_buffers(m_codecCtx);
                 }
-                frames.clear();
+                if (m_audioCodecCtx) {
+                    avcodec_flush_buffers(m_audioCodecCtx);
+                }
+                if (m_audioFlushCallback) {
+                    m_audioFlushCallback();
+                }
+                m_currentPositionMs.store(target);
+                seekFloorMs = target;
+                eof = false;
+                resetClock = true;
             }
-
-            std::function<void(void* data)> cb;
-            void* cbData = nullptr;
+            std::function<void(void*)> callback;
+            void* data;
             {
                 std::lock_guard<std::mutex> lock(m_stateMutex);
-                cb = m_seekCompleteCallback;
-                cbData = m_seekCompleteData;
+                callback = m_seekCompleteCallback;
+                data = m_seekCompleteData;
             }
-            if (cb) {
-                cb(cbData);
+            if (callback) {
+                callback(data);
             }
-        }
-
-        AVPacket* pkt = av_packet_alloc();
-        if (!pkt) {
-            return;
-        }
-
-        int ret = av_read_frame(m_fmtCtx, pkt);
-        if (ret < 0) {
-            PLAYER_LOGI(
-                "[FfmpegWrapperPlayer] End of file or error reading frame\n");
-            av_packet_free(&pkt);
-            return;
-        }
-
-        is_video = (pkt->stream_index == m_videoStreamIndex);
-        if (is_video) {
-            packet_data.assign(pkt->data, pkt->data + pkt->size);
-            pts = pkt->pts;
-            dts = pkt->dts;
-            PLAYER_LOGI("[FfmpegWrapperPlayer] Read video packet. Size: %d\n",
-                        pkt->size);
-        } else {
-            // m_codecCtx decodes only the video stream; feeding it another
-            // stream's packets corrupts its bitstream parsing.
-            PLAYER_LOGI("[FfmpegWrapperPlayer] Skipped non-video packet\n");
-            av_packet_free(&pkt);
             continue;
         }
-
-        ret = avcodec_send_packet(m_codecCtx, pkt);
-        av_packet_free(&pkt);
-
-        while (ret >= 0) {
-            AVFrame* frame = av_frame_alloc();
-            ret = avcodec_receive_frame(m_codecCtx, frame);
-            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-                av_frame_free(&frame);
-                break;
-            } else if (ret < 0) {
-                av_frame_free(&frame);
-                break;
-            }
-            frames.push_back(frame);
+        if (eof) {
+            break;
         }
-
-        int width_ = 0;
-        int height_ = 0;
-
-        if (is_video) {
-            for (AVFrame* frame : frames) {
-                if (!swsCtx || width_ != frame->width ||
-                    height_ != frame->height) {
-                    if (swsCtx) {
-                        sws_freeContext(swsCtx);
-                    }
-                    width_ = frame->width;
-                    height_ = frame->height;
-                    swsCtx = sws_getContext(
-                        width_, height_, (AVPixelFormat)frame->format, width_,
-                        height_, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr,
-                        nullptr, nullptr);
+        int result = av_read_frame(m_fmtCtx, packet);
+        if (result < 0) {
+            if (result == AVERROR_EOF) {
+                if (m_codecCtx) {
+                    avcodec_send_packet(m_codecCtx, nullptr);
+                    deliver(m_codecCtx, m_videoStreamIndex);
                 }
-                int stride = width_ * 4;
-                uint8_t* buffer = (uint8_t*)malloc(stride * height_);
-                LinuxMediaPacket* packet =
-                    new LinuxMediaPacket(width_, height_, stride);
-
-                uint8_t* dest[4] = { (uint8_t*)buffer, nullptr, nullptr,
-                                     nullptr };
-                int dest_linesize[4] = { stride, 0, 0, 0 };
-
-                sws_scale(swsCtx, frame->data, frame->linesize, 0, height_,
-                          dest, dest_linesize);
-                packet->setBuffer(buffer);
-
-                // Advance the playhead to this frame's presentation time so
-                // getPlayPosition() (and thus HTMLMediaElement.currentTime)
-                // tracks progressive playback.
-                int64_t framePts = frame->best_effort_timestamp;
-                if (framePts == AV_NOPTS_VALUE) {
-                    framePts = frame->pts;
+                if (m_audioCodecCtx) {
+                    avcodec_send_packet(m_audioCodecCtx, nullptr);
+                    deliver(m_audioCodecCtx, m_audioStreamIndex);
                 }
-                if (framePts != AV_NOPTS_VALUE && m_fmtCtx != nullptr &&
-                    m_videoStreamIndex >= 0) {
-                    AVRational tb =
-                        m_fmtCtx->streams[m_videoStreamIndex]->time_base;
-                    double sec = (double)framePts * av_q2d(tb);
-                    if (sec >= 0) {
-                        m_currentPositionMs.store((uint64_t)(sec * 1000.0));
-                    }
+                // Keep the thread available for a replay seek.
+                eof = true;
+                {
+                    std::lock_guard<std::mutex> lock(m_stateMutex);
+                    m_state = State::PAUSED;
                 }
-
-                if (m_framedecodedCallback != nullptr &&
-                    m_framedecodedCallbackData != nullptr) {
-                    m_framedecodedCallback(packet, m_framedecodedCallbackData);
+                if (!m_stopRequested && m_completeCallback) {
+                    m_completeCallback(m_completeCallbackData);
                 }
-
-                // Simulate frame rendering time
-                std::this_thread::sleep_for(
-                    std::chrono::milliseconds(33)); // ~30 FPS
-
-                av_frame_free(&frame);
-
-                if (m_stopRequested) {
-                    break;
-                }
+                continue;
+            }
+            if (!m_stopRequested && m_errorCallback) {
+                m_errorCallback(result, m_errorCallbackData);
+            }
+            break;
+        }
+        int index = packet->stream_index;
+        AVCodecContext* codec = index == m_videoStreamIndex   ? m_codecCtx
+                                : index == m_audioStreamIndex ? m_audioCodecCtx
+                                                              : nullptr;
+        if (codec) {
+            result = avcodec_send_packet(codec, packet);
+            if (result == AVERROR(EAGAIN)) {
+                deliver(codec, index);
+                result = avcodec_send_packet(codec, packet);
+            }
+            if (result >= 0) {
+                deliver(codec, index);
             }
         }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-        frames.clear();
+        av_packet_unref(packet);
     }
+    sws_freeContext(scale);
+    av_frame_free(&frame);
+    av_packet_free(&packet);
 }
 
-class MediaPlayerLinuxMediaSourceClient : public MediaSourceClient {
+class MediaPlayerFFmpegMediaSourceClient : public MediaSourceClient {
 public:
-    MediaPlayerLinuxMediaSourceClient(MediaPlayerLinux* player)
+    MediaPlayerFFmpegMediaSourceClient(MediaPlayerFFmpeg* player)
         : MediaSourceClient()
         , m_player(player)
     {
@@ -731,8 +744,8 @@ public:
             [](void* obj, void* cd) {
                 PLAYER_LOGI(
                     "[TRACE_MSE_GC] "
-                    "MediaPlayerLinuxMediaSourceClient::~"
-                    "MediaPlayerLinuxMediaSourceClient (%p)",
+                    "MediaPlayerFFmpegMediaSourceClient::~"
+                    "MediaPlayerFFmpegMediaSourceClient (%p)",
                     obj);
             },
             NULL, NULL, NULL);
@@ -742,7 +755,7 @@ public:
     virtual void activeSourceComputed()
     {
         PLAYER_LOGI(
-            "MediaPlayerLinuxMediaSourceClient::activeSourceComputed\n");
+            "MediaPlayerFFmpegMediaSourceClient::activeSourceComputed\n");
         if (m_player != nullptr && m_player->alive() == true) {
             m_player->prepareMediaSource();
         }
@@ -751,7 +764,7 @@ public:
     virtual void activeVideoSourceBufferUpdated(SourceBuffer* s)
     {
         PLAYER_LOGI(
-            "MediaPlayerLinuxMediaSourceClient::"
+            "MediaPlayerFFmpegMediaSourceClient::"
             "activeVideoSourceBufferUpdated\n");
         PLAYER_LOGI("activeVideoSourceBufferUpdated")
         if (m_player != nullptr && m_player->alive() == true &&
@@ -763,7 +776,7 @@ public:
     virtual void activeAudioSourceBufferUpdated(SourceBuffer* s)
     {
         PLAYER_LOGI(
-            "MediaPlayerLinuxMediaSourceClient::"
+            "MediaPlayerFFmpegMediaSourceClient::"
             "activeAudioSourceBufferUpdated\n");
         if (m_player != nullptr && m_player->alive() == true &&
             m_player->activeSourceBuffer(StreamTypeAudio) == s) {
@@ -771,7 +784,7 @@ public:
         }
     }
 
-    MediaPlayerLinux* m_player;
+    MediaPlayerFFmpeg* m_player;
 };
 
 void MediaPlayerSourceStream::initFormatExtraForAudio()
@@ -899,7 +912,7 @@ void MediaPlayerSourceStream::setLastBufferBytes(size_t value)
     m_lastBufferBytes = value;
 }
 
-MediaPlayerLinux::MediaPlayerLinux(HTMLMediaElement* element)
+MediaPlayerFFmpeg::MediaPlayerFFmpeg(HTMLMediaElement* element)
     : MediaPlayer(element)
     , m_inPrepare(false)
     , m_pendingPlay(false)
@@ -925,8 +938,6 @@ MediaPlayerLinux::MediaPlayerLinux(HTMLMediaElement* element)
     , m_swsCtxHeight(0)
     , m_clockStartMs(0)
     , m_clockOffsetSec(0)
-    , m_audioSinkLib(nullptr)
-    , m_audioSinkHandle(nullptr)
     , m_audioSinkChannels(0)
     , m_audioSinkRate(0)
     , m_swrCtx(nullptr)
@@ -937,7 +948,7 @@ MediaPlayerLinux::MediaPlayerLinux(HTMLMediaElement* element)
     , m_audioWriterStop(false)
     , m_audioWriteQueueBytes(0)
 {
-    PLAYER_LOGI("MediaPlayerLinux::MediaPlayerLinux\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::MediaPlayerFFmpeg\n");
     STARFISH_ASSERT(element != nullptr);
 
     m_nativePlayer = new (PointerFreeGC) FfmpegWrapperPlayer();
@@ -949,7 +960,7 @@ MediaPlayerLinux::MediaPlayerLinux(HTMLMediaElement* element)
 }
 
 #if defined(STARFISH_ENABLE_WEBAUDIO)
-MediaAudioPlaybackState* MediaPlayerLinux::audioPlaybackState()
+MediaAudioPlaybackState* MediaPlayerFFmpeg::audioPlaybackState()
 {
     std::lock_guard<std::mutex> lock(m_audioWriteMutex);
     if (!m_audioPlaybackState) {
@@ -970,12 +981,17 @@ MediaAudioPlaybackState* MediaPlayerLinux::audioPlaybackState()
         }
         m_audioWriteQueue.clear();
         m_audioWriteQueueBytes = 0;
+        ++m_audioGeneration;
+        if (m_audioOutput && m_audioOutputOpened) {
+            m_audioFlushPending = true;
+            m_audioOutput->interrupt();
+        }
         m_audioWriteCv.notify_all();
     }
     return m_audioPlaybackState.value();
 }
 
-void MediaPlayerLinux::syncAudioPlaybackState()
+void MediaPlayerFFmpeg::syncAudioPlaybackState()
 {
     std::lock_guard<std::mutex> lock(m_audioWriteMutex);
     if (m_audioPlaybackState) {
@@ -988,14 +1004,14 @@ void MediaPlayerLinux::syncAudioPlaybackState()
 }
 #endif
 
-void MediaPlayerLinux::handlePlayerError()
+void MediaPlayerFFmpeg::handlePlayerError()
 {
     if (isMainThread() == false) {
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
             m_container->window(),
             [](size_t, void* data) {
-                MediaPlayerLinux* player = (MediaPlayerLinux*)data;
+                MediaPlayerFFmpeg* player = (MediaPlayerFFmpeg*)data;
                 player->handlePlayerError();
             },
             this);
@@ -1011,7 +1027,7 @@ void MediaPlayerLinux::handlePlayerError()
     destroy();
 }
 
-void MediaPlayerLinux::fillBufferIfNeeded(StreamType type)
+void MediaPlayerFFmpeg::fillBufferIfNeeded(StreamType type)
 {
     MediaPlayerSourceStream* stream = currentStream(type);
     if (stream == nullptr) {
@@ -1028,11 +1044,11 @@ void MediaPlayerLinux::fillBufferIfNeeded(StreamType type)
 #endif
 }
 
-void MediaPlayerLinux::seek(double time)
+void MediaPlayerFFmpeg::seek(double time)
 {
-    PLAYER_LOGI("MediaPlayerLinux::seek\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::seek\n");
     if (m_inPrepare == true) {
-        PLAYER_LOGI("MediaPlayerLinux::seek -> seeking failed saving time %lf",
+        PLAYER_LOGI("MediaPlayerFFmpeg::seek -> seeking failed saving time %lf",
                     time);
         m_container->setDefaultPlaybackStartPosition(time);
         if (isMSE() == true) {
@@ -1072,7 +1088,7 @@ void MediaPlayerLinux::seek(double time)
         time = 0;
     } else if (dur != 0 && !std::isnan(dur) && time >= dur) {
         // Note: Seeking to EOS is impossible!!! (player_set_position fault)
-        PLAYER_LOGI("MediaPlayerLinux::seek() reaches EOS");
+        PLAYER_LOGI("MediaPlayerFFmpeg::seek() reaches EOS");
         m_container->mediaPlayerNotifySeekedItsContainer(duration());
         handleEnded();
         return;
@@ -1087,8 +1103,8 @@ void MediaPlayerLinux::seek(double time)
     //        and properly destroyed
     m_seekingTimer = m_container->window()->setTimeout(
         [](void* data) {
-            MediaPlayerLinux* self = (MediaPlayerLinux*)data;
-            PLAYER_LOGI("MediaPlayerLinux::seek() : timeout");
+            MediaPlayerFFmpeg* self = (MediaPlayerFFmpeg*)data;
+            PLAYER_LOGI("MediaPlayerFFmpeg::seek() : timeout");
             self->handleSeekTimeout();
         },
         MAX_WAITING_SECONDS_FOR_SEEK_OPERATION, this);
@@ -1096,9 +1112,9 @@ void MediaPlayerLinux::seek(double time)
     seekOperation((int)(time * 1000.0));
 }
 
-void MediaPlayerLinux::seekOperation(int timeInMS)
+void MediaPlayerFFmpeg::seekOperation(int timeInMS)
 {
-    PLAYER_LOGI("MediaPlayerLinux::seekOperation() (time: %d)", timeInMS);
+    PLAYER_LOGI("MediaPlayerFFmpeg::seekOperation() (time: %d)", timeInMS);
     if (isMSE()) {
         // MSE has no native player seek (FFmpeg av_seek only drives the
         // file/URL path). Do the seek entirely in software: repoint the
@@ -1164,13 +1180,12 @@ void MediaPlayerLinux::seekOperation(int timeInMS)
             m_audioWriteQueue.clear();
             m_audioWriteQueueBytes = 0;
         }
+        flushAudioSink();
         // Repoint the soft clock so currentTime() reports the target at once
         // (video promotion and the decode-lookahead gate both key off it).
         m_clockOffsetSec = timeInMS / 1000.0;
         if (playbackState() == PLAYBACK_STATE_PLAYING) {
-            struct timespec ts;
-            clock_gettime(CLOCK_MONOTONIC, &ts);
-            m_clockStartMs = (uint64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+            m_clockStartMs = monotonicMilliseconds();
         } else {
             m_clockStartMs = 0;
         }
@@ -1186,7 +1201,7 @@ void MediaPlayerLinux::seekOperation(int timeInMS)
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdler(
             m_container->window(),
-            [](size_t, void* d) { ((MediaPlayerLinux*)d)->handleSeeked(); },
+            [](size_t, void* d) { ((MediaPlayerFFmpeg*)d)->handleSeeked(); },
             this);
         return;
     }
@@ -1198,19 +1213,21 @@ void MediaPlayerLinux::seekOperation(int timeInMS)
     m_nativePlayer->setPlayPosition(
         timeInMS, true,
         [](void* data) {
-            MediaPlayerLinux* self = (MediaPlayerLinux*)data;
+            MediaPlayerFFmpeg* self = (MediaPlayerFFmpeg*)data;
             MessageLoop* msgLoop = self->container()->webView()->messageLoop();
             msgLoop->addIdlerWithNoGCRootingInOtherThread(
                 self->container()->window(),
-                [](size_t, void* d) { ((MediaPlayerLinux*)d)->handleSeeked(); },
+                [](size_t, void* d) {
+                    ((MediaPlayerFFmpeg*)d)->handleSeeked();
+                },
                 self);
         },
         this);
 }
 
-void MediaPlayerLinux::handleSeeked()
+void MediaPlayerFFmpeg::handleSeeked()
 {
-    PLAYER_LOGI("MediaPlayerLinux::handleSeeked\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::handleSeeked\n");
     STARFISH_ASSERT(isMainThread());
     if (m_seekState == SEEKSTATE_NO_SEEK) {
         return;
@@ -1223,29 +1240,50 @@ void MediaPlayerLinux::handleSeeked()
     m_container->mediaPlayerNotifySeekedItsContainer(currentTime());
 }
 
-void MediaPlayerLinux::handleSeekTimeout()
+void MediaPlayerFFmpeg::handleSeekTimeout()
 {
-    PLAYER_LOGI("MediaPlayerLinux::handleSeekTimeout\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::handleSeekTimeout\n");
     // Treat a timed-out seek as completed so the element does not stay stuck in
     // the seeking state.
     handleSeeked();
 }
 
-void MediaPlayerLinux::handleEnded()
+void MediaPlayerFFmpeg::handleEnded()
 {
-    PLAYER_LOGI("MediaPlayerLinux::handleEnded\n");
-    STARFISH_UNIMPLEMENTED();
+    PLAYER_LOGI("MediaPlayerFFmpeg::handleEnded\n");
+    if (!isMainThread()) {
+        m_container->webView()
+            ->messageLoop()
+            ->addIdlerWithNoGCRootingInOtherThread(
+                m_container->window(),
+                [](size_t, void* data) {
+                    auto* player = static_cast<MediaPlayerFFmpeg*>(data);
+                    if (player->alive()) {
+                        player->handleEnded();
+                    }
+                },
+                this);
+        return;
+    }
+    if (playbackState() == PLAYBACK_STATE_END) {
+        return;
+    }
+    pause();
+    setPlaybackState(PLAYBACK_STATE_END);
+    if (loop()) {
+        m_container->mediaPlayerRequestRestartItsContainer();
+    } else {
+        m_container->mediaPlayerNotifyEndedItsContainer();
+    }
 }
 
-double MediaPlayerLinux::currentTime()
+double MediaPlayerFFmpeg::currentTime()
 {
     if (isMSE()) {
         if (playbackState() != PLAYBACK_STATE_PLAYING || m_clockStartMs == 0) {
             return m_clockOffsetSec;
         }
-        struct timespec ts;
-        clock_gettime(CLOCK_MONOTONIC, &ts);
-        uint64_t nowMs = (uint64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+        uint64_t nowMs = monotonicMilliseconds();
         double elapsed = (nowMs - m_clockStartMs) / 1000.0;
         return m_clockOffsetSec + elapsed;
     }
@@ -1255,13 +1293,13 @@ double MediaPlayerLinux::currentTime()
     return 0;
 }
 
-void MediaPlayerLinux::destroy()
+void MediaPlayerFFmpeg::destroy()
 {
     STARFISH_ASSERT(isMainThread());
     if (m_alive == false) {
         return;
     }
-    PLAYER_LOGI("MediaPlayerLinux::destroy()");
+    PLAYER_LOGI("MediaPlayerFFmpeg::destroy()");
     if (m_inPrepare == true) {
         m_foundError = true;
         handlePrepared();
@@ -1285,9 +1323,9 @@ void MediaPlayerLinux::destroy()
     dispose();
 }
 
-double MediaPlayerLinux::duration()
+double MediaPlayerFFmpeg::duration()
 {
-    PLAYER_LOGI("MediaPlayerLinux::duration\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::duration\n");
     if (m_activeMediaSource != nullptr) {
         return m_activeMediaSource->duration();
     }
@@ -1300,7 +1338,7 @@ double MediaPlayerLinux::duration()
 static void updateTimeCallback(void* data)
 {
     PLAYER_LOGI("updateTimeCallback\n");
-    MediaPlayerLinux* self = (MediaPlayerLinux*)data;
+    MediaPlayerFFmpeg* self = (MediaPlayerFFmpeg*)data;
     if (self->seeking() == true || self->alive() == false) {
         // Do not update time while seeking
         return;
@@ -1325,27 +1363,29 @@ static void updateTimeCallback(void* data)
     }
 }
 
-void MediaPlayerLinux::play()
+void MediaPlayerFFmpeg::play()
 {
-    PLAYER_LOGI("MediaPlayerLinux::play\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::play\n");
     STARFISH_RELEASE_ASSERT(isMainThread());
     if (playbackState() == PLAYBACK_STATE_PLAYING) {
         return;
     }
 
     player_state_e state = m_nativePlayer->getState();
-    PLAYER_LOGI("MediaPlayerLinux::play() state : %d state2: %d ms: %p",
+    PLAYER_LOGI("MediaPlayerFFmpeg::play() state : %d state2: %d ms: %p",
                 (int)state, (int)playbackState(), m_activeMediaSource);
     if (state < PLAYER_STATE_READY) {
         m_pendingPlay = true;
         return;
     }
     m_pendingPlay = false;
+    {
+        std::lock_guard<std::mutex> lock(m_audioWriteMutex);
+        m_audioPaused = false;
+    }
     setPlaybackState(PLAYBACK_STATE_PLAYING);
     if (isMSE()) {
-        struct timespec ts;
-        clock_gettime(CLOCK_MONOTONIC, &ts);
-        m_clockStartMs = (uint64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+        m_clockStartMs = monotonicMilliseconds();
     }
     m_nativePlayer->play();
 #if defined(STARFISH_ENABLE_WEBAUDIO)
@@ -1356,16 +1396,14 @@ void MediaPlayerLinux::play()
         updateTimeCallback, isMSE() ? 16 : 250, this);
 }
 
-void MediaPlayerLinux::pause()
+void MediaPlayerFFmpeg::pause()
 {
-    PLAYER_LOGI("MediaPlayerLinux::pause\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::pause\n");
     if (playbackState() != PLAYBACK_STATE_PLAYING) {
         return;
     }
     if (isMSE() && m_clockStartMs != 0) {
-        struct timespec ts;
-        clock_gettime(CLOCK_MONOTONIC, &ts);
-        uint64_t nowMs = (uint64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+        uint64_t nowMs = monotonicMilliseconds();
         m_clockOffsetSec += (nowMs - m_clockStartMs) / 1000.0;
         m_clockStartMs = 0;
     }
@@ -1388,22 +1426,27 @@ void MediaPlayerLinux::pause()
     }
 
     m_nativePlayer->pause();
+    {
+        std::lock_guard<std::mutex> lock(m_audioWriteMutex);
+        m_audioPaused = true;
+    }
+    flushAudioSink();
     m_currentTimeUpdateTimer = TimerInvalidID;
 }
 
-void MediaPlayerLinux::setNativePlayerDefaultOptions(ResourceURL* url)
+void MediaPlayerFFmpeg::setNativePlayerDefaultOptions(ResourceURL* url)
 {
-    PLAYER_LOGI("MediaPlayerLinux::setNativePlayerDefaultOptions\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::setNativePlayerDefaultOptions\n");
 }
 
-void MediaPlayerLinux::setNativePlayerDisplayModeWithGL()
+void MediaPlayerFFmpeg::setNativePlayerDisplayModeWithGL()
 {
     m_nativePlayer->setVideoFrameDecodedCB(
-        [](LinuxMediaPacket* packet, void* data) {
-            MediaPlayerLinux* player = (MediaPlayerLinux*)data;
+        [](FFmpegMediaPacket* packet, void* data) {
+            MediaPlayerFFmpeg* player = (MediaPlayerFFmpeg*)data;
             {
                 Locker<Mutex> l(*player->m_decodedVideoFrameMutex);
-                LinuxMediaPacket* oldPacket = player->m_lastDecodedVideoPacket;
+                FFmpegMediaPacket* oldPacket = player->m_lastDecodedVideoPacket;
                 player->m_lastDecodedVideoPacket = packet;
                 if (oldPacket != nullptr) {
                     player->freeFramePacketLocked(oldPacket);
@@ -1415,7 +1458,7 @@ void MediaPlayerLinux::setNativePlayerDisplayModeWithGL()
                 ->addIdlerWithNoGCRootingInOtherThread(
                     player->window(),
                     [](size_t, void* data) {
-                        MediaPlayerLinux* self = (MediaPlayerLinux*)data;
+                        MediaPlayerFFmpeg* self = (MediaPlayerFFmpeg*)data;
                         if (self->alive() && self->container() != nullptr &&
                             self->container()->frame() != nullptr) {
                             self->container()->setNeedsComposite();
@@ -1426,34 +1469,39 @@ void MediaPlayerLinux::setNativePlayerDisplayModeWithGL()
         this);
 }
 
-void MediaPlayerLinux::openPreparingMode()
+void MediaPlayerFFmpeg::openPreparingMode()
 {
-    PLAYER_LOGI("MediaPlayerLinux::openPreparingMode\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::openPreparingMode\n");
     STARFISH_ASSERT(!m_inPrepare);
     m_inPrepare = true;
     m_container->executionContext()->addPointerInRootSet(this);
 }
 
-void MediaPlayerLinux::closePreparingMode()
+void MediaPlayerFFmpeg::closePreparingMode()
 {
-    PLAYER_LOGI("MediaPlayerLinux::closePreparingMode\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::closePreparingMode\n");
     if (m_inPrepare == true) {
         m_container->executionContext()->removePointerFromRootSet(this);
         m_inPrepare = false;
     }
 }
 
-void MediaPlayerLinux::prepare(ResourceURL* url)
+void MediaPlayerFFmpeg::prepare(ResourceURL* url)
 {
-    PLAYER_LOGI("MediaPlayerLinux::prepare\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::prepare\n");
     m_currentURL = url;
-    m_nativePlayer->setVolume(1.0);
-    m_nativePlayer->mute(false);
+    m_nativePlayer->m_audioDecodedCallback = [this](AVFrame* frame) {
+        publishDecodedAudioFrame(frame,
+                                 m_nativePlayer->getPlayPosition() / 1000.0);
+    };
+    m_nativePlayer->m_audioFlushCallback = [this]() { flushAudioSink(); };
+    m_nativePlayer->setVolume(m_container->volume());
+    m_nativePlayer->mute(m_container->muted());
     m_nativePlayer->setLooping(m_isLooping);
     m_nativePlayer->setErrorCB(
         [](int errorCode, void* data) {
-            PLAYER_LOGI("MediaPlayerLinux::player_error_cb");
-            MediaPlayerLinux* player = (MediaPlayerLinux*)data;
+            PLAYER_LOGI("MediaPlayerFFmpeg::player_error_cb");
+            MediaPlayerFFmpeg* player = (MediaPlayerFFmpeg*)data;
             player->printNativePlayerError(errorCode);
             player->handlePlayerError();
         },
@@ -1461,7 +1509,7 @@ void MediaPlayerLinux::prepare(ResourceURL* url)
     m_nativePlayer->setcompleteCB(completeCallback, this);
     m_nativePlayer->setBufferingCB(
         [](int percent, void* data) {
-            PLAYER_LOGI("MediaPlayerLinux -> buffering state... %d", percent);
+            PLAYER_LOGI("MediaPlayerFFmpeg -> buffering state... %d", percent);
         },
         this);
 
@@ -1470,7 +1518,7 @@ void MediaPlayerLinux::prepare(ResourceURL* url)
         BlobURLStore store;
         if (WebBase::stringToBlobURLString(url->urlString(), store) == false) {
             PLAYER_LOGE(
-                "MediaPlayerLinux::prepare, seturl, FAIL - INVALID BLOB URL");
+                "MediaPlayerFFmpeg::prepare, seturl, FAIL - INVALID BLOB URL");
             processNextOperationQueueInContainer();
             return;
         }
@@ -1483,7 +1531,7 @@ void MediaPlayerLinux::prepare(ResourceURL* url)
             WebBase::stringToBlobURLString(url->urlString(), store);
             MediaSource* ms = (MediaSource*)store.m_blob;
             m_activeMediaSource = ms;
-            m_mseClient = new MediaPlayerLinuxMediaSourceClient(this);
+            m_mseClient = new MediaPlayerFFmpegMediaSourceClient(this);
             m_activeMediaSource->addClient(m_mseClient);
             m_activeMediaSource->attach(m_container);
             if (m_container != nullptr) {
@@ -1504,7 +1552,7 @@ void MediaPlayerLinux::prepare(ResourceURL* url)
     openPreparingMode();
 
     if (!m_nativePlayer->prepare(preparedCallback, this)) {
-        PLAYER_LOGE("MediaPlayerLinux::player_prepare_async return error !!!");
+        PLAYER_LOGE("MediaPlayerFFmpeg::player_prepare_async return error !!!");
         m_foundError = true;
         handlePrepared();
         return;
@@ -1512,22 +1560,22 @@ void MediaPlayerLinux::prepare(ResourceURL* url)
     setNativePlayerDisplayModeWithGL();
 }
 
-void MediaPlayerLinux::handlePrepared()
+void MediaPlayerFFmpeg::handlePrepared()
 {
-    PLAYER_LOGI("MediaPlayerLinux::handlePrepared\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::handlePrepared\n");
     if (isMainThread() == false) {
-        PLAYER_LOGI("MediaPlayerLinux::handlePrepared in non-MainThread");
+        PLAYER_LOGI("MediaPlayerFFmpeg::handlePrepared in non-MainThread");
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
             m_container->window(),
             [](size_t, void* user_data) {
-                MediaPlayerLinux* self = (MediaPlayerLinux*)user_data;
+                MediaPlayerFFmpeg* self = (MediaPlayerFFmpeg*)user_data;
                 self->handlePrepared();
             },
             this);
         return;
     }
-    PLAYER_LOGI("MediaPlayerLinux::handlePrepared in MainThread");
+    PLAYER_LOGI("MediaPlayerFFmpeg::handlePrepared in MainThread");
     closePreparingMode();
     if (m_foundError == true) {
         if (m_container != nullptr) {
@@ -1578,7 +1626,7 @@ void MediaPlayerLinux::handlePrepared()
         }
     }
 
-    PLAYER_LOGI("MediaPlayerLinux::prepare ok %s %s %d %d", videoCodec,
+    PLAYER_LOGI("MediaPlayerFFmpeg::prepare ok %s %s %d %d", videoCodec,
                 audioCodec, (int)m_videoWidth, (int)m_videoHeight);
 
     // free(videoCodec);
@@ -1595,7 +1643,7 @@ void MediaPlayerLinux::handlePrepared()
         if (m_nativePlayer->setPlayPosition(defaultTimeInMS, true,
                                             seekedCallback, this)) {
             PLAYER_LOGI(
-                "MediaPlayerLinux::handlePrepared failed to set default start "
+                "MediaPlayerFFmpeg::handlePrepared failed to set default start "
                 "pos");
             // printNativePlayerError(ret);
             m_foundError = true;
@@ -1610,15 +1658,17 @@ void MediaPlayerLinux::handlePrepared()
         m_container->frame() != nullptr) {
         m_container->setNeedsComposite();
     }
-    // if (m_pendingPlay == true) {
-    m_pendingPlay = false;
-    play();
-    // }
+    // HTML's paused state changes on play(), not on metadata becoming ready.
+    // https://html.spec.whatwg.org/multipage/media.html#dom-media-play
+    if (m_pendingPlay) {
+        m_pendingPlay = false;
+        play();
+    }
 }
 
-void MediaPlayerLinux::dispose()
+void MediaPlayerFFmpeg::dispose()
 {
-    PLAYER_LOGI("MediaPlayerLinux::dispose");
+    PLAYER_LOGI("MediaPlayerFFmpeg::dispose");
 
     if (m_playerDeadFlag != nullptr) {
         *m_playerDeadFlag = true;
@@ -1689,48 +1739,37 @@ void MediaPlayerLinux::dispose()
     m_container = nullptr;
 }
 
-void MediaPlayerLinux::setVolume(double volume)
+void MediaPlayerFFmpeg::setVolume(double volume)
 {
 #if defined(STARFISH_ENABLE_WEBAUDIO)
     syncAudioPlaybackState();
 #endif
-    PLAYER_LOGI("MediaPlayerLinux::setVolume(%f)", volume);
+    PLAYER_LOGI("MediaPlayerFFmpeg::setVolume(%f)", volume);
     if (m_nativePlayer == nullptr) {
         return;
     }
-    player_state_e state = m_nativePlayer->getState();
-    if (state > PLAYER_STATE_IDLE) {
-        if (volume == 0.0) {
-            setMuted(true);
-            return;
-        }
-        setMuted(false);
-        if (m_nativePlayer->setVolume(volume)) {
-            PLAYER_LOGE("**ERROR: player_set_volume ");
-        }
+    if (!m_nativePlayer->setVolume(volume)) {
+        PLAYER_LOGE("**ERROR: player_set_volume");
     }
 }
 
-void MediaPlayerLinux::setMuted(bool muted)
+void MediaPlayerFFmpeg::setMuted(bool muted)
 {
 #if defined(STARFISH_ENABLE_WEBAUDIO)
     syncAudioPlaybackState();
 #endif
-    PLAYER_LOGI("MediaPlayerLinux::setMuted(%s)", muted ? "true" : "false");
+    PLAYER_LOGI("MediaPlayerFFmpeg::setMuted(%s)", muted ? "true" : "false");
     if (m_nativePlayer == nullptr) {
         return;
     }
 
-    player_state_e state = m_nativePlayer->getState();
-    if (state > PLAYER_STATE_IDLE) {
-        if (!m_nativePlayer->mute(muted)) {
-            PLAYER_LOGE("**ERROR: player_set_mute ");
-        }
+    if (!m_nativePlayer->mute(muted)) {
+        PLAYER_LOGE("**ERROR: player_set_mute");
     }
 }
 
-void MediaPlayerLinux::willDrawVideo(Compositor* canvas,
-                                     const LayoutRect& videoRect)
+void MediaPlayerFFmpeg::willDrawVideo(Compositor* canvas,
+                                      const LayoutRect& videoRect)
 {
     STARFISH_ASSERT(canvas != nullptr);
     canvas->setFillColor(Unit::Color(0, 0, 0, 255));
@@ -1764,7 +1803,7 @@ void MediaPlayerLinux::willDrawVideo(Compositor* canvas,
         }
         m_container->window()->setTimeout(
             [](void* data) {
-                MediaPlayerLinux* self = (MediaPlayerLinux*)data;
+                MediaPlayerFFmpeg* self = (MediaPlayerFFmpeg*)data;
                 if (self->alive() && self->container() != nullptr &&
                     self->container()->frame() != nullptr) {
                     self->container()->setNeedsComposite();
@@ -1774,17 +1813,20 @@ void MediaPlayerLinux::willDrawVideo(Compositor* canvas,
     }
 }
 
-void MediaPlayerLinux::didDrawVideo(Compositor* canvas,
-                                    const LayoutRect& videoRect,
-                                    const LayoutRect& absVideoRect)
+void MediaPlayerFFmpeg::didDrawVideo(Compositor* canvas,
+                                     const LayoutRect& videoRect,
+                                     const LayoutRect& absVideoRect)
 {
-    PLAYER_LOGI("MediaPlayerLinux::didDrawVideo\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::didDrawVideo\n");
 }
 
 #ifdef STARFISH_RUN_MSE_THREAD
 static void* threadFillingBuffer(void* data)
 {
-    MediaPlayerLinux* self = (MediaPlayerLinux*)data;
+    MediaPlayerFFmpeg* self = (MediaPlayerFFmpeg*)data;
+    if (getenv("STARFISH_FFMPEG_TRACE")) {
+        STARFISH_LOG_INFO("FFmpeg MSE feed started");
+    }
     volatile bool* playerDeadFlag = self->m_playerDeadFlag;
     while (!(*playerDeadFlag)) {
         MediaPlayer::PlaybackState state = self->playbackState();
@@ -1840,12 +1882,12 @@ static void* threadFillingBuffer(void* data)
 }
 #endif
 
-void MediaPlayerLinux::prepareMediaSource()
+void MediaPlayerFFmpeg::prepareMediaSource()
 {
 #if defined(STARFISH_ENABLE_WEBAUDIO)
     syncAudioPlaybackState();
 #endif
-    PLAYER_LOGI("MediaPlayerLinux::prepareMediaSource\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::prepareMediaSource\n");
     initAudioStreamInfo();
     if (m_foundError == true) {
         return;
@@ -1883,16 +1925,16 @@ void MediaPlayerLinux::prepareMediaSource()
         }
         *m_playerDeadFlag = false;
         STARFISH_ASSERT(m_mseThread == nullptr);
-        m_mseThread = new Thread(NullOption, "MediaPlayerLinux thread");
+        m_mseThread = new Thread(NullOption, "MediaPlayerFFmpeg thread");
         m_mseThread->run(m_container->webView()->messageLoop(),
                          threadFillingBuffer, this);
 #endif
     }
 }
 
-void MediaPlayerLinux::fillBuffer(MediaPlayerSourceStream* stream)
+void MediaPlayerFFmpeg::fillBuffer(MediaPlayerSourceStream* stream)
 {
-    PLAYER_LOGI("MediaPlayerLinux::fillBuffer\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::fillBuffer\n");
     Locker<Mutex> locker(*m_fillBufferMutex);
     fillBufferWithoutGuard(stream);
 }
@@ -1907,15 +1949,15 @@ void MediaPlayerLinux::fillBuffer(MediaPlayerSourceStream* stream)
 #define DEBUG_STREAMBUFFER_LOG(...)
 #endif
 
-void MediaPlayerLinux::enterUnderrunState()
+void MediaPlayerFFmpeg::enterUnderrunState()
 {
-    PLAYER_LOGI("MediaPlayerLinux::enterUnderrunState\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::enterUnderrunState\n");
     if (isMainThread() == false) {
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
             m_container->window(),
             [](size_t, void* data) {
-                MediaPlayerLinux* player = (MediaPlayerLinux*)data;
+                MediaPlayerFFmpeg* player = (MediaPlayerFFmpeg*)data;
                 player->enterUnderrunState();
             },
             this);
@@ -1942,22 +1984,22 @@ void MediaPlayerLinux::enterUnderrunState()
         if (needToNoti == false) {
             return;
         }
-        PLAYER_LOGI("MediaPlayerLinux::enterUnderrunState");
+        PLAYER_LOGI("MediaPlayerFFmpeg::enterUnderrunState");
         m_underrunMode = true;
         m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(
             HTMLMediaElement::HAVE_CURRENT_DATA);
     }
 }
 
-void MediaPlayerLinux::exitUnderrunState()
+void MediaPlayerFFmpeg::exitUnderrunState()
 {
-    PLAYER_LOGI("MediaPlayerLinux::exitUnderrunState\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::exitUnderrunState\n");
     if (isMainThread() == false) {
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
             m_container->window(),
             [](size_t, void* data) {
-                MediaPlayerLinux* player = (MediaPlayerLinux*)data;
+                MediaPlayerFFmpeg* player = (MediaPlayerFFmpeg*)data;
                 player->exitUnderrunState();
             },
             this);
@@ -1977,17 +2019,17 @@ void MediaPlayerLinux::exitUnderrunState()
         if (allOut == false) {
             return;
         }
-        PLAYER_LOGI("MediaPlayerLinux::exitUnderrunState");
+        PLAYER_LOGI("MediaPlayerFFmpeg::exitUnderrunState");
         m_underrunMode = false;
         m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(
             HTMLMediaElement::HAVE_ENOUGH_DATA);
     }
 }
 
-void MediaPlayerLinux::handlePlayerBuffer(StreamType type,
-                                          uint64_t currentBytes)
+void MediaPlayerFFmpeg::handlePlayerBuffer(StreamType type,
+                                           uint64_t currentBytes)
 {
-    PLAYER_LOGI("MediaPlayerLinux::handlePlayerBuffer\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::handlePlayerBuffer\n");
 // Other thread
 #ifdef STARFISH_RUN_MSE_THREAD
     MediaPlayerSourceStream* stream = currentStream(type);
@@ -2042,7 +2084,7 @@ void MediaPlayerLinux::handlePlayerBuffer(StreamType type,
 #endif
 }
 
-void MediaPlayerLinux::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
+void MediaPlayerFFmpeg::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
 {
     if (stream == nullptr) {
         return;
@@ -2144,16 +2186,15 @@ void MediaPlayerLinux::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
             // reads from player_get_play_position() so there is no soft
             // clock to advance.)
             if (stream->isVideo() && isMSE() && packet.m_dts > currentMs) {
-                struct timespec ts;
-                clock_gettime(CLOCK_MONOTONIC, &ts);
-                uint64_t nowMonoMs =
-                    (uint64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+                uint64_t nowMonoMs = monotonicMilliseconds();
                 m_clockOffsetSec = packet.m_dts / 1000.0;
                 m_clockStartMs = nowMonoMs;
                 currentMs = packet.m_dts;
             }
             lastDTS = packet.m_dts;
         }
+        // FFmpeg bitstream readers require zeroed padding after encoded data.
+        packetData.resize(packet.m_dataSize + AV_INPUT_BUFFER_PADDING_SIZE, 0);
         MediaPacket tmp;
         tmp.m_data = packetData.data();
         tmp.m_dataSize = packet.m_dataSize;
@@ -2174,16 +2215,16 @@ void MediaPlayerLinux::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
     }
 }
 
-void MediaPlayerLinux::setLoop(bool loop)
+void MediaPlayerFFmpeg::setLoop(bool loop)
 {
-    PLAYER_LOGI("MediaPlayerLinux::setLoop\n");
+    PLAYER_LOGI("MediaPlayerFFmpeg::setLoop\n");
     m_isLooping = loop;
     if (m_nativePlayer != nullptr) {
         m_nativePlayer->setLooping(loop);
     }
 }
 
-bool MediaPlayerLinux::isMSEBufferEOS()
+bool MediaPlayerFFmpeg::isMSEBufferEOS()
 {
     bool isEOS = true;
     if (m_audioStream != nullptr) {
@@ -2197,8 +2238,8 @@ bool MediaPlayerLinux::isMSEBufferEOS()
     return isEOS;
 }
 
-bool MediaPlayerLinux::createDecoderForStream(MediaPlayerSourceStream* stream,
-                                              StreamInfo* info)
+bool MediaPlayerFFmpeg::createDecoderForStream(MediaPlayerSourceStream* stream,
+                                               StreamInfo* info)
 {
     if (stream == nullptr || info == nullptr) {
         return false;
@@ -2223,7 +2264,7 @@ bool MediaPlayerLinux::createDecoderForStream(MediaPlayerSourceStream* stream,
         codecId = AV_CODEC_ID_OPUS;
     } else {
         STARFISH_LOG_INFO(
-            "MediaPlayerLinux::createDecoderForStream: no AVCodecID "
+            "MediaPlayerFFmpeg::createDecoderForStream: no AVCodecID "
             "mapping for codec '%s'",
             info->codecString());
         return false;
@@ -2232,7 +2273,7 @@ bool MediaPlayerLinux::createDecoderForStream(MediaPlayerSourceStream* stream,
     const AVCodec* codec = avcodec_find_decoder(codecId);
     if (codec == nullptr) {
         STARFISH_LOG_INFO(
-            "MediaPlayerLinux::createDecoderForStream: libavcodec lacks a "
+            "MediaPlayerFFmpeg::createDecoderForStream: libavcodec lacks a "
             "decoder for '%s' (AVCodecID=%d) — build without that decoder?",
             info->codecString(), (int)codecId);
         return false;
@@ -2241,7 +2282,7 @@ bool MediaPlayerLinux::createDecoderForStream(MediaPlayerSourceStream* stream,
     AVCodecContext* ctx = avcodec_alloc_context3(codec);
     if (ctx == nullptr) {
         STARFISH_LOG_INFO(
-            "MediaPlayerLinux::createDecoderForStream: "
+            "MediaPlayerFFmpeg::createDecoderForStream: "
             "avcodec_alloc_context3 returned null for '%s'",
             info->codecString());
         return false;
@@ -2278,7 +2319,16 @@ bool MediaPlayerLinux::createDecoderForStream(MediaPlayerSourceStream* stream,
         memcpy(ctx->extradata, info->m_extraData.data(), ctx->extradata_size);
     }
 
-    if (avcodec_open2(ctx, codec, nullptr) < 0) {
+    if (getenv("STARFISH_FFMPEG_TRACE")) {
+        STARFISH_LOG_INFO(
+            "FFmpeg decoder codec=%s native=%s video=%dx%d audio=%d/%d",
+            info->codecString(), codec->name, ctx->width, ctx->height,
+            ctx->sample_rate, ctx->ch_layout.nb_channels);
+    }
+    int openResult = avcodec_open2(ctx, codec, nullptr);
+    if (openResult < 0) {
+        STARFISH_LOG_ERROR("FFmpeg decoder open failed codec=%s error=%d",
+                           codec->name, openResult);
         avcodec_free_context(&ctx);
         return false;
     }
@@ -2288,7 +2338,7 @@ bool MediaPlayerLinux::createDecoderForStream(MediaPlayerSourceStream* stream,
     return true;
 }
 
-void MediaPlayerLinux::destroyDecoderForStream(MediaPlayerSourceStream* stream)
+void MediaPlayerFFmpeg::destroyDecoderForStream(MediaPlayerSourceStream* stream)
 {
     if (stream == nullptr) {
         return;
@@ -2300,25 +2350,25 @@ void MediaPlayerLinux::destroyDecoderForStream(MediaPlayerSourceStream* stream)
     }
 }
 
-LinuxMediaPacket* MediaPlayerLinux::takePooledFramePacketLocked(int width,
-                                                                int height)
+FFmpegMediaPacket* MediaPlayerFFmpeg::takePooledFramePacketLocked(int width,
+                                                                  int height)
 {
     if (width == m_framePoolWidth && height == m_framePoolHeight &&
         !m_framePool.empty()) {
-        LinuxMediaPacket* p = m_framePool.back();
+        FFmpegMediaPacket* p = m_framePool.back();
         m_framePool.pop_back();
         return p;
     }
     return nullptr;
 }
 
-void MediaPlayerLinux::freeFramePacketLocked(LinuxMediaPacket* packet)
+void MediaPlayerFFmpeg::freeFramePacketLocked(FFmpegMediaPacket* packet)
 {
     free(packet->buffer());
     delete packet;
 }
 
-void MediaPlayerLinux::releaseFramePacketLocked(LinuxMediaPacket* packet)
+void MediaPlayerFFmpeg::releaseFramePacketLocked(FFmpegMediaPacket* packet)
 {
     if (packet->width() == m_framePoolWidth &&
         packet->height() == m_framePoolHeight &&
@@ -2329,7 +2379,7 @@ void MediaPlayerLinux::releaseFramePacketLocked(LinuxMediaPacket* packet)
     }
 }
 
-void MediaPlayerLinux::flushFramePoolLocked(int newWidth, int newHeight)
+void MediaPlayerFFmpeg::flushFramePoolLocked(int newWidth, int newHeight)
 {
     for (size_t i = 0; i < m_framePool.size(); i++) {
         freeFramePacketLocked(m_framePool[i]);
@@ -2339,7 +2389,7 @@ void MediaPlayerLinux::flushFramePoolLocked(int newWidth, int newHeight)
     m_framePoolHeight = newHeight;
 }
 
-void MediaPlayerLinux::publishDecodedFrame(AVFrame* frame)
+void MediaPlayerFFmpeg::publishDecodedFrame(AVFrame* frame)
 {
     if (frame == nullptr || frame->width <= 0 || frame->height <= 0) {
         return;
@@ -2347,6 +2397,11 @@ void MediaPlayerLinux::publishDecodedFrame(AVFrame* frame)
     int width = frame->width;
     int height = frame->height;
     int stride = width * 4;
+    if (getenv("STARFISH_FFMPEG_TRACE") && m_swsCtx == nullptr) {
+        STARFISH_LOG_INFO("FFmpeg decoded video=%dx%d format=%d pts=%lld",
+                          width, height, frame->format,
+                          static_cast<long long>(frame->best_effort_timestamp));
+    }
 
     if (m_swsCtx == nullptr || m_swsCtxWidth != width ||
         m_swsCtxHeight != height) {
@@ -2360,7 +2415,7 @@ void MediaPlayerLinux::publishDecodedFrame(AVFrame* frame)
                                   nullptr, nullptr, nullptr);
         if (m_swsCtx == nullptr) {
             STARFISH_LOG_INFO(
-                "MediaPlayerLinux::publishDecodedFrame sws_getContext failed");
+                "MediaPlayerFFmpeg::publishDecodedFrame sws_getContext failed");
             return;
         }
         {
@@ -2369,7 +2424,7 @@ void MediaPlayerLinux::publishDecodedFrame(AVFrame* frame)
         }
     }
 
-    LinuxMediaPacket* mediaPacket = nullptr;
+    FFmpegMediaPacket* mediaPacket = nullptr;
     {
         Locker<Mutex> l(*m_decodedVideoFrameMutex);
         mediaPacket = takePooledFramePacketLocked(width, height);
@@ -2379,7 +2434,7 @@ void MediaPlayerLinux::publishDecodedFrame(AVFrame* frame)
         if (buffer == nullptr) {
             return;
         }
-        mediaPacket = new LinuxMediaPacket(width, height, stride);
+        mediaPacket = new FFmpegMediaPacket(width, height, stride);
         mediaPacket->setBuffer(buffer);
     }
     uint8_t* dest[4] = { mediaPacket->buffer(), nullptr, nullptr, nullptr };
@@ -2409,7 +2464,7 @@ void MediaPlayerLinux::publishDecodedFrame(AVFrame* frame)
                 msgLoop->addIdlerWithNoGCRootingInOtherThread(
                     m_container->window(),
                     [](size_t, void* data) {
-                        MediaPlayerLinux* self = (MediaPlayerLinux*)data;
+                        MediaPlayerFFmpeg* self = (MediaPlayerFFmpeg*)data;
                         if (self->alive() && self->container() != nullptr &&
                             self->container()->frame() != nullptr) {
                             self->container()->setNeedsComposite();
@@ -2424,7 +2479,7 @@ void MediaPlayerLinux::publishDecodedFrame(AVFrame* frame)
     }
 }
 
-void MediaPlayerLinux::promoteVideoFrameForCurrentTime()
+void MediaPlayerFFmpeg::promoteVideoFrameForCurrentTime()
 {
     uint64_t nowMs = (uint64_t)(currentTime() * 1000.0);
 
@@ -2433,7 +2488,7 @@ void MediaPlayerLinux::promoteVideoFrameForCurrentTime()
         return;
     }
 
-    LinuxMediaPacket* picked = nullptr;
+    FFmpegMediaPacket* picked = nullptr;
     while (!m_decodedVideoQueue.empty()) {
         DecodedVideoFrame& head = m_decodedVideoQueue.front();
         // Future frame: stop here and present whatever we already picked.
@@ -2465,152 +2520,141 @@ void MediaPlayerLinux::promoteVideoFrameForCurrentTime()
     }
 }
 
-void MediaPlayerLinux::ensureAudioSink(int channels, int sampleRate)
+void MediaPlayerFFmpeg::ensureAudioSink(int channels, int sampleRate)
 {
-    if (channels <= 0 || sampleRate <= 0) {
-        return;
-    }
-    if (m_audioSinkHandle != nullptr && m_audioSinkChannels == channels &&
+    if (m_audioOutput && m_audioSinkChannels == channels &&
         m_audioSinkRate == sampleRate) {
         return;
     }
-    if (m_audioSinkHandle != nullptr) {
-        teardownAudioSink();
-    }
-
-    void* handle = nullptr;
-    PulseSimpleApi* api = loadPulseSimple(handle);
-    if (api == nullptr) {
-        return;
-    }
-    m_audioSinkLib = handle;
-
-    pa_sample_spec spec;
-    spec.format = PA_SAMPLE_S16LE;
-    spec.rate = (uint32_t)sampleRate;
-    spec.channels = (uint8_t)(channels > 8 ? 8 : channels);
-
-    int err = 0;
-    // Use PulseAudio defaults (large server-side buffer). Backpressure is
-    // absorbed by the dedicated writer thread, not by the MSE driver.
-    pa_simple* s =
-        api->pa_simple_new(nullptr, "Starfish", PA_STREAM_PLAYBACK, nullptr,
-                           "media", &spec, nullptr, nullptr, &err);
-    if (s == nullptr) {
-        STARFISH_LOG_INFO(
-            "MediaPlayerLinux::ensureAudioSink pa_simple_new failed (%d)", err);
-        return;
-    }
-    m_audioSinkHandle = s;
-    m_audioSinkChannels = (int)spec.channels;
+    teardownAudioSink();
+    m_audioOutput = FFmpegAudioOutput::create();
+    m_audioSinkChannels = channels;
     m_audioSinkRate = sampleRate;
-
-    m_audioWriterStop = false;
-    m_audioWriteQueueBytes = 0;
-    m_audioWriterThread = new std::thread([this]() {
-        void* h = nullptr;
-        PulseSimpleApi* api = loadPulseSimple(h);
-        if (api == nullptr) {
-            return;
+    m_audioOutputReady = false;
+    m_audioOutputOpened = false;
+    m_audioWriterThread = new std::thread([this, channels, sampleRate]() {
+        FFmpegAudioOutput* output = m_audioOutput.value();
+        bool opened = output->open(channels, sampleRate);
+        if (getenv("STARFISH_FFMPEG_TRACE")) {
+            STARFISH_LOG_INFO(
+                "FFmpeg audio device channels=%d rate=%d opened=%d", channels,
+                sampleRate, opened);
         }
-        while (true) {
-            std::pair<uint8_t*, size_t> item(nullptr, 0);
-            {
-                std::unique_lock<std::mutex> lk(m_audioWriteMutex);
-                m_audioWriteCv.wait(lk, [this]() {
-#if defined(STARFISH_ENABLE_WEBAUDIO)
-                    if (m_audioPlaybackState) {
-                        return true;
-                    }
-#endif
-                    return m_audioWriterStop || !m_audioWriteQueue.empty();
-                });
-#if defined(STARFISH_ENABLE_WEBAUDIO)
-                if (m_audioPlaybackState) {
-                    // Web Audio reroutes the element, including samples
-                    // already buffered by its former device output.
-                    lk.unlock();
-                    int err = 0;
-                    api->pa_simple_flush((pa_simple*)m_audioSinkHandle, &err);
-                    return;
-                }
-#endif
-                if (m_audioWriteQueue.empty()) {
+        {
+            std::lock_guard<std::mutex> lock(m_audioWriteMutex);
+            m_audioOutputOpened = opened;
+            m_audioOutputReady = true;
+        }
+        m_audioWriteCv.notify_all();
+        if (opened) {
+            while (true) {
+                std::pair<uint8_t*, size_t> item(nullptr, 0);
+                uint64_t generation;
+                {
+                    std::unique_lock<std::mutex> lock(m_audioWriteMutex);
+                    m_audioWriteCv.wait(lock, [this]() {
+                        return m_audioWriterStop || m_audioFlushPending ||
+                               !m_audioWriteQueue.empty();
+                    });
                     if (m_audioWriterStop) {
-                        return;
+                        break;
                     }
-                    continue;
-                }
-                item = m_audioWriteQueue.front();
-                m_audioWriteQueue.pop_front();
-                if (m_audioWriteQueueBytes >= item.second) {
+                    if (m_audioFlushPending) {
+                        // Keep the lock through reset so another interrupt
+                        // cannot be lost while the output clears its event.
+                        output->flush();
+                        m_audioFlushPending = false;
+                    }
+                    if (m_audioWriteQueue.empty()) {
+                        continue;
+                    }
+                    item = m_audioWriteQueue.front();
+                    m_audioWriteQueue.pop_front();
                     m_audioWriteQueueBytes -= item.second;
-                } else {
-                    m_audioWriteQueueBytes = 0;
+                    generation = m_audioGeneration;
+                }
+                bool written = output->write(item.first, item.second);
+                av_free(item.first);
+                if (!written) {
+                    std::lock_guard<std::mutex> lock(m_audioWriteMutex);
+                    if (!m_audioWriterStop && generation == m_audioGeneration) {
+                        m_audioOutputOpened = false;
+                        STARFISH_LOG_ERROR("FFmpeg audio device write failed");
+                        break;
+                    }
                 }
             }
-            if (m_audioSinkHandle != nullptr && item.first != nullptr) {
-                int err = 0;
-                api->pa_simple_write((pa_simple*)m_audioSinkHandle, item.first,
-                                     item.second, &err);
-            }
-            if (item.first != nullptr) {
-                av_free(item.first);
-            }
+        } else {
+            STARFISH_LOG_INFO("FFmpeg audio output unavailable");
         }
+        delete output;
     });
+    std::unique_lock<std::mutex> lock(m_audioWriteMutex);
+    m_audioWriteCv.wait(lock, [this]() { return m_audioOutputReady; });
 }
 
-void MediaPlayerLinux::teardownAudioSink()
+void MediaPlayerFFmpeg::flushAudioSink()
 {
-    if (m_audioWriterThread != nullptr) {
+    std::lock_guard<std::mutex> lock(m_audioWriteMutex);
+    for (auto& item : m_audioWriteQueue) {
+        av_free(item.first);
+    }
+    m_audioWriteQueue.clear();
+    m_audioWriteQueueBytes = 0;
+    ++m_audioGeneration;
+    if (m_audioOutput && m_audioOutputOpened) {
+        m_audioFlushPending = true;
+        m_audioOutput->interrupt();
+        m_audioWriteCv.notify_all();
+    }
+}
+
+void MediaPlayerFFmpeg::teardownAudioSink()
+{
+    if (m_audioWriterThread) {
         {
-            std::lock_guard<std::mutex> lk(m_audioWriteMutex);
+            std::lock_guard<std::mutex> lock(m_audioWriteMutex);
             m_audioWriterStop = true;
+            if (m_audioOutputOpened) {
+                m_audioOutput->interrupt();
+            }
         }
         m_audioWriteCv.notify_all();
         m_audioWriterThread->join();
         delete m_audioWriterThread;
         m_audioWriterThread = nullptr;
     }
+    m_audioOutput = NullOption;
     {
-        std::lock_guard<std::mutex> lk(m_audioWriteMutex);
-        for (auto& it : m_audioWriteQueue) {
-            if (it.first != nullptr) {
-                av_free(it.first);
-            }
+        std::lock_guard<std::mutex> lock(m_audioWriteMutex);
+        for (auto& item : m_audioWriteQueue) {
+            av_free(item.first);
         }
         m_audioWriteQueue.clear();
         m_audioWriteQueueBytes = 0;
         m_audioWriterStop = false;
+        m_audioOutputOpened = false;
+        m_audioFlushPending = false;
     }
-
-    if (m_audioSinkHandle != nullptr && m_audioSinkLib != nullptr) {
-        void* handle = nullptr;
-        PulseSimpleApi* api = loadPulseSimple(handle);
-        if (api != nullptr) {
-            api->pa_simple_free((pa_simple*)m_audioSinkHandle);
-        }
-    }
-    m_audioSinkHandle = nullptr;
-    m_audioSinkLib = nullptr;
     m_audioSinkChannels = 0;
     m_audioSinkRate = 0;
-
-    if (m_swrCtx != nullptr) {
+    if (m_swrCtx) {
         swr_free(&m_swrCtx);
-        m_swrCtx = nullptr;
     }
     m_swrChannels = 0;
     m_swrRate = 0;
     m_swrSrcFmt = -1;
+    m_swrOutputChannels = 0;
 }
 
-void MediaPlayerLinux::publishDecodedAudioFrame(AVFrame* frame,
-                                                double fallbackPosition)
+void MediaPlayerFFmpeg::publishDecodedAudioFrame(AVFrame* frame,
+                                                 double fallbackPosition)
 {
     if (frame == nullptr || frame->nb_samples <= 0) {
         return;
+    }
+    if (getenv("STARFISH_FFMPEG_TRACE") && !m_audioOutput && !m_swrCtx) {
+        STARFISH_LOG_INFO("FFmpeg decoded audio samples=%d", frame->nb_samples);
     }
     int channels = frame->ch_layout.nb_channels;
     int sampleRate = frame->sample_rate;
@@ -2641,26 +2685,32 @@ void MediaPlayerLinux::publishDecodedAudioFrame(AVFrame* frame,
         routed = !!playback.state;
     }
 #endif
+    int outputChannels = routed ? channels : std::min(channels, 2);
     if (!routed) {
-        ensureAudioSink(channels, sampleRate);
-        if (m_audioSinkHandle == nullptr) {
+        ensureAudioSink(outputChannels, sampleRate);
+        std::lock_guard<std::mutex> lock(m_audioWriteMutex);
+        if (!m_audioOutputOpened) {
             return;
         }
     }
 
     if (m_swrCtx == nullptr || m_swrChannels != channels ||
-        m_swrRate != sampleRate || m_swrSrcFmt != srcFmt) {
+        m_swrRate != sampleRate || m_swrSrcFmt != srcFmt ||
+        m_swrOutputChannels != outputChannels) {
         if (m_swrCtx != nullptr) {
             swr_free(&m_swrCtx);
             m_swrCtx = nullptr;
         }
         SwrContext* swr = nullptr;
+        AVChannelLayout outputLayout;
+        av_channel_layout_default(&outputLayout, outputChannels);
         int rc = swr_alloc_set_opts2(
-            &swr, &frame->ch_layout, AV_SAMPLE_FMT_S16, sampleRate,
+            &swr, &outputLayout, AV_SAMPLE_FMT_S16, sampleRate,
             &frame->ch_layout, (AVSampleFormat)srcFmt, sampleRate, 0, nullptr);
+        av_channel_layout_uninit(&outputLayout);
         if (rc < 0 || swr == nullptr) {
             STARFISH_LOG_INFO(
-                "MediaPlayerLinux::publishDecodedAudioFrame "
+                "MediaPlayerFFmpeg::publishDecodedAudioFrame "
                 "swr_alloc_set_opts2 failed (%d)",
                 rc);
             return;
@@ -2673,12 +2723,13 @@ void MediaPlayerLinux::publishDecodedAudioFrame(AVFrame* frame,
         m_swrChannels = channels;
         m_swrRate = sampleRate;
         m_swrSrcFmt = srcFmt;
+        m_swrOutputChannels = outputChannels;
     }
 
     int outSamples = frame->nb_samples;
     int bytesPerSample = 2; // S16
-    int outBufSize = av_samples_get_buffer_size(nullptr, channels, outSamples,
-                                                AV_SAMPLE_FMT_S16, 1);
+    int outBufSize = av_samples_get_buffer_size(
+        nullptr, outputChannels, outSamples, AV_SAMPLE_FMT_S16, 1);
     if (outBufSize < 0) {
         return;
     }
@@ -2710,15 +2761,22 @@ void MediaPlayerLinux::publishDecodedAudioFrame(AVFrame* frame,
         return;
     }
 #endif
-    size_t writeBytes = (size_t)converted * channels * bytesPerSample;
+    size_t writeBytes = (size_t)converted * outputChannels * bytesPerSample;
+    float gain = m_nativePlayer->audioGain();
+    int16_t* samples = reinterpret_cast<int16_t*>(outBuf);
+    for (size_t i = 0; i < writeBytes / sizeof(int16_t); ++i) {
+        samples[i] = static_cast<int16_t>(samples[i] * gain);
+    }
     {
         std::lock_guard<std::mutex> lk(m_audioWriteMutex);
-        // Cap pending audio at ~5 seconds worth (sampleRate * channels * 2 *
-        // 5). Guards against runaway memory if the writer thread can't keep
-        // up; in steady state the queue stays small.
-        size_t maxBytes = (size_t)sampleRate * (size_t)channels * 2u * 5u;
-        if (m_audioWriteQueueBytes + writeBytes > maxBytes &&
-            !m_audioWriteQueue.empty()) {
+        // Bound pending PCM to one second, including oversized frames.
+        size_t maxBytes = (size_t)sampleRate * (size_t)outputChannels * 2u;
+        if (writeBytes > maxBytes || !m_audioOutputOpened || m_audioPaused) {
+            av_free(outBuf);
+            return;
+        }
+        while (m_audioWriteQueueBytes + writeBytes > maxBytes &&
+               !m_audioWriteQueue.empty()) {
             auto& victim = m_audioWriteQueue.front();
             if (victim.first != nullptr) {
                 av_free(victim.first);
@@ -2736,8 +2794,8 @@ void MediaPlayerLinux::publishDecodedAudioFrame(AVFrame* frame,
     m_audioWriteCv.notify_one();
 }
 
-void MediaPlayerLinux::decodeAndDeliverPacket(MediaPlayerSourceStream* stream,
-                                              MediaPacket* packet)
+void MediaPlayerFFmpeg::decodeAndDeliverPacket(MediaPlayerSourceStream* stream,
+                                               MediaPacket* packet)
 {
     if (stream == nullptr || packet == nullptr ||
         stream->codecContext() == nullptr) {
@@ -2758,9 +2816,18 @@ void MediaPlayerLinux::decodeAndDeliverPacket(MediaPlayerSourceStream* stream,
         avPkt->flags |= AV_PKT_FLAG_KEY;
     }
 
+    if (getenv("STARFISH_FFMPEG_TRACE") && ctx->frame_num == 0) {
+        STARFISH_LOG_INFO("FFmpeg packet codec=%s size=%d pts=%lld dts=%lld",
+                          ctx->codec->name, avPkt->size, (long long)avPkt->pts,
+                          (long long)avPkt->dts);
+    }
     int ret = avcodec_send_packet(ctx, avPkt);
     av_packet_free(&avPkt);
     if (ret < 0) {
+        if (getenv("STARFISH_FFMPEG_TRACE")) {
+            STARFISH_LOG_ERROR("FFmpeg send failed codec=%s error=%d",
+                               ctx->codec->name, ret);
+        }
         return;
     }
 
@@ -2787,7 +2854,7 @@ void MediaPlayerLinux::decodeAndDeliverPacket(MediaPlayerSourceStream* stream,
     }
 }
 
-void MediaPlayerLinux::initVideoStreamInfo(size_t initSegmentIndex)
+void MediaPlayerFFmpeg::initVideoStreamInfo(size_t initSegmentIndex)
 {
     SourceBuffer* sb = m_activeMediaSource->activeVideoSourceBuffer();
     if (sb == nullptr) {
@@ -2818,7 +2885,7 @@ void MediaPlayerLinux::initVideoStreamInfo(size_t initSegmentIndex)
     createDecoderForStream(m_videoStream, info);
 }
 
-void MediaPlayerLinux::initAudioStreamInfo(size_t initSegmentIndex)
+void MediaPlayerFFmpeg::initAudioStreamInfo(size_t initSegmentIndex)
 {
     SourceBuffer* sb = m_activeMediaSource->activeAudioSourceBuffer();
     if (sb == nullptr) {
@@ -2843,9 +2910,9 @@ void MediaPlayerLinux::initAudioStreamInfo(size_t initSegmentIndex)
     createDecoderForStream(m_audioStream, info);
 }
 
-void MediaPlayerLinux::updateStreamInfo(MediaPlayerSourceStream* stream,
-                                        size_t pastInitIndex,
-                                        size_t newInitIndex)
+void MediaPlayerFFmpeg::updateStreamInfo(MediaPlayerSourceStream* stream,
+                                         size_t pastInitIndex,
+                                         size_t newInitIndex)
 {
     if (stream->isVideo() == true) {
         updateVideoStreamInfo(stream, pastInitIndex, newInitIndex);
@@ -2854,9 +2921,9 @@ void MediaPlayerLinux::updateStreamInfo(MediaPlayerSourceStream* stream,
     }
 }
 
-void MediaPlayerLinux::updateVideoStreamInfo(MediaPlayerSourceStream* stream,
-                                             size_t pastInitIndex,
-                                             size_t newInitIndex)
+void MediaPlayerFFmpeg::updateVideoStreamInfo(MediaPlayerSourceStream* stream,
+                                              size_t pastInitIndex,
+                                              size_t newInitIndex)
 {
     SourceBuffer* sb = m_activeMediaSource->activeVideoSourceBuffer();
     if (sb == nullptr) {
@@ -2872,13 +2939,13 @@ void MediaPlayerLinux::updateVideoStreamInfo(MediaPlayerSourceStream* stream,
     stream->setMaxBufferSize((m_videoWidth * m_videoHeight * 30 * 2 * 7) / 100 /
                              8 * 5);
     createDecoderForStream(stream, info);
-    PLAYER_LOGI("MediaPlayerLinux::updateVideoStreamInfo %dx%d",
+    PLAYER_LOGI("MediaPlayerFFmpeg::updateVideoStreamInfo %dx%d",
                 (int)m_videoWidth, (int)m_videoHeight);
 }
 
-void MediaPlayerLinux::updateAudioStreamInfo(MediaPlayerSourceStream* stream,
-                                             size_t pastInitIndex,
-                                             size_t newInitIndex)
+void MediaPlayerFFmpeg::updateAudioStreamInfo(MediaPlayerSourceStream* stream,
+                                              size_t pastInitIndex,
+                                              size_t newInitIndex)
 {
     SourceBuffer* sb = m_activeMediaSource->activeAudioSourceBuffer();
     if (sb == nullptr) {
@@ -2890,13 +2957,13 @@ void MediaPlayerLinux::updateAudioStreamInfo(MediaPlayerSourceStream* stream,
         return;
     }
     createDecoderForStream(stream, info);
-    PLAYER_LOGI("MediaPlayerLinux::updateAudioStreamInfo channels=%d rate=%d",
+    PLAYER_LOGI("MediaPlayerFFmpeg::updateAudioStreamInfo channels=%d rate=%d",
                 (int)info->audioChannels(), (int)info->audioSampleRate());
 }
 
 MediaPlayer* MediaPlayer::create(HTMLMediaElement* element, ResourceURL* url)
 {
-    return new MediaPlayerLinux(element);
+    return new MediaPlayerFFmpeg(element);
 }
 
 bool MediaPlayer::isSupport(MediaCodec codec)

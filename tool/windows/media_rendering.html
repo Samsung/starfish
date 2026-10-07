@@ -1,0 +1,56 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>FFmpeg video rendering regression</title>
+<style>
+body { margin: 0; background: white; }
+video { position: absolute; top: 0; width: 128px; height: 96px; }
+#progressive { left: 0; } #h264 { left: 160px; } #av1 { left: 320px; }
+</style>
+<video id="progressive" muted loop></video>
+<video id="h264" muted></video>
+<video id="av1" muted></video>
+<script>
+let failures = 0;
+function check(value, message) {
+    console.assert(value, message);
+    if (!value) { failures++; console.log('MEDIA_RENDERING_FAIL ' + message); }
+}
+function event(target, name) {
+    return new Promise(resolve => target.addEventListener(name, resolve, {once: true}));
+}
+async function mseVideo(id, file, type) {
+    const video = document.getElementById(id);
+    const source = new MediaSource();
+    const opened = event(source, 'sourceopen');
+    video.src = URL.createObjectURL(source);
+    await opened;
+    const response = await fetch(file);
+    const bytes = await response.arrayBuffer();
+    const buffer = source.addSourceBuffer(type);
+    const appended = event(buffer, 'updateend');
+    buffer.appendBuffer(bytes);
+    await appended;
+    source.endOfStream();
+    await video.play();
+}
+function testEnd() {
+    const status = failures ? 'FAIL' : 'PASS';
+    console.log('MEDIA_RENDERING_' + status);
+    fetch('/result?status=' + status).catch(() => {});
+}
+async function run() {
+    const progressive = document.getElementById('progressive');
+    progressive.src = 'clip.mp4';
+    await progressive.play();
+    await mseVideo('h264', 'mse_h264.mp4', 'video/mp4; codecs="avc1.64000a"');
+    await mseVideo('av1', 'mse_av1.mp4', 'video/mp4; codecs="av01.0.00M.08"');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    for (const id of ['progressive', 'h264', 'av1']) {
+        const video = document.getElementById(id);
+        check(video.videoWidth === 64 && video.videoHeight === 48, id + ' dimensions');
+        check(video.currentTime > 0.25, id + ' playback');
+    }
+    testEnd();
+}
+run().catch(error => { check(false, String(error)); testEnd(); });
+</script>

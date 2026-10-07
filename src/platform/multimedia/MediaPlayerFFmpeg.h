@@ -19,8 +19,8 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
-#ifndef __StarfishMediaPlayerLinux__
-#define __StarfishMediaPlayerLinux__
+#ifndef __StarfishMediaPlayerFFmpeg__
+#define __StarfishMediaPlayerFFmpeg__
 
 #ifndef MAX_WAITING_SECONDS_FOR_SEEK_OPERATION
 #define MAX_WAITING_SECONDS_FOR_SEEK_OPERATION 30000
@@ -47,9 +47,10 @@ extern "C" {
 
 namespace Starfish {
 
+class FFmpegAudioOutput;
 class CanvasSurface;
 class MediaSource;
-class MediaPlayerLinuxMediaSourceClient;
+class MediaPlayerFFmpegMediaSourceClient;
 class Mutex;
 struct MediaPacket;
 
@@ -61,9 +62,9 @@ typedef enum {
     PLAYER_STATE_PAUSED,  /**< Player is paused while playing media */
 } player_state_e;
 
-class LinuxMediaPacket {
+class FFmpegMediaPacket {
 public:
-    LinuxMediaPacket(int width, int height, int stride)
+    FFmpegMediaPacket(int width, int height, int stride)
     {
         m_width = width;
         m_height = height;
@@ -120,7 +121,7 @@ public:
         void* user_data);
 
     bool setVideoFrameDecodedCB(
-        std::function<void(LinuxMediaPacket* buffer, void* data)>
+        std::function<void(FFmpegMediaPacket* buffer, void* data)>
             framedecodedCallback,
         void* data);
     bool setcompleteCB(std::function<void(void* data)> completeCallback,
@@ -142,6 +143,10 @@ public:
     bool pause();
     bool mute(bool mute);
     bool setVolume(float volume);
+    float audioGain() const
+    {
+        return m_muted.load() ? 0.0f : m_volume.load();
+    }
     void setUrl(ResourceURL* url);
     void setLooping(bool looping);
     void setMemoryBuffer(void* buffer, int size);
@@ -154,6 +159,10 @@ public:
     AVFormatContext* m_fmtCtx;
     AVCodecContext* m_codecCtx;
     int m_videoStreamIndex;
+    AVCodecContext* m_audioCodecCtx{ nullptr };
+    int m_audioStreamIndex{ -1 };
+    std::function<void(AVFrame*)> m_audioDecodedCallback;
+    std::function<void()> m_audioFlushCallback;
 
 private:
     // Internal methods
@@ -162,7 +171,7 @@ private:
     // State management
     enum class State { STOPPED, PREPARED, PLAYING, PAUSED };
 
-    std::function<void(LinuxMediaPacket* buffer, void* data)>
+    std::function<void(FFmpegMediaPacket* buffer, void* data)>
         m_framedecodedCallback;
     std::function<void(void* data)> m_completeCallback;
     std::function<void(int errorCode, void* data)> m_errorCallback;
@@ -180,7 +189,7 @@ private:
     std::atomic<bool> m_stopRequested;
 
     // State
-    State m_state;
+    std::atomic<State> m_state;
 
     // Audio controls
     std::atomic<bool> m_muted;
@@ -306,11 +315,11 @@ protected:
     volatile int64_t m_seekHoldTargetMs = -1;
 };
 
-class MediaPlayerLinux : public MediaPlayer {
+class MediaPlayerFFmpeg : public MediaPlayer {
 public:
-    friend class MediaPlayerLinuxMediaSourceClient;
+    friend class MediaPlayerFFmpegMediaSourceClient;
 
-    MediaPlayerLinux(HTMLMediaElement* element);
+    MediaPlayerFFmpeg(HTMLMediaElement* element);
 
     virtual void destroy();
     virtual void play();
@@ -369,11 +378,11 @@ public:
     bool m_underrunMode : 1;
     size_t m_seekingTimer;
     LayoutRect m_lastAbsoluteROIArea;
-    MediaPlayerLinuxMediaSourceClient* m_mseClient;
+    MediaPlayerFFmpegMediaSourceClient* m_mseClient;
     Mutex* m_fillBufferMutex;
 
     Mutex* m_decodedVideoFrameMutex;
-    LinuxMediaPacket* m_lastDecodedVideoPacket;
+    FFmpegMediaPacket* m_lastDecodedVideoPacket;
 
     ResourceURL* m_currentURL;
 
@@ -424,26 +433,27 @@ public:
     void promoteVideoFrameForCurrentTime();
     void ensureAudioSink(int channels, int sampleRate);
     void teardownAudioSink();
+    void flushAudioSink();
 
     struct DecodedVideoFrame {
         uint64_t ptsMs;
-        LinuxMediaPacket* packet;
+        FFmpegMediaPacket* packet;
     };
     std::deque<DecodedVideoFrame> m_decodedVideoQueue;
 
-    // Recycled decoded-frame packets (LinuxMediaPacket header + RGBA buffer).
+    // Recycled decoded-frame packets (FFmpegMediaPacket header + RGBA buffer).
     // Guarded by m_decodedVideoFrameMutex. All entries match
     // m_framePoolWidth/Height; the producer re-tags and flushes the pool when
     // the sws context is recreated (resolution change).
     static const size_t kMaxPooledFramePackets = 4;
-    std::vector<LinuxMediaPacket*> m_framePool;
+    std::vector<FFmpegMediaPacket*> m_framePool;
     int m_framePoolWidth;
     int m_framePoolHeight;
 
     // All require m_decodedVideoFrameMutex held.
-    LinuxMediaPacket* takePooledFramePacketLocked(int width, int height);
-    void releaseFramePacketLocked(LinuxMediaPacket* packet);
-    void freeFramePacketLocked(LinuxMediaPacket* packet);
+    FFmpegMediaPacket* takePooledFramePacketLocked(int width, int height);
+    void releaseFramePacketLocked(FFmpegMediaPacket* packet);
+    void freeFramePacketLocked(FFmpegMediaPacket* packet);
     void flushFramePoolLocked(int newWidth, int newHeight);
 
     SwsContext* m_swsCtx;
@@ -456,23 +466,27 @@ public:
     uint64_t m_clockStartMs;
     double m_clockOffsetSec;
 
-    void* m_audioSinkLib;
-    void* m_audioSinkHandle;
+    Optional<FFmpegAudioOutput*> m_audioOutput;
     int m_audioSinkChannels;
     int m_audioSinkRate;
     SwrContext* m_swrCtx;
     int m_swrChannels;
     int m_swrRate;
     int m_swrSrcFmt;
+    int m_swrOutputChannels{ 0 };
 
-    // Decouple PulseAudio writes from the MSE driver thread: pa_simple_write
-    // is blocking, and calling it from the decode loop also stalls video
-    // decoding. The writer thread drains the queue and absorbs that block.
+    // Device backpressure must not block video decoding.
+    // The writer thread owns the audio device and drains this bounded queue.
     std::deque<std::pair<uint8_t*, size_t>> m_audioWriteQueue;
     std::mutex m_audioWriteMutex;
     std::condition_variable m_audioWriteCv;
     std::thread* m_audioWriterThread;
-    volatile bool m_audioWriterStop;
+    bool m_audioWriterStop;
+    bool m_audioOutputReady{ false };
+    bool m_audioOutputOpened{ false };
+    bool m_audioFlushPending{ false };
+    uint64_t m_audioGeneration{ 0 };
+    bool m_audioPaused{ true };
     size_t m_audioWriteQueueBytes;
 #if defined(STARFISH_ENABLE_WEBAUDIO)
     // Published under m_audioWriteMutex; released after both native threads
@@ -483,7 +497,7 @@ public:
     static void seekedCallback(void* data)
     {
         PLAYER_LOGI("player_set_play_position_cb");
-        MediaPlayerLinux* self = (MediaPlayerLinux*)data;
+        MediaPlayerFFmpeg* self = (MediaPlayerFFmpeg*)data;
         self->handleSeeked();
     }
 
@@ -498,6 +512,6 @@ protected:
 
 } // namespace Starfish
 
-#endif // __StarfishMediaPlayerLinux__
+#endif // __StarfishMediaPlayerFFmpeg__
 #endif // STARFISH_USE_FFMPEG_MEDIAPLAYER
 #endif // STARFISH_ENABLE_MULTIMEDIA
