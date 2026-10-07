@@ -1,14 +1,14 @@
 http://web-platform.test:8000/svg/animations/animate-display-to-none-001.html
 http://web-platform.test:8000/svg/animations/animate-fill-underlying-value-change.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/animations/animate-rewind-freeze-indefinite.svg
-http://web-platform.test:8000/svg/animations/conditional-processing-01.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/svg/animations/conditional-processing-01.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/animations/invalid-attribute-type-does-not-block-other-animations.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/animations/invalid-attribute-type-does-not-block-same-group-animation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/animations/media-fragment-override-animation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/animations/scripted/animateMotion-animated-line.svg
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/animations/scripted/clear-mapped-animation.svg
-http://web-platform.test:8000/svg/animations/set-animation-end-1.html
-http://web-platform.test:8000/svg/animations/set-animation-end-2.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/svg/animations/set-animation-end-1.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/svg/animations/set-animation-end-2.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/animations/stop-animation-01.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/animations/switch-animation-01.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/animations/switch-animation-02.html
@@ -401,7 +401,7 @@ http://web-platform.test:8000/svg/styling/svg-filter-render-cross-origin-frame.t
 http://web-platform.test:8000/svg/styling/svg-filter-render-cross-origin-navigation-in-srcdoc-frame.tentative.sub.https.html
 http://web-platform.test:8000/svg/styling/svg-filter-render-same-origin-frame-in-cross-origin-frame.tentative.sub.https.html
 http://web-platform.test:8000/svg/styling/svg-filter-render-same-origin-frame-in-same-origin-frame.tentative.https.html
-http://web-platform.test:8000/svg/styling/svg-filter-render-same-origin-frame-reload-as-sandbox.tentative.https.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/svg/styling/svg-filter-render-same-origin-frame-reload-as-sandbox.tentative.https.html
 http://web-platform.test:8000/svg/styling/svg-filter-render-same-origin-frame.tentative.https.html
 http://web-platform.test:8000/svg/styling/svg-filter-render-sandbox-frame.tentative.https.html
 http://web-platform.test:8000/svg/styling/svg-filter-render-srcdoc-frame.tentative.https.html
@@ -473,7 +473,7 @@ http://web-platform.test:8000/svg/text/reftests/textpath-side-002.svg
 http://web-platform.test:8000/svg/text/reftests/textpath-side-003.svg
 http://web-platform.test:8000/svg/text/reftests/textpath-side-004.svg
 http://web-platform.test:8000/svg/text/reftests/textpath-side-005.svg
-http://web-platform.test:8000/svg/text/reftests/transform-dynamic-change-root.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/svg/text/reftests/transform-dynamic-change-root.html
 http://web-platform.test:8000/svg/text/reftests/transform-dynamic-change.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/text/reftests/tspan-opacity-mixed-direction.svg
 http://web-platform.test:8000/svg/text/reftests/writing-mode-dynamic-change.html

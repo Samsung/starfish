@@ -140,7 +140,7 @@ http://web-platform.test:8000/css/css-pseudo/highlight-styling-001.html
 http://web-platform.test:8000/css/css-pseudo/highlight-styling-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-pseudo/highlight-styling-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-pseudo/highlight-styling-004.html
-http://web-platform.test:8000/css/css-pseudo/highlight-styling-005.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-pseudo/highlight-styling-005.html
 http://web-platform.test:8000/css/css-pseudo/highlight-z-index-001.html
 http://web-platform.test:8000/css/css-pseudo/highlight-z-index-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-pseudo/marker-and-other-pseudo-elements.html

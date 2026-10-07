@@ -1,6 +1,6 @@
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animate-font-size-with-margin-override.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animate-with-background-color-hsla-to-legacy-rgb.html
-http://web-platform.test:8000/css/css-animations/animate-with-background-color-oklch-001.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-animations/animate-with-background-color-oklch-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animation-delay-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animation-delay-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animation-delay-010.html
@@ -11,7 +11,7 @@ http://web-platform.test:8000/css/css-animations/animation-duration-infinite.htm
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animation-name-in-shadow-part-inner-match.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animation-name-in-shadow-part-outer-match.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animation-name-in-shadow-part.html
-http://web-platform.test:8000/css/css-animations/animation-offscreen-to-onscreen.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-animations/animation-offscreen-to-onscreen.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animation-opacity-pause-and-set-time.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animation-pseudo-dynamic-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animation-transform-pause-and-set-time.html

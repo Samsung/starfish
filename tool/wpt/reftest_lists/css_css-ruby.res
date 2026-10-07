@@ -126,10 +126,10 @@ http://web-platform.test:8000/css/css-ruby/ruby-reflow-001-opaqueruby.html
 http://web-platform.test:8000/css/css-ruby/ruby-reflow-001-transparentruby.html
 http://web-platform.test:8000/css/css-ruby/ruby-span-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ruby/ruby-text-collapse.html
-http://web-platform.test:8000/css/css-ruby/ruby-text-combine-upright-001a.html
-http://web-platform.test:8000/css/css-ruby/ruby-text-combine-upright-001b.html
-http://web-platform.test:8000/css/css-ruby/ruby-text-combine-upright-002a.html
-http://web-platform.test:8000/css/css-ruby/ruby-text-combine-upright-002b.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-ruby/ruby-text-combine-upright-001a.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-ruby/ruby-text-combine-upright-001b.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-ruby/ruby-text-combine-upright-002a.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-ruby/ruby-text-combine-upright-002b.html
 http://web-platform.test:8000/css/css-ruby/ruby-text-dynamic-style.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ruby/ruby-whitespace-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ruby/ruby-whitespace-002.html

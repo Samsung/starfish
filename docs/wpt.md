@@ -30,9 +30,10 @@ wptrunner would pick up `testdriver.js`-dependent tests, wdspec, and
 print-reftest for free — worth revisiting then.
 
 MVP limits (tracked as follow-ups, not blocking): fuzzy tolerance is not
-applied (exact-pixel only, so `<meta name=fuzzy>` tests may false-FAIL),
-reference chains (a reference that is itself a reftest) are not resolved
-recursively, and `reftest-wait` extra settle time isn't honored beyond `load`.
+applied (exact-pixel only, so `<meta name=fuzzy>` tests may false-FAIL)
+and reference chains (a reference that is itself a reftest) are not resolved
+recursively. The `--screen-shot` capture waits for the root element to drop
+`reftest-wait`, so a page that never clears it times out.
 `tool/wpt/scripts/wpt_reftest.py` judges reftest by parsing the pixel-difference
 percentage `tool/imgdiff/imgdiff` prints, not its own pass/fail verdict (which
 folds in a golden-image antialiasing tolerance inappropriate for reftest). Two

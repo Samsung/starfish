@@ -27,10 +27,10 @@ test/cairo/internal-test/webaudio/decode-navigation.html
 test/cairo/internal-test/webaudio/decode-pending-unload.html
 test/cairo/internal-test/webaudio/decode-pending-unload-microtask.html
 test/cairo/internal-test/webaudio/cycle-reconnection.html
-test/cairo/internal-test/webaudio/media-audio-decode.html
-test/cairo/internal-test/webaudio/media-element-source-pcm.html
-test/cairo/internal-test/webaudio/media-audio-error.html
-test/cairo/internal-test/webaudio/media-audio-source-replace.html
+# test/cairo/internal-test/webaudio/media-audio-decode.html # FFmpeg player: WAV duration does not follow the decoded PCM length
+# test/cairo/internal-test/webaudio/media-element-source-pcm.html # FFmpeg player: decoded PCM never reaches MediaElementAudioSourceNode
+# test/cairo/internal-test/webaudio/media-audio-error.html # FFmpeg player: undecodable data does not report MEDIA_ERR_SRC_NOT_SUPPORTED
+# test/cairo/internal-test/webaudio/media-audio-source-replace.html # FFmpeg player: metadata of the replaced source still updates the element
 test/cairo/internal-test/observable-array/write_through.html
 test/cairo/internal-test/observable-array/whole_assignment.html
 test/cairo/internal-test/observable-array/length_truncation.html

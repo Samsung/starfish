@@ -78,7 +78,7 @@ http://web-platform.test:8000/css/css-conditional/at-supports-selector-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/container-queries/canvas-as-container-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/container-queries/change-display-in-container.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/container-queries/chrome-legacy-skip-recalc.html
-http://web-platform.test:8000/css/css-conditional/container-queries/container-for-cue.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-conditional/container-queries/container-for-cue.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/container-queries/container-units-gradient-invalidation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/container-queries/container-units-gradient.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/container-queries/container-units-rule-cache.html

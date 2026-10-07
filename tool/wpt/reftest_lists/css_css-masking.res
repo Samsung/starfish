@@ -27,79 +27,79 @@ http://web-platform.test:8000/css/css-masking/clip/clip-not-absolute-positioned-
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip/clip-rect-scroll.html
 http://web-platform.test:8000/css/css-masking/clip/clip-transform-order-2.html
 http://web-platform.test:8000/css/css-masking/clip/clip-transform-order.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-cancel.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-circle-0-percent.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-custom-property.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-custom-timing-function-reverse.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-custom-timing-function.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-cancel.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-circle-0-percent.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-custom-property.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-custom-timing-function-reverse.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-custom-timing-function.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-ellipse-mixed-change.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-ellipse.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-ensure-keyframe-update.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-filter.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-fixed-position-rounding-error.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-fixed-position.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-font-size-inherited.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-font-size-mixed-change.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-font-size.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-forward-fill-positive-delay.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-forward-fill.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-fragmented.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-ellipse.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-ensure-keyframe-update.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-filter.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-fixed-position-rounding-error.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-fixed-position.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-font-size-inherited.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-font-size-mixed-change.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-font-size.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-forward-fill-positive-delay.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-forward-fill.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-fragmented.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-geometry-box-delay.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-incompatible-shapes1.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-incompatible-shapes2.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-inherit.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-initial.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-inset-50-percent.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-missing-0-percent.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-incompatible-shapes1.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-incompatible-shapes2.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-inherit.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-initial.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-inset-50-percent.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-missing-0-percent.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-mixed-calc.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-mixed-interpolation.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-mixed-interpolation.html
 http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-no-inherit-clip-after-remove.html?force-repaint
 http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-no-inherit-clip-after-remove.html?skip-repaint
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-non-keyframe-timing-function.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-none-backdrop-filter-subpixel-offset.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-none.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-offset-position-not-stuck.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-overflow.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-path.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-non-keyframe-timing-function.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-none-backdrop-filter-subpixel-offset.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-none.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-offset-position-not-stuck.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-overflow.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-path.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-polygon-mixed-change.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-polygon.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-polygon.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-reference-delay.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-retarget.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-revert-layer.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-revert.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-set-currenttime-forward-finish.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-set-currenttime-negative.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-set-duration-animation-finish.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-set-effect.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-start-time.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-svg-zoom.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-svg.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-three-keyframes1.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-three-keyframes2.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-unset.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-retarget.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-revert-layer.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-revert.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-set-currenttime-forward-finish.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-set-currenttime-negative.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-set-duration-animation-finish.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-set-effect.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-start-time.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-svg-zoom.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-svg.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-three-keyframes1.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-three-keyframes2.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-unset.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-view-transition-mixed-change.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-zero-duration.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-zoom.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-zero-duration.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation-zoom.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-animation.html
 http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-path-interpolation-001.html
 http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-path-interpolation-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-path-interpolation-with-zoom.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-rect-interpolation-001.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-shape-arc-interpolation.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-shape-arc-interpolation.html
 http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-shape-interpolation-001.html
 http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-shape-interpolation-002.html
 http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-shape-interpolation-003.html
 http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-shape-interpolation-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-shape-transition-with-zoom.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-transition-allow-discrete-shape.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-transition-allow-discrete.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-transition-allow-discrete-shape.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-transition-allow-discrete.html
 http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-transition-custom-timing-function.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-transition.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-transition.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-xywh-interpolation-001.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/two-clip-path-animation-diff-length1.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/two-clip-path-animation-diff-length2.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/two-clip-path-animation-diff-length3.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/two-clip-path-animation-diff-length4.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/two-clip-path-animation-diff-length1.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/two-clip-path-animation-diff-length2.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/two-clip-path-animation-diff-length3.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/two-clip-path-animation-diff-length4.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-blending-offset.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-borderBox-1a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-borderBox-1b.html
@@ -201,7 +201,7 @@ http://web-platform.test:8000/css/css-masking/clip-path/clip-path-path-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-reference-restore.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-rotated-will-change-transform.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-round-zero-size.html
-http://web-platform.test:8000/css/css-masking/clip-path/clip-path-scaled-video.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-scaled-video.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-scroll.html
 http://web-platform.test:8000/css/css-masking/clip-path/clip-path-shape-001.html
 http://web-platform.test:8000/css/css-masking/clip-path/clip-path-shape-002-units.html

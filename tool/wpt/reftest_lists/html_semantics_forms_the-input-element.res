@@ -22,4 +22,4 @@ http://web-platform.test:8000/html/semantics/forms/the-input-element/range-tick-
 http://web-platform.test:8000/html/semantics/forms/the-input-element/range-tick-marks-04.html
 http://web-platform.test:8000/html/semantics/forms/the-input-element/range-tick-marks-05.html
 http://web-platform.test:8000/html/semantics/forms/the-input-element/type-change-to-password.html
-http://web-platform.test:8000/html/semantics/forms/the-input-element/type-change-to-same-type.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/semantics/forms/the-input-element/type-change-to-same-type.html

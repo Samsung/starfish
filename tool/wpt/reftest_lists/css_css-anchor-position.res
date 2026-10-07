@@ -92,7 +92,7 @@ http://web-platform.test:8000/css/css-anchor-position/anchor-position-non-anchor
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/anchor-size-css-zoom.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/anchor-size-function-chain-pseudo-elements.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/anchored-c-v-hidden.html
-http://web-platform.test:8000/css/css-anchor-position/anchored-transition-display-none-001.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-anchor-position/anchored-transition-display-none-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/anchored-transition-display-none-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/auto-margins-position-area.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-anchor-position/container-queries/anchored-fallback-color-change.html

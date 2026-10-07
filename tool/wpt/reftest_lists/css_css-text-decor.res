@@ -1,11 +1,11 @@
 http://web-platform.test:8000/css/css-text-decor/decorating-box/text-decoration-decorating-box-thickness-001.html
-http://web-platform.test:8000/css/css-text-decor/invalidation/selection-pseudo-with-decoration-invalidation-001.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-text-decor/invalidation/selection-pseudo-with-decoration-invalidation-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text-decor/invalidation/selection-pseudo-with-decoration-invalidation-002.html
 http://web-platform.test:8000/css/css-text-decor/invalidation/text-decoration-invalidation-dashed.html
 http://web-platform.test:8000/css/css-text-decor/invalidation/text-decoration-invalidation-double.html
 http://web-platform.test:8000/css/css-text-decor/invalidation/text-decoration-invalidation-solid.html
 http://web-platform.test:8000/css/css-text-decor/invalidation/text-decoration-invalidation-wavy.html
-http://web-platform.test:8000/css/css-text-decor/invalidation/text-decoration-thickness.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-text-decor/invalidation/text-decoration-thickness.html
 http://web-platform.test:8000/css/css-text-decor/line-through-vertical.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text-decor/ruby-text-decoration-01.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-text-decor/text-combine-emphasis.html

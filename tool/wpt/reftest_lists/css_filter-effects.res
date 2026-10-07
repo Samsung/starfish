@@ -81,7 +81,7 @@ http://web-platform.test:8000/css/filter-effects/blur-clip-stacking-context-001.
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/clip-under-filter-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/clip-under-filter-002.html
 http://web-platform.test:8000/css/filter-effects/clip-under-filter-003.html
-http://web-platform.test:8000/css/filter-effects/css-backdrop-filter-transform-clip.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/filter-effects/css-backdrop-filter-transform-clip.html
 http://web-platform.test:8000/css/filter-effects/css-backdrop-filters-animation-blur.html
 http://web-platform.test:8000/css/filter-effects/css-backdrop-filters-animation-brightness.html
 http://web-platform.test:8000/css/filter-effects/css-backdrop-filters-animation-combined.html

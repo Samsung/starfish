@@ -170,8 +170,8 @@ http://web-platform.test:8000/css/css-contain/contain-paint-clip-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/contain-paint-clip-019.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/contain-paint-containing-block-absolute-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/contain-paint-containing-block-fixed-001.html
-http://web-platform.test:8000/css/css-contain/contain-paint-dynamic-002.html
-http://web-platform.test:8000/css/css-contain/contain-paint-dynamic-003.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-contain/contain-paint-dynamic-002.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-contain/contain-paint-dynamic-003.html
 http://web-platform.test:8000/css/css-contain/contain-paint-dynamic-004.html
 http://web-platform.test:8000/css/css-contain/contain-paint-dynamic-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/contain-paint-formatting-context-float-001.html
@@ -383,20 +383,20 @@ http://web-platform.test:8000/css/css-contain/content-visibility/content-visibil
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-on-root-svg.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-on-ruby.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-paint-containment-001.html
-http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-paint-containment-002.html
-http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-paint-containment-003.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-paint-containment-002.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-paint-containment-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-paint-containment-004.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-resize-observer-no-error.html
-http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-video.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-video.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-vs-scrollIntoView-001.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-vs-scrollIntoView-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-popover-top-layer-000.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-popover-top-layer-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-popover-top-layer-002.html
-http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-popover-top-layer-003.html
-http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-popover-top-layer-004.html
-http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-popover-top-layer-005.html
-http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-popover-top-layer-and-auto-descendant.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-popover-top-layer-003.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-popover-top-layer-004.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-popover-top-layer-005.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-popover-top-layer-and-auto-descendant.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-popover-top-layer-hide-after-addition.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-top-layer-000.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-top-layer-001.html

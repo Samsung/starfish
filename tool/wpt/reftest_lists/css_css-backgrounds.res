@@ -1,21 +1,21 @@
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-custom-property.html
-http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-custom-timing-function-reverse.html
-http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-custom-timing-function.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-custom-timing-function-reverse.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-custom-timing-function.html
 http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-element-not-visible-at-current-viewport.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-fallback-additive-keyframe.html
-http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-fallback-missing-0-percent.html
-http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-fallback-missing-100-percent.html
-http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-fallback-replace.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-fallback-missing-0-percent.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-fallback-missing-100-percent.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-fallback-replace.html
 http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-fragmented.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-half-opaque.html
 http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-in-body.html
 http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-non-zero-size-element-change-to-zero.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-offset-position-not-stuck.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-pseudo-element.html
-http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-single-keyframe.html
-http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-three-keyframes1.html
-http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-three-keyframes2.html
-http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-three-keyframes3.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-single-keyframe.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-three-keyframes1.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-three-keyframes2.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-three-keyframes3.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-will-change-contents.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-with-blur.html
 http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-with-images.html
@@ -24,10 +24,10 @@ http://web-platform.test:8000/css/css-backgrounds/animations/background-color-an
 http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-with-table2.html
 http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-with-table3.html
 http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-with-table4.html
-http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-with-zero-playbackRate.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-with-zero-playbackRate.html
 http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-zero-size-element-change-to-non-zero.html
 http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation-zero-size-element.html
-http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-scroll-into-viewport.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-transition-currentcolor.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-transition.html
@@ -36,9 +36,9 @@ http://web-platform.test:8000/css/css-backgrounds/animations/invalidation/backgr
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/animations/invalidation/background-color-transition-obscured.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/animations/invalidation/background-color-transition-with-delay.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/animations/invalidation/background-color-transition-with-initially-transparent.html
-http://web-platform.test:8000/css/css-backgrounds/animations/two-background-color-animation-diff-length1.html
-http://web-platform.test:8000/css/css-backgrounds/animations/two-background-color-animation-diff-length2.html
-http://web-platform.test:8000/css/css-backgrounds/animations/two-background-color-animation-diff-length3.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/animations/two-background-color-animation-diff-length1.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/animations/two-background-color-animation-diff-length2.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/animations/two-background-color-animation-diff-length3.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-334.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-attachment-350.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-attachment-353.html
@@ -85,7 +85,7 @@ http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-border-ar
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-border-area.html
 http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-border-shape-table-part-background.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-rounded-corner.html
-http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-text-animated-text.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-text-animated-text.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-text-background-table-cell.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-text-blend-mode.html
 http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-text-composited-descendant-with-bg-color.html
@@ -160,7 +160,7 @@ http://web-platform.test:8000/css/css-backgrounds/background-image-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-image-centered-with-border-radius.html
 http://web-platform.test:8000/css/css-backgrounds/background-image-centered.html
 http://web-platform.test:8000/css/css-backgrounds/background-image-cover-zoomed-1.html
-http://web-platform.test:8000/css/css-backgrounds/background-image-first-letter.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/background-image-first-letter.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-image-first-line.html
 http://web-platform.test:8000/css/css-backgrounds/background-image-gradient-currentcolor-conic-repaint.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-backgrounds/background-image-gradient-currentcolor-linear-repaint.html

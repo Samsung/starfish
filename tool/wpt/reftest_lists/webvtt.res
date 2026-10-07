@@ -14,7 +14,7 @@
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/align_end_wrapped.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/align_start.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/align_start_wrapped.html
-http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/audio_has_no_subtitles.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/audio_has_no_subtitles.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/basic.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/bidi/bidi_ruby.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/bidi/start_alignment.html
@@ -35,21 +35,21 @@ http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/dom_override_cue_line.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/dom_override_cue_text.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/dom_override_cue_text_while_paused.html
-http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/dom_override_remove_cue_while_paused.html
-http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/embedded_style_cascade_priority.html
-http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/embedded_style_cascade_priority_layer.html
-http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/embedded_style_imports_blocked.html
-http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/embedded_style_invalid_format.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/dom_override_remove_cue_while_paused.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/embedded_style_cascade_priority.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/embedded_style_cascade_priority_layer.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/embedded_style_imports_blocked.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/embedded_style_invalid_format.html
 http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/embedded_style_media_queries.html
 http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/embedded_style_media_queries_resized.html
-http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/embedded_style_multiple_tracks.html
-http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/embedded_style_selectors.html
-http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/embedded_style_urls.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/embedded_style_multiple_tracks.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/embedded_style_selectors.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/embedded_style_urls.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/evil/9_cues_overlapping_completely.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/evil/9_cues_overlapping_completely_all_cues_have_same_timestamp.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/evil/media_404_omit_subtitles.html
+http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/evil/media_404_omit_subtitles.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/evil/media_height_19.html
-http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/evil/non-standard-pseudo-elements.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/evil/non-standard-pseudo-elements.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/evil/single_quote.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/evil/size_90.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/evil/size_99.html

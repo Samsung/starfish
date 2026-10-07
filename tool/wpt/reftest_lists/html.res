@@ -60,8 +60,8 @@ http://web-platform.test:8000/html/canvas/element/layers/2d.layer.clip-outside.l
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/layers/2d.layer.draw-in-filter.html
 http://web-platform.test:8000/html/canvas/element/layers/2d.layer.drawImage.ctx-filter.html
 http://web-platform.test:8000/html/canvas/element/layers/2d.layer.drawImage.layer-filter.tentative.html
-http://web-platform.test:8000/html/canvas/element/layers/2d.layer.flush-on-frame-presentation.filtered_layer.tentative.html
-http://web-platform.test:8000/html/canvas/element/layers/2d.layer.flush-on-frame-presentation.plain_layer.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/element/layers/2d.layer.flush-on-frame-presentation.filtered_layer.tentative.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/element/layers/2d.layer.flush-on-frame-presentation.plain_layer.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/layers/2d.layer.global-states.ctx-filter.no-transform.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/layers/2d.layer.global-states.ctx-filter.rotation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/layers/2d.layer.global-states.filter.ctx-filter.no-transform.tentative.html
@@ -113,7 +113,7 @@ http://web-platform.test:8000/html/canvas/element/manual/building-paths/canvas_c
 http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/compositing-descendant-filter.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/compositing-op-basic.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/compositing-op-non-opaque-element.tentative.html
-http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/css-backdrop-filter-and-mask.tentative.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/css-backdrop-filter-and-mask.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/css-backdrop-filter-image.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/css-backdrop-filter-on-div.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/css-backdrop-filter-with-sibling.tentative.html
@@ -138,7 +138,7 @@ http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/css-
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/iframe-local.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/iframe.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/ink-overflow.tentative.html
-http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/invalidation-during-onpaint.tentative.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/invalidation-during-onpaint.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/nested-canvas-invalidation.tentative.html
 http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/nested-canvas-not-rendered.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/non-opaque-element.tentative.html
@@ -147,7 +147,7 @@ http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/nest
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/privacy/selection-alone-with-decorations-painted.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/privacy/selection-colors-default.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/privacy/selection-painted-overlay-path.tentative.html
-http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/privacy/target-text-ignored-overlay-path.tentative.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/privacy/target-text-ignored-overlay-path.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/scale.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/shadow-basic.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/shadow-non-opaque-element.tentative.html
@@ -210,12 +210,12 @@ http://web-platform.test:8000/html/canvas/element/manual/text/canvas.2d.fontStre
 http://web-platform.test:8000/html/canvas/element/manual/text/canvas.2d.fontStretch.semi-expanded.html
 http://web-platform.test:8000/html/canvas/element/manual/text/canvas.2d.fontStretch.ultra-condensed.html
 http://web-platform.test:8000/html/canvas/element/manual/text/canvas.2d.fontStretch.ultra-expanded.html
-http://web-platform.test:8000/html/canvas/element/manual/text/canvas.2d.lang.dynamic.html
-http://web-platform.test:8000/html/canvas/element/manual/text/canvas.2d.lang.empty.canvas.html
-http://web-platform.test:8000/html/canvas/element/manual/text/canvas.2d.lang.html
-http://web-platform.test:8000/html/canvas/element/manual/text/canvas.2d.lang.inherit.disconnected.canvas.html
-http://web-platform.test:8000/html/canvas/element/manual/text/canvas.2d.lang.inherit.disconnected.canvas.no.lang.html
-http://web-platform.test:8000/html/canvas/element/manual/text/canvas.2d.lang.inherit.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/element/manual/text/canvas.2d.lang.dynamic.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/element/manual/text/canvas.2d.lang.empty.canvas.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/element/manual/text/canvas.2d.lang.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/element/manual/text/canvas.2d.lang.inherit.disconnected.canvas.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/element/manual/text/canvas.2d.lang.inherit.disconnected.canvas.no.lang.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/element/manual/text/canvas.2d.lang.inherit.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/text/canvas_text_font_001.htm
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/the-canvas-state/canvas_state_restore_001.htm
 http://web-platform.test:8000/html/canvas/element/manual/transformations/canvas_transformations_reset_001.html
@@ -322,29 +322,29 @@ http://web-platform.test:8000/html/canvas/element/text/direction-rtl.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.anisotropic-blur.y-only.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.anisotropic-blur.y-only.tentative.w.html
 http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.blur-from-outside-canvas.no-clipping.ctx-filter.html
-http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.blur-from-outside-canvas.no-clipping.ctx-filter.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.blur-from-outside-canvas.no-clipping.ctx-filter.w.html
 http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.blur-from-outside-canvas.no-clipping.layer-filter.tentative.html
-http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.blur-from-outside-canvas.no-clipping.layer-filter.tentative.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.blur-from-outside-canvas.no-clipping.layer-filter.tentative.w.html
 http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.blur-from-outside-canvas.with-clipping.ctx-filter.html
-http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.blur-from-outside-canvas.with-clipping.ctx-filter.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.blur-from-outside-canvas.with-clipping.ctx-filter.w.html
 http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.blur-from-outside-canvas.with-clipping.layer-filter.tentative.html
-http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.blur-from-outside-canvas.with-clipping.layer-filter.tentative.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.blur-from-outside-canvas.with-clipping.layer-filter.tentative.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clearRect.full.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clearRect.full.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clearRect.partial.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clearRect.partial.w.html
 http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-inside-and-outside.ctx-filter.html
-http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-inside-and-outside.ctx-filter.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-inside-and-outside.ctx-filter.w.html
 http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-inside-and-outside.layer-filter.tentative.html
-http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-inside-and-outside.layer-filter.tentative.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-inside-and-outside.layer-filter.tentative.w.html
 http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-inside.ctx-filter.html
-http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-inside.ctx-filter.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-inside.ctx-filter.w.html
 http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-inside.layer-filter.tentative.html
-http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-inside.layer-filter.tentative.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-inside.layer-filter.tentative.w.html
 http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-outside.ctx-filter.html
-http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-outside.ctx-filter.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-outside.ctx-filter.w.html
 http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-outside.layer-filter.tentative.html
-http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-outside.layer-filter.tentative.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-outside.layer-filter.tentative.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.cross-layer-paths.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.cross-layer-paths.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.css-filters.blur-and-shadow.tentative.html
@@ -410,7 +410,7 @@ http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.clip-outside
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.reset.plain_layer.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.reset.plain_layer.w.html
 http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.resize-canvas-in-filter.html
-http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.resize-canvas-in-filter.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.resize-canvas-in-filter.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.restore-style.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.restore-style.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.several-complex.html
@@ -441,17 +441,17 @@ http://web-platform.test:8000/html/canvas/offscreen/layers/2d.layer.resize-canva
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.fillText-FontFace.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.fillText.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.direction.html
-http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.lang.html
-http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.lang.inherit.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.lang.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.lang.inherit.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.transferred.direction.inherit.document.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.transferred.direction.inherit.html
-http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.transferred.lang.html
-http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.transferred.lang.inherit.document.html
-http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.transferred.lang.inherit.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.transferred.lang.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.transferred.lang.inherit.document.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.transferred.lang.inherit.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.worker.direction.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.worker.direction.inherit.html
-http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.worker.lang.html
-http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.worker.lang.inherit.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.worker.lang.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscreen.worker.lang.inherit.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/path-objects/2d.path.clip.scale.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/path-objects/2d.path.clip.scale.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/reset/2d.reset.after-rasterization.html
@@ -475,15 +475,15 @@ http://web-platform.test:8000/html/canvas/offscreen/manual/text/canvas.2d.offscr
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps.after.reset.font.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps.after.reset.font.w.html
 http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps1.html
-http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps1.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps1.w.html
 http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps3.html
-http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps3.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps3.w.html
 http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps4.html
-http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps4.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps4.w.html
 http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps5.html
-http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps5.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps5.w.html
 http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps6.html
-http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps6.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps6.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.measure.fillTextCluster-align.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.measure.fillTextCluster-align.tentative.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.measure.fillTextCluster-baseline.tentative.html
@@ -491,7 +491,7 @@ http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.fontVariantCaps
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.measure.fillTextCluster-drawing-styles-change.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.measure.fillTextCluster-drawing-styles-change.tentative.w.html
 http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.measure.fillTextCluster-font-change.tentative.html
-http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.measure.fillTextCluster-font-change.tentative.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.measure.fillTextCluster-font-change.tentative.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.measure.strokeTextCluster-align.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.measure.strokeTextCluster-align.tentative.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.measure.strokeTextCluster-baseline.tentative.html
@@ -499,7 +499,7 @@ http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.measure.fillTex
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.measure.strokeTextCluster-drawing-styles-change.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.measure.strokeTextCluster-drawing-styles-change.tentative.w.html
 http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.measure.strokeTextCluster-font-change.tentative.html
-http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.measure.strokeTextCluster-font-change.tentative.w.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/offscreen/text/2d.text.measure.strokeTextCluster-font-change.tentative.w.html
 http://web-platform.test:8000/html/canvas/offscreen/text/canvas.2d.fontStretch.condensed.html
 http://web-platform.test:8000/html/canvas/offscreen/text/canvas.2d.fontStretch.expanded.html
 http://web-platform.test:8000/html/canvas/offscreen/text/canvas.2d.fontStretch.extra-condensed.html
@@ -974,7 +974,7 @@ http://web-platform.test:8000/html/semantics/embedded-content/media-elements/tra
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/embedded-content/media-elements/track/track-element/track-cue-rendering-line-doesnt-fit.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/embedded-content/media-elements/track/track-element/track-cue-rendering-transformed-video.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/embedded-content/media-elements/track/track-element/track-webvtt-non-snap-to-lines.html
-http://web-platform.test:8000/html/semantics/embedded-content/media-elements/track/track-element/track-webvtt-two-cue-layout-after-first-end.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/semantics/embedded-content/media-elements/track/track-element/track-webvtt-two-cue-layout-after-first-end.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/embedded-content/the-audio-element/audio_001.htm
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/embedded-content/the-audio-element/audio_002.htm
 http://web-platform.test:8000/html/semantics/embedded-content/the-embed-element/embed-hidden-attribute.html
@@ -1045,14 +1045,14 @@ http://web-platform.test:8000/html/semantics/forms/the-input-element/range-tick-
 http://web-platform.test:8000/html/semantics/forms/the-input-element/range-tick-marks-04.html
 http://web-platform.test:8000/html/semantics/forms/the-input-element/range-tick-marks-05.html
 http://web-platform.test:8000/html/semantics/forms/the-input-element/type-change-to-password.html
-http://web-platform.test:8000/html/semantics/forms/the-input-element/type-change-to-same-type.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/semantics/forms/the-input-element/type-change-to-same-type.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/html/semantics/forms/the-meter-element/meter-appearance-none-even-less-good-value-rendering.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/html/semantics/forms/the-meter-element/meter-appearance-none-optimum-value-rendering.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/html/semantics/forms/the-meter-element/meter-appearance-none-rendering.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/html/semantics/forms/the-meter-element/meter-appearance-none-suboptimum-value-rendering.html
 http://web-platform.test:8000/html/semantics/forms/the-meter-element/meter-min-rendering.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-option-element/dynamic-content-change-rendering.html
-http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/appearance-base-and-base-select.tentative.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/appearance-base-and-base-select.tentative.html
 http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/appearance-base-select-other-elements.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/border-rendering.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/checkmark-animation-002.html
@@ -1094,7 +1094,7 @@ http://web-platform.test:8000/html/semantics/forms/the-select-element/customizab
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-appearance-switching-invalidation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-appearance-writing-mode-vertical-lr.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-appearance-writing-mode-vertical-rl.html
-http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-appearance-wrong-picker-argument.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-appearance-wrong-picker-argument.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-base-appearance-ordering.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-base-appearance-writing-modes.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-button-text-and-icon-clipping.html
@@ -1104,8 +1104,8 @@ http://web-platform.test:8000/html/semantics/forms/the-select-element/customizab
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-font-size.html
 http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-grid-before-after.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-icon-color.html
-http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-only-button-opt-in.html
-http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-only-picker-opt-in.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-only-button-opt-in.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-only-picker-opt-in.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-open-invalidation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-optgroup-legend-label.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-option-images.html
@@ -1135,7 +1135,7 @@ http://web-platform.test:8000/html/semantics/forms/the-select-element/customizab
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select-listbox/customizable-select-listbox-sizing.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select-multiple-popup/select-multiple-popup-appearance.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/filterable-select/filterable-select-appearance.tentative.html
-http://web-platform.test:8000/html/semantics/forms/the-select-element/list-box-important-colors.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/semantics/forms/the-select-element/list-box-important-colors.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/reset-algorithm-rendering.html
 http://web-platform.test:8000/html/semantics/forms/the-select-element/select-dropdown-vs-listbox.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/select-hr-listbox.html
