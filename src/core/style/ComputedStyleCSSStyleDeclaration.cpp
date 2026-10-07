@@ -2204,7 +2204,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::StrokeDasharray);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        GCAtomicVector<double> array = style->strokeDasharray();
+        const GCAtomicVector<double>& array = style->strokeDasharray();
         ValueList* vals = new ValueList(Separator::SpaceSeparator);
         for (size_t i = 0; i < array.size(); i++) {
             vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
