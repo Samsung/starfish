@@ -3515,10 +3515,11 @@ The compressed decoder accepts AAC, FLAC, Matroska/WebM, MP4/MOV, MP3,
 Ogg, and WAVE containers. Playlists and secondary file or network access
 from demuxers are rejected; decoding is confined to the supplied bytes.
 Without that option, compressed formats are rejected. WAV data uses linear
-interpolation when resampling. Compressed decoding is limited to 32 MiB of
-output PCM to bound transient copies. `decodeAudioData()` detaches the input
-`ArrayBuffer` and decodes directly from its detached storage without copying
-it.
+interpolation when resampling. Compressed decoding writes its output PCM in
+place, without a second copy, and shares the `AudioBuffer` limit below
+(for example, about 5.8 minutes of 48 kHz stereo). `decodeAudioData()`
+detaches the input `ArrayBuffer` and decodes directly from its detached
+storage without copying it.
 `AudioBuffer` allocation is limited to 128 MiB to preserve the low-memory
 profile. Every node type listed below renders in both `OfflineAudioContext`
 and real-time `AudioContext` graphs, including fan-in mixing, channel

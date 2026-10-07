@@ -13,33 +13,69 @@
 #include "Starfish.h"
 #include "core/modules/webaudio/render/AudioBufferData.h"
 
+#include <algorithm>
 #include <cstdlib>
-#include <limits>
+#include <memory>
+#include <new>
 
 namespace Starfish {
 
+namespace {
+
+    bool isWithinLimit(size_t channels, size_t frames)
+    {
+        return channels && frames &&
+               channels <= AudioBufferData::MaxSamples / frames;
+    }
+
+    void freeChannels(float* const* channelData, size_t channels)
+    {
+        for (size_t channel = 0; channel < channels; channel++) {
+            free(channelData[channel]);
+        }
+    }
+
+} // namespace
+
 AudioBufferData* AudioBufferData::create(size_t channels, size_t frames)
 {
-    // Limit a single web-controlled allocation to preserve the low-memory
-    // embedding profile; longer audio should use streaming media.
-    static const size_t maxBytes = 128 * 1024 * 1024;
-    if (!channels || !frames ||
-        channels >
-            std::numeric_limits<size_t>::max() / frames / sizeof(float) ||
-        channels * frames > maxBytes / sizeof(float)) {
+    if (!isWithinLimit(channels, frames)) {
         return nullptr;
     }
-
-    float* samples =
-        static_cast<float*>(calloc(channels * frames, sizeof(float)));
-    if (!samples) {
+    std::unique_ptr<float*[]> channelData(
+        new (std::nothrow) float*[channels]());
+    if (!channelData) {
         return nullptr;
     }
-    return new AudioBufferData(samples, channels, frames);
+    for (size_t channel = 0; channel < channels; channel++) {
+        channelData[channel] =
+            static_cast<float*>(calloc(frames, sizeof(float)));
+        if (!channelData[channel]) {
+            freeChannels(channelData.get(), channel);
+            return nullptr;
+        }
+    }
+    return new AudioBufferData(channelData.release(), channels, frames);
 }
 
-AudioBufferData::AudioBufferData(float* samples, size_t channels, size_t frames)
-    : m_samples(samples)
+AudioBufferData* AudioBufferData::adopt(float* const* channelData,
+                                        size_t channels, size_t frames)
+{
+    std::unique_ptr<float*[]> owned;
+    if (isWithinLimit(channels, frames)) {
+        owned.reset(new (std::nothrow) float*[channels]);
+    }
+    if (!owned) {
+        freeChannels(channelData, channels);
+        return nullptr;
+    }
+    std::copy(channelData, channelData + channels, owned.get());
+    return new AudioBufferData(owned.release(), channels, frames);
+}
+
+AudioBufferData::AudioBufferData(float** channelData, size_t channels,
+                                 size_t frames)
+    : m_channelData(channelData)
     , m_channels(channels)
     , m_frames(frames)
 {
@@ -47,7 +83,8 @@ AudioBufferData::AudioBufferData(float* samples, size_t channels, size_t frames)
 
 AudioBufferData::~AudioBufferData()
 {
-    free(m_samples);
+    freeChannels(m_channelData, m_channels);
+    delete[] m_channelData;
 }
 
 void AudioBufferData::retain()
@@ -90,13 +127,13 @@ bool AudioBufferData::isOnlyReferencedByOwnerAndViews() const
 float* AudioBufferData::channel(size_t index)
 {
     STARFISH_ASSERT(index < m_channels);
-    return m_samples + index * m_frames;
+    return m_channelData[index];
 }
 
 const float* AudioBufferData::channel(size_t index) const
 {
     STARFISH_ASSERT(index < m_channels);
-    return m_samples + index * m_frames;
+    return m_channelData[index];
 }
 
 } // namespace Starfish
