@@ -4022,12 +4022,13 @@ public:
         ensureInheritedRareData()->m_strokeDasharray = array;
     }
 
-    GCAtomicVector<double> strokeDasharray()
+    const GCAtomicVector<double>& strokeDasharray()
     {
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_strokeDasharray;
         }
-        return GCAtomicVector<double>();
+        static const GCAtomicVector<double> empty;
+        return empty;
     }
 
     void setStrokeDashoffset(double offset)

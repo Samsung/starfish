@@ -1701,11 +1701,11 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
-    if (newStyle->strokeDasharray().size() !=
-            oldStyle->strokeDasharray().size() ||
-        !std::equal(newStyle->strokeDasharray().begin(),
-                    newStyle->strokeDasharray().end(),
-                    oldStyle->strokeDasharray().begin())) {
+    const GCAtomicVector<double>& newDasharray = newStyle->strokeDasharray();
+    const GCAtomicVector<double>& oldDasharray = oldStyle->strokeDasharray();
+    if (newDasharray.size() != oldDasharray.size() ||
+        !std::equal(newDasharray.begin(), newDasharray.end(),
+                    oldDasharray.begin())) {
         damagedKeys[CSSStyleValuePair::KeyKind::StrokeDasharray] = true;
         damage = static_cast<ComputedStyleDamage>(
             ComputedStyleDamage::ComputedStyleDamageInherited |
