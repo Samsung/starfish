@@ -125,3 +125,9 @@
 	url = https://github.com/KhronosGroup/WebGL.git
 	ignore = dirty
 	shallow = true
+[submodule "third_party/windows/ffmpeg"]
+	path = third_party/windows/ffmpeg
+	url = https://github.com/Samsung/starfish-submodules.git
+	branch = modules/third_party/windows/ffmpeg
+	ignore = untracked
+	shallow = true
