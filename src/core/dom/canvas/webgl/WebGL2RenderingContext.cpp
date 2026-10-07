@@ -179,6 +179,26 @@ void WebGL2RenderingContext::bindBuffer(GLenum target,
     }
 }
 
+void WebGL2RenderingContext::deleteBuffer(Optional<WebGLBuffer*> maybe)
+{
+    if (maybe.hasValue()) {
+        WebGLBuffer* buffer = maybe.value();
+        for (size_t i = 0; i < m_uniformBufferBindings.size(); ++i) {
+            if (m_uniformBufferBindings[i] &&
+                m_uniformBufferBindings[i]->buffer == buffer) {
+                m_uniformBufferBindings[i] = nullptr;
+            }
+        }
+        for (size_t i = 0; i < m_transformFeedbackBufferBindings.size(); ++i) {
+            if (m_transformFeedbackBufferBindings[i] &&
+                m_transformFeedbackBufferBindings[i]->buffer == buffer) {
+                m_transformFeedbackBufferBindings[i] = nullptr;
+            }
+        }
+    }
+    WebGLRenderingContext::deleteBuffer(maybe);
+}
+
 void WebGL2RenderingContext::bindFramebuffer(
     GLenum target, Optional<WebGLFramebuffer*> maybeFramebuffer)
 {
@@ -977,35 +997,90 @@ void WebGL2RenderingContext::copyBufferSubData(GLenum readTarget,
 {
     ENTER_CONTEXT_SCOPE();
 
-    GLenum readTargetType = readTarget;
-    if (readTargetType == GL_COPY_READ_BUFFER ||
-        readTargetType == GL_COPY_WRITE_BUFFER) {
-        WebGLBuffer* readBuffer =
-            getState()->getBoundBuffer(readTarget).valueOr(nullptr);
-        if (readBuffer != nullptr) {
-            readTargetType = readBuffer->target();
+    auto isValidBufferTarget = [](GLenum target) -> bool {
+        switch (target) {
+        case GL_ARRAY_BUFFER:
+        case GL_COPY_READ_BUFFER:
+        case GL_COPY_WRITE_BUFFER:
+        case GL_ELEMENT_ARRAY_BUFFER:
+        case GL_PIXEL_PACK_BUFFER:
+        case GL_PIXEL_UNPACK_BUFFER:
+        case GL_TRANSFORM_FEEDBACK_BUFFER:
+        case GL_UNIFORM_BUFFER:
+            return true;
+        default:
+            return false;
         }
+    };
+
+    if (!isValidBufferTarget(readTarget) || !isValidBufferTarget(writeTarget)) {
+        setGLError(GL_INVALID_ENUM);
+        return;
     }
 
-    GLenum writeTargetType = writeTarget;
-    if (writeTargetType == GL_COPY_READ_BUFFER ||
-        writeTargetType == GL_COPY_WRITE_BUFFER) {
-        WebGLBuffer* writeBuffer =
-            getState()->getBoundBuffer(writeTarget).valueOr(nullptr);
-        if (writeBuffer != nullptr) {
-            writeTargetType = writeBuffer->target();
-        }
+    if (readOffset < 0 || writeOffset < 0 || size < 0) {
+        setGLError(GL_INVALID_VALUE);
+        return;
     }
 
-    if ((readTargetType == GL_ELEMENT_ARRAY_BUFFER &&
-         writeTargetType != GL_ELEMENT_ARRAY_BUFFER) ||
-        (writeTargetType == GL_ELEMENT_ARRAY_BUFFER &&
-         readTargetType != GL_ELEMENT_ARRAY_BUFFER)) {
+    WebGLBuffer* readBuffer =
+        getState()->getBoundBuffer(readTarget).valueOr(nullptr);
+    WebGLBuffer* writeBuffer =
+        getState()->getBoundBuffer(writeTarget).valueOr(nullptr);
+
+    if (!readBuffer || readBuffer->isDeleted() || !writeBuffer ||
+        writeBuffer->isDeleted()) {
         setGLError(GL_INVALID_OPERATION);
         return;
     }
 
-    glCopyBufferSubData(readTarget, writeTarget, readOffset, writeOffset, size);
+    GLenum readTargetType = (readTarget == GL_COPY_READ_BUFFER ||
+                             readTarget == GL_COPY_WRITE_BUFFER)
+                                ? readBuffer->target()
+                                : readTarget;
+    GLenum writeTargetType = (writeTarget == GL_COPY_READ_BUFFER ||
+                              writeTarget == GL_COPY_WRITE_BUFFER)
+                                 ? writeBuffer->target()
+                                 : writeTarget;
+
+    if (readBuffer != writeBuffer &&
+        ((readTargetType == GL_ELEMENT_ARRAY_BUFFER &&
+          writeTargetType != GL_ELEMENT_ARRAY_BUFFER) ||
+         (writeTargetType == GL_ELEMENT_ARRAY_BUFFER &&
+          readTargetType != GL_ELEMENT_ARRAY_BUFFER))) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    unsigned long long uReadOffset =
+        static_cast<unsigned long long>(readOffset);
+    unsigned long long uWriteOffset =
+        static_cast<unsigned long long>(writeOffset);
+    unsigned long long uSize = static_cast<unsigned long long>(size);
+
+    if (uReadOffset + uSize >
+            static_cast<unsigned long long>(readBuffer->byteLength()) ||
+        uWriteOffset + uSize >
+            static_cast<unsigned long long>(writeBuffer->byteLength())) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    if (readBuffer == writeBuffer) {
+        GLintptr readEnd = readOffset + size;
+        GLintptr writeEnd = writeOffset + size;
+        if (readEnd > writeOffset && writeEnd > readOffset) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+    }
+
+    if (size == 0) {
+        return;
+    }
+
+    gl()->copyBufferSubData(readTarget, writeTarget, readOffset, writeOffset,
+                            size);
 }
 
 void WebGL2RenderingContext::getBufferSubData(GLenum target,
@@ -1572,6 +1647,23 @@ void WebGL2RenderingContext::bindBufferBase(GLenum target, GLuint index,
         return;
     }
 
+    if (target == GL_UNIFORM_BUFFER) {
+        GLint maxBindings = 0;
+        gl()->getIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxBindings);
+        if (index >= static_cast<GLuint>(maxBindings)) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+    } else if (target == GL_TRANSFORM_FEEDBACK_BUFFER) {
+        GLint maxBindings = 0;
+        gl()->getIntegerv(GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS,
+                          &maxBindings);
+        if (index >= static_cast<GLuint>(maxBindings)) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+    }
+
     if (buffer.hasValue()) {
         WebGLBuffer* value = buffer.value();
 
@@ -1609,6 +1701,12 @@ void WebGL2RenderingContext::bindBufferBase(GLenum target, GLuint index,
             }
             m_uniformBufferBindings[index] =
                 new IndexedBufferBinding(value, 0, 0, false);
+        } else if (target == GL_TRANSFORM_FEEDBACK_BUFFER) {
+            if (index >= m_transformFeedbackBufferBindings.size()) {
+                m_transformFeedbackBufferBindings.resize(index + 1);
+            }
+            m_transformFeedbackBufferBindings[index] =
+                new IndexedBufferBinding(value, 0, 0, false);
         }
     } else {
         gl()->bindBufferBase(target, index, 0);
@@ -1619,6 +1717,9 @@ void WebGL2RenderingContext::bindBufferBase(GLenum target, GLuint index,
         if (target == GL_UNIFORM_BUFFER &&
             index < m_uniformBufferBindings.size()) {
             m_uniformBufferBindings[index] = nullptr;
+        } else if (target == GL_TRANSFORM_FEEDBACK_BUFFER &&
+                   index < m_transformFeedbackBufferBindings.size()) {
+            m_transformFeedbackBufferBindings[index] = nullptr;
         }
     }
 }
@@ -1632,6 +1733,38 @@ void WebGL2RenderingContext::bindBufferRange(GLenum target, GLuint index,
     if (target != GL_TRANSFORM_FEEDBACK_BUFFER && target != GL_UNIFORM_BUFFER) {
         setGLError(GL_INVALID_ENUM);
         return;
+    }
+
+    if (offset < 0 || size <= 0) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    if (target == GL_UNIFORM_BUFFER) {
+        GLint maxBindings = 0;
+        gl()->getIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxBindings);
+        if (index >= static_cast<GLuint>(maxBindings)) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        GLint alignment = 1;
+        gl()->getIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &alignment);
+        if (alignment > 0 && (offset % alignment) != 0) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+    } else if (target == GL_TRANSFORM_FEEDBACK_BUFFER) {
+        GLint maxBindings = 0;
+        gl()->getIntegerv(GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS,
+                          &maxBindings);
+        if (index >= static_cast<GLuint>(maxBindings)) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        if ((offset % 4) != 0 || (size % 4) != 0) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
     }
 
     if (buffer.hasValue()) {
@@ -1671,6 +1804,12 @@ void WebGL2RenderingContext::bindBufferRange(GLenum target, GLuint index,
             }
             m_uniformBufferBindings[index] =
                 new IndexedBufferBinding(value, offset, size, true);
+        } else if (target == GL_TRANSFORM_FEEDBACK_BUFFER) {
+            if (index >= m_transformFeedbackBufferBindings.size()) {
+                m_transformFeedbackBufferBindings.resize(index + 1);
+            }
+            m_transformFeedbackBufferBindings[index] =
+                new IndexedBufferBinding(value, offset, size, true);
         }
     } else {
         gl()->bindBufferRange(target, index, 0, offset, size);
@@ -1681,7 +1820,116 @@ void WebGL2RenderingContext::bindBufferRange(GLenum target, GLuint index,
         if (target == GL_UNIFORM_BUFFER &&
             index < m_uniformBufferBindings.size()) {
             m_uniformBufferBindings[index] = nullptr;
+        } else if (target == GL_TRANSFORM_FEEDBACK_BUFFER &&
+                   index < m_transformFeedbackBufferBindings.size()) {
+            m_transformFeedbackBufferBindings[index] = nullptr;
         }
+    }
+}
+
+ScriptValue WebGL2RenderingContext::getIndexedParameter(GLenum target,
+                                                        GLuint index)
+{
+    ENTER_CONTEXT_SCOPE(scriptNull());
+
+    switch (target) {
+    case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING: {
+        GLint maxBindings = 0;
+        gl()->getIntegerv(GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS,
+                          &maxBindings);
+        if (index >= static_cast<GLuint>(maxBindings)) {
+            setGLError(GL_INVALID_VALUE);
+            return scriptNull();
+        }
+        if (index < m_transformFeedbackBufferBindings.size() &&
+            m_transformFeedbackBufferBindings[index] != nullptr &&
+            m_transformFeedbackBufferBindings[index]->buffer != nullptr &&
+            !m_transformFeedbackBufferBindings[index]->buffer->isDeleted()) {
+            return m_transformFeedbackBufferBindings[index]
+                ->buffer->scriptValue();
+        }
+        return scriptNull();
+    }
+    case GL_TRANSFORM_FEEDBACK_BUFFER_SIZE: {
+        GLint maxBindings = 0;
+        gl()->getIntegerv(GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS,
+                          &maxBindings);
+        if (index >= static_cast<GLuint>(maxBindings)) {
+            setGLError(GL_INVALID_VALUE);
+            return scriptNull();
+        }
+        if (index < m_transformFeedbackBufferBindings.size() &&
+            m_transformFeedbackBufferBindings[index] != nullptr &&
+            m_transformFeedbackBufferBindings[index]->isRange) {
+            return createScriptValue(static_cast<double>(
+                m_transformFeedbackBufferBindings[index]->size));
+        }
+        return createScriptValue(0.0);
+    }
+    case GL_TRANSFORM_FEEDBACK_BUFFER_START: {
+        GLint maxBindings = 0;
+        gl()->getIntegerv(GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS,
+                          &maxBindings);
+        if (index >= static_cast<GLuint>(maxBindings)) {
+            setGLError(GL_INVALID_VALUE);
+            return scriptNull();
+        }
+        if (index < m_transformFeedbackBufferBindings.size() &&
+            m_transformFeedbackBufferBindings[index] != nullptr &&
+            m_transformFeedbackBufferBindings[index]->isRange) {
+            return createScriptValue(static_cast<double>(
+                m_transformFeedbackBufferBindings[index]->offset));
+        }
+        return createScriptValue(0.0);
+    }
+    case GL_UNIFORM_BUFFER_BINDING: {
+        GLint maxBindings = 0;
+        gl()->getIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxBindings);
+        if (index >= static_cast<GLuint>(maxBindings)) {
+            setGLError(GL_INVALID_VALUE);
+            return scriptNull();
+        }
+        if (index < m_uniformBufferBindings.size() &&
+            m_uniformBufferBindings[index] != nullptr &&
+            m_uniformBufferBindings[index]->buffer != nullptr &&
+            !m_uniformBufferBindings[index]->buffer->isDeleted()) {
+            return m_uniformBufferBindings[index]->buffer->scriptValue();
+        }
+        return scriptNull();
+    }
+    case GL_UNIFORM_BUFFER_SIZE: {
+        GLint maxBindings = 0;
+        gl()->getIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxBindings);
+        if (index >= static_cast<GLuint>(maxBindings)) {
+            setGLError(GL_INVALID_VALUE);
+            return scriptNull();
+        }
+        if (index < m_uniformBufferBindings.size() &&
+            m_uniformBufferBindings[index] != nullptr &&
+            m_uniformBufferBindings[index]->isRange) {
+            return createScriptValue(
+                static_cast<double>(m_uniformBufferBindings[index]->size));
+        }
+        return createScriptValue(0.0);
+    }
+    case GL_UNIFORM_BUFFER_START: {
+        GLint maxBindings = 0;
+        gl()->getIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxBindings);
+        if (index >= static_cast<GLuint>(maxBindings)) {
+            setGLError(GL_INVALID_VALUE);
+            return scriptNull();
+        }
+        if (index < m_uniformBufferBindings.size() &&
+            m_uniformBufferBindings[index] != nullptr &&
+            m_uniformBufferBindings[index]->isRange) {
+            return createScriptValue(
+                static_cast<double>(m_uniformBufferBindings[index]->offset));
+        }
+        return createScriptValue(0.0);
+    }
+    default:
+        setGLError(GL_INVALID_ENUM);
+        return scriptNull();
     }
 }
 

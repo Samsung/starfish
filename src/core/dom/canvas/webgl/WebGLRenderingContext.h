@@ -175,7 +175,7 @@ public:
     WebGLShader* createShader(unsigned long type);
     WebGLTexture* createTexture();
     void cullFace(GLenum mode);
-    void deleteBuffer(Optional<WebGLBuffer*> buffer);
+    virtual void deleteBuffer(Optional<WebGLBuffer*> buffer);
     void deleteFramebuffer(Optional<WebGLFramebuffer*> framebuffer);
     void deleteProgram(Optional<WebGLProgram*> program);
     void deleteRenderbuffer(Optional<WebGLRenderbuffer*> renderbuffer);

@@ -98,7 +98,7 @@ void WebGLRenderingContextState::setBoundBuffer(GLenum target,
 {
     if (target == GL_ELEMENT_ARRAY_BUFFER) {
         GLuint vao = vertexArray();
-        if (maybe.hasValue() && maybe.value() != nullptr) {
+        if (maybe.hasValue()) {
             m_elementArrayBuffers[vao] = maybe.value();
         } else {
             m_elementArrayBuffers.erase(vao);
@@ -106,7 +106,7 @@ void WebGLRenderingContextState::setBoundBuffer(GLenum target,
         return;
     }
 
-    if (maybe.hasValue() && maybe.value() != nullptr) {
+    if (maybe.hasValue()) {
         m_globalBuffersBound[target] = maybe.value();
     } else {
         m_globalBuffersBound.erase(target);
@@ -135,6 +135,26 @@ void WebGLRenderingContextState::deleteVertexArrayOES(GLuint vao)
     m_arraysEnabled.erase(vao);
     m_elementArrayBuffers.erase(vao);
     m_buffersBoundToVertexAttributes.erase(vao);
+}
+
+void WebGLRenderingContextState::unbindBuffer(WebGLBuffer* buffer)
+{
+    if (!buffer) {
+        return;
+    }
+    for (auto it = m_globalBuffersBound.begin();
+         it != m_globalBuffersBound.end();) {
+        if (it->second == buffer) {
+            it = m_globalBuffersBound.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    GLuint vao = vertexArray();
+    auto iter = m_elementArrayBuffers.find(vao);
+    if (iter != m_elementArrayBuffers.end() && iter->second == buffer) {
+        m_elementArrayBuffers.erase(iter);
+    }
 }
 
 GLuint WebGLRenderingContextState::vertexArray()

@@ -874,7 +874,25 @@ void WebGLRenderingContext::cullFace(GLenum mode)
         }                                                                  \
     }
 
-IMPLEMENT_DELETE_BUFFERS(Buffer, m_gl->deleteBuffers);
+void WebGLRenderingContext::deleteBuffer(Optional<WebGLBuffer*> maybe)
+{
+    ENTER_CONTEXT_SCOPE();
+    if (maybe.hasValue()) {
+        WebGLBuffer* value = maybe.value();
+        if (!isFromCurrentContext(value)) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+        if (value->isDeleted()) {
+            return;
+        }
+        GLuint buffer = value->glObject();
+        m_gl->deleteBuffers(1, &buffer);
+        value->markDeleted();
+        m_state->unbindBuffer(value);
+    }
+}
+
 IMPLEMENT_DELETE_BUFFERS(Framebuffer, m_gl->deleteFramebuffers);
 IMPLEMENT_DELETE_BUFFERS(Renderbuffer, m_gl->deleteRenderbuffers);
 
@@ -1735,9 +1753,10 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         WebGLBuffer* buffer = m_state->getBoundBuffer(target).valueOr(nullptr);
         GLint value = 0;
         m_gl->getIntegerv(pname, &value);
-        STARFISH_ASSERT((value == 0 && buffer == nullptr) ||
-                        (static_cast<GLuint>(value) == buffer->glObject()));
-        return buffer ? buffer->scriptValue() : scriptNull();
+        if (buffer && !buffer->isDeleted()) {
+            return buffer->scriptValue();
+        }
+        return scriptNull();
     }
     // WebGLTexture
     case GL_TEXTURE_BINDING_2D:
