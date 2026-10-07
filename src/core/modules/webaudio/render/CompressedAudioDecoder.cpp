@@ -13,13 +13,14 @@
 #include "Starfish.h"
 #include "core/modules/webaudio/render/AudioDecoder.h"
 #include "core/modules/webaudio/render/AudioBufferData.h"
+#include "core/modules/webaudio/render/AudioBus.h"
 
 #include <algorithm>
 #include <cerrno>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
 #include <limits>
-#include <memory>
 #include <new>
 #include <vector>
 
@@ -38,12 +39,6 @@ namespace Starfish {
 #if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
 namespace {
 
-    // Decoded PCM is held twice while the AudioBufferData is built (decode
-    // chunks plus output), so bound it well below the AudioBuffer limit.
-    constexpr size_t MaxDecodedSamples = 32 * 1024 * 1024 / sizeof(float);
-    // Frames per channel in one decode chunk. Fixed-size chunks avoid the
-    // transient doubling of geometric vector growth.
-    constexpr size_t ChunkFrames = 8192;
     // Output frames per resampler call, bounding the conversion buffer even
     // for extreme sample-rate ratios.
     constexpr int64_t ConversionFrames = 4096;
@@ -121,6 +116,9 @@ namespace {
 
         ~CompressedDecoder()
         {
+            for (float* samples : m_channelData) {
+                free(samples);
+            }
             releaseDecoder();
             av_channel_layout_uninit(&m_inputLayout);
             av_channel_layout_uninit(&m_outputLayout);
@@ -150,22 +148,16 @@ namespace {
             }
             releaseDecoder();
 
-            AudioBufferData* data =
-                AudioBufferData::create(m_channels, m_frames);
-            if (!data) {
-                return nullptr;
-            }
-            size_t copied = 0;
-            for (auto& chunk : m_chunks) {
-                size_t count = std::min(ChunkFrames, m_frames - copied);
-                for (size_t channel = 0; channel < m_channels; channel++) {
-                    memcpy(data->channel(channel) + copied,
-                           chunk.get() + channel * ChunkFrames,
-                           count * sizeof(float));
+            // Give back the unused capacity before handing the buffers over.
+            for (float*& samples : m_channelData) {
+                if (auto* trimmed = static_cast<float*>(
+                        realloc(samples, m_frames * sizeof(float)))) {
+                    samples = trimmed;
                 }
-                copied += count;
-                chunk.reset();
             }
+            AudioBufferData* data = AudioBufferData::adopt(
+                m_channelData.data(), m_channels, m_frames);
+            m_channelData.clear();
             return data;
         }
 
@@ -311,28 +303,61 @@ namespace {
             return status >= 0 && swr_init(m_resampler) >= 0;
         }
 
-        bool appendFrames(const float* planar, size_t stride, size_t frames)
+        // Decoded frames go straight into the per-channel buffers that become
+        // the AudioBuffer, so peak memory stays near the decoded size instead
+        // of holding the PCM twice while it is copied into place.
+        bool reserveFrames(size_t needed)
         {
-            if (frames > MaxDecodedSamples / m_channels - m_frames) {
+            const size_t limit = AudioBufferData::MaxSamples / m_channels;
+            if (needed > limit) {
                 return false;
             }
-            for (size_t written = 0; written < frames;) {
-                size_t offset = m_frames % ChunkFrames;
-                if (!offset) {
-                    std::unique_ptr<float[]> chunk(
-                        new float[m_channels * ChunkFrames]);
-                    m_chunks.push_back(std::move(chunk));
+            size_t capacity =
+                m_capacity ? m_capacity + m_capacity / 2 : estimatedFrames();
+            capacity = std::min(std::max(capacity, needed), limit);
+            m_channelData.resize(m_channels, nullptr);
+            for (float*& samples : m_channelData) {
+                auto* grown = static_cast<float*>(
+                    realloc(samples, capacity * sizeof(float)));
+                if (!grown) {
+                    return false;
                 }
-                size_t count = std::min(ChunkFrames - offset, frames - written);
-                float* chunk = m_chunks.back().get();
-                for (size_t channel = 0; channel < m_channels; channel++) {
-                    memcpy(chunk + channel * ChunkFrames + offset,
-                           planar + channel * stride + written,
-                           count * sizeof(float));
-                }
-                written += count;
-                m_frames += count;
+                samples = grown;
             }
+            m_capacity = capacity;
+            return true;
+        }
+
+        // The container duration sizes the first allocation so a typical file
+        // never reallocates. It may be estimated from the bitrate; growth and
+        // the final trim absorb the error.
+        size_t estimatedFrames() const
+        {
+            if (m_format->duration <= 0) {
+                return 0;
+            }
+            int64_t frames =
+                av_rescale(m_format->duration, m_targetRate, AV_TIME_BASE);
+            if (frames <= 0 ||
+                static_cast<uint64_t>(frames) > AudioBufferData::MaxSamples) {
+                return 0;
+            }
+            size_t estimate = static_cast<size_t>(frames);
+            // Decoder priming and duration rounding can add a few frames.
+            return estimate + estimate / 64 + AudioBus::RenderQuantumFrames;
+        }
+
+        bool appendFrames(const float* planar, size_t stride, size_t frames)
+        {
+            if (frames > m_capacity - m_frames &&
+                !reserveFrames(m_frames + frames)) {
+                return false;
+            }
+            for (size_t channel = 0; channel < m_channels; channel++) {
+                memcpy(m_channelData[channel] + m_frames,
+                       planar + channel * stride, frames * sizeof(float));
+            }
+            m_frames += frames;
             return true;
         }
 
@@ -340,7 +365,7 @@ namespace {
                              int inputFrames)
         {
             if (capacity < 0 || static_cast<size_t>(capacity) >
-                                    MaxDecodedSamples / m_channels) {
+                                    AudioBufferData::MaxSamples / m_channels) {
                 return false;
             }
             if (!capacity) {
@@ -432,8 +457,9 @@ namespace {
         AVChannelLayout m_outputLayout{};
         size_t m_channels{ 0 };
         size_t m_frames{ 0 };
+        size_t m_capacity{ 0 };
         std::vector<float> m_conversionBuffer;
-        std::vector<std::unique_ptr<float[]>> m_chunks;
+        std::vector<float*> m_channelData;
     };
 
 } // namespace

@@ -50,11 +50,17 @@ def main():
             '-i', 'sine=frequency=440:sample_rate=48000:duration=0.1',
             '-c:a', 'pcm_mulaw', str(fixture),
         ], check=True, timeout=30)
+        track = path / 'track.mp3'
+        subprocess.run([
+            'ffmpeg', '-nostdin', '-v', 'error', '-f', 'lavfi',
+            '-i', 'sine=frequency=440:sample_rate=44100:duration=100',
+            '-ac', '2', '-c:a', 'libmp3lame', '-b:a', '32k', str(track),
+        ], check=True, timeout=60)
         result = subprocess.run([
             'valgrind', '--leak-check=full', '--show-leak-kinds=definite',
             '--errors-for-leak-kinds=definite', '--error-exitcode=99',
-            str(binary), str(fixture),
-        ], cwd=path, capture_output=True, text=True, timeout=120)
+            str(binary), str(fixture), str(track),
+        ], cwd=path, capture_output=True, text=True, timeout=300)
         print(result.stdout + result.stderr)
         result.check_returncode()
         if 'DECODER_MEMORY_PASS' not in result.stdout:
