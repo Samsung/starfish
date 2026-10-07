@@ -84,6 +84,9 @@ SET(STARFISH_DEFINES
 
 IF (STARFISH_WINDOWS_ENABLE_MULTIMEDIA)
     LIST (APPEND STARFISH_DEFINES -DSTARFISH_ENABLE_MULTIMEDIA)
+    IF (USE_FFMPEG_MEDIA_PLAYER STREQUAL "1")
+        LIST (APPEND STARFISH_DEFINES -DSTARFISH_USE_FFMPEG_MEDIAPLAYER)
+    ENDIF()
 ENDIF()
 
 IF (${WEBGL} STREQUAL "1")
@@ -374,6 +377,14 @@ ADD_CUSTOM_COMMAND (TARGET starfish.shared_library POST_BUILD
     COMMENT "Deploy vcpkg runtime DLLs"
 )
 
+IF (STARFISH_WINDOWS_ENABLE_MULTIMEDIA AND USE_FFMPEG_MEDIA_PLAYER STREQUAL "1")
+    ADD_CUSTOM_COMMAND (TARGET starfish.shared_library POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/starfish-ffmpeg-prebuilt"
+            "$<TARGET_FILE_DIR:starfish.shared_library>/licenses/ffmpeg"
+        COMMENT "Deploy FFmpeg license and package provenance")
+ENDIF()
+
 IF (STARFISH_WINDOWS_BUILD_SHELL)
     SET (STARFISH_WINDOWS_SHELL_SRC
         ${STARFISH_ROOT}/src/shell/windows/StarfishShell.cpp
@@ -403,4 +414,28 @@ IF (STARFISH_WINDOWS_BUILD_SHELL)
     # MSVCRT's exe_main.obj, which references a narrow main that does not
     # exist here (LNK2019). Name the wide startup object explicitly.
     TARGET_LINK_OPTIONS (starfish.windows_shell PRIVATE /ENTRY:wmainCRTStartup)
+ENDIF()
+
+IF (STARFISH_WINDOWS_BUILD_SHELL AND STARFISH_WINDOWS_ENABLE_MULTIMEDIA AND USE_FFMPEG_MEDIA_PLAYER STREQUAL "1")
+    ADD_EXECUTABLE (starfish.windows_mp4_fragment_smoke
+        ${THIRD_PARTY_ROOT}/MP4Parse/tests/fragment_flags.cpp)
+    SET_TARGET_PROPERTIES (starfish.windows_mp4_fragment_smoke PROPERTIES
+        OUTPUT_NAME "MP4FragmentSmoke"
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    TARGET_LINK_LIBRARIES (starfish.windows_mp4_fragment_smoke PRIVATE mp4parse)
+
+    ADD_EXECUTABLE (starfish.windows_ffmpeg_smoke
+        ${STARFISH_ROOT}/tool/windows/ffmpeg_smoke.cpp
+        ${STARFISH_ROOT}/src/platform/multimedia/FFmpegAudioOutput.cpp)
+    SET_TARGET_PROPERTIES (starfish.windows_ffmpeg_smoke PROPERTIES
+        OUTPUT_NAME "FFmpegSmoke"
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    TARGET_INCLUDE_DIRECTORIES (starfish.windows_ffmpeg_smoke PRIVATE ${STARFISH_ROOT}/src)
+    TARGET_COMPILE_DEFINITIONS (starfish.windows_ffmpeg_smoke PRIVATE
+        STARFISH_WINDOWS STARFISH_ENABLE_MULTIMEDIA STARFISH_USE_FFMPEG_MEDIAPLAYER NOMINMAX)
+    TARGET_LINK_LIBRARIES (starfish.windows_ffmpeg_smoke PRIVATE starfish::ffmpeg ole32)
+    ADD_CUSTOM_COMMAND (TARGET starfish.windows_ffmpeg_smoke POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${STARFISH_WINDOWS_VCPKG_RUNTIME_DIR}"
+            "$<TARGET_FILE_DIR:starfish.windows_ffmpeg_smoke>")
 ENDIF()

@@ -69,6 +69,10 @@ ELSE()
     MESSAGE (FATAL_ERROR "vcpkg libwebsockets did not export a supported CMake target")
 ENDIF()
 
+IF (STARFISH_WINDOWS_ENABLE_MULTIMEDIA AND USE_FFMPEG_MEDIA_PLAYER STREQUAL "1")
+    FIND_PACKAGE (starfish-ffmpeg-prebuilt CONFIG REQUIRED)
+ENDIF()
+
 ADD_LIBRARY (starfish.windows.vcpkg INTERFACE)
 TARGET_LINK_LIBRARIES (starfish.windows.vcpkg INTERFACE
     CURL::libcurl
@@ -83,6 +87,10 @@ TARGET_LINK_LIBRARIES (starfish.windows.vcpkg INTERFACE
     ${STARFISH_VCPKG_LIBWEBSOCKETS_TARGET}
     PThreads4W::PThreads4W
 )
+
+IF (STARFISH_WINDOWS_ENABLE_MULTIMEDIA AND USE_FFMPEG_MEDIA_PLAYER STREQUAL "1")
+    TARGET_LINK_LIBRARIES (starfish.windows.vcpkg INTERFACE starfish::ffmpeg ole32)
+ENDIF()
 
 # This is read only inside a POST_BUILD COMMAND (windows.cmake's
 # copy_directory deploy step for starfish.shared_library), which CMake

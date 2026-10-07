@@ -1,0 +1,67 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>FFmpeg progressive playback regression</title>
+<audio id="audio" preload="auto"></audio>
+<video id="video" preload="auto" width="320" height="240"></video>
+<script>
+let failures = 0;
+function check(value, message) {
+    console.assert(value, message);
+    if (!value) { failures++; console.log('PROGRESSIVE_MEDIA_FAIL ' + message); }
+}
+function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+function event(target, name) {
+    return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('timeout: ' + name)), 5000);
+        target.addEventListener(name, () => { clearTimeout(timeout); resolve(); }, {once: true});
+        target.addEventListener('error', () => reject(new Error('media error')), {once: true});
+    });
+}
+function testEnd() {
+    const result = failures ? 'FAIL' : 'PASS';
+    console.log('PROGRESSIVE_MEDIA_' + result);
+    fetch('/result?status=' + result).catch(() => {});
+}
+async function run() {
+    const audio = document.getElementById('audio');
+    let ready = event(audio, 'loadedmetadata');
+    audio.src = 'tone.wav';
+    await ready;
+    check(audio.paused, 'loading metadata must preserve paused');
+    check(audio.duration > 2.9 && audio.duration < 3.1, 'audio-only duration');
+    audio.muted = true;
+    audio.volume = 0.25;
+    check(audio.muted, 'volume preserves mute');
+    audio.muted = false;
+    await audio.play();
+    await wait(450);
+    check(audio.currentTime > 0.1 && audio.currentTime < 1.2, 'audio clock advances in real time');
+    const pausedEvent = event(audio, 'pause');
+    audio.pause();
+    await pausedEvent;
+    const paused = audio.currentTime;
+    await wait(250);
+    check(audio.paused && Math.abs(audio.currentTime - paused) < 0.1, 'pause freezes playhead');
+    const seeked = event(audio, 'seeked');
+    audio.currentTime = 1.3;
+    await seeked;
+    check(audio.paused && Math.abs(audio.currentTime - 1.3) < 0.15, 'paused seek');
+    const ended = event(audio, 'ended');
+    await audio.play();
+    await ended;
+    check(audio.ended, 'audio ended event');
+    const video = document.getElementById('video');
+    ready = event(video, 'loadedmetadata');
+    video.src = 'clip.mp4';
+    await ready;
+    check(video.paused, 'video must not autoplay');
+    check(video.videoWidth === 64 && video.videoHeight === 48, 'software H264 dimensions');
+    video.muted = true;
+    await video.play();
+    await wait(600);
+    check(video.currentTime > 0.1 && video.currentTime < 1.5, 'video clock advances in real time');
+    video.pause();
+    testEnd();
+}
+run().catch(error => { check(false, String(error)); testEnd(); });
+</script>

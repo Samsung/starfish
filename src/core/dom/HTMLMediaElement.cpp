@@ -361,7 +361,8 @@ void HTMLMediaElement::initMediaPlayer(ResourceURL* url)
     } else if (m_resourceSelectionContext->m_mode ==
                    ResourceSelectionContext::MODE_ATTRIBUTE &&
                isHTMLAudioElement()) {
-#if defined(STARFISH_ENABLE_WEBAUDIO)
+#if defined(STARFISH_ENABLE_WEBAUDIO) && \
+    !defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
         m_mediaPlayer = MediaPlayerAudio::create(this);
 #endif
     }
@@ -1750,6 +1751,11 @@ void MediaOperationQueueDataRequestPause::processOperationQueue()
         return;
     }
     player->pause();
+    double time = player->currentTime();
+    m_mediaElement->setPlayEndPos(time);
+    // Pause event observers must see the final playback position.
+    // https://html.spec.whatwg.org/multipage/media.html#internal-pause-steps
+    m_mediaElement->setOfficialPlaybackPosition(time);
     // Fire a simple event named timeupdate at the element.
     m_mediaElement->dispatchTimeupdateEventNow();
     // Fire a simple event named pause at the element.
@@ -1765,10 +1771,6 @@ void MediaOperationQueueDataRequestPause::processOperationQueue()
             ->m_promise->reject(exception->scriptValue());
         iter = m_mediaElement->m_playOperationQueue.erase(iter);
     }
-    double time = player->currentTime();
-    m_mediaElement->setPlayEndPos(time);
-    // Set the official playback position to the current playback position.
-    m_mediaElement->setOfficialPlaybackPosition(time);
 }
 
 void MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()

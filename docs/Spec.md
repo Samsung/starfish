@@ -59,7 +59,7 @@ The compile-time flags that gate large chunks of this spec. "Default" is for the
 | `Intl`, locale-sensitive formatting | `RUNTIME_ICU=1` (→ `STARFISH_ENABLE_RUNTIME_ICU_BINDER`) | on | ICU is linked directly (`icu-uc`/`icu-i18n` become build dependencies) instead of being bound at runtime. The JS-visible `Intl` surface is the same either way. |
 | Web Device API (`window.tizen`) | `CMAKE_SYSTEM_NAME=Tizen` + `TIZEN_DEVICE_API` | off (linux/windows/android) | `window.tizen` undefined. |
 | MSE playback backend | `ENABLE_ESPLUSPLAYER=1` | off; auto-enabled on `CMAKE_SYSTEM_NAME=Tizen` with `TIZEN_MAJOR_VERSION >= 10`. Requires `CMAKE_SYSTEM_NAME=Tizen` | Media Source playback uses the platform-default media path. |
-| ffmpeg media player | `USE_FFMPEG_MEDIA_PLAYER=1` | off | `<video>`/`<audio>` use the platform-default media path. |
+| ffmpeg media player | `USE_FFMPEG_MEDIA_PLAYER=1` (and `STARFISH_WINDOWS_ENABLE_MULTIMEDIA=ON` on Windows) | off on Linux; on on Windows | `<video>`/`<audio>` use the platform-default media path (mock on Windows). |
 | Chrome DevTools Protocol server | `STARFISH_ENABLE_CDP=1` | off | No CDP endpoint. This surface is never visible to page script either way — see `docs/CDP.md`. |
 
 When you read a row in the tables below, assume the corresponding flag in this table is on unless the row's "Note" column says otherwise.
