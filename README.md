@@ -282,7 +282,7 @@ active MSVC toolchain and deployed as `pthreadVC3.dll`; the vcpkg path does
 not use the checked-in VC2010-era `pthreadVC2.dll`. A target Windows system
 must provide the Visual C++ runtime and the Windows system `icu.dll` API.
 
-The x64 LGPL shared FFmpeg prebuilt package is pinned separately in
+The x86/x64 LGPL shared FFmpeg prebuilt packages are pinned separately in
 `third_party/windows/ffmpeg`, on the external submodule branch
 `modules/third_party/windows/ffmpeg`. It retains the five media libraries,
 development files, license, source archives, and archive checksums, so its
