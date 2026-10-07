@@ -92,9 +92,9 @@ public:
                     decodeCompressedAudio(bytes, work->m_bytes.size(), 48000);
             }
             // The element keeps its decoded PCM for as long as it holds the
-            // resource. Bound it to the compressed decoder's output limit so
-            // a WAVE resource (e.g. 8 kHz upsampled to 48 kHz) cannot pin the
-            // full AudioBuffer allocation limit per element.
+            // resource, so bound it well below the AudioBuffer limit: no
+            // element pins the full allocation limit, e.g. with a WAVE
+            // resource upsampled from 8 kHz to 48 kHz.
             constexpr size_t MaxElementSamples =
                 32 * 1024 * 1024 / sizeof(float);
             if (work->m_pcm &&

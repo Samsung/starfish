@@ -105,6 +105,11 @@ Default values are in **bold**.
 * -DCLI=[ **0** | 1 ]<br>
   Build the CLI on Linux. Requires a shell executable and
   -DSTARFISH_ENABLE_CDP=1.
+* -DWEBAUDIO=[ **0** | 1 ]<br>
+  Enable Web Audio on processors other than x86_64, where it is always on.
+  On Tizen it needs capi-media-audio-io, capi-media-sound-manager and the
+  platform FFmpeg (libavcodec, libavformat, libavutil, libswresample) for
+  compressed `decodeAudioData()`.
 * -DUSE_FFMPEG_MEDIA_PLAYER=[ **0** | 1 ]<br>
   Use the common FFmpeg software media player. The default is `1` on Windows
   and `0` on Linux. Linux also enables Web Audio compressed `decodeAudioData()`
@@ -212,6 +217,8 @@ Default values are in **bold**.
 
 * --define 'build_profile [ tv | common | headless | **all** ]'<br>
   Genereate RPMs for TV, common and headless platforms.
+* --define 'enable_webaudio [ **0** | 1 ]'<br>
+  Build with Web Audio (`-DWEBAUDIO=1`).
 
 ### How to Compile: Windows x86/x64
 

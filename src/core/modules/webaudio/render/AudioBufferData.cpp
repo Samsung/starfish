@@ -58,21 +58,6 @@ AudioBufferData* AudioBufferData::create(size_t channels, size_t frames)
     return new AudioBufferData(channelData.release(), channels, frames);
 }
 
-AudioBufferData* AudioBufferData::adopt(float* const* channelData,
-                                        size_t channels, size_t frames)
-{
-    std::unique_ptr<float*[]> owned;
-    if (isWithinLimit(channels, frames)) {
-        owned.reset(new (std::nothrow) float*[channels]);
-    }
-    if (!owned) {
-        freeChannels(channelData, channels);
-        return nullptr;
-    }
-    std::copy(channelData, channelData + channels, owned.get());
-    return new AudioBufferData(owned.release(), channels, frames);
-}
-
 AudioBufferData::AudioBufferData(float** channelData, size_t channels,
                                  size_t frames)
     : m_channelData(channelData)
@@ -134,6 +119,66 @@ const float* AudioBufferData::channel(size_t index) const
 {
     STARFISH_ASSERT(index < m_channels);
     return m_channelData[index];
+}
+
+AudioBufferDataBuilder::AudioBufferDataBuilder(size_t channels,
+                                               size_t expectedFrames)
+    : m_channelData(channels, nullptr)
+    , m_expectedFrames(expectedFrames)
+{
+}
+
+AudioBufferDataBuilder::~AudioBufferDataBuilder()
+{
+    freeChannels(m_channelData.data(), m_channelData.size());
+}
+
+bool AudioBufferDataBuilder::reserve(size_t frames)
+{
+    if (!isWithinLimit(channels(), m_frames + frames)) {
+        return false;
+    }
+    const size_t needed = m_frames + frames;
+    if (needed <= m_capacity) {
+        return true;
+    }
+    const size_t limit = AudioBufferData::MaxSamples / channels();
+    size_t capacity =
+        m_capacity ? m_capacity + m_capacity / 2 : m_expectedFrames;
+    capacity = std::min(std::max(capacity, needed), limit);
+    for (float*& samples : m_channelData) {
+        auto* grown =
+            static_cast<float*>(realloc(samples, capacity * sizeof(float)));
+        if (!grown) {
+            return false;
+        }
+        samples = grown;
+    }
+    m_capacity = capacity;
+    return true;
+}
+
+AudioBufferData* AudioBufferDataBuilder::finish()
+{
+    if (!m_frames) {
+        return nullptr;
+    }
+    std::unique_ptr<float*[]> channelData(
+        new (std::nothrow) float*[channels()]);
+    if (!channelData) {
+        return nullptr;
+    }
+    // Give back the unused capacity before handing the buffers over.
+    for (size_t channel = 0; channel < channels(); channel++) {
+        float*& samples = m_channelData[channel];
+        if (auto* trimmed = static_cast<float*>(
+                realloc(samples, m_frames * sizeof(float)))) {
+            samples = trimmed;
+        }
+        channelData[channel] = samples;
+        samples = nullptr;
+    }
+    return new AudioBufferData(channelData.release(), channels(), m_frames);
 }
 
 } // namespace Starfish

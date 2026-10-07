@@ -14,6 +14,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <vector>
 
 namespace Starfish {
 
@@ -26,11 +27,6 @@ public:
     static constexpr size_t MaxSamples = 128 * 1024 * 1024 / sizeof(float);
 
     static AudioBufferData* create(size_t channels, size_t frames);
-    // Takes ownership of `channels` malloc()ed arrays of `frames` samples, so
-    // a decoder that learns the length only at the end hands its buffers over
-    // without a copy. Frees them and returns nullptr when over the limit.
-    static AudioBufferData* adopt(float* const* channelData, size_t channels,
-                                  size_t frames);
 
     void retain();
     void release();
@@ -56,6 +52,8 @@ public:
     }
 
 private:
+    friend class AudioBufferDataBuilder;
+
     AudioBufferData(float** channelData, size_t channels, size_t frames);
     ~AudioBufferData();
 
@@ -64,6 +62,47 @@ private:
     float** m_channelData;
     size_t m_channels;
     size_t m_frames;
+};
+
+// Collects decoded PCM straight into the buffers the finished AudioBufferData
+// adopts. A decoder learns the length only at the end; copying from a staging
+// buffer would hold the PCM twice.
+class AudioBufferDataBuilder {
+public:
+    // `expectedFrames` (0 if unknown) sizes the first allocation, so a
+    // correct estimate never reallocates.
+    AudioBufferDataBuilder(size_t channels, size_t expectedFrames);
+    ~AudioBufferDataBuilder();
+
+    size_t channels() const
+    {
+        return m_channelData.size();
+    }
+    size_t frames() const
+    {
+        return m_frames;
+    }
+    // Makes room for `frames` more frames per channel; false past the
+    // AudioBuffer limit or on allocation failure.
+    bool reserve(size_t frames);
+    // The first unwritten frame of `channel`; valid until the next reserve().
+    float* end(size_t channel)
+    {
+        return m_channelData[channel] + m_frames;
+    }
+    // Marks `frames` reserved frames written.
+    void commit(size_t frames)
+    {
+        m_frames += frames;
+    }
+    // Returns the buffer, or nullptr when nothing was written.
+    AudioBufferData* finish();
+
+private:
+    std::vector<float*> m_channelData;
+    size_t m_expectedFrames;
+    size_t m_capacity{ 0 };
+    size_t m_frames{ 0 };
 };
 
 } // namespace Starfish

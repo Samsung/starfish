@@ -361,8 +361,11 @@ void HTMLMediaElement::initMediaPlayer(ResourceURL* url)
     } else if (m_resourceSelectionContext->m_mode ==
                    ResourceSelectionContext::MODE_ATTRIBUTE &&
                isHTMLAudioElement()) {
+        // FFmpeg and Tizen builds keep <audio> on their full media player,
+        // which plays every format the platform supports; the Web Audio
+        // player decodes only what decodeAudioData does.
 #if defined(STARFISH_ENABLE_WEBAUDIO) && \
-    !defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
+    !defined(STARFISH_USE_FFMPEG_MEDIAPLAYER) && !defined(STARFISH_TIZEN)
         m_mediaPlayer = MediaPlayerAudio::create(this);
 #endif
     }
