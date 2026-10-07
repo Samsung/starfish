@@ -72,6 +72,8 @@ public:
     void deleteVertexArray(GLuint vao);
     void deleteVertexArrayOES(GLuint vao);
 
+    void unbindBuffer(WebGLBuffer* buffer);
+
 private:
     GLuint vertexArray();
 

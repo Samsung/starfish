@@ -118,12 +118,14 @@ public:
     FILL_GC_POINTER(WebGL2RenderingContext, m_readFramebuffer);
     FILL_GC_POINTER(WebGL2RenderingContext, m_drawFramebuffer);
     FILL_GC_POINTER(WebGL2RenderingContext, m_uniformBufferBindings);
+    FILL_GC_POINTER(WebGL2RenderingContext, m_transformFeedbackBufferBindings);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 
 public:
     // Implement WebGLRenderingContextBase
 
     void bindBuffer(GLenum target, Optional<WebGLBuffer*> buffer);
+    void deleteBuffer(Optional<WebGLBuffer*> buffer) override;
     void bindFramebuffer(GLenum target, Optional<WebGLFramebuffer*> buffer);
     void bindTexture(GLenum target, Optional<WebGLTexture*> texture);
 
@@ -233,6 +235,7 @@ public:
     void bindBufferRange(GLenum target, GLuint index,
                          Optional<WebGLBuffer*> buffer, GLintptr offset,
                          GLsizeiptr size);
+    ScriptValue getIndexedParameter(GLenum target, GLuint index);
     ScriptValue getActiveUniforms(WebGLProgram* program,
                                   GCAtomicVector<GLuint> uniformIndices,
                                   GLenum pname);
@@ -464,6 +467,7 @@ private:
         bool isRange;
     };
     GCVector<IndexedBufferBinding*> m_uniformBufferBindings;
+    GCVector<IndexedBufferBinding*> m_transformFeedbackBufferBindings;
 };
 
 } // namespace Starfish

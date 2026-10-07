@@ -334,6 +334,9 @@ public:
     virtual void bindBufferRange(GLenum target, GLuint index, GLuint buffer,
                                  GLintptr offset, GLsizeiptr size) = 0;
     virtual void bindBufferBase(GLenum target, GLuint index, GLuint buffer) = 0;
+    virtual void copyBufferSubData(GLenum readTarget, GLenum writeTarget,
+                                   GLintptr readOffset, GLintptr writeOffset,
+                                   GLsizeiptr size) = 0;
     virtual void vertexAttribIPointer(GLuint index, GLint size, GLenum type,
                                       GLsizei stride, const void *pointer) = 0;
     virtual void getVertexAttribIiv(GLuint index, GLenum pname,

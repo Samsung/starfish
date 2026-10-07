@@ -1494,12 +1494,12 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/attribs/gl-vertex-a
 http://localhost:11010/conformance-suites/2.0.0/conformance2/attribs/gl-vertex-attrib-i-render.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/attribs/gl-vertexattribipointer.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/attribs/gl-vertexattribipointer-offsets.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/buffers/bound-buffer-size-change-test.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/buffers/buffer-copying-contents.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/buffers/bound-buffer-size-change-test.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/buffers/buffer-copying-contents.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/buffers/buffer-copying-restrictions.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/buffers/buffer-data-and-buffer-sub-data-sub-source.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/buffers/buffer-type-restrictions.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/buffers/buffer-overflow-test.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/buffers/buffer-overflow-test.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/buffers/get-buffer-sub-data.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/buffers/one-large-uniform-buffer.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/buffers/uniform-buffers.html

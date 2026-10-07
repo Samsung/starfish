@@ -1057,6 +1057,14 @@ public:
         glBindBufferBase(target, index, buffer);
     }
 
+    void copyBufferSubData(GLenum readTarget, GLenum writeTarget,
+                           GLintptr readOffset, GLintptr writeOffset,
+                           GLsizeiptr size) override
+    {
+        glCopyBufferSubData(readTarget, writeTarget, readOffset, writeOffset,
+                            size);
+    }
+
     void vertexAttribIPointer(GLuint index, GLint size, GLenum type,
                               GLsizei stride, const void *pointer) override
     {
