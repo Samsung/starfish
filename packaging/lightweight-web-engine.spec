@@ -134,6 +134,11 @@ Requires(postun): /sbin/ldconfig
 %define enable_webrtc 0
 %endif
 
+%if 0%{?enable_webaudio:1}
+%else
+%define enable_webaudio 0
+%endif
+
 # -DENABLE_ESPLUSPLAYER flag: only turned on for the "common" profile on
 # Tizen 10 or higher (esplusplayer MSE backend is unsupported before Tizen 10).
 # It is fed through the shared features_config, so leaving it off for "all" keeps
@@ -328,6 +333,13 @@ BuildRequires: pkgconfig(dbus-1)
 %if 0%{?enable_webrtc:1}
 BuildRequires: pkgconfig(capi-media-camera)
 BuildRequires: pkgconfig(capi-media-tool)
+%endif
+
+%if "%{enable_webaudio}" == "1"
+BuildRequires: pkgconfig(libavcodec)
+BuildRequires: pkgconfig(libavformat)
+BuildRequires: pkgconfig(libavutil)
+BuildRequires: pkgconfig(libswresample)
 %endif
 
 %if 0%{?need_esplusplayer_pkg} == 1
@@ -556,7 +568,7 @@ CFLAGS="$CFLAGS -DNO_UFFDWP_VDB "
 # This features_config values are used in cmake command.
 %define features_config -DWORKER='%{enable_worker}' -DSHARED_WORKER='%{enable_sharedworker}' \\\
   -DSERVICE_WORKER='%{enable_serviceworker}' -DTLS_ACCESS_BY_ADDRESS='%{enable_tls_access_by_address}' \\\
-  -DWEBRTC='%{enable_webrtc}' -DWEBGL='%{enable_webgl}' \\\
+  -DWEBRTC='%{enable_webrtc}' -DWEBGL='%{enable_webgl}' -DWEBAUDIO='%{enable_webaudio}' \\\
   -DENABLE_ESPLUSPLAYER='%{enable_esplusplayer}' -DESCARGOT_FORCE_TLS_DIALECT_GNU2='%{force_tls_dialect_gnu2}'
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"

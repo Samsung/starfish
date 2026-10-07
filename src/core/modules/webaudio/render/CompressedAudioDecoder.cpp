@@ -15,16 +15,22 @@
 #include "core/modules/webaudio/render/AudioBufferData.h"
 #include "core/modules/webaudio/render/AudioBus.h"
 
+// Linux decodes with FFmpeg only in the FFmpeg media player build; Tizen
+// Web Audio builds always link the platform's FFmpeg.
+#if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER) || defined(STARFISH_TIZEN)
+#define STARFISH_FFMPEG_AUDIO_DECODER
+#endif
+
 #include <algorithm>
 #include <cerrno>
 #include <cmath>
-#include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <memory>
 #include <new>
 #include <vector>
 
-#if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
+#if defined(STARFISH_FFMPEG_AUDIO_DECODER)
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -36,7 +42,7 @@ extern "C" {
 
 namespace Starfish {
 
-#if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
+#if defined(STARFISH_FFMPEG_AUDIO_DECODER)
 namespace {
 
     // Output frames per resampler call, bounding the conversion buffer even
@@ -116,9 +122,6 @@ namespace {
 
         ~CompressedDecoder()
         {
-            for (float* samples : m_channelData) {
-                free(samples);
-            }
             releaseDecoder();
             av_channel_layout_uninit(&m_inputLayout);
             av_channel_layout_uninit(&m_outputLayout);
@@ -143,22 +146,11 @@ namespace {
             }
             if (status != AVERROR_EOF ||
                 avcodec_send_packet(m_codec, nullptr) < 0 || !receiveFrames() ||
-                !flushResampler() || !m_frames) {
+                !flushResampler()) {
                 return nullptr;
             }
             releaseDecoder();
-
-            // Give back the unused capacity before handing the buffers over.
-            for (float*& samples : m_channelData) {
-                if (auto* trimmed = static_cast<float*>(
-                        realloc(samples, m_frames * sizeof(float)))) {
-                    samples = trimmed;
-                }
-            }
-            AudioBufferData* data = AudioBufferData::adopt(
-                m_channelData.data(), m_channels, m_frames);
-            m_channelData.clear();
-            return data;
+            return m_output->finish();
         }
 
     private:
@@ -291,6 +283,8 @@ namespace {
                     return false;
                 }
                 m_channels = static_cast<size_t>(channels);
+                m_output.reset(
+                    new AudioBufferDataBuilder(m_channels, estimatedFrames()));
             }
             av_channel_layout_uninit(&m_inputLayout);
             m_inputLayout = layout;
@@ -303,34 +297,9 @@ namespace {
             return status >= 0 && swr_init(m_resampler) >= 0;
         }
 
-        // Decoded frames go straight into the per-channel buffers that become
-        // the AudioBuffer, so peak memory stays near the decoded size instead
-        // of holding the PCM twice while it is copied into place.
-        bool reserveFrames(size_t needed)
-        {
-            const size_t limit = AudioBufferData::MaxSamples / m_channels;
-            if (needed > limit) {
-                return false;
-            }
-            size_t capacity =
-                m_capacity ? m_capacity + m_capacity / 2 : estimatedFrames();
-            capacity = std::min(std::max(capacity, needed), limit);
-            m_channelData.resize(m_channels, nullptr);
-            for (float*& samples : m_channelData) {
-                auto* grown = static_cast<float*>(
-                    realloc(samples, capacity * sizeof(float)));
-                if (!grown) {
-                    return false;
-                }
-                samples = grown;
-            }
-            m_capacity = capacity;
-            return true;
-        }
-
-        // The container duration sizes the first allocation so a typical file
-        // never reallocates. It may be estimated from the bitrate; growth and
-        // the final trim absorb the error.
+        // The container duration sizes the first allocation. It may be
+        // estimated from the bitrate; growth and the final trim absorb the
+        // error.
         size_t estimatedFrames() const
         {
             if (m_format->duration <= 0) {
@@ -349,15 +318,14 @@ namespace {
 
         bool appendFrames(const float* planar, size_t stride, size_t frames)
         {
-            if (frames > m_capacity - m_frames &&
-                !reserveFrames(m_frames + frames)) {
+            if (!m_output->reserve(frames)) {
                 return false;
             }
             for (size_t channel = 0; channel < m_channels; channel++) {
-                memcpy(m_channelData[channel] + m_frames,
-                       planar + channel * stride, frames * sizeof(float));
+                memcpy(m_output->end(channel), planar + channel * stride,
+                       frames * sizeof(float));
             }
-            m_frames += frames;
+            m_output->commit(frames);
             return true;
         }
 
@@ -456,10 +424,8 @@ namespace {
         AVChannelLayout m_inputLayout{};
         AVChannelLayout m_outputLayout{};
         size_t m_channels{ 0 };
-        size_t m_frames{ 0 };
-        size_t m_capacity{ 0 };
+        std::unique_ptr<AudioBufferDataBuilder> m_output;
         std::vector<float> m_conversionBuffer;
-        std::vector<float*> m_channelData;
     };
 
 } // namespace
@@ -468,7 +434,7 @@ namespace {
 AudioBufferData* decodeCompressedAudio(const uint8_t* bytes, size_t length,
                                        double targetSampleRate)
 {
-#if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
+#if defined(STARFISH_FFMPEG_AUDIO_DECODER)
     if (!bytes || !length ||
         length > static_cast<size_t>(std::numeric_limits<int64_t>::max()) ||
         !std::isfinite(targetSampleRate) || targetSampleRate < 3000 ||

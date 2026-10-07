@@ -48,7 +48,7 @@ The compile-time flags that gate large chunks of this spec. "Default" is for the
 | Workers | `WORKER=1`, `SHARED_WORKER=1`, `SERVICE_WORKER=1` | off, off, off | Worker globals undefined. Setting `SHARED_WORKER` or `SERVICE_WORKER` forces `WORKER=1`. |
 | IndexedDB | `IDB=1` | off | `indexedDB` undefined. |
 | WebRTC, MediaStream | `WEBRTC=1` (→ `STARFISH_ENABLE_WEBRTC`/`MULTIMEDIA`/`WEBSOCKET`/`WEBAUDIO`) | off | All `RTC*`/`MediaStream*` interfaces undefined. |
-| WebAudio | `STARFISH_ENABLE_WEBAUDIO` | on for `CMAKE_SYSTEM_PROCESSOR=x86_64` only; also implied by `WEBRTC=1` | `AudioContext` etc. undefined. |
+| WebAudio | `STARFISH_ENABLE_WEBAUDIO` (also from `WEBAUDIO=1`; Tizen RPM: `--define 'enable_webaudio 1'`) | on for `CMAKE_SYSTEM_PROCESSOR=x86_64`; **off** elsewhere unless `WEBAUDIO=1`; also implied by `WEBRTC=1` | `AudioContext` etc. undefined. |
 | WebSocket | `STARFISH_ENABLE_WEBSOCKET` | on (every `CMAKE_SYSTEM_PROCESSOR`) | `WebSocket` undefined. |
 | Web Speech (TTS) | `STARFISH_ENABLE_TTS` | on for `CMAKE_SYSTEM_PROCESSOR=x86_64` only | `SpeechSynthesis*` undefined. |
 | [WAI-ARIA](#accessible-rich-internet-applications-wai-aria) touch exploration | `STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION` (from `ENABLE_A11Y_TOUCH=1`) | on for `CMAKE_SYSTEM_PROCESSOR=x86_64`; on `CMAKE_SYSTEM_NAME=Tizen` it needs `-DENABLE_A11Y_TOUCH=1` and is force-disabled on TV profiles | Tap-to-speak / double-tap-activate / swipe navigation absent; ARIA attributes still reflect. |
@@ -3514,12 +3514,14 @@ rejected.
 The compressed decoder accepts AAC, FLAC, Matroska/WebM, MP4/MOV, MP3,
 Ogg, and WAVE containers. Playlists and secondary file or network access
 from demuxers are rejected; decoding is confined to the supplied bytes.
-Without that option, compressed formats are rejected. WAV data uses linear
-interpolation when resampling. Compressed decoding writes its output PCM in
-place, without a second copy, and shares the `AudioBuffer` limit below
-(for example, about 5.8 minutes of 48 kHz stereo). `decodeAudioData()`
-detaches the input `ArrayBuffer` and decodes directly from its detached
-storage without copying it.
+Tizen builds decode compressed audio the same way with the platform's FFmpeg
+libraries, so the decoders available depend on the device's FFmpeg build.
+Other Linux builds reject compressed formats.
+WAV data uses linear interpolation when resampling. Compressed decoding writes its
+output PCM in place, without a second copy, and shares the `AudioBuffer`
+limit below (for example, about 5.8 minutes of 48 kHz stereo).
+`decodeAudioData()` detaches the input `ArrayBuffer` and decodes directly
+from its detached storage without copying it.
 `AudioBuffer` allocation is limited to 128 MiB to preserve the low-memory
 profile. Every node type listed below renders in both `OfflineAudioContext`
 and real-time `AudioContext` graphs, including fan-in mixing, channel
@@ -3533,11 +3535,12 @@ rendering through `startRendering(chunkSize)` is not implemented.
 after the state change, then fire `statechange` in a separate task; offline
 completion resolves `startRendering()` before firing `complete`.
 Real-time `AudioContext` sends stereo PCM to PulseAudio on Linux when its
-Simple API is available; otherwise it advances its clock with silent output.
+Simple API is available, and to `audio_out` (as a media stream) on Tizen;
+otherwise it advances its clock with silent output.
 Real-time rendering runs on a native per-context thread, with a separate
-blocking PulseAudio writer thread. The PulseAudio connection is opened on
+blocking writer thread. The audio server connection is opened on
 that writer thread, so the main thread does not block on it. At most 8
-PulseAudio clients are open at once; further output devices fall back to
+output connections are open at once; further output devices fall back to
 silent output. Rendered quanta pass through an 8-slot queue and are dropped
 only when it is full. Node and AudioParam connections use a
 bounded native command queue, applied before rendering or synchronous graph
@@ -3548,18 +3551,19 @@ This is not a lock-free real-time implementation. Completion events remain
 on the main event loop, as does chunked offline rendering; a real-time
 context polls for source completion only while a started source is pending.
 Suspend, close, and document teardown join the render thread but not the
-PulseAudio writer thread. Tizen hardware output is not
-yet connected.
+writer thread.
 AudioBufferSourceNode acquires immutable PCM on `start()` (or when its buffer
 is assigned after `start()`), detaching old channel views and copying only
 when script next modifies the AudioBuffer.
 `MediaElementAudioSourceNode` rejects a second source for the same media
-element. On Linux, an `<audio src>` resource is decoded off the main thread
-and its PCM is routed into the Web Audio graph; the element's volume, mute,
-rate, seeking, and loop state continue to apply. Creation of the source
-suppresses the element's direct audio output. Encoded resources larger than
-32 MiB are rejected early from `Content-Length` (as a media error) and again
-after download; the response body is moved to the decoder, not copied.
+element. On Tizen, `<audio>` keeps playing through the platform player and
+its audio is not routed into the graph. On Linux, an `<audio src>` resource
+is decoded off the main thread and its PCM is routed into the Web Audio
+graph; the element's volume, mute, rate, seeking, and loop state continue to
+apply. Creation of the source suppresses the element's direct audio output.
+Encoded resources larger than 32 MiB are rejected early from `Content-Length`
+(as a media error) and again after download; the response body is moved to
+the decoder, not copied.
 Decoded PCM is capped at 32 MiB (8M float samples) per element. The graph
 receives silence for opaque cross-origin and redirected resources because the
 media loader does not yet provide a trustworthy final CORS label. This also means

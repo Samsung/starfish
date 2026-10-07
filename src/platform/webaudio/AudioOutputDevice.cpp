@@ -15,8 +15,13 @@
 #include "core/modules/webaudio/render/AudioBus.h"
 #include "core/modules/profiling/Profiling.h"
 
+#if defined(STARFISH_LINUX) || defined(STARFISH_TIZEN)
 #if defined(STARFISH_LINUX)
 #include "platform/multimedia/PulseSimple.h"
+#else
+#include <audio_io.h>
+#include <sound_manager.h>
+#endif
 
 #include <algorithm>
 #include <array>
@@ -32,30 +37,174 @@
 
 namespace Starfish {
 
-#if defined(STARFISH_LINUX)
+#if defined(STARFISH_LINUX) || defined(STARFISH_TIZEN)
 namespace {
 
     constexpr size_t outputChannels = 2;
     constexpr size_t quantumSamples =
         AudioBus::RenderQuantumFrames * outputChannels;
     constexpr size_t queuedQuanta = 8;
-    // Each device is a PulseAudio client plus a writer thread. Writers that
+    // Each device is an audio server client plus a writer thread. Writers that
     // are still closing after their owner went away count too, so a stalled
     // server cannot accumulate threads; further devices fall back to the
     // silent wall clock.
     constexpr unsigned maxOutputDevices = 8;
     std::atomic<unsigned> g_outputDevices{ 0 };
 
-    // Shared by the owning device and its detached writer thread, so either
-    // may go away first.
-    struct PulseOutputState {
-        PulseOutputState(PulseSimpleApi* api, uint32_t sampleRate)
-            : api(api)
-            , sampleRate(sampleRate)
+    // The platform connection. Only the writer thread uses it, and every
+    // call may block on the audio server.
+    class OutputSink {
+    public:
+        // Discards queued output instead of draining it.
+        virtual ~OutputSink() = default;
+        virtual bool write(const int16_t* pcm, size_t bytes) = 0;
+        // Microseconds of audio queued ahead of the speaker.
+        virtual bool latency(uint64_t& latencyUs) = 0;
+    };
+
+#if defined(STARFISH_LINUX)
+    class PulseSink final : public OutputSink {
+    public:
+        static std::unique_ptr<OutputSink> open(PulseSimpleApi* api,
+                                                uint32_t sampleRate)
+        {
+            pa_sample_spec spec{ PA_SAMPLE_S16LE, sampleRate, 2 };
+            // PulseAudio's default prebuffer can hold about two seconds,
+            // delaying short media and interactive Web Audio. Request 20 ms,
+            // with room for four render quanta at the lowest supported sample
+            // rates.
+            const uint32_t targetFrames = std::max(
+                sampleRate / 50,
+                static_cast<uint32_t>(AudioBus::RenderQuantumFrames * 4));
+            pa_buffer_attr buffer{ UINT32_MAX, targetFrames * 4, UINT32_MAX,
+                                   UINT32_MAX, UINT32_MAX };
+            int error = 0;
+            pa_simple* sink = api->pa_simple_new(
+                nullptr, "Starfish", PA_STREAM_PLAYBACK, nullptr, "Web Audio",
+                &spec, nullptr, &buffer, &error);
+            if (!sink) {
+                return nullptr;
+            }
+            return std::unique_ptr<OutputSink>(new PulseSink(api, sink));
+        }
+
+        ~PulseSink() override
+        {
+            int error = 0;
+            m_api->pa_simple_flush(m_sink, &error);
+            m_api->pa_simple_free(m_sink);
+        }
+
+        bool write(const int16_t* pcm, size_t bytes) override
+        {
+            int error = 0;
+            return m_api->pa_simple_write(m_sink, pcm, bytes, &error) >= 0;
+        }
+
+        bool latency(uint64_t& latencyUs) override
+        {
+            if (!m_api->pa_simple_get_latency) {
+                return false;
+            }
+            int error = 0;
+            latencyUs = m_api->pa_simple_get_latency(m_sink, &error);
+            return error == 0 && latencyUs != UINT64_MAX;
+        }
+
+    private:
+        PulseSink(PulseSimpleApi* api, pa_simple* sink)
+            : m_api(api)
+            , m_sink(sink)
         {
         }
 
-        PulseSimpleApi* api;
+        PulseSimpleApi* m_api;
+        pa_simple* m_sink;
+    };
+#else
+    class AudioOutSink final : public OutputSink {
+    public:
+        static std::unique_ptr<OutputSink> open(uint32_t sampleRate)
+        {
+            audio_out_h output = nullptr;
+            if (audio_out_create_new(
+                    static_cast<int>(sampleRate), AUDIO_CHANNEL_STEREO,
+                    AUDIO_SAMPLE_TYPE_S16_LE, &output) != AUDIO_IO_ERROR_NONE) {
+                return nullptr;
+            }
+            // Web Audio is media playback: it follows the media volume and
+            // routing policy, like an <audio> element.
+            sound_stream_info_h stream = nullptr;
+            if (sound_manager_create_stream_information(
+                    SOUND_STREAM_TYPE_MEDIA, nullptr, nullptr, &stream) !=
+                    SOUND_MANAGER_ERROR_NONE ||
+                audio_out_set_sound_stream_info(output, stream) !=
+                    AUDIO_IO_ERROR_NONE ||
+                audio_out_prepare(output) != AUDIO_IO_ERROR_NONE) {
+                audio_out_destroy(output);
+                if (stream) {
+                    sound_manager_destroy_stream_information(stream);
+                }
+                return nullptr;
+            }
+            return std::unique_ptr<OutputSink>(
+                new AudioOutSink(output, stream));
+        }
+
+        ~AudioOutSink() override
+        {
+            audio_out_flush(m_output);
+            audio_out_unprepare(m_output);
+            audio_out_destroy(m_output);
+            sound_manager_destroy_stream_information(m_stream);
+        }
+
+        bool write(const int16_t* pcm, size_t bytes) override
+        {
+            auto* data =
+                const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(pcm));
+            while (bytes) {
+                int written = audio_out_write(m_output, data,
+                                              static_cast<unsigned>(bytes));
+                if (written <= 0) {
+                    return false;
+                }
+                data += written;
+                bytes -= static_cast<size_t>(written);
+            }
+            return true;
+        }
+
+        // audio_io reports no latency; the context falls back to its wall
+        // clock for outputLatency and getOutputTimestamp().
+        bool latency(uint64_t&) override
+        {
+            return false;
+        }
+
+    private:
+        AudioOutSink(audio_out_h output, sound_stream_info_h stream)
+            : m_output(output)
+            , m_stream(stream)
+        {
+        }
+
+        audio_out_h m_output;
+        sound_stream_info_h m_stream;
+    };
+#endif
+
+    // Shared by the owning device and its detached writer thread, so either
+    // may go away first.
+    struct OutputState {
+        explicit OutputState(uint32_t sampleRate)
+            : sampleRate(sampleRate)
+        {
+        }
+
+#if defined(STARFISH_LINUX)
+        PulseSimpleApi* api{ nullptr };
+#endif
         uint32_t sampleRate;
         // Single-producer/single-consumer ring: submit() fills slots and
         // advances head; the writer drains them and advances tail.
@@ -74,33 +223,20 @@ namespace {
         uint64_t timestampWallClockUs{ 0 };
     };
 
-    pa_simple* openSink(PulseOutputState& state)
+    std::unique_ptr<OutputSink> openSink(OutputState& state)
     {
-        pa_sample_spec spec{ PA_SAMPLE_S16LE, state.sampleRate, 2 };
-        // PulseAudio's default prebuffer can hold about two seconds, delaying
-        // short media and interactive Web Audio. Request 20 ms, with room for
-        // four render quanta at the lowest supported sample rates.
-        const uint32_t targetFrames =
-            std::max(state.sampleRate / 50,
-                     static_cast<uint32_t>(AudioBus::RenderQuantumFrames * 4));
-        pa_buffer_attr buffer{ UINT32_MAX, targetFrames * 4, UINT32_MAX,
-                               UINT32_MAX, UINT32_MAX };
-        int error = 0;
-        return state.api->pa_simple_new(nullptr, "Starfish", PA_STREAM_PLAYBACK,
-                                        nullptr, "Web Audio", &spec, nullptr,
-                                        &buffer, &error);
+#if defined(STARFISH_LINUX)
+        return PulseSink::open(state.api, state.sampleRate);
+#else
+        return AudioOutSink::open(state.sampleRate);
+#endif
     }
 
-    void updateTimestamp(PulseOutputState& state, pa_simple* sink,
+    void updateTimestamp(OutputState& state, OutputSink& sink,
                          uint64_t firstFrame)
     {
-        if (!state.api->pa_simple_get_latency) {
-            return;
-        }
-        int error = 0;
-        const uint64_t latencyUs =
-            state.api->pa_simple_get_latency(sink, &error);
-        if (error != 0 || latencyUs == UINT64_MAX) {
+        uint64_t latencyUs = 0;
+        if (!sink.latency(latencyUs)) {
             return;
         }
         // One host query gives both the audible frame and the delay ahead of
@@ -125,11 +261,11 @@ namespace {
         state.timestampWallClockUs = nowUs;
     }
 
-    // Connecting and writing both block on the PulseAudio server, so neither
+    // Connecting and writing both block on the audio server, so neither
     // runs on the thread that owns the device.
-    void writeLoop(std::shared_ptr<PulseOutputState> state)
+    void writeLoop(std::shared_ptr<OutputState> state)
     {
-        pa_simple* sink = openSink(*state);
+        std::unique_ptr<OutputSink> sink = openSink(*state);
         if (!sink) {
             state->failed.store(true, std::memory_order_relaxed);
         }
@@ -147,34 +283,28 @@ namespace {
                 continue;
             }
             const size_t slot = tail % queuedQuanta;
-            int error = 0;
-            if (state->api->pa_simple_write(sink, state->queue[slot].data(),
-                                            quantumSamples * sizeof(int16_t),
-                                            &error) < 0) {
+            if (!sink->write(state->queue[slot].data(),
+                             quantumSamples * sizeof(int16_t))) {
                 state->failed.store(true, std::memory_order_relaxed);
                 break;
             }
             const uint64_t firstFrame = state->firstFrames[slot];
             state->tail.store(tail + 1, std::memory_order_release);
-            updateTimestamp(*state, sink, firstFrame);
+            updateTimestamp(*state, *sink, firstFrame);
         }
-        if (sink) {
-            int error = 0;
-            // The owner is gone; discard queued output instead of draining.
-            state->api->pa_simple_flush(sink, &error);
-            state->api->pa_simple_free(sink);
-        }
+        // The owner is gone; the sink discards queued output.
+        sink.reset();
         g_outputDevices.fetch_sub(1);
     }
 
-    class PulseAudioOutputDevice final : public AudioOutputDevice {
+    class QueuedAudioOutputDevice final : public AudioOutputDevice {
     public:
-        explicit PulseAudioOutputDevice(std::shared_ptr<PulseOutputState> state)
+        explicit QueuedAudioOutputDevice(std::shared_ptr<OutputState> state)
             : m_state(std::move(state))
         {
         }
 
-        ~PulseAudioOutputDevice() override
+        ~QueuedAudioOutputDevice() override
         {
             // Never join: the writer may be blocked in the server. It exits
             // after its current call and owns the connection until then.
@@ -186,7 +316,7 @@ namespace {
         // Called by a single producer thread.
         void submit(const AudioBus& bus, uint64_t firstFrame) override
         {
-            PulseOutputState& state = *m_state;
+            OutputState& state = *m_state;
             if (state.failed.load(std::memory_order_relaxed)) {
                 return;
             }
@@ -245,7 +375,7 @@ namespace {
         }
 
     private:
-        std::shared_ptr<PulseOutputState> m_state;
+        std::shared_ptr<OutputState> m_state;
     };
 
 } // namespace
@@ -254,20 +384,25 @@ namespace {
 std::unique_ptr<AudioOutputDevice> AudioOutputDevice::create(
     uint32_t sampleRate)
 {
+#if defined(STARFISH_LINUX) || defined(STARFISH_TIZEN)
 #if defined(STARFISH_LINUX)
     void* handle = nullptr;
     PulseSimpleApi* api = loadPulseSimple(handle);
     if (!api) {
         return nullptr;
     }
+#endif
     if (g_outputDevices.fetch_add(1) >= maxOutputDevices) {
         g_outputDevices.fetch_sub(1);
         return nullptr;
     }
     try {
-        auto state = std::make_shared<PulseOutputState>(api, sampleRate);
+        auto state = std::make_shared<OutputState>(sampleRate);
+#if defined(STARFISH_LINUX)
+        state->api = api;
+#endif
         std::unique_ptr<AudioOutputDevice> device(
-            new PulseAudioOutputDevice(state));
+            new QueuedAudioOutputDevice(state));
         std::thread(writeLoop, std::move(state)).detach();
         return device;
     } catch (const std::bad_alloc&) {

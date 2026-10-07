@@ -404,6 +404,13 @@ IF (${ENABLE_WASM} STREQUAL "1")
     SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM} -DSTARFISH_ENABLE_WASM)
 ENDIF()
 
+# Web Audio is already on for x86_64; WEBAUDIO=1 adds it to the other
+# processors and profiles, which leave it off for its render thread and
+# decoded-PCM memory.
+IF (${WEBAUDIO} STREQUAL "1")
+    SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM} -DSTARFISH_ENABLE_WEBAUDIO)
+ENDIF()
+
 IF (${ENABLE_DEBUGGER} STREQUAL "1")
     SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM} -DSTARFISH_ENABLE_DEBUGGER)
 ENDIF()
@@ -687,11 +694,14 @@ int main() { AtkComponentIface i; i.grab_highlight = 0; (void)i; return 0; }"
         pkg_check_modules (STARFISH_TIZEN_TTS REQUIRED tts)
     ENDIF()
 
-    # src/platform/multimedia/MediaPlayerAudioTizen.cpp (audio_out_*):
-    # STARFISH_ENABLE_MULTIMEDIA && STARFISH_ENABLE_WEBAUDIO.
-    IF ("${LWE_DEFINES_ENABLED}" MATCHES "STARFISH_ENABLE_MULTIMEDIA"
-        AND "${LWE_DEFINES_ENABLED}" MATCHES "STARFISH_ENABLE_WEBAUDIO")
-        pkg_check_modules (STARFISH_TIZEN_AUDIO_IO REQUIRED capi-media-audio-io)
+    # src/platform/webaudio/AudioOutputDevice.cpp (audio_out_*,
+    # sound_manager_*) and the platform FFmpeg in
+    # src/core/modules/webaudio/render/CompressedAudioDecoder.cpp:
+    # STARFISH_ENABLE_WEBAUDIO.
+    IF ("${LWE_DEFINES_ENABLED}" MATCHES "STARFISH_ENABLE_WEBAUDIO")
+        pkg_check_modules (STARFISH_TIZEN_WEBAUDIO REQUIRED capi-media-audio-io
+            capi-media-sound-manager libavcodec libavformat libavutil
+            libswresample)
     ENDIF()
 ENDIF()
 
