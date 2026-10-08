@@ -12,6 +12,15 @@
 
 #include "platform/multimedia/FFmpegAudioOutput.h"
 
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <condition_variable>
+#include <cstdio>
+#include <cstdlib>
+#include <mutex>
+#include <cstring>
+
 #if defined(STARFISH_WINDOWS)
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -19,8 +28,6 @@
 #include <windows.h>
 #include <audioclient.h>
 #include <mmdeviceapi.h>
-#include <algorithm>
-#include <cstring>
 #else
 #include "platform/multimedia/PulseSimple.h"
 #endif
@@ -228,9 +235,67 @@ private:
 };
 #endif
 
+#if defined(STARFISH_MEDIA_PLAYBACK_TEST)
+// CI hosts need not expose a physical endpoint. This opt-in sink exercises
+// the normal PCM writer queue and timing without retaining the audio stream.
+class TestAudioOutput final : public FFmpegAudioOutput {
+public:
+    bool open(int channels, int sampleRate) override
+    {
+        m_bytesPerSecond = static_cast<uint64_t>(channels) * sampleRate * 2;
+        return m_bytesPerSecond != 0;
+    }
+
+    bool write(const uint8_t* data, size_t bytes) override
+    {
+        const int16_t* samples = reinterpret_cast<const int16_t*>(data);
+        size_t count = bytes / sizeof(int16_t);
+        double sum = 0;
+        int peak = 0;
+        for (size_t i = 0; i < count; ++i) {
+            int value = samples[i];
+            peak = std::max(peak, std::abs(value));
+            sum += static_cast<double>(value) * value;
+        }
+        std::unique_lock<std::mutex> lock(m_mutex);
+        auto duration =
+            std::chrono::nanoseconds(bytes * 1000000000ULL / m_bytesPerSecond);
+        if (m_cv.wait_for(lock, duration, [this]() { return m_interrupted; })) {
+            return false;
+        }
+        std::fprintf(stderr, "FFMPEG_CI_AUDIO samples=%zu rms=%f peak=%d\n",
+                     count, count ? std::sqrt(sum / count) / 32768.0 : 0, peak);
+        std::fflush(stderr);
+        return true;
+    }
+
+    void flush() override
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_interrupted = false;
+    }
+
+    void interrupt() override
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_interrupted = true;
+        m_cv.notify_all();
+    }
+
+private:
+    std::mutex m_mutex;
+    std::condition_variable m_cv;
+    uint64_t m_bytesPerSecond{ 0 };
+    bool m_interrupted{ false };
+};
+
+#endif
+
 FFmpegAudioOutput* FFmpegAudioOutput::create()
 {
-#if defined(STARFISH_WINDOWS)
+#if defined(STARFISH_MEDIA_PLAYBACK_TEST)
+    return new TestAudioOutput();
+#elif defined(STARFISH_WINDOWS)
     return new WasapiAudioOutput();
 #else
     return new PulseAudioOutput();

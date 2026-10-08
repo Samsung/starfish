@@ -1,0 +1,39 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Starfish YouTube playback regression</title>
+<style>body{margin:0;background:#202020;color:white;font:16px sans-serif}iframe{border:0}pre{white-space:pre-wrap}</style>
+<iframe id="player" width="960" height="540" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<pre id="status">Loading YouTube iframe...</pre>
+<script>
+var match = /[?&]video=([^&]+)/.exec(location.search);
+var video = match ? decodeURIComponent(match[1]) : 'M7lc1UVf-VE';
+var frame = document.getElementById('player');
+frame.src = 'https://www.youtube.com/embed/' + encodeURIComponent(video) +
+    '?enablejsapi=1&autoplay=1&playsinline=1&origin=' + encodeURIComponent(location.origin);
+var player;
+function report(value) {
+    var message = JSON.stringify(value);
+    document.getElementById('status').textContent = message;
+    console.log('YOUTUBE_CI ' + message);
+    fetch('/yt-status?event=' + encodeURIComponent(message)).catch(function() {});
+}
+function onYouTubeIframeAPIReady() {
+    player = new YT.Player('player', {events: {
+        onReady: function(event) {
+            event.target.unMute();
+            event.target.setVolume(50);
+            event.target.playVideo();
+            report({event:'ready'});
+        },
+        onStateChange: function(event) { report({event:'state',state:event.data}); },
+        onError: function(event) { report({event:'error',code:event.data}); }
+    }});
+    setInterval(function() {
+        if (player.getPlayerState && player.getPlayerState() === 1) {
+            report({event:'playing',time:player.getCurrentTime(),
+                    muted:player.isMuted(),volume:player.getVolume()});
+        }
+    }, 1000);
+}
+</script>
+<script src="https://www.youtube.com/iframe_api"></script>

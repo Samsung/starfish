@@ -60,6 +60,7 @@ The compile-time flags that gate large chunks of this spec. "Default" is for the
 | Web Device API (`window.tizen`) | `CMAKE_SYSTEM_NAME=Tizen` + `TIZEN_DEVICE_API` | off (linux/windows/android) | `window.tizen` undefined. |
 | MSE playback backend | `ENABLE_ESPLUSPLAYER=1` | off; auto-enabled on `CMAKE_SYSTEM_NAME=Tizen` with `TIZEN_MAJOR_VERSION >= 10`. Requires `CMAKE_SYSTEM_NAME=Tizen` | Media Source playback uses the platform-default media path. |
 | ffmpeg media player | `USE_FFMPEG_MEDIA_PLAYER=1` (and `STARFISH_WINDOWS_ENABLE_MULTIMEDIA=ON` on Windows) | off on Linux; on on Windows | `<video>`/`<audio>` use the platform-default media path (mock on Windows). |
+| CI media playback instrumentation | `STARFISH_MEDIA_PLAYBACK_TEST=ON` | off | Normal native audio output and platform TLS defaults; no CI frame fingerprints or paced test PCM sink. This test-only build also skips TLS certificate checks, adds no web API and must not ship. |
 | Chrome DevTools Protocol server | `STARFISH_ENABLE_CDP=1` | off | No CDP endpoint. This surface is never visible to page script either way — see `docs/CDP.md`. |
 
 When you read a row in the tables below, assume the corresponding flag in this table is on unless the row's "Note" column says otherwise.

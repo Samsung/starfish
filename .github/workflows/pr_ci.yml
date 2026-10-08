@@ -264,6 +264,16 @@ jobs:
       thirdparty_key: ${{ needs.prepare_source.outputs.thirdparty_key }}
     secrets: inherit
 
+  youtube:
+    needs: [ prepare_source ]
+    uses: ./.github/workflows/youtube.yml
+    with:
+      thirdparty_key: ${{ needs.prepare_source.outputs.thirdparty_key }}
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      BART_API_KEY: ${{ secrets.BART_API_KEY }}
+
   windows:
     needs: [ prepare_source ]
     uses: ./.github/workflows/windows.yml

@@ -132,6 +132,55 @@ out
 ./out/release/lightweight-web-engine 'html/file/path'
 ```
 
+## YouTube playback CI
+
+The Linux `glib_cairo_gl` / `x11` x64 port runs
+`tool/ci/test_youtube_playback.py` on the internal `runner-type3` pool with
+YouTube egress. Windows x64/x86 and DALi retain build checks and the existing
+self-contained page screenshot tests. Windows YouTube playback CI is deferred
+because that pool cannot reach YouTube.
+The CI runner must reach YouTube, its API and `googlevideo.com` media hosts;
+GitHub download access alone is insufficient.
+Windows screenshot checks verify painted fills, embedded PNGs and text
+without playing media or accessing external hosts. FFmpeg/MP4 smoke execution
+and progressive/media playback probes are removed from Windows CI; their
+local test tools remain.
+
+Build the CI browser with `-DUSE_FFMPEG_MEDIA_PLAYER=1` and
+`-DSTARFISH_MEDIA_PLAYBACK_TEST=ON`. This option defaults **off** and must
+not be enabled in shipped builds. It compiles in sampled video upload
+fingerprints and a paced PCM sink, so a CI VM needs no physical speaker.
+This CI-only build also skips browser TLS certificate verification; ordinary
+builds retain their existing platform TLS defaults.
+The PCM sink verifies decoded audio, volume and the writer queue; hardware
+WASAPI/PulseAudio endpoints are checked separately by the existing local
+media tests. No environment-variable switch enables this instrumentation.
+
+Install Pillow (`python -m pip install Pillow`, or `python3-pil` on Ubuntu).
+The script serves the checked-in local HTML over a temporary loopback HTTP
+port because the YouTube embedded player requires an HTTP Referer. It
+passes `--disable-web-security` explicitly. The configured proxy is used for
+external requests. CI also passes `--ignore-certificate-errors` to skip TLS
+verification in the Python network preflight, matching the CI-only browser.
+No extra CA certificate is installed.
+
+```sh
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/ci/test_youtube_playback.py --browser out/youtube/bin/lightweight-web-engine --expected-bits 64 --ignore-certificate-errors --output youtube-linux-x64
+```
+
+The harness also supports manual Windows validation with an instrumented
+build on a desktop that can reach YouTube:
+
+```bat
+python tool\ci\test_youtube_playback.py --browser build\windows-x64\Release\StarfishShell.exe --expected-bits 64 --output youtube-x64
+```
+
+Passing requires at least 18 seconds of unmuted playback, 90 uploaded video
+frames with at least 30 distinct pixel fingerprints, non-silent PCM, and
+a nonblank, nonuniform captured video region. Network/player errors, absent
+instrumentation, frozen/blank video and silent audio fail the job. Results
+include `summary.json`, `browser.log` and `screenshot.png` in `--output`.
+
 ## How to Cross-Compile: Linux (aarch64 / armhf / x86)
 
 Cross builds target other Linux architectures (e.g. Raspberry Pi 5 = aarch64) from
@@ -327,7 +376,8 @@ resampling and RGBA conversion; `--audio` also checks cancellation and reset
 with the default endpoint, reporting explicitly when no endpoint exists.
 The browser regression checks audio-only WAV, software H.264/AAC video,
 playback timing, pause, paused seek and ended. It uses local fixtures and a
-local HTTP server, and also runs on Linux under the usual `xvfb-run` wrapper.
+local HTTP server, and also runs on Linux under the usual `xvfb-run` wrapper
+with `STARFISH_MEDIA_PLAYBACK_TEST=ON` for frame inspection.
 The rendering regression checks progressive H.264 and MSE H.264/AV1, including
 actual Windows framebuffer colors. Screenshot mode uses an offscreen ANGLE
 buffer, so these checks also run from SSH or CI without an interactive desktop.

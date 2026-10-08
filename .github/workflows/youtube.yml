@@ -1,0 +1,81 @@
+name: YouTube playback (Linux x64)
+
+on:
+  workflow_call:
+    inputs:
+      thirdparty_key:
+        required: true
+        type: string
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+      DOCKERHUB_TOKEN:
+        required: true
+      BART_API_KEY:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  playback:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    # This internal pool can reach YouTube; the public code pool cannot.
+    runs-on: [runner-type3]
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+        working-directory: youtube-source
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    steps:
+      # Authentication uses trusted base tooling, before PR source exists.
+      - name: Checkout trusted cache tooling
+        uses: CODE-Actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+          path: youtube-source
+      - name: Add safe directory
+        run: git config --global --add safe.directory "$PWD"
+      - name: Fetch thirdparty submodule cache with trusted tooling
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+          CACHE_KEY: ${{ inputs.thirdparty_key }}
+        run: |
+          case "$CACHE_KEY" in ''|*[!a-zA-Z0-9_-]*) exit 1 ;; esac
+          source tool/ci/lib_submodule_cache.sh
+          submodule_cache_fetch "$CACHE_KEY" cache.tar.gz "$RUNNER_TEMP/youtube-thirdparty.tar.gz"
+      # No step below receives repository secrets or persisted Git auth.
+      - name: Checkout test source
+        uses: CODE-Actions/checkout@v2
+        with:
+          allow-unsafe-pr-checkout: true
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          path: youtube-source
+      - name: Restore thirdparty submodules
+        run: tar xzf "$RUNNER_TEMP/youtube-thirdparty.tar.gz"
+      - name: Install FFmpeg and framebuffer test dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libswresample-dev python3-pil
+      - name: Build X11 GL browser with CI instrumentation
+        run: |
+          cmake -S . -B out/youtube -G Ninja -DDOCKER=1 -DCMAKE_BUILD_TYPE=Release -DBACKEND=glib_cairo_gl -DSHELL=x11 -DWEBGL=1 -DUSE_FFMPEG_MEDIA_PLAYER=1 -DSTARFISH_MEDIA_PLAYBACK_TEST=ON
+          cmake --build out/youtube --target starfish.executable --parallel
+      - name: Check real YouTube video and audio
+        timeout-minutes: 3
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/ci/test_youtube_playback.py --browser out/youtube/bin/lightweight-web-engine --expected-bits 64 --ignore-certificate-errors --output youtube-linux-x64
+      - uses: CODE-Actions/upload-artifact@v2
+        if: always()
+        with:
+          name: youtube-linux-x64
+          path: youtube-source/youtube-linux-x64/
