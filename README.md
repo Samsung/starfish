@@ -332,6 +332,10 @@ The rendering regression checks progressive H.264 and MSE H.264/AV1, including
 actual Windows framebuffer colors. Screenshot mode uses an offscreen ANGLE
 buffer, so these checks also run from SSH or CI without an interactive desktop.
 
+The shell accepts `--disable-web-security` as an explicit test opt-out;
+normal invocations keep web security enabled. Windows multimedia defaults
+on (`STARFISH_WINDOWS_ENABLE_MULTIMEDIA=ON`).
+
 To check a YouTube iframe with sound in an interactive Windows desktop:
 
 ```bat

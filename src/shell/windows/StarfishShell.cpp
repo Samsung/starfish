@@ -304,7 +304,7 @@ public:
                          "usage: StarfishShell [URL-or-file] "
                          "[--screenshot=FILE.bmp] [--screenshot-frames=N] "
                          "[--window-size=WxH] "
-                         "[--timeout-ms=N]\n");
+                         "[--timeout-ms=N] [--disable-web-security]\n");
             std::fflush(stderr);
             return 2;
         }
@@ -468,6 +468,8 @@ private:
                     return false;
                 }
                 m_fixedWindowSize = true;
+            } else if (argument == L"--disable-web-security") {
+                m_disableWebSecurity = true;
             } else if (argument.compare(0, 2, L"--") == 0) {
                 std::fprintf(stderr, "[StarfishShell] unknown option: %s\n",
                              toUTF8(argument.c_str()).c_str());
@@ -595,7 +597,9 @@ private:
             });
 
         LWE::Settings settings = m_container->GetSettings();
-        settings.SetWebSecurityMode(LWE::WebSecurityMode::Disable);
+        if (m_disableWebSecurity) {
+            settings.SetWebSecurityMode(LWE::WebSecurityMode::Disable);
+        }
         m_container->SetSettings(settings);
 
         // Nothing renders or takes input in an unfocused container.
@@ -963,6 +967,7 @@ private:
     unsigned m_timeoutMs{ 0 };
     int m_captureWidth{ kDefaultCaptureWidth };
     int m_captureHeight{ kDefaultCaptureHeight };
+    bool m_disableWebSecurity{ false };
     bool m_fixedWindowSize{ false };
     bool m_captureNudge{ false };
 };
