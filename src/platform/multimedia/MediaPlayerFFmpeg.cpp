@@ -75,23 +75,12 @@ static uint64_t monotonicMilliseconds()
 // Each queued frame is a full-resolution RGBA buffer (e.g. 1080x1920 ~= 8MB),
 // so a wide window keeps that many decoded frames resident -> memory pressure
 // and GC churn (the main cause of bursty mid-playback stalls at high
-// resolutions). Default 400ms; override at runtime via the
-// STARFISH_DECODE_LOOKAHEAD_MS env var for A/B tuning without a rebuild.
+// resolutions). Keep the window at 400ms to bound queued frame storage.
 #define STARFISH_DECODE_LOOKAHEAD_MS_DEFAULT 400
 
 static uint64_t decodeLookaheadMs()
 {
-    static const uint64_t value = []() -> uint64_t {
-        const char* e = getenv("STARFISH_DECODE_LOOKAHEAD_MS");
-        if (e != nullptr) {
-            int v = atoi(e);
-            if (v > 0) {
-                return (uint64_t)v;
-            }
-        }
-        return STARFISH_DECODE_LOOKAHEAD_MS_DEFAULT;
-    }();
-    return value;
+    return STARFISH_DECODE_LOOKAHEAD_MS_DEFAULT;
 }
 
 #define RETURN_WHEN_PLAYER_ERROR(...) \
@@ -1824,9 +1813,7 @@ void MediaPlayerFFmpeg::didDrawVideo(Compositor* canvas,
 static void* threadFillingBuffer(void* data)
 {
     MediaPlayerFFmpeg* self = (MediaPlayerFFmpeg*)data;
-    if (getenv("STARFISH_FFMPEG_TRACE")) {
-        STARFISH_LOG_INFO("FFmpeg MSE feed started");
-    }
+    PLAYER_LOGI("FFmpeg MSE feed started");
     volatile bool* playerDeadFlag = self->m_playerDeadFlag;
     while (!(*playerDeadFlag)) {
         MediaPlayer::PlaybackState state = self->playbackState();
@@ -2319,12 +2306,9 @@ bool MediaPlayerFFmpeg::createDecoderForStream(MediaPlayerSourceStream* stream,
         memcpy(ctx->extradata, info->m_extraData.data(), ctx->extradata_size);
     }
 
-    if (getenv("STARFISH_FFMPEG_TRACE")) {
-        STARFISH_LOG_INFO(
-            "FFmpeg decoder codec=%s native=%s video=%dx%d audio=%d/%d",
-            info->codecString(), codec->name, ctx->width, ctx->height,
-            ctx->sample_rate, ctx->ch_layout.nb_channels);
-    }
+    PLAYER_LOGI("FFmpeg decoder codec=%s native=%s video=%dx%d audio=%d/%d",
+                info->codecString(), codec->name, ctx->width, ctx->height,
+                ctx->sample_rate, ctx->ch_layout.nb_channels);
     int openResult = avcodec_open2(ctx, codec, nullptr);
     if (openResult < 0) {
         STARFISH_LOG_ERROR("FFmpeg decoder open failed codec=%s error=%d",
@@ -2397,10 +2381,10 @@ void MediaPlayerFFmpeg::publishDecodedFrame(AVFrame* frame)
     int width = frame->width;
     int height = frame->height;
     int stride = width * 4;
-    if (getenv("STARFISH_FFMPEG_TRACE") && m_swsCtx == nullptr) {
-        STARFISH_LOG_INFO("FFmpeg decoded video=%dx%d format=%d pts=%lld",
-                          width, height, frame->format,
-                          static_cast<long long>(frame->best_effort_timestamp));
+    if (m_swsCtx == nullptr) {
+        PLAYER_LOGI("FFmpeg decoded video=%dx%d format=%d pts=%lld", width,
+                    height, frame->format,
+                    static_cast<long long>(frame->best_effort_timestamp));
     }
 
     if (m_swsCtx == nullptr || m_swsCtxWidth != width ||
@@ -2522,24 +2506,28 @@ void MediaPlayerFFmpeg::promoteVideoFrameForCurrentTime()
 
 void MediaPlayerFFmpeg::ensureAudioSink(int channels, int sampleRate)
 {
-    if (m_audioOutput && m_audioSinkChannels == channels &&
-        m_audioSinkRate == sampleRate) {
-        return;
+    {
+        std::lock_guard<std::mutex> lock(m_audioWriteMutex);
+        if (m_audioOutput && m_audioSinkChannels == channels &&
+            m_audioSinkRate == sampleRate) {
+            return;
+        }
     }
     teardownAudioSink();
-    m_audioOutput = FFmpegAudioOutput::create();
-    m_audioSinkChannels = channels;
-    m_audioSinkRate = sampleRate;
-    m_audioOutputReady = false;
-    m_audioOutputOpened = false;
-    m_audioWriterThread = new std::thread([this, channels, sampleRate]() {
-        FFmpegAudioOutput* output = m_audioOutput.value();
+    FFmpegAudioOutput* output = FFmpegAudioOutput::create();
+    {
+        std::lock_guard<std::mutex> lock(m_audioWriteMutex);
+        m_audioOutput = output;
+        m_audioSinkChannels = channels;
+        m_audioSinkRate = sampleRate;
+        m_audioOutputReady = false;
+        m_audioOutputOpened = false;
+    }
+    m_audioWriterThread = new std::thread([this, output, channels,
+                                           sampleRate]() {
         bool opened = output->open(channels, sampleRate);
-        if (getenv("STARFISH_FFMPEG_TRACE")) {
-            STARFISH_LOG_INFO(
-                "FFmpeg audio device channels=%d rate=%d opened=%d", channels,
-                sampleRate, opened);
-        }
+        PLAYER_LOGI("FFmpeg audio device channels=%d rate=%d opened=%d",
+                    channels, sampleRate, opened);
         {
             std::lock_guard<std::mutex> lock(m_audioWriteMutex);
             m_audioOutputOpened = opened;
@@ -2587,6 +2575,11 @@ void MediaPlayerFFmpeg::ensureAudioSink(int channels, int sampleRate)
         } else {
             STARFISH_LOG_INFO("FFmpeg audio output unavailable");
         }
+        {
+            std::lock_guard<std::mutex> lock(m_audioWriteMutex);
+            m_audioOutput = NullOption;
+            m_audioOutputOpened = false;
+        }
         delete output;
     });
     std::unique_lock<std::mutex> lock(m_audioWriteMutex);
@@ -2624,9 +2617,9 @@ void MediaPlayerFFmpeg::teardownAudioSink()
         delete m_audioWriterThread;
         m_audioWriterThread = nullptr;
     }
-    m_audioOutput = NullOption;
     {
         std::lock_guard<std::mutex> lock(m_audioWriteMutex);
+        m_audioOutput = NullOption;
         for (auto& item : m_audioWriteQueue) {
             av_free(item.first);
         }
@@ -2652,9 +2645,6 @@ void MediaPlayerFFmpeg::publishDecodedAudioFrame(AVFrame* frame,
 {
     if (frame == nullptr || frame->nb_samples <= 0) {
         return;
-    }
-    if (getenv("STARFISH_FFMPEG_TRACE") && !m_audioOutput && !m_swrCtx) {
-        STARFISH_LOG_INFO("FFmpeg decoded audio samples=%d", frame->nb_samples);
     }
     int channels = frame->ch_layout.nb_channels;
     int sampleRate = frame->sample_rate;
@@ -2764,8 +2754,10 @@ void MediaPlayerFFmpeg::publishDecodedAudioFrame(AVFrame* frame,
     size_t writeBytes = (size_t)converted * outputChannels * bytesPerSample;
     float gain = m_nativePlayer->audioGain();
     int16_t* samples = reinterpret_cast<int16_t*>(outBuf);
-    for (size_t i = 0; i < writeBytes / sizeof(int16_t); ++i) {
-        samples[i] = static_cast<int16_t>(samples[i] * gain);
+    if (gain != 1.0f) {
+        for (size_t i = 0; i < writeBytes / sizeof(int16_t); ++i) {
+            samples[i] = static_cast<int16_t>(samples[i] * gain);
+        }
     }
     {
         std::lock_guard<std::mutex> lk(m_audioWriteMutex);
@@ -2816,18 +2808,16 @@ void MediaPlayerFFmpeg::decodeAndDeliverPacket(MediaPlayerSourceStream* stream,
         avPkt->flags |= AV_PKT_FLAG_KEY;
     }
 
-    if (getenv("STARFISH_FFMPEG_TRACE") && ctx->frame_num == 0) {
-        STARFISH_LOG_INFO("FFmpeg packet codec=%s size=%d pts=%lld dts=%lld",
-                          ctx->codec->name, avPkt->size, (long long)avPkt->pts,
-                          (long long)avPkt->dts);
+    if (ctx->frame_num == 0) {
+        PLAYER_LOGI("FFmpeg packet codec=%s size=%d pts=%lld dts=%lld",
+                    ctx->codec->name, avPkt->size, (long long)avPkt->pts,
+                    (long long)avPkt->dts);
     }
     int ret = avcodec_send_packet(ctx, avPkt);
     av_packet_free(&avPkt);
     if (ret < 0) {
-        if (getenv("STARFISH_FFMPEG_TRACE")) {
-            STARFISH_LOG_ERROR("FFmpeg send failed codec=%s error=%d",
-                               ctx->codec->name, ret);
-        }
+        PLAYER_LOGE("FFmpeg send failed codec=%s error=%d", ctx->codec->name,
+                    ret);
         return;
     }
 
