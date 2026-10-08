@@ -378,8 +378,8 @@ http://web-platform.test:8000/css/css-transforms/subpixel-transform-changes-004.
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-transforms/text-perspective-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/transform-3d-rotateY-stair-above-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/transform-3d-rotateY-stair-below-001.xht
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-transforms/transform-3d-scales-different-x-y-dynamic-001.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-transforms/transform-3d-scales-different-x-y-dynamic-002.html
+http://web-platform.test:8000/css/css-transforms/transform-3d-scales-different-x-y-dynamic-001.html
+http://web-platform.test:8000/css/css-transforms/transform-3d-scales-different-x-y-dynamic-002.html
 http://web-platform.test:8000/css/css-transforms/transform-abspos-001.html
 http://web-platform.test:8000/css/css-transforms/transform-abspos-002.html
 http://web-platform.test:8000/css/css-transforms/transform-abspos-003.html

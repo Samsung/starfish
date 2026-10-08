@@ -24,10 +24,10 @@ http://web-platform.test:8000/mathml/presentation-markup/fractions/frac-invalid.
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/mathml/presentation-markup/fractions/frac-linethickness-001.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/mathml/presentation-markup/fractions/frac-linethickness-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/mathml/presentation-markup/fractions/frac-linethickness-004.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/mathml/presentation-markup/fractions/frac-linethickness-005.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/mathml/presentation-markup/fractions/frac-linethickness-006.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/mathml/presentation-markup/fractions/frac-linethickness-007.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/mathml/presentation-markup/fractions/frac-linethickness-008.html
+http://web-platform.test:8000/mathml/presentation-markup/fractions/frac-linethickness-005.html
+http://web-platform.test:8000/mathml/presentation-markup/fractions/frac-linethickness-006.html
+http://web-platform.test:8000/mathml/presentation-markup/fractions/frac-linethickness-007.html
+http://web-platform.test:8000/mathml/presentation-markup/fractions/frac-linethickness-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/mathml/presentation-markup/fractions/frac-mrow-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/mathml/presentation-markup/fractions/frac-numalign-denomalign-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/mathml/presentation-markup/fractions/frac-parameters-gap-001.html
@@ -94,8 +94,8 @@ http://web-platform.test:8000/mathml/presentation-markup/operators/mo-lspace-rsp
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/mathml/presentation-markup/operators/mo-not-in-dictionary-movablelimits.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/mathml/presentation-markup/operators/mo-paint-lspace-rspace.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/mathml/presentation-markup/operators/mo-single-char-and-children.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/mathml/presentation-markup/operators/munderover-accent-dynamic-001.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/mathml/presentation-markup/operators/munderover-accentunder-dynamic-001.html
+http://web-platform.test:8000/mathml/presentation-markup/operators/munderover-accent-dynamic-001.html
+http://web-platform.test:8000/mathml/presentation-markup/operators/munderover-accentunder-dynamic-001.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/mathml/presentation-markup/operators/non-spacing-accent-1.xhtml
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/mathml/presentation-markup/operators/op-dict-1.html
 http://web-platform.test:8000/mathml/presentation-markup/operators/op-dict-12.html
@@ -257,7 +257,7 @@ http://web-platform.test:8000/mathml/relations/html5-tree/class-1.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/mathml/relations/html5-tree/display-2.html
 http://web-platform.test:8000/mathml/relations/html5-tree/dynamic-1.html
 http://web-platform.test:8000/mathml/relations/html5-tree/dynamic-2.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/mathml/relations/html5-tree/dynamic-href-001.html
+http://web-platform.test:8000/mathml/relations/html5-tree/dynamic-href-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/mathml/relations/html5-tree/dynamic-mozilla-162063.xhtml
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/mathml/relations/html5-tree/href-click-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/mathml/relations/html5-tree/href-click-002.html

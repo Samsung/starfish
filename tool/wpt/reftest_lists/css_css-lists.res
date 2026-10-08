@@ -155,7 +155,7 @@ http://web-platform.test:8000/css/css-lists/list-style-type-string-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/list-type-none-style-image.html
 http://web-platform.test:8000/css/css-lists/list-with-image-display-changed-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/marker-counter.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-lists/marker-dynamic-content-change.html
+http://web-platform.test:8000/css/css-lists/marker-dynamic-content-change.html
 http://web-platform.test:8000/css/css-lists/marker-quotes.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-lists/marker-webkit-text-fill-color.html
 http://web-platform.test:8000/css/css-lists/nested-marker-dynamic.html

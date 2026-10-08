@@ -469,7 +469,7 @@ http://web-platform.test:8000/css/css-overflow/scrollbar-gutter-abspos-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scrollbar-gutter-dynamic-001.html
 http://web-platform.test:8000/css/css-overflow/scrollbar-gutter-dynamic-002.html
 http://web-platform.test:8000/css/css-overflow/scrollbar-gutter-dynamic-003.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-overflow/scrollbar-gutter-dynamic-004.html
+http://web-platform.test:8000/css/css-overflow/scrollbar-gutter-dynamic-004.html
 http://web-platform.test:8000/css/css-overflow/scrollbar-gutter-fixedpos-001.html
 http://web-platform.test:8000/css/css-overflow/scrollbar-gutter-fixedpos-002.html
 http://web-platform.test:8000/css/css-overflow/scrollbar-gutter-fixedpos-003.html

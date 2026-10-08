@@ -56,18 +56,46 @@ namespace Starfish {
 // never clears it runs into the test driver's timeout, which is the verdict.
 static const unsigned ReftestWaitPollIntervalInMS = 50;
 
-static void startTestAfterLoad(void* data)
+static bool hasReftestWait(Window* window)
 {
-    Window* window = static_cast<Window*>(data);
     Element* root = window->document()->documentElement();
-    if (root && root->hasClassName(String::fromUTF8("reftest-wait"))) {
-        window->setTimeout(startTestAfterLoad, ReftestWaitPollIntervalInMS,
-                           window);
-        return;
-    }
+    return root && root->hasClassName(String::fromUTF8("reftest-wait"));
+}
+
+static void startTest(Window* window)
+{
     g_fireOnloadEvent = true;
     window->document()->setNeedsPainting();
     window->testStart();
+}
+
+static void pollReftestWait(void* data)
+{
+    Window* window = static_cast<Window*>(data);
+    if (hasReftestWait(window)) {
+        window->setTimeout(pollReftestWait, ReftestWaitPollIntervalInMS,
+                           window);
+        return;
+    }
+    startTest(window);
+}
+
+static void startTestAfterLoad(void* data)
+{
+    Window* window = static_cast<Window*>(data);
+    if (!hasReftestWait(window)) {
+        startTest(window);
+        return;
+    }
+    // Once the page has rendered with the class still set, the harness fires
+    // TestRendered at the root element; tests that only start their
+    // asynchronous work on it would otherwise wait forever (see
+    // tools/wptrunner/wptrunner/executors/test-wait.js).
+    Element* root = window->document()->documentElement();
+    root->dispatchEventByUA(new Event(window->document()->executionContext(),
+                                      String::fromUTF8("TestRendered"),
+                                      EventInit(true, false)));
+    pollReftestWait(window);
 }
 #endif
 
