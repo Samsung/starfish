@@ -75,7 +75,6 @@ def main():
     environment = os.environ.copy()
     environment['NO_PROXY'] = environment.get('NO_PROXY', environment.get('no_proxy', '')) + ',127.0.0.1,localhost,::1'
     environment['no_proxy'] = environment['NO_PROXY']
-    environment['STARFISH_FFMPEG_TRACE'] = '1'
     try:
         with tempfile.TemporaryDirectory(prefix='starfish-video-') as directory:
             capture = Path(args.capture).resolve() if args.capture else Path(directory) / 'video.bmp'
@@ -102,8 +101,8 @@ def main():
                     raise
                 print('MEDIA_RENDERING_PASS: progressive H264, MSE H264/AV1 framebuffer pixels')
             else:
-                if output.count('FFmpeg decoded video=64x48') < 2:
-                    raise RuntimeError('Both MSE decoders must publish video frames')
+                if output.count('FFMPEG_VIDEO_PRESENT width=64 height=48') < 2:
+                    raise RuntimeError('MSE frames missing; Linux frame inspection requires STARFISH_MEDIA_PLAYBACK_TEST=ON')
                 print('MEDIA_RENDERING_PASS: progressive H264, MSE H264/AV1 decoded frames')
     finally:
         server.shutdown()

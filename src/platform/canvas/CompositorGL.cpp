@@ -43,6 +43,7 @@
 #endif
 
 #include <array>
+#include <cstdio>
 #include <clipper2/clipper.h>
 #include <stdlib.h>
 
@@ -97,6 +98,7 @@ using Point = std::array<Coord, 2>;
 #if defined(STARFISH_ENABLE_TEST) && defined(PORT_CANVAS_BACKEND_CAIRO)
 #include <cairo.h>
 namespace Starfish {
+
 void dumpTextureToPNG(GL* gl, GLuint textureId, int width, int height,
                       const char* path, GLenum textureTarget = GL_TEXTURE_2D);
 }
@@ -269,6 +271,29 @@ static bool prepareEglAttributeList(EGLint* attribs, int attrib_max,
 #endif
 
 namespace Starfish {
+
+#if defined(STARFISH_MEDIA_PLAYBACK_TEST)
+static void traceFFmpegVideoFrame(FFmpegMediaPacket* packet)
+{
+    // Sample the uploaded pixels so CI can distinguish changing video from
+    // a clock advancing over one frozen frame, without copying frame storage.
+    uint32_t signature = 2166136261u;
+    for (size_t y = 0; y < 8; ++y) {
+        for (size_t x = 0; x < 8; ++x) {
+            const uint8_t* pixel =
+                packet->buffer() +
+                (y * packet->height() / 8) * packet->stride() +
+                (x * packet->width() / 8) * 4;
+            for (size_t channel = 0; channel < 3; ++channel) {
+                signature = (signature ^ pixel[channel]) * 16777619u;
+            }
+        }
+    }
+    std::fprintf(stderr, "FFMPEG_VIDEO_PRESENT width=%d height=%d hash=%u\n",
+                 packet->width(), packet->height(), signature);
+    std::fflush(stderr);
+}
+#endif
 
 static bool g_needsCheckCompatibility = true;
 static bool g_isOpenGLES3 = false;
@@ -3713,6 +3738,9 @@ public:
         checkError(gl());
         gl()->bindTexture(GL_TEXTURE_2D, 0);
         checkError(gl());
+#if defined(STARFISH_MEDIA_PLAYBACK_TEST)
+        traceFFmpegVideoFrame(packet);
+#endif
         return true;
     }
 #endif

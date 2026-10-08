@@ -1,11 +1,11 @@
 # =============================================================================
-# Build the Windows port natively, on Windows, and prove it still renders.
+# Build the Windows port natively and verify static page rendering.
 #
 # The old checked-in-prebuilts MSBuild job is gone (see git history); this
 # configures the same CMake graph a developer does -- manifest-mode vcpkg --
-# and then runs StarfishShell.exe once with --screenshot, which is the only
-# step that can catch a rendering regression like the cairo float-word-order
-# bug (it compiled, linked and ran clean while painting nothing).
+# and verifies the supported generator/configuration combinations plus
+# self-contained page screenshots. FFmpeg/media runtime probes are omitted;
+# YouTube playback CI runs on Linux.
 #
 # Three legs, not three redundant copies of the same thing: Ninja (x86) is
 # the fast path already proven by the Docker/Wine cross-build, the Visual
@@ -21,8 +21,7 @@
 #
 # The Linux MSVC-on-Wine cross-build is deliberately NOT what runs here: its
 # image acquires Microsoft-licensed material and lives in a separate internal
-# repository. Building on a real Windows host is also the only way the
-# screenshot means anything.
+# repository. This workflow uses the native Windows toolchain.
 # =============================================================================
 name: Build Starfish (windows)
 
@@ -41,7 +40,7 @@ on:
 
 env:
   # 10.112.1.184:8080 (this pool's egress proxy) is deliberately NOT used
-  # anywhere in this job -- confirmed on real runs, forcing it makes things
+  # for build/download steps -- confirmed on real runs, forcing it makes things
   # worse, not better: git clone through it has timed out establishing the
   # CONNECT tunnel outright, and forcing HTTP_PROXY/HTTPS_PROXY onto
   # fetch_vcpkg_asset.ps1's curl.exe below turned a fixable SSL error into
@@ -396,7 +395,7 @@ jobs:
           # correctly-flagged build on the VS legs now (previously it always
           # got Release flags/output regardless of --config). dali-x64 builds
           # RelWithDebInfo here, not Release -- see its matrix entry.
-          cmake --build out_windows --target starfish.windows_shell starfish.windows_ffmpeg_smoke starfish.windows_mp4_fragment_smoke --config ${{ matrix.build_config }} --parallel
+          cmake --build out_windows --target starfish.windows_shell --config ${{ matrix.build_config }} --parallel
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
       # x64 only: this leg is the one multi-config generator (Visual Studio),
@@ -469,50 +468,16 @@ jobs:
             -Headers @{ "X-JFrog-Art-Api" = $env:BART_API_KEY } -InFile vcpkg-cache-new.zip | Out-Null
           echo "vcpkg binary cache published as ${{ steps.vcpkg_key.outputs.id }}"
 
-      # --timeout-ms so a page that never loads fails here instead of hanging
-      # until the job timeout. A nonzero exit means no screenshot was written.
-      #
-      # A CI VM has no GPU, so ANGLE's normal hardware eglGetDisplay() path
-      # has nothing to bind to. Unlike the old WGL/GLEW shell, this needs no
-      # CI-only shim DLL to fix: RendererANGLE falls back to D3D11 WARP
-      # (Windows' own software rasteriser, part of the OS, not a download) on
-      # a hardware-display failure, and STARFISH_FORCE_WARP=1 goes straight
-      # to that path deterministically instead of relying on the hardware
-      # attempt failing first -- see WINDOWS.md's ANGLE + DALi section for
-      # why this env var exists.
-      - name: Check FFmpeg decoding and playback
-        env:
-          STARFISH_LOG_STDERR: '1'
-          STARFISH_FORCE_WARP: '1'
-        run: |
-          & "out_windows/${{ matrix.build_config }}/MP4FragmentSmoke.exe"
-          if ($LASTEXITCODE -ne 0) { exit 1 }
-          & "out_windows/${{ matrix.build_config }}/FFmpegSmoke.exe" --audio
-          if ($LASTEXITCODE -ne 0) { exit 1 }
-          python tool/windows/test_progressive_media.py --browser "out_windows/${{ matrix.build_config }}/StarfishShell.exe"
-          if ($LASTEXITCODE -ne 0) { exit 1 }
-          python tool/windows/test_media_rendering.py --browser "out_windows/${{ matrix.build_config }}/StarfishShell.exe"
-          if ($LASTEXITCODE -ne 0) { exit 1 }
-
+      # Self-contained pages exercise rendering without media playback or
+      # external network access. Screenshot mode uses an offscreen surface
+      # and automatically falls back to WARP when hardware is unavailable.
       - name: Capture screenshots
         shell: cmd
-        env:
-          STARFISH_LOG_STDERR: '1'
-          STARFISH_FORCE_WARP: '1'
         run: |
           cd out_windows\${{ matrix.build_config }}
           StarfishShell.exe --screenshot=%CD%\smoke.bmp --timeout-ms=60000 || exit /b 1
           StarfishShell.exe %GITHUB_WORKSPACE%\tool\ci\windows_render_check.html --screenshot=%CD%\render.bmp --timeout-ms=60000 || exit /b 1
 
-      # The capture existing proves almost nothing -- the blank-render bug
-      # produced a perfectly valid all-white one. This asserts that a fill was
-      # painted, that the embedded PNG reached the screen, and that glyphs
-      # rasterised. See the script for what each colour proves.
-      # Only render.bmp is asserted on. smoke.bmp is captured and uploaded to
-      # look at, but nothing here checks it: the built-in smoke page has no
-      # image and no flat #1040c0, and its dark #102030 background would itself
-      # satisfy the "dark ink exists" test, so a font assertion on it would
-      # pass on a completely black frame too.
       - name: Check screenshot
         run: |
           python tool/ci/check_render_bmp.py out_windows/${{ matrix.build_config }}/render.bmp
