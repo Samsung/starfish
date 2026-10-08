@@ -2442,10 +2442,30 @@ Apps relying on the right-hand list get **no protection** — the directive is p
 | Interface | Notes |
 |-----------|-------|
 | `WebGLRenderingContext` | Full WebGL 1.0 surface (~190 methods) per [Khronos WebGL 1.0 spec](https://registry.khronos.org/webgl/specs/latest/1.0/). Obtain via `canvas.getContext('webgl')` or `'experimental-webgl'`. |
-| `WebGL2RenderingContext` | WebGL 2.0 surface; obtain via `canvas.getContext('webgl2')`. Includes `WebGLQuery`, `WebGLSampler`, `WebGLSync`, `WebGLTransformFeedback`, `WebGLVertexArrayObject`. |
-| Object handles | `WebGLBuffer`, `WebGLFramebuffer`, `WebGLRenderbuffer`, `WebGLTexture`, `WebGLProgram`, `WebGLShader`. |
+| `WebGL2RenderingContext` | WebGL 2.0 surface per [Khronos WebGL 2.0 spec](https://registry.khronos.org/webgl/specs/latest/2.0/); obtain via `canvas.getContext('webgl2')`. See implementation status below. |
+| Object handles | `WebGLBuffer`, `WebGLFramebuffer`, `WebGLRenderbuffer`, `WebGLTexture`, `WebGLProgram`, `WebGLShader`, `WebGLVertexArrayObject`, `WebGLSync`. `WebGLQuery`, `WebGLSampler`, `WebGLTransformFeedback` exist in IDL but their APIs are mostly unimplemented. |
 | Value types | `WebGLActiveInfo`, `WebGLShaderPrecisionFormat`, `WebGLUniformLocation`, `WebGLContextAttributes`. |
 | **Not exposed** | `WebGLContextEvent` typed event (use a generic `Event` listener for `webglcontextlost`/`webglcontextrestored`). |
+
+#### WebGL 2.0 Implementation Status
+
+**Implemented core features:**
+- **Buffer & UBO:** `copyBufferSubData`, `getBufferSubData`, `bindBufferBase`, `bindBufferRange`, `getIndexedParameter` (queries for `UNIFORM_BUFFER` and `TRANSFORM_FEEDBACK_BUFFER` binding/start/size), `bufferData`/`bufferSubData` with sub-source view offsets/lengths, automatic unbind on `deleteBuffer`.
+- **Uniform Blocks:** `getUniformBlockIndex`, `uniformBlockBinding`, `getActiveUniformBlockParameter`, `getActiveUniformBlockName`, `getActiveUniforms`, `getUniformIndices`, active uniform block count query via `getProgramParameter`.
+- **Transform Feedback Setup:** `transformFeedbackVaryings`, `GL_TRANSFORM_FEEDBACK_BUFFER_MODE` and `GL_TRANSFORM_FEEDBACK_VARYINGS` queries via `getProgramParameter`.
+- **Vertex Array Objects (VAO):** `createVertexArray`, `deleteVertexArray`, `isVertexArray`, `bindVertexArray`.
+- **Sync Objects:** `fenceSync`, `isSync`, `deleteSync`, `clientWaitSync`, `waitSync`, `getSyncParameter`.
+- **Framebuffers & Rendering:** `blitFramebuffer`, `invalidateFramebuffer`, `invalidateSubFramebuffer`, `readBuffer`, `drawBuffers`, `getFramebufferAttachmentParameter` (supporting WebGL2 targets, default framebuffer `BACK`/`DEPTH`/`STENCIL` attachments, texture layer queries, component types, color encoding).
+- **Instanced Drawing:** `drawArraysInstanced`, `drawElementsInstanced`, `drawRangeElements`, `vertexAttribDivisor`.
+- **Integer Attributes:** `vertexAttribIPointer`, `vertexAttribI4i`/`vertexAttribI4ui`/`vertexAttribI4iv`/`vertexAttribI4uiv`, `getVertexAttribIiv`/`getVertexAttribIuiv`.
+- **Textures (3D & 2D Array):** `texImage3D`, `texSubImage3D`, `texStorage2D`, `texStorage3D`, sized internal format uploads and pixel store parameters.
+
+**Unimplemented WebGL 2.0 features (`[Unimplemented]` in IDL / methods not exposed on instance):**
+- **Query Objects:** `createQuery`, `deleteQuery`, `isQuery`, `beginQuery`, `endQuery`, `getQuery`, `getQueryParameter`.
+- **Sampler Objects:** `createSampler`, `deleteSampler`, `isSampler`, `bindSampler`, `samplerParameteri`, `samplerParameterf`, `getSamplerParameter`.
+- **Transform Feedback Execution:** `createTransformFeedback`, `deleteTransformFeedback`, `isTransformFeedback`, `bindTransformFeedback`, `beginTransformFeedback`, `endTransformFeedback`, `pauseTransformFeedback`, `resumeTransformFeedback`, `getTransformFeedbackVarying`.
+- **Compressed Textures:** `compressedTexImage2D/3D`, `compressedTexSubImage2D/3D`, `copyTexSubImage3D`.
+- **Multiple Render Targets Clear:** `clearBufferfv`, `clearBufferiv`, `clearBufferuiv`, `clearBufferfi`.
 
 **Extensions exposed via `getExtension(name)`** (subject to the underlying GL driver advertising the matching `GL_*` token; on Mesa llvmpipe / SwiftShader none may be advertised):
 
