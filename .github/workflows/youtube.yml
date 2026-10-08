@@ -19,7 +19,9 @@ permissions:
 
 jobs:
   playback:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository ||
+      github.event.pull_request.head.repo.full_name == 'sh8281-kim/starfish2'
     # This internal pool can reach YouTube; the public code pool cannot.
     runs-on: [runner-type3]
     timeout-minutes: 30
