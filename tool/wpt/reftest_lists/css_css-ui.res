@@ -910,7 +910,7 @@ http://web-platform.test:8000/css/css-ui/outline-022.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/outline-026.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/outline-027.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/outline-028.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-ui/outline-auto-dynamic-change.html
+http://web-platform.test:8000/css/css-ui/outline-auto-dynamic-change.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/outline-auto-width-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/outline-color-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/outline-color-002.html
@@ -928,7 +928,7 @@ http://web-platform.test:8000/css/css-ui/outline-offset.html
 http://web-platform.test:8000/css/css-ui/outline-style-inherit.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/outline-with-padding-001.html
 http://web-platform.test:8000/css/css-ui/pointer-events-no-scrollbars-001.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-ui/pointer-events-no-scrollbars-002.html
+http://web-platform.test:8000/css/css-ui/pointer-events-no-scrollbars-002.html
 http://web-platform.test:8000/css/css-ui/resize-change-margin.html
 http://web-platform.test:8000/css/css-ui/resize-child-will-change-transform.html
 http://web-platform.test:8000/css/css-ui/resize-generated-content.html
