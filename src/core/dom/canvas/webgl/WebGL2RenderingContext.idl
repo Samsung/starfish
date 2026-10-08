@@ -366,20 +366,20 @@ interface WebGL2RenderingContextBase
     [Unimplemented] undefined copyTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
                                                 GLint x, GLint y, GLsizei width, GLsizei height);
 
-    [Unimplemented] undefined compressedTexImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
-                                                   GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, GLintptr offset);
-    [Unimplemented] undefined compressedTexImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
-                                                   GLsizei height, GLsizei depth, GLint border, [AllowShared] ArrayBufferView srcData,
-                                                   optional unsigned long long srcOffset = 0, optional GLuint srcLengthOverride = 0);
+    undefined compressedTexImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
+                                   GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, GLintptr offset);
+    undefined compressedTexImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
+                                   GLsizei height, GLsizei depth, GLint border, [AllowShared] ArrayBufferView srcData,
+                                   optional unsigned long long srcOffset = 0, optional GLuint srcLengthOverride = 0);
 
-    [Unimplemented] undefined compressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                                                      GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
-                                                      GLenum format, GLsizei imageSize, GLintptr offset);
-    [Unimplemented] undefined compressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                                                      GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
-                                                      GLenum format, [AllowShared] ArrayBufferView srcData,
-                                                      optional unsigned long long srcOffset = 0,
-                                                      optional GLuint srcLengthOverride = 0);
+    undefined compressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                                      GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
+                                      GLenum format, GLsizei imageSize, GLintptr offset);
+    undefined compressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                                      GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
+                                      GLenum format, [AllowShared] ArrayBufferView srcData,
+                                      optional unsigned long long srcOffset = 0,
+                                      optional GLuint srcLengthOverride = 0);
 
     /* Programs and shaders */
     [WebGLHandlesContextLoss] GLint getFragDataLocation(WebGLProgram program, DOMString name);
@@ -544,19 +544,19 @@ interface WebGL2RenderingContextOverloads
                             GLsizei height, GLenum format, GLenum type, [AllowShared] ArrayBufferView srcData,
                             unsigned long long srcOffset);
 
-    [Unimplemented] undefined compressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
-                                                   GLsizei height, GLint border, GLsizei imageSize, GLintptr offset);
-    [Unimplemented] undefined compressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
-                                                   GLsizei height, GLint border, [AllowShared] ArrayBufferView srcData,
-                                                   optional unsigned long long srcOffset = 0, optional GLuint srcLengthOverride = 0);
+    undefined compressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
+                                   GLsizei height, GLint border, GLsizei imageSize, GLintptr offset);
+    undefined compressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
+                                   GLsizei height, GLint border, [AllowShared] ArrayBufferView srcData,
+                                   optional unsigned long long srcOffset = 0, optional GLuint srcLengthOverride = 0);
 
-    [Unimplemented] undefined compressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                                                      GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, GLintptr offset);
-    [Unimplemented] undefined compressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                                                      GLsizei width, GLsizei height, GLenum format,
-                                                      [AllowShared] ArrayBufferView srcData,
-                                                      optional unsigned long long srcOffset = 0,
-                                                      optional GLuint srcLengthOverride = 0);
+    undefined compressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                                      GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, GLintptr offset);
+    undefined compressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                                      GLsizei width, GLsizei height, GLenum format,
+                                      [AllowShared] ArrayBufferView srcData,
+                                      optional unsigned long long srcOffset = 0,
+                                      optional GLuint srcLengthOverride = 0);
 
     undefined uniform1fv(WebGLUniformLocation? location, Float32List data, optional unsigned long long srcOffset = 0,
                          optional GLuint srcLength = 0);
