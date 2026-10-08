@@ -2459,12 +2459,13 @@ Apps relying on the right-hand list get **no protection** — the directive is p
 - **Instanced Drawing:** `drawArraysInstanced`, `drawElementsInstanced`, `drawRangeElements`, `vertexAttribDivisor`.
 - **Integer Attributes:** `vertexAttribIPointer`, `vertexAttribI4i`/`vertexAttribI4ui`/`vertexAttribI4iv`/`vertexAttribI4uiv`, `getVertexAttribIiv`/`getVertexAttribIuiv`.
 - **Textures (3D & 2D Array):** `texImage3D`, `texSubImage3D`, `texStorage2D`, `texStorage3D`, sized internal format uploads and pixel store parameters.
+- **Compressed Textures:** `compressedTexImage2D`/`3D` and `compressedTexSubImage2D`/`3D` (all overloads) are exposed, but since no compressed format is supported they only validate the source (`PIXEL_UNPACK_BUFFER` binding) and target, then generate `INVALID_ENUM` — the same as WebGL 1.
 
 **Unimplemented WebGL 2.0 features (`[Unimplemented]` in IDL / methods not exposed on instance):**
 - **Query Objects:** `createQuery`, `deleteQuery`, `isQuery`, `beginQuery`, `endQuery`, `getQuery`, `getQueryParameter`.
 - **Sampler Objects:** `createSampler`, `deleteSampler`, `isSampler`, `bindSampler`, `samplerParameteri`, `samplerParameterf`, `getSamplerParameter`.
 - **Transform Feedback Execution:** `createTransformFeedback`, `deleteTransformFeedback`, `isTransformFeedback`, `bindTransformFeedback`, `beginTransformFeedback`, `endTransformFeedback`, `pauseTransformFeedback`, `resumeTransformFeedback`, `getTransformFeedbackVarying`.
-- **Compressed Textures:** `compressedTexImage2D/3D`, `compressedTexSubImage2D/3D`, `copyTexSubImage3D`.
+- **3D Texture Copy:** `copyTexSubImage3D`.
 - **Multiple Render Targets Clear:** `clearBufferfv`, `clearBufferiv`, `clearBufferuiv`, `clearBufferfi`.
 
 **Extensions exposed via `getExtension(name)`** (subject to the underlying GL driver advertising the matching `GL_*` token; on Mesa llvmpipe / SwiftShader none may be advertised):

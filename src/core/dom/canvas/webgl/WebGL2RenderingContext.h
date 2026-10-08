@@ -385,6 +385,43 @@ public:
                        GLenum type, ScriptArrayBufferView srcData,
                        unsigned long long srcOffset);
 
+    void compressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
+                              GLsizei width, GLsizei height, GLint border,
+                              GLsizei imageSize, GLintptr offset);
+    void compressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
+                              GLsizei width, GLsizei height, GLint border,
+                              ScriptArrayBufferView srcData,
+                              unsigned long long srcOffset = 0,
+                              GLuint srcLengthOverride = 0);
+    void compressedTexSubImage2D(GLenum target, GLint level, GLint xoffset,
+                                 GLint yoffset, GLsizei width, GLsizei height,
+                                 GLenum format, GLsizei imageSize,
+                                 GLintptr offset);
+    void compressedTexSubImage2D(GLenum target, GLint level, GLint xoffset,
+                                 GLint yoffset, GLsizei width, GLsizei height,
+                                 GLenum format, ScriptArrayBufferView srcData,
+                                 unsigned long long srcOffset = 0,
+                                 GLuint srcLengthOverride = 0);
+
+    void compressedTexImage3D(GLenum target, GLint level, GLenum internalformat,
+                              GLsizei width, GLsizei height, GLsizei depth,
+                              GLint border, GLsizei imageSize, GLintptr offset);
+    void compressedTexImage3D(GLenum target, GLint level, GLenum internalformat,
+                              GLsizei width, GLsizei height, GLsizei depth,
+                              GLint border, ScriptArrayBufferView srcData,
+                              unsigned long long srcOffset = 0,
+                              GLuint srcLengthOverride = 0);
+    void compressedTexSubImage3D(GLenum target, GLint level, GLint xoffset,
+                                 GLint yoffset, GLint zoffset, GLsizei width,
+                                 GLsizei height, GLsizei depth, GLenum format,
+                                 GLsizei imageSize, GLintptr offset);
+    void compressedTexSubImage3D(GLenum target, GLint level, GLint xoffset,
+                                 GLint yoffset, GLint zoffset, GLsizei width,
+                                 GLsizei height, GLsizei depth, GLenum format,
+                                 ScriptArrayBufferView srcData,
+                                 unsigned long long srcOffset = 0,
+                                 GLuint srcLengthOverride = 0);
+
     void uniform1fv(Optional<WebGLUniformLocation*> location, Float32List data,
                     unsigned long long srcOffset = 0, GLuint srcLength = 0);
     void uniform2fv(Optional<WebGLUniformLocation*> location, Float32List data,
@@ -450,6 +487,9 @@ private:
         return 2;
     }
     Optional<WebGLFramebuffer*> getBoundFramebuffer(GLenum target) override;
+
+    void rejectCompressedTexImage(GLenum target, bool is3D,
+                                  bool fromPixelUnpackBuffer);
 
     GLenum m_currentVertexAttribType = GL_FLOAT;
     GLenum m_defaultReadBuffer = 0x405; /* GL_BACK */
