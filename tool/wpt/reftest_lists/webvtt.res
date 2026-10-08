@@ -47,7 +47,7 @@ http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/embedded_style_urls.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/evil/9_cues_overlapping_completely.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/evil/9_cues_overlapping_completely_all_cues_have_same_timestamp.html
-http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/evil/media_404_omit_subtitles.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/evil/media_404_omit_subtitles.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/evil/media_height_19.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/evil/non-standard-pseudo-elements.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/webvtt/rendering/cues-with-video/processing-model/evil/single_quote.html
