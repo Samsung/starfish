@@ -94,10 +94,12 @@ engine problems:
   carrying a wait class, the pass signal is the test's own script clearing it;
   our `inject_report.js` waits for `load` and observes the `class` attribute
   (both `test-wait` and `reftest-wait` are recognized). Tests that only signal
-  via the `TestRendered` custom event still don't complete — wptrunner's own
-  helper `third_party/wpt/tools/wptrunner/wptrunner/executors/test-wait.js`
-  dispatches it (after `load` → `document.fonts.ready` → a double-rAF settle),
-  but we never do, so a test that only listens for `TestRendered` (e.g.
+  via the `TestRendered` custom event complete only when the root carries
+  `reftest-wait`: wptrunner's own helper
+  `third_party/wpt/tools/wptrunner/wptrunner/executors/test-wait.js`
+  dispatches it for either class (after `load` → `document.fonts.ready` → a
+  double-rAF settle), but Starfish's test-mode hook fires it for `reftest-wait`
+  only, so a `test-wait` crashtest that only listens for `TestRendered` (e.g.
   `css/css-anchor-position/long-anchor-chain-crash.html`) waits forever — as
   does any test whose async work (a `Worker`, `requestIdleCallback`, …) never
   settles in Starfish. In these the *engine* typically didn't crash; they are
