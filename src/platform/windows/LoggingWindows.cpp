@@ -47,19 +47,14 @@ __declspec(thread) bool g_postLogMessageToThreadMessageQueue = false;
 // left every engine-side diagnostic unreachable from a console host -- the
 // whole blank-render investigation on this port was blind until these lines
 // reached stderr. Warnings and errors always go there; the (very chatty) info
-// stream only when STARFISH_LOG_STDERR is set.
+// stream is emitted only in debug builds.
 static void emit(const char* level, const char* text, bool isInfo)
 {
-    static int infoEnabled = -1;
+#if defined(NDEBUG) && !defined(STARFISH_MEDIA_PLAYBACK_TEST)
     if (isInfo) {
-        if (infoEnabled < 0) {
-            infoEnabled =
-                GetEnvironmentVariableA("STARFISH_LOG_STDERR", nullptr, 0) != 0;
-        }
-        if (!infoEnabled) {
-            return;
-        }
+        return;
     }
+#endif
     fprintf(stderr, "%s %s\n", level, text);
     fflush(stderr);
 }

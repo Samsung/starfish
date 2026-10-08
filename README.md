@@ -341,8 +341,8 @@ python tool\windows\run_youtube_iframe.py --browser build\windows-x64\Release\St
 Use `--video VIDEO_ID` to select another video. The helper serves the iframe
 over local HTTP and bypasses the corporate proxy only for loopback addresses;
 YouTube requests continue to use the configured proxy. Its status reports
-playing time, mute and volume. `STARFISH_FFMPEG_TRACE=1` logs decoder, audio
-endpoint and texture initialization for diagnosis.
+playing time, mute and volume. Diagnostic logs use the existing compile-time
+logging configuration; no environment switch enables FFmpeg tracing.
 
 For repeated builds, enable a vcpkg binary cache, for example:
 

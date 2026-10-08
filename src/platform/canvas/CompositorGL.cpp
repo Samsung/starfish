@@ -3767,10 +3767,6 @@ public:
         // dimensions by the display DPI reads beyond the supplied RGBA frame.
         m_bufferWidth = w;
         m_bufferHeight = h;
-        if (getenv("STARFISH_FFMPEG_TRACE")) {
-            STARFISH_LOG_INFO("FFmpeg texture frame=%zux%zu dpi=%f", w, h,
-                              devicePixelRatio);
-        }
 #else
         m_bufferWidth = std::max((size_t)1, (size_t)(w * devicePixelRatio));
         m_bufferHeight = std::max((size_t)1, (size_t)(h * devicePixelRatio));

@@ -106,41 +106,22 @@ bool RendererANGLE::initialize(HWND window, unsigned offscreenWidth,
         return false;
     }
 
-    // Whether a given session actually fails hardware D3D11 device creation
-    // is out of our control (modern RDP often still succeeds against the
-    // physical adapter), so there is no reliable way to exercise the WARP
-    // path below by just picking an environment to run in. This lets a
-    // developer force it deterministically instead, to check the WARP
-    // retry logic and the resulting render independently of whatever
-    // hardware happens to be reachable.
-    char forceWarp[8] = {};
-    bool skipHardware =
-        GetEnvironmentVariableA("STARFISH_FORCE_WARP", forceWarp,
-                                sizeof(forceWarp)) > 0 &&
-        forceWarp[0] != '0';
-    if (skipHardware) {
-        std::fprintf(stderr,
-                     "[StarfishShell] STARFISH_FORCE_WARP set, skipping the "
-                     "hardware EGL attempt\n");
-        std::fflush(stderr);
-    } else {
-        const EGLint hardwareAttributes[] = {
-            EGL_PLATFORM_ANGLE_TYPE_ANGLE,
-            EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
-            EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE,
-            EGL_PLATFORM_ANGLE_DEVICE_TYPE_HARDWARE_ANGLE,
-            EGL_EXPERIMENTAL_PRESENT_PATH_ANGLE,
-            EGL_EXPERIMENTAL_PRESENT_PATH_COPY_ANGLE,
-            EGL_NONE,
-        };
-        if (bringUpDisplay(getPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE,
-                                                 EGL_DEFAULT_DISPLAY,
-                                                 hardwareAttributes),
-                           "hardware")) {
-            return true;
-        }
-        teardownDisplay();
+    const EGLint hardwareAttributes[] = {
+        EGL_PLATFORM_ANGLE_TYPE_ANGLE,
+        EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
+        EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE,
+        EGL_PLATFORM_ANGLE_DEVICE_TYPE_HARDWARE_ANGLE,
+        EGL_EXPERIMENTAL_PRESENT_PATH_ANGLE,
+        EGL_EXPERIMENTAL_PRESENT_PATH_COPY_ANGLE,
+        EGL_NONE,
+    };
+    if (bringUpDisplay(getPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE,
+                                             EGL_DEFAULT_DISPLAY,
+                                             hardwareAttributes),
+                       "hardware")) {
+        return true;
     }
+    teardownDisplay();
 
     // A remote/RDP session or a machine with no usable D3D11 hardware
     // adapter fails somewhere above. Retry explicitly against ANGLE's D3D11

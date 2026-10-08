@@ -37,12 +37,7 @@
         "" STR,                  \
         ##__VA_ARGS__);
 #else
-#define DEMUXERMP4_LOG(...)                                 \
-    do {                                                    \
-        if (getenv("STARFISH_FFMPEG_TRACE")) {              \
-            STARFISH_LOG_INFO("[DemuxerMP4] " __VA_ARGS__); \
-        }                                                   \
-    } while (0)
+#define DEMUXERMP4_LOG(...)
 #endif
 
 class MP4BinaryStreamAdapter : public MP4::BinaryStream {

@@ -62,6 +62,7 @@ Deltas and emphases on top of `docs/Coding_Style_Guide.md`:
 - Containers of GC-managed pointers use `GCVector`/`GCTightVector`, even
   for short-lived locals — a `std::vector` buffer lives outside the GC heap
   and its elements can be collected while still in use.
+- Final product builds must not contain environment-variable switches for debug or test paths. Compile CI-only instrumentation out by default.
 - Fix root causes. Don't paper over a symptom with a defensive null check
   or a try-catch that swallows the failure.
 
