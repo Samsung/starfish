@@ -139,7 +139,10 @@ out
 
 The Linux `glib_cairo_gl` / `x11` x64 port runs
 `tool/ci/test_youtube_playback.py` on the internal `runner-type3` pool with
-YouTube egress. Windows x64/x86 and DALi retain build checks and the existing
+YouTube egress. Same-repository PRs and the `sh8281-kim/starfish2` development
+fork run against the pinned PR head SHA. Cache authentication uses trusted
+base tooling before test source is checked out. Windows x64/x86 and DALi
+retain build checks and the existing
 self-contained page screenshot tests. Windows YouTube playback CI is deferred
 because that pool cannot reach YouTube.
 The CI runner must reach YouTube, its API and `googlevideo.com` media hosts;
