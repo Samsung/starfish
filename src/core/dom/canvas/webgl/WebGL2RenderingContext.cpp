@@ -551,6 +551,24 @@ ScriptValue WebGL2RenderingContext::getProgramParameter(WebGLProgram* program,
         return scriptNull();
     }
 
+    switch (pname) {
+    case GL_DELETE_STATUS:
+    case GL_LINK_STATUS:
+    case GL_VALIDATE_STATUS:
+    case GL_ATTACHED_SHADERS:
+    case GL_ACTIVE_ATTRIBUTES:
+    case GL_ACTIVE_UNIFORMS:
+    case GL_ACTIVE_UNIFORM_BLOCKS:
+        break;
+    case GL_TRANSFORM_FEEDBACK_BUFFER_MODE:
+        return createScriptValue(program->transformFeedbackBufferMode());
+    case GL_TRANSFORM_FEEDBACK_VARYINGS:
+        return createScriptValue(program->transformFeedbackVaryingsCount());
+    default:
+        setGLError(GL_INVALID_ENUM);
+        return scriptNull();
+    }
+
     GLint params = 0;
     gl()->getProgramiv(program->glObject(), pname, &params);
 
@@ -569,15 +587,11 @@ ScriptValue WebGL2RenderingContext::getProgramParameter(WebGLProgram* program,
         return createScriptValue(static_cast<bool>(params));
     case GL_VALIDATE_STATUS:
         return createScriptValue(static_cast<bool>(params));
-    // GLenum
-    case GL_TRANSFORM_FEEDBACK_BUFFER_MODE:
-        return createScriptValue(static_cast<GLenum>(params));
     // GLint
     case GL_ACTIVE_ATTRIBUTES:
     case GL_ACTIVE_UNIFORMS:
-    case GL_ACTIVE_UNIFORM_BLOCKS:
     case GL_ATTACHED_SHADERS:
-    case GL_TRANSFORM_FEEDBACK_VARYINGS:
+    case GL_ACTIVE_UNIFORM_BLOCKS:
         return createScriptValue(params);
     default:
         break;
@@ -961,6 +975,41 @@ void WebGL2RenderingContext::texParameteri(GLenum target, GLenum pname,
                pname != GL_TEXTURE_WRAP_T) {
         setGLError(GL_INVALID_ENUM);
         return;
+    }
+
+    if (pname == GL_TEXTURE_WRAP_S || pname == GL_TEXTURE_WRAP_T ||
+        pname == GL_TEXTURE_WRAP_R) {
+        if (param != GL_REPEAT && param != GL_CLAMP_TO_EDGE &&
+            param != GL_MIRRORED_REPEAT) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+    } else if (pname == GL_TEXTURE_MAG_FILTER) {
+        if (param != GL_NEAREST && param != GL_LINEAR) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+    } else if (pname == GL_TEXTURE_MIN_FILTER) {
+        if (param != GL_NEAREST && param != GL_LINEAR &&
+            param != GL_NEAREST_MIPMAP_NEAREST &&
+            param != GL_LINEAR_MIPMAP_NEAREST &&
+            param != GL_NEAREST_MIPMAP_LINEAR &&
+            param != GL_LINEAR_MIPMAP_LINEAR) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+    } else if (pname == GL_TEXTURE_COMPARE_MODE) {
+        if (param != GL_NONE && param != GL_COMPARE_REF_TO_TEXTURE) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+    } else if (pname == GL_TEXTURE_COMPARE_FUNC) {
+        if (param != GL_LEQUAL && param != GL_GEQUAL && param != GL_LESS &&
+            param != GL_GREATER && param != GL_EQUAL && param != GL_NOTEQUAL &&
+            param != GL_ALWAYS && param != GL_NEVER) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
     }
 
     if (target != GL_TEXTURE_2D && target != GL_TEXTURE_3D &&
@@ -1635,6 +1684,60 @@ ScriptValue WebGL2RenderingContext::getSyncParameter(WebGLSync* sync,
     }
     setGLError(GL_INVALID_ENUM);
     return scriptNull();
+}
+
+void WebGL2RenderingContext::transformFeedbackVaryings(
+    WebGLProgram* program, GCVector<String*> varyings, GLenum bufferMode)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (!isFromCurrentContext(program)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    if (bufferMode != GL_INTERLEAVED_ATTRIBS &&
+        bufferMode != GL_SEPARATE_ATTRIBS) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (bufferMode == GL_SEPARATE_ATTRIBS) {
+        GLint maxSeparateAttribs = 0;
+        gl()->getIntegerv(GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS,
+                          &maxSeparateAttribs);
+        if (static_cast<GLint>(varyings.size()) > maxSeparateAttribs) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+    }
+
+    std::vector<std::string> strings;
+    std::vector<const char*> cstrings;
+    strings.reserve(varyings.size());
+    cstrings.reserve(varyings.size());
+
+    for (size_t i = 0; i < varyings.size(); ++i) {
+        strings.push_back(varyings[i]->toUTF8NonGCString());
+        cstrings.push_back(strings.back().c_str());
+    }
+
+    gl()->transformFeedbackVaryings(program->glObject(),
+                                    static_cast<GLsizei>(cstrings.size()),
+                                    cstrings.data(), bufferMode);
+
+    program->setTransformFeedbackBufferMode(bufferMode);
+    program->setTransformFeedbackVaryingsCount(
+        static_cast<GLint>(varyings.size()));
+}
+
+Optional<WebGLFramebuffer*> WebGL2RenderingContext::getBoundFramebuffer(
+    GLenum target)
+{
+    if (target == GL_READ_FRAMEBUFFER) {
+        return m_readFramebuffer;
+    }
+    return m_drawFramebuffer;
 }
 
 void WebGL2RenderingContext::bindBufferBase(GLenum target, GLuint index,

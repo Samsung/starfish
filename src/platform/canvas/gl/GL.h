@@ -337,6 +337,9 @@ public:
     virtual void copyBufferSubData(GLenum readTarget, GLenum writeTarget,
                                    GLintptr readOffset, GLintptr writeOffset,
                                    GLsizeiptr size) = 0;
+    virtual void transformFeedbackVaryings(GLuint program, GLsizei count,
+                                           const char *const *varyings,
+                                           GLenum bufferMode) = 0;
     virtual void vertexAttribIPointer(GLuint index, GLint size, GLenum type,
                                       GLsizei stride, const void *pointer) = 0;
     virtual void getVertexAttribIiv(GLuint index, GLenum pname,

@@ -271,6 +271,7 @@ public:
     {
         return true;
     }
+    virtual Optional<WebGLFramebuffer*> getBoundFramebuffer(GLenum target);
 
     void stencilFunc(GLenum func, GLint ref, GLuint mask);
     void stencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);

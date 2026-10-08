@@ -472,7 +472,7 @@ interface WebGL2RenderingContextBase
     [Unimplemented] undefined bindTransformFeedback(GLenum target, WebGLTransformFeedback? tf);
     [Unimplemented] undefined beginTransformFeedback(GLenum primitiveMode);
     [Unimplemented] undefined endTransformFeedback();
-    [Unimplemented] undefined transformFeedbackVaryings(WebGLProgram program, sequence<DOMString> varyings, GLenum bufferMode);
+    undefined transformFeedbackVaryings(WebGLProgram program, sequence<DOMString> varyings, GLenum bufferMode);
     [Unimplemented] WebGLActiveInfo? getTransformFeedbackVarying(WebGLProgram program, GLuint index);
     [Unimplemented] undefined pauseTransformFeedback();
     [Unimplemented] undefined resumeTransformFeedback();
