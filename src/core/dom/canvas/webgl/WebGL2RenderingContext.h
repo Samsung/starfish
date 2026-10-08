@@ -229,6 +229,11 @@ public:
     void waitSync(WebGLSync* sync, GLbitfield flags, GLint64 timeout);
     ScriptValue getSyncParameter(WebGLSync* sync, GLenum pname);
 
+    /* Transform Feedback */
+    void transformFeedbackVaryings(WebGLProgram* program,
+                                   GCVector<String*> varyings,
+                                   GLenum bufferMode);
+
     /* Uniform Buffer Objects and Transform Feedback Buffers */
     void bindBufferBase(GLenum target, GLuint index,
                         Optional<WebGLBuffer*> buffer);
@@ -444,6 +449,7 @@ private:
     {
         return 2;
     }
+    Optional<WebGLFramebuffer*> getBoundFramebuffer(GLenum target) override;
 
     GLenum m_currentVertexAttribType = GL_FLOAT;
     GLenum m_defaultReadBuffer = 0x405; /* GL_BACK */

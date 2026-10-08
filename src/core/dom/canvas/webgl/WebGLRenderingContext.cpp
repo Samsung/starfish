@@ -986,9 +986,34 @@ void WebGLRenderingContext::detachShader(WebGLProgram* program,
     program->removeDetachedShader(shader);
 }
 
+static bool isValidEnableCap(GLenum cap, bool isWebGL2)
+{
+    switch (cap) {
+    case GL_BLEND:
+    case GL_CULL_FACE:
+    case GL_DEPTH_TEST:
+    case GL_DITHER:
+    case GL_POLYGON_OFFSET_FILL:
+    case GL_SAMPLE_ALPHA_TO_COVERAGE:
+    case GL_SAMPLE_COVERAGE:
+    case GL_SCISSOR_TEST:
+    case GL_STENCIL_TEST:
+        return true;
+    case GL_RASTERIZER_DISCARD:
+        return isWebGL2;
+    default:
+        return false;
+    }
+}
+
 void WebGLRenderingContext::disable(GLenum cap)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!isValidEnableCap(cap, isWebGL2RenderingContext())) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
 
     m_gl->disable(cap);
 }
@@ -1356,6 +1381,11 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
 void WebGLRenderingContext::enable(GLenum cap)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!isValidEnableCap(cap, isWebGL2RenderingContext())) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
 
     m_gl->enable(cap);
 }
@@ -2035,10 +2065,97 @@ GLint WebGLRenderingContext::getAttribLocation(WebGLProgram* program,
 
     return m_gl->getAttribLocation(program->glObject(), CSTR(name));
 }
+Optional<WebGLFramebuffer*> WebGLRenderingContext::getBoundFramebuffer(
+    GLenum target)
+{
+    return m_state->webGLFramebuffer();
+}
+
 ScriptValue WebGLRenderingContext::getFramebufferAttachmentParameter(
     GLenum target, GLenum attachment, GLenum pname)
 {
     ENTER_CONTEXT_SCOPE(scriptNull());
+
+    bool isWebGL2 = isWebGL2RenderingContext();
+
+    if (isWebGL2) {
+        if (target != GL_FRAMEBUFFER && target != GL_READ_FRAMEBUFFER &&
+            target != GL_DRAW_FRAMEBUFFER) {
+            setGLError(GL_INVALID_ENUM);
+            return scriptNull();
+        }
+    } else {
+        if (target != GL_FRAMEBUFFER) {
+            setGLError(GL_INVALID_ENUM);
+            return scriptNull();
+        }
+    }
+
+    Optional<WebGLFramebuffer*> maybeFb = getBoundFramebuffer(target);
+
+    if (!maybeFb.hasValue()) {
+        if (!isWebGL2) {
+            setGLError(GL_INVALID_OPERATION);
+            return scriptNull();
+        }
+
+        if (attachment != GL_BACK && attachment != GL_DEPTH &&
+            attachment != GL_STENCIL) {
+            setGLError(GL_INVALID_ENUM);
+            return scriptNull();
+        }
+
+        if (pname != GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE &&
+            pname != GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE &&
+            pname != GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE &&
+            pname != GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE &&
+            pname != GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE &&
+            pname != GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE &&
+            pname != GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE &&
+            pname != GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE &&
+            pname != GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING) {
+            setGLError(GL_INVALID_ENUM);
+            return scriptNull();
+        }
+
+        bool hasBuffer = true;
+        if (attachment == GL_DEPTH) {
+            hasBuffer = m_attributes.depth();
+        } else if (attachment == GL_STENCIL) {
+            hasBuffer = m_attributes.stencil();
+        }
+
+        if (!hasBuffer) {
+            if (pname == GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE) {
+                return Escargot::ValueRef::create(static_cast<GLenum>(GL_NONE));
+            }
+            setGLError(GL_INVALID_OPERATION);
+            return scriptNull();
+        }
+
+        if (pname == GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE) {
+            return Escargot::ValueRef::create(
+                static_cast<GLenum>(GL_FRAMEBUFFER_DEFAULT));
+        }
+
+        GLint params = 0;
+        m_gl->getFramebufferAttachmentParameteriv(target, attachment, pname,
+                                                  &params);
+        if (hasNewGLError()) {
+            return scriptNull();
+        }
+        if (pname == GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING ||
+            pname == GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE) {
+            return Escargot::ValueRef::create(static_cast<GLenum>(params));
+        }
+        return Escargot::ValueRef::create(params);
+    }
+
+    if (attachment == GL_BACK || attachment == GL_DEPTH ||
+        attachment == GL_STENCIL || attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
+        setGLError(GL_INVALID_ENUM);
+        return scriptNull();
+    }
 
     GLint maxColorAttachments = 0;
     m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
@@ -2059,81 +2176,85 @@ ScriptValue WebGLRenderingContext::getFramebufferAttachmentParameter(
         return scriptNull();
     }
 
-    if (!isDefaultFramebufferBound()) {
-        Optional<WebGLFramebuffer*> maybeFb = m_state->webGLFramebuffer();
-        if (maybeFb.hasValue() && maybeFb.value()) {
-            WebGLFramebuffer* fb = maybeFb.value();
-            WebGLTexture* tex = fb->attachedTexture(attachment);
-            WebGLRenderbuffer* rb = fb->attachedRenderBuffer();
-            if (attachment >= GL_COLOR_ATTACHMENT0 &&
-                attachment < static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + 16)) {
-                if (attachment != GL_COLOR_ATTACHMENT0) {
-                    rb = nullptr;
-                }
-            }
-            if (!tex && !rb) {
-                if (pname == GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE) {
-                    return Escargot::ValueRef::create(
-                        static_cast<GLenum>(GL_NONE));
-                }
-                if (pname == GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME) {
-                    return scriptNull();
-                }
-            }
+    WebGLFramebuffer* fb = maybeFb.value();
+    WebGLTexture* tex = fb->attachedTexture(attachment);
+    WebGLRenderbuffer* rb = fb->attachedRenderBuffer();
+    if (attachment >= GL_COLOR_ATTACHMENT0 &&
+        attachment < static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + 16)) {
+        if (attachment != GL_COLOR_ATTACHMENT0) {
+            rb = nullptr;
         }
+    }
+
+    if (!tex && !rb) {
+        if (pname == GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE) {
+            return Escargot::ValueRef::create(static_cast<GLenum>(GL_NONE));
+        }
+        setGLError(GL_INVALID_OPERATION);
+        return scriptNull();
+    }
+
+    switch (pname) {
+    case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
+        return Escargot::ValueRef::create(
+            static_cast<GLenum>(tex ? GL_TEXTURE : GL_RENDERBUFFER));
+    case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
+        if (tex) {
+            return tex->scriptValue();
+        }
+        if (rb) {
+            return rb->scriptValue();
+        }
+        return scriptNull();
+    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
+        if (!tex) {
+            setGLError(GL_INVALID_ENUM);
+            return scriptNull();
+        }
+        break;
+    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
+        if (!tex) {
+            setGLError(GL_INVALID_ENUM);
+            return scriptNull();
+        }
+        break;
+    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER:
+        if (!isWebGL2 || !tex) {
+            setGLError(GL_INVALID_ENUM);
+            return scriptNull();
+        }
+        break;
+    case GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE:
+    case GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE:
+    case GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE:
+    case GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE:
+    case GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE:
+    case GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE:
+    case GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE:
+    case GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING:
+        if (!isWebGL2) {
+            setGLError(GL_INVALID_ENUM);
+            return scriptNull();
+        }
+        break;
+    default:
+        setGLError(GL_INVALID_ENUM);
+        return scriptNull();
     }
 
     GLint params = 0;
     m_gl->getFramebufferAttachmentParameteriv(target, attachment, pname,
                                               &params);
-
     if (hasNewGLError()) {
         return scriptNull();
     }
 
-    switch (pname) {
-    case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE: {
-        return params != 0
-                   ? Escargot::ValueRef::create(static_cast<GLenum>(params))
-                   : scriptNull();
+    if (pname == GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING ||
+        pname == GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE) {
+        return Escargot::ValueRef::create(static_cast<GLenum>(params));
     }
-    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
-    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
-        return Escargot::ValueRef::create(params);
-    case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME: {
-        Optional<WebGLFramebuffer*> webGLFramebuffer =
-            m_state->webGLFramebuffer();
-        if (!webGLFramebuffer.hasValue() || !webGLFramebuffer.value()) {
-            return scriptNull();
-        }
-        GLint rboOrTextureID;
-        m_gl->getFramebufferAttachmentParameteriv(
-            target, attachment, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,
-            &rboOrTextureID);
 
-        GLint type;
-        m_gl->getFramebufferAttachmentParameteriv(
-            target, attachment, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &type);
-        if (type == GL_RENDERBUFFER) {
-            return webGLFramebuffer.value()
-                ->attachedRenderBuffer()
-                ->scriptValue();
-        } else if (type == GL_TEXTURE) {
-            WebGLTexture* tex =
-                webGLFramebuffer.value()->attachedTexture(attachment);
-            if (tex) {
-                return tex->scriptValue();
-            }
-            return scriptNull();
-        }
-        STARFISH_LOG_DEBUG("Unknown type %d", type);
-        return scriptNull();
-    }
-    default:
-        setGLError(GL_INVALID_ENUM);
-        break;
-    }
-    return scriptNull();
+    return Escargot::ValueRef::create(params);
 }
 
 ScriptValue WebGLRenderingContext::getProgramParameter(WebGLProgram* program,
@@ -2143,6 +2264,19 @@ ScriptValue WebGLRenderingContext::getProgramParameter(WebGLProgram* program,
 
     if (!isFromCurrentContext(program)) {
         setGLError(GL_INVALID_OPERATION);
+        return scriptNull();
+    }
+
+    switch (pname) {
+    case GL_DELETE_STATUS:
+    case GL_LINK_STATUS:
+    case GL_VALIDATE_STATUS:
+    case GL_ATTACHED_SHADERS:
+    case GL_ACTIVE_ATTRIBUTES:
+    case GL_ACTIVE_UNIFORMS:
+        break;
+    default:
+        setGLError(GL_INVALID_ENUM);
         return scriptNull();
     }
 
@@ -2747,6 +2881,11 @@ bool WebGLRenderingContext::isEnabled(GLenum cap)
         return false;
     }
 
+    if (!isValidEnableCap(cap, isWebGL2RenderingContext())) {
+        setGLError(GL_INVALID_ENUM);
+        return false;
+    }
+
     return m_gl->isEnabled(cap);
 }
 
@@ -3133,8 +3272,32 @@ void WebGLRenderingContext::texParameteri(GLenum target, GLenum pname,
 {
     ENTER_CONTEXT_SCOPE();
 
-    if (pname == GL_TEXTURE_MAX_ANISOTROPY_EXT &&
-        !isExtensionEnabled("EXT_texture_filter_anisotropic")) {
+    if (pname == GL_TEXTURE_WRAP_S || pname == GL_TEXTURE_WRAP_T) {
+        if (param != GL_REPEAT && param != GL_CLAMP_TO_EDGE &&
+            param != GL_MIRRORED_REPEAT) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+    } else if (pname == GL_TEXTURE_MAG_FILTER) {
+        if (param != GL_NEAREST && param != GL_LINEAR) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+    } else if (pname == GL_TEXTURE_MIN_FILTER) {
+        if (param != GL_NEAREST && param != GL_LINEAR &&
+            param != GL_NEAREST_MIPMAP_NEAREST &&
+            param != GL_LINEAR_MIPMAP_NEAREST &&
+            param != GL_NEAREST_MIPMAP_LINEAR &&
+            param != GL_LINEAR_MIPMAP_LINEAR) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+    } else if (pname == GL_TEXTURE_MAX_ANISOTROPY_EXT) {
+        if (!isExtensionEnabled("EXT_texture_filter_anisotropic")) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+    } else {
         setGLError(GL_INVALID_ENUM);
         return;
     }

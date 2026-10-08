@@ -89,6 +89,24 @@ public:
         return m_linkFailed;
     }
 
+    void setTransformFeedbackBufferMode(GLenum mode)
+    {
+        m_transformFeedbackBufferMode = mode;
+    }
+    GLenum transformFeedbackBufferMode() const
+    {
+        return m_transformFeedbackBufferMode;
+    }
+
+    void setTransformFeedbackVaryingsCount(GLint count)
+    {
+        m_transformFeedbackVaryingsCount = count;
+    }
+    GLint transformFeedbackVaryingsCount() const
+    {
+        return m_transformFeedbackVaryingsCount;
+    }
+
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLProgram, WebGLObject);
     GC_set_bit(desc, GC_WORD_OFFSET(WebGLProgram, m_attachedShaders));
     GC_set_bit(desc, GC_WORD_OFFSET(WebGLProgram, m_attachedShaders) + 1);
@@ -100,6 +118,8 @@ private:
     GCAtomicVector<UniformBlockInfo> m_uniformBlocks;
     bool m_usesFragColor = false;
     bool m_linkFailed = false;
+    GLenum m_transformFeedbackBufferMode = 0x8C80; // GL_INTERLEAVED_ATTRIBS
+    GLint m_transformFeedbackVaryingsCount = 0;
 };
 } // namespace Starfish
 

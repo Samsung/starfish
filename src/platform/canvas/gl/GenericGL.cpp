@@ -1065,6 +1065,13 @@ public:
                             size);
     }
 
+    void transformFeedbackVaryings(GLuint program, GLsizei count,
+                                   const char *const *varyings,
+                                   GLenum bufferMode) override
+    {
+        glTransformFeedbackVaryings(program, count, varyings, bufferMode);
+    }
+
     void vertexAttribIPointer(GLuint index, GLint size, GLenum type,
                               GLsizei stride, const void *pointer) override
     {
