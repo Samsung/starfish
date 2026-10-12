@@ -440,22 +440,22 @@ interface WebGL2RenderingContextBase
     undefined clearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil);
 
     /* Query Objects */
-    [Unimplemented] WebGLQuery createQuery();
-    [Unimplemented] undefined deleteQuery(WebGLQuery? query);
-    [WebGLHandlesContextLoss, Unimplemented] GLboolean isQuery(WebGLQuery? query);
-    [Unimplemented] undefined beginQuery(GLenum target, WebGLQuery query);
-    [Unimplemented] undefined endQuery(GLenum target);
-    [Unimplemented] WebGLQuery? getQuery(GLenum target, GLenum pname);
-    [Unimplemented] any getQueryParameter(WebGLQuery query, GLenum pname);
+    WebGLQuery? createQuery();
+    undefined deleteQuery(WebGLQuery? query);
+    [WebGLHandlesContextLoss] GLboolean isQuery(WebGLQuery? query);
+    undefined beginQuery(GLenum target, WebGLQuery query);
+    undefined endQuery(GLenum target);
+    WebGLQuery? getQuery(GLenum target, GLenum pname);
+    any getQueryParameter(WebGLQuery query, GLenum pname);
 
     /* Sampler Objects */
-    [Unimplemented] WebGLSampler createSampler();
-    [Unimplemented] undefined deleteSampler(WebGLSampler? sampler);
-    [WebGLHandlesContextLoss, Unimplemented] GLboolean isSampler(WebGLSampler? sampler);
-    [Unimplemented] undefined bindSampler(GLuint unit, WebGLSampler? sampler);
-    [Unimplemented] undefined samplerParameteri(WebGLSampler sampler, GLenum pname, GLint param);
-    [Unimplemented] undefined samplerParameterf(WebGLSampler sampler, GLenum pname, GLfloat param);
-    [Unimplemented] any getSamplerParameter(WebGLSampler sampler, GLenum pname);
+    WebGLSampler? createSampler();
+    undefined deleteSampler(WebGLSampler? sampler);
+    [WebGLHandlesContextLoss] GLboolean isSampler(WebGLSampler? sampler);
+    undefined bindSampler(GLuint unit, WebGLSampler? sampler);
+    undefined samplerParameteri(WebGLSampler sampler, GLenum pname, GLint param);
+    undefined samplerParameterf(WebGLSampler sampler, GLenum pname, GLfloat param);
+    any getSamplerParameter(WebGLSampler sampler, GLenum pname);
 
     /* Sync objects */
     WebGLSync? fenceSync(GLenum condition, GLbitfield flags);
@@ -466,16 +466,16 @@ interface WebGL2RenderingContextBase
     any getSyncParameter(WebGLSync sync, GLenum pname);
 
     /* Transform Feedback */
-    [Unimplemented] WebGLTransformFeedback createTransformFeedback();
-    [Unimplemented] undefined deleteTransformFeedback(WebGLTransformFeedback? tf);
-    [WebGLHandlesContextLoss, Unimplemented] GLboolean isTransformFeedback(WebGLTransformFeedback? tf);
-    [Unimplemented] undefined bindTransformFeedback(GLenum target, WebGLTransformFeedback? tf);
-    [Unimplemented] undefined beginTransformFeedback(GLenum primitiveMode);
-    [Unimplemented] undefined endTransformFeedback();
+    WebGLTransformFeedback? createTransformFeedback();
+    undefined deleteTransformFeedback(WebGLTransformFeedback? tf);
+    [WebGLHandlesContextLoss] GLboolean isTransformFeedback(WebGLTransformFeedback? tf);
+    undefined bindTransformFeedback(GLenum target, WebGLTransformFeedback? tf);
+    undefined beginTransformFeedback(GLenum primitiveMode);
+    undefined endTransformFeedback();
     undefined transformFeedbackVaryings(WebGLProgram program, sequence<DOMString> varyings, GLenum bufferMode);
-    [Unimplemented] WebGLActiveInfo? getTransformFeedbackVarying(WebGLProgram program, GLuint index);
-    [Unimplemented] undefined pauseTransformFeedback();
-    [Unimplemented] undefined resumeTransformFeedback();
+    WebGLActiveInfo? getTransformFeedbackVarying(WebGLProgram program, GLuint index);
+    undefined pauseTransformFeedback();
+    undefined resumeTransformFeedback();
 
     /* Uniform Buffer Objects and Transform Feedback Buffers */
     undefined bindBufferBase(GLenum target, GLuint index, WebGLBuffer? buffer);

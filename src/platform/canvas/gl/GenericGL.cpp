@@ -1072,6 +1072,131 @@ public:
         glTransformFeedbackVaryings(program, count, varyings, bufferMode);
     }
 
+    void genQueries(GLsizei n, GLuint *ids) override
+    {
+        glGenQueries(n, ids);
+    }
+
+    void deleteQueries(GLsizei n, const GLuint *ids) override
+    {
+        glDeleteQueries(n, ids);
+    }
+
+    GLboolean isQuery(GLuint id) override
+    {
+        return glIsQuery(id);
+    }
+
+    void beginQuery(GLenum target, GLuint id) override
+    {
+        glBeginQuery(target, id);
+    }
+
+    void endQuery(GLenum target) override
+    {
+        glEndQuery(target);
+    }
+
+    void getQueryiv(GLenum target, GLenum pname, GLint *params) override
+    {
+        glGetQueryiv(target, pname, params);
+    }
+
+    void getQueryObjectuiv(GLuint id, GLenum pname, GLuint *params) override
+    {
+        glGetQueryObjectuiv(id, pname, params);
+    }
+
+    void genSamplers(GLsizei n, GLuint *samplers) override
+    {
+        glGenSamplers(n, samplers);
+    }
+
+    void deleteSamplers(GLsizei n, const GLuint *samplers) override
+    {
+        glDeleteSamplers(n, samplers);
+    }
+
+    GLboolean isSampler(GLuint sampler) override
+    {
+        return glIsSampler(sampler);
+    }
+
+    void bindSampler(GLuint unit, GLuint sampler) override
+    {
+        glBindSampler(unit, sampler);
+    }
+
+    void samplerParameteri(GLuint sampler, GLenum pname, GLint param) override
+    {
+        glSamplerParameteri(sampler, pname, param);
+    }
+
+    void samplerParameterf(GLuint sampler, GLenum pname, GLfloat param) override
+    {
+        glSamplerParameterf(sampler, pname, param);
+    }
+
+    void getSamplerParameteriv(GLuint sampler, GLenum pname,
+                               GLint *params) override
+    {
+        glGetSamplerParameteriv(sampler, pname, params);
+    }
+
+    void getSamplerParameterfv(GLuint sampler, GLenum pname,
+                               GLfloat *params) override
+    {
+        glGetSamplerParameterfv(sampler, pname, params);
+    }
+
+    void genTransformFeedbacks(GLsizei n, GLuint *ids) override
+    {
+        glGenTransformFeedbacks(n, ids);
+    }
+
+    void deleteTransformFeedbacks(GLsizei n, const GLuint *ids) override
+    {
+        glDeleteTransformFeedbacks(n, ids);
+    }
+
+    GLboolean isTransformFeedback(GLuint id) override
+    {
+        return glIsTransformFeedback(id);
+    }
+
+    void bindTransformFeedback(GLenum target, GLuint id) override
+    {
+        glBindTransformFeedback(target, id);
+    }
+
+    void beginTransformFeedback(GLenum primitiveMode) override
+    {
+        glBeginTransformFeedback(primitiveMode);
+    }
+
+    void endTransformFeedback() override
+    {
+        glEndTransformFeedback();
+    }
+
+    void pauseTransformFeedback() override
+    {
+        glPauseTransformFeedback();
+    }
+
+    void resumeTransformFeedback() override
+    {
+        glResumeTransformFeedback();
+    }
+
+    void getTransformFeedbackVarying(GLuint program, GLuint index,
+                                     GLsizei bufSize, GLsizei *length,
+                                     GLsizei *size, GLenum *type,
+                                     GLchar *name) override
+    {
+        glGetTransformFeedbackVarying(program, index, bufSize, length, size,
+                                      type, name);
+    }
     void vertexAttribIPointer(GLuint index, GLint size, GLenum type,
                               GLsizei stride, const void *pointer) override
     {

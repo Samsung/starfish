@@ -340,6 +340,43 @@ public:
     virtual void transformFeedbackVaryings(GLuint program, GLsizei count,
                                            const char *const *varyings,
                                            GLenum bufferMode) = 0;
+
+    /* Query Objects */
+    virtual void genQueries(GLsizei n, GLuint *ids) = 0;
+    virtual void deleteQueries(GLsizei n, const GLuint *ids) = 0;
+    virtual GLboolean isQuery(GLuint id) = 0;
+    virtual void beginQuery(GLenum target, GLuint id) = 0;
+    virtual void endQuery(GLenum target) = 0;
+    virtual void getQueryiv(GLenum target, GLenum pname, GLint *params) = 0;
+    virtual void getQueryObjectuiv(GLuint id, GLenum pname, GLuint *params) = 0;
+
+    /* Sampler Objects */
+    virtual void genSamplers(GLsizei n, GLuint *samplers) = 0;
+    virtual void deleteSamplers(GLsizei n, const GLuint *samplers) = 0;
+    virtual GLboolean isSampler(GLuint sampler) = 0;
+    virtual void bindSampler(GLuint unit, GLuint sampler) = 0;
+    virtual void samplerParameteri(GLuint sampler, GLenum pname,
+                                   GLint param) = 0;
+    virtual void samplerParameterf(GLuint sampler, GLenum pname,
+                                   GLfloat param) = 0;
+    virtual void getSamplerParameteriv(GLuint sampler, GLenum pname,
+                                       GLint *params) = 0;
+    virtual void getSamplerParameterfv(GLuint sampler, GLenum pname,
+                                       GLfloat *params) = 0;
+
+    /* Transform Feedback */
+    virtual void genTransformFeedbacks(GLsizei n, GLuint *ids) = 0;
+    virtual void deleteTransformFeedbacks(GLsizei n, const GLuint *ids) = 0;
+    virtual GLboolean isTransformFeedback(GLuint id) = 0;
+    virtual void bindTransformFeedback(GLenum target, GLuint id) = 0;
+    virtual void beginTransformFeedback(GLenum primitiveMode) = 0;
+    virtual void endTransformFeedback() = 0;
+    virtual void pauseTransformFeedback() = 0;
+    virtual void resumeTransformFeedback() = 0;
+    virtual void getTransformFeedbackVarying(GLuint program, GLuint index,
+                                             GLsizei bufSize, GLsizei *length,
+                                             GLsizei *size, GLenum *type,
+                                             GLchar *name) = 0;
     virtual void vertexAttribIPointer(GLuint index, GLint size, GLenum type,
                                       GLsizei stride, const void *pointer) = 0;
     virtual void getVertexAttribIiv(GLuint index, GLenum pname,

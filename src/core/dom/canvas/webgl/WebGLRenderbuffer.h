@@ -36,8 +36,40 @@ public:
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLRenderbuffer() const override;
 
+    GLsizei width() const
+    {
+        return m_width;
+    }
+    GLsizei height() const
+    {
+        return m_height;
+    }
+    GLenum internalFormat() const
+    {
+        return m_internalFormat;
+    }
+    GLsizei samples() const
+    {
+        return m_samples;
+    }
+
+    void setStorage(GLenum internalFormat, GLsizei width, GLsizei height,
+                    GLsizei samples = 0)
+    {
+        m_internalFormat = internalFormat;
+        m_width = width;
+        m_height = height;
+        m_samples = samples;
+    }
+
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLRenderbuffer, WebGLObject);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
+
+private:
+    GLenum m_internalFormat = 0;
+    GLsizei m_width = 0;
+    GLsizei m_height = 0;
+    GLsizei m_samples = 0;
 };
 } // namespace Starfish
 
