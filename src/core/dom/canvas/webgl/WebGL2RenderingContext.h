@@ -653,6 +653,8 @@ private:
     WebGLQuery* m_activeQueryTransformFeedbackPrimitivesWritten = nullptr;
     GCVector<WebGLSampler*> m_samplerBindings;
     WebGLTransformFeedback* m_boundTransformFeedback = nullptr;
+    void samplerParameteriImpl(WebGLSampler* sampler, GLenum pname,
+                               GLint param);
 };
 
 } // namespace Starfish
