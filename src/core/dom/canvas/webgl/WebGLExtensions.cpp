@@ -120,14 +120,14 @@ void WebGLExtensionRegistry::initialize(GL* gl)
     // 2. Add generators for extensions not requiring binding to native objects
 
 #define SUPPORTED_GL_EXTENSIONS(V)                                           \
-    V(OES_texture_float, OES_texture_float, AnyVersion, false)               \
-    V(OES_texture_half_float, OES_texture_half_float, AnyVersion, false)     \
-    V(OES_standard_derivatives, OES_standard_derivatives, AnyVersion, false) \
-    V(OES_depth_texture, WEBGL_depth_texture, AnyVersion, false)             \
+    V(OES_texture_float, OES_texture_float, WebGL1Only, false)               \
+    V(OES_texture_half_float, OES_texture_half_float, WebGL1Only, false)     \
+    V(OES_standard_derivatives, OES_standard_derivatives, WebGL1Only, false) \
+    V(OES_depth_texture, WEBGL_depth_texture, WebGL1Only, false)             \
     V(EXT_texture_filter_anisotropic, EXT_texture_filter_anisotropic,        \
       AnyVersion, false)                                                     \
     V(OES_texture_float_linear, OES_texture_float_linear, AnyVersion, false) \
-    V(EXT_blend_minmax, EXT_blend_minmax, AnyVersion, false)                 \
+    V(EXT_blend_minmax, EXT_blend_minmax, WebGL1Only, false)                 \
     V(OES_element_index_uint, OES_element_index_uint, WebGL1Only,            \
       isCoreProfile3)                                                        \
     V(EXT_color_buffer_float, EXT_color_buffer_float, WebGL2Only,            \
@@ -161,7 +161,7 @@ void WebGLExtensionRegistry::initialize(GL* gl)
         has("ARB_instanced_arrays");
 
 #define SUPPORTED_GL_EXTENSIONS(V)                \
-    V(OES_vertex_array_object, AnyVersion, false) \
+    V(OES_vertex_array_object, WebGL1Only, false) \
     V(ANGLE_instanced_arrays, WebGL1Only, hasInstancedArrays)
 
 #define V(name, availability, alsoSupportedWhen)                           \

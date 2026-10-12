@@ -1510,7 +1510,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/context/context-typ
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-color-buffer-float.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-color-buffer-half-float.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-disjoint-timer-query-webgl2.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/promoted-extensions.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/promoted-extensions.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/promoted-extensions-in-shaders.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/array-as-return-value.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/array-assign.html
@@ -1547,9 +1547,9 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/uniform-block
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/valid-invariant.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/vector-dynamic-indexing.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/expando-loss-2.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/getextension-while-pbo-bound-stability.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/instanceof-test.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/object-deletion-behaviour-2.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/getextension-while-pbo-bound-stability.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/instanceof-test.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/object-deletion-behaviour-2.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/uninitialized-test-2.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/views-with-offsets.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/programs/gl-get-frag-data-location.html
@@ -2456,7 +2456,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/svg_image/
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/image_bitmap_from_image_bitmap/tex-3d-rgba16f-rgba-float.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/image_bitmap_from_image_bitmap/tex-3d-rgba32f-rgba-float.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/image_bitmap_from_image_bitmap/tex-3d-rgba8ui-rgba_integer-unsigned_byte.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/transform_feedback/transform_feedback.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/transform_feedback/two-unreferenced-varyings.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/transform_feedback/transform_feedback.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/transform_feedback/two-unreferenced-varyings.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/transform_feedback/unwritten-output-defaults-to-zero.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/vertex_arrays/vertex-array-object.html
