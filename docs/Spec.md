@@ -2444,7 +2444,7 @@ Apps relying on the right-hand list get **no protection** — the directive is p
 |-----------|-------|
 | `WebGLRenderingContext` | Full WebGL 1.0 surface (~190 methods) per [Khronos WebGL 1.0 spec](https://registry.khronos.org/webgl/specs/latest/1.0/). Obtain via `canvas.getContext('webgl')` or `'experimental-webgl'`. |
 | `WebGL2RenderingContext` | WebGL 2.0 surface per [Khronos WebGL 2.0 spec](https://registry.khronos.org/webgl/specs/latest/2.0/); obtain via `canvas.getContext('webgl2')`. See implementation status below. |
-| Object handles | `WebGLBuffer`, `WebGLFramebuffer`, `WebGLRenderbuffer`, `WebGLTexture`, `WebGLProgram`, `WebGLShader`, `WebGLVertexArrayObject`, `WebGLSync`, `WebGLQuery`, `WebGLSampler`. `WebGLTransformFeedback` exists in IDL but its APIs are mostly unimplemented. |
+| Object handles | `WebGLBuffer`, `WebGLFramebuffer`, `WebGLRenderbuffer`, `WebGLTexture`, `WebGLProgram`, `WebGLShader`, `WebGLVertexArrayObject`, `WebGLSync`, `WebGLQuery`, `WebGLSampler`, `WebGLTransformFeedback`. |
 | Value types | `WebGLActiveInfo`, `WebGLShaderPrecisionFormat`, `WebGLUniformLocation`, `WebGLContextAttributes`. |
 | **Not exposed** | `WebGLContextEvent` typed event (use a generic `Event` listener for `webglcontextlost`/`webglcontextrestored`). |
 
@@ -2454,6 +2454,7 @@ Apps relying on the right-hand list get **no protection** — the directive is p
 - **Buffer & UBO:** `copyBufferSubData`, `getBufferSubData`, `bindBufferBase`, `bindBufferRange`, `getIndexedParameter` (queries for `UNIFORM_BUFFER` and `TRANSFORM_FEEDBACK_BUFFER` binding/start/size), `bufferData`/`bufferSubData` with sub-source view offsets/lengths, automatic unbind on `deleteBuffer`.
 - **Query Objects:** `createQuery`, `deleteQuery`, `isQuery`, `beginQuery`, `endQuery`, `getQuery`, `getQueryParameter` (asynchronous `QUERY_RESULT_AVAILABLE` and `QUERY_RESULT` for occlusion and primitives-written queries).
 - **Sampler Objects:** `createSampler`, `deleteSampler`, `isSampler`, `bindSampler`, `samplerParameteri`, `samplerParameterf`, `getSamplerParameter`, `SAMPLER_BINDING` query via `getParameter`.
+- **Transform Feedback Execution:** `createTransformFeedback`, `deleteTransformFeedback`, `isTransformFeedback`, `bindTransformFeedback`, `beginTransformFeedback`, `endTransformFeedback`, `pauseTransformFeedback`, `resumeTransformFeedback`, `getTransformFeedbackVarying`, `TRANSFORM_FEEDBACK_BINDING` query via `getParameter`.
 - **Renderbuffers & Framebuffers:** `renderbufferStorage` format and dimension validation, multi-attachment renderbuffer/texture tracking, WebGL2 `DEPTH_STENCIL_ATTACHMENT` dual-attachment alias, attachment bit size queries (`DEPTH_BITS`, `STENCIL_BITS`), completeness verification (`FRAMEBUFFER_INCOMPLETE_DIMENSIONS`, `FRAMEBUFFER_INCOMPLETE_ATTACHMENT`).
 - **Uniform Blocks:** `getUniformBlockIndex`, `uniformBlockBinding`, `getActiveUniformBlockParameter`, `getActiveUniformBlockName`, `getActiveUniforms`, `getUniformIndices`, active uniform block count query via `getProgramParameter`.
 - **Transform Feedback Setup:** `transformFeedbackVaryings`, `GL_TRANSFORM_FEEDBACK_BUFFER_MODE` and `GL_TRANSFORM_FEEDBACK_VARYINGS` queries via `getProgramParameter`.
@@ -2467,15 +2468,14 @@ Apps relying on the right-hand list get **no protection** — the directive is p
 - **Compressed Textures:** `compressedTexImage2D`/`3D` and `compressedTexSubImage2D`/`3D` (all overloads) are exposed, but since no compressed format is supported they only validate the source (`PIXEL_UNPACK_BUFFER` binding) and target, then generate `INVALID_ENUM` — the same as WebGL 1.
 
 **Unimplemented WebGL 2.0 features (`[Unimplemented]` in IDL / methods not exposed on instance):**
-- **Transform Feedback Execution:** `createTransformFeedback`, `deleteTransformFeedback`, `isTransformFeedback`, `bindTransformFeedback`, `beginTransformFeedback`, `endTransformFeedback`, `pauseTransformFeedback`, `resumeTransformFeedback`, `getTransformFeedbackVarying`.
 - **3D Texture Copy:** `copyTexSubImage3D`.
 - **Clear Depth/Stencil Buffer:** `clearBufferfi`.
 
 **Extensions exposed via `getExtension(name)`** (subject to the underlying GL driver advertising the matching `GL_*` token; on Mesa llvmpipe / SwiftShader none may be advertised):
 
-`OES_texture_float`, `OES_texture_half_float`, `OES_texture_float_linear`, `OES_standard_derivatives`, `OES_vertex_array_object`, `WEBGL_depth_texture`, `EXT_blend_minmax`, `EXT_texture_filter_anisotropic`.
+`EXT_texture_filter_anisotropic`, `OES_texture_float_linear`.
 
-Version-specific: `OES_element_index_uint` and `ANGLE_instanced_arrays` are exposed to WebGL 1 contexts only (both are core in WebGL 2), and `EXT_color_buffer_float` to WebGL 2 contexts only. All three are also reported when the driver makes the feature core (ES 3.0 / desktop GL 3.x) without advertising the `GL_*` token.
+Version-specific: Promoted extensions (`EXT_blend_minmax`, `OES_standard_derivatives`, `OES_texture_float`, `OES_texture_half_float`, `OES_vertex_array_object`, `WEBGL_depth_texture`, `OES_element_index_uint`, `ANGLE_instanced_arrays`) are exposed to WebGL 1 contexts only (all are core in WebGL 2), and `EXT_color_buffer_float` to WebGL 2 contexts only. All three are also reported when the driver makes the feature core (ES 3.0 / desktop GL 3.x) without advertising the `GL_*` token.
 
 **Common extensions NOT implemented** (will return `null`): `WEBGL_lose_context`, `WEBGL_debug_renderer_info`, `WEBGL_compressed_texture_*` (s3tc/etc1/astc/pvrtc), `OES_texture_half_float_linear`, `EXT_sRGB`, `KHR_parallel_shader_compile`.
 
