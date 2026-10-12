@@ -14,7 +14,7 @@ test/cairo/reftest/web_platform_test/css/dist/mediaqueries-3_dev/html/media-quer
 test/cairo/reftest/web_platform_test/css/dist/mediaqueries-3_dev/html/media-queries-002.htm
 test/cairo/reftest/web_platform_test/css/dist/mediaqueries-3_dev/html/media-queries-003.htm
 test/cairo/reftest/web_platform_test/css/dist/mediaqueries-3_dev/html/min-width-001.htm
-# test/cairo/reftest/web_platform_test/css/dist/mediaqueries-3_dev/html/min-width-tables-001.htm # stale expected PNG captured mid-test; @media not re-applied on viewport resize (Window::resize)
+test/cairo/reftest/web_platform_test/css/dist/mediaqueries-3_dev/html/min-width-tables-001.htm
 #test/cairo/reftest/web_platform_test/css/dist/mediaqueries-3_dev/html/mq-calc-002.htm
 #test/cairo/reftest/web_platform_test/css/dist/mediaqueries-3_dev/html/mq-calc-003.htm
 #test/cairo/reftest/web_platform_test/css/dist/mediaqueries-3_dev/html/mq-calc-004.htm

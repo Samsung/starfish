@@ -460,6 +460,12 @@ static void checkVwVh(Node* nd)
 
 void Window::resize(uint32_t w, uint32_t h)
 {
+    // Viewport media features read innerWidth()/innerHeight(), so the new size
+    // has to be in place before the media queries are re-evaluated against it.
+    bool sizeChanged = m_width != w || m_height != h;
+    m_width = w;
+    m_height = h;
+
     bool mediaQueryAffectedByViewportChange =
         document()->styleResolver().mediaQueryAffectedByViewportChange();
     if (mediaQueryAffectedByViewportChange) {
@@ -482,9 +488,7 @@ void Window::resize(uint32_t w, uint32_t h)
         checkVwVh(document());
     }
 
-    if (m_width != w || m_height != h) {
-        m_width = w;
-        m_height = h;
+    if (sizeChanged) {
         document()->setNeedsLayout();
 
         String* eventType = staticStrings()->m_resize.localName();
