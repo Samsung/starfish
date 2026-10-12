@@ -1438,7 +1438,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/verte
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/attriblocation.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/booleanstatequery.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/buffercopy.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/bufferobjectquery.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/bufferobjectquery.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/clipping.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/defaultvertexattribute.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbocompleteness.html
@@ -1446,14 +1446,14 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/verte
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbomultisample.2_samples.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbomultisample.4_samples.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbomultisample.8_samples.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbostatequery.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbostatequery.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbostencilbuffer.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/floatstatequery.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fragdepth.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/indexedstatequery.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/indexedstatequery.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/instancedrendering.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/integerstatequery.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/internalformatquery.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/internalformatquery.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/lifetime.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/multisample.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativebufferapi.html
@@ -1469,7 +1469,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/verte
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/rbostatequery.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/readpixel.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/samplerobject.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/samplerstatequery.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/samplerstatequery.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderapi.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderbuiltinvar.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shadercommonfunction.html
@@ -1486,7 +1486,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/verte
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderstatequery.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderstruct.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderswitch.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/stringquery.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/stringquery.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/sync.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/texturestatequery.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrayobject.html

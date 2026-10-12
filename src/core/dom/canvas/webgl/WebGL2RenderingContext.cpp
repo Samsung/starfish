@@ -130,8 +130,6 @@ ScriptBindingInstance* WebGL2RenderingContext::scriptBindingInstance()
 
 void WebGL2RenderingContext::clear(uint32_t mask)
 {
-    ENTER_CONTEXT_SCOPE();
-
     if (mask & GL_COLOR_BUFFER_BIT) {
         Optional<WebGLFramebuffer*> maybeFb =
             getBoundFramebuffer(GL_DRAW_FRAMEBUFFER);
@@ -2711,6 +2709,12 @@ void WebGL2RenderingContext::samplerParameteri(WebGLSampler* sampler,
                                                GLenum pname, GLint param)
 {
     ENTER_CONTEXT_SCOPE();
+    samplerParameteriImpl(sampler, pname, param);
+}
+
+void WebGL2RenderingContext::samplerParameteriImpl(WebGLSampler* sampler,
+                                                   GLenum pname, GLint param)
+{
     if (!sampler || !isFromCurrentContext(sampler) || sampler->isDeleted()) {
         setGLError(GL_INVALID_OPERATION);
         return;
@@ -2787,7 +2791,7 @@ void WebGL2RenderingContext::samplerParameterf(WebGLSampler* sampler,
     case GL_TEXTURE_MIN_FILTER:
     case GL_TEXTURE_COMPARE_MODE:
     case GL_TEXTURE_COMPARE_FUNC:
-        samplerParameteri(sampler, pname, static_cast<GLint>(param));
+        samplerParameteriImpl(sampler, pname, static_cast<GLint>(param));
         return;
     default:
         setGLError(GL_INVALID_ENUM);
@@ -3438,6 +3442,12 @@ ScriptValue WebGL2RenderingContext::getInternalformatParameter(
     if (pname != GL_SAMPLES) {
         setGLError(GL_INVALID_ENUM, "pname must be SAMPLES");
         return scriptNull();
+    }
+
+    if (WebGLFramebuffer::isIntegerInternalFormat(internalformat)) {
+        return createScriptValue(
+            createTypedArray<Escargot::Int32ArrayObjectRef>(
+                scriptBindingInstance(), std::vector<int32_t>()));
     }
 
     GLint numSampleCounts = 0;
