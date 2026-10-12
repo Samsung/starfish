@@ -665,20 +665,31 @@ GLenum WebGLRenderingContext::checkFramebufferStatus(GLenum target)
         return GL_FRAMEBUFFER_UNSUPPORTED;
     }
 
-    GLenum status = m_gl->checkFramebufferStatus(target);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        return status;
+    bool isWebGL2 = isWebGL2RenderingContext();
+    if (isWebGL2) {
+        if (target != GL_FRAMEBUFFER && target != GL_READ_FRAMEBUFFER &&
+            target != GL_DRAW_FRAMEBUFFER) {
+            setGLError(GL_INVALID_ENUM);
+            return 0;
+        }
+    } else {
+        if (target != GL_FRAMEBUFFER) {
+            setGLError(GL_INVALID_ENUM);
+            return 0;
+        }
     }
 
     if (!isDefaultFramebufferBound()) {
-        Optional<WebGLFramebuffer*> maybeFb = m_state->webGLFramebuffer();
+        Optional<WebGLFramebuffer*> maybeFb = getBoundFramebuffer(target);
         if (maybeFb.hasValue() && maybeFb.value()) {
-            if (!maybeFb.value()->hasConsistentDimensions()) {
-                return GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS;
+            GLenum webglStatus = maybeFb.value()->checkWebGLStatus();
+            if (webglStatus != GL_FRAMEBUFFER_COMPLETE) {
+                return webglStatus;
             }
         }
     }
-    return GL_FRAMEBUFFER_COMPLETE;
+
+    return m_gl->checkFramebufferStatus(target);
 }
 
 void WebGLRenderingContext::clear(uint32_t mask)
@@ -1437,52 +1448,22 @@ void WebGLRenderingContext::framebufferRenderbuffer(
         return;
     }
 
-    GLint maxColorAttachments = 0;
-    m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
-    if (maxColorAttachments < 1) {
-        maxColorAttachments = 1;
-    }
-    if (attachment >= GL_COLOR_ATTACHMENT0 &&
-        attachment < static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + 16)) {
-        if (attachment >=
-            static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + maxColorAttachments)) {
+    bool isWebGL2 = isWebGL2RenderingContext();
+    if (isWebGL2) {
+        if (target != GL_FRAMEBUFFER && target != GL_READ_FRAMEBUFFER &&
+            target != GL_DRAW_FRAMEBUFFER) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+    } else {
+        if (target != GL_FRAMEBUFFER) {
             setGLError(GL_INVALID_ENUM);
             return;
         }
     }
 
-    Optional<WebGLFramebuffer*> webGLFramebuffer = m_state->webGLFramebuffer();
-
-    if (maybeRenderbuffer.hasValue()) {
-        WebGLRenderbuffer* renderBuffer = maybeRenderbuffer.value();
-
-        if (!isFromCurrentContext(renderBuffer)) {
-            setGLError(GL_INVALID_OPERATION);
-            return;
-        }
-
-        m_gl->framebufferRenderbuffer(target, attachment, renderbuffertarget,
-                                      renderBuffer->glObject());
-        if (webGLFramebuffer) {
-            webGLFramebuffer->setAttachedRenderBuffer(renderBuffer);
-        }
-    } else {
-        m_gl->framebufferRenderbuffer(target, attachment, renderbuffertarget,
-                                      0);
-        if (webGLFramebuffer) {
-            webGLFramebuffer->setAttachedRenderBuffer(nullptr);
-        }
-    }
-}
-
-void WebGLRenderingContext::framebufferTexture2D(
-    GLenum target, GLenum attachment, GLenum textarget,
-    Optional<WebGLTexture*> maybeTexture, GLint level)
-{
-    ENTER_CONTEXT_SCOPE();
-
-    if (isDefaultFramebufferBound()) {
-        setGLError(GL_INVALID_OPERATION);
+    if (renderbuffertarget != GL_RENDERBUFFER) {
+        setGLError(GL_INVALID_ENUM);
         return;
     }
 
@@ -1498,9 +1479,110 @@ void WebGLRenderingContext::framebufferTexture2D(
             setGLError(GL_INVALID_ENUM);
             return;
         }
+    } else if (attachment != GL_DEPTH_ATTACHMENT &&
+               attachment != GL_STENCIL_ATTACHMENT &&
+               attachment != GL_DEPTH_STENCIL_ATTACHMENT) {
+        setGLError(GL_INVALID_ENUM);
+        return;
     }
 
-    Optional<WebGLFramebuffer*> webGLFramebuffer = m_state->webGLFramebuffer();
+    Optional<WebGLFramebuffer*> maybeFb = getBoundFramebuffer(target);
+    if (!maybeFb.hasValue() || !maybeFb.value()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    WebGLFramebuffer* fb = maybeFb.value();
+
+    if (maybeRenderbuffer.hasValue()) {
+        WebGLRenderbuffer* renderBuffer = maybeRenderbuffer.value();
+
+        if (!isFromCurrentContext(renderBuffer)) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        if (renderBuffer->isDeleted()) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        GLuint rbId = renderBuffer->glObject();
+        if (isWebGL2 && attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
+            m_gl->framebufferRenderbuffer(target, GL_DEPTH_ATTACHMENT,
+                                          renderbuffertarget, rbId);
+            m_gl->framebufferRenderbuffer(target, GL_STENCIL_ATTACHMENT,
+                                          renderbuffertarget, rbId);
+        } else {
+            m_gl->framebufferRenderbuffer(target, attachment,
+                                          renderbuffertarget, rbId);
+        }
+
+        fb->setAttachmentRenderbuffer(attachment, renderBuffer);
+    } else {
+        if (isWebGL2 && attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
+            m_gl->framebufferRenderbuffer(target, GL_DEPTH_ATTACHMENT,
+                                          renderbuffertarget, 0);
+            m_gl->framebufferRenderbuffer(target, GL_STENCIL_ATTACHMENT,
+                                          renderbuffertarget, 0);
+        } else {
+            m_gl->framebufferRenderbuffer(target, attachment,
+                                          renderbuffertarget, 0);
+        }
+
+        fb->setAttachmentRenderbuffer(attachment, nullptr);
+    }
+}
+
+void WebGLRenderingContext::framebufferTexture2D(
+    GLenum target, GLenum attachment, GLenum textarget,
+    Optional<WebGLTexture*> maybeTexture, GLint level)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (isDefaultFramebufferBound()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    bool isWebGL2 = isWebGL2RenderingContext();
+    if (isWebGL2) {
+        if (target != GL_FRAMEBUFFER && target != GL_READ_FRAMEBUFFER &&
+            target != GL_DRAW_FRAMEBUFFER) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+    } else {
+        if (target != GL_FRAMEBUFFER) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+    }
+
+    GLint maxColorAttachments = 0;
+    m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+    if (maxColorAttachments < 1) {
+        maxColorAttachments = 1;
+    }
+    if (attachment >= GL_COLOR_ATTACHMENT0 &&
+        attachment < static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + 16)) {
+        if (attachment >=
+            static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + maxColorAttachments)) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+    } else if (attachment != GL_DEPTH_ATTACHMENT &&
+               attachment != GL_STENCIL_ATTACHMENT &&
+               attachment != GL_DEPTH_STENCIL_ATTACHMENT) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    Optional<WebGLFramebuffer*> maybeFb = getBoundFramebuffer(target);
+    if (!maybeFb.hasValue() || !maybeFb.value()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    WebGLFramebuffer* fb = maybeFb.value();
 
     if (maybeTexture.hasValue()) {
         WebGLTexture* texture = maybeTexture.value();
@@ -1515,19 +1597,44 @@ void WebGLRenderingContext::framebufferTexture2D(
             return;
         }
 
+        GLint maxTexSize = 0;
+        m_gl->getIntegerv(GL_MAX_TEXTURE_SIZE, &maxTexSize);
+        GLint maxLevels = 0;
+        while ((maxTexSize >> maxLevels) > 0) {
+            ++maxLevels;
+        }
+        if (level < 0 || level >= maxLevels) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+
         GLuint textureId = texture->glObject();
-        m_gl->framebufferTexture2D(target, attachment, textarget, textureId,
-                                   level);
-        if (webGLFramebuffer.hasValue() && webGLFramebuffer.value()) {
-            webGLFramebuffer.value()->setAttachedTexture(texture);
-            webGLFramebuffer.value()->setAttachmentTexture(attachment, texture);
+        if (isWebGL2 && attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
+            m_gl->framebufferTexture2D(target, GL_DEPTH_ATTACHMENT, textarget,
+                                       textureId, level);
+            m_gl->framebufferTexture2D(target, GL_STENCIL_ATTACHMENT, textarget,
+                                       textureId, level);
+        } else {
+            m_gl->framebufferTexture2D(target, attachment, textarget, textureId,
+                                       level);
         }
+
+        fb->setAttachmentTexture(attachment, texture);
     } else {
-        m_gl->framebufferTexture2D(target, attachment, textarget, 0, level);
-        if (webGLFramebuffer.hasValue() && webGLFramebuffer.value()) {
-            webGLFramebuffer.value()->setAttachedTexture(nullptr);
-            webGLFramebuffer.value()->setAttachmentTexture(attachment, nullptr);
+        if (level != 0) {
+            setGLError(GL_INVALID_VALUE);
+            return;
         }
+        if (isWebGL2 && attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
+            m_gl->framebufferTexture2D(target, GL_DEPTH_ATTACHMENT, textarget,
+                                       0, 0);
+            m_gl->framebufferTexture2D(target, GL_STENCIL_ATTACHMENT, textarget,
+                                       0, 0);
+        } else {
+            m_gl->framebufferTexture2D(target, attachment, textarget, 0, 0);
+        }
+
+        fb->setAttachmentTexture(attachment, nullptr);
     }
 }
 
@@ -1667,7 +1774,6 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
     // GLint
     case GL_ALPHA_BITS:
     case GL_BLUE_BITS:
-    case GL_DEPTH_BITS:
     case GL_GREEN_BITS:
     case GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
     case GL_MAX_CUBE_MAP_TEXTURE_SIZE:
@@ -1684,12 +1790,73 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
     case GL_SAMPLE_BUFFERS:
     case GL_SAMPLES:
     case GL_STENCIL_BACK_REF:
-    case GL_STENCIL_BITS:
     case GL_STENCIL_CLEAR_VALUE:
     case GL_STENCIL_REF:
     case GL_SUBPIXEL_BITS:
     case GL_MAX_SAMPLES:
     case GL_UNPACK_ALIGNMENT: {
+        std::vector<int> values(1);
+        m_gl->getIntegerv(pname, &values[0]);
+        return ValueRef::create(values[0]);
+    }
+    case GL_DEPTH_BITS: {
+        if (!isDefaultFramebufferBound()) {
+            Optional<WebGLFramebuffer*> maybeFb =
+                getBoundFramebuffer(GL_FRAMEBUFFER);
+            if (maybeFb.hasValue() && maybeFb.value()) {
+                WebGLRenderbuffer* rb =
+                    maybeFb.value()->attachedRenderbuffer(GL_DEPTH_ATTACHMENT);
+                if (rb && !rb->isDeleted()) {
+                    GLenum fmt = rb->internalFormat();
+                    if (fmt == GL_DEPTH_COMPONENT16) {
+                        return ValueRef::create(16);
+                    }
+                    if (fmt == GL_DEPTH_COMPONENT24 ||
+                        fmt == GL_DEPTH24_STENCIL8) {
+                        return ValueRef::create(24);
+                    }
+                    if (fmt == GL_DEPTH_COMPONENT32F ||
+                        fmt == GL_DEPTH32F_STENCIL8) {
+                        return ValueRef::create(32);
+                    }
+                    return ValueRef::create(16);
+                }
+                WebGLTexture* tex =
+                    maybeFb.value()->attachedTexture(GL_DEPTH_ATTACHMENT);
+                if (tex && !tex->isDeleted()) {
+                    return ValueRef::create(24);
+                }
+                return ValueRef::create(0);
+            }
+        }
+        if (!m_attributes.depth()) {
+            return ValueRef::create(0);
+        }
+        std::vector<int> values(1);
+        m_gl->getIntegerv(pname, &values[0]);
+        return ValueRef::create(values[0]);
+    }
+    case GL_STENCIL_BITS: {
+        if (!isDefaultFramebufferBound()) {
+            Optional<WebGLFramebuffer*> maybeFb =
+                getBoundFramebuffer(GL_FRAMEBUFFER);
+            if (maybeFb.hasValue() && maybeFb.value()) {
+                WebGLRenderbuffer* rb = maybeFb.value()->attachedRenderbuffer(
+                    GL_STENCIL_ATTACHMENT);
+                if (rb && !rb->isDeleted()) {
+                    return ValueRef::create(8);
+                }
+                WebGLTexture* tex =
+                    maybeFb.value()->attachedTexture(GL_STENCIL_ATTACHMENT);
+                if (tex && !tex->isDeleted()) {
+                    return ValueRef::create(8);
+                }
+                return ValueRef::create(0);
+            }
+        }
+        if (!m_attributes.stencil()) {
+            return ValueRef::create(0);
+        }
         std::vector<int> values(1);
         m_gl->getIntegerv(pname, &values[0]);
         return ValueRef::create(values[0]);
@@ -2178,13 +2345,7 @@ ScriptValue WebGLRenderingContext::getFramebufferAttachmentParameter(
 
     WebGLFramebuffer* fb = maybeFb.value();
     WebGLTexture* tex = fb->attachedTexture(attachment);
-    WebGLRenderbuffer* rb = fb->attachedRenderBuffer();
-    if (attachment >= GL_COLOR_ATTACHMENT0 &&
-        attachment < static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + 16)) {
-        if (attachment != GL_COLOR_ATTACHMENT0) {
-            rb = nullptr;
-        }
-    }
+    WebGLRenderbuffer* rb = fb->attachedRenderbuffer(attachment);
 
     if (!tex && !rb) {
         if (pname == GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE) {
@@ -3223,7 +3384,39 @@ void WebGLRenderingContext::renderbufferStorage(GLenum target,
 {
     ENTER_CONTEXT_SCOPE();
 
-    m_gl->renderbufferStorage(target, internalformat, width, height);
+    if (target != GL_RENDERBUFFER) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (width < 0 || height < 0) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    GLint maxSize = 0;
+    m_gl->getIntegerv(GL_MAX_RENDERBUFFER_SIZE, &maxSize);
+    if (maxSize > 0 && (width > maxSize || height > maxSize)) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    if (!m_boundRenderbuffer.hasValue() ||
+        m_boundRenderbuffer.value() == nullptr ||
+        m_boundRenderbuffer.value()->isDeleted()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    GLenum glInternalFormat = internalformat;
+    if (glInternalFormat == GL_DEPTH_STENCIL) {
+        glInternalFormat = GL_DEPTH24_STENCIL8;
+    }
+
+    m_gl->renderbufferStorage(target, glInternalFormat, width, height);
+    if (!hasNewGLError()) {
+        m_boundRenderbuffer.value()->setStorage(internalformat, width, height);
+    }
 }
 
 void WebGLRenderingContext::sampleCoverage(GLclampf value, GLboolean invert)

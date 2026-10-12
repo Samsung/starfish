@@ -1092,6 +1092,275 @@ public:
                                                  bufferMode);
     }
 
+    void genQueries(GLsizei n, GLuint *ids) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glGenQueries) {
+            m_evasGLAPI->glGenQueries(n, ids);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glGenQueries");
+    }
+
+    void deleteQueries(GLsizei n, const GLuint *ids) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glDeleteQueries) {
+            m_evasGLAPI->glDeleteQueries(n, ids);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glDeleteQueries");
+    }
+
+    GLboolean isQuery(GLuint id) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glIsQuery) {
+            return m_evasGLAPI->glIsQuery(id);
+        }
+#endif
+        STARFISH_UNSUPPORTED("glIsQuery");
+        return GL_FALSE;
+    }
+
+    void beginQuery(GLenum target, GLuint id) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glBeginQuery) {
+            m_evasGLAPI->glBeginQuery(target, id);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glBeginQuery");
+    }
+
+    void endQuery(GLenum target) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glEndQuery) {
+            m_evasGLAPI->glEndQuery(target);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glEndQuery");
+    }
+
+    void getQueryiv(GLenum target, GLenum pname, GLint *params) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glGetQueryiv) {
+            m_evasGLAPI->glGetQueryiv(target, pname, params);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glGetQueryiv");
+    }
+
+    void getQueryObjectuiv(GLuint id, GLenum pname, GLuint *params) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glGetQueryObjectuiv) {
+            m_evasGLAPI->glGetQueryObjectuiv(id, pname, params);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glGetQueryObjectuiv");
+    }
+
+    void genSamplers(GLsizei n, GLuint *samplers) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glGenSamplers) {
+            m_evasGLAPI->glGenSamplers(n, samplers);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glGenSamplers");
+    }
+
+    void deleteSamplers(GLsizei n, const GLuint *samplers) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glDeleteSamplers) {
+            m_evasGLAPI->glDeleteSamplers(n, samplers);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glDeleteSamplers");
+    }
+
+    GLboolean isSampler(GLuint sampler) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glIsSampler) {
+            return m_evasGLAPI->glIsSampler(sampler);
+        }
+#endif
+        STARFISH_UNSUPPORTED("glIsSampler");
+        return GL_FALSE;
+    }
+
+    void bindSampler(GLuint unit, GLuint sampler) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glBindSampler) {
+            m_evasGLAPI->glBindSampler(unit, sampler);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glBindSampler");
+    }
+
+    void samplerParameteri(GLuint sampler, GLenum pname, GLint param) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glSamplerParameteri) {
+            m_evasGLAPI->glSamplerParameteri(sampler, pname, param);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glSamplerParameteri");
+    }
+
+    void samplerParameterf(GLuint sampler, GLenum pname, GLfloat param) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glSamplerParameterf) {
+            m_evasGLAPI->glSamplerParameterf(sampler, pname, param);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glSamplerParameterf");
+    }
+
+    void getSamplerParameteriv(GLuint sampler, GLenum pname,
+                               GLint *params) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glGetSamplerParameteriv) {
+            m_evasGLAPI->glGetSamplerParameteriv(sampler, pname, params);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glGetSamplerParameteriv");
+    }
+
+    void getSamplerParameterfv(GLuint sampler, GLenum pname,
+                               GLfloat *params) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glGetSamplerParameterfv) {
+            m_evasGLAPI->glGetSamplerParameterfv(sampler, pname, params);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glGetSamplerParameterfv");
+    }
+
+    void genTransformFeedbacks(GLsizei n, GLuint *ids) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glGenTransformFeedbacks) {
+            m_evasGLAPI->glGenTransformFeedbacks(n, ids);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glGenTransformFeedbacks");
+    }
+
+    void deleteTransformFeedbacks(GLsizei n, const GLuint *ids) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glDeleteTransformFeedbacks) {
+            m_evasGLAPI->glDeleteTransformFeedbacks(n, ids);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glDeleteTransformFeedbacks");
+    }
+
+    GLboolean isTransformFeedback(GLuint id) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glIsTransformFeedback) {
+            return m_evasGLAPI->glIsTransformFeedback(id);
+        }
+#endif
+        STARFISH_UNSUPPORTED("glIsTransformFeedback");
+        return GL_FALSE;
+    }
+
+    void bindTransformFeedback(GLenum target, GLuint id) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glBindTransformFeedback) {
+            m_evasGLAPI->glBindTransformFeedback(target, id);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glBindTransformFeedback");
+    }
+
+    void beginTransformFeedback(GLenum primitiveMode) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glBeginTransformFeedback) {
+            m_evasGLAPI->glBeginTransformFeedback(primitiveMode);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glBeginTransformFeedback");
+    }
+
+    void endTransformFeedback() override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glEndTransformFeedback) {
+            m_evasGLAPI->glEndTransformFeedback();
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glEndTransformFeedback");
+    }
+
+    void pauseTransformFeedback() override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glPauseTransformFeedback) {
+            m_evasGLAPI->glPauseTransformFeedback();
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glPauseTransformFeedback");
+    }
+
+    void resumeTransformFeedback() override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glResumeTransformFeedback) {
+            m_evasGLAPI->glResumeTransformFeedback();
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glResumeTransformFeedback");
+    }
+
+    void getTransformFeedbackVarying(GLuint program, GLuint index,
+                                     GLsizei bufSize, GLsizei *length,
+                                     GLsizei *size, GLenum *type,
+                                     GLchar *name) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glGetTransformFeedbackVarying) {
+            m_evasGLAPI->glGetTransformFeedbackVarying(
+                program, index, bufSize, length, size, type, name);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glGetTransformFeedbackVarying");
+    }
     void vertexAttribIPointer(GLuint index, GLint size, GLenum type,
                               GLsizei stride, const void *pointer) override
     {

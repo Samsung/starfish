@@ -404,6 +404,14 @@ private:
 protected:
     bool hasBoundTexture(GLenum target) const;
     WebGLTexture* getBoundTextureObject(GLenum target) const;
+    GLenum activeTextureUnit() const
+    {
+        return m_activeTextureUnit;
+    }
+    Optional<WebGLRenderbuffer*> boundRenderbuffer() const
+    {
+        return m_boundRenderbuffer;
+    }
 
     // A texture binding is identified by the texture unit it was made on and
     // the target it was made to.

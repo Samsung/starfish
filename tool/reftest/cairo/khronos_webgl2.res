@@ -1553,16 +1553,16 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/vector-dynami
 http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/uninitialized-test-2.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/views-with-offsets.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/programs/gl-get-frag-data-location.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/query/occlusion-query.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/query/query.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/query/occlusion-query.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/query/query.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/reading/read-pixels-from-fbo-test.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/reading/read-pixels-into-pixel-pack-buffer.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/reading/read-pixels-pack-parameters.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/renderbuffers/framebuffer-object-attachment.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/renderbuffers/framebuffer-test.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/renderbuffers/framebuffer-object-attachment.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/renderbuffers/framebuffer-test.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/renderbuffers/framebuffer-texture-layer.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/renderbuffers/invalidate-framebuffer.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/renderbuffers/multisampled-renderbuffer-initialization.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/renderbuffers/multisampled-renderbuffer-initialization.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/renderbuffers/readbuffer.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/attrib-type-match.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/blitframebuffer-filter-outofbounds.html
@@ -1580,8 +1580,8 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/instanced
 http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/out-of-bounds-index-buffers-after-copying.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/rgb-format-support.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/uniform-block-buffer-size.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/samplers/samplers.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/samplers/sampler-drawing-test.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/samplers/samplers.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/samplers/sampler-drawing-test.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/state/gl-enum-tests.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/state/gl-get-calls.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/state/gl-getstring.html

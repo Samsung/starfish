@@ -27,6 +27,7 @@
 #include "binding/generated/Int32ArrayOrSequenceOfGLintUnion.h"
 #include "binding/generated/Uint32ArrayOrSequenceOfGLuintUnion.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/canvas/webgl/WebGLActiveInfo.h"
 #include "core/dom/canvas/webgl/WebGLBuffer.h"
 #include "core/dom/canvas/webgl/WebGLFramebuffer.h"
 #include "core/dom/canvas/webgl/WebGLProgram.h"
@@ -35,6 +36,7 @@
 #include "core/dom/canvas/webgl/WebGLRenderingContextState.h"
 #include "core/dom/canvas/webgl/WebGLUniformLocation.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
+#include "core/page/Window.h"
 #include "core/util/debug/Trace.h"
 #include "platform/canvas/gl/GL.h"
 #include "platform/canvas/gl/IncludeGL.h"
@@ -523,9 +525,24 @@ Optional<ScriptValue> WebGL2RenderingContext::getParameterImpl(GLenum pname)
         }
         return m_drawFramebuffer.value()->scriptValue();
     }
-    case GL_SAMPLER_BINDING:
-    case GL_TRANSFORM_FEEDBACK_BINDING:
+    case GL_SAMPLER_BINDING: {
+        GLenum activeUnit = activeTextureUnit();
+        if (activeUnit >= GL_TEXTURE0) {
+            size_t unit = activeUnit - GL_TEXTURE0;
+            if (unit < m_samplerBindings.size() && m_samplerBindings[unit] &&
+                !m_samplerBindings[unit]->isDeleted()) {
+                return m_samplerBindings[unit]->scriptValue();
+            }
+        }
         return scriptNull();
+    }
+    case GL_TRANSFORM_FEEDBACK_BINDING: {
+        if (m_boundTransformFeedback &&
+            !m_boundTransformFeedback->isDeleted()) {
+            return m_boundTransformFeedback->scriptValue();
+        }
+        return scriptNull();
+    }
     default:
         break;
     }
@@ -559,11 +576,9 @@ ScriptValue WebGL2RenderingContext::getProgramParameter(WebGLProgram* program,
     case GL_ACTIVE_ATTRIBUTES:
     case GL_ACTIVE_UNIFORMS:
     case GL_ACTIVE_UNIFORM_BLOCKS:
-        break;
     case GL_TRANSFORM_FEEDBACK_BUFFER_MODE:
-        return createScriptValue(program->transformFeedbackBufferMode());
     case GL_TRANSFORM_FEEDBACK_VARYINGS:
-        return createScriptValue(program->transformFeedbackVaryingsCount());
+        break;
     default:
         setGLError(GL_INVALID_ENUM);
         return scriptNull();
@@ -592,7 +607,10 @@ ScriptValue WebGL2RenderingContext::getProgramParameter(WebGLProgram* program,
     case GL_ACTIVE_UNIFORMS:
     case GL_ATTACHED_SHADERS:
     case GL_ACTIVE_UNIFORM_BLOCKS:
+    case GL_TRANSFORM_FEEDBACK_VARYINGS:
         return createScriptValue(params);
+    case GL_TRANSFORM_FEEDBACK_BUFFER_MODE:
+        return createScriptValue(static_cast<GLenum>(params));
     default:
         break;
     }
@@ -1162,8 +1180,11 @@ void WebGL2RenderingContext::getBufferSubData(GLenum target,
         return;
     }
 
-    // TODO: If target is TRANSFORM_FEEDBACK_BUFFER, and any transform feedback
-    // object is currently active, generates an INVALID_OPERATION error.
+    if (m_boundTransformFeedback && m_boundTransformFeedback->isActive() &&
+        !m_boundTransformFeedback->isPaused()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
 
     GLint64 bufSize;
     gl()->getBufferParameteri64v(target, GL_BUFFER_SIZE, &bufSize);
@@ -2345,6 +2366,683 @@ void WebGL2RenderingContext::bindVertexArray(
     getState()->setWebGLVertexArrayObject(value);
 }
 
+/* Query Objects */
+
+WebGLQuery* WebGL2RenderingContext::createQuery()
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+    GLuint query = 0;
+    gl()->genQueries(1, &query);
+    return new WebGLQuery(scriptBindingInstance(), this, query);
+}
+
+void WebGL2RenderingContext::deleteQuery(Optional<WebGLQuery*> query)
+{
+    ENTER_CONTEXT_SCOPE();
+    if (!query.hasValue()) {
+        return;
+    }
+    WebGLQuery* value = query.value();
+    if (!isFromCurrentContext(value)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    if (value->isDeleted()) {
+        return;
+    }
+    GLuint id = value->glObject();
+    gl()->deleteQueries(1, &id);
+    value->markDeleted();
+
+    if (m_activeQueryAnySamplesPassed == value) {
+        m_activeQueryAnySamplesPassed = nullptr;
+    }
+    if (m_activeQueryAnySamplesPassedConservative == value) {
+        m_activeQueryAnySamplesPassedConservative = nullptr;
+    }
+    if (m_activeQueryTransformFeedbackPrimitivesWritten == value) {
+        m_activeQueryTransformFeedbackPrimitivesWritten = nullptr;
+    }
+}
+
+GLboolean WebGL2RenderingContext::isQuery(Optional<WebGLQuery*> query)
+{
+    ENTER_CONTEXT_SCOPE(false);
+    if (!query.hasValue()) {
+        return false;
+    }
+    WebGLQuery* value = query.value();
+    if (!isFromCurrentContext(value) || value->invalidated()) {
+        return false;
+    }
+    if (!value->hasEverBeenBound()) {
+        return false;
+    }
+    return gl()->isQuery(value->glObject());
+}
+
+void WebGL2RenderingContext::beginQuery(GLenum target, WebGLQuery* query)
+{
+    ENTER_CONTEXT_SCOPE();
+    if (!query) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    if (!isFromCurrentContext(query)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    if (query->isDeleted()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    if (query->isActive()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    if (query->hasEverBeenBound() && query->target() != target) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    WebGLQuery** activeSlot = nullptr;
+    switch (target) {
+    case GL_ANY_SAMPLES_PASSED:
+        activeSlot = &m_activeQueryAnySamplesPassed;
+        break;
+    case GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
+        activeSlot = &m_activeQueryAnySamplesPassedConservative;
+        break;
+    case GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
+        activeSlot = &m_activeQueryTransformFeedbackPrimitivesWritten;
+        break;
+    default:
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (*activeSlot != nullptr) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    gl()->beginQuery(target, query->glObject());
+    if (hasNewGLError()) {
+        return;
+    }
+
+    query->setTarget(target);
+    query->setHasEverBeenBound();
+    query->setActive(true);
+    query->setCanBeAvailable(false);
+    *activeSlot = query;
+}
+
+void WebGL2RenderingContext::endQuery(GLenum target)
+{
+    ENTER_CONTEXT_SCOPE();
+    WebGLQuery** activeSlot = nullptr;
+    switch (target) {
+    case GL_ANY_SAMPLES_PASSED:
+        activeSlot = &m_activeQueryAnySamplesPassed;
+        break;
+    case GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
+        activeSlot = &m_activeQueryAnySamplesPassedConservative;
+        break;
+    case GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
+        activeSlot = &m_activeQueryTransformFeedbackPrimitivesWritten;
+        break;
+    default:
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (*activeSlot == nullptr) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    gl()->endQuery(target);
+    if (hasNewGLError()) {
+        return;
+    }
+
+    WebGLQuery* q = *activeSlot;
+    q->setActive(false);
+    *activeSlot = nullptr;
+
+    HTMLCanvasElement* canvas = m_ownerHTMLCanvasElement;
+    if (canvas && canvas->window()) {
+        canvas->window()->requestAnimationFrame(
+            [](void* data) {
+                WebGLQuery* query = static_cast<WebGLQuery*>(data);
+                query->setCanBeAvailable(true);
+            },
+            q);
+    } else {
+        q->setCanBeAvailable(true);
+    }
+}
+
+WebGLQuery* WebGL2RenderingContext::getQuery(GLenum target, GLenum pname)
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+    if (pname != GL_CURRENT_QUERY) {
+        setGLError(GL_INVALID_ENUM);
+        return nullptr;
+    }
+    switch (target) {
+    case GL_ANY_SAMPLES_PASSED:
+        return m_activeQueryAnySamplesPassed;
+    case GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
+        return m_activeQueryAnySamplesPassedConservative;
+    case GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
+        return m_activeQueryTransformFeedbackPrimitivesWritten;
+    default:
+        setGLError(GL_INVALID_ENUM);
+        return nullptr;
+    }
+}
+
+ScriptValue WebGL2RenderingContext::getQueryParameter(WebGLQuery* query,
+                                                      GLenum pname)
+{
+    ENTER_CONTEXT_SCOPE(scriptNull());
+    if (!query || !isFromCurrentContext(query) || query->isDeleted()) {
+        setGLError(GL_INVALID_OPERATION);
+        return scriptNull();
+    }
+    if (!query->hasEverBeenBound() || query->isActive()) {
+        setGLError(GL_INVALID_OPERATION);
+        return scriptNull();
+    }
+
+    switch (pname) {
+    case GL_QUERY_RESULT_AVAILABLE: {
+        if (!query->canBeAvailable()) {
+            return createScriptValue(false);
+        }
+        GLuint available = 0;
+        gl()->getQueryObjectuiv(query->glObject(), GL_QUERY_RESULT_AVAILABLE,
+                                &available);
+        if (hasNewGLError()) {
+            return scriptNull();
+        }
+        return createScriptValue(available == GL_TRUE);
+    }
+    case GL_QUERY_RESULT: {
+        GLuint result = 0;
+        gl()->getQueryObjectuiv(query->glObject(), GL_QUERY_RESULT, &result);
+        if (hasNewGLError()) {
+            return scriptNull();
+        }
+        return createScriptValue(static_cast<double>(result));
+    }
+    default:
+        setGLError(GL_INVALID_ENUM);
+        return scriptNull();
+    }
+}
+
+/* Sampler Objects */
+
+WebGLSampler* WebGL2RenderingContext::createSampler()
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+    GLuint sampler = 0;
+    gl()->genSamplers(1, &sampler);
+    return new WebGLSampler(scriptBindingInstance(), this, sampler);
+}
+
+void WebGL2RenderingContext::deleteSampler(Optional<WebGLSampler*> sampler)
+{
+    ENTER_CONTEXT_SCOPE();
+    if (!sampler.hasValue()) {
+        return;
+    }
+    WebGLSampler* value = sampler.value();
+    if (!isFromCurrentContext(value)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    if (value->isDeleted()) {
+        return;
+    }
+    GLuint id = value->glObject();
+    gl()->deleteSamplers(1, &id);
+    value->markDeleted();
+
+    for (size_t i = 0; i < m_samplerBindings.size(); ++i) {
+        if (m_samplerBindings[i] == value) {
+            gl()->bindSampler(static_cast<GLuint>(i), 0);
+            m_samplerBindings[i] = nullptr;
+        }
+    }
+}
+
+GLboolean WebGL2RenderingContext::isSampler(Optional<WebGLSampler*> sampler)
+{
+    ENTER_CONTEXT_SCOPE(false);
+    if (!sampler.hasValue()) {
+        return false;
+    }
+    WebGLSampler* value = sampler.value();
+    if (!isFromCurrentContext(value) || value->invalidated()) {
+        return false;
+    }
+    return !value->isDeleted();
+}
+
+void WebGL2RenderingContext::bindSampler(GLuint unit,
+                                         Optional<WebGLSampler*> sampler)
+{
+    ENTER_CONTEXT_SCOPE();
+    GLint maxUnits = 0;
+    gl()->getIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxUnits);
+    if (maxUnits <= 0) {
+        maxUnits = 32;
+    }
+    if (unit >= static_cast<GLuint>(maxUnits)) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    if (sampler.hasValue()) {
+        WebGLSampler* value = sampler.value();
+        if (!isFromCurrentContext(value)) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+        if (value->isDeleted()) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        gl()->bindSampler(unit, value->glObject());
+        if (hasNewGLError()) {
+            return;
+        }
+        if (unit >= m_samplerBindings.size()) {
+            m_samplerBindings.resize(unit + 1);
+        }
+        m_samplerBindings[unit] = value;
+    } else {
+        gl()->bindSampler(unit, 0);
+        if (hasNewGLError()) {
+            return;
+        }
+        if (unit < m_samplerBindings.size()) {
+            m_samplerBindings[unit] = nullptr;
+        }
+    }
+}
+
+void WebGL2RenderingContext::samplerParameteri(WebGLSampler* sampler,
+                                               GLenum pname, GLint param)
+{
+    ENTER_CONTEXT_SCOPE();
+    if (!sampler || !isFromCurrentContext(sampler) || sampler->isDeleted()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    switch (pname) {
+    case GL_TEXTURE_WRAP_S:
+    case GL_TEXTURE_WRAP_T:
+    case GL_TEXTURE_WRAP_R:
+        if (param != GL_REPEAT && param != GL_CLAMP_TO_EDGE &&
+            param != GL_MIRRORED_REPEAT) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+        break;
+    case GL_TEXTURE_MAG_FILTER:
+        if (param != GL_NEAREST && param != GL_LINEAR) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+        break;
+    case GL_TEXTURE_MIN_FILTER:
+        if (param != GL_NEAREST && param != GL_LINEAR &&
+            param != GL_NEAREST_MIPMAP_NEAREST &&
+            param != GL_LINEAR_MIPMAP_NEAREST &&
+            param != GL_NEAREST_MIPMAP_LINEAR &&
+            param != GL_LINEAR_MIPMAP_LINEAR) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+        break;
+    case GL_TEXTURE_COMPARE_MODE:
+        if (param != GL_NONE && param != GL_COMPARE_REF_TO_TEXTURE) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+        break;
+    case GL_TEXTURE_COMPARE_FUNC:
+        if (param != GL_LEQUAL && param != GL_GEQUAL && param != GL_LESS &&
+            param != GL_GREATER && param != GL_EQUAL && param != GL_NOTEQUAL &&
+            param != GL_ALWAYS && param != GL_NEVER) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+        break;
+    case GL_TEXTURE_MIN_LOD:
+    case GL_TEXTURE_MAX_LOD:
+        break;
+    default:
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    gl()->samplerParameteri(sampler->glObject(), pname, param);
+}
+
+void WebGL2RenderingContext::samplerParameterf(WebGLSampler* sampler,
+                                               GLenum pname, GLfloat param)
+{
+    ENTER_CONTEXT_SCOPE();
+    if (!sampler || !isFromCurrentContext(sampler) || sampler->isDeleted()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    switch (pname) {
+    case GL_TEXTURE_MIN_LOD:
+    case GL_TEXTURE_MAX_LOD:
+        break;
+    case GL_TEXTURE_WRAP_S:
+    case GL_TEXTURE_WRAP_T:
+    case GL_TEXTURE_WRAP_R:
+    case GL_TEXTURE_MAG_FILTER:
+    case GL_TEXTURE_MIN_FILTER:
+    case GL_TEXTURE_COMPARE_MODE:
+    case GL_TEXTURE_COMPARE_FUNC:
+        samplerParameteri(sampler, pname, static_cast<GLint>(param));
+        return;
+    default:
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    gl()->samplerParameterf(sampler->glObject(), pname, param);
+}
+
+ScriptValue WebGL2RenderingContext::getSamplerParameter(WebGLSampler* sampler,
+                                                        GLenum pname)
+{
+    ENTER_CONTEXT_SCOPE(scriptNull());
+    if (!sampler || !isFromCurrentContext(sampler) || sampler->isDeleted()) {
+        setGLError(GL_INVALID_OPERATION);
+        return scriptNull();
+    }
+
+    switch (pname) {
+    case GL_TEXTURE_MIN_LOD:
+    case GL_TEXTURE_MAX_LOD: {
+        GLfloat param = 0.0f;
+        gl()->getSamplerParameterfv(sampler->glObject(), pname, &param);
+        if (hasNewGLError()) {
+            return scriptNull();
+        }
+        return createScriptValue(static_cast<double>(param));
+    }
+    case GL_TEXTURE_WRAP_S:
+    case GL_TEXTURE_WRAP_T:
+    case GL_TEXTURE_WRAP_R:
+    case GL_TEXTURE_MAG_FILTER:
+    case GL_TEXTURE_MIN_FILTER:
+    case GL_TEXTURE_COMPARE_MODE:
+    case GL_TEXTURE_COMPARE_FUNC: {
+        GLint param = 0;
+        gl()->getSamplerParameteriv(sampler->glObject(), pname, &param);
+        if (hasNewGLError()) {
+            return scriptNull();
+        }
+        return createScriptValue(static_cast<GLenum>(param));
+    }
+    default:
+        setGLError(GL_INVALID_ENUM);
+        return scriptNull();
+    }
+}
+
+/* Transform Feedback */
+
+WebGLTransformFeedback* WebGL2RenderingContext::createTransformFeedback()
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+    GLuint tf = 0;
+    gl()->genTransformFeedbacks(1, &tf);
+    return new WebGLTransformFeedback(scriptBindingInstance(), this, tf);
+}
+
+void WebGL2RenderingContext::deleteTransformFeedback(
+    Optional<WebGLTransformFeedback*> tf)
+{
+    ENTER_CONTEXT_SCOPE();
+    if (!tf.hasValue()) {
+        return;
+    }
+    WebGLTransformFeedback* value = tf.value();
+    if (!isFromCurrentContext(value)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    if (value->isDeleted()) {
+        return;
+    }
+
+    if (value->isActive()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    GLuint id = value->glObject();
+    gl()->deleteTransformFeedbacks(1, &id);
+    value->markDeleted();
+
+    if (m_boundTransformFeedback == value) {
+        gl()->bindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
+        m_boundTransformFeedback = nullptr;
+    }
+}
+
+GLboolean WebGL2RenderingContext::isTransformFeedback(
+    Optional<WebGLTransformFeedback*> tf)
+{
+    ENTER_CONTEXT_SCOPE(false);
+    if (!tf.hasValue()) {
+        return false;
+    }
+    WebGLTransformFeedback* value = tf.value();
+    if (!isFromCurrentContext(value) || value->invalidated()) {
+        return false;
+    }
+    if (!value->hasEverBeenBound()) {
+        return false;
+    }
+    return gl()->isTransformFeedback(value->glObject());
+}
+
+void WebGL2RenderingContext::bindTransformFeedback(
+    GLenum target, Optional<WebGLTransformFeedback*> tf)
+{
+    ENTER_CONTEXT_SCOPE();
+    if (target != GL_TRANSFORM_FEEDBACK) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (m_boundTransformFeedback && m_boundTransformFeedback->isActive() &&
+        !m_boundTransformFeedback->isPaused()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    if (tf.hasValue()) {
+        WebGLTransformFeedback* value = tf.value();
+        if (!isFromCurrentContext(value)) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+        if (value->isDeleted()) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        gl()->bindTransformFeedback(target, value->glObject());
+        if (hasNewGLError()) {
+            return;
+        }
+        value->setHasEverBeenBound();
+        m_boundTransformFeedback = value;
+    } else {
+        gl()->bindTransformFeedback(target, 0);
+        if (hasNewGLError()) {
+            return;
+        }
+        m_boundTransformFeedback = nullptr;
+    }
+}
+
+void WebGL2RenderingContext::beginTransformFeedback(GLenum primitiveMode)
+{
+    ENTER_CONTEXT_SCOPE();
+    if (primitiveMode != GL_POINTS && primitiveMode != GL_LINES &&
+        primitiveMode != GL_TRIANGLES) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    Optional<WebGLProgram*> prog = getState()->webGLProgram();
+    if (!prog.hasValue() || prog.value() == nullptr ||
+        prog.value()->isDeleted()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    if (m_boundTransformFeedback) {
+        if (m_boundTransformFeedback->isActive()) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+        gl()->beginTransformFeedback(primitiveMode);
+        if (hasNewGLError()) {
+            return;
+        }
+        m_boundTransformFeedback->setActive(true);
+        m_boundTransformFeedback->setPaused(false);
+        m_boundTransformFeedback->setPrimitiveMode(primitiveMode);
+        m_boundTransformFeedback->setProgram(prog.value());
+    } else {
+        gl()->beginTransformFeedback(primitiveMode);
+    }
+}
+
+void WebGL2RenderingContext::endTransformFeedback()
+{
+    ENTER_CONTEXT_SCOPE();
+    if (m_boundTransformFeedback) {
+        if (!m_boundTransformFeedback->isActive()) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+        gl()->endTransformFeedback();
+        if (hasNewGLError()) {
+            return;
+        }
+        m_boundTransformFeedback->setActive(false);
+        m_boundTransformFeedback->setPaused(false);
+        m_boundTransformFeedback->setProgram(nullptr);
+    } else {
+        gl()->endTransformFeedback();
+    }
+}
+
+void WebGL2RenderingContext::pauseTransformFeedback()
+{
+    ENTER_CONTEXT_SCOPE();
+    if (m_boundTransformFeedback) {
+        if (!m_boundTransformFeedback->isActive() ||
+            m_boundTransformFeedback->isPaused()) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+        gl()->pauseTransformFeedback();
+        if (hasNewGLError()) {
+            return;
+        }
+        m_boundTransformFeedback->setPaused(true);
+    } else {
+        gl()->pauseTransformFeedback();
+    }
+}
+
+void WebGL2RenderingContext::resumeTransformFeedback()
+{
+    ENTER_CONTEXT_SCOPE();
+    if (m_boundTransformFeedback) {
+        if (!m_boundTransformFeedback->isActive() ||
+            !m_boundTransformFeedback->isPaused()) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+        Optional<WebGLProgram*> prog = getState()->webGLProgram();
+        if (!prog.hasValue() ||
+            prog.value() != m_boundTransformFeedback->program()) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+        gl()->resumeTransformFeedback();
+        if (hasNewGLError()) {
+            return;
+        }
+        m_boundTransformFeedback->setPaused(false);
+    } else {
+        gl()->resumeTransformFeedback();
+    }
+}
+
+WebGLActiveInfo* WebGL2RenderingContext::getTransformFeedbackVarying(
+    WebGLProgram* program, GLuint index)
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+    if (!program || !isFromCurrentContext(program) || program->isDeleted()) {
+        setGLError(GL_INVALID_OPERATION);
+        return nullptr;
+    }
+
+    GLint maxVaryings = 0;
+    gl()->getProgramiv(program->glObject(), GL_TRANSFORM_FEEDBACK_VARYINGS,
+                       &maxVaryings);
+    if (index >= static_cast<GLuint>(maxVaryings)) {
+        setGLError(GL_INVALID_VALUE);
+        return nullptr;
+    }
+
+    GLint maxLen = 0;
+    gl()->getProgramiv(program->glObject(),
+                       GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH, &maxLen);
+    if (maxLen <= 0) {
+        maxLen = 256;
+    }
+
+    std::vector<char> nameBuffer(maxLen + 1, 0);
+    GLsizei length = 0;
+    GLsizei size = 0;
+    GLenum type = 0;
+
+    gl()->getTransformFeedbackVarying(program->glObject(), index, maxLen,
+                                      &length, &size, &type, nameBuffer.data());
+    if (hasNewGLError()) {
+        return nullptr;
+    }
+
+    return new WebGLActiveInfo(
+        scriptBindingInstance(), size, type,
+        String::createASCIIString(nameBuffer.data(), length));
+}
+
 // WebGL2RenderingContextOverloads
 
 bool WebGL2RenderingContext::validateDrawCallUBO()
@@ -2647,8 +3345,47 @@ void WebGL2RenderingContext::renderbufferStorageMultisample(
     GLsizei height)
 {
     ENTER_CONTEXT_SCOPE();
-    gl()->renderbufferStorageMultisample(target, samples, internalformat, width,
-                                         height);
+
+    if (target != GL_RENDERBUFFER) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (width < 0 || height < 0 || samples < 0) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    GLint maxSize = 0;
+    gl()->getIntegerv(GL_MAX_RENDERBUFFER_SIZE, &maxSize);
+    if (maxSize > 0 && (width > maxSize || height > maxSize)) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    GLint maxSamples = 0;
+    gl()->getIntegerv(GL_MAX_SAMPLES, &maxSamples);
+    if (maxSamples > 0 && samples > maxSamples) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    Optional<WebGLRenderbuffer*> rb = boundRenderbuffer();
+    if (!rb.hasValue() || rb.value() == nullptr || rb.value()->isDeleted()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    GLenum glInternalFormat = internalformat;
+    if (glInternalFormat == GL_DEPTH_STENCIL) {
+        glInternalFormat = GL_DEPTH24_STENCIL8;
+    }
+
+    gl()->renderbufferStorageMultisample(target, samples, glInternalFormat,
+                                         width, height);
+    if (!hasNewGLError()) {
+        rb.value()->setStorage(internalformat, width, height, samples);
+    }
 }
 
 static bool filterInvalidateAttachments(

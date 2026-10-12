@@ -38,8 +38,50 @@ public:
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLQuery() const override;
 
+    GLenum target() const
+    {
+        return m_target;
+    }
+    void setTarget(GLenum target)
+    {
+        m_target = target;
+    }
+
+    bool hasEverBeenBound() const
+    {
+        return m_hasEverBeenBound;
+    }
+    void setHasEverBeenBound()
+    {
+        m_hasEverBeenBound = true;
+    }
+
+    bool isActive() const
+    {
+        return m_isActive;
+    }
+    void setActive(bool active)
+    {
+        m_isActive = active;
+    }
+
+    bool canBeAvailable() const
+    {
+        return m_canBeAvailable;
+    }
+    void setCanBeAvailable(bool available)
+    {
+        m_canBeAvailable = available;
+    }
+
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLQuery, WebGLObject);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
+
+private:
+    GLenum m_target = 0;
+    bool m_hasEverBeenBound = false;
+    bool m_isActive = false;
+    bool m_canBeAvailable = false;
 };
 
 class WebGLSampler : public WebGLObject {
@@ -79,8 +121,61 @@ public:
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLTransformFeedback() const override;
 
+    bool hasEverBeenBound() const
+    {
+        return m_hasEverBeenBound;
+    }
+    void setHasEverBeenBound()
+    {
+        m_hasEverBeenBound = true;
+    }
+
+    bool isActive() const
+    {
+        return m_isActive;
+    }
+    void setActive(bool active)
+    {
+        m_isActive = active;
+    }
+
+    bool isPaused() const
+    {
+        return m_isPaused;
+    }
+    void setPaused(bool paused)
+    {
+        m_isPaused = paused;
+    }
+
+    GLenum primitiveMode() const
+    {
+        return m_primitiveMode;
+    }
+    void setPrimitiveMode(GLenum mode)
+    {
+        m_primitiveMode = mode;
+    }
+
+    WebGLProgram* program() const
+    {
+        return m_program;
+    }
+    void setProgram(WebGLProgram* prog)
+    {
+        m_program = prog;
+    }
+
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLTransformFeedback, WebGLObject);
+    FILL_GC_POINTER(WebGLTransformFeedback, m_program);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
+
+private:
+    bool m_hasEverBeenBound = false;
+    bool m_isActive = false;
+    bool m_isPaused = false;
+    GLenum m_primitiveMode = 0;
+    WebGLProgram* m_program = nullptr;
 };
 
 class WebGLVertexArrayObject : public WebGLObject {
@@ -119,6 +214,13 @@ public:
     FILL_GC_POINTER(WebGL2RenderingContext, m_drawFramebuffer);
     FILL_GC_POINTER(WebGL2RenderingContext, m_uniformBufferBindings);
     FILL_GC_POINTER(WebGL2RenderingContext, m_transformFeedbackBufferBindings);
+    FILL_GC_POINTER(WebGL2RenderingContext, m_activeQueryAnySamplesPassed);
+    FILL_GC_POINTER(WebGL2RenderingContext,
+                    m_activeQueryAnySamplesPassedConservative);
+    FILL_GC_POINTER(WebGL2RenderingContext,
+                    m_activeQueryTransformFeedbackPrimitivesWritten);
+    FILL_GC_POINTER(WebGL2RenderingContext, m_samplerBindings);
+    FILL_GC_POINTER(WebGL2RenderingContext, m_boundTransformFeedback);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 
 public:
@@ -221,6 +323,24 @@ public:
     void vertexAttribIPointer(GLuint index, GLint size, GLenum type,
                               GLsizei stride, GLintptr offset);
 
+    /* Query Objects */
+    WebGLQuery* createQuery();
+    void deleteQuery(Optional<WebGLQuery*> query);
+    GLboolean isQuery(Optional<WebGLQuery*> query);
+    void beginQuery(GLenum target, WebGLQuery* query);
+    void endQuery(GLenum target);
+    WebGLQuery* getQuery(GLenum target, GLenum pname);
+    ScriptValue getQueryParameter(WebGLQuery* query, GLenum pname);
+
+    /* Sampler Objects */
+    WebGLSampler* createSampler();
+    void deleteSampler(Optional<WebGLSampler*> sampler);
+    GLboolean isSampler(Optional<WebGLSampler*> sampler);
+    void bindSampler(GLuint unit, Optional<WebGLSampler*> sampler);
+    void samplerParameteri(WebGLSampler* sampler, GLenum pname, GLint param);
+    void samplerParameterf(WebGLSampler* sampler, GLenum pname, GLfloat param);
+    ScriptValue getSamplerParameter(WebGLSampler* sampler, GLenum pname);
+
     /* Sync objects */
     Optional<WebGLSync*> fenceSync(GLenum condition, GLbitfield flags);
     GLboolean isSync(Optional<WebGLSync*> sync);
@@ -230,6 +350,17 @@ public:
     ScriptValue getSyncParameter(WebGLSync* sync, GLenum pname);
 
     /* Transform Feedback */
+    WebGLTransformFeedback* createTransformFeedback();
+    void deleteTransformFeedback(Optional<WebGLTransformFeedback*> tf);
+    GLboolean isTransformFeedback(Optional<WebGLTransformFeedback*> tf);
+    void bindTransformFeedback(GLenum target,
+                               Optional<WebGLTransformFeedback*> tf);
+    void beginTransformFeedback(GLenum primitiveMode);
+    void endTransformFeedback();
+    void pauseTransformFeedback();
+    void resumeTransformFeedback();
+    WebGLActiveInfo* getTransformFeedbackVarying(WebGLProgram* program,
+                                                 GLuint index);
     void transformFeedbackVaryings(WebGLProgram* program,
                                    GCVector<String*> varyings,
                                    GLenum bufferMode);
@@ -514,6 +645,11 @@ private:
     };
     GCVector<IndexedBufferBinding*> m_uniformBufferBindings;
     GCVector<IndexedBufferBinding*> m_transformFeedbackBufferBindings;
+    WebGLQuery* m_activeQueryAnySamplesPassed = nullptr;
+    WebGLQuery* m_activeQueryAnySamplesPassedConservative = nullptr;
+    WebGLQuery* m_activeQueryTransformFeedbackPrimitivesWritten = nullptr;
+    GCVector<WebGLSampler*> m_samplerBindings;
+    WebGLTransformFeedback* m_boundTransformFeedback = nullptr;
 };
 
 } // namespace Starfish
