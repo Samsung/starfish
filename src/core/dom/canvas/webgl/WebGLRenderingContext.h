@@ -153,7 +153,7 @@ public:
                            GLenum dstAlpha);
 
     GLenum checkFramebufferStatus(GLenum target);
-    void clear(uint32_t mask);
+    virtual void clear(uint32_t mask);
     void clearColor(float red, float green, float blue, float alpha);
     void clearDepth(GLclampf depth);
     void clearStencil(GLint s);
@@ -394,7 +394,7 @@ protected:
     bool isFormatGenerateMipmapSupported(GLenum internalFormat);
 
 protected:
-    bool isDefaultFramebufferBound();
+    virtual bool isDefaultFramebufferBound();
 
 private:
     GLuint getCurrentFBO();

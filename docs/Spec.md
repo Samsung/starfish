@@ -2459,7 +2459,8 @@ Apps relying on the right-hand list get **no protection** — the directive is p
 - **Transform Feedback Setup:** `transformFeedbackVaryings`, `GL_TRANSFORM_FEEDBACK_BUFFER_MODE` and `GL_TRANSFORM_FEEDBACK_VARYINGS` queries via `getProgramParameter`.
 - **Vertex Array Objects (VAO):** `createVertexArray`, `deleteVertexArray`, `isVertexArray`, `bindVertexArray`.
 - **Sync Objects:** `fenceSync`, `isSync`, `deleteSync`, `clientWaitSync`, `waitSync`, `getSyncParameter`.
-- **Framebuffers & Rendering:** `blitFramebuffer`, `invalidateFramebuffer`, `invalidateSubFramebuffer`, `readBuffer`, `drawBuffers`, `getFramebufferAttachmentParameter` (supporting WebGL2 targets, default framebuffer `BACK`/`DEPTH`/`STENCIL` attachments, texture layer queries, component types, color encoding).
+- **Framebuffers & Rendering:** `blitFramebuffer` (with identical attachment feedback loop detection and multisampled format matching), `invalidateFramebuffer`, `invalidateSubFramebuffer`, `readBuffer`, `drawBuffers`, `getFramebufferAttachmentParameter` (supporting WebGL2 targets, default framebuffer `BACK`/`DEPTH`/`STENCIL` attachments, texture layer queries, component types, color encoding), duplicate image detection (`FRAMEBUFFER_UNSUPPORTED`).
+- **Multiple Render Targets Clear:** `clearBufferfv`, `clearBufferiv`, `clearBufferuiv` with buffer format type matching (float/signed-int/unsigned-int), and `clear(COLOR_BUFFER_BIT)` integer buffer validation.
 - **Instanced Drawing:** `drawArraysInstanced`, `drawElementsInstanced`, `drawRangeElements`, `vertexAttribDivisor`.
 - **Integer Attributes:** `vertexAttribIPointer`, `vertexAttribI4i`/`vertexAttribI4ui`/`vertexAttribI4iv`/`vertexAttribI4uiv`, `getVertexAttribIiv`/`getVertexAttribIuiv`.
 - **Textures (3D & 2D Array):** `texImage3D`, `texSubImage3D`, `texStorage2D`, `texStorage3D`, sized internal format uploads and pixel store parameters.
@@ -2468,7 +2469,7 @@ Apps relying on the right-hand list get **no protection** — the directive is p
 **Unimplemented WebGL 2.0 features (`[Unimplemented]` in IDL / methods not exposed on instance):**
 - **Transform Feedback Execution:** `createTransformFeedback`, `deleteTransformFeedback`, `isTransformFeedback`, `bindTransformFeedback`, `beginTransformFeedback`, `endTransformFeedback`, `pauseTransformFeedback`, `resumeTransformFeedback`, `getTransformFeedbackVarying`.
 - **3D Texture Copy:** `copyTexSubImage3D`.
-- **Multiple Render Targets Clear:** `clearBufferfv`, `clearBufferiv`, `clearBufferuiv`, `clearBufferfi`.
+- **Clear Depth/Stencil Buffer:** `clearBufferfi`.
 
 **Extensions exposed via `getExtension(name)`** (subject to the underlying GL driver advertising the matching `GL_*` token; on Mesa llvmpipe / SwiftShader none may be advertised):
 

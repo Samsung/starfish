@@ -607,6 +607,7 @@ void WebGLRenderingContext::bindTexture(GLenum target,
             return;
         }
 
+        texture->setTarget(target);
         m_gl->bindTexture(target, texture->glObject());
         m_boundTextures[target] = texture->glObject();
         m_boundTextureObjects[textureBindingKey(m_activeTextureUnit, target)] =
@@ -679,17 +680,16 @@ GLenum WebGLRenderingContext::checkFramebufferStatus(GLenum target)
         }
     }
 
-    if (!isDefaultFramebufferBound()) {
-        Optional<WebGLFramebuffer*> maybeFb = getBoundFramebuffer(target);
-        if (maybeFb.hasValue() && maybeFb.value()) {
-            GLenum webglStatus = maybeFb.value()->checkWebGLStatus();
-            if (webglStatus != GL_FRAMEBUFFER_COMPLETE) {
-                return webglStatus;
-            }
+    Optional<WebGLFramebuffer*> maybeFb = getBoundFramebuffer(target);
+    if (maybeFb.hasValue() && maybeFb.value()) {
+        GLenum webglStatus = maybeFb.value()->checkWebGLStatus();
+        if (webglStatus != GL_FRAMEBUFFER_COMPLETE) {
+            return webglStatus;
         }
+        return m_gl->checkFramebufferStatus(target);
     }
 
-    return m_gl->checkFramebufferStatus(target);
+    return GL_FRAMEBUFFER_COMPLETE;
 }
 
 void WebGLRenderingContext::clear(uint32_t mask)
@@ -1443,11 +1443,6 @@ void WebGLRenderingContext::framebufferRenderbuffer(
 {
     ENTER_CONTEXT_SCOPE();
 
-    if (isDefaultFramebufferBound()) {
-        setGLError(GL_INVALID_OPERATION);
-        return;
-    }
-
     bool isWebGL2 = isWebGL2RenderingContext();
     if (isWebGL2) {
         if (target != GL_FRAMEBUFFER && target != GL_READ_FRAMEBUFFER &&
@@ -1539,11 +1534,6 @@ void WebGLRenderingContext::framebufferTexture2D(
 {
     ENTER_CONTEXT_SCOPE();
 
-    if (isDefaultFramebufferBound()) {
-        setGLError(GL_INVALID_OPERATION);
-        return;
-    }
-
     bool isWebGL2 = isWebGL2RenderingContext();
     if (isWebGL2) {
         if (target != GL_FRAMEBUFFER && target != GL_READ_FRAMEBUFFER &&
@@ -1619,7 +1609,7 @@ void WebGLRenderingContext::framebufferTexture2D(
                                        level);
         }
 
-        fb->setAttachmentTexture(attachment, texture);
+        fb->setAttachmentTexture2D(attachment, texture, textarget, level);
     } else {
         if (level != 0) {
             setGLError(GL_INVALID_VALUE);
@@ -1634,7 +1624,7 @@ void WebGLRenderingContext::framebufferTexture2D(
             m_gl->framebufferTexture2D(target, attachment, textarget, 0, 0);
         }
 
-        fb->setAttachmentTexture(attachment, nullptr);
+        fb->setAttachmentTexture2D(attachment, nullptr, textarget, level);
     }
 }
 

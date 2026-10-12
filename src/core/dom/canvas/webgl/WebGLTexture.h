@@ -59,6 +59,17 @@ public:
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLTexture() const override;
 
+    GLenum target() const
+    {
+        return m_target;
+    }
+    void setTarget(GLenum target)
+    {
+        if (m_target == 0) {
+            m_target = target;
+        }
+    }
+
     bool isImmutable() const
     {
         return m_isImmutable;
@@ -169,6 +180,7 @@ public:
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 
 private:
+    GLenum m_target = 0;
     bool m_isImmutable = false;
     GLsizei m_width = 0;
     GLsizei m_height = 0;
