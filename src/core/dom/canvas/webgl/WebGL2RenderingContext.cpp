@@ -128,6 +128,46 @@ ScriptBindingInstance* WebGL2RenderingContext::scriptBindingInstance()
     });
 #endif
 
+void WebGL2RenderingContext::clear(uint32_t mask)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (mask & GL_COLOR_BUFFER_BIT) {
+        Optional<WebGLFramebuffer*> maybeFb =
+            getBoundFramebuffer(GL_DRAW_FRAMEBUFFER);
+        if (maybeFb.hasValue() && maybeFb.value()) {
+            WebGLFramebuffer* fb = maybeFb.value();
+            const GLenum* drawBuffers = fb->drawBuffers();
+            size_t count = fb->drawBufferCount();
+            if (count == 0) {
+                count = 1;
+            }
+            for (size_t i = 0; i < count; ++i) {
+                GLenum b = drawBuffers[i];
+                if (b >= GL_COLOR_ATTACHMENT0 &&
+                    b < GL_COLOR_ATTACHMENT0 + 16) {
+                    size_t idx = b - GL_COLOR_ATTACHMENT0;
+                    GLenum fmt = fb->getColorAttachmentFormat(idx);
+                    if (WebGLFramebuffer::isIntegerInternalFormat(fmt)) {
+                        setGLError(GL_INVALID_OPERATION,
+                                   "clear(COLOR_BUFFER_BIT) not allowed on "
+                                   "integer color buffers.");
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    WebGLRenderingContext::clear(mask);
+}
+
+bool WebGL2RenderingContext::isDefaultFramebufferBound()
+{
+    return !m_drawFramebuffer.hasValue() ||
+           m_drawFramebuffer.value() == nullptr;
+}
+
 void WebGL2RenderingContext::bindBuffer(GLenum target,
                                         Optional<WebGLBuffer*> buffer)
 {
@@ -847,7 +887,7 @@ ScriptValue WebGL2RenderingContext::getVertexAttrib(GLuint index, GLenum pname)
     case GL_VERTEX_ATTRIB_ARRAY_NORMALIZED: {
         GLint value = 0;
         gl()->getVertexAttribiv(index, pname, &value);
-        return createScriptValue(static_cast<GLboolean>(value));
+        return createScriptValue(value != 0);
     }
     // GLenum
     case GL_VERTEX_ATTRIB_ARRAY_TYPE: {
@@ -899,24 +939,14 @@ ScriptValue WebGL2RenderingContext::getVertexAttrib(GLuint index, GLenum pname)
 
         TRACE(WEBGL, KV(index), KV(value));
 
-        Optional<WebGLVertexArrayObject*> maybe =
-            getState()->webGLVertexArrayObject();
-
-        if (!maybe.hasValue()) {
-            return scriptNull(); // No mention found for this in the spec.
-        }
-
         Optional<WebGLBuffer*> maybeBuffer =
             getState()->getBufferBoundToVertexAttributes(index);
 
-        if (!maybeBuffer.hasValue()) {
-            return scriptNull(); // No mention found for this in the spec.
+        if (!maybeBuffer.hasValue() || !maybeBuffer.value()) {
+            return scriptNull();
         }
 
         TRACE(WEBGL, KV(index), KV(maybeBuffer.value()->glObject()));
-
-        STARFISH_ASSERT(static_cast<GLuint>(value) ==
-                        maybeBuffer.value()->glObject());
 
         return maybeBuffer.value()->scriptValue();
     }
@@ -3273,6 +3303,81 @@ void WebGL2RenderingContext::blitFramebuffer(GLint srcX0, GLint srcY0,
         return;
     }
 
+    if (mask & GL_COLOR_BUFFER_BIT) {
+        Optional<WebGLFramebuffer*> maybeReadFb =
+            getBoundFramebuffer(GL_READ_FRAMEBUFFER);
+        Optional<WebGLFramebuffer*> maybeDrawFb =
+            getBoundFramebuffer(GL_DRAW_FRAMEBUFFER);
+        WebGLFramebuffer* readFb =
+            maybeReadFb.hasValue() ? maybeReadFb.value() : nullptr;
+        WebGLFramebuffer* drawFb =
+            maybeDrawFb.hasValue() ? maybeDrawFb.value() : nullptr;
+        GLenum readBuf = readFb ? readFb->readBuffer() : GL_BACK;
+
+        if (readFb == drawFb && readFb != nullptr) {
+            const GLenum* drawBuffers = drawFb->drawBuffers();
+            size_t count = drawFb->drawBufferCount();
+            if (count == 0) {
+                count = 1;
+            }
+            for (size_t i = 0; i < count; ++i) {
+                GLenum db = drawBuffers[i];
+                if (db != GL_NONE && db == readBuf) {
+                    setGLError(GL_INVALID_OPERATION,
+                               "blitFramebuffer cannot have identical read and "
+                               "draw buffer.");
+                    return;
+                }
+            }
+        }
+        if (readFb && drawFb) {
+            if (readBuf >= GL_COLOR_ATTACHMENT0 &&
+                readBuf < GL_COLOR_ATTACHMENT0 + 16) {
+                size_t readIdx = readBuf - GL_COLOR_ATTACHMENT0;
+                void* readObj = readFb->getColorAttachmentObject(readIdx);
+                const GLenum* drawBuffers = drawFb->drawBuffers();
+                size_t count = drawFb->drawBufferCount();
+                if (count == 0) {
+                    count = 1;
+                }
+                for (size_t i = 0; i < count; ++i) {
+                    GLenum db = drawBuffers[i];
+                    if (db >= GL_COLOR_ATTACHMENT0 &&
+                        db < GL_COLOR_ATTACHMENT0 + 16) {
+                        size_t drawIdx = db - GL_COLOR_ATTACHMENT0;
+                        void* drawObj =
+                            drawFb->getColorAttachmentObject(drawIdx);
+                        if (readObj != nullptr && readObj == drawObj) {
+                            if (readFb->isSameImageAs(readIdx, drawFb,
+                                                      drawIdx)) {
+                                setGLError(
+                                    GL_INVALID_OPERATION,
+                                    "blitFramebuffer cannot have identical "
+                                    "read and draw attachment.");
+                                return;
+                            }
+                        }
+                        GLsizei readSamples =
+                            readFb->getColorAttachmentSamples(readIdx);
+                        GLsizei drawSamples =
+                            drawFb->getColorAttachmentSamples(drawIdx);
+                        GLenum readFmt =
+                            readFb->getColorAttachmentFormat(readIdx);
+                        GLenum drawFmt =
+                            drawFb->getColorAttachmentFormat(drawIdx);
+                        if ((readSamples > 0 || drawSamples > 0) &&
+                            readFmt != drawFmt) {
+                            setGLError(GL_INVALID_OPERATION,
+                                       "blitFramebuffer with multisampling "
+                                       "requires identical formats.");
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     gl()->blitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1,
                           dstY1, mask, filter);
     m_ownerHTMLCanvasElement->setNeedsComposite();
@@ -3301,7 +3406,22 @@ void WebGL2RenderingContext::framebufferTextureLayer(
         }
     }
 
-    gl()->framebufferTextureLayer(target, attachment, texName, level, layer);
+    if (attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
+        gl()->framebufferTextureLayer(target, GL_DEPTH_ATTACHMENT, texName,
+                                      level, layer);
+        gl()->framebufferTextureLayer(target, GL_STENCIL_ATTACHMENT, texName,
+                                      level, layer);
+    } else {
+        gl()->framebufferTextureLayer(target, attachment, texName, level,
+                                      layer);
+    }
+    Optional<WebGLFramebuffer*> maybeFb = getBoundFramebuffer(target);
+    if (maybeFb.hasValue() && maybeFb.value()) {
+        maybeFb.value()->setAttachmentTextureLayer(
+            attachment,
+            maybeTexture.hasValue() ? maybeTexture.value() : nullptr, level,
+            layer);
+    }
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
@@ -3623,7 +3743,8 @@ void WebGL2RenderingContext::drawBuffers(GCAtomicVector<GLenum> buffers)
 
     gl()->drawBuffers(buffers.size(), buffers.data());
 
-    Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
+    Optional<WebGLFramebuffer*> maybeFb =
+        getBoundFramebuffer(GL_DRAW_FRAMEBUFFER);
     if (maybeFb.hasValue() && maybeFb.value()) {
         maybeFb.value()->setDrawBuffers(buffers);
     }
@@ -3641,6 +3762,29 @@ void WebGL2RenderingContext::clearBufferfv(GLenum buffer, GLint drawbuffer,
     if (buffer == GL_DEPTH && drawbuffer != 0) {
         setGLError(GL_INVALID_VALUE, "drawbuffer must be 0 for DEPTH.");
         return;
+    }
+
+    if (buffer == GL_COLOR) {
+        Optional<WebGLFramebuffer*> maybeFb =
+            getBoundFramebuffer(GL_DRAW_FRAMEBUFFER);
+        if (maybeFb.hasValue() && maybeFb.value()) {
+            WebGLFramebuffer* fb = maybeFb.value();
+            const GLenum* drawBuffers = fb->drawBuffers();
+            size_t count = fb->drawBufferCount();
+            GLenum b = drawbuffer < static_cast<GLint>(count)
+                           ? drawBuffers[drawbuffer]
+                           : (drawbuffer == 0 ? GL_COLOR_ATTACHMENT0 : GL_NONE);
+            if (b >= GL_COLOR_ATTACHMENT0 && b < GL_COLOR_ATTACHMENT0 + 16) {
+                size_t idx = b - GL_COLOR_ATTACHMENT0;
+                GLenum fmt = fb->getColorAttachmentFormat(idx);
+                if (WebGLFramebuffer::isIntegerInternalFormat(fmt)) {
+                    setGLError(
+                        GL_INVALID_OPERATION,
+                        "clearBufferfv not allowed on integer color buffers.");
+                    return;
+                }
+            }
+        }
     }
 
     if (values.isFloat32ArrayValue()) {
@@ -3678,6 +3822,32 @@ void WebGL2RenderingContext::clearBufferiv(GLenum buffer, GLint drawbuffer,
         return;
     }
 
+    if (buffer == GL_COLOR) {
+        Optional<WebGLFramebuffer*> maybeFb =
+            getBoundFramebuffer(GL_DRAW_FRAMEBUFFER);
+        if (!maybeFb.hasValue() || !maybeFb.value()) {
+            setGLError(GL_INVALID_OPERATION,
+                       "clearBufferiv not allowed on default framebuffer.");
+            return;
+        }
+        WebGLFramebuffer* fb = maybeFb.value();
+        const GLenum* drawBuffers = fb->drawBuffers();
+        size_t count = fb->drawBufferCount();
+        GLenum b = drawbuffer < static_cast<GLint>(count)
+                       ? drawBuffers[drawbuffer]
+                       : (drawbuffer == 0 ? GL_COLOR_ATTACHMENT0 : GL_NONE);
+        if (b >= GL_COLOR_ATTACHMENT0 && b < GL_COLOR_ATTACHMENT0 + 16) {
+            size_t idx = b - GL_COLOR_ATTACHMENT0;
+            GLenum fmt = fb->getColorAttachmentFormat(idx);
+            if (!WebGLFramebuffer::isSignedIntegerInternalFormat(fmt)) {
+                setGLError(GL_INVALID_OPERATION,
+                           "clearBufferiv only allowed on signed integer "
+                           "color buffers.");
+                return;
+            }
+        }
+    }
+
     if (values.isInt32ArrayValue()) {
         const ScriptInt32Array arr = values.getInt32ArrayValue();
         if (srcOffset >= arr->arrayLength()) {
@@ -3706,6 +3876,32 @@ void WebGL2RenderingContext::clearBufferuiv(GLenum buffer, GLint drawbuffer,
     if (buffer != GL_COLOR) {
         setGLError(GL_INVALID_ENUM, "buffer must be GL_COLOR.");
         return;
+    }
+
+    {
+        Optional<WebGLFramebuffer*> maybeFb =
+            getBoundFramebuffer(GL_DRAW_FRAMEBUFFER);
+        if (!maybeFb.hasValue() || !maybeFb.value()) {
+            setGLError(GL_INVALID_OPERATION,
+                       "clearBufferuiv not allowed on default framebuffer.");
+            return;
+        }
+        WebGLFramebuffer* fb = maybeFb.value();
+        const GLenum* drawBuffers = fb->drawBuffers();
+        size_t count = fb->drawBufferCount();
+        GLenum b = drawbuffer < static_cast<GLint>(count)
+                       ? drawBuffers[drawbuffer]
+                       : (drawbuffer == 0 ? GL_COLOR_ATTACHMENT0 : GL_NONE);
+        if (b >= GL_COLOR_ATTACHMENT0 && b < GL_COLOR_ATTACHMENT0 + 16) {
+            size_t idx = b - GL_COLOR_ATTACHMENT0;
+            GLenum fmt = fb->getColorAttachmentFormat(idx);
+            if (!WebGLFramebuffer::isUnsignedIntegerInternalFormat(fmt)) {
+                setGLError(GL_INVALID_OPERATION,
+                           "clearBufferuiv only allowed on unsigned integer "
+                           "color buffers.");
+                return;
+            }
+        }
     }
 
     if (values.isUint32ArrayValue()) {
@@ -4247,6 +4443,7 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
         height, skipPixels, skipRows, width, height, depth, imageHeight);
 
     if (texture && !hasNewGLError()) {
+        texture->setSize(width, height);
         texture->setImageLevelInfo(target, level, internalformat, width, height,
                                    depth);
     }
@@ -4348,6 +4545,7 @@ void WebGL2RenderingContext::texImage3D(
         });
 
     if (texture && !hasNewGLError()) {
+        texture->setSize(width, height);
         texture->setImageLevelInfo(target, level, internalformat, width, height,
                                    depth);
     }

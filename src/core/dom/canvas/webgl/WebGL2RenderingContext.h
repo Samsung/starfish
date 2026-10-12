@@ -226,6 +226,8 @@ public:
 public:
     // Implement WebGLRenderingContextBase
 
+    void clear(uint32_t mask) override;
+    bool isDefaultFramebufferBound() override;
     void bindBuffer(GLenum target, Optional<WebGLBuffer*> buffer);
     void deleteBuffer(Optional<WebGLBuffer*> buffer) override;
     void bindFramebuffer(GLenum target, Optional<WebGLFramebuffer*> buffer);
@@ -516,6 +518,9 @@ public:
                        GLenum type, ScriptArrayBufferView srcData,
                        unsigned long long srcOffset);
 
+    void copyTexSubImage3D(GLenum target, GLint level, GLint xoffset,
+                           GLint yoffset, GLint zoffset, GLint x, GLint y,
+                           GLsizei width, GLsizei height);
     void compressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
                               GLsizei width, GLsizei height, GLint border,
                               GLsizei imageSize, GLintptr offset);
@@ -533,7 +538,6 @@ public:
                                  GLenum format, ScriptArrayBufferView srcData,
                                  unsigned long long srcOffset = 0,
                                  GLuint srcLengthOverride = 0);
-
     void compressedTexImage3D(GLenum target, GLint level, GLenum internalformat,
                               GLsizei width, GLsizei height, GLsizei depth,
                               GLint border, GLsizei imageSize, GLintptr offset);
@@ -552,7 +556,6 @@ public:
                                  ScriptArrayBufferView srcData,
                                  unsigned long long srcOffset = 0,
                                  GLuint srcLengthOverride = 0);
-
     void uniform1fv(Optional<WebGLUniformLocation*> location, Float32List data,
                     unsigned long long srcOffset = 0, GLuint srcLength = 0);
     void uniform2fv(Optional<WebGLUniformLocation*> location, Float32List data,

@@ -39,6 +39,10 @@ public:
         for (size_t i = 0; i < 16; ++i) {
             m_attachedColorTextures[i] = nullptr;
             m_attachedColorRenderbuffers[i] = nullptr;
+            m_attachedColorTextargets[i] = 0;
+            m_attachedColorLevels[i] = 0;
+            m_attachedColorLayers[i] = 0;
+            m_attachedColorIsLayers[i] = false;
         }
     }
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
@@ -131,9 +135,20 @@ public:
 
     void setAttachmentTexture(GLenum attachment, WebGLTexture* texture)
     {
+        setAttachmentTexture2D(attachment, texture, 0x0DE1 /* GL_TEXTURE_2D */,
+                               0);
+    }
+
+    void setAttachmentTexture2D(GLenum attachment, WebGLTexture* texture,
+                                GLenum textarget, GLint level)
+    {
         if (attachment >= 0x8CE0 && attachment < 0x8CE0 + 16) {
             size_t idx = attachment - 0x8CE0;
             m_attachedColorTextures[idx] = texture;
+            m_attachedColorTextargets[idx] = textarget;
+            m_attachedColorLevels[idx] = level;
+            m_attachedColorLayers[idx] = 0;
+            m_attachedColorIsLayers[idx] = false;
             if (texture) {
                 m_attachedColorRenderbuffers[idx] = nullptr;
             }
@@ -142,22 +157,193 @@ public:
             }
         } else if (attachment == 0x8D00 /* GL_DEPTH_ATTACHMENT */) {
             m_attachedDepthTexture = texture;
+            m_attachedDepthTextarget = textarget;
+            m_attachedDepthLevel = level;
+            m_attachedDepthLayer = 0;
+            m_attachedDepthIsLayer = false;
             if (texture) {
                 m_attachedDepthRenderbuffer = nullptr;
             }
         } else if (attachment == 0x8D20 /* GL_STENCIL_ATTACHMENT */) {
             m_attachedStencilTexture = texture;
+            m_attachedStencilTextarget = textarget;
+            m_attachedStencilLevel = level;
+            m_attachedStencilLayer = 0;
+            m_attachedStencilIsLayer = false;
             if (texture) {
                 m_attachedStencilRenderbuffer = nullptr;
             }
         } else if (attachment == 0x821A /* GL_DEPTH_STENCIL_ATTACHMENT */) {
             m_attachedDepthTexture = texture;
+            m_attachedDepthTextarget = textarget;
+            m_attachedDepthLevel = level;
+            m_attachedDepthLayer = 0;
+            m_attachedDepthIsLayer = false;
             m_attachedStencilTexture = texture;
+            m_attachedStencilTextarget = textarget;
+            m_attachedStencilLevel = level;
+            m_attachedStencilLayer = 0;
+            m_attachedStencilIsLayer = false;
             if (texture) {
                 m_attachedDepthRenderbuffer = nullptr;
                 m_attachedStencilRenderbuffer = nullptr;
             }
         }
+    }
+
+    void setAttachmentTextureLayer(GLenum attachment, WebGLTexture* texture,
+                                   GLint level, GLint layer)
+    {
+        GLenum tgt =
+            texture && texture->target() != 0 ? texture->target() : 0x806F;
+        if (attachment >= 0x8CE0 && attachment < 0x8CE0 + 16) {
+            size_t idx = attachment - 0x8CE0;
+            m_attachedColorTextures[idx] = texture;
+            m_attachedColorTextargets[idx] = tgt;
+            m_attachedColorLevels[idx] = level;
+            m_attachedColorLayers[idx] = layer;
+            m_attachedColorIsLayers[idx] = true;
+            if (texture) {
+                m_attachedColorRenderbuffers[idx] = nullptr;
+            }
+            if (idx == 0) {
+                m_attachedTexture = texture;
+            }
+        } else if (attachment == 0x8D00 /* GL_DEPTH_ATTACHMENT */) {
+            m_attachedDepthTexture = texture;
+            m_attachedDepthTextarget = tgt;
+            m_attachedDepthLevel = level;
+            m_attachedDepthLayer = layer;
+            m_attachedDepthIsLayer = true;
+            if (texture) {
+                m_attachedDepthRenderbuffer = nullptr;
+            }
+        } else if (attachment == 0x8D20 /* GL_STENCIL_ATTACHMENT */) {
+            m_attachedStencilTexture = texture;
+            m_attachedStencilTextarget = tgt;
+            m_attachedStencilLevel = level;
+            m_attachedStencilLayer = layer;
+            m_attachedStencilIsLayer = true;
+            if (texture) {
+                m_attachedStencilRenderbuffer = nullptr;
+            }
+        } else if (attachment == 0x821A /* GL_DEPTH_STENCIL_ATTACHMENT */) {
+            m_attachedDepthTexture = texture;
+            m_attachedDepthTextarget = tgt;
+            m_attachedDepthLevel = level;
+            m_attachedDepthLayer = layer;
+            m_attachedDepthIsLayer = true;
+            m_attachedStencilTexture = texture;
+            m_attachedStencilTextarget = tgt;
+            m_attachedStencilLevel = level;
+            m_attachedStencilLayer = layer;
+            m_attachedStencilIsLayer = true;
+            if (texture) {
+                m_attachedDepthRenderbuffer = nullptr;
+                m_attachedStencilRenderbuffer = nullptr;
+            }
+        }
+    }
+
+    static bool isSignedIntegerInternalFormat(GLenum format)
+    {
+        switch (format) {
+        case 0x8D82: /* GL_RGBA32I */
+        case 0x8D88: /* GL_RGBA16I */
+        case 0x8D8E: /* GL_RGBA8I */
+        case 0x8D83: /* GL_RGB32I */
+        case 0x8D89: /* GL_RGB16I */
+        case 0x8D8F: /* GL_RGB8I */
+        case 0x823B: /* GL_RG32I */
+        case 0x8239: /* GL_RG16I */
+        case 0x8237: /* GL_RG8I */
+        case 0x8235: /* GL_R32I */
+        case 0x8233: /* GL_R16I */
+        case 0x8231: /* GL_R8I */
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    static bool isUnsignedIntegerInternalFormat(GLenum format)
+    {
+        switch (format) {
+        case 0x8D70: /* GL_RGBA32UI */
+        case 0x8D76: /* GL_RGBA16UI */
+        case 0x8D7C: /* GL_RGBA8UI */
+        case 0x8D71: /* GL_RGB32UI */
+        case 0x8D77: /* GL_RGB16UI */
+        case 0x8D7D: /* GL_RGB8UI */
+        case 0x823C: /* GL_RG32UI */
+        case 0x823A: /* GL_RG16UI */
+        case 0x8238: /* GL_RG8UI */
+        case 0x8236: /* GL_R32UI */
+        case 0x8234: /* GL_R16UI */
+        case 0x8232: /* GL_R8UI */
+        case 0x906F: /* GL_RGB10_A2UI */
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    static bool isIntegerInternalFormat(GLenum format)
+    {
+        return isSignedIntegerInternalFormat(format) ||
+               isUnsignedIntegerInternalFormat(format);
+    }
+
+    GLenum getColorAttachmentFormat(size_t index) const
+    {
+        if (index >= 16) {
+            return 0;
+        }
+        if (m_attachedColorRenderbuffers[index] &&
+            !m_attachedColorRenderbuffers[index]->isDeleted()) {
+            return m_attachedColorRenderbuffers[index]->internalFormat();
+        }
+        if (m_attachedColorTextures[index] &&
+            !m_attachedColorTextures[index]->isDeleted()) {
+            WebGLTexture* tex = m_attachedColorTextures[index];
+            GLenum tgt = m_attachedColorIsLayers[index]
+                             ? 0x806F /* GL_TEXTURE_3D */
+                             : m_attachedColorTextargets[index];
+            const auto* info =
+                tex->getImageLevelInfo(tgt, m_attachedColorLevels[index]);
+            if (info) {
+                return info->internalFormat;
+            }
+        }
+        return 0;
+    }
+
+    GLsizei getColorAttachmentSamples(size_t index) const
+    {
+        if (index >= 16) {
+            return 0;
+        }
+        if (m_attachedColorRenderbuffers[index] &&
+            !m_attachedColorRenderbuffers[index]->isDeleted()) {
+            return m_attachedColorRenderbuffers[index]->samples();
+        }
+        return 0;
+    }
+
+    void* getColorAttachmentObject(size_t index) const
+    {
+        if (index >= 16) {
+            return nullptr;
+        }
+        if (m_attachedColorRenderbuffers[index] &&
+            !m_attachedColorRenderbuffers[index]->isDeleted()) {
+            return m_attachedColorRenderbuffers[index];
+        }
+        if (m_attachedColorTextures[index] &&
+            !m_attachedColorTextures[index]->isDeleted()) {
+            return m_attachedColorTextures[index];
+        }
+        return nullptr;
     }
 
     void setAttachmentRenderbuffer(GLenum attachment, WebGLRenderbuffer* rb)
@@ -191,6 +377,36 @@ public:
         }
     }
 
+    bool isSameImageAs(size_t myIndex, const WebGLFramebuffer* other,
+                       size_t otherIndex) const
+    {
+        if (myIndex >= 16 || otherIndex >= 16 || other == nullptr) {
+            return false;
+        }
+        if (m_attachedColorRenderbuffers[myIndex] != nullptr &&
+            m_attachedColorRenderbuffers[myIndex] ==
+                other->m_attachedColorRenderbuffers[otherIndex]) {
+            return true;
+        }
+        WebGLTexture* t1 = m_attachedColorTextures[myIndex];
+        WebGLTexture* t2 = other->m_attachedColorTextures[otherIndex];
+        if (t1 != nullptr && t1 == t2) {
+            if (m_attachedColorLevels[myIndex] ==
+                other->m_attachedColorLevels[otherIndex]) {
+                if (m_attachedColorIsLayers[myIndex] &&
+                    other->m_attachedColorIsLayers[otherIndex]) {
+                    return m_attachedColorLayers[myIndex] ==
+                           other->m_attachedColorLayers[otherIndex];
+                } else if (!m_attachedColorIsLayers[myIndex] &&
+                           !other->m_attachedColorIsLayers[otherIndex]) {
+                    return m_attachedColorTextargets[myIndex] ==
+                           other->m_attachedColorTextargets[otherIndex];
+                }
+            }
+        }
+        return false;
+    }
+
     bool hasAnyAttachment() const
     {
         for (size_t i = 0; i < 16; ++i) {
@@ -215,6 +431,38 @@ public:
     {
         if (!hasAnyAttachment()) {
             return 0x8CD7; /* GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT */
+        }
+
+        // WebGL2: Check if identical image is attached to more than one color
+        // attachment
+        for (size_t i = 0; i < 16; ++i) {
+            for (size_t j = i + 1; j < 16; ++j) {
+                if (m_attachedColorRenderbuffers[i] &&
+                    m_attachedColorRenderbuffers[i] ==
+                        m_attachedColorRenderbuffers[j] &&
+                    !m_attachedColorRenderbuffers[i]->isDeleted()) {
+                    return 0x8CDD; /* GL_FRAMEBUFFER_UNSUPPORTED */
+                }
+                WebGLTexture* t1 = m_attachedColorTextures[i];
+                WebGLTexture* t2 = m_attachedColorTextures[j];
+                if (t1 && t1 == t2 && !t1->isDeleted()) {
+                    if (m_attachedColorLevels[i] == m_attachedColorLevels[j]) {
+                        if (m_attachedColorIsLayers[i] &&
+                            m_attachedColorIsLayers[j]) {
+                            if (m_attachedColorLayers[i] ==
+                                m_attachedColorLayers[j]) {
+                                return 0x8CDD; /* GL_FRAMEBUFFER_UNSUPPORTED */
+                            }
+                        } else if (!m_attachedColorIsLayers[i] &&
+                                   !m_attachedColorIsLayers[j]) {
+                            if (m_attachedColorTextargets[i] ==
+                                m_attachedColorTextargets[j]) {
+                                return 0x8CDD; /* GL_FRAMEBUFFER_UNSUPPORTED */
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         GLsizei commonWidth = -1;
@@ -249,8 +497,29 @@ public:
         for (size_t i = 0; i < 16; ++i) {
             WebGLTexture* tex = m_attachedColorTextures[i];
             if (tex && !tex->isDeleted()) {
-                GLenum res =
-                    checkImage(tex->width(), tex->height(), 0x1908, true);
+                GLsizei w = tex->width();
+                GLsizei h = tex->height();
+                GLenum fmt = 0x1908;
+                GLenum tgt = m_attachedColorIsLayers[i]
+                                 ? (tex->target() != 0 ? tex->target() : 0x806F)
+                                 : m_attachedColorTextargets[i];
+                const auto* info =
+                    tex->getImageLevelInfo(tgt, m_attachedColorLevels[i]);
+                if (info) {
+                    w = info->width;
+                    h = info->height;
+                    fmt = info->internalFormat;
+                } else if (m_attachedColorLevels[i] > 0) {
+                    const auto* info0 = tex->getImageLevelInfo(tgt, 0);
+                    if (info0) {
+                        w = std::max(1,
+                                     info0->width >> m_attachedColorLevels[i]);
+                        h = std::max(1,
+                                     info0->height >> m_attachedColorLevels[i]);
+                        fmt = info0->internalFormat;
+                    }
+                }
+                GLenum res = checkImage(w, h, fmt, true);
                 if (res != 0x8CD5) {
                     return res;
                 }
@@ -266,8 +535,25 @@ public:
         }
 
         if (m_attachedDepthTexture && !m_attachedDepthTexture->isDeleted()) {
-            GLenum res = checkImage(m_attachedDepthTexture->width(),
-                                    m_attachedDepthTexture->height(), 0, false);
+            WebGLTexture* tex = m_attachedDepthTexture;
+            GLsizei w = tex->width();
+            GLsizei h = tex->height();
+            GLenum tgt = m_attachedDepthIsLayer
+                             ? (tex->target() != 0 ? tex->target() : 0x806F)
+                             : m_attachedDepthTextarget;
+            const auto* info =
+                tex->getImageLevelInfo(tgt, m_attachedDepthLevel);
+            if (info) {
+                w = info->width;
+                h = info->height;
+            } else if (m_attachedDepthLevel > 0) {
+                const auto* info0 = tex->getImageLevelInfo(tgt, 0);
+                if (info0) {
+                    w = std::max(1, info0->width >> m_attachedDepthLevel);
+                    h = std::max(1, info0->height >> m_attachedDepthLevel);
+                }
+            }
+            GLenum res = checkImage(w, h, 0, false);
             if (res != 0x8CD5) {
                 return res;
             }
@@ -284,9 +570,25 @@ public:
         }
         if (m_attachedStencilTexture &&
             !m_attachedStencilTexture->isDeleted()) {
-            GLenum res =
-                checkImage(m_attachedStencilTexture->width(),
-                           m_attachedStencilTexture->height(), 0, false);
+            WebGLTexture* tex = m_attachedStencilTexture;
+            GLsizei w = tex->width();
+            GLsizei h = tex->height();
+            GLenum tgt = m_attachedStencilIsLayer
+                             ? (tex->target() != 0 ? tex->target() : 0x806F)
+                             : m_attachedStencilTextarget;
+            const auto* info =
+                tex->getImageLevelInfo(tgt, m_attachedStencilLevel);
+            if (info) {
+                w = info->width;
+                h = info->height;
+            } else if (m_attachedStencilLevel > 0) {
+                const auto* info0 = tex->getImageLevelInfo(tgt, 0);
+                if (info0) {
+                    w = std::max(1, info0->width >> m_attachedStencilLevel);
+                    h = std::max(1, info0->height >> m_attachedStencilLevel);
+                }
+            }
+            GLenum res = checkImage(w, h, 0, false);
             if (res != 0x8CD5) {
                 return res;
             }
@@ -335,9 +637,21 @@ private:
     GLenum m_readBuffer = 0x8CE0;
     WebGLTexture* m_attachedColorTextures[16];
     WebGLRenderbuffer* m_attachedColorRenderbuffers[16];
+    GLenum m_attachedColorTextargets[16];
+    GLint m_attachedColorLevels[16];
+    GLint m_attachedColorLayers[16];
+    bool m_attachedColorIsLayers[16];
     WebGLTexture* m_attachedDepthTexture = nullptr;
+    GLenum m_attachedDepthTextarget = 0;
+    GLint m_attachedDepthLevel = 0;
+    GLint m_attachedDepthLayer = 0;
+    bool m_attachedDepthIsLayer = false;
     WebGLRenderbuffer* m_attachedDepthRenderbuffer = nullptr;
     WebGLTexture* m_attachedStencilTexture = nullptr;
+    GLenum m_attachedStencilTextarget = 0;
+    GLint m_attachedStencilLevel = 0;
+    GLint m_attachedStencilLayer = 0;
+    bool m_attachedStencilIsLayer = false;
     WebGLRenderbuffer* m_attachedStencilRenderbuffer = nullptr;
 };
 } // namespace Starfish
