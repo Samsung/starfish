@@ -7431,7 +7431,7 @@ test/cairo/reftest/web_platform_test/css/dist/css21_dev/html4/min-width-applies-
 test/cairo/reftest/web_platform_test/css/dist/css21_dev/html4/min-width-percentage-001.htm
 test/cairo/reftest/web_platform_test/css/dist/css21_dev/html4/min-width-percentage-002.htm
 test/cairo/reftest/web_platform_test/css/dist/css21_dev/html4/min-width-percentage-003.htm
-# test/cairo/reftest/web_platform_test/css/dist/css21_dev/html4/min-width-tables-001.htm # stale expected PNG captured mid-test; @media not re-applied on viewport resize (Window::resize)
+test/cairo/reftest/web_platform_test/css/dist/css21_dev/html4/min-width-tables-001.htm
 #test/cairo/reftest/web_platform_test/css/dist/css21_dev/html4/missing-cell-rendering-001.htm
 #test/cairo/reftest/web_platform_test/css/dist/css21_dev/html4/moz-css21-block-page-break-inside-avoid-10.htm
 #test/cairo/reftest/web_platform_test/css/dist/css21_dev/html4/moz-css21-block-page-break-inside-avoid-11.htm
