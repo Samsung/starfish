@@ -23,6 +23,13 @@
 #include "core/dom/DOMException.h"
 #include "core/modules/crypto/Crypto.h"
 
+#include <cstdio>
+#include <cstdint>
+
+#if defined(STARFISH_ENABLE_WEBCRYPTO)
+#include "platform/crypto/PlatformCrypto.h"
+#endif
+
 namespace Starfish {
 Crypto::Crypto(ExecutionContext* executionContext)
     : ScriptWrappable(this)
@@ -96,6 +103,16 @@ bool Crypto::isIntTypeArray(ScriptArrayBufferView array)
 
 void Crypto::makeRandomByte(uint8_t* buffer, unsigned byteSize)
 {
+#if defined(STARFISH_ENABLE_WEBCRYPTO)
+    // getRandomValues must use a cryptographically strong generator.
+    if (PlatformCrypto::randomBytes(buffer, byteSize)) {
+        return;
+    }
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+#endif
+    // FIXME: mt19937 is not a cryptographically strong generator, so this
+    // does not meet the getRandomValues spec. Builds with WEBCRYPTO=1 use
+    // OpenSSL above.
     std::uniform_int_distribution<uint32_t> distribution(0, 0xFFFFFFFFu);
     int offset = 0;
     uint32_t bits = 0;
@@ -110,4 +127,80 @@ void Crypto::makeRandomByte(uint8_t* buffer, unsigned byteSize)
         }
     }
 }
+
+#if defined(STARFISH_ENABLE_WEBCRYPTO)
+// https://w3c.github.io/webcrypto/#Crypto-method-randomUUID
+String* Crypto::randomUUID()
+{
+    uint8_t bytes[16];
+    makeRandomByte(bytes, sizeof(bytes));
+    // RFC 9562 version 4: set the version and the variant bits.
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    char uuid[37];
+    snprintf(uuid, sizeof(uuid),
+             "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-"
+             "%02x%02x%02x%02x%02x%02x",
+             bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5],
+             bytes[6], bytes[7], bytes[8], bytes[9], bytes[10], bytes[11],
+             bytes[12], bytes[13], bytes[14], bytes[15]);
+    return String::fromUTF8(uuid, 36);
+}
+
+// FIXME: WebIDL defines QuotaExceededError as an interface that extends
+// DOMException and has `quota` and `requested`. Starfish does not have it,
+// so this makes getRandomValues() pass the WPT check with two shims:
+// - a global QuotaExceededError that is the DOMException constructor;
+// - a JS wrapper of getRandomValues() that sets both members to null.
+// Remove both when Starfish implements the QuotaExceededError interface.
+void Crypto::postInit(ScriptBindingInstance* instance)
+{
+    Escargot::Evaluator::execute(
+        instance->scriptContext(),
+        [](Escargot::ExecutionStateRef* state, Crypto* self,
+           ScriptBindingInstance* bindingInstance) -> Escargot::ValueRef* {
+            Escargot::ObjectRef* globalObject =
+                state->context()->globalObject();
+            globalObject->defineDataProperty(
+                state,
+                Escargot::StringRef::createFromASCII("QuotaExceededError"),
+                bindingInstance->fnDOMException(), false /* writable */,
+                false /* enumerable */, true /* configurable */);
+
+            auto* source =
+                Escargot::StringRef::createFromASCII(R"((function(original) {
+  return function getRandomValues(array) {
+    try {
+      return original.call(this, array);
+    } catch (e) {
+      if (e && e.name === 'QuotaExceededError') {
+        e.requested = null;
+        e.quota = null;
+      }
+      throw e;
+    }
+  };
+}))");
+            auto parsed = state->context()->scriptParser()->initializeScript(
+                source,
+                Escargot::StringRef::createFromASCII("getRandomValuesWrapper"));
+            if (!parsed.isSuccessful()) {
+                return Escargot::ValueRef::createUndefined();
+            }
+            Escargot::ValueRef* factory = parsed.script.value()->execute(state);
+            Escargot::ObjectRef* target = self->scriptObject();
+            auto* name =
+                Escargot::StringRef::createFromASCII("getRandomValues");
+            Escargot::ValueRef* original = target->get(state, name);
+            Escargot::ValueRef* wrapper =
+                factory->call(state, globalObject, 1, &original);
+            target->defineDataProperty(
+                state, name, wrapper, true /* writable */,
+                false /* enumerable */, true /* configurable */);
+            return Escargot::ValueRef::createUndefined();
+        },
+        this, instance);
+}
+#endif
+
 } // namespace Starfish
