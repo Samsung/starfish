@@ -45,6 +45,10 @@ public:
     static unsigned animationFrameInterval();
 
 private:
+    // The GMainContext of the message loop of m_webBase. Read it on each
+    // use: a worker creates its timer before its message loop is ready.
+    void* glibContext();
+
     static unsigned s_animationFrameInterval;
 };
 

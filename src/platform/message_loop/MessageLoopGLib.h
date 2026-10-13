@@ -65,9 +65,17 @@ public:
         GlobalScope* globalScope, void (*fn)(size_t handle, void*, void*),
         void* data, void* data1) override;
 
+    // The GMainContext that runs the sources of this loop. A worker loop
+    // uses the context of its own RunLoopGLib. Other loops use
+    // glibMainContext(). Read it on each use: the main loop can be created
+    // before MessageLoop::init() sets up glibMainContext().
+    void* glibContext();
+
 private:
     MessageLoopGLib();
     MessageLoopGLib(RunLoopGLib* loop);
+
+    RunLoopGLib* m_runLoop;
 };
 
 } // namespace Starfish
