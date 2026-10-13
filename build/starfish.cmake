@@ -14,6 +14,8 @@ ENDIF()
 
 FILE (GLOB_RECURSE STARFISH_SHELL_SRC ${STARFISH_ROOT}/src/shell/*.cpp)
 FILE (GLOB_RECURSE STARFISH_CLI_SRC ${STARFISH_ROOT}/src/launcher/cli/*.cpp)
+# Built as its own target in build/crypto.cmake.
+FILE (GLOB_RECURSE STARFISH_CRYPTO_SRC ${STARFISH_ROOT}/src/platform/crypto/*.cpp)
 
 LIST (REMOVE_ITEM STARFISH_SRC
     ${STARFISH_ROOT}/src/public/LWEWebView.cpp
@@ -23,6 +25,7 @@ LIST (REMOVE_ITEM STARFISH_SRC
     ${STARFISH_ROOT}/src/public/LWEWorkerDelegateLoader.cpp
     ${STARFISH_ROOT}/src/launcher/CLI.cpp
     ${STARFISH_CLI_SRC}
+    ${STARFISH_CRYPTO_SRC}
     ${STARFISH_SHELL_SRC}
 )
 

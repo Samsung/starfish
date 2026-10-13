@@ -342,9 +342,13 @@ FILE (GLOB_RECURSE STARFISH_SRC ${STARFISH_ROOT}/src/*.cpp)
 
 FILE (GLOB_RECURSE STARFISH_SHELL_SRC ${STARFISH_ROOT}/src/shell/*.cpp)
 FILE (GLOB_RECURSE STARFISH_CLI_SRC ${STARFISH_ROOT}/src/launcher/cli/*.cpp)
+# The OpenSSL layer of WebCrypto. Only build/crypto.cmake builds it, and
+# this build does not support WEBCRYPTO.
+FILE (GLOB_RECURSE STARFISH_CRYPTO_SRC ${STARFISH_ROOT}/src/platform/crypto/*.cpp)
 LIST (REMOVE_ITEM STARFISH_SRC
     ${STARFISH_ROOT}/src/launcher/CLI.cpp
     ${STARFISH_CLI_SRC}
+    ${STARFISH_CRYPTO_SRC}
     ${STARFISH_SHELL_SRC}
 )
 
