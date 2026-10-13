@@ -1595,7 +1595,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/mipma
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-3d-size-limit.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-image-and-sub-image-with-array-buffer-view-sub-source.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-image-with-bad-args.html
-http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-image-with-bad-args-from-dom-elements.html
+# http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-image-with-bad-args-from-dom-elements.html # @ignore Times out on the FFmpeg player: the h264 clip fails to play and the test never advances (#5393).
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-image-with-different-data-source.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-input-validation.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-mipmap-levels.html
