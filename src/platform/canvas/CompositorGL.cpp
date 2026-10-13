@@ -304,6 +304,35 @@ static bool g_shouldUseEGLImageOnPlainSurface = true;
 static bool g_needsRGBShuffle = true;
 static bool g_isSupported_EGL_NATIVE_SURFACE_TIZEN = false;
 
+#if defined(STARFISH_TIZEN)
+// Same image creation as CanvasSurfaceGL's external video buffer path, for
+// callers outside the compositor (WebGL video uploads).
+void* createVideoFrameImage(GL* gl, void* tbmSurface)
+{
+    if (!gl->isGeneric()) {
+        int eglImgAttr[] = { EVAS_GL_IMAGE_PRESERVED, GL_TRUE, 0 };
+        return gl->xglCreateImage(EVAS_GL_NATIVE_SURFACE_TIZEN, tbmSurface,
+                                  eglImgAttr);
+    }
+#if defined(STARFISH_SHELL_EFL) && defined(STARFISH_GLIB_CAIRO_GL)
+    EGLint attribs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+    return gl->xglCreateImage(EGL_NATIVE_SURFACE_TIZEN, tbmSurface, attribs);
+#else
+    if (g_isSupported_EGL_NATIVE_SURFACE_TIZEN) {
+        EGLint attribs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+        return gl->xglCreateImage(EGL_NATIVE_SURFACE_TIZEN, tbmSurface,
+                                  attribs);
+    }
+    EGLint attribs[EGL_ATTRIBUTE_MAX];
+    if (!prepareEglAttributeList(attribs, EGL_ATTRIBUTE_MAX,
+                                 static_cast<tbm_surface_h>(tbmSurface))) {
+        return nullptr;
+    }
+    return gl->xglCreateImage(EGL_LINUX_DMA_BUF_EXT, nullptr, attribs);
+#endif
+}
+#endif
+
 // Generic canvas textures use immutable storage (glTexStorage2D) instead of
 // glTexImage2D, so the driver never has to re-validate/reallocate storage on
 // later updates. Always allocates as plain GL_RGBA8 (core ES3, no BGRA

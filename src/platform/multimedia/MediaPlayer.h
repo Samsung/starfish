@@ -52,6 +52,7 @@ namespace Starfish {
 class Canvas;
 class CanvasSurface;
 class Compositor;
+class GL;
 class MediaSource;
 class Mutex;
 class URL;
@@ -159,6 +160,20 @@ public:
     }
 
     CanvasSurface* contentSurface();
+
+    // Binds the decoded frame on screen to `texture` of gl's current context,
+    // for WebGL uploads: as GL_TEXTURE_EXTERNAL_OES over the decoder's buffer
+    // (Tizen; `image` must then be released with gl->xglDestroyImage()) or as
+    // an RGBA GL_TEXTURE_2D copy (FFmpeg). `width`/`height` come in as the
+    // size of the texture's current 2D storage (0 if none) and go out as the
+    // frame size. Returns the target bound, or 0 when no frame is available,
+    // e.g. while the video is on the HW overlay plane.
+    virtual unsigned bindCurrentVideoFrame(GL* gl, unsigned texture,
+                                           size_t& width, size_t& height,
+                                           void*& image)
+    {
+        return 0;
+    }
 
     virtual unsigned long videoWidth()
     {

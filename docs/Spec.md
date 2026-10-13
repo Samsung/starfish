@@ -2448,6 +2448,8 @@ Apps relying on the right-hand list get **no protection** — the directive is p
 | Value types | `WebGLActiveInfo`, `WebGLShaderPrecisionFormat`, `WebGLUniformLocation`, `WebGLContextAttributes`. |
 | **Not exposed** | `WebGLContextEvent` typed event (use a generic `Event` listener for `webglcontextlost`/`webglcontextrestored`). |
 
+**Video texture sources** (multimedia builds): `texImage2D(target, level, internalformat, format, type, video)` and `texSubImage2D(target, level, xoffset, yoffset, format, type, video)` take an `HTMLVideoElement` and copy its current frame on the GPU (zero-copy from the decoder's buffer on Tizen; an uploaded RGBA frame with the FFmpeg player). Only `RGB`/`RGBA` with `UNSIGNED_BYTE` are supported (other combinations fail with `INVALID_OPERATION`), and `UNPACK_FLIP_Y_WEBGL` is honored. Network media is never origin-clean — the platform players fetch it without CORS and follow redirects without reporting the final URL — so only `data:` and `blob:` (e.g. MSE) videos are uploaded and any other source throws `SecurityError`, unless the embedder sets `WebSecurityMode::Disable` (`--disable-web-security` in the shells). Nothing is uploaded while the video has no frame, or while it is shown on the HW overlay plane (`videoOverlayEnabled`). The WebGL 2 overloads with explicit width/height and the 3D uploads do not take video sources yet (nothing is uploaded).
+
 #### WebGL 2.0 Implementation Status
 
 **Implemented core features:**

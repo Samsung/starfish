@@ -134,6 +134,7 @@ void WebGLRenderingContextBaseMixIn::finalize()
 {
     if (m_context.isValid()) {
         m_context.setCurrent();
+        releaseInternalGLObjects();
         m_framebufferTexture.reset();
         m_context.destroy();
     }

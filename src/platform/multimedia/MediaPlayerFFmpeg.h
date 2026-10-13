@@ -362,6 +362,11 @@ public:
     virtual void didDrawVideo(Compositor* canvas, const LayoutRect& videoRect,
                               const LayoutRect& absVideoRect);
     virtual void willDrawVideo(Compositor* canvas, const LayoutRect& videoRect);
+#if !defined(STARFISH_HEADLESS)
+    virtual unsigned bindCurrentVideoFrame(GL* gl, unsigned texture,
+                                           size_t& width, size_t& height,
+                                           void*& image) override;
+#endif
     virtual void prepareMediaSource();
 
     void updateStreamInfo(MediaPlayerSourceStream* stream, size_t pastInitIndex,

@@ -154,6 +154,11 @@ public:
                               const LayoutRect& absVideoRect) override;
     virtual void hideVideoOverlay() override;
     virtual void prepare(ResourceURL* url) override;
+#if !defined(STARFISH_HEADLESS)
+    virtual unsigned bindCurrentVideoFrame(GL* gl, unsigned texture,
+                                           size_t& width, size_t& height,
+                                           void*& image) override;
+#endif
     virtual void prepareMediaSource() override;
 
     void fillBufferIfNeeded(StreamType type);
