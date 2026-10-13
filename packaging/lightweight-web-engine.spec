@@ -95,19 +95,14 @@ Requires(postun): /sbin/ldconfig
 %endif
 %endif
 
-# Tizen 5.0/5.5's legacy gold lacks ARM GNU2 TLS descriptor relocations.
-%if (0%{?tizen_version_major} == 5) && ((0%{?tizen_version_minor} == 0) || (0%{?tizen_version_minor} == 5))
+# Off: Tizen 5.0/5.5's legacy gold lacks ARM GNU2 TLS descriptor relocations,
+# and newer ARM links leave the 0x80000000 placeholder as the addend of some
+# symbol-less descriptors, so ld.so resolves them to unmapped addresses.
 %define force_tls_dialect_gnu2 0
-%else
-%define force_tls_dialect_gnu2 1
-%endif
 
-# Untested below Tizen 9 -- off there, on (default) everywhere else.
-%if 0%{?tizen_version_major} <= 8
+# Off: the engine library is dlopen'ed, so its TLS is allocated per thread and
+# the fixed tp offset this mode assumes differs on worker threads (GC_init aborts).
 %define enable_tls_access_by_address 0
-%else
-%define enable_tls_access_by_address 1
-%endif
 
 %if 0%{?enable_codecache:1}
 %else
