@@ -481,10 +481,6 @@ cmake -Bout/ffmpeg -DCMAKE_BUILD_TYPE=Release -DBACKEND=glib_cairo_gl -DSHELL=x1
   -DTARGETNAME=Starfish -DUSE_FFMPEG_MEDIA_PLAYER=1 -G Ninja
 ninja -C out/ffmpeg starfish.executable
 
-# Compressed-audio decodeAudioData WPT (manual).
-STARFISH_BIN="$PWD/out/ffmpeg/bin/Starfish" xvfb-run -s '-screen 0 1920x1080x24' -a \
-  ./tool/runner/test_runner.py wpt_serve_testharness_webaudio_ffmpeg
-
 # On Linux, AudioContext uses libpulse-simple.so.0 at runtime when available;
 # otherwise it renders silently. No PulseAudio development package is needed.
 # Each real-time AudioContext or playing <audio> element opens its own

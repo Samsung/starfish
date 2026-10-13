@@ -235,10 +235,8 @@ xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py wpt_serve_c
 `wpt serve` session, with `wpt_serve_testharness_webaudio`'s settings (2 jobs,
 60 s per test) instead of the default 8 jobs / 20 s, because offline audio
 renders are memory- and CPU-heavy in Debug builds; the run fails if either
-group regresses. `ffmpeg_webaudio_decode.res` is excluded: it needs a
-`USE_FFMPEG_MEDIA_PLAYER=1` binary and is run manually with
-`STARFISH_BIN=<that binary> ... test_runner.py wpt_serve_testharness_webaudio_ffmpeg`
-(`STARFISH_BIN` overrides `./Starfish` for every `wpt_runner.py`-based run).
+group regresses. `STARFISH_BIN=<binary>` overrides `./Starfish` for every
+`wpt_runner.py`-based run.
 
 `wpt_serve_reftest`/`wpt_serve_crashtest` run lists generated straight from
 MANIFEST.json (see below) rather than carried forward from a legacy corpus,
