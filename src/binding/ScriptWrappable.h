@@ -426,14 +426,13 @@ STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_FORWARD_DECLARATION)
         window =                                                             \
             (Window*)state->resolveCallerLexicalGlobalObject()->extraData(); \
     } else {                                                                 \
-        ObjectRef* mayBeWindowObject = nullptr;                              \
-        if (!((ScriptWrappable*)(mayBeWindowObject =                         \
-                                     thisValue->toObject(state))             \
-                  ->extraData())                                             \
-                 ->isWindow()) {                                             \
+        /* A plain object has no extra data. Check it before the call. */    \
+        void* mayBeWindow = thisValue->toObject(state)->extraData();         \
+        if (!mayBeWindow ||                                                  \
+            !static_cast<ScriptWrappable*>(mayBeWindow)->isWindow()) {       \
             THROW_EXCEPTION(ILLEGAL_INVOKE);                                 \
         }                                                                    \
-        window = (Window*)mayBeWindowObject->extraData();                    \
+        window = static_cast<Window*>(mayBeWindow);                          \
     }
 
 #define GENERATE_WORKER_GLOBALSCOPE(Type)                                    \
