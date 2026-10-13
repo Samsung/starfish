@@ -23,6 +23,8 @@
 
 #include "core/dom/canvas/webgl/gl/GLContext.h"
 #include "core/modules/renderer/Renderer.h"
+#include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Compositor.h"
 
 namespace Starfish {
 
@@ -62,7 +64,16 @@ bool GLContext::setCurrent()
         // the Renderer logic.
         return true;
     }
-    return m_renderer->makeCurrentWithContext(m_context);
+    if (!m_renderer->makeCurrentWithContext(m_context)) {
+        return false;
+    }
+    // The last frame's compositing may still be sampling this context's
+    // drawing buffer, which is about to be cleared or drawn into.
+    if (CompositorContext* compositorContext =
+            m_renderer->compositorContext()) {
+        compositorContext->waitForLastFrameOnGPU();
+    }
+    return true;
 }
 
 bool GLContext::destroy()
