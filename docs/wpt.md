@@ -33,7 +33,7 @@ MVP limits (tracked as follow-ups, not blocking): fuzzy tolerance is not
 applied (exact-pixel only, so `<meta name=fuzzy>` tests may false-FAIL)
 and reference chains (a reference that is itself a reftest) are not resolved
 recursively. The `--screen-shot` capture waits for the root element to drop
-`reftest-wait`, so a page that never clears it times out.
+`reftest-wait` (or `test-wait`), so a page that never clears it times out.
 `tool/wpt/scripts/wpt_reftest.py` judges reftest by parsing the pixel-difference
 percentage `tool/imgdiff/imgdiff` prints, not its own pass/fail verdict (which
 folds in a golden-image antialiasing tolerance inappropriate for reftest). Two
@@ -93,17 +93,14 @@ engine problems:
 - **Completion signal never fires though injection succeeded.** For a page
   carrying a wait class, the pass signal is the test's own script clearing it;
   our `inject_report.js` waits for `load` and observes the `class` attribute
-  (both `test-wait` and `reftest-wait` are recognized). Tests that only signal
-  via the `TestRendered` custom event complete only when the root carries
-  `reftest-wait`: wptrunner's own helper
-  `third_party/wpt/tools/wptrunner/wptrunner/executors/test-wait.js`
-  dispatches it for either class (after `load` → `document.fonts.ready` → a
-  double-rAF settle), but Starfish's test-mode hook fires it for `reftest-wait`
-  only, so a `test-wait` crashtest that only listens for `TestRendered` (e.g.
-  `css/css-anchor-position/long-anchor-chain-crash.html`) waits forever — as
-  does any test whose async work (a `Worker`, `requestIdleCallback`, …) never
-  settles in Starfish. In these the *engine* typically didn't crash; they are
-  harness-coverage gaps, not engine bugs.
+  (both `test-wait` and `reftest-wait` are recognized). Tests that only start
+  on the `TestRendered` custom event get it from Starfish's test-mode hook
+  (`src/platform/loader/ResourceLoader.cpp`), which fires it at the root 250 ms
+  after `load` when either class is still set, like wptrunner's
+  `third_party/wpt/tools/wptrunner/wptrunner/executors/test-wait.js`. A test
+  whose async work (a `Worker`, `requestIdleCallback`, …) never settles in
+  Starfish still waits forever. In these the *engine* typically didn't crash;
+  they are harness-coverage gaps, not engine bugs.
 - **Genuinely pathological pages that really are slow/hung.** Some TIMEOUTs
   are legitimate — e.g.
   `editing/crashtests/…-collapsible-spaces.html` inserts `" ".repeat(3.3e8)`

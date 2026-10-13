@@ -49,17 +49,20 @@
 namespace Starfish {
 
 #ifdef STARFISH_ENABLE_TEST
-// A reftest keeps class="reftest-wait" on its root element until its
-// asynchronous work has settled, and only the page rendered after the class is
-// gone is the one to capture
-// (https://web-platform-tests.org/writing-tests/reftests.html). A page that
-// never clears it runs into the test driver's timeout, which is the verdict.
-static const unsigned ReftestWaitPollIntervalInMS = 50;
+// A wait page keeps a wait class on its root element until its asynchronous
+// work has settled: `reftest-wait` for reftests, `test-wait` for crashtests
+// (https://web-platform-tests.org/writing-tests/reftests.html,
+// https://web-platform-tests.org/writing-tests/crashtest.html). Only the page
+// rendered after the class is gone is the one to capture or finish. A page
+// that never clears it runs into the test driver's timeout, which is the
+// verdict.
+static const unsigned TestWaitPollIntervalInMS = 50;
 
-static bool hasReftestWait(Window* window)
+static bool hasTestWait(Window* window)
 {
     Element* root = window->document()->documentElement();
-    return root && root->hasClassName(String::fromUTF8("reftest-wait"));
+    return root && (root->hasClassName(String::fromUTF8("reftest-wait")) ||
+                    root->hasClassName(String::fromUTF8("test-wait")));
 }
 
 static void startTest(Window* window)
@@ -69,12 +72,11 @@ static void startTest(Window* window)
     window->testStart();
 }
 
-static void pollReftestWait(void* data)
+static void pollTestWait(void* data)
 {
     Window* window = static_cast<Window*>(data);
-    if (hasReftestWait(window)) {
-        window->setTimeout(pollReftestWait, ReftestWaitPollIntervalInMS,
-                           window);
+    if (hasTestWait(window)) {
+        window->setTimeout(pollTestWait, TestWaitPollIntervalInMS, window);
         return;
     }
     startTest(window);
@@ -83,7 +85,7 @@ static void pollReftestWait(void* data)
 static void startTestAfterLoad(void* data)
 {
     Window* window = static_cast<Window*>(data);
-    if (!hasReftestWait(window)) {
+    if (!hasTestWait(window)) {
         startTest(window);
         return;
     }
@@ -95,7 +97,7 @@ static void startTestAfterLoad(void* data)
     root->dispatchEventByUA(new Event(window->document()->executionContext(),
                                       String::fromUTF8("TestRendered"),
                                       EventInit(true, false)));
-    pollReftestWait(window);
+    pollTestWait(window);
 }
 #endif
 
