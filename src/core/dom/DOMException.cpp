@@ -41,7 +41,7 @@ static const char* s_names[] = {
     "NamespaceError",
     "InvalidAccessError",
     "",
-    "",
+    "TypeMismatchError",
     "SecurityError",
     "NetworkError",
     "AbortError",
@@ -148,6 +148,16 @@ DOMException::DOMException(ExecutionContext* executionContext, String* message,
     , m_message(message)
     , m_name(name)
 {
+    // WebIDL: code is the legacy code of the name in the error names
+    // table, or 0 for other names. Index 0 ("DOMException") is not in the
+    // table, and empty slots are codes without a name.
+    for (size_t i = 1; i < s_domExceptionNameCount; i++) {
+        size_t length = strlen(s_names[i]);
+        if (length > 0 && name->equals(s_names[i], length)) {
+            m_code = static_cast<uint16_t>(i);
+            break;
+        }
+    }
 }
 
 String* DOMException::name()
