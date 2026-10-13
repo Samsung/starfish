@@ -27,6 +27,7 @@
 #include <cstdint>
 
 #if defined(STARFISH_ENABLE_WEBCRYPTO)
+#include "core/modules/crypto/SubtleCrypto.h"
 #include "platform/crypto/PlatformCrypto.h"
 #endif
 
@@ -129,6 +130,14 @@ void Crypto::makeRandomByte(uint8_t* buffer, unsigned byteSize)
 }
 
 #if defined(STARFISH_ENABLE_WEBCRYPTO)
+SubtleCrypto* Crypto::subtle()
+{
+    if (!m_subtle) {
+        m_subtle = SubtleCrypto::create(m_executionContext);
+    }
+    return m_subtle;
+}
+
 // https://w3c.github.io/webcrypto/#Crypto-method-randomUUID
 String* Crypto::randomUUID()
 {

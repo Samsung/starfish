@@ -56,6 +56,7 @@ The compile-time flags that gate large chunks of this spec. "Default" is for the
 | CSS legacy `-webkit-*` aliases | `STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX`, `…_BOX_PREFIX`, `…_LINE_PREFIX`, `…_TRANSFORM_PREFIX`, `…_TRANSITION_PREFIX` | on (every `CMAKE_SYSTEM_PROCESSOR`, all five) | Aliases not parsed; use unprefixed forms. |
 | [Obsolete](#obsolete) / [Obsolete CSS](#obsolete-css) | `STARFISH_ENABLE_OBSOLETE_SPEC` | on (every `CMAKE_SYSTEM_PROCESSOR`) | `Document.width`/`height`, `Window.event` and the obsolete CSS properties are absent. |
 | WebAssembly (`WebAssembly` global) | `ENABLE_WASM=1` | off | `WebAssembly` undefined. |
+| WebCrypto (`crypto.subtle`, `CryptoKey`) | `WEBCRYPTO=1` (→ `STARFISH_ENABLE_WEBCRYPTO`) | off | `crypto.subtle`, `crypto.randomUUID()`, `SubtleCrypto` and `CryptoKey` are `undefined`. |
 | `Intl`, locale-sensitive formatting | `RUNTIME_ICU=1` (→ `STARFISH_ENABLE_RUNTIME_ICU_BINDER`) | on | ICU is linked directly (`icu-uc`/`icu-i18n` become build dependencies) instead of being bound at runtime. The JS-visible `Intl` surface is the same either way. |
 | Web Device API (`window.tizen`) | `CMAKE_SYSTEM_NAME=Tizen` + `TIZEN_DEVICE_API` | off (linux/windows/android) | `window.tizen` undefined. |
 | MSE playback backend | `ENABLE_ESPLUSPLAYER=1` | off; auto-enabled on `CMAKE_SYSTEM_NAME=Tizen` with `TIZEN_MAJOR_VERSION >= 10`. Requires `CMAKE_SYSTEM_NAME=Tizen` | Media Source playback uses the platform-default media path. |
@@ -2490,12 +2491,22 @@ Version-specific: `OES_element_index_uint` and `ANGLE_instanced_arrays` are expo
 
 ### Crypto
 
+WebCrypto needs `WEBCRYPTO=1`. Without it, only `crypto.getRandomValues()` is available.
+
 | Member | Status |
 |--------|--------|
-| `crypto.getRandomValues(typedArray)` | Implemented. |
-| `crypto.randomUUID()` | **`[Unimplemented]`** — `undefined`. |
-| `crypto.subtle` | **`[Unimplemented]`** — `undefined`. **The entire WebCrypto algorithm surface is missing**: `encrypt`, `decrypt`, `sign`, `verify`, `digest`, `generateKey`, `deriveKey`, `deriveBits`, `importKey`, `exportKey`, `wrapKey`, `unwrapKey` are all unavailable. |
-| **Not exposed** | `SubtleCrypto`, `CryptoKey`, `CryptoKeyPair` constructors. Apps needing SHA-256, AES, HMAC, ECDSA, etc. must ship a JS polyfill. |
+| `crypto.getRandomValues(typedArray)` | Implemented. Uses the OpenSSL random generator. |
+| `crypto.randomUUID()` | Implemented. Returns a version 4 UUID. |
+| `crypto.subtle` | Implemented. Every method returns a Promise. |
+| `SubtleCrypto` | Exposed in Window and workers. Not constructible. Use `crypto.subtle`. |
+| `CryptoKey` | Exposed in Window and workers. Not constructible. `type`, `extractable`, `algorithm` and `usages` are implemented. A key pair is a plain `{ publicKey, privateKey }` object. |
+
+`crypto.subtle` supports every algorithm and operation of [Web Cryptography Level 2 (W3C Working Draft, 22 April 2025)](https://www.w3.org/TR/2025/WD-webcrypto-2-20250422/). Differences from the specification:
+
+- A `CryptoKey` cannot be serialized. `structuredClone()` and `postMessage()` do not accept it.
+- `[SecureContext]` is not enforced. WebCrypto is also exposed in non-secure contexts such as `http://` pages.
+
+Algorithms from drafts outside Level 2 are not supported. Examples are ML-KEM, ML-DSA, SHA-3, ChaCha20-Poly1305, Ed448 and X448.
 
 ### Forms — runtime caveats
 

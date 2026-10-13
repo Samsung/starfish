@@ -16,7 +16,7 @@ partial interface WorkerGlobalScope {
    Exposed=(Window,Worker)]
 interface Crypto {
   // NOTE The binding generator does not enforce [SecureContext] yet.
-  [Unimplemented,SecureContext] readonly attribute SubtleCrypto subtle;
+  [STARFISH_ENABLE_WEBCRYPTO, SecureContext] readonly attribute SubtleCrypto subtle;
   [RaisesException] ArrayBufferView getRandomValues(ArrayBufferView array);
   [STARFISH_ENABLE_WEBCRYPTO, SecureContext] DOMString randomUUID();
 };
