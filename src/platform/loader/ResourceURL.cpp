@@ -518,13 +518,18 @@ void ResourceURL::resolvePositions()
 
     m_usernameEnd = m_passwordEnd = m_usernameStart;
 
-    // host
+    // host: the authority ends at the first "/", "?" or "#", so a "/" inside
+    // the query or fragment does not start the path.
     pos = m_urlString->find("/", 1, m_usernameStart);
-    if (pos != SIZE_MAX) {
+    size_t queryOrFragmentStart =
+        std::min(m_urlString->find("?", 1, m_usernameStart),
+                 m_urlString->find("#", 1, m_usernameStart));
+    if (pos != SIZE_MAX && pos < queryOrFragmentStart) {
         m_hostEnd = m_portEnd = pos;
 
         size_t pos2 = m_urlString->find("?", 1, pos);
-        if (pos2 != SIZE_MAX) {
+        // A "?" inside the fragment does not start a query.
+        if (pos2 != SIZE_MAX && pos2 < m_urlString->find("#", 1, pos)) {
             m_pathEnd = pos2;
             size_t pos3 = m_urlString->find("#", 1, pos);
             if (pos3 != SIZE_MAX) {
@@ -547,7 +552,8 @@ void ResourceURL::resolvePositions()
         }
     } else {
         size_t pos2 = m_urlString->find("?");
-        if (pos2 != SIZE_MAX) {
+        // A "?" inside the fragment does not start a query.
+        if (pos2 != SIZE_MAX && pos2 < m_urlString->find("#")) {
             m_hostEnd = m_portEnd = m_pathEnd = pos2;
             size_t pos3 = m_urlString->find("#", 1, pos2);
             if (pos3 != SIZE_MAX) {
@@ -764,7 +770,14 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
         String* origPath = pathname();
         String* newPath = removingDots(origPath);
         if (newPath != origPath) {
-            setPathname(newPath, false);
+            // setPathname() returns a new ResourceURL, so rewrite this one in
+            // place; otherwise trailing "." / ".." segments survive parsing.
+            StringBuilder sb;
+            sb.appendSubString(m_urlString, 0, m_portEnd);
+            sb.appendString(newPath);
+            sb.appendSubString(m_urlString, m_pathEnd, m_urlString->length());
+            m_urlString = sb.finalize();
+            resolvePositions();
         }
     }
 
