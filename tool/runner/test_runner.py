@@ -430,11 +430,6 @@ def wpt_serve_testharness_webaudio():
     _wpt_serve_run_groups([_WPT_WEBAUDIO_GROUP])
 
 
-def wpt_serve_testharness_webaudio_ffmpeg():
-    # Optional: run with a Starfish binary built with USE_FFMPEG_MEDIA_PLAYER=1.
-    _wpt_serve_run("ffmpeg_webaudio_decode.res", jobs=2, timeout=60)
-
-
 def wpt_serve_testharness_intersection_observer():
     _wpt_serve_run("intersection-observer.res")
 
@@ -462,12 +457,10 @@ def wpt_serve_testharness():
     # peers, which this aggregate's CI job (x64_test.yml) does not build. They
     # are gated separately by the daemon-equipped wpt_serve_testharness_worker/
     # _serviceworker suites, so exclude them here and skip daemon startup.
-    # Compressed decoding requires an opt-in Linux ffmpeg build.
     # Web Audio lists run in the same `wpt serve` session, but with the
     # dedicated wpt_serve_testharness_webaudio concurrency and timeout.
     _wpt_serve_run_groups([
-        ((), ("worker.res", "serviceworker.res", "ffmpeg_webaudio_decode.res",
-              "webaudio_*.res"), 8, 20),
+        ((), ("worker.res", "serviceworker.res", "webaudio_*.res"), 8, 20),
         _WPT_WEBAUDIO_GROUP,
     ])
 
