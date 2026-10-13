@@ -316,6 +316,8 @@ public:
     static ReferrerPolicy policyFromString(String* policy);
 
 private:
+    String* originForReferrer();
+
     ReferrerPolicy m_policy;
 };
 

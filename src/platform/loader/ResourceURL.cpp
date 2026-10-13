@@ -1363,6 +1363,15 @@ void* ReferrerURL::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+String* ReferrerURL::originForReferrer()
+{
+    String* o = origin();
+    if (o->equals("null")) {
+        return String::emptyString;
+    }
+    return o->concat("/");
+}
+
 String* ReferrerURL::referrerString(ResourceURL* url)
 {
     STARFISH_ASSERT(url != nullptr);
@@ -1379,12 +1388,12 @@ String* ReferrerURL::referrerString(ResourceURL* url)
         }
         return urlString();
     case ReferrerPolicy::Origin:
-        return origin();
+        return originForReferrer();
     case ReferrerPolicy::OriginWhenCrossOrigin:
         if (origin()->equalsIgnoreCase(url->origin())) {
             return urlString();
         }
-        return origin();
+        return originForReferrer();
     case ReferrerPolicy::SameOrigin:
         if (origin()->equalsIgnoreCase(url->origin())) {
             return urlString();
@@ -1393,12 +1402,12 @@ String* ReferrerURL::referrerString(ResourceURL* url)
     case ReferrerPolicy::StrictOrigin:
         if (protocolKind() == HTTPS_PROTOCOL) {
             if (url->protocolKind() == HTTPS_PROTOCOL) {
-                return origin();
+                return originForReferrer();
             } else {
                 return String::emptyString;
             }
         }
-        return origin();
+        return originForReferrer();
     case ReferrerPolicy::StrictOriginWhenCrossOrigin:
         if (origin()->equalsIgnoreCase(url->origin())) {
             return urlString();
@@ -1406,7 +1415,7 @@ String* ReferrerURL::referrerString(ResourceURL* url)
                    url->protocolKind() == HTTP_PROTOCOL) {
             return String::emptyString;
         }
-        return origin();
+        return originForReferrer();
     case ReferrerPolicy::UnsafeUrl:
         return urlString();
     default:
