@@ -1,0 +1,111 @@
+// https://w3c.github.io/webcrypto/#subtlecrypto-interface
+//
+// The interface in the specification:
+//
+// [SecureContext,Exposed=(Window,Worker)]
+// interface SubtleCrypto {
+//   Promise<ArrayBuffer> encrypt(
+//     AlgorithmIdentifier algorithm,
+//     CryptoKey key,
+//     BufferSource data
+//   );
+//   Promise<ArrayBuffer> decrypt(
+//     AlgorithmIdentifier algorithm,
+//     CryptoKey key,
+//     BufferSource data
+//   );
+//   Promise<ArrayBuffer> sign(
+//     AlgorithmIdentifier algorithm,
+//     CryptoKey key,
+//     BufferSource data
+//   );
+//   Promise<boolean> verify(
+//     AlgorithmIdentifier algorithm,
+//     CryptoKey key,
+//     BufferSource signature,
+//     BufferSource data
+//   );
+//   Promise<ArrayBuffer> digest(
+//     AlgorithmIdentifier algorithm,
+//     BufferSource data
+//   );
+//
+//   Promise<(CryptoKey or CryptoKeyPair)> generateKey(
+//     AlgorithmIdentifier algorithm,
+//     boolean extractable,
+//     sequence<KeyUsage> keyUsages
+//   );
+//   Promise<CryptoKey> deriveKey(
+//     AlgorithmIdentifier algorithm,
+//     CryptoKey baseKey,
+//     AlgorithmIdentifier derivedKeyType,
+//     boolean extractable,
+//     sequence<KeyUsage> keyUsages
+//   );
+//   Promise<ArrayBuffer> deriveBits(
+//     AlgorithmIdentifier algorithm,
+//     CryptoKey baseKey,
+//     optional unsigned long? length = null
+//   );
+//
+//   Promise<CryptoKey> importKey(
+//     KeyFormat format,
+//     (BufferSource or JsonWebKey) keyData,
+//     AlgorithmIdentifier algorithm,
+//     boolean extractable,
+//     sequence<KeyUsage> keyUsages
+//   );
+//   Promise<(ArrayBuffer or JsonWebKey)> exportKey(
+//     KeyFormat format,
+//     CryptoKey key
+//   );
+//
+//   Promise<ArrayBuffer> wrapKey(
+//     KeyFormat format,
+//     CryptoKey key,
+//     CryptoKey wrappingKey,
+//     AlgorithmIdentifier wrapAlgorithm
+//   );
+//   Promise<CryptoKey> unwrapKey(
+//     KeyFormat format,
+//     BufferSource wrappedKey,
+//     CryptoKey unwrappingKey,
+//     AlgorithmIdentifier unwrapAlgorithm,
+//     AlgorithmIdentifier unwrappedKeyAlgorithm,
+//     boolean extractable,
+//     sequence<KeyUsage> keyUsages
+//   );
+// };
+
+// NOTE The arguments below are `any`, and SubtleCrypto converts them in C++
+// with the types above. The generated binding code does not convert them as
+// WebIDL does. Each C++ method converts its arguments in the WebIDL order,
+// and rejects the Promise when a conversion fails.
+// NOTE The binding generator does not enforce [SecureContext] yet.
+[
+  STARFISH_ENABLE_WEBCRYPTO,
+  SecureContext,
+  Exposed=(Window,Worker),
+]
+interface SubtleCrypto {
+  Promise<any> encrypt(any algorithm, any key, any data);
+  Promise<any> decrypt(any algorithm, any key, any data);
+  Promise<any> sign(any algorithm, any key, any data);
+  Promise<any> verify(any algorithm, any key, any signature, any data);
+  Promise<any> digest(any algorithm, any data);
+
+  Promise<any> generateKey(any algorithm, any extractable, any keyUsages);
+  Promise<any> deriveKey(any algorithm, any baseKey, any derivedKeyType,
+                         any extractable, any keyUsages);
+  Promise<any> deriveBits(any algorithm, any baseKey, optional any length);
+
+  Promise<any> importKey(any format, any keyData, any algorithm,
+                         any extractable, any keyUsages);
+  Promise<any> exportKey(any format, any key);
+
+  Promise<any> wrapKey(any format, any key, any wrappingKey,
+                       any wrapAlgorithm);
+  Promise<any> unwrapKey(any format, any wrappedKey, any unwrappingKey,
+                         any unwrapAlgorithm, any unwrappedKeyAlgorithm,
+                         any extractable, any keyUsages);
+};

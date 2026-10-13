@@ -1,0 +1,18 @@
+// https://w3c.github.io/webcrypto/#cryptokey-interface
+
+enum KeyType { "public", "private", "secret" };
+
+// NOTE The binding generator does not enforce [SecureContext] yet.
+// NOTE The specification also has [Serializable]. It is left out, because
+// structuredClone() and postMessage() of a CryptoKey are not supported yet.
+[
+  STARFISH_ENABLE_WEBCRYPTO,
+  SecureContext,
+  Exposed=(Window,Worker),
+]
+interface CryptoKey {
+  readonly attribute KeyType type;
+  readonly attribute boolean extractable;
+  readonly attribute object algorithm;
+  readonly attribute object usages;
+};

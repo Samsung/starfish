@@ -39,6 +39,7 @@ public:
     }
     ScriptArrayBufferView getRandomValues(ScriptArrayBufferView array);
 #if defined(STARFISH_ENABLE_WEBCRYPTO)
+    SubtleCrypto* subtle();
     String* randomUUID();
 #endif
 
@@ -57,6 +58,9 @@ private:
     bool isIntTypeArray(ScriptArrayBufferView array);
 
     ExecutionContext* m_executionContext;
+#if defined(STARFISH_ENABLE_WEBCRYPTO)
+    SubtleCrypto* m_subtle = nullptr;
+#endif
 };
 } // namespace Starfish
 
