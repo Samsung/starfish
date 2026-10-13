@@ -57,7 +57,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/canvas/to-data-url-t
 # http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/oes-texture-float-linear.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-debug-renderer-info.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-debug-shaders.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-etc.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-etc.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-pvrtc.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-s3tc.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-s3tc-srgb.html

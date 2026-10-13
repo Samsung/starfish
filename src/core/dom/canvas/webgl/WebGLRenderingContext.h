@@ -424,6 +424,22 @@ protected:
         return m_boundRenderbuffer;
     }
 
+    bool isCompressedFormatEnabled(GLenum format);
+    bool checkCompressedTexImage(GLenum target, bool is3D, GLenum format,
+                                 GLsizei width, GLsizei height, GLsizei depth,
+                                 size_t imageSize);
+    // Shared by every compressedTex(Sub)Image2D/3D overload; data is client
+    // memory, or an offset when it comes from a PIXEL_UNPACK_BUFFER.
+    void compressedTexImage(GLenum target, bool is3D, GLint level,
+                            GLenum internalformat, GLsizei width,
+                            GLsizei height, GLsizei depth, GLint border,
+                            size_t imageSize, const void* data);
+    void compressedTexSubImage(GLenum target, bool is3D, GLint level,
+                               GLint xoffset, GLint yoffset, GLint zoffset,
+                               GLsizei width, GLsizei height, GLsizei depth,
+                               GLenum format, size_t imageSize,
+                               const void* data);
+
     // A texture binding is identified by the texture unit it was made on and
     // the target it was made to.
     static uint64_t textureBindingKey(GLenum unit, GLenum target)

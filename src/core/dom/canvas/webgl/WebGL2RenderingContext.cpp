@@ -4134,7 +4134,8 @@ void WebGL2RenderingContext::texStorage2D(GLenum target, GLsizei levels,
         return;
     }
 
-    if (!Pixel::isSizedInternalFormat(internalformat)) {
+    if (!Pixel::isSizedInternalFormat(internalformat) &&
+        !isCompressedFormatEnabled(internalformat)) {
         setGLError(GL_INVALID_ENUM,
                    "internalformat is not a sized internal format.");
         return;
@@ -4189,7 +4190,8 @@ void WebGL2RenderingContext::texStorage3D(GLenum target, GLsizei levels,
         return;
     }
 
-    if (!Pixel::isSizedInternalFormat(internalformat)) {
+    if (!Pixel::isSizedInternalFormat(internalformat) &&
+        !isCompressedFormatEnabled(internalformat)) {
         setGLError(GL_INVALID_ENUM,
                    "internalformat is not a sized internal format.");
         return;
@@ -4829,17 +4831,12 @@ void WebGL2RenderingContext::texSubImage2D(GLenum target, GLint level,
                                          format, type, source);
 }
 
-// WebGL 2.0 core defines no compressed texture formats, and no
-// WEBGL_compressed_texture_* extension is exposed, so whatever format a
-// compressed upload names is unsupported: once the source and target are
-// valid, the call generates INVALID_ENUM and returns.
-// https://registry.khronos.org/webgl/specs/latest/1.0/#COMPRESSED_TEXTURE_SUPPORT
+// The ArrayBufferView overloads read client memory and must not run while a
+// PIXEL_UNPACK_BUFFER is bound; the offset overloads read from that buffer.
 // https://registry.khronos.org/webgl/specs/latest/2.0/#3.7.6
-void WebGL2RenderingContext::rejectCompressedTexImage(
-    GLenum target, bool is3D, bool fromPixelUnpackBuffer)
+bool WebGL2RenderingContext::checkUnpackBufferBinding(
+    bool fromPixelUnpackBuffer)
 {
-    // The offset overloads read from PIXEL_UNPACK_BUFFER; the
-    // ArrayBufferView overloads must not run while one is bound.
     Optional<WebGLBuffer*> unpackBuffer =
         getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER);
     bool hasUnpackBuffer = unpackBuffer.hasValue() && unpackBuffer.value();
@@ -4847,39 +4844,46 @@ void WebGL2RenderingContext::rejectCompressedTexImage(
         setGLError(GL_INVALID_OPERATION,
                    hasUnpackBuffer ? "PIXEL_UNPACK_BUFFER is bound."
                                    : "PIXEL_UNPACK_BUFFER is not bound.");
-        return;
+        return false;
+    }
+    return true;
+}
+
+// srcOffset and srcLengthOverride count elements of srcData; a zero
+// srcLengthOverride takes the rest of the view.
+bool WebGL2RenderingContext::sliceCompressedTexData(
+    ScriptArrayBufferView srcData, unsigned long long srcOffset,
+    GLuint srcLengthOverride, const uint8_t*& data, size_t& byteLength)
+{
+    if (!checkUnpackBufferBinding(false)) {
+        return false;
     }
 
-    bool isValidTarget =
-        is3D ? (target == GL_TEXTURE_3D || target == GL_TEXTURE_2D_ARRAY)
-             : (target == GL_TEXTURE_2D ||
-                (target >= GL_TEXTURE_CUBE_MAP_POSITIVE_X &&
-                 target <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z));
-    if (!isValidTarget) {
-        setGLError(GL_INVALID_ENUM, "target is invalid.");
-        return;
+    size_t length = srcData->isDataViewObject() ? srcData->byteLength()
+                                                : srcData->arrayLength();
+    size_t elementSize = length ? srcData->byteLength() / length : 1;
+    if (srcOffset > length || srcLengthOverride > length - srcOffset) {
+        setGLError(GL_INVALID_VALUE,
+                   "srcOffset or srcLengthOverride is out of range.");
+        return false;
     }
-
-    if (!hasBoundTexture(target)) {
-        setGLError(
-            GL_INVALID_OPERATION,
-            StringUtils::formatString("target (0x%04X) is not bound.", target)
-                .c_str());
-        return;
-    }
-
-    STARFISH_ASSERT(
-        WebGLExtensionRegistry::instance().hasTextureCompressionExtension() ==
-        false);
-
-    setGLError(GL_INVALID_ENUM, "No compressed texture format is supported.");
+    size_t count = srcLengthOverride ? srcLengthOverride : length - srcOffset;
+    data = srcData->rawBuffer() + srcOffset * elementSize;
+    byteLength = count * elementSize;
+    return true;
 }
 
 void WebGL2RenderingContext::compressedTexImage2D(
     GLenum target, GLint level, GLenum internalformat, GLsizei width,
     GLsizei height, GLint border, GLsizei imageSize, GLintptr offset)
 {
-    rejectCompressedTexImage(target, false, true);
+    ENTER_CONTEXT_SCOPE();
+
+    if (checkUnpackBufferBinding(true)) {
+        compressedTexImage(target, false, level, internalformat, width, height,
+                           1, border, imageSize,
+                           reinterpret_cast<const void*>(offset));
+    }
 }
 
 void WebGL2RenderingContext::compressedTexImage2D(
@@ -4887,14 +4891,28 @@ void WebGL2RenderingContext::compressedTexImage2D(
     GLsizei height, GLint border, ScriptArrayBufferView srcData,
     unsigned long long srcOffset, GLuint srcLengthOverride)
 {
-    rejectCompressedTexImage(target, false, false);
+    ENTER_CONTEXT_SCOPE();
+
+    const uint8_t* data;
+    size_t byteLength;
+    if (sliceCompressedTexData(srcData, srcOffset, srcLengthOverride, data,
+                               byteLength)) {
+        compressedTexImage(target, false, level, internalformat, width, height,
+                           1, border, byteLength, data);
+    }
 }
 
 void WebGL2RenderingContext::compressedTexSubImage2D(
     GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
     GLsizei height, GLenum format, GLsizei imageSize, GLintptr offset)
 {
-    rejectCompressedTexImage(target, false, true);
+    ENTER_CONTEXT_SCOPE();
+
+    if (checkUnpackBufferBinding(true)) {
+        compressedTexSubImage(target, false, level, xoffset, yoffset, 0, width,
+                              height, 1, format, imageSize,
+                              reinterpret_cast<const void*>(offset));
+    }
 }
 
 void WebGL2RenderingContext::compressedTexSubImage2D(
@@ -4902,7 +4920,15 @@ void WebGL2RenderingContext::compressedTexSubImage2D(
     GLsizei height, GLenum format, ScriptArrayBufferView srcData,
     unsigned long long srcOffset, GLuint srcLengthOverride)
 {
-    rejectCompressedTexImage(target, false, false);
+    ENTER_CONTEXT_SCOPE();
+
+    const uint8_t* data;
+    size_t byteLength;
+    if (sliceCompressedTexData(srcData, srcOffset, srcLengthOverride, data,
+                               byteLength)) {
+        compressedTexSubImage(target, false, level, xoffset, yoffset, 0, width,
+                              height, 1, format, byteLength, data);
+    }
 }
 
 void WebGL2RenderingContext::compressedTexImage3D(GLenum target, GLint level,
@@ -4912,7 +4938,13 @@ void WebGL2RenderingContext::compressedTexImage3D(GLenum target, GLint level,
                                                   GLsizei imageSize,
                                                   GLintptr offset)
 {
-    rejectCompressedTexImage(target, true, true);
+    ENTER_CONTEXT_SCOPE();
+
+    if (checkUnpackBufferBinding(true)) {
+        compressedTexImage(target, true, level, internalformat, width, height,
+                           depth, border, imageSize,
+                           reinterpret_cast<const void*>(offset));
+    }
 }
 
 void WebGL2RenderingContext::compressedTexImage3D(
@@ -4920,7 +4952,15 @@ void WebGL2RenderingContext::compressedTexImage3D(
     GLsizei height, GLsizei depth, GLint border, ScriptArrayBufferView srcData,
     unsigned long long srcOffset, GLuint srcLengthOverride)
 {
-    rejectCompressedTexImage(target, true, false);
+    ENTER_CONTEXT_SCOPE();
+
+    const uint8_t* data;
+    size_t byteLength;
+    if (sliceCompressedTexData(srcData, srcOffset, srcLengthOverride, data,
+                               byteLength)) {
+        compressedTexImage(target, true, level, internalformat, width, height,
+                           depth, border, byteLength, data);
+    }
 }
 
 void WebGL2RenderingContext::compressedTexSubImage3D(
@@ -4928,7 +4968,13 @@ void WebGL2RenderingContext::compressedTexSubImage3D(
     GLsizei width, GLsizei height, GLsizei depth, GLenum format,
     GLsizei imageSize, GLintptr offset)
 {
-    rejectCompressedTexImage(target, true, true);
+    ENTER_CONTEXT_SCOPE();
+
+    if (checkUnpackBufferBinding(true)) {
+        compressedTexSubImage(target, true, level, xoffset, yoffset, zoffset,
+                              width, height, depth, format, imageSize,
+                              reinterpret_cast<const void*>(offset));
+    }
 }
 
 void WebGL2RenderingContext::compressedTexSubImage3D(
@@ -4937,7 +4983,15 @@ void WebGL2RenderingContext::compressedTexSubImage3D(
     ScriptArrayBufferView srcData, unsigned long long srcOffset,
     GLuint srcLengthOverride)
 {
-    rejectCompressedTexImage(target, true, false);
+    ENTER_CONTEXT_SCOPE();
+
+    const uint8_t* data;
+    size_t byteLength;
+    if (sliceCompressedTexData(srcData, srcOffset, srcLengthOverride, data,
+                               byteLength)) {
+        compressedTexSubImage(target, true, level, xoffset, yoffset, zoffset,
+                              width, height, depth, format, byteLength, data);
+    }
 }
 
 void WebGL2RenderingContext::uniform1fv(

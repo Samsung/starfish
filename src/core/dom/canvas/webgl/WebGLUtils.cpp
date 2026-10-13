@@ -240,6 +240,39 @@ bool Pixel::isKnownTypeWebGL2(GLenum type)
     return false;
 }
 
+Optional<CompressedFormatInfo> Pixel::compressedFormatInfo(GLenum format)
+{
+    // https://registry.khronos.org/webgl/extensions/WEBGL_compressed_texture_etc/
+    // COMPRESSED_R11_EAC (0x9270) .. COMPRESSED_SRGB8_ALPHA8_ETC2_EAC (0x9279)
+    if (format >= 0x9270 && format <= 0x9279) {
+        // The two-channel EAC and the RGBA8 formats use 16 bytes per 4x4
+        // block, the rest 8.
+        const bool isWide = format == 0x9272 || format == 0x9273 ||
+                            format == 0x9278 || format == 0x9279;
+        return CompressedFormatInfo{ "WEBGL_compressed_texture_etc", 4, 4,
+                                     static_cast<uint8_t>(isWide ? 16 : 8) };
+    }
+
+    // https://registry.khronos.org/webgl/extensions/WEBGL_compressed_texture_astc/
+    // COMPRESSED_RGBA_ASTC_4x4_KHR (0x93B0) and
+    // COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR (0x93D0) each start a run of the
+    // same 14 block footprints; every ASTC block is 16 bytes.
+    static const uint8_t astcFootprints[][2] = {
+        { 4, 4 },  { 5, 4 },   { 5, 5 },   { 6, 5 },   { 6, 6 },
+        { 8, 5 },  { 8, 6 },   { 8, 8 },   { 10, 5 },  { 10, 6 },
+        { 10, 8 }, { 10, 10 }, { 12, 10 }, { 12, 12 },
+    };
+    const size_t astcCount = sizeof(astcFootprints) / sizeof(astcFootprints[0]);
+    for (GLenum first : { 0x93B0u, 0x93D0u }) {
+        if (format >= first && format < first + astcCount) {
+            const uint8_t* footprint = astcFootprints[format - first];
+            return CompressedFormatInfo{ "WEBGL_compressed_texture_astc",
+                                         footprint[0], footprint[1], 16 };
+        }
+    }
+    return Optional<CompressedFormatInfo>();
+}
+
 bool Pixel::isSizedInternalFormat(GLenum internalformat)
 {
     if (internalformat == GL_RGBA || internalformat == GL_RGB ||

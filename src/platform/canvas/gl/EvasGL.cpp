@@ -276,6 +276,29 @@ public:
                                                data);
     }
 
+    virtual void compressedTexImage3D(GLenum target, GLint level,
+                                      GLenum internalformat, GLsizei width,
+                                      GLsizei height, GLsizei depth,
+                                      GLint border, GLsizei imageSize,
+                                      const void *data) override
+    {
+        m_evasGLAPI->glCompressedTexImage3D(target, level, internalformat,
+                                            width, height, depth, border,
+                                            imageSize, data);
+    }
+
+    virtual void compressedTexSubImage3D(GLenum target, GLint level,
+                                         GLint xoffset, GLint yoffset,
+                                         GLint zoffset, GLsizei width,
+                                         GLsizei height, GLsizei depth,
+                                         GLenum format, GLsizei imageSize,
+                                         const void *data) override
+    {
+        m_evasGLAPI->glCompressedTexSubImage3D(target, level, xoffset, yoffset,
+                                               zoffset, width, height, depth,
+                                               format, imageSize, data);
+    }
+
     virtual void copyTexImage2D(GLenum target, GLint level,
                                 GLenum internalformat, GLint x, GLint y,
                                 GLsizei width, GLsizei height,
