@@ -900,6 +900,10 @@ public:
         m_clipPathCache;
 
     Renderer* m_renderer;
+    // Fence after the last composited frame. Work that would race with that
+    // frame waits on it only when it is about to touch shared resources,
+    // instead of every frame start stalling until the GPU is idle.
+    GLsync m_lastFrameFence = nullptr;
 
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
     GLuint m_mainViewTexture;
@@ -1046,6 +1050,10 @@ public:
         cleanUpTextureCache();
         cleanUpFBOCache();
         cleanUpGLPrograms();
+
+        if (m_lastFrameFence) {
+            gl()->deleteSync(m_lastFrameFence);
+        }
 
         gl()->deleteBuffers(1, &m_texTexPosBuffer);
         gl()->deleteBuffers(1, &m_texIdxBuffer);
@@ -1430,6 +1438,46 @@ public:
     virtual void didRendering() override
     {
         cleanUpTextureCache();
+
+        if (g_isOpenGLES3) {
+            if (m_lastFrameFence) {
+                gl()->deleteSync(m_lastFrameFence);
+            }
+            m_lastFrameFence =
+                gl()->fenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+        } else {
+#if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 9
+            // Without sync objects the embedder's per-frame wait is the only
+            // thing keeping WebGL from overwriting what this frame samples.
+            m_renderer->mayNeedsSync();
+#endif
+        }
+    }
+
+    // Blocks until the GPU has finished the last composited frame. Needed
+    // before the CPU writes into a buffer that frame may still be sampling.
+    void waitForLastFrameOnCPU()
+    {
+        if (!m_lastFrameFence) {
+            return;
+        }
+        LongTaskFinder t("waitForLastFrameOnCPU", 1);
+        gl()->clientWaitSync(m_lastFrameFence, GL_SYNC_FLUSH_COMMANDS_BIT,
+                             GL_TIMEOUT_IGNORED);
+        gl()->deleteSync(m_lastFrameFence);
+        m_lastFrameFence = nullptr;
+    }
+
+    virtual void waitForLastFrameOnGPU() override
+    {
+        if (m_lastFrameFence) {
+            gl()->waitSync(m_lastFrameFence, 0, GL_TIMEOUT_IGNORED);
+        }
+    }
+
+    bool hasPendingFrame() const
+    {
+        return m_lastFrameFence != nullptr;
     }
 
     virtual void onIdle() override
@@ -2983,6 +3031,26 @@ public:
     }
 #endif
 
+    // The previous frame may still be sampling this native buffer on the GPU.
+    void waitForLastFrame()
+    {
+        CompositorContextGL* ctx =
+            (CompositorContextGL*)m_renderer->compositorContext();
+        if (!ctx || !ctx->hasPendingFrame()) {
+            return;
+        }
+#if defined(STARFISH_ENABLE_WEBGL)
+        // A WebGL context shares the fence, so it can wait in place.
+        if (GLContextScope::getCurrentGLContext().isValid()) {
+            ctx->waitForLastFrameOnCPU();
+            return;
+        }
+#endif
+        if (m_renderer->makeCurrent()) {
+            ctx->waitForLastFrameOnCPU();
+        }
+    }
+
     virtual void detachNativeBuffer() override
     {
         if (m_textureFragments.size()) {
@@ -3407,6 +3475,7 @@ public:
     {
         if (m_isEGLImageExternal) {
             if (!m_buffer) {
+                waitForLastFrame();
 #if defined(STARFISH_TIZEN)
                 tbm_surface_info_s surfaceInfo;
                 {
@@ -5156,7 +5225,12 @@ public:
 
         // Select appropriate shader program based on mask requirement
         if (isEGLImage) {
-            m_webView->renderer()->mayNeedsSync();
+            // Our own TBM buffers are guarded by the frame fence before the CPU
+            // writes them again; other external images (video frames) are
+            // recycled by their producer, so the embedder still has to sync.
+            if (!g_isOpenGLES3 || !cs->m_isEGLBufferOwner) {
+                m_webView->renderer()->mayNeedsSync();
+            }
             if (enableMask) {
                 m_compositorContext->texShaderProgramEGLImageExternalWithMask();
             } else {
