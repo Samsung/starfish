@@ -73,10 +73,9 @@ public:
         return m_hasEXT_texture_format_BGRA8888;
     }
 
-    bool hasTextureCompressionExtension()
+    bool hasASTCHDRProfile()
     {
-        // NOTE: Currently verifiable targets don't support this feature.
-        return false;
+        return m_hasASTCHDRProfile;
     }
 
 private:
@@ -104,6 +103,7 @@ private:
         m_interfaceGenerators;
 
     bool m_hasEXT_texture_format_BGRA8888 = false;
+    bool m_hasASTCHDRProfile = false;
     bool m_isInitialized = false;
 };
 

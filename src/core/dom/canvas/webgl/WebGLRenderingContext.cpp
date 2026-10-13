@@ -52,6 +52,7 @@
 #include "binding/generated/ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementUnion.h"
 #include <regex>
 #include <array>
+#include <limits>
 #include "core/dom/canvas/webgl/WebGLOES_VertexArrayObject.h"
 #include "core/dom/canvas/webgl/WebGLShaderPrecisionFormat.h"
 #include "core/page/WebView.h"
@@ -2194,10 +2195,19 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
     }
     // Uint32Array
     case GL_COMPRESSED_TEXTURE_FORMATS: {
-        STARFISH_ASSERT(WebGLExtensionRegistry::instance()
-                            .hasTextureCompressionExtension() == false);
+        // The formats of the compressed texture extensions enabled so far:
+        // the ETC2/EAC run, then the RGBA and SRGB8_ALPHA8 ASTC runs.
+        std::vector<uint32_t> formats;
+        for (GLenum first : { 0x9270u, 0x93B0u, 0x93D0u }) {
+            for (GLenum format = first;
+                 Pixel::compressedFormatInfo(format).hasValue(); ++format) {
+                if (isCompressedFormatEnabled(format)) {
+                    formats.push_back(format);
+                }
+            }
+        }
         return createTypedArray<Uint32ArrayObjectRef>(scriptBindingInstance(),
-                                                      std::vector<uint32_t>());
+                                                      formats);
     }
     default:
         STARFISH_UNSUPPORTED("pname: 0x%04X(%s)", pname, __PRETTY_FUNCTION__);
@@ -4038,42 +4048,145 @@ void WebGLRenderingContext::bufferSubData(GLenum target, GLintptr offset,
     }
 }
 
+// A compressed format is only accepted once the WebGL extension defining it
+// has been enabled on this context; the core specifications define none.
+// https://registry.khronos.org/webgl/specs/latest/1.0/#COMPRESSED_TEXTURE_SUPPORT
+bool WebGLRenderingContext::isCompressedFormatEnabled(GLenum format)
+{
+    Optional<CompressedFormatInfo> info = Pixel::compressedFormatInfo(format);
+    return info && isExtensionEnabled(info.value().extension);
+}
+
+// Checks shared by compressed uploads before any GL call. imageSize must match
+// the format's block layout exactly, which also keeps the driver from reading
+// past the end of the client data.
+bool WebGLRenderingContext::checkCompressedTexImage(
+    GLenum target, bool is3D, GLenum format, GLsizei width, GLsizei height,
+    GLsizei depth, size_t imageSize)
+{
+    const bool isValidTarget =
+        is3D ? (target == GL_TEXTURE_3D || target == GL_TEXTURE_2D_ARRAY)
+             : (target == GL_TEXTURE_2D ||
+                (target >= GL_TEXTURE_CUBE_MAP_POSITIVE_X &&
+                 target <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z));
+    if (!isValidTarget) {
+        setGLError(GL_INVALID_ENUM, "target is invalid.");
+        return false;
+    }
+    if (!hasBoundTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return false;
+    }
+    if (!isCompressedFormatEnabled(format)) {
+        setGLError(GL_INVALID_ENUM,
+                   StringUtils::formatString(
+                       "compressed format (0x%04X) is not enabled.", format)
+                       .c_str());
+        return false;
+    }
+    if (width < 0 || height < 0 || depth < 0) {
+        setGLError(GL_INVALID_VALUE, "dimensions are negative.");
+        return false;
+    }
+
+    const CompressedFormatInfo info =
+        Pixel::compressedFormatInfo(format).value();
+    const uint64_t blocksWide =
+        (static_cast<uint64_t>(width) + info.blockWidth - 1) / info.blockWidth;
+    const uint64_t blocksHigh =
+        (static_cast<uint64_t>(height) + info.blockHeight - 1) /
+        info.blockHeight;
+    const uint64_t layerSize = blocksWide * blocksHigh * info.bytesPerBlock;
+    // GLsizei bounds imageSize, so an image larger than that cannot match.
+    const uint64_t maxImageSize = std::numeric_limits<GLsizei>::max();
+    if (depth != 0 && layerSize > maxImageSize / depth) {
+        setGLError(GL_INVALID_VALUE, "image is too large.");
+        return false;
+    }
+    if (imageSize != layerSize * depth) {
+        setGLError(GL_INVALID_VALUE,
+                   "data size does not match the format and dimensions.");
+        return false;
+    }
+    return true;
+}
+
+void WebGLRenderingContext::compressedTexImage(
+    GLenum target, bool is3D, GLint level, GLenum internalformat, GLsizei width,
+    GLsizei height, GLsizei depth, GLint border, size_t imageSize,
+    const void* data)
+{
+    if (!checkCompressedTexImage(target, is3D, internalformat, width, height,
+                                 depth, imageSize)) {
+        return;
+    }
+
+    WebGLTexture* texture = getBoundTextureObject(target);
+    if (texture && texture->isImmutable()) {
+        setGLError(GL_INVALID_OPERATION, "Texture is immutable.");
+        return;
+    }
+
+    if (is3D) {
+        m_gl->compressedTexImage3D(target, level, internalformat, width, height,
+                                   depth, border, imageSize, data);
+    } else {
+        m_gl->compressedTexImage2D(target, level, internalformat, width, height,
+                                   border, imageSize, data);
+    }
+
+    if (texture && !hasNewGLError()) {
+        texture->setImageLevelInfo(target, level, internalformat, width, height,
+                                   depth);
+    }
+}
+
+// Block alignment of the region and the format matching the level are left to
+// the GL, which reports both as INVALID_OPERATION as WebGL requires.
+void WebGLRenderingContext::compressedTexSubImage(
+    GLenum target, bool is3D, GLint level, GLint xoffset, GLint yoffset,
+    GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format,
+    size_t imageSize, const void* data)
+{
+    if (!checkCompressedTexImage(target, is3D, format, width, height, depth,
+                                 imageSize)) {
+        return;
+    }
+
+    if (is3D) {
+        m_gl->compressedTexSubImage3D(target, level, xoffset, yoffset, zoffset,
+                                      width, height, depth, format, imageSize,
+                                      data);
+    } else {
+        m_gl->compressedTexSubImage2D(target, level, xoffset, yoffset, width,
+                                      height, format, imageSize, data);
+    }
+}
+
 void WebGLRenderingContext::compressedTexImage2D(GLenum target, GLint level,
                                                  GLenum internalformat,
                                                  GLsizei width, GLsizei height,
                                                  GLint border,
                                                  ScriptArrayBufferView data)
 {
-    if (m_boundTextures.find(target) == m_boundTextures.end()) {
-        setGLError(GL_INVALID_OPERATION);
-        return;
-    }
+    ENTER_CONTEXT_SCOPE();
 
-    STARFISH_ASSERT(
-        WebGLExtensionRegistry::instance().hasTextureCompressionExtension() ==
-        false);
-
-    // The core WebGL specification does not define any supported compressed
-    // texture formats. By default, these methods generate an INVALID_ENUM error
-    // and return immediately. See Compressed Texture Support.
-
-    setGLError(GL_INVALID_ENUM);
+    compressedTexImage(target, false, level, internalformat, width, height, 1,
+                       border, data->byteLength(), data->rawBuffer());
 }
 
 void WebGLRenderingContext::compressedTexSubImage2D(
     GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
     GLsizei height, GLenum format, ScriptArrayBufferView data)
 {
-    if (m_boundTextures.find(target) == m_boundTextures.end()) {
-        setGLError(GL_INVALID_OPERATION);
-        return;
-    }
+    ENTER_CONTEXT_SCOPE();
 
-    STARFISH_ASSERT(
-        WebGLExtensionRegistry::instance().hasTextureCompressionExtension() ==
-        false);
-
-    setGLError(GL_INVALID_ENUM);
+    compressedTexSubImage(target, false, level, xoffset, yoffset, 0, width,
+                          height, 1, format, data->byteLength(),
+                          data->rawBuffer());
 }
 
 size_t WebGLRenderingContext::getBytesPerPixel(GLenum format, GLenum type)

@@ -33,6 +33,7 @@
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/canvas/webgl/WebGLOES_VertexArrayObject.h"
 #include "core/dom/canvas/webgl/WebGLANGLE_InstancedArrays.h"
+#include "core/dom/canvas/webgl/WebGLWEBGL_CompressedTextureASTC.h"
 
 #include "platform/canvas/gl/IncludeGL.h"
 #include "platform/canvas/gl/GL.h"
@@ -112,6 +113,9 @@ void WebGLExtensionRegistry::initialize(GL* gl)
         reinterpret_cast<const char*>(gl->getString(GL_VERSION));
     const std::string version = rawVersion ? rawVersion : "";
     const bool isDesktopGL = version.find("OpenGL ES") == std::string::npos;
+    // ETC2/EAC decoding is core in ES 3.0; desktop GL gets it with ES 3.0
+    // compatibility.
+    const bool hasETC2 = !isDesktopGL && isCoreProfile3;
 
     const auto has = [&glExtensions](const char* name) -> bool {
         return glExtensions.find(name) != glExtensions.end();
@@ -131,7 +135,8 @@ void WebGLExtensionRegistry::initialize(GL* gl)
     V(OES_element_index_uint, OES_element_index_uint, WebGL1Only,            \
       isCoreProfile3)                                                        \
     V(EXT_color_buffer_float, EXT_color_buffer_float, WebGL2Only,            \
-      (isDesktopGL && isCoreProfile3))
+      (isDesktopGL && isCoreProfile3))                                       \
+    V(ARB_ES3_compatibility, WEBGL_compressed_texture_etc, AnyVersion, hasETC2)
 
 #define V(name, spec, availability, alsoSupportedWhen)                    \
     if (has(#name) || (alsoSupportedWhen)) {                              \
@@ -160,9 +165,11 @@ void WebGLExtensionRegistry::initialize(GL* gl)
         has("EXT_instanced_arrays") || has("NV_instanced_arrays") ||
         has("ARB_instanced_arrays");
 
-#define SUPPORTED_GL_EXTENSIONS(V)                \
-    V(OES_vertex_array_object, WebGL1Only, false) \
-    V(ANGLE_instanced_arrays, WebGL1Only, hasInstancedArrays)
+#define SUPPORTED_GL_EXTENSIONS(V)                            \
+    V(OES_vertex_array_object, WebGL1Only, false)             \
+    V(ANGLE_instanced_arrays, WebGL1Only, hasInstancedArrays) \
+    V(WEBGL_compressed_texture_astc, AnyVersion,              \
+      has("KHR_texture_compression_astc_ldr"))
 
 #define V(name, availability, alsoSupportedWhen)                           \
     if (has(#name) || (alsoSupportedWhen)) {                               \
@@ -181,6 +188,8 @@ void WebGLExtensionRegistry::initialize(GL* gl)
     SUPPORTED_GL_EXTENSIONS(V);
 #undef V
 #undef SUPPORTED_GL_EXTENSIONS
+
+    m_hasASTCHDRProfile = has("KHR_texture_compression_astc_hdr");
 
     m_hasEXT_texture_format_BGRA8888 =
         (extensions.find("GL_EXT_texture_format_BGRA8888") !=

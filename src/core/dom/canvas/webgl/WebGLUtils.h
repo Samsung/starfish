@@ -23,6 +23,7 @@
 #include <string>
 #include "platform/canvas/gl/GLTypes.h"
 #include "core/util/String.h"
+#include "StarfishBase.h" // Optional
 
 namespace Starfish {
 
@@ -44,8 +45,18 @@ struct CaseInsensitiveEqual {
     }
 };
 
+// Block layout of a compressed texture format, and the WebGL extension that
+// must be enabled on a context before the format is accepted there.
+struct CompressedFormatInfo {
+    const char* extension;
+    uint8_t blockWidth;
+    uint8_t blockHeight;
+    uint8_t bytesPerBlock;
+};
+
 class Pixel {
 public:
+    static Optional<CompressedFormatInfo> compressedFormatInfo(GLenum format);
     static bool isInternalFormatValid(GLint internalFormat, GLenum format,
                                       GLenum type = 0, int webGLVersion = 1);
     static bool isKnownInternalFormatWebGL2(GLint internalFormat);

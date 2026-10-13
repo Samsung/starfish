@@ -2476,7 +2476,7 @@ Apps relying on the right-hand list get **no protection** — the directive is p
 - **Instanced Drawing:** `drawArraysInstanced`, `drawElementsInstanced`, `drawRangeElements`, `vertexAttribDivisor`.
 - **Integer Attributes:** `vertexAttribIPointer`, `vertexAttribI4i`/`vertexAttribI4ui`/`vertexAttribI4iv`/`vertexAttribI4uiv`, `getVertexAttribIiv`/`getVertexAttribIuiv`.
 - **Textures (3D & 2D Array):** `texImage3D`, `texSubImage3D`, `texStorage2D`, `texStorage3D`, `copyTexSubImage3D` (with feedback loop detection), sized internal format uploads, pixel store parameters, `border == 0` validation, and alpha channel compatibility enforcement for `copyTexImage2D`/`copyTexSubImage2D`.
-- **Compressed Textures:** `compressedTexImage2D`/`3D` and `compressedTexSubImage2D`/`3D` (all overloads) are exposed, but since no compressed format is supported they only validate the source (`PIXEL_UNPACK_BUFFER` binding) and target, then generate `INVALID_ENUM` — the same as WebGL 1.
+- **Compressed Textures:** `compressedTexImage2D`/`3D` and `compressedTexSubImage2D`/`3D` (all overloads), and `texStorage2D`/`3D` with a compressed internal format, accept the formats of the `WEBGL_compressed_texture_astc` / `WEBGL_compressed_texture_etc` extensions once enabled on the context; any other format generates `INVALID_ENUM`, the same as WebGL 1. The data size must match the format's block layout exactly (`INVALID_VALUE`); sub-image block alignment and the format/target pairing are checked by the GL driver.
 
 **Unimplemented WebGL 2.0 features (`[Unimplemented]` in IDL / methods not exposed on instance):**
 - **Clear Depth/Stencil Buffer:** `clearBufferfi`.
@@ -2485,9 +2485,11 @@ Apps relying on the right-hand list get **no protection** — the directive is p
 
 `EXT_texture_filter_anisotropic`, `OES_texture_float_linear`.
 
+Compressed textures: `WEBGL_compressed_texture_astc` (driver advertises `GL_KHR_texture_compression_astc_ldr`; `getSupportedProfiles()` adds `"hdr"` with `GL_KHR_texture_compression_astc_hdr`) and `WEBGL_compressed_texture_etc` (OpenGL ES 3.0 context, where ETC2/EAC is core, or `GL_ARB_ES3_compatibility`).
+
 Version-specific: Promoted extensions (`EXT_blend_minmax`, `OES_standard_derivatives`, `OES_texture_float`, `OES_texture_half_float`, `OES_vertex_array_object`, `WEBGL_depth_texture`, `OES_element_index_uint`, `ANGLE_instanced_arrays`) are exposed to WebGL 1 contexts only (all are core in WebGL 2), and `EXT_color_buffer_float` to WebGL 2 contexts only. All three are also reported when the driver makes the feature core (ES 3.0 / desktop GL 3.x) without advertising the `GL_*` token.
 
-**Common extensions NOT implemented** (will return `null`): `WEBGL_lose_context`, `WEBGL_debug_renderer_info`, `WEBGL_compressed_texture_*` (s3tc/etc1/astc/pvrtc), `OES_texture_half_float_linear`, `EXT_sRGB`, `KHR_parallel_shader_compile`.
+**Common extensions NOT implemented** (will return `null`): `WEBGL_lose_context`, `WEBGL_debug_renderer_info`, `WEBGL_compressed_texture_*` other than astc/etc (s3tc/s3tc_srgb/etc1/pvrtc), `EXT_texture_compression_bptc`/`rgtc`, `OES_texture_half_float_linear`, `EXT_sRGB`, `KHR_parallel_shader_compile`.
 
 ### Performance
 

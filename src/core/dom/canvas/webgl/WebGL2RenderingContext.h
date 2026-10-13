@@ -622,8 +622,11 @@ private:
     }
     Optional<WebGLFramebuffer*> getBoundFramebuffer(GLenum target) override;
 
-    void rejectCompressedTexImage(GLenum target, bool is3D,
-                                  bool fromPixelUnpackBuffer);
+    bool checkUnpackBufferBinding(bool fromPixelUnpackBuffer);
+    bool sliceCompressedTexData(ScriptArrayBufferView srcData,
+                                unsigned long long srcOffset,
+                                GLuint srcLengthOverride, const uint8_t*& data,
+                                size_t& byteLength);
 
     GLenum m_currentVertexAttribType = GL_FLOAT;
     GLenum m_defaultReadBuffer = 0x405; /* GL_BACK */
