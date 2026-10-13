@@ -117,7 +117,7 @@ void IDBTaskQueue::worker(void* data)
                     p->item->afterWork(p->item->workData);
                     delete p;
                 },
-                p);
+                [](void* data) { delete static_cast<Param*>(data); }, p);
     }
 
     Escargot::Globals::finalizeThread();
