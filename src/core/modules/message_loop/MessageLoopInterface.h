@@ -27,6 +27,14 @@ public:
         GlobalScope* globalScope, void (*fn)(size_t handle, void*),
         void* data) = 0;
 
+    // Same as above, but the loop calls `discard(data)` on the main thread
+    // when it drops the idler without calling `fn`. This happens when the
+    // global scope is torn down or the idler is removed. Use `discard` to free
+    // `data`, which nobody else owns at that point.
+    virtual size_t addIdlerWithNoGCRootingInOtherThread(
+        GlobalScope* globalScope, void (*fn)(size_t handle, void*),
+        void (*discard)(void*), void* data) = 0;
+
     virtual size_t addIdlerWithNoGCRootingInOtherThread(
         GlobalScope* globalScope, void (*fn)(size_t handle, void*, void*),
         void* data, void* data1) = 0;

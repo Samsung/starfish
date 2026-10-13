@@ -65,6 +65,9 @@ public:
                                                            void*),
                                                 void* data) override;
     size_t addIdlerWithNoGCRootingInOtherThread(
+        GlobalScope* globalScope, void (*fn)(size_t handle, void*),
+        void (*discard)(void*), void* data) override;
+    size_t addIdlerWithNoGCRootingInOtherThread(
         GlobalScope* globalScope, void (*fn)(size_t handle, void*, void*),
         void* data, void* data1) override;
 

@@ -52,6 +52,8 @@ struct IdlerData {
     GlobalScope* m_globalScope;
     volatile bool m_shouldExecute;
     bool m_isMainThreadData;
+    // Called instead of m_fn when an idler from another thread is dropped.
+    void (*m_discard)(void*);
 };
 
 MessageLoopLibUV::MessageLoopLibUV()
@@ -89,6 +91,8 @@ MessageLoopLibUV::MessageLoopLibUV(RunLoopLibUV* runLoop)
                             ((void (*)(size_t, void*, void*))id->m_fn)(
                                 (size_t)id, id->m_data, id->m_data1);
                         }
+                    } else if (id->m_discard) {
+                        id->m_discard(id->m_data);
                     }
                     delete id;
                 }
@@ -200,9 +204,17 @@ void uv_close_cb(uv_handle_t* handle)
 size_t MessageLoopLibUV::addIdlerWithNoGCRootingInOtherThread(
     GlobalScope* globalScope, void (*fn)(size_t, void*), void* data)
 {
+    return addIdlerWithNoGCRootingInOtherThread(globalScope, fn, nullptr, data);
+}
+
+size_t MessageLoopLibUV::addIdlerWithNoGCRootingInOtherThread(
+    GlobalScope* globalScope, void (*fn)(size_t, void*), void (*discard)(void*),
+    void* data)
+{
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
     id->m_shouldExecute = true;
+    id->m_discard = discard;
     id->m_fn = fn;
     id->m_data = data;
     id->m_pararmNum = 1;
@@ -225,6 +237,7 @@ size_t MessageLoopLibUV::addIdlerWithNoGCRootingInOtherThread(
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
     id->m_shouldExecute = true;
+    id->m_discard = nullptr;
     id->m_fn = (void (*)(size_t, void*))fn;
     id->m_data = data;
     id->m_data1 = data1;
@@ -303,6 +316,8 @@ void MessageLoopLibUV::destroy()
                     else if (id->m_pararmNum == 2)
                         ((void (*)(size_t, void*, void*))id->m_fn)(
                             (size_t)id, id->m_data, id->m_data1);
+                } else if (id->m_discard) {
+                    id->m_discard(id->m_data);
                 }
                 delete id;
             }

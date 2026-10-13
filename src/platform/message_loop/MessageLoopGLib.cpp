@@ -165,6 +165,8 @@ struct IdlerData {
     volatile bool m_needsRun;
     volatile bool m_isDestroyed;
     bool m_isMainThreadData;
+    // Called instead of m_fn when an idler from another thread is dropped.
+    void (*m_discard)(void*);
 };
 
 void MessageLoopGLib::destroy()
@@ -309,11 +311,19 @@ size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
 size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
     GlobalScope* globalScope, void (*fn)(size_t, void*), void* data)
 {
+    return addIdlerWithNoGCRootingInOtherThread(globalScope, fn, nullptr, data);
+}
+
+size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
+    GlobalScope* globalScope, void (*fn)(size_t, void*), void (*discard)(void*),
+    void* data)
+{
     STARFISH_ASSERT(!calledOnValidThread());
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
     id->m_needsRun = true;
     id->m_isDestroyed = false;
+    id->m_discard = discard;
     id->m_fn = fn;
     id->m_data = data;
     id->m_ml = this;
@@ -341,7 +351,11 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
                 }
                 if (id->m_needsRun) {
                     id->m_fn((size_t)id, id->m_data);
+                    id->m_discard = nullptr;
                 }
+            }
+            if (id->m_discard) {
+                id->m_discard(id->m_data);
             }
 
             id->m_ml = nullptr;
@@ -365,6 +379,7 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
     id->m_isMainThreadData = false;
     id->m_needsRun = true;
     id->m_isDestroyed = false;
+    id->m_discard = nullptr;
     id->m_fn = (void (*)(size_t, void*))fn;
     id->m_data = data;
     id->m_data1 = data1;
