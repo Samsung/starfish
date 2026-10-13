@@ -47,6 +47,14 @@ public:
     void resetSurface();
     void finalize();
 
+protected:
+    // Called with the context current right before it is destroyed, to free
+    // GL objects the engine created in it on its own.
+    virtual void releaseInternalGLObjects()
+    {
+    }
+
+public:
     void* operator new(size_t size)
     {
         static bool typeInited = false;

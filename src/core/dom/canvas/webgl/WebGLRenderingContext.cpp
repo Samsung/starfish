@@ -59,6 +59,14 @@
 
 #include "platform/canvas/gl/IncludeGL.h"
 #include "platform/canvas/gl/GL.h"
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+#include "core/dom/DOMException.h"
+#include "core/dom/Document.h"
+#include "core/dom/HTMLVideoElement.h"
+#include "core/page/WebBase.h"
+#include "PlatformIntegrationData.h"
+#include "platform/multimedia/MediaPlayer.h"
+#endif
 
 #include <EscargotPublic.h>
 #include <sstream>
@@ -4897,6 +4905,14 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
         return;
     }
 
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+    if (source.isHTMLVideoElementValue()) {
+        texImageVideo(target, level, internalFormat, 0, 0, format, type,
+                      source.getHTMLVideoElementValue());
+        return;
+    }
+#endif
+
     handleTexImageWithImageSource(
         format, type, source, [&](const TexImageHelper* helper) {
             STARFISH_ASSERT(helper != nullptr);
@@ -4966,6 +4982,14 @@ void WebGLRenderingContext::texSubImage2D(GLenum target, GLint level,
 {
     ENTER_CONTEXT_SCOPE();
 
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+    if (source.isHTMLVideoElementValue()) {
+        texImageVideo(target, level, Optional<GLint>(), xoffset, yoffset,
+                      format, type, source.getHTMLVideoElementValue());
+        return;
+    }
+#endif
+
     handleTexImageWithImageSource(
         format, type, source, [&](const TexImageHelper* helper) {
             STARFISH_ASSERT(helper != nullptr);
@@ -4981,6 +5005,407 @@ void WebGLRenderingContext::texSubImage2D(GLenum target, GLint level,
                 helper->dataFormat().valueOr(format), type, helper->data());
         });
 }
+
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+// https://registry.khronos.org/webgl/specs/latest/1.0/#ORIGIN_RESTRICTIONS
+// Network media is never origin-clean: the platform players fetch it without
+// CORS and follow redirects without reporting the final URL, so even a
+// same-origin src may deliver cross-origin frames. Only data: URLs and blob:
+// URLs (script-supplied bytes, e.g. MSE) are clean, as for Web Audio, unless
+// the embedder turned web security off.
+static bool isVideoOriginClean(HTMLVideoElement* video)
+{
+    ExecutionContext* context = video->document()->executionContext();
+    if (context->webBase()->getWebSecurityMode() ==
+        LWE::WebSecurityMode::Disable) {
+        return true;
+    }
+    String* src = video->currentSrc();
+    return src->startsWith("data:", false) || src->startsWith("blob:", false);
+}
+
+static GLuint createVideoCopyProgram(GL* gl, bool externalSource)
+{
+    const char* vertexSource =
+        "attribute vec2 aPosition;\n"
+        "uniform bool uFlipY;\n"
+        "varying vec2 vTexCoord;\n"
+        "void main() {\n"
+        "  vTexCoord = vec2(aPosition.x,\n"
+        "                   uFlipY ? 1.0 - aPosition.y : aPosition.y);\n"
+        "  gl_Position = vec4(aPosition * 2.0 - 1.0, 0.0, 1.0);\n"
+        "}\n";
+    // highp where available: mediump texture coordinates are too coarse to
+    // address every texel of a 4K frame.
+    std::string fragmentSource =
+        externalSource ? "#extension GL_OES_EGL_image_external : require\n"
+                       : "";
+    fragmentSource +=
+        "#ifdef GL_ES\n"
+        "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
+        "precision highp float;\n"
+        "#else\n"
+        "precision mediump float;\n"
+        "#endif\n"
+        "#endif\n"
+        "varying vec2 vTexCoord;\n";
+    fragmentSource += externalSource ? "uniform samplerExternalOES uTexture;\n"
+                                     : "uniform sampler2D uTexture;\n";
+    fragmentSource +=
+        "void main() {\n"
+        "  gl_FragColor = texture2D(uTexture, vTexCoord);\n"
+        "}\n";
+
+    auto compile = [gl](GLenum shaderType, const char* source) {
+        GLuint shader = gl->createShader(shaderType);
+        gl->shaderSource(shader, 1, &source, nullptr);
+        gl->compileShader(shader);
+        return shader;
+    };
+    GLuint vertexShader = compile(GL_VERTEX_SHADER, vertexSource);
+    GLuint fragmentShader = compile(GL_FRAGMENT_SHADER, fragmentSource.c_str());
+    GLuint program = gl->createProgram();
+    gl->attachShader(program, vertexShader);
+    gl->attachShader(program, fragmentShader);
+    gl->bindAttribLocation(program, 0, "aPosition");
+    gl->linkProgram(program);
+    gl->deleteShader(vertexShader);
+    gl->deleteShader(fragmentShader);
+
+    GLint linked = 0;
+    gl->getProgramiv(program, GL_LINK_STATUS, &linked);
+    if (!linked) {
+        STARFISH_LOG_ERROR("WebGL video copy program failed to link\n");
+        gl->deleteProgram(program);
+        return 0;
+    }
+    return program;
+}
+
+void WebGLRenderingContext::texImageVideo(GLenum target, GLint level,
+                                          Optional<GLint> internalFormat,
+                                          GLint xoffset, GLint yoffset,
+                                          GLenum format, GLenum type,
+                                          HTMLVideoElement* video)
+{
+    MediaPlayer* player = video->activeMediaPlayer();
+    // No media data yet, or a srcObject stream (empty currentSrc), whose
+    // players do not expose frames to WebGL: nothing to upload.
+    if (!player || video->currentSrc()->isEmpty()) {
+        return;
+    }
+    if (!isVideoOriginClean(video)) {
+        throw new DOMException(video->document()->executionContext(),
+                               DOMException::Code::SECURITY_ERR,
+                               "The video element contains cross-origin data.");
+    }
+    // shortcut: the GPU copy below renders the frame into the level, so only
+    // 8-bit RGB(A) destinations are handled; other format/type combinations
+    // need a CPU readback and conversion, add it when a page needs one.
+    if ((format != GL_RGBA && format != GL_RGB) || type != GL_UNSIGNED_BYTE) {
+        setGLError(GL_INVALID_OPERATION,
+                   "Unsupported format or type for a video source.");
+        return;
+    }
+    if (target != GL_TEXTURE_2D && (target < GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
+                                    target > GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)) {
+        setGLError(GL_INVALID_ENUM, "Invalid texture target.");
+        return;
+    }
+    WebGLTexture* texture = getBoundTextureObject(target);
+    if (!texture) {
+        setGLError(GL_INVALID_OPERATION, "No texture is bound.");
+        return;
+    }
+    if (!internalFormat && !texture->getImageLevelInfo(target, level)) {
+        setGLError(GL_INVALID_OPERATION, "The texture level is not defined.");
+        return;
+    }
+
+    const bool isWebGL2 = webGLVersion() == 2;
+    const GLenum bindingTarget =
+        target == GL_TEXTURE_2D ? GL_TEXTURE_2D : GL_TEXTURE_CUBE_MAP;
+    const GLenum bindingQuery = target == GL_TEXTURE_2D
+                                    ? GL_TEXTURE_BINDING_2D
+                                    : GL_TEXTURE_BINDING_CUBE_MAP;
+    // Without vertex array objects the copy borrows attribute 0 of the
+    // current vertex state and puts it back afterwards.
+    const bool hasVertexArrays =
+        isWebGL2 || WebGLExtensionRegistry::instance()
+                        .getGenerator("OES_vertex_array_object", false)
+                        .hasValue();
+    const bool hasDivisor =
+        isWebGL2 || WebGLExtensionRegistry::instance()
+                        .getGenerator("ANGLE_instanced_arrays", false)
+                        .hasValue();
+
+    // Save every piece of context state the copy changes.
+    GLint savedActiveTexture, savedUnit0Texture2D, savedUnit0Binding,
+        savedProgram, savedArrayBuffer, savedFramebuffer,
+        savedReadFramebuffer = 0, savedUnpackAlignment, savedUnpackBuffer = 0,
+        savedUnpackRowLength = 0, savedUnpackSkipRows = 0,
+        savedUnpackSkipPixels = 0, savedVertexArray = 0;
+    GLint savedViewport[4];
+    GLboolean savedColorMask[4];
+    const GLenum caps[] = { GL_BLEND,        GL_CULL_FACE,
+                            GL_DEPTH_TEST,   GL_SCISSOR_TEST,
+                            GL_STENCIL_TEST, GL_RASTERIZER_DISCARD };
+    const size_t capCount = isWebGL2 ? 6 : 5;
+    GLboolean savedCaps[6];
+    GLint savedAttribEnabled = 0, savedAttribSize = 0, savedAttribType = 0,
+          savedAttribNormalized = 0, savedAttribStride = 0,
+          savedAttribBuffer = 0, savedAttribDivisor = 0;
+    void* savedAttribPointer = nullptr;
+
+    m_gl->getIntegerv(GL_ACTIVE_TEXTURE, &savedActiveTexture);
+    m_gl->activeTexture(GL_TEXTURE0);
+    m_gl->getIntegerv(GL_TEXTURE_BINDING_2D, &savedUnit0Texture2D);
+    m_gl->getIntegerv(bindingQuery, &savedUnit0Binding);
+    m_gl->getIntegerv(GL_CURRENT_PROGRAM, &savedProgram);
+    m_gl->getIntegerv(GL_ARRAY_BUFFER_BINDING, &savedArrayBuffer);
+    m_gl->getIntegerv(GL_FRAMEBUFFER_BINDING, &savedFramebuffer);
+    m_gl->getIntegerv(GL_VIEWPORT, savedViewport);
+    m_gl->getBooleanv(GL_COLOR_WRITEMASK, savedColorMask);
+    m_gl->getIntegerv(GL_UNPACK_ALIGNMENT, &savedUnpackAlignment);
+    if (isWebGL2) {
+        m_gl->getIntegerv(GL_READ_FRAMEBUFFER_BINDING, &savedReadFramebuffer);
+        m_gl->getIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &savedUnpackBuffer);
+        m_gl->getIntegerv(GL_UNPACK_ROW_LENGTH, &savedUnpackRowLength);
+        m_gl->getIntegerv(GL_UNPACK_SKIP_ROWS, &savedUnpackSkipRows);
+        m_gl->getIntegerv(GL_UNPACK_SKIP_PIXELS, &savedUnpackSkipPixels);
+    }
+    if (hasVertexArrays) {
+        m_gl->getIntegerv(GL_VERTEX_ARRAY_BINDING, &savedVertexArray);
+    } else {
+        m_gl->getVertexAttribiv(0, GL_VERTEX_ATTRIB_ARRAY_ENABLED,
+                                &savedAttribEnabled);
+        m_gl->getVertexAttribiv(0, GL_VERTEX_ATTRIB_ARRAY_SIZE,
+                                &savedAttribSize);
+        m_gl->getVertexAttribiv(0, GL_VERTEX_ATTRIB_ARRAY_TYPE,
+                                &savedAttribType);
+        m_gl->getVertexAttribiv(0, GL_VERTEX_ATTRIB_ARRAY_NORMALIZED,
+                                &savedAttribNormalized);
+        m_gl->getVertexAttribiv(0, GL_VERTEX_ATTRIB_ARRAY_STRIDE,
+                                &savedAttribStride);
+        m_gl->getVertexAttribiv(0, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING,
+                                &savedAttribBuffer);
+        m_gl->getVertexAttribPointerv(0, GL_VERTEX_ATTRIB_ARRAY_POINTER,
+                                      &savedAttribPointer);
+        if (hasDivisor) {
+            m_gl->getVertexAttribiv(0, GL_VERTEX_ATTRIB_ARRAY_DIVISOR,
+                                    &savedAttribDivisor);
+        }
+    }
+    for (size_t i = 0; i < capCount; i++) {
+        savedCaps[i] = m_gl->isEnabled(caps[i]);
+    }
+
+    // The FFmpeg frame is uploaded as tightly packed client memory.
+    m_gl->pixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    if (isWebGL2) {
+        m_gl->bindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+        m_gl->pixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        m_gl->pixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+        m_gl->pixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+    }
+
+    // A 2D frame texture is kept for the next upload so that same-sized
+    // frames update its storage in place; an external one is released below
+    // so it does not hold on to a decoder buffer.
+    GLuint source = m_videoCopySource;
+    if (!source) {
+        m_gl->genTextures(1, &source);
+    }
+    size_t width = m_videoCopySourceWidth, height = m_videoCopySourceHeight;
+    void* image = nullptr;
+    // Record errors queued before the copy, so the checks below only see
+    // the ones it raises.
+    // Bounded in case a driver keeps reporting the same error.
+    for (int i = 0; i < 8 && hasNewGLError(); i++) {
+    }
+    GLenum sourceTarget =
+        player->bindCurrentVideoFrame(m_gl, source, width, height, image);
+    if (m_gl->getError() != GL_NO_ERROR) {
+        // e.g. the frame upload or the image binding failed; that is the
+        // engine's failure, not an error of the page's call.
+        sourceTarget = 0;
+        width = height = 0;
+    }
+    if (sourceTarget == GL_TEXTURE_2D || source == m_videoCopySource) {
+        m_videoCopySource = source;
+        m_videoCopySourceWidth = width;
+        m_videoCopySourceHeight = height;
+    }
+
+    GLuint framebuffer = 0;
+    GLuint vertexArray = 0;
+    bool allocated = false;
+    if (sourceTarget) {
+        // A plain 2D texture without mipmaps is incomplete under the default
+        // minification filter; the frame is drawn 1:1, so LINEAR is exact.
+        m_gl->texParameteri(sourceTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        m_gl->texParameteri(sourceTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        m_gl->texParameteri(sourceTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        m_gl->texParameteri(sourceTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        if (internalFormat) {
+            m_gl->bindTexture(bindingTarget, texture->glObject());
+            m_gl->texImage2D(target, level, internalFormat.value(), width,
+                             height, 0, format, type, nullptr);
+            if (hasNewGLError()) {
+                sourceTarget = 0;
+            } else {
+                texture->setImageLevelInfo(
+                    target, level, internalFormat.value(), width, height, 1);
+                allocated = true;
+            }
+        }
+    }
+    if (sourceTarget) {
+        const TextureImageLevelInfo* levelInfo =
+            texture->getImageLevelInfo(target, level);
+        bool fits = levelInfo && xoffset >= 0 && yoffset >= 0 &&
+                    xoffset + width <= size_t(levelInfo->width) &&
+                    yoffset + height <= size_t(levelInfo->height);
+
+        m_gl->genFramebuffers(1, &framebuffer);
+        m_gl->bindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+        m_gl->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target,
+                                   texture->glObject(), level);
+        size_t programIndex = sourceTarget == GL_TEXTURE_2D ? 0 : 1;
+        if (!m_videoCopyPrograms[programIndex]) {
+            m_videoCopyPrograms[programIndex] =
+                createVideoCopyProgram(m_gl, programIndex == 1);
+        }
+        GLuint program = m_videoCopyPrograms[programIndex];
+
+        if (!fits) {
+            setGLError(GL_INVALID_VALUE,
+                       "The video frame does not fit in the texture level.");
+        } else if (!program || m_gl->checkFramebufferStatus(GL_FRAMEBUFFER) !=
+                                   GL_FRAMEBUFFER_COMPLETE) {
+            setGLError(GL_INVALID_OPERATION,
+                       "The texture level cannot receive a video frame.");
+            if (allocated) {
+                // Do not leave the new level holding uninitialized memory.
+                std::vector<GLubyte> zeros(width * height * 4);
+                m_gl->texImage2D(target, level, internalFormat.value(), width,
+                                 height, 0, format, type, zeros.data());
+            }
+        } else {
+            if (!m_videoCopyQuad) {
+                const GLfloat quad[] = { 0, 0, 1, 0, 0, 1, 1, 1 };
+                m_gl->genBuffers(1, &m_videoCopyQuad);
+                m_gl->bindBuffer(GL_ARRAY_BUFFER, m_videoCopyQuad);
+                m_gl->bufferData(GL_ARRAY_BUFFER, sizeof(quad), quad,
+                                 GL_STATIC_DRAW);
+            }
+            if (hasVertexArrays) {
+                m_gl->genVertexArrays(1, &vertexArray);
+                m_gl->bindVertexArray(vertexArray);
+            } else if (hasDivisor) {
+                m_gl->vertexAttribDivisor(0, 0);
+            }
+            m_gl->bindBuffer(GL_ARRAY_BUFFER, m_videoCopyQuad);
+            m_gl->enableVertexAttribArray(0);
+            m_gl->vertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+            m_gl->bindTexture(sourceTarget, source);
+            m_gl->useProgram(program);
+            m_gl->uniform1i(m_gl->getUniformLocation(program, "uFlipY"),
+                            m_unpackFlipY);
+            for (size_t i = 0; i < capCount; i++) {
+                m_gl->disable(caps[i]);
+            }
+            m_gl->colorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            m_gl->viewport(xoffset, yoffset, width, height);
+            m_gl->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        }
+    }
+
+    // The page already got the errors that apply to its call; whatever the
+    // driver raised for the copy itself (e.g. an ES2 FBO rejecting level > 0,
+    // reported above as INVALID_OPERATION) is not the page's.
+    for (int i = 0; i < 8 && m_gl->getError() != GL_NO_ERROR; i++) {
+    }
+
+    // Restore the saved state.
+    if (vertexArray) {
+        m_gl->deleteVertexArrays(1, &vertexArray);
+    }
+    if (hasVertexArrays) {
+        m_gl->bindVertexArray(savedVertexArray);
+    } else if (sourceTarget) {
+        m_gl->bindBuffer(GL_ARRAY_BUFFER, savedAttribBuffer);
+        m_gl->vertexAttribPointer(0, savedAttribSize, savedAttribType,
+                                  savedAttribNormalized, savedAttribStride,
+                                  savedAttribPointer);
+        if (!savedAttribEnabled) {
+            m_gl->disableVertexAttribArray(0);
+        }
+        if (hasDivisor) {
+            m_gl->vertexAttribDivisor(0, savedAttribDivisor);
+        }
+    }
+    if (framebuffer) {
+        m_gl->deleteFramebuffers(1, &framebuffer);
+    }
+    if (isWebGL2) {
+        m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER, savedFramebuffer);
+        m_gl->bindFramebuffer(GL_READ_FRAMEBUFFER, savedReadFramebuffer);
+        m_gl->bindBuffer(GL_PIXEL_UNPACK_BUFFER, savedUnpackBuffer);
+        m_gl->pixelStorei(GL_UNPACK_ROW_LENGTH, savedUnpackRowLength);
+        m_gl->pixelStorei(GL_UNPACK_SKIP_ROWS, savedUnpackSkipRows);
+        m_gl->pixelStorei(GL_UNPACK_SKIP_PIXELS, savedUnpackSkipPixels);
+    } else {
+        m_gl->bindFramebuffer(GL_FRAMEBUFFER, savedFramebuffer);
+    }
+    m_gl->pixelStorei(GL_UNPACK_ALIGNMENT, savedUnpackAlignment);
+    for (size_t i = 0; i < capCount; i++) {
+        if (savedCaps[i]) {
+            m_gl->enable(caps[i]);
+        }
+    }
+    m_gl->colorMask(savedColorMask[0], savedColorMask[1], savedColorMask[2],
+                    savedColorMask[3]);
+    m_gl->viewport(savedViewport[0], savedViewport[1], savedViewport[2],
+                   savedViewport[3]);
+    m_gl->useProgram(savedProgram);
+    m_gl->bindBuffer(GL_ARRAY_BUFFER, savedArrayBuffer);
+    if (sourceTarget && sourceTarget != GL_TEXTURE_2D) {
+        m_gl->bindTexture(sourceTarget, 0);
+    }
+    if (source != m_videoCopySource) {
+        m_gl->deleteTextures(1, &source);
+    }
+    if (image) {
+        m_gl->xglDestroyImage(image);
+    }
+    m_gl->bindTexture(GL_TEXTURE_2D, savedUnit0Texture2D);
+    if (bindingTarget != GL_TEXTURE_2D) {
+        m_gl->bindTexture(bindingTarget, savedUnit0Binding);
+    }
+    m_gl->activeTexture(savedActiveTexture);
+}
+
+void WebGLRenderingContext::releaseInternalGLObjects()
+{
+    for (GLuint& program : m_videoCopyPrograms) {
+        if (program) {
+            m_gl->deleteProgram(program);
+            program = 0;
+        }
+    }
+    if (m_videoCopyQuad) {
+        m_gl->deleteBuffers(1, &m_videoCopyQuad);
+        m_videoCopyQuad = 0;
+    }
+    if (m_videoCopySource) {
+        m_gl->deleteTextures(1, &m_videoCopySource);
+        m_videoCopySource = 0;
+    }
+}
+#endif
 
 void WebGLRenderingContext::implementUniformNfv(
     size_t n, void (GL::*uniformNfv)(GLint, GLsizei, const GLfloat*),

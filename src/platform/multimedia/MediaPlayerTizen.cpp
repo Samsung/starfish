@@ -40,6 +40,10 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
+#include "platform/canvas/gl/IncludeGL.h"
+#include "platform/canvas/gl/GL.h"
+
+#include <tbm_surface.h>
 #include "platform/multimedia/MediaPlayerTizen.h"
 #if defined(STARFISH_USE_ESPLUSPLAYER)
 #include "platform/multimedia/MediaPlayerESPlusPlayer.h"
@@ -1173,6 +1177,36 @@ void MediaPlayerTizen::willDrawVideo(Compositor* canvas,
         }
     }
 }
+
+#if !defined(STARFISH_HEADLESS)
+unsigned MediaPlayerTizen::bindCurrentVideoFrame(GL* gl, unsigned texture,
+                                                 size_t& width, size_t& height,
+                                                 void*& image)
+{
+    // Overlay mode sends frames to the HW plane only.
+    if (videoOverlayEnabled()) {
+        return 0;
+    }
+    Locker<Mutex> l(*m_decodedVideoFrameMutex);
+    tbm_surface_h tbm;
+    tbm_surface_info_s info;
+    if (m_lastDecodedVideoPacket == nullptr ||
+        media_packet_get_tbm_surface(m_lastDecodedVideoPacket, &tbm) !=
+            MEDIA_PACKET_ERROR_NONE ||
+        tbm_surface_get_info(tbm, &info) != TBM_SURFACE_ERROR_NONE) {
+        return 0;
+    }
+    image = createVideoFrameImage(gl, tbm);
+    if (image == nullptr) {
+        return 0;
+    }
+    gl->bindTexture(GL_TEXTURE_EXTERNAL_OES, texture);
+    gl->xglImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, image);
+    width = info.width;
+    height = info.height;
+    return GL_TEXTURE_EXTERNAL_OES;
+}
+#endif
 
 void MediaPlayerTizen::didDrawVideo(Compositor* canvas,
                                     const LayoutRect& videoRect,

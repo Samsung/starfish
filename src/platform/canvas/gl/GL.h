@@ -453,6 +453,12 @@ public:
     virtual void readBuffer(GLenum src) = 0;
 };
 
+#if defined(STARFISH_TIZEN)
+// Wraps a decoded video tbm_surface_h in an image of gl's display, to be
+// bound as GL_TEXTURE_EXTERNAL_OES and released with xglDestroyImage().
+void *createVideoFrameImage(GL *gl, void *tbmSurface);
+#endif
+
 } // namespace Starfish
 
 #endif

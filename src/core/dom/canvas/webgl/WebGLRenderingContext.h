@@ -47,6 +47,7 @@ class WebGLRenderbuffer;
 class WebGLUniformLocation;
 class WebGLRenderingContextState;
 class WebGLShaderPrecisionFormat;
+class HTMLVideoElement;
 class ImageData;
 class String;
 class Float32ArrayOrSequenceOfGLfloat;
@@ -387,6 +388,16 @@ protected:
 
 private:
     bool isBoundCubeMapTexture(GLenum target);
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+    void releaseInternalGLObjects() override;
+    // Copies the current frame of `video` on the GPU into `level` of the
+    // texture bound to `target` at (xoffset, yoffset), first allocating the
+    // level to the frame size when `internalFormat` is given (texImage2D).
+    void texImageVideo(GLenum target, GLint level,
+                       Optional<GLint> internalFormat, GLint xoffset,
+                       GLint yoffset, GLenum format, GLenum type,
+                       HTMLVideoElement* video);
+#endif
 
 protected:
     bool isFromCurrentProgram(WebGLUniformLocation* uniform);
@@ -494,6 +505,16 @@ private:
     String* m_drawingBufferColorSpace;
     Optional<WebGLRenderbuffer*> m_boundRenderbuffer;
     GLExtensionMap m_enabledExtensions;
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+    // Built on the first video upload: copy programs for a GL_TEXTURE_2D and a
+    // GL_TEXTURE_EXTERNAL_OES source, their full-viewport quad, and the 2D
+    // frame texture with the size of its storage.
+    GLuint m_videoCopyPrograms[2] = { 0, 0 };
+    GLuint m_videoCopyQuad = 0;
+    GLuint m_videoCopySource = 0;
+    size_t m_videoCopySourceWidth = 0;
+    size_t m_videoCopySourceHeight = 0;
+#endif
 };
 } // namespace Starfish
 
