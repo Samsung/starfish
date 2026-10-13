@@ -136,12 +136,22 @@ static PauseRequest* g_currentPauseRequest = nullptr;
 
 MessageLoopGLib::MessageLoopGLib()
     : MessageLoop()
+    , m_runLoop(nullptr)
 {
 }
 
 MessageLoopGLib::MessageLoopGLib(RunLoopGLib* loop)
     : MessageLoop()
+    , m_runLoop(loop)
 {
+}
+
+void* MessageLoopGLib::glibContext()
+{
+    if (m_runLoop) {
+        return m_runLoop->mainContext();
+    }
+    return glibMainContext();
 }
 
 struct IdlerData {
@@ -169,8 +179,8 @@ void MessageLoopGLib::destroy()
             }
         }
 
-        g_main_context_iteration(
-            reinterpret_cast<GMainContext*>(glibMainContext()), FALSE);
+        g_main_context_iteration(reinterpret_cast<GMainContext*>(glibContext()),
+                                 FALSE);
     }
     {
         Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
@@ -198,7 +208,7 @@ static bool removeIderFromList(std::unordered_set<size_t>& list, IdlerData* id)
 size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
                                  void (*fn)(size_t, void*), void* data)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(calledOnValidThread());
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
     id->m_isMainThreadData = true;
@@ -219,8 +229,8 @@ size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
             return G_SOURCE_REMOVE;
         },
         id, nullptr);
-    id->m_idler = g_source_attach(
-        source, reinterpret_cast<GMainContext*>(glibMainContext()));
+    id->m_idler =
+        g_source_attach(source, reinterpret_cast<GMainContext*>(glibContext()));
     g_source_unref(source);
 
     return (size_t)id;
@@ -230,7 +240,7 @@ size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
                                  void (*fn)(size_t, void*, void*), void* data,
                                  void* data1)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(calledOnValidThread());
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
     id->m_isMainThreadData = true;
@@ -254,8 +264,8 @@ size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
             return G_SOURCE_REMOVE;
         },
         id, nullptr);
-    id->m_idler = g_source_attach(
-        source, reinterpret_cast<GMainContext*>(glibMainContext()));
+    id->m_idler =
+        g_source_attach(source, reinterpret_cast<GMainContext*>(glibContext()));
     g_source_unref(source);
 
     return (size_t)id;
@@ -265,7 +275,7 @@ size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
                                  void (*fn)(size_t, void*, void*, void*),
                                  void* data, void* data1, void* data2)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(calledOnValidThread());
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
     id->m_isMainThreadData = true;
@@ -289,8 +299,8 @@ size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
             return G_SOURCE_REMOVE;
         },
         id, nullptr);
-    id->m_idler = g_source_attach(
-        source, reinterpret_cast<GMainContext*>(glibMainContext()));
+    id->m_idler =
+        g_source_attach(source, reinterpret_cast<GMainContext*>(glibContext()));
     g_source_unref(source);
 
     return (size_t)id;
@@ -299,7 +309,7 @@ size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
 size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
     GlobalScope* globalScope, void (*fn)(size_t, void*), void* data)
 {
-    STARFISH_ASSERT(!isMainThread());
+    STARFISH_ASSERT(!calledOnValidThread());
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
     id->m_needsRun = true;
@@ -339,8 +349,8 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
             return G_SOURCE_REMOVE;
         },
         id, nullptr);
-    id->m_idler = g_source_attach(
-        source, reinterpret_cast<GMainContext*>(glibMainContext()));
+    id->m_idler =
+        g_source_attach(source, reinterpret_cast<GMainContext*>(glibContext()));
     g_source_set_ready_time(source, 0);
     g_source_unref(source);
     return (size_t)id;
@@ -350,7 +360,7 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
     GlobalScope* globalScope, void (*fn)(size_t, void*, void*), void* data,
     void* data1)
 {
-    STARFISH_ASSERT(!isMainThread());
+    STARFISH_ASSERT(!calledOnValidThread());
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
     id->m_needsRun = true;
@@ -393,8 +403,8 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
             return G_SOURCE_REMOVE;
         },
         id, nullptr);
-    id->m_idler = g_source_attach(
-        source, reinterpret_cast<GMainContext*>(glibMainContext()));
+    id->m_idler =
+        g_source_attach(source, reinterpret_cast<GMainContext*>(glibContext()));
     g_source_set_ready_time(source, 0);
     g_source_unref(source);
     return (size_t)id;
@@ -402,14 +412,14 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
 
 void MessageLoopGLib::removeIdler(size_t handle)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(calledOnValidThread());
     if (handle == MessageLoopInvalidID) {
         return;
     }
     IdlerData* id = (IdlerData*)handle;
     if (removeIderFromList(m_idlers, id)) {
         GSource* source = g_main_context_find_source_by_id(
-            reinterpret_cast<GMainContext*>(glibMainContext()), id->m_idler);
+            reinterpret_cast<GMainContext*>(glibContext()), id->m_idler);
         if (source) {
             g_source_destroy(source);
         }
@@ -429,7 +439,7 @@ void MessageLoopGLib::removeIdlerWithNoGCRooting(size_t handle)
 void MessageLoopGLib::clearPendingIdlers(GlobalScope* globalScope)
 {
     STARFISH_LOG_INFO("clearPendingIdlers: globalScope[%p]", globalScope);
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(calledOnValidThread());
 
     // Remove idlers
     auto iter = m_idlers.begin();
@@ -437,8 +447,7 @@ void MessageLoopGLib::clearPendingIdlers(GlobalScope* globalScope)
         IdlerData* id = (IdlerData*)*iter;
         if (id->m_globalScope == globalScope || globalScope == nullptr) {
             GSource* source = g_main_context_find_source_by_id(
-                reinterpret_cast<GMainContext*>(glibMainContext()),
-                id->m_idler);
+                reinterpret_cast<GMainContext*>(glibContext()), id->m_idler);
             if (source) {
                 g_source_destroy(source);
             }

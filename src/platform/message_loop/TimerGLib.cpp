@@ -37,6 +37,12 @@ TimerGLib::TimerGLib(WebBase* webBase)
 {
 }
 
+void* TimerGLib::glibContext()
+{
+    return static_cast<MessageLoopGLib*>(m_webBase->messageLoop())
+        ->glibContext();
+}
+
 struct AnimationTickData : public gc {
     TimerGLib* m_timer;
     int32_t m_id;
@@ -58,7 +64,7 @@ struct TimeoutData : public gc {
 size_t TimerGLib::addTimer(unsigned delay, GlobalScope* globalScope,
                            TimerHandler handler, void* data, bool repetitive)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(m_webBase->messageLoop()->calledOnValidThread());
 
     TimeoutData* td = new (NoGC) TimeoutData;
     td->m_timer = this;
@@ -68,7 +74,7 @@ size_t TimerGLib::addTimer(unsigned delay, GlobalScope* globalScope,
     td->m_data = data;
     td->m_handler = handler;
 
-    GMainContext* context = reinterpret_cast<GMainContext*>(glibMainContext());
+    GMainContext* context = reinterpret_cast<GMainContext*>(glibContext());
     GSource* source = g_timeout_source_new(delay);
 
     if (repetitive) {
@@ -111,8 +117,8 @@ size_t TimerGLib::addTimer(unsigned delay, GlobalScope* globalScope,
 
 void TimerGLib::removeTimer(size_t reqID)
 {
-    STARFISH_RELEASE_ASSERT(isMainThread());
-    GMainContext* context = reinterpret_cast<GMainContext*>(glibMainContext());
+    STARFISH_RELEASE_ASSERT(m_webBase->messageLoop()->calledOnValidThread());
+    GMainContext* context = reinterpret_cast<GMainContext*>(glibContext());
     auto handlerData = m_timeoutHandler.find(reqID);
     if (handlerData != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)handlerData->second;
@@ -130,7 +136,7 @@ void TimerGLib::removeTimer(size_t reqID)
 size_t TimerGLib::addAnimator(GlobalScope* globalScope,
                               GenericAnimationHandler handler, void* data)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(m_webBase->messageLoop()->calledOnValidThread());
     AnimationTickData* ad = new (NoGC) AnimationTickData;
     ad->m_timer = this;
     auto id = ++m_animationCounter;
@@ -139,7 +145,7 @@ size_t TimerGLib::addAnimator(GlobalScope* globalScope,
     ad->m_handler = handler;
     ad->m_globalScope = globalScope;
 
-    GMainContext* context = reinterpret_cast<GMainContext*>(glibMainContext());
+    GMainContext* context = reinterpret_cast<GMainContext*>(glibContext());
     GSource* source = g_timeout_source_new(0);
     g_source_set_callback(
         source,
@@ -154,7 +160,7 @@ size_t TimerGLib::addAnimator(GlobalScope* globalScope,
                 ad->m_timer->m_animationHandler.erase(a);
             }
             GMainContext* context =
-                reinterpret_cast<GMainContext*>(glibMainContext());
+                reinterpret_cast<GMainContext*>(ad->m_timer->glibContext());
             GSource* source =
                 g_main_context_find_source_by_id(context, ad->m_timerID);
             if (source) {
@@ -173,8 +179,8 @@ size_t TimerGLib::addAnimator(GlobalScope* globalScope,
 
 void TimerGLib::removeGenericAnimator(size_t reqID)
 {
-    STARFISH_RELEASE_ASSERT(isMainThread());
-    GMainContext* context = reinterpret_cast<GMainContext*>(glibMainContext());
+    STARFISH_RELEASE_ASSERT(m_webBase->messageLoop()->calledOnValidThread());
+    GMainContext* context = reinterpret_cast<GMainContext*>(glibContext());
     auto handlerData = m_animationHandler.find(reqID);
     if (handlerData != m_animationHandler.end()) {
         AnimationTickData* ad = (AnimationTickData*)handlerData->second;
@@ -190,8 +196,8 @@ void TimerGLib::removeGenericAnimator(size_t reqID)
 
 void TimerGLib::clear(GlobalScope* globalScope)
 {
-    STARFISH_RELEASE_ASSERT(isMainThread());
-    GMainContext* context = reinterpret_cast<GMainContext*>(glibMainContext());
+    STARFISH_RELEASE_ASSERT(m_webBase->messageLoop()->calledOnValidThread());
+    GMainContext* context = reinterpret_cast<GMainContext*>(glibContext());
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)timerIter->second;
@@ -242,8 +248,8 @@ void TimerGLib::clear(GlobalScope* globalScope)
 
 void TimerGLib::destroy()
 {
-    STARFISH_RELEASE_ASSERT(isMainThread());
-    GMainContext* context = reinterpret_cast<GMainContext*>(glibMainContext());
+    STARFISH_RELEASE_ASSERT(m_webBase->messageLoop()->calledOnValidThread());
+    GMainContext* context = reinterpret_cast<GMainContext*>(glibContext());
     STARFISH_LOG_INFO("TimerGLib::destroy");
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
