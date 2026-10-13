@@ -29,8 +29,8 @@ http://web-platform.test:8000/css/css-anchor-position/chrome-445458885-crash.htm
 http://web-platform.test:8000/css/css-anchor-position/grid-anchor-center-crash.html
 http://web-platform.test:8000/css/css-anchor-position/iframe-anchor-name-crash.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-anchor-position/inline-grid-try-fallbacks-crash.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-anchor-position/long-anchor-chain-crash.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-anchor-position/position-try-display-none-hang-crash.html
+http://web-platform.test:8000/css/css-anchor-position/long-anchor-chain-crash.html
+http://web-platform.test:8000/css/css-anchor-position/position-try-display-none-hang-crash.html
 http://web-platform.test:8000/css/css-anchor-position/position-try-fallbacks-crash.html
 http://web-platform.test:8000/css/css-anchor-position/position-try-invalid-anchor-crash.html
 http://web-platform.test:8000/css/css-anchor-position/self-referencing-invoker-anchor-crash.html

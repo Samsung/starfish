@@ -1,5 +1,5 @@
 http://web-platform.test:8000/css/filter-effects/backdrop-filter-feimage-crash.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/filter-effects/backdrop-filter-root-toggle-crash.html
+http://web-platform.test:8000/css/filter-effects/backdrop-filter-root-toggle-crash.html
 http://web-platform.test:8000/css/filter-effects/backdrop-filter-transform-popover-crash.html
 http://web-platform.test:8000/css/filter-effects/crashtests/broken-reference-crash-001.html
 http://web-platform.test:8000/css/filter-effects/crashtests/external-reference-in-interleaved-oof-crash.html
