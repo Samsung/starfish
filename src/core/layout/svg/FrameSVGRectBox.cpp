@@ -43,6 +43,18 @@ void* FrameSVGRectBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void FrameSVGRectBox::paintContent(PaintingContext& ctx)
+{
+    // SVG 2 rect: a computed value of zero for either dimension disables
+    // rendering of the element. path() still serves clipPath and the
+    // geometry queries, so only painting stops here.
+    auto styleSize = resolveStyleSize(viewport());
+    if (styleSize.width() <= 0 || styleSize.height() <= 0) {
+        return;
+    }
+    FrameSVGBox::paintContent(ctx);
+}
+
 Optional<Path*> FrameSVGRectBox::path()
 {
     Path* path = Path::create();

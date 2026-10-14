@@ -59,6 +59,7 @@ public:
         }
     }
 
+    virtual void paintContent(PaintingContext& ctx) override;
     virtual Optional<Path*> path() override;
     virtual LayoutRect boundingRect() override;
 
