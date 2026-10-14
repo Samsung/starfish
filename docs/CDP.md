@@ -49,7 +49,8 @@ The listener binds **loopback only** (`127.0.0.1`), like Chrome's
 `--remote-debugging-port`: a CDP client can run script in every page, read and
 rewrite cookies, and turn off TLS verification, so the port must not be
 reachable from other hosts by default. Set `STARFISH_CDP_BIND_ANY=1` to bind
-all interfaces when you have a reason to (and a firewall). WebSocket upgrades
+all interfaces when you have a reason to (and a firewall); any other value
+keeps the loopback default. WebSocket upgrades
 that carry an `Origin` header (i.e. come from a web page) are rejected, as
 Chrome does without `--remote-allow-origins`; CLI clients, Puppeteer and
 Playwright send none. `Security.setIgnoreCertificateErrors` is reverted when
