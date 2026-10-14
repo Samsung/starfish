@@ -1,0 +1,5 @@
+// https://webidl.spec.whatwg.org/#dictdef-quotaexceedederroroptions
+dictionary QuotaExceededErrorOptions {
+    double quota;
+    double requested;
+};
