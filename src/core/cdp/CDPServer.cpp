@@ -115,9 +115,12 @@ void* CDPServer::acceptLoop(void* data)
     // Loopback only, like Chrome's --remote-debugging-port: a CDP client has
     // full control of every page (script, cookies, TLS policy), so exposing
     // the port beyond this host is an explicit embedder opt-in, never a
-    // default web content or a LAN peer can rely on.
+    // default web content or a LAN peer can rely on. Only the documented
+    // value opts in, so STARFISH_CDP_BIND_ANY=0 keeps the loopback default.
+    const char* bindAny = getenv("STARFISH_CDP_BIND_ANY");
+    const bool bindAllInterfaces = bindAny && !strcmp(bindAny, "1");
     addr.sin_addr.s_addr =
-        htonl(getenv("STARFISH_CDP_BIND_ANY") ? INADDR_ANY : INADDR_LOOPBACK);
+        htonl(bindAllInterfaces ? INADDR_ANY : INADDR_LOOPBACK);
     addr.sin_port = htons(self->m_port);
 
     if (::bind(listenFd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
