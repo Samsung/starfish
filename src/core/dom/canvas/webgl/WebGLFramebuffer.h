@@ -24,6 +24,7 @@
 
 #include "core/dom/canvas/webgl/WebGLObject.h"
 #include "core/dom/canvas/webgl/WebGLRenderbuffer.h"
+#include "core/dom/canvas/webgl/WebGLRenderingContext.h"
 #include "core/dom/canvas/webgl/WebGLTexture.h"
 
 namespace Starfish {
@@ -288,6 +289,22 @@ public:
         }
     }
 
+    static bool isFloatColorFormat(GLenum format)
+    {
+        switch (format) {
+        case 0x822D: /* GL_R16F */
+        case 0x822F: /* GL_RG16F */
+        case 0x881A: /* GL_RGBA16F */
+        case 0x822E: /* GL_R32F */
+        case 0x8230: /* GL_RG32F */
+        case 0x8814: /* GL_RGBA32F */
+        case 0x8C3A: /* GL_R11F_G11F_B10F */
+            return true;
+        default:
+            return false;
+        }
+    }
+
     static bool isIntegerInternalFormat(GLenum format)
     {
         return isSignedIntegerInternalFormat(format) ||
@@ -481,8 +498,18 @@ public:
                     format == 0x84F9 /* GL_DEPTH_STENCIL */ ||
                     format == 0x88F0 /* GL_DEPTH24_STENCIL8 */ ||
                     format == 0x8CAD /* GL_DEPTH32F_STENCIL8 */ ||
-                    format == 0x8D48 /* GL_STENCIL_INDEX8 */) {
+                    format == 0x8D48 /* GL_STENCIL_INDEX8 */ ||
+                    format == 0x881B /* GL_RGB16F */ ||
+                    format == 0x8815 /* GL_RGB32F */) {
                     return 0x8CD6; /* GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT */
+                }
+                if (isFloatColorFormat(format)) {
+                    if (context() && context()->isWebGL2RenderingContext() &&
+                        !context()->isExtensionEnabled(
+                            "EXT_color_buffer_float")) {
+                        return 0x8CD6; /* GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT
+                                        */
+                    }
                 }
             }
             if (commonWidth == -1) {

@@ -210,6 +210,36 @@ bool Pixel::isInternalFormatValid(GLint internalFormat, GLenum format,
     return false;
 }
 
+bool Pixel::isKnownInternalFormatWebGL2(GLint internalFormat)
+{
+    for (const Combination& combination : combinationsWebGL2) {
+        if (combination.internalFormat == internalFormat) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Pixel::isKnownFormatWebGL2(GLenum format)
+{
+    for (const Combination& combination : combinationsWebGL2) {
+        if (combination.format == format) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Pixel::isKnownTypeWebGL2(GLenum type)
+{
+    for (const Combination& combination : combinationsWebGL2) {
+        if (combination.type == type) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool Pixel::isSizedInternalFormat(GLenum internalformat)
 {
     if (internalformat == GL_RGBA || internalformat == GL_RGB ||

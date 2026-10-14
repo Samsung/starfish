@@ -778,20 +778,68 @@ void WebGLRenderingContext::copyTexImage2D(GLenum target, GLint level,
 {
     ENTER_CONTEXT_SCOPE();
 
+    if (target != GL_TEXTURE_2D && (target < GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
+                                    target > GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)) {
+        setGLError(GL_INVALID_ENUM, "Invalid texture target");
+        return;
+    }
+
+    if (border != 0) {
+        setGLError(GL_INVALID_VALUE, "border must be 0");
+        return;
+    }
+
+    if (level < 0 || width < 0 || height < 0) {
+        setGLError(GL_INVALID_VALUE, "negative level or dimension");
+        return;
+    }
+
     WebGLTexture* texture = getBoundTextureObject(target);
-    if (texture && texture->isImmutable()) {
+    if (!texture || m_boundTextures.find(target) == m_boundTextures.end()) {
+        setGLError(GL_INVALID_OPERATION, "No texture bound to target");
+        return;
+    }
+
+    if (texture->isImmutable()) {
         setGLError(GL_INVALID_OPERATION, "Texture is immutable.");
         return;
     }
 
-    if (m_boundTextures.find(target) == m_boundTextures.end()) {
-        setGLError(GL_INVALID_OPERATION);
+    if (internalformat == 0x8054 /* GL_RGB16 */) {
+        setGLError(GL_INVALID_ENUM, "Invalid internal format");
         return;
+    }
+
+    // Check alpha compatibility with read framebuffer
+    if (internalformat == GL_RGBA || internalformat == GL_RGBA4 ||
+        internalformat == GL_RGB5_A1 || internalformat == GL_RGBA8) {
+        GLenum srcFormat = 0;
+        Optional<WebGLFramebuffer*> maybeFb =
+            getBoundFramebuffer(GL_READ_FRAMEBUFFER);
+        if (maybeFb.hasValue() && maybeFb.value()) {
+            WebGLFramebuffer* fb = maybeFb.value();
+            size_t readAttachmentIndex = 0;
+            GLenum rb = fb->readBuffer();
+            if (rb >= GL_COLOR_ATTACHMENT0 && rb < GL_COLOR_ATTACHMENT0 + 16) {
+                readAttachmentIndex = rb - GL_COLOR_ATTACHMENT0;
+            }
+            srcFormat = fb->getColorAttachmentFormat(readAttachmentIndex);
+        } else {
+            if (!m_attributes.alpha()) {
+                srcFormat = GL_RGB;
+            }
+        }
+        if (srcFormat == GL_RGB565 || srcFormat == GL_RGB ||
+            srcFormat == GL_RGB8) {
+            setGLError(GL_INVALID_OPERATION,
+                       "Cannot copy non-alpha source to alpha destination");
+            return;
+        }
     }
 
     m_gl->copyTexImage2D(target, level, internalformat, x, y, width, height,
                          border);
-    if (texture && !hasNewGLError()) {
+    if (!hasNewGLError()) {
         texture->setImageLevelInfo(target, level, internalformat, width, height,
                                    1);
     }
@@ -804,10 +852,55 @@ void WebGLRenderingContext::copyTexSubImage2D(GLenum target, GLint level,
 {
     ENTER_CONTEXT_SCOPE();
 
-    if (m_boundTextures.find(target) == m_boundTextures.end()) {
+    if (target != GL_TEXTURE_2D && (target < GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
+                                    target > GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)) {
+        setGLError(GL_INVALID_ENUM, "Invalid texture target");
+        return;
+    }
+
+    if (level < 0 || xoffset < 0 || yoffset < 0 || width < 0 || height < 0) {
+        setGLError(GL_INVALID_VALUE, "negative offset or dimension");
+        return;
+    }
+
+    WebGLTexture* texture = getBoundTextureObject(target);
+    if (!texture || m_boundTextures.find(target) == m_boundTextures.end()) {
         setGLError(GL_INVALID_OPERATION);
         return;
     }
+
+    // Check alpha compatibility with read framebuffer
+    GLenum srcFormat = 0;
+    Optional<WebGLFramebuffer*> maybeFb =
+        getBoundFramebuffer(GL_READ_FRAMEBUFFER);
+    if (maybeFb.hasValue() && maybeFb.value()) {
+        WebGLFramebuffer* fb = maybeFb.value();
+        size_t readAttachmentIndex = 0;
+        GLenum rb = fb->readBuffer();
+        if (rb >= GL_COLOR_ATTACHMENT0 && rb < GL_COLOR_ATTACHMENT0 + 16) {
+            readAttachmentIndex = rb - GL_COLOR_ATTACHMENT0;
+        }
+        srcFormat = fb->getColorAttachmentFormat(readAttachmentIndex);
+    } else {
+        if (!m_attributes.alpha()) {
+            srcFormat = GL_RGB;
+        }
+    }
+    if (srcFormat == GL_RGB565 || srcFormat == GL_RGB || srcFormat == GL_RGB8) {
+        GLenum dstFormat = 0;
+        const auto* info = texture->getImageLevelInfo(target, level);
+        if (info) {
+            dstFormat = info->internalFormat;
+        }
+        if (dstFormat == GL_RGBA || dstFormat == GL_RGBA4 ||
+            dstFormat == GL_RGB5_A1 || dstFormat == GL_RGBA8 ||
+            dstFormat == 0) {
+            setGLError(GL_INVALID_OPERATION,
+                       "Cannot copy non-alpha source to alpha destination");
+            return;
+        }
+    }
+
     m_gl->copyTexSubImage2D(target, level, xoffset, yoffset, x, y, width,
                             height);
 }
@@ -3392,6 +3485,18 @@ void WebGLRenderingContext::renderbufferStorage(GLenum target,
         return;
     }
 
+    if (internalformat == 0x881B /* GL_RGB16F */ ||
+        internalformat == 0x8815 /* GL_RGB32F */) {
+        setGLError(GL_INVALID_ENUM, "RGB float formats are not renderable");
+        return;
+    }
+    if (WebGLFramebuffer::isFloatColorFormat(internalformat)) {
+        if (!isExtensionEnabled("EXT_color_buffer_float")) {
+            setGLError(GL_INVALID_ENUM, "EXT_color_buffer_float not enabled");
+            return;
+        }
+    }
+
     GLint maxSize = 0;
     m_gl->getIntegerv(GL_MAX_RENDERBUFFER_SIZE, &maxSize);
     if (maxSize > 0 && (width > maxSize || height > maxSize)) {
@@ -4792,6 +4897,18 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
 bool WebGLRenderingContext::checkInternalFormat(GLint internalFormat,
                                                 GLenum format, GLenum type)
 {
+    if (internalFormat != GL_ALPHA && internalFormat != GL_RGB &&
+        internalFormat != GL_RGBA && internalFormat != GL_LUMINANCE &&
+        internalFormat != GL_LUMINANCE_ALPHA) {
+        setGLError(GL_INVALID_ENUM, "internalFormat is not an accepted token");
+        return false;
+    }
+    if (format != GL_ALPHA && format != GL_RGB && format != GL_RGBA &&
+        format != GL_LUMINANCE && format != GL_LUMINANCE_ALPHA) {
+        setGLError(GL_INVALID_ENUM, "format is not an accepted token");
+        return false;
+    }
+
     if (!Pixel::isInternalFormatValid(internalFormat, format, type, 1)) {
         // The format, in WebGL 1, must be the same as internalFormat. See:
         // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
@@ -4814,6 +4931,17 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
                                        Optional<ScriptArrayBufferView> pixels)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (target != GL_TEXTURE_2D && (target < GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
+                                    target > GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)) {
+        setGLError(GL_INVALID_ENUM, "Invalid texture target");
+        return;
+    }
+
+    if (border != 0) {
+        setGLError(GL_INVALID_VALUE, "border must be 0");
+        return;
+    }
 
     WebGLTexture* texture = getBoundTextureObject(target);
     if (texture && texture->isImmutable()) {
@@ -4944,6 +5072,18 @@ void WebGLRenderingContext::texSubImage2D(
     Optional<ScriptArrayBufferView> pixels)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (target != GL_TEXTURE_2D && (target < GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
+                                    target > GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)) {
+        setGLError(GL_INVALID_ENUM, "Invalid texture target");
+        return;
+    }
+
+    if (format == 0x80E0 /* GL_BGR */ || format == 0x80E1 /* GL_BGRA */ ||
+        type == 0x8032 /* GL_UNSIGNED_BYTE_3_3_2 */) {
+        setGLError(GL_INVALID_ENUM, "Invalid format or type");
+        return;
+    }
 
     handleTexImageWithArrayBufferView(
         target, level, width, height, 1, format, type, pixels, 0,

@@ -3486,6 +3486,18 @@ void WebGL2RenderingContext::renderbufferStorageMultisample(
         return;
     }
 
+    if (internalformat == 0x881B /* GL_RGB16F */ ||
+        internalformat == 0x8815 /* GL_RGB32F */) {
+        setGLError(GL_INVALID_ENUM, "RGB float formats are not renderable");
+        return;
+    }
+    if (WebGLFramebuffer::isFloatColorFormat(internalformat)) {
+        if (!isExtensionEnabled("EXT_color_buffer_float")) {
+            setGLError(GL_INVALID_ENUM, "EXT_color_buffer_float not enabled");
+            return;
+        }
+    }
+
     GLint maxSize = 0;
     gl()->getIntegerv(GL_MAX_RENDERBUFFER_SIZE, &maxSize);
     if (maxSize > 0 && (width > maxSize || height > maxSize)) {
@@ -4065,6 +4077,14 @@ void WebGL2RenderingContext::bufferSubData(GLenum target,
 bool WebGL2RenderingContext::checkInternalFormat(GLint internalFormat,
                                                  GLenum format, GLenum type)
 {
+    if (!Pixel::isKnownInternalFormatWebGL2(internalFormat) ||
+        !Pixel::isKnownFormatWebGL2(format) ||
+        !Pixel::isKnownTypeWebGL2(type)) {
+        setGLError(GL_INVALID_ENUM,
+                   "internalFormat, format, or type is not an accepted token");
+        return false;
+    }
+
     if (!Pixel::isInternalFormatValid(internalFormat, format, type, 2)) {
         setGLError(GL_INVALID_OPERATION,
                    StringUtils::formatString(
@@ -4468,21 +4488,32 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
 {
     ENTER_CONTEXT_SCOPE();
 
-    WebGLTexture* texture = getBoundTextureObject(target);
     if (target != GL_TEXTURE_3D && target != GL_TEXTURE_2D_ARRAY) {
         setGLError(GL_INVALID_ENUM, "target is invalid.");
         return;
     }
 
+    if (border != 0) {
+        setGLError(GL_INVALID_VALUE, "border must be 0.");
+        return;
+    }
+
+    if (internalformat == 0x8227 /* GL_RG */) {
+        setGLError(GL_INVALID_VALUE,
+                   "unsized GL_RG format not allowed in texImage3D");
+        return;
+    }
+
+    if (!checkInternalFormat(internalformat, format, type)) {
+        return;
+    }
+
+    WebGLTexture* texture = getBoundTextureObject(target);
     if (!hasBoundTexture(target)) {
         setGLError(
             GL_INVALID_OPERATION,
             StringUtils::formatString("target (0x%04X) is not bound.", target)
                 .c_str());
-        return;
-    }
-
-    if (!checkInternalFormat(internalformat, format, type)) {
         return;
     }
 
@@ -4515,17 +4546,8 @@ void WebGL2RenderingContext::texImage3D(
 {
     ENTER_CONTEXT_SCOPE();
 
-    WebGLTexture* texture = getBoundTextureObject(target);
     if (target != GL_TEXTURE_3D && target != GL_TEXTURE_2D_ARRAY) {
         setGLError(GL_INVALID_ENUM, "target is invalid.");
-        return;
-    }
-
-    if (!hasBoundTexture(target)) {
-        setGLError(
-            GL_INVALID_OPERATION,
-            StringUtils::formatString("target (0x%04X) is not bound.", target)
-                .c_str());
         return;
     }
 
@@ -4534,7 +4556,22 @@ void WebGL2RenderingContext::texImage3D(
         return;
     }
 
+    if (internalformat == 0x8227 /* GL_RG */) {
+        setGLError(GL_INVALID_VALUE,
+                   "unsized GL_RG format not allowed in texImage3D");
+        return;
+    }
+
     if (!checkInternalFormat(internalformat, format, type)) {
+        return;
+    }
+
+    WebGLTexture* texture = getBoundTextureObject(target);
+    if (!hasBoundTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
         return;
     }
 
@@ -4643,6 +4680,12 @@ void WebGL2RenderingContext::texSubImage3D(
 
     if (target != GL_TEXTURE_3D && target != GL_TEXTURE_2D_ARRAY) {
         setGLError(GL_INVALID_ENUM, "target is invalid.");
+        return;
+    }
+
+    if (!Pixel::isKnownFormatWebGL2(format) ||
+        !Pixel::isKnownTypeWebGL2(type)) {
+        setGLError(GL_INVALID_ENUM, "format or type is invalid.");
         return;
     }
 
@@ -5192,15 +5235,24 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
         return;
     }
 
-    size_t bytesPerPixel = getBytesPerPixel(format, type);
-    size_t byteLengthOfPixels =
-        static_cast<size_t>(width) * height * bytesPerPixel;
     size_t elementSize = dstData->isDataViewObject()
                              ? 1
                              : dstData->byteLength() / dstData->arrayLength();
+    size_t elementCount = dstData->isDataViewObject() ? dstData->byteLength()
+                                                      : dstData->arrayLength();
 
-    if (dstData->byteLength() < dstOffset * elementSize + byteLengthOfPixels) {
-        setGLError(GL_INVALID_OPERATION);
+    if (dstOffset > elementCount) {
+        setGLError(GL_INVALID_VALUE, "dstOffset is out of bounds");
+        return;
+    }
+
+    size_t bytesPerPixel = getBytesPerPixel(format, type);
+    size_t byteLengthOfPixels =
+        static_cast<size_t>(width) * height * bytesPerPixel;
+    size_t remainingBytes = dstData->byteLength() - (dstOffset * elementSize);
+
+    if (remainingBytes < byteLengthOfPixels) {
+        setGLError(GL_INVALID_OPERATION, "buffer view is too small");
         return;
     }
 
