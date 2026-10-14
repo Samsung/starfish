@@ -1080,6 +1080,11 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
         SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
         rect = vpRect;
         isUserSpaceOnUseMode = true;
+    } else if (rect.isEmpty()) {
+        // SVG 2 (Object bounding box units): when the geometry of the element
+        // has no width or no height, an objectBoundingBox effect such as a
+        // gradient is ignored -- it has no coordinate system to map onto.
+        return nullptr;
     }
 
     // Handle gradient transform
@@ -1088,6 +1093,13 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
     SkMatrix mat = SkMatrix::I();
     for (size_t i = 0; i < gradientTransform->length(); ++i) {
         mat = mat * gradientTransform->getItem(i)->matrix()->matrix();
+    }
+    // A non-invertible gradientTransform collapses the gradient's coordinate
+    // system the same way, and like a non-invertible transform on an element
+    // (CSS Transforms 1) nothing is displayed.
+    SkMatrix inverse;
+    if (!mat.invert(&inverse)) {
+        return nullptr;
     }
 
     if (matchingSvg->isSVGLinearGradientElement()) {
