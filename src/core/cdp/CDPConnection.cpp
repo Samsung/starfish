@@ -157,6 +157,18 @@ bool CDPConnection::doHandshake(const std::string& request)
         return handleHttpDiscovery(request, url);
     }
 
+    // A browser sends Origin on WebSocket upgrades; a DevTools client (CLI,
+    // Puppeteer, Playwright) does not. Web content on this host must not be
+    // able to drive the loopback CDP port (Chrome: --remote-allow-origins).
+    if (!headerValue(request, "Origin").empty()) {
+        STARFISH_LOG_INFO("cdp: rejecting WebSocket upgrade with Origin");
+        return false;
+    }
+    if (url != "/" && url.compare(0, 10, "/devtools/") != 0) {
+        STARFISH_LOG_INFO("cdp: rejecting unknown WebSocket path");
+        return false;
+    }
+
     // Compute Sec-WebSocket-Accept = base64(sha1(key + GUID)).
     std::string toHash = wsKey + kWsGuid;
     uint8_t digest[20];

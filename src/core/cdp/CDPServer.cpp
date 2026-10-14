@@ -112,7 +112,12 @@ void* CDPServer::acceptLoop(void* data)
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    // Loopback only, like Chrome's --remote-debugging-port: a CDP client has
+    // full control of every page (script, cookies, TLS policy), so exposing
+    // the port beyond this host is an explicit embedder opt-in, never a
+    // default web content or a LAN peer can rely on.
+    addr.sin_addr.s_addr =
+        htonl(getenv("STARFISH_CDP_BIND_ANY") ? INADDR_ANY : INADDR_LOOPBACK);
     addr.sin_port = htons(self->m_port);
 
     if (::bind(listenFd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {

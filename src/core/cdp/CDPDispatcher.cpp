@@ -106,6 +106,9 @@ CDPDispatcher::CDPDispatcher(CDPServer* server, WebView* webView)
 
 CDPDispatcher::~CDPDispatcher()
 {
+    // Security.setIgnoreCertificateErrors is a debugging aid scoped to the
+    // CDP client; it must not outlive the server (see resetConnectionState).
+    setGlobalIgnoreSSLVerify(false);
     while (!m_contexts.empty()) {
         destroyContext(m_contexts.back());
     }
@@ -259,6 +262,10 @@ void CDPDispatcher::resetConnectionState()
     // Drop the flat browser-target session so a reconnecting client
     // re-attaches.
     m_browserSessionId.clear();
+    // Restore strict TLS verification: the override belongs to the departed
+    // client, and leaving it set would weaken every later HTTPS request in
+    // the process.
+    setGlobalIgnoreSSLVerify(false);
 }
 
 void CDPDispatcher::dispatchOnMain(const std::string& rawJson)

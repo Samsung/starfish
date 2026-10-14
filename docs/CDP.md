@@ -45,6 +45,16 @@ The CDP server is started from the `WebView` constructor when the
 `STARFISH_CDP_PORT` (default `9222`). Only the **first** WebView in the process
 binds the port; spawned tabs reuse the same server.
 
+The listener binds **loopback only** (`127.0.0.1`), like Chrome's
+`--remote-debugging-port`: a CDP client can run script in every page, read and
+rewrite cookies, and turn off TLS verification, so the port must not be
+reachable from other hosts by default. Set `STARFISH_CDP_BIND_ANY=1` to bind
+all interfaces when you have a reason to (and a firewall). WebSocket upgrades
+that carry an `Origin` header (i.e. come from a web page) are rejected, as
+Chrome does without `--remote-allow-origins`; CLI clients, Puppeteer and
+Playwright send none. `Security.setIgnoreCertificateErrors` is reverted when
+the client disconnects.
+
 ```sh
 cd out/headless
 STARFISH_ENABLE_CDP=1 STARFISH_CDP_PORT=9222 \
