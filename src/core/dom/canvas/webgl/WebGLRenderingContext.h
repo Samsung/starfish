@@ -365,6 +365,9 @@ public:
     bool executeInContextScope(std::function<void()> callback);
     WebGLRenderingContextState* getState();
 
+    bool isFromCurrentContext(WebGLObject* object);
+    bool isExtensionEnabled(const char* requestedName);
+
 private:
     bool checkAttribOrUniformName(String* name);
 
@@ -384,8 +387,6 @@ protected:
         size_t destWidth = 0, size_t destHeight = 0, size_t depth = 1,
         size_t imageHeight = 0);
 
-    bool isFromCurrentContext(WebGLObject* object);
-
 private:
     bool isBoundCubeMapTexture(GLenum target);
 #ifdef STARFISH_ENABLE_MULTIMEDIA
@@ -401,7 +402,6 @@ private:
 
 protected:
     bool isFromCurrentProgram(WebGLUniformLocation* uniform);
-    bool isExtensionEnabled(const char* requestedName);
     bool isFormatGenerateMipmapSupported(GLenum internalFormat);
 
 protected:

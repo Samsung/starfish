@@ -1394,7 +1394,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/verte
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/transformfeedback/random_interleaved_points.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/transformfeedback/random_interleaved_lines.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/transformfeedback/random_interleaved_triangles.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/uniformapi/info_query.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/uniformapi/info_query.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/uniformapi/value_initial.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/uniformapi/value_assigned.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/uniformapi/random.html
@@ -1436,7 +1436,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/verte
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrays/multiple_attributes.stride.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrays/multiple_attributes.output.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/attriblocation.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/booleanstatequery.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/booleanstatequery.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/buffercopy.html
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/bufferobjectquery.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/clipping.html
@@ -1448,7 +1448,7 @@ http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/bufferobje
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbomultisample.8_samples.html
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbostatequery.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbostencilbuffer.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/floatstatequery.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/floatstatequery.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fragdepth.html
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/indexedstatequery.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/instancedrendering.html
@@ -1488,8 +1488,8 @@ http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/samplersta
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderswitch.html
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/stringquery.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/sync.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/texturestatequery.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrayobject.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/texturestatequery.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrayobject.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/attribs/gl-vertex-attrib.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/attribs/gl-vertex-attrib-i-render.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/attribs/gl-vertexattribipointer.html
@@ -1507,7 +1507,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/context/constants-a
 http://localhost:11010/conformance-suites/2.0.0/conformance2/context/context-attributes-depth-stencil-antialias-obeyed.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/context/context-type-test-2.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/context/methods-2.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-color-buffer-float.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-color-buffer-float.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-color-buffer-half-float.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-disjoint-timer-query-webgl2.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/promoted-extensions.html
@@ -1551,7 +1551,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/getextension-w
 http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/instanceof-test.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/object-deletion-behaviour-2.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/uninitialized-test-2.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/views-with-offsets.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/views-with-offsets.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/programs/gl-get-frag-data-location.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/query/occlusion-query.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/query/query.html
@@ -1597,7 +1597,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-i
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-image-with-bad-args.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-image-with-bad-args-from-dom-elements.html # @ignore Times out on the FFmpeg player: the h264 clip fails to play and the test never advances (#5393).
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-image-with-different-data-source.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-input-validation.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-input-validation.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-mipmap-levels.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-new-formats.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-storage-2d.html

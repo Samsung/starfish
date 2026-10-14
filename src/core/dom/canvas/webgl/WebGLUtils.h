@@ -48,6 +48,9 @@ class Pixel {
 public:
     static bool isInternalFormatValid(GLint internalFormat, GLenum format,
                                       GLenum type = 0, int webGLVersion = 1);
+    static bool isKnownInternalFormatWebGL2(GLint internalFormat);
+    static bool isKnownFormatWebGL2(GLenum format);
+    static bool isKnownTypeWebGL2(GLenum type);
     static bool isSizedInternalFormat(GLenum internalformat);
     static size_t getBytesPerPixel(GLenum format, GLenum type,
                                    int webGLVersion = 1);
