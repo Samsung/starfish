@@ -2573,13 +2573,14 @@ String* WebGLRenderingContext::getProgramInfoLog(WebGLProgram* program)
     m_gl->getProgramiv(program->glObject(), GL_INFO_LOG_LENGTH, &bufferSize);
 
     std::string buffer;
-    buffer.reserve(bufferSize);
+    buffer.resize(bufferSize);
     m_gl->getProgramInfoLog(program->glObject(), bufferSize, &length,
                             &buffer[0]);
 
     if (hasNewGLError()) {
         return nullptr;
     }
+    buffer.resize(length);
 
     TRACE(WEBGL, buffer);
 
@@ -2678,12 +2679,13 @@ String* WebGLRenderingContext::getShaderInfoLog(WebGLShader* shader)
     m_gl->getShaderiv(shader->glObject(), GL_INFO_LOG_LENGTH, &bufferSize);
 
     std::string buffer;
-    buffer.reserve(bufferSize);
+    buffer.resize(bufferSize);
     m_gl->getShaderInfoLog(shader->glObject(), bufferSize, &length, &buffer[0]);
 
     if (hasNewGLError()) {
         return nullptr;
     }
+    buffer.resize(length);
 
     TRACE(WEBGL, buffer);
 
@@ -2698,12 +2700,13 @@ String* WebGLRenderingContext::getShaderSource(WebGLShader* shader)
     m_gl->getShaderiv(shader->glObject(), GL_SHADER_SOURCE_LENGTH, &bufferSize);
 
     std::string buffer;
-    buffer.reserve(bufferSize);
+    buffer.resize(bufferSize);
     m_gl->getShaderSource(shader->glObject(), bufferSize, &length, &buffer[0]);
 
     if (hasNewGLError()) {
         return nullptr;
     }
+    buffer.resize(length);
 
     return String::fromUTF8(buffer.data(), length);
 }
