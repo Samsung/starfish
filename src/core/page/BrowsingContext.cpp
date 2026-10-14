@@ -1408,10 +1408,12 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
             const double scrollOffsetY = window()->scrollY(false);
             std::vector<TouchData> pageTouches(touches, touches + count);
             for (size_t i = 0; i < count; i++) {
-                pageTouches[i].setClientX(pageTouches[i].clientX() +
-                                          scrollOffsetX);
-                pageTouches[i].setClientY(pageTouches[i].clientY() +
-                                          scrollOffsetY);
+                pageTouches[i].setPageX(pageTouches[i].clientX() +
+                                        scrollOffsetX);
+                pageTouches[i].setPageY(pageTouches[i].clientY() +
+                                        scrollOffsetY);
+                pageTouches[i].setClientX(pageTouches[i].pageX());
+                pageTouches[i].setClientY(pageTouches[i].pageY());
             }
             Node* cancelTarget =
                 hitTest(pageTouches[0].clientX(), pageTouches[0].clientY());
@@ -1454,9 +1456,14 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
     touches = pageTouches.data();
     const double scrollOffsetX = window()->scrollX(false);
     const double scrollOffsetY = window()->scrollY(false);
+    // https://w3c.github.io/touch-events/#dom-touch-pagex
+    // pageX/pageY are the viewport coordinates plus the scroll offset, the
+    // same page coordinates dispatchMouseEvent() gives MouseEvent.pageX.
     for (size_t i = 0; i < count; i++) {
-        touches[i].setClientX(touches[i].clientX() + scrollOffsetX);
-        touches[i].setClientY(touches[i].clientY() + scrollOffsetY);
+        touches[i].setPageX(touches[i].clientX() + scrollOffsetX);
+        touches[i].setPageY(touches[i].clientY() + scrollOffsetY);
+        touches[i].setClientX(touches[i].pageX());
+        touches[i].setClientY(touches[i].pageY());
     }
     // Handle touch informations
     // - Do the hitTest for all `Touch` informations and set target for each.

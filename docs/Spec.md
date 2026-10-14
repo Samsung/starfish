@@ -1324,12 +1324,16 @@ section are supported.
 | | attribute | screenY | The vertical coordinate of point relative to the screen in pixels. |
 | | attribute | clientX | The horizontal coordinate of point relative to the viewport in pixels, excluding any scroll offset. |
 | | attribute | clientY | The vertical coordinate of point relative to the viewport in pixels, excluding any scroll offset. |
+| | attribute | pageX | The horizontal coordinate of point relative to the viewport in pixels, including any scroll offset. |
+| | attribute | pageY | The vertical coordinate of point relative to the viewport in pixels, including any scroll offset. |
 | [TouchInit](https://w3c.github.io/touch-events/#idl-def-touchinit) | dictionary | TouchInit | Dictionary that is used to create TouchInit. |
 | | attribute | target | Initializes the target attribute of the Touch object |
 | | attribute | screenX | Initializes the screenX attribute of the Touch object |
 | | attribute | screenY | Initializes the screenY attribute of the Touch object |
 | | attribute | clientX | Initializes the clientX attribute of the Touch object |
 | | attribute | clientY | Initializes the clientY attribute of the Touch object |
+| | attribute | pageX | Initializes the pageX attribute of the Touch object |
+| | attribute | pageY | Initializes the pageY attribute of the Touch object |
 | [TouchList](https://w3c.github.io/touch-events/#idl-def-touchlist) | interface | TouchList | Defines a list of individual points of contact for a touch event. |
 | | attribute | length | Returns the number of Touch objects in the list |
 | [Window](https://html.spec.whatwg.org/#the-window-object) | interface | Window | The Window has an associated Document, which is a Document object. |
@@ -3180,7 +3184,7 @@ The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` 
 | `MouseEvent` | Adds `pageX`/`pageY` (read 0 on synthetic events because `MouseEventInit` does not surface them). **`[Unimplemented]`:** `offsetX`, `offsetY`, `movementX`, `movementY`, `x`, `y`, `layerX`, `layerY`, `getModifierState(key)`. **Bug:** `new MouseEvent('click', {altKey:true})` does NOT copy modifier keys from the init dict. |
 | `PointerEvent` | Exposed; inherits MouseEvent. Implements only `pointerId`, `pointerType` on the prototype. `pointerType` names the input that produced the event (`"touch"` for a finger, `"mouse"` for the pointing device). **`[Unimplemented]`:** `width`, `height`, `pressure`, `tangentialPressure`, `tiltX`, `tiltY`, `twist`, `altitudeAngle`, `azimuthAngle`, `isPrimary`, `getCoalescedEvents()`, `getPredictedEvents()`. **Bug:** `document.createEvent('PointerEvent')` throws "operation is not supported"; use `new PointerEvent(...)`. |
 | `WheelEvent` | **Does NOT exist in LWE** — `WheelEvent === undefined`. `el.onwheel` accepts assignment but never fires. |
-| `TouchEvent` / `Touch` / `TouchList` | All three constructors exposed (`typeof === 'function'`), but **`new TouchEvent(...)` throws `Illegal constructor`** — there is no JS-side way to construct/dispatch a TouchEvent. Real touch events fire only on touchscreen-capable shells (not on glfw/EFL desktop). `Touch` is constructible (`target`, `screenX/Y`, `clientX/Y` only); `TouchEvent.touches` is on the prototype but `targetTouches`/`changedTouches`/modifier flags are not. |
+| `TouchEvent` / `Touch` / `TouchList` | All three constructors exposed (`typeof === 'function'`), but **`new TouchEvent(...)` throws `Illegal constructor`** — there is no JS-side way to construct/dispatch a TouchEvent. Real touch events fire only on touchscreen-capable shells (not on glfw/EFL desktop). `Touch` is constructible (`target`, `screenX/Y`, `clientX/Y`, `pageX/Y` only); `TouchEvent.touches` is on the prototype but `targetTouches`/`changedTouches`/modifier flags are not. |
 | `DragEvent` / `DataTransfer` / `DataTransferItem` / `DataTransferItemList` | **All four are absent** — no IDL, no C++. Globals are `undefined`. `HTMLElement.draggable` is `[Unimplemented]` — reflector returns `undefined`. All `ondrag*` handler slots accept assignment but never fire. |
 | `InputEvent` | Constructible. Implements `data`, **`inputType`** (Spec.md previously didn't list this). **`[Unimplemented]`:** `dataTransfer`, `isComposing`, `getTargetRanges()`. |
 | `CompositionEvent` | Constructible. Implements `data` only. **Not in IDL:** `locale`. `initCompositionEvent()` is `[Unimplemented]`. |
