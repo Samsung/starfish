@@ -50,6 +50,8 @@ public:
         , m_clientY(clientY)
         , m_screenX(screenX)
         , m_screenY(screenY)
+        , m_pageX(clientX)
+        , m_pageY(clientY)
         , m_timeStamp(timeStamp)
     {
     }
@@ -94,6 +96,22 @@ public:
     {
         m_screenY = screenY;
     }
+    double pageX() const
+    {
+        return m_pageX;
+    }
+    void setPageX(double pageX)
+    {
+        m_pageX = pageX;
+    }
+    double pageY() const
+    {
+        return m_pageY;
+    }
+    void setPageY(double pageY)
+    {
+        m_pageY = pageY;
+    }
 
     DOMTimeStamp timeStamp()
     {
@@ -116,6 +134,8 @@ protected:
     double m_clientY;
     double m_screenX;
     double m_screenY;
+    double m_pageX;
+    double m_pageY;
     DOMTimeStamp m_timeStamp;
 };
 
@@ -182,6 +202,14 @@ public:
     void setScreenY(double screenY)
     {
         m_touchData.m_screenY = screenY;
+    }
+    double pageX() const
+    {
+        return m_touchData.m_pageX;
+    }
+    double pageY() const
+    {
+        return m_touchData.m_pageY;
     }
 
     virtual void init(ScriptBindingInstance* instance,

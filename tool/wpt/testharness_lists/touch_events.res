@@ -1,0 +1,12 @@
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/touch-events/expose-legacy-touch-event-apis.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/touch-events/historical.html
+# [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/touch-events/mouseevents-after-touchend.tentative.html
+# [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/touch-events/multi-touch-interactions.html
+# [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/touch-events/multi-touch-interfaces.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/touch-events/multi-touch-touchmove.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/touch-events/pinch-zoom-change.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/touch-events/single-tap-when-touchend-listener-use-sync-xhr.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/touch-events/single-touch.html
+# [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/touch-events/single-touch-vertical-rl.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/touch-events/touch-globaleventhandler-interface.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/touch-events/touch-touchevent-constructor.html

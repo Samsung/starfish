@@ -12,8 +12,8 @@ dictionary TouchInit {
     double clientY = 0;
     double screenX = 0;
     double screenY = 0;
-    [Unimplemented] double pageX = 0;
-    [Unimplemented] double pageY = 0;
+    double pageX = 0;
+    double pageY = 0;
     [Unimplemented] float radiusX = 0;
     [Unimplemented] float radiusY = 0;
     [Unimplemented] float rotationAngle = 0;
@@ -32,8 +32,8 @@ interface Touch {
     readonly attribute double screenY;
     readonly attribute double clientX;
     readonly attribute double clientY;
-    [Unimplemented] readonly attribute double pageX;
-    [Unimplemented] readonly attribute double pageY;
+    readonly attribute double pageX;
+    readonly attribute double pageY;
     [Unimplemented] readonly attribute float radiusX;
     [Unimplemented] readonly attribute float radiusY;
     [Unimplemented] readonly attribute float rotationAngle;
