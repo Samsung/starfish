@@ -638,15 +638,88 @@ static NULLABLE GifRowType* allocateTarget(int width, int height)
     return buffer;
 }
 
+struct GIFFrameRect {
+    size_t left;
+    size_t top;
+    size_t width;
+    size_t height;
+};
+
+// GIF89a places a frame (Image Descriptor) relative to the logical screen
+// anywhere in a 16-bit space, and only the part on the screen is displayed.
+// The row buffers and the RGBA canvas cover just the screen, so every write
+// is clipped to this rectangle.
+static GIFFrameRect visibleGIFFrameRect(const GifImageDesc& image,
+                                        size_t screenWidth, size_t screenHeight)
+{
+    GIFFrameRect rect;
+    rect.left = std::min<size_t>(image.Left, screenWidth);
+    rect.top = std::min<size_t>(image.Top, screenHeight);
+    rect.width = std::min<size_t>(image.Width, screenWidth - rect.left);
+    rect.height = std::min<size_t>(image.Height, screenHeight - rect.top);
+    return rect;
+}
+
+// Decodes the current frame into the screen rows, keeping its visible part.
+// Rows off the screen are still decoded: the LZW stream has to be consumed
+// in full to reach the next record.
+static void readGIFFrame(GifFileType* gifFile, GifRowType* screen,
+                         size_t screenWidth, size_t screenHeight)
+{
+    const GifImageDesc& image = gifFile->Image;
+    const size_t width = image.Width;
+    const size_t height = image.Height;
+    if (!width || !height) {
+        return;
+    }
+    const GIFFrameRect visible =
+        visibleGIFFrameRect(image, screenWidth, screenHeight);
+    // Holds rows that do not fit on the screen; allocated only for frames
+    // that stick out of it.
+    std::vector<GifPixelType> clippedRow;
+    auto readRow = [&](size_t y) {
+        const size_t screenRow = image.Top + y;
+        if (screenRow < screenHeight && visible.width == width) {
+            return DGifGetLine(gifFile, &screen[screenRow][visible.left],
+                               width) == GIF_OK;
+        }
+        clippedRow.resize(width);
+        if (DGifGetLine(gifFile, clippedRow.data(), width) != GIF_OK) {
+            return false;
+        }
+        if (screenRow < screenHeight) {
+            memcpy(&screen[screenRow][visible.left], clippedRow.data(),
+                   visible.width);
+        }
+        return true;
+    };
+
+    if (image.Interlace) {
+        static const size_t interlacedOffset[] = { 0, 4, 2, 1 };
+        static const size_t interlacedJumps[] = { 8, 8, 4, 2 };
+        for (size_t pass = 0; pass < 4; pass++) {
+            for (size_t y = interlacedOffset[pass]; y < height;
+                 y += interlacedJumps[pass]) {
+                if (!readRow(y)) {
+                    return;
+                }
+            }
+        }
+    } else {
+        for (size_t y = 0; y < height; y++) {
+            if (!readRow(y)) {
+                return;
+            }
+        }
+    }
+}
+
 static ImageDecoder::DecodeResult decodeGIF(
     const std::vector<char>& inputBuffer, bool needsDecoding)
 {
     ImageDecoder::DecodeResult result;
 
-    int row = 0, col = 0;
-    int width = 0, height = 0;
     int extCode = 0;
-    int i = 0, j = 0;
     int errorCode = 0;
     unsigned int imageNum = 0;
     unsigned long size = 0;
@@ -692,29 +765,12 @@ static ImageDecoder::DecodeResult decodeGIF(
             case IMAGE_DESC_RECORD_TYPE:
                 DGifGetImageDesc(gifFile);
 
-                row = gifFile->Image.Top;
-                col = gifFile->Image.Left;
-                width = gifFile->Image.Width;
-                height = gifFile->Image.Height;
-
                 imageNum++;
                 if (imageNum > 1) {
                     break;
                 }
-                if (gifFile->Image.Interlace) {
-                    int interlacedOffset[] = { 0, 4, 2, 1 };
-                    int interlacedJumps[] = { 8, 8, 4, 2 };
-                    for (i = 0; i < 4; i++) {
-                        for (j = row + interlacedOffset[i]; j < row + height;
-                             j += interlacedJumps[i]) {
-                            DGifGetLine(gifFile, &screenBuffer[j][col], width);
-                        }
-                    }
-                } else {
-                    for (i = 0; i < height; i++) {
-                        DGifGetLine(gifFile, &screenBuffer[row++][col], width);
-                    }
-                }
+                readGIFFrame(gifFile, screenBuffer, result.m_width,
+                             result.m_height);
                 break;
             case EXTENSION_RECORD_TYPE: {
                 GifByteType* extension = nullptr;
@@ -764,8 +820,11 @@ static ImageDecoder::DecodeResult decodeGIF(
         for (unsigned long h = 0; h < result.m_height; h++) {
             gifRow = screenBuffer[h];
             for (unsigned long w = 0; w < result.m_width; w++) {
-                colorMapEntry = &colorMap->Colors[gifRow[w]];
-                if (gifRow[w] != transparentIndex) {
+                // An index past a short color table has no color; leave the
+                // pixel transparent instead of reading beyond the table.
+                if (gifRow[w] != transparentIndex &&
+                    gifRow[w] < colorMap->ColorCount) {
+                    colorMapEntry = &colorMap->Colors[gifRow[w]];
                     setTargetPixel(buffer, colorMapEntry);
                 }
                 buffer = buffer + 4;
@@ -964,14 +1023,13 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
     uint8_t* targetBuffer, size_t targetWidth, size_t targetHeight)
 {
     bool isNewFrame = false;
-    size_t row = 0, col = 0;
-    size_t width = 0, height = 0;
     int extCode = 0;
     int errorCode = 0;
     int transparentIndex = -1;
     GifDisposeMethod disposeMethod = GifDisposeMethod::None;
     ColorMapObject* colorMap = nullptr;
     GifRecordType recordType = UNDEFINED_RECORD_TYPE;
+    GIFFrameRect visible;
     DecodeResult result;
 
     if (!prepareAnimatedGIF()) {
@@ -999,25 +1057,7 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
             colorMap = (gifFile->Image.ColorMap ? gifFile->Image.ColorMap
                                                 : gifFile->SColorMap);
 
-            row = gifFile->Image.Top;
-            col = gifFile->Image.Left;
-            width = gifFile->Image.Width;
-            height = gifFile->Image.Height;
-
-            if (gifFile->Image.Interlace) {
-                int interlacedOffset[] = { 0, 4, 2, 1 };
-                int interlacedJumps[] = { 8, 8, 4, 2 };
-                for (size_t i = 0; i < 4; i++) {
-                    for (size_t j = row + interlacedOffset[i]; j < row + height;
-                         j += interlacedJumps[i]) {
-                        DGifGetLine(gifFile, &gifBuffer[j][col], width);
-                    }
-                }
-            } else {
-                for (size_t i = 0; i < height; i++) {
-                    DGifGetLine(gifFile, &gifBuffer[row++][col], width);
-                }
-            }
+            readGIFFrame(gifFile, gifBuffer, result.m_width, result.m_height);
 
             STARFISH_RELEASE_ASSERT(result.m_buffer != nullptr);
             if (!m_gifPassStarted) {
@@ -1043,15 +1083,13 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
                 }
             }
 
+            visible = visibleGIFFrameRect(gifFile->Image, result.m_width,
+                                          result.m_height);
             m_gifPrevDispose = disposeMethod;
-            m_gifPrevLeft =
-                std::min<size_t>(gifFile->Image.Left, result.m_width);
-            m_gifPrevTop =
-                std::min<size_t>(gifFile->Image.Top, result.m_height);
-            m_gifPrevWidth = std::min<size_t>(gifFile->Image.Width,
-                                              result.m_width - m_gifPrevLeft);
-            m_gifPrevHeight = std::min<size_t>(gifFile->Image.Height,
-                                               result.m_height - m_gifPrevTop);
+            m_gifPrevLeft = visible.left;
+            m_gifPrevTop = visible.top;
+            m_gifPrevWidth = visible.width;
+            m_gifPrevHeight = visible.height;
             if (disposeMethod == GifDisposeMethod::RestorePrevious) {
                 // Save what is under this frame so it can be restored.
                 size_t lineBytes = m_gifPrevWidth * 4;
@@ -1069,20 +1107,23 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
                 GifRowType gifRow = nullptr;
                 GifColorType* colorMapEntry = nullptr;
                 GifByteType* buffer = nullptr;
+                // A frame with neither a local nor a global color table has
+                // no colors to paint.
+                const int colorCount = colorMap ? colorMap->ColorCount : 0;
 
-                row = gifFile->Image.Top;
-                col = gifFile->Image.Left;
-                width = gifFile->Image.Width;
-                height = gifFile->Image.Height;
-
-                for (unsigned long h = row; h < row + height; h++) {
+                for (size_t h = visible.top; h < visible.top + visible.height;
+                     h++) {
                     gifRow = gifBuffer[h];
-                    for (unsigned long w = col; w < col + width; w++) {
+                    for (size_t w = visible.left;
+                         w < visible.left + visible.width; w++) {
                         buffer = result.m_buffer + h * result.m_stride + w * 4;
-                        colorMapEntry = &colorMap->Colors[gifRow[w]];
 
                         // http://giflib.sourceforge.net/whatsinagif/animation_and_transparency.html
-                        if (gifRow[w] != transparentIndex) {
+                        // An index past a short color table has no color
+                        // either; leave it transparent like decodeGIF().
+                        if (gifRow[w] != transparentIndex &&
+                            gifRow[w] < colorCount) {
+                            colorMapEntry = &colorMap->Colors[gifRow[w]];
                             setTargetPixel(buffer, colorMapEntry);
                         }
                         buffer = buffer + 4;

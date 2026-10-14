@@ -912,6 +912,7 @@ test/cairo/internal-test/file/file_constructor.html
 test/cairo/internal-test/file/file_text.html
 test/cairo/internal-test/crash/gif-playback-crash.html
 test/cairo/internal-test/crash/gif-oversized-screen.html
+test/cairo/internal-test/crash/gif-frame-off-screen.html
 test/cairo/internal-test/crash/chartjs.html
 test/cairo/internal-test/crash/js-module-01.html
 test/cairo/internal-test/crash/svg-gradient-href-crash.html
