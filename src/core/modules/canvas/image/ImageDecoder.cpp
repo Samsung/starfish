@@ -605,14 +605,35 @@ static void setTargetPixel(GifByteType* pBuffer, GifColorType* colorMapEntry)
     }
 }
 
-static GifRowType* allocateTarget(int width, int height)
+// The logical screen comes straight from the file (16-bit each), and GIF is
+// decoded at full size (no scaleDownIfNeeds), so cap the canvas up front
+// instead of letting a 65535x65535 header request ~20 GiB.
+// shortcut: 8K pixel cap, raise when a supported panel exceeds 7680x4320.
+static const size_t kMaxGIFScreenPixels = 7680 * 4320;
+
+static bool isGIFScreenSizeAcceptable(size_t width, size_t height)
 {
-    GifRowType* buffer = (GifRowType*)malloc(height * sizeof(GifRowType));
-    STARFISH_RELEASE_ASSERT(buffer != nullptr);
+    return width != 0 && height != 0 && width * height <= kMaxGIFScreenPixels;
+}
+
+// Returns nullptr (nothing left allocated) when the row buffers do not fit;
+// callers treat that as a failed decode rather than aborting the process.
+static NULLABLE GifRowType* allocateTarget(int width, int height)
+{
+    GifRowType* buffer = (GifRowType*)calloc(height, sizeof(GifRowType));
+    if (!buffer) {
+        return nullptr;
+    }
     unsigned long size = width * sizeof(GifPixelType);
     for (int i = 0; i < height; i++) {
         buffer[i] = (GifRowType)calloc(1, size);
-        STARFISH_RELEASE_ASSERT(buffer[i] != nullptr);
+        if (!buffer[i]) {
+            for (int j = 0; j < i; j++) {
+                free(buffer[j]);
+            }
+            free(buffer);
+            return nullptr;
+        }
     }
     return buffer;
 }
@@ -653,8 +674,17 @@ static ImageDecoder::DecodeResult decodeGIF(
     result.m_height = gifFile->SHeight;
     result.m_stride = result.m_width * 4;
 
+    if (!isGIFScreenSizeAcceptable(result.m_width, result.m_height)) {
+        releaseGIFResource(gifFile, nullptr, 0);
+        return ImageDecoder::DecodeResult();
+    }
+
     if (needsDecoding) {
         screenBuffer = allocateTarget(result.m_width, result.m_height);
+        if (!screenBuffer) {
+            releaseGIFResource(gifFile, nullptr, 0);
+            return ImageDecoder::DecodeResult();
+        }
         int transparentIndex = -1;
         do {
             DGifGetRecordType(gifFile, &recordType);
@@ -726,7 +756,10 @@ static ImageDecoder::DecodeResult decodeGIF(
 
         // Transparent pixels are skipped below, so start from all-zero.
         result.m_buffer = (uint8_t*)calloc(result.m_width * result.m_height, 4);
-        STARFISH_RELEASE_ASSERT(result.m_buffer != nullptr);
+        if (!result.m_buffer) {
+            releaseGIFResource(gifFile, screenBuffer, result.m_height);
+            return ImageDecoder::DecodeResult();
+        }
         buffer = (GifByteType*)result.m_buffer;
         for (unsigned long h = 0; h < result.m_height; h++) {
             gifRow = screenBuffer[h];
@@ -916,7 +949,11 @@ bool ImageDecoder::prepareAnimatedGIF()
             STARFISH_LOG_ERROR("Could not open GIF file");
             return false;
         }
-        gifBuffer = allocateTarget(gifFile->SWidth, gifFile->SHeight);
+        if (!isGIFScreenSizeAcceptable(gifFile->SWidth, gifFile->SHeight) ||
+            !(gifBuffer = allocateTarget(gifFile->SWidth, gifFile->SHeight))) {
+            releaseGIFResource(gifFile, nullptr, 0);
+            return false;
+        }
         m_gifFile = gifFile;
         m_gifBuffer = gifBuffer;
     }
