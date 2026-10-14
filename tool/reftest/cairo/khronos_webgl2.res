@@ -1588,8 +1588,8 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/state/gl-getstring.
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/state/gl-object-get-calls.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/sync/sync-webgl-specific.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/copy-texture-image.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/copy-texture-image-luma-format.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/copy-texture-image-webgl-specific.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/copy-texture-image-luma-format.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/copy-texture-image-webgl-specific.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/gl-get-tex-parameter.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/mipmap-fbo.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-3d-size-limit.html

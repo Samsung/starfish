@@ -227,6 +227,9 @@ public:
                             GLsizei width, GLsizei height, GLsizei depth,
                             GLint border, GLenum format, GLenum type,
                             const void *pixels) = 0;
+    virtual void copyTexSubImage3D(GLenum target, GLint level, GLint xoffset,
+                                   GLint yoffset, GLint zoffset, GLint x,
+                                   GLint y, GLsizei width, GLsizei height) = 0;
     virtual void texParameterf(GLenum target, GLenum pname, GLfloat param) = 0;
     virtual void texParameterfv(GLenum target, GLenum pname,
                                 const GLfloat *params) = 0;

@@ -5261,6 +5261,46 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
     gl()->readPixels(x, y, width, height, format, type, data);
 }
 
+void WebGL2RenderingContext::copyTexSubImage3D(GLenum target, GLint level,
+                                               GLint xoffset, GLint yoffset,
+                                               GLint zoffset, GLint x, GLint y,
+                                               GLsizei width, GLsizei height)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (target != GL_TEXTURE_3D && target != GL_TEXTURE_2D_ARRAY) {
+        setGLError(GL_INVALID_ENUM, "Invalid texture target");
+        return;
+    }
+
+    if (level < 0 || xoffset < 0 || yoffset < 0 || zoffset < 0 || width < 0 ||
+        height < 0) {
+        setGLError(GL_INVALID_VALUE, "negative offset or dimension");
+        return;
+    }
+
+    WebGLTexture* texture = getBoundTextureObject(target);
+    if (!texture || !hasBoundTexture(target)) {
+        setGLError(GL_INVALID_OPERATION, "No texture bound to target");
+        return;
+    }
+
+    // Check feedback loop with bound read framebuffer
+    Optional<WebGLFramebuffer*> maybeFb =
+        getBoundFramebuffer(GL_READ_FRAMEBUFFER);
+    if (maybeFb.hasValue() && maybeFb.value()) {
+        WebGLFramebuffer* fb = maybeFb.value();
+        if (fb->hasFeedbackLoop(texture, level, zoffset)) {
+            setGLError(GL_INVALID_OPERATION,
+                       "Feedback loop detected in copyTexSubImage3D");
+            return;
+        }
+    }
+
+    gl()->copyTexSubImage3D(target, level, xoffset, yoffset, zoffset, x, y,
+                            width, height);
+}
+
 } // namespace Starfish
 
 #endif // defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)

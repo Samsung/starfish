@@ -751,6 +751,21 @@ public:
                                   depth, border, format, type, pixels);
     }
 
+    virtual void copyTexSubImage3D(GLenum target, GLint level, GLint xoffset,
+                                   GLint yoffset, GLint zoffset, GLint x,
+                                   GLint y, GLsizei width,
+                                   GLsizei height) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glCopyTexSubImage3D) {
+            m_evasGLAPI->glCopyTexSubImage3D(target, level, xoffset, yoffset,
+                                             zoffset, x, y, width, height);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glCopyTexSubImage3D");
+    }
+
     virtual void texParameterf(GLenum target, GLenum pname,
                                GLfloat param) override
     {

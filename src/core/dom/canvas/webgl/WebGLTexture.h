@@ -165,6 +165,9 @@ public:
                       GLsizei width, GLsizei height, GLsizei depth)
     {
         m_isImmutable = true;
+        m_target = target;
+        m_width = width;
+        m_height = height;
         for (GLsizei l = 0; l < levels; ++l) {
             GLsizei w = std::max(1, width >> l);
             GLsizei h = std::max(1, height >> l);
