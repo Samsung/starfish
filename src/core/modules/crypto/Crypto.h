@@ -29,9 +29,6 @@ class Crypto : public ScriptWrappable {
 public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-#if defined(STARFISH_ENABLE_WEBCRYPTO)
-    virtual void postInit(ScriptBindingInstance* instance) override;
-#endif
     virtual bool isCrypto() const override;
     ScriptBindingInstance* scriptBindingInstance() override
     {

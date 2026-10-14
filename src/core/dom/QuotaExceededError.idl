@@ -1,0 +1,10 @@
+// https://webidl.spec.whatwg.org/#quotaexceedederror
+[
+    ConstructorCallWith=ExecutionContext,
+    ExceptionConstructor(optional DOMString message = "", optional QuotaExceededErrorOptions options /* = {} */),
+    RaisesException=Constructor,
+    Exposed=(Window,Worker)
+] interface QuotaExceededError : DOMException {
+    readonly attribute double? quota;
+    readonly attribute double? requested;
+};

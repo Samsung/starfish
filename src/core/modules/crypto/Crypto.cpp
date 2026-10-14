@@ -21,6 +21,7 @@
 #include "binding/ScriptBindingInstance.h"
 #include "core/util/RandomEngine.h"
 #include "core/dom/DOMException.h"
+#include "core/dom/QuotaExceededError.h"
 #include "core/modules/crypto/Crypto.h"
 
 #include <cstdio>
@@ -55,8 +56,8 @@ ScriptArrayBufferView Crypto::getRandomValues(ScriptArrayBufferView array)
     // 2. If the byteLength of array is greater than 65536, throw a
     // QuotaExceededError and terminate the algorithm.
     if (byteSize > 65536) {
-        throw new DOMException(
-            executionContext(), DOMException::Code::QUOTA_EXCEEDED_ERR,
+        throw new QuotaExceededError(
+            executionContext(),
             "The ArrayBufferView's byte length exceeds the number of bytes of "
             "entropy available via this API");
     }
@@ -154,61 +155,6 @@ String* Crypto::randomUUID()
              bytes[6], bytes[7], bytes[8], bytes[9], bytes[10], bytes[11],
              bytes[12], bytes[13], bytes[14], bytes[15]);
     return String::fromUTF8(uuid, 36);
-}
-
-// FIXME: WebIDL defines QuotaExceededError as an interface that extends
-// DOMException and has `quota` and `requested`. Starfish does not have it,
-// so this makes getRandomValues() pass the WPT check with two shims:
-// - a global QuotaExceededError that is the DOMException constructor;
-// - a JS wrapper of getRandomValues() that sets both members to null.
-// Remove both when Starfish implements the QuotaExceededError interface.
-void Crypto::postInit(ScriptBindingInstance* instance)
-{
-    Escargot::Evaluator::execute(
-        instance->scriptContext(),
-        [](Escargot::ExecutionStateRef* state, Crypto* self,
-           ScriptBindingInstance* bindingInstance) -> Escargot::ValueRef* {
-            Escargot::ObjectRef* globalObject =
-                state->context()->globalObject();
-            globalObject->defineDataProperty(
-                state,
-                Escargot::StringRef::createFromASCII("QuotaExceededError"),
-                bindingInstance->fnDOMException(), false /* writable */,
-                false /* enumerable */, true /* configurable */);
-
-            auto* source =
-                Escargot::StringRef::createFromASCII(R"((function(original) {
-  return function getRandomValues(array) {
-    try {
-      return original.call(this, array);
-    } catch (e) {
-      if (e && e.name === 'QuotaExceededError') {
-        e.requested = null;
-        e.quota = null;
-      }
-      throw e;
-    }
-  };
-}))");
-            auto parsed = state->context()->scriptParser()->initializeScript(
-                source,
-                Escargot::StringRef::createFromASCII("getRandomValuesWrapper"));
-            if (!parsed.isSuccessful()) {
-                return Escargot::ValueRef::createUndefined();
-            }
-            Escargot::ValueRef* factory = parsed.script.value()->execute(state);
-            Escargot::ObjectRef* target = self->scriptObject();
-            auto* name =
-                Escargot::StringRef::createFromASCII("getRandomValues");
-            Escargot::ValueRef* original = target->get(state, name);
-            Escargot::ValueRef* wrapper =
-                factory->call(state, globalObject, 1, &original);
-            target->defineDataProperty(
-                state, name, wrapper, true /* writable */,
-                false /* enumerable */, true /* configurable */);
-            return Escargot::ValueRef::createUndefined();
-        },
-        this, instance);
 }
 #endif
 

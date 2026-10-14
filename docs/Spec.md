@@ -548,6 +548,10 @@ section are supported.
 |  | constant | TIMEOUT_ERR = 23 | The operation timed out. |
 |  | constant | INVALID_NODE_TYPE_ERR = 24 | The supplied node is incorrect or has an incorrect ancestor for this operation. |
 |  | constant | DATA_CLONE_ERR = 25 | The object can not be cloned. |
+| [QuotaExceededError](https://webidl.spec.whatwg.org/#quotaexceedederror) | interface | QuotaExceededError : DOMException | The name is "QuotaExceededError" and the code is 22. |
+|  | constructor | QuotaExceededError(optional DOMString message = "", optional QuotaExceededErrorOptions options = {}) | Throws a RangeError when quota or requested is negative, or when requested is greater than quota. |
+|  | attribute | quota | The quota from the options, or null. |
+|  | attribute | requested | The requested amount from the options, or null. |
 | [DOMParser](https://w3c.github.io/DOM-Parsing/#the-domparser-interface) | interface | DOMParser | DOMParser can parse XML or HTML source stored in a string into a DOM Document.  |
 |  | constructor | DOMParser() | Create a new DOMParser |
 |  | enum | SupportedType | "text/html", "text/xml", "application/xml", "application/xhtml+xml", "image/svg+xml" |
