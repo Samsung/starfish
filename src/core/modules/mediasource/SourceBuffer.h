@@ -59,7 +59,7 @@ struct MediaPacketGroup {
     uint64_t m_groupDtsTimestampStart;
     uint64_t m_groupDtsTimestampEnd;
 
-    std::vector<MediaPacket*> m_packets;
+    GCVector<MediaPacket*> m_packets;
     MediaPacketGroup(size_t idx, size_t initSegmentIdx, StreamInfo* streamInfo,
                      size_t maxFrameDuration = 0,
                      uint64_t start = std::numeric_limits<uint64_t>::max(),
@@ -362,7 +362,7 @@ protected:
     String* m_type;
     MediaSource* m_parentMediaSource;
     GCVector<GCVector<StreamInfo*>> m_streamInfo;
-    std::vector<MediaPacketGroup*> m_packetGroups;
+    GCVector<MediaPacketGroup*> m_packetGroups;
     GCVector<std::pair<size_t, size_t>> m_packetAccessCachePerStream;
     // Max m_groupTimestampEnd per stream; UINT64_MAX = invalid, recompute
     // lazily in lastBufferedTimestamp(). Guarded by m_packetGroupsMutex.
