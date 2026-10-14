@@ -2475,11 +2475,10 @@ Apps relying on the right-hand list get **no protection** — the directive is p
 - **State and Parameter Queries:** `getInternalformatParameter` (returning empty `SAMPLES` array for integer formats per spec), buffer object parameter queries, sampler state queries, FBO state queries, indexed buffer binding queries, string queries (`SHADING_LANGUAGE_VERSION`, `VERSION`), boolean/float state queries, texture state queries, and uniform block / active uniform introspection queries (`getUniformIndices`, `getActiveUniforms`).
 - **Instanced Drawing:** `drawArraysInstanced`, `drawElementsInstanced`, `drawRangeElements`, `vertexAttribDivisor`.
 - **Integer Attributes:** `vertexAttribIPointer`, `vertexAttribI4i`/`vertexAttribI4ui`/`vertexAttribI4iv`/`vertexAttribI4uiv`, `getVertexAttribIiv`/`getVertexAttribIuiv`.
-- **Textures (3D & 2D Array):** `texImage3D`, `texSubImage3D`, `texStorage2D`, `texStorage3D`, sized internal format uploads, pixel store parameters, `border == 0` validation, and alpha channel compatibility enforcement for `copyTexImage2D`/`copyTexSubImage2D`.
+- **Textures (3D & 2D Array):** `texImage3D`, `texSubImage3D`, `texStorage2D`, `texStorage3D`, `copyTexSubImage3D` (with feedback loop detection), sized internal format uploads, pixel store parameters, `border == 0` validation, and alpha channel compatibility enforcement for `copyTexImage2D`/`copyTexSubImage2D`.
 - **Compressed Textures:** `compressedTexImage2D`/`3D` and `compressedTexSubImage2D`/`3D` (all overloads) are exposed, but since no compressed format is supported they only validate the source (`PIXEL_UNPACK_BUFFER` binding) and target, then generate `INVALID_ENUM` — the same as WebGL 1.
 
 **Unimplemented WebGL 2.0 features (`[Unimplemented]` in IDL / methods not exposed on instance):**
-- **3D Texture Copy:** `copyTexSubImage3D`.
 - **Clear Depth/Stencil Buffer:** `clearBufferfi`.
 
 **Extensions exposed via `getExtension(name)`** (subject to the underlying GL driver advertising the matching `GL_*` token; on Mesa llvmpipe / SwiftShader none may be advertised):

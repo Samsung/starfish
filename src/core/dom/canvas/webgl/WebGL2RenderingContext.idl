@@ -363,8 +363,8 @@ interface WebGL2RenderingContextBase
                             GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
                             [AllowShared] ArrayBufferView? srcData, optional unsigned long long srcOffset = 0);
 
-    [Unimplemented] undefined copyTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
-                                                GLint x, GLint y, GLsizei width, GLsizei height);
+    undefined copyTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
+                                GLint x, GLint y, GLsizei width, GLsizei height);
 
     undefined compressedTexImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
                                    GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, GLintptr offset);

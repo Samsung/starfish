@@ -424,6 +424,27 @@ public:
         return false;
     }
 
+    bool hasFeedbackLoop(WebGLTexture* texture, GLint level,
+                         GLint layer = -1) const
+    {
+        if (!texture) {
+            return false;
+        }
+        for (size_t i = 0; i < 16; ++i) {
+            if (m_attachedColorTextures[i] == texture &&
+                m_attachedColorLevels[i] == level) {
+                if (layer >= 0 && m_attachedColorIsLayers[i]) {
+                    if (m_attachedColorLayers[i] == layer) {
+                        return true;
+                    }
+                } else if (!m_attachedColorIsLayers[i]) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     bool hasAnyAttachment() const
     {
         for (size_t i = 0; i < 16; ++i) {
