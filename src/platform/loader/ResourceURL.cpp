@@ -1378,17 +1378,17 @@ void* ReferrerURL::operator new(size_t size)
 
 String* ReferrerURL::originForReferrer()
 {
-    String* o = origin();
-    if (o->equals("null")) {
-        return String::emptyString;
-    }
-    return o->concat("/");
+    return origin()->concat("/");
 }
 
 String* ReferrerURL::referrerString(ResourceURL* url)
 {
     STARFISH_ASSERT(url != nullptr);
     STARFISH_ASSERT(url->isHTTPFamilyURL());
+
+    if (!isHTTPFamilyURL() || hostname()->isEmpty()) {
+        return String::emptyString;
+    }
 
     switch (m_policy) {
     case ReferrerPolicy::NoReferrer:
