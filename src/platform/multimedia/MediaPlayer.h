@@ -56,6 +56,7 @@ class GL;
 class MediaSource;
 class Mutex;
 class URL;
+class WebOrigin;
 class Window;
 class MediaPlayerWebRtc;
 #if defined(STARFISH_ENABLE_WEBAUDIO)
@@ -133,6 +134,21 @@ public:
     }
 
     virtual void prepare(ResourceURL* url) {};
+    // The URL the media data came from, so the element can decide whether
+    // its media data is CORS-same-origin
+    // (https://html.spec.whatwg.org/multipage/media.html#media-data-is-cors-same-origin).
+    // Empty until the resource is prepared, empty once the backend saw the
+    // request redirected anywhere (it can't report the hops Fetch judges
+    // one by one), and empty for a backend that follows redirects without
+    // reporting them at all (the Tizen player): the element then treats
+    // the media data as cross-origin, the safe side.
+    virtual Optional<ResourceURL*> responseURL()
+    {
+        return nullptr;
+    }
+    // Whether responseURL() is same-origin with `origin`. Judged once per
+    // response: the texture upload path asks for every frame.
+    bool responseIsSameOrigin(WebOrigin* origin);
     virtual double currentTime() = 0;
     virtual double duration() = 0;
     virtual void setVolume(double volume) = 0;
@@ -236,6 +252,8 @@ protected:
     HTMLMediaElement* m_container;
     MediaSource* m_activeMediaSource;
     volatile unsigned long m_videoWidth, m_videoHeight;
+    ResourceURL* m_judgedResponseURL{ nullptr };
+    bool m_judgedSameOrigin{ false };
     size_t m_currentTimeUpdateTimer;
     Mutex* m_playerStateMutex;
     CanvasSurface* m_canvasSurface;

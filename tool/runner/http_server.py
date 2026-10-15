@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from functools import partial
 from urllib.parse import urlparse
 import json
+import re
 import signal
 import errno
 import sys
@@ -70,6 +71,41 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(payload)
 
+    # A single "bytes=start-end" Range (RFC 9110 14.1.2): a media demuxer
+    # reading over HTTP seeks with it, and without it an MP4 whose "moov" atom
+    # follows the media data (the suite's video assets) cannot be probed, so
+    # every test that uploads a video frame fails before it starts. The
+    # injected files are served whole; nothing seeks in a script.
+    def serve_range(self, local, head_only=False):
+        match = re.fullmatch(r"bytes=(\d*)-(\d*)", self.headers.get("Range", ""))
+        if not match or not (match.group(1) or match.group(2)):
+            return False
+        size = os.path.getsize(local)
+        if match.group(1):
+            start = int(match.group(1))
+            end = int(match.group(2)) if match.group(2) else size - 1
+        else:
+            start = max(0, size - int(match.group(2)))
+            end = size - 1
+        end = min(end, size - 1)
+        if start > end:
+            self.send_response(416)
+            self.send_header("Content-Range", "bytes */%d" % size)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return True
+        self.send_response(206)
+        self.send_header("Content-Type", self.guess_type(local))
+        self.send_header("Accept-Ranges", "bytes")
+        self.send_header("Content-Range", "bytes %d-%d/%d" % (start, end, size))
+        self.send_header("Content-Length", str(end - start + 1))
+        self.end_headers()
+        if not head_only:
+            with open(local, "rb") as f:
+                f.seek(start)
+                self.wfile.write(f.read(end - start + 1))
+        return True
+
     def do_GET(self):
         if self.is_echo_request():
             self.echo_request()
@@ -78,6 +114,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
         if target:
             self.serve_injected(target)
             return
+        local = self.translate_path(urlparse(self.path).path)
+        if os.path.isfile(local) and self.serve_range(local):
+            return
         super().do_GET()
 
     def do_HEAD(self):
@@ -85,6 +124,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
         target = self.inject_target()
         if target:
             self.serve_injected(target, head_only=True)
+            return
+        local = self.translate_path(urlparse(self.path).path)
+        if os.path.isfile(local) and self.serve_range(local, head_only=True):
             return
         super().do_HEAD()
 

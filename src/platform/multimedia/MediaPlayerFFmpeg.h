@@ -40,7 +40,9 @@
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+#include <libavutil/avstring.h>
 #include <libavutil/frame.h>
+#include <libavutil/opt.h>
 #include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 }
@@ -156,6 +158,13 @@ public:
     double getDuration();
 
     ResourceURL* m_url;
+    // Redirect tracking for the element's origin check: the URL the input
+    // was opened with (released in destroy(), since the destructor never
+    // runs under PointerFreeGC) and whether the response location
+    // libavformat reports has matched it so far. False for anything but
+    // plain http(s), and sticky once a redirect is seen.
+    std::string m_requestedLocation;
+    std::atomic<bool> m_originVouched;
     AVFormatContext* m_fmtCtx;
     AVCodecContext* m_codecCtx;
     int m_videoStreamIndex;
@@ -167,6 +176,7 @@ public:
 private:
     // Internal methods
     void decodingThread();
+    void noteResponseLocation();
 
     // State management
     enum class State { STOPPED, PREPARED, PLAYING, PAUSED };
@@ -334,6 +344,8 @@ public:
 #endif
 
     virtual void prepare(ResourceURL* url);
+    // The requested URL, when the FFmpeg player saw no redirect on it.
+    Optional<ResourceURL*> responseURL() override;
     virtual void setNativePlayerDefaultOptions(ResourceURL* url);
     virtual void printNativePlayerError(int errorCode);
 
