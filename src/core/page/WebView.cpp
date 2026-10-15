@@ -414,6 +414,8 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_useExternalPopup(false)
     , m_useSpatialNavigation(false)
     , m_needsDownScaleImageResourceLargerThan(0)
+    , m_maxVideoDecodeWidth(1920)
+    , m_maxVideoDecodeHeight(1080)
     , m_glCompositorScale(1)
     , m_showFps(false)
     , m_showLoadFailMsg(true)

@@ -308,6 +308,9 @@ void Shell::printUsage()
         "seconds");
     puts("  --storage-dir=<value>                  Set storage directory path");
     puts(
+        "  --max-video-decode-size=<WxH>          Largest video frame to "
+        "decode (default: 1920x1080)");
+    puts(
         "  --hide-window                          Run with window hidden "
         "(regression/pixel test only)");
 }

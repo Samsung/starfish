@@ -165,6 +165,11 @@ public:
     // plain http(s), and sticky once a redirect is seen.
     std::string m_requestedLocation;
     std::atomic<bool> m_originVouched;
+    // Largest frame handed to the element (the WebView's max video decode
+    // size). prepare() refuses larger streams up front; this only guards a
+    // mid-stream resolution change by scaling such frames to fit.
+    int m_maxFrameWidth{ 0 };
+    int m_maxFrameHeight{ 0 };
     AVFormatContext* m_fmtCtx;
     AVCodecContext* m_codecCtx;
     int m_videoStreamIndex;

@@ -3261,6 +3261,7 @@ The JavaScript runtime is [Escargot](https://github.com/Samsung/escargot). Verif
 |  | Build-conditional: `srcObject` is `[STARFISH_ENABLE_WEBRTC]` — only exposed when `WEBRTC=1`. |
 |  | **`[Unimplemented]`:** `fastSeek`, `getStartDate`, `defaultMuted`, `audioTracks`, `videoTracks`. |
 |  | Note: `canPlayType` returns a static answer (`"probably"`/`"maybe"`/`""`); when built with `STARFISH_USE_MOCK_MEDIAPLAYER` (the default Linux non-ffmpeg path), it still returns `"probably"` for mp4 even though no real decoding occurs. |
+|  | Resolution limit: the embedder setting `maxVideoDecodeSize` (default `1920x1080`) is the largest coded frame a media player decodes. A larger stream fails resource selection with `MEDIA_ERR_SRC_NOT_SUPPORTED`, and `MediaCapabilities.decodingInfo()` reports it `supported: false`, so pages can pick a smaller rendition. |
 | `HTMLVideoElement` | Adds: `poster`. **`[Unimplemented]`:** `playsInline`, `getVideoPlaybackQuality()`. `VideoPlaybackQuality` interface not exposed. |
 | `HTMLAudioElement` | Named constructor `new Audio(optional src)` exposed. |
 | `HTMLSourceElement` | **`[Unimplemented]`:** `srcset`, `sizes`, `media` — `<picture>`-style source selection is not supported. |

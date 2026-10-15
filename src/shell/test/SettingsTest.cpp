@@ -192,6 +192,25 @@ TEST_F(SettingsTest, NeedsDownScaleImageResourceLargerThan)
     EXPECT_TRUE(settings.NeedsDownScaleImageResourceLargerThan() == 1024);
 }
 
+TEST_F(SettingsTest, MaxVideoDecodeSize)
+{
+    LWE::Settings settings(kDefaultUA, kUA);
+    uint32_t width = 0, height = 0;
+
+    settings.GetMaxVideoDecodeSize(width, height);
+    EXPECT_TRUE(width == 1920 && height == 1080);
+
+    settings.SetMaxVideoDecodeSize(3840, 2160);
+    settings.GetMaxVideoDecodeSize(width, height);
+    EXPECT_TRUE(width == 3840 && height == 2160);
+    EXPECT_TRUE(settings.GetSetting("maxVideoDecodeSize") == "3840x2160");
+
+    // A malformed value reads back as 0x0 ("keep the default").
+    settings.UpdateSetting("maxVideoDecodeSize", "4k");
+    settings.GetMaxVideoDecodeSize(width, height);
+    EXPECT_TRUE(width == 0 && height == 0);
+}
+
 TEST_F(SettingsTest, ScrollbarVisible)
 {
     LWE::Settings settings(kDefaultUA, kUA);

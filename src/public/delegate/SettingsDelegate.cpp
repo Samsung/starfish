@@ -21,6 +21,7 @@
 
 #include "SettingsBoolean.h"
 
+#include <cstdlib>
 #include <sstream>
 
 #define STR_INDIR(x) #x
@@ -88,6 +89,9 @@ public:
     void IterateSettings(
         std::function<void(const std::string&, const std::string&)> callback)
         const override;
+    void GetMaxVideoDecodeSize(uint32_t& width,
+                               uint32_t& height) const override;
+    void SetMaxVideoDecodeSize(uint32_t width, uint32_t height) override;
 
 private:
     std::unordered_map<std::string, std::string> m_settings;
@@ -118,6 +122,7 @@ SettingsImpl::SettingsImpl(const std::string& default_ua, const std::string& ua)
     UpdateSetting("useHttp2", ToBoolString(false));
     UpdateSetting("videoOverlayEnabled", ToBoolString(false));
     UpdateSetting("needsDownScaleImageResourceLargerThan", "0");
+    UpdateSetting("maxVideoDecodeSize", "1920x1080");
     UpdateSetting("scrollbarVisible", ToBoolString(true));
     UpdateSetting("useExternalPopup", ToBoolString(false));
     UpdateSetting("useSpatialNavigation", ToBoolString(false));
@@ -422,6 +427,36 @@ void SettingsImpl::SetUseExternalPopup(bool useExternalPopup)
 void SettingsImpl::SetUseSpatialNavigation(bool useSpatialNavigation)
 {
     UpdateSetting("useSpatialNavigation", ToBoolString(useSpatialNavigation));
+}
+
+void SettingsImpl::GetMaxVideoDecodeSize(uint32_t& width,
+                                         uint32_t& height) const
+{
+    // Anything but a well-formed "WxH" reads back as 0x0, which the engine
+    // treats as "keep the default".
+    width = height = 0;
+    std::string value = GetSetting("maxVideoDecodeSize");
+    size_t x = value.find('x');
+    if (x == std::string::npos || x == 0 || x + 1 >= value.length()) {
+        return;
+    }
+    char* end = nullptr;
+    unsigned long w = std::strtoul(value.c_str(), &end, 10);
+    if (end != value.c_str() + x) {
+        return;
+    }
+    unsigned long h = std::strtoul(value.c_str() + x + 1, &end, 10);
+    if (*end != '\0') {
+        return;
+    }
+    width = static_cast<uint32_t>(w);
+    height = static_cast<uint32_t>(h);
+}
+
+void SettingsImpl::SetMaxVideoDecodeSize(uint32_t width, uint32_t height)
+{
+    UpdateSetting("maxVideoDecodeSize",
+                  std::to_string(width) + "x" + std::to_string(height));
 }
 
 void SettingsImpl::IterateSettings(

@@ -238,6 +238,9 @@ public:
     bool NeedsDownloadWebFontsEarly() const;
     bool UseHttp2() const;
     uint32_t NeedsDownScaleImageResourceLargerThan() const;
+    // Largest coded video frame the engine decodes; larger streams are
+    // reported unsupported. Default 1920x1080; 0 in either keeps the default.
+    void GetMaxVideoDecodeSize(uint32_t& width, uint32_t& height) const;
     bool ScrollbarVisible() const;
     bool UseExternalPopup() const;
     bool UseSpatialNavigation() const;
@@ -260,6 +263,7 @@ public:
     void SetUseHttp2(bool b);
     void SetNeedsDownScaleImageResourceLargerThan(
         uint32_t demention); // Experimental
+    void SetMaxVideoDecodeSize(uint32_t width, uint32_t height);
     void SetScrollbarVisible(bool visible);
     void SetUseExternalPopup(bool useExternalPopup);
     void SetUseSpatialNavigation(bool useSpatialNavigation);

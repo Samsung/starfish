@@ -23,6 +23,7 @@
 
 #include "core/dom/HTMLElement.h"
 #include "core/extra/TimeRange.h"
+#include "core/dom/MediaError.h"
 
 namespace Starfish {
 
@@ -36,7 +37,6 @@ class TextTrack;
 class TextTrackList;
 class TimeRanges;
 class URL;
-class MediaError;
 #if defined(STARFISH_ENABLE_WEBAUDIO)
 class MediaElementAudioSourceNode;
 #endif
@@ -412,7 +412,9 @@ public:
     ADD_DISPATCH_EVENT_DECL(Volumechange)
 #undef ADD_DISPATCH_EVENT_DECL
 
-    void giveupFetchingResource(bool shouldSetError = true);
+    void giveupFetchingResource(
+        bool shouldSetError = true,
+        MediaError::Code errorCode = MediaError::MEDIA_ERR_NETWORK);
     void setNetworkStateAsHaveNothing();
 
     void dispose()

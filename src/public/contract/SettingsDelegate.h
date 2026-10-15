@@ -90,6 +90,13 @@ public:
     virtual void IterateSettings(
         std::function<void(const std::string&, const std::string&)> callback)
         const = 0;
+    // Largest coded video frame the engine decodes (key "maxVideoDecodeSize",
+    // spelled "WxH"). A stream beyond it is reported unsupported instead of
+    // decoded, which bounds decoder and frame memory per device. Either
+    // value 0 keeps the engine default (1920x1080).
+    virtual void GetMaxVideoDecodeSize(uint32_t& width,
+                                       uint32_t& height) const = 0;
+    virtual void SetMaxVideoDecodeSize(uint32_t width, uint32_t height) = 0;
 };
 
 } // namespace LWEDelegate
