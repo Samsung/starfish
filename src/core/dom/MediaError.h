@@ -26,6 +26,14 @@ namespace Starfish {
 
 class MediaError : public ScriptWrappable {
 public:
+    // https://html.spec.whatwg.org/multipage/media.html#dom-mediaerror-code
+    enum Code : int32_t {
+        MEDIA_ERR_ABORTED = 1,
+        MEDIA_ERR_NETWORK = 2,
+        MEDIA_ERR_DECODE = 3,
+        MEDIA_ERR_SRC_NOT_SUPPORTED = 4,
+    };
+
     MediaError(ExecutionContext* executionContext, int32_t code = 0,
                String* message = nullptr);
     virtual void init(ScriptBindingInstance* instance,

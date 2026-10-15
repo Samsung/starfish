@@ -23,6 +23,8 @@
 #include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptWrappable.h"
 #include "platform/multimedia/StreamInfo.h"
@@ -183,6 +185,16 @@ Promise* MediaCapabilities::decodingInfo(
         auto type =
             suggestVideoCodecFromString(configuration.video().contentType());
         isVideoSupported = MediaPlayer::isSupport(type);
+        // The device's decode limit is part of "supported": a media player
+        // refuses a larger stream, so pages learn it here rather than at
+        // playback
+        // (https://w3c.github.io/media-capabilities/#media-configurations).
+        WebView* webView =
+            m_executionContext->document()->browsingContext()->webView();
+        if (configuration.video().width() > webView->maxVideoDecodeWidth() ||
+            configuration.video().height() > webView->maxVideoDecodeHeight()) {
+            isVideoSupported = false;
+        }
     }
     if (configuration.audio().contentType()->length()) {
         auto type =

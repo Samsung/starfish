@@ -42,8 +42,6 @@
 
 namespace Starfish {
 
-#define STARFISH_VIDEO_MAX_WIDTH 1920
-#define STARFISH_VIDEO_MAX_HEIGHT 1080
 #define STARFISH_VIDEO_DEFAULT_FRAMERATE_NUM 2997
 #define STARFISH_VIDEO_DEFAULT_FRAMERATE_DEN 100
 #define STARFISH_MSE_SUBMIT_BYTES_RATE 0.3
@@ -237,8 +235,9 @@ void MediaPlayerTizen::setMediaFormatExtraForVideo(media_format_h& mediaFormat,
                                                    StreamInfo* info)
 {
     auto mediaFormatExtra = m_videoStream->videoFormatExtra();
-    mediaFormatExtra->max_width = STARFISH_VIDEO_MAX_WIDTH;
-    mediaFormatExtra->max_height = STARFISH_VIDEO_MAX_HEIGHT;
+    mediaFormatExtra->max_width = m_container->webView()->maxVideoDecodeWidth();
+    mediaFormatExtra->max_height =
+        m_container->webView()->maxVideoDecodeHeight();
     m_videoStream->setMaxBufferSize(
         (m_videoWidth * m_videoHeight * 30 * 2 * 7) / 100 / 8 * 5);
 

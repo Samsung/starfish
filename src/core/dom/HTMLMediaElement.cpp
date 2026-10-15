@@ -425,16 +425,16 @@ void HTMLMediaElement::dedicatedMediaSourceFailure()
     m_delayingTheLoadEvent = false;
 }
 
-void HTMLMediaElement::giveupFetchingResource(bool shouldSetError)
+void HTMLMediaElement::giveupFetchingResource(bool shouldSetError,
+                                              MediaError::Code errorCode)
 {
     if (shouldSetError) {
         // STARFISH_ASSERT(m_readyState > HAVE_NOTHING);
-        // Set the error attribute to a new MediaError object whose code
-        // attribute is set to MEDIA_ERR_NETWORK (= 2).
-        // NOTE minimal impl: network vs decode not distinguished here; the
-        // media pipeline does not surface the error kind (single m_foundError
-        // bool). Defaulting to MEDIA_ERR_NETWORK.
-        m_error = new MediaError(executionContext(), 2);
+        // Set the error attribute to a new MediaError object. The media
+        // pipeline mostly surfaces a single failure flag, so network and
+        // decode failures both default to MEDIA_ERR_NETWORK; a player that
+        // can tell (a format it refuses) passes the spec'd code.
+        m_error = new MediaError(executionContext(), errorCode);
 
         // Set the element's networkState attribute to the NETWORK_IDLE value.
         m_networkState = NETWORK_IDLE;

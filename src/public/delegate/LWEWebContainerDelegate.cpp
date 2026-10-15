@@ -840,6 +840,8 @@ Settings* WebContainerImpl::GetSettings()
             m_webView->needsDownloadWebFontsEarly());
         result->SetNeedsDownScaleImageResourceLargerThan(
             m_webView->needsDownScaleImageResourceLargerThan());
+        result->SetMaxVideoDecodeSize(m_webView->maxVideoDecodeWidth(),
+                                      m_webView->maxVideoDecodeHeight());
         result->SetScrollbarVisible(m_webView->scrollbarVisible());
         result->SetUseExternalPopup(m_webView->useExternalPopup());
         result->SetUseSpatialNavigation(m_webView->useSpatialNavigation());
@@ -1194,6 +1196,13 @@ void WebContainerImpl::SetSettings(const Settings* settings)
                 ParseBool(settings->GetSetting("videoOverlayEnabled")));
             m_webView->setNeedsDownScaleImageResourceLargerThan(
                 settings->NeedsDownScaleImageResourceLargerThan());
+            {
+                uint32_t width = 0, height = 0;
+                settings->GetMaxVideoDecodeSize(width, height);
+                if (width && height) {
+                    m_webView->setMaxVideoDecodeSize(width, height);
+                }
+            }
             m_webView->setScrollbarVisible(settings->ScrollbarVisible());
             // Default-on: an absent key (host built against an older
             // Settings) keeps the default true; ParseBool handles any

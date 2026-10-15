@@ -513,6 +513,26 @@ public:
         return m_needsDownScaleImageResourceLargerThan;
     }
 
+    // Largest coded video frame a media player may decode (embedder
+    // setting "maxVideoDecodeSize"). A stream beyond it is unsupported:
+    // MediaCapabilities reports it so and the element fails the resource,
+    // which keeps decoder and frame memory bounded per device.
+    void setMaxVideoDecodeSize(uint32_t width, uint32_t height)
+    {
+        m_maxVideoDecodeWidth = width;
+        m_maxVideoDecodeHeight = height;
+    }
+
+    uint32_t maxVideoDecodeWidth()
+    {
+        return m_maxVideoDecodeWidth;
+    }
+
+    uint32_t maxVideoDecodeHeight()
+    {
+        return m_maxVideoDecodeHeight;
+    }
+
     void setGLCompositorScale(float glCompositorScale)
     {
         m_glCompositorScale = glCompositorScale;
@@ -842,6 +862,8 @@ private:
     bool m_useExternalPopup;
     bool m_useSpatialNavigation;
     uint32_t m_needsDownScaleImageResourceLargerThan;
+    uint32_t m_maxVideoDecodeWidth;
+    uint32_t m_maxVideoDecodeHeight;
     float m_glCompositorScale;
     bool m_showFps;
     bool m_showLoadFailMsg;

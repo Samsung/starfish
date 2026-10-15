@@ -61,8 +61,6 @@ static uint64_t monotonicMilliseconds()
         .count();
 }
 
-#define STARFISH_VIDEO_MAX_WIDTH 1920
-#define STARFISH_VIDEO_MAX_HEIGHT 1080
 #define STARFISH_VIDEO_DEFAULT_FRAMERATE_NUM 2997
 #define STARFISH_VIDEO_DEFAULT_FRAMERATE_DEN 100
 #define STARFISH_MSE_SUBMIT_BYTES_RATE 0.3
@@ -648,25 +646,36 @@ void FfmpegWrapperPlayer::decodingThread()
             } else {
                 int width = frame->width;
                 int height = frame->height;
-                if (width <= 0 || height <= 0 ||
-                    width > STARFISH_VIDEO_MAX_WIDTH ||
-                    height > STARFISH_VIDEO_MAX_HEIGHT) {
+                if (width <= 0 || height <= 0) {
                     av_frame_unref(frame);
                     continue;
                 }
+                // A stream that grows past the limit mid-way is scaled to
+                // fit rather than dropped: dropping would leave a stream the
+                // element reports as playing with nothing on screen.
+                int outWidth = width;
+                int outHeight = height;
+                if (m_maxFrameWidth > 0 && m_maxFrameHeight > 0 &&
+                    (width > m_maxFrameWidth || height > m_maxFrameHeight)) {
+                    double ratio = std::min((double)m_maxFrameWidth / width,
+                                            (double)m_maxFrameHeight / height);
+                    outWidth = std::max(1, (int)lround(width * ratio));
+                    outHeight = std::max(1, (int)lround(height * ratio));
+                }
                 scale = sws_getCachedContext(
                     scale, width, height,
-                    static_cast<AVPixelFormat>(frame->format), width, height,
-                    AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr);
+                    static_cast<AVPixelFormat>(frame->format), outWidth,
+                    outHeight, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr,
+                    nullptr);
                 uint8_t* buffer =
-                    static_cast<uint8_t*>(malloc(width * height * 4));
+                    static_cast<uint8_t*>(malloc(outWidth * outHeight * 4));
                 if (scale && buffer) {
                     uint8_t* planes[] = { buffer, nullptr, nullptr, nullptr };
-                    int strides[] = { width * 4, 0, 0, 0 };
+                    int strides[] = { outWidth * 4, 0, 0, 0 };
                     sws_scale(scale, frame->data, frame->linesize, 0, height,
                               planes, strides);
-                    FFmpegMediaPacket* decoded =
-                        new FFmpegMediaPacket(width, height, width * 4);
+                    FFmpegMediaPacket* decoded = new FFmpegMediaPacket(
+                        outWidth, outHeight, outWidth * 4);
                     decoded->setBuffer(buffer);
                     if (m_framedecodedCallback) {
                         m_framedecodedCallback(decoded,
@@ -1540,6 +1549,10 @@ void MediaPlayerFFmpeg::prepare(ResourceURL* url)
 {
     PLAYER_LOGI("MediaPlayerFFmpeg::prepare\n");
     m_currentURL = url;
+    m_nativePlayer->m_maxFrameWidth =
+        (int)m_container->webView()->maxVideoDecodeWidth();
+    m_nativePlayer->m_maxFrameHeight =
+        (int)m_container->webView()->maxVideoDecodeHeight();
     m_nativePlayer->m_audioDecodedCallback = [this](AVFrame* frame) {
         publishDecodedAudioFrame(frame,
                                  m_nativePlayer->getPlayPosition() / 1000.0);
@@ -1599,15 +1612,17 @@ void MediaPlayerFFmpeg::prepare(ResourceURL* url)
         m_nativePlayer->setUrl(url);
     }
 
+    // The wrapper's prepare() runs handlePrepared() synchronously, and that
+    // may destroy() this player (e.g. an oversized stream), so nothing may
+    // touch m_nativePlayer after it returns.
+    setNativePlayerDisplayModeWithGL();
     openPreparingMode();
 
     if (!m_nativePlayer->prepare(preparedCallback, this)) {
         PLAYER_LOGE("MediaPlayerFFmpeg::player_prepare_async return error !!!");
         m_foundError = true;
         handlePrepared();
-        return;
     }
-    setNativePlayerDisplayModeWithGL();
 }
 
 void MediaPlayerFFmpeg::handlePrepared()
@@ -1673,6 +1688,26 @@ void MediaPlayerFFmpeg::handlePrepared()
             m_videoWidth = (unsigned long)width;
             m_videoHeight = (unsigned long)height;
         }
+    }
+
+    // A stream larger than the device's decode limit is an unsupported
+    // format for this engine (HTML "media data processing steps": fetched,
+    // but found by inspection to be unsupported), refused here before the
+    // decoder allocates its reference frames. MediaCapabilities tells pages
+    // the same limit so they can pick a smaller rendition.
+    WebView* webView = m_container->webView();
+    if (m_hasVideo && (m_videoWidth > webView->maxVideoDecodeWidth() ||
+                       m_videoHeight > webView->maxVideoDecodeHeight())) {
+        PLAYER_LOGE(
+            "MediaPlayerFFmpeg: %dx%d exceeds max video decode size "
+            "%ux%u",
+            (int)m_videoWidth, (int)m_videoHeight,
+            webView->maxVideoDecodeWidth(), webView->maxVideoDecodeHeight());
+        m_foundError = true;
+        m_container->giveupFetchingResource(
+            true, MediaError::MEDIA_ERR_SRC_NOT_SUPPORTED);
+        destroy();
+        return;
     }
 
     PLAYER_LOGI("MediaPlayerFFmpeg::prepare ok %s %s %d %d", videoCodec,

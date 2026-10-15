@@ -91,6 +91,8 @@ public:
         bool showFps = false;
         bool videoOverlayEnabled = false;
         uint32_t needsDownScaleImageResourceLargerThan = 0;
+        uint32_t maxVideoDecodeWidth = 0;
+        uint32_t maxVideoDecodeHeight = 0;
         LWE::TTSMode ttsMode = LWE::TTSMode::Default;
         std::string customUserAgentString;
         std::string language;

@@ -27,6 +27,7 @@
 #include "APIReplayer.h"
 #endif
 
+#include <cstdio>
 #include <cstring>
 
 namespace {
@@ -116,6 +117,13 @@ void MiniBrowser::parseArgs(int argc, char* argv[],
             settings.needsDownScaleImageResourceLargerThan = std::atoi(
                 argv[i] +
                 strlen("--needs-downscale-image-resource-larger-than="));
+        } else if (strstr(argv[i], "--max-video-decode-size=") == argv[i]) {
+            unsigned width = 0, height = 0;
+            if (sscanf(argv[i] + strlen("--max-video-decode-size="), "%ux%u",
+                       &width, &height) == 2) {
+                settings.maxVideoDecodeWidth = width;
+                settings.maxVideoDecodeHeight = height;
+            }
         } else if (strstr(argv[i], "--scrollbar-unvisible")) {
             settings.scrollbarVisible = false;
         } else if (strstr(argv[i], "--use-external-popup")) {
@@ -257,6 +265,11 @@ void MiniBrowser::setSettings(const Settings& settings)
     if (settings.needsDownScaleImageResourceLargerThan) {
         lweSettings.SetNeedsDownScaleImageResourceLargerThan(
             settings.needsDownScaleImageResourceLargerThan);
+    }
+
+    if (settings.maxVideoDecodeWidth && settings.maxVideoDecodeHeight) {
+        lweSettings.SetMaxVideoDecodeSize(settings.maxVideoDecodeWidth,
+                                          settings.maxVideoDecodeHeight);
     }
 
     if (!settings.scrollbarVisible) {

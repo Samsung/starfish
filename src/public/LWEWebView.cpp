@@ -457,6 +457,18 @@ void Settings::IterateSettings(
     toImpl<LWEDelegate::Settings>(m_delegate.get())->IterateSettings(callback);
 }
 
+void Settings::GetMaxVideoDecodeSize(uint32_t& width, uint32_t& height) const
+{
+    toImpl<LWEDelegate::Settings>(m_delegate.get())
+        ->GetMaxVideoDecodeSize(width, height);
+}
+
+void Settings::SetMaxVideoDecodeSize(uint32_t width, uint32_t height)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate.get())
+        ->SetMaxVideoDecodeSize(width, height);
+}
+
 CookieManager::CookieManager()
 {
 }
