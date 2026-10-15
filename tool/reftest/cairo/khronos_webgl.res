@@ -648,7 +648,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-a
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-rgba4444.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-rgba5551.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-svg-image.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video-rgb565.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video-rgba4444.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video-rgba5551.html
@@ -722,7 +722,7 @@ http://localhost:11010/conformance-suites/1.0.3/extra/context-creation-and-destr
 # http://localhost:11010/conformance-suites/1.0.3/extra/readpixels-after-alert.html
 # http://localhost:11010/conformance-suites/1.0.3/extra/simulated-attrib-0-bug-test.html
 # http://localhost:11010/conformance-suites/1.0.3/extra/slow-shader-example.html
-# http://localhost:11010/conformance-suites/1.0.3/extra/tex-image-with-video-test.html
+http://localhost:11010/conformance-suites/1.0.3/extra/tex-image-with-video-test.html
 # http://localhost:11010/conformance-suites/1.0.3/extra/webgl-drawelements-validation.html
 # http://localhost:11010/conformance-suites/1.0.3/extra/webgl-info.html
 # http://localhost:11010/conformance-suites/1.0.3/extra/webgl-translate-shader.html

@@ -4724,6 +4724,10 @@ void WebGLRenderingContext::handleTexImageWithArrayBufferView(
     }
 }
 
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+static bool isVideoOriginClean(HTMLVideoElement* video);
+#endif
+
 void WebGLRenderingContext::handleTexImageWithImageSource(
     const GLenum format, const GLenum type, const TexImageSource& source,
     std::function<void(const TexImageHelper*)> updateImage, size_t sliceHeight,
@@ -4815,7 +4819,21 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
     }
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     else if (source.isHTMLVideoElementValue()) {
+        // Video frames are copied on the GPU by texImageVideo(), which only
+        // the WebGL 1 overloads reach; the explicit-size and 3D uploads do
+        // not take a video source yet, so nothing is uploaded. A tainted
+        // video is still rejected, as on every overload.
+        HTMLVideoElement* video = source.getHTMLVideoElementValue();
+        if (video->activeMediaPlayer() && !video->currentSrc()->isEmpty() &&
+            video->readyState() >= HTMLMediaElement::HAVE_METADATA &&
+            !isVideoOriginClean(video)) {
+            throw new DOMException(
+                video->document()->executionContext(),
+                DOMException::Code::SECURITY_ERR,
+                "The video element contains cross-origin data.");
+        }
         STARFISH_UNIMPLEMENTED("HTMLVideoElement");
+        return;
     }
 #endif
     else {
@@ -5151,11 +5169,9 @@ void WebGLRenderingContext::texSubImage2D(GLenum target, GLint level,
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 // https://registry.khronos.org/webgl/specs/latest/1.0/#ORIGIN_RESTRICTIONS
-// Network media is never origin-clean: the platform players fetch it without
-// CORS and follow redirects without reporting the final URL, so even a
-// same-origin src may deliver cross-origin frames. Only data: URLs and blob:
-// URLs (script-supplied bytes, e.g. MSE) are clean, as for Web Audio, unless
-// the embedder turned web security off.
+// A video whose media data is not CORS-same-origin would leak its pixels
+// through the texture, so it is rejected unless the embedder turned web
+// security off.
 static bool isVideoOriginClean(HTMLVideoElement* video)
 {
     ExecutionContext* context = video->document()->executionContext();
@@ -5163,8 +5179,7 @@ static bool isVideoOriginClean(HTMLVideoElement* video)
         LWE::WebSecurityMode::Disable) {
         return true;
     }
-    String* src = video->currentSrc();
-    return src->startsWith("data:", false) || src->startsWith("blob:", false);
+    return video->mediaDataIsCORSSameOrigin();
 }
 
 static GLuint createVideoCopyProgram(GL* gl, bool externalSource)
@@ -5232,9 +5247,11 @@ void WebGLRenderingContext::texImageVideo(GLenum target, GLint level,
                                           HTMLVideoElement* video)
 {
     MediaPlayer* player = video->activeMediaPlayer();
-    // No media data yet, or a srcObject stream (empty currentSrc), whose
-    // players do not expose frames to WebGL: nothing to upload.
-    if (!player || video->currentSrc()->isEmpty()) {
+    // No media data yet (its origin is only known from HAVE_METADATA on),
+    // or a srcObject stream (empty currentSrc), whose players do not expose
+    // frames to WebGL: nothing to upload.
+    if (!player || video->currentSrc()->isEmpty() ||
+        video->readyState() < HTMLMediaElement::HAVE_METADATA) {
         return;
     }
     if (!isVideoOriginClean(video)) {

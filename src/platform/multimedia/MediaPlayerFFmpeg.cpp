@@ -115,6 +115,31 @@ static void completeCallback(void* data)
     player->handleEnded();
 }
 
+// Whether the input's http(s) context still reads from the URL it was
+// opened with. libavformat rewrites the context's "location" on every
+// redirect, so a mismatch means a redirect happened. False when nothing
+// can be vouched for: a playlist format (HLS, DASH) fetches its segments
+// through contexts of its own, so the playlist's location says nothing
+// about where the media bytes come from, and only the http(s) protocol
+// has a "location" (a file: or rtsp: input stays cross-origin to the
+// element). Asked through av_opt_get(), which hands out a copy, so nothing
+// here points into libavformat's private state.
+static bool responseLocationIs(AVFormatContext* ctx, const char* requested)
+{
+    if (!ctx->pb ||
+        (ctx->iformat && av_match_name(ctx->iformat->name, "hls,dash"))) {
+        return false;
+    }
+    uint8_t* location = nullptr;
+    if (av_opt_get(ctx->pb, "location", AV_OPT_SEARCH_CHILDREN, &location) <
+        0) {
+        return false;
+    }
+    bool same = strcmp((const char*)location, requested) == 0;
+    av_free(location);
+    return same;
+}
+
 static void preparedCallback(void* data)
 {
     PLAYER_LOGI("preparedCallback\n");
@@ -160,6 +185,7 @@ static void printMediaFormatError(int errorCode)
 
 FfmpegWrapperPlayer::FfmpegWrapperPlayer()
     : m_url(nullptr)
+    , m_originVouched(false)
     , m_fmtCtx(nullptr)
     , m_codecCtx(nullptr)
     , m_videoStreamIndex(-1)
@@ -322,6 +348,7 @@ void FfmpegWrapperPlayer::destroy()
     if (m_fmtCtx != nullptr) {
         avformat_close_input(&m_fmtCtx);
     }
+    std::string().swap(m_requestedLocation);
 }
 
 bool FfmpegWrapperPlayer::prepare(
@@ -388,6 +415,11 @@ bool FfmpegWrapperPlayer::prepare(
             (m_videoStreamIndex < 0 && m_audioStreamIndex < 0)) {
             return false;
         }
+        // Checked after probing, which may itself re-request the input (an
+        // MP4 with its moov after the media data seeks back to the start).
+        m_requestedLocation = m_url->urlString()->toUTF8NonGCString();
+        m_originVouched =
+            responseLocationIs(m_fmtCtx, m_requestedLocation.c_str());
     }
 
     m_state = State::PREPARED;
@@ -534,6 +566,23 @@ double FfmpegWrapperPlayer::getDuration()
     return std::numeric_limits<double>::quiet_NaN();
 }
 
+// Any redirect, at open or on a later request of the input (a seek, or
+// the demuxer hopping between interleaved chunks, re-requests over http),
+// taints the media for the element. libavformat follows redirects itself
+// and keeps only the final URL, so a chain that merely passed through
+// another origin can't be told from one that stayed home; Fetch keeps a
+// no-cors response opaque after any cross-origin hop, and this errs the
+// same way for the same-origin hops it can't see.
+void FfmpegWrapperPlayer::noteResponseLocation()
+{
+    if (!m_originVouched.load()) {
+        return;
+    }
+    if (!responseLocationIs(m_fmtCtx, m_requestedLocation.c_str())) {
+        m_originVouched = false;
+    }
+}
+
 void FfmpegWrapperPlayer::decodingThread()
 {
     AVPacket* packet = av_packet_alloc();
@@ -645,6 +694,7 @@ void FfmpegWrapperPlayer::decodingThread()
             int64_t target = m_seekTargetMs.load();
             int result = av_seek_frame(m_fmtCtx, -1, target * 1000,
                                        AVSEEK_FLAG_BACKWARD);
+            noteResponseLocation();
             if (result >= 0) {
                 if (m_codecCtx) {
                     avcodec_flush_buffers(m_codecCtx);
@@ -676,6 +726,7 @@ void FfmpegWrapperPlayer::decodingThread()
             break;
         }
         int result = av_read_frame(m_fmtCtx, packet);
+        noteResponseLocation();
         if (result < 0) {
             if (result == AVERROR_EOF) {
                 if (m_codecCtx) {
@@ -1430,6 +1481,14 @@ void MediaPlayerFFmpeg::setNativePlayerDefaultOptions(ResourceURL* url)
     PLAYER_LOGI("MediaPlayerFFmpeg::setNativePlayerDefaultOptions\n");
 }
 
+Optional<ResourceURL*> MediaPlayerFFmpeg::responseURL()
+{
+    if (!m_nativePlayer->m_originVouched.load()) {
+        return nullptr;
+    }
+    return m_currentURL;
+}
+
 void MediaPlayerFFmpeg::setNativePlayerDisplayModeWithGL()
 {
     m_nativePlayer->setVideoFrameDecodedCB(
@@ -1575,7 +1634,6 @@ void MediaPlayerFFmpeg::handlePrepared()
         destroy();
         return;
     }
-
     char* videoCodec = nullptr;
     char* audioCodec = nullptr;
 

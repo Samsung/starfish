@@ -23,6 +23,7 @@
 #include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLMediaElement.h"
+#include "core/dom/WebOrigin.h"
 #include "platform/multimedia/MediaPlayer.h"
 #include "core/modules/renderer/Renderer.h"
 #include "core/modules/canvas/Canvas.h"
@@ -127,5 +128,24 @@ void MediaPlayer::setPlaybackState(MediaPlayer::PlaybackState state)
     Locker<Mutex> locker(*m_playerStateMutex);
     m_playbackState = state;
 }
+
+bool MediaPlayer::responseIsSameOrigin(WebOrigin* origin)
+{
+    Optional<ResourceURL*> response = responseURL();
+    if (!response) {
+        return false;
+    }
+    if (response.value() != m_judgedResponseURL) {
+        WebOrigin* responseOrigin =
+            WebOrigin::createDocumentOrigin(response.value());
+        // An opaque origin is same-origin only with itself, which a
+        // response's never is.
+        m_judgedResponseURL = response.value();
+        m_judgedSameOrigin =
+            !responseOrigin->isOpaque() && origin->isSameOrigin(responseOrigin);
+    }
+    return m_judgedSameOrigin;
+}
+
 } // namespace Starfish
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

@@ -893,6 +893,25 @@ void HTMLMediaElement::setCrossOrigin(Optional<String*> crossOrigin)
     }
 }
 
+// https://html.spec.whatwg.org/multipage/media.html#media-data-is-cors-same-origin
+// The players fetch through their own network stacks, without CORS, so a
+// cross-origin response can't be verified and stays opaque even when
+// `crossorigin` is set: only a response from the document's own origin is
+// CORS-same-origin. Fetch judges that hop by hop along the redirects; the
+// players can't report the hops, so they vouch for a response only when
+// they saw no redirect at all (a same-origin redirect taints too, the
+// conservative side of that deviation). data: and blob: media
+// (script-supplied bytes, e.g. MSE) carry no cross-origin data.
+bool HTMLMediaElement::mediaDataIsCORSSameOrigin()
+{
+    if (m_currentSrc->startsWith("data:", false) ||
+        m_currentSrc->startsWith("blob:", false)) {
+        return true;
+    }
+    MediaPlayer* player = activeMediaPlayer();
+    return player && player->responseIsSameOrigin(document()->webOrigin());
+}
+
 void HTMLMediaElement::setPreload(String* preload)
 {
     setAttribute(starfish()->staticStrings()->m_preload, preload);

@@ -611,9 +611,9 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/textures/svg_image/t
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/svg_image/tex-2d-rgba-rgba-unsigned_byte.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/svg_image/tex-2d-rgba-rgba-unsigned_short_4_4_4_4.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/svg_image/tex-2d-rgba-rgba-unsigned_short_5_5_5_1.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/textures/video/tex-2d-rgb-rgb-unsigned_byte.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/textures/video/tex-2d-rgb-rgb-unsigned_byte.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/textures/video/tex-2d-rgb-rgb-unsigned_short_5_6_5.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/textures/video/tex-2d-rgba-rgba-unsigned_byte.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/textures/video/tex-2d-rgba-rgba-unsigned_byte.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/textures/video/tex-2d-rgba-rgba-unsigned_short_4_4_4_4.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/textures/video/tex-2d-rgba-rgba-unsigned_short_5_5_5_1.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/textures/webgl_canvas/tex-2d-rgb-rgb-unsigned_byte.html

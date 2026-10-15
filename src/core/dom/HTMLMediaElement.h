@@ -308,6 +308,8 @@ public:
 
     Optional<String*> crossOrigin();
     void setCrossOrigin(Optional<String*> crossOrigin);
+    // https://html.spec.whatwg.org/multipage/media.html#media-data-is-cors-same-origin
+    bool mediaDataIsCORSSameOrigin();
 
     NetworkState networkState();
     PreloadState preloadValue();
