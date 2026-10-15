@@ -385,3 +385,5 @@ http://web-platform.test:8000/html/browsers/browsing-the-web/navigating-across-d
 http://web-platform.test:8000/html/browsers/browsing-the-web/navigating-across-documents/empty_fragment.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/history-traversal/window-name-after-same-origin-sub-frame-navigation.sub.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/history-traversal/window-name-after-cross-origin-sub-frame-navigation.sub.html
+http://web-platform.test:8000/html/webappapis/timers/negative-settimeout.any.html
+http://web-platform.test:8000/html/webappapis/timers/negative-setinterval.any.html

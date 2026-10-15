@@ -120,7 +120,8 @@ uint32_t WorkerGlobalScope::setTimeout(TimerHandler handler, int32_t delay,
 {
     STARFISH_ASSERT(handler != nullptr);
     STARFISH_ASSERT(data != nullptr);
-    return webWorker()->timer()->addTimer(delay, this, handler, data, false);
+    return webWorker()->timer()->addTimer(std::max(0, delay), this, handler,
+                                          data, false);
 }
 
 void WorkerGlobalScope::clearTimeout(int32_t id)
@@ -133,7 +134,8 @@ uint32_t WorkerGlobalScope::setInterval(TimerHandler handler, int32_t delay,
 {
     STARFISH_ASSERT(handler != nullptr);
     STARFISH_ASSERT(data != nullptr);
-    return webWorker()->timer()->addTimer(delay, this, handler, data, true);
+    return webWorker()->timer()->addTimer(std::max(0, delay), this, handler,
+                                          data, true);
 }
 
 void WorkerGlobalScope::clearInterval(int32_t id)

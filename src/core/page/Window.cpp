@@ -834,7 +834,8 @@ String* Window::getA11yFocusedElementId()
 
 uint32_t Window::setTimeout(TimerHandler handler, int32_t delay, void* data)
 {
-    return webView()->timer()->addTimer(delay, this, handler, data, false);
+    return webView()->timer()->addTimer(std::max(0, delay), this, handler, data,
+                                        false);
 }
 
 void Window::clearTimeout(int32_t id)
@@ -844,7 +845,8 @@ void Window::clearTimeout(int32_t id)
 
 uint32_t Window::setInterval(TimerHandler handler, int32_t delay, void* data)
 {
-    return webView()->timer()->addTimer(delay, this, handler, data, true);
+    return webView()->timer()->addTimer(std::max(0, delay), this, handler, data,
+                                        true);
 }
 
 void Window::clearInterval(int32_t id)
