@@ -55,42 +55,80 @@ public:
 
     WebGLTexture* attachedTexture(GLenum attachment) const
     {
+        WebGLTexture* tex = nullptr;
         if (attachment >= 0x8CE0 && attachment < 0x8CE0 + 16) {
-            return m_attachedColorTextures[attachment - 0x8CE0];
-        }
-        if (attachment == 0x8D00 /* GL_DEPTH_ATTACHMENT */) {
-            return m_attachedDepthTexture;
-        }
-        if (attachment == 0x8D20 /* GL_STENCIL_ATTACHMENT */) {
-            return m_attachedStencilTexture;
-        }
-        if (attachment == 0x821A /* GL_DEPTH_STENCIL_ATTACHMENT */) {
+            tex = m_attachedColorTextures[attachment - 0x8CE0];
+        } else if (attachment == 0x8D00 /* GL_DEPTH_ATTACHMENT */) {
+            tex = m_attachedDepthTexture;
+        } else if (attachment == 0x8D20 /* GL_STENCIL_ATTACHMENT */) {
+            tex = m_attachedStencilTexture;
+        } else if (attachment == 0x821A /* GL_DEPTH_STENCIL_ATTACHMENT */) {
             if (m_attachedDepthTexture &&
                 m_attachedDepthTexture == m_attachedStencilTexture) {
-                return m_attachedDepthTexture;
+                tex = m_attachedDepthTexture;
             }
         }
-        return nullptr;
+        return (tex && !tex->isDeleted()) ? tex : nullptr;
     }
 
     WebGLRenderbuffer* attachedRenderbuffer(GLenum attachment) const
     {
+        WebGLRenderbuffer* rb = nullptr;
         if (attachment >= 0x8CE0 && attachment < 0x8CE0 + 16) {
-            return m_attachedColorRenderbuffers[attachment - 0x8CE0];
-        }
-        if (attachment == 0x8D00 /* GL_DEPTH_ATTACHMENT */) {
-            return m_attachedDepthRenderbuffer;
-        }
-        if (attachment == 0x8D20 /* GL_STENCIL_ATTACHMENT */) {
-            return m_attachedStencilRenderbuffer;
-        }
-        if (attachment == 0x821A /* GL_DEPTH_STENCIL_ATTACHMENT */) {
+            rb = m_attachedColorRenderbuffers[attachment - 0x8CE0];
+        } else if (attachment == 0x8D00 /* GL_DEPTH_ATTACHMENT */) {
+            rb = m_attachedDepthRenderbuffer;
+        } else if (attachment == 0x8D20 /* GL_STENCIL_ATTACHMENT */) {
+            rb = m_attachedStencilRenderbuffer;
+        } else if (attachment == 0x821A /* GL_DEPTH_STENCIL_ATTACHMENT */) {
             if (m_attachedDepthRenderbuffer &&
                 m_attachedDepthRenderbuffer == m_attachedStencilRenderbuffer) {
-                return m_attachedDepthRenderbuffer;
+                rb = m_attachedDepthRenderbuffer;
             }
         }
-        return nullptr;
+        return (rb && !rb->isDeleted()) ? rb : nullptr;
+    }
+
+    void detachTexture(WebGLTexture* texture)
+    {
+        if (!texture) {
+            return;
+        }
+        for (size_t i = 0; i < 16; ++i) {
+            if (m_attachedColorTextures[i] == texture) {
+                m_attachedColorTextures[i] = nullptr;
+                if (i == 0) {
+                    m_attachedTexture = nullptr;
+                }
+            }
+        }
+        if (m_attachedDepthTexture == texture) {
+            m_attachedDepthTexture = nullptr;
+        }
+        if (m_attachedStencilTexture == texture) {
+            m_attachedStencilTexture = nullptr;
+        }
+    }
+
+    void detachRenderbuffer(WebGLRenderbuffer* renderbuffer)
+    {
+        if (!renderbuffer) {
+            return;
+        }
+        for (size_t i = 0; i < 16; ++i) {
+            if (m_attachedColorRenderbuffers[i] == renderbuffer) {
+                m_attachedColorRenderbuffers[i] = nullptr;
+                if (i == 0) {
+                    m_attachedRenderBuffer = nullptr;
+                }
+            }
+        }
+        if (m_attachedDepthRenderbuffer == renderbuffer) {
+            m_attachedDepthRenderbuffer = nullptr;
+        }
+        if (m_attachedStencilRenderbuffer == renderbuffer) {
+            m_attachedStencilRenderbuffer = nullptr;
+        }
     }
 
     WebGLTexture* attachedColorTexture(size_t index) const

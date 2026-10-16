@@ -155,6 +155,16 @@ void WebGLRenderingContextState::unbindBuffer(WebGLBuffer* buffer)
     if (iter != m_elementArrayBuffers.end() && iter->second == buffer) {
         m_elementArrayBuffers.erase(iter);
     }
+    if (m_buffersBoundToVertexAttributes.count(vao)) {
+        auto& attrMap = m_buffersBoundToVertexAttributes[vao];
+        for (auto it = attrMap.begin(); it != attrMap.end();) {
+            if (it->second == buffer) {
+                it = attrMap.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
 }
 
 GLuint WebGLRenderingContextState::vertexArray()
