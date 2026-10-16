@@ -81,7 +81,7 @@ public:
 
 protected:
     String* makeTimeString(String* label, Optional<String*> data);
-    void printMessage(LogLevel level, String* tag, String* dataessage);
+    void printMessage(LogLevel level, const char* tag, String* message);
 
     WebBase* m_webBase = nullptr;
     GCUnorderedMap<String*, uint64_t> m_times;

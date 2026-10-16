@@ -68,10 +68,7 @@ void Console::log(String* data, Escargot::ValueRef** argv, size_t argc)
 #if defined(STARFISH_ENABLE_CDP)
     emitCDPConsole(m_webBase, "log", data, argv, argc);
 #endif
-    printMessage(
-        LogLevel::Log,
-        AtomicString::createAtomicString(m_webBase->starfish(), "console.log"),
-        data);
+    printMessage(LogLevel::Log, "console.log", data);
 }
 
 void Console::info(String* data, Escargot::ValueRef** argv, size_t argc)
@@ -84,10 +81,7 @@ void Console::info(String* data, Escargot::ValueRef** argv, size_t argc)
 #if defined(STARFISH_ENABLE_CDP)
     emitCDPConsole(m_webBase, "info", data, argv, argc);
 #endif
-    printMessage(
-        LogLevel::Info,
-        AtomicString::createAtomicString(m_webBase->starfish(), "console.info"),
-        data);
+    printMessage(LogLevel::Info, "console.info", data);
 }
 
 void Console::error(String* data, Escargot::ValueRef** argv, size_t argc)
@@ -100,10 +94,7 @@ void Console::error(String* data, Escargot::ValueRef** argv, size_t argc)
 #if defined(STARFISH_ENABLE_CDP)
     emitCDPConsole(m_webBase, "error", data, argv, argc);
 #endif
-    printMessage(LogLevel::Error,
-                 AtomicString::createAtomicString(m_webBase->starfish(),
-                                                  "console.error"),
-                 data);
+    printMessage(LogLevel::Error, "console.error", data);
 }
 
 void Console::warn(String* data, Escargot::ValueRef** argv, size_t argc)
@@ -116,10 +107,7 @@ void Console::warn(String* data, Escargot::ValueRef** argv, size_t argc)
 #if defined(STARFISH_ENABLE_CDP)
     emitCDPConsole(m_webBase, "warning", data, argv, argc);
 #endif
-    printMessage(
-        LogLevel::Warn,
-        AtomicString::createAtomicString(m_webBase->starfish(), "console.warn"),
-        data);
+    printMessage(LogLevel::Warn, "console.warn", data);
 }
 
 void Console::debug(String* data, Escargot::ValueRef** argv, size_t argc)
@@ -132,10 +120,7 @@ void Console::debug(String* data, Escargot::ValueRef** argv, size_t argc)
 #if defined(STARFISH_ENABLE_CDP)
     emitCDPConsole(m_webBase, "verbose", data, argv, argc);
 #endif
-    printMessage(LogLevel::Log,
-                 AtomicString::createAtomicString(m_webBase->starfish(),
-                                                  "console.debug"),
-                 data);
+    printMessage(LogLevel::Log, "console.debug", data);
 }
 
 void Console::time(String* label)
@@ -158,10 +143,7 @@ void Console::timeLog(String* label, Optional<String*> data)
     }
 
     String* timeString = makeTimeString(label, data);
-    printMessage(LogLevel::Log,
-                 AtomicString::createAtomicString(m_webBase->starfish(),
-                                                  "console.timeLog"),
-                 timeString);
+    printMessage(LogLevel::Log, "console.timeLog", timeString);
 }
 
 void Console::timeEnd(String* label)
@@ -173,10 +155,7 @@ void Console::timeEnd(String* label)
     }
 
     String* timeString = makeTimeString(label, nullptr);
-    printMessage(LogLevel::Info,
-                 AtomicString::createAtomicString(m_webBase->starfish(),
-                                                  "console.timeEnd"),
-                 timeString);
+    printMessage(LogLevel::Info, "console.timeEnd", timeString);
 
     m_times.erase(label);
 }
@@ -190,10 +169,7 @@ void Console::group(String* data)
     // doesn't work properly and needs further improvement.
 
     m_groupStack.push_back(data);
-    printMessage(LogLevel::Log,
-                 AtomicString::createAtomicString(m_webBase->starfish(),
-                                                  "console.group"),
-                 data);
+    printMessage(LogLevel::Log, "console.group", data);
 }
 
 void Console::groupCollapsed(String* data)
@@ -212,25 +188,19 @@ void Console::groupEnd()
 void Console::assertion(bool condition, Optional<String*> data)
 {
     if (!condition) {
-        printMessage(LogLevel::Error,
-                     AtomicString::createAtomicString(m_webBase->starfish(),
-                                                      "Assertion failed"),
+        printMessage(LogLevel::Error, "Assertion failed",
                      data.hasValue()
                          ? data.value()
-                         : AtomicString::createAtomicString(
-                               m_webBase->starfish(), "console.assert"));
+                         : String::createASCIIString("console.assert"));
 #if defined(STARFISH_ENABLE_TEST) && defined(STARFISH_WEBWORKER_NOT_HOST)
         starfishRecordTestFailure();
 #endif
     } else {
 #if defined(STARFISH_ENABLE_TEST)
-        printMessage(LogLevel::Error,
-                     AtomicString::createAtomicString(m_webBase->starfish(),
-                                                      "Assertion ok"),
+        printMessage(LogLevel::Error, "Assertion ok",
                      data.hasValue()
                          ? data.value()
-                         : AtomicString::createAtomicString(
-                               m_webBase->starfish(), "console.assert"));
+                         : String::createASCIIString("console.assert"));
 #endif
     }
 }
@@ -256,10 +226,10 @@ String* Console::makeTimeString(String* label, Optional<String*> data)
     return builder.finalize();
 }
 
-void Console::printMessage(LogLevel level, String* tag, String* message)
+void Console::printMessage(LogLevel level, const char* tag, String* message)
 {
     StringBuilder builder;
-    builder.appendString(tag);
+    builder.appendString(tag, strlen(tag));
     builder.appendChar(':');
     builder.appendChar(' ');
 
