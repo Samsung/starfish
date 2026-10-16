@@ -1529,13 +1529,13 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/frag-depth.ht
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/invalid-default-precision.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/invalid-invariant.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/loops-with-side-effects.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/misplaced-version-directive.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/misplaced-version-directive.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/sampler-no-precision.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/sequence-operator-returns-non-constant.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/shader-linking.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/shader-with-1024-character-define.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/shader-with-1024-character-identifier.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/shader-with-1025-character-define.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/shader-with-1025-character-define.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/shader-with-1025-character-identifier.frag.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/shader-with-invalid-characters.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/shader-with-mis-matching-uniform-block.html
