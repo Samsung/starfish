@@ -4385,6 +4385,26 @@ void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
         return;
     }
 
+    if (pboOffset < 0) {
+        setGLError(GL_INVALID_VALUE, "negative offset");
+        return;
+    }
+
+    size_t requiredBytes = 0;
+    if (!computeRequiredUnpackBytes(width, height, 1, format, type,
+                                    requiredBytes)) {
+        return;
+    }
+
+    GLint bufferSize = 0;
+    gl()->getBufferParameteriv(GL_PIXEL_UNPACK_BUFFER, GL_BUFFER_SIZE,
+                               &bufferSize);
+    if (static_cast<size_t>(pboOffset) + requiredBytes >
+        static_cast<size_t>(bufferSize)) {
+        setGLError(GL_INVALID_OPERATION, "buffer too small");
+        return;
+    }
+
     gl()->texImage2D(target, level, internalformat, width, height, border,
                      format, type, reinterpret_cast<const void*>(pboOffset));
     if (texture && !hasNewGLError()) {
@@ -4520,6 +4540,26 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
     if (!getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).hasValue() ||
         getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).value() == nullptr) {
         setGLError(GL_INVALID_OPERATION, "PIXEL_UNPACK_BUFFER is not bound.");
+        return;
+    }
+
+    if (pboOffset < 0) {
+        setGLError(GL_INVALID_VALUE, "negative offset");
+        return;
+    }
+
+    size_t requiredBytes = 0;
+    if (!computeRequiredUnpackBytes(width, height, depth, format, type,
+                                    requiredBytes)) {
+        return;
+    }
+
+    GLint bufferSize = 0;
+    gl()->getBufferParameteriv(GL_PIXEL_UNPACK_BUFFER, GL_BUFFER_SIZE,
+                               &bufferSize);
+    if (static_cast<size_t>(pboOffset) + requiredBytes >
+        static_cast<size_t>(bufferSize)) {
+        setGLError(GL_INVALID_OPERATION, "buffer too small");
         return;
     }
 
@@ -4731,6 +4771,26 @@ void WebGL2RenderingContext::texSubImage3D(GLenum target, GLint level,
         return;
     }
 
+    if (pboOffset < 0) {
+        setGLError(GL_INVALID_VALUE, "negative offset");
+        return;
+    }
+
+    size_t requiredBytes = 0;
+    if (!computeRequiredUnpackBytes(width, height, depth, format, type,
+                                    requiredBytes)) {
+        return;
+    }
+
+    GLint bufferSize = 0;
+    gl()->getBufferParameteriv(GL_PIXEL_UNPACK_BUFFER, GL_BUFFER_SIZE,
+                               &bufferSize);
+    if (static_cast<size_t>(pboOffset) + requiredBytes >
+        static_cast<size_t>(bufferSize)) {
+        setGLError(GL_INVALID_OPERATION, "buffer too small");
+        return;
+    }
+
     gl()->texSubImage3D(target, level, xoffset, yoffset, zoffset, width, height,
                         depth, format, type,
                         reinterpret_cast<const void*>(pboOffset));
@@ -4843,6 +4903,26 @@ void WebGL2RenderingContext::texSubImage2D(GLenum target, GLint level,
     if (!getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).hasValue() ||
         getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).value() == nullptr) {
         setGLError(GL_INVALID_OPERATION, "PIXEL_UNPACK_BUFFER is not bound.");
+        return;
+    }
+
+    if (pboOffset < 0) {
+        setGLError(GL_INVALID_VALUE, "negative offset");
+        return;
+    }
+
+    size_t requiredBytes = 0;
+    if (!computeRequiredUnpackBytes(width, height, 1, format, type,
+                                    requiredBytes)) {
+        return;
+    }
+
+    GLint bufferSize = 0;
+    gl()->getBufferParameteriv(GL_PIXEL_UNPACK_BUFFER, GL_BUFFER_SIZE,
+                               &bufferSize);
+    if (static_cast<size_t>(pboOffset) + requiredBytes >
+        static_cast<size_t>(bufferSize)) {
+        setGLError(GL_INVALID_OPERATION, "buffer too small");
         return;
     }
 
@@ -5294,8 +5374,10 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
         return;
     }
 
-    size_t bytesPerPixel = getBytesPerPixel(format, type);
-    size_t requiredSize = static_cast<size_t>(width) * height * bytesPerPixel;
+    size_t requiredSize = 0;
+    if (!computeRequiredPackBytes(width, height, format, type, requiredSize)) {
+        return;
+    }
     GLint bufferSize = 0;
     gl()->getBufferParameteriv(GL_PIXEL_PACK_BUFFER, GL_BUFFER_SIZE,
                                &bufferSize);
@@ -5403,9 +5485,11 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
         return;
     }
 
-    size_t bytesPerPixel = getBytesPerPixel(format, type);
-    size_t byteLengthOfPixels =
-        static_cast<size_t>(width) * height * bytesPerPixel;
+    size_t byteLengthOfPixels = 0;
+    if (!computeRequiredPackBytes(width, height, format, type,
+                                  byteLengthOfPixels)) {
+        return;
+    }
     size_t remainingBytes = dstData->byteLength() - (dstOffset * elementSize);
 
     if (remainingBytes < byteLengthOfPixels) {

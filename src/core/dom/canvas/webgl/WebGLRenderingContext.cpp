@@ -3553,6 +3553,118 @@ void WebGLRenderingContext::pixelStorei(GLenum pname, GLint param)
             m_unpackColorspaceConversion = param;
         }
         break;
+    case GL_PACK_ALIGNMENT:
+        if (param != 1 && param != 2 && param != 4 && param != 8) {
+            setGLError(GL_INVALID_VALUE, "Invalid pack alignment");
+            return;
+        }
+        m_packAlignment = param;
+        m_gl->pixelStorei(pname, param);
+        break;
+    case GL_UNPACK_ALIGNMENT:
+        if (param != 1 && param != 2 && param != 4 && param != 8) {
+            setGLError(GL_INVALID_VALUE, "Invalid unpack alignment");
+            return;
+        }
+        m_unpackAlignment = param;
+        m_gl->pixelStorei(pname, param);
+        break;
+    case GL_PACK_ROW_LENGTH:
+        if (!isWebGL2RenderingContext()) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+        if (param < 0) {
+            setGLError(GL_INVALID_VALUE, "negative pack row length");
+            return;
+        }
+        m_packRowLength = param;
+        m_gl->pixelStorei(pname, param);
+        break;
+    case GL_PACK_SKIP_PIXELS:
+        if (!isWebGL2RenderingContext()) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+        if (param < 0) {
+            setGLError(GL_INVALID_VALUE, "negative pack skip pixels");
+            return;
+        }
+        m_packSkipPixels = param;
+        m_gl->pixelStorei(pname, param);
+        break;
+    case GL_PACK_SKIP_ROWS:
+        if (!isWebGL2RenderingContext()) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+        if (param < 0) {
+            setGLError(GL_INVALID_VALUE, "negative pack skip rows");
+            return;
+        }
+        m_packSkipRows = param;
+        m_gl->pixelStorei(pname, param);
+        break;
+    case GL_UNPACK_ROW_LENGTH:
+        if (!isWebGL2RenderingContext()) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+        if (param < 0) {
+            setGLError(GL_INVALID_VALUE, "negative unpack row length");
+            return;
+        }
+        m_unpackRowLength = param;
+        m_gl->pixelStorei(pname, param);
+        break;
+    case GL_UNPACK_IMAGE_HEIGHT:
+        if (!isWebGL2RenderingContext()) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+        if (param < 0) {
+            setGLError(GL_INVALID_VALUE, "negative unpack image height");
+            return;
+        }
+        m_unpackImageHeight = param;
+        m_gl->pixelStorei(pname, param);
+        break;
+    case GL_UNPACK_SKIP_PIXELS:
+        if (!isWebGL2RenderingContext()) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+        if (param < 0) {
+            setGLError(GL_INVALID_VALUE, "negative unpack skip pixels");
+            return;
+        }
+        m_unpackSkipPixels = param;
+        m_gl->pixelStorei(pname, param);
+        break;
+    case GL_UNPACK_SKIP_ROWS:
+        if (!isWebGL2RenderingContext()) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+        if (param < 0) {
+            setGLError(GL_INVALID_VALUE, "negative unpack skip rows");
+            return;
+        }
+        m_unpackSkipRows = param;
+        m_gl->pixelStorei(pname, param);
+        break;
+    case GL_UNPACK_SKIP_IMAGES:
+        if (!isWebGL2RenderingContext()) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+        if (param < 0) {
+            setGLError(GL_INVALID_VALUE, "negative unpack skip images");
+            return;
+        }
+        m_unpackSkipImages = param;
+        m_gl->pixelStorei(pname, param);
+        break;
     default:
         TRACE(WEBGL, KV(glValueString(pname)), KV(glValueString(param)));
         m_gl->pixelStorei(pname, param);
@@ -4279,6 +4391,173 @@ size_t WebGLRenderingContext::getBytesPerPixel(GLenum format, GLenum type)
     return Pixel::getBytesPerPixel(format, type, webGLVersion());
 }
 
+bool WebGLRenderingContext::computeRequiredPackBytes(GLsizei width,
+                                                     GLsizei height,
+                                                     GLenum format, GLenum type,
+                                                     size_t& requiredBytes)
+{
+    if (width < 0 || height < 0) {
+        setGLError(GL_INVALID_VALUE, "negative width or height");
+        return false;
+    }
+
+    if (width == 0 || height == 0) {
+        requiredBytes = 0;
+        return true;
+    }
+
+    if (isWebGL2RenderingContext()) {
+        size_t actualRowLength = (m_packRowLength > 0)
+                                     ? static_cast<size_t>(m_packRowLength)
+                                     : static_cast<size_t>(width);
+        if (m_packRowLength > 0 && m_packRowLength < width) {
+            setGLError(GL_INVALID_OPERATION, "PACK_ROW_LENGTH < width");
+            return false;
+        }
+        if (static_cast<size_t>(m_packSkipPixels) + static_cast<size_t>(width) >
+            actualRowLength) {
+            setGLError(GL_INVALID_OPERATION,
+                       "PACK_SKIP_PIXELS + width > rowLength");
+            return false;
+        }
+    }
+
+    size_t bytesPerPixel = getBytesPerPixel(format, type);
+    if (bytesPerPixel == 0) {
+        setGLError(GL_INVALID_ENUM, "invalid format or type");
+        return false;
+    }
+
+    size_t effectiveWidth = width;
+    size_t skipPixels = 0;
+    size_t skipRows = 0;
+    size_t alignment = m_packAlignment;
+
+    if (isWebGL2RenderingContext()) {
+        if (m_packRowLength > 0) {
+            effectiveWidth = static_cast<size_t>(m_packRowLength);
+        }
+        skipPixels = static_cast<size_t>(m_packSkipPixels);
+        skipRows = static_cast<size_t>(m_packSkipRows);
+    }
+
+    size_t rowBytes = effectiveWidth * bytesPerPixel;
+    size_t alignedRowBytes = rowBytes;
+    if (alignment > 1) {
+        size_t remainder = rowBytes % alignment;
+        if (remainder != 0) {
+            alignedRowBytes = rowBytes + (alignment - remainder);
+        }
+    }
+
+    size_t skipBytes = skipPixels * bytesPerPixel + skipRows * alignedRowBytes;
+    size_t payloadBytes = alignedRowBytes * (static_cast<size_t>(height) - 1) +
+                          bytesPerPixel * static_cast<size_t>(width);
+
+    requiredBytes = skipBytes + payloadBytes;
+    return true;
+}
+
+bool WebGLRenderingContext::computeRequiredUnpackBytes(
+    GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
+    size_t& requiredBytes)
+{
+    if (width < 0 || height < 0 || depth < 0) {
+        setGLError(GL_INVALID_VALUE, "negative dimension");
+        return false;
+    }
+
+    if (width == 0 || height == 0 || depth == 0) {
+        requiredBytes = 0;
+        return true;
+    }
+
+    size_t bytesPerPixel = getBytesPerPixel(format, type);
+    if (bytesPerPixel == 0) {
+        setGLError(GL_INVALID_ENUM, "invalid format or type");
+        return false;
+    }
+
+    if (isWebGL2RenderingContext()) {
+        size_t actualRowLength = (m_unpackRowLength > 0)
+                                     ? static_cast<size_t>(m_unpackRowLength)
+                                     : static_cast<size_t>(width);
+        if (m_unpackRowLength > 0 && m_unpackRowLength < width) {
+            setGLError(GL_INVALID_OPERATION, "UNPACK_ROW_LENGTH < width");
+            return false;
+        }
+        if (static_cast<size_t>(m_unpackSkipPixels) +
+                static_cast<size_t>(width) >
+            actualRowLength) {
+            setGLError(GL_INVALID_OPERATION,
+                       "UNPACK_SKIP_PIXELS + width > rowLength");
+            return false;
+        }
+
+        if (depth > 1) {
+            size_t actualImageHeight =
+                (m_unpackImageHeight > 0)
+                    ? static_cast<size_t>(m_unpackImageHeight)
+                    : static_cast<size_t>(height);
+            if (m_unpackImageHeight > 0 && m_unpackImageHeight < height) {
+                setGLError(GL_INVALID_OPERATION,
+                           "UNPACK_IMAGE_HEIGHT < height");
+                return false;
+            }
+            if (static_cast<size_t>(m_unpackSkipRows) +
+                    static_cast<size_t>(height) >
+                actualImageHeight) {
+                setGLError(GL_INVALID_OPERATION,
+                           "UNPACK_SKIP_ROWS + height > imageHeight");
+                return false;
+            }
+        }
+    }
+
+    size_t effectiveWidth = width;
+    size_t effectiveHeight = height;
+    size_t skipPixels = 0;
+    size_t skipRows = 0;
+    size_t skipImages = 0;
+    size_t alignment = m_unpackAlignment;
+
+    if (isWebGL2RenderingContext()) {
+        if (m_unpackRowLength > 0) {
+            effectiveWidth = static_cast<size_t>(m_unpackRowLength);
+        }
+        skipPixels = static_cast<size_t>(m_unpackSkipPixels);
+        skipRows = static_cast<size_t>(m_unpackSkipRows);
+
+        if (depth > 1) {
+            if (m_unpackImageHeight > 0) {
+                effectiveHeight = static_cast<size_t>(m_unpackImageHeight);
+            }
+            skipImages = static_cast<size_t>(m_unpackSkipImages);
+        }
+    }
+
+    size_t rowBytes = effectiveWidth * bytesPerPixel;
+    size_t alignedRowBytes = rowBytes;
+    if (alignment > 1) {
+        size_t remainder = rowBytes % alignment;
+        if (remainder != 0) {
+            alignedRowBytes = rowBytes + (alignment - remainder);
+        }
+    }
+
+    size_t imageBytes = alignedRowBytes * effectiveHeight;
+
+    size_t skipBytes = skipPixels * bytesPerPixel + skipRows * alignedRowBytes +
+                       skipImages * imageBytes;
+
+    size_t payloadBytes = imageBytes * (static_cast<size_t>(depth) - 1) +
+                          alignedRowBytes * (static_cast<size_t>(height) - 1) +
+                          bytesPerPixel * static_cast<size_t>(width);
+
+    requiredBytes = skipBytes + payloadBytes;
+    return true;
+}
+
 void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
                                        GLsizei height, GLenum format,
                                        GLenum type,
@@ -4370,14 +4649,12 @@ void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
             return;
         }
 
-        size_t bytesPerPixel = getBytesPerPixel(format, type);
-        size_t byteLengthOfPixels = width * height * bytesPerPixel;
+        size_t byteLengthOfPixels = 0;
+        if (!computeRequiredPackBytes(width, height, format, type,
+                                      byteLengthOfPixels)) {
+            return;
+        }
         size_t byteLengthOfView = pixels->byteLength();
-
-        TRACEF(WEBGL, "\n%s",
-               StringUtils::createTableString(
-                   20, KV(width), KV(height), KV(bytesPerPixel),
-                   KV(byteLengthOfView), KV(byteLengthOfPixels)));
 
         if (byteLengthOfView < byteLengthOfPixels) {
             // If pixels is non-null, but is not large enough to retrieve all of
@@ -4841,16 +5118,15 @@ void WebGLRenderingContext::handleTexImageWithArrayBufferView(
         }
 
         size_t bytesPerPixel = getBytesPerPixel(format, type);
-        size_t byteLengthOfPixels = width * height * depth * bytesPerPixel;
+        size_t byteLengthOfPixels = 0;
+        if (!computeRequiredUnpackBytes(width, height, depth, format, type,
+                                        byteLengthOfPixels)) {
+            return;
+        }
         size_t availableBytes = pixelsView->byteLength() - byteOffset;
 
-        TRACEF(WEBGL, "\n%s",
-               StringUtils::createTableString(
-                   20, KV(hex(target)), KV(width), KV(height), KV(depth),
-                   KV(bytesPerPixel), KV(byteLengthOfPixels)));
-
         if (availableBytes < byteLengthOfPixels) {
-            setGLError(GL_INVALID_OPERATION);
+            setGLError(GL_INVALID_OPERATION, "buffer too small");
             return;
         }
 
