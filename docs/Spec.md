@@ -245,7 +245,7 @@ section are supported.
 > - `AudioContext`, `BaseAudioContext`, `AudioBuffer*`, `AudioNode*` — `STARFISH_ENABLE_WEBAUDIO` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64`)
 > - `WebSocket` — `STARFISH_ENABLE_WEBSOCKET` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64`)
 > - `WebGL*`, `EXT_*`, `OES_*`, `WEBGL_*` — `WEBGL=1`
-> - `Worker`, `WorkerGlobalScope`, `DedicatedWorkerGlobalScope`, `WorkerLocation` — `WORKER=1`
+> - `Worker`, `WorkerGlobalScope`, `DedicatedWorkerGlobalScope`, `WorkerLocation` — `WORKER=1`. `WorkerGlobalScope` is exposed in Workers; `DedicatedWorkerGlobalScope` is exposed only in dedicated Workers. Both global interface objects have prototypes but cannot be constructed with `new`. They are absent from Window.
 > - `SharedWorker`, `SharedWorkerGlobalScope` — `SHARED_WORKER=1`
 > - `ServiceWorker`, `ServiceWorkerRegistration`, `ServiceWorkerContainer` ([Unimplemented]), `ServiceWorkerGlobalScope`, `Notification`, `PushManager`, `PushSubscription`, `PushSubscriptionOptions`, `Cache`, `caches`, `FetchEvent`, `ExtendableEvent` — `SERVICE_WORKER=1`
 > - `IDBFactory`, `IDBDatabase`, `IDBObjectStore`, `IDBCursor` ([Unimplemented]), `IDBIndex`, `IDBKeyRange` ([Unimplemented]), `IDBOpenDBRequest` ([Unimplemented]), `IDBRequest`, `IDBTransaction` ([Unimplemented]) — `IDB=1`

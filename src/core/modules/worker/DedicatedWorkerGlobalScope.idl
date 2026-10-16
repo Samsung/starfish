@@ -4,8 +4,7 @@
   STARFISH_ENABLE_WORKER,
   PrimaryGlobal,
   Global=(Worker,DedicatedWorker),
-  Exposed=DedicatedWorker,
-  NoInterfaceObject
+  Exposed=DedicatedWorker
 ]
 interface DedicatedWorkerGlobalScope : WorkerGlobalScope {
   [Replaceable] readonly attribute DOMString name;

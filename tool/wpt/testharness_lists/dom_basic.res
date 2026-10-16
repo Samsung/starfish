@@ -29,9 +29,11 @@ http://web-platform.test:8000/dom/events/Event-cancelBubble.html
 http://web-platform.test:8000/dom/events/Event-propagation.html
 http://web-platform.test:8000/dom/events/Event-dispatch-reenter.html
 http://web-platform.test:8000/dom/events/EventTarget-addEventListener.any.html
+http://web-platform.test:8000/dom/events/EventTarget-addEventListener.any.worker.html
 http://web-platform.test:8000/dom/events/Event-type.html
 http://web-platform.test:8000/dom/events/Event-constants.html
 http://web-platform.test:8000/dom/events/EventTarget-removeEventListener.any.html
+http://web-platform.test:8000/dom/events/EventTarget-removeEventListener.any.worker.html
 http://web-platform.test:8000/dom/events/Event-type-empty.html
 # [auto-fail] http://web-platform.test:8000/dom/events/Event-dispatch-handlers-changed.html
 http://web-platform.test:8000/dom/events/Event-dispatch-target-moved.html

@@ -1,19 +1,31 @@
 http://web-platform.test:8000/fetch/api/request/request-cache-no-cache.any.html
+http://web-platform.test:8000/fetch/api/request/request-cache-no-cache.any.worker.html
 http://web-platform.test:8000/fetch/api/request/request-clone.sub.html
 http://web-platform.test:8000/fetch/api/request/request-init-001.sub.html
 http://web-platform.test:8000/fetch/api/request/request-init-003.sub.html
 # [auto-fail] http://web-platform.test:8000/fetch/api/request/request-structure.any.html
 http://web-platform.test:8000/fetch/api/headers/headers-errors.any.html
+http://web-platform.test:8000/fetch/api/headers/headers-errors.any.worker.html
 # [auto-fail] http://web-platform.test:8000/fetch/api/headers/headers-normalize.any.html
 http://web-platform.test:8000/fetch/api/headers/headers-structure.any.html
+http://web-platform.test:8000/fetch/api/headers/headers-structure.any.worker.html
 http://web-platform.test:8000/fetch/api/headers/headers-casing.any.html
+http://web-platform.test:8000/fetch/api/headers/headers-casing.any.worker.html
 http://web-platform.test:8000/fetch/api/response/response-stream-disturbed-2.any.html
+http://web-platform.test:8000/fetch/api/response/response-stream-disturbed-2.any.worker.html
 http://web-platform.test:8000/fetch/api/response/response-stream-disturbed-4.any.html
+http://web-platform.test:8000/fetch/api/response/response-stream-disturbed-4.any.worker.html
 http://web-platform.test:8000/fetch/api/response/response-stream-disturbed-5.any.html
+http://web-platform.test:8000/fetch/api/response/response-stream-disturbed-5.any.worker.html
 http://web-platform.test:8000/fetch/api/response/response-init-001.any.html
+http://web-platform.test:8000/fetch/api/response/response-init-001.any.worker.html
 http://web-platform.test:8000/fetch/api/response/response-stream-disturbed-3.any.html
+http://web-platform.test:8000/fetch/api/response/response-stream-disturbed-3.any.worker.html
 http://web-platform.test:8000/fetch/api/response/response-static-redirect.any.html
+http://web-platform.test:8000/fetch/api/response/response-static-redirect.any.worker.html
 http://web-platform.test:8000/fetch/api/response/response-static-error.any.html
+http://web-platform.test:8000/fetch/api/response/response-static-error.any.worker.html
 http://web-platform.test:8000/fetch/api/response/response-error.any.html
+http://web-platform.test:8000/fetch/api/response/response-error.any.worker.html
 # Unmeasured (no local wpt serve): SyntaxError rejection of Response.json(); measure and uncomment.
 # http://web-platform.test:8000/fetch/api/response/json.any.html

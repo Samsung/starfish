@@ -97,6 +97,7 @@ http://web-platform.test:8000/WebCryptoAPI/generateKey/successes_X25519.https.an
 # http://web-platform.test:8000/WebCryptoAPI/generateKey/successes_kmac.tentative.https.any.html # Tentative. Not in the WebCrypto spec.
 # http://web-platform.test:8000/WebCryptoAPI/getPublicKey.tentative.https.any.html # Tentative. Not in the WebCrypto spec.
 http://web-platform.test:8000/WebCryptoAPI/getRandomValues.any.html
+http://web-platform.test:8000/WebCryptoAPI/getRandomValues.any.worker.html
 # http://web-platform.test:8000/WebCryptoAPI/historical.any.html # Needs [SecureContext] support in the binding generator.
 # http://web-platform.test:8000/WebCryptoAPI/idlharness.https.any.html # Crashed in the generated Window attribute getter, fixed by #5400. Not enabled yet: #5404 (WC-04).
 # http://web-platform.test:8000/WebCryptoAPI/idlharness.tentative.https.any.html # Tentative. Not in the WebCrypto spec.

@@ -2,8 +2,7 @@
 
 [
   STARFISH_ENABLE_WORKER,
-  Exposed=Worker,
-  NoInterfaceObject
+  Exposed=Worker
 ]
 interface WorkerGlobalScope : EventTarget {
   readonly attribute WorkerGlobalScope self;
