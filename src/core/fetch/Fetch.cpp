@@ -19,6 +19,8 @@
 
 #include "StarfishConfig.h"
 #include "binding/ScriptWrappable.h"
+#include "core/dom/DOMException.h"
+#include "core/dom/Document.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/fetch/Fetch.h"
 #include "core/fetch/Request.h"
@@ -79,11 +81,35 @@ void* Fetch::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+static RequestData* requestDataWithReferrer(ExecutionContext* executionContext,
+                                            RequestData* original)
+{
+    ReferrerURL* referrer = original->m_referrer;
+    ReferrerPolicy policy = referrer->policy();
+    if (policy == ReferrerPolicy::Empty && executionContext->hasDocument()) {
+        policy = executionContext->document()->referrerPolicy();
+    }
+    bool isClient = referrer->urlString()->equals("about:client");
+    if (!isClient && policy == referrer->policy()) {
+        return original;
+    }
+    RequestData* data = new RequestData(*original);
+    if (isClient) {
+        data->m_referrer =
+            new ReferrerURL(executionContext->documentURI(), policy);
+    } else {
+        data->m_referrer =
+            new ReferrerURL(static_cast<ResourceURL*>(referrer), policy);
+    }
+    return data;
+}
+
 void Fetch::start()
 {
     m_response = new Response(executionContext());
-    m_resourceRequest->open(m_request->requestData(),
-                            m_request->headers()->headersData());
+    m_resourceRequest->open(
+        requestDataWithReferrer(executionContext(), m_request->requestData()),
+        m_request->headers()->headersData());
     if (m_request->method()->equals("GET") ||
         m_request->method()->equals("HEAD")) {
         // This is a method that cannot have a body
@@ -138,8 +164,14 @@ void Fetch::fail()
 Promise* Fetch::fetch(ExecutionContext* executionContext, RequestInfo& info)
 {
     Promise* promise = new Promise(executionContext->scriptBindingInstance());
-    auto request = info.isRequestValue() ? info.getRequestValue()
-                                         : new Request(executionContext, info);
+    Request* request = nullptr;
+    try {
+        request = info.isRequestValue() ? info.getRequestValue()
+                                        : new Request(executionContext, info);
+    } catch (DOMException* exception) {
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
     Fetch* f = new Fetch(executionContext, request, promise);
     f->start();
 
@@ -150,9 +182,15 @@ Promise* Fetch::fetch(ExecutionContext* executionContext, RequestInfo& info,
                       RequestInit& init)
 {
     Promise* promise = new Promise(executionContext->scriptBindingInstance());
-    auto request = info.isRequestValue()
-                       ? info.getRequestValue()
-                       : new Request(executionContext, info, init);
+    Request* request = nullptr;
+    try {
+        request = info.isRequestValue()
+                      ? info.getRequestValue()
+                      : new Request(executionContext, info, init);
+    } catch (DOMException* exception) {
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
     Fetch* f = new Fetch(executionContext, request, promise);
     f->start();
 
