@@ -928,6 +928,15 @@ String* ResourceURL::origin()
         return m_urlString->substring(0, 7)->toASCIILower(); // "file://"
     }
 
+    if (m_protocol == BLOB_PROTOCOL) {
+        String* inner =
+            m_urlString->substring(5, m_urlString->length() - 5); // "blob:"
+        ResourceURL* innerURL = new ResourceURL(inner);
+        if (innerURL->isHTTPFamilyURL()) {
+            return innerURL->origin();
+        }
+    }
+
     if (m_protocol >= HTTP_PROTOCOL && m_protocol <= HTTPS_PROTOCOL) {
         if (!hostname()->isEmpty()) {
             return protocol()->concat("//")->concat(host());

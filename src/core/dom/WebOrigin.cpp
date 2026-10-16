@@ -38,6 +38,14 @@ WebOrigin* WebOrigin::createDocumentOrigin(ResourceURL* url)
     if (url && url->isHTTPFamilyURL()) {
         return new WebOrigin(url, false);
     }
+    if (url && url->isBlobURL()) {
+        String* urlString = url->urlString();
+        ResourceURL* inner = new ResourceURL(
+            urlString->substring(5, urlString->length() - 5)); // "blob:"
+        if (inner->isHTTPFamilyURL()) {
+            return new WebOrigin(inner, false);
+        }
+    }
     return new WebOrigin(url, true);
 }
 

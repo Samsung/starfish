@@ -52,6 +52,10 @@ WorkerGlobalScope* DedicatedWorkerThread::createWorkerGlobalScope(
         webWorker->createGlobalScope<DedicatedWorkerGlobalScope>(
             createScriptURL());
 
+    if (workerHostInitData().hasInlineMainScript) {
+        globalScope->setInlineMainScript(workerHostInitData().inlineMainScript);
+    }
+
     globalScope->initialize(
         workerHost,
         new WorkerObjectProxy(globalScope->executionContext(), m_worker));

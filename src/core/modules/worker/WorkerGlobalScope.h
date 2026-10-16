@@ -115,6 +115,13 @@ public:
 
     bool loadMainScript();
 
+    // Blob-URL workers evaluate a source captured on the page thread
+    // instead of fetching the (unreachable) blob: URL.
+    void setInlineMainScript(const std::string& source)
+    {
+        m_inlineMainScript = String::fromUTF8(source.data(), source.size());
+    }
+
     Promise* fetch(RequestInfo& input);
     Promise* fetch(RequestInfo& input, RequestInit& init);
 
@@ -166,6 +173,7 @@ protected:
     WorkerNavigator* m_workerNavigator{ nullptr };
     Crypto* m_crypto{ nullptr };
     std::atomic_bool m_closing;
+    String* m_inlineMainScript{ nullptr };
 
 #if defined(STARFISH_ENABLE_IDB)
     IDBFactory* m_idbFactory{ nullptr };

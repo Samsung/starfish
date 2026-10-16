@@ -28,6 +28,11 @@ struct WorkerHostInitData {
     std::string locale;
     std::string timezoneID;
     std::string userAgent;
+    // Blob-URL workers: the page's blob store is not reachable from the
+    // worker thread, so the script source is captured on the page thread
+    // at construction time and evaluated directly in the worker.
+    std::string inlineMainScript;
+    bool hasInlineMainScript = false;
 };
 
 } // namespace Starfish
