@@ -8,6 +8,10 @@ http://web-platform.test:8000/webmessaging/MessageEvent.any.worker.html
 http://web-platform.test:8000/webmessaging/MessagePort_initial_disabled.any.worker.html
 http://web-platform.test:8000/webmessaging/MessagePort_onmessage_start.any.worker.html
 http://web-platform.test:8000/webmessaging/message-channels/no-start.any.worker.html
+http://web-platform.test:8000/webmessaging/message-channels/worker-post-after-close.any.html
+http://web-platform.test:8000/webmessaging/message-channels/worker-post-after-close.any.worker.html
+http://web-platform.test:8000/webmessaging/message-channels/worker.any.html
+http://web-platform.test:8000/webmessaging/message-channels/worker.any.worker.html
 http://web-platform.test:8000/workers/Worker-base64.any.worker.html
 http://web-platform.test:8000/workers/Worker-call.worker.html
 http://web-platform.test:8000/workers/Worker-constructor-proto.any.worker.html
@@ -50,6 +54,7 @@ http://web-platform.test:8000/workers/constructors/SharedWorker/port-onmessage.h
 http://web-platform.test:8000/workers/constructors/SharedWorker/port-properties.html
 http://web-platform.test:8000/workers/constructors/SharedWorker/port-readonly.html
 http://web-platform.test:8000/workers/constructors/SharedWorker/unexpected-global-properties.html
+http://web-platform.test:8000/workers/constructors/Worker/Blob-url.html
 http://web-platform.test:8000/workers/constructors/Worker/expected-self-properties.worker.html
 http://web-platform.test:8000/workers/constructors/Worker/unexpected-self-properties.worker.html
 http://web-platform.test:8000/workers/constructors/Worker/use-base-url.html

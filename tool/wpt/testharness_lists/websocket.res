@@ -89,3 +89,5 @@ http://web-platform.test:8000/websockets/constructor/008.html
 # [auto-fail] http://web-platform.test:8000/websockets/constructor/019.html
 # [auto-fail] http://web-platform.test:8000/websockets/constructor/020.html
 http://web-platform.test:8000/websockets/constructor/021.html
+http://web-platform.test:8000/websockets/Create-on-worker-shutdown.any.html
+http://web-platform.test:8000/websockets/Create-on-worker-shutdown.any.worker.html

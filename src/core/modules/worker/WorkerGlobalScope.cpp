@@ -186,6 +186,12 @@ bool WorkerGlobalScope::loadMainScript()
 {
     TRACE(WORKER, "load main script");
 
+    if (m_inlineMainScript) {
+        String* source = m_inlineMainScript;
+        m_inlineMainScript = nullptr;
+        return m_workerScriptController->evaluatefromString(source);
+    }
+
     try {
         importScript(executionContext()->documentURI());
     } catch (DOMException* e) {

@@ -23,6 +23,7 @@
 #include "Starfish.h"
 
 #include "platform/loader/ResourceURL.h"
+#include "core/fileapi/Blob.h"
 #include "core/page/WebBase.h"
 #include "core/page/GlobalScope.h"
 #include "core/dom/ExecutionContext.h"
@@ -102,6 +103,22 @@ WorkerThread::WorkerThread(WebBase* webBase, ResourceURL* scriptURL)
     m_workerHostInitData.timezoneID =
         webBase->timezoneID()->toUTF8NonGCString();
     m_workerHostInitData.userAgent = webBase->userAgent()->toUTF8NonGCString();
+
+    // A blob: script URL can only be resolved against this (the page)
+    // thread's blob store; capture the source now so the worker can
+    // evaluate it without going through the resource loader.
+    if (scriptURL->isBlobURL()) {
+        BlobURLStore store;
+        if (WebBase::stringToBlobURLString(scriptURL->urlString(), store) &&
+            webBase->isValidBlobURL(store)) {
+            Blob* blob = static_cast<Blob*>(store.m_blob);
+            if (blob->size()) {
+                m_workerHostInitData.inlineMainScript.assign(
+                    reinterpret_cast<const char*>(blob->data()), blob->size());
+            }
+            m_workerHostInitData.hasInlineMainScript = true;
+        }
+    }
 }
 
 WorkerThread::~WorkerThread() = default;
