@@ -1,3 +1,22 @@
+http://web-platform.test:8000/webmessaging/Channel_postMessage_Blob.any.worker.html
+http://web-platform.test:8000/webmessaging/Channel_postMessage_DataCloneErr.any.worker.html
+http://web-platform.test:8000/webmessaging/Channel_postMessage_clone_port_error.any.worker.html
+http://web-platform.test:8000/webmessaging/Channel_postMessage_event_properties.any.worker.html
+http://web-platform.test:8000/webmessaging/Channel_postMessage_ports_readonly_array.any.worker.html
+http://web-platform.test:8000/webmessaging/Channel_postMessage_target_source.any.worker.html
+http://web-platform.test:8000/webmessaging/MessageEvent.any.worker.html
+http://web-platform.test:8000/webmessaging/MessagePort_initial_disabled.any.worker.html
+http://web-platform.test:8000/webmessaging/MessagePort_onmessage_start.any.worker.html
+http://web-platform.test:8000/webmessaging/message-channels/no-start.any.worker.html
+http://web-platform.test:8000/workers/Worker-base64.any.worker.html
+http://web-platform.test:8000/workers/Worker-call.worker.html
+http://web-platform.test:8000/workers/Worker-constructor-proto.any.worker.html
+http://web-platform.test:8000/workers/Worker-custom-event.any.worker.html
+http://web-platform.test:8000/workers/Worker-formdata.any.worker.html
+http://web-platform.test:8000/workers/Worker-location.sub.any.worker.html
+http://web-platform.test:8000/workers/Worker-replace-event-handler.any.worker.html
+http://web-platform.test:8000/workers/Worker-replace-global-constructor.any.worker.html
+http://web-platform.test:8000/workers/Worker-replace-self.any.worker.html
 http://web-platform.test:8000/workers/WorkerGlobalScope_importScripts.htm
 http://web-platform.test:8000/workers/WorkerGlobalScope_setInterval.htm
 http://web-platform.test:8000/workers/WorkerGlobalScope_setTimeout.htm
@@ -31,9 +50,16 @@ http://web-platform.test:8000/workers/constructors/SharedWorker/port-onmessage.h
 http://web-platform.test:8000/workers/constructors/SharedWorker/port-properties.html
 http://web-platform.test:8000/workers/constructors/SharedWorker/port-readonly.html
 http://web-platform.test:8000/workers/constructors/SharedWorker/unexpected-global-properties.html
+http://web-platform.test:8000/workers/constructors/Worker/expected-self-properties.worker.html
+http://web-platform.test:8000/workers/constructors/Worker/unexpected-self-properties.worker.html
 http://web-platform.test:8000/workers/constructors/Worker/use-base-url.html
+http://web-platform.test:8000/workers/examples/general.any.worker.html
+http://web-platform.test:8000/workers/examples/general.worker.html
+http://web-platform.test:8000/workers/interfaces/DedicatedWorkerGlobalScope/EventTarget.worker.html
+http://web-platform.test:8000/workers/interfaces/DedicatedWorkerGlobalScope/onmessage.worker.html
 http://web-platform.test:8000/workers/interfaces/DedicatedWorkerGlobalScope/postMessage/event-ports-dedicated.html
 http://web-platform.test:8000/workers/interfaces/DedicatedWorkerGlobalScope/postMessage/message-event.html
+http://web-platform.test:8000/workers/interfaces/DedicatedWorkerGlobalScope/postMessage/return-value.worker.html
 http://web-platform.test:8000/workers/interfaces/DedicatedWorkerGlobalScope/postMessage/second-argument-null-in-array.html
 # [auto-fail] http://web-platform.test:8000/workers/interfaces/DedicatedWorkerGlobalScope/postMessage/second-argument-null.html
 http://web-platform.test:8000/workers/interfaces/DedicatedWorkerGlobalScope/postMessage/second-argument-undefined.html
@@ -42,12 +68,15 @@ http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/close/incomin
 http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/close/sending-messages.html
 http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/close/setInterval.html
 http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/close/setTimeout.html
+http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/location/returns-same-object.any.worker.html
 http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/location/setting-members.html
 http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/location/worker-separate-file.html
+http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/self.any.worker.html
 http://web-platform.test:8000/workers/interfaces/WorkerUtils/WindowTimers/001.html
 http://web-platform.test:8000/workers/interfaces/WorkerUtils/WindowTimers/002.html
 http://web-platform.test:8000/workers/interfaces/WorkerUtils/WindowTimers/003.html
 http://web-platform.test:8000/workers/interfaces/WorkerUtils/WindowTimers/004.html
+http://web-platform.test:8000/workers/interfaces/WorkerUtils/importScripts/001.worker.html
 http://web-platform.test:8000/workers/interfaces/WorkerUtils/importScripts/003.html
 http://web-platform.test:8000/workers/interfaces/WorkerUtils/importScripts/005.html
 http://web-platform.test:8000/workers/interfaces/WorkerUtils/importScripts/007.html
@@ -62,12 +91,17 @@ http://web-platform.test:8000/workers/interfaces/WorkerUtils/navigator/004.html
 http://web-platform.test:8000/workers/interfaces/WorkerUtils/navigator/005.html
 http://web-platform.test:8000/workers/interfaces/WorkerUtils/navigator/006.html
 http://web-platform.test:8000/workers/interfaces/WorkerUtils/navigator/007.html
+http://web-platform.test:8000/workers/interfaces/WorkerUtils/navigator/008.worker.html
 http://web-platform.test:8000/workers/interfaces/WorkerUtils/navigator/language.html
+http://web-platform.test:8000/workers/nested_worker_close_self.worker.html
 http://web-platform.test:8000/workers/postMessage_event_properties.htm
 http://web-platform.test:8000/workers/postMessage_target_source.htm
+http://web-platform.test:8000/workers/semantics/encodings/004.worker.html
+http://web-platform.test:8000/workers/semantics/interface-objects/002.worker.html
 # [auto-fail] http://web-platform.test:8000/workers/semantics/multiple-workers/001.html
 http://web-platform.test:8000/workers/semantics/multiple-workers/002.html
 # [auto-fail] http://web-platform.test:8000/workers/semantics/multiple-workers/004.html
+http://web-platform.test:8000/workers/semantics/multiple-workers/exposure.any.worker.html
 http://web-platform.test:8000/workers/semantics/run-a-worker/001.html
 # [auto-fail] http://web-platform.test:8000/workers/semantics/run-a-worker/002.html
 http://web-platform.test:8000/workers/semantics/xhr/001.html

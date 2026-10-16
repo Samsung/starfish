@@ -1,4 +1,5 @@
 http://web-platform.test:8000/html/webappapis/timers/evil-spec-example.any.html
+http://web-platform.test:8000/html/webappapis/timers/evil-spec-example.any.worker.html
 http://web-platform.test:8000/html/webappapis/system-state-and-capabilities/the-navigator-object/navigator-indexed.html
 # [auto-fail] http://web-platform.test:8000/html/webappapis/scripting/processing-model-2/window-onerror-runtime-error-throw.html
 http://web-platform.test:8000/html/webappapis/scripting/processing-model-2/runtime-error-same-origin-with-hash.html
@@ -386,4 +387,6 @@ http://web-platform.test:8000/html/browsers/browsing-the-web/navigating-across-d
 http://web-platform.test:8000/html/browsers/browsing-the-web/history-traversal/window-name-after-same-origin-sub-frame-navigation.sub.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/history-traversal/window-name-after-cross-origin-sub-frame-navigation.sub.html
 http://web-platform.test:8000/html/webappapis/timers/negative-settimeout.any.html
+http://web-platform.test:8000/html/webappapis/timers/negative-settimeout.any.worker.html
 http://web-platform.test:8000/html/webappapis/timers/negative-setinterval.any.html
+http://web-platform.test:8000/html/webappapis/timers/negative-setinterval.any.worker.html
