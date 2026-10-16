@@ -1585,7 +1585,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/samplers/sampler-dr
 http://localhost:11010/conformance-suites/2.0.0/conformance2/state/gl-enum-tests.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/state/gl-get-calls.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/state/gl-getstring.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/state/gl-object-get-calls.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/state/gl-object-get-calls.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/sync/sync-webgl-specific.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/copy-texture-image.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/copy-texture-image-luma-format.html

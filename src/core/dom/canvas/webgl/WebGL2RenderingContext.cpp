@@ -2108,6 +2108,20 @@ ScriptValue WebGL2RenderingContext::getActiveUniformBlockParameter(
         setGLError(GL_INVALID_OPERATION);
         return scriptNull();
     }
+    GLint linkStatus = 0;
+    gl()->getProgramiv(program->glObject(), GL_LINK_STATUS, &linkStatus);
+    if (linkStatus != GL_TRUE || program->linkFailed()) {
+        setGLError(GL_INVALID_OPERATION);
+        return scriptNull();
+    }
+    GLint activeBlocks = 0;
+    gl()->getProgramiv(program->glObject(), GL_ACTIVE_UNIFORM_BLOCKS,
+                       &activeBlocks);
+    if (activeBlocks < 0 ||
+        uniformBlockIndex >= static_cast<GLuint>(activeBlocks)) {
+        setGLError(GL_INVALID_VALUE);
+        return scriptNull();
+    }
     switch (pname) {
     case GL_UNIFORM_BLOCK_BINDING:
     case GL_UNIFORM_BLOCK_DATA_SIZE:
@@ -2163,6 +2177,20 @@ String* WebGL2RenderingContext::getActiveUniformBlockName(
     ENTER_CONTEXT_SCOPE(nullptr);
     if (!isFromCurrentContext(program)) {
         setGLError(GL_INVALID_OPERATION);
+        return nullptr;
+    }
+    GLint linkStatus = 0;
+    gl()->getProgramiv(program->glObject(), GL_LINK_STATUS, &linkStatus);
+    if (linkStatus != GL_TRUE || program->linkFailed()) {
+        setGLError(GL_INVALID_OPERATION);
+        return nullptr;
+    }
+    GLint activeBlocks = 0;
+    gl()->getProgramiv(program->glObject(), GL_ACTIVE_UNIFORM_BLOCKS,
+                       &activeBlocks);
+    if (activeBlocks < 0 ||
+        uniformBlockIndex >= static_cast<GLuint>(activeBlocks)) {
+        setGLError(GL_INVALID_VALUE);
         return nullptr;
     }
     GLint maxNameLength = 0;
@@ -3429,6 +3457,73 @@ void WebGL2RenderingContext::framebufferTextureLayer(
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
+static bool isValidRenderbufferInternalFormat(GLenum internalformat)
+{
+    switch (internalformat) {
+    case GL_R8:
+    case GL_R8_SNORM:
+    case GL_RG8:
+    case GL_RG8_SNORM:
+    case GL_RGB8:
+    case GL_RGB8_SNORM:
+    case GL_RGB565:
+    case GL_RGBA4:
+    case GL_RGB5_A1:
+    case GL_RGBA8:
+    case GL_RGBA8_SNORM:
+    case GL_RGB10_A2:
+    case GL_RGB10_A2UI:
+    case GL_SRGB8:
+    case GL_SRGB8_ALPHA8:
+    case GL_R16F:
+    case GL_RG16F:
+    case GL_RGB16F:
+    case GL_RGBA16F:
+    case GL_R32F:
+    case GL_RG32F:
+    case GL_RGB32F:
+    case GL_RGBA32F:
+    case GL_R11F_G11F_B10F:
+    case GL_RGB9_E5:
+    case GL_R8I:
+    case GL_R8UI:
+    case GL_R16I:
+    case GL_R16UI:
+    case GL_R32I:
+    case GL_R32UI:
+    case GL_RG8I:
+    case GL_RG8UI:
+    case GL_RG16I:
+    case GL_RG16UI:
+    case GL_RG32I:
+    case GL_RG32UI:
+    case GL_RGB8I:
+    case GL_RGB8UI:
+    case GL_RGB16I:
+    case GL_RGB16UI:
+    case GL_RGB32I:
+    case GL_RGB32UI:
+    case GL_RGBA8I:
+    case GL_RGBA8UI:
+    case GL_RGBA16I:
+    case GL_RGBA16UI:
+    case GL_RGBA32I:
+    case GL_RGBA32UI:
+    case GL_RGB:
+    case GL_RGBA:
+    case GL_DEPTH_STENCIL:
+    case GL_DEPTH_COMPONENT16:
+    case GL_DEPTH_COMPONENT24:
+    case GL_DEPTH_COMPONENT32F:
+    case GL_DEPTH24_STENCIL8:
+    case GL_DEPTH32F_STENCIL8:
+    case GL_STENCIL_INDEX8:
+        return true;
+    default:
+        return false;
+    }
+}
+
 ScriptValue WebGL2RenderingContext::getInternalformatParameter(
     GLenum target, GLenum internalformat, GLenum pname)
 {
@@ -3444,6 +3539,11 @@ ScriptValue WebGL2RenderingContext::getInternalformatParameter(
         return scriptNull();
     }
 
+    if (!isValidRenderbufferInternalFormat(internalformat)) {
+        setGLError(GL_INVALID_ENUM, "internalformat not supported");
+        return scriptNull();
+    }
+
     if (WebGLFramebuffer::isIntegerInternalFormat(internalformat)) {
         return createScriptValue(
             createTypedArray<Escargot::Int32ArrayObjectRef>(
@@ -3453,7 +3553,10 @@ ScriptValue WebGL2RenderingContext::getInternalformatParameter(
     GLint numSampleCounts = 0;
     gl()->getInternalformativ(target, internalformat, GL_NUM_SAMPLE_COUNTS, 1,
                               &numSampleCounts);
-    if (hasNewGLError() || numSampleCounts <= 0) {
+    if (hasNewGLError()) {
+        return scriptNull();
+    }
+    if (numSampleCounts <= 0) {
         return createScriptValue(
             createTypedArray<Escargot::Int32ArrayObjectRef>(
                 scriptBindingInstance(), std::vector<int32_t>()));
