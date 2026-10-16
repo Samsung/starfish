@@ -503,6 +503,54 @@ protected:
         return m_attributes.m_stencil;
     }
 
+    bool computeRequiredPackBytes(GLsizei width, GLsizei height, GLenum format,
+                                  GLenum type, size_t& requiredBytes);
+    bool computeRequiredUnpackBytes(GLsizei width, GLsizei height,
+                                    GLsizei depth, GLenum format, GLenum type,
+                                    size_t& requiredBytes);
+
+    GLint packAlignment() const
+    {
+        return m_packAlignment;
+    }
+    GLint packRowLength() const
+    {
+        return m_packRowLength;
+    }
+    GLint packSkipPixels() const
+    {
+        return m_packSkipPixels;
+    }
+    GLint packSkipRows() const
+    {
+        return m_packSkipRows;
+    }
+
+    GLint unpackAlignment() const
+    {
+        return m_unpackAlignment;
+    }
+    GLint unpackRowLength() const
+    {
+        return m_unpackRowLength;
+    }
+    GLint unpackImageHeight() const
+    {
+        return m_unpackImageHeight;
+    }
+    GLint unpackSkipPixels() const
+    {
+        return m_unpackSkipPixels;
+    }
+    GLint unpackSkipRows() const
+    {
+        return m_unpackSkipRows;
+    }
+    GLint unpackSkipImages() const
+    {
+        return m_unpackSkipImages;
+    }
+
 private:
     GLTextureMap m_boundTextures;
     // Keyed by textureBindingKey(unit, target).
@@ -511,6 +559,16 @@ private:
     bool m_unpackFlipY;
     bool m_unpackPremultiplyAlpha;
     GLenum m_unpackColorspaceConversion;
+    GLint m_packAlignment{ 4 };
+    GLint m_packRowLength{ 0 };
+    GLint m_packSkipPixels{ 0 };
+    GLint m_packSkipRows{ 0 };
+    GLint m_unpackAlignment{ 4 };
+    GLint m_unpackRowLength{ 0 };
+    GLint m_unpackImageHeight{ 0 };
+    GLint m_unpackSkipPixels{ 0 };
+    GLint m_unpackSkipRows{ 0 };
+    GLint m_unpackSkipImages{ 0 };
     WebGLContextAttributes m_attributes;
     bool m_isContextLost;
     GL* m_gl;

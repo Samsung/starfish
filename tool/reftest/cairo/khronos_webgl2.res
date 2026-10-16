@@ -1557,7 +1557,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/query/occlusion-que
 http://localhost:11010/conformance-suites/2.0.0/conformance2/query/query.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/reading/read-pixels-from-fbo-test.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/reading/read-pixels-into-pixel-pack-buffer.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/reading/read-pixels-pack-parameters.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/reading/read-pixels-pack-parameters.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/renderbuffers/framebuffer-object-attachment.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/renderbuffers/framebuffer-test.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/renderbuffers/framebuffer-texture-layer.html
@@ -1603,7 +1603,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-n
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-storage-2d.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-storage-and-subimage-3d.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-storage-compressed-formats.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-unpack-params.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/tex-unpack-params.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/texel-fetch-undefined.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/texture-npot.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/canvas/tex-2d-r8-red-unsigned_byte.html
