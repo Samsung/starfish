@@ -1506,7 +1506,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/buffers/uniform-buf
 http://localhost:11010/conformance-suites/2.0.0/conformance2/context/constants-and-properties-2.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/context/context-attributes-depth-stencil-antialias-obeyed.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/context/context-type-test-2.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/context/methods-2.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/context/methods-2.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-color-buffer-float.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-color-buffer-half-float.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-disjoint-timer-query-webgl2.html
