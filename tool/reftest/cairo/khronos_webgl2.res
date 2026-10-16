@@ -1509,7 +1509,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/context/context-typ
 http://localhost:11010/conformance-suites/2.0.0/conformance2/context/methods-2.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-color-buffer-float.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-color-buffer-half-float.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-disjoint-timer-query-webgl2.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-disjoint-timer-query-webgl2.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/promoted-extensions.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/promoted-extensions-in-shaders.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/array-as-return-value.html
@@ -1519,7 +1519,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/array-complex
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/array-element-increment.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/array-equality.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/array-in-complex-expression.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/attrib-location-length-limits.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/attrib-location-length-limits.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/bool-type-cast-bug-uint-ivec-uvec.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/compare-structs-containing-arrays.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/compound-assignment-type-combination.html
@@ -1543,7 +1543,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/short-circuit
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/texture-offset-out-of-range.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/uniform-block-layouts.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/uniform-block-layout-match.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/uniform-location-length-limits.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/uniform-location-length-limits.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/valid-invariant.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/vector-dynamic-indexing.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/expando-loss-2.html
@@ -1587,7 +1587,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/state/gl-get-calls.
 http://localhost:11010/conformance-suites/2.0.0/conformance2/state/gl-getstring.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/state/gl-object-get-calls.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/sync/sync-webgl-specific.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/copy-texture-image.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/copy-texture-image.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/copy-texture-image-luma-format.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/copy-texture-image-webgl-specific.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/misc/gl-get-tex-parameter.html

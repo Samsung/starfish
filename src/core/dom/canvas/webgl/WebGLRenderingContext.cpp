@@ -806,7 +806,9 @@ void WebGLRenderingContext::copyTexImage2D(GLenum target, GLint level,
         return;
     }
 
-    if (internalformat == 0x8054 /* GL_RGB16 */) {
+    if (internalformat == 0x8054 /* GL_RGB16 */ ||
+        internalformat == GL_R8_SNORM || internalformat == GL_RG8_SNORM ||
+        internalformat == GL_RGB8_SNORM || internalformat == GL_RGBA8_SNORM) {
         setGLError(GL_INVALID_ENUM, "Invalid internal format");
         return;
     }
@@ -6056,7 +6058,10 @@ bool WebGLRenderingContext::checkAttribOrUniformName(String* name)
     // If the passed name is longer than the restriction defined in Maximum
     // Uniform and Attribute Location Lengths, generates an INVALID_VALUE error
     // and returns -1
-    if (name->length() > kMaximumUniformAndAttributeLocationLengths) {
+    size_t maxLen = (webGLVersion() >= 2)
+                        ? 1024
+                        : kMaximumUniformAndAttributeLocationLengths;
+    if (name->length() > maxLen) {
         setGLError(GL_INVALID_VALUE);
         return false;
     }
