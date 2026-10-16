@@ -769,6 +769,65 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
         return;
     }
 
+    shader->setCompileFailed(false);
+    shader->setInfoLog("");
+
+    const std::string& src = shader->source();
+
+    // Token length limit: contiguous identifier token exceeding 1024 chars
+    size_t tokenLen = 0;
+    for (char c : src) {
+        if (isalnum(static_cast<unsigned char>(c)) || c == '_') {
+            tokenLen++;
+            if (tokenLen > 1024) {
+                shader->setCompileFailed(true);
+                shader->setInfoLog("Token exceeds 1024 characters");
+                return;
+            }
+        } else {
+            tokenLen = 0;
+        }
+    }
+
+    if (webGLVersion() >= 2) {
+        // 1. Misplaced version directive: #version 300 es must be on line 1,
+        // column 0
+        size_t versionPos = src.find("#version 300 es");
+        if (versionPos != std::string::npos && versionPos != 0) {
+            shader->setCompileFailed(true);
+            shader->setInfoLog("#version directive must be on the first line");
+            return;
+        }
+
+        // 2. Promoted extensions: requiring or enabling them is forbidden in
+        // WebGL 2
+        static const char* kPromotedExtensions[] = {
+            "GL_EXT_draw_buffers", "GL_EXT_frag_depth",
+            "GL_EXT_shader_texture_lod", "GL_OES_standard_derivatives"
+        };
+        for (const char* extName : kPromotedExtensions) {
+            size_t extPos = src.find(extName);
+            if (extPos != std::string::npos) {
+                size_t lineStart = src.rfind('\n', extPos);
+                lineStart =
+                    (lineStart == std::string::npos) ? 0 : lineStart + 1;
+                size_t lineEnd = src.find('\n', extPos);
+                std::string line =
+                    src.substr(lineStart, (lineEnd == std::string::npos)
+                                              ? std::string::npos
+                                              : lineEnd - lineStart);
+                if (line.find("#extension") != std::string::npos &&
+                    (line.find("require") != std::string::npos ||
+                     line.find("enable") != std::string::npos)) {
+                    shader->setCompileFailed(true);
+                    shader->setInfoLog(std::string("Extension ") + extName +
+                                       " is not supported in WebGL 2");
+                    return;
+                }
+            }
+        }
+    }
+
     m_gl->compileShader(shader->glObject());
 }
 
@@ -2739,7 +2798,11 @@ ScriptValue WebGLRenderingContext::getShaderParameter(WebGLShader* shader,
     case GL_SHADER_TYPE:
         return Escargot::ValueRef::create(static_cast<GLenum>(params));
     case GL_DELETE_STATUS:
+        return Escargot::ValueRef::create(static_cast<bool>(params));
     case GL_COMPILE_STATUS:
+        if (shader->compileFailed()) {
+            return Escargot::ValueRef::create(false);
+        }
         return Escargot::ValueRef::create(static_cast<bool>(params));
     default:
         break;
@@ -2769,6 +2832,11 @@ WebGLShaderPrecisionFormat* WebGLRenderingContext::getShaderPrecisionFormat(
 String* WebGLRenderingContext::getShaderInfoLog(WebGLShader* shader)
 {
     ENTER_CONTEXT_SCOPE(nullptr);
+
+    if (shader->compileFailed()) {
+        return String::fromUTF8(shader->infoLog().c_str(),
+                                shader->infoLog().length());
+    }
 
     GLsizei length = 0, bufferSize = 0;
     m_gl->getShaderiv(shader->glObject(), GL_INFO_LOG_LENGTH, &bufferSize);
@@ -3442,6 +3510,13 @@ void WebGLRenderingContext::linkProgram(WebGLProgram* program)
     }
 
     program->setLinkFailed(false);
+
+    for (WebGLShader* shader : program->getWebGLShaders()) {
+        if (shader && shader->compileFailed()) {
+            program->setLinkFailed(true);
+            return;
+        }
+    }
 
     if (webGLVersion() >= 2) {
         if (!validateUniformBlocksMatch(program->getWebGLShaders())) {

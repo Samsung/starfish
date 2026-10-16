@@ -42,11 +42,30 @@ public:
         return m_source;
     }
 
+    void setCompileFailed(bool failed)
+    {
+        m_compileFailed = failed;
+    }
+    bool compileFailed() const
+    {
+        return m_compileFailed;
+    }
+    void setInfoLog(const std::string& infoLog)
+    {
+        m_infoLog = infoLog;
+    }
+    const std::string& infoLog() const
+    {
+        return m_infoLog;
+    }
+
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLShader, WebGLObject);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 
 private:
     std::string m_source;
+    bool m_compileFailed = false;
+    std::string m_infoLog;
 };
 } // namespace Starfish
 
