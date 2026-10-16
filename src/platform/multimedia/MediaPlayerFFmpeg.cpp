@@ -648,25 +648,37 @@ void FfmpegWrapperPlayer::decodingThread()
             } else {
                 int width = frame->width;
                 int height = frame->height;
-                if (width <= 0 || height <= 0 ||
-                    width > STARFISH_VIDEO_MAX_WIDTH ||
-                    height > STARFISH_VIDEO_MAX_HEIGHT) {
+                if (width <= 0 || height <= 0) {
                     av_frame_unref(frame);
                     continue;
                 }
+                // Oversized (e.g. 4K) frames are scaled into the 1080p box so
+                // each queued RGBA frame stays bounded instead of being
+                // dropped, which left the element black.
+                int outWidth = width;
+                int outHeight = height;
+                if (width > STARFISH_VIDEO_MAX_WIDTH ||
+                    height > STARFISH_VIDEO_MAX_HEIGHT) {
+                    double ratio =
+                        std::min((double)STARFISH_VIDEO_MAX_WIDTH / width,
+                                 (double)STARFISH_VIDEO_MAX_HEIGHT / height);
+                    outWidth = std::max(2, (int)(width * ratio) & ~1);
+                    outHeight = std::max(2, (int)(height * ratio) & ~1);
+                }
                 scale = sws_getCachedContext(
                     scale, width, height,
-                    static_cast<AVPixelFormat>(frame->format), width, height,
-                    AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr);
+                    static_cast<AVPixelFormat>(frame->format), outWidth,
+                    outHeight, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr,
+                    nullptr, nullptr);
                 uint8_t* buffer =
-                    static_cast<uint8_t*>(malloc(width * height * 4));
+                    static_cast<uint8_t*>(malloc(outWidth * outHeight * 4));
                 if (scale && buffer) {
                     uint8_t* planes[] = { buffer, nullptr, nullptr, nullptr };
-                    int strides[] = { width * 4, 0, 0, 0 };
+                    int strides[] = { outWidth * 4, 0, 0, 0 };
                     sws_scale(scale, frame->data, frame->linesize, 0, height,
                               planes, strides);
-                    FFmpegMediaPacket* decoded =
-                        new FFmpegMediaPacket(width, height, width * 4);
+                    FFmpegMediaPacket* decoded = new FFmpegMediaPacket(
+                        outWidth, outHeight, outWidth * 4);
                     decoded->setBuffer(buffer);
                     if (m_framedecodedCallback) {
                         m_framedecodedCallback(decoded,
