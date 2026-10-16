@@ -96,8 +96,8 @@ static ReferrerURL* computeReferrer(String* referrer,
 
     String* contextOrigin = executionContext->baseURL()->origin();
 
-    ReferrerURL* url =
-        new ReferrerURL(new ResourceURL(referrer, contextOrigin));
+    ReferrerURL* url = new ReferrerURL(new ResourceURL(referrer, contextOrigin),
+                                       ReferrerPolicy::Empty);
 
     if (url->isValid() == false) {
         throw new DOMException(executionContext,
@@ -106,11 +106,13 @@ static ReferrerURL* computeReferrer(String* referrer,
     }
 
     if (url->protocol()->equals("about") && url->pathname()->equals("client")) {
-        return new ReferrerURL(String::createASCIIString("about:client"));
+        return new ReferrerURL(String::createASCIIString("about:client"),
+                               ReferrerPolicy::Empty);
     }
 
     if (url->origin()->equals(contextOrigin) == false) {
-        return new ReferrerURL(String::createASCIIString("about:client"));
+        return new ReferrerURL(String::createASCIIString("about:client"),
+                               ReferrerPolicy::Empty);
     }
 
     return url;

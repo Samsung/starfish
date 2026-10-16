@@ -29,3 +29,9 @@ http://web-platform.test:8000/fetch/api/response/response-error.any.html
 http://web-platform.test:8000/fetch/api/response/response-error.any.worker.html
 # Unmeasured (no local wpt serve): SyntaxError rejection of Response.json(); measure and uncomment.
 # http://web-platform.test:8000/fetch/api/response/json.any.html
+http://web-platform.test:8000/fetch/api/basic/request-head.any.html
+http://web-platform.test:8000/fetch/api/basic/request-head.any.worker.html
+http://web-platform.test:8000/fetch/api/basic/request-referrer-redirected-worker.html
+http://web-platform.test:8000/fetch/api/basic/request-referrer.any.html
+http://web-platform.test:8000/fetch/api/basic/request-referrer.any.worker.html
+http://web-platform.test:8000/fetch/api/policies/referrer-origin-when-cross-origin.html
