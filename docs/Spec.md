@@ -2471,15 +2471,14 @@ Apps relying on the right-hand list get **no protection** — the directive is p
 - **Vertex Array Objects (VAO):** `createVertexArray`, `deleteVertexArray`, `isVertexArray`, `bindVertexArray`.
 - **Sync Objects:** `fenceSync`, `isSync`, `deleteSync`, `clientWaitSync`, `waitSync`, `getSyncParameter`.
 - **Framebuffers & Rendering:** `blitFramebuffer` (with identical attachment feedback loop detection and multisampled format matching), `invalidateFramebuffer`, `invalidateSubFramebuffer`, `readBuffer`, `drawBuffers`, `getFramebufferAttachmentParameter` (supporting WebGL2 targets, default framebuffer `BACK`/`DEPTH`/`STENCIL` attachments, texture layer queries, component types, color encoding), duplicate image detection (`FRAMEBUFFER_UNSUPPORTED`), and `readPixels` with ArrayBufferView dstOffset bounds validation.
-- **Multiple Render Targets Clear:** `clearBufferfv`, `clearBufferiv`, `clearBufferuiv` with buffer format type matching (float/signed-int/unsigned-int), and `clear(COLOR_BUFFER_BIT)` integer buffer validation.
+- **Multiple Render Targets Clear:** `clearBufferfv`, `clearBufferiv`, `clearBufferuiv` with buffer format type matching (float/signed-int/unsigned-int), `clearBufferfi` (depth/stencil buffer clear), and `clear(COLOR_BUFFER_BIT)` integer buffer validation.
 - **State and Parameter Queries:** `getInternalformatParameter` (returning empty `SAMPLES` array for integer formats per spec), buffer object parameter queries, sampler state queries, FBO state queries, indexed buffer binding queries, string queries (`SHADING_LANGUAGE_VERSION`, `VERSION`), boolean/float state queries, texture state queries, and uniform block / active uniform introspection queries (`getUniformIndices`, `getActiveUniforms`).
 - **Instanced Drawing:** `drawArraysInstanced`, `drawElementsInstanced`, `drawRangeElements`, `vertexAttribDivisor`.
 - **Integer Attributes:** `vertexAttribIPointer`, `vertexAttribI4i`/`vertexAttribI4ui`/`vertexAttribI4iv`/`vertexAttribI4uiv`, `getVertexAttribIiv`/`getVertexAttribIuiv`.
 - **Textures (3D & 2D Array):** `texImage3D`, `texSubImage3D`, `texStorage2D`, `texStorage3D`, `copyTexSubImage3D` (with feedback loop detection), sized internal format uploads, pixel store parameters, `border == 0` validation, and alpha channel compatibility enforcement for `copyTexImage2D`/`copyTexSubImage2D`.
 - **Compressed Textures:** `compressedTexImage2D`/`3D` and `compressedTexSubImage2D`/`3D` (all overloads), and `texStorage2D`/`3D` with a compressed internal format, accept the formats of the `WEBGL_compressed_texture_astc` / `WEBGL_compressed_texture_etc` extensions once enabled on the context; any other format generates `INVALID_ENUM`, the same as WebGL 1. The data size must match the format's block layout exactly (`INVALID_VALUE`); sub-image block alignment and the format/target pairing are checked by the GL driver.
 
-**Unimplemented WebGL 2.0 features (`[Unimplemented]` in IDL / methods not exposed on instance):**
-- **Clear Depth/Stencil Buffer:** `clearBufferfi`.
+**Unimplemented WebGL 2.0 features (`[Unimplemented]` in IDL / methods not exposed on instance):** None. All WebGL2 core methods are exposed and implemented on `WebGL2RenderingContext`.
 
 **Extensions exposed via `getExtension(name)`** (subject to the underlying GL driver advertising the matching `GL_*` token; on Mesa llvmpipe / SwiftShader none may be advertised):
 
