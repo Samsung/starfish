@@ -66,15 +66,16 @@ WebWorker::~WebWorker()
         m_threadPool = nullptr;
     }
 
-    if (m_messageLoop != nullptr) {
-        m_messageLoop->destroy();
-        m_messageLoop = nullptr;
-    }
-
     if (m_timer != nullptr) {
         m_timer->clear(nullptr);
         m_timer->destroy();
         m_timer = nullptr;
+    }
+
+    // Timers use their message loop's context when removing sources.
+    if (m_messageLoop != nullptr) {
+        m_messageLoop->destroy();
+        m_messageLoop = nullptr;
     }
 }
 
