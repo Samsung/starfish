@@ -71,14 +71,12 @@ static void collectInlineBoxes(
     InlineBoxLayoutParentBox* parent,
     LayoutRepaintTracker::InlineLayoutResult* oldResult,
     LayoutRepaintTracker::InlineLayoutResult* result,
-    FrameBox* stackingContextOwner,
-    Optional<FrameBox*> lastGraphicsBufferContext)
+    FrameBox* stackingContextOwner)
 {
+    // The rects are dirty areas keyed to stackingContextOwner and mapped
+    // through its matrix, like the block box rects, so they stay relative to
+    // the owner rather than to the graphics buffer it paints into.
     auto& b = parent->boxes();
-    auto* parentStackingContextBox = lastGraphicsBufferContext
-                                         ? lastGraphicsBufferContext.value()
-                                         : stackingContextOwner;
-    bool includeTopMostScroll = lastGraphicsBufferContext ? false : true;
     for (size_t i = 0; i < b.size(); i++) {
         Frame* f = b[i];
         bool inserted = false;
@@ -93,7 +91,7 @@ static void collectInlineBoxes(
         if (f->isInlineTextBox()) {
             LayoutRepaintTracker::InlineLayoutResultItem r;
             r.m_frameRect = f->asFrameBox()->absoluteRectIncludingScroll(
-                parentStackingContextBox, includeTopMostScroll);
+                stackingContextOwner);
 
             float diff =
                 FONT_WIDTH_DIFFERENCE_GLYPH_ADVANCE_AND_ACTUAL_WIDTH_OF_GLYPH(
@@ -115,7 +113,7 @@ static void collectInlineBoxes(
         } else if (f->isInlineNonReplacedBox()) {
             LayoutRepaintTracker::InlineLayoutResultItem r;
             r.m_frameRect = f->asFrameBox()->absoluteRectIncludingScroll(
-                parentStackingContextBox, includeTopMostScroll);
+                stackingContextOwner);
             r.m_textStartEndValue = 0;
             inserted = true;
             result->push_back(r);
@@ -132,8 +130,7 @@ static void collectInlineBoxes(
 
         if (f->isInlineBoxLayoutParentBox()) {
             collectInlineBoxes(f->asInlineBoxLayoutParentBox(), oldResult,
-                               result, stackingContextOwner,
-                               lastGraphicsBufferContext);
+                               result, stackingContextOwner);
         }
     }
 }
@@ -382,8 +379,7 @@ static void traceRepaintRegionJob(
         auto& lineBoxes = currentFrame->asFrameBlockBox()->lineBoxes();
         for (size_t i = 0; i < lineBoxes.size(); i++) {
             collectInlineBoxes(lineBoxes[i], oldInlineResult, inlineResult,
-                               lastStackingContextOwner,
-                               lastGraphicsBufferContext);
+                               lastStackingContextOwner);
         }
 
         if (oldInlineResult) {
