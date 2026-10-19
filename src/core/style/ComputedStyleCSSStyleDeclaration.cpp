@@ -40,6 +40,13 @@
 
 namespace Starfish {
 
+// https://drafts.csswg.org/css-values-4/#time-value
+// A computed <time> is serialized in seconds whatever unit was specified.
+static CSSTime computedTime(const CSSTime& time)
+{
+    return CSSTime(CSSTime::S, time.toTimeValue() / 1000);
+}
+
 void ComputedStyleCSSStyleDeclaration::layoutIfNeeds()
 {
     if (m_node->isDocument()) {
@@ -1900,14 +1907,17 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionDuration);
         p.setValueList(new ValueList(Separator::CommaSeparator));
-        size_t layerSize = style->transitionLayerSize();
-        if (!layerSize) {
-            p.multiValue()->emplace_back(CSSStyleValuePair::Time, CSSTime(0));
+        // The computed value is the specified list itself, not the list
+        // truncated or repeated to the number of transition-property items.
+        size_t size = style->transitionDurationSize();
+        if (!size) {
+            p.multiValue()->emplace_back(CSSStyleValuePair::Time,
+                                         computedTime(CSSTime(0)));
         } else {
-            ValueList* list = new ValueList(Separator::CommaSeparator);
-            for (size_t i = 0; i < layerSize; i++) {
-                p.multiValue()->emplace_back(CSSStyleValuePair::Time,
-                                             style->transitionDuration(i));
+            for (size_t i = 0; i < size; i++) {
+                p.multiValue()->emplace_back(
+                    CSSStyleValuePair::Time,
+                    computedTime(style->transitionDuration(i)));
             }
         }
         addValuePair(p);
@@ -1916,14 +1926,15 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionDelay);
         p.setValueList(new ValueList(Separator::CommaSeparator));
-        size_t layerSize = style->transitionLayerSize();
-        if (!layerSize) {
-            p.multiValue()->emplace_back(CSSStyleValuePair::Time, CSSTime(0));
+        size_t size = style->transitionDelaySize();
+        if (!size) {
+            p.multiValue()->emplace_back(CSSStyleValuePair::Time,
+                                         computedTime(CSSTime(0)));
         } else {
-            ValueList* list = new ValueList(Separator::CommaSeparator);
-            for (size_t i = 0; i < layerSize; i++) {
-                p.multiValue()->emplace_back(CSSStyleValuePair::Time,
-                                             style->transitionDelay(i));
+            for (size_t i = 0; i < size; i++) {
+                p.multiValue()->emplace_back(
+                    CSSStyleValuePair::Time,
+                    computedTime(style->transitionDelay(i)));
             }
         }
         addValuePair(p);
@@ -1973,11 +1984,13 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         size_t size =
             style->animation() ? style->animation()->durationSize() : 0;
         if (size == 0) {
-            p.multiValue()->emplace_back(CSSStyleValuePair::Time, CSSTime(0));
+            p.multiValue()->emplace_back(CSSStyleValuePair::Time,
+                                         computedTime(CSSTime(0)));
         } else {
             for (size_t i = 0; i < size; i++) {
-                p.multiValue()->emplace_back(CSSStyleValuePair::Time,
-                                             style->animationDuration(i));
+                p.multiValue()->emplace_back(
+                    CSSStyleValuePair::Time,
+                    computedTime(style->animationDuration(i)));
             }
         }
         addValuePair(p);
@@ -2007,11 +2020,13 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setValueList(new ValueList(Separator::CommaSeparator));
         size_t size = style->animation() ? style->animation()->delaySize() : 0;
         if (size == 0) {
-            p.multiValue()->emplace_back(CSSStyleValuePair::Time, CSSTime(0));
+            p.multiValue()->emplace_back(CSSStyleValuePair::Time,
+                                         computedTime(CSSTime(0)));
         } else {
             for (size_t i = 0; i < size; i++) {
-                p.multiValue()->emplace_back(CSSStyleValuePair::Time,
-                                             style->animationDelay(i));
+                p.multiValue()->emplace_back(
+                    CSSStyleValuePair::Time,
+                    computedTime(style->animationDelay(i)));
             }
         }
         addValuePair(p);

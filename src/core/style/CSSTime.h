@@ -41,6 +41,12 @@ public:
         m_value = time;
     }
 
+    CSSTime(Kind kind, double value)
+    {
+        m_kind = kind;
+        m_value = value;
+    }
+
     CSSTime(const CSSTokenValue& str, float f);
     CSSTime(String* str, float f);
 
