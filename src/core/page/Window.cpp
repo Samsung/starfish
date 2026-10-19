@@ -148,7 +148,10 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     m_history = new History(m_document);
     m_navigator = new Navigator(m_document);
     m_location = new Location(m_document);
-    m_scriptBindingInstance->initBinding();
+    // Device APIs (tizen, webapis, xwalk) belong to locally installed app
+    // content. Remote pages feature-detect the platform from these globals,
+    // so exposing them to http(s) content misidentifies the device.
+    m_scriptBindingInstance->initBinding(url->isFileURL());
 
 #if defined(STARFISH_ENABLE_TTS)
     m_speechSynthesis = new SpeechSynthesis(m_document);

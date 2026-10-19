@@ -58,7 +58,7 @@ The compile-time flags that gate large chunks of this spec. "Default" is for the
 | WebAssembly (`WebAssembly` global) | `ENABLE_WASM=1` | off | `WebAssembly` undefined. |
 | WebCrypto (`crypto.subtle`, `CryptoKey`) | `WEBCRYPTO=1` (→ `STARFISH_ENABLE_WEBCRYPTO`) | off | `crypto.subtle`, `crypto.randomUUID()`, `SubtleCrypto` and `CryptoKey` are `undefined`. |
 | `Intl`, locale-sensitive formatting | `RUNTIME_ICU=1` (→ `STARFISH_ENABLE_RUNTIME_ICU_BINDER`) | on | ICU is linked directly (`icu-uc`/`icu-i18n` become build dependencies) instead of being bound at runtime. The JS-visible `Intl` surface is the same either way. |
-| Web Device API (`window.tizen`) | `CMAKE_SYSTEM_NAME=Tizen` + `TIZEN_DEVICE_API` | off (linux/windows/android) | `window.tizen` undefined. |
+| Web Device API (`window.tizen`) | `CMAKE_SYSTEM_NAME=Tizen` + `TIZEN_DEVICE_API` | off (linux/windows/android) | `window.tizen` undefined. Even when built, exposed only to `file:` document and worker scopes. |
 | MSE playback backend | `ENABLE_ESPLUSPLAYER=1` | off; auto-enabled on `CMAKE_SYSTEM_NAME=Tizen` with `TIZEN_MAJOR_VERSION >= 10`. Requires `CMAKE_SYSTEM_NAME=Tizen` | Media Source playback uses the platform-default media path. |
 | ffmpeg media player | `USE_FFMPEG_MEDIA_PLAYER=1` (and `STARFISH_WINDOWS_ENABLE_MULTIMEDIA=ON` on Windows) | off on Linux; on on Windows | `<video>`/`<audio>` use the platform-default media path (mock on Windows). |
 | CI media playback instrumentation | `STARFISH_MEDIA_PLAYBACK_TEST=ON` | off | Normal native audio output and platform TLS defaults; no CI frame fingerprints or paced test PCM sink. This test-only build also skips TLS certificate checks, adds no web API and must not ship. |
@@ -3355,7 +3355,7 @@ LWE exposes Escargot's JS debugger protocol via `cmake -DENABLE_DEBUGGER=1` (def
 ## Web Device API
 The following describes Web device APIs supported by lightweight web engine. Supported interfaces and methods are generally the same as the interfaces and methods supported by Tizen API, respectively. If there are exceptions, they are explicitly mentioned below.
 
-> **Build flag:** the Web Device API (`window.tizen`) is exposed only when `CMAKE_SYSTEM_NAME=Tizen` and the `TIZEN_DEVICE_API` macro is defined. On `CMAKE_SYSTEM_NAME=Linux`/`CMAKE_SYSTEM_NAME=Windows`/the Android build `window.tizen` is `undefined`.
+> **Build flag:** the Web Device API (`window.tizen`) is exposed only when `CMAKE_SYSTEM_NAME=Tizen` and the `TIZEN_DEVICE_API` macro is defined. On `CMAKE_SYSTEM_NAME=Linux`/`CMAKE_SYSTEM_NAME=Windows`/the Android build `window.tizen` is `undefined`. Even when built, `tizen`, `webapis` and `xwalk` are defined only for `file:` documents and workers (locally installed app content); remote (`http:`/`https:`) and other non-`file:` content sees them as `undefined`.
 
 | API            | Description | Note |
 |----------------|-------------|------|

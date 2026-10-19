@@ -74,7 +74,7 @@ public:
     {
     }
 
-    void initBinding();
+    void initBinding(bool exposeDeviceAPI);
 
     void defineGlobalBindingNameAccessor(
         Escargot::ExecutionStateRef* state, Escargot::ObjectRef* object,

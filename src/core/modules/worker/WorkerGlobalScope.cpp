@@ -75,7 +75,8 @@ void WorkerGlobalScope::initGlobalScope(ResourceURL* url, String* charSet)
     m_workerScriptController = new WorkerScriptController(m_executionContext);
     m_workerLocation = new WorkerLocation(m_executionContext, url);
     m_workerNavigator = new WorkerNavigator(m_executionContext);
-    m_scriptBindingInstance->initBinding();
+    // Same device API exposure rule as Window.
+    m_scriptBindingInstance->initBinding(url->isFileURL());
 }
 
 DedicatedWorkerGlobalScope* WorkerGlobalScope::asDedicatedWorkerGlobalScope()

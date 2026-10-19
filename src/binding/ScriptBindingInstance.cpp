@@ -285,7 +285,7 @@ public:
     GlobalBindingNameAccessorSetter m_valueSetter = nullptr;
 };
 
-void ScriptBindingInstance::initBinding()
+void ScriptBindingInstance::initBinding(bool exposeDeviceAPI)
 {
     ContextRef* context = scriptContext();
     Evaluator::execute(
@@ -297,7 +297,9 @@ void ScriptBindingInstance::initBinding()
         this);
 
 #ifdef TIZEN_DEVICE_API
-    m_deviceAPI = DeviceAPI::initialize(m_scriptContext);
+    if (exposeDeviceAPI) {
+        m_deviceAPI = DeviceAPI::initialize(m_scriptContext);
+    }
 #endif
 }
 
