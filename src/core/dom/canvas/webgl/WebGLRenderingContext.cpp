@@ -5336,8 +5336,7 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
         HTMLImageElement* element = source.getHTMLImageElementValue();
         imageData = element->imageData();
         if (imageData == nullptr) {
-            // For suppressing annoying coverity issue (false positive)
-            STARFISH_ASSERT_NOT_REACHED();
+            setGLError(GL_INVALID_VALUE);
             return;
         }
         if (imageData->isSVGNativeImageData()) {
