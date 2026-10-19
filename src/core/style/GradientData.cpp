@@ -229,7 +229,10 @@ void GradientData::makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
 
         ColorStop* cs = new ColorStop();
 
-        cs->setColor(item->color());
+        // The gradient data is shared by every element that inherits it, so
+        // currentcolor resolves against the painting box, not in place.
+        cs->setColor(item->isCurrentColor() ? owner->style()->color()
+                                            : item->color());
 
         const auto& offset = item->offset();
 
