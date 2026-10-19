@@ -5427,7 +5427,6 @@ void CSSStyleDeclaration::setAnimationName(const char* value, size_t length,
         return;
     }
 
-    // TODO handle var() case
     CSSTokenVector layers;
     if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
         return;
@@ -5439,6 +5438,12 @@ void CSSStyleDeclaration::setAnimationName(const char* value, size_t length,
         CSSTokenVector tokens;
         tokenizeCSSValue(tokens, layers[i].data(), layers[i].length(), "", 0,
                          true);
+        if (sub.updateValueVarReferences(tokens)) {
+            sub.setValue(String::fromUTF8(value, length));
+            sub.setFlagImportant(isImportant);
+            addCSSValuePair(CSSStyleValuePair::KeyKind::AnimationName, sub);
+            return;
+        }
         if (!(layerSize == 1 && sub.updateValueCommon(tokens) == true) &&
             sub.updateValueLayerAnimationName(tokens) == false) {
             return;
@@ -5459,7 +5464,6 @@ void CSSStyleDeclaration::setAnimationDuration(const char* value, size_t length,
         removeCSSValuePair(CSSStyleValuePair::AnimationDuration);
         return;
     }
-    // TODO handle var() case
     CSSTokenVector layers;
     if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
         return;
@@ -5470,6 +5474,12 @@ void CSSStyleDeclaration::setAnimationDuration(const char* value, size_t length,
         CSSStyleValuePair sub;
         CSSTokenVector tokens;
         tokenizeCSSValue(tokens, layers[i].data(), layers[i].length());
+        if (sub.updateValueVarReferences(tokens)) {
+            sub.setValue(String::fromUTF8(value, length));
+            sub.setFlagImportant(isImportant);
+            addCSSValuePair(CSSStyleValuePair::KeyKind::AnimationDuration, sub);
+            return;
+        }
         if (!(layerSize == 1 && sub.updateValueCommon(tokens) == true) &&
             sub.updateValueLayerAnimationDuration(tokens) == false) {
             return;
@@ -5491,7 +5501,6 @@ void CSSStyleDeclaration::setAnimationTimingFunction(const char* value,
         removeCSSValuePair(CSSStyleValuePair::AnimationTimingFunction);
         return;
     }
-    // TODO handle var() case
     CSSTokenVector layers;
     if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
         return;
@@ -5502,6 +5511,13 @@ void CSSStyleDeclaration::setAnimationTimingFunction(const char* value,
         CSSStyleValuePair sub;
         CSSTokenVector tokens;
         tokenizeCSSValue(tokens, layers[i].data(), layers[i].length());
+        if (sub.updateValueVarReferences(tokens)) {
+            sub.setValue(String::fromUTF8(value, length));
+            sub.setFlagImportant(isImportant);
+            addCSSValuePair(CSSStyleValuePair::KeyKind::AnimationTimingFunction,
+                            sub);
+            return;
+        }
         if (!(layerSize == 1 && sub.updateValueCommon(tokens) == true) &&
             sub.updateValueLayerAnimationTimingFunction(tokens) == false) {
             return;
@@ -5522,7 +5538,6 @@ void CSSStyleDeclaration::setAnimationDelay(const char* value, size_t length,
         removeCSSValuePair(CSSStyleValuePair::AnimationDelay);
         return;
     }
-    // TODO handle var() case
     CSSTokenVector layers;
     if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
         return;
@@ -5533,6 +5548,12 @@ void CSSStyleDeclaration::setAnimationDelay(const char* value, size_t length,
         CSSStyleValuePair sub;
         CSSTokenVector tokens;
         tokenizeCSSValue(tokens, layers[i].data(), layers[i].length());
+        if (sub.updateValueVarReferences(tokens)) {
+            sub.setValue(String::fromUTF8(value, length));
+            sub.setFlagImportant(isImportant);
+            addCSSValuePair(CSSStyleValuePair::KeyKind::AnimationDelay, sub);
+            return;
+        }
         if (!(layerSize == 1 && sub.updateValueCommon(tokens) == true) &&
             sub.updateValueLayerAnimationDelay(tokens) == false) {
             return;
@@ -5554,7 +5575,6 @@ void CSSStyleDeclaration::setAnimationIterationCount(const char* value,
         removeCSSValuePair(CSSStyleValuePair::AnimationIterationCount);
         return;
     }
-    // TODO handle var() case
     CSSTokenVector layers;
     if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
         return;
@@ -5565,6 +5585,13 @@ void CSSStyleDeclaration::setAnimationIterationCount(const char* value,
         CSSStyleValuePair sub;
         CSSTokenVector tokens;
         tokenizeCSSValue(tokens, layers[i].data(), layers[i].length());
+        if (sub.updateValueVarReferences(tokens)) {
+            sub.setValue(String::fromUTF8(value, length));
+            sub.setFlagImportant(isImportant);
+            addCSSValuePair(CSSStyleValuePair::KeyKind::AnimationIterationCount,
+                            sub);
+            return;
+        }
         if (!(layerSize == 1 && sub.updateValueCommon(tokens) == true) &&
             sub.updateValueLayerAnimationIterationCount(tokens) == false) {
             return;
@@ -5585,7 +5612,6 @@ void CSSStyleDeclaration::setAnimationDirection(const char* value,
         removeCSSValuePair(CSSStyleValuePair::AnimationDirection);
         return;
     }
-    // TODO handle var() case
     CSSTokenVector layers;
     if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
         return;
@@ -5596,6 +5622,13 @@ void CSSStyleDeclaration::setAnimationDirection(const char* value,
         CSSStyleValuePair sub;
         CSSTokenVector tokens;
         tokenizeCSSValue(tokens, layers[i].data(), layers[i].length());
+        if (sub.updateValueVarReferences(tokens)) {
+            sub.setValue(String::fromUTF8(value, length));
+            sub.setFlagImportant(isImportant);
+            addCSSValuePair(CSSStyleValuePair::KeyKind::AnimationDirection,
+                            sub);
+            return;
+        }
         if (!(layerSize == 1 && sub.updateValueCommon(tokens) == true) &&
             sub.updateValueLayerAnimationDirection(tokens) == false) {
             return;
@@ -5616,7 +5649,6 @@ void CSSStyleDeclaration::setAnimationPlayState(const char* value,
         removeCSSValuePair(CSSStyleValuePair::AnimationPlayState);
         return;
     }
-    // TODO handle var() case
     CSSTokenVector layers;
     if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
         return;
@@ -5627,6 +5659,13 @@ void CSSStyleDeclaration::setAnimationPlayState(const char* value,
         CSSStyleValuePair sub;
         CSSTokenVector tokens;
         tokenizeCSSValue(tokens, layers[i].data(), layers[i].length());
+        if (sub.updateValueVarReferences(tokens)) {
+            sub.setValue(String::fromUTF8(value, length));
+            sub.setFlagImportant(isImportant);
+            addCSSValuePair(CSSStyleValuePair::KeyKind::AnimationPlayState,
+                            sub);
+            return;
+        }
         if (!(layerSize == 1 && sub.updateValueCommon(tokens) == true) &&
             sub.updateValueLayerAnimationPlayState(tokens) == false) {
             return;
@@ -5647,7 +5686,6 @@ void CSSStyleDeclaration::setAnimationFillMode(const char* value, size_t length,
         removeCSSValuePair(CSSStyleValuePair::AnimationFillMode);
         return;
     }
-    // TODO handle var() case
     CSSTokenVector layers;
     if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
         return;
@@ -5658,6 +5696,12 @@ void CSSStyleDeclaration::setAnimationFillMode(const char* value, size_t length,
         CSSStyleValuePair sub;
         CSSTokenVector tokens;
         tokenizeCSSValue(tokens, layers[i].data(), layers[i].length());
+        if (sub.updateValueVarReferences(tokens)) {
+            sub.setValue(String::fromUTF8(value, length));
+            sub.setFlagImportant(isImportant);
+            addCSSValuePair(CSSStyleValuePair::KeyKind::AnimationFillMode, sub);
+            return;
+        }
         if (!(layerSize == 1 && sub.updateValueCommon(tokens) == true) &&
             sub.updateValueLayerAnimationFillMode(tokens) == false) {
             return;
