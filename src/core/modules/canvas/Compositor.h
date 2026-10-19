@@ -116,8 +116,10 @@ public:
     virtual void drawRect(const LayoutRect& rt) = 0;
     virtual void punchHole(const Unit::Rect& rt) = 0;
 
-    virtual void setMaskSurface(CanvasSurface* maskSurface, float offsetX,
-                                float offsetY, float maskWidth,
+    // drawToMask maps the current drawing coordinates to the mask owner's
+    // local coordinates, whose box is maskWidth x maskHeight.
+    virtual void setMaskSurface(CanvasSurface* maskSurface,
+                                const SkMatrix& drawToMask, float maskWidth,
                                 float maskHeight)
     {
     }

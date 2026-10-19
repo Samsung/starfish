@@ -3502,10 +3502,11 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         maskContext = maskContext->parent();
     }
     CanvasSurface* compositingMask = nullptr;
-    float maskOriginX = 0;
-    float maskOriginY = 0;
-    float maskScaleX = 1;
-    float maskScaleY = 1;
+    // Maps this context's local coordinates to the mask owner's. It is a full
+    // affine map: a rotated or skewed descendant must sample the mask along
+    // its own axes, not along the mask owner's.
+    SkMatrix maskMatrix;
+    maskMatrix.reset();
     if (maskContext) {
         maskContext->updateMaskSurface();
         compositingMask = maskContext->maskSurface();
@@ -3520,22 +3521,17 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                                           m_owner->shouldApplyOverflow())
                     .mapPoints(points, 3);
                 maskInverse.mapPoints(points, 3);
-                maskOriginX = points[0].x();
-                maskOriginY = points[0].y();
-                maskScaleX = points[1].x() - maskOriginX;
-                maskScaleY = points[2].y() - maskOriginY;
-                if (std::abs(maskScaleX) < 0.0001f) {
-                    maskScaleX = 1;
-                }
-                if (std::abs(maskScaleY) < 0.0001f) {
-                    maskScaleY = 1;
-                }
+                maskMatrix.setAll(points[1].x() - points[0].x(),
+                                  points[2].x() - points[0].x(), points[0].x(),
+                                  points[1].y() - points[0].y(),
+                                  points[2].y() - points[0].y(), points[0].y(),
+                                  0, 0, 1);
             }
         } else if (maskContext->owner()->isFrameBlockBox() &&
                    maskContext->owner()->shouldApplyOverflow()) {
-            maskOriginX -=
-                maskContext->owner()->asFrameBlockBox()->scrollLeft();
-            maskOriginY -= maskContext->owner()->asFrameBlockBox()->scrollTop();
+            maskMatrix.setTranslate(
+                -maskContext->owner()->asFrameBlockBox()->scrollLeft(),
+                -maskContext->owner()->asFrameBlockBox()->scrollTop());
         }
     }
 
@@ -3712,12 +3708,12 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                         m_rareData->m_graphicsBufferHolder
                                 ->m_surfaces[tileIndex] != nullptr) {
                         if (compositingMask) {
+                            SkMatrix tileToMask = maskMatrix;
+                            tileToMask.preTranslate(minX, minY);
                             compositor->setMaskSurface(
-                                compositingMask,
-                                (float)minX + maskOriginX / maskScaleX,
-                                (float)minY + maskOriginY / maskScaleY,
-                                maskContext->owner()->width() / maskScaleX,
-                                maskContext->owner()->height() / maskScaleY);
+                                compositingMask, tileToMask,
+                                maskContext->owner()->width(),
+                                maskContext->owner()->height());
                         }
                         compositor->drawSurface(
                             m_rareData->m_graphicsBufferHolder
@@ -3780,11 +3776,11 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             compositor->translate(dx, dy);
 
             if (compositingMask) {
-                compositor->setMaskSurface(
-                    compositingMask, dx + maskOriginX / maskScaleX,
-                    dy + maskOriginY / maskScaleY,
-                    maskContext->owner()->width() / maskScaleX,
-                    maskContext->owner()->height() / maskScaleY);
+                SkMatrix contentToMask = maskMatrix;
+                contentToMask.preTranslate(dx, dy);
+                compositor->setMaskSurface(compositingMask, contentToMask,
+                                           maskContext->owner()->width(),
+                                           maskContext->owner()->height());
             }
             compositor->drawSurface(contentSurface.getValue(),
                                     Unit::Rect(0, 0, owner()->contentWidth(),
