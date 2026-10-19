@@ -30,11 +30,18 @@
 
 namespace Starfish {
 
+#ifdef STARFISH_ENABLE_TEST
+ESCARGOT_EXPORT void reseedScriptEngineForTest();
+#endif
+
 ScriptEngineInstance::ScriptEngineInstance(const char* locale,
                                            const char* timezone)
     : m_inDrainMicroTaskQueue(false)
     , m_macroTaskCounter(0)
 {
+#ifdef STARFISH_ENABLE_TEST
+    reseedScriptEngineForTest();
+#endif
 #ifdef STARFISH_TIZEN
     // add argument for CodeCache directory
     auto cachePath = app_get_cache_path();

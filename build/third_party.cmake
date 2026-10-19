@@ -399,6 +399,13 @@ ENDIF()
 
 ADD_SUBDIRECTORY (third_party/escargot)
 
+# Compile the test-only reseeding bridge with Escargot's internal headers and
+# compile definitions; normal builds must not contain this instrumentation.
+IF ("-DSTARFISH_ENABLE_TEST" IN_LIST LWE_DEFINITIONS)
+    TARGET_SOURCES (escargot PRIVATE
+        ${STARFISH_ROOT}/build/test/ScriptEngineTest.cpp)
+ENDIF()
+
 # escargot resets CMAKE_LIBRARY_OUTPUT_DIRECTORY to its own binary dir for its
 # standalone release layout, so libwalrus.so would land outside
 # ${OUTPUT_DIRECTORY}/lib. Every packaging step (packaging/*.spec copies
