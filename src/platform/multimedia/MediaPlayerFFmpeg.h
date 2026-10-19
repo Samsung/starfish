@@ -107,7 +107,7 @@ private:
 
 class FfmpegWrapperPlayer : public gc {
 public:
-    FfmpegWrapperPlayer();
+    FfmpegWrapperPlayer(MediaPlayer* owner);
     ~FfmpegWrapperPlayer();
 
     // API functions
@@ -158,13 +158,13 @@ public:
     double getDuration();
 
     ResourceURL* m_url;
-    // Redirect tracking for the element's origin check: the URL the input
-    // was opened with (released in destroy(), since the destructor never
-    // runs under PointerFreeGC) and whether the response location
-    // libavformat reports has matched it so far. False for anything but
-    // plain http(s), and sticky once a redirect is seen.
+    // The player this wrapper feeds; it holds the origin vouch for the
+    // element and outlives the decoding thread.
+    MediaPlayer* m_owner;
+    // The URL the input was opened with, for the element's origin check
+    // against the response location libavformat reports (released in
+    // destroy(), since the destructor never runs under PointerFreeGC).
     std::string m_requestedLocation;
-    std::atomic<bool> m_originVouched;
     // Largest frame handed to the element (the WebView's max video decode
     // size). prepare() refuses larger streams up front; this only guards a
     // mid-stream resolution change by scaling such frames to fit.
@@ -349,8 +349,6 @@ public:
 #endif
 
     virtual void prepare(ResourceURL* url);
-    // The requested URL, when the FFmpeg player saw no redirect on it.
-    Optional<ResourceURL*> responseURL() override;
     virtual void setNativePlayerDefaultOptions(ResourceURL* url);
     virtual void printNativePlayerError(int errorCode);
 

@@ -181,9 +181,9 @@ static void printMediaFormatError(int errorCode)
     }
 }
 
-FfmpegWrapperPlayer::FfmpegWrapperPlayer()
+FfmpegWrapperPlayer::FfmpegWrapperPlayer(MediaPlayer* owner)
     : m_url(nullptr)
-    , m_originVouched(false)
+    , m_owner(owner)
     , m_fmtCtx(nullptr)
     , m_codecCtx(nullptr)
     , m_videoStreamIndex(-1)
@@ -416,8 +416,9 @@ bool FfmpegWrapperPlayer::prepare(
         // Checked after probing, which may itself re-request the input (an
         // MP4 with its moov after the media data seeks back to the start).
         m_requestedLocation = m_url->urlString()->toUTF8NonGCString();
-        m_originVouched =
-            responseLocationIs(m_fmtCtx, m_requestedLocation.c_str());
+        if (responseLocationIs(m_fmtCtx, m_requestedLocation.c_str())) {
+            m_owner->vouchResponseURL(m_url);
+        }
     }
 
     m_state = State::PREPARED;
@@ -573,11 +574,11 @@ double FfmpegWrapperPlayer::getDuration()
 // same way for the same-origin hops it can't see.
 void FfmpegWrapperPlayer::noteResponseLocation()
 {
-    if (!m_originVouched.load()) {
+    if (!m_owner->responseURLVouched()) {
         return;
     }
     if (!responseLocationIs(m_fmtCtx, m_requestedLocation.c_str())) {
-        m_originVouched = false;
+        m_owner->revokeResponseURL();
     }
 }
 
@@ -1002,7 +1003,7 @@ MediaPlayerFFmpeg::MediaPlayerFFmpeg(HTMLMediaElement* element)
     PLAYER_LOGI("MediaPlayerFFmpeg::MediaPlayerFFmpeg\n");
     STARFISH_ASSERT(element != nullptr);
 
-    m_nativePlayer = new (PointerFreeGC) FfmpegWrapperPlayer();
+    m_nativePlayer = new (PointerFreeGC) FfmpegWrapperPlayer(this);
 #if defined(STARFISH_ENABLE_WEBAUDIO)
     if (element->audioSourceNode()) {
         element->audioSourceNode()->setPlaybackState(audioPlaybackState());
@@ -1488,14 +1489,6 @@ void MediaPlayerFFmpeg::pause()
 void MediaPlayerFFmpeg::setNativePlayerDefaultOptions(ResourceURL* url)
 {
     PLAYER_LOGI("MediaPlayerFFmpeg::setNativePlayerDefaultOptions\n");
-}
-
-Optional<ResourceURL*> MediaPlayerFFmpeg::responseURL()
-{
-    if (!m_nativePlayer->m_originVouched.load()) {
-        return nullptr;
-    }
-    return m_currentURL;
 }
 
 void MediaPlayerFFmpeg::setNativePlayerDisplayModeWithGL()

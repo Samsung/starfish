@@ -24,6 +24,7 @@
 #define STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS 300
 #define STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS 150
 
+#include <atomic>
 #include "core/dom/HTMLMediaElement.h"
 #include "platform/multimedia/StreamInfo.h"
 
@@ -140,19 +141,25 @@ public:
     // The URL the media data came from, so the element can decide whether
     // its media data is CORS-same-origin
     // (https://html.spec.whatwg.org/multipage/media.html#media-data-is-cors-same-origin).
-    // Empty until the resource is prepared and empty once the backend saw
-    // the request redirected anywhere (it can't report the hops Fetch
-    // judges one by one): the element then treats the media data as
-    // cross-origin, the safe side. A backend that fetches through its own
-    // network stack and can't report at all (the Tizen player) answers
-    // with what probeResponseURL() learned beforehand.
-    virtual Optional<ResourceURL*> responseURL()
-    {
-        return m_probedResponseURL;
-    }
+    // Empty until a backend vouches for the requested URL, and empty again
+    // once it saw the request redirected anywhere (it can't report the hops
+    // Fetch judges one by one): the element then treats the media data as
+    // cross-origin, the safe side. Backends differ only in their evidence:
+    // the FFmpeg player reads libavformat's response location, the Tizen
+    // player relies on probeResponseURL().
+    Optional<ResourceURL*> responseURL();
     // Whether responseURL() is same-origin with `origin`. Judged once per
     // response: the texture upload path asks for every frame.
     bool responseIsSameOrigin(WebOrigin* origin);
+    // Called by a backend (or its native wrapper) with what its network
+    // stack tells it. Vouching happens on the main thread once the resource
+    // is prepared; revoking may come from a decoding thread.
+    void vouchResponseURL(ResourceURL* url);
+    void revokeResponseURL();
+    bool responseURLVouched() const
+    {
+        return m_responseURLVouched.load();
+    }
     virtual double currentTime() = 0;
     virtual double duration() = 0;
     virtual void setVolume(double volume) = 0;
@@ -247,14 +254,14 @@ protected:
     void notifyMediaSourceFailure();
     // For a backend whose player fetches the media itself and can't report
     // where it came from: a HEAD request through the engine's loader, shaped
-    // like the player's own (no CORS, no credentials), vouches for `url` in
-    // responseURL() when the response came back from it unredirected, with
-    // a success status (a server rejecting HEAD leaves the media tainted)
-    // and not as a playlist. The player's request is a separate one, so a
-    // server answering the two differently defeats the check; platform
-    // players in Chromium carry the same trade-off. didProbeResponseURL()
-    // follows on the main thread whether or not the probe vouched, unless
-    // the player died meanwhile.
+    // like the player's own (no CORS, no credentials), vouches for `url`
+    // when the response came back from it unredirected, with a success
+    // status (a server rejecting HEAD leaves the media tainted) and not as
+    // a playlist. The player's request is a separate one, so a server
+    // answering the two differently defeats the check; platform players in
+    // Chromium carry the same trade-off. didProbeResponseURL() follows on
+    // the main thread whether or not the probe vouched, unless the player
+    // died meanwhile.
     void probeResponseURL(ResourceURL* url);
     virtual void didProbeResponseURL(ResourceURL* url)
     {
@@ -273,7 +280,8 @@ protected:
     volatile unsigned long m_videoWidth, m_videoHeight;
     ResourceURL* m_judgedResponseURL{ nullptr };
     bool m_judgedSameOrigin{ false };
-    Optional<ResourceURL*> m_probedResponseURL;
+    Optional<ResourceURL*> m_vouchedResponseURL;
+    std::atomic<bool> m_responseURLVouched{ false };
     Optional<Resource*> m_responseURLProbe;
     size_t m_currentTimeUpdateTimer;
     Mutex* m_playerStateMutex;
