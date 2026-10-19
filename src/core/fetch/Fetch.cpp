@@ -149,7 +149,7 @@ void Fetch::success(ResourceRequest* request)
     m_response->setType(request->responseType());
     m_response->setMimeType(request->responseMimeType());
     m_response->setUrl(request->url()->urlString());
-    m_response->setHeadersFromHeaderMap(request->responseHeaderMap());
+    m_response->setHeadersFromHeaderMap(request->responseHeaderMap(), request);
     m_response->responseBody()->pushResponseData(request);
     m_promise->fulfill(m_response->scriptValue());
 }

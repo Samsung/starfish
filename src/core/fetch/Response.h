@@ -94,7 +94,11 @@ public:
         return m_headers;
     }
 
-    void setHeadersFromHeaderMap(const HeaderMap& map);
+    // Copies the response headers a script may see. With a request, the
+    // header list is filtered by the response's type as the filtered
+    // response concept requires; without one every header is copied.
+    void setHeadersFromHeaderMap(const HeaderMap& map,
+                                 ResourceRequest* request = nullptr);
 
     Response* cloneWithoutBody();
     Response* clone();

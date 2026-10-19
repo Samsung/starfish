@@ -275,8 +275,12 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
         } else {
             // 14.2 Set response to the following filtered response with
             // response as its internal response, depending on request's
-            // response tainting:
-            // TODO
+            // response tainting: "basic" for a same-origin response. The
+            // header list a script may see is narrowed accordingly where the
+            // response is exposed (Response::setHeadersFromHeaderMap and
+            // XMLHttpRequest's header getters). An "opaque" filtered
+            // response for no-cors cross-origin requests is still TODO.
+            m_responseData->m_type = ResponseType::Basic;
         }
     } else if (readyState == ReadyState::Done) {
         if (m_containsBase64Content) {
