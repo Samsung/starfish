@@ -24,6 +24,11 @@
 #include "core/dom/Document.h"
 #include "core/dom/HTMLMediaElement.h"
 #include "core/dom/WebOrigin.h"
+#include "core/fetch/RequestData.h"
+#include "core/modules/resource_request/ResourceRequest.h"
+#include "platform/loader/HeaderResource.h"
+#include "platform/loader/ResourceClient.h"
+#include "platform/loader/ResourceLoader.h"
 #include "platform/multimedia/MediaPlayer.h"
 #include "core/modules/renderer/Renderer.h"
 #include "core/modules/canvas/Canvas.h"
@@ -127,6 +132,112 @@ void MediaPlayer::setPlaybackState(MediaPlayer::PlaybackState state)
 {
     Locker<Mutex> locker(*m_playerStateMutex);
     m_playbackState = state;
+}
+
+// A playlist (HLS, DASH) fetches its segments through requests of its
+// own, so where the playlist came from says nothing about where the media
+// bytes come from; the FFmpeg player refuses to vouch for those formats for
+// the same reason. Judged from the response's MIME type and, since servers
+// often label playlists as plain text, the URL's extension.
+static bool isPlaylistResponse(Resource* resource, ResourceURL* url)
+{
+    String* mimeType = resource->responseMimeType()->toLower();
+    static const char* const playlistTypes[] = {
+        "application/vnd.apple.mpegurl",
+        "application/x-mpegurl",
+        "audio/mpegurl",
+        "audio/x-mpegurl",
+        "application/dash+xml",
+    };
+    for (const char* type : playlistTypes) {
+        if (mimeType->startsWith(type, strlen(type))) {
+            return true;
+        }
+    }
+    String* path = url->pathname();
+    return path->endsWith(".m3u8", false) || path->endsWith(".mpd", false);
+}
+
+class ResponseURLProbeClient : public ResourceClient {
+public:
+    ResponseURLProbeClient(Resource* resource, MediaPlayer* player,
+                           ResourceURL* url)
+        : ResourceClient(resource)
+        , m_player(player)
+        , m_url(url)
+    {
+    }
+
+    void didLoadFinished() override
+    {
+        ResourceRequest* request = m_resource->resourceRequest();
+        finish(!request->isRedirected() && request->status() / 100 == 2 &&
+               !isPlaylistResponse(m_resource, m_url));
+    }
+
+    void didLoadFailed() override
+    {
+        finish(false);
+    }
+
+    // The player disowns the probe before canceling it from its teardown;
+    // a probe still owned was canceled by the loader (the document going
+    // away), which the player treats like a failed one.
+    void didLoadCanceled() override
+    {
+        Optional<Resource*> probe = m_player->m_responseURLProbe;
+        if (!probe || probe.value() != m_resource) {
+            return;
+        }
+        finish(false);
+    }
+
+private:
+    void finish(bool vouched)
+    {
+        m_player->m_responseURLProbe = nullptr;
+        if (!m_player->alive()) {
+            return;
+        }
+        m_player->m_probedResponseURL = vouched ? m_url : nullptr;
+        m_player->didProbeResponseURL(m_url);
+    }
+
+    MediaPlayer* m_player;
+    ResourceURL* m_url;
+};
+
+void MediaPlayer::probeResponseURL(ResourceURL* url)
+{
+    STARFISH_ASSERT(!m_responseURLProbe);
+    m_probedResponseURL = nullptr;
+    Document* document = m_container->document();
+    HeaderResource* resource = document->resourceLoader().fetchHeader(url);
+    resource->markThisResourceIsDoesNotAffectWindowOnLoad();
+    resource->addResourceClient(
+        new ResponseURLProbeClient(resource, this, url));
+    m_responseURLProbe = resource;
+
+    RequestData* request = new RequestData();
+    request->m_url = url;
+    request->m_referrer = new ReferrerURL(document->documentURI());
+    request->m_method = String::createASCIIString("HEAD");
+    request->m_mode = RequestMode::NoCORS;
+    request->m_credentials = RequestCredentials::Omit;
+    request->m_syncLevel = RequestSyncLevel::NeverSync;
+    resource->request(request, false);
+}
+
+void MediaPlayer::cancelResponseURLProbe()
+{
+    if (!m_responseURLProbe) {
+        return;
+    }
+    Resource* probe = m_responseURLProbe.value();
+    m_responseURLProbe = nullptr;
+    if (probe->state() <= Resource::Receiving) {
+        probe->cancel();
+    }
 }
 
 bool MediaPlayer::responseIsSameOrigin(WebOrigin* origin)
