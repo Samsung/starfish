@@ -668,60 +668,60 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/uniform-def
 http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/uniform-values-per-program.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/uniform-location.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/uniform-samplers-test.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/constants.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/getContext.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/methods.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-A.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-B1.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-B2.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-B3.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-B4.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-C.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-D_G.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-G_I.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-L_S.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-S_V.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/webGLArrays.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/bindBuffer.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/bindBufferBadArgs.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/bindFramebufferLeaveNonZero.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/bufferData.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/bufferDataBadArgs.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/bufferSubData.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/bufferSubDataBadArgs.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/constants.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/getContext.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/methods.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-A.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-B1.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-B2.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-B3.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-B4.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-C.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-D_G.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-G_I.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-L_S.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/quickCheckAPI-S_V.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/conformance/webGLArrays.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/bindBuffer.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/bindBufferBadArgs.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/bindFramebufferLeaveNonZero.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/bufferData.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/bufferDataBadArgs.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/bufferSubData.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/bufferSubDataBadArgs.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/copyTexImage2D.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/copyTexImage2DBadArgs.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/copyTexSubImage2D.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/copyTexSubImage2DBadArgs.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/deleteBufferBadArgs.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/copyTexSubImage2DBadArgs.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/deleteBufferBadArgs.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/drawArrays.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/drawArraysOutOfBounds.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/drawElements.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/drawElements.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/isTests.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/isTestsBadArgs.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/readPixels.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/isTestsBadArgs.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/readPixels.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/readPixelsBadArgs.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texImage2D.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texImage2DBadArgs.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texImage2D.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texImage2DBadArgs.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texImage2DHTML.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texImage2DHTMLBadArgs.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texSubImage2D.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texSubImage2D.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texSubImage2DBadArgs.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texSubImage2DHTML.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texSubImage2DHTMLBadArgs.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformf.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformfBadArgs.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformfArrayLen1.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformi.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformiBadArgs.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformMatrix.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformf.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformfBadArgs.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformfArrayLen1.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformi.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformiBadArgs.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformMatrix.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformMatrixBadArgs.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/vertexAttrib.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/vertexAttribBadArgs.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/vertexAttribPointer.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/vertexAttribPointerBadArgs.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/glsl/arrayOutOfBounds.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/glsl/uniformOutOfBounds.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/glsl/uniformOutOfBounds.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/arrays.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/conditionals.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/constants.html
