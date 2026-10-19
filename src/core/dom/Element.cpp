@@ -834,6 +834,42 @@ static ComputedStyleDamage comparePseudoElementStyle(ComputedStyle* oldStyle,
     return damage;
 }
 
+#if defined(STARFISH_ENABLE_ANIMATION)
+// A pseudo-element's style is recomputed with its originating element, so
+// its CSS animations are driven from here, the same way applyStyleToElement
+// drives an element's: they begin when the pseudo-element appears or its
+// animation properties change, and step on every recomputation.
+void Element::computePseudoElementAnimation(Element* pseudoNode,
+                                            Optional<ComputedStyle*> fromStyle,
+                                            ComputedStyle* toStyle)
+{
+    bool damagedKeys[CSSStyleValuePair::KeyKindSize] = {
+        false,
+    };
+    ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
+    if (!fromStyle) {
+        pseudoNode->clearDidPrepareAnimation();
+        damage = ComputedStyleDamage::ComputedStyleDamageAnimation;
+    } else {
+        damage = compareStyle(fromStyle.value(), toStyle, damagedKeys,
+                              isSVGDescendantElement());
+        if (damagedKeys[CSSStyleValuePair::KeyKind::Animation] ||
+            damagedKeys[CSSStyleValuePair::KeyKind::AnimationName]) {
+            pseudoNode->clearDidPrepareAnimation();
+        }
+    }
+
+    // var() in @keyframes resolves against the pseudo-element's own custom
+    // properties.
+    StyleResolver& resolver = styleResolver();
+    resolver.setCssCustomValues(toStyle->customProperty());
+    computeAnimation(resolver, pseudoNode, fromStyle, toStyle, damage,
+                     damagedKeys);
+    resolver.clearCssCustomValues();
+    pseudoNode->markDidPrepareAnimation();
+}
+#endif
+
 void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                                       ComputedStyle* newStyle,
                                       Optional<StyleResolveContext*> ctx)
@@ -887,6 +923,18 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                     pseudoElementMap->setPseudoElement(type, nullptr);
                 }
 
+#if defined(STARFISH_ENABLE_ANIMATION)
+                bool hasAnimation =
+                    (ncs && ncs->hasRareComputeStyleData() &&
+                     ncs->animation()) ||
+                    (o && ocs->hasRareComputeStyleData() && ocs->animation());
+                if (n && hasAnimation) {
+                    computePseudoElementAnimation(
+                        pseudoElementMap->pseudoElement(type),
+                        o ? ocs : nullptr, ncs);
+                }
+#endif
+
                 if (o && n) {
                     Element* pseudoNode = pseudoElementMap->pseudoElement(type);
 
@@ -918,10 +966,6 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                                     ->markScreenExtentDirty();
                             }
                         }
-
-                        // TODO
-                        // implement CSS animtion for pseudo element
-                        // here when we can tracking psuedo element is appear
 
                         // The generated content takes its style from the
                         // pseudo-element when its frames are built, so an
