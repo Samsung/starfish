@@ -268,13 +268,13 @@ CSSAngle CalcTerm::angleValue() const
         bool operand = *it2;
 
         if (operand == MUL) {
-            if (lType.isNumber()) {
+            if (rType.isNumber()) {
                 result *= (*it).numberValue();
             } else {
                 result *= (*it).angleValue().toDegreeValue();
             }
         } else {
-            if (lType.isNumber()) {
+            if (rType.isNumber()) {
                 result /= (*it).numberValue();
             } else {
                 result /= (*it).angleValue().toDegreeValue();
@@ -305,13 +305,13 @@ CSSTime CalcTerm::timeValue() const
         bool operand = *it2;
 
         if (operand == MUL) {
-            if (lType.isNumber()) {
+            if (rType.isNumber()) {
                 result *= (*it).numberValue();
             } else {
                 result *= (*it).timeValue().toTimeValue();
             }
         } else {
-            if (lType.isNumber()) {
+            if (rType.isNumber()) {
                 result /= (*it).numberValue();
             } else {
                 result /= (*it).timeValue().toTimeValue();
