@@ -199,7 +199,9 @@ private:
         if (!m_player->alive()) {
             return;
         }
-        m_player->m_probedResponseURL = vouched ? m_url : nullptr;
+        if (vouched) {
+            m_player->vouchResponseURL(m_url);
+        }
         m_player->didProbeResponseURL(m_url);
     }
 
@@ -210,7 +212,7 @@ private:
 void MediaPlayer::probeResponseURL(ResourceURL* url)
 {
     STARFISH_ASSERT(!m_responseURLProbe);
-    m_probedResponseURL = nullptr;
+    revokeResponseURL();
     Document* document = m_container->document();
     HeaderResource* resource = document->resourceLoader().fetchHeader(url);
     resource->markThisResourceIsDoesNotAffectWindowOnLoad();
@@ -238,6 +240,25 @@ void MediaPlayer::cancelResponseURLProbe()
     if (probe->state() <= Resource::Receiving) {
         probe->cancel();
     }
+}
+
+Optional<ResourceURL*> MediaPlayer::responseURL()
+{
+    if (!m_responseURLVouched.load()) {
+        return nullptr;
+    }
+    return m_vouchedResponseURL;
+}
+
+void MediaPlayer::vouchResponseURL(ResourceURL* url)
+{
+    m_vouchedResponseURL = url;
+    m_responseURLVouched = true;
+}
+
+void MediaPlayer::revokeResponseURL()
+{
+    m_responseURLVouched = false;
 }
 
 bool MediaPlayer::responseIsSameOrigin(WebOrigin* origin)
