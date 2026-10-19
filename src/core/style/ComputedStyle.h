@@ -3104,6 +3104,24 @@ public:
         return 0;
     }
 
+    size_t transitionDurationSize()
+    {
+        StyleTransitionData* t = transition();
+        if (t) {
+            return t->durationSize();
+        }
+        return 0;
+    }
+
+    size_t transitionDelaySize()
+    {
+        StyleTransitionData* t = transition();
+        if (t) {
+            return t->delaySize();
+        }
+        return 0;
+    }
+
     CSSStyleValuePair::KeyKind transitionProperty(size_t layer = 0)
     {
         StyleTransitionData* t = transition();

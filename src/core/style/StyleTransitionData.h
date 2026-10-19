@@ -102,6 +102,16 @@ public:
         return m_propertySize;
     }
 
+    size_t durationSize() const
+    {
+        return m_durationSize;
+    }
+
+    size_t delaySize() const
+    {
+        return m_delaySize;
+    }
+
     void resizeIfNeeds(size_t index, size_t& currentSize)
     {
         if (m_layers.size() <= index) {
