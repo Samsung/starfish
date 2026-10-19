@@ -4231,8 +4231,10 @@ public:
             useDifferenceFactors = true;
             break;
         case BlendMode::Screen:
+            // Cs + Cb * (1 - Cs) on premultiplied colors; the alpha channel
+            // reduces to source-over since 1 - Cs is 1 - As there.
             srcFactor = GL_ONE;
-            dstFactor = GL_ONE_MINUS_SRC_ALPHA;
+            dstFactor = GL_ONE_MINUS_SRC_COLOR;
             equation = GL_FUNC_ADD;
             break;
         case BlendMode::ColorDodge:
