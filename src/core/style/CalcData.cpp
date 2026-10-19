@@ -38,6 +38,35 @@ LayoutUnit CalcValue::specifiedValue(const LayoutUnit& parentContentLength,
     return LayoutUnit();
 }
 
+// A nested calc() operand is resolved by its own CalcData, like
+// specifiedValue() does for lengths.
+float CalcValue::numberValue() const
+{
+    if (m_type.isCalcData()) {
+        return m_data.m_calcData->numberValue();
+    }
+    STARFISH_ASSERT(m_type.isNumber());
+    return m_data.m_numberData;
+}
+
+CSSAngle CalcValue::angleValue() const
+{
+    if (m_type.isCalcData()) {
+        return m_data.m_calcData->angleValue();
+    }
+    STARFISH_ASSERT(m_type.isAngle());
+    return m_data.m_angleData;
+}
+
+CSSTime CalcValue::timeValue() const
+{
+    if (m_type.isCalcData()) {
+        return m_data.m_calcData->timeValue();
+    }
+    STARFISH_ASSERT(m_type.isTime());
+    return m_data.m_timeData;
+}
+
 LayoutUnit CalcValue::specifiedFontValue(Node* n) const
 {
     if (m_type.isLength()) {
