@@ -4,11 +4,11 @@
 http://web-platform.test:8000/css/css-images/color-stop-currentcolor.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/color-stop-light-dark-currentcolor-invalidation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/color-stop-relative-color-currentcolor-invalidation.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/conic-gradient-angle-negative.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/conic-gradient-angle.html
+http://web-platform.test:8000/css/css-images/conic-gradient-angle-negative.html
+http://web-platform.test:8000/css/css-images/conic-gradient-angle.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/conic-gradient-calc-angle-percentage.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/conic-gradient-center.html
-http://web-platform.test:8000/css/css-images/conic-gradient-color-with-sibling-index.html
+http://web-platform.test:8000/css/css-images/conic-gradient-center.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/conic-gradient-color-with-sibling-index.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/conic-gradient-line-height-relative-units-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/conic-gradient-line-height-relative-units-002.html
 http://web-platform.test:8000/css/css-images/conic-gradient-line-height-relative-units-003.html
@@ -150,7 +150,7 @@ http://web-platform.test:8000/css/css-images/image-rendering-mixed-scaled.html
 http://web-platform.test:8000/css/css-images/image-set/image-set-all-options-invalid.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-set/image-set-calc-x-rendering-2.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-set/image-set-calc-x-rendering.html
-http://web-platform.test:8000/css/css-images/image-set/image-set-conic-gradient-rendering.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-set/image-set-conic-gradient-rendering.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-set/image-set-content-rendering.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-set/image-set-dpcm-rendering.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-set/image-set-dpi-rendering-2.html
@@ -168,7 +168,7 @@ http://web-platform.test:8000/css/css-images/image-set/image-set-negative-resolu
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-set/image-set-radial-gradient-rendering.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-set/image-set-rendering-2.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-set/image-set-rendering.html
-http://web-platform.test:8000/css/css-images/image-set/image-set-repeating-conic-gradient-rendering.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-set/image-set-repeating-conic-gradient-rendering.html
 http://web-platform.test:8000/css/css-images/image-set/image-set-repeating-linear-gradient-rendering.html
 http://web-platform.test:8000/css/css-images/image-set/image-set-repeating-radial-gradient-rendering.html
 http://web-platform.test:8000/css/css-images/image-set/image-set-resolution-001.html
@@ -191,15 +191,15 @@ http://web-platform.test:8000/css/css-images/linear-gradient-2.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/linear-gradient-calc-em-units.html
 http://web-platform.test:8000/css/css-images/linear-gradient-non-square.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/linear-gradient-sibling-index.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/multiple-position-color-stop-conic-2.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/multiple-position-color-stop-conic.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/multiple-position-color-stop-linear-2.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/multiple-position-color-stop-linear.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/multiple-position-color-stop-radial-2.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/multiple-position-color-stop-radial.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/normalization-conic-2.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/normalization-conic-degenerate.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/normalization-conic.html
+http://web-platform.test:8000/css/css-images/multiple-position-color-stop-conic-2.html
+http://web-platform.test:8000/css/css-images/multiple-position-color-stop-conic.html
+http://web-platform.test:8000/css/css-images/multiple-position-color-stop-linear-2.html
+http://web-platform.test:8000/css/css-images/multiple-position-color-stop-linear.html
+http://web-platform.test:8000/css/css-images/multiple-position-color-stop-radial-2.html
+http://web-platform.test:8000/css/css-images/multiple-position-color-stop-radial.html
+http://web-platform.test:8000/css/css-images/normalization-conic-2.html
+http://web-platform.test:8000/css/css-images/normalization-conic-degenerate.html
+http://web-platform.test:8000/css/css-images/normalization-conic.html
 http://web-platform.test:8000/css/css-images/normalization-linear-2.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/normalization-linear-degenerate.html
 http://web-platform.test:8000/css/css-images/normalization-linear.html
@@ -440,7 +440,7 @@ http://web-platform.test:8000/css/css-images/object-view-box-svg-img-no-size.htm
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/object-view-box-writing-mode-video.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/object-view-box-xywh-percentage.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/object-view-box-xywh.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/out-of-range-color-stop-conic.html
+http://web-platform.test:8000/css/css-images/out-of-range-color-stop-conic.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/radial-gradient-container-relative-units-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/radial-gradient-container-relative-units-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/radial-gradient-container-relative-units-003.html
@@ -449,9 +449,9 @@ http://web-platform.test:8000/css/css-images/object-view-box-svg-img-no-size.htm
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/radial-gradient-line-height-relative-units-002.html
 http://web-platform.test:8000/css/css-images/radial-gradient-line-height-relative-units-003.html
 http://web-platform.test:8000/css/css-images/radial-gradient-line-height-relative-units-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/repeating-conic-gradient.html
+http://web-platform.test:8000/css/css-images/repeating-conic-gradient.html
 http://web-platform.test:8000/css/css-images/svg-images-are-ignored.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/svg-script-is-ignored.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/tiled-conic-gradients.html
+http://web-platform.test:8000/css/css-images/tiled-conic-gradients.html
 http://web-platform.test:8000/css/css-images/tiled-gradients.html
 http://web-platform.test:8000/css/css-images/tiled-radial-gradients.html

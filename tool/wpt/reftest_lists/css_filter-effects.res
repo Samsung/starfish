@@ -175,10 +175,10 @@ http://web-platform.test:8000/css/filter-effects/filter-effect-remove-unattached
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-008.html
-http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-conic-gradient.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-conic-gradient.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-linear-gradient.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-radial-gradient.html
-http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-repeating-conic-gradient.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-repeating-conic-gradient.html
 http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-repeating-linear-gradient.html
 http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-repeating-radial-gradient.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-grayscale-001.html

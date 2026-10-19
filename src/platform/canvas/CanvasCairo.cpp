@@ -247,6 +247,11 @@ private:
             initializePatternToRadialGradient(info->x1, info->y1, info->r1,
                                               info->x2, info->y2, info->r2);
             applyGradientMatrixInternal(info);
+        } else if (info->type == GradientType::ConicGradient) {
+            // Cairo has no sweep gradient; the canvas rasterizes it from the
+            // drawing info. This placeholder only keeps the liveness sentinel.
+            m_pattern = cairo_pattern_create_rgba(0, 0, 0, 0);
+            return;
         } else {
             STARFISH_UNSUPPORTED("Canvas: unsupported gradient type");
         }
@@ -1893,9 +1898,113 @@ public:
         cairo_save(m_canvas);
 
         cairo_rectangle(m_canvas, dst.x(), dst.y(), dst.width(), dst.height());
-        cairo_set_source(m_canvas, ((NativeGradientCairo*)gradient)->pattern());
-        cairo_fill(m_canvas);
+        if (info->type == GradientType::ConicGradient) {
+            cairo_clip(m_canvas);
+            paintConicGradient(info);
+        } else {
+            cairo_set_source(m_canvas,
+                             ((NativeGradientCairo*)gradient)->pattern());
+            cairo_fill(m_canvas);
+        }
         cairo_restore(m_canvas);
+    }
+
+    // Evaluates the conic gradient at every device pixel center of the
+    // current clip, so hard stops land on the same pixels as in other
+    // engines regardless of the transform.
+    void paintConicGradient(GradientDrawingInfo* info)
+    {
+        const auto& stops = info->colorStops;
+        if (stops.empty()) {
+            return;
+        }
+
+        cairo_matrix_t toUser;
+        cairo_get_matrix(m_canvas, &toUser);
+        if (cairo_matrix_invert(&toUser) != CAIRO_STATUS_SUCCESS) {
+            return;
+        }
+        cairo_identity_matrix(m_canvas);
+        double x1, y1, x2, y2;
+        cairo_clip_extents(m_canvas, &x1, &y1, &x2, &y2);
+        int left = floor(x1), top = floor(y1);
+        int width = ceil(x2) - left, height = ceil(y2) - top;
+        if (width <= 0 || height <= 0) {
+            return;
+        }
+
+        struct Stop {
+            float offset;
+            float r, g, b, a; // premultiplied, as stops interpolate
+        };
+        std::vector<Stop> list;
+        list.reserve(stops.size());
+        for (auto* stop : stops) {
+            Unit::Color c = stop->color();
+            float a = c.A();
+            list.push_back({ stop->offset().percent(), (float)c.R() * a,
+                             (float)c.G() * a, (float)c.B() * a, a });
+        }
+        float first = list.front().offset;
+        float period = list.back().offset - first;
+        // shortcut: a repeating gradient with a (near) zero period paints its
+        // last color instead of the spec's average color; upgrade if such
+        // content shows up.
+        bool repeating = info->repeating && period > 1e-6f;
+        bool solidLast = info->repeating && !repeating;
+
+        cairo_surface_t* image =
+            cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+        if (cairo_surface_status(image) != CAIRO_STATUS_SUCCESS) {
+            cairo_surface_destroy(image);
+            return;
+        }
+        cairo_surface_flush(image);
+        unsigned char* data = cairo_image_surface_get_data(image);
+        int stride = cairo_image_surface_get_stride(image);
+        float startTurn = info->computedAngle / 360;
+        for (int y = 0; y < height; ++y) {
+            uint32_t* row = (uint32_t*)(data + y * stride);
+            for (int x = 0; x < width; ++x) {
+                double ux = left + x + 0.5, uy = top + y + 0.5;
+                cairo_matrix_transform_point(&toUser, &ux, &uy);
+                // Angles start at 12 o'clock and run clockwise.
+                float t = atan2f(ux - info->x1, info->y1 - uy) / (2 * M_PI) -
+                          startTurn;
+                t -= floorf(t);
+                if (repeating) {
+                    t = first + fmodf(t - first, period);
+                    if (t < first) {
+                        t += period;
+                    }
+                }
+
+                size_t i = 0;
+                while (i < list.size() && list[i].offset <= t) {
+                    i++;
+                }
+                Stop c;
+                if (solidLast || i == list.size()) {
+                    c = list.back();
+                } else if (i == 0) {
+                    c = list.front();
+                } else {
+                    const Stop& a = list[i - 1];
+                    const Stop& b = list[i];
+                    float r = (t - a.offset) / (b.offset - a.offset);
+                    c = { t, a.r + (b.r - a.r) * r, a.g + (b.g - a.g) * r,
+                          a.b + (b.b - a.b) * r, a.a + (b.a - a.a) * r };
+                }
+                row[x] = ((uint32_t)lroundf(c.a * 255) << 24) |
+                         ((uint32_t)lroundf(c.r * 255) << 16) |
+                         ((uint32_t)lroundf(c.g * 255) << 8) |
+                         (uint32_t)lroundf(c.b * 255);
+            }
+        }
+        cairo_surface_mark_dirty(image);
+        cairo_set_source_surface(m_canvas, image, left, top);
+        cairo_paint(m_canvas);
+        cairo_surface_destroy(image);
     }
 
     virtual void drawRadialGradient(const Unit::Rect& dst,

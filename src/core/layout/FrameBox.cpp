@@ -2577,12 +2577,12 @@ void FrameBox::paintGradient(Canvas* canvas, FrameBox* box,
             cv->scale(1 / imageScale, 1 / imageScale);
 
             cv->clearColor(Unit::Color(0, 0, 0, 0));
+            // Linear and conic patterns are both painted over the plain box.
             if (imageValue->gradientValue()->type() ==
-                GradientType::LinearGradient) {
-                cv->drawLinearGradient(rect, info, gradient);
-            } else if (imageValue->gradientValue()->type() ==
-                       GradientType::RadialGradient) {
+                GradientType::RadialGradient) {
                 cv->drawRadialGradient(rect, info, gradient);
+            } else {
+                cv->drawLinearGradient(rect, info, gradient);
             }
             cv->fill();
             delete cv;
@@ -2617,11 +2617,10 @@ void FrameBox::paintGradient(Canvas* canvas, FrameBox* box,
             for (float x = startX; x < endX;
                  x += width, canvas->translate(rect.width(), 0)) {
                 if (imageValue->gradientValue()->type() ==
-                    GradientType::LinearGradient) {
-                    canvas->drawLinearGradient(rect, info, gradient.get());
-                } else if (imageValue->gradientValue()->type() ==
-                           GradientType::RadialGradient) {
+                    GradientType::RadialGradient) {
                     canvas->drawRadialGradient(rect, info, gradient.get());
+                } else {
+                    canvas->drawLinearGradient(rect, info, gradient.get());
                 }
             }
             canvas->restore();

@@ -27,7 +27,7 @@ class CSSLinearGradientValue;
 class GradientData;
 class ColorStop;
 
-enum class GradientType { LinearGradient, RadialGradient };
+enum class GradientType { LinearGradient, RadialGradient, ConicGradient };
 
 enum SideOrConer {
     toLeft = 1 << 0,
@@ -351,6 +351,73 @@ public:
 private:
     RadialGradientShape m_shape;
     CSSRadialGradientSize m_size; // size of the gradient's ending shape
+    CSSStyleValuePair m_positionX;
+    CSSStyleValuePair m_positionY;
+};
+
+class CSSConicGradientValue : public CSSGradientValue {
+public:
+    CSSConicGradientValue(bool repeating)
+        : CSSGradientValue(GradientType::ConicGradient)
+        , m_repeating(repeating)
+        , m_angle(0)
+        , m_positionX()
+        , m_positionY()
+    {
+    }
+
+    bool repeating()
+    {
+        return m_repeating;
+    }
+
+    CSSAngle angle()
+    {
+        return m_angle;
+    }
+
+    void setAngle(CSSAngle val)
+    {
+        m_angle = val;
+    }
+
+    CSSStyleValuePair positionX()
+    {
+        return m_positionX;
+    }
+
+    void setPositionX(CSSStyleValuePair& positionX)
+    {
+        m_positionX = positionX;
+    }
+
+    CSSStyleValuePair positionY()
+    {
+        return m_positionY;
+    }
+
+    void setPositionY(CSSStyleValuePair& positionY)
+    {
+        m_positionY = positionY;
+    }
+
+    virtual String* toString() override;
+    virtual GradientData* convertToGradientData() override;
+    virtual bool equals(CSSGradientValue* src) override
+    {
+        if (CSSGradientValue::equals(src)) {
+            CSSConicGradientValue* s = (CSSConicGradientValue*)src;
+            return m_repeating == s->m_repeating && m_angle == s->m_angle &&
+                   m_positionX == s->m_positionX &&
+                   m_positionY == s->m_positionY;
+        } else {
+            return false;
+        }
+    }
+
+private:
+    bool m_repeating;
+    CSSAngle m_angle;
     CSSStyleValuePair m_positionX;
     CSSStyleValuePair m_positionY;
 };

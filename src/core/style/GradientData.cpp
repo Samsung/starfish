@@ -185,6 +185,12 @@ RadialGradientData* GradientData::asRadialGradientData()
     return (RadialGradientData*)this;
 }
 
+ConicGradientData* GradientData::asConicGradientData()
+{
+    STARFISH_ASSERT(m_type == GradientType::ConicGradient);
+    return (ConicGradientData*)this;
+}
+
 void GradientData::checkComputed(Length curFontSize, Length rootFontSize,
                                  Font* font, LayoutSize windowSize,
                                  ComputedStyle* cs)
@@ -217,6 +223,9 @@ void GradientData::makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
     float gradientLength = 0.0f;
     if (m_type == GradientType::LinearGradient) {
         gradientLength = hypotf(x2 - x1, y2 - y1);
+    } else if (m_type == GradientType::ConicGradient) {
+        // Conic stops are fractions of a turn; fixed offsets hold degrees.
+        gradientLength = 360;
     } else {
         gradientLength = r2;
     }
@@ -321,7 +330,9 @@ void GradientData::makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
 
     // At this point we have a fully resolved set of stops. Time to perform
     // adjustments for repeat gradients and degenerate values if needed.
-    if (!requiresStopsNormalization(out)) {
+    // The conic painter consumes out-of-range stops directly.
+    if (m_type == GradientType::ConicGradient ||
+        !requiresStopsNormalization(out)) {
         return;
     }
 
@@ -973,6 +984,8 @@ size_t GradientDrawingInfo::hashValue() const
         hash_combine(hash, r2);
         hash_combine(hash, firstRadius);
         hash_combine(hash, secondRadius);
+        hash_combine(hash, computedAngle);
+        hash_combine(hash, repeating);
         for (size_t i = 0; i < colorStops.size(); i++) {
             hash_combine(hash, colorStops[i]->offset().numberData());
             auto c = colorStops[i]->color();
@@ -991,7 +1004,9 @@ bool GradientDrawingInfo::equals(const GradientDrawingInfo* src) const
              (y1 == src->y1) && (x2 == src->x2) && (y2 == src->y2) &&
              (r1 == src->r1) && (r2 == src->r2) &&
              (firstRadius == src->firstRadius) &&
-             (secondRadius == src->secondRadius);
+             (secondRadius == src->secondRadius) &&
+             (computedAngle == src->computedAngle) &&
+             (repeating == src->repeating);
     if (a && colorStops.size() == src->colorStops.size()) {
         size_t len = colorStops.size();
         for (size_t i = 0; i < len; i++) {
@@ -1004,6 +1019,130 @@ bool GradientDrawingInfo::equals(const GradientDrawingInfo* src) const
         return true;
     }
 
+    return false;
+}
+
+ConicGradientData::ConicGradientData(bool repeating)
+    : GradientData(GradientType::ConicGradient)
+    , m_repeating(repeating)
+    , m_angleDeg(0)
+{
+}
+
+GradientDrawingInfo* ConicGradientData::makeGradientDrawingInfo(
+    const Unit::Rect& rect, FrameBox* box)
+{
+    GradientDrawingInfo* ret = new GradientDrawingInfo(m_type, rect);
+    ret->x1 =
+        rect.x() + ((m_horizentalSide == SideValue::NoneSideValue &&
+                     m_horizentalSideOffset.isAuto())
+                        ? rect.width() / 2
+                        : positionFromSideValue(rect, box, m_horizentalSide,
+                                                m_horizentalSideOffset, true));
+    ret->y1 =
+        rect.y() + ((m_verticalSide == SideValue::NoneSideValue &&
+                     m_verticalSideOffset.isAuto())
+                        ? rect.height() / 2
+                        : positionFromSideValue(rect, box, m_verticalSide,
+                                                m_verticalSideOffset, false));
+    ret->computedAngle = m_angleDeg;
+    ret->repeating = m_repeating;
+    makeSpecifiedColorStops(ret->colorStops, ret->x1, ret->y1, ret->r1, ret->x2,
+                            ret->y2, ret->r2, box);
+    return ret;
+}
+
+CSSGradientValue* ConicGradientData::convertToCSSGradientValue()
+{
+    CSSConicGradientValue* gradient = new CSSConicGradientValue(m_repeating);
+    gradient->setAngle(CSSAngle(CSSAngle::DEG, m_angleDeg));
+
+    if (m_horizentalSide != SideValue::NoneSideValue ||
+        !m_horizentalSideOffset.isAuto() ||
+        m_verticalSide != SideValue::NoneSideValue ||
+        !m_verticalSideOffset.isAuto()) {
+        CSSStyleValuePair xlist;
+        xlist.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        xlist.setValueList(new ValueList(Separator::SpaceSeparator));
+        CSSStyleValuePair x;
+        if (m_horizentalSide != SideValue::NoneSideValue) {
+            x.setValueKind(CSSStyleValuePair::ValueKind::SideValueKind);
+            x.setValue(m_horizentalSide);
+        } else if (!m_horizentalSideOffset.isAuto()) {
+            x = CSSStyleDeclaration::lengthToCSSStyleValue(
+                m_horizentalSideOffset);
+        } else {
+            x.setValueKind(CSSStyleValuePair::ValueKind::SideValueKind);
+            x.setValue(SideValue::CenterSideValue);
+        }
+        xlist.multiValue()->push_back(x);
+        gradient->setPositionX(xlist);
+
+        CSSStyleValuePair ylist;
+        ylist.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        ylist.setValueList(new ValueList(Separator::SpaceSeparator));
+        CSSStyleValuePair y;
+        if (m_verticalSide != SideValue::NoneSideValue) {
+            y.setValueKind(CSSStyleValuePair::ValueKind::SideValueKind);
+            y.setValue(m_verticalSide);
+        } else if (!m_verticalSideOffset.isAuto()) {
+            y = CSSStyleDeclaration::lengthToCSSStyleValue(
+                m_verticalSideOffset);
+        } else {
+            y.setValueKind(CSSStyleValuePair::ValueKind::SideValueKind);
+            y.setValue(SideValue::CenterSideValue);
+        }
+        ylist.multiValue()->push_back(y);
+        gradient->setPositionY(ylist);
+    }
+
+    convertColorStopsToCSSColorStops(gradient->cssColorStopList());
+    // Fixed conic offsets are degrees (see convertCSSColorStopsToColorStops).
+    for (size_t i = 0; i < m_colorStopList.size(); ++i) {
+        const Length& offset = m_colorStopList[i]->offset();
+        if (offset.isFixed()) {
+            CSSStyleValuePair angle;
+            angle.setValueKind(CSSStyleValuePair::ValueKind::Angle);
+            angle.setValue(CSSAngle(CSSAngle::DEG, offset.fixed()));
+            gradient->cssColorStopList()[i]->setOffset(angle);
+        }
+    }
+    return gradient;
+}
+
+void ConicGradientData::checkComputed(Length curFontSize, Length rootFontSize,
+                                      Font* font, LayoutSize windowSize,
+                                      ComputedStyle* cs)
+{
+    GradientData::checkComputed(curFontSize, rootFontSize, font, windowSize,
+                                cs);
+
+    m_horizentalSideOffset.changeToFixedIfNeeded(curFontSize, rootFontSize,
+                                                 font, windowSize.width(),
+                                                 windowSize.height(), cs);
+    m_verticalSideOffset.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                               windowSize.width(),
+                                               windowSize.height(), cs);
+}
+
+bool ConicGradientData::equals(GradientData* other) const
+{
+    if (!GradientData::equals(other)) {
+        return false;
+    }
+    ConicGradientData* r = other->asConicGradientData();
+    return m_repeating == r->m_repeating && m_angleDeg == r->m_angleDeg &&
+           m_horizentalSideOffset == r->m_horizentalSideOffset &&
+           m_verticalSideOffset == r->m_verticalSideOffset;
+}
+
+bool ConicGradientData::isEffective() const
+{
+    for (auto stop : colorStopList()) {
+        if (!stop->color().isTransparent()) {
+            return true;
+        }
+    }
     return false;
 }
 } // namespace Starfish
