@@ -50,281 +50,281 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-lost
 # http://localhost:11010/conformance-suites/2.0.0/conformance/context/premultiplyalpha-test.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/context/resource-sharing-test.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/user-defined-properties-on-context.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/ext-color-buffer-half-float.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/ext-color-buffer-half-float.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/ext-disjoint-timer-query.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/ext-texture-filter-anisotropic.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/get-extension.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/oes-texture-float-linear.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-debug-renderer-info.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-debug-renderer-info.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-debug-shaders.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-etc.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-pvrtc.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-s3tc.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-s3tc-srgb.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-pvrtc.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-s3tc.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-s3tc-srgb.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-size-limit.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-shared-resources.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/angle-ambiguous-function-call.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/angle-constructor-invalid-parameters.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/angle-d3d11-compiler-error.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/angle-dx-variable-bug.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/array-of-struct-with-int-first-position.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/bool-type-cast-bug-int-float.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/compare-loop-index-to-uniform.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/angle-ambiguous-function-call.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/angle-constructor-invalid-parameters.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/angle-d3d11-compiler-error.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/angle-dx-variable-bug.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/array-of-struct-with-int-first-position.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/bool-type-cast-bug-int-float.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/compare-loop-index-to-uniform.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/complex-glsl-does-not-crash.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/compound-assignment-type-combination.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/conditional-discard-in-loop.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/conditional-discard-optimization.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/constant-precision-qualifier.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/floor-div-cos-should-not-truncate.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/floored-division-accuracy.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/fragcoord-linking-bug.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/gl-fragcoord-multisampling-bug.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/global-invariant-does-not-leak-across-shaders.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/invariant-does-not-leak-across-shaders.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/logic-inside-block-without-braces.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/compound-assignment-type-combination.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/conditional-discard-in-loop.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/conditional-discard-optimization.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/constant-precision-qualifier.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/floor-div-cos-should-not-truncate.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/floored-division-accuracy.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/fragcoord-linking-bug.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/gl-fragcoord-multisampling-bug.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/global-invariant-does-not-leak-across-shaders.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/invariant-does-not-leak-across-shaders.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/logic-inside-block-without-braces.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/long-expressions-should-not-crash.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/loop-if-loop-gradient.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/modulo-arithmetic-accuracy.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/multiplication-assignment.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/loop-if-loop-gradient.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/modulo-arithmetic-accuracy.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/multiplication-assignment.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/nested-functions-should-not-crash.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/nested-loops-with-break-and-continue.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/nested-sequence-operator.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/pow-of-small-constant-in-user-defined-function.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/pow-with-constant-exponent-should-not-crash.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/qualcomm-crash.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/qualcomm-loop-with-continue-crash.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/sampler-array-using-loop-index.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/sampler-struct-function-arg.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/sequence-operator-evaluation-order.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/sketchfab-lighting-shader-crash.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/struct-constructor-highp-bug.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/temp-expressions-should-not-crash.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/undefined-index-should-not-crash.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/uniforms-should-not-lose-values.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-vec2.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-vec3.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-vec4.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-ivec2.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-ivec3.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-ivec4.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-bvec2.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-bvec3.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-bvec4.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-mat2.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-mat3.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-mat4.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-vec-mat-corner-cases.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-vec-mat-index.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-abs.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-acos.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-asin.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-atan.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-atan-xy.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-ceil.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-clamp-float.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-clamp-gentype.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-cos.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-cross.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-distance.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-dot.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-faceforward.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-floor.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-fract.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-length.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-max-float.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-max-gentype.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-min-float.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-min-gentype.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-mix-float.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-mix-gentype.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-mod-float.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-mod-gentype.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-normalize.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-reflect.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-sign.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-sin.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-step-float.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-step-gentype.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-smoothstep-float.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-smoothstep-gentype.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_int_float.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_int_mat2.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_int_mat3.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_int_mat4.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_int_vec2.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_int_vec3.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_int_vec4.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_ivec2_vec2.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_ivec3_vec3.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_ivec4_vec4.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/assign_int_to_float.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/assign_ivec2_to_vec2.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/assign_ivec3_to_vec3.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/assign_ivec4_to_vec4.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/construct_struct.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_int_float.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_int_mat2.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_int_mat3.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_int_mat4.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_int_vec2.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_int_vec3.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_int_vec4.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_ivec2_vec2.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_ivec3_vec3.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_ivec4_vec4.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/equal_int_float.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/equal_ivec2_vec2.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/equal_ivec3_vec3.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/equal_ivec4_vec4.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/function_int_float.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/function_ivec2_vec2.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/function_ivec3_vec3.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/function_ivec4_vec4.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/greater_than.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/greater_than_equal.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/less_than.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/less_than_equal.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_int_float.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_int_mat2.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_int_mat3.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_int_mat4.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_int_vec2.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_int_vec3.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_int_vec4.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_ivec2_vec2.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_ivec3_vec3.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_ivec4_vec4.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/not_equal_int_float.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/not_equal_ivec2_vec2.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/not_equal_ivec3_vec3.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/not_equal_ivec4_vec4.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_int_float.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_int_mat2.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_int_mat3.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_int_mat4.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_int_vec2.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_int_vec3.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_int_vec4.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_ivec2_vec2.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_ivec3_vec3.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_ivec4_vec4.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/ternary_int_float.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/ternary_ivec2_vec2.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/ternary_ivec3_vec3.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/ternary_ivec4_vec4.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/literals/float_literal.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/literals/literal_precision.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/literals/overflow_leak.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/matrices/glsl-mat4-to-mat3.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/matrices/glsl-mat3-construction.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/matrices/matrix-compound-multiply.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/boolean_precision.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/const-variable-initialization.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/embedded-struct-definitions-forbidden.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/empty-declaration.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/empty_main.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/expression-list-in-declarator-initializer.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/gl_position_unset.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/nested-loops-with-break-and-continue.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/nested-sequence-operator.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/pow-of-small-constant-in-user-defined-function.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/pow-with-constant-exponent-should-not-crash.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/qualcomm-crash.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/qualcomm-loop-with-continue-crash.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/sampler-array-using-loop-index.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/sampler-struct-function-arg.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/sequence-operator-evaluation-order.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/sketchfab-lighting-shader-crash.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/struct-constructor-highp-bug.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/temp-expressions-should-not-crash.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/undefined-index-should-not-crash.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/uniforms-should-not-lose-values.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-vec2.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-vec3.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-vec4.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-ivec2.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-ivec3.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-ivec4.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-bvec2.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-bvec3.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-bvec4.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-mat2.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-mat3.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-mat4.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-vec-mat-corner-cases.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-vec-mat-index.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-abs.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-acos.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-asin.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-atan.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-atan-xy.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-ceil.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-clamp-float.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-clamp-gentype.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-cos.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-cross.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-distance.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-dot.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-faceforward.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-floor.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-fract.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-length.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-max-float.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-max-gentype.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-min-float.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-min-gentype.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-mix-float.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-mix-gentype.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-mod-float.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-mod-gentype.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-normalize.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-reflect.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-sign.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-sin.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-step-float.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-step-gentype.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-smoothstep-float.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/functions/glsl-function-smoothstep-gentype.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_int_float.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_int_mat2.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_int_mat3.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_int_mat4.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_int_vec2.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_int_vec3.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_int_vec4.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_ivec2_vec2.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_ivec3_vec3.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/add_ivec4_vec4.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/assign_int_to_float.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/assign_ivec2_to_vec2.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/assign_ivec3_to_vec3.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/assign_ivec4_to_vec4.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/construct_struct.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_int_float.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_int_mat2.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_int_mat3.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_int_mat4.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_int_vec2.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_int_vec3.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_int_vec4.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_ivec2_vec2.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_ivec3_vec3.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/divide_ivec4_vec4.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/equal_int_float.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/equal_ivec2_vec2.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/equal_ivec3_vec3.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/equal_ivec4_vec4.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/function_int_float.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/function_ivec2_vec2.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/function_ivec3_vec3.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/function_ivec4_vec4.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/greater_than.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/greater_than_equal.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/less_than.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/less_than_equal.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_int_float.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_int_mat2.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_int_mat3.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_int_mat4.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_int_vec2.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_int_vec3.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_int_vec4.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_ivec2_vec2.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_ivec3_vec3.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/multiply_ivec4_vec4.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/not_equal_int_float.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/not_equal_ivec2_vec2.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/not_equal_ivec3_vec3.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/not_equal_ivec4_vec4.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_int_float.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_int_mat2.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_int_mat3.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_int_mat4.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_int_vec2.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_int_vec3.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_int_vec4.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_ivec2_vec2.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_ivec3_vec3.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/subtract_ivec4_vec4.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/ternary_int_float.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/ternary_ivec2_vec2.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/ternary_ivec3_vec3.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/implicit/ternary_ivec4_vec4.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/literals/float_literal.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/literals/literal_precision.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/literals/overflow_leak.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/matrices/glsl-mat4-to-mat3.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/matrices/glsl-mat3-construction.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/matrices/matrix-compound-multiply.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/boolean_precision.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/const-variable-initialization.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/embedded-struct-definitions-forbidden.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/empty-declaration.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/empty_main.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/expression-list-in-declarator-initializer.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/gl_position_unset.vert.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/global-variable-init.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/glsl-function-nodes.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/glsl-vertex-branch.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/glsl-long-variable-names.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/non-ascii-comments.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/non-ascii.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/re-compile-re-link.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/sequence-operator-returns-constant.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-precision-format-obeyed.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-struct-scope.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/glsl-function-nodes.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/glsl-vertex-branch.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/glsl-long-variable-names.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/non-ascii-comments.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/non-ascii.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/re-compile-re-link.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/sequence-operator-returns-constant.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-precision-format-obeyed.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-struct-scope.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-uniform-packing-restrictions.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-varying-packing-restrictions.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-256-character-define.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-256-character-identifier.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-256-character-define.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-256-character-identifier.frag.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-_webgl-identifier.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-arbitrary-indexing.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-arbitrary-indexing.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-array-of-structs-containing-arrays.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-array-of-structs-uniform.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-attrib-array.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-attrib-struct.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-arbitrary-indexing.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-arbitrary-indexing.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-array-of-structs-containing-arrays.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-array-of-structs-uniform.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-attrib-array.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-attrib-struct.vert.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-clipvertex.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-conditional-scoping.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-conditional-scoping-negative.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-default-precision.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-default-precision.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-dfdx-no-ext.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-conditional-scoping.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-conditional-scoping-negative.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-default-precision.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-default-precision.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-dfdx-no-ext.frag.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-dfdx.frag.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-do-loop.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-error-directive.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-explicit-int-cast.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-float-return-value.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-for-scoping.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-for-loop.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-frag-depth.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-function-recursion.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-function-scoped-struct.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-functional-scoping.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-comma-assignment.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-comma-conditional-assignment.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-comma-separated-variable-declarations.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-error-directive.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-explicit-int-cast.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-float-return-value.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-for-scoping.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-for-loop.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-frag-depth.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-function-recursion.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-function-scoped-struct.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-functional-scoping.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-comma-assignment.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-comma-conditional-assignment.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-comma-separated-variable-declarations.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-glcolor.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-gles-1.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-gles-symbol.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-gles-1.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-gles-symbol.frag.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-glprojectionmatrix.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-implicit-vec3-to-vec4-cast.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-include.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-int-return-value.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-invalid-identifier.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-ivec2-return-value.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-ivec3-return-value.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-ivec4-return-value.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-limited-indexing.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-hex-int-constant-macro.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-long-line.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-non-ascii-error.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-implicit-vec3-to-vec4-cast.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-include.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-int-return-value.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-invalid-identifier.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-ivec2-return-value.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-ivec3-return-value.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-ivec4-return-value.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-limited-indexing.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-hex-int-constant-macro.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-long-line.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-non-ascii-error.frag.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-non-reserved-words.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-precision.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-preprocessor-whitespace.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-quoted-error.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-precision.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-preprocessor-whitespace.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-quoted-error.frag.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-reserved-words.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-similar-uniform-array-names.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-too-many-uniforms.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-two-initializer-types.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-undefined-preprocessor-symbol.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-similar-uniform-array-names.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-too-many-uniforms.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-two-initializer-types.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-undefined-preprocessor-symbol.frag.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-uniform-in-loop-condition.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-vec2-return-value.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-vec3-return-value.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-vec4-return-value.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-vec4-vec3-vec4-conditional.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-version-100.frag.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-version-100.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-version-120.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-version-130.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-vec2-return-value.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-vec3-return-value.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-vec4-return-value.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-vec4-vec3-vec4-conditional.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-version-100.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-version-100.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-version-120.vert.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-version-130.vert.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-webgl-identifier.vert.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-while-loop.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-without-precision.frag.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-without-precision.frag.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-constant-expression-loop-conditions.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-invariance.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-mis-matching-uniforms.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-mis-matching-varyings.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-missing-varyings.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-uniform-structs.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-varyings.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shared.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-invariance.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-mis-matching-uniforms.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-mis-matching-varyings.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-missing-varyings.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-uniform-structs.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-varyings.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shared.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-nesting-exceeds-maximum.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-nesting-under-maximum.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-short-circuiting-operators.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-global-variable-precision-mismatch.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/large-loop-compile.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-nesting-under-maximum.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-short-circuiting-operators.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-global-variable-precision-mismatch.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/large-loop-compile.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-equals.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-assign.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-mixed-array-declarators.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-nesting-of-variable-names.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-specifiers-in-uniforms.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-unary-operators.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-mixed-array-declarators.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-nesting-of-variable-names.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-specifiers-in-uniforms.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-unary-operators.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/ternary-operator-on-arrays.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/ternary-operators-in-global-initializers.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/ternary-operators-in-initializers.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/ternary-operators-in-global-initializers.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/ternary-operators-in-initializers.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/reserved/_webgl_field.vert.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/reserved/_webgl_function.vert.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/reserved/_webgl_struct.vert.html
@@ -333,16 +333,16 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-sha
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/reserved/webgl_function.vert.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/reserved/webgl_struct.vert.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/reserved/webgl_variable.vert.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/samplers/glsl-function-texture2d-bias.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/samplers/glsl-function-texture2dlod.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/samplers/glsl-function-texture2dproj.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/samplers/glsl-function-texture2dprojlod.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/variables/gl-fragcoord.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/variables/gl-frontfacing.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/variables/gl-pointcoord.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/samplers/glsl-function-texture2d-bias.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/samplers/glsl-function-texture2dlod.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/samplers/glsl-function-texture2dproj.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/samplers/glsl-function-texture2dprojlod.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/variables/gl-fragcoord.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/variables/gl-frontfacing.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/variables/gl-pointcoord.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/variables/glsl-built-ins.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/variables/gl-fragcoord-xy-values.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/variables/gl-fragdata-and-fragcolor.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/variables/gl-fragcoord-xy-values.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/variables/gl-fragdata-and-fragcolor.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/limits/gl-line-width.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/limits/gl-min-attribs.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/limits/gl-max-texture-dimensions.html
@@ -362,147 +362,147 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/misc/shader-precisio
 http://localhost:11010/conformance-suites/2.0.0/conformance/misc/type-conversion-test.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/misc/uninitialized-test.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/misc/webgl-specific.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/abs/abs_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/acos/acos_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/all/all_001_to_004.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/any/any_001_to_004.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/array/array_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/asin/asin_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/atan/atan_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/atan/atan_009_to_012.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/biConstants/biConstants_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/biConstants/biConstants_009_to_016.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/biuDepthRange/biuDepthRange_001_to_002.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_009_to_016.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_017_to_024.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_025_to_032.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_033_to_040.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_041_to_048.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_049_to_056.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_057_to_064.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_065_to_072.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_073_to_080.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_081_to_088.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_089_to_096.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_097_to_104.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_105_to_112.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_113_to_120.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_121_to_128.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_129_to_136.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_137_to_144.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_145_to_152.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_153_to_160.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_161_to_168.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_169_to_176.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_177_to_178.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/built_in_varying_array_out_of_bounds/built_in_varying_array_out_of_bounds_001_to_001.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/ceil/ceil_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/clamp/clamp_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/control_flow/control_flow_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/control_flow/control_flow_009_to_010.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/cos/cos_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/cross/cross_001_to_002.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/default/default_001_to_001.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/degrees/degrees_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/discard/discard_001_to_002.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/distance/distance_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/dot/dot_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/equal/equal_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/equal/equal_009_to_012.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/exp/exp_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/exp/exp_009_to_012.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/exp2/exp2_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/exp2/exp2_009_to_012.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/faceforward/faceforward_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/floor/floor_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/fract/fract_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_009_to_016.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_017_to_024.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_025_to_032.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_033_to_040.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_041_to_048.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_049_to_056.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_057_to_064.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_065_to_072.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_073_to_080.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_081_to_088.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_089_to_096.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_097_to_104.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_105_to_112.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_113_to_120.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_121_to_126.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/gl_FragCoord/gl_FragCoord_001_to_003.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/gl_FrontFacing/gl_FrontFacing_001_to_001.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/greaterThan/greaterThan_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/greaterThanEqual/greaterThanEqual_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/inversesqrt/inversesqrt_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/length/length_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/lessThan/lessThan_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/lessThanEqual/lessThanEqual_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/log/log_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/log/log_009_to_012.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/log2/log2_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/log2/log2_009_to_012.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mat/mat_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mat/mat_009_to_016.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mat/mat_017_to_024.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mat/mat_025_to_032.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mat/mat_033_to_040.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mat/mat_041_to_046.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mat3/mat3_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/matrixCompMult/matrixCompMult_001_to_004.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/max/max_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/min/min_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mix/mix_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mod/mod_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/normalize/normalize_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/not/not_001_to_004.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/notEqual/notEqual_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/notEqual/notEqual_009_to_012.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/operators/operators_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/operators/operators_009_to_016.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/operators/operators_017_to_024.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/operators/operators_025_to_026.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/pow/pow_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/pow/pow_009_to_016.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/pow/pow_017_to_024.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/radians/radians_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/reflect/reflect_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/refract/refract_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/sign/sign_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/sin/sin_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/smoothstep/smoothstep_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/sqrt/sqrt_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/step/step_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/struct/struct_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/struct/struct_009_to_016.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/struct/struct_017_to_024.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/struct/struct_025_to_032.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/struct/struct_033_to_040.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/struct/struct_041_to_048.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/struct/struct_049_to_056.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_009_to_016.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_017_to_024.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_025_to_032.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_033_to_040.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_041_to_048.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_049_to_056.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_057_to_064.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_065_to_072.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_073_to_080.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_081_to_088.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_089_to_096.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_097_to_104.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_105_to_112.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_113_to_120.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/tan/tan_001_to_006.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/vec/vec_001_to_008.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/vec/vec_009_to_016.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/vec/vec_017_to_018.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/vec3/vec3_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/abs/abs_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/acos/acos_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/all/all_001_to_004.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/any/any_001_to_004.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/array/array_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/asin/asin_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/atan/atan_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/atan/atan_009_to_012.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/biConstants/biConstants_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/biConstants/biConstants_009_to_016.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/biuDepthRange/biuDepthRange_001_to_002.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_009_to_016.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_017_to_024.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_025_to_032.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_033_to_040.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_041_to_048.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_049_to_056.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_057_to_064.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_065_to_072.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_073_to_080.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_081_to_088.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_089_to_096.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_097_to_104.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_105_to_112.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_113_to_120.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_121_to_128.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_129_to_136.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_137_to_144.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_145_to_152.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_153_to_160.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_161_to_168.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_169_to_176.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/build/build_177_to_178.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/built_in_varying_array_out_of_bounds/built_in_varying_array_out_of_bounds_001_to_001.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/ceil/ceil_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/clamp/clamp_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/control_flow/control_flow_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/control_flow/control_flow_009_to_010.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/cos/cos_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/cross/cross_001_to_002.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/default/default_001_to_001.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/degrees/degrees_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/discard/discard_001_to_002.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/distance/distance_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/dot/dot_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/equal/equal_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/equal/equal_009_to_012.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/exp/exp_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/exp/exp_009_to_012.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/exp2/exp2_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/exp2/exp2_009_to_012.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/faceforward/faceforward_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/floor/floor_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/fract/fract_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_009_to_016.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_017_to_024.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_025_to_032.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_033_to_040.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_041_to_048.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_049_to_056.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_057_to_064.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_065_to_072.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_073_to_080.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_081_to_088.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_089_to_096.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_097_to_104.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_105_to_112.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_113_to_120.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/functions/functions_121_to_126.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/gl_FragCoord/gl_FragCoord_001_to_003.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/gl_FrontFacing/gl_FrontFacing_001_to_001.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/greaterThan/greaterThan_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/greaterThanEqual/greaterThanEqual_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/inversesqrt/inversesqrt_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/length/length_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/lessThan/lessThan_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/lessThanEqual/lessThanEqual_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/log/log_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/log/log_009_to_012.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/log2/log2_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/log2/log2_009_to_012.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mat/mat_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mat/mat_009_to_016.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mat/mat_017_to_024.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mat/mat_025_to_032.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mat/mat_033_to_040.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mat/mat_041_to_046.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mat3/mat3_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/matrixCompMult/matrixCompMult_001_to_004.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/max/max_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/min/min_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mix/mix_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/mod/mod_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/normalize/normalize_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/not/not_001_to_004.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/notEqual/notEqual_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/notEqual/notEqual_009_to_012.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/operators/operators_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/operators/operators_009_to_016.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/operators/operators_017_to_024.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/operators/operators_025_to_026.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/pow/pow_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/pow/pow_009_to_016.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/pow/pow_017_to_024.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/radians/radians_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/reflect/reflect_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/refract/refract_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/sign/sign_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/sin/sin_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/smoothstep/smoothstep_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/sqrt/sqrt_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/step/step_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/struct/struct_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/struct/struct_009_to_016.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/struct/struct_017_to_024.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/struct/struct_025_to_032.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/struct/struct_033_to_040.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/struct/struct_041_to_048.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/struct/struct_049_to_056.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_009_to_016.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_017_to_024.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_025_to_032.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_033_to_040.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_041_to_048.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_049_to_056.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_057_to_064.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_065_to_072.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_073_to_080.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_081_to_088.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_089_to_096.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_097_to_104.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_105_to_112.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/swizzlers/swizzlers_113_to_120.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/tan/tan_001_to_006.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/vec/vec_001_to_008.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/vec/vec_009_to_016.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/vec/vec_017_to_018.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/vec3/vec3_001_to_008.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/programs/get-active-test.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/programs/gl-bind-attrib-location-test.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/programs/gl-bind-attrib-location-long-names-test.html
@@ -519,33 +519,33 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/reading/read-pixels-
 # http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/feedback-loop.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/framebuffer-state-restoration.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/renderbuffer-initialization.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/culling.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/default-texture-draw-bug.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/culling.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/default-texture-draw-bug.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/draw-arrays-out-of-bounds.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/draw-elements-out-of-bounds.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/draw-with-changing-start-vertex-bug.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/framebuffer-switch.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/framebuffer-texture-switch.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-clear.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-drawarrays.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/draw-with-changing-start-vertex-bug.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/framebuffer-switch.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/framebuffer-texture-switch.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-clear.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-drawarrays.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-drawelements.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-scissor-test.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-scissor-fbo-test.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-scissor-canvas-dimensions.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-viewport-test.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/many-draw-calls.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/more-than-65536-indices.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-scissor-test.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-scissor-fbo-test.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-scissor-canvas-dimensions.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-viewport-test.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/many-draw-calls.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/more-than-65536-indices.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/multisample-corruption.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/negative-one-index.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/out-of-bounds-index-buffers.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/point-no-attributes.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/point-size.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/point-specific-shader-variables.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/point-with-gl-pointcoord-in-fragment-shader.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/polygon-offset.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/simple.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/triangle.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/line-loop-tri-fan.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/negative-one-index.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/out-of-bounds-index-buffers.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/point-no-attributes.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/point-size.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/point-specific-shader-variables.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/point-with-gl-pointcoord-in-fragment-shader.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/polygon-offset.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/simple.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/triangle.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/line-loop-tri-fan.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/state/gl-enable-enum-test.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/state/gl-get-calls.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/state/gl-geterror.html
@@ -723,21 +723,21 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/verte
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/glsl/arrayOutOfBounds.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/glsl/uniformOutOfBounds.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/arrays.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/conditionals.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/conditionals.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/constants.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/constant_expressions.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/constant_expressions.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/conversions.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/declarations.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/declarations.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/fragdata.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/functions.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/invalid_texture_functions.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/keywords.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/linkage.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/negative.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/negative.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/preprocessor.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/qualification_order.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/scoping.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/switch.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/qualification_order.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/scoping.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/switch.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/swizzles.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/framework/opengl/simplereference/referencecontext.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/draw_arrays.html
@@ -745,7 +745,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/more/glsl/uniformOut
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/draw_arrays_instanced.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/draw_elements_instanced.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/draw_range_elements.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/instancing.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/instancing.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/random.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbocolorbuffer/clear.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbocolorbuffer/tex2d_00.html
