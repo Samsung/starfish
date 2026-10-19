@@ -901,6 +901,7 @@ void MediaPlayerTizen::prepare(ResourceURL* url)
             player_set_memory_buffer(m_nativePlayer,
                                      ((Blob*)store.m_blob)->data(),
                                      ((Blob*)store.m_blob)->size());
+            startNativePrepare();
         } else if (m_container->webView()->isValidMediaSourceBlobURL(store) ==
                    true) {
             BlobURLStore store;
@@ -940,13 +941,31 @@ void MediaPlayerTizen::prepare(ResourceURL* url)
             destroy();
             return;
         }
+    } else if (url->isHTTPFamilyURL()) {
+        // The platform player fetches the URL itself and reports nothing
+        // about the response, so learn where the media comes from first.
+        probeResponseURL(url);
     } else {
-        auto s = url->urlString()->toUTF8NonGCString();
-        player_set_uri(m_nativePlayer, s.data());
+        prepareNativePlayer(url);
     }
+}
 
+void MediaPlayerTizen::didProbeResponseURL(ResourceURL* url)
+{
+    prepareNativePlayer(url);
+}
+
+void MediaPlayerTizen::prepareNativePlayer(ResourceURL* url)
+{
+    auto s = url->urlString()->toUTF8NonGCString();
+    player_set_uri(m_nativePlayer, s.data());
+    startNativePrepare();
+}
+
+void MediaPlayerTizen::startNativePrepare()
+{
     openPreparingMode();
-    ret = player_prepare_async(m_nativePlayer, preparedCallback, this);
+    int ret = player_prepare_async(m_nativePlayer, preparedCallback, this);
     if (ret != PLAYER_ERROR_NONE) {
         PLAYER_LOGE("MediaPlayerTizen::player_prepare_async return error !!!");
         printNativePlayerError(ret);
@@ -1055,6 +1074,7 @@ void MediaPlayerTizen::handlePrepared()
 void MediaPlayerTizen::dispose()
 {
     PLAYER_LOGI("MediaPlayerTizen::dispose (%p)", this);
+    cancelResponseURLProbe();
     if (m_nativePlayer != nullptr) {
         pause();
         player_unprepare(m_nativePlayer);

@@ -55,6 +55,7 @@ class Compositor;
 class GL;
 class MediaSource;
 class Mutex;
+class Resource;
 class URL;
 class WebOrigin;
 class Window;
@@ -64,6 +65,8 @@ class MediaAudioPlaybackState;
 #endif
 
 class MediaPlayer : public gc {
+    friend class ResponseURLProbeClient;
+
 public:
     virtual ~MediaPlayer()
     {
@@ -137,14 +140,15 @@ public:
     // The URL the media data came from, so the element can decide whether
     // its media data is CORS-same-origin
     // (https://html.spec.whatwg.org/multipage/media.html#media-data-is-cors-same-origin).
-    // Empty until the resource is prepared, empty once the backend saw the
-    // request redirected anywhere (it can't report the hops Fetch judges
-    // one by one), and empty for a backend that follows redirects without
-    // reporting them at all (the Tizen player): the element then treats
-    // the media data as cross-origin, the safe side.
+    // Empty until the resource is prepared and empty once the backend saw
+    // the request redirected anywhere (it can't report the hops Fetch
+    // judges one by one): the element then treats the media data as
+    // cross-origin, the safe side. A backend that fetches through its own
+    // network stack and can't report at all (the Tizen player) answers
+    // with what probeResponseURL() learned beforehand.
     virtual Optional<ResourceURL*> responseURL()
     {
-        return nullptr;
+        return m_probedResponseURL;
     }
     // Whether responseURL() is same-origin with `origin`. Judged once per
     // response: the texture upload path asks for every frame.
@@ -241,6 +245,21 @@ protected:
     void processNextOperationQueueInContainer();
     void appendToOperationQueueInContainer(MediaOperationQueueData* data);
     void notifyMediaSourceFailure();
+    // For a backend whose player fetches the media itself and can't report
+    // where it came from: a HEAD request through the engine's loader, shaped
+    // like the player's own (no CORS, no credentials), vouches for `url` in
+    // responseURL() when the response came back from it unredirected, with
+    // a success status (a server rejecting HEAD leaves the media tainted)
+    // and not as a playlist. The player's request is a separate one, so a
+    // server answering the two differently defeats the check; platform
+    // players in Chromium carry the same trade-off. didProbeResponseURL()
+    // follows on the main thread whether or not the probe vouched, unless
+    // the player died meanwhile.
+    void probeResponseURL(ResourceURL* url);
+    virtual void didProbeResponseURL(ResourceURL* url)
+    {
+    }
+    void cancelResponseURLProbe();
     SourceBuffer* activeSourceBuffer(StreamType type);
     uint64_t activeStreamIndex(StreamType type);
     bool m_alive;
@@ -254,6 +273,8 @@ protected:
     volatile unsigned long m_videoWidth, m_videoHeight;
     ResourceURL* m_judgedResponseURL{ nullptr };
     bool m_judgedSameOrigin{ false };
+    Optional<ResourceURL*> m_probedResponseURL;
+    Optional<Resource*> m_responseURLProbe;
     size_t m_currentTimeUpdateTimer;
     Mutex* m_playerStateMutex;
     CanvasSurface* m_canvasSurface;

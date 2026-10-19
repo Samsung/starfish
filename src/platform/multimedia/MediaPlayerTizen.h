@@ -170,6 +170,9 @@ public:
     void setLoop(bool loop) override;
 
     virtual void prepare(ResourceURL* url);
+    void didProbeResponseURL(ResourceURL* url) override;
+    void prepareNativePlayer(ResourceURL* url);
+    void startNativePrepare();
     virtual void setNativePlayerDefaultOptions(ResourceURL* url);
     virtual void printNativePlayerError(int errorCode);
 
