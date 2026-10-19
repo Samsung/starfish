@@ -116,14 +116,23 @@ public:
     virtual void drawRect(const LayoutRect& rt) = 0;
     virtual void punchHole(const Unit::Rect& rt) = 0;
 
+    // Masks a backend multiplies when drawing one surface.
+    static const size_t maxMaskSurfaces = 2;
+    struct MaskSurface {
+        CanvasSurface* surface;
+        SkMatrix drawToMask;
+        float width;
+        float height;
+    };
     // drawToMask maps the current drawing coordinates to the mask owner's
-    // local coordinates, whose box is maskWidth x maskHeight.
-    virtual void setMaskSurface(CanvasSurface* maskSurface,
+    // local coordinates, whose box is maskWidth x maskHeight. The masks added
+    // until clearMaskSurfaces() multiply.
+    virtual void addMaskSurface(CanvasSurface* maskSurface,
                                 const SkMatrix& drawToMask, float maskWidth,
                                 float maskHeight)
     {
     }
-    virtual void clearMaskSurface()
+    virtual void clearMaskSurfaces()
     {
     }
 

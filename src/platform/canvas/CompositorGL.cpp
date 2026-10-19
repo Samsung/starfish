@@ -4096,9 +4096,7 @@ public:
         m_baseFBOId = 0;
         m_baseRBOId = 0;
         m_webView = webView;
-        m_currentMaskSurface = nullptr;
-        m_maskWidth = 0;
-        m_maskHeight = 0;
+        m_maskCount = 0;
         m_globalScale = m_webView->glCompositorScale();
         m_screenWidth = m_webView->renderer()->width();
         m_screenHeight = m_webView->renderer()->height();
@@ -5490,19 +5488,18 @@ public:
         position[7] = dest[3][1] * hh + 1;
     }
 
-    virtual void setMaskSurface(CanvasSurface* maskSurface,
+    virtual void addMaskSurface(CanvasSurface* maskSurface,
                                 const SkMatrix& drawToMask, float maskWidth,
                                 float maskHeight) override
     {
-        m_currentMaskSurface = (CanvasSurfaceGL*)maskSurface;
-        m_maskMatrix = drawToMask;
-        m_maskWidth = maskWidth;
-        m_maskHeight = maskHeight;
+        STARFISH_ASSERT(m_maskCount < maxMaskSurfaces);
+        m_masks[m_maskCount++] = { maskSurface, drawToMask, maskWidth,
+                                   maskHeight };
     }
 
-    virtual void clearMaskSurface() override
+    virtual void clearMaskSurfaces() override
     {
-        m_currentMaskSurface = nullptr;
+        m_maskCount = 0;
     }
 
     virtual void drawSurface(CanvasSurface* cs, const Unit::Rect& dst) override
@@ -5557,9 +5554,9 @@ public:
         // Analytic rounded-rect clip: the SDF shader clips each fragment to the
         // intersection of all tracked rounded rects; we scissor to their bbox
         // intersection, skipping the mask FBO entirely.
-        bool activeClip =
-            !m_currentMaskSurface && lastState.roundedClipChainOk &&
-            lastState.roundedRectClipCount > 0 && lastState.matrixStaysInRect;
+        bool activeClip = !m_maskCount && lastState.roundedClipChainOk &&
+                          lastState.roundedRectClipCount > 0 &&
+                          lastState.matrixStaysInRect;
 
         if (activeClip) {
             visibleArea = toRect(dest);
@@ -5712,67 +5709,81 @@ public:
             auto useCSSMask = [&](const Unit::Rect& localDst,
                                   GLuint& primaryMask, float(&primaryUV)[6],
                                   GLuint& secondMask, float(&secondUV)[6]) {
-                if (!m_currentMaskSurface ||
-                    m_currentMaskSurface->m_textureFragments.empty()) {
-                    return;
-                }
-                GLuint texture =
-                    m_currentMaskSurface->m_textureFragments[0].textureID;
-                gl()->bindTexture(GL_TEXTURE_2D, texture);
-                const float eps = 0.0001f;
-                bool oneToOne =
-                    lastState.matrixStaysInRect &&
-                    std::abs(m_maskMatrix.getScaleX() - 1) < eps &&
-                    std::abs(m_maskMatrix.getScaleY() - 1) < eps &&
-                    std::abs(m_maskMatrix.getSkewX()) < eps &&
-                    std::abs(m_maskMatrix.getSkewY()) < eps &&
-                    std::abs(m_maskWidth -
-                             m_currentMaskSurface->bufferWidth()) < 0.01f &&
-                    std::abs(m_maskHeight -
-                             m_currentMaskSurface->bufferHeight()) < 0.01f;
-                GLenum filter = oneToOne ? GL_NEAREST : GL_LINEAR;
-                gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                                    filter);
-                gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-                                    filter);
-                // The texture position (tx, ty) in [0, 1] covers localDst,
-                // upside down for a flipped surface. m_maskMatrix maps that
-                // point to the mask owner's box; the shader computes
-                //   u = tx * uv[2] + uv[0] + ty * uv[4]
-                //   v = 1 - (ty * uv[3] + uv[1] + tx * uv[5])
-                // Cairo uploads the CSS mask with its top row at texture
-                // coordinate zero. The clip-path mask comes from an FBO and
-                // uses the opposite Y direction in the shader.
-                float x0 = localDst.x();
-                float y0 = localDst.y();
-                float w = localDst.width();
-                float h = localDst.height();
-                if (csGL->isFlipYNeeded()) {
-                    y0 += h;
-                    h = -h;
-                }
-                const SkMatrix& m = m_maskMatrix;
-                float uConst = (m.getScaleX() * x0 + m.getSkewX() * y0 +
-                                m.getTranslateX()) /
-                               m_maskWidth;
-                float vConst = (m.getSkewY() * x0 + m.getScaleY() * y0 +
-                                m.getTranslateY()) /
-                               m_maskHeight;
-                float uv[6] = { uConst,
-                                1 - vConst,
-                                m.getScaleX() * w / m_maskWidth,
-                                -m.getScaleY() * h / m_maskHeight,
-                                m.getSkewX() * h / m_maskWidth,
-                                -m.getSkewY() * w / m_maskHeight };
-                if (primaryMask) {
-                    secondMask = texture;
-                    for (int i = 0; i < 6; i++) {
-                        secondUV[i] = uv[i];
+                for (size_t maskIndex = 0; maskIndex < m_maskCount;
+                     maskIndex++) {
+                    // shortcut: the shader samples two masks, so a clip-path
+                    // mask leaves room for one CSS mask only and the outer
+                    // one is dropped; add a sampler if that combination
+                    // matters.
+                    if (secondMask) {
+                        break;
                     }
-                } else {
-                    primaryMask = texture;
-                    for (int i = 0; i < 6; i++) {
-                        primaryUV[i] = uv[i];
+                    CanvasSurfaceGL* maskSurface =
+                        (CanvasSurfaceGL*)m_masks[maskIndex].surface;
+                    const SkMatrix& maskMatrix = m_masks[maskIndex].drawToMask;
+                    float maskWidth = m_masks[maskIndex].width;
+                    float maskHeight = m_masks[maskIndex].height;
+                    if (maskSurface->m_textureFragments.empty()) {
+                        continue;
+                    }
+                    GLuint texture =
+                        maskSurface->m_textureFragments[0].textureID;
+                    gl()->bindTexture(GL_TEXTURE_2D, texture);
+                    const float eps = 0.0001f;
+                    bool oneToOne =
+                        lastState.matrixStaysInRect &&
+                        std::abs(maskMatrix.getScaleX() - 1) < eps &&
+                        std::abs(maskMatrix.getScaleY() - 1) < eps &&
+                        std::abs(maskMatrix.getSkewX()) < eps &&
+                        std::abs(maskMatrix.getSkewY()) < eps &&
+                        std::abs(maskWidth - maskSurface->bufferWidth()) <
+                            0.01f &&
+                        std::abs(maskHeight - maskSurface->bufferHeight()) <
+                            0.01f;
+                    GLenum filter = oneToOne ? GL_NEAREST : GL_LINEAR;
+                    gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                                        filter);
+                    gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                                        filter);
+                    // The texture position (tx, ty) in [0, 1] covers localDst,
+                    // upside down for a flipped surface. maskMatrix maps that
+                    // point to the mask owner's box; the shader computes
+                    //   u = tx * uv[2] + uv[0] + ty * uv[4]
+                    //   v = 1 - (ty * uv[3] + uv[1] + tx * uv[5])
+                    // Cairo uploads the CSS mask with its top row at texture
+                    // coordinate zero. The clip-path mask comes from an FBO and
+                    // uses the opposite Y direction in the shader.
+                    float x0 = localDst.x();
+                    float y0 = localDst.y();
+                    float w = localDst.width();
+                    float h = localDst.height();
+                    if (csGL->isFlipYNeeded()) {
+                        y0 += h;
+                        h = -h;
+                    }
+                    const SkMatrix& m = maskMatrix;
+                    float uConst = (m.getScaleX() * x0 + m.getSkewX() * y0 +
+                                    m.getTranslateX()) /
+                                   maskWidth;
+                    float vConst = (m.getSkewY() * x0 + m.getScaleY() * y0 +
+                                    m.getTranslateY()) /
+                                   maskHeight;
+                    float uv[6] = { uConst,
+                                    1 - vConst,
+                                    m.getScaleX() * w / maskWidth,
+                                    -m.getScaleY() * h / maskHeight,
+                                    m.getSkewX() * h / maskWidth,
+                                    -m.getSkewY() * w / maskHeight };
+                    if (primaryMask) {
+                        secondMask = texture;
+                        for (int i = 0; i < 6; i++) {
+                            secondUV[i] = uv[i];
+                        }
+                    } else {
+                        primaryMask = texture;
+                        for (int i = 0; i < 6; i++) {
+                            primaryUV[i] = uv[i];
+                        }
                     }
                 }
             };
@@ -6346,10 +6357,8 @@ protected:
     std::vector<FBOState> m_fboState;
     GLuint m_baseFBOId;
     GLuint m_baseRBOId;
-    CanvasSurfaceGL* m_currentMaskSurface;
-    SkMatrix m_maskMatrix;
-    float m_maskWidth;
-    float m_maskHeight;
+    MaskSurface m_masks[maxMaskSurfaces];
+    size_t m_maskCount;
 
     Clipper2Lib::PathD m_abbreviatedPath;
     std::vector<CompositorImplGLState::PathCommand> m_pathCommands;
