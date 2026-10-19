@@ -29,9 +29,19 @@ http://web-platform.test:8000/fetch/api/response/response-error.any.html
 http://web-platform.test:8000/fetch/api/response/response-error.any.worker.html
 # Unmeasured (no local wpt serve): SyntaxError rejection of Response.json(); measure and uncomment.
 # http://web-platform.test:8000/fetch/api/response/json.any.html
+http://web-platform.test:8000/fetch/api/basic/accept-header.any.html
+http://web-platform.test:8000/fetch/api/basic/accept-header.any.worker.html
 http://web-platform.test:8000/fetch/api/basic/request-head.any.html
 http://web-platform.test:8000/fetch/api/basic/request-head.any.worker.html
 http://web-platform.test:8000/fetch/api/basic/request-referrer-redirected-worker.html
 http://web-platform.test:8000/fetch/api/basic/request-referrer.any.html
 http://web-platform.test:8000/fetch/api/basic/request-referrer.any.worker.html
+http://web-platform.test:8000/fetch/api/cors/cors-filtering.sub.any.worker.html
+# http://web-platform.test:8000/fetch/api/credentials/authentication-basic.any.html # Uncomment when https://github.com/web-platform-tests/wpt/pull/63876 is merged.
+# http://web-platform.test:8000/fetch/api/credentials/authentication-basic.any.worker.html # Uncomment when https://github.com/web-platform-tests/wpt/pull/63876 is merged.
 http://web-platform.test:8000/fetch/api/policies/referrer-origin-when-cross-origin.html
+http://web-platform.test:8000/fetch/api/policies/referrer-no-referrer.html
+http://web-platform.test:8000/fetch/api/policies/referrer-no-referrer-worker.html
+http://web-platform.test:8000/fetch/api/policies/referrer-origin.html
+http://web-platform.test:8000/fetch/api/policies/referrer-unsafe-url.html
+http://web-platform.test:8000/fetch/api/policies/referrer-unsafe-url-worker.html

@@ -21,8 +21,10 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
 #include "platform/network/http/HTTPHeaderMap.h"
+#include "core/fetch/FetchUtils.h"
 #include "core/fetch/Headers.h"
 #include "core/fetch/Response.h"
+#include "core/modules/resource_request/ResourceRequest.h"
 #include "platform/loader/ResourceURL.h"
 
 namespace Starfish {
@@ -307,9 +309,25 @@ void Response::setMimeType(String* mimeType)
     m_responseData->m_mimeType = mimeType;
 }
 
-void Response::setHeadersFromHeaderMap(const HeaderMap& map)
+void Response::setHeadersFromHeaderMap(const HeaderMap& map,
+                                       ResourceRequest* request)
 {
+    // https://fetch.spec.whatwg.org/#concept-filtered-response
+    // A basic filtered response drops the forbidden response-header names
+    // (Set-Cookie, Set-Cookie2); a CORS filtered response keeps only the
+    // CORS-safelisted response-header names plus the names the server
+    // exposed with Access-Control-Expose-Headers.
+    ResponseType type =
+        request ? request->responseType() : ResponseType::Default;
     for (auto& pair : map) {
+        if (type == ResponseType::Basic &&
+            FetchUtils::isForbiddenResponseHeaderName(pair.first)) {
+            continue;
+        }
+        if (type == ResponseType::Cors &&
+            !request->isCORSsafelistedResponseHeaderName(pair.first)) {
+            continue;
+        }
         auto key =
             String::createASCIIString(pair.first.c_str(), pair.first.length());
         auto value = String::createASCIIString(pair.second.c_str(),
