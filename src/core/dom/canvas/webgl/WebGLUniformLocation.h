@@ -32,11 +32,12 @@ class WebGLProgram;
 class WebGLUniformLocation : public ScriptWrappable {
 public:
     WebGLUniformLocation(ScriptBindingInstance* instance, WebGLProgram* program,
-                         GLint location)
+                         GLint location, uint32_t linkCount)
         : ScriptWrappable(this)
         , m_scriptBindingInstance(instance)
         , m_program(program)
         , m_location(location)
+        , m_linkCount(linkCount)
     {
     }
 
@@ -49,6 +50,7 @@ public:
 
     DEFINE_GETTER(WebGLProgram*, program);
     DEFINE_GETTER(GLint, location);
+    DEFINE_GETTER(uint32_t, linkCount);
 
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLUniformLocation);
     FILL_GC_POINTER(WebGLUniformLocation, m_program);
@@ -58,6 +60,7 @@ private:
     ScriptBindingInstance* m_scriptBindingInstance;
     WebGLProgram* m_program;
     GLint m_location;
+    uint32_t m_linkCount;
 };
 } // namespace Starfish
 

@@ -107,6 +107,15 @@ public:
         return m_transformFeedbackVaryingsCount;
     }
 
+    uint32_t linkCount() const
+    {
+        return m_linkCount;
+    }
+    void incrementLinkCount()
+    {
+        m_linkCount++;
+    }
+
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLProgram, WebGLObject);
     GC_set_bit(desc, GC_WORD_OFFSET(WebGLProgram, m_attachedShaders));
     GC_set_bit(desc, GC_WORD_OFFSET(WebGLProgram, m_attachedShaders) + 1);
@@ -120,6 +129,7 @@ private:
     bool m_linkFailed = false;
     GLenum m_transformFeedbackBufferMode = 0x8C80; // GL_INTERLEAVED_ATTRIBS
     GLint m_transformFeedbackVaryingsCount = 0;
+    uint32_t m_linkCount = 0;
 };
 } // namespace Starfish
 
