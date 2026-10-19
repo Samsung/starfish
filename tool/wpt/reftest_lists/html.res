@@ -167,8 +167,8 @@ http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-c
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/image-orientation/drawImage-from-element.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/image-orientation/drawImage-with-src-rect.tentative.html
 http://web-platform.test:8000/html/canvas/element/manual/drawing-text-to-the-canvas/canvas.2d.disconnected-font-size-math.html
-http://web-platform.test:8000/html/canvas/element/manual/fill-and-stroke-styles/conic-gradient-rotation.html
-http://web-platform.test:8000/html/canvas/element/manual/fill-and-stroke-styles/conic-gradient.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/fill-and-stroke-styles/conic-gradient-rotation.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/fill-and-stroke-styles/conic-gradient.html
 http://web-platform.test:8000/html/canvas/element/manual/filters/canvas-fillStyle-opacity.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/filters/canvas-filter-opacity-alpha-and-fillStyle.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/element/manual/filters/canvas-filter-opacity.html

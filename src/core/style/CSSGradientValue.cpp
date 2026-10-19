@@ -44,7 +44,12 @@ void CSSGradientValue::convertCSSColorStopsToColorStops(
         }
 
         auto offset = item->offset();
-        if (offset.valueKind() != CSSStyleValuePair::ValueKind::None) {
+        if (offset.valueKind() == CSSStyleValuePair::ValueKind::Angle) {
+            // Only conic stops take angles; a conic gradient has no length
+            // stops, so a fixed offset there is read as degrees.
+            cs->setOffset(
+                Length(Length::Fixed, offset.angleValue().toDegreeValue()));
+        } else if (offset.valueKind() != CSSStyleValuePair::ValueKind::None) {
             cs->setOffset(offset.toLengthValue());
         }
 
@@ -80,7 +85,8 @@ bool CSSGradientValue::isCacheable() const
             }
         }
         const auto& offset = cssColorStop->offset();
-        if (offset.valueKind() == CSSStyleValuePair::ValueKind::None) {
+        if (offset.valueKind() == CSSStyleValuePair::ValueKind::None ||
+            offset.valueKind() == CSSStyleValuePair::ValueKind::Angle) {
             continue;
         }
         // offset is length or percent
@@ -238,6 +244,71 @@ GradientData* CSSRadialGradientValue::convertToGradientData()
     }
     if (m_size.hasSecondRadius()) {
         gradient->setSecondRadius(m_size.secondRadius().toLengthValue());
+    }
+
+    if (isCacheable()) {
+        gradient->setGeneratedFromCacheableCSSGradientValue(true);
+    }
+
+    convertCSSColorStopsToColorStops(gradient->colorStopList());
+    return gradient;
+}
+
+String* CSSConicGradientValue::toString()
+{
+    StringBuilder result;
+
+    if (m_repeating) {
+        result.appendString("repeating-");
+    }
+    result.appendString("conic-gradient(");
+    bool hasPosition =
+        m_positionX.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind;
+    if (m_angle.toDegreeValue() != 0) {
+        result.appendString("from ");
+        result.appendString(m_angle.toString());
+        if (hasPosition) {
+            result.appendChar(' ');
+        } else {
+            result.appendString(", ");
+        }
+    }
+    if (hasPosition) {
+        result.appendString("at ");
+        result.appendString(m_positionX.toString());
+        result.appendChar(' ');
+        result.appendString(m_positionY.toString());
+        result.appendString(", ");
+    }
+
+    result.appendString(colorStopListToString());
+    result.appendChar(')');
+
+    return result.finalize();
+}
+
+GradientData* CSSConicGradientValue::convertToGradientData()
+{
+    ConicGradientData* gradient = new ConicGradientData(m_repeating);
+    gradient->setAngle(m_angle.toDegreeValue());
+
+    if (m_positionX.valueKind() ==
+        CSSStyleValuePair::ValueKind::ValueListKind) {
+        auto& x = m_positionX.multiValue()->front();
+        if (x.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+            gradient->setHorizontalSide(x.sideValue());
+        } else if (x.valueKind() != CSSStyleValuePair::ValueKind::None) {
+            gradient->setHorizontalSideOffset(x.toLengthValue());
+        }
+    }
+    if (m_positionY.valueKind() ==
+        CSSStyleValuePair::ValueKind::ValueListKind) {
+        auto& y = m_positionY.multiValue()->front();
+        if (y.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+            gradient->setVerticalSide(y.sideValue());
+        } else if (y.valueKind() != CSSStyleValuePair::ValueKind::None) {
+            gradient->setVerticalSideOffset(y.toLengthValue());
+        }
     }
 
     if (isCacheable()) {

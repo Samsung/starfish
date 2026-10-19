@@ -1734,7 +1734,7 @@ section are supported.
 | | opacity | alpha value (0.0 ~ 1.0) | Sets the opacity level for an element | |
 | [Background](https://www.w3.org/TR/css3-background) | background | [&lt;bg-layer&gt;]* &lt;final-bg-layer&gt; | Shorthand for the longhands listed below. Multiple comma-separated layers ARE accepted (e.g. `background: red url(a.png) no-repeat, linear-gradient(red,blue)`). The `background-blend-mode` longhand is NOT part of this shorthand and is unsupported (see below). | |
 | | background-color | &lt;color&gt; &#124; transparent | Specifies the background color. Same color formats as `color` (hex, named, `rgb()`/`rgba()`, `hsl()`/`hsla()`, `transparent`, `currentColor`). | |
-| | background-image | [ &lt;url&gt; &#124; &lt;gradient&gt; &#124; none ]# | Comma-separated list of background-image layers IS supported (`backgroundLayerSize()` reflects layer count). Accepted gradient functions are `linear-gradient(...)` and `radial-gradient(...)` only. **`conic-gradient`, `repeating-linear-gradient`, `repeating-radial-gradient` are silently parsed as `none`** with no warning. | All other longhands (`background-position-{x,y}`, `background-size`, `background-repeat-{x,y}`, `background-attachment`, `background-clip`, `background-origin`) only return non-initial values from `getComputedStyle()` when at least one image layer is set. |
+| | background-image | [ &lt;url&gt; &#124; &lt;gradient&gt; &#124; none ]# | Comma-separated list of background-image layers IS supported (`backgroundLayerSize()` reflects layer count). Accepted gradient functions are `linear-gradient(...)`, `radial-gradient(...)`, `conic-gradient(...)` and `repeating-conic-gradient(...)`. **`repeating-linear-gradient`, `repeating-radial-gradient` are silently parsed as `none`** with no warning. | All other longhands (`background-position-{x,y}`, `background-size`, `background-repeat-{x,y}`, `background-attachment`, `background-clip`, `background-origin`) only return non-initial values from `getComputedStyle()` when at least one image layer is set. |
 | | background-position | &lt;bg-position&gt; [, &lt;bg-position&gt;]* where &lt;bg-position&gt; = [ &lt;percentage&gt; &#124; &lt;length&gt; &#124; left &#124; center &#124; right ] [ &lt;percentage&gt; &#124; &lt;length&gt; &#124; top &#124; center &#124; bottom ]? | 1- and 2-value forms supported. **The CSS-3 4-value form `left 10px top 20px` is parsed without error but the side keywords are dropped — only the two length/percentage components survive (computed: `10px 20px`).** | |
 | | background-position-x | [ center &#124; left &#124; right &#124; &lt;length-percentage&gt; ] | Single token only. | |
 | | background-position-y | [ center &#124; top &#124; bottom &#124; &lt;length-percentage&gt; ] | Single token only. | |
@@ -2828,12 +2828,12 @@ CSS Houdini support is **essentially absent**. Only a cosmetic Typed-OM façade 
 
 ### CSS Image functions — runtime caveats
 
-Of the function set in CSS Images L4, only `linear-gradient(...)` and `radial-gradient(...)` work. Everything else silently resolves the entire declaration to `none` (no warning, no comma-list fallback).
+Of the function set in CSS Images L4, only `linear-gradient(...)`, `radial-gradient(...)`, `conic-gradient(...)` and `repeating-conic-gradient(...)` work. Everything else silently resolves the entire declaration to `none` (no warning, no comma-list fallback).
 
 | Function | Status |
 |----------|--------|
-| `linear-gradient`, `radial-gradient` | OK. |
-| `conic-gradient`, `repeating-linear-gradient`, `repeating-radial-gradient` | **Silently → `none`.** |
+| `linear-gradient`, `radial-gradient`, `conic-gradient`, `repeating-conic-gradient` | OK. |
+| `repeating-linear-gradient`, `repeating-radial-gradient` | **Silently → `none`.** |
 | `image-set(...)` (CSS3 url-quoted form, CSS4 bare-string form, with `type(...)`) | **Silently → `none`.** No DPR-based image picker — use a single `url()` (typically @2x) or branch via `@media (min-resolution: 2dppx)`. |
 | `cross-fade(...)` | **Silently → `none`.** Use a layered overlay with separate `<img>` + opacity transitions. |
 | `element(#id)` | **Silently → `none`.** No live source painter. |
@@ -2845,7 +2845,7 @@ Of the function set in CSS Images L4, only `linear-gradient(...)` and `radial-gr
 
 ### Gradient syntax detail — runtime caveats
 
-`linear-gradient(...)` and `radial-gradient(...)` are the only gradient functions parsed. Within them:
+`linear-gradient(...)`, `radial-gradient(...)`, `conic-gradient(...)` and `repeating-conic-gradient(...)` are the only gradient functions parsed. Within them:
 
 | Syntax | Status |
 |--------|--------|
@@ -2854,11 +2854,12 @@ Of the function set in CSS Images L4, only `linear-gradient(...)` and `radial-gr
 | `linear-gradient(c1, c2)` (no angle/side ⇒ default `to bottom`) | OK. |
 | `radial-gradient(<shape> <size> at <position>, ...)` | OK. Shapes: `circle`, `ellipse`. Sizes: `closest-side`, `closest-corner`, `farthest-side`, `farthest-corner` (default), explicit length(s). |
 | `radial-gradient(at <position>, ...)` (no shape/size) | OK. |
+| `conic-gradient([from <angle>] [at <position>], ...)`, `repeating-conic-gradient(...)` | OK. Stop positions are angles (incl. `calc()` of angles), percentages or `0`. A repeating gradient whose stops span less than 1/1024 turn paints as its last color instead of the average color. |
 | Color-stop position (`red 50%`, `blue 200px`) | OK. |
 | **Color hint** between two stops (`red, 30%, blue`) — single bare percentage between two color stops | Parser accepts the syntax but the **interpolation hint behavior is approximate**; treat as a smoothing nudge only. |
-| **Multi-position color stop** (`red 0% 25%`, two positions on one stop) | **NOT supported** — only the first position is parsed, the second is dropped silently. |
+| **Multi-position color stop** (`red 0% 25%`, two positions on one stop) | OK. Parsed as two stops of the same color. |
 | Modern color spaces in stops (`linear-gradient(in oklch, ...)`) | **NOT supported** — `in <colorspace>` clause is not recognized; the `in` token aborts gradient parsing. |
-| `conic-gradient(...)`, `repeating-linear-gradient(...)`, `repeating-radial-gradient(...)` | **Silently → `none`** (already documented). |
+| `repeating-linear-gradient(...)`, `repeating-radial-gradient(...)` | **Silently → `none`** (already documented). |
 
 ### Writing-mode + isolation — runtime caveats
 

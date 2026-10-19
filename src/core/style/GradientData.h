@@ -36,6 +36,7 @@ namespace Starfish {
 class Font;
 class LinearGradientData;
 class RadialGradientData;
+class ConicGradientData;
 class CSSGradientValue;
 class FrameBox;
 class CSSColorStop;
@@ -143,6 +144,7 @@ struct GradientDrawingInfo : public gc {
     float computedAngle;
     float firstRadius;
     float secondRadius;
+    bool repeating;
     SkMatrix matrix;
     GCVector<ColorStop*> colorStops;
 
@@ -158,6 +160,7 @@ struct GradientDrawingInfo : public gc {
         , computedAngle(0.0f)
         , firstRadius(0.0f)
         , secondRadius(0.0f)
+        , repeating(false)
         , matrix(SkMatrix::I())
         , colorStops()
         , hash(0)
@@ -209,6 +212,7 @@ public:
 
     LinearGradientData* asLinearGradientData();
     RadialGradientData* asRadialGradientData();
+    ConicGradientData* asConicGradientData();
 
     SideValue horizontalSide()
     {
@@ -461,6 +465,68 @@ private:
     Length m_firstRadius;
     Length m_secondRadius;
     RadialGradientSizeKeyword m_gradientSizeKeyword;
+};
+
+class ConicGradientData : public GradientData {
+public:
+    ConicGradientData(bool repeating);
+
+    void setAngle(float val)
+    {
+        m_angleDeg = val;
+    }
+
+    void setHorizontalSideOffset(Length offset)
+    {
+        m_horizentalSideOffset = offset;
+    }
+
+    void setVerticalSideOffset(Length offset)
+    {
+        m_verticalSideOffset = offset;
+    }
+
+    virtual GradientDrawingInfo* makeGradientDrawingInfo(
+        const Unit::Rect& rect, FrameBox* box) override;
+    virtual CSSGradientValue* convertToCSSGradientValue() override;
+    virtual void checkComputed(Length curFontSize, Length rootFontSize,
+                               Font* font, LayoutSize windowSize,
+                               ComputedStyle* cs) override;
+    virtual bool equals(GradientData* other) const override;
+    virtual bool isEffective() const override;
+    virtual std::pair<bool, float> isShrinkable(float width,
+                                                float height) const override
+    {
+        return { false, 0.0f };
+    }
+
+    void* operator new(size_t size)
+    {
+        STARFISH_ASSERT(size == sizeof(ConicGradientData));
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(ConicGradientData)] = { 0 };
+            GC_set_bit(desc, GC_WORD_OFFSET(ConicGradientData,
+                                            m_horizentalSideOffset));
+            GC_set_bit(desc,
+                       GC_WORD_OFFSET(ConicGradientData, m_verticalSideOffset));
+            GradientData::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(ConicGradientData));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+
+    void* operator new[](size_t size) = delete;
+
+private:
+    bool m_repeating;
+    float m_angleDeg;
+
+    // Position of gradient center
+    Length m_horizentalSideOffset;
+    Length m_verticalSideOffset;
 };
 } // namespace Starfish
 

@@ -12399,6 +12399,35 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
 
     const CSSTokenValue& type = parser.parsedString();
     CSSGradientValue* gradient;
+    bool isConic = false;
+    // Reads one value token, including a function such as calc(...).
+    auto consumeArgument = [&parser](uint32_t option) -> CSSTokenValue {
+        parser.consumeString(option);
+        CSSTokenValue value = parser.parsedString();
+        if (*parser.curPos() == '(' && parser.consumeParenthesisBlock()) {
+            value += "(" + parser.parsedString() + ")";
+        }
+        return value;
+    };
+    // <angle> or a calc() resolving to one, in degrees.
+    auto parseAngle = [](const CSSTokenValue& token, CSSAngle& out) -> bool {
+        CSSStyleValuePair angle;
+        if (!angle.updateValueUnitAngleOrCalc(
+                token, CSSPropertyParser::AllowNegative |
+                           CSSPropertyParser::AllowDot)) {
+            return false;
+        }
+        if (angle.valueKind() == CSSStyleValuePair::ValueKind::Angle) {
+            out = angle.angleValue();
+            return true;
+        }
+        if (angle.valueKind() == CSSStyleValuePair::ValueKind::CalcValueKind) {
+            out = CSSAngle(CSSAngle::DEG,
+                           angle.calcValue()->angleValue().toDegreeValue());
+            return true;
+        }
+        return false;
+    };
     if (type == "linear-gradient" && parser.consumeIfNext('(')) {
         // linear-gradient() = linear-gradient(
         //   [ <angle> | to <side-or-corner> ]?
@@ -12581,9 +12610,88 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
             }
         }
         gradient = radialGradientValue;
+    } else if ((type == "conic-gradient" ||
+                type == "repeating-conic-gradient") &&
+               parser.consumeIfNext('(')) {
+        // <conic-gradient> = conic-gradient(
+        //   [ [ from <angle> ]? [ at <position> ]? ]? ,
+        //   <angular-color-stop-list>
+        // )
+        CSSConicGradientValue* conicGradientValue =
+            new CSSConicGradientValue(type == "repeating-conic-gradient");
+        isConic = true;
+        parser.consumeWhitespaces();
+        char* stopsStart = parser.curPos();
+        parser.consumeString(0);
+        bool hasPrelude = false;
+        if (parser.parsedString() == "from") {
+            hasPrelude = true;
+            parser.consumeWhitespaces();
+            CSSAngle angle;
+            if (!parseAngle(consumeArgument(CSSPropertyParser::AllowNegative |
+                                            CSSPropertyParser::AllowDot),
+                            angle)) {
+                return false;
+            }
+            conicGradientValue->setAngle(angle);
+            parser.consumeWhitespaces();
+            stopsStart = parser.curPos();
+            parser.consumeString(0);
+        }
+        if (parser.parsedString() == "at") {
+            hasPrelude = true;
+            CSSTokenVector tokens;
+            while (parser.consumeWhitespaces() && *(parser.curPos()) != ',') {
+                if (!parser.consumeString(CSSPropertyParser::AllowNegative |
+                                          CSSPropertyParser::AllowPercent |
+                                          CSSPropertyParser::AllowDot)) {
+                    return false;
+                }
+                tokens.push_back(parser.parsedString());
+            }
+            CSSStyleValuePair positionX;
+            CSSStyleValuePair positionY;
+            if (tokens.size() > 4 ||
+                !CSSStyleDeclaration::parseUnitPositionShorthand(
+                    tokens, CSSStyleValuePair::BackgroundPosition, &positionX,
+                    &positionY, false)) {
+                return false;
+            }
+            conicGradientValue->setPositionX(positionX);
+            conicGradientValue->setPositionY(positionY);
+        } else {
+            parser.swap(stopsStart);
+        }
+        if (hasPrelude) {
+            parser.consumeWhitespaces();
+            if (!parser.consumeIfNext(',')) {
+                return false;
+            }
+        }
+        gradient = conicGradientValue;
     } else {
         return false;
     }
+
+    uint32_t offsetOption = CSSPropertyParser::AllowNegative |
+                            CSSPropertyParser::AllowPercent |
+                            CSSPropertyParser::AllowDot;
+    auto parseStopOffset = [&](CSSStyleValuePair& out) -> bool {
+        CSSTokenValue value = consumeArgument(offsetOption);
+        CSSAngle angle;
+        if (isConic && parseAngle(value, angle)) {
+            out.setValueKind(CSSStyleValuePair::ValueKind::Angle);
+            out.setValue(angle);
+            return true;
+        }
+        if (!out.updateValueUnitLengthOrCalc(value, offsetOption)) {
+            return false;
+        }
+        // Conic positions are <angle-percentage>; only a zero length passes.
+        return !isConic ||
+               out.valueKind() != CSSStyleValuePair::ValueKind::Length ||
+               out.toLengthValue().isZero();
+    };
 
     // Parse color-stops
     while (parser.consumeWhitespaces() && *(parser.curPos()) != ')') {
@@ -12608,28 +12716,24 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
             }
 
             cs->setColor(color);
-            uint32_t option = CSSPropertyParser::AllowNegative |
-                              CSSPropertyParser::AllowPercent |
-                              CSSPropertyParser::AllowDot;
             parser.consumeWhitespaces();
             if (*(parser.curPos()) != ',' && *(parser.curPos()) != ')') {
-                parser.consumeString(option);
-                ps = parser.parsedStringToGCString();
-                if (ps->equals("calc")) {
-                    String* calcStr = String::createASCIIString("calc(");
-                    parser.consumeParenthesisBlock();
-                    value =
-                        CSSTokenValue("calc(" + parser.parsedString() + ")");
-                    if (!length.updateValueUnitLengthOrCalc(value, option)) {
-                        return false;
-                    }
-                } else {
-                    value = CSSTokenValue(ps->toUTF8NonGCString().data());
-                    if (!length.updateValueUnitLength(value, option)) {
-                        return false;
-                    }
+                if (!parseStopOffset(length)) {
+                    return false;
                 }
                 cs->setOffset(length);
+                parser.consumeWhitespaces();
+                if (*(parser.curPos()) != ',' && *(parser.curPos()) != ')') {
+                    // A stop with two positions is two stops of one color.
+                    CSSStyleValuePair second;
+                    if (!parseStopOffset(second)) {
+                        return false;
+                    }
+                    gradient->cssColorStopList().push_back(cs);
+                    cs = new CSSColorStop();
+                    cs->setColor(color);
+                    cs->setOffset(second);
+                }
             }
             gradient->cssColorStopList().push_back(cs);
         }
