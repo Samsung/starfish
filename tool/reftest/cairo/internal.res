@@ -929,6 +929,9 @@ test/cairo/internal-test/dom/text-element-added.html
 test/cairo/internal-test/dom/same_origin_01.html
 test/cairo/internal-test/window/window-security.https.html
 test/cairo/internal-test/event/pointerevent_constructor.html
+test/cairo/internal-test/forms/range-keyboard.html
+test/cairo/internal-test/forms/range-pointer.html
+test/cairo/internal-test/forms/range-appearance-none.html
 test/cairo/internal-test/event/mouse_enter_leave_event_order.html
 test/cairo/internal-test/event/scroll-suppresses-click.html
 test/cairo/internal-test/event/no-scroll-fires-click.html

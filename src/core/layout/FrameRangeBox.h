@@ -44,6 +44,11 @@ public:
         return "FrameRangeBox";
     }
 
+    virtual bool isFrameRangeBox() override
+    {
+        return true;
+    }
+
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
     virtual void paintBackgroundAndBorders(Canvas* canvas) override;
@@ -62,7 +67,13 @@ public:
     virtual void paintInlineContentBlock(Canvas* canvas,
                                          PaintPassMemos* memos) override;
 
+    // Where a pointer at page point (pageX, pageY) puts the thumb's center
+    // along the track: 0 at the minimum end, 1 at the maximum end, clamped
+    // to the track. Empty when the box has no track to speak of.
+    Optional<double> fractionAtPagePoint(double pageX, double pageY);
+
 private:
+    LayoutRect sliderRect();
     void paintSlider(Canvas* canvas);
 };
 } // namespace Starfish

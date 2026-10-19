@@ -1629,6 +1629,13 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         Event* e = createTouchEvent(document(), name, touches, count);
         Node* t = targetNode->nearestParentElement();
         t = t ? t : document();
+        // A touch stays with the element it started on, and an element
+        // that captured the pointer is that element for the rest of the
+        // sequence, however far the finger strays (a slider thumb).
+        // https://w3c.github.io/touch-events/#the-touchmove-event
+        if (m_pointerCaptureTarget && m_pointerCaptureTarget->isConnected()) {
+            t = m_pointerCaptureTarget;
+        }
         returnValue = !document()->window()->dispatchEventByUA(t, e);
         // If scroll just started during this touchmove dispatch, fire
         // touchcancel to let JS clean up (matches Chrome behavior).
@@ -1663,6 +1670,9 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         releaseActiveNode();
         Node* t = targetNode->nearestParentElement();
         t = t ? t : document();
+        if (m_pointerCaptureTarget && m_pointerCaptureTarget->isConnected()) {
+            t = m_pointerCaptureTarget;
+        }
         // Spec order: touchend → pointerup → mousemove → mousedown →
         // mouseup → click.
         name = starfish()->staticStrings()->m_touchend.localName();
@@ -2129,6 +2139,10 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
 
     bool shouldDispatchInputEvent = true;
     bool isTextEditable = target->isHTMLTextEditable();
+    // The input event below stands in for the edit a key makes to a text
+    // control; a range control fires its own from its default action.
+    bool isEditableText =
+        isTextEditable && target->asHTMLTextEditable()->isEditableType();
 
     if (!e->defaultPrevented()) {
         if (kind == KeyEventKind::KeyEventDown) {
@@ -2195,7 +2209,7 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
     }
 
     // After editing, this 'oninput' event is called.
-    if (kind == KeyEventKind::KeyEventDown && isTextEditable &&
+    if (kind == KeyEventKind::KeyEventDown && isEditableText &&
         shouldDispatchInputEvent && target->isHTMLFormControl()) {
         InputEvent* event = new InputEvent(document()->executionContext(),
                                            String::createASCIIString("input"));

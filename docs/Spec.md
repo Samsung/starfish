@@ -193,7 +193,7 @@ The HTML parser and DOM expose the following tags as well; they were missing fro
 |  [param](https://www.w3.org/TR/html5/embedded-content-0.html#the-param-element) | name, value | &lt;string&gt; | Companion to `<object>`. |
 |  [form](https://www.w3.org/TR/html5/forms.html#the-form-element) | action | &lt;URL&gt; |  |
 |  | method | get &#124; post |  |
-|  [input](https://www.w3.org/TR/html5/forms.html#the-input-element) | type | text &#124; password &#124; checkbox &#124; radio &#124; submit &#124; reset &#124; button &#124; hidden &#124; file &#124; number &#124; range &#124; email &#124; url &#124; date &#124; time | The exact set of types depends on platform input widget support; layout falls back to text for unsupported types. `range` renders a slider with spec value sanitization, but is not yet operable by pointer or key. |
+|  [input](https://www.w3.org/TR/html5/forms.html#the-input-element) | type | text &#124; password &#124; checkbox &#124; radio &#124; submit &#124; reset &#124; button &#124; hidden &#124; file &#124; number &#124; range &#124; email &#124; url &#124; date &#124; time | The exact set of types depends on platform input widget support; layout falls back to text for unsupported types. `range` renders a slider with spec value sanitization and is operable: a pointer click or drag moves the thumb (`input` while dragging, `change` on release), and with focus Arrow keys step by `step`, PageUp/PageDown by a tenth of the range, Home/End to the ends (`input` and `change` per key). Tick marks (`list`) are not rendered. |
 |  | name, value, placeholder | &lt;string&gt; |  |
 |  | disabled, readonly, checked, required | boolean attribute |  |
 |  [button](https://www.w3.org/TR/html5/forms.html#the-button-element) | type | submit &#124; reset &#124; button |  |
@@ -2530,7 +2530,7 @@ The HTML form-control IDLs in `src/core/dom/HTMLFormElement.idl`, `HTMLInputElem
 | Surface | Status |
 |---------|--------|
 | Constraint validation API on every form control (`validity`, `validationMessage`, `willValidate`, `checkValidity()`, `reportValidity()`, `setCustomValidity()`) | **All `[Unimplemented]`.** Reading returns `undefined`; calling the methods raises `TypeError: Callee is not a function object`. There is no working `:invalid` runtime state, no `ValidityState` constructor, and no `RadioNodeList`. |
-| `HTMLInputElement` selection/range/step API (`select()`, `setSelectionRange()`, `setRangeText()`, `selectionStart/End/Direction`, `stepUp()`, `stepDown()`, `valueAsDate`, `valueAsNumber`) | All `[Unimplemented]`. Calling throws. |
+| `HTMLInputElement` selection API (`select()`, `setSelectionRange()`, `setRangeText()`, `selectionStart/End/Direction`) and `valueAsDate` | All `[Unimplemented]`. Calling throws. `stepUp()`, `stepDown()` and `valueAsNumber` work for `type=range` only (see the HTMLInputElement member table). |
 | `HTMLInputElement` other attrs (`accept`, `alt`, `autocomplete`, `dirName`, `formNoValidate`, `pattern`, `readOnly` (works on textarea, NOT input), `inputMode`, `height`, `width`, `src`, `useMap`, `align`, `indeterminate`, `files`, `list`) | `[Unimplemented]` — `undefined`. |
 | `HTMLTextAreaElement` selection/wrap (`wrap`, `select()`, `selectionStart/End/Direction`, `setRangeText()`, `setSelectionRange()`, `inputMode`) | `[Unimplemented]`. |
 | `HTMLOptGroupElement.label` | `[Unimplemented]` — `<optgroup label="X">` does not surface `label` via JS. |
@@ -3056,7 +3056,7 @@ The following font-related CSS properties are **not in the parser trie** at all 
 
 | Property/Pseudo | Status |
 |-----------------|--------|
-| `appearance: auto`, `appearance: none` | Supported, only on `FrameInputBox` (text inputs/buttons) — suppresses background/border/content paint. On `input[type=range]` it suppresses only the slider; the CSS background and borders still paint. |
+| `appearance: auto`, `appearance: none` | Supported, only on `FrameInputBox` (text inputs/buttons) — suppresses background/border/content paint. On `input[type=range]` it drops only the native track, so the CSS background stands in for it; the thumb still paints and the control stays operable, as in Chromium and Firefox. |
 | `appearance: button / checkbox / radio / menulist / textfield / slider-horizontal / progress-bar / scrollbar* / etc.` | **Silently rejected** — declaration dropped, computed falls back to `auto`. |
 | `-webkit-appearance` / `-moz-appearance` | **NOT recognized** — full declaration dropped with `Unsupported css property` warning. |
 | `color-scheme` | **Parsed and inherited** (`normal | [ light | dark | <custom-ident> ]+ && only?`); `getComputedStyle` serializes the ident list canonically (`only` last). It only records the opt-in — native widgets are not re-themed and no dark UA stylesheet is applied. See the note under the `cursor` note above. |
