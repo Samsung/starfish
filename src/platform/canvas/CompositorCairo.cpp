@@ -60,9 +60,7 @@ public:
         m_surface = nullptr;
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = true;
-        m_currentMaskSurface = nullptr;
-        m_maskWidth = 0;
-        m_maskHeight = 0;
+        m_maskCount = 0;
 
         initFromBuffer(data->mapBuffer(), data->bufferWidth(),
                        data->bufferHeight(), data->bufferStride());
@@ -294,19 +292,18 @@ public:
         cairo_restore(m_canvas);
     }
 
-    virtual void setMaskSurface(CanvasSurface* maskSurface,
+    virtual void addMaskSurface(CanvasSurface* maskSurface,
                                 const SkMatrix& drawToMask, float maskWidth,
                                 float maskHeight) override
     {
-        m_currentMaskSurface = maskSurface;
-        m_maskMatrix = drawToMask;
-        m_maskWidth = maskWidth;
-        m_maskHeight = maskHeight;
+        STARFISH_ASSERT(m_maskCount < maxMaskSurfaces);
+        m_masks[m_maskCount++] = { maskSurface, drawToMask, maskWidth,
+                                   maskHeight };
     }
 
-    virtual void clearMaskSurface() override
+    virtual void clearMaskSurfaces() override
     {
-        m_currentMaskSurface = nullptr;
+        m_maskCount = 0;
     }
 
     virtual void drawSurface(CanvasSurface* data,
@@ -318,7 +315,7 @@ public:
             data->bufferWidth(), data->bufferHeight(), data->bufferStride());
         checkError();
 
-        if (m_currentMaskSurface) {
+        if (m_maskCount) {
             float xx = dst.x();
             float yy = dst.y();
             float ww = dst.width();
@@ -326,17 +323,23 @@ public:
 
             // The user space origin is at (xx, yy) of the drawing
             // coordinates; map it through drawToMask into mask pixels.
-            SkMatrix toMaskPixels = m_maskMatrix;
-            toMaskPixels.preTranslate(xx, yy);
-            toMaskPixels.postScale(
-                m_currentMaskSurface->bufferWidth() / m_maskWidth,
-                m_currentMaskSurface->bufferHeight() / m_maskHeight);
-
+            SkMatrix toMaskPixels[maxMaskSurfaces];
             // A collapsed or non-finite mask mapping leaves the masked layer
             // with no area; cairo would also reject the pattern matrix and
             // put the context into an error state.
-            if (data->bufferWidth() && data->bufferHeight() && ww && hh &&
-                toMaskPixels.isFinite() && toMaskPixels.invert(nullptr)) {
+            bool drawable =
+                data->bufferWidth() && data->bufferHeight() && ww && hh;
+            for (size_t i = 0; i < m_maskCount; i++) {
+                CanvasSurface* mask = m_masks[i].surface;
+                toMaskPixels[i] = m_masks[i].drawToMask;
+                toMaskPixels[i].preTranslate(xx, yy);
+                toMaskPixels[i].postScale(
+                    mask->bufferWidth() / m_masks[i].width,
+                    mask->bufferHeight() / m_masks[i].height);
+                drawable = drawable && toMaskPixels[i].isFinite() &&
+                           toMaskPixels[i].invert(nullptr);
+            }
+            if (drawable) {
                 cairo_save(m_canvas);
 
                 cairo_pattern_t* resizePattern =
@@ -350,30 +353,39 @@ public:
                 cairo_pattern_set_matrix(resizePattern, &matrix);
                 cairo_pattern_set_filter(resizePattern, CAIRO_FILTER_FAST);
                 checkError();
+
+                // Each further mask is applied to the group masked so far.
+                for (size_t i = 1; i < m_maskCount; i++) {
+                    cairo_push_group(m_canvas);
+                }
                 cairo_set_source(m_canvas, resizePattern);
+                for (size_t i = 0; i < m_maskCount; i++) {
+                    if (i) {
+                        cairo_pop_group_to_source(m_canvas);
+                    }
+                    CanvasSurface* mask = m_masks[i].surface;
+                    cairo_surface_t* maskImage =
+                        cairo_image_surface_create_for_data(
+                            (unsigned char*)mask->mapBuffer(),
+                            CAIRO_FORMAT_ARGB32, mask->bufferWidth(),
+                            mask->bufferHeight(), mask->bufferStride());
 
-                cairo_surface_t* maskImage =
-                    cairo_image_surface_create_for_data(
-                        (unsigned char*)m_currentMaskSurface->mapBuffer(),
-                        CAIRO_FORMAT_ARGB32,
-                        m_currentMaskSurface->bufferWidth(),
-                        m_currentMaskSurface->bufferHeight(),
-                        m_currentMaskSurface->bufferStride());
+                    cairo_pattern_t* maskPattern =
+                        cairo_pattern_create_for_surface(maskImage);
+                    cairo_matrix_t maskMatrix;
+                    cairo_matrix_init(&maskMatrix, toMaskPixels[i].getScaleX(),
+                                      toMaskPixels[i].getSkewY(),
+                                      toMaskPixels[i].getSkewX(),
+                                      toMaskPixels[i].getScaleY(),
+                                      toMaskPixels[i].getTranslateX(),
+                                      toMaskPixels[i].getTranslateY());
+                    cairo_pattern_set_matrix(maskPattern, &maskMatrix);
 
-                cairo_pattern_t* maskPattern =
-                    cairo_pattern_create_for_surface(maskImage);
-                cairo_matrix_t maskMatrix;
-                cairo_matrix_init(
-                    &maskMatrix, toMaskPixels.getScaleX(),
-                    toMaskPixels.getSkewY(), toMaskPixels.getSkewX(),
-                    toMaskPixels.getScaleY(), toMaskPixels.getTranslateX(),
-                    toMaskPixels.getTranslateY());
-                cairo_pattern_set_matrix(maskPattern, &maskMatrix);
+                    cairo_mask(m_canvas, maskPattern);
 
-                cairo_mask(m_canvas, maskPattern);
-
-                cairo_pattern_destroy(maskPattern);
-                cairo_surface_destroy(maskImage);
+                    cairo_pattern_destroy(maskPattern);
+                    cairo_surface_destroy(maskImage);
+                }
                 cairo_pattern_destroy(resizePattern);
 
                 cairo_restore(m_canvas);
@@ -493,10 +505,8 @@ protected:
     unsigned m_height;
     bool m_shouldDestroyCairo;
     bool m_shouldDestroySurface;
-    CanvasSurface* m_currentMaskSurface;
-    SkMatrix m_maskMatrix;
-    float m_maskWidth;
-    float m_maskHeight;
+    MaskSurface m_masks[maxMaskSurfaces];
+    size_t m_maskCount;
 };
 
 uint32_t CompositorFactory::maximumTextureSizeCairo()

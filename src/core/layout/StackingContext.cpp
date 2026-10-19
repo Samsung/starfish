@@ -3493,23 +3493,32 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         return;
     }
 
-    // CSS Masking applies an element's mask to its rendered descendants too.
-    // Overlapping composited descendants still require group compositing to
-    // apply the mask only once to their combined pixels.
-    StackingContext* maskContext = this;
-    while (maskContext && (maskContext->owner()->isFrameSVGBox() ||
-                           !maskContext->owner()->style()->maskLayerSize())) {
-        maskContext = maskContext->parent();
-    }
-    CanvasSurface* compositingMask = nullptr;
-    // Maps this context's local coordinates to the mask owner's. It is a full
-    // affine map: a rotated or skewed descendant must sample the mask along
-    // its own axes, not along the mask owner's.
-    SkMatrix maskMatrix;
-    maskMatrix.reset();
-    if (maskContext) {
+    // CSS Masking applies an element's mask to its rendered descendants too,
+    // so the masks of all masked ancestors multiply into this context's
+    // pixels. Overlapping composited descendants still require group
+    // compositing to apply a mask only once to their combined pixels.
+    // shortcut: only the two nearest masks are applied, deeper nesting drops
+    // the outer ones; collect more if a backend can sample them.
+    StackingContext* maskContexts[Compositor::maxMaskSurfaces];
+    CanvasSurface* compositingMasks[Compositor::maxMaskSurfaces];
+    // Maps this context's local coordinates to each mask owner's. It is a
+    // full affine map: a rotated or skewed descendant must sample the mask
+    // along its own axes, not along the mask owner's.
+    SkMatrix maskMatrices[Compositor::maxMaskSurfaces];
+    size_t compositingMaskCount = 0;
+    for (StackingContext* maskContext = this;
+         maskContext && compositingMaskCount < Compositor::maxMaskSurfaces;
+         maskContext = maskContext->parent()) {
+        if (maskContext->owner()->isFrameSVGBox() ||
+            !maskContext->owner()->style()->maskLayerSize()) {
+            continue;
+        }
         maskContext->updateMaskSurface();
-        compositingMask = maskContext->maskSurface();
+        if (!maskContext->maskSurface()) {
+            continue;
+        }
+        SkMatrix& maskMatrix = maskMatrices[compositingMaskCount];
+        maskMatrix.reset();
         if (maskContext != this) {
             SkMatrix maskInverse;
             if (maskContext->owner()->computeScreenMatrix(false).invert(
@@ -3533,7 +3542,19 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                 -maskContext->owner()->asFrameBlockBox()->scrollLeft(),
                 -maskContext->owner()->asFrameBlockBox()->scrollTop());
         }
+        maskContexts[compositingMaskCount] = maskContext;
+        compositingMasks[compositingMaskCount] = maskContext->maskSurface();
+        compositingMaskCount++;
     }
+    auto addCompositingMasks = [&](float x, float y) {
+        for (size_t i = 0; i < compositingMaskCount; i++) {
+            SkMatrix drawToMask = maskMatrices[i];
+            drawToMask.preTranslate(x, y);
+            compositor->addMaskSurface(compositingMasks[i], drawToMask,
+                                       maskContexts[i]->owner()->width(),
+                                       maskContexts[i]->owner()->height());
+        }
+    };
 
     auto contentSurface = owner()->contentSurface();
     if (!thereIsNoBufferBecauseThereIsNoVisibleContent || contentSurface ||
@@ -3593,9 +3614,10 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                     auto clr = owner()->style()->backgroundColor();
                     if (!clr.isTransparent()) {
                         compositor->save();
-                        if (maskContext == this && compositingMask) {
+                        if (compositingMaskCount && maskContexts[0] == this) {
                             compositor->beginOpacityLayer(clr.A(), fullRect);
-                            compositor->drawSurface(compositingMask, fullRect);
+                            compositor->drawSurface(compositingMasks[0],
+                                                    fullRect);
                             compositor->endOpacityLayer();
                         } else {
                             compositor->setFillColor(clr);
@@ -3707,20 +3729,13 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                                         ->m_surfaces.size() &&
                         m_rareData->m_graphicsBufferHolder
                                 ->m_surfaces[tileIndex] != nullptr) {
-                        if (compositingMask) {
-                            SkMatrix tileToMask = maskMatrix;
-                            tileToMask.preTranslate(minX, minY);
-                            compositor->setMaskSurface(
-                                compositingMask, tileToMask,
-                                maskContext->owner()->width(),
-                                maskContext->owner()->height());
-                        }
+                        addCompositingMasks(minX, minY);
                         compositor->drawSurface(
                             m_rareData->m_graphicsBufferHolder
                                 ->m_surfaces[tileIndex],
                             Unit::Rect(tx, ty, w, h));
-                        if (compositingMask) {
-                            compositor->clearMaskSurface();
+                        if (compositingMaskCount) {
+                            compositor->clearMaskSurfaces();
                         }
 #ifdef STARFISH_ENABLE_TEST
                         if (UNLIKELY(owner()->node()->webView()->startUpFlag() &
@@ -3775,18 +3790,12 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             auto dy = owner()->borderTop() + owner()->paddingTop();
             compositor->translate(dx, dy);
 
-            if (compositingMask) {
-                SkMatrix contentToMask = maskMatrix;
-                contentToMask.preTranslate(dx, dy);
-                compositor->setMaskSurface(compositingMask, contentToMask,
-                                           maskContext->owner()->width(),
-                                           maskContext->owner()->height());
-            }
+            addCompositingMasks(dx, dy);
             compositor->drawSurface(contentSurface.getValue(),
                                     Unit::Rect(0, 0, owner()->contentWidth(),
                                                owner()->contentHeight()));
-            if (compositingMask) {
-                compositor->clearMaskSurface();
+            if (compositingMaskCount) {
+                compositor->clearMaskSurfaces();
             }
             compositor->restore();
         }
