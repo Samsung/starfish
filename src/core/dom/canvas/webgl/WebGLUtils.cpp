@@ -79,7 +79,6 @@ static size_t getBytesPerPixelWebGL1(GLenum format, GLenum type)
     }
 
     STARFISH_UNIMPLEMENTED("format: 0x%04X, type: 0x%04X", format, type);
-    STARFISH_ASSERT_NOT_REACHED();
     return 0;
 }
 
