@@ -3347,9 +3347,11 @@ static void tokenize(TokenVector& tokens, const char* data, size_t length)
         } else if (((inParenthesis && !numberOfnesting) && data[i] == ')') ||
                    i == length - 1) {
             if (str.size() != 0) {
-                if (!numberOfnesting) {
-                    tokens.push_back(std::move(str));
+                // The end of input closes an open function or block.
+                for (; numberOfnesting; numberOfnesting--) {
+                    str.push_back(')');
                 }
+                tokens.push_back(std::move(str));
             }
             inParenthesis = false;
             isWhiteSpaceState = true;
