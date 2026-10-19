@@ -74,6 +74,18 @@ public:
 
     void unbindBuffer(WebGLBuffer* buffer);
 
+    static constexpr size_t kMaxVertexAttribs = 32;
+    struct AttribTypes {
+        GLenum types[kMaxVertexAttribs];
+        AttribTypes();
+    };
+
+    bool isVertexAttribArrayEnabled(GLuint index);
+    GLenum getVertexAttribType(GLuint index);
+    void setVertexAttribType(GLuint index, GLenum type);
+    GLenum getGenericVertexAttribType(GLuint index);
+    void setGenericVertexAttribType(GLuint index, GLenum type);
+
 private:
     GLuint vertexArray();
 
@@ -87,6 +99,8 @@ private:
     GCUnorderedMap<GLenum, WebGLBuffer*> m_globalBuffersBound;
     GCUnorderedMap<GLuint, std::unordered_map<GLuint, WebGLBuffer*>>
         m_buffersBoundToVertexAttributes;
+    GCUnorderedMap<GLuint, AttribTypes> m_vertexAttribType;
+    GLenum m_genericVertexAttribType[kMaxVertexAttribs];
 };
 } // namespace Starfish
 

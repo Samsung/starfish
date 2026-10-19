@@ -26,8 +26,18 @@
 
 namespace Starfish {
 
+WebGLRenderingContextState::AttribTypes::AttribTypes()
+{
+    for (size_t i = 0; i < kMaxVertexAttribs; ++i) {
+        types[i] = GL_FLOAT;
+    }
+}
+
 WebGLRenderingContextState::WebGLRenderingContextState()
 {
+    for (size_t i = 0; i < kMaxVertexAttribs; ++i) {
+        m_genericVertexAttribType[i] = GL_FLOAT;
+    }
 }
 
 std::unordered_set<GLuint> WebGLRenderingContextState::arraysEnabled()
@@ -123,6 +133,7 @@ void WebGLRenderingContextState::deleteVertexArray(GLuint vao)
     m_arraysEnabled.erase(vao);
     m_elementArrayBuffers.erase(vao);
     m_buffersBoundToVertexAttributes.erase(vao);
+    m_vertexAttribType.erase(vao);
 }
 
 void WebGLRenderingContextState::deleteVertexArrayOES(GLuint vao)
@@ -135,6 +146,7 @@ void WebGLRenderingContextState::deleteVertexArrayOES(GLuint vao)
     m_arraysEnabled.erase(vao);
     m_elementArrayBuffers.erase(vao);
     m_buffersBoundToVertexAttributes.erase(vao);
+    m_vertexAttribType.erase(vao);
 }
 
 void WebGLRenderingContextState::unbindBuffer(WebGLBuffer* buffer)
@@ -176,6 +188,51 @@ GLuint WebGLRenderingContextState::vertexArray()
         return m_webGLVertexArrayObjectOES.value()->glObject();
     }
     return 0;
+}
+
+bool WebGLRenderingContextState::isVertexAttribArrayEnabled(GLuint index)
+{
+    GLuint vao = vertexArray();
+    const auto& set = m_arraysEnabled[vao];
+    return set.find(index) != set.end();
+}
+
+GLenum WebGLRenderingContextState::getVertexAttribType(GLuint index)
+{
+    if (index >= kMaxVertexAttribs) {
+        return GL_FLOAT;
+    }
+    GLuint vao = vertexArray();
+    const auto& iter = m_vertexAttribType.find(vao);
+    if (iter == m_vertexAttribType.end()) {
+        return GL_FLOAT;
+    }
+    return iter->second.types[index];
+}
+
+void WebGLRenderingContextState::setVertexAttribType(GLuint index, GLenum type)
+{
+    if (index >= kMaxVertexAttribs) {
+        return;
+    }
+    GLuint vao = vertexArray();
+    m_vertexAttribType[vao].types[index] = type;
+}
+
+GLenum WebGLRenderingContextState::getGenericVertexAttribType(GLuint index)
+{
+    if (index >= kMaxVertexAttribs) {
+        return GL_FLOAT;
+    }
+    return m_genericVertexAttribType[index];
+}
+
+void WebGLRenderingContextState::setGenericVertexAttribType(GLuint index,
+                                                            GLenum type)
+{
+    if (index < kMaxVertexAttribs) {
+        m_genericVertexAttribType[index] = type;
+    }
 }
 
 } // namespace Starfish
