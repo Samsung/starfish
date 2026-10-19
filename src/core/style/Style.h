@@ -3642,6 +3642,10 @@ public:
         Node* node, const CSSStyleValuePair& cssValuePair);
 
     void clearCssCustomValues();
+    void setCssCustomValues(Optional<MutablePropertyValueList*> values)
+    {
+        m_cssCustomValues = values;
+    }
     Optional<const MutablePropertyValueList*> cssCustomValues();
     CSSStyleDeclaration* resolveVarValue(Element* element,
                                          const CSSStyleValuePair& cssValuePair,

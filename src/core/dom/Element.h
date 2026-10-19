@@ -282,6 +282,11 @@ public:
     virtual void didComputedStyleChanged(
         ComputedStyle* oldStyle, ComputedStyle* newStyle,
         Optional<StyleResolveContext*> ctx) override;
+#if defined(STARFISH_ENABLE_ANIMATION)
+    void computePseudoElementAnimation(Element* pseudoNode,
+                                       Optional<ComputedStyle*> fromStyle,
+                                       ComputedStyle* toStyle);
+#endif
 
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump() override
