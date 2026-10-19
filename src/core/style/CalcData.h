@@ -207,11 +207,7 @@ public:
         memcpy(&m_data, &data, sizeof(CalcValueData));
     }
 
-    float numberValue() const
-    {
-        STARFISH_ASSERT(m_type.isNumber());
-        return m_data.m_numberData;
-    }
+    float numberValue() const;
 
     float percentageValue() const
     {
@@ -229,17 +225,8 @@ public:
                               Node* n) const;
     LayoutUnit specifiedFontValue(Node* n) const;
 
-    CSSAngle angleValue() const
-    {
-        STARFISH_ASSERT(m_type.isAngle());
-        return m_data.m_angleData;
-    }
-
-    CSSTime timeValue() const
-    {
-        STARFISH_ASSERT(m_type.isTime());
-        return m_data.m_timeData;
-    }
+    CSSAngle angleValue() const;
+    CSSTime timeValue() const;
 
     CalcData* calcDataValue() const
     {
