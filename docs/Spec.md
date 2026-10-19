@@ -3355,7 +3355,7 @@ LWE exposes Escargot's JS debugger protocol via `cmake -DENABLE_DEBUGGER=1` (def
 ## Web Device API
 The following describes Web device APIs supported by lightweight web engine. Supported interfaces and methods are generally the same as the interfaces and methods supported by Tizen API, respectively. If there are exceptions, they are explicitly mentioned below.
 
-> **Build flag:** the Web Device API (`window.tizen`) is exposed only when `CMAKE_SYSTEM_NAME=Tizen` and the `TIZEN_DEVICE_API` macro is defined. On `CMAKE_SYSTEM_NAME=Linux`/`CMAKE_SYSTEM_NAME=Windows`/the Android build `window.tizen` is `undefined`. Even when built, `tizen`, `webapis` and `xwalk` are defined only for `file:` documents and workers (locally installed app content); remote (`http:`/`https:`) and other non-`file:` content sees them as `undefined`.
+> **Build flag:** the Web Device API (`window.tizen`) is exposed only when `CMAKE_SYSTEM_NAME=Tizen` and the `TIZEN_DEVICE_API` macro is defined. On `CMAKE_SYSTEM_NAME=Linux`/`CMAKE_SYSTEM_NAME=Windows`/the Android build `window.tizen` is `undefined`. Even when built, `tizen`, `webapis` and `xwalk` are defined only for `file:` documents and workers (locally installed app content); remote (`http:`/`https:`) and other non-`file:` content sees them as `undefined`. The check uses each scope's own URL, so `about:blank`/`srcdoc` frames and `blob:` workers do not get them even inside a `file:` app (same-origin frames can still reach `parent.tizen`). This keeps remote pages from misdetecting the platform; it is not a security boundary.
 
 | API            | Description | Note |
 |----------------|-------------|------|
