@@ -1718,9 +1718,14 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
                     std::transform(str.begin(), str.end(), str.begin(),
                                    tolower);
                 }
-                if (!numberOfnesting) {
-                    tokens.push_back(std::move(str));
+                // https://drafts.csswg.org/css-syntax/#consume-function
+                // The end of input closes an open function or block, so
+                // keep the value and close it instead of dropping it.
+                if (numberOfnesting) {
+                    str.append(numberOfnesting, ')');
+                    numberOfnesting = 0;
                 }
+                tokens.push_back(std::move(str));
             }
             inParenthesis = false;
             isWhiteSpaceState = true;
