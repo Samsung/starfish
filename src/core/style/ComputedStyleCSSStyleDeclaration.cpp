@@ -221,6 +221,10 @@ ComputedStyleCSSStyleDeclaration::requiredStage(
     case CSSStyleValuePair::KeyKind::GridTemplateRows:
     case CSSStyleValuePair::KeyKind::GridTemplateColumns:
         return RequiredStyleResolveStage::Layout;
+    case CSSStyleValuePair::KeyKind::Transform:
+        // The matrix is resolved against the element's box.
+        return style->hasTransforms() ? RequiredStyleResolveStage::Layout
+                                      : RequiredStyleResolveStage::None;
     case CSSStyleValuePair::KeyKind::MinWidth:
     case CSSStyleValuePair::KeyKind::MinHeight:
         return RequiredStyleResolveStage::FrameTreeBuild;
