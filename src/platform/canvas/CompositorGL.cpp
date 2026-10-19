@@ -581,25 +581,35 @@ struct CanvasSurfaceTextureInfo {
     std::vector<CanvasSurfaceTextureInfoFragment> fragments;
 };
 
-#define SECOND_MASK_UNIFORMS                  \
-    "uniform sampler2D uSecondMaskTexture;\n" \
-    "uniform vec4 uSecondMaskUV;\n"           \
-    "uniform vec2 uSecondMaskShear;\n"        \
-    "uniform float uSecondMaskEnabled;\n"
+// The second mask slot holds two masks, so a clip-path mask in the primary
+// slot still leaves room for two nested CSS masks (Compositor::
+// maxMaskSurfaces). GLSL ES 1.0 indexes sampler arrays by constants only.
+#define SECOND_MASK_COUNT 2
+#define SECOND_MASK_UNIFORMS                                              \
+    "uniform sampler2D uSecondMaskTexture[2];\n"                          \
+    "uniform vec4 uSecondMaskUV[2];\n"                                    \
+    "uniform vec2 uSecondMaskShear[2];\n"                                 \
+    "uniform float uSecondMaskEnabled[2];\n"                              \
+    "float secondMaskSample(sampler2D tex, vec4 uv, vec2 shear, vec2 p) " \
+    "{\n"                                                                 \
+    "  vec2 coord = vec2(p.x * uv.z + uv.x + p.y * shear.x, "             \
+    "1.0 - (p.y * uv.w + uv.y + p.x * shear.y));\n"                       \
+    "  if (coord.x >= 0.0 && coord.x <= 1.0 && coord.y >= 0.0 && "        \
+    "coord.y <= 1.0) {\n"                                                 \
+    "    return texture2D(tex, coord).a;\n"                               \
+    "  }\n"                                                               \
+    "  return 0.0;\n"                                                     \
+    "}\n"
 
-#define SECOND_MASK_ALPHA                                        \
-    "  float secondMaskAlpha = 1.0;\n"                           \
-    "  if (uSecondMaskEnabled > 0.5) {\n"                        \
-    "    vec2 secondCoord = vec2(vTexPos.x * uSecondMaskUV.z + " \
-    "uSecondMaskUV.x + vTexPos.y * uSecondMaskShear.x, "         \
-    "1.0 - (vTexPos.y * uSecondMaskUV.w + uSecondMaskUV.y + "    \
-    "vTexPos.x * uSecondMaskShear.y));\n"                        \
-    "    secondMaskAlpha = 0.0;\n"                               \
-    "    if (secondCoord.x >= 0.0 && secondCoord.x <= 1.0 && "   \
-    "secondCoord.y >= 0.0 && secondCoord.y <= 1.0) {\n"          \
-    "      secondMaskAlpha = texture2D(uSecondMaskTexture, "     \
-    "secondCoord).a;\n"                                          \
-    "    }\n"                                                    \
+#define SECOND_MASK_ALPHA                                             \
+    "  float secondMaskAlpha = 1.0;\n"                                \
+    "  if (uSecondMaskEnabled[0] > 0.5) {\n"                          \
+    "    secondMaskAlpha *= secondMaskSample(uSecondMaskTexture[0], " \
+    "uSecondMaskUV[0], uSecondMaskShear[0], vTexPos);\n"              \
+    "  }\n"                                                           \
+    "  if (uSecondMaskEnabled[1] > 0.5) {\n"                          \
+    "    secondMaskAlpha *= secondMaskSample(uSecondMaskTexture[1], " \
+    "uSecondMaskUV[1], uSecondMaskShear[1], vTexPos);\n"              \
     "  }\n"
 
 #define PRIMARY_MASK_ALPHA                                    \
@@ -1824,6 +1834,14 @@ public:
         return m_texShaderProgramEGLImageExternal;
     }
 
+    void initSecondMaskUniforms(GLint textures, GLint enabled)
+    {
+        const GLint units[SECOND_MASK_COUNT] = { 2, 3 };
+        const GLfloat disabled[SECOND_MASK_COUNT] = { 0, 0 };
+        gl()->uniform1iv(textures, SECOND_MASK_COUNT, units);
+        gl()->uniform1fv(enabled, SECOND_MASK_COUNT, disabled);
+    }
+
     // EGLImageExternal shader program with mask support
     GLuint texShaderProgramEGLImageExternalWithMask()
     {
@@ -1944,10 +1962,9 @@ public:
                             0);
             gl()->uniform1i(
                 m_texShaderProgramEGLImageExternalWithMaskMaskTexture, 1);
-            gl()->uniform1i(
-                m_texShaderProgramEGLImageExternalWithMaskSecondMaskTexture, 2);
-            gl()->uniform1f(
-                m_texShaderProgramEGLImageExternalWithMaskSecondMaskEnabled, 0);
+            initSecondMaskUniforms(
+                m_texShaderProgramEGLImageExternalWithMaskSecondMaskTexture,
+                m_texShaderProgramEGLImageExternalWithMaskSecondMaskEnabled);
             gl()->uniform1f(m_texShaderProgramEGLImageExternalWithMaskAlpha, 1);
             gl()->uniform4f(m_texShaderProgramEGLImageExternalWithMaskMaskUV, 0,
                             0, 1, 1);
@@ -2417,8 +2434,8 @@ public:
 
             gl()->uniform1i(m_texShaderProgramWithMaskTexture, 0);
             gl()->uniform1i(m_texShaderProgramWithMaskMaskTexture, 1);
-            gl()->uniform1i(m_texShaderProgramWithMaskSecondMaskTexture, 2);
-            gl()->uniform1f(m_texShaderProgramWithMaskSecondMaskEnabled, 0);
+            initSecondMaskUniforms(m_texShaderProgramWithMaskSecondMaskTexture,
+                                   m_texShaderProgramWithMaskSecondMaskEnabled);
             gl()->uniform1f(m_texShaderProgramWithMaskAlpha, 1);
             gl()->uniform4f(m_texShaderProgramWithMaskMaskUV, 0, 0, 1, 1);
 
@@ -2831,8 +2848,9 @@ public:
 
         gl()->uniform1i(m_texBlurShaderProgramHWithMaskTexture, 0);
         gl()->uniform1i(m_texBlurShaderProgramHWithMaskMaskTexture, 1);
-        gl()->uniform1i(m_texBlurShaderProgramHWithMaskSecondMaskTexture, 2);
-        gl()->uniform1f(m_texBlurShaderProgramHWithMaskSecondMaskEnabled, 0);
+        initSecondMaskUniforms(
+            m_texBlurShaderProgramHWithMaskSecondMaskTexture,
+            m_texBlurShaderProgramHWithMaskSecondMaskEnabled);
         gl()->uniform1f(m_texBlurShaderProgramHWithMaskAlpha, 1);
         gl()->uniform4f(m_texBlurShaderProgramHWithMaskMaskUV, 0, 0, 1, 1);
 
@@ -4940,12 +4958,44 @@ public:
                                       Clipper2Lib::FillRule::NonZero);
     }
 
+    void bindSecondMasks(const GLuint secondMasks[SECOND_MASK_COUNT])
+    {
+        for (int i = 0; i < SECOND_MASK_COUNT; i++) {
+            if (secondMasks[i]) {
+                gl()->activeTexture(GL_TEXTURE2 + i);
+                gl()->bindTexture(GL_TEXTURE_2D, secondMasks[i]);
+            }
+        }
+    }
+
+    void setSecondMaskUniforms(GLint uvUniform, GLint shearUniform,
+                               GLint enabledUniform,
+                               const GLuint secondMasks[SECOND_MASK_COUNT],
+                               float secondMaskUV[SECOND_MASK_COUNT][6])
+    {
+        GLfloat uv[SECOND_MASK_COUNT * 4];
+        GLfloat shear[SECOND_MASK_COUNT * 2];
+        GLfloat enabled[SECOND_MASK_COUNT];
+        for (int i = 0; i < SECOND_MASK_COUNT; i++) {
+            for (int j = 0; j < 4; j++) {
+                uv[i * 4 + j] = secondMaskUV[i][j];
+            }
+            shear[i * 2] = secondMaskUV[i][4];
+            shear[i * 2 + 1] = secondMaskUV[i][5];
+            enabled[i] = secondMasks[i] ? 1 : 0;
+        }
+        gl()->uniform4fv(uvUniform, SECOND_MASK_COUNT, uv);
+        gl()->uniform2fv(shearUniform, SECOND_MASK_COUNT, shear);
+        gl()->uniform1fv(enabledUniform, SECOND_MASK_COUNT, enabled);
+    }
+
     void drawFilteredTexture(CanvasSurfaceGL* cs, float position[8],
                              GLuint textureID, GLenum textureKind,
                              GLenum textureBindNumber, size_t textureWidth,
                              size_t textureHeight, GLuint maskTextureID,
-                             float maskUV[6], GLuint secondMaskTextureID,
-                             float secondMaskUV[6])
+                             float maskUV[6],
+                             GLuint secondMasks[SECOND_MASK_COUNT],
+                             float secondMaskUV[SECOND_MASK_COUNT][6])
     {
         auto& lastState = m_state.back();
         bool enableMask = maskTextureID != 0;
@@ -5105,10 +5155,7 @@ public:
             if (enableMask) {
                 gl()->activeTexture(GL_TEXTURE1);
                 gl()->bindTexture(GL_TEXTURE_2D, maskTextureID);
-                if (secondMaskTextureID) {
-                    gl()->activeTexture(GL_TEXTURE2);
-                    gl()->bindTexture(GL_TEXTURE_2D, secondMaskTextureID);
-                }
+                bindSecondMasks(secondMasks);
             }
 
             gl()->activeTexture(GL_TEXTURE0);
@@ -5128,21 +5175,14 @@ public:
                 gl()->uniform4f(*maskUVUniform, maskUV[0], maskUV[1], maskUV[2],
                                 maskUV[3]);
                 gl()->uniform2f(*maskShearUniform, maskUV[4], maskUV[5]);
-                gl()->uniform1f(
+                setSecondMaskUniforms(
+                    m_compositorContext
+                        ->m_texBlurShaderProgramHWithMaskSecondMaskUV,
+                    m_compositorContext
+                        ->m_texBlurShaderProgramHWithMaskSecondMaskShear,
                     m_compositorContext
                         ->m_texBlurShaderProgramHWithMaskSecondMaskEnabled,
-                    secondMaskTextureID ? 1 : 0);
-                if (secondMaskTextureID) {
-                    gl()->uniform4f(
-                        m_compositorContext
-                            ->m_texBlurShaderProgramHWithMaskSecondMaskUV,
-                        secondMaskUV[0], secondMaskUV[1], secondMaskUV[2],
-                        secondMaskUV[3]);
-                    gl()->uniform2f(
-                        m_compositorContext
-                            ->m_texBlurShaderProgramHWithMaskSecondMaskShear,
-                        secondMaskUV[4], secondMaskUV[5]);
-                }
+                    secondMasks, secondMaskUV);
             }
 
             if (UNLIKELY(cs->isFlipYNeeded())) {
@@ -5169,7 +5209,8 @@ public:
         CanvasSurfaceGL* cs, float position[8], GLuint textureID,
         GLenum textureKind, GLenum textureBindNumber, size_t textureWidth,
         size_t textureHeight, GLuint maskTextureID, float maskUV[6],
-        GLuint secondMaskTextureID, float secondMaskUV[6],
+        GLuint secondMasks[SECOND_MASK_COUNT],
+        float secondMaskUV[SECOND_MASK_COUNT][6],
         Optional<const float*> roundedClipPos = nullptr,
         const CompositorImplGLState::RoundedRectClip* roundedClips = nullptr,
         int roundedClipCount = 0)
@@ -5178,7 +5219,7 @@ public:
         if (lastState.blurRadius) {
             drawFilteredTexture(cs, position, textureID, textureKind,
                                 textureBindNumber, textureWidth, textureHeight,
-                                maskTextureID, maskUV, secondMaskTextureID,
+                                maskTextureID, maskUV, secondMasks,
                                 secondMaskUV);
             return;
         }
@@ -5292,10 +5333,7 @@ public:
         if (enableMask) {
             gl()->activeTexture(GL_TEXTURE1);
             gl()->bindTexture(GL_TEXTURE_2D, maskTextureID);
-            if (secondMaskTextureID) {
-                gl()->activeTexture(GL_TEXTURE2);
-                gl()->bindTexture(GL_TEXTURE_2D, secondMaskTextureID);
-            }
+            bindSecondMasks(secondMasks);
         }
 
         gl()->activeTexture(GL_TEXTURE0);
@@ -5385,15 +5423,9 @@ public:
             gl()->uniform4f(*maskUVUniform, maskUV[0], maskUV[1], maskUV[2],
                             maskUV[3]);
             gl()->uniform2f(*maskShearUniform, maskUV[4], maskUV[5]);
-            gl()->uniform1f(*secondMaskEnabledUniform,
-                            secondMaskTextureID ? 1 : 0);
-            if (secondMaskTextureID) {
-                gl()->uniform4f(*secondMaskUVUniform, secondMaskUV[0],
-                                secondMaskUV[1], secondMaskUV[2],
-                                secondMaskUV[3]);
-                gl()->uniform2f(*secondMaskShearUniform, secondMaskUV[4],
-                                secondMaskUV[5]);
-            }
+            setSecondMaskUniforms(*secondMaskUVUniform, *secondMaskShearUniform,
+                                  *secondMaskEnabledUniform, secondMasks,
+                                  secondMaskUV);
         }
 
         if (UNLIKELY(cs->isFlipYNeeded())) {
@@ -5708,16 +5740,11 @@ public:
         if (!shouldSkipTexturePainting) {
             auto useCSSMask = [&](const Unit::Rect& localDst,
                                   GLuint& primaryMask, float(&primaryUV)[6],
-                                  GLuint& secondMask, float(&secondUV)[6]) {
+                                  GLuint(&secondMasks)[SECOND_MASK_COUNT],
+                                  float(&secondUV)[SECOND_MASK_COUNT][6]) {
+                int secondCount = 0;
                 for (size_t maskIndex = 0; maskIndex < m_maskCount;
                      maskIndex++) {
-                    // shortcut: the shader samples two masks, so a clip-path
-                    // mask leaves room for one CSS mask only and the outer
-                    // one is dropped; add a sampler if that combination
-                    // matters.
-                    if (secondMask) {
-                        break;
-                    }
                     CanvasSurfaceGL* maskSurface =
                         (CanvasSurfaceGL*)m_masks[maskIndex].surface;
                     const SkMatrix& maskMatrix = m_masks[maskIndex].drawToMask;
@@ -5775,10 +5802,11 @@ public:
                                     m.getSkewX() * h / maskWidth,
                                     -m.getSkewY() * w / maskHeight };
                     if (primaryMask) {
-                        secondMask = texture;
+                        secondMasks[secondCount] = texture;
                         for (int i = 0; i < 6; i++) {
-                            secondUV[i] = uv[i];
+                            secondUV[secondCount][i] = uv[i];
                         }
+                        secondCount++;
                     } else {
                         primaryMask = texture;
                         for (int i = 0; i < 6; i++) {
@@ -5794,9 +5822,9 @@ public:
                                        screenHeight, texPosition,
                                        activeClip ? clipPosition : nullptr);
                 GLuint primaryMask = maskFBO.fboTex;
-                GLuint secondMask = 0;
-                float secondMaskUV[6] = { 0, 0, 1, 1, 0, 0 };
-                useCSSMask(dst, primaryMask, maskUV, secondMask, secondMaskUV);
+                GLuint secondMasks[SECOND_MASK_COUNT] = {};
+                float secondMaskUV[SECOND_MASK_COUNT][6] = {};
+                useCSSMask(dst, primaryMask, maskUV, secondMasks, secondMaskUV);
                 drawTexture(csGL, texPosition,
                             csGL->m_textureFragments[0].textureID,
 #if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
@@ -5805,7 +5833,7 @@ public:
                             GL_TEXTURE_EXTERNAL_OES, -1,
 #endif
                             csGL->m_bufferWidth, csGL->m_bufferHeight,
-                            primaryMask, maskUV, secondMask, secondMaskUV,
+                            primaryMask, maskUV, secondMasks, secondMaskUV,
                             activeClip ? clipPosition : nullptr,
                             activeClip ? lastState.roundedRectClips : nullptr,
                             activeClip ? lastState.roundedRectClipCount : 0);
@@ -5905,15 +5933,15 @@ public:
                                 }
 
                                 GLuint primaryMask = maskFBO.fboTex;
-                                GLuint secondMask = 0;
-                                float secondMaskUV[6] = { 0, 0, 1, 1, 0, 0 };
+                                GLuint secondMasks[SECOND_MASK_COUNT] = {};
+                                float secondMaskUV[SECOND_MASK_COUNT][6] = {};
                                 useCSSMask(newDst, primaryMask, maskUV,
-                                           secondMask, secondMaskUV);
+                                           secondMasks, secondMaskUV);
                                 drawTexture(
                                     csGL, texPosition, tid, GL_TEXTURE_2D,
                                     GL_TEXTURE0, texureDataWidth,
                                     texureDataHeight, primaryMask, maskUV,
-                                    secondMask, secondMaskUV,
+                                    secondMasks, secondMaskUV,
                                     activeClip ? clipPosition : nullptr,
                                     activeClip ? lastState.roundedRectClips
                                                : nullptr,
@@ -6357,6 +6385,10 @@ protected:
     std::vector<FBOState> m_fboState;
     GLuint m_baseFBOId;
     GLuint m_baseRBOId;
+    // A clip-path mask takes the primary slot and pushes every CSS mask into
+    // the second one.
+    static_assert(maxMaskSurfaces <= SECOND_MASK_COUNT,
+                  "the second mask slot must fit every CSS mask");
     MaskSurface m_masks[maxMaskSurfaces];
     size_t m_maskCount;
 
