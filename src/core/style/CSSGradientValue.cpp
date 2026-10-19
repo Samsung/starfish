@@ -30,7 +30,11 @@ void CSSGradientValue::convertCSSColorStopsToColorStops(
         ColorStop* cs = new ColorStop();
         auto color = item->color();
         if (color.valueKind() ==
-            CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+                CSSStyleValuePair::ValueKind::NamedColorValueKind &&
+            color.namedColorValue() == NamedColor::currentColor) {
+            cs->setIsCurrentColor(true);
+        } else if (color.valueKind() ==
+                   CSSStyleValuePair::ValueKind::NamedColorValueKind) {
             Unit::Color c =
                 NamedColor::namedColorToColor(color.namedColorValue());
             cs->setColor(c);

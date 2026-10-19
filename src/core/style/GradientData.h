@@ -51,6 +51,7 @@ public:
         : m_color()
         , m_offset()
         , m_specified(false)
+        , m_isCurrentColor(false)
     {
     }
     Unit::Color color()
@@ -81,6 +82,17 @@ public:
     void setSpecified(bool value)
     {
         m_specified = value;
+    }
+
+    // currentcolor is resolved against the painting box's color.
+    bool isCurrentColor()
+    {
+        return m_isCurrentColor;
+    }
+
+    void setIsCurrentColor(bool value)
+    {
+        m_isCurrentColor = value;
     }
 
     bool equals(ColorStop* other) const
@@ -116,6 +128,7 @@ private:
     Unit::Color m_color;
     Length m_offset;
     bool m_specified;
+    bool m_isCurrentColor;
 };
 
 struct GradientDrawingInfo : public gc {

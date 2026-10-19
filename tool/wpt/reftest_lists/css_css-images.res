@@ -1,7 +1,7 @@
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/color-stop-color-mix-currentcolor-invalidation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/color-stop-contrast-color-currentcolor-invalidation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/color-stop-currentcolor-invalidation.html
-# [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-images/color-stop-currentcolor.html
+http://web-platform.test:8000/css/css-images/color-stop-currentcolor.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/color-stop-light-dark-currentcolor-invalidation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/color-stop-relative-color-currentcolor-invalidation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/conic-gradient-angle-negative.html

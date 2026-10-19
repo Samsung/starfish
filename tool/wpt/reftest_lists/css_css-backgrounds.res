@@ -163,9 +163,9 @@ http://web-platform.test:8000/css/css-backgrounds/background-image-cover-zoomed-
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/background-image-first-letter.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-image-first-line.html
 http://web-platform.test:8000/css/css-backgrounds/background-image-gradient-currentcolor-conic-repaint.html
-# [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-backgrounds/background-image-gradient-currentcolor-linear-repaint.html
-# [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-backgrounds/background-image-gradient-currentcolor-radial-repaint.html
-# [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-backgrounds/background-image-gradient-currentcolor-visited.html
+http://web-platform.test:8000/css/css-backgrounds/background-image-gradient-currentcolor-linear-repaint.html
+http://web-platform.test:8000/css/css-backgrounds/background-image-gradient-currentcolor-radial-repaint.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-image-gradient-currentcolor-visited.html
 http://web-platform.test:8000/css/css-backgrounds/background-image-gradient-interpolation-repaint.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-image-image-function.html
 http://web-platform.test:8000/css/css-backgrounds/background-image-large-with-auto.html
