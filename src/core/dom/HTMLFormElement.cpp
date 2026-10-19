@@ -554,10 +554,11 @@ void HTMLFormControl::queueEvent(QualifiedName& eventType, bool bubbles,
 }
 
 void HTMLFormControl::fireEvent(QualifiedName& eventType, bool bubbles,
-                                bool cancelable)
+                                bool cancelable, bool composed)
 {
     Event* e = new Event(executionContext(), eventType.localName(),
                          EventInit(bubbles, cancelable));
+    e->setComposed(composed);
     EventTarget::dispatchEventByUA(this, e);
 }
 

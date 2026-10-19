@@ -20,10 +20,13 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
+#include "core/dom/Document.h"
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/Node.h"
 #include "core/layout/FrameRangeBox.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 #include "core/style/ComputedStyle.h"
 
 namespace Starfish {
@@ -94,17 +97,67 @@ void FrameRangeBox::paintContent(PaintingContext& ctx)
     }
 }
 
-void FrameRangeBox::paintSlider(Canvas* canvas)
+LayoutRect FrameRangeBox::sliderRect()
 {
-    // https://www.w3.org/TR/css-ui-4/#appearance-switching
-    // appearance: none drops the native control; the element keeps the CSS box
-    // that has already been painted.
-    if (style()->appearance() == NoneAppearanceValue) {
-        return;
+    return LayoutRect(borderLeft() + paddingLeft(), borderTop() + paddingTop(),
+                      contentWidth(), contentHeight());
+}
+
+// The thumb travels between the two ends of the track, so its own width comes
+// off the distance it can cover.
+static LayoutUnit thumbSizeFor(const LayoutRect& content)
+{
+    return std::min(LayoutUnit(RANGE_THUMB_SIZE), content.height());
+}
+
+Optional<double> FrameRangeBox::fractionAtPagePoint(double pageX, double pageY)
+{
+    LayoutRect content = sliderRect();
+    LayoutUnit thumbSize = thumbSizeFor(content);
+    double travel = (content.width() - thumbSize).toFloat();
+    if (travel <= 0) {
+        return NullOption;
     }
 
-    LayoutRect content(borderLeft() + paddingLeft(), borderTop() + paddingTop(),
-                       contentWidth(), contentHeight());
+    // computeScreenMatrix() maps into the top-level viewport. Page
+    // coordinates count from the document's origin instead: scrolled by the
+    // document's own offset, and, inside an iframe, relative to that
+    // iframe's viewport rather than the top one, which is the same
+    // correction Element::getClientQuads() makes for getBoundingClientRect().
+    SkMatrix matrix = computeScreenMatrix();
+    matrix.postTranslate(node()->window()->scrollX(false),
+                         node()->window()->scrollY(false));
+    Document* document = node()->document();
+    if (document->browsingContext() &&
+        !document->browsingContext()->isTopLevelBrowsingContext() &&
+        document->frame() && document->frame()->isFrameBox()) {
+        SkPoint origin[1] = { { 0, 0 } };
+        document->frame()->asFrameBox()->computeScreenMatrix().mapPoints(origin,
+                                                                         1);
+        matrix.postTranslate(-origin[0].x(), -origin[0].y());
+    }
+    SkMatrix inverse;
+    if (!matrix.invert(&inverse)) {
+        return NullOption;
+    }
+    SkPoint point[1] = { { (float)pageX, (float)pageY } };
+    inverse.mapPoints(point, 1);
+
+    // The pointer says where the thumb's center goes, and that center sits
+    // half a thumb inside the track at either end.
+    double fraction =
+        (point[0].x() - content.x().toFloat() - thumbSize.toFloat() / 2) /
+        travel;
+    fraction = std::min(std::max(fraction, 0.0), 1.0);
+    if (style()->direction() == DirectionValue::RtlDirectionValue) {
+        fraction = 1 - fraction;
+    }
+    return fraction;
+}
+
+void FrameRangeBox::paintSlider(Canvas* canvas)
+{
+    LayoutRect content = sliderRect();
     if (content.width() <= 0 || content.height() <= 0) {
         return;
     }
@@ -113,23 +166,27 @@ void FrameRangeBox::paintSlider(Canvas* canvas)
 
     canvas->save();
 
-    LayoutUnit trackThickness =
-        std::min(LayoutUnit(RANGE_TRACK_THICKNESS), content.height());
-    canvas->setFillColor(disabled ? RANGE_TRACK_DISABLED_COLOR
-                                  : RANGE_TRACK_COLOR);
-    canvas->drawRect(LayoutRect(
-        content.x(), content.y() + (content.height() - trackThickness) / 2,
-        content.width(), trackThickness));
+    // https://www.w3.org/TR/css-ui-4/#appearance-switching
+    // appearance: none drops the native track and leaves the CSS box, whose
+    // background then stands in for it. The thumb stays, as it does in other
+    // engines: pages style the track this way and still expect a thumb to
+    // show the value and to drag.
+    if (style()->appearance() != NoneAppearanceValue) {
+        LayoutUnit trackThickness =
+            std::min(LayoutUnit(RANGE_TRACK_THICKNESS), content.height());
+        canvas->setFillColor(disabled ? RANGE_TRACK_DISABLED_COLOR
+                                      : RANGE_TRACK_COLOR);
+        canvas->drawRect(LayoutRect(
+            content.x(), content.y() + (content.height() - trackThickness) / 2,
+            content.width(), trackThickness));
+    }
 
     double fraction = node()->asHTMLInputElement()->rangeValueFraction();
     if (style()->direction() == DirectionValue::RtlDirectionValue) {
         fraction = 1 - fraction;
     }
 
-    // The thumb travels between the two ends of the track, so its own width
-    // comes off the distance it can cover.
-    LayoutUnit thumbSize =
-        std::min(LayoutUnit(RANGE_THUMB_SIZE), content.height());
+    LayoutUnit thumbSize = thumbSizeFor(content);
     LayoutUnit travel = content.width() - thumbSize;
     canvas->setFillColor(disabled ? RANGE_THUMB_DISABLED_COLOR
                                   : RANGE_THUMB_COLOR);

@@ -50,6 +50,14 @@ String* keyValueToKey(KeyValue v)
         return String::createASCIIString("ArrowLeft");
     } else if (v == ArrowRightKey) {
         return String::createASCIIString("ArrowRight");
+    } else if (v == HomeKey) {
+        return String::createASCIIString("Home");
+    } else if (v == EndKey) {
+        return String::createASCIIString("End");
+    } else if (v == PageUpKey) {
+        return String::createASCIIString("PageUp");
+    } else if (v == PageDownKey) {
+        return String::createASCIIString("PageDown");
     } else if (v == MinusMarkKey) {
         return String::createASCIIString("-");
     } else if (v == DeleteKey) {
@@ -140,7 +148,7 @@ bool keyToKeyValue(const std::string& key, const std::string& text,
 {
     // Only keys keyValueToKey can name back: a KeyValue it does not know
     // reaches script as key == "undefined", so mapping one here would build
-    // half-working surface. Tab/Backspace/Home/End already had that gap before
+    // half-working surface. Tab/Backspace still have that gap from before
     // this table existed.
     static const struct {
         const char* name;
@@ -157,6 +165,8 @@ bool keyToKeyValue(const std::string& key, const std::string& text,
         { "ArrowDown", ArrowDownKey },
         { "Home", HomeKey },
         { "End", EndKey },
+        { "PageUp", PageUpKey },
+        { "PageDown", PageDownKey },
         { "Escape", EscapeKey },
         { " ", SpaceKey },
         { "Space", SpaceKey },
@@ -223,6 +233,14 @@ String* keyValueToCode(KeyValue v)
         return String::createASCIIString("ArrowLeft");
     } else if (v == ArrowRightKey) {
         return String::createASCIIString("ArrowRight");
+    } else if (v == HomeKey) {
+        return String::createASCIIString("Home");
+    } else if (v == EndKey) {
+        return String::createASCIIString("End");
+    } else if (v == PageUpKey) {
+        return String::createASCIIString("PageUp");
+    } else if (v == PageDownKey) {
+        return String::createASCIIString("PageDown");
     } else if (v == MinusMarkKey) {
         return String::createASCIIString("Minus");
     } else if (v == DeleteKey) {
@@ -329,6 +347,14 @@ uint32_t keyValueToKeyCode(KeyValue v, bool isForVirtualKeyCode)
         return 39;
     } else if (v == ArrowUpKey) {
         return 38;
+    } else if (v == PageUpKey) {
+        return 33;
+    } else if (v == PageDownKey) {
+        return 34;
+    } else if (v == EndKey) {
+        return 35;
+    } else if (v == HomeKey) {
+        return 36;
     } else if (v == ArrowDownKey) {
         return 40;
     } else if (v == EnterKey) {

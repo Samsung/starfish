@@ -147,6 +147,16 @@ private:
     String* sanitizedRangeValue(String* input);
     void applyStep(int64_t n);
 
+    // User interaction with a range control: keys step the value, a pointer
+    // drags the thumb.
+    bool handleRangeEvent(Event* event);
+    bool handleRangeKeydown(KeyboardEvent* event);
+    bool draggingRange();
+    void endRangeDrag();
+    void moveRangeThumbTo(double pageX, double pageY);
+    void setRangeValueByUser(double value);
+    void commitRangeValue(double valueBefore);
+
     bool m_dirtiness;
 
     bool m_checkness;
@@ -154,6 +164,11 @@ private:
     bool m_previousCheckness;
 
     HTMLInputElement* m_previousCheckedRadioButton;
+
+    // The value when a pointer drag began; change fires on release only if
+    // the drag moved it. The drag itself is the pointer capture held on the
+    // browsing context, so nothing here can outlive it.
+    double m_rangeValueAtDragStart;
 
     GCVector<File*>* m_selectedFiles = nullptr;
 };

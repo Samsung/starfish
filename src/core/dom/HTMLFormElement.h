@@ -109,7 +109,8 @@ protected:
                     bool supportTabIndex = true);
     void fireSubmitEvent();
 
-    virtual void fireEvent(QualifiedName& type, bool bubbles, bool cancelable);
+    virtual void fireEvent(QualifiedName& type, bool bubbles, bool cancelable,
+                           bool composed = false);
     virtual void queueEvent(QualifiedName& type, bool bubbles, bool cancelable);
 
     virtual bool isDisabled();

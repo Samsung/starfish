@@ -28,6 +28,10 @@
 #include "core/dom/DOMException.h"
 #include "core/dom/Text.h"
 #include "core/dom/KeyboardEvent.h"
+#include "core/dom/MouseEvent.h"
+#include "core/dom/Touch.h"
+#include "core/dom/TouchEvent.h"
+#include "core/dom/TouchList.h"
 #include "core/dom/InputEvent.h"
 #include "core/dom/CompositionEvent.h"
 #include "core/dom/HTMLFormElement.h"
@@ -37,6 +41,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/layout/FrameInputBox.h"
+#include "core/layout/FrameRangeBox.h"
 #ifdef STARFISH_ENABLE_A11Y_ATSPI
 #include "core/page/A11yAtspiTreeSource.h"
 #endif
@@ -159,6 +164,7 @@ HTMLInputElement::HTMLInputElement(Document* document,
     , m_dirtyCheckness(false)
     , m_previousCheckness(false)
     , m_previousCheckedRadioButton(nullptr)
+    , m_rangeValueAtDragStart(0)
 {
 }
 
@@ -564,7 +570,8 @@ void HTMLInputElement::activationBehavior()
     }
 
     if (type()->equals("checkbox") || type()->equals("radio")) {
-        fireEvent(starfish()->staticStrings()->m_input, true, false);
+        // input is composed as well as bubbling; change only bubbles.
+        fireEvent(starfish()->staticStrings()->m_input, true, false, true);
         fireEvent(starfish()->staticStrings()->m_change, true, false);
     } else if (type()->equals("file")) {
     } else if (type()->equals("submit")) {
@@ -738,6 +745,11 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
         return true;
     }
 
+    // The range handler sees disabled controls too, to let go of a drag.
+    if (type()->equals("range") && handleRangeEvent(event)) {
+        return true;
+    }
+
     if (isDisabled()) {
         return false;
     }
@@ -758,6 +770,200 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
         }
     }
     return false;
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range)
+// The spec leaves how the user moves a range control to the user agent; this
+// follows what other engines do: arrow keys step, Page keys jump a tenth of
+// the range, Home/End go to the ends, and a pointer drags the thumb.
+bool HTMLInputElement::handleRangeEvent(Event* event)
+{
+    // Only the user moves the control; a script dispatching the same events
+    // gets no default action, as with other engines.
+    if (!event->isTrusted()) {
+        return false;
+    }
+
+    if (isDisabled()) {
+        // Disabled mid-drag: let go where the thumb is, committing what the
+        // drag changed so far.
+        if (draggingRange()) {
+            endRangeDrag();
+        }
+        return false;
+    }
+
+    if (event->isKeyboardEvent()) {
+        if (!event->type()->equals("keydown") ||
+            document()->browsingContext()->focusedNode() != this) {
+            return false;
+        }
+        return handleRangeKeydown(event->asKeyboardEvent());
+    }
+
+    // A drag holds the pointer capture, so the moves and the release keep
+    // coming here once the pointer leaves the thin box of the control, and
+    // the browsing context lets go of it on release even when that happens
+    // somewhere this control no longer hears about.
+    BrowsingContext* browsingContext = document()->browsingContext();
+    if (event->isMouseEvent()) {
+        MouseEvent* mouseEvent = event->asMouseEvent();
+        if (mouseEvent->button() != 0) {
+            return false;
+        }
+        if (event->type()->equals("mousedown")) {
+            m_rangeValueAtDragStart = valueAsNumber();
+            browsingContext->setPointerCaptureTarget(this);
+            moveRangeThumbTo(mouseEvent->pageX(), mouseEvent->pageY());
+            return true;
+        }
+        if (!draggingRange()) {
+            return false;
+        }
+        if (event->type()->equals("mousemove")) {
+            moveRangeThumbTo(mouseEvent->pageX(), mouseEvent->pageY());
+            return true;
+        }
+        if (event->type()->equals("mouseup")) {
+            moveRangeThumbTo(mouseEvent->pageX(), mouseEvent->pageY());
+            endRangeDrag();
+            return true;
+        }
+        return false;
+    }
+
+    if (event->isTouchEvent()) {
+        TouchEvent* touchEvent = event->asTouchEvent();
+        if (event->type()->equals("touchstart")) {
+            if (touchEvent->touches()->length() == 0) {
+                return false;
+            }
+            Touch* touch = touchEvent->touches()->item(0);
+            m_rangeValueAtDragStart = valueAsNumber();
+            browsingContext->setPointerCaptureTarget(this);
+            moveRangeThumbTo(touch->pageX(), touch->pageY());
+            return true;
+        }
+        if (!draggingRange()) {
+            return false;
+        }
+        if (event->type()->equals("touchmove")) {
+            if (touchEvent->touches()->length()) {
+                Touch* touch = touchEvent->touches()->item(0);
+                moveRangeThumbTo(touch->pageX(), touch->pageY());
+            }
+            return true;
+        }
+        if (event->type()->equals("touchend") ||
+            event->type()->equals("touchcancel")) {
+            endRangeDrag();
+            return true;
+        }
+    }
+    return false;
+}
+
+bool HTMLInputElement::draggingRange()
+{
+    return document()->browsingContext()->pointerCaptureTarget() == this;
+}
+
+void HTMLInputElement::endRangeDrag()
+{
+    document()->browsingContext()->releasePointerCaptureTarget(this);
+    commitRangeValue(m_rangeValueAtDragStart);
+}
+
+bool HTMLInputElement::handleRangeKeydown(KeyboardEvent* event)
+{
+    double min = minimum();
+    double max = maximum();
+    if (max < min) {
+        return false;
+    }
+
+    // A control with step="any" has no step to move by; a hundredth of the
+    // range keeps the keys useful, as in other engines.
+    double step;
+    if (!allowedValueStep(&step)) {
+        step = (max - min) / 100;
+    }
+    double pageStep = std::max((max - min) / 10, step);
+    bool rtl = frame() && frame()->style()->direction() ==
+                              DirectionValue::RtlDirectionValue;
+
+    double current = valueAsNumber();
+    double next;
+    switch (event->keyValue()) {
+    case LWE::KeyValue::ArrowUpKey:
+        next = current + step;
+        break;
+    case LWE::KeyValue::ArrowDownKey:
+        next = current - step;
+        break;
+    // Left and right follow the direction the track is drawn in.
+    case LWE::KeyValue::ArrowRightKey:
+        next = rtl ? current - step : current + step;
+        break;
+    case LWE::KeyValue::ArrowLeftKey:
+        next = rtl ? current + step : current - step;
+        break;
+    case LWE::KeyValue::PageUpKey:
+        next = current + pageStep;
+        break;
+    case LWE::KeyValue::PageDownKey:
+        next = current - pageStep;
+        break;
+    case LWE::KeyValue::HomeKey:
+        next = min;
+        break;
+    case LWE::KeyValue::EndKey:
+        next = max;
+        break;
+    default:
+        return false;
+    }
+
+    setRangeValueByUser(std::min(std::max(next, min), max));
+    commitRangeValue(current);
+    return true;
+}
+
+void HTMLInputElement::moveRangeThumbTo(double pageX, double pageY)
+{
+    if (!frame() || !frame()->isFrameRangeBox()) {
+        return;
+    }
+    Optional<double> fraction =
+        static_cast<FrameRangeBox*>(frame())->fractionAtPagePoint(pageX, pageY);
+    if (!fraction) {
+        return;
+    }
+    double min = minimum();
+    double max = maximum();
+    if (max < min) {
+        return;
+    }
+    setRangeValueByUser(min + (max - min) * fraction.value());
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#common-input-element-events
+// input fires whenever the user changes the value, change once the change is
+// committed: on a key press right away, on a pointer drag when it ends.
+void HTMLInputElement::setRangeValueByUser(double value)
+{
+    String* oldValue = this->value();
+    setValue(serializeFloatingPointNumber(value));
+    if (!this->value()->equals(oldValue)) {
+        fireEvent(starfish()->staticStrings()->m_input, true, false, true);
+    }
+}
+
+void HTMLInputElement::commitRangeValue(double valueBefore)
+{
+    if (valueAsNumber() != valueBefore) {
+        fireEvent(starfish()->staticStrings()->m_change, true, false);
+    }
 }
 
 bool HTMLInputElement::isPlaceholderVisible()

@@ -1394,6 +1394,11 @@ public:
         return false;
     }
 
+    virtual bool isFrameRangeBox()
+    {
+        return false;
+    }
+
     virtual bool isFrameButtonBox()
     {
         return false;
