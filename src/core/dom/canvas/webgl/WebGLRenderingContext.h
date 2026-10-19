@@ -367,6 +367,7 @@ public:
 
     bool isFromCurrentContext(WebGLObject* object);
     bool isExtensionEnabled(const char* requestedName);
+    bool validateDrawCallVertexAttribs();
 
 private:
     bool checkAttribOrUniformName(String* name);

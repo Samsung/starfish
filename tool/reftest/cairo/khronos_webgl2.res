@@ -1564,7 +1564,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/renderbuffers/frame
 http://localhost:11010/conformance-suites/2.0.0/conformance2/renderbuffers/invalidate-framebuffer.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/renderbuffers/multisampled-renderbuffer-initialization.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/renderbuffers/readbuffer.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/attrib-type-match.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/attrib-type-match.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/blitframebuffer-filter-outofbounds.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/blitframebuffer-filter-srgb.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/blitframebuffer-multisampled-readbuffer.html

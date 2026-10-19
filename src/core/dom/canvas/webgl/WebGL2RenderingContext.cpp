@@ -1253,12 +1253,14 @@ void WebGL2RenderingContext::vertexAttrib1f(GLuint index, GLfloat x)
 {
     WebGLRenderingContext::vertexAttrib1f(index, x);
     m_currentVertexAttribType = GL_FLOAT;
+    getState()->setGenericVertexAttribType(index, GL_FLOAT);
 }
 
 void WebGL2RenderingContext::vertexAttrib2f(GLuint index, GLfloat x, GLfloat y)
 {
     WebGLRenderingContext::vertexAttrib2f(index, x, y);
     m_currentVertexAttribType = GL_FLOAT;
+    getState()->setGenericVertexAttribType(index, GL_FLOAT);
 }
 
 void WebGL2RenderingContext::vertexAttrib3f(GLuint index, GLfloat x, GLfloat y,
@@ -1266,6 +1268,7 @@ void WebGL2RenderingContext::vertexAttrib3f(GLuint index, GLfloat x, GLfloat y,
 {
     WebGLRenderingContext::vertexAttrib3f(index, x, y, z);
     m_currentVertexAttribType = GL_FLOAT;
+    getState()->setGenericVertexAttribType(index, GL_FLOAT);
 }
 
 void WebGL2RenderingContext::vertexAttrib4f(GLuint index, GLfloat x, GLfloat y,
@@ -1273,30 +1276,35 @@ void WebGL2RenderingContext::vertexAttrib4f(GLuint index, GLfloat x, GLfloat y,
 {
     WebGLRenderingContext::vertexAttrib4f(index, x, y, z, w);
     m_currentVertexAttribType = GL_FLOAT;
+    getState()->setGenericVertexAttribType(index, GL_FLOAT);
 }
 
 void WebGL2RenderingContext::vertexAttrib1fv(GLuint index, Float32List values)
 {
     WebGLRenderingContext::vertexAttrib1fv(index, values);
     m_currentVertexAttribType = GL_FLOAT;
+    getState()->setGenericVertexAttribType(index, GL_FLOAT);
 }
 
 void WebGL2RenderingContext::vertexAttrib2fv(GLuint index, Float32List values)
 {
     WebGLRenderingContext::vertexAttrib2fv(index, values);
     m_currentVertexAttribType = GL_FLOAT;
+    getState()->setGenericVertexAttribType(index, GL_FLOAT);
 }
 
 void WebGL2RenderingContext::vertexAttrib3fv(GLuint index, Float32List values)
 {
     WebGLRenderingContext::vertexAttrib3fv(index, values);
     m_currentVertexAttribType = GL_FLOAT;
+    getState()->setGenericVertexAttribType(index, GL_FLOAT);
 }
 
 void WebGL2RenderingContext::vertexAttrib4fv(GLuint index, Float32List values)
 {
     WebGLRenderingContext::vertexAttrib4fv(index, values);
     m_currentVertexAttribType = GL_FLOAT;
+    getState()->setGenericVertexAttribType(index, GL_FLOAT);
 }
 
 void WebGL2RenderingContext::uniform1ui(
@@ -1519,6 +1527,7 @@ void WebGL2RenderingContext::vertexAttribI4i(GLuint index, GLint x, GLint y,
 
     gl()->vertexAttribI4i(index, x, y, z, w);
     m_currentVertexAttribType = GL_INT;
+    getState()->setGenericVertexAttribType(index, GL_INT);
 }
 
 void WebGL2RenderingContext::vertexAttribI4iv(GLuint index, Int32List values)
@@ -1546,6 +1555,7 @@ void WebGL2RenderingContext::vertexAttribI4iv(GLuint index, Int32List values)
         STARFISH_ASSERT_NOT_REACHED();
     }
     m_currentVertexAttribType = GL_INT;
+    getState()->setGenericVertexAttribType(index, GL_INT);
 }
 
 void WebGL2RenderingContext::vertexAttribI4ui(GLuint index, GLuint x, GLuint y,
@@ -1555,6 +1565,7 @@ void WebGL2RenderingContext::vertexAttribI4ui(GLuint index, GLuint x, GLuint y,
 
     gl()->vertexAttribI4ui(index, x, y, z, w);
     m_currentVertexAttribType = GL_UNSIGNED_INT;
+    getState()->setGenericVertexAttribType(index, GL_UNSIGNED_INT);
 }
 
 void WebGL2RenderingContext::vertexAttribI4uiv(GLuint index, Uint32List values)
@@ -1582,6 +1593,7 @@ void WebGL2RenderingContext::vertexAttribI4uiv(GLuint index, Uint32List values)
         STARFISH_ASSERT_NOT_REACHED();
     }
     m_currentVertexAttribType = GL_UNSIGNED_INT;
+    getState()->setGenericVertexAttribType(index, GL_UNSIGNED_INT);
 }
 
 void WebGL2RenderingContext::vertexAttribIPointer(GLuint index, GLint size,
@@ -1630,6 +1642,11 @@ void WebGL2RenderingContext::vertexAttribIPointer(GLuint index, GLint size,
     if (hasNewGLError()) {
         return;
     }
+    GLenum mappedType = (type == GL_UNSIGNED_BYTE ||
+                         type == GL_UNSIGNED_SHORT || type == GL_UNSIGNED_INT)
+                            ? GL_UNSIGNED_INT
+                            : GL_INT;
+    getState()->setVertexAttribType(index, mappedType);
     getState()->setBufferBoundToVertexAttributes(
         index, getState()->getBoundBuffer(GL_ARRAY_BUFFER));
 }
@@ -3302,7 +3319,7 @@ void WebGL2RenderingContext::drawRangeElements(GLenum mode, GLuint start,
     }
 
     completePendingJobs();
-    if (!validateDrawCallUBO())
+    if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs())
         return;
     gl()->drawRangeElements(mode, start, end, count, type,
                             reinterpret_cast<const void*>(offset));

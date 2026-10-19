@@ -1359,7 +1359,7 @@ void WebGLRenderingContext::drawArraysInstanced(GLenum mode, GLint first,
     }
 
     completePendingJobs();
-    if (!validateDrawCallUBO())
+    if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs())
         return;
     m_gl->drawArraysInstanced(mode, first, count, instanceCount);
     m_ownerHTMLCanvasElement->setNeedsComposite();
@@ -1421,7 +1421,7 @@ void WebGLRenderingContext::drawElementsInstanced(GLenum mode, GLsizei count,
     }
 
     completePendingJobs();
-    if (!validateDrawCallUBO())
+    if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs())
         return;
     m_gl->drawElementsInstanced(mode, count, type,
                                 reinterpret_cast<const void*>(offset),
@@ -1448,7 +1448,7 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
         return;
     }
 
-    if (!validateDrawCallUBO()) {
+    if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs()) {
         return;
     }
 
@@ -1543,7 +1543,7 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
         return;
     }
 
-    if (!validateDrawCallUBO()) {
+    if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs()) {
         return;
     }
 
@@ -4098,6 +4098,7 @@ void WebGLRenderingContext::vertexAttrib1f(GLuint index, GLfloat x)
     ENTER_CONTEXT_SCOPE();
 
     m_gl->vertexAttrib1f(index, x);
+    m_state->setGenericVertexAttribType(index, GL_FLOAT);
 }
 
 void WebGLRenderingContext::vertexAttrib2f(GLuint index, GLfloat x, GLfloat y)
@@ -4105,6 +4106,7 @@ void WebGLRenderingContext::vertexAttrib2f(GLuint index, GLfloat x, GLfloat y)
     ENTER_CONTEXT_SCOPE();
 
     m_gl->vertexAttrib2f(index, x, y);
+    m_state->setGenericVertexAttribType(index, GL_FLOAT);
 }
 
 void WebGLRenderingContext::vertexAttrib3f(GLuint index, GLfloat x, GLfloat y,
@@ -4113,6 +4115,7 @@ void WebGLRenderingContext::vertexAttrib3f(GLuint index, GLfloat x, GLfloat y,
     ENTER_CONTEXT_SCOPE();
 
     m_gl->vertexAttrib3f(index, x, y, z);
+    m_state->setGenericVertexAttribType(index, GL_FLOAT);
 }
 
 void WebGLRenderingContext::vertexAttrib4f(GLuint index, GLfloat x, GLfloat y,
@@ -4121,6 +4124,7 @@ void WebGLRenderingContext::vertexAttrib4f(GLuint index, GLfloat x, GLfloat y,
     ENTER_CONTEXT_SCOPE();
 
     m_gl->vertexAttrib4f(index, x, y, z, w);
+    m_state->setGenericVertexAttribType(index, GL_FLOAT);
 }
 
 #define IMPLEMENT_VERTEX_ATTRIB_NFV(N)                                        \
@@ -4128,6 +4132,7 @@ void WebGLRenderingContext::vertexAttrib4f(GLuint index, GLfloat x, GLfloat y,
                                                     Float32List variant)      \
     {                                                                         \
         ENTER_CONTEXT_SCOPE();                                                \
+        m_state->setGenericVertexAttribType(index, GL_FLOAT);                 \
         if (variant.isFloat32ArrayValue()) {                                  \
             Float32ArrayObjectRef* values = variant.getFloat32ArrayValue();   \
             const size_t arrayLength = values->arrayLength();                 \
@@ -4236,6 +4241,7 @@ void WebGLRenderingContext::vertexAttribPointer(GLuint index, GLint size,
     if (hasNewGLError()) {
         return;
     }
+    m_state->setVertexAttribType(index, GL_FLOAT);
     m_state->setBufferBoundToVertexAttributes(
         index, m_state->getBoundBuffer(GL_ARRAY_BUFFER));
 }
@@ -6498,6 +6504,94 @@ GLint WebGLRenderingContext::getCurrentProgram()
     GLint program = 0;
     m_gl->getIntegerv(GL_CURRENT_PROGRAM, &program);
     return program;
+}
+
+bool WebGLRenderingContext::validateDrawCallVertexAttribs()
+{
+    if (webGLVersion() < 2) {
+        return true;
+    }
+
+    GLint program = getCurrentProgram();
+    if (program == 0) {
+        return true;
+    }
+
+    GLint activeAttribs = 0;
+    m_gl->getProgramiv(program, GL_ACTIVE_ATTRIBUTES, &activeAttribs);
+    for (GLint i = 0; i < activeAttribs; ++i) {
+        char nameBuf[256];
+        GLsizei length = 0;
+        GLint size = 0;
+        GLenum type = 0;
+        m_gl->getActiveAttrib(program, i, sizeof(nameBuf), &length, &size,
+                              &type, nameBuf);
+        GLint location = m_gl->getAttribLocation(program, nameBuf);
+        if (location < 0) {
+            continue;
+        }
+
+        bool isShaderInt = false;
+        bool isShaderUint = false;
+        switch (type) {
+        case GL_INT:
+        case GL_INT_VEC2:
+        case GL_INT_VEC3:
+        case GL_INT_VEC4:
+            isShaderInt = true;
+            break;
+        case GL_UNSIGNED_INT:
+        case GL_UNSIGNED_INT_VEC2:
+        case GL_UNSIGNED_INT_VEC3:
+        case GL_UNSIGNED_INT_VEC4:
+            isShaderUint = true;
+            break;
+        default:
+            break;
+        }
+
+        bool arrayEnabled = m_state->isVertexAttribArrayEnabled(location);
+        if (arrayEnabled) {
+            GLenum bufferType = m_state->getVertexAttribType(location);
+            if (isShaderInt && bufferType != GL_INT) {
+                setGLError(GL_INVALID_OPERATION,
+                           "Active signed integer vertex attribute requires "
+                           "signed integer buffer");
+                return false;
+            }
+            if (isShaderUint && bufferType != GL_UNSIGNED_INT) {
+                setGLError(GL_INVALID_OPERATION,
+                           "Active unsigned integer vertex attribute requires "
+                           "unsigned integer buffer");
+                return false;
+            }
+            if (!isShaderInt && !isShaderUint && bufferType != GL_FLOAT) {
+                setGLError(
+                    GL_INVALID_OPERATION,
+                    "Active float vertex attribute requires float buffer");
+                return false;
+            }
+        } else {
+            GLenum genericType = m_state->getGenericVertexAttribType(location);
+            if (isShaderInt && genericType != GL_INT) {
+                setGLError(GL_INVALID_OPERATION,
+                           "Type mismatch for active integer attribute");
+                return false;
+            }
+            if (isShaderUint && genericType != GL_UNSIGNED_INT) {
+                setGLError(
+                    GL_INVALID_OPERATION,
+                    "Type mismatch for active unsigned integer attribute");
+                return false;
+            }
+            if (!isShaderInt && !isShaderUint && genericType != GL_FLOAT) {
+                setGLError(GL_INVALID_OPERATION,
+                           "Type mismatch for active float attribute");
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 void WebGLRenderingContext::completePendingJobs()
