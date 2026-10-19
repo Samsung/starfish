@@ -61,8 +61,6 @@ public:
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = true;
         m_currentMaskSurface = nullptr;
-        m_maskOffsetX = 0;
-        m_maskOffsetY = 0;
         m_maskWidth = 0;
         m_maskHeight = 0;
 
@@ -296,13 +294,12 @@ public:
         cairo_restore(m_canvas);
     }
 
-    virtual void setMaskSurface(CanvasSurface* maskSurface, float offsetX,
-                                float offsetY, float maskWidth,
+    virtual void setMaskSurface(CanvasSurface* maskSurface,
+                                const SkMatrix& drawToMask, float maskWidth,
                                 float maskHeight) override
     {
         m_currentMaskSurface = maskSurface;
-        m_maskOffsetX = offsetX;
-        m_maskOffsetY = offsetY;
+        m_maskMatrix = drawToMask;
         m_maskWidth = maskWidth;
         m_maskHeight = maskHeight;
     }
@@ -327,7 +324,19 @@ public:
             float ww = dst.width();
             float hh = dst.height();
 
-            if (data->bufferWidth() && data->bufferHeight() && ww && hh) {
+            // The user space origin is at (xx, yy) of the drawing
+            // coordinates; map it through drawToMask into mask pixels.
+            SkMatrix toMaskPixels = m_maskMatrix;
+            toMaskPixels.preTranslate(xx, yy);
+            toMaskPixels.postScale(
+                m_currentMaskSurface->bufferWidth() / m_maskWidth,
+                m_currentMaskSurface->bufferHeight() / m_maskHeight);
+
+            // A collapsed or non-finite mask mapping leaves the masked layer
+            // with no area; cairo would also reject the pattern matrix and
+            // put the context into an error state.
+            if (data->bufferWidth() && data->bufferHeight() && ww && hh &&
+                toMaskPixels.isFinite() && toMaskPixels.invert(nullptr)) {
                 cairo_save(m_canvas);
 
                 cairo_pattern_t* resizePattern =
@@ -354,12 +363,11 @@ public:
                 cairo_pattern_t* maskPattern =
                     cairo_pattern_create_for_surface(maskImage);
                 cairo_matrix_t maskMatrix;
-                cairo_matrix_init_translate(&maskMatrix, xx, yy);
-                cairo_matrix_scale(
-                    &maskMatrix,
-                    (double)m_currentMaskSurface->bufferWidth() / m_maskWidth,
-                    (double)m_currentMaskSurface->bufferHeight() /
-                        m_maskHeight);
+                cairo_matrix_init(
+                    &maskMatrix, toMaskPixels.getScaleX(),
+                    toMaskPixels.getSkewY(), toMaskPixels.getSkewX(),
+                    toMaskPixels.getScaleY(), toMaskPixels.getTranslateX(),
+                    toMaskPixels.getTranslateY());
                 cairo_pattern_set_matrix(maskPattern, &maskMatrix);
 
                 cairo_mask(m_canvas, maskPattern);
@@ -486,8 +494,7 @@ protected:
     bool m_shouldDestroyCairo;
     bool m_shouldDestroySurface;
     CanvasSurface* m_currentMaskSurface;
-    float m_maskOffsetX;
-    float m_maskOffsetY;
+    SkMatrix m_maskMatrix;
     float m_maskWidth;
     float m_maskHeight;
 };

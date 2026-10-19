@@ -584,14 +584,16 @@ struct CanvasSurfaceTextureInfo {
 #define SECOND_MASK_UNIFORMS                  \
     "uniform sampler2D uSecondMaskTexture;\n" \
     "uniform vec4 uSecondMaskUV;\n"           \
+    "uniform vec2 uSecondMaskShear;\n"        \
     "uniform float uSecondMaskEnabled;\n"
 
 #define SECOND_MASK_ALPHA                                        \
     "  float secondMaskAlpha = 1.0;\n"                           \
     "  if (uSecondMaskEnabled > 0.5) {\n"                        \
     "    vec2 secondCoord = vec2(vTexPos.x * uSecondMaskUV.z + " \
-    "uSecondMaskUV.x, 1.0 - (vTexPos.y * uSecondMaskUV.w + "     \
-    "uSecondMaskUV.y));\n"                                       \
+    "uSecondMaskUV.x + vTexPos.y * uSecondMaskShear.x, "         \
+    "1.0 - (vTexPos.y * uSecondMaskUV.w + uSecondMaskUV.y + "    \
+    "vTexPos.x * uSecondMaskShear.y));\n"                        \
     "    secondMaskAlpha = 0.0;\n"                               \
     "    if (secondCoord.x >= 0.0 && secondCoord.x <= 1.0 && "   \
     "secondCoord.y >= 0.0 && secondCoord.y <= 1.0) {\n"          \
@@ -682,8 +684,10 @@ public:
     GLint m_texShaderProgramWithMaskAlpha;
     GLint m_texShaderProgramWithMaskMaskTexture;
     GLint m_texShaderProgramWithMaskMaskUV;
+    GLint m_texShaderProgramWithMaskMaskShear;
     GLint m_texShaderProgramWithMaskSecondMaskTexture;
     GLint m_texShaderProgramWithMaskSecondMaskUV;
+    GLint m_texShaderProgramWithMaskSecondMaskShear;
     GLint m_texShaderProgramWithMaskSecondMaskEnabled;
 
     GLuint m_texFragmentShaderEGLImageExternal;
@@ -703,8 +707,10 @@ public:
     GLint m_texShaderProgramEGLImageExternalWithMaskAlpha;
     GLint m_texShaderProgramEGLImageExternalWithMaskMaskTexture;
     GLint m_texShaderProgramEGLImageExternalWithMaskMaskUV;
+    GLint m_texShaderProgramEGLImageExternalWithMaskMaskShear;
     GLint m_texShaderProgramEGLImageExternalWithMaskSecondMaskTexture;
     GLint m_texShaderProgramEGLImageExternalWithMaskSecondMaskUV;
+    GLint m_texShaderProgramEGLImageExternalWithMaskSecondMaskShear;
     GLint m_texShaderProgramEGLImageExternalWithMaskSecondMaskEnabled;
 
     GLuint m_texFragmentBlurShaderW;
@@ -752,8 +758,10 @@ public:
     GLint m_texBlurShaderProgramHWithMaskAlpha;
     GLint m_texBlurShaderProgramHWithMaskMaskTexture;
     GLint m_texBlurShaderProgramHWithMaskMaskUV;
+    GLint m_texBlurShaderProgramHWithMaskMaskShear;
     GLint m_texBlurShaderProgramHWithMaskSecondMaskTexture;
     GLint m_texBlurShaderProgramHWithMaskSecondMaskUV;
+    GLint m_texBlurShaderProgramHWithMaskSecondMaskShear;
     GLint m_texBlurShaderProgramHWithMaskSecondMaskEnabled;
 
     GLuint m_texTexPosBuffer;
@@ -967,6 +975,7 @@ public:
         m_texShaderProgramWithMaskAlpha = 0;
         m_texShaderProgramWithMaskMaskTexture = 0;
         m_texShaderProgramWithMaskMaskUV = 0;
+        m_texShaderProgramWithMaskMaskShear = 0;
         m_texFragmentShaderWithMask = 0;
 
         // texShaderProgramEGLImageExternal (without mask)
@@ -981,6 +990,7 @@ public:
         m_texShaderProgramEGLImageExternalWithMaskAlpha = 0;
         m_texShaderProgramEGLImageExternalWithMaskMaskTexture = 0;
         m_texShaderProgramEGLImageExternalWithMaskMaskUV = 0;
+        m_texShaderProgramEGLImageExternalWithMaskMaskShear = 0;
         m_texFragmentShaderEGLImageExternalWithMask = 0;
 
         m_texVertexShader = m_texFragmentShader = 0;
@@ -1023,6 +1033,7 @@ public:
         m_texBlurShaderProgramHWithMaskAlpha = 0;
         m_texBlurShaderProgramHWithMaskMaskTexture = 0;
         m_texBlurShaderProgramHWithMaskMaskUV = 0;
+        m_texBlurShaderProgramHWithMaskMaskShear = 0;
         m_texBlurShaderProgramHWithMaskTexPos = 0;
         m_texBlurShaderProgramHWithMaskTexIdx = 0;
 
@@ -1827,12 +1838,14 @@ public:
                 "varying vec2 vTexPos;\n"
                 "uniform float uAlpha;\n"
                 "uniform vec4 uMaskUV;\n"
+                "uniform vec2 uMaskShear;\n"
                 "void main(void)\n"
                 "{\n"
                 "  vec4 texColor = texture2D(uTexture, vTexPos);\n"
-                "  vec2 maskCoord = vec2(vTexPos.x * uMaskUV.z + uMaskUV.x, "
-                "1.0 - (vTexPos.y * uMaskUV.w + "
-                "uMaskUV.y));\n" PRIMARY_MASK_ALPHA SECOND_MASK_ALPHA
+                "  vec2 maskCoord = vec2(vTexPos.x * uMaskUV.z + uMaskUV.x + "
+                "vTexPos.y * uMaskShear.x, 1.0 - (vTexPos.y * uMaskUV.w + "
+                "uMaskUV.y + vTexPos.x * "
+                "uMaskShear.y));\n" PRIMARY_MASK_ALPHA SECOND_MASK_ALPHA
                 "  gl_FragColor = texColor * uAlpha * maskAlpha * "
                 "secondMaskAlpha;\n"
                 "}";
@@ -1847,12 +1860,14 @@ public:
                     "varying vec2 vTexPos;\n"
                     "uniform float uAlpha;\n"
                     "uniform vec4 uMaskUV;\n"
+                    "uniform vec2 uMaskShear;\n"
                     "void main(void)\n"
                     "{\n"
                     "  vec4 texData = texture2D(uTexture, vTexPos);\n"
                     "  vec2 maskCoord = vec2(vTexPos.x * uMaskUV.z + "
-                    "uMaskUV.x, 1.0 - (vTexPos.y * uMaskUV.w + "
-                    "uMaskUV.y));\n" PRIMARY_MASK_ALPHA SECOND_MASK_ALPHA
+                    "uMaskUV.x + vTexPos.y * uMaskShear.x, 1.0 - (vTexPos.y "
+                    "* uMaskUV.w + uMaskUV.y + vTexPos.x * "
+                    "uMaskShear.y));\n" PRIMARY_MASK_ALPHA SECOND_MASK_ALPHA
                     "  texData = texData * uAlpha * maskAlpha * "
                     "secondMaskAlpha;\n"
                     "  gl_FragColor.r = texData[2];\n"
@@ -1905,6 +1920,9 @@ public:
             m_texShaderProgramEGLImageExternalWithMaskMaskUV =
                 gl()->getUniformLocation(
                     m_texShaderProgramEGLImageExternalWithMask, "uMaskUV");
+            m_texShaderProgramEGLImageExternalWithMaskMaskShear =
+                gl()->getUniformLocation(
+                    m_texShaderProgramEGLImageExternalWithMask, "uMaskShear");
             m_texShaderProgramEGLImageExternalWithMaskSecondMaskTexture =
                 gl()->getUniformLocation(
                     m_texShaderProgramEGLImageExternalWithMask,
@@ -1913,6 +1931,10 @@ public:
                 gl()->getUniformLocation(
                     m_texShaderProgramEGLImageExternalWithMask,
                     "uSecondMaskUV");
+            m_texShaderProgramEGLImageExternalWithMaskSecondMaskShear =
+                gl()->getUniformLocation(
+                    m_texShaderProgramEGLImageExternalWithMask,
+                    "uSecondMaskShear");
             m_texShaderProgramEGLImageExternalWithMaskSecondMaskEnabled =
                 gl()->getUniformLocation(
                     m_texShaderProgramEGLImageExternalWithMask,
@@ -2307,12 +2329,14 @@ public:
                 "varying vec2 vTexPos;\n"
                 "uniform float uAlpha;\n"
                 "uniform vec4 uMaskUV;\n"
+                "uniform vec2 uMaskShear;\n"
                 "void main(void)\n"
                 "{\n"
                 "  vec4 texColor = texture2D(uTexture, vTexPos);\n"
-                "  vec2 maskCoord = vec2(vTexPos.x * uMaskUV.z + uMaskUV.x, "
-                "1.0 - (vTexPos.y * uMaskUV.w + "
-                "uMaskUV.y));\n" PRIMARY_MASK_ALPHA SECOND_MASK_ALPHA
+                "  vec2 maskCoord = vec2(vTexPos.x * uMaskUV.z + uMaskUV.x + "
+                "vTexPos.y * uMaskShear.x, 1.0 - (vTexPos.y * uMaskUV.w + "
+                "uMaskUV.y + vTexPos.x * "
+                "uMaskShear.y));\n" PRIMARY_MASK_ALPHA SECOND_MASK_ALPHA
                 "  gl_FragColor = texColor * uAlpha * maskAlpha * "
                 "secondMaskAlpha;\n"
                 "}";
@@ -2326,12 +2350,14 @@ public:
                     "varying vec2 vTexPos;\n"
                     "uniform float uAlpha;\n"
                     "uniform vec4 uMaskUV;\n"
+                    "uniform vec2 uMaskShear;\n"
                     "void main(void)\n"
                     "{\n"
                     "  vec4 texData = texture2D(uTexture, vTexPos);\n"
                     "  vec2 maskCoord = vec2(vTexPos.x * uMaskUV.z + "
-                    "uMaskUV.x, 1.0 - (vTexPos.y * uMaskUV.w + "
-                    "uMaskUV.y));\n" PRIMARY_MASK_ALPHA SECOND_MASK_ALPHA
+                    "uMaskUV.x + vTexPos.y * uMaskShear.x, 1.0 - (vTexPos.y "
+                    "* uMaskUV.w + uMaskUV.y + vTexPos.x * "
+                    "uMaskShear.y));\n" PRIMARY_MASK_ALPHA SECOND_MASK_ALPHA
                     "  texData = texData * uAlpha * maskAlpha * "
                     "secondMaskAlpha;\n"
                     "  gl_FragColor.r = texData[2];\n"
@@ -2375,11 +2401,16 @@ public:
                 m_texShaderProgramWithMask, "uMaskTexture");
             m_texShaderProgramWithMaskMaskUV =
                 gl()->getUniformLocation(m_texShaderProgramWithMask, "uMaskUV");
+            m_texShaderProgramWithMaskMaskShear = gl()->getUniformLocation(
+                m_texShaderProgramWithMask, "uMaskShear");
             m_texShaderProgramWithMaskSecondMaskTexture =
                 gl()->getUniformLocation(m_texShaderProgramWithMask,
                                          "uSecondMaskTexture");
             m_texShaderProgramWithMaskSecondMaskUV = gl()->getUniformLocation(
                 m_texShaderProgramWithMask, "uSecondMaskUV");
+            m_texShaderProgramWithMaskSecondMaskShear =
+                gl()->getUniformLocation(m_texShaderProgramWithMask,
+                                         "uSecondMaskShear");
             m_texShaderProgramWithMaskSecondMaskEnabled =
                 gl()->getUniformLocation(m_texShaderProgramWithMask,
                                          "uSecondMaskEnabled");
@@ -2471,6 +2502,7 @@ public:
         if (withMask) {
             ss << "uniform sampler2D uMaskTexture;\n";
             ss << "uniform vec4 uMaskUV;\n";
+            ss << "uniform vec2 uMaskShear;\n";
             ss << SECOND_MASK_UNIFORMS;
         }
         ss << "uniform vec2 uBlurRadius;\n";
@@ -2499,8 +2531,9 @@ public:
         }
 
         if (withMask) {
-            ss << "  vec2 maskCoord = vec2(vTexPos.x * uMaskUV.z + uMaskUV.x, "
-                  "1.0 - (vTexPos.y * uMaskUV.w + uMaskUV.y));\n";
+            ss << "  vec2 maskCoord = vec2(vTexPos.x * uMaskUV.z + uMaskUV.x + "
+                  "vTexPos.y * uMaskShear.x, 1.0 - (vTexPos.y * uMaskUV.w + "
+                  "uMaskUV.y + vTexPos.x * uMaskShear.y));\n";
             ss << "  float maskAlpha = 0.0;\n";
             ss << "  if (maskCoord.x >= 0.0 && maskCoord.x <= 1.0 && "
                   "maskCoord.y "
@@ -2782,11 +2815,16 @@ public:
             m_texBlurShaderProgramHWithMask, "uMaskTexture");
         m_texBlurShaderProgramHWithMaskMaskUV = gl()->getUniformLocation(
             m_texBlurShaderProgramHWithMask, "uMaskUV");
+        m_texBlurShaderProgramHWithMaskMaskShear = gl()->getUniformLocation(
+            m_texBlurShaderProgramHWithMask, "uMaskShear");
         m_texBlurShaderProgramHWithMaskSecondMaskTexture =
             gl()->getUniformLocation(m_texBlurShaderProgramHWithMask,
                                      "uSecondMaskTexture");
         m_texBlurShaderProgramHWithMaskSecondMaskUV = gl()->getUniformLocation(
             m_texBlurShaderProgramHWithMask, "uSecondMaskUV");
+        m_texBlurShaderProgramHWithMaskSecondMaskShear =
+            gl()->getUniformLocation(m_texBlurShaderProgramHWithMask,
+                                     "uSecondMaskShear");
         m_texBlurShaderProgramHWithMaskSecondMaskEnabled =
             gl()->getUniformLocation(m_texBlurShaderProgramHWithMask,
                                      "uSecondMaskEnabled");
@@ -4059,8 +4097,6 @@ public:
         m_baseRBOId = 0;
         m_webView = webView;
         m_currentMaskSurface = nullptr;
-        m_maskOffsetX = 0;
-        m_maskOffsetY = 0;
         m_maskWidth = 0;
         m_maskHeight = 0;
         m_globalScale = m_webView->glCompositorScale();
@@ -4910,8 +4946,8 @@ public:
                              GLuint textureID, GLenum textureKind,
                              GLenum textureBindNumber, size_t textureWidth,
                              size_t textureHeight, GLuint maskTextureID,
-                             float maskUV[4], GLuint secondMaskTextureID,
-                             float secondMaskUV[4])
+                             float maskUV[6], GLuint secondMaskTextureID,
+                             float secondMaskUV[6])
     {
         auto& lastState = m_state.back();
         bool enableMask = maskTextureID != 0;
@@ -5027,6 +5063,7 @@ public:
             GLint* blurRadius;
             GLint* alphaPos;
             GLint* maskUVUniform = nullptr;
+            GLint* maskShearUniform = nullptr;
 
             if (enableMask) {
                 texPos =
@@ -5045,6 +5082,9 @@ public:
                     &m_compositorContext->m_texBlurShaderProgramHWithMaskAlpha;
                 maskUVUniform =
                     &m_compositorContext->m_texBlurShaderProgramHWithMaskMaskUV;
+                maskShearUniform =
+                    &m_compositorContext
+                         ->m_texBlurShaderProgramHWithMaskMaskShear;
             } else {
                 texPos = &m_compositorContext->m_texBlurShaderProgramHTexPos;
                 texIdx = &m_compositorContext->m_texBlurShaderProgramHTexIdx;
@@ -5089,6 +5129,7 @@ public:
             if (enableMask) {
                 gl()->uniform4f(*maskUVUniform, maskUV[0], maskUV[1], maskUV[2],
                                 maskUV[3]);
+                gl()->uniform2f(*maskShearUniform, maskUV[4], maskUV[5]);
                 gl()->uniform1f(
                     m_compositorContext
                         ->m_texBlurShaderProgramHWithMaskSecondMaskEnabled,
@@ -5099,6 +5140,10 @@ public:
                             ->m_texBlurShaderProgramHWithMaskSecondMaskUV,
                         secondMaskUV[0], secondMaskUV[1], secondMaskUV[2],
                         secondMaskUV[3]);
+                    gl()->uniform2f(
+                        m_compositorContext
+                            ->m_texBlurShaderProgramHWithMaskSecondMaskShear,
+                        secondMaskUV[4], secondMaskUV[5]);
                 }
             }
 
@@ -5125,8 +5170,8 @@ public:
     void drawTexture(
         CanvasSurfaceGL* cs, float position[8], GLuint textureID,
         GLenum textureKind, GLenum textureBindNumber, size_t textureWidth,
-        size_t textureHeight, GLuint maskTextureID, float maskUV[4],
-        GLuint secondMaskTextureID, float secondMaskUV[4],
+        size_t textureHeight, GLuint maskTextureID, float maskUV[6],
+        GLuint secondMaskTextureID, float secondMaskUV[6],
         Optional<const float*> roundedClipPos = nullptr,
         const CompositorImplGLState::RoundedRectClip* roundedClips = nullptr,
         int roundedClipCount = 0)
@@ -5263,7 +5308,9 @@ public:
         GLint* texPos;
         GLint* texIdx;
         GLint* maskUVUniform = nullptr;
+        GLint* maskShearUniform = nullptr;
         GLint* secondMaskUVUniform = nullptr;
+        GLint* secondMaskShearUniform = nullptr;
         GLint* secondMaskEnabledUniform = nullptr;
 
         float a = lastState.opacity;
@@ -5280,9 +5327,15 @@ public:
             maskUVUniform =
                 &m_compositorContext
                      ->m_texShaderProgramEGLImageExternalWithMaskMaskUV;
+            maskShearUniform =
+                &m_compositorContext
+                     ->m_texShaderProgramEGLImageExternalWithMaskMaskShear;
             secondMaskUVUniform =
                 &m_compositorContext
                      ->m_texShaderProgramEGLImageExternalWithMaskSecondMaskUV;
+            secondMaskShearUniform =
+                &m_compositorContext
+                     ->m_texShaderProgramEGLImageExternalWithMaskSecondMaskShear;
             secondMaskEnabledUniform =
                 &m_compositorContext
                      ->m_texShaderProgramEGLImageExternalWithMaskSecondMaskEnabled;
@@ -5304,8 +5357,12 @@ public:
             texIdx = &m_compositorContext->m_texShaderProgramWithMaskTexIdx;
             maskUVUniform =
                 &m_compositorContext->m_texShaderProgramWithMaskMaskUV;
+            maskShearUniform =
+                &m_compositorContext->m_texShaderProgramWithMaskMaskShear;
             secondMaskUVUniform =
                 &m_compositorContext->m_texShaderProgramWithMaskSecondMaskUV;
+            secondMaskShearUniform =
+                &m_compositorContext->m_texShaderProgramWithMaskSecondMaskShear;
             secondMaskEnabledUniform =
                 &m_compositorContext
                      ->m_texShaderProgramWithMaskSecondMaskEnabled;
@@ -5329,12 +5386,15 @@ public:
         if (enableMask) {
             gl()->uniform4f(*maskUVUniform, maskUV[0], maskUV[1], maskUV[2],
                             maskUV[3]);
+            gl()->uniform2f(*maskShearUniform, maskUV[4], maskUV[5]);
             gl()->uniform1f(*secondMaskEnabledUniform,
                             secondMaskTextureID ? 1 : 0);
             if (secondMaskTextureID) {
                 gl()->uniform4f(*secondMaskUVUniform, secondMaskUV[0],
                                 secondMaskUV[1], secondMaskUV[2],
                                 secondMaskUV[3]);
+                gl()->uniform2f(*secondMaskShearUniform, secondMaskUV[4],
+                                secondMaskUV[5]);
             }
         }
 
@@ -5430,13 +5490,12 @@ public:
         position[7] = dest[3][1] * hh + 1;
     }
 
-    virtual void setMaskSurface(CanvasSurface* maskSurface, float offsetX,
-                                float offsetY, float maskWidth,
+    virtual void setMaskSurface(CanvasSurface* maskSurface,
+                                const SkMatrix& drawToMask, float maskWidth,
                                 float maskHeight) override
     {
         m_currentMaskSurface = (CanvasSurfaceGL*)maskSurface;
-        m_maskOffsetX = offsetX;
-        m_maskOffsetY = offsetY;
+        m_maskMatrix = drawToMask;
         m_maskWidth = maskWidth;
         m_maskHeight = maskHeight;
     }
@@ -5476,7 +5535,7 @@ public:
         size_t screenWidth = this->screenWidth();
         size_t screenHeight = this->screenHeight();
         FBOState maskFBO;
-        float maskUV[4] = { 0, 0, 1, 1 };
+        float maskUV[6] = { 0, 0, 1, 1, 0, 0 };
 
         float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
         dest[0][0] = dst.x();
@@ -5651,8 +5710,8 @@ public:
 
         if (!shouldSkipTexturePainting) {
             auto useCSSMask = [&](const Unit::Rect& localDst,
-                                  GLuint& primaryMask, float(&primaryUV)[4],
-                                  GLuint& secondMask, float(&secondUV)[4]) {
+                                  GLuint& primaryMask, float(&primaryUV)[6],
+                                  GLuint& secondMask, float(&secondUV)[6]) {
                 if (!m_currentMaskSurface ||
                     m_currentMaskSurface->m_textureFragments.empty()) {
                     return;
@@ -5660,8 +5719,13 @@ public:
                 GLuint texture =
                     m_currentMaskSurface->m_textureFragments[0].textureID;
                 gl()->bindTexture(GL_TEXTURE_2D, texture);
+                const float eps = 0.0001f;
                 bool oneToOne =
                     lastState.matrixStaysInRect &&
+                    std::abs(m_maskMatrix.getScaleX() - 1) < eps &&
+                    std::abs(m_maskMatrix.getScaleY() - 1) < eps &&
+                    std::abs(m_maskMatrix.getSkewX()) < eps &&
+                    std::abs(m_maskMatrix.getSkewY()) < eps &&
                     std::abs(m_maskWidth -
                              m_currentMaskSurface->bufferWidth()) < 0.01f &&
                     std::abs(m_maskHeight -
@@ -5671,24 +5735,43 @@ public:
                                     filter);
                 gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
                                     filter);
-                float top = (localDst.y() + m_maskOffsetY) / m_maskHeight;
-                float height = localDst.height() / m_maskHeight;
+                // The texture position (tx, ty) in [0, 1] covers localDst,
+                // upside down for a flipped surface. m_maskMatrix maps that
+                // point to the mask owner's box; the shader computes
+                //   u = tx * uv[2] + uv[0] + ty * uv[4]
+                //   v = 1 - (ty * uv[3] + uv[1] + tx * uv[5])
                 // Cairo uploads the CSS mask with its top row at texture
                 // coordinate zero. The clip-path mask comes from an FBO and
                 // uses the opposite Y direction in the shader.
-                float uv[4] = { (localDst.x() + m_maskOffsetX) / m_maskWidth,
-                                csGL->isFlipYNeeded() ? 1 - top - height
-                                                      : 1 - top,
-                                localDst.width() / m_maskWidth,
-                                csGL->isFlipYNeeded() ? height : -height };
+                float x0 = localDst.x();
+                float y0 = localDst.y();
+                float w = localDst.width();
+                float h = localDst.height();
+                if (csGL->isFlipYNeeded()) {
+                    y0 += h;
+                    h = -h;
+                }
+                const SkMatrix& m = m_maskMatrix;
+                float uConst = (m.getScaleX() * x0 + m.getSkewX() * y0 +
+                                m.getTranslateX()) /
+                               m_maskWidth;
+                float vConst = (m.getSkewY() * x0 + m.getScaleY() * y0 +
+                                m.getTranslateY()) /
+                               m_maskHeight;
+                float uv[6] = { uConst,
+                                1 - vConst,
+                                m.getScaleX() * w / m_maskWidth,
+                                -m.getScaleY() * h / m_maskHeight,
+                                m.getSkewX() * h / m_maskWidth,
+                                -m.getSkewY() * w / m_maskHeight };
                 if (primaryMask) {
                     secondMask = texture;
-                    for (int i = 0; i < 4; i++) {
+                    for (int i = 0; i < 6; i++) {
                         secondUV[i] = uv[i];
                     }
                 } else {
                     primaryMask = texture;
-                    for (int i = 0; i < 4; i++) {
+                    for (int i = 0; i < 6; i++) {
                         primaryUV[i] = uv[i];
                     }
                 }
@@ -5701,7 +5784,7 @@ public:
                                        activeClip ? clipPosition : nullptr);
                 GLuint primaryMask = maskFBO.fboTex;
                 GLuint secondMask = 0;
-                float secondMaskUV[4] = { 0, 0, 1, 1 };
+                float secondMaskUV[6] = { 0, 0, 1, 1, 0, 0 };
                 useCSSMask(dst, primaryMask, maskUV, secondMask, secondMaskUV);
                 drawTexture(csGL, texPosition,
                             csGL->m_textureFragments[0].textureID,
@@ -5784,21 +5867,35 @@ public:
                                     activeClip ? clipPosition : nullptr);
 
                                 if (maskFBO.fboTex) {
-                                    auto w = visibleArea.width();
-                                    auto h = visibleArea.height();
-                                    float fw = w / maskFBO.textureSize.width();
-                                    float fh = h / maskFBO.textureSize.height();
+                                    // The clip mask is in screen space. Map
+                                    // the texture position (tx, ty) through
+                                    // the tile's own corners, so a rotated
+                                    // tile samples the clip along its edges
+                                    // rather than its bounding box.
+                                    float sx =
+                                        1.f / maskFBO.textureSize.width();
+                                    float sy =
+                                        1.f / maskFBO.textureSize.height();
+                                    bool flip = csGL->isFlipYNeeded();
+                                    const float* origin =
+                                        flip ? newDest[1] : newDest[0];
+                                    const float* yEnd =
+                                        flip ? newDest[0] : newDest[1];
                                     maskUV[0] =
-                                        (minX - visibleArea.x()) / w * fw;
+                                        (origin[0] - visibleArea.x()) * sx;
                                     maskUV[1] =
-                                        (minY - visibleArea.y()) / h * fh;
-                                    maskUV[2] = (maxX - minX) / w * fw;
-                                    maskUV[3] = (maxY - minY) / h * fh;
+                                        (origin[1] - visibleArea.y()) * sy;
+                                    maskUV[2] =
+                                        (newDest[2][0] - newDest[0][0]) * sx;
+                                    maskUV[3] = (yEnd[1] - origin[1]) * sy;
+                                    maskUV[4] = (yEnd[0] - origin[0]) * sx;
+                                    maskUV[5] =
+                                        (newDest[2][1] - newDest[0][1]) * sy;
                                 }
 
                                 GLuint primaryMask = maskFBO.fboTex;
                                 GLuint secondMask = 0;
-                                float secondMaskUV[4] = { 0, 0, 1, 1 };
+                                float secondMaskUV[6] = { 0, 0, 1, 1, 0, 0 };
                                 useCSSMask(newDst, primaryMask, maskUV,
                                            secondMask, secondMaskUV);
                                 drawTexture(
@@ -6250,8 +6347,7 @@ protected:
     GLuint m_baseFBOId;
     GLuint m_baseRBOId;
     CanvasSurfaceGL* m_currentMaskSurface;
-    float m_maskOffsetX;
-    float m_maskOffsetY;
+    SkMatrix m_maskMatrix;
     float m_maskWidth;
     float m_maskHeight;
 
