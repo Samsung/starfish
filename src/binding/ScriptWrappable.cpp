@@ -46,11 +46,29 @@
 #include "core/dom/HTMLScriptElement.h"
 #endif /* defined(STARFISH_WEBWORKER_HOST) */
 
+#if defined(STARFISH_ENABLE_WORKER)
+#include "core/modules/worker/WorkerGlobalScope.h"
+#include "core/modules/worker/WorkerScriptController.h"
+#endif
+
 #include <EscargotPublic.h>
 
 using namespace Escargot;
 
 namespace Starfish {
+
+static GCVector<Document::ScriptModuleData*>& fetchModuleScripts(
+    ExecutionContext* executionContext)
+{
+#if defined(STARFISH_ENABLE_WORKER)
+    if (executionContext->hasWorkerGlobalScope()) {
+        return executionContext->workerGlobalScope()
+            ->workerScriptController()
+            ->moduleScripts();
+    }
+#endif
+    return executionContext->document()->moduleScripts();
+}
 
 class EscargotStarfishPlatform : public Escargot::PlatformRef {
 public:
@@ -99,35 +117,35 @@ public:
     {
         bool existOnLoadedModuleList = false;
         auto executionContext = fetchExecutionContext(relatedContext);
-        auto& moduleScripts = executionContext->document()->moduleScripts();
+        auto& moduleScripts = fetchModuleScripts(executionContext);
 
         String* srcString = toBrowserString(
-            executionContext->document()->scriptBindingInstance(), moduleSrc);
+            executionContext->scriptBindingInstance(), moduleSrc);
 
         ResourceURL* src;
         Optional<ResourceURL*> importMapResolvedURL;
 #if defined(STARFISH_WEBWORKER_NOT_HOST)
-        importMapResolvedURL =
-            executionContext->document()->resolveModuleSrcFromImportMap(
-                srcString);
+        if (executionContext->hasDocument()) {
+            importMapResolvedURL =
+                executionContext->document()->resolveModuleSrcFromImportMap(
+                    srcString);
+        }
 #endif
         if (importMapResolvedURL) {
             src = importMapResolvedURL.value();
         } else {
             String* baseURI;
             if (whereRequestFrom->src()->length()) {
-                baseURI =
-                    (new ResourceURL(toBrowserString(
-                         executionContext->document()->scriptBindingInstance(),
-                         whereRequestFrom->src())))
-                        ->baseURI();
+                baseURI = (new ResourceURL(toBrowserString(
+                               executionContext->scriptBindingInstance(),
+                               whereRequestFrom->src())))
+                              ->baseURI();
             } else {
                 baseURI = executionContext->baseURL()->baseURI();
             }
             src = new ResourceURL(
-                toBrowserString(
-                    executionContext->document()->scriptBindingInstance(),
-                    moduleSrc),
+                toBrowserString(executionContext->scriptBindingInstance(),
+                                moduleSrc),
                 baseURI);
         }
 
@@ -184,6 +202,23 @@ public:
             return;
         }
 
+#if defined(STARFISH_ENABLE_WORKER)
+        auto executionContext = fetchExecutionContext(relatedContext);
+        if (executionContext->hasWorkerGlobalScope()) {
+            // Worker script loading is synchronous, so load the module graph
+            // right away and settle the promise with the result.
+            bool hadNetworkError = false;
+            auto module = executionContext->workerGlobalScope()
+                              ->workerScriptController()
+                              ->fetchModuleTree(std::get<1>(loadedModuleResult),
+                                                hadNetworkError);
+            this->notifyHostImportModuleDynamicallyResult(
+                relatedContext, referrer, src, promise,
+                module ? LoadModuleResult(module.value())
+                       : std::get<0>(loadedModuleResult));
+            return;
+        }
+#endif
 #if defined(STARFISH_WEBWORKER_NOT_HOST)
         fetchScriptBindingInstance(relatedContext)
             ->dynamicImportedModuleData()

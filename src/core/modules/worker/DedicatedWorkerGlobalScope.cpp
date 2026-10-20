@@ -64,7 +64,7 @@ void DedicatedWorkerGlobalScope::initialize(
 
     hostProxy->entangleTarget(this, workerObjectProxy);
 
-    if (loadMainScript()) {
+    if (loadMainScript(m_workerObjectProxy->workerType())) {
         m_workerObjectProxy->postTask(
             [](void* data) {
                 auto* hostProxy = static_cast<WorkerHostProxy*>(data);
