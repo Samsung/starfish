@@ -3064,7 +3064,7 @@ The following font-related CSS properties are **not in the parser trie** at all 
 | `:placeholder-shown` (pseudo-class) | **WORKS** — both `Element.matches()` and selector matching work (correction to earlier audit). |
 | `::placeholder` (pseudo-element) | **NOT supported** — `checkPseudoElement` lacks the case (logs `Unsupported css pseudo-element: 60`). Style placeholder color via `:placeholder-shown { color: ... }` on the input itself. |
 | Native `<input type=checkbox/radio>` chrome | LWE has no native checkbox/radio painter; `appearance: none` does NOT change the box dimensions. |
-| Native `<input type=range>` chrome | Track and thumb are painted by the engine, with a 129×16 default size. Not operable by pointer or key yet. `::-webkit-slider-thumb` / `::-moz-range-track` are not supported, and since `-webkit-appearance` is not recognized, the common `-webkit-appearance: none` + custom-thumb idiom leaves the native slider in place. |
+| Native `<input type=range>` chrome | Track and thumb are painted by the engine, with a 129×16 default size; the control is operable by pointer and key (see the `input` type row). `::-webkit-slider-thumb` / `::-moz-range-track` are not supported, and since `-webkit-appearance` is not recognized, the common `-webkit-appearance: none` + custom-thumb idiom leaves the native slider in place. |
 
 ### Scroll-driven animations — runtime caveats
 
