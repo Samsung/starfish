@@ -138,8 +138,11 @@ CanvasImageSourceUtils::toNativeImageData(ExecutionContext* executionContext,
     } else if (image.isHTMLCanvasElementValue()) {
         auto htmlCanvas = image.getHTMLCanvasElementValue();
         auto context = htmlCanvas->canvasRenderingContext();
-        if (context != nullptr) {
-            auto context2d = (CanvasRenderingContext2DMixIn*)context;
+        // Only a 2D context exposes a Canvas bitmap to read back; other
+        // contexts (WebGL, bitmaprenderer) yield no image here.
+        if (context != nullptr && context->isCanvasRenderingContext2D()) {
+            auto context2d =
+                static_cast<CanvasRenderingContext2DMixIn*>(context);
             context2d->flushForReadback();
             nativeImageData = NativeImageData::attach(context2d->canvas());
             clean = context->originCleanFlag();
