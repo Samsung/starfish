@@ -379,10 +379,7 @@ void Window::postMessage(Window* source, ScriptValue message,
 void Window::postMessage(Window* source, ScriptValue message,
                          String* targetOrigin, GCVector<ScriptObject>& transfer)
 {
-    String* origin = source->location()->origin();
-    if (targetOrigin->equals("/")) {
-        targetOrigin = origin;
-    } else if (targetOrigin->equals("*")) {
+    if (targetOrigin->equals("/") || targetOrigin->equals("*")) {
     } else if (!ResourceURL::isValidURL(targetOrigin)) {
         COMPOSE_MESSAGE(reason, INVALID_TARGET_ORIGIN,
                         targetOrigin->toUTF8NonGCString().data(),
@@ -410,6 +407,25 @@ void Window::postMessage(Window* source, ScriptValue message,
 
     // NOTE addIder would hold serializedRecord
     if (browsingContext()) {
+        // Drop the message unless targetOrigin is "*" or same origin with the
+        // recipient's document ("/" meaning the source's origin).
+        // https://html.spec.whatwg.org/multipage/web-messaging.html#window-post-message-steps
+        WebOrigin* recipientOrigin =
+            browsingContext()->window()->document()->webOrigin();
+        if (targetOrigin->equals("/")) {
+            WebOrigin* sourceOrigin = source->document()->webOrigin();
+            if (sourceOrigin != recipientOrigin &&
+                (sourceOrigin->isOpaque() ||
+                 !sourceOrigin->isSameOrigin(recipientOrigin))) {
+                delete serializedRecord;
+                return;
+            }
+        } else if (!targetOrigin->equals("*") &&
+                   (recipientOrigin->isOpaque() ||
+                    !recipientOrigin->serialize()->equals(targetOrigin))) {
+            delete serializedRecord;
+            return;
+        }
         webView()->messageLoop()->addIdler(
             browsingContext()->window(),
             [](size_t handle, void* data, void* data1, void* data2) {
