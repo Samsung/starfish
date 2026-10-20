@@ -83,7 +83,7 @@ String* CharacterData::substringData(unsigned long offset, unsigned long count)
     // Return a string whose value is the code units from the offsetth code unit
     // to the offset+countth code unit in node’s data.
     size_t subLength = count;
-    if (offset + count > length) {
+    if (count > length - offset) {
         subLength = length - offset;
     }
 
@@ -181,7 +181,7 @@ void CharacterData::deleteData(unsigned long offset, unsigned long count)
 
     // If offset plus count is greater than length, then set count to length
     // minus offset.
-    if ((offset + count) > length) {
+    if (count > length - offset) {
         count = length - offset;
     }
 
@@ -215,7 +215,7 @@ void CharacterData::replaceData(unsigned long offset, unsigned long count,
 
     // If offset plus count is greater than length, then set count to length
     // minus offset.
-    if ((offset + count) > length) {
+    if (count > length - offset) {
         count = length - offset;
     }
 
