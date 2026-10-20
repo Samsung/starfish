@@ -56,7 +56,7 @@ ENDIF()
 # STARFISH_TIZEN : enable several TIZEN specific features such as media player, backend graphic library
 # TIZEN_DEVICE_API : enable TIZEN device API Loader for escargot. define JS Object extension which has supported TIZEN properties.
 # SIZE_MAX=0xffffffff : define maximum size of 32bit unsigned value
-# STARFISH_IGNORE_SSL_VERIFYPEER : ignore SSL connection verification only for Android
+# STARFISH_IGNORE_SSL_VERIFYPEER : ignore SSL connection verification (CI test builds; still set by build/windows.cmake)
 # STARFISH_ENABLE_TEST : enable features only necessary for TC runs
 # STARFISH_MEDIAPLAYER_DEBUG : enable debugging and messaging for mediaplayer
 # STARFISH_TIZEN_TV : enable features only necessary for TIZEN based TV targets
