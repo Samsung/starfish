@@ -387,28 +387,23 @@ namespace WindowOrWorkerGlobalScope {
             size_t imagaDataHeight = imageData->height();
             size_t stride = imagaDataWidth * 4;
             // 2.If IsDetachedBuffer(buffer) is true, then return p rejected
-            // with an "InvalidStateError" DOMException.
-            if (imageData->data()
-                    ->asArrayBufferView()
-                    ->buffer()
-                    ->isArrayBufferObject() &&
-                imageData->data()
-                    ->asArrayBufferView()
-                    ->buffer()
-                    ->asArrayBufferObject()
-                    ->isDetachedBuffer()) {
+            // with an "InvalidStateError" DOMException. A shrunk resizable
+            // buffer no longer holds every pixel either.
+            auto pixels = imageData->data();
+            if (!pixels->rawBuffer() ||
+                pixels->byteLength() / imagaDataHeight < stride) {
                 return rejectPromiseWithDOMException(
                     executionContext, promise,
                     DOMException::Code::INVALID_STATE_ERR);
             }
-            uint8_t* srcPtr =
-                imageData->data()->asArrayBufferView()->buffer()->rawBuffer();
-            uint8_t* dstPtr =
-                (uint8_t*)malloc(imagaDataWidth * imagaDataHeight * stride);
-            size_t bufferLength = (size_t)imageData->data()
-                                      ->asArrayBufferView()
-                                      ->buffer()
-                                      ->byteLength();
+            uint8_t* srcPtr = pixels->rawBuffer();
+            size_t bufferLength = stride * imagaDataHeight;
+            uint8_t* dstPtr = (uint8_t*)malloc(bufferLength);
+            if (!dstPtr) {
+                return rejectPromiseWithDOMException(
+                    executionContext, promise,
+                    DOMException::Code::INVALID_STATE_ERR);
+            }
 #if defined(PORT_PIXEL_ORDER_RGBA)
             memcpy(dstPtr, srcPtr, bufferLength);
 #else
