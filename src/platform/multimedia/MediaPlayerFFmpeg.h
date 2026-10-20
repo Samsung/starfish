@@ -51,6 +51,7 @@ namespace Starfish {
 
 class FFmpegAudioOutput;
 class CanvasSurface;
+class ExecutionContext;
 class MediaSource;
 class MediaPlayerFFmpegMediaSourceClient;
 class Mutex;
@@ -392,6 +393,13 @@ public:
                                size_t pastInitIndex, size_t newInitIndex);
     void enterUnderrunState();
     void exitUnderrunState();
+
+    // Runs |task| on the main thread; called from decoder/MSE threads.
+    void postToMainThread(void (*task)(MediaPlayerFFmpeg*));
+    // Those idlers hold |this| outside the GC heap, so dispose() roots the
+    // player in m_pendingIdlerRoot until the count drains to zero.
+    std::atomic<size_t> m_pendingIdlerCount{ 0 };
+    Optional<ExecutionContext*> m_pendingIdlerRoot;
 
     bool m_inPrepare : 1;
     bool m_pendingPlay : 1;
