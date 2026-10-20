@@ -37,6 +37,23 @@ static bool createFrameBufferObject(GL* gl, const unsigned width,
                                     const bool needDepthBuffer,
                                     const bool needStencilBuffer)
 {
+    // Temporarily unbind GL_PIXEL_UNPACK_BUFFER so user PBO bindings do not
+    // interfere with backing texture allocation.
+    struct PixelUnpackRestore {
+        GL* gl;
+        GLint oldBuffer;
+        ~PixelUnpackRestore()
+        {
+            if (oldBuffer != 0) {
+                gl->bindBuffer(GL_PIXEL_UNPACK_BUFFER, oldBuffer);
+            }
+        }
+    } unpackGuard{ gl, 0 };
+    gl->getIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &unpackGuard.oldBuffer);
+    if (unpackGuard.oldBuffer != 0) {
+        gl->bindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    }
+
     // 1. Create a framebuffer object
     gl->genFramebuffers(1, &outFbo);
     gl->bindFramebuffer(GL_FRAMEBUFFER, outFbo);
