@@ -14,7 +14,8 @@ dictionary ScrollToOptions : ScrollOptions {
 [PrimaryGlobal, LegacyUnenumerableNamedProperties, CustomDescriptor, Exposed=Window]
 interface Window : EventTarget {
   // the current browsing context
-  [Unforgeable, CrossOrigin] readonly attribute WindowProxy window;
+  // A cross-origin readable property; the proxy and the this-check gate it.
+  [Unforgeable] readonly attribute WindowProxy window;
   // `self` is Implemented in virtual id
   // [Replaceable] readonly attribute WindowProxy self;
   [Unforgeable, CrossOrigin] readonly attribute Document document;

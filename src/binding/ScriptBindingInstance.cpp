@@ -22,6 +22,7 @@
 #include "binding/ScriptEngineInstance.h"
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptWrappable.h"
+#include "binding/ScriptBindingSecurity.h"
 #include "core/extra/Console.h"
 #include "core/page/WebBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -325,6 +326,20 @@ void ScriptBindingInstance::destroy()
 static String* toBrowserStringForConsole(ExecutionStateRef* state,
                                          ValueRef* value)
 {
+#if !defined(STARFISH_WEBWORKER_HOST)
+    // Logging must not throw: stringifying a cross-origin Window or
+    // Location would call a member the caller may not access. A worker
+    // process has neither, so the check is compiled out there.
+    // https://console.spec.whatwg.org/#printer
+    if (value->isObject() &&
+        ScriptBindingSecurity::isCrossOriginObject(state, value->asObject())) {
+        if (static_cast<ScriptWrappable*>(value->asObject()->extraData())
+                ->isWindow()) {
+            return String::createASCIIString("[object Window]");
+        }
+        return String::createASCIIString("[object Location]");
+    }
+#endif
     if (value->isObject() && value->asObject()->isErrorObject()) {
         ObjectRef* o = value->asObject();
         ValueRef* stack =

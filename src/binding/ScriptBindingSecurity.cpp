@@ -27,6 +27,7 @@
 #include "core/dom/WebOrigin.h"
 #include "core/page/WebView.h"
 #include <EscargotPublic.h>
+#include <cstring>
 
 namespace Starfish {
 
@@ -82,5 +83,59 @@ bool ScriptBindingSecurity::shouldAllowCrossOriginScriptAPIAccessToLocation(
                                DOMException::Code::SECURITY_ERR);
     }
     return true;
+}
+
+// A WindowProxy only guards property access through itself, so a member
+// invoked with a cross-origin WindowProxy as |this| (e.g.
+// setTimeout.call(frames[0], ...)) must be checked here.
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#crossoriginproperties-(-o-)
+void ScriptBindingSecurity::checkWindowMemberAccess(
+    Escargot::ExecutionStateRef* state, Window* window,
+    const char* bindingFunctionName)
+{
+    Window* sourceWindow =
+        (Window*)state->resolveCallerLexicalGlobalObject()->extraData();
+    if (sourceWindow == window ||
+        canAccess(sourceWindow->document(), window->document())) {
+        return;
+    }
+
+    static const char* const crossOriginMembers[] = {
+        "blurFunction",           "focusFunction",
+        "framesGetterFunction",   "lengthGetterFunction",
+        "locationGetterFunction", "locationSetterFunction",
+        "parentGetterFunction",   "topGetterFunction",
+        "windowGetterFunction",   "postMessageWindowFunction",
+    };
+    for (const char* name : crossOriginMembers) {
+        if (!strcmp(name, bindingFunctionName)) {
+            return;
+        }
+    }
+
+    DOMException* exception = new DOMException(
+        sourceWindow->executionContext(), DOMException::Code::SECURITY_ERR);
+    state->throwException(exception->scriptValue());
+}
+
+bool ScriptBindingSecurity::isCrossOriginObject(
+    Escargot::ExecutionStateRef* state, Escargot::ObjectRef* object)
+{
+    ScriptWrappable* wrappable = (ScriptWrappable*)object->extraData();
+    if (!wrappable) {
+        return false;
+    }
+    Document* target = nullptr;
+    if (wrappable->isWindow()) {
+        target = static_cast<Window*>(wrappable)->document();
+    } else if (wrappable->isLocation()) {
+        target = static_cast<Location*>(wrappable)->document();
+    } else {
+        return false;
+    }
+    Window* sourceWindow =
+        (Window*)state->resolveCallerLexicalGlobalObject()->extraData();
+    return sourceWindow != wrappable &&
+           !canAccess(sourceWindow->document(), target);
 }
 } // namespace Starfish

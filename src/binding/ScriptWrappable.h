@@ -21,6 +21,7 @@
 #define __StarfishScriptWrappable__
 
 #include "binding/generated/Interfaces.h"
+#include "binding/ScriptBindingSecurity.h"
 #include "StarfishBase.h" // ASSERT, UNLIKELY, RELEASE_ASSERT_SHOULD_NOT_BE_HERE
 #include <GCUtil.h>       // gc
 #include <vector>
@@ -425,9 +426,25 @@ STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_FORWARD_DECLARATION)
         THROW_EXCEPTION(ILLEGAL_INVOKE); \
     }
 
-#define GENERATE_THIS_AND_CHECK_TYPE(type) \
-    CHECK_TYPEOF(thisValue, type);         \
-    type* originalObj = (type*)(thisValue->asObject()->extraData());
+#if defined(STARFISH_WEBWORKER_HOST)
+#define CHECK_CROSS_ORIGIN_WINDOW_THIS(type)
+#else
+// EventTarget members reach a Window without GENERATE_WINDOW, so a
+// cross-origin WindowProxy passed as |this| is checked here too.
+#define CHECK_CROSS_ORIGIN_WINDOW_THIS(type)                                 \
+    if (std::is_same<type, EventTarget>::value &&                            \
+        static_cast<ScriptWrappable*>(thisValue->asObject()->extraData())    \
+            ->isWindow()) {                                                  \
+        ScriptBindingSecurity::checkWindowMemberAccess(                      \
+            state, static_cast<Window*>(thisValue->asObject()->extraData()), \
+            __func__);                                                       \
+    }
+#endif
+
+#define GENERATE_THIS_AND_CHECK_TYPE(type)                           \
+    CHECK_TYPEOF(thisValue, type);                                   \
+    type* originalObj = (type*)(thisValue->asObject()->extraData()); \
+    CHECK_CROSS_ORIGIN_WINDOW_THIS(type)
 
 #define GENERATE_WINDOW()                                                    \
     Window* window = nullptr;                                                \
@@ -442,6 +459,8 @@ STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_FORWARD_DECLARATION)
             THROW_EXCEPTION(ILLEGAL_INVOKE);                                 \
         }                                                                    \
         window = static_cast<Window*>(mayBeWindow);                          \
+        ScriptBindingSecurity::checkWindowMemberAccess(state, window,        \
+                                                       __func__);            \
     }
 
 #define GENERATE_WORKER_GLOBALSCOPE(Type)                                    \

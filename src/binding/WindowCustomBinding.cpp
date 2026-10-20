@@ -316,15 +316,11 @@ ValueRef* requestAnimationFrameWindowFunction(ExecutionStateRef* state,
         td->argVector.push_back(argv[i]);
     }
     // Handle argument arg0
-    if (argv[0]->isCallable()) {
-        td->listener = argv[0]->asObject();
-    } else {
-        String* bodyStr = toBrowserString(state, argv[0]);
-        String* name[] = { String::emptyString };
-        bool error = false;
-        td->listener = createScriptFunction(window->scriptBindingInstance(),
-                                            name, 1, bodyStr, error);
+    // FrameRequestCallback is a callback function; strings are not compiled.
+    if (!argv[0]->isCallable()) {
+        THROW_EXCEPTION(ILLEGAL_INVOKE);
     }
+    td->listener = argv[0]->asObject();
 
     return ValueRef::create(
         window->requestAnimationFrame(requestAnimationFrameHandler, td));
