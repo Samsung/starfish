@@ -405,6 +405,7 @@ http://web-platform.test:8000/html/browsers/browsing-the-web/unloading-documents
 http://web-platform.test:8000/html/browsers/browsing-the-web/unloading-documents/prompt/003.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/unloading-documents/prompt/002.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/scroll-to-fragid/scroll-position.html
+http://web-platform.test:8000/html/browsers/origin/inheritance/about-blank-iframe.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/scroll-to-fragid/003.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/scroll-to-fragid/002.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/scroll-to-fragid/001.html

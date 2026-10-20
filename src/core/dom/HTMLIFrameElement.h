@@ -68,6 +68,7 @@ public:
     void setScrolling(String* scrolling);
 
     Document* contentDocument();
+    Document* contentDocumentForBindings();
     WindowProxy* contentWindow();
 
     String* referrerPolicy();
