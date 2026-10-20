@@ -39,7 +39,7 @@ public:
 
     // Performance Timeline API
     // https://w3c.github.io/performance-timeline/
-    GCVector<PerformanceEntry*> getEntries();
+    const GCVector<PerformanceEntry*>& getEntries();
     GCVector<PerformanceEntry*> getEntriesByType(String* entryType);
     GCVector<PerformanceEntry*> getEntriesByName(
         String* name, Optional<String*> entryType = Optional<String*>());
