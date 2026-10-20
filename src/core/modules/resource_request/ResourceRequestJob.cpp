@@ -363,7 +363,7 @@ void DataURLResourceRequestJobDelegate::worker(ResourceRequest* request,
         mimeType = sub;
         size_t base64 = sub->find(";base64");
 
-        if (base64 == sub->length() - 7) {
+        if (base64 != SIZE_MAX && base64 + 7 == sub->length()) {
             sub = sub->substring(0, base64);
             mimeType = sub;
             request->m_containsBase64Content = true;
