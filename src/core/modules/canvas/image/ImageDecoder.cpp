@@ -130,7 +130,8 @@ static ImageDecoder::DecodeResult decodePNG(
     READ_DATA readData;
     png_byte colorType;
     png_byte bitDepth;
-    png_bytep* rowPointers;
+    // volatile: assigned after setjmp() and read on the longjmp path.
+    png_bytep* volatile rowPointers = nullptr;
 
     ImageDecoder::DecodeResult result;
 
@@ -149,6 +150,9 @@ static ImageDecoder::DecodeResult decodePNG(
 
     if (setjmp(png_jmpbuf(png))) {
         png_destroy_read_struct(&png, &info, nullptr);
+        free(rowPointers);
+        free(result.m_buffer);
+        result.m_buffer = nullptr;
         return result;
     }
 
