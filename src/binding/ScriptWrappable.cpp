@@ -2127,6 +2127,19 @@ ScriptUint32Array createEmptyUint32Array(ScriptBindingInstance* instance)
         .result->asUint32ArrayObject();
 }
 
+ScriptFloat16Array createEmptyFloat16Array(ScriptBindingInstance* instance)
+{
+    ContextRef* ctx = instance->scriptContext();
+    return Evaluator::execute(ctx,
+                              [](ExecutionStateRef* state) -> ValueRef* {
+                                  auto arr =
+                                      Float16ArrayObjectRef::create(state);
+                                  attachEmptyBuffer(state, arr);
+                                  return arr;
+                              })
+        .result->asFloat16ArrayObject();
+}
+
 ScriptFloat32Array createEmptyFloat32Array(ScriptBindingInstance* instance)
 {
     ContextRef* ctx = instance->scriptContext();
@@ -2151,6 +2164,32 @@ ScriptFloat64Array createEmptyFloat64Array(ScriptBindingInstance* instance)
                                   return arr;
                               })
         .result->asFloat64ArrayObject();
+}
+
+ScriptBigInt64Array createEmptyBigInt64Array(ScriptBindingInstance* instance)
+{
+    ContextRef* ctx = instance->scriptContext();
+    return Evaluator::execute(ctx,
+                              [](ExecutionStateRef* state) -> ValueRef* {
+                                  auto arr =
+                                      BigInt64ArrayObjectRef::create(state);
+                                  attachEmptyBuffer(state, arr);
+                                  return arr;
+                              })
+        .result->asBigInt64ArrayObject();
+}
+
+ScriptBigUint64Array createEmptyBigUint64Array(ScriptBindingInstance* instance)
+{
+    ContextRef* ctx = instance->scriptContext();
+    return Evaluator::execute(ctx,
+                              [](ExecutionStateRef* state) -> ValueRef* {
+                                  auto arr =
+                                      BigUint64ArrayObjectRef::create(state);
+                                  attachEmptyBuffer(state, arr);
+                                  return arr;
+                              })
+        .result->asBigUint64ArrayObject();
 }
 
 ScriptUint8ClampedArray createEmptyUint8ClampedArray(
