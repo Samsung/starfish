@@ -5551,8 +5551,7 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
         return;
     }
 
-    GLvoid* data = dstData->rawBuffer() + dstData->byteOffset() +
-                   (dstOffset * elementSize);
+    GLvoid* data = dstData->rawBuffer() + (dstOffset * elementSize);
     gl()->readPixels(x, y, width, height, format, type, data);
 }
 

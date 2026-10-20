@@ -89,8 +89,7 @@ void WaveShaperNode::setCurve(ScriptFloat32Array curve)
     // "an internal copy of the curve" so later writes to that array have no
     // effect. Both are therefore kept; the copy is the only native one.
     const size_t length = curve->arrayLength();
-    const float* data = reinterpret_cast<const float*>(curve->rawBuffer() +
-                                                       curve->byteOffset());
+    const float* data = reinterpret_cast<const float*>(curve->rawBuffer());
     m_shaperHandler->setCurve(std::vector<float>(data, data + length));
     m_curve = curve;
     m_curveSet = true;

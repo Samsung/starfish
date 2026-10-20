@@ -207,8 +207,7 @@ void AudioBuffer::copyFromChannel(ScriptFloat32Array destination,
     if (!count) {
         return;
     }
-    float* target = reinterpret_cast<float*>(destination->rawBuffer() +
-                                             destination->byteOffset());
+    float* target = reinterpret_cast<float*>(destination->rawBuffer());
     memmove(target, m_data->channel(channelNumber) + bufferOffset,
             count * sizeof(float));
 }
@@ -230,8 +229,7 @@ void AudioBuffer::copyToChannel(ScriptFloat32Array source,
         return;
     }
     ensureMutableData();
-    const float* samples = reinterpret_cast<const float*>(source->rawBuffer() +
-                                                          source->byteOffset());
+    const float* samples = reinterpret_cast<const float*>(source->rawBuffer());
     memmove(m_data->channel(channelNumber) + bufferOffset, samples,
             count * sizeof(float));
 }

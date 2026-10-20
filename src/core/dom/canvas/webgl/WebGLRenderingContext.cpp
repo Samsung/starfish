@@ -4912,7 +4912,7 @@ void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
             generated.
         */
 
-        GLvoid* data = pixelsView->rawBuffer() + pixelsView->byteOffset();
+        GLvoid* data = pixelsView->rawBuffer();
 
         // completePendingJobs() is not related as this function is a read
         // operation.
@@ -4954,8 +4954,7 @@ TexImageHelper::TexImageHelper(::Starfish::ImageData* imageData, GLenum format)
     m_sourceImage.height = imageData->height();
     m_sourceImage.stride = imageData->width() * 4;
     m_sourceImage.format = format;
-    m_sourceImage.data =
-        imageData->data()->rawBuffer() + imageData->data()->byteOffset();
+    m_sourceImage.data = imageData->data()->rawBuffer();
     m_isNativeImageDataUsed = false;
     m_isImageDataUsed = true;
 }
@@ -5349,8 +5348,7 @@ void WebGLRenderingContext::handleTexImageWithArrayBufferView(
             return;
         }
 
-        GLvoid* data =
-            pixelsView->rawBuffer() + pixelsView->byteOffset() + byteOffset;
+        GLvoid* data = pixelsView->rawBuffer() + byteOffset;
 
         // Handle WebGL-specific pixel storage parameters that affect the
         // behavior of this function. Treat 3D textures as multiple 2D layers
