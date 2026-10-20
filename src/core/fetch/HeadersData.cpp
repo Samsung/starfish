@@ -73,7 +73,8 @@ bool HeadersData::isValidHTTPHeaderValue(const String* value)
 {
     for (size_t i = 0; i < value->length(); i++) {
         auto c = value->charAt(i);
-        if (c > 0xFF) {
+        // https://fetch.spec.whatwg.org/#header-value
+        if (c > 0xFF || c == 0x00 || c == '\r' || c == '\n') {
             return false;
         }
     }
@@ -125,8 +126,7 @@ HeadersData::HeadersData()
 void HeadersData::append(String* name, String* value, bool* typeErrorOccurred)
 {
     // https://fetch.spec.whatwg.org/#concept-headers-append
-
-    // TODO : Nomalize vlaue
+    value = value->trim();
     if (!isValidHTTPToken(name) || !isValidHTTPHeaderValue(value)) {
         SET_TYPE_ERROR();
         return;
@@ -143,7 +143,7 @@ void HeadersData::append(String* name, String* value, bool* typeErrorOccurred)
     // TODDO : Guard::RequestNoCors, Guard::Response
 
     m_httpHeaderMap.append(name->toLower()->toUTF8NonGCString(),
-                           value->trim()->toUTF8NonGCString());
+                           value->toUTF8NonGCString());
     return;
 }
 
@@ -213,7 +213,7 @@ bool HeadersData::noCheckValidHas(const std::string& lowerCaseName)
 
 void HeadersData::set(String* name, String* value, bool* typeErrorOccurred)
 {
-    // TODO : Nomalize vlaue
+    value = value->trim();
     if (!isValidHTTPToken(name) || !isValidHTTPHeaderValue(value)) {
         SET_TYPE_ERROR();
         return;
@@ -229,7 +229,7 @@ void HeadersData::set(String* name, String* value, bool* typeErrorOccurred)
     }
     // TODDO : Guard::RequestNoCors, Guard::Response
     noCheckValidSet(name->toLower()->toUTF8NonGCString().data(),
-                    value->trim()->toUTF8NonGCString().data());
+                    value->toUTF8NonGCString().data());
 }
 
 void HeadersData::noCheckValidSet(const std::string& lowerCaseName,

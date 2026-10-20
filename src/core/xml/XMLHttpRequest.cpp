@@ -704,6 +704,12 @@ void XMLHttpRequest::setRequestHeader(String* header, String* value)
         throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
                                "InvalidStateError");
     }
+    // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-setrequestheader
+    if (!HeadersData::isValidHTTPToken(header) ||
+        !HeadersData::isValidHTTPHeaderValue(value)) {
+        throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
+                               "SyntaxError");
+    }
 
     if (FetchUtils::isForbiddenHeaderName(header)) {
         STARFISH_LOG_WARN("Refused to set unsafe header \"%s\"",
