@@ -132,6 +132,7 @@ static ImageDecoder::DecodeResult decodePNG(
     png_byte bitDepth;
     // volatile: assigned after setjmp() and read on the longjmp path.
     png_bytep* volatile rowPointers = nullptr;
+    uint8_t* volatile pixels = nullptr;
 
     ImageDecoder::DecodeResult result;
 
@@ -151,9 +152,8 @@ static ImageDecoder::DecodeResult decodePNG(
     if (setjmp(png_jmpbuf(png))) {
         png_destroy_read_struct(&png, &info, nullptr);
         free(rowPointers);
-        free(result.m_buffer);
-        result.m_buffer = nullptr;
-        return result;
+        free(pixels);
+        return ImageDecoder::DecodeResult();
     }
 
     readData.mem = (unsigned char*)inputBuffer.data();
@@ -165,6 +165,14 @@ static ImageDecoder::DecodeResult decodePNG(
 
     result.m_width = png_get_image_width(png, info);
     result.m_height = png_get_image_height(png, info);
+    // fail when image is extremely large, same limit as decodeJPG
+    if (result.m_width >=
+            static_cast<size_t>(std::numeric_limits<int16_t>::max()) ||
+        result.m_height >=
+            static_cast<size_t>(std::numeric_limits<int16_t>::max())) {
+        png_destroy_read_struct(&png, &info, nullptr);
+        return ImageDecoder::DecodeResult();
+    }
     colorType = png_get_color_type(png, info);
     bitDepth = png_get_bit_depth(png, info);
 
@@ -200,11 +208,16 @@ static ImageDecoder::DecodeResult decodePNG(
     result.m_stride = rowbytes;
     if (needsDecoding) {
         rowPointers = (png_bytep*)malloc(sizeof(png_bytep) * result.m_height);
-        STARFISH_RELEASE_ASSERT(rowPointers);
-        result.m_buffer = (uint8_t*)malloc(rowbytes * result.m_height);
-        STARFISH_RELEASE_ASSERT(result.m_buffer);
+        pixels = (uint8_t*)malloc((size_t)rowbytes * result.m_height);
+        result.m_buffer = pixels;
+        if (!rowPointers || !result.m_buffer) {
+            free(rowPointers);
+            free(result.m_buffer);
+            png_destroy_read_struct(&png, &info, nullptr);
+            return ImageDecoder::DecodeResult();
+        }
         for (png_uint_32 i = 0; i < (unsigned int)result.m_height; ++i) {
-            rowPointers[i] = (png_bytep)result.m_buffer + i * rowbytes;
+            rowPointers[i] = (png_bytep)result.m_buffer + (size_t)i * rowbytes;
         }
 
         png_read_image(png, rowPointers);
