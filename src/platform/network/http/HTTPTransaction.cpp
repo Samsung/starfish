@@ -211,6 +211,14 @@ void HTTPTransaction::start()
 #endif
     curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(m_curl, CURLOPT_MAXREDIRS, 128);
+    // Fetch only follows redirects to HTTP(S) URLs; anything else is a
+    // network error. https://fetch.spec.whatwg.org/#http-redirect-fetch
+#if LIBCURL_VERSION_NUM >= 0x075500
+    curl_easy_setopt(m_curl, CURLOPT_REDIR_PROTOCOLS_STR, "http,https");
+#else
+    curl_easy_setopt(m_curl, CURLOPT_REDIR_PROTOCOLS,
+                     CURLPROTO_HTTP | CURLPROTO_HTTPS);
+#endif
     curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url().data());
     m_credentialsExcluded = false;
     if (includeCredentials) {
