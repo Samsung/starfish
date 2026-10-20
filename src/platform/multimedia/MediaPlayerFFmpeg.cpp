@@ -1061,14 +1061,8 @@ void MediaPlayerFFmpeg::syncAudioPlaybackState()
 void MediaPlayerFFmpeg::handlePlayerError()
 {
     if (isMainThread() == false) {
-        MessageLoop* msgLoop = m_container->webView()->messageLoop();
-        msgLoop->addIdlerWithNoGCRootingInOtherThread(
-            m_container->window(),
-            [](size_t, void* data) {
-                MediaPlayerFFmpeg* player = (MediaPlayerFFmpeg*)data;
-                player->handlePlayerError();
-            },
-            this);
+        postToMainThread(
+            [](MediaPlayerFFmpeg* player) { player->handlePlayerError(); });
         return;
     }
 
@@ -1268,13 +1262,8 @@ void MediaPlayerFFmpeg::seekOperation(int timeInMS)
         timeInMS, true,
         [](void* data) {
             MediaPlayerFFmpeg* self = (MediaPlayerFFmpeg*)data;
-            MessageLoop* msgLoop = self->container()->webView()->messageLoop();
-            msgLoop->addIdlerWithNoGCRootingInOtherThread(
-                self->container()->window(),
-                [](size_t, void* d) {
-                    ((MediaPlayerFFmpeg*)d)->handleSeeked();
-                },
-                self);
+            self->postToMainThread(
+                [](MediaPlayerFFmpeg* player) { player->handleSeeked(); });
         },
         this);
 }
@@ -1306,17 +1295,11 @@ void MediaPlayerFFmpeg::handleEnded()
 {
     PLAYER_LOGI("MediaPlayerFFmpeg::handleEnded\n");
     if (!isMainThread()) {
-        m_container->webView()
-            ->messageLoop()
-            ->addIdlerWithNoGCRootingInOtherThread(
-                m_container->window(),
-                [](size_t, void* data) {
-                    auto* player = static_cast<MediaPlayerFFmpeg*>(data);
-                    if (player->alive()) {
-                        player->handleEnded();
-                    }
-                },
-                this);
+        postToMainThread([](MediaPlayerFFmpeg* player) {
+            if (player->alive()) {
+                player->handleEnded();
+            }
+        });
         return;
     }
     if (playbackState() == PLAYBACK_STATE_END) {
@@ -1506,19 +1489,12 @@ void MediaPlayerFFmpeg::setNativePlayerDisplayModeWithGL()
                     player->freeFramePacketLocked(oldPacket);
                 }
             }
-            player->window()
-                ->webView()
-                ->messageLoop()
-                ->addIdlerWithNoGCRootingInOtherThread(
-                    player->window(),
-                    [](size_t, void* data) {
-                        MediaPlayerFFmpeg* self = (MediaPlayerFFmpeg*)data;
-                        if (self->alive() && self->container() != nullptr &&
-                            self->container()->frame() != nullptr) {
-                            self->container()->setNeedsComposite();
-                        }
-                    },
-                    player);
+            player->postToMainThread([](MediaPlayerFFmpeg* self) {
+                if (self->alive() && self->container() != nullptr &&
+                    self->container()->frame() != nullptr) {
+                    self->container()->setNeedsComposite();
+                }
+            });
         },
         this);
 }
@@ -1625,14 +1601,8 @@ void MediaPlayerFFmpeg::handlePrepared()
     PLAYER_LOGI("MediaPlayerFFmpeg::handlePrepared\n");
     if (isMainThread() == false) {
         PLAYER_LOGI("MediaPlayerFFmpeg::handlePrepared in non-MainThread");
-        MessageLoop* msgLoop = m_container->webView()->messageLoop();
-        msgLoop->addIdlerWithNoGCRootingInOtherThread(
-            m_container->window(),
-            [](size_t, void* user_data) {
-                MediaPlayerFFmpeg* self = (MediaPlayerFFmpeg*)user_data;
-                self->handlePrepared();
-            },
-            this);
+        postToMainThread(
+            [](MediaPlayerFFmpeg* self) { self->handlePrepared(); });
         return;
     }
     PLAYER_LOGI("MediaPlayerFFmpeg::handlePrepared in MainThread");
@@ -1815,7 +1785,40 @@ void MediaPlayerFFmpeg::dispose()
         m_canvasSurface->detachNativeBuffer();
         m_canvasSurface = nullptr;
     }
+    // Every posting thread is joined by now. Keep the player rooted until
+    // the idlers it already queued have run, and drop a composite request
+    // a decoder posted after pause() above.
+    {
+        Locker<Mutex> locker(*m_setNeedsCompositeEventIdlerHandleMutex);
+        if (m_setNeedsCompositeEventIdlerHandle != MessageLoopInvalidID) {
+            m_container->webView()->messageLoop()->removeIdlerWithNoGCRooting(
+                m_setNeedsCompositeEventIdlerHandle);
+            m_setNeedsCompositeEventIdlerHandle = MessageLoopInvalidID;
+        }
+    }
+    if (m_pendingIdlerCount > 0) {
+        m_pendingIdlerRoot = m_container->executionContext();
+        m_pendingIdlerRoot->addPointerInRootSet(this);
+    }
     m_container = nullptr;
+}
+
+void MediaPlayerFFmpeg::postToMainThread(void (*task)(MediaPlayerFFmpeg*))
+{
+    m_pendingIdlerCount++;
+    m_container->webView()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+        m_container->window(),
+        [](size_t, void* data, void* task) {
+            MediaPlayerFFmpeg* self = (MediaPlayerFFmpeg*)data;
+            reinterpret_cast<void (*)(MediaPlayerFFmpeg*)>(task)(self);
+            // shortcut: an idler dropped by clearPendingIdlers() never gets
+            // here, leaving the root in the context being torn down anyway.
+            if (--self->m_pendingIdlerCount == 0 && self->m_pendingIdlerRoot) {
+                self->m_pendingIdlerRoot->removePointerFromRootSet(self);
+                self->m_pendingIdlerRoot = NullOption;
+            }
+        },
+        this, reinterpret_cast<void*>(task));
 }
 
 void MediaPlayerFFmpeg::setVolume(double volume)
@@ -2064,14 +2067,8 @@ void MediaPlayerFFmpeg::enterUnderrunState()
 {
     PLAYER_LOGI("MediaPlayerFFmpeg::enterUnderrunState\n");
     if (isMainThread() == false) {
-        MessageLoop* msgLoop = m_container->webView()->messageLoop();
-        msgLoop->addIdlerWithNoGCRootingInOtherThread(
-            m_container->window(),
-            [](size_t, void* data) {
-                MediaPlayerFFmpeg* player = (MediaPlayerFFmpeg*)data;
-                player->enterUnderrunState();
-            },
-            this);
+        postToMainThread(
+            [](MediaPlayerFFmpeg* player) { player->enterUnderrunState(); });
     } else {
         if (alive() == false || m_underrunMode == true ||
             playbackState() != PLAYBACK_STATE_PLAYING) {
@@ -2106,14 +2103,8 @@ void MediaPlayerFFmpeg::exitUnderrunState()
 {
     PLAYER_LOGI("MediaPlayerFFmpeg::exitUnderrunState\n");
     if (isMainThread() == false) {
-        MessageLoop* msgLoop = m_container->webView()->messageLoop();
-        msgLoop->addIdlerWithNoGCRootingInOtherThread(
-            m_container->window(),
-            [](size_t, void* data) {
-                MediaPlayerFFmpeg* player = (MediaPlayerFFmpeg*)data;
-                player->exitUnderrunState();
-            },
-            this);
+        postToMainThread(
+            [](MediaPlayerFFmpeg* player) { player->exitUnderrunState(); });
     } else {
         if (alive() == false || m_underrunMode == false) {
             return;
