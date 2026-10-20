@@ -81,12 +81,10 @@ void IIRFilterNode::getFrequencyResponse(ScriptFloat32Array frequencyHz,
             "Frequency response arrays must have equal lengths");
     }
 
-    const float* frequency = reinterpret_cast<const float*>(
-        frequencyHz->rawBuffer() + frequencyHz->byteOffset());
-    float* magnitude = reinterpret_cast<float*>(magResponse->rawBuffer() +
-                                                magResponse->byteOffset());
-    float* phase = reinterpret_cast<float*>(phaseResponse->rawBuffer() +
-                                            phaseResponse->byteOffset());
+    const float* frequency =
+        reinterpret_cast<const float*>(frequencyHz->rawBuffer());
+    float* magnitude = reinterpret_cast<float*>(magResponse->rawBuffer());
+    float* phase = reinterpret_cast<float*>(phaseResponse->rawBuffer());
     const auto* handler = static_cast<const IIRFilterHandler*>(m_handler);
     const double nyquist = context()->sampleRate() / 2;
     constexpr double pi = 3.14159265358979323846;

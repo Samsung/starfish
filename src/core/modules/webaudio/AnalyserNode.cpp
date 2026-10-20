@@ -100,15 +100,14 @@ void AnalyserNode::setSmoothingTimeConstant(double value)
 void AnalyserNode::getFloatTimeDomainData(ScriptFloat32Array array)
 {
     AudioGraphLock graphLock(context()->graph());
-    float* data =
-        reinterpret_cast<float*>(array->rawBuffer() + array->byteOffset());
+    float* data = reinterpret_cast<float*>(array->rawBuffer());
     m_analyserHandler->copyTimeDomain(data, array->arrayLength());
 }
 
 void AnalyserNode::getByteTimeDomainData(ScriptUint8Array array)
 {
     AudioGraphLock graphLock(context()->graph());
-    uint8_t* data = array->rawBuffer() + array->byteOffset();
+    uint8_t* data = array->rawBuffer();
     const size_t count = std::min<size_t>(array->arrayLength(), m_fftSize);
     for (size_t i = 0; i < count; i++) {
         const double scaled =
@@ -120,8 +119,7 @@ void AnalyserNode::getByteTimeDomainData(ScriptUint8Array array)
 void AnalyserNode::getFloatFrequencyData(ScriptFloat32Array array)
 {
     AudioGraphLock graphLock(context()->graph());
-    float* data =
-        reinterpret_cast<float*>(array->rawBuffer() + array->byteOffset());
+    float* data = reinterpret_cast<float*>(array->rawBuffer());
     const std::vector<float>& frequencies = m_analyserHandler->frequencyData();
     std::copy_n(frequencies.begin(),
                 std::min<size_t>(array->arrayLength(), frequencies.size()),
@@ -131,7 +129,7 @@ void AnalyserNode::getFloatFrequencyData(ScriptFloat32Array array)
 void AnalyserNode::getByteFrequencyData(ScriptUint8Array array)
 {
     AudioGraphLock graphLock(context()->graph());
-    uint8_t* data = array->rawBuffer() + array->byteOffset();
+    uint8_t* data = array->rawBuffer();
     const std::vector<float>& frequencies = m_analyserHandler->frequencyData();
     const size_t count =
         std::min<size_t>(array->arrayLength(), frequencies.size());

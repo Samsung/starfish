@@ -98,12 +98,10 @@ void BiquadFilterNode::getFrequencyResponse(ScriptFloat32Array frequencyHz,
             executionContext(), DOMException::INVALID_ACCESS_ERR,
             "Frequency response arrays must have equal lengths");
     }
-    const float* frequency = reinterpret_cast<const float*>(
-        frequencyHz->rawBuffer() + frequencyHz->byteOffset());
-    float* magnitude = reinterpret_cast<float*>(magResponse->rawBuffer() +
-                                                magResponse->byteOffset());
-    float* phase = reinterpret_cast<float*>(phaseResponse->rawBuffer() +
-                                            phaseResponse->byteOffset());
+    const float* frequency =
+        reinterpret_cast<const float*>(frequencyHz->rawBuffer());
+    float* magnitude = reinterpret_cast<float*>(magResponse->rawBuffer());
+    float* phase = reinterpret_cast<float*>(phaseResponse->rawBuffer());
     m_filterHandler->getFrequencyResponse(frequency, magnitude, phase, length,
                                           context()->currentTime());
 }
