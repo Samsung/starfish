@@ -22,7 +22,8 @@
 
 namespace Escargot {
 class ExecutionStateRef;
-}
+class ObjectRef;
+} // namespace Escargot
 
 namespace Starfish {
 
@@ -37,6 +38,14 @@ public:
         Escargot::ExecutionStateRef* state, Window* window);
     static bool shouldAllowCrossOriginScriptAPIAccessToLocation(
         Escargot::ExecutionStateRef* state, Location* location);
+    // Throws SecurityError unless the caller may use |bindingFunctionName|
+    // (the C++ binding function, i.e. __func__) on |window|.
+    static void checkWindowMemberAccess(Escargot::ExecutionStateRef* state,
+                                        Window* window,
+                                        const char* bindingFunctionName);
+    // Whether |object| is a Window or Location the caller may not access.
+    static bool isCrossOriginObject(Escargot::ExecutionStateRef* state,
+                                    Escargot::ObjectRef* object);
 };
 } // namespace Starfish
 #endif
