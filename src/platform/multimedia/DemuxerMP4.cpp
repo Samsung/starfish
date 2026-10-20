@@ -114,11 +114,13 @@ public:
 private:
     void readDirect(char* s, std::streamsize n)
     {
-        size_t sizeWantToRead = n;
-        size_t out;
+        size_t out = 0;
         int error = 0;
         m_source->onRead(n, out, error, (uint8_t*)s);
-        STARFISH_ASSERT(error == 0);
+        // Atom parsers read past a truncated box; never hand them stale bytes.
+        if (out < (size_t)n) {
+            memset(s + out, 0, (size_t)n - out);
+        }
     }
     virtual void get(char& c)
     {
@@ -154,6 +156,43 @@ static uint32_t readBigEndianUnsignedInteger(DemuxerSource* source, int& error)
     }
 
     return n;
+}
+
+// MP4Parse loops over TRUN/ELST entry counts without checking the box
+// length, so reject counts the box (or the whole buffer) cannot hold.
+static bool entryCountFitsBox(DemuxerSource* source, uint32_t type,
+                              uint64_t dataLength, int64_t maxPos)
+{
+    int64_t pos = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
+    uint8_t h[8];
+    size_t got = 0;
+    int err = 0;
+    source->onRead(8, got, err, h);
+    source->onSeek(pos, DemuxerSource::SeekWhenceSet);
+    if (err || got != 8) {
+        return false;
+    }
+    uint32_t flags = (uint32_t)h[1] << 16 | (uint32_t)h[2] << 8 | h[3];
+    uint64_t count = (uint32_t)h[4] << 24 | (uint32_t)h[5] << 16 |
+                     (uint32_t)h[6] << 8 | h[7];
+    uint64_t header = 8;
+    uint64_t entrySize;
+    if (type == MP4_PARSER_DEFINE_TYPE_STRING("trun")) {
+        header += 4 * (!!(flags & 0x1) + !!(flags & 0x4));
+        entrySize = 4 * (!!(flags & 0x100) + !!(flags & 0x200) +
+                         !!(flags & 0x400) + !!(flags & 0x800));
+        if (!entrySize) {
+            // Every sample needs at least one byte of mdat in this buffer.
+            return count <= (uint64_t)(maxPos - pos);
+        }
+    } else {
+        // MP4Parse reads a single entry for version 0.
+        if (h[0] != 1) {
+            return true;
+        }
+        entrySize = 16;
+    }
+    return header + count * entrySize <= dataLength;
 }
 
 static bool parseMP4(DemuxerSource* source, bool findPacket,
@@ -250,6 +289,13 @@ static bool parseMP4(DemuxerSource* source, bool findPacket,
             lastUnpairedMoofPos = SIZE_MAX;
         }
 
+        if ((typeInt == MP4_PARSER_DEFINE_TYPE_STRING("trun") ||
+             typeInt == MP4_PARSER_DEFINE_TYPE_STRING("elst")) &&
+            !entryCountFitsBox(source, typeInt, dataLength, maxPos)) {
+            PRINT_STOP_REASON("Entry count exceeds box size");
+            return false;
+        }
+
         MP4::Atom* atom = MP4::atomFactory(typeInt);
         ((MP4::DataAtom*)atom)->processData(&src, dataLength);
         bool success = fn(atom);
@@ -336,22 +382,22 @@ public:
 };
 
 static StreamInfoMP4* handleTKHD(MP4::TKHD* tkhd,
-                                 std::unordered_map<size_t, StreamInfoMP4>& map)
+                                 std::unordered_map<size_t, StreamInfoMP4>& map,
+                                 size_t streamIndex)
 {
     if (tkhd->track_id < 1) {
         DEMUXERMP4_LOG("Unexpected structure of MP4");
         DEMUXERMP4_LOG("> TRAK(TKHD): Found wrong track number");
         return nullptr;
     }
-    size_t streamIndex = tkhd->track_id - 1;
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
-    auto exist = map.find(streamIndex);
+    auto exist = map.find(tkhd->track_id);
     if (exist != map.end()) {
-        DEMUXERMP4_LOG("TRAK(TKHD): Replace previous stream at index %d",
-                       (int)streamIndex);
+        DEMUXERMP4_LOG("TRAK(TKHD): Replace previous stream of track %d",
+                       (int)tkhd->track_id);
     }
 #endif
-    auto& info = map[streamIndex];
+    auto& info = map[tkhd->track_id];
     if (tkhd->track_width && tkhd->track_height) {
         DEMUXERMP4_LOG("TRAK(TKHD): Found new VIDEO stream");
         info.setType(StreamTypeVideo);
@@ -363,7 +409,9 @@ static StreamInfoMP4* handleTKHD(MP4::TKHD* tkhd,
         info.setType(StreamTypeAudio);
     }
     info.setRawDuration(tkhd->duration);
-    info.setStreamIndex(tkhd->track_id - 1);
+    // track_ID is any non-zero 32-bit value, so index streams densely in
+    // trak order instead; SourceBuffer sizes per-stream tables by index.
+    info.setStreamIndex(streamIndex);
     return &info;
 }
 
@@ -508,7 +556,7 @@ bool DemuxerMP4::findStreamInfo(DemuxerSource* source, String* formatHint)
     Locker<Mutex> lock(*m_demuxingMutex);
 
     int64_t before = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
-    std::unordered_set<size_t> detectedStreamIndice;
+    std::unordered_set<size_t> detectedTrackIDs;
     StreamInfoMP4* currentStream = nullptr;
     MP4::TREX* trexData = nullptr;
 
@@ -518,7 +566,13 @@ bool DemuxerMP4::findStreamInfo(DemuxerSource* source, String* formatHint)
             switch (type) {
             case MP4_PARSER_DEFINE_TYPE_STRING("tkhd"): {
                 // Found new stream
-                currentStream = handleTKHD((MP4::TKHD*)atom, m_streamInfo);
+                if (detectedTrackIDs.count(((MP4::TKHD*)atom)->track_id)) {
+                    DEMUXERMP4_LOG("Unexpected structure of MP4");
+                    DEMUXERMP4_LOG("> TRAK(TKHD): Duplicate track number");
+                    return false;
+                }
+                currentStream = handleTKHD((MP4::TKHD*)atom, m_streamInfo,
+                                           detectedTrackIDs.size());
                 if (!currentStream) {
                     return false;
                 }
@@ -527,7 +581,7 @@ bool DemuxerMP4::findStreamInfo(DemuxerSource* source, String* formatHint)
                     delete trexData;
                     trexData = nullptr;
                 }
-                detectedStreamIndice.insert(currentStream->streamIndex());
+                detectedTrackIDs.insert(((MP4::TKHD*)atom)->track_id);
                 return true;
             }
             case MP4_PARSER_DEFINE_TYPE_STRING("mdhd"): {
@@ -576,7 +630,18 @@ bool DemuxerMP4::findStreamInfo(DemuxerSource* source, String* formatHint)
         delete trexData;
     }
     if (result) {
-        for (const size_t i : detectedStreamIndice) {
+        // Drop tracks of a previous init segment so a later TFHD cannot
+        // reach a stream index this init segment did not declare.
+        if (!detectedTrackIDs.empty()) {
+            for (auto it = m_streamInfo.begin(); it != m_streamInfo.end();) {
+                if (detectedTrackIDs.count(it->first)) {
+                    ++it;
+                } else {
+                    it = m_streamInfo.erase(it);
+                }
+            }
+        }
+        for (const size_t i : detectedTrackIDs) {
             StreamInfoMP4& item = m_streamInfo[i];
             for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                 m_demuxerClients[j]->onDetectStream(item);
@@ -590,7 +655,7 @@ bool DemuxerMP4::findStreamInfo(DemuxerSource* source, String* formatHint)
 
 struct SegmentParsingInfo {
     uint64_t m_DTS{ 0 };
-    size_t m_streamIndex{ 0 };
+    size_t m_trackID{ 0 };
     size_t m_defaultSampleSize{ 0 };
     size_t m_defaultSampleDuration{ 0 };
     bool m_hasDefaultSampleSize : 1;
@@ -633,7 +698,7 @@ static bool handleTFHD(MP4::TFHD* tfhd, SegmentParsingInfo& parsingInfo)
         return false;
     }
     parsingInfo.m_seenTFHD = true;
-    parsingInfo.m_streamIndex = tfhd->track_id - 1;
+    parsingInfo.m_trackID = tfhd->track_id;
     parsingInfo.m_hasDefaultSampleSize = tfhd->has_default_sample_size;
     parsingInfo.m_hasDefaultSampleDuration = tfhd->has_default_sample_duration;
     parsingInfo.m_defaultSampleSize = tfhd->default_sample_size;
@@ -748,7 +813,13 @@ bool DemuxerMP4::findStreamPacket(DemuxerSource* source)
                     DEMUXERMP4_LOG("> MDAT");
                     return false;
                 }
-                StreamInfoMP4& stream = m_streamInfo[parsingInfo.m_streamIndex];
+                auto found = m_streamInfo.find(parsingInfo.m_trackID);
+                if (found == m_streamInfo.end()) {
+                    DEMUXERMP4_LOG("Unexpected structure of MP4");
+                    DEMUXERMP4_LOG("> TFHD: track not in init segment");
+                    return false;
+                }
+                StreamInfoMP4& stream = found->second;
                 MP4::MDAT* mdat = (MP4::MDAT*)atom;
                 int64_t before =
                     source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
@@ -801,7 +872,7 @@ bool DemuxerMP4::findStreamPacket(DemuxerSource* source)
                     packet->m_duration = durationMs;
                     for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                         if (!m_demuxerClients[j]->onDetectPacket(
-                                parsingInfo.m_streamIndex, packet)) {
+                                stream.streamIndex(), packet)) {
                             DEMUXERMP4_LOG("Unexpected structure of MP4");
                             DEMUXERMP4_LOG(
                                 "> Failed to append packet to groups");
