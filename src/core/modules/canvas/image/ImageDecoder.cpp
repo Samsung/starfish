@@ -109,6 +109,7 @@ static bool isWebPFormat(const std::vector<char>& inputBuffer)
 typedef struct {
     const unsigned char* mem;
     unsigned long int size;
+    unsigned long int pos;
 } READ_DATA;
 
 static void readPNGFromBufferedInput(png_structp png, png_bytep data,
@@ -116,10 +117,11 @@ static void readPNGFromBufferedInput(png_structp png, png_bytep data,
 {
     READ_DATA* readData = (READ_DATA*)png_get_io_ptr(png);
 
-    if (readData->mem && size > 0) {
-        memcpy(data, readData->mem + readData->size, size);
-        readData->size += size;
+    if (size > readData->size - readData->pos) {
+        png_error(png, "Read past end of data");
     }
+    memcpy(data, readData->mem + readData->pos, size);
+    readData->pos += size;
 }
 
 static ImageDecoder::DecodeResult decodePNG(
@@ -151,7 +153,8 @@ static ImageDecoder::DecodeResult decodePNG(
     }
 
     readData.mem = (unsigned char*)inputBuffer.data();
-    readData.size = 0;
+    readData.size = inputBuffer.size();
+    readData.pos = 0;
     png_set_read_fn(png, &readData, readPNGFromBufferedInput);
 
     png_read_info(png, info);
@@ -847,6 +850,7 @@ static ImageDecoder::DecodeResult decodeWebP(
     READ_DATA readData;
     readData.mem = (unsigned char*)inputBuffer.data();
     readData.size = inputBuffer.size();
+    readData.pos = 0;
 
     int width = 0, height = 0;
 
