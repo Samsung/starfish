@@ -201,9 +201,8 @@ Document* DOMParser::parseFromString(String* str, String* type)
         } catch (const rapidxml::parse_error& err) {
             std::string errStr = err.what();
             errStr += " where -> ";
-            char buffer[16];
-            strncpy(buffer, err.where<char>(), 16);
-            errStr += buffer;
+            const char* where = err.where<char>();
+            errStr.append(where, strnlen(where, 16));
             return DOMParser::parseFromString(
                 String::fromUTF8(errStr.data(), errStr.size()),
                 String::fromUTF8("text/html"));
