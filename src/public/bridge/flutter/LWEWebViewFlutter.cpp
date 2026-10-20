@@ -369,9 +369,9 @@ public:
             STARFISH_LOG_INFO("wl_display_dispatch few times");
             size_t dispatchCount = 0;
             while (dispatchCount < 3) {
-                if (wl_display_dispatch_pending(m_wlDisplay) > 0) {
-                    wl_display_dispatch(m_wlDisplay);
-                }
+                // Separate wl_display connection: no events arrive here,
+                // so a blocking dispatch() never returns.
+                wl_display_dispatch_pending(m_wlDisplay);
                 dispatchCount++;
             }
         }

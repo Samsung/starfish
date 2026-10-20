@@ -401,7 +401,8 @@ ADD_SUBDIRECTORY (third_party/escargot)
 
 # Compile the test-only reseeding bridge with Escargot's internal headers and
 # compile definitions; normal builds must not contain this instrumentation.
-IF ("-DSTARFISH_ENABLE_TEST" IN_LIST LWE_DEFINITIONS)
+LIST (FIND LWE_DEFINITIONS "-DSTARFISH_ENABLE_TEST" STARFISH_TEST_INDEX)
+IF (NOT STARFISH_TEST_INDEX EQUAL -1)
     TARGET_SOURCES (escargot PRIVATE
         ${STARFISH_ROOT}/build/test/ScriptEngineTest.cpp)
 ENDIF()
