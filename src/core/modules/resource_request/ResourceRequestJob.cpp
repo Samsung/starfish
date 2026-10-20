@@ -24,6 +24,7 @@
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptEngineInstance.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/WebOrigin.h"
 #include "core/fileapi/Blob.h"
 #include "platform/file/PlatformFile.h"
 #include "core/modules/resource_request/ResourceRequest.h"
@@ -268,6 +269,21 @@ void FileURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 void FileURLResourceRequestJobDelegate::worker(ResourceRequest* request,
                                                String* filePath)
 {
+    // Fetch leaves file: to the implementation; only navigations and
+    // file: contexts may read local files, never web content.
+    Optional<ResourceURL*> requesterURL =
+        request->executionContext()->webOrigin()->url();
+    if (request->requestMode() != RequestMode::Navigate &&
+        !(requesterURL && requesterURL->isFileURL())) {
+        auto s = request->url()->urlString()->toUTF8NonGCString();
+        STARFISH_LOG_WARN("blocked file access from non-file context: %s",
+                          s.data());
+        request->m_responseData->m_status = 0;
+        request->handleError(ProgressState::InError,
+                             RequestErrorType::FileError);
+        return;
+    }
+
     std::string u8Path = filePath->toUTF8NonGCString();
     if (request->webBase()->m_resolveFilePathCallback) {
         // custom I/O path
