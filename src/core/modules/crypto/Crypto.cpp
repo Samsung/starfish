@@ -112,15 +112,12 @@ void Crypto::makeRandomByte(uint8_t* buffer, unsigned byteSize)
     }
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 #endif
-    // FIXME: mt19937 is not a cryptographically strong generator, so this
-    // does not meet the getRandomValues spec. Builds with WEBCRYPTO=1 use
-    // OpenSSL above.
     std::uniform_int_distribution<uint32_t> distribution(0, 0xFFFFFFFFu);
     int offset = 0;
     uint32_t bits = 0;
     for (unsigned i = 0; i < byteSize; i++) {
         if (offset == 0) {
-            bits = distribution(RandomEngine::instance().mt19937());
+            bits = distribution(RandomEngine::instance().device());
         }
         *(buffer++) = static_cast<char>(bits & 0xFF);
         bits >>= 8;

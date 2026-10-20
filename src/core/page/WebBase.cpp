@@ -287,9 +287,9 @@ void WebBase::callPublicWebViewHandler(
     }
 }
 
-std::mt19937& WebBase::randomEngine()
+std::random_device& WebBase::randomEngine()
 {
-    return RandomEngine::instance().mt19937();
+    return RandomEngine::instance().device();
 }
 
 LWE::WebSecurityMode WebBase::getWebSecurityMode() const

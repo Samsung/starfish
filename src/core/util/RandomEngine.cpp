@@ -23,11 +23,7 @@
 namespace Starfish {
 
 RandomEngine::RandomEngine()
-    : m_mt19937((unsigned int)time(NULL))
 {
-    // NOTE: we intentionally use the current time because the random number
-    // from`std::random_device` is relatively unclear and its source is platform
-    // dependent.
 }
 
 RandomEngine& RandomEngine::instance()
