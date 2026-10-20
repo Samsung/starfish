@@ -246,7 +246,7 @@ public:
         return m_videoOverlayEnabled;
     }
 
-    std::mt19937& randomEngine();
+    std::random_device& randomEngine();
 
 protected:
     BlobURLStore createBlobURLStore(void* ptr);

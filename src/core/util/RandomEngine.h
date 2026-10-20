@@ -21,9 +21,9 @@ namespace Starfish {
 
 class RandomEngine {
 public:
-    std::mt19937& mt19937()
+    std::random_device& device()
     {
-        return m_mt19937;
+        return m_device;
     }
 
     static RandomEngine& instance();
@@ -31,7 +31,10 @@ public:
 private:
     RandomEngine();
 
-    std::mt19937 m_mt19937;
+    // Every supported host (libstdc++/libc++ on Linux, Tizen and Android;
+    // MSVC on Windows) backs random_device with the OS CSPRNG, which is
+    // also safe to call from worker threads.
+    std::random_device m_device;
 };
 
 } // namespace Starfish

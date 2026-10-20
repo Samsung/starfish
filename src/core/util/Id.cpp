@@ -37,7 +37,7 @@ uint32_t IDGenerator::sequence()
 uint32_t IDGenerator::random()
 {
     std::uniform_int_distribution<uint32_t> dist;
-    return dist(RandomEngine::instance().mt19937());
+    return dist(RandomEngine::instance().device());
 }
 
 } // namespace Starfish
