@@ -43,7 +43,7 @@
 #include "core/dom/canvas/webgl/WebGLUniformLocation.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/canvas/CanvasRenderingContext.h"
-#include "core/dom/canvas/CanvasRenderingContext2DMixIn.h"
+#include "core/dom/canvas/CanvasRenderingContext2D.h"
 #include "core/dom/canvas/webgl/WebGLRenderingContextState.h"
 #include "binding/ScriptBindingInstance.h"
 #include "binding/generated/Float32ArrayOrSequenceOfGLfloatUnion.h"
@@ -5435,6 +5435,7 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
     NativeImageData* imageData = nullptr;
     NativeImageData* rasterizedSVGImage = nullptr;
     ::Starfish::ImageData* sourceImageData = nullptr;
+    std::vector<uint8_t> blankCanvasPixels;
 
     if (source.isNoneValue()) {
         setGLError(GL_INVALID_VALUE);
@@ -5501,13 +5502,29 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
         TRACE(WEBGL, "source.isHTMLCanvasElementValue");
         // TODO: Consider using CanvasImageSourceUtils::toNativeImageData
         HTMLCanvasElement* element = source.getHTMLCanvasElementValue();
-        CanvasRenderingContext* context = element->canvasRenderingContext();
-        STARFISH_ASSERT(context != nullptr);
-        auto context2d = static_cast<CanvasRenderingContext2DMixIn*>(context);
-        context2d->flushForReadback();
-        imageData = NativeImageData::attach(context2d->canvas());
         width = element->width();
         height = element->height();
+        CanvasRenderingContext* context = element->canvasRenderingContext();
+        if (!context) {
+            // A canvas that has no rendering context yet still has a bitmap
+            // of its size, initialized to transparent black (HTML, "The canvas
+            // element"). Transparent black is all-zero in every WebGL format
+            // and type, so no pixel conversion is needed. A 0x0 canvas still
+            // gets one byte so the upload has a valid buffer to point at.
+            blankCanvasPixels.resize(std::max<size_t>(
+                1, width * height * getBytesPerPixel(format, type)));
+        } else if (context->isCanvasRenderingContext2D()) {
+            CanvasRenderingContext2DMixIn* context2d =
+                context->asCanvasRenderingContext2D();
+            context2d->flushForReadback();
+            imageData = NativeImageData::attach(context2d->canvas());
+        } else {
+            // WebGL requires uploading the drawing buffer of a WebGL or
+            // bitmaprenderer canvas; reading those back is not supported yet,
+            // so the texture is left unchanged.
+            STARFISH_UNIMPLEMENTED("texImage from a non-2D canvas");
+            return;
+        }
     }
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     else if (source.isHTMLVideoElementValue()) {
@@ -5533,7 +5550,8 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
         return;
     }
 
-    if (imageData == nullptr && sourceImageData == nullptr) {
+    if (imageData == nullptr && sourceImageData == nullptr &&
+        blankCanvasPixels.empty()) {
         STARFISH_ASSERT_NOT_REACHED();
         return;
     }
@@ -5544,9 +5562,11 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
 
     // Handle WebGL-specific pixel storage parameters that affect the behavior
     // of this function.
-    TexImageHelper image = sourceImageData
-                               ? TexImageHelper(sourceImageData, format)
-                               : TexImageHelper(imageData, format);
+    TexImageHelper image =
+        sourceImageData ? TexImageHelper(sourceImageData, format)
+        : imageData     ? TexImageHelper(imageData, format)
+                        : TexImageHelper(width, height, stride, format,
+                                         blankCanvasPixels.data());
 
     GLint savedSkipPixels = 0, savedSkipRows = 0, savedRowLength = 0,
           savedImageHeight = 0;
