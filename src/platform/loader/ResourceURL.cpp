@@ -1086,27 +1086,6 @@ String* ResourceURL::hostname()
     return m_urlString->substring(start, m_hostEnd - start);
 }
 
-String* ResourceURL::domain()
-{
-    if (!isHTTPFamilyURL()) {
-        return String::emptyString;
-    }
-
-    int start =
-        (m_passwordEnd == m_usernameStart) ? m_passwordEnd : m_passwordEnd + 1;
-    int cnt = 0;
-    for (int pos = (int)m_hostEnd; pos >= start; --pos) {
-        if (m_urlString->charAt(pos) == '.') {
-            cnt++;
-        }
-        if (cnt == 2) {
-            start = pos + 1;
-            break;
-        }
-    }
-    return m_urlString->substring(start, m_hostEnd - start);
-}
-
 ResourceURL* ResourceURL::setHostname(String* newHostname)
 {
     STARFISH_ASSERT(newHostname != nullptr);

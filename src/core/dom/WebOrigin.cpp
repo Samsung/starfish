@@ -60,6 +60,7 @@ String* WebOrigin::serialize() const
     return m_originalURL->origin();
 }
 
+// https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-effective-domain
 Optional<String*> WebOrigin::domain() const
 {
     if (isOpaque()) {
@@ -68,16 +69,10 @@ Optional<String*> WebOrigin::domain() const
     // m_originalURL should not be null unless isOpaque is true
     STARFISH_ASSERT(m_originalURL);
 
-    String* domain = m_originalURL->domain();
-
-    if (domain != String::emptyString) {
-        return domain;
-    }
-
     // TODO domain can be changed through the document.domain API.
     // If origin's domain is non-null, then return origin's domain.
 
-    return m_originalURL->host();
+    return m_originalURL->hostname();
 }
 
 // https://w3c.github.io/html/browsers.html#same-origin
@@ -122,22 +117,9 @@ bool WebOrigin::isSameOriginDomain(const WebOrigin* otherWebOrigin) const
         return false;
     }
 
-    // m_originalURL should not be null unless isOpaque is true
-    STARFISH_ASSERT(m_originalURL);
-    STARFISH_ASSERT(otherWebOrigin->m_originalURL);
-
-    if ((m_originalURL->protocol()->equals(
-            otherWebOrigin->m_originalURL->protocol())) &&
-        (domain().hasValue()) && (otherWebOrigin->domain().hasValue()) &&
-        (domain().getValue()->equals(otherWebOrigin->domain().getValue()) ==
-         true)) {
-        return true;
-    } else if ((isSameOrigin(otherWebOrigin)) && (!domain().hasValue()) &&
-               (!otherWebOrigin->domain().hasValue())) {
-        return true;
-    }
-
-    return false;
+    // document.domain is not settable, so an origin's domain is always null
+    // and same origin-domain reduces to same origin.
+    return isSameOrigin(otherWebOrigin);
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#can-have-its-url-rewritten

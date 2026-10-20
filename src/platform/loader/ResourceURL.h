@@ -195,7 +195,6 @@ public:
     ResourceURL* setHost(String* newHost);
     String* hostname();
     ResourceURL* setHostname(String* newHostname);
-    String* domain();
     String* port();
     ResourceURL* setPort(String* newPort);
     String* pathname();
