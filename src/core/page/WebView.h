@@ -213,7 +213,7 @@ public:
                                          String* jsFunctionName);
     void applyJavaScriptNativeInterface(ScriptBindingInstance* instance);
 
-    BlobURLStore addMediaSourceInBlobURLStore(MediaSource* ptr);
+    BlobURLStore addMediaSourceInBlobURLStore(MediaSource* ptr, String* origin);
     void removeMediaSourceFromBlobURLStore(MediaSource* ptr);
     // On success, fills store.m_blob with the MediaSource the URL refers to.
     bool isValidMediaSourceBlobURL(BlobURLStore& store);

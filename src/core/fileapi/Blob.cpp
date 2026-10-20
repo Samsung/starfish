@@ -23,6 +23,7 @@
 #include "core/serialize/Serializer.h"
 #include "core/page/WebBase.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/WebOrigin.h"
 #include "binding/generated/ArrayBufferViewOrArrayBufferUnion.h"
 #include "EscargotPublic.h"
 
@@ -163,7 +164,8 @@ void Blob::addBlobToBlobURLStore()
     STARFISH_ASSERT(!m_blobData.m_isEntryOfBlobURLStore);
     m_blobData.m_isEntryOfBlobURLStore = true;
     STARFISH_ASSERT(!executionContext()->webBase()->isValidBlobURL(this));
-    executionContext()->webBase()->addBlobInBlobURLStore(this);
+    executionContext()->webBase()->addBlobInBlobURLStore(
+        this, executionContext()->webOrigin()->serialize());
 }
 
 void Blob::removeBlobFromBlobURLStore()

@@ -1262,11 +1262,13 @@ void WebView::evaluateJavaScript(String* s, std::function<void(std::string)> cb)
     cb(ret->toUTF8NonGCString());
 }
 
-BlobURLStore WebView::addMediaSourceInBlobURLStore(MediaSource* ptr)
+BlobURLStore WebView::addMediaSourceInBlobURLStore(MediaSource* ptr,
+                                                   String* origin)
 {
     STARFISH_ASSERT(findBlobURLStoreByPointer(m_urlMediaSourceBlobStore, ptr) ==
                     m_urlMediaSourceBlobStore.end());
     BlobURLStore a = createBlobURLStore(ptr);
+    a.m_origin = origin;
     m_urlMediaSourceBlobStore.insert(a);
     return a;
 }
@@ -1284,10 +1286,13 @@ void WebView::removeMediaSourceFromBlobURLStore(MediaSource* ptr)
     }
 }
 
+// Like a Blob entry, a MediaSource entry resolves only through a URL that
+// carries its creator's origin; https://w3c.github.io/FileAPI/#blob-url-resolve
 bool WebView::isValidMediaSourceBlobURL(BlobURLStore& store)
 {
     auto iter = m_urlMediaSourceBlobStore.find(store);
-    if (iter == m_urlMediaSourceBlobStore.end()) {
+    if (iter == m_urlMediaSourceBlobStore.end() || !store.m_origin ||
+        !iter->m_origin->equals(store.m_origin)) {
         return false;
     }
     store.m_blob = iter->m_blob;

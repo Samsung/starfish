@@ -83,10 +83,14 @@ WebBase::WebBase(Starfish* starfish, MessageLoop* messageLoop, Timer* timer,
 
 bool WebBase::stringToBlobURLString(String* url, BlobURLStore& store)
 {
-    size_t idx = url->lastIndexOf('/');
-    if (idx == SIZE_MAX) {
+    if (!url->startsWith("blob:", false)) {
         return false;
     }
+    size_t idx = url->lastIndexOf('/');
+    if (idx == SIZE_MAX || idx < 5) {
+        return false;
+    }
+    store.m_origin = url->substring(5, idx - 5);
 
     idx++;
     if (idx >= url->length()) {
@@ -161,11 +165,12 @@ GCUnorderedSet<BlobURLStore>::iterator WebBase::findBlobURLStoreByPointer(
     return iter;
 }
 
-BlobURLStore WebBase::addBlobInBlobURLStore(Blob* ptr)
+BlobURLStore WebBase::addBlobInBlobURLStore(Blob* ptr, String* origin)
 {
     STARFISH_ASSERT(findBlobURLStoreByPointer(m_urlBlobStore, ptr) ==
                     m_urlBlobStore.end());
     BlobURLStore a = createBlobURLStore(ptr);
+    a.m_origin = origin;
     m_urlBlobStore.insert(a);
     return a;
 }
@@ -179,10 +184,14 @@ void WebBase::removeBlobFromBlobURLStore(Blob* ptr)
     }
 }
 
+// https://w3c.github.io/FileAPI/#blob-url-resolve
+// The URL's origin text must match the entry's origin, as blob: documents
+// take their origin from it.
 bool WebBase::isValidBlobURL(BlobURLStore& store)
 {
     auto iter = m_urlBlobStore.find(store);
-    if (iter == m_urlBlobStore.end()) {
+    if (iter == m_urlBlobStore.end() || !store.m_origin ||
+        !iter->m_origin->equals(store.m_origin)) {
         return false;
     }
     store.m_blob = iter->m_blob;
