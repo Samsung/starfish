@@ -74,13 +74,7 @@ void HTMLOptionsCollection::add(HTMLOptionElementOrHTMLOptGroupElement element,
 
 void HTMLOptionsCollection::remove(int index)
 {
-    if (index < 0) {
-        return;
-    }
-
-    if (HTMLOptionElement* option = item(index)->asHTMLOptionElement()) {
-        option->remove();
-    }
+    m_nodeListImpl.root()->asHTMLSelectElement()->remove(index);
 }
 
 int HTMLOptionsCollection::selectedIndex()
