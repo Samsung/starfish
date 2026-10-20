@@ -227,10 +227,20 @@ SerializedArrayBufferViewData::SerializedArrayBufferViewData(
         m_type = Type::Int32Array;
     } else if (arrayBufferView->isUint32ArrayObject()) {
         m_type = Type::Uint32Array;
+    } else if (arrayBufferView->isUint8ClampedArrayObject()) {
+        m_type = Type::Uint8ClampedArray;
+    } else if (arrayBufferView->isFloat16ArrayObject()) {
+        m_type = Type::Float16Array;
+    } else if (arrayBufferView->isFloat32ArrayObject()) {
+        m_type = Type::Float32Array;
+    } else if (arrayBufferView->isFloat64ArrayObject()) {
+        m_type = Type::Float64Array;
+    } else if (arrayBufferView->isBigInt64ArrayObject()) {
+        m_type = Type::BigInt64Array;
+    } else if (arrayBufferView->isBigUint64ArrayObject()) {
+        m_type = Type::BigUint64Array;
     } else {
-        STARFISH_UNSUPPORTED(
-            "serialize: BigInt64Array, BigUint64Array, Float32Array, "
-            "Float64Array, Uint8ClampedArray");
+        STARFISH_UNSUPPORTED("serialize: unknown ArrayBufferView type");
         throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR,
                                "Data clone error");
     }
@@ -260,10 +270,20 @@ ScriptArrayBufferView SerializedArrayBufferViewData::createDeserializedValue(
         arrayBufferView = Int32ArrayObjectRef::create(state);
     } else if (m_type == Type::Uint32Array) {
         arrayBufferView = Uint32ArrayObjectRef::create(state);
+    } else if (m_type == Type::Uint8ClampedArray) {
+        arrayBufferView = Uint8ClampedArrayObjectRef::create(state);
+    } else if (m_type == Type::Float16Array) {
+        arrayBufferView = Float16ArrayObjectRef::create(state);
+    } else if (m_type == Type::Float32Array) {
+        arrayBufferView = Float32ArrayObjectRef::create(state);
+    } else if (m_type == Type::Float64Array) {
+        arrayBufferView = Float64ArrayObjectRef::create(state);
+    } else if (m_type == Type::BigInt64Array) {
+        arrayBufferView = BigInt64ArrayObjectRef::create(state);
+    } else if (m_type == Type::BigUint64Array) {
+        arrayBufferView = BigUint64ArrayObjectRef::create(state);
     } else {
-        STARFISH_UNSUPPORTED(
-            "deserialize: BigInt64Array, BigUint64Array, Float32Array, "
-            "Float64Array, Uint8ClampedArray");
+        STARFISH_UNSUPPORTED("deserialize: unknown ArrayBufferView type");
         throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR,
                                "Data clone error");
     }

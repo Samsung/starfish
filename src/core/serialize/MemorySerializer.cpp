@@ -142,6 +142,12 @@ enum class ScriptValueSerializerTag : uint8_t {
     Uint16Array,
     Int32Array,
     Uint32Array,
+    Uint8ClampedArray,
+    Float16Array,
+    Float32Array,
+    Float64Array,
+    BigInt64Array,
+    BigUint64Array,
     Unknown,
 };
 
@@ -350,6 +356,18 @@ private:
             typeTag = ScriptValueSerializerTag::Uint32Array;
         } else if (arrayBufferView->isInt32ArrayObject()) {
             typeTag = ScriptValueSerializerTag::Int32Array;
+        } else if (arrayBufferView->isUint8ClampedArrayObject()) {
+            typeTag = ScriptValueSerializerTag::Uint8ClampedArray;
+        } else if (arrayBufferView->isFloat16ArrayObject()) {
+            typeTag = ScriptValueSerializerTag::Float16Array;
+        } else if (arrayBufferView->isFloat32ArrayObject()) {
+            typeTag = ScriptValueSerializerTag::Float32Array;
+        } else if (arrayBufferView->isFloat64ArrayObject()) {
+            typeTag = ScriptValueSerializerTag::Float64Array;
+        } else if (arrayBufferView->isBigInt64ArrayObject()) {
+            typeTag = ScriptValueSerializerTag::BigInt64Array;
+        } else if (arrayBufferView->isBigUint64ArrayObject()) {
+            typeTag = ScriptValueSerializerTag::BigUint64Array;
         } else {
             STARFISH_UNIMPLEMENTED();
             throw new DOMException(m_executionContext,
@@ -582,6 +600,18 @@ private:
             return sizeof(int32_t);
         case ScriptValueSerializerTag::Uint32Array:
             return sizeof(uint32_t);
+        case ScriptValueSerializerTag::Uint8ClampedArray:
+            return sizeof(uint8_t);
+        case ScriptValueSerializerTag::Float16Array:
+            return 2;
+        case ScriptValueSerializerTag::Float32Array:
+            return 4;
+        case ScriptValueSerializerTag::Float64Array:
+            return 8;
+        case ScriptValueSerializerTag::BigInt64Array:
+            return sizeof(int64_t);
+        case ScriptValueSerializerTag::BigUint64Array:
+            return sizeof(uint64_t);
         default:
             break;
         }
@@ -619,6 +649,24 @@ private:
                 m_executionContext->scriptBindingInstance());
         } else if (typeTag == ScriptValueSerializerTag::Int32Array) {
             arrayBufferView = createEmptyInt32Array(
+                m_executionContext->scriptBindingInstance());
+        } else if (typeTag == ScriptValueSerializerTag::Uint8ClampedArray) {
+            arrayBufferView = createEmptyUint8ClampedArray(
+                m_executionContext->scriptBindingInstance());
+        } else if (typeTag == ScriptValueSerializerTag::Float16Array) {
+            arrayBufferView = createEmptyFloat16Array(
+                m_executionContext->scriptBindingInstance());
+        } else if (typeTag == ScriptValueSerializerTag::Float32Array) {
+            arrayBufferView = createEmptyFloat32Array(
+                m_executionContext->scriptBindingInstance());
+        } else if (typeTag == ScriptValueSerializerTag::Float64Array) {
+            arrayBufferView = createEmptyFloat64Array(
+                m_executionContext->scriptBindingInstance());
+        } else if (typeTag == ScriptValueSerializerTag::BigInt64Array) {
+            arrayBufferView = createEmptyBigInt64Array(
+                m_executionContext->scriptBindingInstance());
+        } else if (typeTag == ScriptValueSerializerTag::BigUint64Array) {
+            arrayBufferView = createEmptyBigUint64Array(
                 m_executionContext->scriptBindingInstance());
         } else {
             STARFISH_UNIMPLEMENTED();
