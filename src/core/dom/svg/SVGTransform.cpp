@@ -55,7 +55,8 @@ void* SVGTransform::operator new(size_t size)
     GC_descr& descr = GCDescriptorCache<SVGTransform>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGTransform)] = { 0 };
-        SVGElement::fillGCDescriptor(desc);
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(SVGTransform, m_object)); // ScriptWrappable
 
         GC_set_bit(desc, GC_WORD_OFFSET(SVGTransform, m_sourceElement));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGTransform, m_value));

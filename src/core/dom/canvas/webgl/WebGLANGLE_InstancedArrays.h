@@ -51,6 +51,8 @@ public:
     void vertexAttribDivisorANGLE(GLuint index, GLuint divisor);
 
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(ANGLE_instanced_arrays);
+    FILL_GC_POINTER(ANGLE_instanced_arrays, m_object); // ScriptWrappable
+    FILL_GC_POINTER(ANGLE_instanced_arrays, m_scriptBindingInstance);
     FILL_GC_POINTER(ANGLE_instanced_arrays, m_context);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 

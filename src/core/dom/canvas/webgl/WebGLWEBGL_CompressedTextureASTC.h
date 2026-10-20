@@ -48,6 +48,8 @@ public:
     GCVector<String*> getSupportedProfiles();
 
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WEBGL_compressed_texture_astc);
+    FILL_GC_POINTER(WEBGL_compressed_texture_astc, m_object); // ScriptWrappable
+    FILL_GC_POINTER(WEBGL_compressed_texture_astc, m_scriptBindingInstance);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 
 private:

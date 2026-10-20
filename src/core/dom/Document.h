@@ -851,6 +851,7 @@ protected:
     {
         Node::fillGCDescriptor(desc);
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_window));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_fullscreenElement));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_executionContext));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_baseElementURL));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_baseTarget));
@@ -873,6 +874,7 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_implementation));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_currentScripts));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_focusRingCache));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_dialogsInShowModal));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_nodeIterators));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentLanguage));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_mediaQueryListMatcher));
@@ -923,8 +925,6 @@ protected:
 
     ExecutionContext* m_executionContext;
     Window* m_window;
-    // Fullscreen element. Document is a GC object, so this raw pointer is
-    // traced conservatively (no explicit trace needed).
     Element* m_fullscreenElement = nullptr;
     ResourceURL* m_baseElementURL;
     String* m_baseTarget;

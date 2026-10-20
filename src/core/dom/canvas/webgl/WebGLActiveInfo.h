@@ -54,6 +54,8 @@ public:
     DEFINE_GETTER(String*, name);
 
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLActiveInfo);
+    FILL_GC_POINTER(WebGLActiveInfo, m_object); // ScriptWrappable
+    FILL_GC_POINTER(WebGLActiveInfo, m_scriptBindingInstance);
     FILL_GC_POINTER(WebGLActiveInfo, m_name);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 

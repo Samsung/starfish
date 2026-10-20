@@ -179,6 +179,10 @@ private:
         GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_webOrigin));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(ExecutionContext, m_contentSecurityPolicy));
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(ExecutionContext, m_activeServiceWorker));
+#endif
     }
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER

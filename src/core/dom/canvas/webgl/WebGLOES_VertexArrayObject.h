@@ -76,6 +76,8 @@ public:
     void bindVertexArrayOES(Optional<WebGLVertexArrayObjectOES*> arrayObject);
 
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(OES_vertex_array_object);
+    FILL_GC_POINTER(OES_vertex_array_object, m_object); // ScriptWrappable
+    FILL_GC_POINTER(OES_vertex_array_object, m_scriptBindingInstance);
     FILL_GC_POINTER(OES_vertex_array_object, m_context);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 

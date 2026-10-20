@@ -183,6 +183,10 @@ protected:
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
+        GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope,
+                                        m_object)); // ScriptWrappable
+        GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope,
+                                        m_eventListeners)); // EventTarget
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_webWorker));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(WorkerGlobalScope, m_scriptBindingInstance));
@@ -192,6 +196,7 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_workerLocation));
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_workerNavigator));
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_crypto));
+        GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_inlineMainScript));
 #if defined(STARFISH_ENABLE_IDB)
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_idbFactory));
 #endif

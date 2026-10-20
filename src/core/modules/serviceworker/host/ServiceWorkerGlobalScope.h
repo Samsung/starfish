@@ -72,6 +72,9 @@ private:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         WorkerGlobalScope::fillGCDescriptor(desc);
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(ServiceWorkerGlobalScope, m_serviceWorker));
+        GC_set_bit(desc, GC_WORD_OFFSET(ServiceWorkerGlobalScope, m_internal));
         GC_set_bit(desc, GC_WORD_OFFSET(ServiceWorkerGlobalScope,
                                         m_storageNamespaceProvider));
         GC_set_bit(desc, GC_WORD_OFFSET(ServiceWorkerGlobalScope,
