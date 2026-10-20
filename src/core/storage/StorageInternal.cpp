@@ -43,7 +43,8 @@ Optional<StorageKey*> StorageInternal::getStorageKey(ExecutionContext* context)
     }
 
     // TODO: 3. If the user has disabled storage, then return failure.
-    return WebOrigin::createDocumentOrigin(context->baseURL());
+    // The key is the origin itself, never the <base href>-controlled URL.
+    return context->webOrigin();
 }
 
 StorageMemory::StorageMemory(StorageType storageType, WebOrigin* webOrigin)
