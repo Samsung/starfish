@@ -816,6 +816,14 @@ static ValueRef* wptTestEndFunction(ExecutionStateRef* state,
     return ValueRef::createUndefined();
 }
 
+// The paths below are spliced into shell command lines. Each one is passed
+// single-quoted, so only a quote (and NUL, which would truncate the command)
+// can break out of it.
+static bool isShellSafePath(const std::string& s)
+{
+    return s.find_first_of(std::string("'\0", 2)) == std::string::npos;
+}
+
 static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
                                      ValueRef* thisValue, size_t argc,
                                      ValueRef** argv, bool isNewExpression)
@@ -827,13 +835,20 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
     Window* wnd = window;
     UTF8StringDataNonGCStd path =
         wnd->document()->documentURI()->baseURI()->toUTF8NonGCString();
+    std::string resultImg = argv[0]->toString(state)->toStdUTF8String().data();
+    std::string expectedImg =
+        argv[1]->toString(state)->toStdUTF8String().data();
+    // Reftests are local files; never let web content drive these tools.
+    if (path.find("file://") != 0) {
+        THROW_EXCEPTION("testImgDiff is only available to file: documents");
+    }
     path = path.substr(strlen("file://"));
+    if (!isShellSafePath(path) || !isShellSafePath(resultImg) ||
+        !isShellSafePath(expectedImg)) {
+        THROW_EXCEPTION("testImgDiff got a path with unsupported characters");
+    }
 
-    cmd += path;
-    cmd += argv[0]->toString(state)->toStdUTF8String().data();
-    cmd += " ";
-    cmd += path;
-    cmd += argv[1]->toString(state)->toStdUTF8String().data();
+    cmd += "'" + path + resultImg + "' '" + path + expectedImg + "'";
 
     STARFISH_LOG_INFO("%s", cmd.c_str());
     FILE* fp = popen(cmd.c_str(), "r");
@@ -852,15 +867,8 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
 
     if (output.find("[imgdiff-fail]") != std::string::npos) {
         cmd = "test/tools/image_diff/image_diff --diff ";
-        cmd += path;
-        cmd += argv[0]->toString(state)->toStdUTF8String().data();
-        cmd += " ";
-        cmd += path;
-        cmd += argv[1]->toString(state)->toStdUTF8String().data();
-        cmd += " ";
-        cmd += path;
-        cmd += std::string(argv[0]->toString(state)->toStdUTF8String().data()) +
-               "_diff.png";
+        cmd += "'" + path + resultImg + "' '" + path + expectedImg + "' '" +
+               path + resultImg + "_diff.png'";
         puts(cmd.c_str());
 
         FILE* fp = popen(cmd.c_str(), "r");
@@ -885,7 +893,7 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
     // behind in the (git-tracked) test directory. A failing diff keeps it
     // alongside the generated *_diff.png for debugging before exit(-1) above.
     std::string resultImgPath = path;
-    resultImgPath += argv[0]->toString(state)->toStdUTF8String().data();
+    resultImgPath += resultImg;
     remove(resultImgPath.c_str());
 
     return scriptUndefined();
