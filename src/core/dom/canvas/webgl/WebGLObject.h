@@ -67,6 +67,7 @@ public:
     }
 
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLObject);
+    FILL_GC_POINTER(WebGLObject, m_object); // ScriptWrappable
     FILL_GC_POINTER(WebGLObject, m_context);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 
