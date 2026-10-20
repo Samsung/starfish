@@ -678,6 +678,8 @@ public:
     QualifiedName m_submit;
     QualifiedName m_onsubmit;
     QualifiedName m_toggle;
+    // ToggleEvent state string; core DOM, not multimedia-gated.
+    QualifiedName m_closed;
     QualifiedName m_ontoggle;
     QualifiedName m_input;
     QualifiedName m_oninput;
@@ -793,7 +795,6 @@ public:
     QualifiedName m_seeking;
     QualifiedName m_seeked;
     QualifiedName m_ended;
-    QualifiedName m_closed;
     QualifiedName m_durationchange;
     QualifiedName m_timeupdate;
     QualifiedName m_play;

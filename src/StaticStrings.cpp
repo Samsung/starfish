@@ -549,6 +549,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "submit"));
     m_toggle =
         QualifiedName(AtomicString::createAtomicString(starfish, "toggle"));
+    m_closed =
+        QualifiedName(AtomicString::createAtomicString(starfish, "closed"));
     m_ontoggle =
         QualifiedName(AtomicString::createAtomicString(starfish, "ontoggle"));
     m_onsubmit =
@@ -871,8 +873,6 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "seeked"));
     m_ended =
         QualifiedName(AtomicString::createAtomicString(starfish, "ended"));
-    m_closed =
-        QualifiedName(AtomicString::createAtomicString(starfish, "closed"));
     m_durationchange = QualifiedName(
         AtomicString::createAtomicString(starfish, "durationchange"));
     m_timeupdate =

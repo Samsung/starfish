@@ -450,8 +450,10 @@ bool HTMLElement::handleDefaultEvent(Event* event)
                 tag == ss->m_detailsTagName || tag == ss->m_iframeTagName ||
                 tag == ss->m_embedTagName ||
                 (tag == ss->m_aTagName && has(ss->m_href)) ||
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
                 ((tag == ss->m_audioTagName || tag == ss->m_videoTagName) &&
                  has(ss->m_controls)) ||
+#endif
                 (tag == ss->m_imgTagName && has(ss->m_usemap)) ||
                 (tag == ss->m_inputTagName &&
                  !element->getAttributeOrEmpty(ss->m_type)
