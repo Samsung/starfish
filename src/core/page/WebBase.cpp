@@ -96,66 +96,28 @@ bool WebBase::stringToBlobURLString(String* url, BlobURLStore& store)
 
     auto utf8Data = uuid->toUTF8NonGCString();
     const char* str = utf8Data.data();
+    // Exactly 8-4-4-4-12 hex digits; sscanf alone would also take signs,
+    // spaces and short groups.
     if (strlen(str) != 36) {
         return false;
     }
+    for (size_t i = 0; i < 36; i++) {
+        bool isDash = i == 8 || i == 13 || i == 18 || i == 23;
+        if (isDash ? str[i] != '-' : !isxdigit((unsigned char)str[i])) {
+            return false;
+        }
+    }
 
-    unsigned int a0, a1, a2, a3, a4, a5, a6, a7;
-    sscanf(str, "%04X%04X-%04X-%04X-%04X-%04X%04X%04X", &a0, &a1, &a2, &a3, &a4,
-           &a5, &a6, &a7);
-
-    union {
-        struct {
-            uint16_t a;
-            uint16_t b;
-        } tiny;
-        uint32_t big;
-    } spliter;
-
-#ifdef STARFISH_64
-    union {
-        struct {
-            uint16_t a;
-            uint16_t b;
-            uint16_t c;
-            uint16_t d;
-        } tiny;
-        uint64_t big;
-    } spliter64;
-#endif
-
-#ifdef STARFISH_64
-    spliter.tiny.a = a0;
-    spliter.tiny.b = a1;
-    store.m_a = spliter.big;
-
-    spliter.tiny.a = a2;
-    spliter.tiny.b = a3;
-    store.m_b = spliter.big;
-
-    spliter64.tiny.a = a4;
-    spliter64.tiny.b = a5;
-    spliter64.tiny.c = a6;
-    spliter64.tiny.d = a7;
-    store.m_blob = (void*)spliter64.big;
-#else
-    spliter.tiny.a = a0;
-    spliter.tiny.b = a1;
-    store.m_a = spliter.big;
-
-    spliter.tiny.a = a2;
-    spliter.tiny.b = a3;
-    store.m_b = spliter.big;
-
-    spliter.tiny.a = a4;
-    spliter.tiny.b = a5;
-    store.m_c = spliter.big;
-
-    spliter.tiny.a = a6;
-    spliter.tiny.b = a7;
-    store.m_blob = (void*)spliter.big;
-#endif
-
+    unsigned int a, b0, b1, c0, c1, d;
+    if (sscanf(str, "%8X-%4X-%4X-%4X-%4X%8X", &a, &b0, &b1, &c0, &c1, &d) !=
+        6) {
+        return false;
+    }
+    store.m_blob = nullptr;
+    store.m_a = a;
+    store.m_b = (b0 << 16) | b1;
+    store.m_c = (c0 << 16) | c1;
+    store.m_d = d;
     return true;
 }
 
@@ -165,156 +127,77 @@ String* WebBase::blobURLStoreToString(BlobURLStore store, String* origin)
     url += origin->toUTF8NonGCString();
     url += "/";
 
-    union {
-        struct {
-            uint16_t a;
-            uint16_t b;
-        } tiny;
-        uint32_t big;
-    } spliter;
-
-#ifdef STARFISH_64
-    union {
-        struct {
-            uint16_t a;
-            uint16_t b;
-            uint16_t c;
-            uint16_t d;
-        } tiny;
-        uint64_t big;
-    } spliter64;
-#endif
-
-    char buf[32];
-#ifdef STARFISH_64
-    spliter.big = store.m_a;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
+    char buf[40];
+    snprintf(buf, sizeof(buf), "%08x-%04x-%04x-%04x-%04x%08x",
+             (unsigned)store.m_a, (unsigned)(store.m_b >> 16),
+             (unsigned)(store.m_b & 0xFFFF), (unsigned)(store.m_c >> 16),
+             (unsigned)(store.m_c & 0xFFFF), (unsigned)store.m_d);
     url += buf;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
-    url += buf;
-    url += "-";
-
-    spliter.big = store.m_b;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
-    url += buf;
-    url += "-";
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
-    url += buf;
-    url += "-";
-
-    spliter64.big = (uint64_t)store.m_blob;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.tiny.a);
-    url += buf;
-    url += "-";
-
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.tiny.b);
-    url += buf;
-
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.tiny.c);
-    url += buf;
-
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.tiny.d);
-    url += buf;
-#else
-    spliter.big = store.m_a;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
-    url += buf;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
-    url += buf;
-    url += "-";
-
-    spliter.big = store.m_b;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
-    url += buf;
-    url += "-";
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
-    url += buf;
-    url += "-";
-
-    spliter.big = store.m_c;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
-    url += buf;
-    url += "-";
-
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
-    url += buf;
-
-    spliter.big = (uint32_t)store.m_blob;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
-    url += buf;
-
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
-    url += buf;
-#endif
     return String::createASCIIString(url.data(), url.size());
+}
+
+BlobURLStore WebBase::createBlobURLStore(void* ptr)
+{
+    BlobURLStore a;
+    a.m_blob = ptr;
+    std::uniform_int_distribution<uint32_t> distribution;
+    a.m_a = distribution(randomEngine());
+    // A version 4 UUID (RFC 4122 4.4): fixed version and variant bits.
+    a.m_b = (distribution(randomEngine()) & 0xFFFF0FFF) | 0x00004000;
+    a.m_c = (distribution(randomEngine()) & 0x3FFFFFFF) | 0x80000000;
+    a.m_d = distribution(randomEngine());
+    return a;
+}
+
+GCUnorderedSet<BlobURLStore>::iterator WebBase::findBlobURLStoreByPointer(
+    GCUnorderedSet<BlobURLStore>& set, void* ptr)
+{
+    // shortcut: linear scan, entries are keyed by the random UUID; add a
+    // pointer index if pages start holding many blob URLs at once.
+    auto iter = set.begin();
+    while (iter != set.end() && iter->m_blob != ptr) {
+        ++iter;
+    }
+    return iter;
 }
 
 BlobURLStore WebBase::addBlobInBlobURLStore(Blob* ptr)
 {
-#ifndef NDEBUG
-    {
-        BlobURLStore s;
-        s.m_blob = ptr;
-        STARFISH_ASSERT(m_urlBlobStore.find(s) == m_urlBlobStore.end());
-    }
-#endif
-    BlobURLStore a;
-    a.m_blob = ptr;
-
-    std::uniform_int_distribution<uint32_t> distribution;
-#ifdef STARFISH_32
-    a.m_a = distribution(randomEngine());
-    a.m_b = distribution(randomEngine());
-    a.m_c = distribution(randomEngine());
-#else
-    a.m_a = distribution(randomEngine());
-    a.m_b = distribution(randomEngine());
-#endif
-
+    STARFISH_ASSERT(findBlobURLStoreByPointer(m_urlBlobStore, ptr) ==
+                    m_urlBlobStore.end());
+    BlobURLStore a = createBlobURLStore(ptr);
     m_urlBlobStore.insert(a);
-
     return a;
 }
 
 void WebBase::removeBlobFromBlobURLStore(Blob* ptr)
 {
-#ifndef NDEBUG
-    {
-        BlobURLStore s;
-        s.m_blob = ptr;
-        STARFISH_ASSERT(m_urlBlobStore.find(s) != m_urlBlobStore.end());
+    auto iter = findBlobURLStoreByPointer(m_urlBlobStore, ptr);
+    STARFISH_ASSERT(iter != m_urlBlobStore.end());
+    if (iter != m_urlBlobStore.end()) {
+        m_urlBlobStore.erase(iter);
     }
-#endif
-    BlobURLStore s;
-    s.m_blob = ptr;
-    m_urlBlobStore.erase(s);
 }
 
-bool WebBase::isValidBlobURL(BlobURLStore ptr)
+bool WebBase::isValidBlobURL(BlobURLStore& store)
 {
-    auto iter = m_urlBlobStore.find(ptr);
-#ifdef STARFISH_32
-    return iter != m_urlBlobStore.end() && ptr.m_a == iter->m_a &&
-           ptr.m_b == iter->m_b && ptr.m_c == iter->m_c;
-#else
-    return iter != m_urlBlobStore.end() && ptr.m_a == iter->m_a &&
-           ptr.m_b == iter->m_b;
-#endif
+    auto iter = m_urlBlobStore.find(store);
+    if (iter == m_urlBlobStore.end()) {
+        return false;
+    }
+    store.m_blob = iter->m_blob;
+    return true;
 }
 
 bool WebBase::isValidBlobURL(Blob* ptr)
 {
-    BlobURLStore s;
-    s.m_blob = ptr;
-    auto iter = m_urlBlobStore.find(s);
-    return iter != m_urlBlobStore.end();
+    return findBlobURLStoreByPointer(m_urlBlobStore, ptr) !=
+           m_urlBlobStore.end();
 }
 
 Optional<BlobURLStore> WebBase::findBlobURL(Blob* ptr)
 {
-    BlobURLStore s;
-    s.m_blob = ptr;
-    auto iter = m_urlBlobStore.find(s);
+    auto iter = findBlobURLStoreByPointer(m_urlBlobStore, ptr);
     if (iter != m_urlBlobStore.end()) {
         return *iter;
     } else {

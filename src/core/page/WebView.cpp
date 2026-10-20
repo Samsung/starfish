@@ -1264,83 +1264,45 @@ void WebView::evaluateJavaScript(String* s, std::function<void(std::string)> cb)
 
 BlobURLStore WebView::addMediaSourceInBlobURLStore(MediaSource* ptr)
 {
-    STARFISH_ASSERT(ptr != nullptr);
-
-#ifndef NDEBUG
-    {
-        BlobURLStore s;
-        s.m_blob = ptr;
-        STARFISH_ASSERT(m_urlMediaSourceBlobStore.find(s) ==
-                        m_urlMediaSourceBlobStore.end());
-    }
-#endif
-    BlobURLStore a;
-    a.m_blob = ptr;
-
-    std::uniform_int_distribution<uint32_t> distribution;
-
-#ifdef STARFISH_32
-    a.m_a = distribution(randomEngine());
-    a.m_b = distribution(randomEngine());
-    a.m_c = distribution(randomEngine());
-#else
-    a.m_a = distribution(randomEngine());
-    a.m_b = distribution(randomEngine());
-#endif
-
+    STARFISH_ASSERT(findBlobURLStoreByPointer(m_urlMediaSourceBlobStore, ptr) ==
+                    m_urlMediaSourceBlobStore.end());
+    BlobURLStore a = createBlobURLStore(ptr);
     m_urlMediaSourceBlobStore.insert(a);
-
     return a;
 }
 
 void WebView::removeMediaSourceFromBlobURLStore(MediaSource* ptr)
 {
-    STARFISH_ASSERT(ptr != nullptr);
-
 #ifndef NDEBUG
     STARFISH_LOG_INFO(
         "[TRACE_MSE_GC] WebView::removeMediaSourceFromBlobURLStore");
-    {
-        BlobURLStore s;
-        s.m_blob = ptr;
-        STARFISH_ASSERT(m_urlMediaSourceBlobStore.find(s) !=
-                        m_urlMediaSourceBlobStore.end());
-    }
 #endif
-    BlobURLStore s;
-    s.m_blob = ptr;
-    m_urlMediaSourceBlobStore.erase(s);
+    auto iter = findBlobURLStoreByPointer(m_urlMediaSourceBlobStore, ptr);
+    STARFISH_ASSERT(iter != m_urlMediaSourceBlobStore.end());
+    if (iter != m_urlMediaSourceBlobStore.end()) {
+        m_urlMediaSourceBlobStore.erase(iter);
+    }
 }
 
-bool WebView::isValidMediaSourceBlobURL(BlobURLStore ptr)
+bool WebView::isValidMediaSourceBlobURL(BlobURLStore& store)
 {
-    auto iter = m_urlMediaSourceBlobStore.find(ptr);
-#ifdef STARFISH_32
-    return iter != m_urlMediaSourceBlobStore.end() && ptr.m_a == iter->m_a &&
-           ptr.m_b == iter->m_b && ptr.m_c == iter->m_c;
-#else
-    return iter != m_urlMediaSourceBlobStore.end() && ptr.m_a == iter->m_a &&
-           ptr.m_b == iter->m_b;
-#endif
+    auto iter = m_urlMediaSourceBlobStore.find(store);
+    if (iter == m_urlMediaSourceBlobStore.end()) {
+        return false;
+    }
+    store.m_blob = iter->m_blob;
+    return true;
 }
 
 bool WebView::isValidMediaSourceBlobURL(MediaSource* ptr)
 {
-    STARFISH_ASSERT(ptr != nullptr);
-
-    BlobURLStore s;
-    s.m_blob = ptr;
-    auto iter = m_urlMediaSourceBlobStore.find(s);
-    return iter != m_urlMediaSourceBlobStore.end();
+    return findBlobURLStoreByPointer(m_urlMediaSourceBlobStore, ptr) !=
+           m_urlMediaSourceBlobStore.end();
 }
 
 Optional<BlobURLStore> WebView::findMediaSourceBlobURL(MediaSource* ptr)
 {
-    STARFISH_ASSERT(ptr != nullptr);
-
-    BlobURLStore s;
-    s.m_blob = ptr;
-    auto iter = m_urlMediaSourceBlobStore.find(s);
+    auto iter = findBlobURLStoreByPointer(m_urlMediaSourceBlobStore, ptr);
     if (iter != m_urlMediaSourceBlobStore.end()) {
         return *iter;
     } else {
