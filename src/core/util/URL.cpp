@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/WebOrigin.h"
 #include "core/fileapi/Blob.h"
 #include "core/modules/mediasource/MediaSource.h"
 #include "core/util/URL.h"
@@ -61,10 +62,10 @@ String* URL::createObjectURL(Blob* blob)
             return String::emptyString;
         }
     } else {
-        store = webBase->addBlobInBlobURLStore(blob);
+        store = webBase->addBlobInBlobURLStore(
+            blob, blob->executionContext()->webOrigin()->serialize());
     }
-    return WebBase::blobURLStoreToString(store,
-                                         blob->executionContext()->urlString());
+    return WebBase::blobURLStoreToString(store, store.m_origin);
 }
 
 void URL::revokeObjectURL(ExecutionContext* executionContext,
@@ -101,11 +102,10 @@ String* URL::createObjectURL(MediaSource* mediaSource)
             return String::emptyString;
         }
     } else {
-        store =
-            mediaSource->webView()->addMediaSourceInBlobURLStore(mediaSource);
+        store = mediaSource->webView()->addMediaSourceInBlobURLStore(
+            mediaSource, mediaSource->document()->webOrigin()->serialize());
     }
-    return WebBase::blobURLStoreToString(store,
-                                         mediaSource->document()->urlString());
+    return WebBase::blobURLStoreToString(store, store.m_origin);
 }
 #endif
 

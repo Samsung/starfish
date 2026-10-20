@@ -845,7 +845,12 @@ String* ResourceURL::baseURI() const
     }
 
     size_t pos = m_urlString->find("://");
-    STARFISH_ASSERT(pos != SIZE_MAX);
+    if (pos == SIZE_MAX) {
+        // A URL with an opaque path, such as blob:null/<uuid> created by an
+        // opaque origin, has no directory for relative URLs to resolve
+        // against. https://url.spec.whatwg.org/#url-opaque-path
+        return String::emptyString;
+    }
     size_t pos2 = m_urlString->find("/", 1, pos + 3);
     if (pos2 != SIZE_MAX) {
         return m_urlString->substring(0, m_urlString->rfind("/", 1, m_pathEnd) +

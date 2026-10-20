@@ -35,6 +35,8 @@ struct BlobURLStore {
     uint32_t m_b = 0;
     uint32_t m_c = 0;
     uint32_t m_d = 0;
+    // Serialized origin of the environment that created the entry.
+    String* m_origin = nullptr;
 };
 
 enum StarfishPubicWebViewHandlerKind {
@@ -138,7 +140,7 @@ public:
     static bool stringToBlobURLString(String* url, BlobURLStore& result);
     static String* blobURLStoreToString(BlobURLStore store, String* origin);
 
-    BlobURLStore addBlobInBlobURLStore(Blob* ptr);
+    BlobURLStore addBlobInBlobURLStore(Blob* ptr, String* origin);
     void removeBlobFromBlobURLStore(Blob* ptr);
     // On success, fills store.m_blob with the blob the URL refers to.
     bool isValidBlobURL(BlobURLStore& store);
