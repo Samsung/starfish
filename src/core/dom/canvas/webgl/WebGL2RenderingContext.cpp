@@ -377,6 +377,10 @@ Optional<ScriptValue> WebGL2RenderingContext::getParameterImpl(GLenum pname)
         gl()->getBooleanv(pname, &values[0]);
         return createScriptValue(static_cast<bool>(values[0]));
     }
+    case GL_MIN_PROGRAM_TEXEL_OFFSET:
+        return createScriptValue(-8);
+    case GL_MAX_PROGRAM_TEXEL_OFFSET:
+        return createScriptValue(7);
     // GLfloat
     case GL_MAX_TEXTURE_LOD_BIAS: {
         std::vector<GLfloat> values(1);
@@ -394,7 +398,6 @@ Optional<ScriptValue> WebGL2RenderingContext::getParameterImpl(GLenum pname)
     case GL_MAX_FRAGMENT_INPUT_COMPONENTS:
     case GL_MAX_FRAGMENT_UNIFORM_BLOCKS:
     case GL_MAX_FRAGMENT_UNIFORM_COMPONENTS:
-    case GL_MAX_PROGRAM_TEXEL_OFFSET:
     case GL_MAX_SAMPLES:
     case GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS:
     case GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS:
@@ -404,7 +407,6 @@ Optional<ScriptValue> WebGL2RenderingContext::getParameterImpl(GLenum pname)
     case GL_MAX_VERTEX_OUTPUT_COMPONENTS:
     case GL_MAX_VERTEX_UNIFORM_BLOCKS:
     case GL_MAX_VERTEX_UNIFORM_COMPONENTS:
-    case GL_MIN_PROGRAM_TEXEL_OFFSET:
     case GL_PACK_ROW_LENGTH:
     case GL_PACK_SKIP_PIXELS:
     case GL_PACK_SKIP_ROWS:
@@ -3319,6 +3321,41 @@ void WebGL2RenderingContext::drawRangeElements(GLenum mode, GLuint start,
     }
 
     completePendingJobs();
+
+    if (count > 0) {
+        Optional<WebGLBuffer*> elementBuffer =
+            getState()->getBoundBuffer(GL_ELEMENT_ARRAY_BUFFER);
+        if (!elementBuffer.hasValue() || !elementBuffer.value()) {
+            setGLError(
+                GL_INVALID_OPERATION,
+                "drawRangeElements: no buffer bound to ELEMENT_ARRAY_BUFFER");
+            return;
+        }
+        size_t bytesPerIndex = 1;
+        if (type == GL_UNSIGNED_SHORT) {
+            bytesPerIndex = 2;
+        } else if (type == GL_UNSIGNED_INT) {
+            bytesPerIndex = 4;
+        }
+        if (static_cast<size_t>(elementBuffer.value()->byteLength()) <
+            static_cast<size_t>(offset) +
+                static_cast<size_t>(count) * bytesPerIndex) {
+            setGLError(GL_INVALID_OPERATION,
+                       "drawRangeElements: element buffer out of bounds");
+            return;
+        }
+    }
+
+    for (GLuint array : getState()->arraysEnabled()) {
+        if (!getState()->getBufferBoundToVertexAttributes(array)) {
+            setGLError(
+                GL_INVALID_OPERATION,
+                "drawRangeElements: vertex attribute enabled without bound "
+                "buffer");
+            return;
+        }
+    }
+
     if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs())
         return;
     gl()->drawRangeElements(mode, start, end, count, type,

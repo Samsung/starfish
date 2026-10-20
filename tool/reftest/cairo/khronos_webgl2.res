@@ -663,7 +663,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/gl-uniform-
 # http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/gl-uniformmatrix4fv.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/gl-unknown-uniform.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/null-uniform-location.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/out-of-bounds-uniform-array-access.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/out-of-bounds-uniform-array-access.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/uniform-default-values.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/uniform-values-per-program.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/uniform-location.html
@@ -722,17 +722,17 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/verte
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/vertexAttribPointerBadArgs.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/glsl/arrayOutOfBounds.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/glsl/uniformOutOfBounds.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/arrays.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/arrays.html
 http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/conditionals.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/constants.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/constants.html
 http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/constant_expressions.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/conversions.html
 http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/declarations.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/fragdata.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/functions.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/invalid_texture_functions.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/functions.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/invalid_texture_functions.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/keywords.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/linkage.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/linkage.html
 http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/negative.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/preprocessor.html
 http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/qualification_order.html
@@ -747,7 +747,7 @@ http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/switch.h
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/draw_range_elements.html
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/instancing.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/random.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbocolorbuffer/clear.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbocolorbuffer/clear.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbocolorbuffer/tex2d_00.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbocolorbuffer/tex2d_01.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbocolorbuffer/tex2d_02.html
@@ -772,7 +772,7 @@ http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/insta
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbocolorbuffer/tex3d_03.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbocolorbuffer/tex3d_04.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbocolorbuffer/tex3d_05.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbocolorbuffer/blend.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbocolorbuffer/blend.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fboinvalidate/default.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fboinvalidate/whole.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fboinvalidate/sub.html
@@ -1540,7 +1540,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/shader-with-1
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/shader-with-invalid-characters.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/shader-with-mis-matching-uniform-block.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/short-circuiting-in-loop-condition.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/texture-offset-out-of-range.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/texture-offset-out-of-range.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/uniform-block-layouts.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/uniform-block-layout-match.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/uniform-location-length-limits.html
@@ -1570,7 +1570,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/blitframe
 http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/blitframebuffer-multisampled-readbuffer.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/blitframebuffer-scissor-enabled.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/blitframebuffer-test.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/canvas-resizing-with-pbo-bound.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/canvas-resizing-with-pbo-bound.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/clear-func-buffer-type-match.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/draw-buffers.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/rendering/element-index-uint.html
@@ -2458,5 +2458,5 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/svg_image/
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/textures/image_bitmap_from_image_bitmap/tex-3d-rgba8ui-rgba_integer-unsigned_byte.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/transform_feedback/transform_feedback.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/transform_feedback/two-unreferenced-varyings.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/transform_feedback/unwritten-output-defaults-to-zero.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/transform_feedback/unwritten-output-defaults-to-zero.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/vertex_arrays/vertex-array-object.html

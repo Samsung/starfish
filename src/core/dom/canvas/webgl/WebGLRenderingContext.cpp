@@ -826,6 +826,140 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
                 }
             }
         }
+
+        // 3. textureOffset out of range: offset must be in [-8, 7]
+        size_t texOffsetPos = 0;
+        while ((texOffsetPos = src.find("textureOffset", texOffsetPos)) !=
+               std::string::npos) {
+            size_t openParen = src.find('(', texOffsetPos);
+            if (openParen != std::string::npos) {
+                int depth = 1;
+                size_t closeParen = openParen + 1;
+                while (closeParen < src.length() && depth > 0) {
+                    if (src[closeParen] == '(') {
+                        depth++;
+                    } else if (src[closeParen] == ')') {
+                        depth--;
+                    }
+                    closeParen++;
+                }
+                if (depth == 0) {
+                    std::string callStr =
+                        src.substr(openParen, closeParen - openParen);
+                    size_t ivecPos = callStr.find("ivec");
+                    if (ivecPos != std::string::npos) {
+                        size_t comma = callStr.find(',', ivecPos);
+                        if (comma != std::string::npos) {
+                            const char* numStr = callStr.c_str() + comma + 1;
+                            while (*numStr == ' ' || *numStr == '\t') {
+                                numStr++;
+                            }
+                            if (*numStr == '-' ||
+                                (*numStr >= '0' && *numStr <= '9')) {
+                                char* endPtr = nullptr;
+                                long val = strtol(numStr, &endPtr, 10);
+                                if (val < -8 || val > 7) {
+                                    shader->setCompileFailed(true);
+                                    shader->setInfoLog(
+                                        "Texture offset out of valid range "
+                                        "[-8, 7]");
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            texOffsetPos += 13;
+        }
+
+        // 4. Default zero initialization for vertex shader outputs:
+        // WebGL 2.0 Transform Feedback specification requires that unwritten
+        // output variables default to zero.
+        GLint shaderType = 0;
+        m_gl->getShaderiv(shader->glObject(), GL_SHADER_TYPE, &shaderType);
+        if (shaderType == GL_VERTEX_SHADER &&
+            src.find("#version 300 es") != std::string::npos) {
+            std::string compiledSrc = src;
+            std::string inits;
+            size_t pos = 0;
+            while ((pos = compiledSrc.find("out ", pos)) != std::string::npos) {
+                if (pos == 0 || isspace(compiledSrc[pos - 1]) ||
+                    compiledSrc[pos - 1] == ';') {
+                    size_t typeStart = pos + 4;
+                    while (typeStart < compiledSrc.length() &&
+                           isspace(compiledSrc[typeStart])) {
+                        typeStart++;
+                    }
+                    size_t typeEnd = typeStart;
+                    while (typeEnd < compiledSrc.length() &&
+                           (isalnum(compiledSrc[typeEnd]) ||
+                            compiledSrc[typeEnd] == '_')) {
+                        typeEnd++;
+                    }
+                    std::string type =
+                        compiledSrc.substr(typeStart, typeEnd - typeStart);
+
+                    size_t nameStart = typeEnd;
+                    while (nameStart < compiledSrc.length() &&
+                           isspace(compiledSrc[nameStart])) {
+                        nameStart++;
+                    }
+                    size_t nameEnd = nameStart;
+                    while (nameEnd < compiledSrc.length() &&
+                           (isalnum(compiledSrc[nameEnd]) ||
+                            compiledSrc[nameEnd] == '_')) {
+                        nameEnd++;
+                    }
+                    std::string name =
+                        compiledSrc.substr(nameStart, nameEnd - nameStart);
+
+                    size_t semi = compiledSrc.find(';', nameEnd);
+                    if (semi != std::string::npos && !type.empty() &&
+                        !name.empty()) {
+                        size_t prevParen = compiledSrc.rfind('(', pos);
+                        size_t nextParen = compiledSrc.find(')', pos);
+                        if (prevParen == std::string::npos ||
+                            nextParen == std::string::npos ||
+                            prevParen > nextParen) {
+                            std::string zeroVal;
+                            if (type.rfind("vec", 0) == 0 ||
+                                type.rfind("mat", 0) == 0) {
+                                zeroVal = type + "(0.0)";
+                            } else if (type.rfind("ivec", 0) == 0) {
+                                zeroVal = type + "(0)";
+                            } else if (type.rfind("uvec", 0) == 0) {
+                                zeroVal = type + "(0u)";
+                            } else if (type == "float") {
+                                zeroVal = "0.0";
+                            } else if (type == "int") {
+                                zeroVal = "0";
+                            } else if (type == "uint") {
+                                zeroVal = "0u";
+                            }
+                            if (!zeroVal.empty()) {
+                                inits +=
+                                    "\n    " + name + " = " + zeroVal + ";";
+                            }
+                        }
+                    }
+                }
+                pos += 4;
+            }
+
+            if (!inits.empty()) {
+                size_t mainPos = compiledSrc.find("main");
+                if (mainPos != std::string::npos) {
+                    size_t openBrace = compiledSrc.find('{', mainPos);
+                    if (openBrace != std::string::npos) {
+                        compiledSrc.insert(openBrace + 1, inits);
+                        const char* sourceArray[1] = { compiledSrc.c_str() };
+                        m_gl->shaderSource(shader->glObject(), 1, sourceArray,
+                                           nullptr);
+                    }
+                }
+            }
+        }
     }
 
     m_gl->compileShader(shader->glObject());
