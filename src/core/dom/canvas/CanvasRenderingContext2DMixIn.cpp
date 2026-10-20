@@ -1673,8 +1673,10 @@ void CanvasRenderingContext2DMixIn::putImageData(ImageData* imagedata,
         return;
     }
 
-    if (imagedata->data()->isArrayBufferObject() &&
-        imagedata->data()->asArrayBufferObject()->isDetachedBuffer()) {
+    // A detached (or shrunk resizable) buffer no longer holds every pixel.
+    auto pixels = imagedata->data();
+    if (!pixels->rawBuffer() ||
+        pixels->byteLength() / 4 / imagedata->height() < imagedata->width()) {
         throw new DOMException(executionContext(),
                                DOMException::Code::INVALID_STATE_ERR,
                                "ImageData's data has a detached buffer");
@@ -1714,7 +1716,7 @@ void CanvasRenderingContext2DMixIn::putImageData(ImageData* imagedata,
         return;
     }
 
-    auto src = imagedata->data()->asArrayBufferView()->buffer()->rawBuffer();
+    auto src = pixels->rawBuffer();
 
     uint8_t* dest = m_canvasSurface->mapBuffer();
     auto destWidth = m_canvasSurface->bufferWidth();
