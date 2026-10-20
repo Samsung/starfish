@@ -268,8 +268,9 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
         }
 
         auto resWebOrigin = WebOrigin::createDocumentOrigin(resURL);
-        if (!executionContext()->webOrigin()->isSameOrigin(resWebOrigin) &&
-            !resWebOrigin->isOpaque()) {
+        if (m_responseData->m_redirectTainted ||
+            (!executionContext()->webOrigin()->isSameOrigin(resWebOrigin) &&
+             !resWebOrigin->isOpaque())) {
             // 14.1 If request's response tainting is "cors", then:
             m_responseData->m_type = ResponseType::Cors;
         } else {

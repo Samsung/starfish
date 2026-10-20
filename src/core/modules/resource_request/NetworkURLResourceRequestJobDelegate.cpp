@@ -1002,6 +1002,83 @@ static bool checkCORSPreflight(NetworkURLWorkerData* nwd)
     return true;
 }
 
+// Serializes url's scheme, host and port ("" if unparsable) with curl's
+// parser, as this runs on the network thread and must stay off the GC heap.
+// A relative url is resolved against base.
+static std::string curlURLOrigin(const char* url, const char* base = nullptr)
+{
+    std::string origin;
+#if LIBCURL_VERSION_NUM < 0x073E00
+    // No URL API before 7.62: an empty origin taints every redirect "cors".
+    return origin;
+#else
+    CURLU* handle = curl_url();
+    if ((!base || curl_url_set(handle, CURLUPART_URL, base, 0) == CURLUE_OK) &&
+        curl_url_set(handle, CURLUPART_URL, url, 0) == CURLUE_OK) {
+        const CURLUPart parts[] = { CURLUPART_SCHEME, CURLUPART_HOST,
+                                    CURLUPART_PORT };
+        for (CURLUPart part : parts) {
+            char* value = nullptr;
+            if (curl_url_get(handle, part, &value, CURLU_DEFAULT_PORT) !=
+                CURLUE_OK) {
+                origin.clear();
+                break;
+            }
+            origin += value;
+            origin += '|';
+            curl_free(value);
+        }
+    }
+    curl_url_cleanup(handle);
+    std::transform(origin.begin(), origin.end(), origin.begin(), ::tolower);
+    return origin;
+#endif
+}
+
+// Sets the CORS flag when the URL curl is currently fetching is not same
+// origin with the initial URL. Caution : Use in curlWriteHeaderCallback only
+static void taintIfEffectiveURLIsCrossOrigin(NetworkURLWorkerData* nwd)
+{
+    if (nwd->corsFlag) {
+        return;
+    }
+    char* effectiveURL = nwd->httpTransaction->effectiveURL();
+    std::string initialOrigin =
+        curlURLOrigin(nwd->httpTransaction->httpRequest().url().data());
+    if (!effectiveURL || initialOrigin.empty() ||
+        initialOrigin != curlURLOrigin(effectiveURL)) {
+        nwd->corsFlag = true;
+    }
+}
+
+// Fetch includes credentials in a "same-origin" request only while its
+// response tainting is "basic", so they are dropped for every hop after the
+// chain leaves the request's origin, even one that returns there.
+// https://fetch.spec.whatwg.org/#http-network-or-cache-fetch
+// Caution : Use in curlWriteHeaderCallback only, on a redirect response
+static void excludeCredentialsIfRedirectLeavesOrigin(NetworkURLWorkerData* nwd)
+{
+    ResourceRequest* request = nwd->request;
+    // Navigations and subresources are credentialed for the whole chain.
+    if (request->requestCredentials() == RequestCredentials::Include ||
+        request->isSubresourceRequest() ||
+        request->requestMode() == RequestMode::Navigate) {
+        return;
+    }
+    HTTPTransaction* transaction = nwd->httpTransaction.get();
+    std::string location = transaction->httpResponse().lastLocation();
+    if (location.empty()) {
+        return; // curl does not follow a redirect without Location.
+    }
+    char* effectiveURL = transaction->effectiveURL();
+    std::string initialOrigin =
+        curlURLOrigin(transaction->httpRequest().url().data());
+    if (nwd->corsFlag || !effectiveURL || initialOrigin.empty() ||
+        initialOrigin != curlURLOrigin(location.data(), effectiveURL)) {
+        transaction->excludeCredentialsFromRemainingRedirects();
+    }
+}
+
 // https://fetch.spec.whatwg.org/#concept-cors-check
 // Caution : Use in curlWriteHeaderCallback only
 static bool checkCors(NetworkURLWorkerData* nwd)
@@ -1027,8 +1104,11 @@ static bool checkCors(NetworkURLWorkerData* nwd)
         return false;
     }
 
-    if (request->requestCredentials() != RequestCredentials::Include &&
-        origin->second == "*") {
+    // A request whose credentials mode is not "include" reaches here
+    // without credentials, as a redirect off its origin excluded them.
+    bool credentialed =
+        request->requestCredentials() == RequestCredentials::Include;
+    if (!credentialed && origin->second == "*") {
         return true;
     }
 
@@ -1044,7 +1124,7 @@ static bool checkCors(NetworkURLWorkerData* nwd)
         return false;
     }
 
-    if (request->requestCredentials() != RequestCredentials::Include) {
+    if (!credentialed) {
         return true;
     }
 
@@ -1082,6 +1162,14 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
         !nwd->httpTransaction->httpResponse().isRedirectionResponseStatus()) {
         if ((rawHeader.compare("\r\n") == 0) ||
             (rawHeader.compare("\n") == 0)) {
+            // A redirect to another origin taints the response "cors";
+            // https://fetch.spec.whatwg.org/#http-redirect-fetch
+            if (request->m_responseData->m_redirected) {
+                taintIfEffectiveURLIsCrossOrigin(nwd);
+                // A redirected cross-origin request stays "cors" too, even
+                // when it lands back on the requester's origin.
+                request->m_responseData->m_redirectTainted = nwd->corsFlag;
+            }
             if (nwd->corsFlag &&
                 !(request->isSubresourceRequest() ||
                   request->requestMode() == RequestMode::Navigate)) {
@@ -1123,6 +1211,12 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
                    .isRedirectionResponseStatus()) {
         request->m_responseData->m_redirected = true;
         nwd->httpTransaction->updateLastLocationIfNeeds(rawHeader);
+        // Once a hop has left the initial origin the response stays "cors",
+        // even if the chain returns there (A -> B -> A).
+        if (rawHeader.compare("\r\n") == 0 || rawHeader.compare("\n") == 0) {
+            taintIfEffectiveURLIsCrossOrigin(nwd);
+            excludeCredentialsIfRedirectLeavesOrigin(nwd);
+        }
     }
 
     return realSize;
