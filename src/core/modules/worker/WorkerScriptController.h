@@ -22,6 +22,7 @@
 #define __StarfishWorkerScriptController__
 
 #include "StarfishBase.h"
+#include "core/dom/Document.h"
 
 namespace Starfish {
 
@@ -43,11 +44,24 @@ public:
 
     virtual ScriptLoadResult loadJavaScript(ResourceURL* resourceURL);
 
+    // Fetches, parses and registers the module graph rooted at |resourceURL|
+    // without executing it. Registered modules are resolved through the
+    // platform's onLoadModule callback at link time.
+    Optional<ScriptModule> fetchModuleTree(ResourceURL* resourceURL,
+                                           bool& hadNetworkError);
+
+    ScriptLoadResult loadJavaScriptModule(ResourceURL* resourceURL);
+
     bool evaluatefromString(String* string);
 
     ExecutionContext* executionContext()
     {
         return m_executionContext;
+    }
+
+    GCVector<Document::ScriptModuleData*>& moduleScripts()
+    {
+        return m_moduleScripts;
     }
 
     ScriptBindingInstance* scriptBindingInstance();
@@ -59,6 +73,7 @@ protected:
 
 private:
     ExecutionContext* m_executionContext;
+    GCVector<Document::ScriptModuleData*> m_moduleScripts;
 };
 } // namespace Starfish
 

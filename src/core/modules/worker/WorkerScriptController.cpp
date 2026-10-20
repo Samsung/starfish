@@ -89,6 +89,40 @@ private:
     ScriptLoadResult m_scriptLoadResult;
 };
 
+class WorkerScriptTextFetchClient : public ResourceRequestClient {
+public:
+    void onProgressEvent(ResourceRequest* request, bool isExplicitAction)
+    {
+    }
+
+    void onReadyStateChange(ResourceRequest* request, bool fromExplicit)
+    {
+        STARFISH_ASSERT(request != nullptr);
+
+        if (!fromExplicit) {
+            return;
+        }
+
+        if (request->readyState() == ReadyState::Done) {
+            if (request->isError() == false && request->status() == 200) {
+                auto& response = request->response();
+                m_text = String::fromUTF8(response.data(), response.size());
+
+                response.clear();
+                response.shrink_to_fit();
+            }
+        }
+    }
+
+    Optional<String*> text()
+    {
+        return m_text;
+    }
+
+private:
+    Optional<String*> m_text;
+};
+
 WorkerScriptController::WorkerScriptController(
     ExecutionContext* executionContext)
     : m_executionContext(executionContext)
@@ -135,6 +169,82 @@ template ScriptLoadResult WorkerScriptController::loadJavaScriptInternal<
     ServiceWorkerScriptControllerClient, ServiceWorkerScriptController>(
     ResourceURL*, ServiceWorkerScriptController*);
 #endif
+
+Optional<ScriptModule> WorkerScriptController::fetchModuleTree(
+    ResourceURL* resourceURL, bool& hadNetworkError)
+{
+    STARFISH_ASSERT(resourceURL != nullptr);
+
+    for (auto* data : m_moduleScripts) {
+        if (data->url.hasValue() && *data->url.value() == *resourceURL) {
+            if (data->hasLoadingError) {
+                return Optional<ScriptModule>();
+            }
+            return data->module;
+        }
+    }
+
+    // Register before fetching sub modules so that cyclic imports terminate.
+    auto* data =
+        new Document::ScriptModuleData(nullptr, resourceURL, nullptr, false);
+    m_moduleScripts.push_back(data);
+
+    RequestData* requestData = new RequestData();
+    requestData->m_url = resourceURL;
+    requestData->m_destination = RequestDestination::Script;
+    requestData->m_syncLevel = RequestSyncLevel::AlwaysSync;
+
+    ResourceRequest* resourceRequest = new ResourceRequest(executionContext());
+    WorkerScriptTextFetchClient* client = new WorkerScriptTextFetchClient();
+    resourceRequest->addResourceRequestClient(client);
+    resourceRequest->open(requestData, new HeadersData());
+    resourceRequest->send();
+
+    if (!client->text()) {
+        data->hasLoadingError = true;
+        hadNetworkError = true;
+        return Optional<ScriptModule>();
+    }
+
+    Optional<ScriptModule> module =
+        initModule(scriptBindingInstance(), client->text().value(),
+                   resourceURL->urlString());
+    if (!module) {
+        data->hasLoadingError = true;
+        return Optional<ScriptModule>();
+    }
+    data->module = module;
+
+    // Resolve sub module URLs the same way the platform's onLoadModule
+    // callback does, so that link-time lookups find these entries.
+    String* baseURI = (new ResourceURL(resourceURL->urlString()))->baseURI();
+    auto requests = moduleRequests(module.value());
+    for (size_t i = 0; i < requests.size(); i++) {
+        ResourceURL* subURL = new ResourceURL(requests[i], baseURI);
+        if (!fetchModuleTree(subURL, hadNetworkError)) {
+            data->hasLoadingError = true;
+            return Optional<ScriptModule>();
+        }
+    }
+
+    return module;
+}
+
+ScriptLoadResult WorkerScriptController::loadJavaScriptModule(
+    ResourceURL* resourceURL)
+{
+    bool hadNetworkError = false;
+    Optional<ScriptModule> root = fetchModuleTree(resourceURL, hadNetworkError);
+    if (!root) {
+        return hadNetworkError ? ScriptLoadResult::NetworkError
+                               : ScriptLoadResult::ScriptError;
+    }
+
+    if (!executeModule(scriptBindingInstance(), root.value())) {
+        return ScriptLoadResult::ScriptError;
+    }
+    return ScriptLoadResult::Success;
+}
 
 bool WorkerScriptController::evaluatefromString(String* string)
 {

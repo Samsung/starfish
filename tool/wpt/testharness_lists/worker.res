@@ -98,6 +98,7 @@ http://web-platform.test:8000/workers/interfaces/WorkerUtils/navigator/006.html
 http://web-platform.test:8000/workers/interfaces/WorkerUtils/navigator/007.html
 http://web-platform.test:8000/workers/interfaces/WorkerUtils/navigator/008.worker.html
 http://web-platform.test:8000/workers/interfaces/WorkerUtils/navigator/language.html
+http://web-platform.test:8000/workers/modules/dedicated-worker-import-meta.html
 http://web-platform.test:8000/workers/nested_worker_close_self.worker.html
 http://web-platform.test:8000/workers/postMessage_event_properties.htm
 http://web-platform.test:8000/workers/postMessage_target_source.htm

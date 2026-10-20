@@ -33,6 +33,11 @@ public:
     String* type() const;
     void setType(String* type);
 
+    WorkerType workerType() const
+    {
+        return m_type;
+    }
+
     String* credentials() const;
     void setCredentials(String* string);
 

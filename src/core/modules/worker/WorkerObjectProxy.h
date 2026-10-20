@@ -21,6 +21,7 @@
 #define __StarfishWorkerObjectProxy__
 
 #include "core/modules/worker/WorkerProxy.h"
+#include "core/modules/worker/WorkerType.h"
 
 namespace Starfish {
 
@@ -36,6 +37,8 @@ public:
     void terminate() override;
 
     String* workerName() const;
+
+    WorkerType workerType() const;
 
     void terminateWorker();
 

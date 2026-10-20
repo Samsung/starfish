@@ -25,6 +25,7 @@
 #include "core/fetch/Fetch.h"
 #include "core/extra/Performance.h"
 #include "core/modules/crypto/Crypto.h"
+#include "core/modules/worker/WorkerType.h"
 #include "core/page/WindowOrWorkerGlobalScope.h"
 
 namespace Starfish {
@@ -111,9 +112,10 @@ public:
     void clearInterval(int32_t id);
 
     void importScript(ResourceURL* url);
+    void importModuleScript(ResourceURL* url);
     void importScripts(GCVector<String*>& urls);
 
-    bool loadMainScript();
+    bool loadMainScript(WorkerType type = WorkerType::Classic);
 
     // Blob-URL workers evaluate a source captured on the page thread
     // instead of fetching the (unreachable) blob: URL.

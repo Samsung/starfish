@@ -56,6 +56,11 @@ String* WorkerObjectProxy::workerName() const
     return m_workerObject->workerOptions().name();
 }
 
+WorkerType WorkerObjectProxy::workerType() const
+{
+    return m_workerObject->workerOptions().workerType();
+}
+
 void WorkerObjectProxy::postSerializedMessage(
     SerializeWithTransferResult* serializedMessage)
 {

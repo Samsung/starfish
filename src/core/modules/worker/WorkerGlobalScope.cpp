@@ -183,7 +183,25 @@ void WorkerGlobalScope::importScript(ResourceURL* url)
     }
 }
 
-bool WorkerGlobalScope::loadMainScript()
+void WorkerGlobalScope::importModuleScript(ResourceURL* url)
+{
+    TRACE_SCOPE(HOST);
+    STARFISH_ASSERT(url != nullptr);
+    if (url->isValid() == false) {
+        throw new DOMException(executionContext(),
+                               DOMException::Code::SYNTAX_ERR, "Invalid URL");
+    }
+
+    ScriptLoadResult result =
+        m_workerScriptController->loadJavaScriptModule(url);
+    if (result != ScriptLoadResult::Success) {
+        throw new DOMException(executionContext(),
+                               DOMException::Code::DOM_EXCEPTION,
+                               "Failed to load module script");
+    }
+}
+
+bool WorkerGlobalScope::loadMainScript(WorkerType type)
 {
     TRACE(WORKER, "load main script");
 
@@ -194,7 +212,11 @@ bool WorkerGlobalScope::loadMainScript()
     }
 
     try {
-        importScript(executionContext()->documentURI());
+        if (type == WorkerType::Module) {
+            importModuleScript(executionContext()->documentURI());
+        } else {
+            importScript(executionContext()->documentURI());
+        }
     } catch (DOMException* e) {
         return false;
     }
