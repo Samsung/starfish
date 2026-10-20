@@ -330,8 +330,10 @@ void* SVGLengthList::operator new(size_t size)
     GC_descr& descr = GCDescriptorCache<SVGLengthList>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGLengthList)] = { 0 };
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(SVGLengthList, m_object)); // ScriptWrappable
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGLengthList, m_sourceElement));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGLengthList, m_v));
-        SVGElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGLengthList));
         typeInited = true;
     }

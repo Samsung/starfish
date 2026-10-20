@@ -47,6 +47,10 @@ public:
 protected:
     static inline void fillGCDescriptor(GC_word* obj_bitmap)
     {
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(CSSStyleValue,
+                                              m_object)); // ScriptWrappable
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(CSSStyleValue, m_executionContext));
     }
 
 private:
