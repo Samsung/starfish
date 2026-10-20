@@ -2593,21 +2593,23 @@ void enqueueMicrotask(ScriptBindingInstance* instance, void (*callback)(void*),
 }
 
 Promise::Promise(ScriptBindingInstance* instance)
+    : ScriptWrappable(this)
+    , m_instance(instance)
 {
-    m_instance = instance;
     ContextRef* ctx = instance->scriptContext();
-    m_scriptValue =
+    overrideScriptObject(
         Evaluator::execute(ctx, [](ExecutionStateRef* state) -> ValueRef* {
             return ValueRef::create(PromiseObjectRef::create(state));
-        }).result;
-    m_scriptValue->asObject()->setExtraData(this);
+        }).result->asObject());
+    m_object->setExtraData(this);
 }
 
 Promise::Promise(ScriptBindingInstance* instance, ScriptValue scriptValue)
-    : m_scriptValue(scriptValue)
+    : ScriptWrappable(this)
     , m_instance(instance)
 {
-    m_scriptValue->asObject()->setExtraData(this);
+    overrideScriptObject(scriptValue->asObject());
+    m_object->setExtraData(this);
 }
 
 void Promise::fulfill(ScriptValue v)
@@ -2618,8 +2620,7 @@ void Promise::fulfill(ScriptValue v)
         ctx,
         [](ExecutionStateRef* state, Promise* self,
            ScriptValue v) -> ValueRef* {
-            self->m_scriptValue->asObject()->asPromiseObject()->fulfill(state,
-                                                                        v);
+            self->m_object->asPromiseObject()->fulfill(state, v);
             return ValueRef::createUndefined();
         },
         this, v);
@@ -2633,8 +2634,7 @@ void Promise::reject(ScriptValue v)
         ctx,
         [](ExecutionStateRef* state, Promise* self,
            ScriptValue v) -> ValueRef* {
-            self->m_scriptValue->asObject()->asPromiseObject()->reject(state,
-                                                                       v);
+            self->m_object->asPromiseObject()->reject(state, v);
             return ValueRef::createUndefined();
         },
         this, v);
@@ -2648,8 +2648,7 @@ ScriptValue Promise::then(ScriptValue handler)
         ctx,
         [](ExecutionStateRef* state, Promise* self,
            ScriptValue handler) -> ValueRef* {
-            return self->m_scriptValue->asObject()->asPromiseObject()->then(
-                state, handler);
+            return self->m_object->asPromiseObject()->then(state, handler);
         },
         this, handler);
 
@@ -2669,8 +2668,8 @@ ScriptValue Promise::then(ScriptValue onFulfilled, ScriptValue onRejected)
         ctx,
         [](ExecutionStateRef* state, Promise* self, ScriptValue onFulfilled,
            ScriptValue onRejected) -> ValueRef* {
-            return self->m_scriptValue->asObject()->asPromiseObject()->then(
-                state, onFulfilled, onRejected);
+            return self->m_object->asPromiseObject()->then(state, onFulfilled,
+                                                           onRejected);
         },
         this, onFulfilled, onRejected);
 
@@ -2688,9 +2687,7 @@ ScriptValue Promise::promiseResult()
     auto result = Evaluator::execute(
         ctx,
         [](ExecutionStateRef* state, Promise* self) -> ValueRef* {
-            return self->m_scriptValue->asObject()
-                ->asPromiseObject()
-                ->promiseResult();
+            return self->m_object->asPromiseObject()->promiseResult();
         },
         this);
 

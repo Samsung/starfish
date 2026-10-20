@@ -275,13 +275,27 @@ void RuntimeDomain::processMessage(CDPCommand& cmd, const std::string& method)
     cmd.sendError(-32601, "'method' wasn't found");
 }
 
-// Heap descriptor stored on the injected window[name] function via
-// setExtraData, so the native callback knows which binding name fired. Plain
-// heap (the FunctionObjectRef holds it for the lifetime of the document;
-// leaking one tiny record per (binding x document) is acceptable for the CDP
-// MVP).
-struct BindingExtra {
-    std::string name;
+// Descriptor stored on the injected window[name] function via setExtraData,
+// so the native callback knows which binding name fired. Page script can pass
+// that function to any binding, which reads extraData as a ScriptWrappable,
+// so it must be one.
+class BindingExtra : public ScriptWrappable {
+public:
+    explicit BindingExtra(String* name)
+        : ScriptWrappable(this)
+        , m_name(name)
+    {
+    }
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override
+    {
+    }
+    virtual ScriptBindingInstance* scriptBindingInstance() override
+    {
+        return nullptr;
+    }
+
+    String* m_name;
 };
 
 // Native callback for window[name](payload). Resolves the originating WebView
@@ -316,7 +330,8 @@ static ValueRef* bindingNativeCallback(ExecutionStateRef* state,
     if (!wv || !wv->cdpServer() || !wv->cdpServer()->dispatcher()) {
         return ValueRef::createUndefined();
     }
-    wv->cdpServer()->dispatcher()->emitBindingCalled(wv, extra->name, payload);
+    wv->cdpServer()->dispatcher()->emitBindingCalled(
+        wv, extra->m_name->toUTF8NonGCString(), payload);
     return ValueRef::createUndefined();
 }
 
@@ -339,8 +354,8 @@ void RuntimeDomain::injectBinding(WebView* wv, const std::string& name)
             ContextRef* context = state->context();
             GlobalObjectRef* global = context->globalObject();
 
-            BindingExtra* extra = new BindingExtra();
-            extra->name = *d->name;
+            BindingExtra* extra = new BindingExtra(
+                String::fromUTF8(d->name->data(), d->name->size()));
 
             StringRef* fnName =
                 StringRef::createFromUTF8(d->name->data(), d->name->size());

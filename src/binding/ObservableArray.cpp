@@ -181,7 +181,11 @@ ScriptProxyObject ObservableArray::create(
     ObservableArrayBackend* backend =
         new ObservableArrayBackend(host, callbacks);
 
+    // WebIDL creates the handler with a null prototype. It also keeps
+    // script from reaching the handler (and its non-ScriptWrappable
+    // extraData) through a trap defined on Object.prototype.
     ObjectRef* handler = ObjectRef::create(state);
+    handler->setPrototype(state, ValueRef::createNull());
     handler->setExtraData(backend);
     defineTrap(state, handler, "set", 3, setTrap, 4);
     defineTrap(state, handler, "defineProperty", 14, definePropertyTrap, 3);
