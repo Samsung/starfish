@@ -37,6 +37,7 @@ http://web-platform.test:8000/fetch/api/basic/request-referrer-redirected-worker
 http://web-platform.test:8000/fetch/api/basic/request-referrer.any.html
 http://web-platform.test:8000/fetch/api/basic/request-referrer.any.worker.html
 http://web-platform.test:8000/fetch/api/cors/cors-filtering.sub.any.worker.html
+http://web-platform.test:8000/fetch/api/cors/cors-filtering.sub.any.html
 # http://web-platform.test:8000/fetch/api/credentials/authentication-basic.any.html # Uncomment when https://github.com/web-platform-tests/wpt/pull/63876 is merged.
 # http://web-platform.test:8000/fetch/api/credentials/authentication-basic.any.worker.html # Uncomment when https://github.com/web-platform-tests/wpt/pull/63876 is merged.
 http://web-platform.test:8000/fetch/api/policies/referrer-origin-when-cross-origin.html

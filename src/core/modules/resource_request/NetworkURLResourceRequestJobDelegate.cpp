@@ -1076,8 +1076,10 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
     request->m_responseData->m_status =
         nwd->httpTransaction->httpResponse().responseCode();
 
-    if (nwd->httpTransaction->httpResponse().isSuccessfulResponseStatus() ||
-        request->m_responseData->m_status == 400) {
+    // The CORS check applies to every final (non-1xx, non-redirect) response;
+    // https://fetch.spec.whatwg.org/#concept-cors-check
+    if (request->m_responseData->m_status >= HTTPStatusCode::HTTP_STATUS_OK &&
+        !nwd->httpTransaction->httpResponse().isRedirectionResponseStatus()) {
         if ((rawHeader.compare("\r\n") == 0) ||
             (rawHeader.compare("\n") == 0)) {
             if (nwd->corsFlag &&

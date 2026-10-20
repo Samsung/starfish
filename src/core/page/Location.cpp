@@ -28,6 +28,7 @@
 #include "core/page/HashChangeEvent.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLFormElement.h"
+#include "core/extra/MimeType.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/loader/ResourceURL.h"
 #include "platform/loader/ResourceLoader.h"
@@ -267,7 +268,13 @@ public:
         if (itr != headers.end()) {
             String* mimetype =
                 String::fromUTF8(itr->second.data(), itr->second.size());
-            if (mimetype->contains("application", false) == true) {
+            // A JSON response is shown as a text document, not downloaded;
+            // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-text
+            String* essence =
+                MimeType::parseFromString(mimetype).stringWithoutParameter();
+            bool isJSON = essence->equalsIgnoreCase("application/json") ||
+                          essence->endsWith("+json", false);
+            if (!isJSON && mimetype->contains("application", false) == true) {
                 checkHeader(false, headers);
                 return;
             }
