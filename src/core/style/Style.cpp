@@ -16983,7 +16983,7 @@ bool CSSStyleValuePair::updateValueTransformFunction(
             return false;
         }
     }
-    if (idx + 1 < minArgCnt) {
+    if (idx < minArgCnt) {
         return false;
     }
 
