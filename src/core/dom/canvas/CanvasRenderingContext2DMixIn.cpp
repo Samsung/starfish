@@ -1588,16 +1588,11 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
 
     flushForReadback();
 
-    size_t stride = 0;
-    if (m_canvasSurface->bufferWidth() != 0 &&
-        m_canvasSurface->bufferStride() != 0) {
-        stride =
-            m_canvasSurface->bufferStride() / m_canvasSurface->bufferWidth();
-    } else {
-        stride = 4;
-    }
-
-    size_t destSize = sw * stride * sh;
+    // ImageData rows are tightly packed, but the surface's rows may be padded
+    // (a Tizen TBM surface aligns them to 64 bytes), so the surface is
+    // addressed by its row stride and never by width * 4.
+    size_t srcRowBytes = m_canvasSurface->bufferStride();
+    size_t destSize = static_cast<size_t>(sw) * 4 * sh;
 
     // TODO : If the Canvas Pixel ArrayBuffer cannot be allocated, then rethrow
     // the RangeError thrown by JavaScript, and return.
@@ -1621,9 +1616,8 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
             if ((x + sx) < 0 || static_cast<int64_t>(width) <= (x + sx)) {
                 continue;
             }
-            uint8_t* destPixel = dest + (y * sw * stride) + (x * stride);
-            uint8_t* srcPixel =
-                src + ((y + sy) * width * stride) + ((x + sx) * stride);
+            uint8_t* destPixel = dest + (y * sw + x) * 4;
+            uint8_t* srcPixel = src + (y + sy) * srcRowBytes + (x + sx) * 4;
             uint8_t r, g, b, a;
 #if defined(PORT_PIXEL_ORDER_RGBA)
             r = srcPixel[0];
@@ -1736,13 +1730,8 @@ void CanvasRenderingContext2DMixIn::putImageData(ImageData* imagedata,
 
     willCanvasSurfaceUpdate();
 
-    size_t destStride = 0;
-    if (destWidth != 0 && m_canvasSurface->bufferStride() != 0) {
-        destStride =
-            m_canvasSurface->bufferStride() / m_canvasSurface->bufferWidth();
-    } else {
-        destStride = 4;
-    }
+    // The surface's rows may be padded; see getImageData().
+    size_t destRowBytes = m_canvasSurface->bufferStride();
 
     for (int64_t y = dirtyY; y < dirtyY + dirtyHeight; ++y) {
         if ((y + dy) < 0 || static_cast<int64_t>(destHeight) <= (y + dy)) {
@@ -1752,8 +1741,7 @@ void CanvasRenderingContext2DMixIn::putImageData(ImageData* imagedata,
             if ((x + dx) < 0 || static_cast<int64_t>(destWidth) <= (x + dx)) {
                 continue;
             }
-            uint8_t* destPixel = dest + ((dy + y) * destWidth * destStride) +
-                                 ((dx + x) * destStride);
+            uint8_t* destPixel = dest + (dy + y) * destRowBytes + (dx + x) * 4;
             uint8_t* srcPixel = src + (y * imagaDataWidth * 4) + (x * 4);
             uint8_t r, g, b, a;
             r = srcPixel[0];
