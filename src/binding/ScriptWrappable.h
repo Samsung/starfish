@@ -577,19 +577,25 @@ public:
     EventTarget* m_target;
 };
 
-class Promise : public gc {
+// A ScriptWrappable so that its script object's extraData, read by every
+// binding type check, always points at a ScriptWrappable.
+class Promise : public ScriptWrappable {
 public:
     Promise(ScriptBindingInstance* instance);
     Promise(ScriptBindingInstance* instance, ScriptValue scriptValue);
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override
+    {
+    }
+    virtual ScriptBindingInstance* scriptBindingInstance() override
+    {
+        return m_instance;
+    }
     void fulfill(ScriptValue v);
     void reject(ScriptValue v);
     ScriptValue then(ScriptValue handler);
     ScriptValue then(ScriptValue onFulfilled, ScriptValue onRejected);
     ScriptValue promiseResult();
-    ScriptValue scriptValue()
-    {
-        return m_scriptValue;
-    }
 
     void onSettled()
     {
@@ -611,7 +617,6 @@ public:
     }
 
 protected:
-    ScriptValue m_scriptValue = nullptr;
     ScriptBindingInstance* m_instance = nullptr;
     void (*m_onSettled)(void*) = nullptr;
     void* m_onSettledData = nullptr;
