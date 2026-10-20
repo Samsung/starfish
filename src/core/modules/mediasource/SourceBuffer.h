@@ -40,11 +40,11 @@ class DemuxerClientSourceBuffer;
 struct SourceBufferData : public gc {
     SourceBuffer* m_sourceBuffer;
     Demuxer* m_currentDemuxer;
-    const uint8_t* m_data;
-    unsigned long m_length;
-    ScriptValue m_originScript;
+    // A copy taken at appendBuffer() time; script may detach or modify the
+    // source buffer while the append runs on another thread.
+    std::vector<uint8_t> m_data;
     SourceBufferData(SourceBuffer* buf, const uint8_t* data,
-                     unsigned long length, ScriptValue origin);
+                     unsigned long length);
     DemuxerClientSourceBuffer* currentDemuxerClient();
 };
 
@@ -166,8 +166,7 @@ public:
 #undef VIRTUAL
 #undef OVERRIDE
 
-    void appendBuffer(const uint8_t* data, unsigned long length,
-                      ScriptValue origin);
+    void appendBuffer(const uint8_t* data, unsigned long length);
     void appendBuffer(ArrayBufferViewOrArrayBuffer buffer);
     void changeType(String* type);
     void abort();

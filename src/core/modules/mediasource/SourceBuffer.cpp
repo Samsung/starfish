@@ -72,23 +72,25 @@ public:
     virtual int64_t onSeek(int64_t position, SeekWhence whence)
     {
         if (whence == DemuxerSource::SeekWhenceLookSize) {
-            return m_bufferRemain->size() + m_inputBuffer->m_length;
+            return m_bufferRemain->size() + m_inputBuffer->m_data.size();
         } else if (whence == DemuxerSource::SeekWhenceSet) {
             STARFISH_ASSERT(position >= 0);
-            if ((int64_t)position <=
-                (int64_t)(m_bufferRemain->size() + m_inputBuffer->m_length)) {
+            if ((int64_t)position <= (int64_t)(m_bufferRemain->size() +
+                                               m_inputBuffer->m_data.size())) {
                 m_readPos = position;
                 return m_readPos;
             } else {
-                m_readPos = m_bufferRemain->size() + m_inputBuffer->m_length;
+                m_readPos =
+                    m_bufferRemain->size() + m_inputBuffer->m_data.size();
                 return m_readPos;
             }
         } else if (whence == DemuxerSource::SeekWhenceCurrent) {
             if (position < 0 && m_readPos < (size_t)std::llabs(position)) {
                 m_readPos = 0;
             } else if (m_readPos + position >
-                       m_bufferRemain->size() + m_inputBuffer->m_length) {
-                m_readPos = m_bufferRemain->size() + m_inputBuffer->m_length;
+                       m_bufferRemain->size() + m_inputBuffer->m_data.size()) {
+                m_readPos =
+                    m_bufferRemain->size() + m_inputBuffer->m_data.size();
             } else {
                 m_readPos = m_readPos + position;
             }
@@ -121,14 +123,14 @@ public:
             size_t diff = m_readPos - m_bufferRemain->size();
             size_t fillAmount;
             if (sizeWantToRead - sizeSuccessToRead >
-                m_inputBuffer->m_length - diff) {
-                fillAmount = m_inputBuffer->m_length - diff;
+                m_inputBuffer->m_data.size() - diff) {
+                fillAmount = m_inputBuffer->m_data.size() - diff;
             } else {
                 fillAmount = sizeWantToRead - sizeSuccessToRead;
             }
 
-            memcpy(buffer + sizeSuccessToRead, m_inputBuffer->m_data + diff,
-                   fillAmount);
+            memcpy(buffer + sizeSuccessToRead,
+                   m_inputBuffer->m_data.data() + diff, fillAmount);
             sizeSuccessToRead += fillAmount;
             m_readPos += fillAmount;
         }
@@ -378,12 +380,10 @@ public:
 };
 
 SourceBufferData::SourceBufferData(SourceBuffer* buf, const uint8_t* data,
-                                   unsigned long length, ScriptValue origin)
+                                   unsigned long length)
     : m_sourceBuffer(buf)
     , m_currentDemuxer(buf->demuxer())
-    , m_data(data)
-    , m_length(length)
-    , m_originScript(origin)
+    , m_data(data, data + length)
 {
 }
 
@@ -561,14 +561,13 @@ DEFINE_EVENT_LISTENER(SourceBuffer, updateend);
 DEFINE_EVENT_LISTENER(SourceBuffer, error);
 DEFINE_EVENT_LISTENER(SourceBuffer, abort);
 
-void SourceBuffer::appendBuffer(const uint8_t* data, unsigned long length,
-                                ScriptValue origin)
+void SourceBuffer::appendBuffer(const uint8_t* data, unsigned long length)
 {
     // Run the prepare append algorithm.
     prepareAppend(length);
 
     // Add data to the end of the input buffer.
-    auto d = new (NoGC) SourceBufferData(this, data, length, origin);
+    auto d = new (NoGC) SourceBufferData(this, data, length);
 
     // Set the updating attribute to true.
     // Queue a task to fire a simple event named updatestart at this
@@ -585,13 +584,11 @@ void SourceBuffer::appendBuffer(ArrayBufferViewOrArrayBuffer buffer)
     if (buffer.isArrayBufferViewValue()) {
         ScriptArrayBufferView unwrap = buffer.getArrayBufferViewValue();
         appendBuffer(arrayBufferViewRawData(unwrap),
-                     arrayBufferViewByteSize(unwrap),
-                     createScriptValue(unwrap));
+                     arrayBufferViewByteSize(unwrap));
     } else {
         STARFISH_ASSERT(buffer.isArrayBufferValue());
         ScriptArrayBuffer unwrap = buffer.getArrayBufferValue();
-        appendBuffer(arrayBufferRawData(unwrap), arrayBufferByteSize(unwrap),
-                     createScriptValue(unwrap));
+        appendBuffer(arrayBufferRawData(unwrap), arrayBufferByteSize(unwrap));
     }
 }
 
@@ -1032,11 +1029,12 @@ static size_t tryDemuxing(SourceBufferData* inputBuffer)
 
     SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer, "findStreamInfo");
     STARFISH_ASSERT(client->m_detectedStream.size() == 0);
-    size_t maxPos = client->m_bufferUnprocessed.size() + inputBuffer->m_length;
+    size_t maxPos =
+        client->m_bufferUnprocessed.size() + inputBuffer->m_data.size();
     if (!demuxer->findStreamInfo(&src, inputBuffer->m_sourceBuffer->type())) {
         STARFISH_LOG_INFO(
             "[MSE] tryDemuxing findStreamInfo FAIL (len=%d unprocessed=%d)",
-            (int)inputBuffer->m_length,
+            (int)inputBuffer->m_data.size(),
             (int)client->m_bufferUnprocessed.size());
         client->m_foundError = true;
         return maxPos;
@@ -1047,8 +1045,8 @@ static size_t tryDemuxing(SourceBufferData* inputBuffer)
         STARFISH_LOG_INFO(
             "[MSE] tryDemuxing findStreamPacket FAIL (len=%d unprocessed=%d "
             "readPos=%d)",
-            (int)inputBuffer->m_length, (int)client->m_bufferUnprocessed.size(),
-            (int)src.m_readPos);
+            (int)inputBuffer->m_data.size(),
+            (int)client->m_bufferUnprocessed.size(), (int)src.m_readPos);
         client->m_foundError = true;
         return maxPos;
     }
@@ -1072,18 +1070,18 @@ static void updateBufferUnprocessed(SourceBufferData* inputBuffer,
         memmove(unp.data(), unp.data() + amount, lastSize - amount);
         unp.resize(lastSize - amount);
     }
-    if (processedSize == inputBuffer->m_length + lastSize) {
+    if (processedSize == inputBuffer->m_data.size() + lastSize) {
         return;
     }
     size_t copyStart = 0;
-    size_t copyEnd = inputBuffer->m_length;
+    size_t copyEnd = inputBuffer->m_data.size();
     if (processedSize > lastSize) {
         copyStart = processedSize - lastSize;
     }
     if (copyEnd > copyStart) {
         size_t oldSize = unp.size();
         unp.resize(oldSize + (copyEnd - copyStart));
-        memcpy(unp.data() + oldSize, inputBuffer->m_data + copyStart,
+        memcpy(unp.data() + oldSize, inputBuffer->m_data.data() + copyStart,
                copyEnd - copyStart);
     }
     SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer, "Got unprocessed (size %d)",
@@ -1214,7 +1212,7 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
             SOURCEBUFFER_LOG(
                 inputBuffer->m_sourceBuffer,
                 "Run thread: bufferAppend (size %d + unprocessed %d)",
-                (int)inputBuffer->m_length,
+                (int)inputBuffer->m_data.size(),
                 (int)inputBuffer->currentDemuxerClient()
                     ->m_bufferUnprocessed.size());
             // Segment Parser Loop
