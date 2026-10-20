@@ -331,9 +331,10 @@ private:
 
     void writeTypedArrayObject(ScriptArrayBufferView arrayBufferView)
     {
+        // The view is re-created over its whole buffer at its byteOffset.
         writeTag(ScriptValueSerializerTag::ArrayBuffer);
-        writeRawBuffer(arrayBufferView->rawBuffer(),
-                       arrayBufferView->byteLength());
+        writeRawBuffer(arrayBufferView->buffer()->rawBuffer(),
+                       arrayBufferView->buffer()->byteLength());
 
         writeArrayBufferView(arrayBufferView);
     }
@@ -675,7 +676,12 @@ private:
         }
 
         size_t byteSize = getByteSize(typeTag);
-        if (byteSize == 0) {
+        size_t bufferLength = arrayBuffer->byteLength();
+        // Serialized data may be stale or corrupted (e.g. IndexedDB), so
+        // the view must fit inside the buffer it is re-created over.
+        if (byteSize == 0 || byteOffset > bufferLength ||
+            byteOffset % byteSize ||
+            arrayLength > (bufferLength - byteOffset) / byteSize) {
             throw new DOMException(
                 m_executionContext, DOMException::DATA_CLONE_ERR,
                 "Failed to deserialize an array buffer view.");
