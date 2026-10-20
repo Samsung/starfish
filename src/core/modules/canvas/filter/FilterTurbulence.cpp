@@ -1054,9 +1054,19 @@ void FilterTurbulence::apply(const Unit::Rect& subRegionInFloat,
         baseFrequencyX, baseFrequencyY,
         e->stitchTiles()->animVal() ==
             SVGFETurbulenceElement::SVG_STITCHTYPE_STITCH);
+    // Clamp in float: converting an out-of-range float to long is UB, and
+    // initPaintingData clamps the seed to [1, s_randMaximum - 1] anyway.
+    float seed = e->seed()->animVal();
+    seed = std::isnan(seed)
+               ? 0
+               : std::max(-2147483520.f, std::min(seed, 2147483520.f));
+    // Each octave doubles the frequency, so beyond a few dozen the noise no
+    // longer changes while the per-pixel cost keeps growing linearly; cap it
+    // rather than let numOctaves="1e9" stall painting.
+    static const int kMaxOctaves = 32;
+    int numOctaves = std::min<long>(e->numOctaves()->animVal(), kMaxOctaves);
     auto paintingData = initPaintingData(
-        e->type()->animVal(), baseFrequencyX, baseFrequencyY,
-        e->numOctaves()->animVal(), e->seed()->animVal(),
+        e->type()->animVal(), baseFrequencyX, baseFrequencyY, numOctaves, seed,
         e->stitchTiles()->animVal() ==
             SVGFETurbulenceElement::SVG_STITCHTYPE_STITCH,
         Unit::IntSize(width / ctx.viewportScaleX, height / ctx.viewportScaleY));

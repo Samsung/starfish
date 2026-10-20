@@ -1045,10 +1045,9 @@ static int clampedToKernelSize(float value)
     // for the result image but
     // inflates the absolute paint rect too much. This is compatible with
     // Firefox' behavior.
-    unsigned size = std::max<unsigned>(
-        2,
-        static_cast<unsigned>(floorf(value * gaussianKernelFactor() + 0.5f)));
-    return clampTo<int>(std::min(size, static_cast<unsigned>(500.f)));
+    // Clamp in float: converting an out-of-range float to an integer is UB.
+    float size = std::min(floorf(value * gaussianKernelFactor() + 0.5f), 500.f);
+    return std::max(2, static_cast<int>(size));
 }
 
 float computeKernelSizeAtStdDeviation(float stdDeviation)
@@ -1059,7 +1058,7 @@ float computeKernelSizeAtStdDeviation(float stdDeviation)
 std::pair<float, float> FilterGaussianBlur::computeKernelSize(
     float stdDeviationX, float stdDeviationY)
 {
-    if (stdDeviationX <= 0 || stdDeviationY <= 0) {
+    if (!(stdDeviationX > 0) || !(stdDeviationY > 0)) {
         return std::make_pair(0, 0);
     }
     return std::make_pair(computeKernelSizeAtStdDeviation(stdDeviationX),

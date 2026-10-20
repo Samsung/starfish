@@ -254,11 +254,10 @@ static int clampedToKernelSize(float value)
     // for the result image but
     // inflates the absolute paint rect too much. This is compatible with
     // Firefox' behavior.
-    unsigned size = std::max<unsigned>(
-        2,
-        static_cast<unsigned>(floorf(value * gaussianKernelFactor() + 0.5f)));
-    return clampTo<int>(
-        std::min(size, static_cast<unsigned>(ShadowBlur::RADIUS_LIMIT)));
+    // Clamp in float: converting an out-of-range float to an integer is UB.
+    float size = std::min(floorf(value * gaussianKernelFactor() + 0.5f),
+                          (float)ShadowBlur::RADIUS_LIMIT);
+    return std::max(2, static_cast<int>(size));
 }
 
 float ShadowBlur::computeKernelSizeAtStdDeviation(float stdDeviation)

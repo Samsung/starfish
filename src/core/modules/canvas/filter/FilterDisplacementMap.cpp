@@ -162,15 +162,20 @@ void FilterDisplacementMap::apply(const Unit::Rect& subRegionInFloat,
             float srcX_float = x + scale * (displaceXVal / 255.f - 0.5f);
             float srcY_float = y + scale * (displaceYVal / 255.f - 0.5f);
 
-            int srcX = static_cast<int>(srcX_float + 0.5f);
-            int srcY = static_cast<int>(srcY_float + 0.5f);
+            float roundedX = srcX_float + 0.5f;
+            float roundedY = srcY_float + 0.5f;
 
             unsigned int* dstPixel =
                 (unsigned int*)(void*)(dstData + pixel_offset);
 
-            if (srcX < 0 || srcX >= width || srcY < 0 || srcY >= height) {
+            // Bounds-check in float: a huge scale must not reach the int
+            // conversion, which is undefined when out of range.
+            if (!(roundedX > -1.f && roundedX < width && roundedY > -1.f &&
+                  roundedY < height)) {
                 *dstPixel = 0;
             } else {
+                int srcX = static_cast<int>(roundedX);
+                int srcY = static_cast<int>(roundedY);
                 int src_pixel_offset = (srcY * stride) + (srcX * 4);
                 unsigned int* srcPixel =
 
