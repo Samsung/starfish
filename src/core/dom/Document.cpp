@@ -195,7 +195,9 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     // If the Document is the initial "about:blank" document
     // The one it was assigned when its browsing context was created.
-    if (uri->urlString()->equals("about:blank") &&
+    // A javascript: navigation's document takes the origin of the document
+    // it replaces, which in a fresh iframe is that initial about:blank.
+    if ((uri->urlString()->equals("about:blank") || uri->isJavascriptURL()) &&
         browsingContext()->parentBrowsingContext()) {
         setWebOrigin(browsingContext()
                          ->parentBrowsingContext()

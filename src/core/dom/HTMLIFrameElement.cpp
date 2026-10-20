@@ -27,6 +27,7 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/csp/ContentSecurityPolicy.h"
+#include "binding/ScriptBindingSecurity.h"
 
 namespace Starfish {
 
@@ -242,6 +243,13 @@ void HTMLIFrameElement::loadSrcDoc()
                                  document()->baseURL()->baseURI()),
                  HistoryManagerAction::Intact,
                  new ReferrerURL(document()->documentURI(), policy));
+        // An iframe srcdoc document takes its container's node document's
+        // origin, not the opaque origin of the data: URL that carries it.
+        // https://html.spec.whatwg.org/multipage/document-sequences.html#determining-the-origin
+        if (m_browsingContext) {
+            m_browsingContext->document()->setWebOrigin(
+                document()->webOrigin());
+        }
     } else {
         navigate(new ResourceURL(String::createASCIIString("about:blank")),
                  HistoryManagerAction::Intact,
@@ -265,6 +273,16 @@ Document* HTMLIFrameElement::contentDocument()
         return m_browsingContext->document();
     }
     return nullptr;
+}
+
+// https://html.spec.whatwg.org/multipage/iframe-embed-object.html#dom-iframe-contentdocument
+Document* HTMLIFrameElement::contentDocumentForBindings()
+{
+    Document* doc = contentDocument();
+    if (doc && !ScriptBindingSecurity::canAccess(document(), doc)) {
+        return nullptr;
+    }
+    return doc;
 }
 
 WindowProxy* HTMLIFrameElement::contentWindow()
