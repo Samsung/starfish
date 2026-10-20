@@ -659,14 +659,16 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
                                s.data());
     }
 
+    syncChildRuleWrappers();
     bool success = wrapperInsertRule(rules[0], index);
     if (!success) {
         throw new DOMException(m_executionContext,
                                DOMException::HIERARCHY_REQUEST_ERR,
                                "Failed to insert the rule.");
     }
+    m_childRuleWrappers.insert(m_childRuleWrappers.begin() + index,
+                               (CSSRule*)(nullptr));
 
-    syncChildRuleWrappers();
     notifyStyleSheetChanged();
 
     return index;
@@ -706,6 +708,7 @@ void CSSStyleSheet::deleteRule(unsigned index)
                                s.data());
     }
 
+    syncChildRuleWrappers();
     bool success = wrapperDeleteRule(index);
     if (!success) {
         throw new DOMException(m_executionContext,
@@ -713,13 +716,10 @@ void CSSStyleSheet::deleteRule(unsigned index)
                                "Failed to delete rule");
     }
 
-    syncChildRuleWrappers();
-    if (!m_childRuleWrappers.empty()) {
-        if (m_childRuleWrappers[index]) {
-            m_childRuleWrappers[index]->setParentStyleSheet(nullptr);
-        }
-        m_childRuleWrappers.erase(m_childRuleWrappers.begin() + index);
+    if (m_childRuleWrappers[index]) {
+        m_childRuleWrappers[index]->setParentStyleSheet(nullptr);
     }
+    m_childRuleWrappers.erase(m_childRuleWrappers.begin() + index);
 
     notifyStyleSheetChanged();
 }
@@ -743,14 +743,11 @@ StyleRuleBase* CSSStyleSheet::ruleAt(unsigned index) const
 
 void CSSStyleSheet::syncChildRuleWrappers()
 {
-    size_t ruleCount = length();
-    if (m_childRuleWrappers.size() != ruleCount) {
-        m_childRuleWrappers.resize(ruleCount);
-        for (size_t i = 0; i < ruleCount; i++) {
-            m_childRuleWrappers[i] =
-                ruleAt(i)->createCSSOMWrapper(const_cast<CSSStyleSheet*>(this));
-        }
-    }
+    // CSSOM requires a stable CSSRule object per rule, so existing wrappers
+    // are kept. Outside insertRule()/deleteRule() rules are only appended
+    // (parsing, replace()), so new rules always get the trailing slots.
+    STARFISH_ASSERT(m_childRuleWrappers.size() <= length());
+    m_childRuleWrappers.resize(length());
 }
 
 void CSSStyleSheet::notifyStyleSheetChanged()
@@ -774,6 +771,10 @@ CSSRule* CSSStyleSheet::item(unsigned index)
     }
 
     syncChildRuleWrappers();
+    if (!m_childRuleWrappers[index]) {
+        m_childRuleWrappers[index] =
+            ruleAt(index)->createCSSOMWrapper(const_cast<CSSStyleSheet*>(this));
+    }
     return m_childRuleWrappers[index];
 }
 
