@@ -207,8 +207,10 @@ Blob* Blob::slice(int64_t start, int64_t end, String* contentType)
     size_t span = (size_t)std::max(relativeEnd - relativeStart, (int64_t)0);
     STARFISH_ASSERT(relativeStart >= 0);
     void* newStart = ((char*)m_blobData.m_data) + relativeStart;
-    return new Blob(executionContext(), span, newType, newStart,
-                    m_blobData.m_isClosed, false);
+    Blob* blob = new Blob(executionContext(), span, newType, newStart,
+                          m_blobData.m_isClosed, false);
+    blob->m_dataOwner = m_dataOwner;
+    return blob;
 }
 
 Promise* Blob::text()

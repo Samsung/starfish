@@ -148,6 +148,9 @@ protected:
 
     ExecutionContext* m_executionContext;
     BlobData m_blobData;
+    // The blob whose allocation m_blobData.m_data points into. A slice
+    // shares its owner's bytes, so it must keep that allocation alive.
+    Blob* m_dataOwner = this;
 };
 
 class SerializedBlobData : public SerializedPlatformObjectData {
