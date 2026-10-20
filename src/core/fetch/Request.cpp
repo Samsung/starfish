@@ -24,6 +24,7 @@
 #include "platform/loader/ResourceURL.h"
 #include "core/fetch/Request.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/WebOrigin.h"
 #include "core/dom/DOMException.h"
 #include "core/fetch/FetchUtils.h"
 
@@ -110,7 +111,9 @@ static ReferrerURL* computeReferrer(String* referrer,
                                ReferrerPolicy::Empty);
     }
 
-    if (url->origin()->equals(contextOrigin) == false) {
+    // Compare with the settings object's origin, which <base> cannot change.
+    if (url->origin()->equals(executionContext->webOrigin()->serialize()) ==
+        false) {
         return new ReferrerURL(String::createASCIIString("about:client"),
                                ReferrerPolicy::Empty);
     }

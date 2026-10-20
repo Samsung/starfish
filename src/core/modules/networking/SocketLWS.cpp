@@ -25,6 +25,7 @@
 #include <EscargotPublic.h>
 #include "core/modules/networking/WebSocket.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/WebOrigin.h"
 #include "core/modules/networking/SocketLWS.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/ThreadPool.h"
@@ -331,12 +332,12 @@ SocketLWS::SocketLWS(WebSocket* socket)
     // RFC6455 4.1: the Origin header carries the origin of the script that
     // opened the connection, not the origin of the target URL. Sending the
     // target's own origin made every server-side origin check pass.
-    m_origin =
-        parent()->executionContext()->baseURL()->origin()->toUTF8NonGCString();
-    if (m_origin.empty() || m_origin == "file://") {
-        // An opaque origin serializes as "null" on the wire.
-        m_origin = "null";
-    }
+    // Use the settings object's origin; <base href> must not spoof it.
+    m_origin = parent()
+                   ->executionContext()
+                   ->webOrigin()
+                   ->serialize()
+                   ->toUTF8NonGCString();
     char* param = (char*)m_url.c_str();
     if (lws_parse_uri(param, &prot, &m_lwsClientConnectInfo.address,
                       &m_lwsClientConnectInfo.port,
