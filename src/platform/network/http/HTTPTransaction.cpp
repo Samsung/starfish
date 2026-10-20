@@ -60,6 +60,8 @@ HTTPTransaction::HTTPTransaction(CurlMultiRequestData* curlMultiRequestData)
     , m_writeData(nullptr)
     , m_uploadBufferDataCB(nullptr)
     , m_uploadData(nullptr)
+    , m_injectedCookies(nullptr)
+    , m_credentialsExcluded(false)
     , m_inPreflightRequest(false)
     , m_isPreflightReqeustDone(false)
     , m_useHttp2(false)
@@ -210,13 +212,13 @@ void HTTPTransaction::start()
     curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(m_curl, CURLOPT_MAXREDIRS, 128);
     curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url().data());
-    struct curl_slist* injectedCookies = nullptr;
+    m_credentialsExcluded = false;
     if (includeCredentials) {
         curl_easy_setopt(
             m_curl, CURLOPT_SHARE,
             NetworkSharedResourceManager::getInstance()->curlShareHandle());
-        injectedCookies = NetworkSharedResourceManager::getInstance()
-                              ->setupPrivateCookieEngine(m_curl);
+        m_injectedCookies = NetworkSharedResourceManager::getInstance()
+                                ->setupPrivateCookieEngine(m_curl);
     } else {
         curl_easy_setopt(m_curl, CURLOPT_SHARE,
                          NetworkSharedResourceManager::getInstance()
@@ -272,11 +274,12 @@ void HTTPTransaction::start()
     m_httpResponse->setResponseTime(timestamp() / 1000);
 
     updateTransactionStatus();
-    if (includeCredentials) {
+    if (includeCredentials && !m_credentialsExcluded) {
         // Publish Set-Cookie results (and server-side deletions) from this
         // transfer's private cookie engine into the master store.
         NetworkSharedResourceManager::getInstance()->mergeTransferCookies(
-            m_curl, injectedCookies);
+            m_curl, m_injectedCookies);
+        m_injectedCookies = nullptr;
     }
     curl_slist_free_all(list);
     postprocess();
@@ -367,6 +370,21 @@ void HTTPTransaction::updateLastLocationIfNeeds(const std::string& header)
             m_httpResponse->setLastLocation(value);
         }
     }
+}
+
+void HTTPTransaction::excludeCredentialsFromRemainingRedirects()
+{
+    if (!m_httpRequest->includeCredentials() || m_credentialsExcluded) {
+        return;
+    }
+    m_credentialsExcluded = true;
+    // The hops so far were credentialed, so their Set-Cookie results are
+    // kept. Emptying the private store then leaves later hops without
+    // cookies, and what they set is discarded with the store.
+    NetworkSharedResourceManager::getInstance()->mergeTransferCookies(
+        m_curl, m_injectedCookies);
+    m_injectedCookies = nullptr;
+    curl_easy_setopt(m_curl, CURLOPT_COOKIELIST, "ALL");
 }
 
 char* HTTPTransaction::effectiveURL()

@@ -49,6 +49,10 @@ public:
     String* m_url;
     bool m_redirected;
     bool m_ok;
+    // Set by the network job when a redirect chain left the request's origin
+    // at any hop; the response is then "cors" even if the final URL is same
+    // origin (https://fetch.spec.whatwg.org/#main-fetch).
+    bool m_redirectTainted;
     uint32_t m_status;
     String* m_statusText;
     String* m_mimeType;

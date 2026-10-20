@@ -81,6 +81,10 @@ public:
     void updateLastLocationIfNeeds(const std::string& header);
     void didReceiveHeader(const std::string& header);
     char* effectiveURL();
+    // Stops sending and storing cookies for the rest of the redirect chain,
+    // keeping what the hops so far stored. Call from the header callback
+    // of the redirect response before curl follows it.
+    void excludeCredentialsFromRemainingRedirects();
 
     void setTimeout(const long timeout)
     {
@@ -170,6 +174,11 @@ private:
 
     Callback m_uploadBufferDataCB;
     void* m_uploadData;
+
+    // Master store snapshot seeded into a credentialed transfer's private
+    // cookie engine; consumed by mergeTransferCookies.
+    struct curl_slist* m_injectedCookies;
+    bool m_credentialsExcluded;
 
     bool m_inPreflightRequest;
     bool m_isPreflightReqeustDone;
