@@ -215,7 +215,8 @@ public:
 
     BlobURLStore addMediaSourceInBlobURLStore(MediaSource* ptr);
     void removeMediaSourceFromBlobURLStore(MediaSource* ptr);
-    bool isValidMediaSourceBlobURL(BlobURLStore ptr);
+    // On success, fills store.m_blob with the MediaSource the URL refers to.
+    bool isValidMediaSourceBlobURL(BlobURLStore& store);
     bool isValidMediaSourceBlobURL(MediaSource* ptr);
     Optional<BlobURLStore> findMediaSourceBlobURL(MediaSource* ptr);
     void clearMediaSourceBlobURLStore();

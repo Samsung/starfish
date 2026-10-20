@@ -27,17 +27,14 @@ enum class WebSecurityMode;
 }
 
 namespace Starfish {
+// A blob URL's UUID is 128 random bits (m_a..m_d) and the entry is found by
+// them; the URL must not reveal the address of the object it refers to.
 struct BlobURLStore {
-#ifdef STARFISH_32
-    void* m_blob;
-    uint32_t m_a;
-    uint32_t m_b;
-    uint32_t m_c;
-#else
-    void* m_blob;
-    uint32_t m_a;
-    uint32_t m_b;
-#endif
+    void* m_blob = nullptr;
+    uint32_t m_a = 0;
+    uint32_t m_b = 0;
+    uint32_t m_c = 0;
+    uint32_t m_d = 0;
 };
 
 enum StarfishPubicWebViewHandlerKind {
@@ -77,7 +74,7 @@ template <>
 struct hash<Starfish::BlobURLStore> {
     size_t operator()(Starfish::BlobURLStore const& x) const
     {
-        return (size_t)x.m_blob;
+        return x.m_a;
     }
 };
 
@@ -86,7 +83,8 @@ struct equal_to<Starfish::BlobURLStore> {
     bool operator()(Starfish::BlobURLStore const& a,
                     Starfish::BlobURLStore const& b) const
     {
-        return a.m_blob == b.m_blob;
+        return a.m_a == b.m_a && a.m_b == b.m_b && a.m_c == b.m_c &&
+               a.m_d == b.m_d;
     }
 };
 } // namespace std
@@ -142,7 +140,8 @@ public:
 
     BlobURLStore addBlobInBlobURLStore(Blob* ptr);
     void removeBlobFromBlobURLStore(Blob* ptr);
-    bool isValidBlobURL(BlobURLStore ptr);
+    // On success, fills store.m_blob with the blob the URL refers to.
+    bool isValidBlobURL(BlobURLStore& store);
     bool isValidBlobURL(Blob* ptr);
     Optional<BlobURLStore> findBlobURL(Blob* ptr);
     void clearBlobURLStore();
@@ -248,6 +247,10 @@ public:
     std::mt19937& randomEngine();
 
 protected:
+    BlobURLStore createBlobURLStore(void* ptr);
+    static GCUnorderedSet<BlobURLStore>::iterator findBlobURLStoreByPointer(
+        GCUnorderedSet<BlobURLStore>& set, void* ptr);
+
     WebBase(Starfish* starfish, MessageLoop* messageLoop, Timer* timer,
             const char* locale, const char* timezoneID,
             String* customUserAgentString);

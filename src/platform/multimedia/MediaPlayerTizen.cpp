@@ -904,8 +904,6 @@ void MediaPlayerTizen::prepare(ResourceURL* url)
             startNativePrepare();
         } else if (m_container->webView()->isValidMediaSourceBlobURL(store) ==
                    true) {
-            BlobURLStore store;
-            WebBase::stringToBlobURLString(url->urlString(), store);
             MediaSource* ms = (MediaSource*)store.m_blob;
             m_activeMediaSource = ms;
             m_mseClient = new MediaPlayerTizenMediaSourceClient(this);
