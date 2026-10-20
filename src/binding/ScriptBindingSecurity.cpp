@@ -22,7 +22,6 @@
 #include "PlatformIntegrationData.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
-#include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/Location.h"
 #include "core/dom/WebOrigin.h"
@@ -48,17 +47,6 @@ bool ScriptBindingSecurity::canAccess(Document* source, Document* target)
         (target->webOrigin()->url() &&
          target->webOrigin()->url()->isFileURL())) {
         return false;
-    }
-
-    // https://html.spec.whatwg.org/multipage/browsers.html#security-nav
-    if (source->webOrigin()->isOpaque()) {
-        BrowsingContext* c = source->browsingContext()->parentBrowsingContext();
-        while (c) {
-            if (c->document() == target) {
-                return true;
-            }
-            c = c->parentBrowsingContext();
-        }
     }
 
     return false;
