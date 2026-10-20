@@ -244,13 +244,15 @@ void FilterMorphology::apply(const Unit::Rect& subRegionInFloat,
     auto radiusXY =
         computeRadiusXY(ctx.target->unadjustedFrameRectByFilter()->size(),
                         std::make_pair(vm.getScaleX(), vm.getScaleY()));
-    if (radiusXY.first <= 0 || radiusXY.second <= 0) {
+    if (!(radiusXY.first > 0) || !(radiusXY.second > 0)) {
         return;
     }
 
     float dpr = element()->webView()->screenInfo().devicePixelRatio;
-    radiusXY.first *= dpr;
-    radiusXY.second *= dpr;
+    // Clamp in float: converting an out-of-range float to int is undefined,
+    // and a radius beyond the image covers it all anyway.
+    radiusXY.first = std::min(radiusXY.first * dpr, (float)ctx.width);
+    radiusXY.second = std::min(radiusXY.second * dpr, (float)ctx.height);
 
     auto normalizedSubRegion = normalizeSubRegion(subRegionInFloat);
     bool isSubRegionCoversAll = subRegionCoversAll(normalizedSubRegion);

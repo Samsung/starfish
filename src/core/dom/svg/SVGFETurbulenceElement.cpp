@@ -23,6 +23,8 @@
 #include "core/dom/svg/SVGFETurbulenceElement.h"
 #include "core/dom/svg/SVGAnimatedInteger.h"
 #include "core/dom/DOMTokenList.h"
+#include "core/layout/LayoutUtil.h"
+#include <cmath>
 
 namespace Starfish {
 SVGFETurbulenceElement::SVGFETurbulenceElement(Document* document,
@@ -106,7 +108,10 @@ void SVGFETurbulenceElement::didAttributeChanged(QualifiedName name,
     } else if (ss->m_seed == name) {
         seed()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_numOctaves == name) {
-        numOctaves()->setBaseVal(String::parseFloat(value), true);
+        // Clamp in float: converting an out-of-range float to long is UB.
+        float octaves = String::parseFloat(value);
+        numOctaves()->setBaseVal(
+            std::isnan(octaves) ? 0 : clampTo<int>(octaves), true);
     } else if (ss->m_type == name) {
         if (type()->isUpdated() == false) {
             if (value->equals("fractalNoise")) {
