@@ -85,6 +85,15 @@ void MessageLoop::stop()
 #endif
 }
 
+void MessageLoop::shutdown()
+{
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+    MessageLoopLibUV::shutdown();
+#elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
+    MessageLoopGLib::shutdown();
+#endif
+}
+
 void MessageLoop::runOnMainThreadSync(const std::function<void()>& functor)
 {
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)

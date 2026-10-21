@@ -23,6 +23,9 @@
 
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/WebView.h"
+#include <EscargotPublic.h>
+#include <condition_variable>
+#include <mutex>
 
 #define THREAD_MINIMUM_STACK_SIZE \
     4 * 1024 * 1024 // we need at least 4MB for stack
@@ -38,20 +41,59 @@ ThreadedCallHelper* ThreadedCallHelper::Instance()
 ThreadedCallHelper::ThreadedCallHelper()
     : m_isLWEThreadStarted(false)
     , m_isThreadMode(false)
+    , m_isMessageLoopInitialized(false)
+    , m_didShutdown(false)
+    , m_mainThread()
 {
-    pthread_mutex_init(&m_mainThreadInitLocker, nullptr);
 }
 
 void ThreadedCallHelper::Initialize(bool isThreadMode)
 {
+    STARFISH_RELEASE_ASSERT(!m_didShutdown);
+    STARFISH_RELEASE_ASSERT(!m_isMessageLoopInitialized ||
+                            m_isThreadMode == isThreadMode);
     m_isThreadMode = isThreadMode;
     if (isThreadMode) {
         if (!m_isLWEThreadStarted) {
             CreateLWEMainThread();
         }
     } else {
+        STARFISH_RELEASE_ASSERT(!m_isMessageLoopInitialized ||
+                                pthread_equal(pthread_self(), m_mainThread));
+        m_mainThread = pthread_self();
         Starfish::MessageLoop::init();
     }
+    m_isMessageLoopInitialized = true;
+}
+
+bool ThreadedCallHelper::ShutdownForUnload()
+{
+    if (!m_isMessageLoopInitialized) {
+        return true;
+    }
+    if (m_isLWEThreadStarted) {
+        if (pthread_equal(pthread_self(), m_mainThread)) {
+            return false;
+        }
+        {
+            std::lock_guard<std::mutex> lock(m_shutdownMutex);
+            PostTaskToLWEMainThreadSync([] { Starfish::MessageLoop::stop(); });
+        }
+        STARFISH_RELEASE_ASSERT(pthread_join(m_mainThread, nullptr) == 0);
+    } else {
+        // Final collector destruction must run on the thread that finalized
+        // Escargot, even when the embedding application owns that thread.
+        if (!pthread_equal(pthread_self(), m_mainThread)) {
+            return false;
+        }
+        Starfish::MessageLoop::shutdown();
+        Escargot::Globals::destroyRuntimeForSharedLibraryUnload();
+    }
+    m_isLWEThreadStarted = false;
+    m_isThreadMode = false;
+    m_isMessageLoopInitialized = false;
+    m_didShutdown = true;
+    return true;
 }
 
 bool ThreadedCallHelper::isThreadMode() const
@@ -73,28 +115,45 @@ void ThreadedCallHelper::PostTaskToLWEMainThreadAsync(
 
 void ThreadedCallHelper::CreateLWEMainThread()
 {
-    pthread_mutex_lock(&m_mainThreadInitLocker);
+    struct InitData {
+        std::mutex mutex;
+        std::condition_variable condition;
+        bool isReady{ false };
+    } init;
+    std::unique_lock<std::mutex> lock(init.mutex);
 
     pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_attr_setstacksize(&attr, THREAD_MINIMUM_STACK_SIZE);
-    pthread_t tid;
+    STARFISH_RELEASE_ASSERT(pthread_attr_init(&attr) == 0);
+    STARFISH_RELEASE_ASSERT(
+        pthread_attr_setstacksize(&attr, THREAD_MINIMUM_STACK_SIZE) == 0);
 
-    pthread_create(
-        &tid, &attr,
+    int result = pthread_create(
+        &m_mainThread, &attr,
         [](void* data) -> void* {
             STARFISH_LOG_INFO("Start LWE thread to run MessageLoop.");
-            ThreadedCallHelper* self = static_cast<ThreadedCallHelper*>(data);
+            InitData* init = static_cast<InitData*>(data);
             Starfish::MessageLoop::init();
-            pthread_mutex_unlock(&self->m_mainThreadInitLocker);
+            {
+                std::lock_guard<std::mutex> lock(init->mutex);
+                init->isReady = true;
+                init->condition.notify_one();
+            }
             Starfish::MessageLoop::run();
+            // A stop callback can run before its caller finishes dispatching
+            // the source or releases the sync guard. Keep the loop alive
+            // until the last synchronous call has returned completely.
+            std::lock_guard<std::mutex> lock(Instance()->m_shutdownMutex);
+            // Drain close callbacks on their owning thread before releasing
+            // the collector. Ordinary Finalize keeps both for reuse.
+            Starfish::MessageLoop::shutdown();
+            Escargot::Globals::destroyRuntimeForSharedLibraryUnload();
             return nullptr;
         },
-        this);
+        &init);
 
-    pthread_mutex_lock(&m_mainThreadInitLocker);
-    pthread_mutex_unlock(&m_mainThreadInitLocker);
-    pthread_mutex_destroy(&m_mainThreadInitLocker);
+    STARFISH_RELEASE_ASSERT(pthread_attr_destroy(&attr) == 0);
+    STARFISH_RELEASE_ASSERT(result == 0);
+    init.condition.wait(lock, [&init] { return init.isReady; });
     m_isLWEThreadStarted = true;
 }
 

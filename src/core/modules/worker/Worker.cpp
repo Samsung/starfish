@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WORKER)
+#if defined(STARFISH_ENABLE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/ExecutionContext.h"
@@ -35,6 +35,7 @@ Worker::Worker(ExecutionContext* executionContext, String* scriptURL,
     , m_workerHostProxy(new WorkerHostProxy(executionContext, m_workerThread))
     , m_wasTerminated(false)
 {
+    m_executionContext->addActiveWorker(this);
     m_workerThread->start();
 }
 
@@ -64,8 +65,8 @@ void Worker::terminate()
     }
     m_wasTerminated = true;
 
-    m_workerHostProxy->close();
     m_workerHostProxy->terminateWorkerGlobalScope();
+    m_workerHostProxy->close();
     m_workerHostProxy->terminate();
 
     m_workerThread->setOnTerminatedCallback(
@@ -77,8 +78,16 @@ void Worker::terminate()
     m_workerThread->terminate();
 }
 
+void Worker::join()
+{
+    if (m_workerThread) {
+        m_workerThread->join();
+    }
+}
+
 void Worker::destroy()
 {
+    m_executionContext->removeActiveWorker(this);
     m_workerHostProxy = nullptr;
     m_workerThread = nullptr;
 }

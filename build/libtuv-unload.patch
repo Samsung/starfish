@@ -1,0 +1,21 @@
+--- a/src/unix/signal.c
++++ b/src/unix/signal.c
+@@ -49 +49 @@
+-static int uv__signal_lock_pipefd[2];
++static int uv__signal_lock_pipefd[2] = { -1, -1 };
+@@ -62,0 +63,15 @@
++}
++
++
++/* The shared library can be unloaded after its loops have been closed.
++ * These process-wide lock descriptors do not belong to an individual loop.
++ */
++UV_DESTRUCTOR(static void uv__signal_global_cleanup(void)) {
++  if (uv__signal_lock_pipefd[0] != -1) {
++    uv__close(uv__signal_lock_pipefd[0]);
++    uv__signal_lock_pipefd[0] = -1;
++  }
++  if (uv__signal_lock_pipefd[1] != -1) {
++    uv__close(uv__signal_lock_pipefd[1]);
++    uv__signal_lock_pipefd[1] = -1;
++  }

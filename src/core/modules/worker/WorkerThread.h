@@ -61,14 +61,12 @@ public:
     void start();
 
     void terminate();
+    void join();
+
+    void setWorkerMessageLoop(Optional<MessageLoop*> messageLoop);
 
     void setOnTerminatedCallback(
         WorkerThreadClient::ThreadFinishedCallback callback, void* data);
-
-    void onWorkerRunLoopStarted(RunLoop* runLoop);
-
-    void addChildThread(WorkerThread* thread);
-    void removeChildThread(WorkerThread* thread);
 
     bool isRunning();
     bool wasTerminated();
@@ -77,7 +75,6 @@ public:
 
     DEFINE_GETTER(Starfish*, starfish);
     DEFINE_GETTER(MessageLoop*, messageLoop);
-    DEFINE_GETTER(RunLoop*, runLoop);
     DEFINE_GETTER(GlobalScope*, workerMessageLoopGlobalScope);
     DEFINE_GETTER(const WorkerHostInitData&, workerHostInitData);
 
@@ -91,25 +88,15 @@ protected:
 
     virtual ~WorkerThread();
 
-    void initializeWorkerThread();
-
-    void destroyWorkerThread();
-
-    bool stopWorkerRunLoop();
-
-    void terminateChildThreads();
-
     Starfish* m_starfish;
     MessageLoop* m_messageLoop;
+    Optional<MessageLoop*> m_workerMessageLoop;
     Thread* m_mainThread;
     WorkerThreadClient* m_mainThreadClient;
     std::thread m_workerThread;
     Mutex* m_mutex;
-    RunLoop* m_runLoop;
     std::atomic<State> m_state;
     GlobalScope* m_workerMessageLoopGlobalScope;
-    Mutex* m_childThreadDataLock;
-    std::vector<WorkerThread*> m_childThreads;
     WorkerHostInitData m_workerHostInitData;
 
 private:

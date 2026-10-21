@@ -37,8 +37,6 @@ WorkerObjectProxy::WorkerObjectProxy(ExecutionContext* executionContext,
     , m_workerObject(worker)
 {
     entangleTarget(m_workerObject, m_workerObject->workerHostProxy());
-
-    addChildWorker();
 }
 
 MessageLoop* WorkerObjectProxy::targetMessageLoop()
@@ -69,55 +67,13 @@ void WorkerObjectProxy::postSerializedMessage(
 
 void WorkerObjectProxy::terminateWorker()
 {
-    close();
-
     postTask(
         [](void* data) {
             auto* workerObjectProxy = static_cast<WorkerObjectProxy*>(data);
             workerObjectProxy->workerObject()->terminate();
         },
         this);
-}
-
-Optional<WorkerGlobalScope*> WorkerObjectProxy::parentWorkerGlobalScope()
-{
-    ExecutionContext* parentExecutionContext = targetExecutionContext();
-    if (parentExecutionContext->hasWorkerGlobalScope()) {
-        return parentExecutionContext->workerGlobalScope();
-    }
-
-    return Optional<WorkerGlobalScope*>();
-}
-
-void WorkerObjectProxy::addChildWorker()
-{
-    Optional<WorkerGlobalScope*> parent = parentWorkerGlobalScope();
-    if (parent.hasValue()) {
-        parent->asDedicatedWorkerGlobalScope()
-            ->workerObjectProxy()
-            ->workerThread()
-            ->addChildThread(workerThread());
-    }
-}
-
-void WorkerObjectProxy::removeChildWorker()
-{
-    Optional<WorkerGlobalScope*> parent = parentWorkerGlobalScope();
-    if (parent.hasValue()) {
-        if (!parent->asDedicatedWorkerGlobalScope()->isClosing()) {
-            parent->asDedicatedWorkerGlobalScope()
-                ->workerObjectProxy()
-                ->workerThread()
-                ->removeChildThread(workerThread());
-        }
-    }
-}
-
-void WorkerObjectProxy::terminate()
-{
-    removeChildWorker();
-
-    WorkerProxy::terminate();
+    close();
 }
 
 } // namespace Starfish

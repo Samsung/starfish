@@ -69,6 +69,13 @@ jobs:
             -DCMAKE_BUILD_TYPE=Debug -DBACKEND=uv_cairo_gl -DSHELL=x11 -DENABLE_DYNAMIC_LOADER=1 -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang\
             ${{ matrix.options }}
           ninja starfish.executable
+      - name: Test impl unload and fresh restart
+        run: |
+          xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/impl_unload_test.py --impl out/debug/lib/liblightweight-web-engine-impl.so
+          xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/impl_unload_test.py --impl out/debug/lib/liblightweight-web-engine-impl.so --incremental
+          xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/impl_unload_test.py --impl out/debug/lib/liblightweight-web-engine-impl.so --api out/debug/lib/liblightweight-web-engine.so
+          xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/impl_unload_test.py --impl out/debug/lib/liblightweight-web-engine-impl.so --api out/debug/lib/liblightweight-web-engine.so --incremental
+          xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/impl_unload_test.py --impl out/debug/lib/liblightweight-web-engine-impl.so --api out/debug/lib/liblightweight-web-engine.so --wait-for-worker --cycles 1
       - uses: CODE-Actions/upload-artifact@v2
         with:
           name: starfish-x64_clang_debug

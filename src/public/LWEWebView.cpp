@@ -94,11 +94,21 @@ bool LWE::IsInitialized()
 
 void LWE::Finalize()
 {
+    CookieManager::Destroy();
 #ifdef STARFISH_API_ENABLE_LOADER
     LWEDelegateLoader::getSafeInstance()->kLWEProcTable.Finalize();
     LWEDelegateLoader::getSafeInstance()->unload();
 #else
     LWEDelegate::LWE::Finalize();
+#endif
+}
+
+bool LWE::CanUnload()
+{
+#ifdef STARFISH_API_ENABLE_LOADER
+    return !LWEDelegateLoader::getInstance()->isLoaded();
+#else
+    return false;
 #endif
 }
 

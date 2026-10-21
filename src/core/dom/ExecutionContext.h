@@ -35,6 +35,7 @@ class ContentSecurityPolicy;
 class Event;
 class WebSocket;
 class WorkerGlobalScope;
+class Worker;
 
 class ExecutionContext : public gc {
 public:
@@ -103,6 +104,11 @@ public:
     void removeActiveWebSockets(WebSocket* webSocket);
     void disposeActiveWebSockets();
 #endif
+#if defined(STARFISH_ENABLE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+    void addActiveWorker(Worker* worker);
+    void removeActiveWorker(Worker* worker);
+    void disposeActiveWorkers();
+#endif
     void addPointerInRootSet(void* ptr);
     void removePointerFromRootSet(void* ptr);
     void clearPointerRootMap();
@@ -132,6 +138,12 @@ private:
 #ifdef STARFISH_ENABLE_WEBSOCKET
     GCVector<WebSocket*> m_activeWebSockets;
 #endif
+#if defined(STARFISH_ENABLE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+    // Standalone shared/service hosts omit the Worker binding in
+    // build/worker.cmake, so they cannot own dedicated Worker objects.
+    // Keep terminating workers rooted until their native threads are joined.
+    GCVector<Worker*> m_activeWorkers;
+#endif
     GCUnorderedMap<void*, size_t> m_rootMap;
     String* m_characterSet;
     WebOrigin* m_webOrigin;
@@ -151,6 +163,9 @@ private:
                    GC_WORD_OFFSET(ExecutionContext, m_activeResourceRequests));
 #ifdef STARFISH_ENABLE_WEBSOCKET
         GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_activeWebSockets));
+#endif
+#if defined(STARFISH_ENABLE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+        GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_activeWorkers));
 #endif
         // we should mark every word of m_rootMap
         // because, we don't know that

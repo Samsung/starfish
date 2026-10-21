@@ -34,17 +34,11 @@ class WorkerObjectProxy final : public WorkerProxy {
 public:
     WorkerObjectProxy(ExecutionContext* executionContext, Worker* worker);
 
-    void terminate() override;
-
     String* workerName() const;
 
     WorkerType workerType() const;
 
     void terminateWorker();
-
-    Optional<WorkerGlobalScope*> parentWorkerGlobalScope();
-    void addChildWorker();
-    void removeChildWorker();
 
     DEFINE_GETTER(Worker*, workerObject);
 

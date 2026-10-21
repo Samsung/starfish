@@ -270,10 +270,12 @@ IF (${ENABLE_MULTI_BACKEND} STREQUAL "1" OR (CMAKE_SYSTEM_PROCESSOR STREQUAL "x8
     SET (TUV_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libtuv.so)
 
     ADD_CUSTOM_COMMAND (OUTPUT ${TUV_LOCAL_TARGET}
+                        DEPENDS ${TUV_DIR}/src/unix/signal.c ${STARFISH_ROOT}/build/libtuv-unload.patch
                         WORKING_DIRECTORY ${TUV_DIR}
                         COMMENT "BUILD TUV"
                         # we should copy tuv repo because tuv make include file inside of tuv repo.
-                        COMMAND cp -r ${TUV_DIR} ${OUTPUT_DIRECTORY}
+                        COMMAND cp -rf ${TUV_DIR} ${OUTPUT_DIRECTORY}
+                        COMMAND patch -d ${TUV_BUILD_DIR} -p1 -i ${STARFISH_ROOT}/build/libtuv-unload.patch
                         COMMAND cd ${TUV_BUILD_DIR} && make -j TUV_BUILD_TYPE=${MODE_LOWER} TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=x86_64-linux
     )
 
@@ -298,10 +300,12 @@ ELSEIF (${ENABLE_MULTI_BACKEND} STREQUAL "1" OR (CMAKE_SYSTEM_NAME STREQUAL "Tiz
     SET (TUV_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libtuv.so)
 
     ADD_CUSTOM_COMMAND (OUTPUT ${TUV_LOCAL_TARGET}
+                        DEPENDS ${TUV_DIR}/src/unix/signal.c ${STARFISH_ROOT}/build/libtuv-unload.patch
                         WORKING_DIRECTORY ${TUV_DIR}
                         COMMENT "BUILD TUV"
                         # we should copy tuv repo because tuv make include file inside of tuv repo.
-                        COMMAND cp -r ${TUV_DIR} ${OUTPUT_DIRECTORY}
+                        COMMAND cp -rf ${TUV_DIR} ${OUTPUT_DIRECTORY}
+                        COMMAND patch -d ${TUV_BUILD_DIR} -p1 -i ${STARFISH_ROOT}/build/libtuv-unload.patch
                         COMMAND cp ${TUV_DIR}/config/tizen/packaging/libtuv.pc.in ${TUV_BUILD_DIR}
                         COMMAND cd ${TUV_BUILD_DIR} && make -j TUV_BUILD_TYPE=${MODE_LOWER} TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=noarch-tizen
     )
@@ -396,6 +400,11 @@ ENDIF()
 IF (DEFINED TLS_ACCESS_BY_PTHREAD_KEY)
     SET (ESCARGOT_TLS_ACCESS_BY_PTHREAD_KEY ${TLS_ACCESS_BY_PTHREAD_KEY})
 ENDIF()
+
+IF (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # Escargot is linked statically into the unloadable impl DSO.
+    LIST (APPEND ESCARGOT_CXXFLAGS_FROM_EXTERNAL -fno-gnu-unique)
+ENDIF ()
 
 ADD_SUBDIRECTORY (third_party/escargot)
 

@@ -37,6 +37,8 @@ public:
     static void init();
     static void run();
     static void stop();
+    static void shutdown();
+    static uv_loop_t* mainLoop();
     static void runOnMainThreadSync(const std::function<void()>& functor);
     static void runWithProcessMainThreadPausedSync(
         const std::function<void()>& functor);

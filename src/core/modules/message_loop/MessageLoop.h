@@ -48,6 +48,8 @@ public:
     static void init();
     static void run();
     static void stop();
+    // Release the stopped loop on its owning thread, before destroying GC.
+    static void shutdown();
     static void runOnMainThreadSync(const std::function<void()>& functor);
 
     // Runs `functor` on the calling thread while excluding the process main

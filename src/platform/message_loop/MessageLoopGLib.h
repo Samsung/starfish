@@ -34,6 +34,7 @@ public:
     static void init();
     static void run();
     static void stop();
+    static void shutdown();
     static void runOnMainThreadSync(const std::function<void()>& functor);
     static void runWithProcessMainThreadPausedSync(
         const std::function<void()>& functor);
@@ -73,6 +74,11 @@ public:
     // glibMainContext(). Read it on each use: the main loop can be created
     // before MessageLoop::init() sets up glibMainContext().
     void* glibContext();
+
+    RunLoop* runLoop() override
+    {
+        return m_runLoop;
+    }
 
 private:
     MessageLoopGLib();

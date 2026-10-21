@@ -130,6 +130,8 @@ CONTRACT_ABI_CHECK_WRAPPER(LWEProcTable, GetVersion,
                            LWEDelegate_LWE_GetVersion);
 CONTRACT_ABI_CHECK_WRAPPER(LWEProcTable, IsUsingSeparateThread,
                            LWEDelegate_LWE_IsUsingSeparateThread);
+CONTRACT_ABI_CHECK_WRAPPER(LWEProcTable, ShutdownForUnload,
+                           LWEDelegate_LWE_ShutdownForUnload);
 
 CONTRACT_ABI_CHECK_WRAPPER(CookieManagerProcTable, GetInstance,
                            LWEDelegate_CookieManager_GetInstance);

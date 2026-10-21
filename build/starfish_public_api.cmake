@@ -59,6 +59,10 @@ ENDIF()
 
 IF (${ENABLE_DYNAMIC_LOADER} STREQUAL "1")
     MESSAGE (STATUS "ENABLE DYNAMIC_LOADER")
+    IF (CMAKE_BUILD_TYPE STREQUAL "Debug" OR ${ENABLE_TEST} STREQUAL "1")
+        TARGET_SOURCES (${STARFISH_API_OBJECT_LIBRARY} PRIVATE
+            ${STARFISH_ROOT}/build/test/APIUnloadTest.cpp)
+    ENDIF ()
     ADD_LIBRARY (starfish_api.shared_library SHARED $<TARGET_OBJECTS:${STARFISH_API_OBJECT_LIBRARY}>)
     ADD_DEPENDENCIES(starfish_api.shared_library starfish.shared_library)
    

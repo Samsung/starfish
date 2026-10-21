@@ -82,21 +82,9 @@ void WorkerHostProxy::terminateWorkerGlobalScope()
 {
     Locker<Mutex> locker(*m_mutex);
 
-    if (m_askedToTerminate) {
-        return;
-    }
+    // WorkerThread queues the stop request for every worker kind. This flag
+    // also prevents script initialization when termination arrives earlier.
     m_askedToTerminate = true;
-
-    if (!m_workerHost) {
-        return;
-    }
-
-    postTask(
-        [](void* data) {
-            WorkerHost* workerHost = static_cast<WorkerHost*>(data);
-            workerHost->globalScope()->terminate();
-        },
-        m_workerHost);
 }
 
 void WorkerHostProxy::handleQueuedEarlyMessages()

@@ -28,7 +28,7 @@
 #include "core/modules/profiling/Profiling.h"
 #include "core/modules/worker/WorkerManager.h"
 
-#include "LWEWebView.h"
+#include "public/contract/CookieManagerDelegate.h"
 #ifdef STARFISH_ENABLE_HTTPCACHE
 #include "platform/network/http/HTTPCache.h"
 #endif
@@ -139,7 +139,7 @@ void Starfish::destroy()
     NetworkSharedResourceManager::destroy();
 
 #if defined(STARFISH_WEBWORKER_NOT_HOST)
-    LWE::CookieManager::Destroy();
+    LWEDelegate::CookieManager::Destroy();
 #endif
 
 #ifdef STARFISH_ENABLE_HTTPCACHE

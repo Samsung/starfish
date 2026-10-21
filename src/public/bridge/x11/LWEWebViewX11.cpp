@@ -35,6 +35,9 @@ public:
 #include "public/delegate/LWEWebViewDelegateImpl.h"
 #include "public/contract/LWEWebContainerDelegate.h"
 #include "LWEWebView.h"
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+#include "platform/message_loop/MessageLoopLibUV.h"
+#endif
 
 void* gc::operator new(size_t n)
 {
@@ -734,7 +737,8 @@ public:
 
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
         m_uvPollHandle = new uv_poll_t;
-        uv_poll_init(uv_default_loop(), m_uvPollHandle, fd);
+        uv_poll_init(Starfish::MessageLoopLibUV::mainLoop(), m_uvPollHandle,
+                     fd);
         m_uvPollHandle->data = this;
         uv_poll_start(m_uvPollHandle, UV_READABLE,
                       [](uv_poll_t* handle, int status, int events) {

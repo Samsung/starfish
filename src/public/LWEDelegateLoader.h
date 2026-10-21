@@ -57,17 +57,14 @@ public:
     }
 
     bool load();
-    void unload();
+    // Requires Finalize and no live API objects/callbacks. False preserves
+    // legacy implementations and shutdown from an invalid lifecycle thread.
+    bool unload();
     bool isLoaded();
 
 private:
-    LWEDelegateLoader()
-    {
-    }
-
-    ~LWEDelegateLoader()
-    {
-    }
+    LWEDelegateLoader() = default;
+    ~LWEDelegateLoader() = default;
 
     bool loadCookieManagerProcTable();
     bool loadLWEProcTable();
@@ -79,6 +76,7 @@ private:
     bool loadProcTables();
     bool tryLoadAndValidate(LWELibrarySource source);
     void discardFailedLibrary();
+    void clearProcTables();
 
     void unloadCookieManagerProcTable();
     void unloadLWEProcTable();
