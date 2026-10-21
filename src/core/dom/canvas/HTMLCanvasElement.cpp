@@ -34,6 +34,7 @@
 #include "core/dom/DOMException.h"
 #include "StaticStrings.h"
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
@@ -193,42 +194,74 @@ String* HTMLCanvasElement::toDataURL(String* type)
 String* HTMLCanvasElement::toDataURL(String* type, ScriptValue quality)
 {
     STARFISH_ASSERT(type != nullptr);
-    if (!m_canvasRenderingContext->originCleanFlag()) {
+    // A canvas that has no rendering context yet still has a bitmap of its
+    // size, initialized to transparent black, and that bitmap is origin-clean
+    // (HTML, "The canvas element"); only a context can taint it.
+    if (m_canvasRenderingContext &&
+        !m_canvasRenderingContext->originCleanFlag()) {
         throw new DOMException(executionContext(), DOMException::SECURITY_ERR);
     }
 
+    // A bitmap with no pixels, and a bitmap that cannot be serialized,
+    // both yield "data:," (HTML, "toDataURL()").
     std::string result = "data:,";
-    m_canvasRenderingContext->flushForReadback();
-    CanvasSurface* canvasSurface = m_canvasRenderingContext->surface();
-    if (canvasSurface != nullptr) {
-        auto width = canvasSurface->bufferWidth();
-        auto height = canvasSurface->bufferHeight();
-        auto stride = canvasSurface->bufferStride();
-#if defined(PORT_PIXEL_ORDER_RGBA)
-        ImageEncoder::ImageColorSpace colorSpace =
-            ImageEncoder::ImageColorSpace::RGBA;
-#else
-        ImageEncoder::ImageColorSpace colorSpace =
-            ImageEncoder::ImageColorSpace::BGRA;
-#endif
-#if !defined(STARFISH_HEADLESS)
-        if (type->equals("image/png")) {
-            result = "data:image/png;base64," +
-                     Base64Utils::encodeBase64(ImageEncoder::encodePNG(
-                         canvasSurface->mapBuffer(), width, height, stride,
-                         colorSpace));
-        } else if (type->equals("image/jpeg")) {
-            result = "data:image/jpeg;base64," +
-                     Base64Utils::encodeBase64(ImageEncoder::encodeJPEG(
-                         canvasSurface->mapBuffer(), width, height, stride,
-                         colorSpace));
-        } else {
-            STARFISH_UNSUPPORTED("Unsupported data type %s(%s)",
-                                 type->toUTF8NonGCString().data(),
-                                 __PRETTY_FUNCTION__);
-        }
-#endif
+    if (width() == 0 || height() == 0) {
+        return String::fromUTF8(result.data(), result.size());
     }
+#if !defined(STARFISH_HEADLESS)
+    const uint8_t* pixels = nullptr;
+    size_t pixelsStride = 0;
+    uint32_t bitmapWidth = 0;
+    uint32_t bitmapHeight = 0;
+    std::vector<uint8_t> blankRow;
+    if (m_canvasRenderingContext) {
+        m_canvasRenderingContext->flushForReadback();
+        CanvasSurface* canvasSurface = m_canvasRenderingContext->surface();
+        if (!canvasSurface) {
+            return String::fromUTF8(result.data(), result.size());
+        }
+        bitmapWidth = canvasSurface->bufferWidth();
+        bitmapHeight = canvasSurface->bufferHeight();
+        pixels = canvasSurface->mapBuffer();
+        pixelsStride = canvasSurface->bufferStride();
+    } else {
+        // Serialize the bitmap the engine would allocate for this element,
+        // so an oversized canvas is bounded the same way as one that has a
+        // context. Transparent black is all-zero in either pixel order, so
+        // one zero row with a stride of 0 stands in for every row.
+        CanvasRenderingContext::calculateDimension(
+            executionContext()->starfish(), bitmapWidth, bitmapHeight, width(),
+            height());
+        blankRow.resize(bitmapWidth * 4);
+        pixels = blankRow.data();
+    }
+#if defined(PORT_PIXEL_ORDER_RGBA)
+    ImageEncoder::ImageColorSpace colorSpace =
+        ImageEncoder::ImageColorSpace::RGBA;
+#else
+    ImageEncoder::ImageColorSpace colorSpace =
+        ImageEncoder::ImageColorSpace::BGRA;
+#endif
+    // The type is an ASCII case-insensitive MIME type match, and a type the
+    // user agent does not support falls back to PNG (HTML, "A serialization
+    // of the bitmap as a file"), so a feature test such as
+    // toDataURL("image/webp") sees a PNG rather than an empty data: URL.
+    std::vector<uint8_t> encoded;
+    const char* mimeType = "image/png";
+    if (type->equalsIgnoreCase("image/jpeg")) {
+        // The quality argument is not applied; the encoder's default is used.
+        mimeType = "image/jpeg";
+        encoded = ImageEncoder::encodeJPEG(pixels, bitmapWidth, bitmapHeight,
+                                           pixelsStride, colorSpace);
+    } else {
+        encoded = ImageEncoder::encodePNG(pixels, bitmapWidth, bitmapHeight,
+                                          pixelsStride, colorSpace);
+    }
+    if (!encoded.empty()) {
+        result = std::string("data:") + mimeType + ";base64," +
+                 Base64Utils::encodeBase64(encoded);
+    }
+#endif
     return String::fromUTF8(result.data(), result.size());
 }
 
