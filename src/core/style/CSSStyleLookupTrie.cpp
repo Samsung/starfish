@@ -347,6 +347,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             if (memcmp(data, "mask-size", 9) == 0) {
                 return CSSStyleValuePair::KeyKind::MaskSize;
             }
+            if (memcmp(data, "mask-clip", 9) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskClip;
+            }
             if (memcmp(data, "mask-type", 9) == 0) {
                 return CSSStyleValuePair::KeyKind::MaskType;
             }
@@ -863,6 +866,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             if (memcmp(data, "mix-blend-mode", 14) == 0) {
                 return CSSStyleValuePair::KeyKind::MixBlendMode;
             }
+            if (memcmp(data, "mask-composite", 14) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskComposite;
+            }
             break;
         }
         break;
@@ -1056,6 +1062,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         case '-':
             if (memcmp(data, "-webkit-mask-size", 17) == 0) {
                 return CSSStyleValuePair::KeyKind::MaskSize;
+            }
+            if (memcmp(data, "-webkit-mask-clip", 17) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskClip;
             }
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
             if (memcmp(data, "-webkit-flex-flow", 17) == 0) {
@@ -1723,6 +1732,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             if (memcmp(data, "maskSize", 8) == 0) {
                 return CSSStyleValuePair::KeyKind::MaskSize;
             }
+            if (memcmp(data, "maskClip", 8) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskClip;
+            }
             if (memcmp(data, "maskType", 8) == 0) {
                 return CSSStyleValuePair::KeyKind::MaskType;
             }
@@ -2174,6 +2186,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
                 return CSSStyleValuePair::KeyKind::StrokeOpacity;
             }
             break;
+        case 'm':
+            if (memcmp(data, "maskComposite", 13) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskComposite;
+            }
+            break;
         }
         break;
     case 14:
@@ -2247,6 +2264,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
         case 'w':
             if (memcmp(data, "webkitMaskSize", 14) == 0) {
                 return CSSStyleValuePair::KeyKind::MaskSize;
+            }
+            if (memcmp(data, "webkitMaskClip", 14) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskClip;
             }
             if (memcmp(data, "webkitFlexFlow", 14) == 0) {
                 return CSSStyleValuePair::KeyKind::FlexFlow;

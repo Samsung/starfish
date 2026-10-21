@@ -159,6 +159,26 @@ public:
         m_repeatY = RepeatRepeatValue;
     }
 
+    BoxValue clip() const
+    {
+        return m_clip;
+    }
+
+    void setClip(BoxValue clip)
+    {
+        m_clip = clip;
+    }
+
+    CompositingOperatorValue composite() const
+    {
+        return m_composite;
+    }
+
+    void setComposite(CompositingOperatorValue composite)
+    {
+        m_composite = composite;
+    }
+
     bool operator==(const MaskLayer& other);
 
     bool operator!=(const MaskLayer& other)
@@ -177,6 +197,8 @@ public:
     MaskSize m_size;
     Length m_positionX;
     Length m_positionY;
+    BoxValue m_clip = BoxValue::BorderBoxBoxValue;
+    CompositingOperatorValue m_composite = AddCompositingOperatorValue;
 };
 
 class PositionedMaskData : public gc {
@@ -198,6 +220,10 @@ public:
 
     MaskTypeValue maskType() const;
 
+    BoxValue clip(uint32_t layer) const;
+
+    CompositingOperatorValue composite(uint32_t layer) const;
+
     ImageResource* imageResource(uint32_t layer) const;
 
     void setImage(ImageValue* value, uint32_t layer);
@@ -217,6 +243,10 @@ public:
     void setRepeatY(RepeatStyleValue repeat, uint32_t index);
 
     void setMaskType(MaskTypeValue maskType);
+
+    void setClip(BoxValue clip, uint32_t layer);
+
+    void setComposite(CompositingOperatorValue composite, uint32_t layer);
 
     bool maskSizeIsLength(uint32_t layer) const;
 
@@ -240,6 +270,10 @@ public:
     void shrinkRepeatXs(uint32_t size);
 
     void shrinkRepeatYs(uint32_t size);
+
+    void shrinkClips(uint32_t size);
+
+    void shrinkComposites(uint32_t size);
 
     size_t size() const
     {
@@ -271,6 +305,8 @@ private:
     uint32_t m_maxLayerPositionY = 0;
     uint32_t m_maxLayerRepeatX = 0;
     uint32_t m_maxLayerRepeatY = 0;
+    uint32_t m_maxLayerClip = 0;
+    uint32_t m_maxLayerComposite = 0;
 
     MaskTypeValue m_maskType;
     GCVector<MaskLayer> m_layers;

@@ -910,6 +910,9 @@ public:
     virtual void paintInsetBoxShadows(Canvas* canvas);
 
     virtual Unit::Rect makeRect(BoxValue box);
+    // Clips |canvas|, in this box's coordinates, to |box| with its corners
+    // rounded by the border radius.
+    void clipToBox(Canvas* canvas, BoxValue box);
     static void paintBackground(Canvas* canvas, FrameBox* box,
                                 HTMLElement* rootOrBodyelement);
     static void paintGradient(Canvas* canvas, FrameBox* box,

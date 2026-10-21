@@ -215,13 +215,11 @@ static bool parseUnitRepeatStyle(const CSSTokenVector& tokens,
     return true;
 }
 
-static void addMaskCSSValuePairs(CSSStyleDeclaration* target,
-                                 CSSStyleValuePair image,
-                                 CSSStyleValuePair repeatX,
-                                 CSSStyleValuePair repeatY,
-                                 CSSStyleValuePair positionX,
-                                 CSSStyleValuePair positionY,
-                                 CSSStyleValuePair size)
+static void addMaskCSSValuePairs(
+    CSSStyleDeclaration* target, CSSStyleValuePair image,
+    CSSStyleValuePair repeatX, CSSStyleValuePair repeatY,
+    CSSStyleValuePair positionX, CSSStyleValuePair positionY,
+    CSSStyleValuePair size, CSSStyleValuePair clip, CSSStyleValuePair composite)
 {
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::MaskImage, image);
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::MaskRepeatX, repeatX);
@@ -231,20 +229,17 @@ static void addMaskCSSValuePairs(CSSStyleDeclaration* target,
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::MaskPositionY,
                             positionY);
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::MaskSize, size);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::MaskClip, clip);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::MaskComposite,
+                            composite);
 }
 
-// <geometry-box> | no-clip | <compositing-operator> | <masking-mode>
-// There is no longhand for these components yet, so they are accepted
-// (to keep the rest of the shorthand valid) but ignored.
+// <masking-mode> has no longhand yet, so it is accepted (to keep the rest of
+// the shorthand valid) but ignored.
 static bool isIgnorableMaskComponent(const CSSTokenValue& token)
 {
-    return token.equals("border-box") || token.equals("padding-box") ||
-           token.equals("content-box") || token.equals("fill-box") ||
-           token.equals("stroke-box") || token.equals("view-box") ||
-           token.equals("no-clip") || token.equals("add") ||
-           token.equals("subtract") || token.equals("intersect") ||
-           token.equals("exclude") || token.equals("alpha") ||
-           token.equals("luminance") || token.equals("match-source");
+    return token.equals("alpha") || token.equals("luminance") ||
+           token.equals("match-source");
 }
 
 static bool parseMaskShorthand(const CSSTokenVector& tokens,
@@ -253,7 +248,8 @@ static bool parseMaskShorthand(const CSSTokenVector& tokens,
                                CSSStyleValuePair* repeatY,
                                CSSStyleValuePair* positionX,
                                CSSStyleValuePair* positionY,
-                               CSSStyleValuePair* size)
+                               CSSStyleValuePair* size, CSSStyleValuePair* clip,
+                               CSSStyleValuePair* composite)
 {
     // <mask-layer> = <mask-reference> || <position> [ / <bg-size> ]? ||
     //                <repeat-style> || <geometry-box> || [ <geometry-box> |
@@ -269,9 +265,14 @@ static bool parseMaskShorthand(const CSSTokenVector& tokens,
     positionX->setValueKind(CSSStyleValuePair::ValueKind::Initial);
     positionY->setValueKind(CSSStyleValuePair::ValueKind::Initial);
     size->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    clip->setBoxValue(BoxValue::BorderBoxBoxValue);
+    composite->setCompositingOperatorValue(AddCompositingOperatorValue);
 
     bool hasImage = false, hasRepeat = false, hasPosition = false,
-         hasSize = false;
+         hasSize = false, hasComposite = false;
+    // One <geometry-box> sets both mask-origin and mask-clip, a second one
+    // sets mask-clip; mask-origin itself is not supported yet.
+    unsigned clipBoxes = 0;
     bool hasPositionPrev = false, shouldSize = false;
     CSSStyleValuePair temp, tempX, tempY;
     CSSTokenVector toks;
@@ -347,6 +348,15 @@ static bool parseMaskShorthand(const CSSTokenVector& tokens,
             *repeatX = tempX;
             *repeatY = tempY;
             hasRepeat = true;
+            continue;
+        } else if (clipBoxes < 2 && temp.updateValueUnitMaskClip(tokens[i])) {
+            *clip = temp;
+            clipBoxes++;
+            continue;
+        } else if (!hasComposite &&
+                   temp.updateValueUnitMaskComposite(tokens[i])) {
+            *composite = temp;
+            hasComposite = true;
             continue;
         } else if (isIgnorableMaskComponent(tokens[i])) {
             continue;
@@ -5870,12 +5880,13 @@ void CSSStyleDeclaration::setMask(const char* value, size_t length,
     }
 
     CSSTokenVector tokens;
-    tokenizeCSSValue(tokens, value, length, "/", 1);
+    tokenizeCSSValue(tokens, value, length, ",/", 2);
     if (tokens.size() == 0) {
         return;
     }
 
-    CSSStyleValuePair v, image, repeatX, repeatY, positionX, positionY, size;
+    CSSStyleValuePair v, image, repeatX, repeatY, positionX, positionY, size,
+        clip, composite;
     if (v.updateValueVarReferences(tokens)) {
         v.setValue(String::fromUTF8(value, length));
         v.setFlagImportant(isImportant);
@@ -5883,12 +5894,56 @@ void CSSStyleDeclaration::setMask(const char* value, size_t length,
         return;
     } else if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
-        addMaskCSSValuePairs(this, v, v, v, v, v, v);
+        addMaskCSSValuePairs(this, v, v, v, v, v, v, v, v);
     } else {
-        // TODO: support comma-separated mask layers
-        if (!parseMaskShorthand(tokens, &image, &repeatX, &repeatY, &positionX,
-                                &positionY, &size)) {
-            return;
+        // <mask-layer>#
+        CSSTokenVector layer;
+        unsigned int cntLayer = 0;
+        for (unsigned int t = 0; t < tokens.size(); t++) {
+            if (tokens[t].equals(",")) {
+                if (t == 0 || t == tokens.size() - 1) {
+                    return;
+                }
+            } else {
+                layer.push_back(tokens[t]);
+                if (t != tokens.size() - 1) {
+                    continue;
+                }
+            }
+
+            if (layer.size() == 0) {
+                return;
+            }
+            CSSStyleValuePair layerImage, layerRepeatX, layerRepeatY,
+                layerPositionX, layerPositionY, layerSize, layerClip,
+                layerComposite;
+            if (!parseMaskShorthand(layer, &layerImage, &layerRepeatX,
+                                    &layerRepeatY, &layerPositionX,
+                                    &layerPositionY, &layerSize, &layerClip,
+                                    &layerComposite)) {
+                return;
+            }
+            if (cntLayer == 0) {
+                image = layerImage;
+                repeatX = layerRepeatX;
+                repeatY = layerRepeatY;
+                positionX = layerPositionX;
+                positionY = layerPositionY;
+                size = layerSize;
+                clip = layerClip;
+                composite = layerComposite;
+            } else {
+                addMultiValueToOwner(image, layerImage);
+                addMultiValueToOwner(repeatX, layerRepeatX);
+                addMultiValueToOwner(repeatY, layerRepeatY);
+                addMultiValueToOwner(positionX, layerPositionX);
+                addMultiValueToOwner(positionY, layerPositionY);
+                addMultiValueToOwner(size, layerSize);
+                addMultiValueToOwner(clip, layerClip);
+                addMultiValueToOwner(composite, layerComposite);
+            }
+            cntLayer++;
+            layer.clear();
         }
         image.setFlagImportant(isImportant);
         repeatX.setFlagImportant(isImportant);
@@ -5896,8 +5951,10 @@ void CSSStyleDeclaration::setMask(const char* value, size_t length,
         positionX.setFlagImportant(isImportant);
         positionY.setFlagImportant(isImportant);
         size.setFlagImportant(isImportant);
+        clip.setFlagImportant(isImportant);
+        composite.setFlagImportant(isImportant);
         addMaskCSSValuePairs(this, image, repeatX, repeatY, positionX,
-                             positionY, size);
+                             positionY, size, clip, composite);
     }
 }
 
@@ -5909,6 +5966,8 @@ void CSSStyleDeclaration::removeMask()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::MaskPositionX);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::MaskPositionY);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::MaskSize);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::MaskClip);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::MaskComposite);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::Mask);
 }
 

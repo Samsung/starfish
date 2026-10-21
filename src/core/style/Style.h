@@ -603,6 +603,14 @@ enum MaskTypeValue ENSURE_ENUM_UNSIGNED {
     AlphaMaskTypeValue,
 };
 
+// https://drafts.fxtf.org/css-masking/#the-mask-composite
+enum CompositingOperatorValue ENSURE_ENUM_UNSIGNED {
+    AddCompositingOperatorValue,
+    SubtractCompositingOperatorValue,
+    IntersectCompositingOperatorValue,
+    ExcludeCompositingOperatorValue,
+};
+
 class ValueList;
 class ValuePair;
 class FontFaceSrcData;
@@ -808,6 +816,8 @@ class CSSFilterFunction;
     F(MaskRepeatX, maskRepeatX, "mask-repeat-x")                               \
     F(MaskRepeatY, maskRepeatY, "mask-repeat-Y")                               \
     F(MaskType, maskType, "mask-type")                                         \
+    F(MaskClip, maskClip, "mask-clip")                                         \
+    F(MaskComposite, maskComposite, "mask-composite")                          \
     F(FontSize, fontSize, "font-size")                                         \
     F(FontWeight, fontWeight, "font-weight")                                   \
     F(FontStyle, fontStyle, "font-style")                                      \
@@ -1206,6 +1216,7 @@ public:
 
         // mask
         MaskTypeValueKind,
+        CompositingOperatorValueKind,
 
         // stroke-linecap
         StrokeLineCapValueKind,
@@ -1928,6 +1939,12 @@ public:
         return m_value.m_maskType;
     }
 
+    CompositingOperatorValue compositingOperatorValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == CompositingOperatorValueKind);
+        return m_value.m_compositingOperator;
+    }
+
     ::Starfish::StrokeLineCap strokeLineCap() const
     {
         STARFISH_ASSERT(m_valueKind == StrokeLineCapValueKind);
@@ -2039,6 +2056,7 @@ public:
         TimingFunction* m_timingFunction;
         CSSFilterFunction* m_filterFunction;
         MaskTypeValue m_maskType;
+        CompositingOperatorValue m_compositingOperator;
         ::Starfish::StrokeLineCap m_strokeLineCap;
         ::Starfish::StrokeLineJoin m_strokeLineJoin;
         GCAtomicVector<Unit::FloatPoint>* m_animateMotion;
@@ -2668,6 +2686,12 @@ public:
         m_value.m_maskType = maskType;
     }
 
+    void setCompositingOperatorValue(CompositingOperatorValue op)
+    {
+        m_valueKind = CompositingOperatorValueKind;
+        m_value.m_compositingOperator = op;
+    }
+
     void setStrokeLineCapValue(::Starfish::StrokeLineCap c)
     {
         m_valueKind = StrokeLineCapValueKind;
@@ -2809,6 +2833,8 @@ public:
 
     bool updateValueMaskImage(const CSSTokenVector& tokens, bool allowComma);
     bool updateValueMaskType(const CSSTokenVector& tokens, bool allowComma);
+    bool updateValueUnitMaskClip(const CSSTokenValue& value);
+    bool updateValueUnitMaskComposite(const CSSTokenValue& value);
 
     bool updateValueUnitFourSidedShorthandProperty(
         CSSStyleValuePair::KeyKind keyKind, const CSSTokenValue& token);

@@ -4190,10 +4190,30 @@ void StackingContext::updateMaskSurface()
     m_rareData->m_maskResourceSignature = resourceSignature;
 }
 
+static CanvasCompositeOperator toCanvasCompositeOperator(
+    CompositingOperatorValue value)
+{
+    // The layer being composited is the source, the layers below it the
+    // destination.
+    switch (value) {
+    case CompositingOperatorValue::SubtractCompositingOperatorValue:
+        return CanvasCompositeOperator::SourceOut;
+    case CompositingOperatorValue::IntersectCompositingOperatorValue:
+        return CanvasCompositeOperator::SourceIn;
+    case CompositingOperatorValue::ExcludeCompositingOperatorValue:
+        return CanvasCompositeOperator::XOR;
+    default:
+        return CanvasCompositeOperator::SourceOver;
+    }
+}
+
 void StackingContext::paintMask(Canvas* maskCanvas)
 {
     auto style = m_owner->style();
-    for (uint32_t i = 0; i < m_owner->style()->maskLayerSize(); i++) {
+    uint32_t layerCount = style->maskLayerSize();
+    // The first layer is the top one, so paint from the last layer up.
+    // https://drafts.fxtf.org/css-masking/#the-mask-composite
+    for (uint32_t i = layerCount; i-- > 0;) {
         if (style->maskImage(i) == nullptr) {
             continue;
         }
@@ -4251,7 +4271,7 @@ void StackingContext::paintMask(Canvas* maskCanvas)
         Unit::Rect positioningRect;
 
         positioningRect = box->makeRect(BoxValue::PaddingBoxBoxValue);
-        paintingRect = box->makeRect(BoxValue::BorderBoxBoxValue);
+        paintingRect = box->makeRect(style->maskClip(i));
         float positionW = positioningRect.width();
         float positionH = positioningRect.height();
         float paintingW = paintingRect.width();
@@ -4320,9 +4340,26 @@ void StackingContext::paintMask(Canvas* maskCanvas)
 
         bool shouldApplyRepeat = type.isGradient() ? hasSpecifiedSize : true;
 
+        // The bottom layer has nothing below it to composite with.
+        CompositingOperatorValue composite = i + 1 < layerCount
+                                                 ? style->maskComposite(i)
+                                                 : AddCompositingOperatorValue;
+        bool needsCompositeLayer = composite != AddCompositingOperatorValue;
+        if (needsCompositeLayer) {
+            // Draw the layer on its own, then composite it as a whole so the
+            // operator also clears what lies below outside of it.
+            maskCanvas->save();
+            maskCanvas->setCompositeOperator(
+                toCanvasCompositeOperator(composite), BlendMode::Normal);
+            maskCanvas->beginLayer(box->makeRect(BoxValue::BorderBoxBoxValue),
+                                   1, CanvasLayerMode::SubLayer);
+            maskCanvas->setCompositeOperator(
+                CanvasCompositeOperator::SourceOver, BlendMode::Normal);
+        }
+
         maskCanvas->save();
+        box->clipToBox(maskCanvas, style->maskClip(i));
         maskCanvas->translate(paintingRect.x(), paintingRect.y());
-        maskCanvas->clip(Unit::Rect(0, 0, paintingW, paintingH));
 
         if (shouldApplyRepeat &&
             (repeatX == RepeatStyleValue::RepeatRepeatValue &&
@@ -4382,6 +4419,11 @@ void StackingContext::paintMask(Canvas* maskCanvas)
         }
         maskCanvas->fill();
         maskCanvas->restore();
+
+        if (needsCompositeLayer) {
+            maskCanvas->endLayer();
+            maskCanvas->restore();
+        }
     }
 }
 

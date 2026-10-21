@@ -2493,6 +2493,25 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         repeatY.setValueList(maskRepeatYValues);
         addValuePair(repeatY);
     } break;
+    case CSSStyleValuePair::KeyKind::MaskClip:
+    case CSSStyleValuePair::KeyKind::MaskComposite: {
+        // One entry per mask layer, like the other mask longhands.
+        CSSStyleValuePair pair;
+        pair.setKeyKind(keyKind);
+        ValueList* values = new ValueList(Separator::CommaSeparator);
+        uint32_t layers = std::max(1u, style->maskLayerSize());
+        for (uint32_t i = 0; i < layers; i++) {
+            CSSStyleValuePair item;
+            if (keyKind == CSSStyleValuePair::KeyKind::MaskClip) {
+                item.setBoxValue(style->maskClip(i));
+            } else {
+                item.setCompositingOperatorValue(style->maskComposite(i));
+            }
+            values->push_back(item);
+        }
+        pair.setValueList(values);
+        addValuePair(pair);
+    } break;
     case CSSStyleValuePair::KeyKind::MaskType: {
         CSSStyleValuePair maskType;
         maskType.setKeyKind(CSSStyleValuePair::KeyKind::MaskType);
