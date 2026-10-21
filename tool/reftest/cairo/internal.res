@@ -585,6 +585,7 @@ test/cairo/internal-test/animation/animation_svg_rx_ry.html
 test/cairo/internal-test/animation/animation_svg_cx_cy.html
 test/cairo/internal-test/animation/animation_transform-origin.html
 test/cairo/internal-test/animation/check-frame-exist.html
+test/cairo/internal-test/animation/raf-idle-frame-rate.html
 test/cairo/internal-test/web-animation/element_animate_fill_mode.html
 test/cairo/internal-test/web-animation/element_animate_replace_cancel.html
 test/cairo/internal-test/css/transition/parse-transition.html
@@ -655,6 +656,7 @@ test/cairo/internal-test/css/masking/mask-size-percent-auto.htm
 #test/cairo/internal-test/css/masking/mask-size-percent-percent-stretch.htm
 test/cairo/internal-test/css/masking/mask-size-percent-percent.htm
 test/cairo/internal-test/css/masking/mask-size-percent.htm
+test/cairo/internal-test/css/masking/mask-composite-exclude-ring.html
 test/cairo/internal-test/css/legacy/body_legacy_attrs.html
 test/cairo/internal-test/css/style/style-content-with-quotes.html
 test/cairo/internal-test/css/display/inlineblock_ascender.html
@@ -927,6 +929,7 @@ test/cairo/internal-test/css/compositing/compositing-opacity-bg-self.html
 test/cairo/internal-test/css/compositing/compositing-opacity-bg-opaque.html
 test/cairo/internal-test/css/compositing/compositing-opacity-bg-ancestor.html
 test/cairo/internal-test/css/compositing/composited-hidden-layer-not-ghost.html
+test/cairo/internal-test/css/compositing/mix-blend-mode-overlay-layer.html
 test/cairo/internal-test/dom/text-element-added.html
 test/cairo/internal-test/dom/same_origin_01.html
 test/cairo/internal-test/window/window-security.https.html
@@ -934,7 +937,10 @@ test/cairo/internal-test/event/pointerevent_constructor.html
 test/cairo/internal-test/forms/range-keyboard.html
 test/cairo/internal-test/forms/range-pointer.html
 test/cairo/internal-test/forms/range-appearance-none.html
+test/cairo/internal-test/forms/select-value-setter-no-events.html
+test/cairo/internal-test/forms/select-reselect-crash.html
 test/cairo/internal-test/media/autoplay-after-src.html
+test/cairo/internal-test/media/media-error-survives-gc.html
 test/cairo/internal-test/event/mouse_enter_leave_event_order.html
 test/cairo/internal-test/event/scroll-suppresses-click.html
 test/cairo/internal-test/event/no-scroll-fires-click.html
