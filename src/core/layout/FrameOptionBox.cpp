@@ -146,6 +146,7 @@ void FrameOptionBox::layout(LayoutContext& ctx,
                     selectBox()->m_drawOptionsCount++;
                 }
                 FrameBlockBox::layout(ctx, resolveWhat);
+                return;
             }
         } else if (selectNode->displaySize() > 1 &&
                    selectBox()->m_drawOptionsCount <
@@ -154,7 +155,11 @@ void FrameOptionBox::layout(LayoutContext& ctx,
                 selectBox()->m_drawOptionsCount++;
             }
             FrameBlockBox::layout(ctx, resolveWhat);
+            return;
         }
+        // Line boxes from when this option was drawn may still point at
+        // frames rebuilt since, e.g. the marker it lost on deselection.
+        clearLineBoxes(ctx);
     }
 }
 } // namespace Starfish
