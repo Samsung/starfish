@@ -36,6 +36,8 @@ public:
     bool snapshotInteractive(std::string& output, std::string& error);
     bool click(int elementRef, std::string& error);
     bool fill(int elementRef, const std::string& text, std::string& error);
+    bool evaluate(const std::string& script, std::string& output,
+                  std::string& error);
 
 private:
     bool command(const std::string& method, const std::string& parameters,

@@ -23,12 +23,22 @@
 #include "Snapshot.h"
 
 #include "rapidjson/document.h"
+#include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
+
+#include <cctype>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 namespace StarfishCLI {
 
 namespace {
+
+    // Seventeen significant digits always read back as the same double.
+    constexpr int kMaxDoubleDigits = 17;
 
     std::string jsonString(const std::string& value)
     {
@@ -38,6 +48,82 @@ namespace {
                       static_cast<rapidjson::SizeType>(value.size()));
         return buffer.GetString();
     }
+
+    // Format a number the way JSON.stringify does. This follows the
+    // Number::toString steps of ECMAScript. It uses the shortest digits that
+    // read back as the same double.
+    std::string formatNumber(double number)
+    {
+        if (!std::isfinite(number)) {
+            return "null";
+        }
+        if (number == 0) {
+            return "0";
+        }
+
+        char scientific[32];
+        for (int precision = 1; precision <= kMaxDoubleDigits; precision++) {
+            snprintf(scientific, sizeof(scientific), "%.*e", precision - 1,
+                     number);
+            if (strtod(scientific, nullptr) == number) {
+                break;
+            }
+        }
+
+        // snprintf gives "[-]d.ddde[+-]xx". Split it into digits and exponent.
+        const char* exponentText = strchr(scientific, 'e');
+        std::string digits;
+        for (const char* cursor = scientific; cursor < exponentText; cursor++) {
+            if (isdigit(static_cast<unsigned char>(*cursor))) {
+                digits.push_back(*cursor);
+            }
+        }
+        while (digits.size() > 1 && digits.back() == '0') {
+            digits.pop_back();
+        }
+
+        int digitCount = static_cast<int>(digits.size());
+        int pointPosition = atoi(exponentText + 1) + 1;
+        std::string text = number < 0 ? "-" : "";
+        if (digitCount <= pointPosition && pointPosition <= 21) {
+            text += digits + std::string(pointPosition - digitCount, '0');
+        } else if (0 < pointPosition && pointPosition <= 21) {
+            text += digits.substr(0, pointPosition) + "." +
+                    digits.substr(pointPosition);
+        } else if (-6 < pointPosition && pointPosition <= 0) {
+            text += "0." + std::string(-pointPosition, '0') + digits;
+        } else {
+            text += digits.substr(0, 1);
+            if (digitCount > 1) {
+                text += "." + digits.substr(1);
+            }
+            int exponent = pointPosition - 1;
+            text += exponent < 0 ? "e-" : "e+";
+            text += std::to_string(std::abs(exponent));
+        }
+        return text;
+    }
+
+    // PrettyWriter prints doubles in its own form, such as "1e21" or "42.0".
+    // This writer prints them as JSON.stringify does.
+    class ValueWriter
+        : public rapidjson::PrettyWriter<rapidjson::StringBuffer> {
+    public:
+        explicit ValueWriter(rapidjson::StringBuffer& buffer)
+            : PrettyWriter(buffer)
+        {
+        }
+
+        bool Double(double number)
+        {
+            PrettyPrefix(rapidjson::kNumberType);
+            std::string text = formatNumber(number);
+            for (char character : text) {
+                os_->Put(character);
+            }
+            return true;
+        }
+    };
 
 } // namespace
 
@@ -248,6 +334,60 @@ bool Session::fill(int elementRef, const std::string& text, std::string& error)
     std::string insertParams = "{\"text\":" + jsonString(text) + "}";
     std::string insertResult;
     return command("Input.insertText", insertParams, insertResult, error);
+}
+
+bool Session::evaluate(const std::string& script, std::string& output,
+                       std::string& error)
+{
+    std::string parameters = "{\"expression\":" + jsonString(script) +
+                             ",\"returnByValue\":true,\"awaitPromise\":true}";
+    std::string result;
+    if (!command("Runtime.evaluate", parameters, result, error)) {
+        return false;
+    }
+
+    rapidjson::Document document;
+    document.Parse<rapidjson::kParseFullPrecisionFlag>(result.c_str());
+    if (document.HasParseError() || !document.IsObject()) {
+        error = "invalid Runtime.evaluate response";
+        return false;
+    }
+
+    if (document.HasMember("exceptionDetails") &&
+        document["exceptionDetails"].IsObject()) {
+        const rapidjson::Value& details = document["exceptionDetails"];
+        std::string description;
+        if (details.HasMember("exception") && details["exception"].IsObject() &&
+            details["exception"].HasMember("description") &&
+            details["exception"]["description"].IsString()) {
+            description = details["exception"]["description"].GetString();
+        } else if (details.HasMember("text") && details["text"].IsString()) {
+            description = details["text"].GetString();
+        } else {
+            description = "JavaScript exception";
+        }
+        error = "Evaluation error: " + description;
+        return false;
+    }
+
+    if (!document.HasMember("result") || !document["result"].IsObject()) {
+        error = "invalid Runtime.evaluate response";
+        return false;
+    }
+
+    const rapidjson::Value& remoteObject = document["result"];
+    if (!remoteObject.HasMember("value")) {
+        output = "null\n";
+        return true;
+    }
+
+    rapidjson::StringBuffer buffer;
+    ValueWriter writer(buffer);
+    writer.SetIndent(' ', 2);
+    remoteObject["value"].Accept(writer);
+    output.assign(buffer.GetString(), buffer.GetSize());
+    output += "\n";
+    return true;
 }
 
 } // namespace StarfishCLI

@@ -30,12 +30,14 @@ constexpr const char* kCommandSnapshot = "snapshot";
 constexpr const char* kCommandClose = "close";
 constexpr const char* kCommandClick = "click";
 constexpr const char* kCommandFill = "fill";
+constexpr const char* kCommandEval = "eval";
 
 struct Request {
     std::string command;
     std::string url;
     std::string selector;
     std::string text;
+    std::string script;
 };
 
 struct Response {
@@ -50,6 +52,7 @@ std::string makeCloseRequest();
 std::string makeClickRequest(const std::string& selector);
 std::string makeFillRequest(const std::string& selector,
                             const std::string& text);
+std::string makeEvalRequest(const std::string& script);
 bool parseRequest(const std::string& input, Request& request);
 bool parseElementReference(const std::string& selector, int& elementRef);
 

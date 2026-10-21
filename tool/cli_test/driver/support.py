@@ -79,9 +79,10 @@ class CLITestCase(unittest.TestCase):
         self.server_thread.join(timeout=5)
         shutil.rmtree(self.root, ignore_errors=True)
 
-    def run_cli(self, *arguments, check=True, binary=None):
+    def run_cli(self, *arguments, check=True, binary=None, input=None):
         result = subprocess.run(
             [str(binary or CLI_BINARY), *arguments],
+            input=input,
             capture_output=True,
             check=False,
             env=self.environment,
