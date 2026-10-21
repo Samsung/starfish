@@ -384,10 +384,12 @@ public:
 protected:
     Renderer(Starfish* starfish);
     void clearNativeHandlers();
+    void scheduleNextFrame();
 
     Starfish* m_starfish;
     WebView* m_webView;
     size_t m_renderingAnimator;
+    size_t m_nextFrameTimer;
 #if !defined(STARFISH_HEADLESS)
     std::unique_ptr<GL> m_gl;
 #endif

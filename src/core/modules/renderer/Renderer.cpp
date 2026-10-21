@@ -89,6 +89,7 @@ Renderer::Renderer(Starfish* starfish)
     : m_starfish(starfish)
     , m_webView(nullptr)
     , m_renderingAnimator(TimerInvalidID)
+    , m_nextFrameTimer(TimerInvalidID)
     , m_compositorContext(nullptr)
     , m_lastMouseMoveX(std::numeric_limits<float>::max())
     , m_lastMouseMoveY(std::numeric_limits<float>::max())
@@ -409,6 +410,10 @@ void Renderer::clearResources()
         webView()->timer()->removeGenericAnimator(m_renderingAnimator);
         m_renderingAnimator = TimerInvalidID;
     }
+    if (m_nextFrameTimer != TimerInvalidID) {
+        webView()->timer()->removeTimer(m_nextFrameTimer);
+        m_nextFrameTimer = TimerInvalidID;
+    }
     webView()->clearStackingContext();
 
     if (m_compositorContext) {
@@ -442,21 +447,49 @@ void Renderer::setNeedsRendering()
                 return false;
             }
 
+            bool presented = false;
             if (renderer->width() != 0 && renderer->height() != 0) {
-                renderer->rendering();
+                presented = renderer->rendering().didPaintingOrCompositing;
             } else {
                 STARFISH_LOG_WARN("Renderer size error");
             }
 
             if (renderer->webView()->needsContinuousRendering()) {
                 STARFISH_ASSERT(!renderer->m_setNeedsRenderingCallback);
-                return true;
+                if (presented) {
+                    // Presenting the frame waits for the display.
+                    return true;
+                }
+                // Nothing reached the display, so nothing paces the next
+                // frame; without a wait, requestAnimationFrame callbacks
+                // would run back to back instead of once per frame.
+                // https://html.spec.whatwg.org/multipage/webappapis.html#update-the-rendering
+                renderer->m_renderingAnimator = TimerInvalidID;
+                renderer->scheduleNextFrame();
+                return false;
             }
 
             renderer->m_renderingAnimator = TimerInvalidID;
             return false;
         },
         renderer);
+}
+
+void Renderer::scheduleNextFrame()
+{
+    if (m_nextFrameTimer != TimerInvalidID) {
+        return;
+    }
+    // One frame at 60Hz.
+    constexpr unsigned frameIntervalMs = 16;
+    m_nextFrameTimer = webView()->timer()->addTimer(
+        frameIntervalMs, nullptr,
+        [](void* data) {
+            Renderer* renderer = (Renderer*)data;
+            renderer->m_nextFrameTimer = TimerInvalidID;
+            renderer->setNeedsRendering();
+        },
+        this, false);
 }
 
 RenderResult Renderer::rendering()
