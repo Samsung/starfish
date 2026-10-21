@@ -193,6 +193,20 @@ http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/context.arguments.missing.html
 http://web-platform.test:8000/html/semantics/embedded-content/media-elements/volume_nonfinite.html
 http://web-platform.test:8000/html/semantics/embedded-content/media-elements/video_volume_check.html
+# [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/html/semantics/embedded-content/media-elements/ready-states/autoplay.html
+# [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/html/semantics/embedded-content/media-elements/loading-the-media-resource/autoplay-overrides-preload.html
+http://web-platform.test:8000/html/semantics/embedded-content/media-elements/event_play.html
+http://web-platform.test:8000/html/semantics/embedded-content/media-elements/event_playing.html
+http://web-platform.test:8000/html/semantics/embedded-content/media-elements/event_order_canplay_playing.html
+http://web-platform.test:8000/html/semantics/embedded-content/media-elements/paused_false_during_play.html
+http://web-platform.test:8000/html/semantics/embedded-content/media-elements/autoplay-with-broken-track.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/media-elements/ready-states/autoplay-with-slow-text-tracks.html
+http://web-platform.test:8000/html/semantics/embedded-content/media-elements/event_loadstart.html
+http://web-platform.test:8000/html/semantics/embedded-content/media-elements/event_timeupdate.html
+http://web-platform.test:8000/html/semantics/embedded-content/media-elements/event_pause.html
+http://web-platform.test:8000/html/semantics/embedded-content/media-elements/readyState_during_loadeddata.html
+http://web-platform.test:8000/html/semantics/embedded-content/media-elements/event_loadeddata_noautoplay.html
+http://web-platform.test:8000/html/semantics/embedded-content/media-elements/event_loadstart_noautoplay.html
 http://web-platform.test:8000/html/semantics/embedded-content/media-elements/track/track-element/vtt-cue-float-precision.html
 http://web-platform.test:8000/html/semantics/embedded-content/media-elements/track/track-element/track-node-add-remove.html
 http://web-platform.test:8000/html/semantics/embedded-content/media-elements/track/track-element/track-load-from-src-readyState.html
