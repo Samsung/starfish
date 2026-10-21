@@ -118,6 +118,7 @@ void* HTMLMediaElement::operator new(size_t size)
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_audioSourceNode));
 #endif
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_currentSrc));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_mediaProvider));
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_textTracks));
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_currentOperation));
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_operationQueue));
@@ -125,6 +126,7 @@ void* HTMLMediaElement::operator new(size_t size)
                    GC_WORD_OFFSET(HTMLMediaElement, m_playOperationQueue));
         GC_set_bit(
             desc, GC_WORD_OFFSET(HTMLMediaElement, m_resourceSelectionContext));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_error));
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_pastPlayed));
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_controlsList));
         HTMLElement::fillGCDescriptor(desc);
