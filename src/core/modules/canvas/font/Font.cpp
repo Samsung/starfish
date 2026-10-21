@@ -22,6 +22,7 @@
 #include "Starfish.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/WebFont.h"
+#include "core/style/FontFaceSet.h"
 #include "core/dom/Document.h"
 #include "core/page/WebView.h"
 #include "platform/loader/ResourceLoader.h"
@@ -209,34 +210,7 @@ Font* FontSelector::loadFont(String* familyNameArray[],
     result->m_fontFaceList = new FontFaceList;
 
     for (size_t i = 0; i < familyNameArraySize; i++) {
-        auto fm = familyNameArray[i]->toUTF8NonGCString();
-        std::transform(fm.begin(), fm.end(), fm.begin(), tolower);
-        UTF8StringDataNonGCStd cacheStr =
-            mergeStyleWeightWithString(fm, style, weight);
-
-        bool existInPlatformLayerCache = false;
-        bool isGenericName = isGenericFontName(fm);
-
-        FontFace* face = m_platformFontCache->lookupFaceCache(
-            cacheStr, existInPlatformLayerCache);
-
-        if (existInPlatformLayerCache) {
-            if (face) {
-                result->m_fontFaceList->push_back(face);
-                continue;
-            }
-        } else {
-            face = loadFromPlatform(fm, isGenericName, style, weight);
-            if (face) {
-                m_platformFontCache->insertFaceCache(cacheStr, face);
-                result->m_fontFaceList->push_back(face);
-                continue;
-            } else {
-                m_platformFontCache->insertFaceCache(cacheStr, nullptr);
-            }
-        }
-
-        // search webfont Path
+        // search webfont Path first per CSS Fonts font matching algorithm
         int fitScore = 0;
         WebFont* selectedWebFont = nullptr;
 
@@ -274,11 +248,16 @@ Font* FontSelector::loadFont(String* familyNameArray[],
                         RequestSyncLevel::SyncIfAlreadyLoaded;
 
                     selectedWebFont->fontResource()->request(reqData, true);
+                    if (auto fonts = document()->fontsIfCreated()) {
+                        fonts.value()->didChangeFontLoadingState();
+                    }
                 }
                 if (selectedWebFont->fontResource()->fontFace()) {
                     // fontface loaded!
-                    face = selectedWebFont->fontResource()->fontFace();
+                    FontFace* face =
+                        selectedWebFont->fontResource()->fontFace();
                     result->m_fontFaceList->push_back(face);
+                    continue;
                 } else if (!selectedWebFont->fontResource()
                                 ->isFaildToFetchResource()) {
                     if (result->m_fontFaceList->m_seenUnresolvedWebFontIndex ==
@@ -286,24 +265,61 @@ Font* FontSelector::loadFont(String* familyNameArray[],
                         result->m_fontFaceList->m_seenUnresolvedWebFontIndex =
                             result->m_fontFaceList->size();
                     }
+                    continue;
                 }
             } else {
                 // local font
-                auto fm = selectedWebFont->localFontName()->toUTF8NonGCString();
-                std::transform(fm.begin(), fm.end(), fm.begin(), tolower);
+                auto localFm =
+                    selectedWebFont->localFontName()->toUTF8NonGCString();
+                std::transform(localFm.begin(), localFm.end(), localFm.begin(),
+                               tolower);
+                UTF8StringDataNonGCStd localCacheStr =
+                    mergeStyleWeightWithString(localFm, style, weight);
 
-                auto iter = m_webFontLocalSrcCache.find(cacheStr);
+                auto iter = m_webFontLocalSrcCache.find(localCacheStr);
+                FontFace* face = nullptr;
                 if (iter == m_webFontLocalSrcCache.end()) {
-                    face = loadFromPlatform(fm, isGenericName, style, weight);
+                    bool isLocalGeneric = isGenericFontName(localFm);
+                    face = loadFromPlatform(localFm, isLocalGeneric, style,
+                                            weight);
                     m_webFontLocalSrcCache.insert(
-                        std::make_pair(cacheStr, face));
+                        std::make_pair(localCacheStr, face));
                 } else {
                     face = iter->second;
                 }
 
                 if (face) {
                     result->m_fontFaceList->push_back(face);
+                    continue;
                 }
+            }
+        }
+
+        // search system font Path if no matching web font (or web font failed)
+        auto fm = familyNameArray[i]->toUTF8NonGCString();
+        std::transform(fm.begin(), fm.end(), fm.begin(), tolower);
+        UTF8StringDataNonGCStd cacheStr =
+            mergeStyleWeightWithString(fm, style, weight);
+
+        bool existInPlatformLayerCache = false;
+        bool isGenericName = isGenericFontName(fm);
+
+        FontFace* face = m_platformFontCache->lookupFaceCache(
+            cacheStr, existInPlatformLayerCache);
+
+        if (existInPlatformLayerCache) {
+            if (face) {
+                result->m_fontFaceList->push_back(face);
+                continue;
+            }
+        } else {
+            face = loadFromPlatform(fm, isGenericName, style, weight);
+            if (face) {
+                m_platformFontCache->insertFaceCache(cacheStr, face);
+                result->m_fontFaceList->push_back(face);
+                continue;
+            } else {
+                m_platformFontCache->insertFaceCache(cacheStr, nullptr);
             }
         }
     }

@@ -11148,6 +11148,9 @@ void StyleResolver::recalcWebFonts()
                 reqData->m_destination = RequestDestination::Font;
                 reqData->m_syncLevel = RequestSyncLevel::SyncIfAlreadyLoaded;
                 webFont.fontResource()->request(reqData, true);
+                if (auto fonts = document()->fontsIfCreated()) {
+                    fonts.value()->didChangeFontLoadingState();
+                }
             }
         } else {
             WebFont webFont(isFontStyleSpecified, isFontWeightSpecified,

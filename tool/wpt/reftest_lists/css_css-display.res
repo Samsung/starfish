@@ -61,7 +61,7 @@ http://web-platform.test:8000/css/css-display/display-contents-suppression-dynam
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-svg-elements.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-table-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-contents-table-002.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-display/display-contents-table-003.html
+http://web-platform.test:8000/css/css-display/display-contents-table-003.html
 http://web-platform.test:8000/css/css-display/display-contents-td-001.html
 http://web-platform.test:8000/css/css-display/display-contents-text-inherit-002.html
 http://web-platform.test:8000/css/css-display/display-contents-text-inherit.html

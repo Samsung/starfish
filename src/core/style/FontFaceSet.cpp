@@ -37,8 +37,9 @@ DEFINE_EVENT_LISTENER(FontFaceSet, loadingerror);
 
 static bool isLoadingState(Resource* resource)
 {
-    return resource->state() == Resource::State::BeforeSend ||
-           resource->state() == Resource::State::Receiving;
+    return resource->isRequested() &&
+           (resource->state() == Resource::State::BeforeSend ||
+            resource->state() == Resource::State::Receiving);
 }
 
 FontFaceSet::FontFaceSet(Document* document)
