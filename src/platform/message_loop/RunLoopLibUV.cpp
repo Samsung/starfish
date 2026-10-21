@@ -32,17 +32,14 @@ RunLoopLibUV::RunLoopLibUV()
     uv_loop_init(m_uvLoop);
 }
 
-RunLoopLibUV::RunLoopLibUV(uv_loop_t* loop)
-    : m_uvLoop(loop)
-{
-}
-
 RunLoopLibUV::~RunLoopLibUV()
 {
-    if (m_uvLoop != uv_default_loop()) {
-        uv_loop_close(m_uvLoop);
-        delete m_uvLoop;
-    }
+    // Worker teardown closes async and timer handles on this loop too.
+    // Their close callbacks must finish before the loop storage is freed.
+    uv_run(m_uvLoop, UV_RUN_NOWAIT);
+    int result = uv_loop_close(m_uvLoop);
+    STARFISH_RELEASE_ASSERT(result == 0);
+    delete m_uvLoop;
 }
 
 void RunLoopLibUV::run()

@@ -49,6 +49,8 @@ public:
 
     void terminate();
 
+    void join();
+
     void destroy();
 
     DEFINE_GETTER(WorkerThread*, workerThread);

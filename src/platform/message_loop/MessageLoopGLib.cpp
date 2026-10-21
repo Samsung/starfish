@@ -36,6 +36,7 @@
 #include <sys/syscall.h>
 #include <chrono>
 #include <condition_variable>
+#include <memory>
 #include <mutex>
 
 namespace Starfish {
@@ -118,20 +119,10 @@ struct PauseRequest {
     bool mainConfirmed{ false };
     bool resumeMain{ false };
 };
-// Heap-allocated by runWithProcessMainThreadPausedSync() and freed ONLY by
-// the GSource callback it posts (in every one of that callback's return
-// paths), never by the function itself: if confirmation doesn't arrive
-// before the timeout, the GSource may still be sitting unfired in
-// g_main_context_default(), to run whenever (if ever) that context gets
-// pumped again, and its callback needs the object to still be valid at that
-// point, however much later. Non-null (guarded by g_rendezvousMutex) exactly
-// while there's an outstanding pause request the GSource callback hasn't
-// resolved yet; both sides compare against this pointer before trusting the
-// fields inside, so a GSource that fires after its own attempt already
-// resolved another way (confirmed early by runOnMainThreadSync(), or given
-// up on via timeout) can tell it's stale and just free itself instead of
-// parking the process main thread on a resumeMain signal that will never
-// come.
+// The caller and its GSource share ownership until both have finished.
+// Guarded by g_rendezvousMutex; non-null only while confirmation is pending.
+// A source dispatched after runOnMainThreadSync resolves the request must
+// return without parking the process main thread.
 static PauseRequest* g_currentPauseRequest = nullptr;
 
 MessageLoopGLib::MessageLoopGLib()
@@ -557,6 +548,14 @@ void MessageLoopGLib::stop()
     }
 }
 
+void MessageLoopGLib::shutdown()
+{
+    if (g_threadedMainRunLoop) {
+        delete g_threadedMainRunLoop.value();
+        g_threadedMainRunLoop = NullOption;
+    }
+}
+
 void MessageLoopGLib::runOnMainThreadSync(const std::function<void()>& functor)
 {
     if (isMainThread()) {
@@ -578,9 +577,8 @@ void MessageLoopGLib::runOnMainThreadSync(const std::function<void()>& functor)
             // "main isn't running its own code" -- resolve its wait
             // directly rather than leaving it to possibly time out waiting
             // for a GSource we may never get back around to dispatching.
-            // The GSource it posted is left attached; when/if it does fire
-            // later, it'll find g_currentPauseRequest no longer pointing at
-            // it and just free itself without parking us a second time.
+            // The source either observes the resolved request or is removed
+            // by its caller before it can dispatch.
             g_currentPauseRequest->mainConfirmed = true;
             g_currentPauseRequest = nullptr;
             g_rendezvousCv.notify_all();
@@ -612,8 +610,10 @@ void MessageLoopGLib::runOnMainThreadSync(const std::function<void()>& functor)
             {
                 std::lock_guard<std::mutex> lock(p->mutex);
                 p->completed = true;
+                // The caller may destroy p as soon as it wakes and acquires
+                // this mutex. Finish notifying while p is still protected.
+                p->cv.notify_one();
             }
-            p->cv.notify_one();
             return G_SOURCE_REMOVE;
         },
         p, nullptr);
@@ -662,9 +662,8 @@ void MessageLoopGLib::runWithProcessMainThreadPausedSync(
         return;
     }
     g_rendezvousOwner = RendezvousOwner::LWEPausingMain;
-    // See g_currentPauseRequest's comment: freed only by the GSource
-    // callback below, in every one of its return paths.
-    PauseRequest* req = new PauseRequest();
+    auto request = std::make_shared<PauseRequest>();
+    PauseRequest* req = request.get();
     g_currentPauseRequest = req;
     lock.unlock();
 
@@ -674,7 +673,8 @@ void MessageLoopGLib::runWithProcessMainThreadPausedSync(
     g_source_set_callback(
         source,
         (GSourceFunc)[](gpointer data)->gboolean {
-            PauseRequest* req = (PauseRequest*)data;
+            auto request = *static_cast<std::shared_ptr<PauseRequest>*>(data);
+            PauseRequest* req = request.get();
             std::unique_lock<std::mutex> lock(g_rendezvousMutex);
             if (g_currentPauseRequest != req) {
                 // Stale: this attempt already resolved another way (the
@@ -682,7 +682,6 @@ void MessageLoopGLib::runWithProcessMainThreadPausedSync(
                 // us via runOnMainThreadSync(), or we gave up waiting on
                 // timeout). Nothing left to do.
                 lock.unlock();
-                delete req;
                 return G_SOURCE_REMOVE;
             }
             req->mainConfirmed = true;
@@ -690,13 +689,24 @@ void MessageLoopGLib::runWithProcessMainThreadPausedSync(
             g_rendezvousCv.notify_all();
             g_rendezvousCv.wait(lock, [req] { return req->resumeMain; });
             lock.unlock();
-            delete req;
             return G_SOURCE_REMOVE;
         },
-        req, nullptr);
+        new std::shared_ptr<PauseRequest>(request),
+        [](gpointer data) {
+            delete static_cast<std::shared_ptr<PauseRequest>*>(data);
+        });
     g_source_attach(source, g_main_context_default());
     g_source_set_ready_time(source, 0);
-    g_source_unref(source);
+    // A timed-out pause must not leave a callback into this DSO attached to
+    // the host's context after the engine thread has stopped.
+    struct SourceGuard {
+        GSource* source;
+        ~SourceGuard()
+        {
+            g_source_destroy(source);
+            g_source_unref(source);
+        }
+    } sourceGuard{ source };
 
     bool paused;
     {
@@ -713,10 +723,8 @@ void MessageLoopGLib::runWithProcessMainThreadPausedSync(
             std::chrono::milliseconds(kProcessMainThreadPauseTimeoutMs),
             [req] { return req->mainConfirmed; });
         if (!paused && g_currentPauseRequest == req) {
-            // Give up: mark it stale so the GSource callback, whenever/if
-            // it eventually fires, just frees `req` and bails out instead
-            // of parking the process main thread on a resumeMain signal
-            // we never send in the timeout path below.
+            // A concurrently dispatched source must observe cancellation
+            // instead of parking the process main thread.
             g_currentPauseRequest = nullptr;
         }
     }

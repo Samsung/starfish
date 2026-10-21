@@ -21,8 +21,8 @@
 #define __ThreadedCallHelper__
 
 #include <functional>
-#include <memory>
-#include <atomic>
+#include <pthread.h>
+#include <mutex>
 
 namespace Starfish {
 class MessageLoop;
@@ -39,6 +39,7 @@ public:
     ThreadedCallHelper(ThreadedCallHelper&&) = delete;
 
     void Initialize(bool isThreadMode);
+    bool ShutdownForUnload();
 
     void PostTaskToLWEMainThreadSync(const std::function<void()>& functor);
     void PostTaskToLWEMainThreadAsync(Starfish::MessageLoop* messageLoop,
@@ -50,9 +51,12 @@ private:
     ThreadedCallHelper();
     void CreateLWEMainThread();
 
-    std::atomic<bool> m_isLWEThreadStarted;
+    bool m_isLWEThreadStarted;
     bool m_isThreadMode;
-    pthread_mutex_t m_mainThreadInitLocker;
+    bool m_isMessageLoopInitialized;
+    bool m_didShutdown;
+    pthread_t m_mainThread;
+    std::mutex m_shutdownMutex;
 };
 
 } // namespace LWEDelegate

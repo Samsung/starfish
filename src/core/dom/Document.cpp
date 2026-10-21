@@ -893,6 +893,9 @@ void Document::dispose()
 
     resourceLoader().clear();
 
+#if defined(STARFISH_ENABLE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+    executionContext()->disposeActiveWorkers();
+#endif
     executionContext()->disposeActiveResourceRequests();
 #ifdef STARFISH_ENABLE_WEBSOCKET
     executionContext()->disposeActiveWebSockets();

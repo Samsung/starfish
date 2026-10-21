@@ -19,7 +19,7 @@ The following platforms are supported.
 sudo apt-get update
 sudo apt-get install -y \
     build-essential cmake ninja-build pkg-config git \
-    autoconf automake libtool patchelf clang-format \
+    autoconf automake libtool patch patchelf clang-format \
     python3 python3-jinja2 \
     libglib2.0-dev libcairo2-dev libfreetype-dev libfontconfig-dev libharfbuzz-dev \
     libx11-dev libxext-dev libxrender-dev libxi-dev \
@@ -77,6 +77,50 @@ ninja starfish.shared_library
 ```sh
 ninja starfish.static_library
 ```
+
+#### Implementation library lifetime
+
+With `ENABLE_DYNAMIC_LOADER=1`, public `LWE::LWE::Finalize()` finalizes the
+engine, releases its loop and retained GC runtime on their owning thread,
+and joins any dedicated thread (including TLS destructors) before calling
+`dlclose()` on the implementation. The next `Initialize()` loads a fresh impl
+and starts a new thread when separate-thread mode is used. Repeated loader
+loads are idempotent, so they do not accumulate `dlopen()` references.
+
+Before `Finalize()`, destroy all WebViews/containers and other engine-backed
+API objects, and stop API calls and callbacks on other threads. With a
+host-owned thread, call `Initialize()` and `Finalize()` on that same thread;
+terminal GC cleanup lets it remain alive across unload/reload. A legacy impl
+without the shutdown export stays loaded for compatibility.
+
+The caller may unload the API SO itself after `Finalize()` only when
+`LWE::LWE::CanUnload()` returns `true`, and no API objects or calls remain.
+This query is also true before the first initialization. It returns `false`
+when the impl is retained or dynamic loading is disabled. Keep the API SO
+loaded in those cases. No thread shutdown/join happens from an SO destructor
+under the dynamic loader's lock.
+
+Actual unmapping requires the last reference to each SO to be released.
+Additional `dlopen()` handles or host libraries linked against these SOs
+keep them resident; the unload regression driver links neither layer.
+Dedicated workers are owned by their execution context: discarding a
+document terminates and joins its workers, including nested workers, before
+releasing the script realm and the shared Escargot platform. Shutdown waits
+for running JavaScript to return naturally; it never forcibly cancels a
+worker thread. A non-yielding script can therefore block shutdown indefinitely,
+keeping the runtime and implementation SO alive until the thread exits.
+
+Direct impl users still call `LWEDelegate_LWE_Finalize()` followed by
+`LWEDelegate_LWE_ShutdownForUnload()` before `dlclose()`. The direct impl
+`Finalize()` preserves its thread; the explicit shutdown is terminal and
+must be followed by actual unloading before another `Initialize()`, since
+its globals can still refer to the old thread's GC heap. Shutdown returns
+`false` if the engine is initialized, the caller is the dedicated LWE thread
+itself, or a host-thread instance is shut down from a different thread.
+Repeated shutdown is safe. Terminal shutdown calls Escargot's
+`Globals::destroyRuntimeForSharedLibraryUnload()` on its lifecycle thread;
+ordinary impl `Finalize()` intentionally retains the GC runtime so cached
+static/TLS descriptors remain valid for reinitialization in the same mapping.
 
 #### Build options
 
@@ -460,6 +504,41 @@ xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py
 
 # E. Internal Test
 ./tool/runner/test_runner.py internal_test
+
+# Impl unload/reload regression (Debug or -DENABLE_TEST=1 build).
+# The executable links neither engine layer: it resolves the impl directly.
+# Covers thread reuse at Finalize, explicit shutdown/join, actual unmapping,
+# reset of mutable globals/statics, DOM/JS after reload, and worker teardown.
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/impl_unload_test.py \
+  --impl out/debug/lib/liblightweight-web-engine-impl.so
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/impl_unload_test.py \
+  --impl out/debug/lib/liblightweight-web-engine-impl.so --incremental
+
+# Wait for running JS in a worker and its nested worker before unloading.
+# Each script runs beyond the former 1-second forced-cancellation deadline.
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/impl_unload_test.py \
+  --impl out/debug/lib/liblightweight-web-engine-impl.so \
+  --wait-for-worker --cycles 1
+
+# GLib: the same host thread survives every unload/reload with fresh TLS.
+# Add --incremental to cover terminal cleanup of the incremental collector.
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/impl_unload_test.py \
+  --impl out/debug/lib/liblightweight-web-engine-impl.so --host-thread
+
+# Public API Finalize -> impl unload; then unload/reload the API SO itself.
+# Also verifies API state reset and impl restarts while the API stays loaded.
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/impl_unload_test.py \
+  --impl out/debug/lib/liblightweight-web-engine-impl.so \
+  --api out/debug/lib/liblightweight-web-engine.so
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/impl_unload_test.py \
+  --impl out/debug/lib/liblightweight-web-engine-impl.so \
+  --api out/debug/lib/liblightweight-web-engine.so --incremental
+
+# GLib: also exercise public Finalize and API unload on a surviving host.
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/impl_unload_test.py \
+  --impl out/debug/lib/liblightweight-web-engine-impl.so \
+  --api out/debug/lib/liblightweight-web-engine.so --host-thread
+
 # The direct internal-test driver accepts STARFISH_BIN to choose a build
 # without changing the repository's ./Starfish symlink.
 STARFISH_BIN="$PWD/out/release/bin/Starfish" xvfb-run -s '-screen 0 1920x1080x24' -a \

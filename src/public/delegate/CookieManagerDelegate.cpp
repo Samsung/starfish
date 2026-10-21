@@ -37,8 +37,6 @@ public:
     ~CookieManagerImpl() = default;
 };
 
-static CookieManagerImpl* g_cookieManager;
-
 std::string CookieManagerImpl::GetCookie(std::string url)
 {
     std::string result;
@@ -77,26 +75,18 @@ CookieManager* CookieManager::GetInstance()
         return nullptr;
     }
 
-    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        if (!g_cookieManager) {
-            g_cookieManager = new CookieManagerImpl();
-        }
-    });
-    return g_cookieManager;
+    // Shipped API libraries cache this pointer across Finalize. The facade
+    // has no session state: cookies belong to NetworkSharedResourceManager.
+    // Give it DSO lifetime so old API wrappers remain valid after reinit,
+    // while new APIs destroy their wrappers before unloading the impl.
+    static CookieManagerImpl instance;
+    return &instance;
 }
 
 void CookieManager::Destroy()
 {
-    if (!LWEDelegate::LWE::IsInitialized()) {
-        return;
-    }
-
-    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        if (g_cookieManager) {
-            delete g_cookieManager;
-            g_cookieManager = nullptr;
-        }
-    });
+    // The stateless facade lives until this DSO is unloaded. Finalize still
+    // releases all cookie-session resources with the network manager.
 }
 } // namespace LWEDelegate
 

@@ -132,12 +132,10 @@ Logger::~Logger()
 
 void Logger::initialize(std::shared_ptr<Output> out)
 {
-    static thread_local std::shared_ptr<StdOut> s_loggerOutput;
-
     if (out == nullptr) {
-        if (s_loggerOutput == nullptr) {
-            s_loggerOutput = std::make_shared<StdOut>();
-        }
+        // StdOut is stateless. A TLS shared_ptr registers a destructor that
+        // pins the impl DSO while an embedding application's thread lives.
+        static auto s_loggerOutput = std::make_shared<StdOut>();
         m_output = s_loggerOutput;
     } else {
         m_output = out;

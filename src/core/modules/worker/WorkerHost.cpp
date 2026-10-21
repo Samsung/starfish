@@ -49,14 +49,12 @@ void WorkerHost::run(void* data)
     WorkerHost host = WorkerHost(workerThread, runLoop);
 
     if (!workerThread->wasTerminated()) {
-        workerThread->onWorkerRunLoopStarted(runLoop);
         runLoop->run();
     }
 
+    workerThread->setWorkerMessageLoop(nullptr);
     host.dispose();
-
     delete runLoop;
-
     Escargot::Globals::finalizeThread();
 }
 
@@ -70,6 +68,7 @@ WorkerHost::WorkerHost(WorkerThread* workerThread, RunLoop* runLoop)
                       String::fromUTF8(initData.userAgent.data(),
                                        initData.userAgent.length()));
 
+    workerThread->setWorkerMessageLoop(m_webWorker->messageLoop());
     m_globalScope = workerThread->createWorkerGlobalScope(m_webWorker, this);
 }
 
@@ -80,9 +79,9 @@ void WorkerHost::dispose()
     }
     m_wasDisposed = true;
 
-    m_webWorker->timer()->clear(m_globalScope);
-    m_webWorker->messageLoop()->clearPendingIdlers(m_globalScope);
-    m_globalScope->dispose();
+    m_globalScope->terminate();
+    m_webWorker->timer()->clear(nullptr);
+    m_webWorker->messageLoop()->clearPendingIdlers(nullptr);
     m_webWorker->destroy();
 }
 

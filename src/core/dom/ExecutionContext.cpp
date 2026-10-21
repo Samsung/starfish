@@ -34,6 +34,9 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/networking/WebSocket.h"
 #include "core/util/debug/Trace.h"
+#if defined(STARFISH_ENABLE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+#include "core/modules/worker/Worker.h"
+#endif
 
 namespace Starfish {
 
@@ -200,6 +203,36 @@ void ExecutionContext::disposeActiveWebSockets()
     }
 }
 #endif
+#if defined(STARFISH_ENABLE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+void ExecutionContext::addActiveWorker(Worker* worker)
+{
+    m_activeWorkers.push_back(worker);
+}
+
+void ExecutionContext::removeActiveWorker(Worker* worker)
+{
+    auto iter =
+        std::find(m_activeWorkers.begin(), m_activeWorkers.end(), worker);
+    if (iter != m_activeWorkers.end()) {
+        m_activeWorkers.erase(iter);
+    }
+}
+
+void ExecutionContext::disposeActiveWorkers()
+{
+    // Dedicated workers lose their owner when its document or worker is
+    // destroyed (HTML: workers.html#the-worker's-lifetime). Join before
+    // disposing the realm or finalizing the shared Escargot platform.
+    GCVector<Worker*> workers = m_activeWorkers;
+    for (auto* worker : workers) {
+        worker->terminate();
+    }
+    for (auto* worker : workers) {
+        worker->join();
+    }
+}
+#endif
+
 void ExecutionContext::initContentSecurityPolicy(
     ContentSecurityPolicy* inheritedPolicy)
 {

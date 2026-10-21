@@ -116,8 +116,9 @@ static void writeProcessHeader(std::ostream& os, std::string resetCode)
     static std::string processIdColorCode = randomColorCode();
     static int thread_count = 0;
 
-    static thread_local std::string thisThreadId;
-    if (thisThreadId.empty()) {
+    // A trivial TLS value lets the library unload while its host lives.
+    static thread_local char thisThreadId;
+    if (!thisThreadId) {
         thisThreadId = ('a' + thread_count);
         thread_count = ++thread_count < 26 ? thread_count : 0;
     }

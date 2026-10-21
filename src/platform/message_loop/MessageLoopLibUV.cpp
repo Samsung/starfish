@@ -39,7 +39,7 @@ static void on_close_handle(uv_handle_t* handle)
 static uv_async_t g_idlerThreadSyncHandle;
 static pthread_mutex_t g_threadSyncExecuteGuard;
 static pthread_mutex_t g_threadSyncFlowControler;
-static RunLoopLibUV g_defaultRunLoop(uv_default_loop());
+static Optional<RunLoopLibUV*> g_mainRunLoop;
 
 struct IdlerData {
     void (*m_fn)(size_t, void*);
@@ -57,7 +57,7 @@ struct IdlerData {
 };
 
 MessageLoopLibUV::MessageLoopLibUV()
-    : MessageLoopLibUV(&g_defaultRunLoop)
+    : MessageLoopLibUV(g_mainRunLoop.value())
 {
 }
 
@@ -404,32 +404,51 @@ uv_loop_t* MessageLoopLibUV::uvLoop()
 
 void MessageLoopLibUV::init()
 {
-    static bool needsInit = true;
-    if (UNLIKELY(needsInit)) {
-        needsInit = false;
+    if (!g_mainRunLoop) {
+        g_mainRunLoop = static_cast<RunLoopLibUV*>(RunLoop::create());
         pthread_mutex_init(&g_threadSyncExecuteGuard, NULL);
         pthread_mutex_init(&g_threadSyncFlowControler, NULL);
 
-        uv_async_init(uv_default_loop(), &g_idlerThreadSyncHandle,
-                      [](uv_async_t* handle) {
-                          {
-                              const std::function<void()>* pFunctor =
-                                  (const std::function<void()>*)handle->data;
-                              (*pFunctor)();
-                              pthread_mutex_unlock(&g_threadSyncFlowControler);
-                          }
-                      });
+        int result = uv_async_init(
+            mainLoop(), &g_idlerThreadSyncHandle, [](uv_async_t* handle) {
+                {
+                    const std::function<void()>* pFunctor =
+                        (const std::function<void()>*)handle->data;
+                    (*pFunctor)();
+                    pthread_mutex_unlock(&g_threadSyncFlowControler);
+                }
+            });
+        STARFISH_RELEASE_ASSERT(result == 0);
     }
 }
 
 void MessageLoopLibUV::run()
 {
-    g_defaultRunLoop.run();
+    g_mainRunLoop->run();
 }
 
 void MessageLoopLibUV::stop()
 {
-    g_defaultRunLoop.stop();
+    g_mainRunLoop->stop();
+}
+
+uv_loop_t* MessageLoopLibUV::mainLoop()
+{
+    return g_mainRunLoop->uvLoop();
+}
+
+void MessageLoopLibUV::shutdown()
+{
+    // Finish close callbacks before unmapping the code they point into.
+    uv_close(reinterpret_cast<uv_handle_t*>(&g_idlerThreadSyncHandle), nullptr);
+    uv_run(mainLoop(), UV_RUN_NOWAIT);
+    STARFISH_RELEASE_ASSERT(uv_loop_alive(mainLoop()) == 0);
+    delete g_mainRunLoop.value();
+    g_mainRunLoop = NullOption;
+    STARFISH_RELEASE_ASSERT(pthread_mutex_destroy(&g_threadSyncExecuteGuard) ==
+                            0);
+    STARFISH_RELEASE_ASSERT(pthread_mutex_destroy(&g_threadSyncFlowControler) ==
+                            0);
 }
 
 void MessageLoopLibUV::runOnMainThreadSync(const std::function<void()>& functor)

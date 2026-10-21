@@ -31,8 +31,6 @@ class RunLoopLibUV final : public RunLoop {
     friend class RunLoop;
 
 public:
-    RunLoopLibUV(uv_loop_t* loop);
-
     ~RunLoopLibUV();
 
     uv_loop_t* uvLoop()

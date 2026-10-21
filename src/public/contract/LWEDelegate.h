@@ -45,6 +45,14 @@ public:
     static void GetVersion(int* major, int* minor, int* patch);
 
     static bool IsUsingSeparateThread();
+
+    // Call after Finalize from the lifecycle owner, with no concurrent API
+    // calls or callbacks, before entering dlclose (not from a DSO destructor).
+    // Returns false while initialized, on the dedicated LWE thread itself,
+    // or from a different thread than the host-owned initialization thread.
+    // After shutting down an existing loop, unload before initializing: its
+    // process globals can still refer to the old thread's GC heap.
+    static bool ShutdownForUnload();
 };
 
 } // namespace LWEDelegate
@@ -67,6 +75,8 @@ void EXPORT_UNMANAGED_API LWEDelegate_LWE_GetVersion(int* major, int* minor,
 
 bool EXPORT_UNMANAGED_API LWEDelegate_LWE_IsUsingSeparateThread();
 
+bool EXPORT_UNMANAGED_API LWEDelegate_LWE_ShutdownForUnload();
+
 typedef struct {
     void (*Initialize)(const char*, uint32_t);
     bool (*IsInitialized)();
@@ -75,6 +85,7 @@ typedef struct {
     void (*SetGCFrequency)(unsigned char);
     void (*GetVersion)(int*, int*, int*);
     bool (*IsUsingSeparateThread)();
+    bool (*ShutdownForUnload)();
 } LWEProcTable;
 }
 #endif

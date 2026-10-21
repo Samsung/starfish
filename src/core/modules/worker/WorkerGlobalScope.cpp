@@ -110,6 +110,9 @@ bool WorkerGlobalScope::terminate()
 
 void WorkerGlobalScope::dispose()
 {
+#if !defined(STARFISH_WEBWORKER_HOST)
+    m_executionContext->disposeActiveWorkers();
+#endif
     if (m_scriptBindingInstance != nullptr) {
         m_scriptBindingInstance->destroy();
         m_scriptBindingInstance = nullptr;

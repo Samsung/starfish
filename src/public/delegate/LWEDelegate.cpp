@@ -245,6 +245,14 @@ bool LWE::IsUsingSeparateThread()
     return ThreadedCallHelper::Instance()->isThreadMode();
 }
 
+bool LWE::ShutdownForUnload()
+{
+    if (IsInitialized()) {
+        return false;
+    }
+    return ThreadedCallHelper::Instance()->ShutdownForUnload();
+}
+
 } // namespace LWEDelegate
 
 extern "C" {
@@ -289,5 +297,10 @@ void EXPORT_UNMANAGED_API LWEDelegate_LWE_GetVersion(int* major, int* minor,
 bool EXPORT_UNMANAGED_API LWEDelegate_LWE_IsUsingSeparateThread()
 {
     return LWEDelegate::LWE::IsUsingSeparateThread();
+}
+
+bool EXPORT_UNMANAGED_API LWEDelegate_LWE_ShutdownForUnload()
+{
+    return LWEDelegate::LWE::ShutdownForUnload();
 }
 }

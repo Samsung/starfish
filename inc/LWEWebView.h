@@ -149,6 +149,10 @@ public:
     /**
      * \brief Perform lightweight web engine cleanup.
      * Called once when the lightweight web engine is no longer in use.
+     * Destroy all engine-backed API objects and stop calls/callbacks first.
+     * For a host-thread instance, use the initialization thread. Dynamic
+     * loading releases supported implementations so Initialize starts fresh;
+     * check CanUnload before the caller closes this API library itself.
      *
      * \code{.cpp}
      *     LWE::LWE::Finalize();
@@ -156,6 +160,12 @@ public:
      *
      */
     static void Finalize();
+
+    // Query after Finalize, with no remaining engine-backed API objects or
+    // callbacks. True means the dynamic loader released its implementation
+    // and the caller may dlclose this API library. False for static linkage,
+    // legacy implementations, and shutdown from an invalid lifecycle thread.
+    static bool CanUnload();
 
     /**
      * \brief Returns GC frequency. default value is 12

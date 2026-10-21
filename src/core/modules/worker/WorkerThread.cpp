@@ -78,10 +78,8 @@ WorkerThread::WorkerThread(Starfish* starfish, MessageLoop* messageLoop)
     : m_starfish(starfish)
     , m_messageLoop(messageLoop)
     , m_mutex(new Mutex())
-    , m_runLoop(nullptr)
     , m_state(State::None)
     , m_workerMessageLoopGlobalScope(new WorkerProxyGlobalScope())
-    , m_childThreadDataLock(new Mutex())
 {
     m_mainThreadClient = new WorkerThreadClient();
     m_mainThread = new Thread(m_mainThreadClient);
@@ -130,26 +128,12 @@ void* WorkerThread::workerMainThreadWork(void* data,
 
     TRACE(WORKER, "start worker thread", getCurrentThreadID());
 
-    std::promise<void> workerHostThreadSignal;
-    auto workerHostThreadFuture = workerHostThreadSignal.get_future();
-    self->m_workerThread = std::thread(
-        [](std::promise<void> signal, void* data) {
-            auto* workerThread = static_cast<WorkerThread*>(data);
-            workerThread->initializeWorkerThread();
-
-            WorkerHost::run(data);
-
-            signal.set_value();
-        },
-        std::move(workerHostThreadSignal), data);
+    self->m_workerThread = std::thread(WorkerHost::run, data);
     stopTask.wait();
 
-    if (workerHostThreadFuture.wait_for(std::chrono::seconds(1)) ==
-        std::future_status::timeout) {
-        self->destroyWorkerThread();
-    }
-
-    self->terminateChildThreads();
+    // Running JavaScript must return before its thread and GC can be retired.
+    // Native cancellation can bypass C++ and engine cleanup; even a slow or
+    // non-yielding script must keep its runtime and containing SO alive.
 
     if (self->m_workerThread.joinable()) {
         self->m_workerThread.join();
@@ -182,86 +166,35 @@ void WorkerThread::terminate()
 
     Locker<Mutex> locker(*m_mutex);
 
-    stopWorkerRunLoop();
+    if (m_workerMessageLoop) {
+        auto* loop = m_workerMessageLoop.value();
+        // Every worker kind stops on its owning loop after running JS returns.
+        // A queued request also survives the loop not having started yet.
+        loop->addIdlerWithNoGCRootingInOtherThread(
+            nullptr,
+            [](size_t, void* data) {
+                static_cast<MessageLoop*>(data)->runLoop()->stop();
+            },
+            loop);
+    }
     m_mainThread->stop();
+}
+
+void WorkerThread::setWorkerMessageLoop(Optional<MessageLoop*> messageLoop)
+{
+    Locker<Mutex> locker(*m_mutex);
+    m_workerMessageLoop = messageLoop;
+}
+
+void WorkerThread::join()
+{
+    m_mainThread->joinIfNeeds();
 }
 
 void WorkerThread::setOnTerminatedCallback(
     WorkerThreadClient::ThreadFinishedCallback callback, void* data)
 {
     m_mainThreadClient->setThreadFinishedCallback(callback, data);
-}
-
-void WorkerThread::initializeWorkerThread()
-{
-#if defined(OS_POSIX) && !defined(STARFISH_ANDROID)
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-#else
-    STARFISH_UNSUPPORTED("Unsupported platform");
-#endif
-}
-
-void WorkerThread::destroyWorkerThread()
-{
-#if defined(OS_POSIX) && !defined(STARFISH_ANDROID)
-    pthread_cancel(m_workerThread.native_handle());
-#else
-    STARFISH_UNSUPPORTED("Unsupported platform");
-#endif
-}
-
-void WorkerThread::onWorkerRunLoopStarted(RunLoop* runLoop)
-{
-    Locker<Mutex> locker(*m_mutex);
-
-    STARFISH_ASSERT(!m_runLoop);
-    m_runLoop = runLoop;
-}
-
-bool WorkerThread::stopWorkerRunLoop()
-{
-    if (!m_runLoop) {
-        return false;
-    }
-
-    m_runLoop->stop();
-    m_runLoop = nullptr;
-
-    return true;
-}
-
-void WorkerThread::addChildThread(WorkerThread* thread)
-{
-    Locker<Mutex> lock(*m_childThreadDataLock);
-
-    m_childThreads.push_back(thread);
-}
-
-void WorkerThread::removeChildThread(WorkerThread* thread)
-{
-    Locker<Mutex> lock(*m_childThreadDataLock);
-
-    auto iter = std::find(m_childThreads.begin(), m_childThreads.end(), thread);
-    if (iter != m_childThreads.end()) {
-        m_childThreads.erase(iter);
-    }
-}
-
-void WorkerThread::terminateChildThreads()
-{
-    Locker<Mutex> lock(*m_childThreadDataLock);
-
-    if (m_childThreads.empty()) {
-        return;
-    }
-
-    for (WorkerThread* thread : m_childThreads) {
-        thread->terminate();
-    }
-
-    m_childThreads.clear();
-    m_childThreads.shrink_to_fit();
 }
 
 bool WorkerThread::isRunning()

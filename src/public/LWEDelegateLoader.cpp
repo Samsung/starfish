@@ -37,11 +37,8 @@ WebViewProcTable LWEDelegateLoader::kWebViewProcTable;
 
 LWEDelegateLoader* LWEDelegateLoader::getInstance()
 {
-    static LWEDelegateLoader* instance = nullptr;
-    if (!instance) {
-        instance = new LWEDelegateLoader();
-    }
-    return instance;
+    static LWEDelegateLoader instance;
+    return &instance;
 }
 
 LWEDelegateLoader* LWEDelegateLoader::getSafeInstance()
@@ -55,6 +52,9 @@ LWEDelegateLoader* LWEDelegateLoader::getSafeInstance()
 
 bool LWEDelegateLoader::load()
 {
+    if (isLoaded()) {
+        return true;
+    }
     if (LWELoaderUtils::shouldUseUpdatedLibrary(m_preferUpdatedVersion) &&
         tryLoadAndValidate(LWELibrarySource::Updated)) {
         return true;
@@ -114,6 +114,11 @@ void LWEDelegateLoader::discardFailedLibrary()
 {
     dlclose(m_handle);
     m_handle = nullptr;
+    clearProcTables();
+}
+
+void LWEDelegateLoader::clearProcTables()
+{
     unloadCookieManagerProcTable();
     unloadLWEProcTable();
     unloadResourceErrorProcTable();
@@ -122,25 +127,26 @@ void LWEDelegateLoader::discardFailedLibrary()
     unloadWebViewProcTable();
 }
 
-void LWEDelegateLoader::unload()
+bool LWEDelegateLoader::unload()
 {
-    // FIXME we cannot close shared-library
-    // dlclose does not end lwe main thread
-    // but global variables are reseted next dlopen with clang-compiled binary
-    return;
-    /*
-    if (m_handle) {
-        dlclose(m_handle);
-        m_handle = nullptr;
+    if (!isLoaded()) {
+        return true;
     }
-
-    unloadCookieManagerProcTable();
-    unloadLWEProcTable();
-    unloadResourceErrorProcTable();
-    unloadSettingsProcTable();
-    unloadWebContainerProcTable();
-    unloadWebViewProcTable();
-    */
+    // Preserve old implementations without the terminal shutdown export,
+    // and attempts made from an invalid lifecycle thread.
+    if (!kLWEProcTable.ShutdownForUnload ||
+        !kLWEProcTable.ShutdownForUnload()) {
+        return false;
+    }
+    if (dlclose(m_handle) != 0) {
+        std::cerr << "Cannot close LWE implementation: " << dlerror()
+                  << std::endl;
+        // Shutdown is terminal; the impl cannot be initialized again.
+        abort();
+    }
+    m_handle = nullptr;
+    clearProcTables();
+    return true;
 }
 
 bool LWEDelegateLoader::isLoaded()
@@ -187,6 +193,10 @@ bool LWEDelegateLoader::loadLWEProcTable()
     kLWEProcTable.IsUsingSeparateThread =
         reinterpret_cast<decltype(LWEProcTable::IsUsingSeparateThread)>(
             dlsym(m_handle, "LWEDelegate_LWE_IsUsingSeparateThread"));
+    // Optional for compatibility with previously shipped implementations.
+    kLWEProcTable.ShutdownForUnload =
+        reinterpret_cast<decltype(LWEProcTable::ShutdownForUnload)>(
+            dlsym(m_handle, "LWEDelegate_LWE_ShutdownForUnload"));
     return kLWEProcTable.Initialize && kLWEProcTable.IsInitialized &&
            kLWEProcTable.Finalize && kLWEProcTable.GetGCFrequency &&
            kLWEProcTable.SetGCFrequency && kLWEProcTable.GetVersion &&
@@ -260,7 +270,7 @@ void LWEDelegateLoader::unloadCookieManagerProcTable()
 void LWEDelegateLoader::unloadLWEProcTable()
 {
     kLWEProcTable = { nullptr, nullptr, nullptr, nullptr,
-                      nullptr, nullptr, nullptr };
+                      nullptr, nullptr, nullptr, nullptr };
 }
 
 void LWEDelegateLoader::unloadResourceErrorProcTable()
