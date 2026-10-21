@@ -111,8 +111,9 @@ void HTMLSelectElement::setValue(String* value)
         }
     }
 
-    fireEvent(starfish()->staticStrings()->m_change, true, false);
-
+    // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-value
+    // The setter only updates selectedness; unlike a user selection it
+    // fires no input or change event.
     setNeedsFrameTreeBuild();
 }
 
