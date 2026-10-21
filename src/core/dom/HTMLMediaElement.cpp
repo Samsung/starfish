@@ -311,11 +311,6 @@ void HTMLMediaElement::load()
     // TODO: 7. Set the playbackRate attribute to the value of the
     // defaultPlaybackRate attribute.
 
-    if (autoplay()) {
-        appendToPlayOperationQueue(
-            new MediaOperationQueueDataRequestPlay(this));
-    }
-
     // 8. Set the error attribute to null and the autoplaying flag to true.
     m_error = nullptr;
     m_autoplayingFlag = true;
@@ -1178,6 +1173,15 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(
                 }
             }
 
+            // The user agent must queue a task to fire an event named
+            // canplaythrough at the element. The spec queues it before the
+            // autoplay substeps, so play and playing follow it.
+            dispatchCanplaythroughEvent();
+
+            // If the element is eligible for autoplay, the user agent may run
+            // the following substeps. The autoplay attribute is evaluated at
+            // this transition, not when the load started, so an attribute set
+            // after src takes effect.
             if (eligibleForAutoplay()) {
                 // 1. Set the paused attribute to false.
                 m_isPaused = false;
@@ -1186,15 +1190,16 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(
                 // TODO
                 // 3. Queue a task to fire an event named play at the element.
                 dispatchPlayEvent();
+                // Autoplay never goes through play(), so playback is started
+                // here rather than from a pending play request.
+                if (MediaPlayer* player = activeMediaPlayer()) {
+                    player->play();
+                }
                 // 4. Notify about playing for the element.
                 notifyAboutPlaying();
                 // 5. Set the autoplaying flag to false.
                 m_autoplayingFlag = false;
             }
-
-            // The user agent must queue a task to fire an event named
-            // canplaythrough at the element.
-            dispatchCanplaythroughEvent();
         }
     } else {
     }
