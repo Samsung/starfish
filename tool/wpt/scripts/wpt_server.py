@@ -44,7 +44,7 @@ from contextlib import contextmanager
 HOST = "web-platform.test"
 HTTP_PORT = 8000
 # Ports that must be free for `wpt serve` to come up fully.
-REQUIRED_PORTS = (8000, 8001, 8443, 8444)
+REQUIRED_PORTS = (8000, 8001, 8443, 8444, 9000)
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(_HERE, os.pardir, os.pardir))  # tool/
@@ -126,9 +126,14 @@ class WptServerError(RuntimeError):
 
 
 @contextmanager
-def wpt_serve(wpt_root, inject_script=DEFAULT_INJECT, http2=False,
+def wpt_serve(wpt_root, inject_script=DEFAULT_INJECT, http2=True,
               startup_timeout=60, verbose=False):
     """Run `wpt serve` for the duration of the with-block.
+
+    The HTTP/2 server stays on: `--no-h2` leaves `ports.h2` empty, and any
+    page whose template reads `{{ports[h2][0]}}` -- every WebSocket test via
+    websockets/constants.sub.js -- then fails to render with an IndexError
+    before the engine is involved.
 
     Raises WptServerError if the server fails to come up healthy.
     """
