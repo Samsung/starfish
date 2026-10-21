@@ -71,6 +71,7 @@
 #if defined(STARFISH_ENABLE_CDP)
 #include "core/cdp/CDPServer.h"
 #include "core/cdp/CDPDispatcher.h"
+#include "core/cdp/domains/RuntimeDomain.h"
 #endif
 #include "core/serialize/Serializer.h"
 #include "core/storage/Storage.h"
@@ -217,6 +218,18 @@ void Window::unregisterAudioContext(AudioContext* context)
 
 void Window::dispose()
 {
+#if defined(STARFISH_ENABLE_CDP)
+    // A CDP command that waits on a Promise of this window can never finish.
+    // Fail it now, while the realm is still alive.
+    WebView* cdpWebView = webView();
+    if (m_scriptBindingInstance && cdpWebView && cdpWebView->cdpServer() &&
+        cdpWebView->cdpServer()->dispatcher()) {
+        cdpWebView->cdpServer()
+            ->dispatcher()
+            ->runtime()
+            ->cancelPendingEvaluations(m_scriptBindingInstance);
+    }
+#endif
     bool deferScriptBindingDestroy = false;
 #if defined(STARFISH_ENABLE_WEBAUDIO)
     // https://webaudio.github.io/web-audio-api/#unloading-a-document

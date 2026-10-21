@@ -109,6 +109,7 @@ CDPDispatcher::~CDPDispatcher()
     // Security.setIgnoreCertificateErrors is a debugging aid scoped to the
     // CDP client; it must not outlive the server (see resetConnectionState).
     setGlobalIgnoreSSLVerify(false);
+    m_runtime->cancelAllPendingEvaluations();
     while (!m_contexts.empty()) {
         destroyContext(m_contexts.back());
     }
@@ -159,6 +160,7 @@ TargetContext* CDPDispatcher::createContext(WebView* wv, bool ownsWebView)
 
 void CDPDispatcher::destroyContext(TargetContext* ctx)
 {
+    m_runtime->cancelPendingEvaluations(ctx->webView, true);
     for (auto it = m_contexts.begin(); it != m_contexts.end(); ++it) {
         if (*it == ctx) {
             m_contexts.erase(it);
@@ -231,6 +233,9 @@ void CDPDispatcher::onConnectionClosedOnMain(size_t, void* data)
 
 void CDPDispatcher::resetConnectionState()
 {
+    // The client is gone, so pending deferred replies have no receiver.
+    m_runtime->cancelAllPendingEvaluations();
+
     // Tabs spawned by the now-departed client (Target.createTarget) belong to
     // that connection; tear them down so a reconnecting client does not see
     // stale targets.

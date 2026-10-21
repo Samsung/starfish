@@ -41,7 +41,9 @@
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
+#include <cstdlib>
 #include <cstring>
+#include <new>
 #include <vector>
 
 namespace Starfish {
@@ -127,7 +129,7 @@ void RuntimeDomain::processMessage(CDPCommand& cmd, const std::string& method)
             cmd.sendError(-32602, "'expression' is required");
             return;
         }
-        const char* expr = (*cmd.params())["expression"].GetString();
+        const rapidjson::Value& expression = (*cmd.params())["expression"];
         bool returnByValue = false;
         if (cmd.params()->HasMember("returnByValue") &&
             (*cmd.params())["returnByValue"].IsBool()) {
@@ -138,7 +140,8 @@ void RuntimeDomain::processMessage(CDPCommand& cmd, const std::string& method)
             (*cmd.params())["awaitPromise"].IsBool()) {
             awaitPromise = (*cmd.params())["awaitPromise"].GetBool();
         }
-        std::string source(expr);
+        std::string source(expression.GetString(),
+                           expression.GetStringLength());
         BrowsingContext* bc = targetBrowsingContext(wv, cmd, "contextId");
         evaluateSource(wv, bc, source, returnByValue, awaitPromise, cmd);
         // Page-script run synchronously here may have removed an iframe (e.g.
@@ -394,14 +397,10 @@ static ValueRef* evalExpr(ContextRef* ctx, const std::string& expr,
     return r.result;
 }
 
-// If `value` is a Promise and awaitPromise is requested, drive the engine until
-// it settles, then return the settled value (and set isRejected). Pending
-// promises in Starfish may be gated on microtasks (drained via
-// executePendingJob) and on observer callbacks driven by the rendering tick
-// (e.g. IntersectionObserver, used by Puppeteer's isIntersectingViewport).
-// Since the CDP command runs synchronously on the main thread while the message
-// loop is blocked, we pump those steps here in a bounded loop. Non-promise
-// values and pending-on-real-IO promises are returned as-is.
+// If `value` is a Promise and awaitPromise is requested, first drain
+// microtasks and observer callbacks that can settle synchronously. A caller
+// that still sees a pending Promise defers the CDP response so the normal
+// message loop can run timers and network completion.
 static ValueRef* settlePromiseIfNeeded(WebView* wv, ContextRef* ctx,
                                        ValueRef* value, bool awaitPromise,
                                        bool& isRejected)
@@ -441,9 +440,226 @@ static ValueRef* settlePromiseIfNeeded(WebView* wv, ContextRef* ctx,
     if (promise->state() == PromiseObjectRef::FulFilled) {
         return promise->promiseResult();
     }
-    // Still pending (e.g. waiting on a real timer/network): return the promise
-    // object itself, matching prior behavior.
+    // A timer or network operation still owns the Promise. The caller will
+    // defer the response and poll from the normal message loop.
     return value;
+}
+
+// Fill `result` for a settled value. A rejected value also gets
+// exceptionDetails, and returnByValue is ignored for it.
+// The synchronous paths and the deferred Promise path all use this.
+static void buildSettledResult(ScriptBindingInstance* sbi,
+                               RemoteObjectStore* store, ValueRef* settled,
+                               bool rejected, bool returnByValue,
+                               rapidjson::Value& result,
+                               rapidjson::Document::AllocatorType& alloc)
+{
+    rapidjson::Value remote(rapidjson::kObjectType);
+    if (!rejected) {
+        serializeRemoteObject(sbi, store, settled, returnByValue, remote,
+                              alloc);
+        result.AddMember("result", remote, alloc);
+        return;
+    }
+    serializeRemoteObject(sbi, store, settled, false, remote, alloc);
+    result.AddMember("result", remote, alloc);
+    std::string text = settled->toStringWithoutException(sbi->scriptContext())
+                           ->toStdUTF8String();
+    rapidjson::Value ex(rapidjson::kObjectType);
+    ex.AddMember("exceptionId", 1, alloc);
+    ex.AddMember("text", rapidjson::Value(text.c_str(), text.size(), alloc),
+                 alloc);
+    ex.AddMember("lineNumber", 0, alloc);
+    ex.AddMember("columnNumber", 0, alloc);
+    rapidjson::Value exObj(rapidjson::kObjectType);
+    serializeRemoteObject(sbi, store, settled, false, exObj, alloc);
+    ex.AddMember("exception", exObj, alloc);
+    result.AddMember("exceptionDetails", ex, alloc);
+}
+
+// Chrome sends this error when the page navigates or closes while a
+// command waits on a Promise.
+static const char* const kTargetNavigatedMessage =
+    "Inspected target navigated or closed";
+
+// One Runtime.evaluate / callFunctionOn waiting on a pending Promise.
+// It lives on the malloc heap, so its GC pointers are rooted while it is
+// registered. RuntimeDomain owns it and frees it on every exit path.
+struct RuntimeDomain::PendingEvaluation {
+    uint64_t id;
+    WebView* webView;
+    ScriptBindingInstance* binding;
+    PromiseObjectRef* promise;
+    bool returnByValue;
+    bool hasCommandId;
+    int64_t commandId;
+    std::string sessionId;
+};
+
+void RuntimeDomain::freePending(PendingEvaluation* p)
+{
+    GC_remove_roots(p, reinterpret_cast<char*>(p) + sizeof(*p));
+    p->~PendingEvaluation();
+    std::free(p);
+}
+
+RuntimeDomain::PendingEvaluation* RuntimeDomain::takePending(uint64_t id)
+{
+    for (auto it = m_pending.begin(); it != m_pending.end(); ++it) {
+        if ((*it)->id == id) {
+            PendingEvaluation* p = *it;
+            m_pending.erase(it);
+            return p;
+        }
+    }
+    return nullptr;
+}
+
+void RuntimeDomain::settlePending(uint64_t id)
+{
+    PendingEvaluation* p = takePending(id);
+    if (!p) {
+        return;
+    }
+    TargetContext* target = m_dispatcher->contextForWebView(p->webView);
+    if (target) {
+        CDPDispatcher::ScopedTarget scopedTarget(m_dispatcher, target);
+        Optional<int64_t> commandId;
+        if (p->hasCommandId) {
+            commandId = p->commandId;
+        }
+        CDPCommand command(m_dispatcher, commandId, p->sessionId, nullptr);
+        rapidjson::Document doc;
+        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+        rapidjson::Value result(rapidjson::kObjectType);
+        buildSettledResult(p->binding, m_dispatcher->remoteObjectStore(),
+                           p->promise->promiseResult(),
+                           p->promise->state() == PromiseObjectRef::Rejected,
+                           p->returnByValue, result, alloc);
+        command.sendResult(result, doc);
+    }
+    freePending(p);
+}
+
+void RuntimeDomain::cancelPendingEvaluations(WebView* wv, bool notify)
+{
+    cancelMatching(wv, nullptr, notify);
+}
+
+void RuntimeDomain::cancelPendingEvaluations(ScriptBindingInstance* sbi)
+{
+    cancelMatching(nullptr, sbi, true);
+}
+
+void RuntimeDomain::cancelMatching(WebView* wv, ScriptBindingInstance* sbi,
+                                   bool notify)
+{
+    std::vector<PendingEvaluation*> taken;
+    for (auto it = m_pending.begin(); it != m_pending.end();) {
+        if ((wv && (*it)->webView == wv) || (sbi && (*it)->binding == sbi)) {
+            taken.push_back(*it);
+            it = m_pending.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    for (PendingEvaluation* p : taken) {
+        TargetContext* target = m_dispatcher->contextForWebView(p->webView);
+        if (notify && target && p->hasCommandId) {
+            CDPDispatcher::ScopedTarget scopedTarget(m_dispatcher, target);
+            CDPCommand command(m_dispatcher, Optional<int64_t>(p->commandId),
+                               p->sessionId, nullptr);
+            command.sendError(-32000, kTargetNavigatedMessage);
+        }
+        freePending(p);
+    }
+}
+
+void RuntimeDomain::cancelAllPendingEvaluations()
+{
+    std::vector<PendingEvaluation*> taken;
+    taken.swap(m_pending);
+    for (PendingEvaluation* p : taken) {
+        freePending(p);
+    }
+}
+
+// Native fulfill/reject handler. The function's extraData is the pending id,
+// not a pointer, so a late call after cancellation finds nothing and does
+// nothing.
+static ValueRef* pendingPromiseCallback(ExecutionStateRef* state,
+                                        ValueRef* thisValue, size_t argc,
+                                        ValueRef** argv, bool isNewExpression)
+{
+    ScriptObject callee = toCalleeObject(state);
+    if (!callee) {
+        return ValueRef::createUndefined();
+    }
+    uint64_t id =
+        static_cast<uint64_t>(reinterpret_cast<uintptr_t>(callee->extraData()));
+    Window* window =
+        static_cast<Window*>(state->context()->globalObject()->extraData());
+    if (!window) {
+        return ValueRef::createUndefined();
+    }
+    WebView* wv = window->webView();
+    if (!wv || !wv->cdpServer() || !wv->cdpServer()->dispatcher()) {
+        return ValueRef::createUndefined();
+    }
+    wv->cdpServer()->dispatcher()->runtime()->settlePending(id);
+    return ValueRef::createUndefined();
+}
+
+bool RuntimeDomain::deferPromise(WebView* webView, ScriptBindingInstance* sbi,
+                                 ValueRef* value, bool returnByValue,
+                                 bool awaitPromise, CDPCommand& command)
+{
+    if (!awaitPromise || !value->isObject() ||
+        !value->asObject()->isPromiseObject()) {
+        return false;
+    }
+    PromiseObjectRef* promise = value->asObject()->asPromiseObject();
+    if (promise->state() != PromiseObjectRef::Pending) {
+        return false;
+    }
+
+    void* storage = std::malloc(sizeof(PendingEvaluation));
+    STARFISH_RELEASE_ASSERT(storage);
+    PendingEvaluation* p = new (storage) PendingEvaluation();
+    p->id = ++m_nextPendingId;
+    p->webView = webView;
+    p->binding = sbi;
+    p->promise = promise;
+    p->returnByValue = returnByValue;
+    p->hasCommandId = command.hasId();
+    p->commandId = command.hasId() ? command.id() : 0;
+    p->sessionId = command.sessionId();
+    GC_add_roots(p, reinterpret_cast<char*>(p) + sizeof(*p));
+    m_pending.push_back(p);
+
+    struct ThenData {
+        PromiseObjectRef* promise;
+        uint64_t id;
+    } data{ promise, p->id };
+    Evaluator::EvaluatorResult r = Evaluator::execute(
+        sbi->scriptContext(),
+        [](ExecutionStateRef* state, ThenData* d) -> ValueRef* {
+            FunctionObjectRef* fn = FunctionObjectRef::create(
+                state, FunctionObjectRef::NativeFunctionInfo(
+                           AtomicStringRef::emptyAtomicString(),
+                           pendingPromiseCallback, 1, true, false));
+            fn->setExtraData(
+                reinterpret_cast<void*>(static_cast<uintptr_t>(d->id)));
+            d->promise->then(state, fn, fn);
+            return ValueRef::createUndefined();
+        },
+        &data);
+    if (!r.isSuccessful()) {
+        // The handlers were not attached; nothing can settle this record.
+        freePending(takePending(p->id));
+        return false;
+    }
+    return true;
 }
 
 // Data passed into the Evaluator closure that performs the actual function
@@ -593,30 +809,12 @@ void RuntimeDomain::callFunctionOn(WebView* wv, BrowsingContext* bc,
     bool settledRejected = false;
     ValueRef* settled = settlePromiseIfNeeded(wv, ctx, res.result, awaitPromise,
                                               settledRejected);
-
-    if (settledRejected) {
-        rapidjson::Value remote(rapidjson::kObjectType);
-        serializeRemoteObject(sbi, store, settled, false, remote, alloc);
-        result.AddMember("result", remote, alloc);
-        std::string text =
-            settled->toStringWithoutException(ctx)->toStdUTF8String();
-        rapidjson::Value ex(rapidjson::kObjectType);
-        ex.AddMember("exceptionId", 1, alloc);
-        ex.AddMember("text", rapidjson::Value(text.c_str(), text.size(), alloc),
-                     alloc);
-        ex.AddMember("lineNumber", 0, alloc);
-        ex.AddMember("columnNumber", 0, alloc);
-        rapidjson::Value exObj(rapidjson::kObjectType);
-        serializeRemoteObject(sbi, store, settled, false, exObj, alloc);
-        ex.AddMember("exception", exObj, alloc);
-        result.AddMember("exceptionDetails", ex, alloc);
-        cmd.sendResult(result, doc);
+    if (deferPromise(wv, sbi, res.result, returnByValue, awaitPromise, cmd)) {
         return;
     }
 
-    rapidjson::Value remote(rapidjson::kObjectType);
-    serializeRemoteObject(sbi, store, settled, returnByValue, remote, alloc);
-    result.AddMember("result", remote, alloc);
+    buildSettledResult(sbi, store, settled, settledRejected, returnByValue,
+                       result, alloc);
     cmd.sendResult(result, doc);
 }
 
@@ -991,34 +1189,13 @@ void RuntimeDomain::evaluateSource(WebView* wv, BrowsingContext* bc,
         bool settledRejected = false;
         ValueRef* settled = settlePromiseIfNeeded(
             wv, ctx, sbresult.result, awaitPromise, settledRejected);
-
-        if (settledRejected) {
-            rapidjson::Value remote(rapidjson::kObjectType);
-            serializeRemoteObject(sbi, m_dispatcher->remoteObjectStore(),
-                                  settled, false, remote, alloc);
-            result.AddMember("result", remote, alloc);
-            std::string text =
-                settled->toStringWithoutException(ctx)->toStdUTF8String();
-            rapidjson::Value ex(rapidjson::kObjectType);
-            ex.AddMember("exceptionId", 1, alloc);
-            ex.AddMember("text",
-                         rapidjson::Value(text.c_str(), text.size(), alloc),
-                         alloc);
-            ex.AddMember("lineNumber", 0, alloc);
-            ex.AddMember("columnNumber", 0, alloc);
-            rapidjson::Value exObj(rapidjson::kObjectType);
-            serializeRemoteObject(sbi, m_dispatcher->remoteObjectStore(),
-                                  settled, false, exObj, alloc);
-            ex.AddMember("exception", exObj, alloc);
-            result.AddMember("exceptionDetails", ex, alloc);
-            cmd.sendResult(result, doc);
+        if (deferPromise(wv, sbi, sbresult.result, returnByValue, awaitPromise,
+                         cmd)) {
             return;
         }
 
-        rapidjson::Value remote(rapidjson::kObjectType);
-        serializeRemoteObject(sbi, m_dispatcher->remoteObjectStore(), settled,
-                              returnByValue, remote, alloc);
-        result.AddMember("result", remote, alloc);
+        buildSettledResult(sbi, m_dispatcher->remoteObjectStore(), settled,
+                           settledRejected, returnByValue, result, alloc);
         cmd.sendResult(result, doc);
         return;
     }
