@@ -222,13 +222,12 @@ int DOMTokenList::checkMatchedTokens(bool* matchFlags,
                                      const GCVector<StringView>& tokens,
                                      String* token)
 {
+    // Only sets flags, so that several tokens can be matched in turn.
     int count = 0;
     for (unsigned i = 0; i < tokens.size(); i++) {
         if (tokens[i].equals(token)) {
             matchFlags[i] = true;
             count++;
-        } else {
-            matchFlags[i] = false;
         }
     }
     return count;
@@ -255,11 +254,12 @@ void DOMTokenList::remove(GCVector<String*>& tokensToRemove)
     String* dst = String::createASCIIString("");
     GCVector<StringView> tokens;
     tokenize(src, tokens);
-    bool* matchFlags = new bool[tokens.size()];
-    int matchCount = 0;
     for (unsigned i = 0; i < tokensToRemove.size(); i++) {
         validateToken(tokensToRemove[i]);
-        matchCount += checkMatchedTokens(matchFlags, tokens, tokensToRemove[i]);
+    }
+    bool* matchFlags = new bool[tokens.size()]();
+    for (unsigned i = 0; i < tokensToRemove.size(); i++) {
+        checkMatchedTokens(matchFlags, tokens, tokensToRemove[i]);
     }
 
     bool isEmpty = true;
@@ -330,12 +330,12 @@ bool DOMTokenList::replace(String* token, String* newToken)
     String* dst = String::createASCIIString("");
     GCVector<StringView> tokens;
     tokenize(src, tokens);
-    bool* matchFlags = new bool[tokens.size()];
-    int matchCount = checkMatchedTokens(matchFlags, tokens, token);
-    matchCount += checkMatchedTokens(matchFlags, tokens, newToken);
+    bool* matchFlags = new bool[tokens.size()]();
     bool isReplaced = false;
 
-    if (matchCount > 0) {
+    // If this's token set does not contain token, then return false.
+    if (checkMatchedTokens(matchFlags, tokens, token) > 0) {
+        checkMatchedTokens(matchFlags, tokens, newToken);
         bool isEmpty = true;
         for (unsigned i = 0; i < tokens.size(); i++) {
             if (matchFlags[i]) {
