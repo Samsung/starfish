@@ -2,6 +2,8 @@ name: Release flutter port
 
 on:
   workflow_dispatch:
+  # Called from pr_ci.yml (pull_request_target) so fork PRs get secrets.
+  workflow_call:
 
 jobs:
   build_tizen_60:
@@ -16,11 +18,20 @@ jobs:
     # Set reasonable timeout value.
     timeout-minutes: 180
 
+    # One build per PR: superseded PR runs cancel, manual runs (run_id) never do.
+    concurrency:
+      group: flutter-port-${{ github.event.pull_request.number || github.run_id }}
+      cancel-in-progress: true
+
     steps:
       - name: Checkout source..
         uses: CODE-Actions/checkout@v2
         with:
           submodules: "recursive"
+          # PR runs come through pr_ci.yml's workflow_call: check out the PR
+          # head, not the base. Empty on workflow_dispatch -> default ref.
+          allow-unsafe-pr-checkout: true
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: container fix
         run: |
           sudo /usr/sbin/update-binfmts --disable
@@ -31,7 +42,10 @@ jobs:
       - name: Reset Submodule
         run: git submodule foreach --recursive git reset --hard
 
+      # PR runs build x86_64 and armv7l only: one per arch block in
+      # build/config.cmake. Release cuts build all four.
       - name: Build flutter_i586
+        if: github.event_name == 'workflow_dispatch'
         run: |
           gbs -c .github/gbs-configuration/sr/tizen_6.0.conf build -A i586 -P profile.tizen_6.0_emulator --define 'build_profile flutter' --include-all --incremental
           mkdir -p i586_so && cd i586_so
@@ -41,13 +55,16 @@ jobs:
           find ./usr/ -name '*.so' | xargs -I {} sh -c "cp {} ./release"
           cd ..
 
+      # Artifacts ship with the release; PR runs only prove the build compiles.
       - uses: CODE-Actions/upload-artifact@v2
+        if: github.event_name == 'workflow_dispatch'
         with:
           name: starfish_flutter_port_i586_so
           path: |
             ./i586_so/release/*.so
 
       - name: Clear cache before next build
+        if: github.event_name == 'workflow_dispatch'
         run: |
           rm -rf out_tizen/
           sudo rm -rf ~/GBS-ROOT/
@@ -63,6 +80,7 @@ jobs:
           cd ..
 
       - uses: CODE-Actions/upload-artifact@v2
+        if: github.event_name == 'workflow_dispatch'
         with:
           name: starfish_flutter_port_x86_64_so
           path: |
@@ -84,17 +102,20 @@ jobs:
           cd ..
 
       - uses: CODE-Actions/upload-artifact@v2
+        if: github.event_name == 'workflow_dispatch'
         with:
           name: starfish_flutter_port_arm_so
           path: |
             ./arm_so/release/*.so
 
       - name: Clear cache before next build
+        if: github.event_name == 'workflow_dispatch'
         run: |
           rm -rf out_tizen/
           sudo rm -rf ~/GBS-ROOT/
 
       - name: Build flutter_arm64
+        if: github.event_name == 'workflow_dispatch'
         run: |
           gbs -c .github/gbs-configuration/sr/tizen_6.0.conf build -A aarch64 -P profile.tizen_6.0_standard --define 'build_profile flutter' --include-all --incremental
           mkdir -p arm64_so && cd arm64_so
@@ -105,12 +126,14 @@ jobs:
           cd ..
 
       - uses: CODE-Actions/upload-artifact@v2
+        if: github.event_name == 'workflow_dispatch'
         with:
           name: starfish_flutter_port_arm64_so
           path: |
             ./arm64_so/release/*.so
 
       - name: Clear cache before next build
+        if: github.event_name == 'workflow_dispatch'
         run: |
           rm -rf out_tizen/
           sudo rm -rf ~/GBS-ROOT/
