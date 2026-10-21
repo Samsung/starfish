@@ -36,7 +36,7 @@ static void PngWriteCallback(png_structp png_ptr, png_bytep data,
     p->insert(p->end(), data, data + length);
 }
 
-static bool encodePNGOnce(const uint8_t* src, size_t w, size_t h,
+static bool encodePNGOnce(const uint8_t* src, size_t w, size_t h, size_t stride,
                           ImageEncoder::ImageColorSpace colorSpace,
                           std::vector<uint8_t>& result)
 {
@@ -65,7 +65,7 @@ static bool encodePNGOnce(const uint8_t* src, size_t w, size_t h,
     if (colorSpace == ImageEncoder::ImageColorSpace::RGBA ||
         colorSpace == ImageEncoder::ImageColorSpace::BGRA) {
         for (size_t y = 0; y < h; ++y) {
-            rows[y] = (uint8_t*)src + y * w * 4;
+            rows[y] = (uint8_t*)src + y * stride;
         }
     } else {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -83,7 +83,7 @@ static bool encodePNGOnce(const uint8_t* src, size_t w, size_t h,
 }
 
 std::vector<uint8_t> ImageEncoder::encodePNG(const uint8_t* src, size_t w,
-                                             size_t h,
+                                             size_t h, size_t stride,
                                              ImageColorSpace colorSpace)
 {
     STARFISH_ASSERT(src != nullptr);
@@ -96,7 +96,7 @@ std::vector<uint8_t> ImageEncoder::encodePNG(const uint8_t* src, size_t w,
 
     std::vector<uint8_t> result;
     for (int attempt = 0; attempt < maxAttempts; ++attempt) {
-        if (encodePNGOnce(src, w, h, colorSpace, result)) {
+        if (encodePNGOnce(src, w, h, stride, colorSpace, result)) {
             break;
         }
     }
@@ -104,8 +104,15 @@ std::vector<uint8_t> ImageEncoder::encodePNG(const uint8_t* src, size_t w,
     return result;
 }
 
+std::vector<uint8_t> ImageEncoder::encodePNG(const uint8_t* src, size_t w,
+                                             size_t h,
+                                             ImageColorSpace colorSpace)
+{
+    return encodePNG(src, w, h, w * 4, colorSpace);
+}
+
 std::vector<uint8_t> ImageEncoder::encodeJPEG(const uint8_t* src, size_t w,
-                                              size_t h,
+                                              size_t h, size_t stride,
                                               ImageColorSpace colorSpace)
 {
     STARFISH_ASSERT(src != nullptr);
@@ -141,7 +148,7 @@ std::vector<uint8_t> ImageEncoder::encodeJPEG(const uint8_t* src, size_t w,
 
     for (size_t i = 0; i < cinfo.image_height; i++) {
         JSAMPROW scanline =
-            static_cast<JSAMPROW>(const_cast<uint8_t*>(src) + i * w * 4);
+            static_cast<JSAMPROW>(const_cast<uint8_t*>(src) + i * stride);
         jpeg_write_scanlines(&cinfo, &scanline, 1);
     }
     jpeg_finish_compress(&cinfo);
@@ -154,5 +161,12 @@ std::vector<uint8_t> ImageEncoder::encodeJPEG(const uint8_t* src, size_t w,
 
 #endif
     return result;
+}
+
+std::vector<uint8_t> ImageEncoder::encodeJPEG(const uint8_t* src, size_t w,
+                                              size_t h,
+                                              ImageColorSpace colorSpace)
+{
+    return encodeJPEG(src, w, h, w * 4, colorSpace);
 }
 } // namespace Starfish

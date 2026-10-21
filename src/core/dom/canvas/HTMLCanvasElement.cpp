@@ -203,6 +203,7 @@ String* HTMLCanvasElement::toDataURL(String* type, ScriptValue quality)
     if (canvasSurface != nullptr) {
         auto width = canvasSurface->bufferWidth();
         auto height = canvasSurface->bufferHeight();
+        auto stride = canvasSurface->bufferStride();
 #if defined(PORT_PIXEL_ORDER_RGBA)
         ImageEncoder::ImageColorSpace colorSpace =
             ImageEncoder::ImageColorSpace::RGBA;
@@ -212,15 +213,15 @@ String* HTMLCanvasElement::toDataURL(String* type, ScriptValue quality)
 #endif
 #if !defined(STARFISH_HEADLESS)
         if (type->equals("image/png")) {
-            result =
-                "data:image/png;base64," +
-                Base64Utils::encodeBase64(ImageEncoder::encodePNG(
-                    canvasSurface->mapBuffer(), width, height, colorSpace));
+            result = "data:image/png;base64," +
+                     Base64Utils::encodeBase64(ImageEncoder::encodePNG(
+                         canvasSurface->mapBuffer(), width, height, stride,
+                         colorSpace));
         } else if (type->equals("image/jpeg")) {
-            result =
-                "data:image/jpeg;base64," +
-                Base64Utils::encodeBase64(ImageEncoder::encodeJPEG(
-                    canvasSurface->mapBuffer(), width, height, colorSpace));
+            result = "data:image/jpeg;base64," +
+                     Base64Utils::encodeBase64(ImageEncoder::encodeJPEG(
+                         canvasSurface->mapBuffer(), width, height, stride,
+                         colorSpace));
         } else {
             STARFISH_UNSUPPORTED("Unsupported data type %s(%s)",
                                  type->toUTF8NonGCString().data(),
