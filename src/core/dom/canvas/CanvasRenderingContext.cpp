@@ -37,6 +37,16 @@ void CanvasRenderingContext::calculateDimension(uint32_t& outWidth,
                                                 const uint32_t elementWidth,
                                                 const uint32_t elementHeight)
 {
+    calculateDimension(executionContext()->starfish(), outWidth, outHeight,
+                       elementWidth, elementHeight);
+}
+
+void CanvasRenderingContext::calculateDimension(Starfish* starfish,
+                                                uint32_t& outWidth,
+                                                uint32_t& outHeight,
+                                                const uint32_t elementWidth,
+                                                const uint32_t elementHeight)
+{
     uint64_t width = elementWidth;
     uint64_t height = elementHeight;
 
@@ -48,8 +58,7 @@ void CanvasRenderingContext::calculateDimension(uint32_t& outWidth,
         height = 1;
     }
 
-    uint32_t maxTextureSize =
-        Compositor::maximumTextureSize(executionContext()->starfish());
+    uint32_t maxTextureSize = Compositor::maximumTextureSize(starfish);
     uint64_t maxTextureArea = maxTextureSize * maxTextureSize;
 
     if (elementWidth * elementHeight >= maxTextureArea) {

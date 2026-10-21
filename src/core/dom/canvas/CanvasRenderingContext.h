@@ -56,6 +56,13 @@ public:
 
     virtual ScriptBindingInstance* scriptBindingInstance();
     virtual void initialize() = 0;
+    // The size of the bitmap the engine keeps for a canvas element of the
+    // given size, bounded by what the compositor can hold.
+    static void calculateDimension(Starfish* starfish, uint32_t& outWidth,
+                                   uint32_t& outHeight,
+                                   const uint32_t elementWidth,
+                                   const uint32_t elementHeight);
+
     virtual CanvasSurface* surface() = 0;
     virtual void flushForReadback() = 0;
     virtual void flushForCompositing()

@@ -28,6 +28,9 @@ public:
         RGBA,
         BGRA,
     };
+    // src holds height rows of width 4-byte pixels, stride bytes apart. A
+    // stride of 0 encodes the one row at src for every line, so a constant
+    // image needs only a single row of source pixels.
     static std::vector<uint8_t> encodePNG(const uint8_t* src, size_t width,
                                           size_t height, size_t stride,
                                           ImageColorSpace colorSpace);

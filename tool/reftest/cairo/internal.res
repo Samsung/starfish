@@ -844,6 +844,7 @@ test/cairo/internal-test/canvas/font-weight-values.html
 # [known-fail:PRE_FIX_BASELINE] test/cairo/internal-test/canvas/webgl2-cube-face-tex-image-overloads.html
 test/cairo/internal-test/canvas/webgl2-compressed-tex-image-overloads.html
 test/cairo/internal-test/canvas/webgl-teximage-contextless-canvas.html
+test/cairo/internal-test/canvas/toDataURL-nocontext.html
 test/cairo/internal-test/css/overflow/overflow-pseudo-element.html
 #test/cairo/internal-test/iframe/iframe-hittest.html
 # [known-fail:PRE_FIX_BASELINE] test/cairo/internal-test/iframe/webgl-blend-in-iframe.html

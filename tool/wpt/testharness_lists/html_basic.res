@@ -180,6 +180,24 @@ http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.arguments.3.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.arguments.2.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.arguments.1.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toBlob.jpeg.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toBlob.null.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toBlob.png.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.bogustype.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.jpeg.alpha.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.jpeg.primarycolours.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.jpeg.quality.basic.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.jpeg.quality.notnumber.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.jpeg.quality.outsiderange.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.jpg.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.lowercase.ascii.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.lowercase.unicode.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.png.complexcolours.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.png.primarycolours.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.unrecognised.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.zeroheight.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.zerosize.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.zerowidth.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/size.attributes.style.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/fallback.nested.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/fallback.multiple.html
