@@ -20,6 +20,10 @@
 #include "Snapshot.h"
 
 #include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
+
+#include <cmath>
 
 #include <vector>
 
@@ -38,6 +42,97 @@ namespace {
             return std::string();
         }
         return value["value"].GetString();
+    }
+
+    const rapidjson::Value* findProperty(const rapidjson::Value& node,
+                                         const char* name)
+    {
+        if (!node.HasMember("properties") || !node["properties"].IsArray()) {
+            return nullptr;
+        }
+        const rapidjson::Value& properties = node["properties"];
+        for (rapidjson::SizeType index = 0; index < properties.Size();
+             index++) {
+            const rapidjson::Value& property = properties[index];
+            if (property.IsObject() && property.HasMember("name") &&
+                property["name"].IsString() &&
+                std::string(property["name"].GetString()) == name &&
+                property.HasMember("value") && property["value"].IsObject() &&
+                property["value"].HasMember("value")) {
+                return &property["value"]["value"];
+            }
+        }
+        return nullptr;
+    }
+
+    bool booleanProperty(const rapidjson::Value& node, const char* name,
+                         bool& result)
+    {
+        const rapidjson::Value* value = findProperty(node, name);
+        if (!value || !value->IsBool()) {
+            return false;
+        }
+        result = value->GetBool();
+        return true;
+    }
+
+    // Returns the states in the order level, checked, expanded, selected,
+    // disabled, required. The result has no brackets.
+    std::string stateList(const rapidjson::Value& node)
+    {
+        std::vector<std::string> states;
+        const rapidjson::Value* level = findProperty(node, "level");
+        if (level && level->IsInt()) {
+            states.push_back("level=" + std::to_string(level->GetInt()));
+        }
+        const rapidjson::Value* checked = findProperty(node, "checked");
+        if (checked && checked->IsString()) {
+            states.push_back(std::string("checked=") + checked->GetString());
+        }
+        bool flag = false;
+        if (booleanProperty(node, "expanded", flag)) {
+            states.push_back(flag ? "expanded=true" : "expanded=false");
+        }
+        if (booleanProperty(node, "selected", flag) && flag) {
+            states.push_back("selected");
+        }
+        if (booleanProperty(node, "disabled", flag) && flag) {
+            states.push_back("disabled");
+        }
+        if (booleanProperty(node, "required", flag) && flag) {
+            states.push_back("required");
+        }
+        std::string joined;
+        for (size_t index = 0; index < states.size(); index++) {
+            joined += (index ? ", " : "") + states[index];
+        }
+        return joined;
+    }
+
+    // The value text of a string or number value. Booleans give no text.
+    std::string valueText(const rapidjson::Value& node)
+    {
+        if (!node.HasMember("value") || !node["value"].IsObject() ||
+            !node["value"].HasMember("value")) {
+            return std::string();
+        }
+        const rapidjson::Value& value = node["value"]["value"];
+        if (value.IsString()) {
+            return value.GetString();
+        }
+        if (!value.IsNumber()) {
+            return std::string();
+        }
+        if (value.IsDouble()) {
+            const double number = value.GetDouble();
+            if (std::floor(number) == number && std::fabs(number) < 1e15) {
+                return std::to_string(static_cast<long long>(number));
+            }
+        }
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        value.Accept(writer);
+        return buffer.GetString();
     }
 
     bool isInteractiveRole(const std::string& role)
@@ -127,6 +222,14 @@ bool formatInteractiveSnapshot(const std::string& axTree, std::string& output,
         }
         if (!name.empty()) {
             output += " \"" + escapeSnapshotText(name) + "\"";
+        }
+        const std::string states = stateList(node);
+        if (!states.empty()) {
+            output += " [" + states + "]";
+        }
+        const std::string value = valueText(node);
+        if (!value.empty() && value != name) {
+            output += ": " + escapeSnapshotText(value);
         }
         output += "\n";
     }
