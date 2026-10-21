@@ -28,18 +28,25 @@ loaded.
 
 ## Session startup
 
-The session files are:
+Each session has its own daemon, engine, and files. The session name comes
+from `--session <name>` and is `default` when the option is absent. The files
+of the default session are:
 
 ```text
 $HOME/lightweight-web-engine/cli/default.sock
-$HOME/lightweight-web-engine/cli/start.lock
+$HOME/lightweight-web-engine/cli/default.start.lock
 ```
+
+A session named `work` uses `work.sock` and `work.start.lock` in the same
+directory. It keeps cookies and storage under
+`$HOME/lightweight-web-engine/cli/storage/work`. The default session keeps
+the engine's own storage directory.
 
 Only `open` can start a session. Other commands fail when the socket does not
 answer.
 
 1. The client tries the socket.
-2. If it fails, the client locks `start.lock` and tries again. This prevents
+2. If it fails, the client locks the session's start lock and tries again. This prevents
    concurrent `open` commands from starting separate daemons.
 3. The client starts the daemon and waits for one startup message.
 4. The daemon starts the engine, connects through CDP, and sets up the

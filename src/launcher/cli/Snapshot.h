@@ -25,8 +25,17 @@
 
 namespace StarfishCLI {
 
-bool formatInteractiveSnapshot(const std::string& axTree, std::string& output,
-                               std::string& error, std::vector<int>& nodeIds);
+// The role and name of one listed element, as the AX tree gives them.
+struct SnapshotElement {
+    std::string role;
+    std::string name;
+};
+
+// When elements is not null, it gets one item for each listed ref.
+bool formatInteractiveSnapshot(
+    const std::string& axTree, std::string& output, std::string& error,
+    std::vector<int>& nodeIds,
+    std::vector<SnapshotElement>* elements = nullptr);
 
 } // namespace StarfishCLI
 

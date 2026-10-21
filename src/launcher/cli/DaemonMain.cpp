@@ -77,6 +77,18 @@ namespace {
         return port;
     }
 
+    // True when the other end of the connection has closed it.
+    bool isPeerClosed(int connection)
+    {
+        char byte;
+        ssize_t count = recv(connection, &byte, 1, MSG_PEEK | MSG_DONTWAIT);
+        if (count == 0) {
+            return true;
+        }
+        return count < 0 && errno != EAGAIN && errno != EWOULDBLOCK &&
+               errno != EINTR;
+    }
+
     void stopEngine(pid_t process)
     {
         if (process <= 0) {
@@ -87,7 +99,8 @@ namespace {
         }
     }
 
-    pid_t startEngine(const std::string& engine, uint16_t port)
+    pid_t startEngine(const std::string& engine, uint16_t port,
+                      const std::string& storageDirectory)
     {
         pid_t process = fork();
         if (process != 0) {
@@ -111,8 +124,15 @@ namespace {
         std::string portText = std::to_string(port);
         setenv("STARFISH_ENABLE_CDP", "1", 1);
         setenv("STARFISH_CDP_PORT", portText.c_str(), 1);
-        execl(engine.c_str(), engine.c_str(), "about:blank",
-              "--disable-console", nullptr);
+        if (storageDirectory.empty()) {
+            execl(engine.c_str(), engine.c_str(), "about:blank",
+                  "--disable-console", nullptr);
+        } else {
+            std::string storageOption =
+                std::string(kStorageDirOptionPrefix) + storageDirectory;
+            execl(engine.c_str(), engine.c_str(), "about:blank",
+                  "--disable-console", storageOption.c_str(), nullptr);
+        }
         _exit(127);
     }
 
@@ -173,13 +193,16 @@ namespace {
     }
 
     bool readDaemonArguments(int argc, char* argv[], std::string& engine,
-                             std::string& socketPath)
+                             std::string& socketPath,
+                             std::string& storageDirectory)
     {
         for (int index = 2; index + 1 < argc; index += 2) {
             if (!strcmp(argv[index], "--engine")) {
                 engine = argv[index + 1];
             } else if (!strcmp(argv[index], "--socket")) {
                 socketPath = argv[index + 1];
+            } else if (!strcmp(argv[index], kDaemonOptionStorage)) {
+                storageDirectory = argv[index + 1];
             } else {
                 return false;
             }
@@ -193,7 +216,9 @@ int daemonMain(int argc, char* argv[])
 {
     std::string engine;
     std::string socketPath;
-    if (!readDaemonArguments(argc, argv, engine, socketPath)) {
+    std::string storageDirectory;
+    if (!readDaemonArguments(argc, argv, engine, socketPath,
+                             storageDirectory)) {
         return 1;
     }
 
@@ -202,7 +227,12 @@ int daemonMain(int argc, char* argv[])
         return failStartup("could not reserve a local port for CDP");
     }
 
-    pid_t engineProcess = startEngine(engine, port);
+    if (!storageDirectory.empty() && !ensureDirectories(storageDirectory)) {
+        return failStartup("could not create the storage directory " +
+                           storageDirectory);
+    }
+
+    pid_t engineProcess = startEngine(engine, port, storageDirectory);
     if (engineProcess < 0) {
         return failStartup("could not start the engine " + engine);
     }
@@ -258,6 +288,15 @@ int daemonMain(int argc, char* argv[])
             continue;
         }
 
+        // The client may have timed out while this request waited in the
+        // queue. Running it now would change the page after the user was told
+        // it failed.
+        if (isPeerClosed(connection)) {
+            close(connection);
+            continue;
+        }
+        client.setCancelDescriptor(connection);
+
         if (request.command == kCommandClose) {
             close(server);
             unlink(socketPath.c_str());
@@ -269,18 +308,19 @@ int daemonMain(int argc, char* argv[])
         }
 
         std::string response;
+        std::string data;
+        std::string output;
         if (request.command == kCommandOpen) {
             if (request.url.empty()) {
                 response = makeErrorResponse("open requires a URL");
-            } else if (session.open(request.url, error)) {
-                response = makeOkResponse();
+            } else if (session.open(request.url, output, data, error)) {
+                response = makeOkResponse(output, data);
             } else {
                 response = makeErrorResponse(error);
             }
         } else if (request.command == kCommandSnapshot) {
-            std::string output;
-            if (session.snapshotInteractive(output, error)) {
-                response = makeOkResponse(output);
+            if (session.snapshotInteractive(output, data, error)) {
+                response = makeOkResponse(output, data);
             } else {
                 response = makeErrorResponse(error);
             }
@@ -292,7 +332,8 @@ int daemonMain(int argc, char* argv[])
             } else if (session.click(elementRef, error)) {
                 response = makeOkResponse();
             } else {
-                response = makeErrorResponse(error);
+                response = makeErrorResponse(
+                    error, session.isStaleRef() ? kStaleRefCode : "");
             }
         } else if (request.command == kCommandFill) {
             int elementRef = 0;
@@ -302,12 +343,12 @@ int daemonMain(int argc, char* argv[])
             } else if (session.fill(elementRef, request.text, error)) {
                 response = makeOkResponse();
             } else {
-                response = makeErrorResponse(error);
+                response = makeErrorResponse(
+                    error, session.isStaleRef() ? kStaleRefCode : "");
             }
         } else if (request.command == kCommandEval) {
-            std::string output;
-            if (session.evaluate(request.script, output, error)) {
-                response = makeOkResponse(output);
+            if (session.evaluate(request.script, output, data, error)) {
+                response = makeOkResponse(output, data);
             } else {
                 response = makeErrorResponse(error);
             }
@@ -315,6 +356,7 @@ int daemonMain(int argc, char* argv[])
             response = makeErrorResponse("unsupported command");
         }
 
+        client.setCancelDescriptor(-1);
         writeMessage(connection, response);
         close(connection);
     }

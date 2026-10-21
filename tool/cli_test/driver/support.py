@@ -1,4 +1,5 @@
 import functools
+import json
 import http.server
 import os
 from pathlib import Path
@@ -92,6 +93,18 @@ class CLITestCase(unittest.TestCase):
         if check:
             self.assertEqual(result.returncode, 0, result.stderr)
         return result
+
+    def run_json(self, *arguments, exit_code=0):
+        # Runs the CLI with --json and checks the one-line contract: exactly
+        # one line on stdout, nothing on stderr. Returns the parsed object
+        # and the raw line.
+        result = self.run_cli(*arguments, "--json", check=False)
+        self.assertEqual(result.returncode, exit_code, result.stdout)
+        self.assertEqual(result.stderr, "")
+        self.assertTrue(result.stdout.endswith("\n"), result.stdout)
+        line = result.stdout[:-1]
+        self.assertNotIn("\n", line)
+        return json.loads(line), line
 
     def resource_url(self, name):
         port = self.server.server_address[1]

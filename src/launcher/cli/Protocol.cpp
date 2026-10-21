@@ -26,7 +26,12 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <poll.h>
+
+#include <algorithm>
 #include <cerrno>
+#include <chrono>
+#include <climits>
 #include <limits>
 
 namespace StarfishCLI {
@@ -49,6 +54,14 @@ namespace {
         }
         return std::string(document[name].GetString(),
                            document[name].GetStringLength());
+    }
+
+    std::string jsonText(const std::string& value)
+    {
+        rapidjson::StringBuffer buffer;
+        JsonWriter writer(buffer);
+        writeString(writer, value);
+        return buffer.GetString();
     }
 
     std::string makeRequest(const char* command, const std::string& url)
@@ -167,7 +180,7 @@ bool parseElementReference(const std::string& selector, int& elementRef)
     return true;
 }
 
-std::string makeOkResponse(const std::string& result)
+std::string makeOkResponse(const std::string& result, const std::string& data)
 {
     rapidjson::StringBuffer buffer;
     JsonWriter writer(buffer);
@@ -178,11 +191,15 @@ std::string makeOkResponse(const std::string& result)
         writer.Key("result");
         writeString(writer, result);
     }
+    if (!data.empty()) {
+        writer.Key("data");
+        writeString(writer, data);
+    }
     writer.EndObject();
     return std::string(buffer.GetString()) + "\n";
 }
 
-std::string makeErrorResponse(const std::string& error)
+std::string makeErrorResponse(const std::string& error, const std::string& code)
 {
     rapidjson::StringBuffer buffer;
     JsonWriter writer(buffer);
@@ -191,8 +208,41 @@ std::string makeErrorResponse(const std::string& error)
     writer.Bool(false);
     writer.Key("error");
     writeString(writer, error);
+    if (!code.empty()) {
+        writer.Key("code");
+        writeString(writer, code);
+    }
     writer.EndObject();
     return std::string(buffer.GetString()) + "\n";
+}
+
+std::string makeJsonSuccess(const std::string& dataJson)
+{
+    return R"({"success":true,"data":)" + dataJson +
+           R"(,"error":null})"
+           "\n";
+}
+
+std::string makeJsonFailure(const std::string& error, const std::string& code)
+{
+    std::string line =
+        R"({"success":false,"data":null,"error":)" + jsonText(error);
+    if (!code.empty()) {
+        line += R"(,"code":)" + jsonText(code);
+    }
+    return line + "}\n";
+}
+
+std::string makeJsonParseFailure(const std::string& error,
+                                 const std::string& type)
+{
+    return R"({"error":)" + jsonText(error) + R"(,"success":false,"type":)" +
+           jsonText(type) + "}\n";
+}
+
+std::string makeJsonStringObject(const char* key, const std::string& value)
+{
+    return "{" + jsonText(key) + ":" + jsonText(value) + "}";
 }
 
 bool parseResponse(const std::string& input, Response& response)
@@ -206,7 +256,9 @@ bool parseResponse(const std::string& input, Response& response)
 
     response.isOk = document["ok"].GetBool();
     response.result = stringMember(document, "result");
+    response.data = stringMember(document, "data");
     response.error = stringMember(document, "error");
+    response.code = stringMember(document, "code");
     return true;
 }
 
@@ -244,11 +296,32 @@ bool writeMessage(int descriptor, const std::string& message)
     return true;
 }
 
-bool readMessage(int descriptor, std::string& message, size_t maximumSize)
+bool readMessage(int descriptor, std::string& message, size_t maximumSize,
+                 long long timeoutMs)
 {
     message.clear();
+    auto deadline = std::chrono::steady_clock::now() +
+                    std::chrono::milliseconds(timeoutMs < 0 ? 0 : timeoutMs);
     char character;
     while (message.size() < maximumSize) {
+        if (timeoutMs >= 0) {
+            // Round up, so the wait never ends before the deadline.
+            auto left = (std::chrono::duration_cast<std::chrono::microseconds>(
+                             deadline - std::chrono::steady_clock::now())
+                             .count() +
+                         999) /
+                        1000;
+            pollfd entry = { descriptor, POLLIN, 0 };
+            int ready = poll(&entry, 1,
+                             static_cast<int>(std::max<long long>(
+                                 0, std::min<long long>(left, INT_MAX))));
+            if (ready < 0 && errno == EINTR) {
+                continue;
+            }
+            if (ready <= 0) {
+                return false;
+            }
+        }
         ssize_t count = read(descriptor, &character, 1);
         if (count < 0 && errno == EINTR) {
             continue;

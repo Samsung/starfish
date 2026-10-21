@@ -25,6 +25,13 @@
     "test_commands.CommandIntegrationTest.test_fill_replaces_input_value",
     "test_commands.CommandIntegrationTest.test_help_uses_public_cli_name",
     "test_commands.CommandIntegrationTest.test_open_snapshot_and_close_share_one_session",
+    "test_common_options.FlowTest.test_json_flow",
+    "test_common_options.FlowTest.test_text_flow",
+    "test_common_options.ParseFailureTest.test_parse_failures_in_json_and_text",
+    "test_common_options.SessionTest.test_option_position_and_session_isolation",
+    "test_common_options.StaleRefTest.test_stale_and_unknown_refs",
+    "test_common_options.TimeoutTest.test_timeout_covers_daemon_start",
+    "test_common_options.TimeoutTest.test_timeout_keeps_session_usable",
     "test_session_lifecycle.SessionLifecycleIntegrationTest.test_concurrent_open_uses_one_session",
     "test_session_lifecycle.SessionLifecycleIntegrationTest.test_failed_session_start_leaves_no_processes"
   ]

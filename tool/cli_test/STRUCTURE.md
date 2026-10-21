@@ -75,7 +75,7 @@ is read by the test itself and never leaves the Python process.
      |-------------->|               |                |
      |               | connect: no socket yet         |
      |               |               |                |
-     |               | flock start.lock               |
+     |               | flock start lock               |
      |               | connect again: still nothing   |
      |               |               |                |
      |               | fork, exec self with --daemon, |
@@ -128,7 +128,7 @@ sequenceDiagram
     T->>H: start on a free loopback port
     T->>C: run_cli open URL
     C->>C: connect to the socket, find nothing
-    C->>C: take start.lock, then try the socket again
+    C->>C: take the start lock, then try the socket again
     C->>D: fork, exec self with --daemon, --engine, --socket
     D->>E: fork, exec the engine with STARFISH_CDP_PORT
     D->>E: CDP connect, then Target, Page, and Accessibility setup
@@ -158,7 +158,7 @@ sequenceDiagram
 The daemon creates the socket only after the engine answers CDP. A startup
 that fails therefore leaves no socket and no session.
 
-The client tries the socket, takes `start.lock`, then tries the socket again
+The client tries the socket, takes the start lock, then tries the socket again
 before it starts a daemon. That second try is what makes two concurrent
 `open` commands share one session.
 
@@ -226,8 +226,9 @@ or engine process behind.
 | CLI client process | Runs one public command | When the command ends |
 | CLI daemon and engine | Keep one session alive | By `close` or teardown |
 
-The fixed session socket suffix is
-`lightweight-web-engine/cli/default.sock`. Its full path remains isolated
+The socket of the default session is
+`lightweight-web-engine/cli/default.sock`. Another session `<name>` uses
+`<name>.sock` in the same directory. Its full path remains isolated
 because every test uses a different `HOME`.
 
 Ctrl-C skips teardown, and the daemon has no idle timeout, so an interrupted
