@@ -574,23 +574,41 @@ void ResourceURL::resolvePositions()
         }
     }
 
-    // username & password & port
-    pos = m_urlString->find("@", 1, m_usernameStart);
-    if (pos != SIZE_MAX && pos < m_hostEnd) {
+    // username & password & port. The host begins after the LAST '@' in the
+    // authority, and the port ':' must be outside any IPv6 literal. Splitting
+    // at the first '@'/':' let http://u@host:p@evil/ parse with hostname
+    // "host", so a secure page bypassed the host-based mixed-content check
+    // while libcurl connected to evil.
+    // https://url.spec.whatwg.org/#authority-state
+    size_t authorityEnd = m_hostEnd;
+    // Where to look for the port ':', skipping a bracketed IPv6 literal.
+    auto portSearchStart = [&](size_t hostStart) -> size_t {
+        if (hostStart < authorityEnd && m_urlString->charAt(hostStart) == '[') {
+            size_t rb = m_urlString->find("]", 1, hostStart);
+            if (rb != SIZE_MAX && rb < authorityEnd) {
+                return rb + 1;
+            }
+        }
+        return hostStart;
+    };
+    pos = (authorityEnd > m_usernameStart)
+              ? m_urlString->rfind("@", 1, authorityEnd - 1)
+              : SIZE_MAX;
+    if (pos != SIZE_MAX && m_usernameStart <= pos && pos < authorityEnd) {
         m_usernameEnd = m_passwordEnd = pos;
 
-        // ':' for username
+        // ':' for username/password separator, before the '@'
         pos = m_urlString->find(":", 1, m_usernameStart);
         if (pos != SIZE_MAX && pos < m_usernameEnd) {
             m_usernameEnd = pos;
         }
-        // ':' for port
-        pos = m_urlString->find(":", 1, m_usernameEnd + 1);
+        // ':' for port, after the host (which starts past the last '@')
+        pos = m_urlString->find(":", 1, portSearchStart(m_passwordEnd + 1));
         if (pos != SIZE_MAX && m_passwordEnd < pos && pos < m_hostEnd) {
             m_hostEnd = pos;
         }
     } else { // no username & password
-        pos = m_urlString->find(":", 1, m_passwordEnd);
+        pos = m_urlString->find(":", 1, portSearchStart(m_passwordEnd));
         if (pos != SIZE_MAX && pos < m_hostEnd) {
             m_hostEnd = pos;
         }
