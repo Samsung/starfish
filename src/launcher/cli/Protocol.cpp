@@ -47,7 +47,8 @@ namespace {
         if (!document.HasMember(name) || !document[name].IsString()) {
             return std::string();
         }
-        return document[name].GetString();
+        return std::string(document[name].GetString(),
+                           document[name].GetStringLength());
     }
 
     std::string makeRequest(const char* command, const std::string& url)
@@ -111,6 +112,19 @@ std::string makeFillRequest(const std::string& selector,
     return std::string(buffer.GetString()) + "\n";
 }
 
+std::string makeEvalRequest(const std::string& script)
+{
+    rapidjson::StringBuffer buffer;
+    JsonWriter writer(buffer);
+    writer.StartObject();
+    writer.Key("command");
+    writer.String(kCommandEval);
+    writer.Key("script");
+    writeString(writer, script);
+    writer.EndObject();
+    return std::string(buffer.GetString()) + "\n";
+}
+
 bool parseRequest(const std::string& input, Request& request)
 {
     rapidjson::Document document;
@@ -123,6 +137,7 @@ bool parseRequest(const std::string& input, Request& request)
     request.url = stringMember(document, "url");
     request.selector = stringMember(document, "selector");
     request.text = stringMember(document, "text");
+    request.script = stringMember(document, "script");
     return !request.command.empty();
 }
 

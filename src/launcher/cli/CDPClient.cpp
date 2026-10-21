@@ -386,7 +386,10 @@ CDPClient::PendingMsg CDPClient::parseFrame(const std::string& frame)
 {
     PendingMsg msg;
     rapidjson::Document d;
-    if (d.Parse(frame.c_str()).HasParseError()) {
+    // Full precision keeps every double exact. The default parser can be off
+    // by one in the last digit, so eval could print a different number.
+    if (d.Parse<rapidjson::kParseFullPrecisionFlag>(frame.c_str())
+            .HasParseError()) {
         return msg;
     }
 

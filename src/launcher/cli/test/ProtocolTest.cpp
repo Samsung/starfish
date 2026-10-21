@@ -61,6 +61,28 @@ TEST(ProtocolTest, MakesAndParsesFillRequest)
     EXPECT_EQ("hello world", request.text);
 }
 
+TEST(ProtocolTest, MakesAndParsesEvalRequestWithoutChangingScript)
+{
+    Request request;
+    const std::string script = R"((() => "quoted\\value")()
+// keep the newline above)";
+
+    EXPECT_TRUE(parseRequest(makeEvalRequest(script), request));
+    EXPECT_EQ("eval", request.command);
+    EXPECT_EQ(script, request.script);
+}
+
+TEST(ProtocolTest, PreservesEmbeddedNullInEvalScript)
+{
+    Request request;
+    const char scriptBytes[] = "/* before */\0\n42";
+    const std::string script(scriptBytes, sizeof(scriptBytes) - 1);
+
+    EXPECT_TRUE(parseRequest(makeEvalRequest(script), request));
+    EXPECT_EQ(script.size(), request.script.size());
+    EXPECT_EQ(script, request.script);
+}
+
 TEST(ProtocolTest, ParsesElementReference)
 {
     int elementRef = 0;

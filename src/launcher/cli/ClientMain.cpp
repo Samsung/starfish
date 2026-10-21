@@ -190,17 +190,138 @@ namespace {
         return isReady;
     }
 
+    int base64Value(char character)
+    {
+        if (character >= 'A' && character <= 'Z') {
+            return character - 'A';
+        }
+        if (character >= 'a' && character <= 'z') {
+            return character - 'a' + 26;
+        }
+        if (character >= '0' && character <= '9') {
+            return character - '0' + 52;
+        }
+        if (character == '+') {
+            return 62;
+        }
+        if (character == '/') {
+            return 63;
+        }
+        return -1;
+    }
+
+    bool decodeBase64(const std::string& encoded, std::string& decoded)
+    {
+        if (encoded.size() % 4 != 0) {
+            return false;
+        }
+
+        decoded.clear();
+        decoded.reserve(encoded.size() / 4 * 3);
+        for (size_t index = 0; index < encoded.size(); index += 4) {
+            int first = base64Value(encoded[index]);
+            int second = base64Value(encoded[index + 1]);
+            bool thirdPadding = encoded[index + 2] == '=';
+            bool fourthPadding = encoded[index + 3] == '=';
+            int third = thirdPadding ? 0 : base64Value(encoded[index + 2]);
+            int fourth = fourthPadding ? 0 : base64Value(encoded[index + 3]);
+            bool isLast = index + 4 == encoded.size();
+            if (first < 0 || second < 0 || third < 0 || fourth < 0 ||
+                (thirdPadding && !fourthPadding) ||
+                ((thirdPadding || fourthPadding) && !isLast)) {
+                return false;
+            }
+            if (thirdPadding && (second & 0x0f) != 0) {
+                return false;
+            }
+            if (fourthPadding && !thirdPadding && (third & 0x03) != 0) {
+                return false;
+            }
+
+            decoded.push_back(static_cast<char>((first << 2) | (second >> 4)));
+            if (!thirdPadding) {
+                decoded.push_back(
+                    static_cast<char>((second << 4) | (third >> 2)));
+            }
+            if (!fourthPadding) {
+                decoded.push_back(static_cast<char>((third << 6) | fourth));
+            }
+        }
+        return true;
+    }
+
+    bool isValidUTF8(const std::string& text)
+    {
+        const unsigned char* bytes =
+            reinterpret_cast<const unsigned char*>(text.data());
+        size_t index = 0;
+        while (index < text.size()) {
+            unsigned char first = bytes[index++];
+            if (first <= 0x7f) {
+                continue;
+            }
+
+            size_t continuationCount = 0;
+            unsigned char secondMinimum = 0x80;
+            unsigned char secondMaximum = 0xbf;
+            if (first >= 0xc2 && first <= 0xdf) {
+                continuationCount = 1;
+            } else if (first >= 0xe0 && first <= 0xef) {
+                continuationCount = 2;
+                if (first == 0xe0) {
+                    secondMinimum = 0xa0;
+                } else if (first == 0xed) {
+                    secondMaximum = 0x9f;
+                }
+            } else if (first >= 0xf0 && first <= 0xf4) {
+                continuationCount = 3;
+                if (first == 0xf0) {
+                    secondMinimum = 0x90;
+                } else if (first == 0xf4) {
+                    secondMaximum = 0x8f;
+                }
+            } else {
+                return false;
+            }
+
+            if (index + continuationCount > text.size() ||
+                bytes[index] < secondMinimum || bytes[index] > secondMaximum) {
+                return false;
+            }
+            index++;
+            for (size_t count = 1; count < continuationCount;
+                 count++, index++) {
+                if (bytes[index] < 0x80 || bytes[index] > 0xbf) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    bool readStandardInput(std::string& input)
+    {
+        char buffer[4096];
+        while (size_t count = fread(buffer, 1, sizeof(buffer), stdin)) {
+            input.append(buffer, count);
+        }
+        return !ferror(stdin);
+    }
+
     void printUsage(FILE* stream)
     {
-        fprintf(stream,
-                "Usage: %s <command>\n"
-                "\n"
-                "Commands:\n"
-                "  open <url>    Open a URL\n"
-                "  snapshot -i  List interactive elements\n"
-                "  click @eN    Click element by reference\n"
-                "  fill @eN <text>  Replace input value\n"
-                "  close         Close the session\n",
+        fprintf(stream, R"(Usage: %s <command>
+
+Commands:
+  open <url>                 Open a URL
+  snapshot -i                List interactive elements
+  click @eN                  Click element by reference
+  fill @eN <text>            Replace input value
+  eval <js>                  Evaluate JavaScript
+  eval -b|--base64 <base64>  Evaluate base64 JavaScript
+  eval --stdin               Read JavaScript from standard input
+  close                      Close the session
+)",
                 kProgramName);
     }
 
@@ -238,6 +359,33 @@ namespace {
                 text += argv[i];
             }
             request = makeFillRequest(argv[2], text);
+            return true;
+        }
+        if (command == kCommandEval) {
+            if (argc < 3) {
+                return false;
+            }
+
+            std::string script;
+            if (!strcmp(argv[2], "--stdin")) {
+                if (argc != 3 || !readStandardInput(script)) {
+                    return false;
+                }
+            } else if (!strcmp(argv[2], "-b") || !strcmp(argv[2], "--base64")) {
+                if (argc != 4 || !decodeBase64(argv[3], script)) {
+                    return false;
+                }
+            } else {
+                script = argv[2];
+                for (int i = 3; i < argc; i++) {
+                    script += " ";
+                    script += argv[i];
+                }
+            }
+            if (!isValidUTF8(script)) {
+                return false;
+            }
+            request = makeEvalRequest(script);
             return true;
         }
         return false;

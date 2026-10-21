@@ -304,6 +304,13 @@ int daemonMain(int argc, char* argv[])
             } else {
                 response = makeErrorResponse(error);
             }
+        } else if (request.command == kCommandEval) {
+            std::string output;
+            if (session.evaluate(request.script, output, error)) {
+                response = makeOkResponse(output);
+            } else {
+                response = makeErrorResponse(error);
+            }
         } else {
             response = makeErrorResponse("unsupported command");
         }
