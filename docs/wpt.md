@@ -254,7 +254,7 @@ driver — start the server on its own and keep it up:
 python3 tool/wpt/scripts/wpt_server.py            # serve until Ctrl-C (third_party/wpt)
 ```
 
-This is the exact same `wpt serve --no-h2 --inject-script inject_report.js`
+This is the exact same `wpt serve --inject-script inject_report.js`
 process the drivers use (`tool/wpt/scripts/wpt_server.py`'s `wpt_serve()`), on
 the same `web-platform.test` hosts/ports set up in "One-time setup" — so any
 URL you load against it (in a browser, via `curl`, or by invoking `./Starfish`
@@ -336,14 +336,15 @@ other script parses page output.
 On-demand `wpt serve` as a context manager, `wpt_serve(wpt_root, ...)`, plus a
 CLI (`python3 tool/wpt/scripts/wpt_server.py` serves until Ctrl-C).
 Responsibilities:
-- start `wpt serve --no-h2 --inject-script inject_report.js --alias_file ...`
+- start `wpt serve --inject-script inject_report.js --alias_file ...`
   in its own session, the alias file mapping `/resources/testharnessreport.js`
   to a temp dir holding a copy of `inject_report.js` under that name (a file
   alias looks the file up by name inside `local-dir`);
 - consider it healthy only after several consecutive good HTTP probes, and fail
   fast if it dies during boot;
 - reclaim the ports first if a stale server is lingering (a leftover holding an
-  alt port like 8444 makes a fresh server abort silently);
+  alt port like 8444 or the HTTP/2 port 9000 makes a fresh server abort
+  silently);
 - on exit, kill the whole process group and wait for the ports to free.
 Other scripts import `wpt_serve` / `DEFAULT_WPT_ROOT` from here.
 
