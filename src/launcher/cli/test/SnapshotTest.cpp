@@ -67,6 +67,73 @@ TEST(SnapshotTest, EscapesTerminalControlCharacters)
     EXPECT_EQ(10, nodeIds[0]);
 }
 
+namespace {
+
+    std::string formatOne(const std::string& extra)
+    {
+        const std::string axTree =
+            R"({"nodes":[{"ignored":false,"role":{"value":"button"},)"
+            R"("name":{"value":"Name"},"backendDOMNodeId":10)" +
+            extra + "}]}";
+        std::string output;
+        std::string error;
+        std::vector<int> nodeIds;
+        EXPECT_TRUE(formatInteractiveSnapshot(axTree, output, error, nodeIds));
+        return output;
+    }
+
+} // namespace
+
+TEST(SnapshotTest, PrintsStatesInFixedOrder)
+{
+    EXPECT_EQ(
+        "@e1 [button] \"Name\" [level=3, checked=mixed, expanded=false, "
+        "selected, disabled, required]\n",
+        formatOne(R"(,"properties":[
+            {"name":"required","value":{"type":"boolean","value":true}},
+            {"name":"disabled","value":{"type":"boolean","value":true}},
+            {"name":"selected","value":{"type":"booleanOrUndefined","value":true}},
+            {"name":"expanded","value":{"type":"booleanOrUndefined","value":false}},
+            {"name":"checked","value":{"type":"tristate","value":"mixed"}},
+            {"name":"level","value":{"type":"integer","value":3}}])"));
+}
+
+TEST(SnapshotTest, OmitsFalseStatesAndOtherProperties)
+{
+    EXPECT_EQ("@e1 [button] \"Name\" [checked=false, expanded=true]\n",
+              formatOne(R"(,"properties":[
+            {"name":"checked","value":{"type":"tristate","value":"false"}},
+            {"name":"expanded","value":{"type":"booleanOrUndefined","value":true}},
+            {"name":"selected","value":{"type":"booleanOrUndefined","value":false}},
+            {"name":"disabled","value":{"type":"boolean","value":false}},
+            {"name":"required","value":{"type":"boolean","value":false}},
+            {"name":"readonly","value":{"type":"boolean","value":true}},
+            {"name":"focusable","value":{"type":"boolean","value":true}}])"));
+    EXPECT_EQ("@e1 [button] \"Name\"\n",
+              formatOne(R"(,"properties":[
+            {"name":"readonly","value":{"type":"boolean","value":true}}])"));
+}
+
+TEST(SnapshotTest, AppendsValueOnlyWhenUseful)
+{
+    EXPECT_EQ("@e1 [button] \"Name\": old\n",
+              formatOne(R"(,"value":{"type":"string","value":"old"})"));
+    EXPECT_EQ("@e1 [button] \"Name\"\n",
+              formatOne(R"(,"value":{"type":"string","value":"Name"})"));
+    EXPECT_EQ("@e1 [button] \"Name\"\n",
+              formatOne(R"(,"value":{"type":"string","value":""})"));
+    EXPECT_EQ("@e1 [button] \"Name\"\n",
+              formatOne(R"(,"value":{"type":"boolean","value":true})"));
+    EXPECT_EQ("@e1 [button] \"Name\": 5\n",
+              formatOne(R"(,"value":{"type":"number","value":5.0})"));
+    EXPECT_EQ("@e1 [button] \"Name\": 2.5\n",
+              formatOne(R"(,"value":{"type":"number","value":2.5})"));
+    EXPECT_EQ("@e1 [button] \"Name\" [disabled]: 7\n",
+              formatOne(R"(,"properties":[
+            {"name":"disabled","value":{"type":"boolean","value":true}}],
+            "value":{"type":"number","value":7})"));
+}
+
 TEST(SnapshotTest, RejectsResponseWithoutNodes)
 {
     std::string output;
