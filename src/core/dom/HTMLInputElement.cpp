@@ -179,6 +179,7 @@ void* HTMLInputElement::operator new(size_t size)
                    GC_WORD_OFFSET(HTMLInputElement, m_currentEditingText));
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLInputElement,
                                         m_previousCheckedRadioButton));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLInputElement, m_selectedFiles));
         HTMLTextEditable::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLInputElement));
         typeInited = true;
