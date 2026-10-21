@@ -29,8 +29,14 @@ public:
         BGRA,
     };
     static std::vector<uint8_t> encodePNG(const uint8_t* src, size_t width,
+                                          size_t height, size_t stride,
+                                          ImageColorSpace colorSpace);
+    static std::vector<uint8_t> encodePNG(const uint8_t* src, size_t width,
                                           size_t height,
                                           ImageColorSpace colorSpace);
+    static std::vector<uint8_t> encodeJPEG(const uint8_t* src, size_t width,
+                                           size_t height, size_t stride,
+                                           ImageColorSpace colorSpace);
     static std::vector<uint8_t> encodeJPEG(const uint8_t* src, size_t width,
                                            size_t height,
                                            ImageColorSpace colorSpace);
