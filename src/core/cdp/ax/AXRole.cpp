@@ -198,7 +198,7 @@ int axChromeRoleForRole(const std::string& role)
         { "checkbox", 14 },       { "combobox", 209 },
         { "banner", 7 },          { "contentinfo", 26 },
         { "complementary", 22 },  { "dialog", 35 },
-        { "alertDialog", 3 },     { "figure", 84 },
+        { "alertdialog", 3 },     { "figure", 84 },
         { "caption", 11 },        { "generic", 88 },
         { "list", 111 },          { "listitem", 115 },
         { "table", 167 },         { "row", 145 },

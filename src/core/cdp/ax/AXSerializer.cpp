@@ -29,10 +29,17 @@
 #include "../domains/PageDomain.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
+#include "core/dom/HTMLDialogElement.h"
+#include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLInputElement.h"
+#include "core/dom/HTMLOptionElement.h"
+#include "core/dom/HTMLSelectElement.h"
+#include "core/dom/HTMLTextEditable.h"
 #include "core/dom/Node.h"
 #include "core/page/BrowsingContext.h"
 
-#include <cstring>
+#include <cctype>
+#include <climits>
 
 namespace Starfish {
 
@@ -42,6 +49,16 @@ namespace {
     // hands out one fixed id for all of them, because such a node has no place
     // in the tree to tell it apart by.
     const char* kIdForNodeWithNoAXNode = "ax-no-node";
+
+    // Chrome shows each character of a password field as this bullet.
+    const char* kPasswordBullet = "\xE2\x80\xA2";
+
+    // The input types whose value a user types in. Chrome exposes the value
+    // of these inputs. It exposes no value for the other types, such as a
+    // checkbox or a button.
+    const char* const kTextEntryInputTypes[] = {
+        "", "text", "search", "email", "url", "tel", "password", "number",
+    };
 
     std::string tagOf(Element* element)
     {
@@ -54,11 +71,286 @@ namespace {
         return tag;
     }
 
+    std::string lowered(std::string text)
+    {
+        for (char& c : text) {
+            c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        }
+        return text;
+    }
+
+    std::string ariaToken(Element* element, const char* attribute)
+    {
+        return lowered(axCollapseWhitespace(axAttribute(element, attribute)));
+    }
+
+    bool isTrueToken(Element* element, const char* attribute)
+    {
+        return ariaToken(element, attribute) == "true";
+    }
+
+    // Reads an integer the way Chromium does for aria-level.
+    // Leading white space and trailing text are allowed.
+    // A missing number or an overflow gives 0.
+    int parseLooseInteger(const std::string& text)
+    {
+        size_t i = 0;
+        while (i < text.size() &&
+               std::isspace(static_cast<unsigned char>(text[i]))) {
+            ++i;
+        }
+        bool negative = false;
+        if (i < text.size() && (text[i] == '+' || text[i] == '-')) {
+            negative = text[i] == '-';
+            ++i;
+        }
+        if (i >= text.size() ||
+            !std::isdigit(static_cast<unsigned char>(text[i]))) {
+            return 0;
+        }
+        int parsed = 0;
+        for (; i < text.size() &&
+               std::isdigit(static_cast<unsigned char>(text[i]));
+             ++i) {
+            int digit = text[i] - '0';
+            if (parsed > (INT_MAX - digit) / 10) {
+                return 0;
+            }
+            parsed = parsed * 10 + digit;
+        }
+        return negative ? -parsed : parsed;
+    }
+
+    // A value below 1 becomes 1, as in Chromium.
+    int ariaLevelValue(const std::string& text)
+    {
+        int parsed = parseLooseInteger(text);
+        return parsed < 1 ? 1 : parsed;
+    }
+
+    // Chromium treats an empty value and "undefined" as an unset token.
+    bool isUnsetToken(const std::string& token)
+    {
+        return token.empty() || token == "undefined";
+    }
+
+    // The roles that support aria-readonly, except cells and headers.
+    bool roleSupportsAriaReadonly(const std::string& role)
+    {
+        return role == "checkbox" || role == "combobox" || role == "grid" ||
+               role == "gridcell" || role == "listbox" ||
+               role == "menuitemcheckbox" || role == "menuitemradio" ||
+               role == "radio" || role == "radiogroup" || role == "searchbox" ||
+               role == "slider" || role == "spinbutton" || role == "switch" ||
+               role == "textbox" || role == "treegrid";
+    }
+
+    bool roleIsCellOrHeader(const std::string& role)
+    {
+        return role == "cell" || role == "columnheader" || role == "rowheader";
+    }
+
+    bool roleIsCellOrHeaderOrRow(const std::string& role)
+    {
+        return role == "columnheader" || role == "rowheader" || role == "row";
+    }
+
+    // A cell, header, or row counts as a widget only inside a grid or
+    // treegrid. The nearest table-like ancestor decides.
+    bool isInsideGrid(AXNode* node)
+    {
+        for (AXNode* ancestor = node->parent(); ancestor;
+             ancestor = ancestor->parent()) {
+            const std::string& ancestorRole = ancestor->role();
+            if (ancestorRole == "table" || ancestorRole == "grid" ||
+                ancestorRole == "treegrid") {
+                return ancestorRole != "table";
+            }
+        }
+        return false;
+    }
+
+    // The roles for which Chromium can set the value.
+    bool roleCanSetValue(const std::string& role)
+    {
+        return role == "scrollbar" || role == "searchbox" || role == "slider" ||
+               role == "spinbutton" || role == "splitter" || role == "textbox";
+    }
+
+    bool roleAllowsMultiselectable(const std::string& role)
+    {
+        return role == "grid" || role == "listbox" || role == "tablist" ||
+               role == "tree" || role == "treegrid";
+    }
+
+    // Chromium reports readonly, multiline, and required for its text field
+    // role only. The searchbox role is a different role there.
+    bool roleAllowsReadonly(const std::string& role)
+    {
+        return role == "grid" || role == "gridcell" || role == "textbox" ||
+               role == "columnheader" || role == "rowheader" ||
+               role == "treegrid";
+    }
+
+    bool roleAllowsRequired(const std::string& role)
+    {
+        return role == "combobox" || role == "gridcell" || role == "listbox" ||
+               role == "radiogroup" || role == "spinbutton" ||
+               role == "textbox" || role == "tree" || role == "columnheader" ||
+               role == "rowheader" || role == "treegrid";
+    }
+
+    bool roleAllowsOrientation(const std::string& role)
+    {
+        return role == "listbox" || role == "menu" || role == "menubar" ||
+               role == "radiogroup" || role == "scrollbar" ||
+               role == "separator" || role == "slider" || role == "tablist" ||
+               role == "toolbar" || role == "tree" || role == "treegrid";
+    }
+
+    // Only some roles have an implicit orientation in Chromium.
+    const char* defaultOrientation(const std::string& role)
+    {
+        if (role == "listbox" || role == "menu" || role == "scrollbar" ||
+            role == "tree") {
+            return "vertical";
+        }
+        if (role == "menubar" || role == "separator" || role == "slider" ||
+            role == "tablist") {
+            return "horizontal";
+        }
+        return nullptr;
+    }
+
+    bool roleAllowsLevel(const std::string& role)
+    {
+        return role == "heading" || role == "listitem" || role == "row" ||
+               role == "treeitem";
+    }
+
+    bool roleAllowsSelected(const std::string& role)
+    {
+        return role == "columnheader" || role == "option" ||
+               role == "gridcell" || role == "row" || role == "rowheader" ||
+               role == "tab" || role == "treeitem";
+    }
+
+    bool roleIsAlwaysCheckable(const std::string& role)
+    {
+        return role == "checkbox" || role == "radio" || role == "switch" ||
+               role == "menuitemcheckbox" || role == "menuitemradio";
+    }
+
+    // Chrome also accepts aria-expanded on listitem.
+    bool roleAllowsExpanded(const std::string& role)
+    {
+        return role == "application" || role == "button" ||
+               role == "checkbox" || role == "columnheader" ||
+               role == "combobox" || role == "gridcell" || role == "link" ||
+               role == "listitem" || role == "menuitem" ||
+               role == "menuitemcheckbox" || role == "menuitemradio" ||
+               role == "row" || role == "rowheader" || role == "switch" ||
+               role == "tab" || role == "treeitem";
+    }
+
+    // True when the contenteditable attribute makes the element an editing
+    // host. Its descendants are editable, but they are not hosts.
+    bool isEditingHost(Element* element)
+    {
+        if (!element->isHTMLElement() ||
+            !axHasAttribute(element, "contenteditable")) {
+            return false;
+        }
+        std::string value = lowered(axAttribute(element, "contenteditable"));
+        return value.empty() || value == "true" || value == "plaintext-only";
+    }
+
+    enum class EditableKind { None, PlainText, RichText };
+
+    // Walks up from the element to the nearest contenteditable attribute.
+    // The value false stops the walk. Other values pass the check upward.
+    // Starfish reads the contenteditable attribute in a case sensitive way,
+    // so the attribute is checked here instead of isContentEditable().
+    EditableKind editableKindFromAttribute(Element* element)
+    {
+        for (Node* current = element; current && current->isElement();
+             current = current->parentNode()) {
+            Element* currentElement = current->asElement();
+            if (!currentElement->isHTMLElement() ||
+                !axHasAttribute(currentElement, "contenteditable")) {
+                continue;
+            }
+            std::string value =
+                lowered(axAttribute(currentElement, "contenteditable"));
+            if (value.empty() || value == "true") {
+                return EditableKind::RichText;
+            }
+            if (value == "plaintext-only") {
+                return EditableKind::PlainText;
+            }
+            if (value == "false") {
+                return EditableKind::None;
+            }
+        }
+        return EditableKind::None;
+    }
+
 } // namespace
 
 rapidjson::Value AXSerializer::stringValue(const std::string& text)
 {
     return rapidjson::Value(text.c_str(), text.size(), *m_allocator);
+}
+
+void AXSerializer::addBooleanProperty(rapidjson::Value& properties,
+                                      const char* name, const char* type,
+                                      bool boolValue)
+{
+    rapidjson::Value property(rapidjson::kObjectType);
+    property.AddMember("name", rapidjson::StringRef(name), *m_allocator);
+    rapidjson::Value value(rapidjson::kObjectType);
+    value.AddMember("type", rapidjson::StringRef(type), *m_allocator);
+    value.AddMember("value", boolValue, *m_allocator);
+    property.AddMember("value", value, *m_allocator);
+    properties.PushBack(property, *m_allocator);
+}
+
+void AXSerializer::addIntegerProperty(rapidjson::Value& properties,
+                                      const char* name, int integerValue)
+{
+    rapidjson::Value property(rapidjson::kObjectType);
+    property.AddMember("name", rapidjson::StringRef(name), *m_allocator);
+    rapidjson::Value value(rapidjson::kObjectType);
+    value.AddMember("type", "integer", *m_allocator);
+    value.AddMember("value", integerValue, *m_allocator);
+    property.AddMember("value", value, *m_allocator);
+    properties.PushBack(property, *m_allocator);
+}
+
+void AXSerializer::addStringProperty(rapidjson::Value& properties,
+                                     const char* name, const char* type,
+                                     const char* text)
+{
+    rapidjson::Value property(rapidjson::kObjectType);
+    property.AddMember("name", rapidjson::StringRef(name), *m_allocator);
+    rapidjson::Value value(rapidjson::kObjectType);
+    value.AddMember("type", rapidjson::StringRef(type), *m_allocator);
+    value.AddMember("value", rapidjson::StringRef(text), *m_allocator);
+    property.AddMember("value", value, *m_allocator);
+    properties.PushBack(property, *m_allocator);
+}
+
+void AXSerializer::addStringProperty(rapidjson::Value& properties,
+                                     const char* name, const char* type,
+                                     const std::string& text)
+{
+    rapidjson::Value property(rapidjson::kObjectType);
+    property.AddMember("name", rapidjson::StringRef(name), *m_allocator);
+    rapidjson::Value value(rapidjson::kObjectType);
+    value.AddMember("type", rapidjson::StringRef(type), *m_allocator);
+    value.AddMember("value", stringValue(text), *m_allocator);
+    property.AddMember("value", value, *m_allocator);
+    properties.PushBack(property, *m_allocator);
 }
 
 void AXSerializer::addRole(rapidjson::Value& out, const std::string& role)
@@ -71,9 +363,7 @@ void AXSerializer::addRole(rapidjson::Value& out, const std::string& role)
                            : "role";
 
     rapidjson::Value roleValue(rapidjson::kObjectType);
-    roleValue.AddMember("type",
-                        rapidjson::Value(type, strlen(type), *m_allocator),
-                        *m_allocator);
+    roleValue.AddMember("type", rapidjson::StringRef(type), *m_allocator);
     roleValue.AddMember("value", stringValue(role), *m_allocator);
     out.AddMember("role", roleValue, *m_allocator);
 
@@ -131,10 +421,10 @@ void AXSerializer::addNameWithSources(rapidjson::Value& out, AXNode* node)
     nameValue.AddMember("type", "computedString", *m_allocator);
     nameValue.AddMember("value", stringValue(name), *m_allocator);
 
-    // The sources list records every place a name could have come from, in
-    // the order accname consults them. The one that supplied the name
-    // carries a value; the ones a higher-priority source beat are marked
-    // superseded.
+    // The sources list records every place a name could have come from.
+    // It follows the order that accname consults them.
+    // The source that supplied the name carries a value.
+    // A source that a higher-priority source beat is marked superseded.
     rapidjson::Value sources(rapidjson::kArrayType);
     if (!element) {
         // Text has one place its name can come from: the text itself.
@@ -282,26 +572,12 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
     rapidjson::Value properties(rapidjson::kArrayType);
 
     if (node->kind() == AXNodeKind::Root) {
-        rapidjson::Value focusable(rapidjson::kObjectType);
-        focusable.AddMember("name", "focusable", *m_allocator);
-        rapidjson::Value focusableValue(rapidjson::kObjectType);
-        focusableValue.AddMember("type", "booleanOrUndefined", *m_allocator);
-        focusableValue.AddMember("value", true, *m_allocator);
-        focusable.AddMember("value", focusableValue, *m_allocator);
-        properties.PushBack(focusable, *m_allocator);
-
-        rapidjson::Value url(rapidjson::kObjectType);
-        url.AddMember("name", "url", *m_allocator);
-        rapidjson::Value urlValue(rapidjson::kObjectType);
-        urlValue.AddMember("type", "string", *m_allocator);
+        addBooleanProperty(properties, "focusable", "booleanOrUndefined", true);
         Document* document = node->domNode()->asDocument();
         std::string address = document->urlString()
                                   ? document->urlString()->toUTF8NonGCString()
                                   : std::string();
-        urlValue.AddMember("value", stringValue(address), *m_allocator);
-        url.AddMember("value", urlValue, *m_allocator);
-        properties.PushBack(url, *m_allocator);
-
+        addStringProperty(properties, "url", "string", address);
         out.AddMember("properties", properties, *m_allocator);
         return;
     }
@@ -312,28 +588,248 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
         return;
     }
 
-    std::string tag = tagOf(element);
-    if (axHasAttribute(element, "tabindex") || tag == "input" ||
-        tag == "button" || tag == "select" || tag == "textarea" ||
-        (tag == "a" && axHasAttribute(element, "href"))) {
-        rapidjson::Value property(rapidjson::kObjectType);
-        property.AddMember("name", "focusable", *m_allocator);
-        rapidjson::Value value(rapidjson::kObjectType);
-        value.AddMember("type", "booleanOrUndefined", *m_allocator);
-        value.AddMember("value", true, *m_allocator);
-        property.AddMember("value", value, *m_allocator);
-        properties.PushBack(property, *m_allocator);
+    const std::string tag = tagOf(element);
+    const std::string& role = node->role();
+    HTMLTextEditable* textEditable =
+        element->isHTMLTextEditable() ? element->asHTMLTextEditable() : nullptr;
+
+    const bool ariaDisabled = isTrueToken(element, "aria-disabled");
+    const bool nativeDisabled =
+        element->isHTMLFormControl() && element->isDisabledFormControl();
+    const bool nativeReadonly = textEditable &&
+                                textEditable->isEditableType() &&
+                                textEditable->readonly();
+    const bool editingHost = isEditingHost(element);
+
+    // Chromium honors aria-readonly only for some roles.
+    // It ignores aria-readonly on an editing host.
+    // A cell or header needs a grid or treegrid ancestor.
+    bool supportsAriaReadonly = false;
+    if (!editingHost) {
+        if (roleSupportsAriaReadonly(role)) {
+            supportsAriaReadonly = true;
+        } else if (roleIsCellOrHeader(role)) {
+            supportsAriaReadonly = isInsideGrid(node);
+        }
+    }
+    // The native readonly attribute wins over aria-readonly.
+    // Otherwise aria-readonly can turn the state on or off.
+    bool readonlyRestriction = nativeReadonly;
+    const std::string ariaReadonlyToken = ariaToken(element, "aria-readonly");
+    if (!nativeReadonly && supportsAriaReadonly &&
+        (ariaReadonlyToken == "true" || ariaReadonlyToken == "false")) {
+        readonlyRestriction = ariaReadonlyToken == "true";
+    }
+    const bool disabledRestriction = nativeDisabled || ariaDisabled;
+    const bool unrestricted = !disabledRestriction && !readonlyRestriction;
+
+    // FillGlobalStates. AXTree owns hidden/hiddenRoot and exposes those states
+    // as ignored reasons. Do not walk the DOM ancestors again here.
+    if (disabledRestriction) {
+        addBooleanProperty(properties, "disabled", "boolean", true);
     }
 
-    if (node->role() == "heading" && tag.size() == 2 && tag[0] == 'h' &&
-        tag[1] >= '1' && tag[1] <= '6') {
-        rapidjson::Value property(rapidjson::kObjectType);
-        property.AddMember("name", "level", *m_allocator);
-        rapidjson::Value value(rapidjson::kObjectType);
-        value.AddMember("type", "integer", *m_allocator);
-        value.AddMember("value", tag[1] - '0', *m_allocator);
-        property.AddMember("value", value, *m_allocator);
-        properties.PushBack(property, *m_allocator);
+    // An empty value and "undefined" mean the attribute is not set.
+    // The spelling and grammar values count as true on a text field only.
+    const std::string invalid = lowered(axAttribute(element, "aria-invalid"));
+    if (!isUnsetToken(invalid)) {
+        if (invalid == "false") {
+            addStringProperty(properties, "invalid", "token", "false");
+        } else if (invalid != "grammar" && invalid != "spelling") {
+            addStringProperty(properties, "invalid", "token", "true");
+        } else if (role == "textbox") {
+            addStringProperty(properties, "invalid", "token", "true");
+        }
+    }
+    // Chromium also reports invalid true or false for every listed form
+    // control, such as input, select, and textarea.
+    // Starfish leaves that out because ValidityState is not implemented.
+
+    const bool nativeDialogIsOpen = element->isHTMLDialogElement() &&
+                                    element->asHTMLDialogElement()->open();
+    const bool focusableCandidate =
+        axHasAttribute(element, "tabindex") || tag == "input" ||
+        tag == "button" || tag == "select" || tag == "textarea" ||
+        tag == "option" || editingHost || nativeDialogIsOpen ||
+        (tag == "a" && axHasAttribute(element, "href"));
+    if (focusableCandidate && !nativeDisabled) {
+        addBooleanProperty(properties, "focusable", "booleanOrUndefined", true);
+    }
+
+    if (element->document()->browsingContext()->focusedNode() == element) {
+        addBooleanProperty(properties, "focused", "booleanOrUndefined", true);
+    }
+
+    // The editable state does not depend on disabled or readonly.
+    // It is true for a text control and for content inside an editing host.
+    EditableKind editableKind = editableKindFromAttribute(element);
+    if (editableKind == EditableKind::None && textEditable &&
+        textEditable->isEditableType()) {
+        editableKind = EditableKind::PlainText;
+    }
+    if (editableKind != EditableKind::None) {
+        addStringProperty(properties, "editable", "token",
+                          editableKind == EditableKind::RichText ? "richtext"
+                                                                 : "plaintext");
+    }
+
+    // The settable state depends on the role and on the restriction.
+    // It does not depend on editable content.
+    if (roleCanSetValue(role) && unrestricted) {
+        addBooleanProperty(properties, "settable", "booleanOrUndefined", true);
+    }
+
+    // FillWidgetProperties.
+    // The level comes from aria-level when the attribute has a value.
+    const std::string levelText = axAttribute(element, "aria-level");
+    const bool hasAriaLevel = roleAllowsLevel(role) && !levelText.empty();
+    const int ariaLevel = hasAriaLevel ? ariaLevelValue(levelText) : 0;
+    int level = 0;
+    if (role == "heading") {
+        // A heading uses aria-level only from 1 to 9.
+        if (hasAriaLevel && ariaLevel <= 9) {
+            level = ariaLevel;
+        } else if (tag.size() == 2 && tag[0] == 'h' && tag[1] >= '1' &&
+                   tag[1] <= '6') {
+            level = tag[1] - '0';
+        } else {
+            level = 2;
+        }
+    } else if (hasAriaLevel) {
+        level = ariaLevel;
+    } else if (role == "listitem") {
+        // Count the list ancestors. A list item outside any list has level 1.
+        for (AXNode* ancestor = node->parent(); ancestor;
+             ancestor = ancestor->parent()) {
+            if (ancestor->role() == "list") {
+                ++level;
+            }
+        }
+        if (level == 0) {
+            level = 1;
+        }
+    } else if (role == "treeitem") {
+        // Count the groups up to the nearest tree.
+        level = 1;
+        for (AXNode* ancestor = node->parent(); ancestor;
+             ancestor = ancestor->parent()) {
+            if (ancestor->role() == "tree") {
+                break;
+            }
+            if (ancestor->role() == "group") {
+                ++level;
+            }
+        }
+    }
+    if (level > 0) {
+        addIntegerProperty(properties, "level", level);
+    }
+
+    if (roleAllowsMultiselectable(role)) {
+        addBooleanProperty(properties, "multiselectable", "boolean",
+                           isTrueToken(element, "aria-multiselectable"));
+    }
+
+    if (roleAllowsOrientation(role)) {
+        std::string orientation = ariaToken(element, "aria-orientation");
+        if (orientation != "vertical" && orientation != "horizontal") {
+            if (const char* fallback = defaultOrientation(role)) {
+                orientation = fallback;
+            } else {
+                orientation.clear();
+            }
+        }
+        if (!orientation.empty()) {
+            addStringProperty(properties, "orientation", "token", orientation);
+        }
+    }
+
+    if (role == "textbox") {
+        // An input is always single line.
+        // Otherwise aria-multiline decides.
+        // Without it, a textarea or an editing host is multiline.
+        bool multiline = false;
+        const std::string multilineToken = ariaToken(element, "aria-multiline");
+        if (tag == "input") {
+            multiline = false;
+        } else if (multilineToken == "true" || multilineToken == "false") {
+            multiline = multilineToken == "true";
+        } else {
+            multiline = tag == "textarea" || editingHost;
+        }
+        addBooleanProperty(properties, "multiline", "boolean", multiline);
+    }
+
+    if (roleAllowsReadonly(role)) {
+        addBooleanProperty(properties, "readonly", "boolean",
+                           readonlyRestriction && !disabledRestriction);
+    }
+
+    if (roleAllowsRequired(role) && tag != "select") {
+        const bool required = (element->isHTMLFormControl() &&
+                               element->asHTMLFormControl()->required()) ||
+                              isTrueToken(element, "aria-required");
+        addBooleanProperty(properties, "required", "boolean", required);
+    }
+
+    // FillWidgetStates. Native mutable state wins over content attributes.
+    const std::string checkedToken = ariaToken(element, "aria-checked");
+    const bool conditionallyCheckable =
+        (role == "option" || role == "treeitem") && !isUnsetToken(checkedToken);
+    if (roleIsAlwaysCheckable(role) || conditionallyCheckable) {
+        std::string checked;
+        if (element->isHTMLInputElement()) {
+            checked =
+                element->asHTMLInputElement()->checked() ? "true" : "false";
+        } else if (isUnsetToken(checkedToken) || checkedToken == "false") {
+            checked = "false";
+        } else if (checkedToken == "mixed") {
+            // The roles radio, menuitemradio, and switch have no mixed state.
+            const bool supportsMixed = role == "checkbox" ||
+                                       role == "menuitemcheckbox" ||
+                                       role == "option" || role == "treeitem";
+            checked = supportsMixed ? "mixed" : "false";
+        } else {
+            // Any other value counts as true.
+            checked = "true";
+        }
+        addStringProperty(properties, "checked", "tristate", checked);
+    }
+
+    std::string expanded = ariaToken(element, "aria-expanded");
+    // Chrome counts any value other than false and undefined as true.
+    if (roleAllowsExpanded(role) && !expanded.empty() &&
+        expanded != "undefined") {
+        addBooleanProperty(properties, "expanded", "booleanOrUndefined",
+                           expanded != "false");
+    } else if (tag == "select") {
+        addBooleanProperty(properties, "expanded", "booleanOrUndefined", false);
+    }
+
+    // A cell, header, or row can be selected only inside a grid.
+    const bool selectedSupported =
+        !roleIsCellOrHeaderOrRow(role) || isInsideGrid(node);
+    // Chrome reports selected for a native option or an explicit attribute.
+    if (element->isHTMLOptionElement() ||
+        (selectedSupported && roleAllowsSelected(role) &&
+         axHasAttribute(element, "aria-selected"))) {
+        const bool selected =
+            element->isHTMLOptionElement()
+                ? element->asHTMLOptionElement()->selectedness()
+                : isTrueToken(element, "aria-selected");
+        addBooleanProperty(properties, "selected", "booleanOrUndefined",
+                           selected);
+    }
+
+    if (role == "dialog" || role == "alertdialog") {
+        std::string ariaModal = ariaToken(element, "aria-modal");
+        bool modal = false;
+        if (ariaModal == "true" || ariaModal == "false") {
+            modal = ariaModal == "true";
+        } else if (element->isHTMLDialogElement()) {
+            modal = element->asHTMLDialogElement()->isInShowModal();
+        }
+        addBooleanProperty(properties, "modal", "boolean", modal);
     }
 
     struct Relation {
@@ -343,39 +839,21 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
         bool includeValue;
         bool includeText;
     };
-    // The order is the one Chromium's FillSparseAttributes and
-    // FillRelationships produce, which the expected outputs compare
-    // position by position.
-    static const Relation relations[] = {
-        { "aria-activedescendant", "activedescendant", "idref", false, false },
-        { "aria-controls", "controls", "idrefList", true, false },
-        { "aria-describedby", "describedby", "idrefList", true, true },
-        { "aria-details", "details", "idrefList", true, false },
-        { "aria-errormessage", "errormessage", "idrefList", true, false },
-        { "aria-flowto", "flowto", "idrefList", true, false },
-        { "aria-labelledby", "labelledby", "nodeList", false, true },
-        { "aria-owns", "owns", "idrefList", true, false },
-    };
-    for (const Relation& relation : relations) {
+    auto addRelation = [&](const Relation& relation) {
         std::string idRefs = axAttribute(element, relation.attribute);
         if (idRefs.empty()) {
-            continue;
+            return;
         }
         rapidjson::Value related =
             relatedNodes(element, idRefs, relation.includeText);
         if (related.Empty()) {
-            continue;
+            return;
         }
         rapidjson::Value property(rapidjson::kObjectType);
-        property.AddMember("name",
-                           rapidjson::Value(relation.property,
-                                            strlen(relation.property),
-                                            *m_allocator),
+        property.AddMember("name", rapidjson::StringRef(relation.property),
                            *m_allocator);
         rapidjson::Value value(rapidjson::kObjectType);
-        value.AddMember("type",
-                        rapidjson::Value(relation.type, strlen(relation.type),
-                                         *m_allocator),
+        value.AddMember("type", rapidjson::StringRef(relation.type),
                         *m_allocator);
         if (relation.includeValue) {
             value.AddMember("value", stringValue(idRefs), *m_allocator);
@@ -383,9 +861,89 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
         value.AddMember("relatedNodes", related, *m_allocator);
         property.AddMember("value", value, *m_allocator);
         properties.PushBack(property, *m_allocator);
+    };
+
+    // The order follows FillRelationships and FillSparseAttributes in
+    // Chromium. The labelledby property comes last because Chromium adds it
+    // from the name sources.
+    static const Relation firstRelations[] = {
+        { "aria-describedby", "describedby", "idrefList", true, true },
+        { "aria-owns", "owns", "idrefList", true, false },
+    };
+    for (const Relation& relation : firstRelations) {
+        addRelation(relation);
+    }
+
+    static const char* const sparseAttributes[][2] = {
+        { "aria-keyshortcuts", "keyshortcuts" },
+        { "aria-roledescription", "roledescription" },
+    };
+    for (const auto& sparse : sparseAttributes) {
+        if (axHasAttribute(element, sparse[0])) {
+            addStringProperty(properties, sparse[1], "string",
+                              axAttribute(element, sparse[0]));
+        }
+    }
+
+    static const Relation lastRelations[] = {
+        { "aria-activedescendant", "activedescendant", "idref", false, false },
+        { "aria-errormessage", "errormessage", "idrefList", true, false },
+        { "aria-controls", "controls", "idrefList", true, false },
+        { "aria-details", "details", "idrefList", true, false },
+        { "aria-flowto", "flowto", "idrefList", true, false },
+        { "aria-labelledby", "labelledby", "nodeList", false, true },
+    };
+    for (const Relation& relation : lastRelations) {
+        addRelation(relation);
     }
 
     out.AddMember("properties", properties, *m_allocator);
+}
+
+// The value Chrome exposes for a form control. This is the current value,
+// not the value attribute, so it follows typing and script changes.
+static std::string formControlValue(Element* element, const std::string& tag)
+{
+    if (!element->isHTMLFormControl()) {
+        return std::string();
+    }
+    if (tag == "select") {
+        // Chrome exposes the text of the selected option.
+        HTMLOptionElement* option =
+            element->asHTMLSelectElement()->firstSelectedOptionElement();
+        String* text = option ? option->text() : nullptr;
+        return text ? axCollapseWhitespace(text->toUTF8NonGCString())
+                    : std::string();
+    }
+
+    std::string type;
+    if (tag == "input") {
+        type = lowered(axAttribute(element, "type"));
+        bool isTextEntry = false;
+        for (const char* textEntryType : kTextEntryInputTypes) {
+            if (type == textEntryType) {
+                isTextEntry = true;
+                break;
+            }
+        }
+        if (!isTextEntry) {
+            return std::string();
+        }
+    }
+
+    String* value = element->asHTMLFormControl()->value();
+    std::string text = value ? value->toUTF8NonGCString() : std::string();
+    if (type != "password") {
+        return text;
+    }
+    std::string bullets;
+    for (char byte : text) {
+        // Count one bullet for each UTF-8 lead byte, so one per character.
+        if ((static_cast<unsigned char>(byte) & 0xC0) != 0x80) {
+            bullets += kPasswordBullet;
+        }
+    }
+    return bullets;
 }
 
 void AXSerializer::addDescriptionAndValue(rapidjson::Value& out, AXNode* node)
@@ -409,7 +967,7 @@ void AXSerializer::addDescriptionAndValue(rapidjson::Value& out, AXNode* node)
     std::string tag = tagOf(element);
     std::string controlValue;
     if (tag == "input" || tag == "textarea" || tag == "select") {
-        controlValue = axAttribute(element, "value");
+        controlValue = formControlValue(element, tag);
     } else if (axHasAttribute(element, "aria-valuetext")) {
         controlValue = axAttribute(element, "aria-valuetext");
     } else if (axHasAttribute(element, "aria-valuenow")) {
@@ -429,12 +987,13 @@ void AXSerializer::addIgnoredReasons(rapidjson::Value& out, AXNode* node)
     for (AXIgnoredReason reason : node->ignoredReasons()) {
         const char* name = axIgnoredReasonName(reason);
         rapidjson::Value property(rapidjson::kObjectType);
-        property.AddMember("name",
-                           rapidjson::Value(name, strlen(name), *m_allocator),
-                           *m_allocator);
+        property.AddMember("name", rapidjson::StringRef(name), *m_allocator);
 
         rapidjson::Value value(rapidjson::kObjectType);
-        Element* target = node->ignoredReasonTarget();
+        // Chrome names no target for the element that has aria-hidden itself.
+        Element* target = reason == AXIgnoredReason::AriaHiddenElement
+                              ? nullptr
+                              : node->ignoredReasonTarget();
         if (target) {
             // A reason that names another element reports that element
             // instead of a bare true.
@@ -462,10 +1021,7 @@ void AXSerializer::addIgnoredReasons(rapidjson::Value& out, AXNode* node)
 rapidjson::Value AXSerializer::serializeMissing(Node* domNode)
 {
     rapidjson::Value out(rapidjson::kObjectType);
-    out.AddMember("nodeId",
-                  rapidjson::Value(kIdForNodeWithNoAXNode,
-                                   strlen(kIdForNodeWithNoAXNode),
-                                   *m_allocator),
+    out.AddMember("nodeId", rapidjson::StringRef(kIdForNodeWithNoAXNode),
                   *m_allocator);
     out.AddMember("ignored", true, *m_allocator);
     addRole(out, "none");
