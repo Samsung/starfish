@@ -11,6 +11,7 @@ SET (_cli_sources
     ${STARFISH_ROOT}/src/launcher/cli/CDPClient.cpp
     ${STARFISH_ROOT}/src/launcher/cli/ClientMain.cpp
     ${STARFISH_ROOT}/src/launcher/cli/DaemonMain.cpp
+    ${STARFISH_ROOT}/src/launcher/cli/Options.cpp
     ${STARFISH_ROOT}/src/launcher/cli/Protocol.cpp
     ${STARFISH_ROOT}/src/launcher/cli/Session.cpp
     ${STARFISH_ROOT}/src/launcher/cli/Snapshot.cpp
@@ -44,6 +45,7 @@ SET_TARGET_PROPERTIES (starfish.cli.executable PROPERTIES
 )
 
 SET (_cli_unit_test_sources
+    ${STARFISH_ROOT}/src/launcher/cli/test/OptionsTest.cpp
     ${STARFISH_ROOT}/src/launcher/cli/test/ProtocolTest.cpp
     ${STARFISH_ROOT}/src/launcher/cli/test/SnapshotTest.cpp
     ${STARFISH_ROOT}/src/launcher/cli/test/TestMain.cpp

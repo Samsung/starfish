@@ -54,6 +54,16 @@ passes. It exits with one when any test fails.
 The harness removes `DISPLAY` from CLI child processes to keep each session
 headless.
 
+## Common options
+
+Every command accepts these options, before or after the command word.
+
+- `--session <name>` picks the session. Each session has its own daemon and
+  engine. The default is `default`.
+- `--json` prints one JSON line on standard output.
+- `--timeout <ms>` limits the whole invocation. A timed-out command fails with
+  `Timed out after <ms>ms`, and the session stays usable.
+
 ## Add a test
 
 Add a `test_*.py` file under `test/cli/`. Subclass `CLITestCase` from

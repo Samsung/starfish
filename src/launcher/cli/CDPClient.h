@@ -39,6 +39,14 @@ public:
         return m_fd >= 0;
     }
 
+    // Gives up a blocking call when the peer of this descriptor closes it.
+    // The daemon passes the connection of the client that waits for the
+    // answer. Pass -1 to stop watching.
+    void setCancelDescriptor(int descriptor)
+    {
+        m_cancelDescriptor = descriptor;
+    }
+
     // Send a CDP command and block until its response arrives.
     // paramsJson is a JSON object for "params".  Pass "" to send {}.
     // sessionId is the CDP session to use.  Pass "" to send none.
@@ -47,6 +55,14 @@ public:
     bool sendCommand(const std::string& method, const std::string& paramsJson,
                      std::string& resultJson, std::string& error,
                      const std::string& sessionId = "");
+
+    // True when the last sendCommand failed because the engine answered
+    // with a CDP error. False when it failed to send, timed out, or was
+    // cancelled.
+    bool lastErrorIsProtocolError() const
+    {
+        return m_lastErrorIsProtocol;
+    }
 
     // Register the one event that may arrive before its command response.
     // All other events are discarded.
@@ -72,15 +88,20 @@ private:
     bool wsHandshake(std::string& error);
     bool sendWsFrame(const std::string& text);
     bool recvWsFrame(std::string& text, int timeoutMs);
+    // Like recvWsFrame, but returns early with isCancelled set when the
+    // cancel descriptor was closed by its peer.
+    bool receiveFrame(std::string& text, int timeoutMs, bool& isCancelled);
     bool sendBytes(const void* buffer, size_t size);
     bool readBytes(void* buf, size_t n, int timeoutMs);
 
     int m_fd = -1;
     int m_nextId = 1;
+    int m_cancelDescriptor = -1;
     std::string m_tcpBuf; // TCP receive buffer
     std::string m_expectedEventMethod;
     std::string m_pendingEventParameters;
     bool m_hasPendingEvent = false;
+    bool m_lastErrorIsProtocol = false;
 };
 
 } // namespace StarfishCLI

@@ -42,8 +42,13 @@ struct Request {
 
 struct Response {
     bool isOk{ false };
+    // Text for the terminal in text mode.
     std::string result;
+    // The "data" object for --json, as JSON text. Empty when the command
+    // has no data from the daemon.
+    std::string data;
     std::string error;
+    std::string code;
 };
 
 std::string makeOpenRequest(const std::string& url);
@@ -56,13 +61,27 @@ std::string makeEvalRequest(const std::string& script);
 bool parseRequest(const std::string& input, Request& request);
 bool parseElementReference(const std::string& selector, int& elementRef);
 
-std::string makeOkResponse(const std::string& result = std::string());
-std::string makeErrorResponse(const std::string& error);
+std::string makeOkResponse(const std::string& result = std::string(),
+                           const std::string& data = std::string());
+std::string makeErrorResponse(const std::string& error,
+                              const std::string& code = std::string());
 bool parseResponse(const std::string& input, Response& response);
+
+// Builds the one line that --json prints. Each ends with a newline.
+// dataJson is JSON text. code may be empty.
+std::string makeJsonSuccess(const std::string& dataJson);
+std::string makeJsonFailure(const std::string& error, const std::string& code);
+std::string makeJsonParseFailure(const std::string& error,
+                                 const std::string& type);
+// Builds {"<key>":"<value>"} with the value escaped.
+std::string makeJsonStringObject(const char* key, const std::string& value);
 
 bool ensureDirectories(const std::string& path);
 bool writeMessage(int descriptor, const std::string& message);
-bool readMessage(int descriptor, std::string& message, size_t maximumSize);
+// Reads one line. A negative timeoutMs waits without limit. Otherwise it is the
+// total time for the whole line, and false means the line did not arrive.
+bool readMessage(int descriptor, std::string& message, size_t maximumSize,
+                 long long timeoutMs = -1);
 
 } // namespace StarfishCLI
 

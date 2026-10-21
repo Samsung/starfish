@@ -19,6 +19,7 @@
 
 #include "Session.h"
 
+#include "Constants.h"
 #include "CDPClient.h"
 #include "Snapshot.h"
 
@@ -125,6 +126,26 @@ namespace {
         }
     };
 
+    // The same number format for the compact output of --json.
+    class CompactValueWriter
+        : public rapidjson::Writer<rapidjson::StringBuffer> {
+    public:
+        explicit CompactValueWriter(rapidjson::StringBuffer& buffer)
+            : Writer(buffer)
+        {
+        }
+
+        bool Double(double number)
+        {
+            Prefix(rapidjson::kNumberType);
+            std::string text = formatNumber(number);
+            for (char character : text) {
+                os_->Put(character);
+            }
+            return true;
+        }
+    };
+
 } // namespace
 
 Session::Session(CDPClient& client)
@@ -168,6 +189,11 @@ bool Session::setup(std::string& error)
         return false;
     }
     m_sessionId = document["sessionId"].GetString();
+    if (document.HasMember("targetInfo") && document["targetInfo"].IsObject() &&
+        document["targetInfo"].HasMember("targetId") &&
+        document["targetInfo"]["targetId"].IsString()) {
+        m_targetId = document["targetInfo"]["targetId"].GetString();
+    }
 
     if (!command("Page.enable", "{}", result, error)) {
         return false;
@@ -175,8 +201,41 @@ bool Session::setup(std::string& error)
     return command("Accessibility.enable", "{}", result, error);
 }
 
-bool Session::open(const std::string& url, std::string& error)
+bool Session::pageInfo(std::string& url, std::string& title, std::string& error)
 {
+    std::string result;
+    if (!command("Runtime.evaluate",
+                 R"json({"expression":"({url:location.href,)json"
+                 R"json(title:document.title})","returnByValue":true})json",
+                 result, error)) {
+        return false;
+    }
+
+    rapidjson::Document document;
+    document.Parse(result.c_str());
+    if (document.HasParseError() || !document.IsObject() ||
+        !document.HasMember("result") || !document["result"].IsObject() ||
+        !document["result"].HasMember("value") ||
+        !document["result"]["value"].IsObject()) {
+        error = kPageAddressErrorMessage;
+        return false;
+    }
+    const rapidjson::Value& value = document["result"]["value"];
+    if (!value.HasMember("url") || !value["url"].IsString() ||
+        !value.HasMember("title") || !value["title"].IsString()) {
+        error = kPageAddressErrorMessage;
+        return false;
+    }
+    url = value["url"].GetString();
+    title = value["title"].GetString();
+    return true;
+}
+
+bool Session::open(const std::string& url, std::string& output,
+                   std::string& data, std::string& error)
+{
+    // The old document is going away, so its refs can no longer work.
+    m_areRefsStale = true;
     std::string result;
     std::string parameters = "{\"url\":" + jsonString(url) + "}";
     m_client.expectEvent("Accessibility.loadComplete");
@@ -190,35 +249,124 @@ bool Session::open(const std::string& url, std::string& error)
         error = "timeout waiting for Accessibility.loadComplete";
         return false;
     }
+
+    std::string finalUrl;
+    std::string title;
+    if (!pageInfo(finalUrl, title, error)) {
+        return false;
+    }
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    writer.StartObject();
+    writer.Key("url");
+    writer.String(finalUrl.c_str(),
+                  static_cast<rapidjson::SizeType>(finalUrl.size()));
+    writer.Key("title");
+    writer.String(title.c_str(),
+                  static_cast<rapidjson::SizeType>(title.size()));
+    writer.Key("targetId");
+    writer.String(m_targetId.c_str(),
+                  static_cast<rapidjson::SizeType>(m_targetId.size()));
+    writer.EndObject();
+    data = buffer.GetString();
+    output =
+        std::string(kOpenedPrefix) + title + kOpenedUrlPrefix + finalUrl + "\n";
     return true;
 }
 
-bool Session::snapshotInteractive(std::string& output, std::string& error)
+bool Session::snapshotInteractive(std::string& output, std::string& data,
+                                  std::string& error)
 {
     std::string result;
     if (!command("Accessibility.getFullAXTree", "{}", result, error)) {
         return false;
     }
 
-    return formatInteractiveSnapshot(result, output, error, m_snapshotNodeIds);
-}
-
-bool Session::click(int elementRef, std::string& error)
-{
-    if (elementRef < 1 ||
-        static_cast<size_t>(elementRef) > m_snapshotNodeIds.size()) {
-        error = "element reference out of range";
+    // A new snapshot replaces the whole previous ref set.
+    std::vector<SnapshotElement> elements;
+    if (!formatInteractiveSnapshot(result, output, error, m_snapshotNodeIds,
+                                   &elements)) {
         return false;
     }
+    m_areRefsStale = false;
 
+    std::string origin;
+    std::string title;
+    if (!pageInfo(origin, title, error)) {
+        return false;
+    }
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    auto writeText = [&writer](const std::string& text) {
+        writer.String(text.c_str(),
+                      static_cast<rapidjson::SizeType>(text.size()));
+    };
+    writer.StartObject();
+    writer.Key("snapshot");
+    writeText(output);
+    writer.Key("origin");
+    writeText(origin);
+    writer.Key("refs");
+    writer.StartObject();
+    for (size_t index = 0; index < elements.size(); index++) {
+        writer.Key(("e" + std::to_string(index + 1)).c_str());
+        writer.StartObject();
+        writer.Key("role");
+        writeText(elements[index].role);
+        writer.Key("name");
+        writeText(elements[index].name);
+        writer.EndObject();
+    }
+    writer.EndObject();
+    writer.EndObject();
+    data = buffer.GetString();
+    return true;
+}
+
+bool Session::failStaleRef(int elementRef, std::string& error)
+{
+    m_isStaleRef = true;
+    error = "Element @e" + std::to_string(elementRef) +
+            " no longer exists. Take a new snapshot.";
+    return false;
+}
+
+bool Session::failRefLookup(int elementRef, const std::string& lookupError,
+                            std::string& error)
+{
+    // Only a CDP error means the node is gone. A lost connection or a
+    // timeout must keep its own message.
+    if (m_client.lastErrorIsProtocolError()) {
+        return failStaleRef(elementRef, error);
+    }
+    m_isStaleRef = false;
+    error = lookupError;
+    return false;
+}
+
+bool Session::resolveElement(int elementRef, std::string& objectId,
+                             std::string& error)
+{
+    m_isStaleRef = false;
+    if (elementRef < 1 ||
+        static_cast<size_t>(elementRef) > m_snapshotNodeIds.size()) {
+        error = "Unknown ref: e" + std::to_string(elementRef);
+        return false;
+    }
+    if (m_areRefsStale) {
+        return failStaleRef(elementRef, error);
+    }
+
+    // resolveNode: backendNodeId -> RemoteObject objectId. It fails when the
+    // node is gone.
     int backendNodeId = m_snapshotNodeIds[elementRef - 1];
-
-    // resolveNode: backendNodeId -> RemoteObject objectId.
     std::string resolveParams =
         "{\"backendNodeId\":" + std::to_string(backendNodeId) + "}";
     std::string resolveResult;
-    if (!command("DOM.resolveNode", resolveParams, resolveResult, error)) {
-        return false;
+    std::string resolveError;
+    if (!command("DOM.resolveNode", resolveParams, resolveResult,
+                 resolveError)) {
+        return failRefLookup(elementRef, resolveError, error);
     }
 
     rapidjson::Document resolveDoc;
@@ -227,10 +375,40 @@ bool Session::click(int elementRef, std::string& error)
         !resolveDoc.HasMember("object") || !resolveDoc["object"].IsObject() ||
         !resolveDoc["object"].HasMember("objectId") ||
         !resolveDoc["object"]["objectId"].IsString()) {
-        error = "could not resolve node";
+        return failStaleRef(elementRef, error);
+    }
+    objectId = resolveDoc["object"]["objectId"].GetString();
+
+    // A removed node can still resolve, so ask the node itself.
+    std::string checkParams =
+        "{\"objectId\":" + jsonString(objectId) +
+        R"(,"returnByValue":true,)"
+        R"("functionDeclaration":"function(){return this.isConnected && )"
+        R"(this.ownerDocument === document;}"})";
+    std::string checkResult;
+    std::string checkError;
+    if (!command("Runtime.callFunctionOn", checkParams, checkResult,
+                 checkError)) {
+        return failRefLookup(elementRef, checkError, error);
+    }
+    rapidjson::Document checkDoc;
+    checkDoc.Parse(checkResult.c_str());
+    if (checkDoc.HasParseError() || !checkDoc.IsObject() ||
+        !checkDoc.HasMember("result") || !checkDoc["result"].IsObject() ||
+        !checkDoc["result"].HasMember("value") ||
+        !checkDoc["result"]["value"].IsBool() ||
+        !checkDoc["result"]["value"].GetBool()) {
+        return failStaleRef(elementRef, error);
+    }
+    return true;
+}
+
+bool Session::click(int elementRef, std::string& error)
+{
+    std::string objectId;
+    if (!resolveElement(elementRef, objectId, error)) {
         return false;
     }
-    std::string objectId = resolveDoc["object"]["objectId"].GetString();
 
     // getBoxModel: objectId -> border quad [x1,y1, x2,y2, x3,y3, x4,y4].
     std::string boxParams = "{\"objectId\":" + jsonString(objectId) + "}";
@@ -285,32 +463,10 @@ bool Session::click(int elementRef, std::string& error)
 
 bool Session::fill(int elementRef, const std::string& text, std::string& error)
 {
-    if (elementRef < 1 ||
-        static_cast<size_t>(elementRef) > m_snapshotNodeIds.size()) {
-        error = "element reference out of range";
+    std::string objectId;
+    if (!resolveElement(elementRef, objectId, error)) {
         return false;
     }
-
-    int backendNodeId = m_snapshotNodeIds[elementRef - 1];
-
-    // resolveNode: backendNodeId -> RemoteObject objectId.
-    std::string resolveParams =
-        "{\"backendNodeId\":" + std::to_string(backendNodeId) + "}";
-    std::string resolveResult;
-    if (!command("DOM.resolveNode", resolveParams, resolveResult, error)) {
-        return false;
-    }
-
-    rapidjson::Document resolveDoc;
-    resolveDoc.Parse(resolveResult.c_str());
-    if (resolveDoc.HasParseError() || !resolveDoc.IsObject() ||
-        !resolveDoc.HasMember("object") || !resolveDoc["object"].IsObject() ||
-        !resolveDoc["object"].HasMember("objectId") ||
-        !resolveDoc["object"]["objectId"].IsString()) {
-        error = "could not resolve node";
-        return false;
-    }
-    std::string objectId = resolveDoc["object"]["objectId"].GetString();
 
     // focus the input element.
     std::string focusParams = "{\"objectId\":" + jsonString(objectId) + "}";
@@ -337,7 +493,7 @@ bool Session::fill(int elementRef, const std::string& text, std::string& error)
 }
 
 bool Session::evaluate(const std::string& script, std::string& output,
-                       std::string& error)
+                       std::string& data, std::string& error)
 {
     std::string parameters = "{\"expression\":" + jsonString(script) +
                              ",\"returnByValue\":true,\"awaitPromise\":true}";
@@ -349,7 +505,7 @@ bool Session::evaluate(const std::string& script, std::string& output,
     rapidjson::Document document;
     document.Parse<rapidjson::kParseFullPrecisionFlag>(result.c_str());
     if (document.HasParseError() || !document.IsObject()) {
-        error = "invalid Runtime.evaluate response";
+        error = kInvalidEvaluateResponseMessage;
         return false;
     }
 
@@ -371,22 +527,35 @@ bool Session::evaluate(const std::string& script, std::string& output,
     }
 
     if (!document.HasMember("result") || !document["result"].IsObject()) {
-        error = "invalid Runtime.evaluate response";
+        error = kInvalidEvaluateResponseMessage;
         return false;
     }
 
     const rapidjson::Value& remoteObject = document["result"];
-    if (!remoteObject.HasMember("value")) {
-        output = "null\n";
-        return true;
-    }
+    std::string compact = "null";
+    if (remoteObject.HasMember("value")) {
+        rapidjson::StringBuffer buffer;
+        ValueWriter writer(buffer);
+        writer.SetIndent(' ', 2);
+        remoteObject["value"].Accept(writer);
+        output.assign(buffer.GetString(), buffer.GetSize());
 
-    rapidjson::StringBuffer buffer;
-    ValueWriter writer(buffer);
-    writer.SetIndent(' ', 2);
-    remoteObject["value"].Accept(writer);
-    output.assign(buffer.GetString(), buffer.GetSize());
+        rapidjson::StringBuffer compactBuffer;
+        CompactValueWriter compactWriter(compactBuffer);
+        remoteObject["value"].Accept(compactWriter);
+        compact.assign(compactBuffer.GetString(), compactBuffer.GetSize());
+    } else {
+        output = "null";
+    }
     output += "\n";
+
+    std::string origin;
+    std::string title;
+    if (!pageInfo(origin, title, error)) {
+        return false;
+    }
+    data =
+        R"({"result":)" + compact + R"(,"origin":)" + jsonString(origin) + "}";
     return true;
 }
 

@@ -426,12 +426,51 @@ void CDPClient::expectEvent(const std::string& eventMethod)
     m_hasPendingEvent = false;
 }
 
+bool CDPClient::receiveFrame(std::string& text, int timeoutMs,
+                             bool& isCancelled)
+{
+    if (m_cancelDescriptor >= 0 && m_tcpBuf.empty()) {
+        fd_set descriptors;
+        FD_ZERO(&descriptors);
+        FD_SET(m_fd, &descriptors);
+        FD_SET(m_cancelDescriptor, &descriptors);
+        timeval timeout;
+        timeout.tv_sec = timeoutMs / 1000;
+        timeout.tv_usec = (timeoutMs % 1000) * 1000;
+        int ready = select(std::max(m_fd, m_cancelDescriptor) + 1, &descriptors,
+                           nullptr, nullptr, &timeout);
+        if (ready <= 0) {
+            return false;
+        }
+        if (FD_ISSET(m_cancelDescriptor, &descriptors)) {
+            // A CLI client sends nothing after its request. Closed, failed,
+            // or unexpected data all mean cancel. Otherwise select would
+            // return at once on every call.
+            char byte;
+            ssize_t count =
+                recv(m_cancelDescriptor, &byte, 1, MSG_PEEK | MSG_DONTWAIT);
+            bool isTransient =
+                count < 0 &&
+                (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR);
+            if (!isTransient) {
+                isCancelled = true;
+                return false;
+            }
+        }
+        if (!FD_ISSET(m_fd, &descriptors)) {
+            return false;
+        }
+    }
+    return recvWsFrame(text, timeoutMs);
+}
+
 bool CDPClient::sendCommand(const std::string& method,
                             const std::string& paramsJson,
                             std::string& resultJson, std::string& error,
                             const std::string& sessionId)
 {
     int id = m_nextId++;
+    m_lastErrorIsProtocol = false;
 
     std::string req = "{\"id\":" + std::to_string(id) + ",\"method\":\"" +
                       method + "\"" +
@@ -454,7 +493,14 @@ bool CDPClient::sendCommand(const std::string& method,
     for (int remaining = kCommandTimeoutMs; remaining > 0;
          remaining = millisecondsUntil(deadline)) {
         std::string frame;
-        if (!recvWsFrame(frame, std::min(remaining, kReadSliceMs))) {
+        bool isCancelled = false;
+        if (!receiveFrame(frame, std::min(remaining, kReadSliceMs),
+                          isCancelled)) {
+            if (isCancelled) {
+                // A late response to this id is dropped by the id check above.
+                error = "cancelled because the client closed the connection";
+                return false;
+            }
             continue;
         }
 
@@ -462,6 +508,7 @@ bool CDPClient::sendCommand(const std::string& method,
         if (p.isResponse && p.id == id) {
             resultJson = p.resultJson;
             error = p.errorMsg;
+            m_lastErrorIsProtocol = !error.empty();
             return error.empty();
         }
         if (!p.isResponse && !m_expectedEventMethod.empty() &&
@@ -496,7 +543,12 @@ bool CDPClient::waitForEvent(const std::string& eventMethod,
     for (int remaining = timeoutMs; remaining > 0;
          remaining = millisecondsUntil(deadline)) {
         std::string frame;
-        if (!recvWsFrame(frame, std::min(remaining, kReadSliceMs))) {
+        bool isCancelled = false;
+        if (!receiveFrame(frame, std::min(remaining, kReadSliceMs),
+                          isCancelled)) {
+            if (isCancelled) {
+                break;
+            }
             continue;
         }
 
