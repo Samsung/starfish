@@ -3831,7 +3831,7 @@ The Websocket is limitedly supported.
 | Interface | Type | Name | Description | Note |
 |-----------|------|------|-------------|------|
 | [WebSocket](https://html.spec.whatwg.org/multipage/web-sockets.html) | interface | WebSocket | | |
-| | constructor | constructor (USVString url, optional DOMString protocols); | LWE accepts a single subprotocol string only; the WHATWG `sequence<DOMString>` form is **not** parsed by `WebSocket.idl`. Pass a comma-separated string if you need to advertise multiple protocols (or wrap and call repeatedly). |
+| | constructor | constructor (USVString url, optional (DOMString or sequence<DOMString>) protocols); | Creates a WebSocket and offers the given subprotocols. Duplicate or malformed protocols throw a `SyntaxError`. | |
 | | attribute | readonly USVString url | Returns the URL that was used to establish the WebSocket connection. | |
 | | value | "CONNECTING" | The connection has not yet been established. |
 | | value | "OPEN" | The WebSocket connection is established and communication is possible. |

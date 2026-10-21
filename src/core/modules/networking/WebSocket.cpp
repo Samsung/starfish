@@ -128,26 +128,34 @@ WebSocket::WebSocket(ExecutionContext* executionContext, String* url)
     , m_binaryType(BinaryType::Blob)
     , m_extensions(String::emptyString)
     , m_protocol(String::emptyString)
-    , m_hasProtocol(false)
+    , m_requestedProtocols(String::emptyString)
     , m_executionContext(executionContext)
 {
-    init(url, String::emptyString);
+    init(url, GCVector<String*>());
 }
 
 WebSocket::WebSocket(ExecutionContext* executionContext, String* url,
-                     String* protocols)
+                     DOMStringOrSequenceOfDOMString protocols)
     : EventTarget()
     , m_readyState(ReadyState::CONNECTING)
     , m_binaryType(BinaryType::Blob)
     , m_extensions(String::emptyString)
     , m_protocol(String::emptyString)
-    , m_hasProtocol(true)
+    , m_requestedProtocols(String::emptyString)
     , m_executionContext(executionContext)
 {
-    init(url, protocols);
+    // If protocols is a string, set protocols to a sequence consisting of just
+    // that string.
+    if (protocols.isSequenceOfDOMStringValue()) {
+        init(url, protocols.getSequenceOfDOMStringValue());
+    } else {
+        GCVector<String*> list;
+        list.push_back(protocols.getDOMStringValue());
+        init(url, list);
+    }
 }
 
-void WebSocket::init(String* url, String* protocol)
+void WebSocket::init(String* url, const GCVector<String*>& protocols)
 {
     // https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket
 
@@ -176,18 +184,29 @@ void WebSocket::init(String* url, String* protocol)
                                "url's fragment is non-null");
     }
 
-    // If protocols is a string, set protocols to a sequence consisting of just
-    // that string.
     // If any of the values in protocols occur more than once or otherwise fail
     // to match the requirements for elements that comprise the value of
     // Sec-WebSocket-Protocol fields as defined by The WebSocket protocol, then
     // throw a "SyntaxError" DOMException. [WSP]
-    if (m_hasProtocol && !IsValidSubprotocolString(protocol)) {
-        throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
-                               "protocol has invalid value");
+    StringBuilder builder;
+    for (size_t i = 0; i < protocols.size(); ++i) {
+        if (!IsValidSubprotocolString(protocols[i])) {
+            throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
+                                   "protocol has invalid value");
+        }
+        for (size_t j = 0; j < i; ++j) {
+            if (protocols[j]->equals(protocols[i])) {
+                throw new DOMException(executionContext(),
+                                       DOMException::SYNTAX_ERR,
+                                       "protocol is duplicated");
+            }
+        }
+        if (i) {
+            builder.appendString(", ");
+        }
+        builder.appendString(protocols[i]);
     }
-
-    setProtocol(protocol);
+    m_requestedProtocols = builder.finalize();
     m_socketLWS = new SocketLWS(this);
     executionContext()->addActiveWebSockets(this);
 }
