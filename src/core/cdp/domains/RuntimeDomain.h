@@ -20,7 +20,13 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPRuntimeDomain__)
 #define __StarfishCDPRuntimeDomain__
 
+#include <cstdint>
 #include <string>
+#include <vector>
+
+namespace Escargot {
+class ValueRef;
+}
 
 namespace Starfish {
 
@@ -28,6 +34,7 @@ class CDPDispatcher;
 class CDPCommand;
 class WebView;
 class BrowsingContext;
+class ScriptBindingInstance;
 
 class RuntimeDomain {
 public:
@@ -43,7 +50,35 @@ public:
     // after navigation (Page.navigate) to re-inject all registered bindings.
     void injectBinding(WebView* wv, const std::string& name);
 
+    // Called by a Promise handler when a deferred evaluation settles. Sends
+    // the reply and frees the record. Unknown ids are ignored.
+    void settlePending(uint64_t id);
+
+    // Free the pending evaluations of `wv`. With notify, answer each command
+    // with Chrome's "Inspected target navigated or closed" error first.
+    void cancelPendingEvaluations(WebView* wv, bool notify);
+
+    // Fail the pending evaluations that run in the realm of `sbi`. The window
+    // calls this when it is disposed, for example on navigation or when an
+    // iframe is removed.
+    void cancelPendingEvaluations(ScriptBindingInstance* sbi);
+
+    // Free every pending evaluation without replying (no client to answer).
+    void cancelAllPendingEvaluations();
+
 private:
+    struct PendingEvaluation;
+
+    // If awaitPromise is set and `value` is a still-pending Promise, register
+    // a deferred evaluation, attach native handlers, and return true. The
+    // caller must then not reply.
+    bool deferPromise(WebView* wv, ScriptBindingInstance* sbi,
+                      Escargot::ValueRef* value, bool returnByValue,
+                      bool awaitPromise, CDPCommand& command);
+    PendingEvaluation* takePending(uint64_t id);
+    void cancelMatching(WebView* wv, ScriptBindingInstance* sbi, bool notify);
+    static void freePending(PendingEvaluation* p);
+
     // Resolve the optional "contextId" / "executionContextId" param to the
     // BrowsingContext it targets. A child iframe contextId resolves to that
     // iframe's BrowsingContext (its own Escargot context); anything else (no
@@ -93,6 +128,8 @@ private:
                                     const std::string& sessionId);
 
     CDPDispatcher* m_dispatcher;
+    std::vector<PendingEvaluation*> m_pending;
+    uint64_t m_nextPendingId = 0;
 };
 
 } // namespace Starfish
