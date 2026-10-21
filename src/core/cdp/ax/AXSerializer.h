@@ -62,6 +62,15 @@ private:
     void addIgnoredReasons(rapidjson::Value& out, AXNode* node);
     rapidjson::Value relatedNodes(Element* element, const std::string& idRefs,
                                   bool includeText);
+    // name/type and the const char* value overload reference static strings.
+    void addBooleanProperty(rapidjson::Value& properties, const char* name,
+                            const char* type, bool value);
+    void addIntegerProperty(rapidjson::Value& properties, const char* name,
+                            int value);
+    void addStringProperty(rapidjson::Value& properties, const char* name,
+                           const char* type, const char* value);
+    void addStringProperty(rapidjson::Value& properties, const char* name,
+                           const char* type, const std::string& value);
     rapidjson::Value stringValue(const std::string& text);
 
     NodeRegistry* m_registry;

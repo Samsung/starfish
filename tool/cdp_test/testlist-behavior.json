@@ -38,9 +38,7 @@
       "suite": "internal"
     },
     "accessibility/accessibility-getRelationships.js": {
-      "expected": "fail",
-      "category": "output-differs",
-      "detail": "line 56: expected ' name : required', got ' name : activedescendant'"
+      "expected": "pass"
     },
     "accessibility/accessibility-getRootNode.js": {
       "expected": "pass"
@@ -60,16 +58,20 @@
     "accessibility/accessibility-ignoredNodesModal.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 59: expected ' [0] : {', got ' ]'"
+      "detail": "line 67: expected ' name : focused', got ' name : modal'"
     },
     "accessibility/accessibility-loadComplete.js": {
+      "expected": "pass",
+      "suite": "internal"
+    },
+    "accessibility/accessibility-modal-properties.js": {
       "expected": "pass",
       "suite": "internal"
     },
     "accessibility/accessibility-modal.js": {
       "expected": "fail",
       "category": "output-differs",
-      "detail": "line 31: expected ' [0] : {', got ' ]'"
+      "detail": "line 276: expected ' name : focused', got ' name : modal'"
     },
     "accessibility/accessibility-nameSources-buttons.js": {
       "expected": "fail",
@@ -115,6 +117,10 @@
       "expected": "fail",
       "category": "script-error",
       "detail": "line 2: expected 'nodesUpdated [', got \"Error while executing test script: TypeError: Cannot read properties of undefined (reading 'properties')\""
+    },
+    "accessibility/accessibility-properties.js": {
+      "expected": "pass",
+      "suite": "internal"
     },
     "accessibility/accessibility-query-axtree-errors.js": {
       "expected": "pass"
