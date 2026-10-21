@@ -7,19 +7,24 @@
 // Its log formatting, which every -expected.txt is diffed against, is
 // therefore Chromium's own.
 //
-// Usage: node driver/node/main.mjs <ws-url> <suite-dir> <test.js> [timeout]
+// Usage: node driver/node/main.mjs <ws-url> <suite-dir> <test.js>
+//        <target-base-url> [timeout]
 
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import vm from 'node:vm';
 
+import { installSessionFanout } from './session_fanout.mjs';
 import { WebSocketClient } from './websocket.mjs';
 
-const [wsUrl, suiteDir, testPath, timeoutArg] = process.argv.slice(2);
-if (!wsUrl || !suiteDir || !testPath) {
+const [
+  wsUrl, suiteDir, testPath, targetBaseURLArg, timeoutArg,
+] = process.argv.slice(2);
+if (!wsUrl || !suiteDir || !testPath || !targetBaseURLArg) {
   console.error(
-    'usage: main.mjs <ws-url> <suite-dir> <test.js> [timeout-seconds]');
+    'usage: main.mjs <ws-url> <suite-dir> <test.js> '
+    + '<target-base-url> [timeout-seconds]');
   process.exit(2);
 }
 const timeoutMs = (Number(timeoutArg) || 30) * 1000;
@@ -111,6 +116,10 @@ const source = readFileSync(VENDORED, 'utf8')
 vm.runInContext(source, sandbox, { filename: VENDORED });
 const { TestRunner, DevToolsAPI } = sandbox.__harness;
 
+// FIXME: Temporary workaround. Remove it when Starfish supports multiple
+// sessions. See session_fanout.mjs.
+installSessionFanout(DevToolsAPI._sessions);
+
 DevToolsAPI._log = (text) => { output.push(String(text)); };
 DevToolsAPI._completeTest = () => { finish(); };
 DevToolsAPI._fetch = async (url) => {
@@ -144,9 +153,13 @@ try {
   report(1);
 }
 
-const testBaseURL = pathToFileURL(dirname(resolve(testPath))).href + '/';
+// Harness helpers remain local files loaded by Node. Target navigation goes
+// through the shared HTTP server; targetBaseURL was made with a POSIX URL
+// path for either the upstream or internal suite.
+const localTestBaseURL = pathToFileURL(dirname(resolve(testPath))).href + '/';
+const targetNavigationBaseURL = new URL(targetBaseURLArg).href;
 const runner = new TestRunner(
-  testBaseURL, testBaseURL,
+  localTestBaseURL, targetNavigationBaseURL,
   DevToolsAPI._log, DevToolsAPI._completeTest, DevToolsAPI._fetch,
   new URLSearchParams(''));
 

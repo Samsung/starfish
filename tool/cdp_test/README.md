@@ -37,6 +37,10 @@ run.py behavior --include-fails    # every entry, so one can be promoted
 
 `run.py <layer> --help` documents every option and the model the lists follow.
 
+The behavior layer serves `test/cdp/` over HTTP at `http://127.0.0.1:8000`.
+Chromium's tests expect this address. Only one behavior run can use the port at
+a time.
+
 ## Test lists
 
 Each layer keeps one file. It is both the run list and the result of the last

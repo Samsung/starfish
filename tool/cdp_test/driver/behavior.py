@@ -11,7 +11,7 @@ import pathlib
 import re
 import subprocess
 
-from . import client, launcher
+from . import client, launcher, static_server
 
 # The Chromium tests are JavaScript, so they run under Node. node/main.mjs
 # is the only part of this suite that is not Python.
@@ -57,7 +57,8 @@ def run(starfish, suite_dir, entry, timeout, harness_dir):
         try:
             result = subprocess.run(
                 ["node", str(NODE_MAIN), browser_url, str(harness_dir),
-                 str(test_path), str(int(timeout))],
+                 str(test_path), static_server.target_base_url(test_path),
+                 str(int(timeout))],
                 capture_output=True, text=True, timeout=timeout * 3 + 30)
         except subprocess.TimeoutExpired:
             # TimeoutExpired is not an OSError, so without this the whole

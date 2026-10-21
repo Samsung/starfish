@@ -42,6 +42,7 @@ carries the first line that differs.
 """
 import argparse
 import concurrent.futures
+import contextlib
 import fnmatch
 import pathlib
 import sys
@@ -52,7 +53,7 @@ SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR.parent))
 
 from driver import (behavior, case, commands as command_table, launcher,  # noqa: E402
-                    testlist)
+                    static_server, testlist)
 
 # What --workers means when given without a number. Chosen from one full
 # behavior sweep: 4 at a time finished it in about a quarter of the time and
@@ -224,7 +225,9 @@ def run_layer(args, layer):
     started = time.monotonic()
     durations = {}
     pool = concurrent.futures.ThreadPoolExecutor(max_workers=args.workers)
-    with pool:
+    server = (static_server.running()
+              if layer.name == "behavior" else contextlib.nullcontext())
+    with server, pool:
         for position, result in enumerate(pool.map(measure, to_run), 1):
             entry, category, detail, spent = result
             durations[entry] = spent
