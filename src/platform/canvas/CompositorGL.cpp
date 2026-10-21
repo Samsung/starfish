@@ -639,6 +639,14 @@ public:
     GLint m_rectShaderProgramColor;
     GLint m_rectShaderProgramTexIdx;
 
+    GLuint m_overlayFragmentShader;
+    GLuint m_overlayShaderProgram;
+    GLint m_overlayShaderProgramPosition;
+    GLint m_overlayShaderProgramColor;
+    GLint m_overlayShaderProgramTexIdx;
+    GLint m_overlayShaderProgramBackdropOrigin;
+    GLint m_overlayShaderProgramBackdropSize;
+
     GLuint m_texVertexShader;
     GLuint m_texFragmentShader;
     GLuint m_texShaderProgram; // Without mask
@@ -973,6 +981,12 @@ public:
         m_rectShaderProgramColor = 0;
         m_rectShaderProgramTexIdx = 0;
 
+        m_overlayFragmentShader = m_overlayShaderProgram = 0;
+        m_overlayShaderProgramPosition = m_overlayShaderProgramColor = 0;
+        m_overlayShaderProgramTexIdx = 0;
+        m_overlayShaderProgramBackdropOrigin = 0;
+        m_overlayShaderProgramBackdropSize = 0;
+
         // texShaderProgram (without mask)
         m_texShaderProgramPosition = 0;
         m_texShaderProgramTexture = 0;
@@ -1149,6 +1163,13 @@ public:
             gl()->deleteProgram(m_polygonShaderProgram);
             gl()->deleteShader(m_polygonVertexShader);
             gl()->deleteShader(m_polygonFragmentShader);
+        }
+
+        if (m_overlayShaderProgram) {
+            gl()->detachShader(m_overlayShaderProgram, m_rectVertexShader);
+            gl()->detachShader(m_overlayShaderProgram, m_overlayFragmentShader);
+            gl()->deleteProgram(m_overlayShaderProgram);
+            gl()->deleteShader(m_overlayFragmentShader);
         }
 
         if (m_rectShaderProgram) {
@@ -1674,6 +1695,70 @@ public:
         }
 
         return m_rectShaderProgram;
+    }
+
+    // Rect fill composited with mix-blend-mode overlay against a copy of the
+    // backdrop bound to texture unit 0.
+    // https://drafts.fxtf.org/compositing-1/#blendingoverlay
+    GLuint overlayProgram()
+    {
+        if (!m_overlayShaderProgram) {
+            rectProgram(); // creates the shared m_rectVertexShader
+            std::string source =
+                "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
+                "  precision highp float;\n"
+                "#elif defined(GL_ES)\n"
+                "  precision mediump float;\n"
+                "#endif\n"
+                "uniform vec4 uColor;\n"
+                "uniform sampler2D uBackdrop;\n"
+                "uniform vec2 uBackdropOrigin;\n"
+                "uniform vec2 uBackdropSize;\n"
+                "void main(void)\n"
+                "{\n";
+            // The backdrop is read back in framebuffer channel order.
+            source += g_needsRGBShuffle ? "  vec4 s = uColor.bgra;\n"
+                                        : "  vec4 s = uColor;\n";
+            source +=
+                "  vec4 b = texture2D(uBackdrop, (gl_FragCoord.xy - "
+                "uBackdropOrigin) / uBackdropSize);\n"
+                "  vec3 cs = s.a > 0.0 ? s.rgb / s.a : vec3(0.0);\n"
+                "  vec3 cb = b.a > 0.0 ? b.rgb / b.a : vec3(0.0);\n"
+                "  vec3 mixed = mix(2.0 * cs * cb,\n"
+                "      1.0 - 2.0 * (1.0 - cs) * (1.0 - cb), step(0.5, cb));\n"
+                "  gl_FragColor = vec4((1.0 - s.a) * b.rgb + (1.0 - b.a) * "
+                "s.rgb + s.a * b.a * mixed, s.a + b.a * (1.0 - s.a));\n"
+                "}";
+            m_overlayFragmentShader =
+                loadShader(gl(), GL_FRAGMENT_SHADER, source.c_str());
+            m_overlayShaderProgram = gl()->createProgram();
+            gl()->attachShader(m_overlayShaderProgram, m_rectVertexShader);
+            gl()->attachShader(m_overlayShaderProgram, m_overlayFragmentShader);
+            gl()->linkProgram(m_overlayShaderProgram);
+            checkError(gl());
+
+            m_lastProgram = m_overlayShaderProgram;
+            gl()->useProgram(m_overlayShaderProgram);
+            m_overlayShaderProgramPosition =
+                gl()->getUniformLocation(m_overlayShaderProgram, "uPosition");
+            m_overlayShaderProgramColor =
+                gl()->getUniformLocation(m_overlayShaderProgram, "uColor");
+            m_overlayShaderProgramTexIdx =
+                gl()->getAttribLocation(m_overlayShaderProgram, "aTexIdx");
+            m_overlayShaderProgramBackdropOrigin = gl()->getUniformLocation(
+                m_overlayShaderProgram, "uBackdropOrigin");
+            m_overlayShaderProgramBackdropSize = gl()->getUniformLocation(
+                m_overlayShaderProgram, "uBackdropSize");
+            gl()->uniform1i(
+                gl()->getUniformLocation(m_overlayShaderProgram, "uBackdrop"),
+                0);
+            bindTexIdx(m_overlayShaderProgramTexIdx, true);
+        } else if (m_lastProgram != m_overlayShaderProgram) {
+            m_lastProgram = m_overlayShaderProgram;
+            gl()->useProgram(m_overlayShaderProgram);
+            bindTexIdx(m_overlayShaderProgramTexIdx, true);
+        }
+        return m_overlayShaderProgram;
     }
 
     void bindTexIdx(GLint texIdx, bool attach)
@@ -4289,8 +4374,10 @@ public:
             dstFactor = GL_ONE_MINUS_SRC_COLOR;
             equation = GL_FUNC_ADD;
             break;
-        case BlendMode::ColorDodge:
         case BlendMode::Overlay:
+            // Needs the backdrop color; rect fills take drawRectOverlay.
+            break;
+        case BlendMode::ColorDodge:
         case BlendMode::ColorBurn:
         case BlendMode::HardLight:
         case BlendMode::SoftLight:
@@ -4522,6 +4609,11 @@ public:
                 maxX * hw - 1, minY * hh + 1, maxX * hw - 1, maxY * hh + 1,
             };
 
+            if (lastState.blendMode == BlendMode::Overlay) {
+                drawRectOverlay(position, currentColor, lastState.opacity);
+                return;
+            }
+
             gl()->uniform2fv(m_compositorContext->m_rectShaderProgramPosition,
                              4, position);
 
@@ -4560,6 +4652,12 @@ public:
                         maxX * hw - 1, maxY * hh + 1, // V4
                     };
 
+                    if (lastState.blendMode == BlendMode::Overlay) {
+                        drawRectOverlay(position, currentColor,
+                                        lastState.opacity);
+                        return;
+                    }
+
                     gl()->uniform2fv(
                         m_compositorContext->m_rectShaderProgramPosition, 4,
                         position);
@@ -4576,11 +4674,77 @@ public:
                     checkError(gl());
                     setBlendEnabled(true);
                 } else {
+                    if (lastState.blendMode == BlendMode::Overlay) {
+                        STARFISH_UNSUPPORTED("Overlay on a clipped polygon");
+                    }
                     drawTessellatedPolygon(result, currentColor,
                                            lastState.opacity, true);
                 }
             }
         }
+    }
+
+    // Composites a rect fill (NDC corners as uploaded to uPosition) with
+    // overlay, which depends on the backdrop color per channel and so cannot
+    // be expressed with fixed-function blending: the backdrop under the rect
+    // is copied to a texture and the shader writes the composited result.
+    void drawRectOverlay(const float (&position)[8], const Unit::Color& color,
+                         float opacity)
+    {
+        float vx = 0, vy = 0;
+        float vw = screenWidth(), vh = screenHeight();
+        int fbWidth = screenWidth(), fbHeight = screenHeight();
+        if (m_fboState.size()) {
+            auto& fbo = m_fboState.back();
+            vx = (float)fbo.viewport.x();
+            vy = (float)fbo.viewport.y();
+            vw = (float)fbo.viewport.width();
+            vh = (float)fbo.viewport.height();
+            fbWidth = fbo.textureSize.width();
+            fbHeight = fbo.textureSize.height();
+        }
+        // Window coordinates, the space gl_FragCoord is in.
+        float nx0 = std::min(position[0], position[4]);
+        float nx1 = std::max(position[0], position[4]);
+        float ny0 = std::min(position[1], position[3]);
+        float ny1 = std::max(position[1], position[3]);
+        int x0 = std::max(0, (int)floor(vx + (nx0 + 1) * vw / 2));
+        int x1 = std::min(fbWidth, (int)ceil(vx + (nx1 + 1) * vw / 2));
+        int y0 = std::max(0, (int)floor(vy + (ny0 + 1) * vh / 2));
+        int y1 = std::min(fbHeight, (int)ceil(vy + (ny1 + 1) * vh / 2));
+        if (x0 >= x1 || y0 >= y1) {
+            return;
+        }
+
+        // Dropped right after the draw so no screen-sized copy stays alive.
+        GLuint backdrop;
+        gl()->genTextures(1, &backdrop);
+        gl()->bindTexture(GL_TEXTURE_2D, backdrop);
+        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        // A copy may not add components the framebuffer lacks; an RGB
+        // backdrop samples as opaque.
+        GLint alphaBits = 0;
+        gl()->getIntegerv(GL_ALPHA_BITS, &alphaBits);
+        gl()->copyTexImage2D(GL_TEXTURE_2D, 0, alphaBits ? GL_RGBA : GL_RGB, x0,
+                             y0, x1 - x0, y1 - y0, 0);
+
+        auto* ctx = m_compositorContext;
+        ctx->overlayProgram();
+        gl()->uniform2fv(ctx->m_overlayShaderProgramPosition, 4, position);
+        uploadFillColor(ctx->m_overlayShaderProgramColor, color, opacity);
+        gl()->uniform2f(ctx->m_overlayShaderProgramBackdropOrigin, x0, y0);
+        gl()->uniform2f(ctx->m_overlayShaderProgramBackdropSize, x1 - x0,
+                        y1 - y0);
+        gl()->enableVertexAttribArray(ctx->m_overlayShaderProgramTexIdx);
+        setBlendEnabled(false);
+        gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        checkError(gl());
+        setBlendEnabled(true);
+        gl()->bindTexture(GL_TEXTURE_2D, 0);
+        gl()->deleteTextures(1, &backdrop);
     }
 
     void drawTessellatedPolygon(const Clipper2Lib::PathsD& paths,
@@ -5545,6 +5709,9 @@ public:
         }
 
         auto& lastState = m_state.back();
+        if (lastState.blendMode == BlendMode::Overlay) {
+            STARFISH_UNSUPPORTED("Overlay on a surface");
+        }
         if (lastState.blendMode == BlendMode::Normal &&
             lastState.opacity == 0) {
             return;
