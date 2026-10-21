@@ -377,7 +377,7 @@ http://web-platform.test:8000/css/css-contain/content-visibility/content-visibil
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-fieldset-size.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-hidden-and-innertext.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-hidden-with-column-spanner.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-intrinsic-size-001.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-intrinsic-size-001.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-on-display-contents.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-on-g.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-on-root-svg.html
