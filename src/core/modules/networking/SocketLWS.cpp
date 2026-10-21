@@ -144,6 +144,19 @@ int SocketLWS::lwsEventCallback(struct lws* wsi,
         break;
     }
 
+    case LWS_CALLBACK_CLIENT_FILTER_PRE_ESTABLISH: {
+        // The handshake headers are released before CLIENT_ESTABLISHED, so
+        // keep the subprotocol the server selected for the protocol attribute.
+        int n = lws_hdr_total_length(wsi, WSI_TOKEN_PROTOCOL);
+        if (n > 0) {
+            socket->m_selectedProtocol.resize(n + 1);
+            lws_hdr_copy(wsi, &socket->m_selectedProtocol[0], n + 1,
+                         WSI_TOKEN_PROTOCOL);
+            socket->m_selectedProtocol.resize(n);
+        }
+        break;
+    }
+
     case LWS_CALLBACK_CLIENT_ESTABLISHED:
         socket->updateState(WebSocket::ReadyState::OPEN);
         socket->publishEvent(SocketLWS::LwsEvent::OPEN);
@@ -261,7 +274,7 @@ SocketLWS::SocketLWS(WebSocket* socket)
     int useSSL = 0;
     const char* prot;
     m_url = parent()->url()->toUTF8NonGCString();
-    m_protocol = parent()->protocol()->toUTF8NonGCString();
+    m_protocol = parent()->requestedProtocols()->toUTF8NonGCString();
     // RFC6455 4.1: the Origin header carries the origin of the script that
     // opened the connection, not the origin of the target URL. Sending the
     // target's own origin made every server-side origin check pass.
@@ -592,6 +605,9 @@ void SocketLWS::updateState(WebSocket::ReadyState state)
             nullptr,
             [](size_t handle, void* data) {
                 SocketLWS* socket = (SocketLWS*)data;
+                socket->parent()->setProtocol(
+                    String::fromUTF8(socket->m_selectedProtocol.data(),
+                                     socket->m_selectedProtocol.size()));
                 socket->parent()->setReadyState(WebSocket::ReadyState::OPEN);
                 // deref() last: dropping the final reference unroots the
                 // socket, so it must not be touched afterwards.

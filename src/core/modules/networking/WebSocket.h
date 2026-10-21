@@ -24,6 +24,7 @@
 
 #include "core/dom/EventTarget.h"
 #include "core/modules/networking/BinaryType.h"
+#include "binding/generated/DOMStringOrSequenceOfDOMStringUnion.h"
 
 namespace Starfish {
 class Blob;
@@ -54,7 +55,7 @@ public:
     };
     WebSocket(ExecutionContext* executionContext, String* url);
     WebSocket(ExecutionContext* executionContext, String* url,
-              String* protocols);
+              DOMStringOrSequenceOfDOMString protocols);
     String* url();
     ResourceURL* urlObject();
 
@@ -82,6 +83,11 @@ public:
     void setProtocol(String* protocol)
     {
         m_protocol = protocol;
+    }
+    // Value of the Sec-WebSocket-Protocol request header
+    String* requestedProtocols()
+    {
+        return m_requestedProtocols;
     }
 
     void close();
@@ -120,14 +126,14 @@ public:
     }
 
 private:
-    void init(String* url, String* protocol);
+    void init(String* url, const GCVector<String*>& protocols);
     void send(const void* buf, size_t len, int flags);
     ReadyState m_readyState;
     BinaryType m_binaryType;
     ResourceURL* m_url;
     String* m_extensions;
     String* m_protocol;
-    bool m_hasProtocol;
+    String* m_requestedProtocols;
 
     ExecutionContext* m_executionContext;
     SocketLWS* m_socketLWS;

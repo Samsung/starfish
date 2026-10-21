@@ -161,6 +161,8 @@ private:
     std::string m_url;
     std::string m_urlPath;
     std::string m_protocol;
+    // Written on the service thread before OPEN is posted to the main thread.
+    std::string m_selectedProtocol;
     std::string m_origin;
 
     lws_client_connect_info m_lwsClientConnectInfo;
