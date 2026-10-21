@@ -256,6 +256,12 @@ jobs:
       thirdparty_key: ${{ needs.prepare_source.outputs.thirdparty_key }}
     secrets: inherit
 
+  # Build the flutter port so its release profiles cannot rot.
+  flutter_port:
+    needs: [ prepare_source ]
+    uses: ./.github/workflows/release_flutter_port.yaml
+    secrets: inherit
+
   minor_port:
     needs: [ prepare_source ]
     uses: ./.github/workflows/minor.yml
