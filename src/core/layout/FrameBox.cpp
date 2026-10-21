@@ -951,6 +951,42 @@ template void FrameBox::applyBorderRadiusClippingIfNeeds<Canvas*>(
 template void FrameBox::applyBorderRadiusClippingIfNeeds<Compositor*>(
     Compositor*, const LayoutRect& rect, float spreadDistance, bool inset);
 
+void FrameBox::clipToBox(Canvas* canvas, BoxValue box)
+{
+    Unit::Rect rect = makeRect(box);
+    if (!hasFrameBorderRadius()) {
+        canvas->clip(rect);
+        return;
+    }
+
+    // The corners follow the border radius reduced by the distance from the
+    // border edge to |box|.
+    // https://drafts.csswg.org/css-backgrounds/#corner-clipping
+    BorderRadiusFixedData fixed =
+        computeFixedBorderRadius(LayoutRect(0, 0, width(), height()), 0, false);
+    float left = rect.x();
+    float top = rect.y();
+    float right = width().toFloat() - rect.maxX();
+    float bottom = height().toFloat() - rect.maxY();
+    auto shrink = [](float& radius, float inset) {
+        radius = std::max(0.0f, radius - inset);
+    };
+    shrink(fixed.m_topLeftHorizontal, left);
+    shrink(fixed.m_topLeftVertical, top);
+    shrink(fixed.m_topRightHorizontal, right);
+    shrink(fixed.m_topRightVertical, top);
+    shrink(fixed.m_bottomLeftHorizontal, left);
+    shrink(fixed.m_bottomLeftVertical, bottom);
+    shrink(fixed.m_bottomRightHorizontal, right);
+    shrink(fixed.m_bottomRightVertical, bottom);
+
+    canvas->beginPath();
+    emitBorderRadiusPath(
+        canvas, LayoutRect(rect.x(), rect.y(), rect.width(), rect.height()),
+        fixed);
+    canvas->clipPath();
+}
+
 void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
 {
     if (canvas->canRejectPainting(frameVisibleRect())) {

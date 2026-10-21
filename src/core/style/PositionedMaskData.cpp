@@ -81,6 +81,10 @@ bool MaskLayer::operator==(const MaskLayer& other)
         return false;
     }
 
+    if (m_clip != other.m_clip || m_composite != other.m_composite) {
+        return false;
+    }
+
     return true;
 }
 
@@ -94,6 +98,8 @@ bool PositionedMaskData::damaged(const PositionedMaskData* lhs,
     damagedKeys[CSSStyleValuePair::KeyKind::MaskPositionY] = false;
     damagedKeys[CSSStyleValuePair::KeyKind::MaskRepeatX] = false;
     damagedKeys[CSSStyleValuePair::KeyKind::MaskRepeatY] = false;
+    damagedKeys[CSSStyleValuePair::KeyKind::MaskClip] = false;
+    damagedKeys[CSSStyleValuePair::KeyKind::MaskComposite] = false;
 
     if (!lhs && !rhs) {
         return false;
@@ -146,6 +152,16 @@ bool PositionedMaskData::damaged(const PositionedMaskData* lhs,
                 damagedKeys[CSSStyleValuePair::KeyKind::MaskRepeatY] =
                     hasDamage = true;
             }
+
+            if (lhs->clip(i) != rhs->clip(i)) {
+                damagedKeys[CSSStyleValuePair::KeyKind::MaskClip] = hasDamage =
+                    true;
+            }
+
+            if (lhs->composite(i) != rhs->composite(i)) {
+                damagedKeys[CSSStyleValuePair::KeyKind::MaskComposite] =
+                    hasDamage = true;
+            }
         }
     }
     return hasDamage;
@@ -158,6 +174,8 @@ PositionedMaskData::PositionedMaskData()
     , m_maxLayerPositionY(0)
     , m_maxLayerRepeatX(0)
     , m_maxLayerRepeatY(0)
+    , m_maxLayerClip(0)
+    , m_maxLayerComposite(0)
     , m_maskType(MaskTypeValue::LuminanceMaskTypeValue)
 {
 }
@@ -205,6 +223,24 @@ RepeatStyleValue PositionedMaskData::repeatY(uint32_t layer) const
 MaskTypeValue PositionedMaskData::maskType() const
 {
     return m_maskType;
+}
+
+// A list shorter than the mask layers repeats to cover them.
+// https://drafts.fxtf.org/css-masking/#layering
+BoxValue PositionedMaskData::clip(uint32_t layer) const
+{
+    if (!m_maxLayerClip) {
+        return BoxValue::BorderBoxBoxValue;
+    }
+    return m_layers[layer % m_maxLayerClip].clip();
+}
+
+CompositingOperatorValue PositionedMaskData::composite(uint32_t layer) const
+{
+    if (!m_maxLayerComposite) {
+        return AddCompositingOperatorValue;
+    }
+    return m_layers[layer % m_maxLayerComposite].composite();
 }
 
 ImageResource* PositionedMaskData::imageResource(uint32_t layer) const
@@ -268,6 +304,19 @@ void PositionedMaskData::setRepeatY(RepeatStyleValue repeat, uint32_t layer)
 void PositionedMaskData::setMaskType(MaskTypeValue maskType)
 {
     m_maskType = maskType;
+}
+
+void PositionedMaskData::setClip(BoxValue clip, uint32_t layer)
+{
+    uint32_t assured = assureLayerIndexAndSize(layer, m_maxLayerClip);
+    m_layers[assured].setClip(clip);
+}
+
+void PositionedMaskData::setComposite(CompositingOperatorValue composite,
+                                      uint32_t layer)
+{
+    uint32_t assured = assureLayerIndexAndSize(layer, m_maxLayerComposite);
+    m_layers[assured].setComposite(composite);
 }
 
 bool PositionedMaskData::maskSizeIsLength(uint32_t layer) const
@@ -346,6 +395,24 @@ void PositionedMaskData::shrinkRepeatYs(uint32_t size)
         m_layers[i].resetRepeatY();
     }
     m_maxLayerRepeatY = size;
+}
+
+void PositionedMaskData::shrinkClips(uint32_t size)
+{
+    STARFISH_ASSERT(m_layers.size() >= m_maxLayerClip);
+    for (uint32_t i = 0; i < m_maxLayerClip; i++) {
+        m_layers[i].setClip(BoxValue::BorderBoxBoxValue);
+    }
+    m_maxLayerClip = size;
+}
+
+void PositionedMaskData::shrinkComposites(uint32_t size)
+{
+    STARFISH_ASSERT(m_layers.size() >= m_maxLayerComposite);
+    for (uint32_t i = 0; i < m_maxLayerComposite; i++) {
+        m_layers[i].setComposite(AddCompositingOperatorValue);
+    }
+    m_maxLayerComposite = size;
 }
 
 bool PositionedMaskData::operator==(const PositionedMaskData& other)

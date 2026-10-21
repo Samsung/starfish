@@ -2566,6 +2566,18 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("alpha");
         }
         break;
+    case CSSStyleValuePair::ValueKind::CompositingOperatorValueKind:
+        switch (compositingOperatorValue()) {
+        case CompositingOperatorValue::AddCompositingOperatorValue:
+            return String::fromUTF8("add");
+        case CompositingOperatorValue::SubtractCompositingOperatorValue:
+            return String::fromUTF8("subtract");
+        case CompositingOperatorValue::IntersectCompositingOperatorValue:
+            return String::fromUTF8("intersect");
+        case CompositingOperatorValue::ExcludeCompositingOperatorValue:
+            return String::fromUTF8("exclude");
+        }
+        break;
     case CSSStyleValuePair::ValueKind::StrokeLineCapValueKind:
         return strokeLineCapToString(strokeLineCap());
     case CSSStyleValuePair::ValueKind::StrokeLineJoinValueKind:
@@ -5111,6 +5123,56 @@ void StyleResolver::applyProperty(Element* element,
                     style->setMaskRepeatY(item.repeatStyleValue(), i);
                 }
             }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::MaskClip:
+        style->resetMaskClips();
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            uint32_t size = parentStyle->maskLayerSize();
+            for (uint32_t i = 0; i < size; i++) {
+                style->setMaskClip(parentStyle->maskClip(i), i);
+            }
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ValueListKind) {
+            ValueList* list = newCssValue.multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                const CSSStyleValuePair& item = (*list)[i];
+                if (item.valueKind() ==
+                    CSSStyleValuePair::ValueKind::BoxValueKind) {
+                    style->setMaskClip(item.boxValue(), i);
+                } else {
+                    style->setMaskClip(BoxValue::BorderBoxBoxValue, i);
+                }
+            }
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::BoxValueKind) {
+            style->setMaskClip(newCssValue.boxValue(), 0);
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::MaskComposite:
+        style->resetMaskComposites();
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            uint32_t size = parentStyle->maskLayerSize();
+            for (uint32_t i = 0; i < size; i++) {
+                style->setMaskComposite(parentStyle->maskComposite(i), i);
+            }
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ValueListKind) {
+            ValueList* list = newCssValue.multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                const CSSStyleValuePair& item = (*list)[i];
+                if (item.valueKind() == CSSStyleValuePair::ValueKind::
+                                            CompositingOperatorValueKind) {
+                    style->setMaskComposite(item.compositingOperatorValue(), i);
+                } else {
+                    style->setMaskComposite(AddCompositingOperatorValue, i);
+                }
+            }
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::CompositingOperatorValueKind) {
+            style->setMaskComposite(newCssValue.compositingOperatorValue(), 0);
         }
         break;
     case CSSStyleValuePair::KeyKind::MaskType:
@@ -17404,6 +17466,76 @@ bool CSSStyleValuePair::updateValueMaskType(const CSSTokenVector& tokens,
         return false;
     }
     return true;
+}
+
+// A comma-separated list of single-token items, each parsed by |parseUnit|.
+static bool updateValueSingleTokenList(
+    CSSStyleValuePair* pair, const CSSTokenVector& tokens,
+    bool (CSSStyleValuePair::*parseUnit)(const CSSTokenValue&))
+{
+    if (tokens.size() % 2 == 0) {
+        return false;
+    }
+    pair->setValueList(new ValueList(Separator::CommaSeparator));
+    for (size_t i = 0; i < tokens.size(); i += 2) {
+        if (i > 0 && !tokens[i - 1].equals(",")) {
+            return false;
+        }
+        CSSStyleValuePair item;
+        if (!(item.*parseUnit)(tokens[i])) {
+            return false;
+        }
+        pair->multiValue()->push_back(item);
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueUnitMaskClip(const CSSTokenValue& value)
+{
+    // <geometry-box> | no-clip
+    if (updateValueUnitBox(value, false)) {
+        return true;
+    }
+    // The mask is painted only within the border box, so no-clip has the
+    // same result as border-box here. An element with a CSS layout box
+    // also computes the SVG boxes to border-box.
+    if (value.equals("no-clip") || value.equals("fill-box") ||
+        value.equals("stroke-box") || value.equals("view-box")) {
+        setBoxValue(BoxValue::BorderBoxBoxValue);
+        return true;
+    }
+    return false;
+}
+
+bool CSSStyleValuePair::updateValueUnitMaskComposite(const CSSTokenValue& value)
+{
+    // <compositing-operator> = add | subtract | intersect | exclude
+    if (value.equals("add")) {
+        setCompositingOperatorValue(AddCompositingOperatorValue);
+    } else if (value.equals("subtract")) {
+        setCompositingOperatorValue(SubtractCompositingOperatorValue);
+    } else if (value.equals("intersect")) {
+        setCompositingOperatorValue(IntersectCompositingOperatorValue);
+    } else if (value.equals("exclude")) {
+        setCompositingOperatorValue(ExcludeCompositingOperatorValue);
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueMaskClip(Document* document,
+                                            const CSSTokenVector& tokens)
+{
+    return updateValueSingleTokenList(
+        this, tokens, &CSSStyleValuePair::updateValueUnitMaskClip);
+}
+
+bool CSSStyleValuePair::updateValueMaskComposite(Document* document,
+                                                 const CSSTokenVector& tokens)
+{
+    return updateValueSingleTokenList(
+        this, tokens, &CSSStyleValuePair::updateValueUnitMaskComposite);
 }
 
 bool CSSStyleValuePair::updateValueMaskImage(Document* document,

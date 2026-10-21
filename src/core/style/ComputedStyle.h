@@ -5028,6 +5028,51 @@ public:
         }
     }
 
+    BoxValue maskClip(uint32_t layer)
+    {
+        PositionedMaskData* positionedMaskData = mask();
+        if (positionedMaskData == nullptr) {
+            return BoxValue::BorderBoxBoxValue;
+        }
+        return positionedMaskData->clip(layer);
+    }
+
+    void setMaskClip(BoxValue value, uint32_t layer)
+    {
+        rareComputedStyleData()->ensurePositionedMask()->setClip(value, layer);
+    }
+
+    void resetMaskClips()
+    {
+        PositionedMaskData* positionedMaskData = mask();
+        if (positionedMaskData) {
+            positionedMaskData->shrinkClips(0);
+        }
+    }
+
+    CompositingOperatorValue maskComposite(uint32_t layer)
+    {
+        PositionedMaskData* positionedMaskData = mask();
+        if (positionedMaskData == nullptr) {
+            return AddCompositingOperatorValue;
+        }
+        return positionedMaskData->composite(layer);
+    }
+
+    void setMaskComposite(CompositingOperatorValue value, uint32_t layer)
+    {
+        rareComputedStyleData()->ensurePositionedMask()->setComposite(value,
+                                                                      layer);
+    }
+
+    void resetMaskComposites()
+    {
+        PositionedMaskData* positionedMaskData = mask();
+        if (positionedMaskData) {
+            positionedMaskData->shrinkComposites(0);
+        }
+    }
+
     MaskTypeValue maskType()
     {
         PositionedMaskData* positionedMaskData = mask();

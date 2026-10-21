@@ -367,12 +367,12 @@ http://web-platform.test:8000/css/css-masking/mask-image/bad-mask-image-svg-3.ht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/mask-image/mask-clip-6.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/mask-image/mask-clip-7.html
 http://web-platform.test:8000/css/css-masking/mask-image/mask-clip-8.html
-# [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-masking/mask-image/mask-composite-1a.html
-# [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-masking/mask-image/mask-composite-1b.html
+http://web-platform.test:8000/css/css-masking/mask-image/mask-composite-1a.html
+http://web-platform.test:8000/css/css-masking/mask-image/mask-composite-1b.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/mask-image/mask-composite-1c.html
-# [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-masking/mask-image/mask-composite-1d.html
-# [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-masking/mask-image/mask-composite-2a.html
-# [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-masking/mask-image/mask-composite-2b.html
+http://web-platform.test:8000/css/css-masking/mask-image/mask-composite-1d.html
+http://web-platform.test:8000/css/css-masking/mask-image/mask-composite-2a.html
+http://web-platform.test:8000/css/css-masking/mask-image/mask-composite-2b.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/mask-image/mask-composite-2c.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/mask-image/mask-composite-2d.html
 http://web-platform.test:8000/css/css-masking/mask-image/mask-image-1a.html
