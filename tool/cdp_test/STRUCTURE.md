@@ -27,6 +27,10 @@ process: one Starfish per entry, and one Node as well for a behavior entry.
                   own HOME
 ```
 
+`driver/static_server.py` serves `test/cdp/` at `http://127.0.0.1:8000` while
+the behavior pool runs. Every Starfish process in the pool loads test pages from
+it.
+
 A worker takes one entry and stays with it until it ends. Starfish starts for
 that entry and stops when the entry ends. A browser that hangs therefore
 cannot affect the next entry.
@@ -45,11 +49,13 @@ checks. Chromium decided that already.
 | `run.py` | Command line, layer choice, worker pool, progress and stats |
 | `driver/testlist.py` | Reads and writes a list, and locks it for one run |
 | `driver/launcher.py` | Finds a build, starts and stops Starfish, cleans up |
+| `driver/static_server.py` | Serves `test/cdp/` over HTTP on port 8000 |
 | `driver/client.py` | HTTP discovery, a WebSocket, and one CDP call |
 | `driver/commands.py` | Turns the protocol JSON into the schema layer's cases |
 | `driver/case.py` | Runs one schema case: send, then check the response |
 | `driver/behavior.py` | Runs one behavior test under Node and diffs output |
 | `driver/node/main.mjs` | Loads Chromium's harness and the test under Node |
+| `driver/node/session_fanout.mjs` | Temporary: sends a reused session id's messages to every harness Session |
 | `driver/node/websocket.mjs` | The WebSocket the Node side speaks |
 
 No file here imports Starfish. The tests reach the build only through the CDP
@@ -68,11 +74,13 @@ result.
 
 **behavior**, in Node:
 
-1. `launcher` starts Starfish and waits for the endpoint to answer.
-2. `behavior` reads the browser WebSocket URL and starts
-   `node main.mjs <ws-url> <suite-dir> <test.js> <timeout>`.
-3. Node runs Chromium's test file and prints its log.
-4. `behavior` compares that log with the test's `-expected.txt`. It reports
+1. `run.py` starts the HTTP server before it runs behavior entries.
+2. `launcher` starts Starfish and waits for the endpoint to answer.
+3. `behavior` reads the browser WebSocket URL and starts
+   `node main.mjs <ws-url> <suite-dir> <test.js> <target-base-url> <timeout>`.
+4. Node loads harness helper scripts from local files, but resolves
+   `TestRunner.url()` navigation below the test's HTTP suite directory.
+5. `behavior` compares Node's log with the test's `-expected.txt`. It reports
    the first line that differs.
 
 The Node side has its own notes in
@@ -99,6 +107,7 @@ list, so you can tell which upstream a list was built from.
 | `testlist-<layer>.json.lock` | The pid that holds the list | When the run ends |
 | `testlist-<layer>.json.<pid>.partial` | The save in progress | On every save |
 | `.tmp/test-cdp/<pid>/<random>/` | One browser's HOME: cookies, storage, cache | When the entry ends |
+| `127.0.0.1:8000` | HTTP server for the behavior pool | When that pool ends |
 
 The list is saved after every entry. A run that is killed therefore keeps its
 results so far. The other files are temporary. Ctrl-C leaves a lock file and a

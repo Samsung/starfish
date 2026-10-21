@@ -43,9 +43,7 @@
       "detail": "line 56: expected ' name : required', got ' name : activedescendant'"
     },
     "accessibility/accessibility-getRootNode.js": {
-      "expected": "fail",
-      "category": "timeout",
-      "detail": "line 2: expected '', got 'HARNESS TIMEOUT'"
+      "expected": "pass"
     },
     "accessibility/accessibility-getTreeWithNoAXNode.js": {
       "expected": "pass"
