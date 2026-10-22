@@ -33,8 +33,8 @@ namespace Starfish {
 void* HTMLIFrameElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLIFrameElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLIFrameElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLIFrameElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLIFrameElement)] = { 0 };
         HTMLIFrameElement::fillGCDescriptor(desc);

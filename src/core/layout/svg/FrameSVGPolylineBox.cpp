@@ -32,8 +32,8 @@ namespace Starfish {
 
 void* FrameSVGPolylineBox::operator new(size_t size)
 {
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameSVGPolylineBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameSVGPolylineBox>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FrameSVGPolylineBox)] = { 0 };
         FrameSVGPolylineBox::fillGCDescriptor(desc);

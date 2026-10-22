@@ -37,8 +37,8 @@ FormDataSetItem::FormDataSetItem(String* name, String* value, String* type)
 void* FormDataSetItem::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FormDataSetItem));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FormDataSetItem>::inited;
+    GC_descr& descr = GCDescriptorCache<FormDataSetItem>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FormDataSetItem)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(FormDataSetItem, m_name));
@@ -70,8 +70,8 @@ FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
 void* FormSubmitData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FormSubmitData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FormSubmitData>::inited;
+    GC_descr& descr = GCDescriptorCache<FormSubmitData>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FormSubmitData)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(FormSubmitData, m_formDataSet));

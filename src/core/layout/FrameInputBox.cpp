@@ -87,8 +87,8 @@ static FrameText* createFrameText(HTMLTextEditable* from)
 void* FrameInputBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameInputBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameInputBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameInputBox>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FrameInputBox)] = { 0 };
         FrameInputBox::fillGCDescriptor(desc);

@@ -345,8 +345,8 @@ ResourceURL::ResourceURL(String* url, String* baseURL)
 void* ResourceURL::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ResourceURL));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<ResourceURL>::inited;
+    GC_descr& descr = GCDescriptorCache<ResourceURL>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(ResourceURL)] = { 0 };
         fillGCDescriptor(desc);
@@ -1313,8 +1313,8 @@ DocumentURL::DocumentURL(ResourceURL* url,
 void* DocumentURL::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(DocumentURL));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<DocumentURL>::inited;
+    GC_descr& descr = GCDescriptorCache<DocumentURL>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(DocumentURL)] = { 0 };
         ResourceURL::fillGCDescriptor(desc);
@@ -1374,8 +1374,8 @@ ReferrerURL::ReferrerURL(ResourceURL* referrer, ReferrerPolicy policy)
 void* ReferrerURL::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ReferrerURL));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<ReferrerURL>::inited;
+    GC_descr& descr = GCDescriptorCache<ReferrerURL>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(ReferrerURL)] = { 0 };
         ResourceURL::fillGCDescriptor(desc);

@@ -547,8 +547,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(FrameGridBox));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<FrameGridBox>::inited;
+        GC_descr& descr = GCDescriptorCache<FrameGridBox>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(FrameGridBox)] = { 0 };
             FrameGridBox::fillGCDescriptor(desc);

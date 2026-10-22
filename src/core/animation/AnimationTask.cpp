@@ -107,8 +107,8 @@ static Length interpolateLength(double progress, const Length& from,
 void* ActiveAnimationTask::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ActiveAnimationTask));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<ActiveAnimationTask>::inited;
+    GC_descr& descr = GCDescriptorCache<ActiveAnimationTask>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(ActiveAnimationTask)] = { 0 };
         fillGCDescriptor(obj_bitmap);
@@ -790,8 +790,8 @@ void ActiveTransformAnimationTask::resolveUnresolvedAnimatedValues()
 void* ActiveTransformAnimationTask::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ActiveTransformAnimationTask));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<ActiveTransformAnimationTask>::inited;
+    GC_descr& descr = GCDescriptorCache<ActiveTransformAnimationTask>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(ActiveTransformAnimationTask)] = {
             0
@@ -1108,8 +1108,8 @@ ActiveLengthAnimationTask::ActiveLengthAnimationTask(
 void* ActiveLengthAnimationTask::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ActiveLengthAnimationTask));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<ActiveLengthAnimationTask>::inited;
+    GC_descr& descr = GCDescriptorCache<ActiveLengthAnimationTask>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(ActiveLengthAnimationTask)] = { 0 };
         fillGCDescriptor(obj_bitmap);
@@ -1655,8 +1655,8 @@ ActiveLengthSizeAnimationTask::ActiveLengthSizeAnimationTask(
 void* ActiveLengthSizeAnimationTask::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ActiveLengthSizeAnimationTask));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<ActiveLengthSizeAnimationTask>::inited;
+    GC_descr& descr = GCDescriptorCache<ActiveLengthSizeAnimationTask>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(ActiveLengthSizeAnimationTask)] = {
             0
@@ -1806,8 +1806,8 @@ ActiveSVGLengthAnimationTask::ActiveSVGLengthAnimationTask(
 void* ActiveSVGLengthAnimationTask::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ActiveSVGLengthAnimationTask));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<ActiveSVGLengthAnimationTask>::inited;
+    GC_descr& descr = GCDescriptorCache<ActiveSVGLengthAnimationTask>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(ActiveSVGLengthAnimationTask)] = {
             0

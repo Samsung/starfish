@@ -503,8 +503,8 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 
 void* WebView::operator new(size_t size)
 {
-    static thread_local bool typeInited = false;
-    static thread_local GC_descr descr;
+    bool& typeInited = GCDescriptorCache<WebView>::inited;
+    GC_descr& descr = GCDescriptorCache<WebView>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(WebView)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_starfish));

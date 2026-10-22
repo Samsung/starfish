@@ -36,8 +36,8 @@ static inline bool isSpaceForFirstLetter(char32_t c)
 void* PseudoElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(PseudoElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLElement)] = { 0 };
         PseudoElement::fillGCDescriptor(desc);

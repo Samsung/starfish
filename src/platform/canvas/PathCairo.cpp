@@ -111,10 +111,10 @@ int GC_CALLBACK PathCairo::disclaimProc(void* obj)
 int PathCairo::gcKind()
 {
     // GCutil is built with GC_THREAD_ISOLATE, so a kind lives in the
-    // registering thread's own table -- fine to cache in a plain static here,
-    // since paths are only ever allocated from the engine main thread, which
-    // never changes.
-    static int gcKind = 0;
+    // registering thread's own table; keep the cache per-thread because
+    // Path2D is exposed to workers and allocates paths off the engine main
+    // thread.
+    static thread_local int gcKind = 0;
     if (gcKind != 0) {
         return gcKind;
     }

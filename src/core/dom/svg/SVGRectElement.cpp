@@ -70,8 +70,8 @@ void SVGRectElement::updateSVGAttributeNeeded(QualifiedName name)
 void* SVGRectElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGRectElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGRectElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGRectElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGRectElement)] = { 0 };
         SVGElement::fillGCDescriptor(desc);

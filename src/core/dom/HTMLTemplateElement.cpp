@@ -37,8 +37,8 @@ HTMLTemplateElement::HTMLTemplateElement(Document* document,
 void* HTMLTemplateElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLTemplateElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLTemplateElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLTemplateElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLTemplateElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLTemplateElement, m_content));

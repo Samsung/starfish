@@ -33,8 +33,8 @@ CSSStyleValue::CSSStyleValue(ExecutionContext* executionContext)
 void* CSSStyleValue::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(CSSStyleValue));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<CSSStyleValue>::inited;
+    GC_descr& descr = GCDescriptorCache<CSSStyleValue>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(CSSStyleValue)] = { 0 };
         CSSStyleValue::fillGCDescriptor(desc);

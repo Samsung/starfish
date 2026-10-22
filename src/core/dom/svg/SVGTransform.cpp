@@ -51,8 +51,8 @@ ScriptBindingInstance* SVGTransform::scriptBindingInstance()
 void* SVGTransform::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGTransform));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGTransform>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGTransform>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGTransform)] = { 0 };
         SVGElement::fillGCDescriptor(desc);

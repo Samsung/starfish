@@ -231,6 +231,37 @@ typedef unsigned int uint;
 #endif
 #include <GCUtil.h>
 #undef ESCARGOT
+
+namespace Starfish {
+// Storage for a typed operator new's cached GC_descr. Escargot runs one
+// collector per thread (GC_THREAD_ISOLATE). A descriptor whose bitmap fits
+// in one word (GC_WORDSZ - GC_DS_TAG_BITS pointer words: 30 on 32-bit, 62 on
+// 64-bit) is a self-contained value and may be shared; a longer one is an
+// index into the creating collector's tables and is only valid on that
+// thread, so it is cached per thread. The bitmap is built from
+// GC_WORD_OFFSET(T, ...) over GC_WORD_LEN(T), so GC_WORD_LEN(T) bounds the
+// highest bit.
+template <typename T,
+          bool kPerThread = (GC_WORD_LEN(T) > GC_WORDSZ - GC_DS_TAG_BITS)>
+struct GCDescriptorCache {
+    static bool inited;
+    static GC_descr descr;
+};
+template <typename T, bool kPerThread>
+bool GCDescriptorCache<T, kPerThread>::inited = false;
+template <typename T, bool kPerThread>
+GC_descr GCDescriptorCache<T, kPerThread>::descr;
+
+template <typename T>
+struct GCDescriptorCache<T, true> {
+    static thread_local bool inited;
+    static thread_local GC_descr descr;
+};
+template <typename T>
+thread_local bool GCDescriptorCache<T, true>::inited = false;
+template <typename T>
+thread_local GC_descr GCDescriptorCache<T, true>::descr;
+} // namespace Starfish
 #endif // NO_EXPOSE_GC
 
 #if defined(STARFISH_ENABLE_RUNTIME_ICU_BINDER)

@@ -2369,8 +2369,8 @@ bool String::validDouble(String* s)
 void* StringDataASCII::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(StringDataASCII));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<StringDataASCII>::inited;
+    GC_descr& descr = GCDescriptorCache<StringDataASCII>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(StringDataASCII)] = { 0 };
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StringDataASCII, m_data));
@@ -2383,8 +2383,8 @@ void* StringDataASCII::operator new(size_t size)
 void* StringDataUTF32::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(StringDataUTF32));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<StringDataUTF32>::inited;
+    GC_descr& descr = GCDescriptorCache<StringDataUTF32>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(StringDataUTF32)] = { 0 };
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StringDataUTF32, m_data));
@@ -2397,8 +2397,8 @@ void* StringDataUTF32::operator new(size_t size)
 void* StringDataBMP::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(StringDataBMP));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<StringDataBMP>::inited;
+    GC_descr& descr = GCDescriptorCache<StringDataBMP>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(StringDataBMP)] = { 0 };
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StringDataBMP, m_data));
@@ -2411,8 +2411,8 @@ void* StringDataBMP::operator new(size_t size)
 void* StringView::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(StringView));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<StringView>::inited;
+    GC_descr& descr = GCDescriptorCache<StringView>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(StringView)] = { 0 };
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StringView, m_string));

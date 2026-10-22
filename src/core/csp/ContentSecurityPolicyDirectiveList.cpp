@@ -75,8 +75,10 @@ ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
 void* ContentSecurityPolicyDirectiveList::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ContentSecurityPolicyDirectiveList));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited =
+        GCDescriptorCache<ContentSecurityPolicyDirectiveList>::inited;
+    GC_descr& descr =
+        GCDescriptorCache<ContentSecurityPolicyDirectiveList>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(ContentSecurityPolicyDirectiveList)] = {
             0

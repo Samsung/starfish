@@ -38,8 +38,8 @@ SVGSymbolElement::SVGSymbolElement(Document* document,
 void* SVGSymbolElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGSymbolElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGSymbolElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGSymbolElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGSymbolElement)] = { 0 };
         SVGElement::fillGCDescriptor(desc);

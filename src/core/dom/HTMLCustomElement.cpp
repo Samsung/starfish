@@ -30,8 +30,8 @@ namespace Starfish {
 void* HTMLCustomElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLCustomElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLCustomElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLCustomElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLCustomElement)] = { 0 };
         HTMLCustomElement::fillGCDescriptor(desc);

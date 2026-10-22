@@ -32,8 +32,8 @@ SVGFEMergeElement::SVGFEMergeElement(Document* document,
 void* SVGFEMergeElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGFEMergeElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGFEMergeElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGFEMergeElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGFEMergeElement)] = { 0 };
         SVGFilterPrimitiveStandardAttributes::fillGCDescriptor(desc);

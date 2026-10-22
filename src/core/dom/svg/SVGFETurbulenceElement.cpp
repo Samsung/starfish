@@ -34,8 +34,8 @@ SVGFETurbulenceElement::SVGFETurbulenceElement(Document* document,
 void* SVGFETurbulenceElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGFETurbulenceElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGFETurbulenceElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGFETurbulenceElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGFETurbulenceElement)] = { 0 };
         SVGFilterPrimitiveStandardAttributes::fillGCDescriptor(desc);

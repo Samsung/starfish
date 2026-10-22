@@ -32,8 +32,8 @@ namespace Starfish {
 void* HTMLMetaElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLMetaElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLMetaElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLMetaElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLMetaElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLMetaElement, m_name));

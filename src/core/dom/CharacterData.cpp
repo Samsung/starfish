@@ -38,8 +38,8 @@ namespace Starfish {
 void* CharacterData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(CharacterData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<CharacterData>::inited;
+    GC_descr& descr = GCDescriptorCache<CharacterData>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(CharacterData)] = { 0 };
         CharacterData::fillGCDescriptor(desc);

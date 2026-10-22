@@ -38,8 +38,8 @@ namespace Starfish {
 void* SVGAnimateMotionElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGAnimateMotionElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGAnimateMotionElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGAnimateMotionElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGAnimateMotionElement)] = { 0 };
         SVGAnimateElement::fillGCDescriptor(desc);

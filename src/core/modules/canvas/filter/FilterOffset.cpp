@@ -41,8 +41,8 @@ FilterOffset::FilterOffset(Filter* filter,
 void* FilterOffset::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FilterOffset));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FilterOffset>::inited;
+    GC_descr& descr = GCDescriptorCache<FilterOffset>::descr;
     if (typeInited == false) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(FilterOffset)] = { 0 };
         STARFISH_ASSERT(obj_bitmap != nullptr);

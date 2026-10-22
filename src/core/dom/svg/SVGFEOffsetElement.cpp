@@ -33,8 +33,8 @@ SVGFEOffsetElement::SVGFEOffsetElement(Document* document,
 void* SVGFEOffsetElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGFEOffsetElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGFEOffsetElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGFEOffsetElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGFEOffsetElement)] = { 0 };
         SVGFilterPrimitiveStandardAttributes::fillGCDescriptor(desc);

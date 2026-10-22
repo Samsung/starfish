@@ -115,8 +115,8 @@ void SVGRadialGradientElement::styleForPresentationAttribute(
 void* SVGRadialGradientElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGRadialGradientElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGRadialGradientElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGRadialGradientElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGRadialGradientElement)] = { 0 };
         fillGCDescriptor(desc);

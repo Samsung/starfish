@@ -70,8 +70,8 @@ Fetch::Fetch(ExecutionContext* executionContext, Request* request,
 void* Fetch::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(Fetch));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<Fetch>::inited;
+    GC_descr& descr = GCDescriptorCache<Fetch>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(Fetch)] = { 0 };
         Fetch::fillGCDescriptor(desc);

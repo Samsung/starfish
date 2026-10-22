@@ -62,8 +62,9 @@ public:
 
     void* operator new(size_t size)
     {
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited =
+            GCDescriptorCache<ImageBitmapRenderingContext>::inited;
+        GC_descr& descr = GCDescriptorCache<ImageBitmapRenderingContext>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(ImageBitmapRenderingContext)] = { 0 };
             ImageBitmapRenderingContext::fillGCDescriptor(desc);

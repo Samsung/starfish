@@ -55,8 +55,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(MockHTMLIFrameElement));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<MockHTMLIFrameElement>::inited;
+        GC_descr& descr = GCDescriptorCache<MockHTMLIFrameElement>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(MockHTMLIFrameElement)] = { 0 };
             GC_set_bit(desc, GC_WORD_OFFSET(MockHTMLIFrameElement, m_resource));

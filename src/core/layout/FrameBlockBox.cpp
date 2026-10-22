@@ -40,8 +40,8 @@ namespace Starfish {
 void* FrameBlockBoxRareData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameBlockBoxRareData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameBlockBoxRareData>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameBlockBoxRareData>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FrameBlockBoxRareData)] = { 0 };
         FrameBlockBoxRareData::fillGCDescriptor(desc);
@@ -1335,8 +1335,8 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 void* FrameBlockBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameBlockBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameBlockBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameBlockBox>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(FrameBlockBox)] = { 0 };
         FrameBlockBox::fillGCDescriptor(obj_bitmap);

@@ -96,8 +96,8 @@ void ShadowRoot::setAdoptedStyleSheetsFromObservableArray(
 void* ShadowRoot::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ShadowRoot));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<ShadowRoot>::inited;
+    GC_descr& descr = GCDescriptorCache<ShadowRoot>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(ShadowRoot)] = { 0 };
         ShadowRoot::fillGCDescriptor(desc);

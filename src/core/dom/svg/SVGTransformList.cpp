@@ -292,8 +292,8 @@ bool SVGTransformList::defaultIndexedSetter(unsigned long index,
 void* SVGTransformList::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGTransformList));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGTransformList>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGTransformList>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGTransformList)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(SVGTransformList, m_v));

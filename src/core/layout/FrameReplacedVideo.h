@@ -59,8 +59,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(FrameReplacedVideo));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<FrameReplacedVideo>::inited;
+        GC_descr& descr = GCDescriptorCache<FrameReplacedVideo>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(FrameReplacedVideo)] = { 0 };
             FrameReplacedVideo::fillGCDescriptor(desc);

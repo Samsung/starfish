@@ -35,8 +35,8 @@ SVGAnimateElement::SVGAnimateElement(Document* document,
 void* SVGAnimateElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGAnimateElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGAnimateElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGAnimateElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGAnimateElement)] = { 0 };
         SVGAnimateElement::fillGCDescriptor(desc);

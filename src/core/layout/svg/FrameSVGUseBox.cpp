@@ -28,8 +28,8 @@ namespace Starfish {
 void* FrameSVGUseBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameSVGUseBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameSVGUseBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameSVGUseBox>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FrameSVGUseBox)] = { 0 };
         FrameSVGUseBox::fillGCDescriptor(desc);

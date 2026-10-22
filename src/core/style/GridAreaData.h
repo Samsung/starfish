@@ -59,8 +59,8 @@ public:
 
     void* operator new(size_t size)
     {
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<NamedGridAreaDataMap>::inited;
+        GC_descr& descr = GCDescriptorCache<NamedGridAreaDataMap>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(NamedGridAreaDataMap)] = { 0 };
 

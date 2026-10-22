@@ -26,8 +26,8 @@ namespace Starfish {
 void* HTMLFieldSetElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLFieldSetElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLFieldSetElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLFieldSetElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLFieldSetElement)] = { 0 };
         HTMLFormControl::fillGCDescriptor(desc);

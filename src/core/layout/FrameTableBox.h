@@ -64,8 +64,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(Cell));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<Cell>::inited;
+        GC_descr& descr = GCDescriptorCache<Cell>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(Cell)] = { 0 };
             Cell::fillGCDescriptor(desc);
@@ -97,8 +97,8 @@ class Row : public gc {
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(Row));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<Row>::inited;
+        GC_descr& descr = GCDescriptorCache<Row>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(Row)] = { 0 };
             Row::fillGCDescriptor(desc);
@@ -134,8 +134,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(ColGroup));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<ColGroup>::inited;
+        GC_descr& descr = GCDescriptorCache<ColGroup>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(ColGroup)] = { 0 };
             ColGroup::fillGCDescriptor(desc);
@@ -172,8 +172,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(Table));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<Table>::inited;
+        GC_descr& descr = GCDescriptorCache<Table>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(Table)] = { 0 };
             Table::fillGCDescriptor(desc);

@@ -73,8 +73,8 @@ void SVGEllipseElement::updateSVGAttributeNeeded(QualifiedName name)
 void* SVGEllipseElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGEllipseElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGEllipseElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGEllipseElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGEllipseElement)] = { 0 };
         SVGElement::fillGCDescriptor(desc);

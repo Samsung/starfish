@@ -59,8 +59,8 @@ HTMLSelectElement::HTMLSelectElement(Document* document,
 void* HTMLSelectElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLSelectElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLSelectElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLSelectElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLSelectElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLSelectElement, m_selectedOptions));

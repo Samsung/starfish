@@ -40,8 +40,8 @@ SVGSVGElement::SVGSVGElement(Document* document, const QualifiedName& qname)
 void* SVGSVGElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGSVGElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGSVGElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGSVGElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGSVGElement)] = { 0 };
         SVGElement::fillGCDescriptor(desc);

@@ -33,8 +33,8 @@ SVGFEGaussianBlurElement::SVGFEGaussianBlurElement(Document* document,
 void* SVGFEGaussianBlurElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGFEGaussianBlurElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGFEGaussianBlurElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGFEGaussianBlurElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGFEGaussianBlurElement)] = { 0 };
         SVGFilterPrimitiveStandardAttributes::fillGCDescriptor(desc);

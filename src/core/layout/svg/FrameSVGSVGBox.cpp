@@ -128,8 +128,8 @@ static SkMatrix SVGPreserveAspectRatioValueMatrix(
 void* FrameSVGSVGBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameSVGSVGBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameSVGSVGBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameSVGSVGBox>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FrameSVGSVGBox)] = { 0 };
         FrameSVGSVGBox::fillGCDescriptor(desc);

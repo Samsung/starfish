@@ -26,8 +26,8 @@ namespace Starfish {
 void* HTMLOptGroupElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLOptGroupElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLOptGroupElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLOptGroupElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLOptGroupElement)] = { 0 };
         HTMLFormControl::fillGCDescriptor(desc);

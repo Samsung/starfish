@@ -31,8 +31,8 @@ namespace Starfish {
 void* TransferedTypedData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(TransferedTypedData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<TransferedTypedData>::inited;
+    GC_descr& descr = GCDescriptorCache<TransferedTypedData>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(TransferedTypedData)] = { 0 };
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(TransferedTypedData, m_data));
@@ -46,8 +46,8 @@ void* TransferedTypedData::operator new(size_t size)
 void* SerializedStringData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SerializedStringData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SerializedStringData>::inited;
+    GC_descr& descr = GCDescriptorCache<SerializedStringData>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(SerializedStringData)] = { 0 };
         descr =
@@ -60,8 +60,8 @@ void* SerializedStringData::operator new(size_t size)
 void* SerializedArrayData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SerializedArrayData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SerializedArrayData>::inited;
+    GC_descr& descr = GCDescriptorCache<SerializedArrayData>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(SerializedArrayData)] = { 0 };
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(SerializedArrayData, m_data));
@@ -75,8 +75,8 @@ void* SerializedArrayData::operator new(size_t size)
 void* SerializedObjectData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SerializedObjectData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SerializedObjectData>::inited;
+    GC_descr& descr = GCDescriptorCache<SerializedObjectData>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(SerializedObjectData)] = { 0 };
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(SerializedObjectData, m_data));
@@ -90,8 +90,8 @@ void* SerializedObjectData::operator new(size_t size)
 void* SerializedMapData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SerializedMapData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SerializedMapData>::inited;
+    GC_descr& descr = GCDescriptorCache<SerializedMapData>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(SerializedMapData)] = { 0 };
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(SerializedMapData, m_data));
@@ -104,8 +104,8 @@ void* SerializedMapData::operator new(size_t size)
 void* SerializedSetData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SerializedSetData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SerializedSetData>::inited;
+    GC_descr& descr = GCDescriptorCache<SerializedSetData>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(SerializedSetData)] = { 0 };
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(SerializedSetData, m_data));
@@ -118,8 +118,8 @@ void* SerializedSetData::operator new(size_t size)
 void* SerializedArrayBufferData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SerializedArrayBufferData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SerializedArrayBufferData>::inited;
+    GC_descr& descr = GCDescriptorCache<SerializedArrayBufferData>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(SerializedArrayBufferData)] = { 0 };
         GC_set_bit(obj_bitmap,
@@ -134,8 +134,8 @@ void* SerializedArrayBufferData::operator new(size_t size)
 void* SerializedArrayBufferViewData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SerializedArrayBufferViewData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SerializedArrayBufferViewData>::inited;
+    GC_descr& descr = GCDescriptorCache<SerializedArrayBufferViewData>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(SerializedArrayBufferViewData)] = {
             0
@@ -152,8 +152,8 @@ void* SerializedArrayBufferViewData::operator new(size_t size)
 void* SerializedTypedData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SerializedTypedData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SerializedTypedData>::inited;
+    GC_descr& descr = GCDescriptorCache<SerializedTypedData>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(SerializedTypedData)] = { 0 };
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(SerializedTypedData, m_data));
@@ -167,8 +167,8 @@ void* SerializedTypedData::operator new(size_t size)
 void* SerializedRawScriptValueData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SerializedRawScriptValueData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SerializedRawScriptValueData>::inited;
+    GC_descr& descr = GCDescriptorCache<SerializedRawScriptValueData>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(SerializedRawScriptValueData)] = {
             0

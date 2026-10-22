@@ -62,8 +62,8 @@ ExecutionContext::ExecutionContext(GlobalScope* globalScope,
 void* ExecutionContext::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ExecutionContext));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<ExecutionContext>::inited;
+    GC_descr& descr = GCDescriptorCache<ExecutionContext>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(ExecutionContext)] = { 0 };
         ExecutionContext::fillGCDescriptor(desc);

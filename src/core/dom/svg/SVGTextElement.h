@@ -41,8 +41,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(SVGTextElement));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<SVGTextElement>::inited;
+        GC_descr& descr = GCDescriptorCache<SVGTextElement>::descr;
 
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(SVGTextElement)] = { 0 };

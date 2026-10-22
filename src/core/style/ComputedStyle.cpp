@@ -86,8 +86,8 @@ static inline bool _checkCSSProperty(CSSStyleValuePair::KeyKind kind,
 void* RareComputedStyleData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(RareComputedStyleData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<RareComputedStyleData>::inited;
+    GC_descr& descr = GCDescriptorCache<RareComputedStyleData>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(RareComputedStyleData)] = { 0 };
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(RareComputedStyleData, m_styles));
@@ -101,8 +101,10 @@ void* RareComputedStyleData::operator new(size_t size)
 void* ComputedStyle::InheritedStylesRareData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ComputedStyle::InheritedStylesRareData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited =
+        GCDescriptorCache<ComputedStyle::InheritedStylesRareData>::inited;
+    GC_descr& descr =
+        GCDescriptorCache<ComputedStyle::InheritedStylesRareData>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(
             ComputedStyle::InheritedStylesRareData)] = { 0 };
@@ -146,8 +148,8 @@ void* ComputedStyle::InheritedStylesRareData::operator new(size_t size)
 void* ComputedStyle::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ComputedStyle));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<ComputedStyle>::inited;
+    GC_descr& descr = GCDescriptorCache<ComputedStyle>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(ComputedStyle)] = { 0 };
         GC_set_bit(obj_bitmap,

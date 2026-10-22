@@ -52,8 +52,8 @@ HTMLTextAreaElement::HTMLTextAreaElement(Document* document,
 void* HTMLTextAreaElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLTextAreaElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLTextAreaElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLTextAreaElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLTextAreaElement)] = { 0 };
         HTMLTextEditable::fillGCDescriptor(desc);

@@ -32,8 +32,8 @@ SVGFEComponentTransferElement::SVGFEComponentTransferElement(
 void* SVGFEComponentTransferElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGFEComponentTransferElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGFEComponentTransferElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGFEComponentTransferElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGFEComponentTransferElement)] = { 0 };
         SVGFilterPrimitiveStandardAttributes::fillGCDescriptor(desc);

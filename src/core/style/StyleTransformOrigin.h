@@ -47,8 +47,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(TransformOriginData));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<TransformOriginData>::inited;
+        GC_descr& descr = GCDescriptorCache<TransformOriginData>::descr;
         if (!typeInited) {
             GC_word obj_bitmap[GC_BITMAP_SIZE(TransformOriginData)] = { 0 };
             GC_set_bit(obj_bitmap,
@@ -166,8 +166,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(StyleTransformOrigin));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<StyleTransformOrigin>::inited;
+        GC_descr& descr = GCDescriptorCache<StyleTransformOrigin>::descr;
         if (!typeInited) {
             GC_word obj_bitmap[GC_BITMAP_SIZE(StyleTransformOrigin)] = { 0 };
             GC_set_bit(obj_bitmap,

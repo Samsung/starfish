@@ -103,8 +103,8 @@ namespace Starfish {
 void* HTMLTableElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLTableElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLTableElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLTableElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLTableElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLTableElement, m_rows));

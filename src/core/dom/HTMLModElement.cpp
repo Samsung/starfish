@@ -31,8 +31,8 @@ HTMLModElement::HTMLModElement(Document* document, const QualifiedName& qname)
 void* HTMLModElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLModElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLModElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLModElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLModElement)] = { 0 };
         HTMLElement::fillGCDescriptor(desc);

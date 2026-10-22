@@ -60,8 +60,8 @@ void SVGCircleElement::updateSVGAttributeNeeded(QualifiedName name)
 void* SVGCircleElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGCircleElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGCircleElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGCircleElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGCircleElement)] = { 0 };
         SVGElement::fillGCDescriptor(desc);

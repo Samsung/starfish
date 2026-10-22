@@ -95,8 +95,8 @@ void* FlexItemMeasureMemo::operator new(size_t size)
 void* FrameBoxRareData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameBoxRareData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameBoxRareData>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameBoxRareData>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FrameBoxRareData)] = { 0 };
         FrameBoxRareData::fillGCDescriptor(desc);
@@ -109,8 +109,8 @@ void* FrameBoxRareData::operator new(size_t size)
 void* FrameBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameBox>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(FrameBox)] = { 0 };
         FrameBox::fillGCDescriptor(obj_bitmap);

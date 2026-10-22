@@ -33,8 +33,8 @@ SVGFEMorphologyElement::SVGFEMorphologyElement(Document* document,
 void* SVGFEMorphologyElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGFEMorphologyElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGFEMorphologyElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGFEMorphologyElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGFEMorphologyElement)] = { 0 };
         SVGFilterPrimitiveStandardAttributes::fillGCDescriptor(desc);

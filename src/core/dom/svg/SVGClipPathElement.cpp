@@ -29,8 +29,8 @@ namespace Starfish {
 void* SVGClipPathElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGClipPathElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGClipPathElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGClipPathElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGClipPathElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(SVGClipPathElement, m_clipPathUnits));

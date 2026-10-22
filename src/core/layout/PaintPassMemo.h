@@ -210,8 +210,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(PaintPassMemos));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<PaintPassMemos>::inited;
+        GC_descr& descr = GCDescriptorCache<PaintPassMemos>::descr;
         if (!typeInited) {
             GC_word obj_bitmap[GC_BITMAP_SIZE(PaintPassMemos)] = { 0 };
             GC_set_bit(obj_bitmap,

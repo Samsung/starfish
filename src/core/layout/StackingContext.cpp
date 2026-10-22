@@ -323,8 +323,8 @@ void GraphicsBufferHolder::detachNativeBuffers()
 void* GraphicsBufferHolder::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(GraphicsBufferHolder));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<GraphicsBufferHolder>::inited;
+    GC_descr& descr = GCDescriptorCache<GraphicsBufferHolder>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(GraphicsBufferHolder)] = { 0 };
         GraphicsBufferHolder::fillGCDescriptor(desc);
@@ -348,8 +348,8 @@ StackingContextRareData::StackingContextRareData()
 void* StackingContextRareData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(StackingContextRareData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<StackingContextRareData>::inited;
+    GC_descr& descr = GCDescriptorCache<StackingContextRareData>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(StackingContextRareData)] = { 0 };
         StackingContextRareData::fillGCDescriptor(desc);
@@ -410,8 +410,8 @@ StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
 void* StackingContext::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(StackingContext));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<StackingContext>::inited;
+    GC_descr& descr = GCDescriptorCache<StackingContext>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(StackingContext)] = { 0 };
         StackingContext::fillGCDescriptor(desc);

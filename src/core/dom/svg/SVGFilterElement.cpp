@@ -28,8 +28,8 @@ namespace Starfish {
 void* SVGFilterElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGFilterElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGFilterElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGFilterElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGFilterElement)] = { 0 };
         SVGElement::fillGCDescriptor(desc);

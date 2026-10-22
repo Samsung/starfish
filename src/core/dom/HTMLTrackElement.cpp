@@ -131,8 +131,8 @@ HTMLTrackElement::HTMLTrackElement(Document* document,
 void* HTMLTrackElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLTrackElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLTrackElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLTrackElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLTrackElement)] = { 0 };
         HTMLElement::fillGCDescriptor(desc);

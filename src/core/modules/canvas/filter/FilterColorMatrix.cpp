@@ -219,8 +219,8 @@ FilterColorMatrix::FilterColorMatrix(
 void* FilterColorMatrix::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FilterColorMatrix));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FilterColorMatrix>::inited;
+    GC_descr& descr = GCDescriptorCache<FilterColorMatrix>::descr;
     if (typeInited == false) {
         GC_word desc[GC_BITMAP_SIZE(FilterColorMatrix)] = { 0 };
         FilterPrimitive::fillGCDescriptor(desc);

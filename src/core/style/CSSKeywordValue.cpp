@@ -28,8 +28,8 @@ namespace Starfish {
 void* CSSKeywordValue::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(CSSKeywordValue));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<CSSKeywordValue>::inited;
+    GC_descr& descr = GCDescriptorCache<CSSKeywordValue>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(CSSKeywordValue)] = { 0 };
         CSSKeywordValue::fillGCDescriptor(desc);

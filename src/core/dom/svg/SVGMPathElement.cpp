@@ -28,8 +28,8 @@ namespace Starfish {
 void* SVGMPathElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGMPathElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGMPathElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGMPathElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGMPathElement)] = { 0 };
         SVGMPathElement::fillGCDescriptor(desc);

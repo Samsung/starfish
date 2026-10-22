@@ -1079,8 +1079,8 @@ FilterGaussianBlur::FilterGaussianBlur(
 void* FilterGaussianBlur::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FilterGaussianBlur));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FilterGaussianBlur>::inited;
+    GC_descr& descr = GCDescriptorCache<FilterGaussianBlur>::descr;
     if (typeInited == false) {
         GC_word desc[GC_BITMAP_SIZE(FilterGaussianBlur)] = { 0 };
         FilterPrimitive::fillGCDescriptor(desc);

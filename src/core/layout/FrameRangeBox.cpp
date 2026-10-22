@@ -46,8 +46,8 @@ static const Unit::Color RANGE_THUMB_DISABLED_COLOR(156, 156, 156, 255);
 void* FrameRangeBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameRangeBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameRangeBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameRangeBox>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FrameRangeBox)] = { 0 };
         FrameRangeBox::fillGCDescriptor(desc);
