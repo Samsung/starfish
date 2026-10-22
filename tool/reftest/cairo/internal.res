@@ -941,6 +941,7 @@ test/cairo/internal-test/forms/select-value-setter-no-events.html
 test/cairo/internal-test/forms/select-reselect-crash.html
 test/cairo/internal-test/media/autoplay-after-src.html
 test/cairo/internal-test/media/media-error-survives-gc.html
+test/cairo/internal-test/websocket/bufferedAmount-after-close.html
 test/cairo/internal-test/event/mouse_enter_leave_event_order.html
 test/cairo/internal-test/event/scroll-suppresses-click.html
 test/cairo/internal-test/event/no-scroll-fires-click.html

@@ -100,12 +100,58 @@ void SocketLWS::serviceTxQueueLocked(struct lws* wsi, bool* failed)
     }
 
     m_txBufferSize -= data->size();
+    m_transmittedBytes.fetch_add(data->size());
     m_txBuffer.erase(m_txBuffer.begin());
     delete data;
 
     if (!m_txBuffer.empty()) {
         lws_callback_on_writable(wsi);
     }
+}
+
+// Service thread. bufferedAmount is defined as of the last time the event
+// loop reached step 1
+// (https://websockets.spec.whatwg.org/#dom-websocket-bufferedamount), so the
+// decrement must land on the main thread as its own task instead of being
+// visible the instant a frame leaves. Every operation on the byte counter and
+// the pending flag stays seq_cst: that single total order is what keeps bytes
+// added while a drain clears the flag from being left behind.
+void SocketLWS::publishTransmitted()
+{
+    CHECK_ALIVE()
+
+    if (m_transmittedBytes.load() == 0) {
+        return;
+    }
+    if (m_transmitPublishPending.exchange(true)) {
+        return;
+    }
+
+    ref();
+    parent()
+        ->executionContext()
+        ->webBase()
+        ->messageLoop()
+        ->addIdlerWithNoGCRootingInOtherThread(
+            nullptr,
+            [](size_t handle, void* data) {
+                SocketLWS* lws = (SocketLWS*)data;
+                // Clear the flag before draining so bytes written after the
+                // drain schedule a new task instead of being left behind.
+                lws->m_transmitPublishPending.store(false);
+                uint64_t bytes = lws->m_transmittedBytes.exchange(0);
+                lws->parent()->didTransmit(bytes);
+                lws->deref();
+            },
+            // A worker tearing down discards its queued idlers without running
+            // them; without this the ref taken above would pin the socket
+            // graph in the root set for good.
+            [](void* data) {
+                SocketLWS* lws = (SocketLWS*)data;
+                lws->m_transmitPublishPending.store(false);
+                lws->deref();
+            },
+            this);
 }
 
 int SocketLWS::lwsEventCallback(struct lws* wsi,
@@ -217,6 +263,7 @@ int SocketLWS::lwsEventCallback(struct lws* wsi,
         if (failed) {
             return -1;
         }
+        socket->publishTransmitted();
         break;
     }
 
@@ -265,6 +312,8 @@ SocketLWS::SocketLWS(WebSocket* socket)
     , m_contextMutex(new Mutex())
     , m_closeMutex(new Mutex())
     , m_txBufferSize(0)
+    , m_transmittedBytes(0)
+    , m_transmitPublishPending(false)
     , m_closeReasonStr(std::string())
     , m_closeReasonCode(WebSocket::CloseCode::NoStatusReceived)
 {
@@ -590,12 +639,6 @@ void SocketLWS::waitForWorkerEnd()
         m_thread->join();
         m_workerStarted = false;
     }
-}
-
-uint64_t SocketLWS::txBufferSize()
-{
-    Locker<Mutex> l(*m_txMutex);
-    return m_txBufferSize;
 }
 
 void SocketLWS::updateState(WebSocket::ReadyState state)

@@ -65,7 +65,13 @@ public:
         return m_readyState;
     }
     void setReadyState(ReadyState state);
-    uint64_t bufferedAmount();
+    uint64_t bufferedAmount()
+    {
+        return m_bufferedAmount;
+    }
+    // Called on the main thread once `bytes` of queued data have left for the
+    // network.
+    void didTransmit(uint64_t bytes);
 
     // networking
     String* extensions()
@@ -137,6 +143,9 @@ private:
 
     ExecutionContext* m_executionContext;
     SocketLWS* m_socketLWS;
+    // Main thread only; see SocketLWS::publishTransmitted() for why the
+    // service thread never touches it.
+    uint64_t m_bufferedAmount;
 };
 } // namespace Starfish
 #endif
