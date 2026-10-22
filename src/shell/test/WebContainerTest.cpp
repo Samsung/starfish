@@ -408,4 +408,62 @@ TEST_F(WebContainerTest, PauseResume)
     lwe->RemoveJavascriptInterface("TEST", "setResult");
 }
 
+class WebContainerLocaleTest : public ::testing::Test {
+public:
+    WebContainerLocaleTest() = default;
+
+protected:
+    void SetUp() override
+    {
+        LWE::LWE::Initialize("/tmp/starfish_storage/");
+        m_window = Window::create();
+        m_window->setInitHint(HINT_VISIBLE, 0);
+        m_window->init("Starfish", 800, 600);
+
+        LWE::WebContainer::WebContainerArguments args = getWebContainerArgs();
+        // An embedder without a system language passes an empty locale; the
+        // engine must still expose a well-formed navigator.language.
+        args.locale = "";
+        LWE::WebContainer::RendererGLConfiguration config =
+            getRendererConfig(m_window);
+        m_lwe = LWE::WebContainer::CreateGL(args, config);
+    }
+
+    void TearDown()
+    {
+        if (m_lwe) {
+            m_lwe->Destroy();
+            m_lwe = nullptr;
+        }
+
+        if (m_window) {
+            delete m_window;
+            m_window = nullptr;
+        }
+        LWE::LWE::Finalize();
+    }
+
+    Window* m_window = nullptr;
+    LWE::WebContainer* m_lwe = nullptr;
+};
+
+TEST_F(WebContainerLocaleTest, EmptyLocaleFallsBackToDefaultLanguage)
+{
+    bool loaded = false;
+    m_lwe->RegisterOnPageLoadedHandler(
+        [this, &loaded](LWE::WebContainer*, const std::string&) {
+            m_window->appLoop()->stop();
+            loaded = true;
+        });
+    m_lwe->LoadURL("about:blank");
+    m_window->appLoop()->start(1);
+    EXPECT_TRUE(loaded);
+
+    std::string language = m_lwe->EvaluateJavaScript("navigator.language");
+    EXPECT_FALSE(language.empty());
+
+    m_lwe->RegisterOnPageLoadedHandler(
+        [](LWE::WebContainer*, const std::string&) {});
+}
+
 } // namespace StarfishShell
