@@ -26,8 +26,8 @@ namespace Starfish {
 void* HTMLLegendElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLLegendElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLLegendElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLLegendElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLLegendElement)] = { 0 };
         HTMLFormControl::fillGCDescriptor(desc);

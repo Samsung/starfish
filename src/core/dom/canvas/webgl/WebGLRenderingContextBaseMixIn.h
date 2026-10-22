@@ -57,8 +57,10 @@ protected:
 public:
     void* operator new(size_t size)
     {
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited =
+            GCDescriptorCache<WebGLRenderingContextBaseMixIn>::inited;
+        GC_descr& descr =
+            GCDescriptorCache<WebGLRenderingContextBaseMixIn>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(WebGLRenderingContextBaseMixIn)] = {
                 0

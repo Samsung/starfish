@@ -236,8 +236,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(StyleTransformData));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<StyleTransformData>::inited;
+        GC_descr& descr = GCDescriptorCache<StyleTransformData>::descr;
         if (!typeInited) {
             GC_word obj_bitmap[GC_BITMAP_SIZE(StyleTransformData)] = { 0 };
             GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StyleTransformData, m_value));

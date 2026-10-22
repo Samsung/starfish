@@ -53,8 +53,8 @@ public:
 
     void* operator new(size_t size)
     {
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<FrameReplacedCanvas>::inited;
+        GC_descr& descr = GCDescriptorCache<FrameReplacedCanvas>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(FrameReplacedCanvas)] = { 0 };
             FrameReplacedCanvas::fillGCDescriptor(desc);

@@ -95,8 +95,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(CanvasState));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<CanvasState>::inited;
+        GC_descr& descr = GCDescriptorCache<CanvasState>::descr;
         if (typeInited == false) {
             GC_word obj_bitmap[GC_BITMAP_SIZE(CanvasState)] = { 0 };
             CanvasState::fillGCDescriptor(obj_bitmap);

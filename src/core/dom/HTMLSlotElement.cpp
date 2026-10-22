@@ -33,8 +33,8 @@ HTMLSlotElement::HTMLSlotElement(Document* document, const QualifiedName& qname)
 void* HTMLSlotElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLSlotElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLSlotElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLSlotElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLSlotElement)] = { 0 };
         HTMLSlotElement::fillGCDescriptor(desc);

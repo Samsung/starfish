@@ -228,8 +228,8 @@ void SVGGradientElement::updateSVGAttributeNeeded(QualifiedName name)
 void* SVGGradientElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGGradientElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGGradientElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGGradientElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGGradientElement)] = { 0 };
         SVGGradientElement::fillGCDescriptor(desc);

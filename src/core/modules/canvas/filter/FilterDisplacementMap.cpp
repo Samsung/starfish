@@ -42,8 +42,8 @@ FilterDisplacementMap::FilterDisplacementMap(
 void* FilterDisplacementMap::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FilterDisplacementMap));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FilterDisplacementMap>::inited;
+    GC_descr& descr = GCDescriptorCache<FilterDisplacementMap>::descr;
     if (typeInited == false) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(FilterDisplacementMap)] = { 0 };
         STARFISH_ASSERT(obj_bitmap != nullptr);

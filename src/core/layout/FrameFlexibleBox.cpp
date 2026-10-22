@@ -30,8 +30,8 @@ namespace Starfish {
 void* FrameFlexibleBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameFlexibleBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameFlexibleBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameFlexibleBox>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FrameFlexibleBox)] = { 0 };
         FrameFlexibleBox::fillGCDescriptor(desc);

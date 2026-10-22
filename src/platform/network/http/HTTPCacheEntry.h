@@ -134,8 +134,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(HTTPCacheEntry));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<HTTPCacheEntry>::inited;
+        GC_descr& descr = GCDescriptorCache<HTTPCacheEntry>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(HTTPCacheEntry)] = { 0 };
             fillGCDescriptor(desc);

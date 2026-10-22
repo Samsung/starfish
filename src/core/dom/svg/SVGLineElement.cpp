@@ -51,8 +51,8 @@ void SVGLineElement::updateSVGAttributeNeeded(QualifiedName name)
 void* SVGLineElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGLineElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGLineElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGLineElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGLineElement)] = { 0 };
         SVGElement::fillGCDescriptor(desc);

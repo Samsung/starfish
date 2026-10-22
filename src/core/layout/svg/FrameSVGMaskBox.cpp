@@ -55,8 +55,8 @@ static void makeLuminanceMask(uint8_t* ptr, size_t w, size_t s, size_t h)
 void* FrameSVGMaskBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameSVGMaskBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameSVGMaskBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameSVGMaskBox>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FrameSVGMaskBox)] = { 0 };
         FrameSVGMaskBox::fillGCDescriptor(desc);

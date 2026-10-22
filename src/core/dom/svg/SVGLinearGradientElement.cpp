@@ -83,8 +83,8 @@ void SVGLinearGradientElement::updateSVGAttributeNeeded(QualifiedName name)
 void* SVGLinearGradientElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGLinearGradientElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGLinearGradientElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGLinearGradientElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGLinearGradientElement)] = { 0 };
         fillGCDescriptor(desc);

@@ -93,8 +93,8 @@ static float clampCoord(double value)
 void* HTMLAreaElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLAreaElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLAreaElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLAreaElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLAreaElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLAreaElement, m_relList));

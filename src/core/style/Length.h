@@ -419,8 +419,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(LengthSize));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<LengthSize>::inited;
+        GC_descr& descr = GCDescriptorCache<LengthSize>::descr;
         if (!typeInited) {
             GC_word obj_bitmap[GC_BITMAP_SIZE(LengthSize)] = { 0 };
             GC_set_bit(obj_bitmap, GC_WORD_OFFSET(LengthSize, m_width));
@@ -479,8 +479,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(LengthPosition));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<LengthPosition>::inited;
+        GC_descr& descr = GCDescriptorCache<LengthPosition>::descr;
         if (!typeInited) {
             GC_word obj_bitmap[GC_BITMAP_SIZE(LengthPosition)] = { 0 };
             GC_set_bit(obj_bitmap, GC_WORD_OFFSET(LengthPosition, m_x));

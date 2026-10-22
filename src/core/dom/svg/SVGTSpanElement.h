@@ -31,8 +31,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(SVGTSpanElement));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<SVGTSpanElement>::inited;
+        GC_descr& descr = GCDescriptorCache<SVGTSpanElement>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(SVGTSpanElement)] = { 0 };
             SVGElement::fillGCDescriptor(desc);

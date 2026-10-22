@@ -46,8 +46,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(FrameQuoteText));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<FrameQuoteText>::inited;
+        GC_descr& descr = GCDescriptorCache<FrameQuoteText>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(FrameQuoteText)] = { 0 };
             FrameQuoteText::fillGCDescriptor(desc);

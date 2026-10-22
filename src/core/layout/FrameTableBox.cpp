@@ -42,8 +42,8 @@ FrameTableBox::FrameTableBox(Node* node, ComputedStyle* style)
 void* ColSizeStruct::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ColSizeStruct));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<ColSizeStruct>::inited;
+    GC_descr& descr = GCDescriptorCache<ColSizeStruct>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(ColSizeStruct)] = { 0 };
         ColSizeStruct::fillGCDescriptor(obj_bitmap);
@@ -56,8 +56,8 @@ void* ColSizeStruct::operator new(size_t size)
 void* FrameTableBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameTableBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameTableBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameTableBox>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(FrameTableBox)] = { 0 };
         FrameTableBox::fillGCDescriptor(obj_bitmap);

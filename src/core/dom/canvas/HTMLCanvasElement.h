@@ -86,8 +86,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(HTMLCanvasElement));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<HTMLCanvasElement>::inited;
+        GC_descr& descr = GCDescriptorCache<HTMLCanvasElement>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(HTMLCanvasElement)] = { 0 };
             HTMLCanvasElement::fillGCDescriptor(desc);

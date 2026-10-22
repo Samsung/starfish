@@ -36,8 +36,8 @@ SVGPathElement::SVGPathElement(Document* document, const QualifiedName& qname)
 void* SVGPathElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGPathElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGPathElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGPathElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGPathElement)] = { 0 };
         SVGElement::fillGCDescriptor(desc);

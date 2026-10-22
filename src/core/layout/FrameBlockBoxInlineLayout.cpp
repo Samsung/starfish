@@ -68,8 +68,8 @@ LayoutUnit Frame::lineHeight()
 void* LineBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(LineBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<LineBox>::inited;
+    GC_descr& descr = GCDescriptorCache<LineBox>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(LineBox)] = { 0 };
         LineBox::fillGCDescriptor(desc);
@@ -1312,8 +1312,8 @@ void LineFormattingContext::registerInlineContent(FrameLineBreak* br)
 void* InlineBoxLayoutParentBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(InlineBoxLayoutParentBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<InlineBoxLayoutParentBox>::inited;
+    GC_descr& descr = GCDescriptorCache<InlineBoxLayoutParentBox>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(InlineBoxLayoutParentBox)] = { 0 };
         InlineBoxLayoutParentBox::fillGCDescriptor(desc);
@@ -3275,8 +3275,8 @@ static void tokenizeText(Starfish* starfish, FrameText* f, Context& ctx)
 void* FrameTextRareData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameTextRareData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameTextRareData>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameTextRareData>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FrameTextRareData)] = { 0 };
         FrameTextRareData::fillGCDescriptor(desc);
@@ -3842,8 +3842,8 @@ void LineFormattingContext::computeDirection(Frame* parent,
 void* InlineNonReplacedBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(InlineNonReplacedBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<InlineNonReplacedBox>::inited;
+    GC_descr& descr = GCDescriptorCache<InlineNonReplacedBox>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(InlineNonReplacedBox)] = { 0 };
         InlineNonReplacedBox::fillGCDescriptor(desc);
@@ -5147,8 +5147,8 @@ void FrameBlockBox::paintContent(PaintingContext& ctx)
 void* InlineTextBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(InlineTextBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<InlineTextBox>::inited;
+    GC_descr& descr = GCDescriptorCache<InlineTextBox>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(InlineTextBox)] = { 0 };
         InlineTextBox::fillGCDescriptor(desc);

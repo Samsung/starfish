@@ -139,8 +139,8 @@ void StyleRule::initFlagsRelatedWithSelectorList()
 void* StyleRule::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(StyleRule));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<StyleRule>::inited;
+    GC_descr& descr = GCDescriptorCache<StyleRule>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(StyleRule)] = { 0 };
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StyleRule, m_selectorList));

@@ -26,8 +26,8 @@ namespace Starfish {
 void* SVGFECompositeElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGFECompositeElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGFECompositeElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGFECompositeElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGFECompositeElement)] = { 0 };
         SVGFilterPrimitiveStandardAttributes::fillGCDescriptor(desc);

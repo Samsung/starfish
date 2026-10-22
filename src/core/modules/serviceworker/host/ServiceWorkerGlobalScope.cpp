@@ -194,8 +194,8 @@ Promise* ServiceWorkerGlobalScope::skipWaiting()
 void* ServiceWorkerGlobalScope::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ServiceWorkerGlobalScope));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<ServiceWorkerGlobalScope>::inited;
+    GC_descr& descr = GCDescriptorCache<ServiceWorkerGlobalScope>::descr;
     if (typeInited == false) {
         GC_word desc[GC_BITMAP_SIZE(ServiceWorkerGlobalScope)] = { 0 };
         ServiceWorkerGlobalScope::fillGCDescriptor(desc);

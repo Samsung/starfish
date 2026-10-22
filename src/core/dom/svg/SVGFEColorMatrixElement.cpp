@@ -33,8 +33,8 @@ SVGFEColorMatrixElement::SVGFEColorMatrixElement(Document* document,
 void* SVGFEColorMatrixElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGFEColorMatrixElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGFEColorMatrixElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGFEColorMatrixElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGFEColorMatrixElement)] = { 0 };
         SVGFilterPrimitiveStandardAttributes::fillGCDescriptor(desc);

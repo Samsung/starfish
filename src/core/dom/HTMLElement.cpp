@@ -90,8 +90,8 @@ HTMLElement::HTMLElement(Document* document, const QualifiedName& qname)
 void* HTMLElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLElement)] = { 0 };
         HTMLElement::fillGCDescriptor(desc);
@@ -533,8 +533,8 @@ HTMLKnownElement::HTMLKnownElement(Document* document,
 void* HTMLKnownElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLKnownElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLKnownElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLKnownElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLKnownElement)] = { 0 };
         HTMLElement::fillGCDescriptor(desc);

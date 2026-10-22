@@ -96,8 +96,11 @@ int GC_CALLBACK BufferedNativeImageData::disclaimProc(void* obj)
 
 int BufferedNativeImageData::nativeImageDataGCKind()
 {
-    static bool isInited = false;
-    static int gcKind;
+    // GCutil is built with GC_THREAD_ISOLATE, so a kind lives in the
+    // registering thread's own table; keep the cache per-thread because a
+    // worker's createImageBitmap allocates these off the engine main thread.
+    static thread_local bool isInited = false;
+    static thread_local int gcKind;
     if (!isInited) {
         isInited = true;
         gcKind = GC_new_kind_enumerable(

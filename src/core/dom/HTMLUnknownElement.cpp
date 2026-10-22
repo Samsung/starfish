@@ -46,8 +46,8 @@ void HTMLUnknownElement::morphIntoCustomElement(CustomElementRegistryData* data)
 void* HTMLUnknownElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLUnknownElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLUnknownElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLUnknownElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLUnknownElement)] = { 0 };
         HTMLUnknownElement::fillGCDescriptor(desc);

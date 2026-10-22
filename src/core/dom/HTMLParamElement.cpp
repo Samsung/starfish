@@ -25,8 +25,8 @@ namespace Starfish {
 void* HTMLParamElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLParamElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLParamElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLParamElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLParamElement)] = { 0 };
         HTMLElement::fillGCDescriptor(desc);

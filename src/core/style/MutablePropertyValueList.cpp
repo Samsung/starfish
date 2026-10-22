@@ -25,8 +25,8 @@ namespace Starfish {
 void* MutablePropertyValueList::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(MutablePropertyValueList));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<MutablePropertyValueList>::inited;
+    GC_descr& descr = GCDescriptorCache<MutablePropertyValueList>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(MutablePropertyValueList)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(MutablePropertyValueList, m_values));

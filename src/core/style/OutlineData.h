@@ -67,8 +67,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(OutlineData));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<OutlineData>::inited;
+        GC_descr& descr = GCDescriptorCache<OutlineData>::descr;
         if (!typeInited) {
             GC_word obj_bitmap[GC_BITMAP_SIZE(OutlineData)] = { 0 };
             GC_set_bit(obj_bitmap, GC_WORD_OFFSET(OutlineData, m_border));

@@ -95,8 +95,8 @@ namespace Starfish {
 void* HTMLDocument::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLDocument));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLDocument>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLDocument>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLDocument)] = { 0 };
         Document::fillGCDescriptor(desc);

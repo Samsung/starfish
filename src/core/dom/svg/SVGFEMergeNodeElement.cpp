@@ -88,8 +88,8 @@ SVGAnimatedString* SVGFEMergeNodeElement::in()
 void* SVGFEMergeNodeElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGFEMergeNodeElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGFEMergeNodeElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGFEMergeNodeElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGFEMergeNodeElement)] = { 0 };
         fillGCDescriptor(desc);

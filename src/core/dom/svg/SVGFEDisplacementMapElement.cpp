@@ -35,8 +35,8 @@ SVGFEDisplacementMapElement::SVGFEDisplacementMapElement(
 void* SVGFEDisplacementMapElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGFEDisplacementMapElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGFEDisplacementMapElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGFEDisplacementMapElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGFEDisplacementMapElement)] = { 0 };
         SVGFilterPrimitiveStandardAttributes::fillGCDescriptor(desc);

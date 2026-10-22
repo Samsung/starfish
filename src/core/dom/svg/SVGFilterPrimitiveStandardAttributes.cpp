@@ -28,8 +28,10 @@ namespace Starfish {
 void* SVGFilterPrimitiveStandardAttributes::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGFilterPrimitiveStandardAttributes));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited =
+        GCDescriptorCache<SVGFilterPrimitiveStandardAttributes>::inited;
+    GC_descr& descr =
+        GCDescriptorCache<SVGFilterPrimitiveStandardAttributes>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGFilterPrimitiveStandardAttributes)] = {
             0

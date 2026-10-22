@@ -40,8 +40,8 @@ namespace Starfish {
 void* FrameSVGEllipseBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameSVGEllipseBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameSVGEllipseBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameSVGEllipseBox>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FrameSVGEllipseBox)] = { 0 };
         FrameSVGEllipseBox::fillGCDescriptor(desc);

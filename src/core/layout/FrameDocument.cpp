@@ -32,8 +32,8 @@ namespace Starfish {
 void* FrameDocument::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameDocument));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameDocument>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameDocument>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FrameDocument)] = { 0 };
         FrameDocument::fillGCDescriptor(desc);

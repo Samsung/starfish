@@ -49,8 +49,8 @@ FilterMerge::FilterMerge(Filter* filter,
 void* FilterMerge::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FilterMerge));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FilterMerge>::inited;
+    GC_descr& descr = GCDescriptorCache<FilterMerge>::descr;
     if (typeInited == false) {
         GC_word desc[GC_BITMAP_SIZE(FilterMerge)] = { 0 };
         FilterPrimitive::fillGCDescriptor(desc);

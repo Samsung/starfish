@@ -30,8 +30,8 @@ namespace Starfish {
 void* HTMLMapElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLMapElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLMapElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLMapElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLMapElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLMapElement, m_areas));

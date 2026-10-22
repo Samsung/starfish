@@ -432,8 +432,8 @@ bool PositionedMaskData::operator==(const PositionedMaskData& other)
 void* PositionedMaskData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(PositionedMaskData));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<PositionedMaskData>::inited;
+    GC_descr& descr = GCDescriptorCache<PositionedMaskData>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(PositionedMaskData)] = { 0 };
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(PositionedMaskData, m_layers));

@@ -145,8 +145,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(FrameSVGImageBox));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<FrameSVGImageBox>::inited;
+        GC_descr& descr = GCDescriptorCache<FrameSVGImageBox>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(FrameSVGImageBox)] = { 0 };
             FrameSVGImageBox::fillGCDescriptor(desc);

@@ -31,8 +31,8 @@ HTMLHeadingElement::HTMLHeadingElement(Document* document,
 void* HTMLHeadingElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLHeadingElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLHeadingElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLHeadingElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLHeadingElement)] = { 0 };
         HTMLElement::fillGCDescriptor(desc);

@@ -109,8 +109,8 @@ HTMLMediaElement::HTMLMediaElement(Document* document,
 void* HTMLMediaElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLMediaElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLMediaElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLMediaElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLMediaElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_mediaPlayer));

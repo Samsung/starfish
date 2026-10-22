@@ -43,8 +43,8 @@ bool isCSSType(const char* type);
 void* HTMLLinkElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLLinkElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLLinkElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLLinkElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLLinkElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLLinkElement, m_generatedSheet));

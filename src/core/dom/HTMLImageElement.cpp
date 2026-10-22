@@ -38,8 +38,8 @@ namespace Starfish {
 void* HTMLImageElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLImageElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLImageElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLImageElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLImageElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLImageElement, m_imageResource));

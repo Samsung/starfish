@@ -55,8 +55,8 @@ namespace Starfish {
 void* FrameSVGBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameSVGBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameSVGBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameSVGBox>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FrameSVGBox)] = { 0 };
         FrameSVGBox::fillGCDescriptor(desc);

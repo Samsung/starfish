@@ -37,8 +37,8 @@ FrameTableRowBox::FrameTableRowBox(Node* node, ComputedStyle* style)
 void* FrameTableRowBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameTableRowBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameTableRowBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameTableRowBox>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(FrameTableRowBox)] = { 0 };
         FrameTableRowBox::fillGCDescriptor(obj_bitmap);

@@ -37,8 +37,8 @@ HTMLButtonElement::HTMLButtonElement(Document* document,
 void* HTMLButtonElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLButtonElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLButtonElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLButtonElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLButtonElement)] = { 0 };
         HTMLFormControl::fillGCDescriptor(desc);

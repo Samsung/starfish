@@ -81,8 +81,8 @@ ReadableStream::ReadableStream(ExecutionContext* executionContext,
 void* ReadableStream::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ReadableStream));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<ReadableStream>::inited;
+    GC_descr& descr = GCDescriptorCache<ReadableStream>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(ReadableStream)] = { 0 };
         ReadableStream::fillGCDescriptor(desc);

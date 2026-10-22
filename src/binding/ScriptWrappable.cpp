@@ -659,8 +659,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(EscargotStringView));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<EscargotStringView>::inited;
+        GC_descr& descr = GCDescriptorCache<EscargotStringView>::descr;
         if (!typeInited) {
             GC_word obj_bitmap[GC_BITMAP_SIZE(EscargotStringView)] = { 0 };
             GC_set_bit(obj_bitmap, GC_WORD_OFFSET(EscargotStringView, m_data));

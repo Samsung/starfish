@@ -33,8 +33,8 @@ namespace Starfish {
 void* FrameSelectBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameSelectBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameSelectBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameSelectBox>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FrameSelectBox)] = { 0 };
         FrameSelectBox::fillGCDescriptor(desc);

@@ -57,8 +57,8 @@ void FrameTableCaptionBox::layoutWidth(LayoutContext& ctx)
 void* FrameTableCaptionBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameTableCaptionBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameTableCaptionBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameTableCaptionBox>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(FrameTableCaptionBox)] = { 0 };
         FrameTableCaptionBox::fillGCDescriptor(obj_bitmap);

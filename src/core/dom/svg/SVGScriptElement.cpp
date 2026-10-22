@@ -47,8 +47,8 @@ extern uint64_t g_profilingBaseTime;
 void* SVGScriptElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGScriptElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGScriptElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGScriptElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGScriptElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(SVGScriptElement, m_nonce));

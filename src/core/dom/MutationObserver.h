@@ -159,8 +159,10 @@ public:
 
     void* operator new(size_t size)
     {
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited =
+            GCDescriptorCache<MutationObserverRegistration>::inited;
+        GC_descr& descr =
+            GCDescriptorCache<MutationObserverRegistration>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(MutationObserverRegistration)] = { 0 };
             MutationObserverRegistration::fillGCDescriptor(desc);
@@ -219,8 +221,8 @@ public:
 
     void* operator new(size_t size)
     {
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<MutationObserver>::inited;
+        GC_descr& descr = GCDescriptorCache<MutationObserver>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(MutationObserver)] = { 0 };
             MutationObserver::fillGCDescriptor(desc);

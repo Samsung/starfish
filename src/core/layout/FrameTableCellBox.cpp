@@ -291,8 +291,8 @@ void FrameTableCellBox::resetColspanForLayout()
 void* FrameTableCellBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameTableCellBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameTableCellBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameTableCellBox>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(FrameTableCellBox)] = { 0 };
         FrameTableCellBox::fillGCDescriptor(obj_bitmap);

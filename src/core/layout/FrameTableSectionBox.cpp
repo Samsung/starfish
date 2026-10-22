@@ -30,8 +30,8 @@ namespace Starfish {
 void* CellStruct::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(CellStruct));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<CellStruct>::inited;
+    GC_descr& descr = GCDescriptorCache<CellStruct>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(CellStruct)] = { 0 };
         CellStruct::fillGCDescriptor(obj_bitmap);
@@ -44,8 +44,8 @@ void* CellStruct::operator new(size_t size)
 void* RowStruct::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(RowStruct));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<RowStruct>::inited;
+    GC_descr& descr = GCDescriptorCache<RowStruct>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(RowStruct)] = { 0 };
         RowStruct::fillGCDescriptor(obj_bitmap);
@@ -105,8 +105,8 @@ FrameTableSectionBox::FrameTableSectionBox(Node* node, ComputedStyle* style)
 void* FrameTableSectionBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameTableSectionBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameTableSectionBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameTableSectionBox>::descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(FrameTableSectionBox)] = { 0 };
         FrameTableSectionBox::fillGCDescriptor(obj_bitmap);

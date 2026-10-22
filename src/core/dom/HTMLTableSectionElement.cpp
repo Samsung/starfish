@@ -38,8 +38,8 @@ HTMLTableSectionElement::HTMLTableSectionElement(Document* document,
 void* HTMLTableSectionElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLTableSectionElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLTableSectionElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLTableSectionElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLTableSectionElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLTableSectionElement, m_rows));

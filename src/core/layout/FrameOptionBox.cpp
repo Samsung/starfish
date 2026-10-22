@@ -45,8 +45,8 @@ static ComputedStyle* createTextStyleFrom(Node* node)
 void* FrameOptionBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameOptionBox));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameOptionBox>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameOptionBox>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FrameOptionBox)] = { 0 };
         FrameOptionBox::fillGCDescriptor(desc);

@@ -58,8 +58,8 @@ static void buildScriptResourceRequest(HTMLScriptElement* element,
 void* HTMLScriptElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLScriptElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLScriptElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLScriptElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLScriptElement)] = { 0 };
         HTMLElement::fillGCDescriptor(desc);

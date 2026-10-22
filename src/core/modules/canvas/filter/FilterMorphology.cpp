@@ -221,8 +221,8 @@ Filter::FilterBias FilterMorphology::computeBias(ComputeBiasContext& ctx)
 void* FilterMorphology::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FilterMorphology));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FilterMorphology>::inited;
+    GC_descr& descr = GCDescriptorCache<FilterMorphology>::descr;
     if (typeInited == false) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(FilterMorphology)] = { 0 };
         STARFISH_ASSERT(obj_bitmap != nullptr);

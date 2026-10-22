@@ -116,8 +116,8 @@ void HTMLOptionElement::updateExtenedMarker()
 void* HTMLOptionElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLOptionElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLOptionElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLOptionElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLOptionElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLOptionElement, m_marker));

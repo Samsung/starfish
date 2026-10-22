@@ -109,8 +109,8 @@ Starfish::Starfish(const StarfishConfiguration& config)
 
 void* Starfish::operator new(size_t size)
 {
-    static thread_local bool typeInited = false;
-    static thread_local GC_descr descr;
+    bool& typeInited = GCDescriptorCache<Starfish>::inited;
+    GC_descr& descr = GCDescriptorCache<Starfish>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(Starfish)] = { 0 };
 

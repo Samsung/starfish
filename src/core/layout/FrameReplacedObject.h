@@ -46,8 +46,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(FrameReplacedObject));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<FrameReplacedObject>::inited;
+        GC_descr& descr = GCDescriptorCache<FrameReplacedObject>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(FrameReplacedObject)] = { 0 };
             FrameReplacedObject::fillGCDescriptor(desc);

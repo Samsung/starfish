@@ -133,8 +133,8 @@ FilterComposite::FilterComposite(Filter* filter,
 void* FilterComposite::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FilterComposite));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FilterComposite>::inited;
+    GC_descr& descr = GCDescriptorCache<FilterComposite>::descr;
     if (typeInited == false) {
         GC_word desc[GC_BITMAP_SIZE(FilterComposite)] = { 0 };
         FilterPrimitive::fillGCDescriptor(desc);

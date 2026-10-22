@@ -107,8 +107,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(ColorStop));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<ColorStop>::inited;
+        GC_descr& descr = GCDescriptorCache<ColorStop>::descr;
         if (!typeInited) {
             GC_word obj_bitmap[GC_BITMAP_SIZE(ColorStop)] = { 0 };
             GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ColorStop, m_offset));
@@ -170,8 +170,8 @@ struct GradientDrawingInfo : public gc {
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(GradientDrawingInfo));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<GradientDrawingInfo>::inited;
+        GC_descr& descr = GCDescriptorCache<GradientDrawingInfo>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(GradientDrawingInfo)] = { 0 };
             GC_set_bit(desc, GC_WORD_OFFSET(GradientDrawingInfo, colorStops));
@@ -308,8 +308,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(LinearGradientData));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<LinearGradientData>::inited;
+        GC_descr& descr = GCDescriptorCache<LinearGradientData>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(LinearGradientData)] = { 0 };
             GradientData::fillGCDescriptor(desc);
@@ -420,8 +420,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(RadialGradientData));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<RadialGradientData>::inited;
+        GC_descr& descr = GCDescriptorCache<RadialGradientData>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(RadialGradientData)] = { 0 };
             GC_set_bit(desc, GC_WORD_OFFSET(RadialGradientData,
@@ -503,8 +503,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(ConicGradientData));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<ConicGradientData>::inited;
+        GC_descr& descr = GCDescriptorCache<ConicGradientData>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(ConicGradientData)] = { 0 };
             GC_set_bit(desc, GC_WORD_OFFSET(ConicGradientData,

@@ -306,8 +306,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(AnimatedValue));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<AnimatedValue>::inited;
+        GC_descr& descr = GCDescriptorCache<AnimatedValue>::descr;
         if (!typeInited) {
             GC_word obj_bitmap[GC_BITMAP_SIZE(AnimatedValue)] = { 0 };
             GC_set_bit(obj_bitmap, GC_WORD_OFFSET(AnimatedValue, m_data));

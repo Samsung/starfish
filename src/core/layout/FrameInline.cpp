@@ -29,8 +29,8 @@ namespace Starfish {
 void* FrameInline::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameInline));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FrameInline>::inited;
+    GC_descr& descr = GCDescriptorCache<FrameInline>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FrameInline)] = { 0 };
         FrameInline::fillGCDescriptor(desc);

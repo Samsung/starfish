@@ -131,8 +131,8 @@ void CSSNumericType::setPercentHint(String* percentHint)
 void* CSSNumericValue::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(CSSNumericValue));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<CSSNumericValue>::inited;
+    GC_descr& descr = GCDescriptorCache<CSSNumericValue>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(CSSNumericValue)] = { 0 };
         CSSNumericValue::fillGCDescriptor(desc);

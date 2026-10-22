@@ -33,8 +33,8 @@ SVGFEFloodElement::SVGFEFloodElement(Document* document,
 void* SVGFEFloodElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGFEFloodElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGFEFloodElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGFEFloodElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGFEFloodElement)] = { 0 };
         SVGFilterPrimitiveStandardAttributes::fillGCDescriptor(desc);

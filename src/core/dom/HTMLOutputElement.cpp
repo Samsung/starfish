@@ -35,8 +35,8 @@ HTMLOutputElement::HTMLOutputElement(Document* document,
 void* HTMLOutputElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLOutputElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLOutputElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLOutputElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLOutputElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLOutputElement, m_htmlForList));

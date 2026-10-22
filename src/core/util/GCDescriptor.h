@@ -20,11 +20,13 @@
 #ifndef __StarfishGCDescriptor__
 #define __StarfishGCDescriptor__
 
+// The descriptor cache is per type and, when it must be, per thread; see
+// GCDescriptorCache in StarfishBase.h.
 #define _NEW_WITH_GC_DESC_ARG1(Class)                             \
     void* operator new(size_t size)                               \
     {                                                             \
-        static bool typeInited = false;                           \
-        static GC_descr descr;                                    \
+        bool& typeInited = GCDescriptorCache<Class>::inited;      \
+        GC_descr& descr = GCDescriptorCache<Class>::descr;        \
         if (!typeInited) {                                        \
             GC_word desc[GC_BITMAP_SIZE(Class)] = { 0 };          \
             Class::fillGCDescriptor(desc);                        \

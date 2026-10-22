@@ -40,8 +40,8 @@ public:
 
     void* operator new(size_t size)
     {
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<CanvasRenderingContext2D>::inited;
+        GC_descr& descr = GCDescriptorCache<CanvasRenderingContext2D>::descr;
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(CanvasRenderingContext2D)] = { 0 };
             CanvasRenderingContext2D::fillGCDescriptor(desc);

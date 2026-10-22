@@ -28,8 +28,8 @@ namespace Starfish {
 void* SVGUseElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGUseElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGUseElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGUseElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGUseElement)] = { 0 };
         SVGElement::fillGCDescriptor(desc);

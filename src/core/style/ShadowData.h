@@ -120,8 +120,8 @@ public:
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(ShadowData));
-        static bool typeInited = false;
-        static GC_descr descr;
+        bool& typeInited = GCDescriptorCache<ShadowData>::inited;
+        GC_descr& descr = GCDescriptorCache<ShadowData>::descr;
         if (!typeInited) {
             GC_word obj_bitmap[GC_BITMAP_SIZE(ShadowData)] = { 0 };
             GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ShadowData, m_offsetX));

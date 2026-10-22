@@ -50,8 +50,8 @@ namespace Starfish {
 void* Scrolling::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(Scrolling));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<Scrolling>::inited;
+    GC_descr& descr = GCDescriptorCache<Scrolling>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(Scrolling)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(Scrolling, m_target));

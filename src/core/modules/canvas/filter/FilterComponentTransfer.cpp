@@ -160,8 +160,8 @@ FilterComponentTransfer::FilterComponentTransfer(
 void* FilterComponentTransfer::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FilterComponentTransfer));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<FilterComponentTransfer>::inited;
+    GC_descr& descr = GCDescriptorCache<FilterComponentTransfer>::descr;
     if (typeInited == false) {
         GC_word desc[GC_BITMAP_SIZE(FilterComponentTransfer)] = { 0 };
         FilterPrimitive::fillGCDescriptor(desc);

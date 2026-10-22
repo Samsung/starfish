@@ -28,8 +28,8 @@ namespace Starfish {
 void* HTMLObjectElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLObjectElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<HTMLObjectElement>::inited;
+    GC_descr& descr = GCDescriptorCache<HTMLObjectElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLObjectElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLObjectElement, m_content));

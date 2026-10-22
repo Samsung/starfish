@@ -37,8 +37,8 @@ namespace Starfish {
 void* SVGStyleElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGStyleElement));
-    static bool typeInited = false;
-    static GC_descr descr;
+    bool& typeInited = GCDescriptorCache<SVGStyleElement>::inited;
+    GC_descr& descr = GCDescriptorCache<SVGStyleElement>::descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGStyleElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(SVGStyleElement, m_generatedSheet));
