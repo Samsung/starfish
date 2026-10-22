@@ -251,7 +251,7 @@ reproduce that same environment for one test — without going through either
 driver — start the server on its own and keep it up:
 
 ```sh
-python3 tool/wpt/scripts/wpt_server.py            # serve until Ctrl-C (third_party/wpt)
+python3 tool/wpt/scripts/wpt_server.py            # serve until Ctrl-C or SIGTERM (third_party/wpt)
 ```
 
 This is the exact same `wpt serve --inject-script inject_report.js`
@@ -334,7 +334,8 @@ other script parses page output.
 
 ### tool/wpt/scripts/wpt_server.py
 On-demand `wpt serve` as a context manager, `wpt_serve(wpt_root, ...)`, plus a
-CLI (`python3 tool/wpt/scripts/wpt_server.py` serves until Ctrl-C).
+CLI (`python3 tool/wpt/scripts/wpt_server.py` serves until Ctrl-C or a
+plain `kill`; both tear the whole `wpt serve` group down).
 Responsibilities:
 - start `wpt serve --inject-script inject_report.js --alias_file ...`
   in its own session, the alias file mapping `/resources/testharnessreport.js`

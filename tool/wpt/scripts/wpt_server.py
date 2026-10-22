@@ -234,6 +234,17 @@ def _main(argv):
     if not args.wpt_root:
         p.error("--wpt-root or WPT_ROOT is required")
 
+    # A plain `kill` of this process must still tear down the whole `wpt serve`
+    # group: Python's default SIGTERM action skips the context manager's
+    # cleanup, which leaves the per-port servers running and the next server
+    # unable to come up. A repeated SIGTERM is ignored so it cannot interrupt
+    # that teardown halfway and leave the same orphans.
+    def exit_on_sigterm(signum, frame):
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        sys.exit(143)
+
+    signal.signal(signal.SIGTERM, exit_on_sigterm)
+
     with wpt_serve(args.wpt_root, inject_script=args.inject, verbose=True):
         if args.duration:
             time.sleep(args.duration)
