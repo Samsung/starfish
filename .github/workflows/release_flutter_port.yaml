@@ -51,8 +51,8 @@ jobs:
           mkdir -p i586_so && cd i586_so
           mkdir -p release
           find ~/GBS-ROOT/local/repos/tizen_6.0_emulator/i586/RPMS -name '*.rpm' | xargs -I {} sh -c "cp {} ./"
-          find -name 'lightweight-web-engine-profile_flutter*' | xargs -I {} sh -c "rpm2cpio {} | cpio -idv ./usr/lib/lwe/flutter/*.so"
-          find ./usr/ -name '*.so' | xargs -I {} sh -c "cp {} ./release"
+          find -name 'lightweight-web-engine-profile_flutter*' | xargs -I {} sh -c "rpm2cpio {} | cpio -idv ./usr/lib/lwe/flutter/*.so*"
+          find ./usr/ -name '*.so*' | xargs -I {} sh -c "cp {} ./release"
           cd ..
 
       # Artifacts ship with the release; PR runs only prove the build compiles.
@@ -61,7 +61,7 @@ jobs:
         with:
           name: starfish_flutter_port_i586_so
           path: |
-            ./i586_so/release/*.so
+            ./i586_so/release/*.so*
 
       - name: Clear cache before next build
         if: github.event_name == 'workflow_dispatch'
@@ -75,8 +75,8 @@ jobs:
           mkdir -p x86_64_so && cd x86_64_so
           mkdir -p release
           find ~/GBS-ROOT/local/repos/tizen_6.0_emulator/x86_64/RPMS -name '*.rpm' | xargs -I {} sh -c "cp {} ./"
-          find -name 'lightweight-web-engine-profile_flutter*' | xargs -I {} sh -c "rpm2cpio {} | cpio -idv ./usr/lib64/lwe/flutter/*.so"
-          find ./usr/ -name '*.so' | xargs -I {} sh -c "cp {} ./release"
+          find -name 'lightweight-web-engine-profile_flutter*' | xargs -I {} sh -c "rpm2cpio {} | cpio -idv ./usr/lib64/lwe/flutter/*.so*"
+          find ./usr/ -name '*.so*' | xargs -I {} sh -c "cp {} ./release"
           cd ..
 
       - uses: CODE-Actions/upload-artifact@v2
@@ -84,7 +84,7 @@ jobs:
         with:
           name: starfish_flutter_port_x86_64_so
           path: |
-            ./x86_64_so/release/*.so
+            ./x86_64_so/release/*.so*
 
       - name: Clear cache before next build
         run: |
@@ -97,8 +97,8 @@ jobs:
           mkdir -p arm_so && cd arm_so
           mkdir -p release
           find ~/GBS-ROOT/local/repos/tizen_6.0_standard/armv7l/RPMS -name '*.rpm' | xargs -I {} sh -c "cp {} ./"
-          find -name 'lightweight-web-engine-profile_flutter*' | xargs -I {} sh -c "rpm2cpio {} | cpio -idv ./usr/lib/lwe/flutter/*.so"
-          find ./usr/ -name '*.so' | xargs -I {} sh -c "cp {} ./release"
+          find -name 'lightweight-web-engine-profile_flutter*' | xargs -I {} sh -c "rpm2cpio {} | cpio -idv ./usr/lib/lwe/flutter/*.so*"
+          find ./usr/ -name '*.so*' | xargs -I {} sh -c "cp {} ./release"
           cd ..
 
       - uses: CODE-Actions/upload-artifact@v2
@@ -106,7 +106,7 @@ jobs:
         with:
           name: starfish_flutter_port_arm_so
           path: |
-            ./arm_so/release/*.so
+            ./arm_so/release/*.so*
 
       - name: Clear cache before next build
         if: github.event_name == 'workflow_dispatch'
@@ -121,8 +121,8 @@ jobs:
           mkdir -p arm64_so && cd arm64_so
           mkdir -p release
           find ~/GBS-ROOT/local/repos/tizen_6.0_standard/aarch64/RPMS -name '*.rpm' | xargs -I {} sh -c "cp {} ./"
-          find -name 'lightweight-web-engine-profile_flutter*' | xargs -I {} sh -c "rpm2cpio {} | cpio -idv ./usr/lib64/lwe/flutter/*.so"
-          find ./usr/ -name '*.so' | xargs -I {} sh -c "cp {} ./release"
+          find -name 'lightweight-web-engine-profile_flutter*' | xargs -I {} sh -c "rpm2cpio {} | cpio -idv ./usr/lib64/lwe/flutter/*.so*"
+          find ./usr/ -name '*.so*' | xargs -I {} sh -c "cp {} ./release"
           cd ..
 
       - uses: CODE-Actions/upload-artifact@v2
@@ -130,7 +130,7 @@ jobs:
         with:
           name: starfish_flutter_port_arm64_so
           path: |
-            ./arm64_so/release/*.so
+            ./arm64_so/release/*.so*
 
       - name: Clear cache before next build
         if: github.event_name == 'workflow_dispatch'
