@@ -6033,38 +6033,44 @@ void StyleResolver::applyProperty(Element* element,
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
-#define ADD_RESOLVE_STYLE_BORDER_WIDTH(POS, pos)                         \
-    case CSSStyleValuePair::KeyKind::Border##POS##Width:                 \
-        if (newCssValue.valueKind() ==                                   \
-            CSSStyleValuePair::ValueKind::Inherit) {                     \
-            BorderData pBorder = parentStyle->border();                  \
-            style->setBorder##POS##Width(pBorder.pos().width());         \
-            parentStyle->markSomeNonInheritMemberExplicitlyInherited(    \
-                newCssValue.keyKind());                                  \
-        } else if ((newCssValue.valueKind() ==                           \
-                    CSSStyleValuePair::ValueKind::Initial) ||            \
-                   (newCssValue.valueKind() ==                           \
-                    CSSStyleValuePair::ValueKind::Unset)) {              \
-            style->setBorder##POS##Width(Length(Length::Fixed, 3));      \
-        } else if (newCssValue.valueKind() ==                            \
-                   CSSStyleValuePair::ValueKind::Length) {               \
-            style->setBorder##POS##Width(                                \
-                newCssValue.cssLengthValue().toLength());                \
-        } else if (newCssValue.valueKind() ==                            \
-                   CSSStyleValuePair::ValueKind::BorderWidthValueKind) { \
-            if (newCssValue.borderWidthValue() ==                        \
-                BorderWidthValue::ThinBorderWidthValue) {                \
-                style->setBorder##POS##Width(Length(Length::Fixed, 1));  \
-            } else if (newCssValue.borderWidthValue() ==                 \
-                       BorderWidthValue::MediumBorderWidthValue) {       \
-                style->setBorder##POS##Width(Length(Length::Fixed, 3));  \
-            } else if (newCssValue.borderWidthValue() ==                 \
-                       BorderWidthValue::ThickBorderWidthValue) {        \
-                style->setBorder##POS##Width(Length(Length::Fixed, 5));  \
-            }                                                            \
-        } else {                                                         \
-            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();                \
-        }                                                                \
+#define ADD_RESOLVE_STYLE_BORDER_WIDTH(POS, pos)                             \
+    case CSSStyleValuePair::KeyKind::Border##POS##Width:                     \
+        if (newCssValue.valueKind() ==                                       \
+            CSSStyleValuePair::ValueKind::Inherit) {                         \
+            BorderData pBorder = parentStyle->border();                      \
+            style->setBorder##POS##Width(pBorder.pos().width());             \
+            parentStyle->markSomeNonInheritMemberExplicitlyInherited(        \
+                newCssValue.keyKind());                                      \
+        } else if ((newCssValue.valueKind() ==                               \
+                    CSSStyleValuePair::ValueKind::Initial) ||                \
+                   (newCssValue.valueKind() ==                               \
+                    CSSStyleValuePair::ValueKind::Unset)) {                  \
+            style->setBorder##POS##Width(Length(Length::Fixed, 3));          \
+        } else if (newCssValue.valueKind() ==                                \
+                   CSSStyleValuePair::ValueKind::Length) {                   \
+            style->setBorder##POS##Width(                                    \
+                newCssValue.cssLengthValue().toLength());                    \
+        } else if (newCssValue.valueKind() ==                                \
+                   CSSStyleValuePair::ValueKind::CalcValueKind) {            \
+            Optional<Length> length =                                        \
+                LengthUtil::convertValueToLength(newCssValue);               \
+            style->setBorder##POS##Width(length ? length.value()             \
+                                                : Length(Length::Fixed, 0)); \
+        } else if (newCssValue.valueKind() ==                                \
+                   CSSStyleValuePair::ValueKind::BorderWidthValueKind) {     \
+            if (newCssValue.borderWidthValue() ==                            \
+                BorderWidthValue::ThinBorderWidthValue) {                    \
+                style->setBorder##POS##Width(Length(Length::Fixed, 1));      \
+            } else if (newCssValue.borderWidthValue() ==                     \
+                       BorderWidthValue::MediumBorderWidthValue) {           \
+                style->setBorder##POS##Width(Length(Length::Fixed, 3));      \
+            } else if (newCssValue.borderWidthValue() ==                     \
+                       BorderWidthValue::ThickBorderWidthValue) {            \
+                style->setBorder##POS##Width(Length(Length::Fixed, 5));      \
+            }                                                                \
+        } else {                                                             \
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();                    \
+        }                                                                    \
         break;
         ADD_RESOLVE_STYLE_BORDER_WIDTH(Top, top)
         ADD_RESOLVE_STYLE_BORDER_WIDTH(Right, right)
@@ -6086,6 +6092,12 @@ void StyleResolver::applyProperty(Element* element,
                    CSSStyleValuePair::ValueKind::Length) {
             style->setBorderBlockStartWidth(
                 newCssValue.cssLengthValue().toLength());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::CalcValueKind) {
+            Optional<Length> length =
+                LengthUtil::convertValueToLength(newCssValue);
+            style->setBorderBlockStartWidth(length ? length.value()
+                                                   : Length(Length::Fixed, 0));
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::BorderWidthValueKind) {
             if (newCssValue.borderWidthValue() ==
@@ -6118,6 +6130,12 @@ void StyleResolver::applyProperty(Element* element,
             style->setBorderBlockEndWidth(
                 newCssValue.cssLengthValue().toLength());
         } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::CalcValueKind) {
+            Optional<Length> length =
+                LengthUtil::convertValueToLength(newCssValue);
+            style->setBorderBlockEndWidth(length ? length.value()
+                                                 : Length(Length::Fixed, 0));
+        } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::BorderWidthValueKind) {
             if (newCssValue.borderWidthValue() ==
                 BorderWidthValue::ThinBorderWidthValue) {
@@ -6149,6 +6167,12 @@ void StyleResolver::applyProperty(Element* element,
             style->setBorderInlineStartWidth(
                 newCssValue.cssLengthValue().toLength());
         } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::CalcValueKind) {
+            Optional<Length> length =
+                LengthUtil::convertValueToLength(newCssValue);
+            style->setBorderInlineStartWidth(length ? length.value()
+                                                    : Length(Length::Fixed, 0));
+        } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::BorderWidthValueKind) {
             if (newCssValue.borderWidthValue() ==
                 BorderWidthValue::ThinBorderWidthValue) {
@@ -6179,6 +6203,12 @@ void StyleResolver::applyProperty(Element* element,
                    CSSStyleValuePair::ValueKind::Length) {
             style->setBorderInlineEndWidth(
                 newCssValue.cssLengthValue().toLength());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::CalcValueKind) {
+            Optional<Length> length =
+                LengthUtil::convertValueToLength(newCssValue);
+            style->setBorderInlineEndWidth(length ? length.value()
+                                                  : Length(Length::Fixed, 0));
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::BorderWidthValueKind) {
             if (newCssValue.borderWidthValue() ==
@@ -7607,6 +7637,12 @@ void StyleResolver::applyProperty(Element* element,
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::Length) {
             style->setOutlineWidth(newCssValue.lengthValue());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::CalcValueKind) {
+            Optional<Length> length =
+                LengthUtil::convertValueToLength(newCssValue);
+            style->setOutlineWidth(length ? length.value()
+                                          : Length(Length::Fixed, 0));
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::BorderWidthValueKind) {
             if (newCssValue.borderWidthValue() ==
@@ -13231,8 +13267,14 @@ bool CSSStyleValuePair::updateValueUnitBorderWidth(const CSSTokenValue& value)
     } else if (value.equals("medium")) {
         m_valueKind = CSSStyleValuePair::ValueKind::BorderWidthValueKind;
         m_value.m_borderWidth = BorderWidthValue::MediumBorderWidthValue;
+    } else if (updateValueUnitLength(value, 0)) {
+        return true;
     } else {
-        return CSSPropertyParser::parseLength(value.c_str(), 0, this);
+        // Math functions may go negative; the computed value is clamped.
+        // https://www.w3.org/TR/css-values-4/#calc-range
+        return updateValueUnitCalc(
+            value, CSSStyleValuePair::CalcParserOption::LengthParser,
+            CSSPropertyParser::ParserOption::AllowNegative);
     }
     return true;
 }
