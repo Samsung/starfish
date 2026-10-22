@@ -407,6 +407,9 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
             FT_Face ftFontFace = run.m_fontFace->freetypeFace();
             bool hasKerning = FT_HAS_KERNING(ftFontFace);
             int ftSize = ftFontFace->size->metrics.y_ppem;
+            // A bitmap-only face (e.g. color emoji) has no size selected, so
+            // harfbuzz reports zero offsets and there is nothing to scale.
+            float offsetScale = ftSize ? (float)intSize / (float)ftSize : 0;
             hb_font_t* hbfont = run.m_fontFace->harfbuzzFace();
 
             hb_shape_full(hbfont, hbBuffer, &hbFeature, 1, NULL);
@@ -429,10 +432,8 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
                 // each calling with same font & size
                 // so I use freetype for computing kerning & advance
 
-                float xOffset = glyphPositions[k].x_offset / 64.f *
-                                (float)intSize / (float)ftSize;
-                float yOffset = glyphPositions[k].y_offset / 64.f *
-                                (float)intSize / (float)ftSize;
+                float xOffset = glyphPositions[k].x_offset / 64.f * offsetScale;
+                float yOffset = glyphPositions[k].y_offset / 64.f * offsetScale;
 
                 if (hasKerning &&
                     font->size() >=
@@ -452,11 +453,14 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
                 run.m_glyphPositions.push_back(
                     LayoutLocation(xOffset + totalAdvance, yOffset));
 
-                FT_Load_Glyph(ftFontFace, glyph, FT_LOAD_NO_SCALE);
+                // Read the advance in font units without loading the glyph:
+                // once cairo selects a bitmap strike on a bitmap-only face,
+                // a loaded glyph reports the strike's pixel advance instead.
+                FT_Fixed advance = 0;
+                FT_Get_Advance(ftFontFace, glyph, FT_LOAD_NO_SCALE, &advance);
 
                 LayoutUnit width =
-                    LayoutUnit((int)(ftFontFace->glyph->metrics.horiAdvance *
-                                     intSize)) /
+                    LayoutUnit((int)(advance * intSize)) /
                     LayoutUnit(
                         (int)(FontFaceImplCairo::unitsPerEMFromFT(ftFontFace)));
                 totalAdvance += width;
