@@ -6,7 +6,8 @@ communicate.
 ## One run
 
 `run_cli_test.py` is one Python process. It finds every `test_*.py` file under
-`test/cli/` and runs the resulting `unittest` suite. Tests run sequentially.
+`test/cli/` and keeps the tests that `testlist.json` enables. Then it runs
+them as one `unittest` suite. Tests run sequentially.
 
 Each test gets its own temporary `HOME` and local HTTP server. CLI commands in
 the same test share one session through a Unix socket under that `HOME`.
@@ -166,6 +167,7 @@ before it starts a daemon. That second try is what makes two concurrent
 | File | What it does |
 | --- | --- |
 | `run_cli_test.py` | Selects the binary, discovers cases, and reports results |
+| `testlist.json` | Names the test IDs that a run without `--all` runs |
 | `driver/support.py` | Provides the isolated test fixture and CLI helpers |
 | `driver/__init__.py` | Documents the boundary between the driver and cases |
 | `driver/fixtures/stalled-engine.py` | Simulates a stalled CDP handshake |

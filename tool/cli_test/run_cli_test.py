@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import json
 import os
 from pathlib import Path
 import sys
@@ -19,6 +20,7 @@ DEFAULT_BINARY = (
     "lightweight-web-engine-cli"
 )
 CLI_TEST_DIR = Path(__file__).resolve().parent
+TEST_LIST = CLI_TEST_DIR / "testlist.json"
 TEST_CASE_DIR = REPOSITORY_DIR / "test" / "cli"
 CLI_BINARY_ENVIRONMENT_VARIABLE = "LWE_CLI_TEST_BINARY"
 
@@ -26,6 +28,10 @@ CLI_BINARY_ENVIRONMENT_VARIABLE = "LWE_CLI_TEST_BINARY"
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--binary", type=Path, default=DEFAULT_BINARY)
+    parser.add_argument(
+        "--all", action="store_true",
+        help="run every discovered test, not only the ones %s enables"
+        % TEST_LIST.name)
     arguments = parser.parse_args()
 
     binary = arguments.binary.resolve()
@@ -54,12 +60,53 @@ def main():
     # directories need to be on sys.path before discovery imports them.
     sys.path.insert(0, str(CLI_TEST_DIR))
     sys.path.insert(0, str(TEST_CASE_DIR))
-    suite = unittest.defaultTestLoader.discover(
+    discovered = unittest.defaultTestLoader.discover(
         str(TEST_CASE_DIR),
         pattern="test_*.py",
     )
-    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    tests = list(flatten(discovered))
+    if not arguments.all:
+        tests = enabled_tests(tests, parser)
+    result = unittest.TextTestRunner(verbosity=2).run(
+        unittest.TestSuite(tests))
     return 0 if result.wasSuccessful() else 1
+
+
+def flatten(suite):
+    for test in suite:
+        if isinstance(test, unittest.TestSuite):
+            yield from flatten(test)
+        else:
+            yield test
+
+
+def enabled_tests(tests, parser):
+    """Keep only the tests that TEST_LIST names.
+
+    The test submodule can contain tests for features that are not merged
+    yet. A test runs only after the change that makes it pass adds it to
+    the list.
+    """
+    enabled = set(json.loads(TEST_LIST.read_text())["tests"])
+    known = {test.id() for test in tests}
+    unknown = sorted(enabled - known)
+    if unknown:
+        parser.error(
+            "%s names %d tests that do not exist, for example %s"
+            % (TEST_LIST.name, len(unknown), ", ".join(unknown[:3]))
+        )
+
+    # A test file that fails to import becomes one _FailedTest. Its ID is
+    # never in the list, so keep it. Otherwise the broken file would be
+    # skipped without a report.
+    selected = [test for test in tests
+                if test.id() in enabled
+                or isinstance(test, unittest.loader._FailedTest)]
+    disabled = len(tests) - len(selected)
+    if disabled:
+        print("skipped %d test(s) that %s does not enable; pass --all to "
+              "run them" % (disabled, TEST_LIST.name))
+    return selected
 
 
 if __name__ == "__main__":
