@@ -1162,10 +1162,25 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
                                         this);
         }
 
+        // A calc() line width is an absolute length at computed-value time,
+        // clamped to the property's range and snapped like any border width.
+        // https://drafts.csswg.org/css-backgrounds/#border-width
+        auto computeCalcLineWidth = [&](BorderValue& value) {
+            Length width = value.width();
+            if (width.isCalc()) {
+                width = Length(
+                    Length::Fixed,
+                    std::max(width.specifiedValue(LayoutUnit(), current), 0.f));
+                width.roundBorderWidth();
+                value.setWidth(width);
+            }
+        };
+
         OutlineData* outline = m_rareComputedStyleData.outline();
         if (outline) {
             outline->checkComputed(curFontSize, rootFontSize, font, windowSize,
                                    this);
+            computeCalcLineWidth(outline->border());
         }
 
         BorderRadiusData* borderRadius = m_rareComputedStyleData.borderRadius();
@@ -1235,6 +1250,10 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         if (border) {
             BorderData* b = border;
             b->checkComputed(curFontSize, rootFontSize, font, windowSize, this);
+            computeCalcLineWidth(b->top());
+            computeCalcLineWidth(b->right());
+            computeCalcLineWidth(b->bottom());
+            computeCalcLineWidth(b->left());
             if (!b->top().hasBorderColor()) {
                 b->top().setColor(color());
             }
