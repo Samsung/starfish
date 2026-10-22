@@ -48,15 +48,32 @@ WebBase::WebBase(Starfish* starfish, MessageLoop* messageLoop, Timer* timer,
     UErrorCode err = U_ZERO_ERROR;
     char buf[512];
     auto len = uloc_getName(locale, buf, sizeof(buf), &err);
-    if (U_FAILURE(err)) {
+    if (U_FAILURE(err) || len <= 0) {
+        // uloc_getName() reports success for an empty locale, so an embedder
+        // without a system language (e.g. dali-extension web-engine-lwe when
+        // vconf is unreachable) would surface an empty navigator.language.
+        // HTML NavigatorLanguage must expose a well-formed language tag, so
+        // fall back to the ICU default locale.
         STARFISH_LOG_ERROR(
-            "there is an error whild parsing locale %s. use default instead",
+            "there is an error while parsing locale %s. use default instead",
             locale);
-        m_locale = uloc_getDefault();
-    } else {
-        buf[len] = 0;
-        m_locale = buf;
+        const char* defaultLocale = uloc_getDefault();
+        if (defaultLocale != nullptr) {
+            err = U_ZERO_ERROR;
+            len = uloc_getName(defaultLocale, buf, sizeof(buf), &err);
+        } else {
+            len = 0;
+        }
+        if (U_FAILURE(err) || len <= 0) {
+            // The default locale itself can be empty; still keep a
+            // well-formed language tag.
+            buf[0] = 'e';
+            buf[1] = 'n';
+            len = 2;
+        }
     }
+    buf[len] = 0;
+    m_locale = buf;
 
 #ifndef STARFISH_THREAD_POOL_SIZE
 #define STARFISH_THREAD_POOL_SIZE 6
