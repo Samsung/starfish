@@ -1413,6 +1413,29 @@ bool CSSStyleValuePair::valueEquals(const CSSStyleValuePair& src) const
     case BlendModeValueKind:
         return m_value.m_blendMode == src.m_value.m_blendMode;
 
+    case FontKerningValueKind:
+        return m_value.m_fontKerning == src.m_value.m_fontKerning;
+
+    case BoxOrientValueKind:
+        return m_value.m_boxOrient == src.m_value.m_boxOrient;
+
+    case CompositingOperatorValueKind:
+        return m_value.m_compositingOperator ==
+               src.m_value.m_compositingOperator;
+
+    case StrokeLineCapValueKind:
+        return m_value.m_strokeLineCap == src.m_value.m_strokeLineCap;
+
+    case StrokeLineJoinValueKind:
+        return m_value.m_strokeLineJoin == src.m_value.m_strokeLineJoin;
+
+    case MaskTypeValueKind:
+        return m_value.m_maskType == src.m_value.m_maskType;
+
+    case GridTemplateAreasValueKind:
+        return m_value.m_gridTemplateAreas->compare(
+            src.m_value.m_gridTemplateAreas);
+
     default:
         STARFISH_ASSERT_NOT_REACHED();
         break;
