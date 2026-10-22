@@ -119,12 +119,12 @@ http://web-platform.test:8000/websockets/Create-protocols-repeated.any.html
 http://web-platform.test:8000/websockets/Create-protocols-repeated.any.worker.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/websockets/Create-url-with-space.any.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/websockets/Create-url-with-space.any.worker.html
-# [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/websockets/Create-valid-url-array-protocols.any.html
-# [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/websockets/Create-valid-url-array-protocols.any.worker.html
+http://web-platform.test:8000/websockets/Create-valid-url-array-protocols.any.html
+http://web-platform.test:8000/websockets/Create-valid-url-array-protocols.any.worker.html
 http://web-platform.test:8000/websockets/Create-valid-url-binaryType-blob.any.html
 http://web-platform.test:8000/websockets/Create-valid-url-binaryType-blob.any.worker.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/websockets/Create-valid-url-protocol-empty.any.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/websockets/Create-valid-url-protocol-empty.any.worker.html
+http://web-platform.test:8000/websockets/Create-valid-url-protocol-empty.any.html
+http://web-platform.test:8000/websockets/Create-valid-url-protocol-empty.any.worker.html
 http://web-platform.test:8000/websockets/Create-valid-url-protocol-setCorrectly.any.html
 http://web-platform.test:8000/websockets/Create-valid-url-protocol-setCorrectly.any.worker.html
 http://web-platform.test:8000/websockets/Create-valid-url-protocol-string.any.html
@@ -135,4 +135,4 @@ http://web-platform.test:8000/websockets/Create-valid-url.any.html
 http://web-platform.test:8000/websockets/Create-valid-url.any.worker.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/websockets/constructor/006.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/websockets/constructor/014.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/websockets/constructor/022.html
+http://web-platform.test:8000/websockets/constructor/022.html

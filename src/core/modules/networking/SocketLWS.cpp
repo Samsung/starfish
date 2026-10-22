@@ -150,9 +150,16 @@ int SocketLWS::lwsEventCallback(struct lws* wsi,
         int n = lws_hdr_total_length(wsi, WSI_TOKEN_PROTOCOL);
         if (n > 0) {
             socket->m_selectedProtocol.resize(n + 1);
-            lws_hdr_copy(wsi, &socket->m_selectedProtocol[0], n + 1,
-                         WSI_TOKEN_PROTOCOL);
-            socket->m_selectedProtocol.resize(n);
+            int copied = lws_hdr_copy(wsi, &socket->m_selectedProtocol[0],
+                                      n + 1, WSI_TOKEN_PROTOCOL);
+            socket->m_selectedProtocol.resize(copied > 0 ? copied : 0);
+        } else if (!socket->m_protocol.empty()) {
+            // If protocols is not the empty list and the response carries no
+            // Sec-WebSocket-Protocol, fail the WebSocket connection
+            // (WebSockets Standard, "establish a WebSocket connection"). lws
+            // would silently fall back to the first offered name instead;
+            // returning nonzero makes it report a connection error.
+            return -1;
         }
         break;
     }

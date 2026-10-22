@@ -194,8 +194,10 @@ void WebSocket::init(String* url, const GCVector<String*>& protocols)
             throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
                                    "protocol has invalid value");
         }
+        // Subprotocol names are compared ASCII case-insensitively, so "echo"
+        // and "eCho" are the same value occurring twice.
         for (size_t j = 0; j < i; ++j) {
-            if (protocols[j]->equals(protocols[i])) {
+            if (protocols[j]->equalsIgnoreCase(protocols[i])) {
                 throw new DOMException(executionContext(),
                                        DOMException::SYNTAX_ERR,
                                        "protocol is duplicated");
