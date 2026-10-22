@@ -30,6 +30,7 @@
 #endif
 
 #include <fontconfig/fontconfig.h>
+#include FT_ADVANCES_H
 #include <hb.h>
 #include <hb-ft.h>
 #include "platform/canvas/font/hb-icu/HarfBuzzICU.h"
@@ -196,11 +197,13 @@ public:
             }
         } else {
             FT_UInt glyphIndex = FT_Get_Char_Index(face, ch);
-            FT_Load_Glyph(face, glyphIndex, FT_LOAD_NO_SCALE);
+            // Font units regardless of the bitmap strike cairo may have
+            // selected on this face (see generateFontCairoTextRuns).
+            FT_Fixed advance = 0;
+            FT_Get_Advance(face, glyphIndex, FT_LOAD_NO_SCALE, &advance);
 
-            m_glyphIndexCache.insert(std::make_pair(
-                ch,
-                std::make_pair(glyphIndex, face->glyph->metrics.horiAdvance)));
+            m_glyphIndexCache.insert(
+                std::make_pair(ch, std::make_pair(glyphIndex, advance)));
 
             if (glyphIndex) {
                 LayoutUnit width;
@@ -210,11 +213,9 @@ public:
                     && false
 #endif
                 ) {
-                    width = ceilf((float)face->glyph->metrics.horiAdvance *
-                                  intSize / m_unitsPerEM);
+                    width = ceilf((float)advance * intSize / m_unitsPerEM);
                 } else {
-                    width = LayoutUnit((int)(face->glyph->metrics.horiAdvance *
-                                             intSize)) /
+                    width = LayoutUnit((int)(advance * intSize)) /
                             LayoutUnit((int)(m_unitsPerEM));
                 }
                 result =
