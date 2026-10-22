@@ -120,8 +120,6 @@ public:
 
     void waitForWorkerEnd();
 
-    uint64_t txBufferSize();
-
     static int lwsEventCallback(struct lws* wsi,
                                 enum lws_callback_reasons reason, void* user,
                                 void* in, size_t len);
@@ -142,6 +140,7 @@ public:
 private:
     static SocketLWS* fromContext(struct lws* wsi);
     void serviceTxQueueLocked(struct lws* wsi, bool* failed);
+    void publishTransmitted();
 
     // Written by the main thread, read by the lws service thread.
     std::atomic<bool> m_needsToClose;
@@ -183,6 +182,12 @@ private:
     // Guarded by m_txMutex.
     std::vector<SocketLWSData*> m_txBuffer;
     uint64_t m_txBufferSize;
+    // Bytes written to the network but not yet subtracted from the script
+    // visible bufferedAmount. The service thread adds, the main thread drains
+    // in a task, so the value script sees only moves at task boundaries.
+    std::atomic<uint64_t> m_transmittedBytes;
+    // At most one drain task is in flight at a time.
+    std::atomic<bool> m_transmitPublishPending;
     // Service thread only.
     std::vector<char> m_rxBuffer;
     // Guarded by m_closeMutex.

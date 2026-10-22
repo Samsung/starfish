@@ -130,6 +130,7 @@ WebSocket::WebSocket(ExecutionContext* executionContext, String* url)
     , m_protocol(String::emptyString)
     , m_requestedProtocols(String::emptyString)
     , m_executionContext(executionContext)
+    , m_bufferedAmount(0)
 {
     init(url, GCVector<String*>());
 }
@@ -143,6 +144,7 @@ WebSocket::WebSocket(ExecutionContext* executionContext, String* url,
     , m_protocol(String::emptyString)
     , m_requestedProtocols(String::emptyString)
     , m_executionContext(executionContext)
+    , m_bufferedAmount(0)
 {
     // If protocols is a string, set protocols to a sequence consisting of just
     // that string.
@@ -223,12 +225,10 @@ ResourceURL* WebSocket::urlObject()
     return m_url;
 }
 
-uint64_t WebSocket::bufferedAmount()
+void WebSocket::didTransmit(uint64_t bytes)
 {
-    if (m_socketLWS) {
-        return m_socketLWS->txBufferSize();
-    }
-    return 0;
+    STARFISH_ASSERT(bytes <= m_bufferedAmount);
+    m_bufferedAmount -= bytes;
 }
 
 void WebSocket::setReadyState(ReadyState state)
@@ -320,6 +320,11 @@ void WebSocket::send(const void* buf, size_t len, int type)
                                DOMException::INVALID_STATE_ERR,
                                "readyState attribute should not be CONNECTING");
     }
+
+    // bufferedAmount grows by the data length on every send(), also once the
+    // connection is closing: the spec counts data that will never be sent, so
+    // script can still tell how much was lost.
+    m_bufferedAmount += len;
 
     // If the readyState attribute is CLOSING or CLOSED, the data is discarded.
     // Queueing it instead would grow m_txBuffer without bound, because the

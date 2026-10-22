@@ -56,19 +56,16 @@ http://web-platform.test:8000/websockets/interfaces/WebSocket/constants/006.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/close/close-multiple.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/close/close-replace.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/close/close-return.html
-# Timing-dependent until bufferedAmount is tracked per event-loop task:
-# the socket thread decrements the count as soon as a frame is written,
-# so an assert right after send() can observe 0 under parallel load.
-# http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-arraybuffer.html
-# http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-blob.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-arraybuffer.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-blob.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-defineProperty-getter.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-defineProperty-setter.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-deleting.html
-# [auto-fail] http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-getting.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-getting.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-initial.html
-# http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-large.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-large.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-readonly.html
-# http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-unicode.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-unicode.html
 http://web-platform.test:8000/websockets/interfaces/CloseEvent/constructor.html
 http://web-platform.test:8000/websockets/interfaces/CloseEvent/historical.html
 http://web-platform.test:8000/websockets/multi-globals/message-received.html
@@ -133,6 +130,22 @@ http://web-platform.test:8000/websockets/Create-valid-url-protocol.any.html
 http://web-platform.test:8000/websockets/Create-valid-url-protocol.any.worker.html
 http://web-platform.test:8000/websockets/Create-valid-url.any.html
 http://web-platform.test:8000/websockets/Create-valid-url.any.worker.html
+http://web-platform.test:8000/websockets/bufferedAmount-unchanged-by-sync-xhr.any.html
+http://web-platform.test:8000/websockets/bufferedAmount-unchanged-by-sync-xhr.any.worker.html
+http://web-platform.test:8000/websockets/Send-0byte-data.any.html
+http://web-platform.test:8000/websockets/Send-0byte-data.any.worker.html
+http://web-platform.test:8000/websockets/Send-65K-data.any.html
+http://web-platform.test:8000/websockets/Send-65K-data.any.worker.html
+http://web-platform.test:8000/websockets/Send-binary-65K-arraybuffer.any.html
+http://web-platform.test:8000/websockets/Send-binary-65K-arraybuffer.any.worker.html
+http://web-platform.test:8000/websockets/Send-binary-arraybuffer.any.html
+http://web-platform.test:8000/websockets/Send-binary-arraybuffer.any.worker.html
+http://web-platform.test:8000/websockets/Send-data.any.html
+http://web-platform.test:8000/websockets/Send-data.any.worker.html
+http://web-platform.test:8000/websockets/Send-paired-surrogates.any.html
+http://web-platform.test:8000/websockets/Send-paired-surrogates.any.worker.html
+http://web-platform.test:8000/websockets/Send-unicode-data.any.html
+http://web-platform.test:8000/websockets/Send-unicode-data.any.worker.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/websockets/constructor/006.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/websockets/constructor/014.html
 http://web-platform.test:8000/websockets/constructor/022.html
