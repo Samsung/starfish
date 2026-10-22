@@ -2969,6 +2969,11 @@ void FrameBox::paintDottedLine(Canvas* canvas, const LayoutLocation& p1,
         y2 = p5.y() - width / 2;
     }
 
+    // A zero-width side has no dots to draw, and spacing them divides by it.
+    if (width <= 0) {
+        return;
+    }
+
     LayoutUnit dist =
         sqrt(float((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1))) -
         (float(width * 2.0f));
