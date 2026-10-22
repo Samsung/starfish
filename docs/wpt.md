@@ -4,9 +4,10 @@ WPT is the canonical measure of spec compliance: a passing WPT test means the
 implementation matches the spec, not just ad-hoc behavior. Ship features with
 WPT coverage.
 
-Starfish runs a curated subset of [web-platform-tests](https://github.com/web-platform-tests/wpt)
-against an **on-demand** `wpt serve`, replacing the legacy always-on external
-test server. WPT is version-pinned as the `third_party/wpt` submodule, so the
+Starfish runs curated CI lists and an uncurated nightly selection from
+[web-platform-tests](https://github.com/web-platform-tests/wpt) against an
+**on-demand** `wpt serve`, replacing the legacy always-on external test server.
+WPT is version-pinned as the `third_party/wpt` submodule, so the
 test corpus is reproducible and upgrades are explicit submodule bumps.
 
 ## Scope: testharness, reftest, crashtest
@@ -16,146 +17,81 @@ rel=match|mismatch>` pixel comparison), and **crashtests** (page must load
 without crashing the shell). None of these need stored expected images, so
 nothing here depends on the internal `test/` submodule.
 
-Verdicts are computed harness-side rather than by wptrunner (WPT's own runner,
-in `third_party/wpt/tools/wptrunner/`): wptrunner drives a browser over
-WebDriver/BiDi, which Starfish doesn't implement yet. Reftest verdicts instead
-compose two already-CI-proven primitives —
-`./Starfish <url> --screen-shot=<file>` (used as-is by the golden-image pixel
-suites) and `tool/imgdiff/imgdiff` — with the reference URL, comparison
-relation, and any fuzzy tolerance read from `third_party/wpt/MANIFEST.json` at
-run time, the same way `wptrunner`'s reftest executor resolves them (see
-`tool/wpt/scripts/wpt_reftest.py`). If Starfish ever gains WebDriver-BiDi
-support (for its own sake, not just for this), migrating this tooling to
-wptrunner would pick up `testdriver.js`-dependent tests, wdspec, and
-print-reftest for free — worth revisiting then.
+Verdicts are computed by Starfish's Python tools rather than WPT's
+`wptrunner`. Testharness results come from `inject_report.js`; reftests use
+`--screen-shot` and `tool/imgdiff/imgdiff`; crashtests use the injected
+`WPTR CRASHOK` completion marker. This path does not use the engine's
+`--ref-test`/`rtDoTest` navigation flow.
 
-MVP limits (tracked as follow-ups, not blocking): fuzzy tolerance is not
-applied (exact-pixel only, so `<meta name=fuzzy>` tests may false-FAIL)
-and reference chains (a reference that is itself a reftest) are not resolved
-recursively. The `--screen-shot` capture waits for the root element to drop
-`reftest-wait` (or `test-wait`), so a page that never clears it times out.
-`tool/wpt/scripts/wpt_reftest.py` judges reftest by parsing the pixel-difference
-percentage `tool/imgdiff/imgdiff` prints, not its own pass/fail verdict (which
-folds in a golden-image antialiasing tolerance inappropriate for reftest). Two
-gaps remain in that percentage itself, and they are not independent of the
-fuzzy limit above:
-- `imgdiff`'s own per-pixel comparison already tolerates a difference of a
-  few levels per channel *before a pixel counts as differing at all*. This is
-  not just a rounding nuance: a systematic, small-but-real rendering
-  difference that touches every pixel (e.g. a gamma/color-space or
-  premultiplied-alpha rounding bug) can produce `diffCount == 0` for the
-  *entire* image, so an `==` reftest would pass even though the render is
-  genuinely wrong. This is currently acting as an uncontrolled substitute for
-  the fuzzy tolerance the MVP doesn't implement — landing a
-  `tool/imgdiff/imgdiff.cpp` "exact" mode (no channel tolerance, raw
-  `diffCount` output) without also landing fuzzy support would likely flip a
-  batch of currently-passing-by-accident `<meta name=fuzzy>` tests to failing
-  at the same time, which would look like a regression from the imgdiff
-  change rather than the fuzzy gap surfacing for the first time.
-- The printed percentage is separately rounded to 2 decimals, so a handful of
-  differing pixels on a large image can round to "0.00%" -- a narrower,
-  independent imprecision on top of the above.
+### Current runner coverage
 
-Both need the same `tool/imgdiff/imgdiff.cpp` change to close (deferred since
-imgdiff is shared with the golden-image pixel suites and this would need a
-rebuild); when picked up, do it together with fuzzy support, not in isolation.
-The engine's own `--ref-test`/`rtDoTest` two-phase state machine is unused by
-this path (it currently crashes navigating to the reference —
-`WebView.cpp:816`, `referrerURL != nullptr` — and only understands
-`rel=match`); removing that dead code is a candidate follow-up.
+Runner coverage is defined by `wpt_status.py`, `wpt_runner.py`,
+`wpt_reftest.py`, `wpt_server.py`, `inject_report.js`, and the CI workflows.
 
-A crashtest verdict has three outcomes: **PASS** (`WPTR CRASHOK` — the engine
-rendered the page to `load` without crashing), **SIGNAL_CRASH** (the shell
-died on a signal — a genuine, reproducible engine crash, the highest-value
-output of this suite; spot-checked cases were real `SIGABRT`/assertion
-failures with backtraces into `src/core/...`), and **TIMEOUT**. TIMEOUT is the
-one to interpret with care: **before treating a crashtest TIMEOUT as an engine
-bug, classify it first**, because most timeouts fall into causes that are not
-engine problems:
+| Area | Current behavior |
+|---|---|
+| Test types | The runners accept testharness, reftest, and crashtest. They do not execute wdspec, print-reftest, manual, or visual tests. |
+| Browser automation | There is no Starfish testdriver vendor adapter in this path. Tests requiring automated input, permission changes, or other testdriver commands cannot be assumed to run correctly. Merely loading `testdriver.js` is not an exclusion criterion. |
+| Dedicated Worker | Nightly builds with `WORKER=1`. Worker support must not be classified as generally absent. |
+| SharedWorker / ServiceWorker | `worker.yml` builds the daemon executables and runs the dedicated suites through `test_runner.py`. Nightly does not build/start those peers or use that suite's shared storage setup. This is an execution-setup gap in nightly. |
+| URL selection | `wpt_manifest_inventory.py` prefixes candidates with `http://web-platform.test:8000`; it does not select HTTPS from test metadata. The server starts HTTPS ports too, so this is not a claim that the server or engine lacks HTTPS support. |
+| Target overlap | Nightly expands each target directory separately. Overlapping targets can schedule the same URL more than once; the reporter does not deduplicate across categories. |
+| Test metadata | Nightly uses a fixed CLI timeout and concurrency. It does not apply per-test timeout metadata or the aggregate CI suite's separate Web Audio settings. |
+| MANIFEST freshness | `ensure_manifest()` creates a missing MANIFEST but leaves an existing file untouched. Regenerate it after a WPT pin change before measuring. |
 
-- **`wpt serve --inject-script` silently skips injection (upstream
-  limitation, not ours).** `third_party/wpt/tools/serve/serve.py:63`'s
-  `inject_script()` tokenizes the document with an HTML5 tokenizer to find an
-  insertion point, and if the tokenizer hits a `ParseError` before that point
-  it gives up with no warning and returns the page unmodified
-  (`if error: return html`). Crashtests routinely contain deliberately
-  malformed markup (that's the point — they try to trip a real parser), which
-  hits this condition, so `tool/wpt/inject_report.js` never runs and
-  `WPTR CRASHOK` can never be printed — a guaranteed TIMEOUT no matter how
-  well Starfish handled the page. Confirmed by `curl`-ing served pages: e.g.
-  `css/css-sizing/min-content-negative-margin-crash.html` reached
-  `Window.onload` and idle mode cleanly per the engine logs, yet the served
-  bytes were identical to the source (no script injected). `.svg`-served
-  crashtests are skipped for the same reason via a different path (the
-  injector only touches `Content-Type: text/html`). This is a
-  `third_party/wpt` (pinned submodule) limitation; closing it would need a
-  different completion-signal delivery mechanism, out of scope here.
-- **Completion signal never fires though injection succeeded.** For a page
-  carrying a wait class, the pass signal is the test's own script clearing it;
-  our `inject_report.js` waits for `load` and observes the `class` attribute
-  (both `test-wait` and `reftest-wait` are recognized). Tests that only start
-  on the `TestRendered` custom event get it from Starfish's test-mode hook
-  (`src/platform/loader/ResourceLoader.cpp`), which fires it at the root 250 ms
-  after `load` when either class is still set, like wptrunner's
-  `third_party/wpt/tools/wptrunner/wptrunner/executors/test-wait.js`. A test
-  whose async work (a `Worker`, `requestIdleCallback`, …) never settles in
-  Starfish still waits forever. In these the *engine* typically didn't crash;
-  they are harness-coverage gaps, not engine bugs.
-- **Genuinely pathological pages that really are slow/hung.** Some TIMEOUTs
-  are legitimate — e.g.
-  `editing/crashtests/…-collapsible-spaces.html` inserts `" ".repeat(3.3e8)`
-  (marked `<meta name=timeout=long>`) and does not finish in any reasonable
-  budget. Here TIMEOUT is the *correct* verdict (a crashtest catching a real
-  problem), not a harness artifact.
+### Reftest limits
 
-Known completion-signal limitations of the crashtest path (all yield a false
-TIMEOUT, i.e. safe over-exclusion, never a false PASS):
-- The exit fires as soon as the wait class clears (or immediately if none is
-  present), so this path catches load-time and *synchronous* crashes; a crash
-  that would only surface on an arbitrarily-delayed later task is not
-  guaranteed to be observed (true of every crashtest here, and of wptrunner
-  itself — completion is signal-driven, not a fixed settle window).
-- The `MutationObserver` watches only the root's `class` attribute on the node
-  present at `load`. A test that signals completion by removing/replacing the
-  root element outright (rather than clearing the class) is not observed and
-  times out (matches upstream `test-wait.js`; rare in practice).
+`resolve_references()` reads reference URLs, relations, and fuzzy metadata
+from MANIFEST at run time. `run_reftest()` applies the relations but does
+**not** apply fuzzy tolerances or recursively resolve reference chains.
 
-One earlier bug here **is now fixed**: a crashtest that removes
-`document.documentElement` itself (e.g.
-`dom/nodes/crashtests/documentElement-remove-*.html`,
-`css/css-page/crashtests/root-element-remove-*.html`) made
-`inject_report.js`'s `document.documentElement.classList` throw a `null`-deref
-and hang as a false TIMEOUT; the crashtest path now null-guards the root and
-treats a removed `documentElement` as "no wait class → done".
+The comparison is also not byte-exact: `imgdiff.cpp`'s `Color::operator==`
+tolerates small channel differences, and its printed difference percentage
+is rounded to two decimals. The runner treats a nonzero printed percentage
+as a difference, ignoring imgdiff's own golden-image pass/fail marker.
+Consequently both missed differences and failures on fuzzy-allowed
+differences are possible. Exact comparison and WPT fuzzy support need to be
+considered together because imgdiff is shared with the golden-image suites.
 
-Net: a crashtest TIMEOUT is **safe to `# [auto-fail]`** (it only excludes,
-never creates a false green), but it is *not* reliable evidence of an engine
-defect on its own — only SIGNAL_CRASH (and a hand-verified genuine hang) is.
+In test builds, `ResourceLoader.cpp` waits for either `reftest-wait` or
+`test-wait` to clear before capture. It also dispatches `TestRendered` at
+the root when a wait class remains at the delayed post-load test hook.
+That event is already implemented; it is not a missing runner feature.
 
-(Diagnosing this the first time, a `./Starfish <file-path> --hide-window`
-invocation — bypassing `wpt serve` entirely — was mistaken for evidence of a
-genuine engine hang. That invocation has no injected script and no exit
-trigger of any kind regardless of the page, so it hangs unconditionally; it
-proves nothing about the page under test. Always reproduce through
-`wpt_server.py`'s `wpt_serve()` context and the real
-`wpt_runner.run_one_crashtest()` path — or `test_runner.py`'s
-`wpt_serve_crashtest` — never a direct file-path invocation.)
+### Crashtest completion and diagnosis
 
-Smaller known follow-ups from tooling review, not blocking: `run_all()`'s
-per-item exception backstop (`tool/wpt/scripts/wpt_runner.py`) records only
-`str(e)` with no traceback, so an unexpected tooling bug (vs. an expected
-external failure) is hard to tell apart in a large batch's failure histogram --
-logging the traceback to stderr (without changing the recorded reason) would
-help without giving up the backstop's batch-safety property. The
-`wpt_domains`/`no_proxy` Starfish-subprocess env setup is duplicated across
-three call sites (`wpt_runner.py`'s `run_one`/`run_one_crashtest`,
-`wpt_reftest.py`'s `_screenshot`) and could be a single shared helper.
-`wpt_runner.py`'s new `_with_crashtest_marker` (via `urlsplit`/`urlunsplit`)
-and `wpt_audit.py`'s existing manual URL-string reconstruction are two
-different conventions for the same category of operation in the same directory;
-worth unifying if a third URL-rewrite need comes up.
+`run_one_crashtest()` appends a query marker that selects the crashtest path
+in `inject_report.js`. The script waits for load and for both `test-wait`
+and `reftest-wait` to be absent, then prints `WPTR CRASHOK` and exits.
+A missing document element at the initial check is treated as no wait class.
+The runner reports `OK`, `SIGNAL_CRASH`, `TIMEOUT`, `SHELL_ERROR`, or
+`NO_COMPLETION`, depending on the process result and completion marker.
+
+A timeout alone does not identify an engine defect. Check the following:
+
+- **Script delivery:** the pinned WPT `serve.py` injector only rewrites
+  `text/html` responses and returns the document unchanged on certain
+  tokenizer errors. A crashtest without the bridge cannot emit its completion
+  marker. The `testharnessreport.js` alias provides another delivery path
+  for testharness pages, but crashtests need not load that script.
+- **Wait completion:** after load, the observer watches the initial root's
+  class attribute, not document-root replacement. A class that never clears
+  needs investigation into the test, engine, and required execution setup.
+- **Runtime:** slow pages and genuine hangs can also exceed the configured
+  timeout. Check the test's timeout metadata before drawing a conclusion.
+
+Completion is signal-driven: a crash scheduled after the completion marker
+and shell exit is not guaranteed to be observed. Historical reports of
+particular crashes, hangs, and injection failures need reproduction with the
+current build and WPT pin; they are not a current failure inventory.
+
+Reproduce through `wpt_serve()` and `run_one_crashtest()`, or the
+`wpt_serve_crashtest` suite. A bare
+`./Starfish <file-path> --hide-window` run does not supply this completion
+protocol; remaining open is not evidence of a test hang.
 
 Out of scope (separate concerns, not run by this path):
+
 - **Golden-image pixel tests** (`csswg`/`vendor_pixel`/`bidi` in
   `tool/runner/test_runner.py`) — Starfish's own harness, needs expected PNGs
   from the internal `test/` submodule.
@@ -178,6 +114,22 @@ Verify: `getent hosts web-platform.test www.web-platform.test` should print two
 Pixel-diff fonts (Ahem etc.) and `tool/imgdiff` come from
 `ninja -C <build> install_pixel_test_dep` (already needed for other suites).
 
+## MANIFEST freshness
+
+`ensure_manifest()` generates `third_party/wpt/MANIFEST.json` when it is
+missing; it does not update an existing file. After changing the WPT pin,
+refresh the manifest explicitly before enumeration or measurement:
+
+```sh
+python3 third_party/wpt/wpt manifest -p third_party/wpt/MANIFEST.json \
+  --tests-root third_party/wpt --no-download
+```
+
+Manifest generation includes local test files. Check
+`git -C third_party/wpt status --short` before comparing measurements with a
+clean CI checkout; an unchanged submodule commit alone does not ensure an
+identical local corpus.
+
 ## Running
 
 `tool/wpt/scripts/wpt_runner.py` starts `wpt serve`, runs each URL in the
@@ -192,8 +144,8 @@ Starfish shell in parallel, and judges the result according to `--mode`
   `tool/wpt/scripts/wpt_reftest.py`). PASSES when every reference's relation
   (`==` must match, `!=` must not) holds.
 - `crashtest`: judges from the `WPTR CRASHOK` marker the injected script emits
-  once the page loads (waiting out a `test-wait` class if present) without
-  crashing the shell.
+  once the page loads (waiting for both `test-wait` and `reftest-wait` to
+  clear if present) without crashing the shell.
 
 ```sh
 # whole baseline (all lists under tool/wpt/testharness_lists/)
@@ -213,20 +165,29 @@ xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py \
 ```
 
 Or through `test_runner.py`, which gates on the active lists —
-`wpt_serve_testharness` runs the whole testharness corpus, and each
-`wpt_serve_<module>` runs one group so a module can be checked in isolation;
-`wpt_serve_reftest`/`wpt_serve_crashtest` are the equivalent whole-corpus
-suites for those two kinds:
+`wpt_serve_testharness` runs active testharness lists except the separate
+Worker/ServiceWorker suites. Each `wpt_serve_testharness_<module>` runs one
+group so a module can be checked in isolation; `wpt_serve_reftest` and
+`wpt_serve_crashtest` run the active lists for those two kinds. These are
+curated lists, not the complete WPT corpus:
 
 ```sh
 xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py wpt_serve_testharness
-xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py wpt_serve_dom
+xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py wpt_serve_testharness_dom
                                          # css, dom, canvas, html, xhr, fetch,
                                          # worker, idb, websocket, webrtc, svg,
                                          # webaudio, intersection_observer, others
+xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py wpt_serve_testharness_worker
+xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py wpt_serve_testharness_serviceworker
 xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py wpt_serve_reftest    # tool/wpt/reftest_lists/
 xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py wpt_serve_crashtest  # tool/wpt/crashtest_lists/
 ```
+
+The Worker/ServiceWorker suites require the matching build flags and daemon
+executables. See `.github/workflows/worker.yml` for the `uv_cairo_gl` build,
+`Starfish-sharedworker` / `Starfish-serviceworker` executables, and dedicated
+suite invocations. `test_runner.py` starts the peers and shares their storage
+directory with clients; the generic status reporter does not do this.
 
 `wpt_serve_testharness` runs `webaudio_*.res` as a second group in the same
 `wpt serve` session, with `wpt_serve_testharness_webaudio`'s settings (2 jobs,
@@ -266,10 +227,10 @@ the `.res` file/line under test.
 instead of starting its own — useful for running a full batch against the
 environment you're inspecting by hand.
 
-A bare file-path invocation (`./Starfish <file-path>`, bypassing `wpt serve`
-entirely) has none of this — no injected script, no exit trigger — and hangs
-unconditionally regardless of the page (see the crashtest-TIMEOUT discussion
-above); always go through the standalone server and a served URL instead.
+A bare file-path invocation (`./Starfish <file-path>`, bypassing `wpt serve`)
+does not supply the injected completion bridge or crashtest query marker.
+A page remaining open in that mode is not evidence of an engine hang; use
+the served URL and the matching runner to reproduce the test protocol.
 
 For reftest, `python3 tool/wpt/scripts/wpt_reftest.py <url>` (run against this
 same standalone server) reproduces the full capture+diff and reports which
@@ -284,7 +245,7 @@ Default WPT checkout is `third_party/wpt` (override with `--wpt-root` or
 
     tool/wpt/
     ├── scripts/            wpt_runner.py, wpt_reftest.py, wpt_audit.py, ...
-    ├── inject_report.js    injected into every page under test
+    ├── inject_report.js    HTML injection / testharnessreport.js alias
     ├── testharness_lists/  curated .res lists (the CI gate)
     ├── reftest_lists/      generated from MANIFEST.json
     ├── crashtest_lists/    generated from MANIFEST.json
@@ -322,7 +283,8 @@ the engine's `wptTestEnd()` hook (which quits when `HIDE_WINDOW` is set):
 
 For a crashtest (URL carries the `__starfish_crashtest=1` query marker that
 `wpt_runner.py --mode crashtest` appends), it instead waits for `load` and for
-the root element's `test-wait` class to be gone (if present), then prints:
+the root element's `test-wait` and `reftest-wait` classes to be gone (if
+present), then prints:
 
     WPTR CRASHOK
 
@@ -337,6 +299,7 @@ On-demand `wpt serve` as a context manager, `wpt_serve(wpt_root, ...)`, plus a
 CLI (`python3 tool/wpt/scripts/wpt_server.py` serves until Ctrl-C or a
 plain `kill`; both tear the whole `wpt serve` group down).
 Responsibilities:
+
 - start `wpt serve --inject-script inject_report.js --alias_file ...`
   in its own session, the alias file mapping `/resources/testharnessreport.js`
   to a temp dir holding a copy of `inject_report.js` under that name (a file
@@ -347,6 +310,13 @@ Responsibilities:
   alt port like 8444 or the HTTP/2 port 9000 makes a fresh server abort
   silently);
 - on exit, kill the whole process group and wait for the ports to free.
+
+HTTP/2 is enabled by default. Disabling it with `--no-h2` leaves
+`ports.h2` empty, which prevents templates such as
+`websockets/constants.sub.js` from rendering before the browser receives
+them. Starting the HTTP/2 server does not imply that the runner selects
+HTTPS URLs or that Starfish HTTP/2 support has been verified.
+
 Other scripts import `wpt_serve` / `DEFAULT_WPT_ROOT` from here.
 
 ### tool/wpt/scripts/wpt_runner.py — measure / gate
@@ -421,9 +391,10 @@ the one you care about — any hand-applied annotations in the other lists are
 silently clobbered. Diff the directory before committing.
 
 Lists carry only test URLs, no reference/relation/fuzzy metadata — that is
-resolved live from MANIFEST.json at run time
-(`tool/wpt/scripts/wpt_reftest.py`), so a submodule bump that changes a
-reference or adds fuzzy just works without regenerating the list.
+read from MANIFEST.json at run time (`tool/wpt/scripts/wpt_reftest.py`).
+Reference changes need no list regeneration if the test URL is unchanged,
+but the MANIFEST must be refreshed after a pin bump. Fuzzy metadata is read
+but is not applied by the current comparison code.
 
 ### tool/wpt/scripts/wpt_reftest.py — reftest capture + compare
 `resolve_references(manifest, test_path)` reads a reftest's references
@@ -559,25 +530,40 @@ xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py t
 git add third_party/wpt tool/wpt/testharness_lists
 ```
 
-## Baseline
+## Historical baseline
 
-Measured at the initial pin (WPT `1c4810772`, 2026-06-08): of 1919 testharness
+These are initial measurements, not a current pass-rate report. Measured at
+the initial pin (WPT `1c4810772`, 2026-06-08): of 1919 testharness
 tests, **78.1% pass**. Coverage of the legacy curated set after rename recovery
 is 95.4% (1930/2024). Weak areas (engine-gap signal): webrtc, websockets, svg,
 html/syntax, html/rendering, cors. Strong: css, dom, html/canvas, workers, xhr.
 
-## Status board (wpt.fyi-comparable)
+## Status board
 
-The inventory foundation for a future full-manifest nightly is separate from
-execution: `wpt_manifest_inventory.manifest_inventory` enumerates unique
-`(test type, URL)` candidates across complete branches, and
-`wpt_scope.compare_inventory` compares them with active CI list entries while
-retaining source-list provenance. Origin differences, type differences and
-missing URLs are diagnostics, not automatic additions. These helpers preserve
-the current HTTP URL convention; they do not assert canonical protocol support
-or filter Worker tests. The current nightly target selection is unchanged.
-Callers must supply all relevant active CI lists, including separate suites;
-an inventory is not proof that those tests completed a nightly run.
+The nightly status board at <https://pages.github.sec.samsung.net/lws/starfish/>
+runs uncurated tests from the directories in
+`tool/wpt/wpt_status_targets.txt`. It is not yet an all-MANIFEST run.
+Unlike the curated CI gate, individual test failures contribute to the report
+rather than fail the job: `wpt_status.py` returns success after writing its
+outputs, even if tests failed. Tool or infrastructure errors can still fail
+the job.
+
+`.github/workflows/wpt_status_nightly.yml` explicitly requests
+**testharness, reftest, and crashtest**, with 16 parallel shells and a
+15-second per-test timeout. The standalone `wpt_status.py` CLI still defaults
+to testharness only. SharedWorker/ServiceWorker daemon setup and CI's separate
+Web Audio execution settings are not currently part of the nightly reporter.
+
+### Inventory helpers
+
+`wpt_manifest_inventory.manifest_inventory` enumerates unique
+`(test type, URL)` candidates across complete MANIFEST branches.
+`wpt_scope.compare_inventory` compares candidates with supplied active CI
+entries, retaining list provenance and diagnosing origin/type/URL mismatches.
+These are library helpers; the master nightly reporter does not call them
+to select its execution scope. They neither prove execution completion nor
+add missing CI URLs automatically. Callers must include separately scheduled
+CI suites when constructing an inventory.
 
 The contract tests use synthetic data and start no browser or WPT server:
 
@@ -585,37 +571,36 @@ The contract tests use synthetic data and start no browser or WPT server:
 xvfb-run -s '-screen 0 1920x1080x24' -a python3 -B -m unittest discover -s tool/wpt/scripts -p test_wpt_inventory.py
 ```
 
-The nightly status board at <https://pages.github.sec.samsung.net/lws/starfish/>
-runs *un-curated* spec directories (`tool/wpt/wpt_status_targets.txt`) to reveal
-where Starfish is strong or weak per spec area — unlike the CI gate above, which
-runs the curated `.res` lists at ~100% by design.
+### Counting and comparison
 
-Counting matches **wpt.fyi**, so the numbers compare directly with the major
-browsers. Each test is scored at the **subtest** level (`wpt_status.py:score`):
-a test with subtests contributes `passing / total` subtests; a test with none
-(single-page test, or a harness error that produced none) counts as `1` total,
-passing only if the harness status is OK. The aggregate is the sum across tests.
+`wpt_status.py:score` counts testharness results at the subtest level: a
+test with subtests contributes its passing and total subtest counts. A result
+without subtests contributes one total, passing only when its harness status
+is OK/PASS. Reftests and crashtests have no subtests, so each contributes one
+pass or fail. The HTML report separates requested types; JSON metrics also
+include a per-type `types` breakdown when multiple types are requested.
 
-> **Scope caveat:** the board counts **testharness** subtests only (reftest /
-> crashtest / wdspec excluded), so its total test count looks smaller than
-> wpt.fyi's full set. Read the comparison at the subtest level, not by raw
-> totals.
+The combined metric mixes testharness subtests with whole-file
+reftest/crashtest verdicts. A similar counting rule does not make the overall
+percentage directly comparable to another browser's wpt.fyi result:
+test selection, WPT revision, build flags, URL protocols, execution setup,
+and runner limitations also affect the result. Compare matching scopes and
+types, and retain the WPT revision recorded in each report.
 
 Pipeline (`.github/workflows/wpt_status_nightly.yml`, nightly):
 
-    wpt_status.py ──▶ report-YYYYMMDD.html  (per-category, subtest counts)
-                 └──▶ metrics.json          (subtest passed/total/rate;
-                                             files_passed/total + per-category
-                                             breakdown for diagnostics)
+    wpt_status.py ──▶ report-YYYYMMDD.html  (per-type/category results)
+                 └──▶ metrics.json          (combined and per-type counts;
+                                             file and category breakdowns)
     metrics.json ──wpt_update_data.py──▶ data.json ──wpt_generate_dashboard.py──▶ index.html
 
-Run it locally:
+Run a small selection locally with the same three types:
 
 ```sh
 xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_status.py \
-  --only css/selectors --limit 30 -o report.html --output-json metrics.json
+  --only css/selectors --limit 30 --test-types testharness,reftest,crashtest \
+  -o report.html --output-json metrics.json
 ```
 
-Because the metric definition is subtest-level (not the earlier per-file count),
-the cumulative `data.json` history must be reset once when this lands — trigger
-the workflow with `reset_history: true`.
+The workflow's `reset_history: true` input clears dashboard history when a
+deliberate metric/scope migration requires it; ordinary runs retain history.
