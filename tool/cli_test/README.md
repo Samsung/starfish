@@ -47,8 +47,9 @@ python3 tool/cli_test/run_cli_test.py \
   --binary out/release/bin/lightweight-web-engine-cli
 ```
 
-The runner exits with zero when every discovered test passes. It exits with
-one when any test fails.
+The runner runs only the tests that `testlist.json` enables. Pass `--all` to
+run every discovered test. The runner exits with zero when every test it runs
+passes. It exits with one when any test fails.
 
 The harness removes `DISPLAY` from CLI child processes to keep each session
 headless.
@@ -57,8 +58,14 @@ headless.
 
 Add a `test_*.py` file under `test/cli/`. Subclass `CLITestCase` from
 `driver.support` so the test gets an isolated `HOME`, a local HTTP server, and
-process cleanup. The runner discovers the file automatically, so there is no
-test list to update.
+process cleanup.
+
+Then add the test ID, such as
+`test_commands.CommandIntegrationTest.test_click_changes_page_state`, to
+`tool/cli_test/testlist.json`. Add it in the same change that makes the test
+pass. The `test` submodule can hold tests for features that are not merged
+yet. A test that is not in the list does not run in CI. A listed ID that no
+longer exists stops the run.
 
 Put pages and expected output under `test/cli/fixtures/`. Use
 `self.resource_url(<name>)` when a test needs to load a page through HTTP.

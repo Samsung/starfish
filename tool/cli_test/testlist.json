@@ -1,0 +1,31 @@
+{
+  "tests": [
+    "test_cdp_promise.CDPPromiseTest.test_navigation_fails_a_pending_evaluation",
+    "test_cdp_promise.CDPPromiseTest.test_never_settled_promise_does_not_block_the_connection",
+    "test_cdp_promise.CDPPromiseTest.test_reconnect_never_receives_the_old_clients_reply",
+    "test_cdp_promise.CDPPromiseTest.test_timer_promise_resolves_and_rejects",
+    "test_cdp_transport.CDPTransportIntegrationTest.test_bind_any_opt_in_needs_the_documented_value",
+    "test_cdp_transport.CDPTransportIntegrationTest.test_devtools_client_upgrade_is_accepted",
+    "test_cdp_transport.CDPTransportIntegrationTest.test_listens_on_loopback_only",
+    "test_cdp_transport.CDPTransportIntegrationTest.test_upgrade_from_web_page_is_rejected",
+    "test_cdp_transport.CDPTransportIntegrationTest.test_upgrade_to_unknown_path_is_rejected",
+    "test_commands.CommandIntegrationTest.test_click_changes_page_state",
+    "test_commands.CommandIntegrationTest.test_complete_interactive_flow_can_inspect_page_with_eval",
+    "test_commands.CommandIntegrationTest.test_eval_accepts_short_and_long_base64_options",
+    "test_commands.CommandIntegrationTest.test_eval_awaits_resolved_promise",
+    "test_commands.CommandIntegrationTest.test_eval_awaits_timer_promises_and_keeps_session_after_rejection",
+    "test_commands.CommandIntegrationTest.test_eval_handles_empty_values_and_rejected_promise",
+    "test_commands.CommandIntegrationTest.test_eval_javascript_exception_does_not_end_session",
+    "test_commands.CommandIntegrationTest.test_eval_joins_unquoted_script_arguments",
+    "test_commands.CommandIntegrationTest.test_eval_preserves_embedded_null_from_stdin",
+    "test_commands.CommandIntegrationTest.test_eval_prints_numbers_like_json_stringify",
+    "test_commands.CommandIntegrationTest.test_eval_prints_scalar_string_and_object_values",
+    "test_commands.CommandIntegrationTest.test_eval_reads_script_from_stdin",
+    "test_commands.CommandIntegrationTest.test_eval_rejects_invalid_option_shapes_and_utf8",
+    "test_commands.CommandIntegrationTest.test_fill_replaces_input_value",
+    "test_commands.CommandIntegrationTest.test_help_uses_public_cli_name",
+    "test_commands.CommandIntegrationTest.test_open_snapshot_and_close_share_one_session",
+    "test_session_lifecycle.SessionLifecycleIntegrationTest.test_concurrent_open_uses_one_session",
+    "test_session_lifecycle.SessionLifecycleIntegrationTest.test_failed_session_start_leaves_no_processes"
+  ]
+}
