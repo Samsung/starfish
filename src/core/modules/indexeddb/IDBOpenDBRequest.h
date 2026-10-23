@@ -22,6 +22,8 @@
 #ifndef __StarfishIDBOpenDBRequest__
 #define __StarfishIDBOpenDBRequest__
 
+#include <string>
+
 #include "core/modules/indexeddb/IDBTaskQueue.h"
 #include "core/modules/indexeddb/IDBDatabaseIdentifier.h"
 
@@ -30,11 +32,10 @@ namespace Starfish {
 class IDBConnection;
 
 struct OpenDBRequestData : public IDBTaskQueueItemData {
-    String* name{ nullptr };
+    std::string name;
     Optional<unsigned long long> version;
     bool upgradeNeeded{ false };
     IDBConnection* connection{ nullptr };
-    WebOrigin* webOrigin{ nullptr };
     IDBDatabaseIdentifier identifier;
 };
 

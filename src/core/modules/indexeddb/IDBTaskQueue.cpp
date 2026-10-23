@@ -34,9 +34,11 @@ namespace Starfish {
 
 IDBTaskQueueItem::IDBTaskQueueItem(IDBTaskQueueMainWork work,
                                    IDBTaskQueueAfterWork afterWork,
+                                   IDBTaskQueueDropWork dropWork,
                                    IDBTaskQueueItemData* data)
     : mainWork(work)
     , afterWork(afterWork)
+    , dropWork(dropWork)
     , workData(data)
 {
 }
@@ -51,6 +53,9 @@ IDBTaskQueue::~IDBTaskQueue()
 {
     stop();
 
+    for (auto& item : m_tasks) {
+        item->dropWork(item->workData);
+    }
     m_tasks.clear();
     m_tasks.shrink_to_fit();
 }
@@ -84,43 +89,58 @@ void IDBTaskQueue::worker(void* data)
             // TODO: 5-1: Wait until request is the first item in transaction’s
             // request list that is not processed.
             self->m_tasks.pop_front();
+            self->m_runningContext = item->context;
+            self->m_runningCancelled = false;
         }
 
         item->mainWork(&connectionData, item->workData);
 
-        STARFISH_ASSERT(item->workData->idbRequest);
-        item->workData->idbRequest->setProcessed(true);
-
-        ExecutionContext* executionContext =
-            item->workData->idbRequest->executionContext();
-        GlobalScope* globalScope = executionContext->globalScope();
-
-        struct Param {
-            std::unique_ptr<IDBTaskQueueItem> item;
-        };
-        Param* p = new Param({ std::move(item) });
-
-        executionContext->webBase()
-            ->messageLoop()
-            ->addIdlerWithNoGCRootingInOtherThread(
-                globalScope,
-                [](size_t, void* data) {
-                    auto* p = static_cast<Param*>(data);
-                    IDBRequest* request = p->item->workData->idbRequest;
-
-                    if (request->transaction()) {
-                        request->transaction()->removeRequest(request);
-                    }
-
-                    p->item->workData->idbRequest->setDone(true);
-
-                    p->item->afterWork(p->item->workData);
-                    delete p;
-                },
-                [](void* data) { delete static_cast<Param*>(data); }, p);
+        {
+            // The result is posted under the lock so a cancel cannot slip in
+            // between the check and the post.
+            std::unique_lock<std::mutex> lock(self->m_mutex);
+            self->m_runningContext = nullptr;
+            if (self->m_runningCancelled) {
+                item->dropWork(item->workData);
+            } else {
+                postResult(std::move(item));
+            }
+        }
+        self->m_runningDone.notify_all();
     }
 
     Escargot::Globals::finalizeThread();
+}
+
+void IDBTaskQueue::postResult(std::unique_ptr<IDBTaskQueueItem> item)
+{
+    struct Param {
+        std::unique_ptr<IDBTaskQueueItem> item;
+    };
+    Param* p = new Param({ std::move(item) });
+
+    p->item->loop->addIdlerWithNoGCRootingInOtherThread(
+        p->item->globalScope,
+        [](size_t, void* data) {
+            auto* p = static_cast<Param*>(data);
+            IDBRequest* request = p->item->workData->idbRequest;
+
+            request->setProcessed(true);
+            if (request->transaction()) {
+                request->transaction()->removeRequest(request);
+            }
+            request->setDone(true);
+
+            p->item->afterWork(p->item->workData);
+            p->item->context->removePointerFromRootSet(request);
+            delete p;
+        },
+        [](void* data) {
+            auto* p = static_cast<Param*>(data);
+            p->item->dropWork(p->item->workData);
+            delete p;
+        },
+        p);
 }
 
 void IDBTaskQueue::stop()
@@ -144,15 +164,48 @@ void IDBTaskQueue::stop()
 
 void IDBTaskQueue::addTask(std::unique_ptr<IDBTaskQueueItem> item)
 {
+    IDBRequest* request = item->workData->idbRequest;
+    ExecutionContext* context = request->executionContext();
+    STARFISH_ASSERT(context->isContextThread());
+
+    item->context = context;
+    item->loop = context->webBase()->messageLoop();
+    item->globalScope = context->globalScope();
+
     std::unique_lock<std::mutex> lock(m_mutex);
     if (m_isStopped) {
+        item->dropWork(item->workData);
         return;
     }
 
+    // Only this queue refers to the in-flight request's data holder, which
+    // the collector does not see; the request stays rooted until its result
+    // is delivered.
+    context->addPointerInRootSet(request);
     m_tasks.push_back(std::move(item));
 
     lock.unlock();
     m_cond.notify_one();
+}
+
+void IDBTaskQueue::cancelTasks(ExecutionContext* context)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+
+    auto iter = m_tasks.begin();
+    while (iter != m_tasks.end()) {
+        if ((*iter)->context == context) {
+            (*iter)->dropWork((*iter)->workData);
+            iter = m_tasks.erase(iter);
+        } else {
+            iter++;
+        }
+    }
+
+    if (m_runningContext == context) {
+        m_runningCancelled = true;
+        m_runningDone.wait(lock, [&] { return m_runningContext != context; });
+    }
 }
 
 } // namespace Starfish

@@ -26,22 +26,19 @@
 
 namespace Starfish {
 
-class ExecutionContext;
-class IDBOpenDBRequest;
-class IDBKey;
-
 // NOTE: The MemoryBackingStore class is called only on the main work thread of
 // IDBTaskQueue.
 
 class MemoryBackingStore final : public IDBBackingStore {
 public:
-    void open(String* name, unsigned long long version) override;
+    void open(const std::string& name, unsigned long long version) override;
 
-    IDBRequestErrorType addOrPut(String* name, const char* data,
-                                 size_t dataSize, IDBKey* key,
+    IDBRequestErrorType addOrPut(const std::string& storeName, const char* data,
+                                 size_t dataSize, int64_t keyHash,
                                  bool noOverwrite) override;
 
-    bool get(String* name, IDBKey* key, char*& data, size_t& dataSize) override;
+    bool get(const std::string& storeName, int64_t keyHash, char*& data,
+             size_t& dataSize) override;
 
 private:
     std::string m_openPath;

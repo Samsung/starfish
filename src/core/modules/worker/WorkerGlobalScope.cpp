@@ -113,6 +113,11 @@ void WorkerGlobalScope::dispose()
 #if !defined(STARFISH_WEBWORKER_HOST)
     m_executionContext->disposeActiveWorkers();
 #endif
+#if defined(STARFISH_ENABLE_IDB)
+    // The IDB thread must not reach this scope once its thread is gone; its
+    // queued and running requests for this context are dropped first.
+    IDBStorageManager::instance().cancelTasks(m_executionContext);
+#endif
 #ifdef STARFISH_ENABLE_WEBSOCKET
     // A socket's service thread posts to this scope's loop, which goes away
     // right after the scope; close and join the sockets first, then drop the

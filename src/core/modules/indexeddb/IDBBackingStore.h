@@ -22,20 +22,23 @@
 #ifndef __StarfishIDBBackingStore__
 #define __StarfishIDBBackingStore__
 
+#include <cstdint>
+#include <string>
+
+#include "core/modules/indexeddb/IDBRequest.h"
+
 namespace Starfish {
 
-class String;
-class IDBKey;
-enum class IDBRequestErrorType : uint8_t;
-
+// Runs on the IDB thread; takes plain data only. A key is identified by the
+// hash of its string form, computed on the requester's thread.
 class IDBBackingStore {
 public:
     virtual ~IDBBackingStore() = default;
-    virtual void open(String* name, unsigned long long version) = 0;
-    virtual IDBRequestErrorType addOrPut(String* name, const char* data,
-                                         size_t dataSize, IDBKey* key,
-                                         bool noOverwrite) = 0;
-    virtual bool get(String* name, IDBKey* key, char*& data,
+    virtual void open(const std::string& name, unsigned long long version) = 0;
+    virtual IDBRequestErrorType addOrPut(const std::string& storeName,
+                                         const char* data, size_t dataSize,
+                                         int64_t keyHash, bool noOverwrite) = 0;
+    virtual bool get(const std::string& storeName, int64_t keyHash, char*& data,
                      size_t& dataSize) = 0;
 };
 } // namespace Starfish

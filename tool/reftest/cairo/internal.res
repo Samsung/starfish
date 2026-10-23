@@ -945,6 +945,8 @@ test/cairo/internal-test/websocket/bufferedAmount-after-close.html
 test/cairo/internal-test/websocket/worker-terminate.html
 test/cairo/internal-test/worker/terminate-in-onmessage.html
 test/cairo/internal-test/worker/post-then-terminate.html
+test/cairo/internal-test/indexeddb/worker-concurrent.html
+test/cairo/internal-test/indexeddb/worker-terminate.html
 test/cairo/internal-test/event/mouse_enter_leave_event_order.html
 test/cairo/internal-test/event/scroll-suppresses-click.html
 test/cairo/internal-test/event/no-scroll-fires-click.html
