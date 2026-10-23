@@ -395,17 +395,17 @@ http://web-platform.test:8000/svg/styling/rect-sizing-viewport-units.svg
 http://web-platform.test:8000/svg/styling/render/transform-origin.svg
 http://web-platform.test:8000/svg/styling/render/transform.svg
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/styling/stroke-color-inherit-link-visited.svg
-http://web-platform.test:8000/svg/styling/svg-filter-render-cross-origin-frame-in-cross-origin-frame.tentative.sub.https.html
-http://web-platform.test:8000/svg/styling/svg-filter-render-cross-origin-frame-in-same-origin-frame.tentative.https.html
-http://web-platform.test:8000/svg/styling/svg-filter-render-cross-origin-frame.tentative.sub.https.html
-http://web-platform.test:8000/svg/styling/svg-filter-render-cross-origin-navigation-in-srcdoc-frame.tentative.sub.https.html
-http://web-platform.test:8000/svg/styling/svg-filter-render-same-origin-frame-in-cross-origin-frame.tentative.sub.https.html
-http://web-platform.test:8000/svg/styling/svg-filter-render-same-origin-frame-in-same-origin-frame.tentative.https.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/svg/styling/svg-filter-render-same-origin-frame-reload-as-sandbox.tentative.https.html
-http://web-platform.test:8000/svg/styling/svg-filter-render-same-origin-frame.tentative.https.html
-http://web-platform.test:8000/svg/styling/svg-filter-render-sandbox-frame.tentative.https.html
-http://web-platform.test:8000/svg/styling/svg-filter-render-srcdoc-frame.tentative.https.html
-http://web-platform.test:8000/svg/styling/svg-filter-render-web-plugin.tentative.https.html
+https://web-platform.test:8443/svg/styling/svg-filter-render-cross-origin-frame-in-cross-origin-frame.tentative.sub.https.html
+https://web-platform.test:8443/svg/styling/svg-filter-render-cross-origin-frame-in-same-origin-frame.tentative.https.html
+https://web-platform.test:8443/svg/styling/svg-filter-render-cross-origin-frame.tentative.sub.https.html
+https://web-platform.test:8443/svg/styling/svg-filter-render-cross-origin-navigation-in-srcdoc-frame.tentative.sub.https.html
+https://web-platform.test:8443/svg/styling/svg-filter-render-same-origin-frame-in-cross-origin-frame.tentative.sub.https.html
+https://web-platform.test:8443/svg/styling/svg-filter-render-same-origin-frame-in-same-origin-frame.tentative.https.html
+# [auto-fail:TIMEOUT] https://web-platform.test:8443/svg/styling/svg-filter-render-same-origin-frame-reload-as-sandbox.tentative.https.html
+https://web-platform.test:8443/svg/styling/svg-filter-render-same-origin-frame.tentative.https.html
+https://web-platform.test:8443/svg/styling/svg-filter-render-sandbox-frame.tentative.https.html
+https://web-platform.test:8443/svg/styling/svg-filter-render-srcdoc-frame.tentative.https.html
+https://web-platform.test:8443/svg/styling/svg-filter-render-web-plugin.tentative.https.html
 http://web-platform.test:8000/svg/styling/use-element-animations.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/styling/use-element-attr-selector-transition.tentative.html
 http://web-platform.test:8000/svg/styling/use-element-attr-selector.html

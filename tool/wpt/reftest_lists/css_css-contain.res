@@ -314,7 +314,7 @@ http://web-platform.test:8000/css/css-contain/content-visibility/content-visibil
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-012.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-013.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-014.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-019.sub.https.html
+# [auto-fail:IMG_MISMATCH] https://web-platform.test:8443/css/css-contain/content-visibility/content-visibility-019.sub.https.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-020.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-021.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-022.html
@@ -324,7 +324,7 @@ http://web-platform.test:8000/css/css-contain/content-visibility/content-visibil
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-027.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-028.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-032.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-033.sub.https.html
+# [auto-fail:IMG_MISMATCH] https://web-platform.test:8443/css/css-contain/content-visibility/content-visibility-033.sub.https.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-034.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-037.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-040.html

@@ -43,6 +43,7 @@ sys.path.insert(0, _HERE)                                      # sibling wpt_*
 sys.path.insert(0, os.path.join(_HERE, os.pardir, os.pardir))  # tool/
 from repo_paths import REPO_ROOT  # noqa: E402
 from wpt_server import wpt_serve, DEFAULT_WPT_ROOT  # noqa: E402
+from wpt_urls import with_test_protocol  # noqa: E402
 
 DEFAULT_RES_DIR = os.path.join(REPO_ROOT, "tool", "reftest", "cairo", "wpt")
 _NOVERIFY = ssl._create_unverified_context()
@@ -66,7 +67,7 @@ def parse_res(path, include_commented):
                     continue
             if not s.startswith("http"):
                 continue
-            yield s.split()[0], commented
+            yield with_test_protocol(s.split()[0]), commented
 
 
 def probe(url, timeout=10):
@@ -212,10 +213,10 @@ def remap_candidate(url, index):
     best = max(cands, key=lambda c: _score(c, path))
     if best == path.lstrip("/"):
         return None
-    return "%s://%s/%s%s%s" % (
+    return with_test_protocol("%s://%s/%s%s%s" % (
         sp.scheme, sp.netloc, best,
         ("?" + sp.query) if sp.query else "",
-        ("#" + sp.fragment) if sp.fragment else "")
+        ("#" + sp.fragment) if sp.fragment else ""))
 
 
 def main(argv):

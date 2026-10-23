@@ -19,4 +19,4 @@
 # [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/css/css-font-loading/fontfaceset-load-var.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-font-loading/fontfacesetloadevent-constructor.html
 http://web-platform.test:8000/css/css-font-loading/historical.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-font-loading/idlharness.https.html
+# [auto-fail:SUBTESTS_FAILED] https://web-platform.test:8443/css/css-font-loading/idlharness.https.html

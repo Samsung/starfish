@@ -220,8 +220,8 @@ process the drivers use (`tool/wpt/scripts/wpt_server.py`'s `wpt_serve()`), on
 the same `web-platform.test` hosts/ports set up in "One-time setup" — so any
 URL you load against it (in a browser, via `curl`, or by invoking `./Starfish`
 directly) sees the exact same server-side behavior a batched run would,
-including `inject_report.js`'s injection. Take the exact `http://...` URL from
-the `.res` file/line under test.
+including `inject_report.js`'s injection. Take the exact `http://...` or
+`https://...` URL from the `.res` file/line under test.
 
 `wpt_runner.py ... --no-serve` also accepts this same standalone server
 instead of starting its own — useful for running a full batch against the
@@ -304,8 +304,9 @@ Responsibilities:
   in its own session, the alias file mapping `/resources/testharnessreport.js`
   to a temp dir holding a copy of `inject_report.js` under that name (a file
   alias looks the file up by name inside `local-dir`);
-- consider it healthy only after several consecutive good HTTP probes, and fail
-  fast if it dies during boot;
+- consider it healthy only after several consecutive successful HTTP and HTTPS
+  probes, and fail fast if it dies during boot. The HTTPS probe accepts WPT's
+  fixture certificate; it does not change browser TLS settings;
 - reclaim the ports first if a stale server is lingering (a leftover holding an
   alt port like 8444 or the HTTP/2 port 9000 makes a fresh server abort
   silently);
@@ -314,8 +315,17 @@ Responsibilities:
 HTTP/2 is enabled by default. Disabling it with `--no-h2` leaves
 `ports.h2` empty, which prevents templates such as
 `websockets/constants.sub.js` from rendering before the browser receives
-them. Starting the HTTP/2 server does not imply that the runner selects
-HTTPS URLs or that Starfish HTTP/2 support has been verified.
+them.
+
+`wpt_urls.py` follows the pinned WPT manifest/wptrunner protocol rules:
+`.https.`, `.serviceworker.`, `.serviceworker-module.`, and equivalent
+`wpt_flags` query values select HTTPS (8443); `.h2.` / `wpt_flags=h2` takes
+priority and selects TLS on the HTTP/2 port (9000). Ordinary tests retain
+HTTP (8000). Manifest inventory, list generation, and legacy URL auditing
+share this selection. Reftest references retain the test origin, including
+its HTTPS or HTTP/2 port; explicit absolute references retain their own URL.
+The CI Debug build defines `STARFISH_ENABLE_TEST` and currently skips browser
+certificate verification. HTTPS serving alone does not prove HTTP/2 negotiation.
 
 Other scripts import `wpt_serve` / `DEFAULT_WPT_ROOT` from here.
 
@@ -363,9 +373,9 @@ Decides which legacy tests still exist in the pinned revision and (re)writes the
 python3 tool/wpt/scripts/wpt_audit.py --out-dir tool/wpt/testharness_lists
 ```
 
-It probes the running server for each legacy URL (HTTP 200 = served, 404 =
-gone) — authoritative for WPT's *generated* tests (`*.any.html` etc.) that have
-no file on disk. Missing URLs are then "remapped" by basename across three
+It selects the required protocol before probing each legacy URL (status
+200 = served, 404 = gone) — authoritative for WPT's *generated* tests
+(`*.any.html` etc.) that have no file on disk. Missing URLs are then "remapped" by basename across three
 rename patterns (directory move, `.htm`↔`.html` swap, plain→`*.any.js` /
 `*.window.js`) and re-probed. With `--out-dir` it writes, per legacy list:
 - `<name>.res`         — served + recovered URLs (the new list)

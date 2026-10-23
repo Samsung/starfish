@@ -86,7 +86,7 @@ http://web-platform.test:8000/css/css-conditional/container-queries/container-un
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/container-queries/container-units-sharing-via-rule-node.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/container-queries/counters-in-container-dynamic.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/container-queries/counters-in-container.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/container-queries/custom-layout-container-001.https.html
+# [auto-fail:IMG_MISMATCH] https://web-platform.test:8443/css/css-conditional/container-queries/custom-layout-container-001.https.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/container-queries/dialog-backdrop-create.html
 http://web-platform.test:8000/css/css-conditional/container-queries/dialog-backdrop-remove.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-conditional/container-queries/display-in-container.html

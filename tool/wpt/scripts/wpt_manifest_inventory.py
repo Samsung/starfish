@@ -18,25 +18,25 @@
 import json
 import os
 
+from wpt_urls import test_url
+
 _HERE = os.path.dirname(os.path.abspath(__file__))
 
 DEFAULT_TARGETS = os.path.join(_HERE, os.pardir, "wpt_status_targets.txt")
-SERVER = "http://web-platform.test:8000"
 
 
 def manifest_inventory(manifest, test_types):
     """Return unique (type, URL) candidates across entire requested branches.
 
-    Keep the existing HTTP URL convention used by nightly and CI lists.
+    Select the protocol required by each WPT URL, including generated variants.
     This is inventory, not execution eligibility: no Worker or capability
     filtering is performed. Missing branches fail rather than look empty.
     """
     inventory = set()
-    prefix = SERVER + manifest["url_base"].rstrip("/") + "/"
     for kind in test_types:
         urls = []
         _collect_urls(manifest["items"][kind], "", urls)
-        inventory.update((kind, prefix + url.lstrip("/")) for url in urls)
+        inventory.update((kind, test_url(url, manifest["url_base"])) for url in urls)
     return inventory
 
 
@@ -107,7 +107,5 @@ def enumerate_tests(manifest_path, targets, test_type="testharness"):
             continue
         rel = []
         _collect_urls(node, target, rel)
-        prefix = url_base.rstrip("/")
-        by_category[target] = [SERVER + prefix + "/" + u.lstrip("/")
-                               for u in rel]
+        by_category[target] = [test_url(u, url_base) for u in rel]
     return by_category, missing

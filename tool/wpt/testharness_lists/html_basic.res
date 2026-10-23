@@ -369,7 +369,7 @@ http://web-platform.test:8000/html/dom/documents/dom-tree-accessors/Document.get
 http://web-platform.test:8000/html/browsers/windows/nested-browsing-contexts/window-top.html
 http://web-platform.test:8000/html/browsers/the-window-object/window-aliases.html
 http://web-platform.test:8000/html/browsers/the-window-object/accessing-other-browsing-contexts/iterator.html
-http://web-platform.test:8000/html/browsers/offline/browser-state/navigator_online_online.https.html
+https://web-platform.test:8443/html/browsers/offline/browser-state/navigator_online_online.https.html
 http://web-platform.test:8000/html/browsers/history/the-location-interface/security_location_0.htm
 # [auto-fail] http://web-platform.test:8000/html/browsers/history/the-location-interface/location-protocol-setter-with-colon.sub.html
 # [auto-fail] http://web-platform.test:8000/html/browsers/history/the-location-interface/location_replace.html

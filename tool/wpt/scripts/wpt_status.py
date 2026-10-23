@@ -52,12 +52,13 @@ from argparse import ArgumentParser
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from html import escape
+from urllib.parse import urlsplit
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)                                      # sibling wpt_*
 sys.path.insert(0, os.path.join(_HERE, os.pardir, os.pardir))  # tool/
 from wpt_server import wpt_serve, DEFAULT_WPT_ROOT  # noqa: E402
-from wpt_manifest_inventory import (DEFAULT_TARGETS, SERVER,  # noqa: E402
+from wpt_manifest_inventory import (DEFAULT_TARGETS,  # noqa: E402
                                     enumerate_tests, read_targets)
 from wpt_runner import (RE_PASS, RE_FAIL, RE_DONE, STARFISH,  # noqa: E402
                         run_one_reftest, run_one_crashtest, isolated_storage_dir)
@@ -285,7 +286,7 @@ def build_tree(results):
     """
     root = {"dirs": {}, "tests": [], "pass": 0, "total": 0}
     for r in results:
-        parts = r["url"][len(SERVER):].strip("/").split("/")
+        parts = urlsplit(r["url"]).path.strip("/").split("/")
         node = root
         for part in parts[:-1]:
             node = node["dirs"].setdefault(
@@ -340,7 +341,10 @@ def render_node(name, node, parts):
                 detail = "%d/%d subtests" % (np, nt)
                 if not r["ok"] and r["reason"] not in ("SUBTESTS_FAILED", "OK"):
                     detail = r["reason"]
-            leaf = r["url"][len(SERVER):].rstrip("/").rsplit("/", 1)[-1]
+            leaf = urlsplit(r["url"]).path.rstrip("/").rsplit("/", 1)[-1]
+            query = urlsplit(r["url"]).query
+            if query:
+                leaf += "?" + query
             parts.append('<tr class="%s" data-name="%s" data-pass="%d" '
                          'data-total="%d" data-rate="%.6f">'
                          '<td class="s">%s</td>'

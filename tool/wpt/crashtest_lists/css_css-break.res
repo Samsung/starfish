@@ -21,7 +21,7 @@ http://web-platform.test:8000/css/css-break/chrome-bug-1285596-crash.html
 http://web-platform.test:8000/css/css-break/chrome-bug-1287342-crash.html
 http://web-platform.test:8000/css/css-break/chrome-bug-1288769-000-crash.html
 http://web-platform.test:8000/css/css-break/chrome-bug-1288769-001-crash.html
-http://web-platform.test:8000/css/css-break/chrome-bug-1289999-crash.https.html
+https://web-platform.test:8443/css/css-break/chrome-bug-1289999-crash.https.html
 http://web-platform.test:8000/css/css-break/chrome-bug-1318455-crash.html
 http://web-platform.test:8000/css/css-break/clear-br-in-size-containment-crash.html
 http://web-platform.test:8000/css/css-break/clear-float-in-size-containment-crash.html

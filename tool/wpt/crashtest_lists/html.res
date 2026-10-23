@@ -1,6 +1,6 @@
 http://web-platform.test:8000/html/browsers/browsing-the-web/navigating-across-documents/unknown-protocol-reload-crash.html
 http://web-platform.test:8000/html/browsers/history/the-location-interface/cross-origin-location-stringify-crash.sub.html
-http://web-platform.test:8000/html/browsers/origin/origin-keyed-agent-clusters/popups-crash.https.html
+https://web-platform.test:8443/html/browsers/origin/origin-keyed-agent-clusters/popups-crash.https.html
 http://web-platform.test:8000/html/canvas/canvas-sibling-index-crash.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/fullscreen-child-crash.tentative.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/html/canvas/element/manual/draw-element-image/fullscreen-crash.tentative.html

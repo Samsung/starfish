@@ -1,1 +1,1 @@
-# [auto-fail] http://web-platform.test:8000/battery-status/battery-promise.https.html
+# [auto-fail] https://web-platform.test:8443/battery-status/battery-promise.https.html
