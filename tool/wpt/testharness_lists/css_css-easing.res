@@ -1,0 +1,12 @@
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-easing/cubic-bezier-timing-functions-output.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-easing/linear-timing-functions-output.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-easing/linear-timing-functions-syntax.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-easing/step-jump-both.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-easing/step-jump-end.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-easing/step-jump-none.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-easing/step-jump-start.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-easing/step-timing-functions-output.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-easing/step-timing-functions-syntax.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-easing/timing-functions-syntax-computed.html
+# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-easing/timing-functions-syntax-invalid.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-easing/timing-functions-syntax-valid.html

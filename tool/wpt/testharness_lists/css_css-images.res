@@ -1,0 +1,41 @@
+# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-images/animation/image-no-interpolation.html
+# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-images/animation/image-slice-interpolation-math-functions-tentative.html
+# [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/css/css-images/animation/object-position-composition.html
+# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-images/animation/object-position-interpolation.html
+# [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/css/css-images/animation/object-view-box-interpolation.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/cross-fade-computed-value.html
+# [vacuous-pass:RESOURCE_TIMING_UNIMPLEMENTED] http://web-platform.test:8000/css/css-images/empty-background-image.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/gradient/color-stops-parsing.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/idlharness.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-from-image-computed-style.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-none-computed-style.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/image-set/image-set-computed.sub.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/image-set/image-set-parsing.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/inheritance.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/object-view-box-parsing.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/object-view-box-transition-mutation.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/conic-gradient-calc-angle-percentage-invalid.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/conic-gradient-calc-angle-percentage-valid.html
+# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-images/parsing/gradient-interpolation-method-computed.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/gradient-interpolation-method-invalid.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/gradient-interpolation-method-valid.html
+# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-images/parsing/gradient-position-computed.html
+http://web-platform.test:8000/css/css-images/parsing/gradient-position-invalid.html
+http://web-platform.test:8000/css/css-images/parsing/gradient-position-valid.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/image-function-computed.html
+# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-images/parsing/image-function-invalid.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/image-function-valid.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/image-orientation-computed.html
+# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-images/parsing/image-orientation-invalid.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/image-orientation-valid.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/image-rendering-computed.html
+# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-images/parsing/image-rendering-invalid.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/image-rendering-valid.html
+# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-images/parsing/image-resolution-invalid.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/image-resolution-valid.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/object-fit-computed.html
+# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-images/parsing/object-fit-invalid.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/object-fit-valid.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/object-position-computed.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/object-position-invalid.html
+http://web-platform.test:8000/css/css-images/parsing/object-position-valid.html
