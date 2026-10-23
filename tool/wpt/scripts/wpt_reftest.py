@@ -43,8 +43,7 @@ MANIFEST.json reftest entries look like:
 A single manifest key can have multiple variants (query-string-parameterized
 generated tests, e.g. "foo.html?width=10..."); resolve_references() matches
 the exact variant the URL under test names, not the union of all of them.
-References are resolved relative to the manifest's own url_base, not to the
-running test's URL.
+Reference paths use the manifest's url_base and the running test's origin.
 """
 
 import contextlib
@@ -56,12 +55,14 @@ import subprocess
 import sys
 import tempfile
 import threading
+from urllib.parse import urlsplit, urlunsplit
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)                                      # sibling wpt_*
 sys.path.insert(0, os.path.join(_HERE, os.pardir, os.pardir))  # tool/
 from repo_paths import REPO_ROOT  # noqa: E402
 from wpt_server import DEFAULT_WPT_ROOT  # noqa: E402
+from wpt_urls import ORIGINS, test_url  # noqa: E402
 
 STARFISH = os.path.join(REPO_ROOT, "Starfish")
 IMGDIFF = os.path.join(REPO_ROOT, "tool", "imgdiff", "imgdiff")
@@ -81,7 +82,7 @@ def _isolated_storage_dir():
         yield d
     finally:
         shutil.rmtree(d, ignore_errors=True)
-SERVER = "http://web-platform.test:8000"
+SERVER = ORIGINS["http"]
 
 # See wpt_runner.py's STARFISH_CMD_PREFIX: forces line buffering so a
 # SIGKILL-on-timeout can't silently drop the last (often most telling)
@@ -157,7 +158,7 @@ def _find_node(items, test_path):
     return node[parts[-1]]
 
 
-def resolve_references(manifest, test_path):
+def resolve_references(manifest, test_path, origin=None):
     """Return [(ref_full_url, relation, fuzzy), ...] for a reftest test_path.
 
     test_path is manifest-relative (e.g. "css/css-flexbox/foo.html", no
@@ -174,6 +175,9 @@ def resolve_references(manifest, test_path):
     if not entry:
         return []
     url_base = manifest["url_base"].rstrip("/")
+    if origin is None:
+        parts = urlsplit(test_url(test_path))
+        origin = urlunsplit((parts.scheme, parts.netloc, "", "", ""))
     out = []
     # entry = ["<hash>", variant, variant, ...]; each variant is
     # [url|null, [[ref_path, relation], ...], {extras}]. A manifest key can
@@ -190,7 +194,7 @@ def resolve_references(manifest, test_path):
         extras = variant[2] if len(variant) > 2 else {}
         fuzzy = extras.get("fuzzy") if isinstance(extras, dict) else None
         for ref_path, relation in references:
-            out.append((_ref_to_url(ref_path, url_base), relation, fuzzy))
+            out.append((_ref_to_url(ref_path, url_base, origin), relation, fuzzy))
     return out
 
 
@@ -204,18 +208,21 @@ def resolve_references(manifest, test_path):
 _SCHEME_RE = re.compile(r"^[a-z][a-z0-9+.-]*:", re.IGNORECASE)
 
 
-def _ref_to_url(ref_path, url_base):
+def _ref_to_url(ref_path, url_base, origin=SERVER):
     if _SCHEME_RE.match(ref_path):
         return ref_path
-    return SERVER + url_base + ref_path
+    if ref_path.startswith("//"):
+        return urlsplit(origin).scheme + ":" + ref_path
+    return origin + url_base + ref_path
 
 
-def url_to_test_path(url):
-    """Strip server origin from a full test URL to get a manifest-relative path."""
-    for prefix in (SERVER,):
-        if url.startswith(prefix):
-            return url[len(prefix):].lstrip("/")
-    return url.lstrip("/")
+def url_to_test_path(url, url_base="/"):
+    """Extract a manifest-relative path and query for HTTP, HTTPS, or h2."""
+    parts = urlsplit(url)
+    path = parts.path
+    if path.startswith(url_base):
+        path = path[len(url_base):]
+    return path.lstrip("/") + (("?" + parts.query) if parts.query else "")
 
 
 def _screenshot(url, out_path, timeout, width=800, height=600):
@@ -302,8 +309,10 @@ def run_reftest(url, wpt_root=DEFAULT_WPT_ROOT, manifest=None, timeout=15,
     """
     if manifest is None:
         manifest = load_manifest(wpt_root)
-    test_path = url_to_test_path(url)
-    references = resolve_references(manifest, test_path)
+    test_path = url_to_test_path(url, manifest["url_base"])
+    parts = urlsplit(url)
+    origin = urlunsplit((parts.scheme, parts.netloc, "", "", ""))
+    references = resolve_references(manifest, test_path, origin)
     if not references:
         return False, "NO_REFERENCE", None
 

@@ -16,11 +16,11 @@
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/mediaqueries/mq-unknown-feature-custom-property.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/mediaqueries/navigation-controls.tentative.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/mediaqueries/overflow-media-features.html
-# [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/css/mediaqueries/preferences-colorScheme.tentative.https.html
-# [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/css/mediaqueries/preferences-contrast.tentative.https.html
-# [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/css/mediaqueries/preferences-reducedData.tentative.https.html
-# [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/css/mediaqueries/preferences-reducedMotion.tentative.https.html
-# [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/css/mediaqueries/preferences-reducedTransparency.tentative.https.html
+# [auto-fail:HARNESS_STATUS_1] https://web-platform.test:8443/css/mediaqueries/preferences-colorScheme.tentative.https.html
+# [auto-fail:HARNESS_STATUS_1] https://web-platform.test:8443/css/mediaqueries/preferences-contrast.tentative.https.html
+# [auto-fail:HARNESS_STATUS_1] https://web-platform.test:8443/css/mediaqueries/preferences-reducedData.tentative.https.html
+# [auto-fail:HARNESS_STATUS_1] https://web-platform.test:8443/css/mediaqueries/preferences-reducedMotion.tentative.https.html
+# [auto-fail:HARNESS_STATUS_1] https://web-platform.test:8443/css/mediaqueries/preferences-reducedTransparency.tentative.https.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/mediaqueries/prefers-color-scheme.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/mediaqueries/prefers-contrast.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/mediaqueries/prefers-reduced-data.html

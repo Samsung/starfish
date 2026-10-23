@@ -1322,7 +1322,7 @@ http://web-platform.test:8000/html/semantics/popovers/popover-inside-display-non
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/popovers/popover-progress-backdrop.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/popovers/popover-stacking-context.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/popovers/popover-textarea-backdrop.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/module/dynamic-import/microtasks/worklet.https.html
+# [auto-fail:IMG_MISMATCH] https://web-platform.test:8443/html/semantics/scripting-1/the-script-element/module/dynamic-import/microtasks/worklet.https.html
 http://web-platform.test:8000/html/semantics/scripting-1/the-template-element/additions-to-the-css-user-agent-style-sheet/css-user-agent-style-sheet-test-001.html
 http://web-platform.test:8000/html/semantics/scripting-1/the-template-element/additions-to-the-css-user-agent-style-sheet/css-user-agent-style-sheet-test-002.html
 http://web-platform.test:8000/html/semantics/scripting-1/the-template-element/additions-to-the-css-user-agent-style-sheet/css-user-agent-style-sheet-test-003.html

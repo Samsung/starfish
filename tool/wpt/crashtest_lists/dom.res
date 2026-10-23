@@ -12,7 +12,7 @@ http://web-platform.test:8000/dom/nodes/crashtests/attribute-index-when-no-attri
 http://web-platform.test:8000/dom/nodes/crashtests/childNodes-last_visited-unwrap-crash.html
 http://web-platform.test:8000/dom/nodes/crashtests/document-replaceChild-input-documentElement.html
 http://web-platform.test:8000/dom/nodes/crashtests/documentElement-remove-descendant-query.html
-http://web-platform.test:8000/dom/nodes/crashtests/multiple-append-mutated-in-unload.https.html
+https://web-platform.test:8443/dom/nodes/crashtests/multiple-append-mutated-in-unload.https.html
 http://web-platform.test:8000/dom/nodes/moveBefore/chrome-338071841-crash.html
 http://web-platform.test:8000/dom/nodes/moveBefore/chrome-433696404-crash.html
 http://web-platform.test:8000/dom/nodes/moveBefore/input-moveBefore-crash.html

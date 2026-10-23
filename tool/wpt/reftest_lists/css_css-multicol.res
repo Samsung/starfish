@@ -457,5 +457,5 @@ http://web-platform.test:8000/css/css-multicol/subpixel-column-rule-width.tentat
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/table/table-cell-multicol-nested-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/table/table-cell-multicol-nested-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/table/table-cell-multicol-nested-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/with-custom-layout-on-same-element.https.html
+# [auto-fail:IMG_MISMATCH] https://web-platform.test:8443/css/css-multicol/with-custom-layout-on-same-element.https.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/zero-column-width-layout.html

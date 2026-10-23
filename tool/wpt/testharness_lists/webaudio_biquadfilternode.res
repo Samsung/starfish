@@ -13,4 +13,4 @@ http://web-platform.test:8000/webaudio/the-audio-api/the-biquadfilternode-interf
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/webaudio/the-audio-api/the-biquadfilternode-interface/biquad-automation.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-biquadfilternode-interface/biquad-tail.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-biquadfilternode-interface/no-dezippering.html
-http://web-platform.test:8000/webaudio/the-audio-api/the-biquadfilternode-interface/biquadfilter-rendersizehint.https.html
+https://web-platform.test:8443/webaudio/the-audio-api/the-biquadfilternode-interface/biquadfilter-rendersizehint.https.html

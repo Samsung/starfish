@@ -35,14 +35,15 @@ import os
 import shutil
 import signal
 import socket
+import ssl
 import subprocess
 import sys
 import tempfile
 import time
 from contextlib import contextmanager
+from http.client import HTTPConnection, HTTPSConnection, HTTPException
 
-HOST = "web-platform.test"
-HTTP_PORT = 8000
+from wpt_urls import HOST, HTTP_PORT, HTTPS_PORT
 # Ports that must be free for `wpt serve` to come up fully.
 REQUIRED_PORTS = (8000, 8001, 8443, 8444, 9000)
 
@@ -62,15 +63,22 @@ def _port_open(port, host="127.0.0.1", timeout=0.5):
         return s.connect_ex((host, port)) == 0
 
 
-def _http_ok(path="/", timeout=2.0):
+def _http_ok(path="/", timeout=2.0, https=False):
+    conn = None
     try:
-        with socket.create_connection((HOST, HTTP_PORT), timeout=timeout) as s:
-            req = "GET %s HTTP/1.0\r\nHost: %s\r\n\r\n" % (path, HOST)
-            s.sendall(req.encode())
-            data = s.recv(64)
-        return data.startswith(b"HTTP/")
-    except OSError:
+        if https:
+            # The local WPT server uses a fixture CA, as in wpt_audit.py.
+            conn = HTTPSConnection(HOST, HTTPS_PORT, timeout=timeout,
+                                   context=ssl._create_unverified_context())
+        else:
+            conn = HTTPConnection(HOST, HTTP_PORT, timeout=timeout)
+        conn.request("GET", path)
+        return conn.getresponse().status == 200
+    except (OSError, HTTPException):
         return False
+    finally:
+        if conn is not None:
+            conn.close()
 
 
 def _wait_ports_free(timeout=15):
@@ -184,7 +192,7 @@ def wpt_serve(wpt_root, inject_script=DEFAULT_INJECT, http2=True,
                 raise WptServerError(
                     "wpt serve exited during startup (code %s); see /tmp/wpt_serve.log"
                     % proc.returncode)
-            if _http_ok("/"):
+            if _http_ok("/") and _http_ok("/", https=True):
                 good += 1
                 if good >= 3:
                     break
@@ -195,8 +203,8 @@ def wpt_serve(wpt_root, inject_script=DEFAULT_INJECT, http2=True,
             raise WptServerError(
                 "wpt serve did not become healthy within %ss" % startup_timeout)
         if verbose:
-            print("[wpt] serving on http://%s:%d (pid %d)"
-                  % (HOST, HTTP_PORT, proc.pid), file=sys.stderr)
+            print("[wpt] serving on http://%s:%d and https://%s:%d (pid %d)"
+                  % (HOST, HTTP_PORT, HOST, HTTPS_PORT, proc.pid), file=sys.stderr)
         yield "http://%s:%d" % (HOST, HTTP_PORT)
     finally:
         _terminate(proc, verbose=verbose)
