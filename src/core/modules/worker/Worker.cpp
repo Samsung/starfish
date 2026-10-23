@@ -67,7 +67,6 @@ void Worker::terminate()
 
     m_workerHostProxy->terminateWorkerGlobalScope();
     m_workerHostProxy->close();
-    m_workerHostProxy->terminate();
 
     m_workerThread->setOnTerminatedCallback(
         [](void* data) {
@@ -88,6 +87,11 @@ void Worker::join()
 void Worker::destroy()
 {
     m_executionContext->removeActiveWorker(this);
+    // The worker thread is joined by now: nothing reads a posted message any
+    // more (freeing them in terminate() raced with the worker deserializing
+    // one), and a task it posted after terminate() would run against its
+    // freed heap.
+    m_workerHostProxy->dispose();
     m_workerHostProxy = nullptr;
     m_workerThread = nullptr;
 }

@@ -37,7 +37,6 @@ WorkerProxy::WorkerProxy(ExecutionContext* executionContext,
     , m_workerThread(workerThread)
     , m_entangledEventTarget(nullptr)
     , m_entangledWorkerProxy(nullptr)
-    , m_wasTerminated(false)
     , m_isClosed(false)
 {
 }
@@ -93,41 +92,57 @@ void WorkerProxy::postMessageToEntangledEventTarget(
         return;
     }
 
+    // Each thread collects its own heap (GC_THREAD_ISOLATE), which goes away
+    // with the thread. The task therefore carries the receiver's proxy, which
+    // lives on the receiver's heap, and reaches the sender's objects through
+    // it only while the receiver's proxy is open: a side closes its proxy
+    // before the other side's thread can end, and a worker thread ends only
+    // after its page terminated it.
     targetMessageLoop()->addIdlerWithNoGCRootingInOtherThread(
         m_workerThread->workerMessageLoopGlobalScope(),
         [](size_t handle, void* data, void* data1) {
-            auto* proxy = static_cast<WorkerProxy*>(data);
+            auto* receiver = static_cast<WorkerProxy*>(data);
 
-            if (proxy->entangledWorkerProxy()->isClosed()) {
+            // Only the receiver's state decides delivery: a worker that
+            // called close() still gets the messages it posted before
+            // delivered to its page (HTML: close() discards the worker's
+            // own tasks, not the page's).
+            if (receiver->isClosed()) {
                 return;
             }
+            WorkerProxy* sender = receiver->entangledWorkerProxy();
 
             auto* serializedMessage =
                 static_cast<SerializeWithTransferResult*>(data1);
 
-            STARFISH_ASSERT(proxy->targetExecutionContext()->isContextThread());
+            STARFISH_ASSERT(
+                sender->targetExecutionContext()->isContextThread());
             MessageEvent* event = new MessageEvent(
-                proxy->targetExecutionContext(), serializedMessage);
-            proxy->entangledEventTarget()->dispatchEventByUA(event);
+                sender->targetExecutionContext(), serializedMessage);
+            sender->entangledEventTarget()->dispatchEventByUA(event);
 
-            if (proxy->isClosed()) {
+            // The handler may have ended either side: a page that calls
+            // worker.terminate() from its message handler closes the proxy
+            // on this side and tears down the sender's loop concurrently.
+            // The message then belongs to the sender's own teardown.
+            if (receiver->isClosed() || sender->isClosed()) {
                 return;
             }
 
             // Free serializedMessage in thread where this variable was created.
-            proxy->ownerExecutionContext()
+            sender->ownerExecutionContext()
                 ->webBase()
                 ->messageLoop()
                 ->addIdlerWithNoGCRootingInOtherThread(
-                    proxy->ownerExecutionContext()->globalScope(),
+                    sender->ownerExecutionContext()->globalScope(),
                     [](size_t handle, void* data, void* data1) {
                         WorkerProxy::onPostMessageDone(
                             static_cast<WorkerProxy*>(data),
                             static_cast<SerializeWithTransferResult*>(data1));
                     },
-                    proxy, serializedMessage);
+                    sender, serializedMessage);
         },
-        this, serializedMessage);
+        m_entangledWorkerProxy, serializedMessage);
 }
 
 SerializeWithTransferResult* WorkerProxy::createSerializedMessage()
@@ -154,12 +169,16 @@ void WorkerProxy::removeSerializedMessage(
     }
 }
 
-void WorkerProxy::clearSerializedMessages()
+void WorkerProxy::dispose()
 {
     STARFISH_ASSERT(m_ownerExecutionContext->isContextThread());
 
-    // If the worker terminates unexpectedly, serializedMessage is not
-    // freed and remains in the vector.
+    // Tasks the other side posted after close() cleared the loop are still
+    // queued; its thread is gone by now, so they must not run.
+    clearPendingPostTask();
+
+    // A message the receiver never acknowledged is freed here: one it has
+    // not dispatched yet, or one it dispatched after this proxy closed.
     for (SerializeWithTransferResult* serializedMessage :
          m_serializedMessages) {
         delete serializedMessage;
@@ -167,21 +186,6 @@ void WorkerProxy::clearSerializedMessages()
 
     m_serializedMessages.clear();
     m_serializedMessages.shrink_to_fit();
-}
-
-void WorkerProxy::terminate()
-{
-    STARFISH_ASSERT(m_ownerExecutionContext->isContextThread());
-
-    if (m_wasTerminated) {
-        return;
-    }
-
-    m_wasTerminated = true;
-
-    clearPendingPostTask();
-
-    clearSerializedMessages();
 }
 
 void WorkerProxy::clearPendingPostTask()
@@ -192,7 +196,10 @@ void WorkerProxy::clearPendingPostTask()
 
 void WorkerProxy::close()
 {
+    STARFISH_ASSERT(m_ownerExecutionContext->isContextThread());
+
     m_isClosed = true;
+    clearPendingPostTask();
 }
 
 EventTarget* WorkerProxy::entangledEventTarget() const

@@ -124,7 +124,7 @@ void DedicatedWorkerGlobalScope::dispose()
     m_wasTerminated = true;
 
     if (m_workerObjectProxy) {
-        m_workerObjectProxy->terminate();
+        m_workerObjectProxy->dispose();
         m_workerObjectProxy = nullptr;
     }
 

@@ -39,7 +39,10 @@ public:
         WorkerProxy* WorkerProxy,
         SerializeWithTransferResult* serializedMessage);
 
-    virtual void terminate();
+    // Drops the tasks still queued for this proxy and frees the messages it
+    // posted. Only once the other side's thread is joined: until then that
+    // thread may still post a task or read a message.
+    void dispose();
 
     void entangleTarget(EventTarget* eventTarget, WorkerProxy* proxy);
 
@@ -48,9 +51,11 @@ public:
     void postMessage(ScriptValue message,
                      const GCVector<ScriptObject>& transfer);
 
+    // Takes this side out of the exchange while the other side's thread is
+    // still running: its tasks stop delivering to this side, and the tasks
+    // already queued on this side's loop are dropped.
     void close();
 
-    DEFINE_GETTER(bool, wasTerminated);
     DEFINE_GETTER(ExecutionContext*, ownerExecutionContext);
     DEFINE_GETTER(WorkerThread*, workerThread);
     DEFINE_GETTER(bool, isClosed);
@@ -73,7 +78,6 @@ protected:
     SerializeWithTransferResult* createSerializedMessage();
     void removeSerializedMessage(
         SerializeWithTransferResult* serializedMessage);
-    void clearSerializedMessages();
 
     void clearPendingPostTask();
 
@@ -81,7 +85,6 @@ protected:
     WorkerThread* m_workerThread;
     EventTarget* m_entangledEventTarget;
     WorkerProxy* m_entangledWorkerProxy;
-    bool m_wasTerminated;
     std::atomic_bool m_isClosed;
     GCAtomicVector<SerializeWithTransferResult*> m_serializedMessages;
 };
