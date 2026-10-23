@@ -63,11 +63,10 @@ IDBOpenDBRequest* IDBFactory::open(String* name,
 
     IDBOpenDBRequest* request = new IDBOpenDBRequest(m_executionContext);
 
-    OpenDBRequestData* data = new (NoGC) OpenDBRequestData();
+    OpenDBRequestData* data = new OpenDBRequestData();
     data->idbRequest = request;
-    data->name = name;
+    data->name = name->toUTF8NonGCString();
     data->version = version;
-    data->webOrigin = m_executionContext->webOrigin();
     data->identifier =
         IDBDatabaseIdentifier(m_executionContext->webOrigin(), name);
 
@@ -91,7 +90,9 @@ IDBOpenDBRequest* IDBFactory::open(String* name,
 
                 IDBDatabase* db = new IDBDatabase(
                     request->executionContext(), requestData->connection,
-                    requestData->name, requestData->version.getValue());
+                    String::fromUTF8(requestData->name.data(),
+                                     requestData->name.length()),
+                    requestData->version.getValue());
 
                 request->setDatabase(db);
 
@@ -102,7 +103,10 @@ IDBOpenDBRequest* IDBFactory::open(String* name,
                 request->successOpenRequest();
             }
 
-            GC_FREE(requestData);
+            delete requestData;
+        },
+        [](IDBTaskQueueItemData* data) {
+            delete reinterpret_cast<OpenDBRequestData*>(data);
         },
         data);
 

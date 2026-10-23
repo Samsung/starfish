@@ -75,6 +75,17 @@ void IDBStorageManager::dispose()
     m_taskQueue.reset();
 }
 
+void IDBStorageManager::cancelTasks(ExecutionContext* context)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+
+    if (!m_isStared) {
+        return;
+    }
+
+    m_taskQueue->cancelTasks(context);
+}
+
 IDBTaskQueue* IDBStorageManager::taskQueue()
 {
     return m_taskQueue.get();

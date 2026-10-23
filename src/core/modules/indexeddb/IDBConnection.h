@@ -22,26 +22,26 @@
 #ifndef __StarfishIDBConnection__
 #define __StarfishIDBConnection__
 
+#include <string>
+#include <unordered_map>
+
 #include "core/modules/indexeddb/IDBDatabaseIdentifier.h"
+#include "core/modules/indexeddb/IDBRequest.h"
 
 namespace Starfish {
 
-class StorageInternal;
-class WebOrigin;
 class IDBBackingStore;
-class IDBKey;
-class IDBKeyRange;
 struct OpenDBRequestData;
-enum class IDBRequestErrorType : uint8_t;
 
-class IDBConnectionData : public gc {
+// State of the IDB thread. It lives on that thread's stack and holds plain
+// data only: the thread collects its own heap and must not keep anything
+// that belongs to a requester's heap.
+class IDBConnectionData {
 public:
-    IDBConnectionData();
-
-    StorageInternal* storageKey(WebOrigin* origin);
-
-private:
-    StorageInternal* m_storageKey;
+    // Version of every database opened so far, by name.
+    // TODO: change to persistent storage; resolve the issues when multiple
+    // processes modify the same storage key.
+    std::unordered_map<std::string, unsigned long long> m_versions;
 };
 
 // NOTE: The IDBConnection class is created from Window and Worker by
@@ -57,11 +57,11 @@ public:
     static void openDatabase(IDBConnectionData* connectionData,
                              OpenDBRequestData* data);
 
-    IDBRequestErrorType storeRecode(String* name, const char* value,
-                                    size_t valueSize, IDBKey* key,
+    IDBRequestErrorType storeRecode(const std::string& name, const char* value,
+                                    size_t valueSize, int64_t keyHash,
                                     bool noOverwrite);
 
-    bool retrieveValue(String* name, IDBKeyRange* query, char*& data,
+    bool retrieveValue(const std::string& name, int64_t keyHash, char*& data,
                        size_t& dataSize);
 
     IDBBackingStore* backingStore();

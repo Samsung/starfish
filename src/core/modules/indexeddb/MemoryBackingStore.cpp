@@ -23,16 +23,22 @@
 #include "platform/file/PlatformDirectory.h"
 #include "platform/file/PlatformFile.h"
 #include "core/util/debug/Trace.h"
-#include "core/modules/indexeddb/IDBKey.h"
 #include "core/modules/indexeddb/IDBRequest.h"
 #include "core/modules/indexeddb/IDBStorageManager.h"
 #include "core/modules/indexeddb/MemoryBackingStore.h"
 
 namespace Starfish {
 
-static String* joinPath(String* path)
+// The strings built here live on the IDB thread's own heap and only serve
+// the file-system calls below.
+static String* pathString(const std::string& s)
 {
-    return path;
+    return String::fromUTF8(s.data(), s.length());
+}
+
+static String* joinPath(String* first)
+{
+    return first;
 }
 
 template <typename... Types>
@@ -41,10 +47,12 @@ static String* joinPath(String* first, Types... args)
     return first->concat("/")->concat(joinPath(args...));
 }
 
-void MemoryBackingStore::open(String* name, unsigned long long version)
+void MemoryBackingStore::open(const std::string& name,
+                              unsigned long long version)
 {
     String* openPath =
-        joinPath(IDBStorageManager::instance().getIDBLocalStoragePath(), name);
+        joinPath(IDBStorageManager::instance().getIDBLocalStoragePath(),
+                 pathString(name));
 
     m_openPath = openPath->toUTF8NonGCString();
 
@@ -53,22 +61,17 @@ void MemoryBackingStore::open(String* name, unsigned long long version)
     TRACE(IDB, m_openPath);
 }
 
-IDBRequestErrorType MemoryBackingStore::addOrPut(String* name, const char* data,
-                                                 size_t dataSize, IDBKey* key,
+IDBRequestErrorType MemoryBackingStore::addOrPut(const std::string& storeName,
+                                                 const char* data,
+                                                 size_t dataSize,
+                                                 int64_t keyHash,
                                                  bool noOverwrite)
 {
-    Optional<String*> keyString = key->toString();
-    if (!keyString.hasValue()) {
-        return IDBRequestErrorType::Unknown;
-    }
-
-    String* hashString = String::fromInt64(keyString->hashValue());
-    String* path = joinPath(
-        String::fromUTF8(m_openPath.c_str(), m_openPath.length()), name);
+    String* path = joinPath(pathString(m_openPath), pathString(storeName));
 
     PlatformDirectoryUtil::createDirectory(path);
 
-    path = joinPath(path, hashString);
+    path = joinPath(path, String::fromInt64(keyHash));
     auto out = PlatformFile::open(path, PlatformFile::FileMode::Write);
 
     if (!out) {
@@ -86,18 +89,11 @@ IDBRequestErrorType MemoryBackingStore::addOrPut(String* name, const char* data,
                             : IDBRequestErrorType::Unknown;
 }
 
-bool MemoryBackingStore::get(String* name, IDBKey* key, char*& data,
-                             size_t& dataSize)
+bool MemoryBackingStore::get(const std::string& storeName, int64_t keyHash,
+                             char*& data, size_t& dataSize)
 {
-    Optional<String*> keyString = key->toString();
-    if (!keyString.hasValue()) {
-        return false;
-    }
-
-    String* hashString = String::fromInt64(keyString->hashValue());
-    String* path =
-        joinPath(String::fromUTF8(m_openPath.c_str(), m_openPath.length()),
-                 name, hashString);
+    String* path = joinPath(pathString(m_openPath), pathString(storeName),
+                            String::fromInt64(keyHash));
     TRACE(IDB, CSTR(path));
 
     auto in = PlatformFile::open(path, PlatformFile::FileMode::Read);

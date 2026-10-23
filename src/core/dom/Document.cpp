@@ -110,6 +110,7 @@
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/modules/canvas/NativeGradient.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/indexeddb/IDBStorageManager.h"
 #include "platform/loader/ResourceLoader.h"
 #include "platform/loader/ImageResource.h"
 #include "platform/file/PlatformFile.h"
@@ -899,6 +900,11 @@ void Document::dispose()
     executionContext()->disposeActiveResourceRequests();
 #ifdef STARFISH_ENABLE_WEBSOCKET
     executionContext()->disposeActiveWebSockets();
+#endif
+#if defined(STARFISH_ENABLE_IDB)
+    // The IDB thread must not reach a context that is gone; its queued and
+    // running requests for this context are dropped before the roots go.
+    IDBStorageManager::instance().cancelTasks(executionContext());
 #endif
     executionContext()->clearPointerRootMap();
 

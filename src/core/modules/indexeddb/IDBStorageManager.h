@@ -26,6 +26,8 @@
 
 namespace Starfish {
 
+class ExecutionContext;
+
 class IDBTaskQueue;
 class IDBConnection;
 
@@ -38,6 +40,9 @@ public:
     void start();
 
     void dispose();
+
+    // Called by a context that is going away, on its own thread.
+    void cancelTasks(ExecutionContext* context);
 
     IDBTaskQueue* taskQueue();
 

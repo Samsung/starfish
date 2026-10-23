@@ -130,32 +130,45 @@ IDBRequest* IDBObjectStore::addOrPut(ScriptValue value, ScriptValue key,
     IDBRequest* request = new IDBRequest(m_executionContext);
 
     struct Params : public IDBTaskQueueItemData {
-        String* name;
-        IDBKey* key;
-        SerializedRawScriptValueData* value;
-        IDBConnection* connection;
-        IDBRequest* request;
-        bool noOverwrite;
+        std::string name;
+        bool hasKey{ false };
+        int64_t keyHash{ 0 };
+        // The serialized value stays rooted in the context while the IDB
+        // thread reads it; it is not copied.
+        SerializedRawScriptValueData* value{ nullptr };
+        IDBConnection* connection{ nullptr };
+        bool noOverwrite{ false };
     };
 
-    Params* p = new (NoGC) Params();
+    Params* p = new Params();
     p->idbRequest = request;
-    p->name = m_name;
-    p->key = convertedKey;
+    p->name = m_name->toUTF8NonGCString();
+    Optional<String*> keyString = convertedKey->toString();
+    if (keyString.hasValue()) {
+        p->hasKey = true;
+        p->keyHash = static_cast<int64_t>(keyString.getValue()->hashValue());
+    }
     p->value = rawData;
     p->connection = m_transaction->db()->connection();
     p->noOverwrite = noOverwrite;
+    m_executionContext->addPointerInRootSet(rawData);
 
     auto operation = std::make_unique<IDBTaskQueueItem>(
         [](IDBConnectionData* connectionData, IDBTaskQueueItemData* data) {
             Params* p = reinterpret_cast<Params*>(data);
 
+            if (!p->hasKey) {
+                p->error = IDBRequestErrorType::Unknown;
+                return;
+            }
             p->error = p->connection->storeRecode(
                 p->name, p->value->internal()->data(),
-                p->value->internal()->size(), p->key, p->noOverwrite);
+                p->value->internal()->size(), p->keyHash, p->noOverwrite);
         },
         [](IDBTaskQueueItemData* data) {
             Params* p = reinterpret_cast<Params*>(data);
+            p->idbRequest->executionContext()->removePointerFromRootSet(
+                p->value);
             if (p->error == IDBRequestErrorType::None) {
                 p->idbRequest->success(scriptUndefined());
             } else {
@@ -163,7 +176,10 @@ IDBRequest* IDBObjectStore::addOrPut(ScriptValue value, ScriptValue key,
                     p->idbRequest->executionContext(), p->error));
             }
 
-            GC_FREE(p);
+            delete p;
+        },
+        [](IDBTaskQueueItemData* data) {
+            delete reinterpret_cast<Params*>(data);
         },
         p);
 
@@ -195,24 +211,34 @@ IDBRequest* IDBObjectStore::get(ScriptValue query)
 
     struct Params : public IDBTaskQueueItemData {
     public:
-        String* name{ nullptr };
-        IDBKeyRange* range{ nullptr };
+        std::string name;
+        // Only a single-key range is looked up, by the hash of its key.
+        bool hasKey{ false };
+        int64_t keyHash{ 0 };
         char* buffer{ nullptr };
         size_t bufferSize{ 0 };
         IDBConnection* connection{ nullptr };
         bool result{ false };
     };
 
-    Params* p = new (NoGC) Params();
+    Params* p = new Params();
     p->idbRequest = request;
-    p->name = m_name;
-    p->range = range;
+    p->name = m_name->toUTF8NonGCString();
+    if (range->isOnly()) {
+        Optional<String*> keyString = range->lower()->toString();
+        if (keyString.hasValue()) {
+            p->hasKey = true;
+            p->keyHash =
+                static_cast<int64_t>(keyString.getValue()->hashValue());
+        }
+    }
     p->connection = m_transaction->db()->connection();
 
     auto operation = std::make_unique<IDBTaskQueueItem>(
         [](IDBConnectionData* connectionData, IDBTaskQueueItemData* data) {
             Params* p = static_cast<Params*>(data);
-            p->result = p->connection->retrieveValue(p->name, p->range,
+            p->result = p->hasKey &&
+                        p->connection->retrieveValue(p->name, p->keyHash,
                                                      p->buffer, p->bufferSize);
         },
         [](IDBTaskQueueItemData* data) {
@@ -240,7 +266,14 @@ IDBRequest* IDBObjectStore::get(ScriptValue query)
                 free(p->buffer);
             }
 
-            GC_FREE(p);
+            delete p;
+        },
+        [](IDBTaskQueueItemData* data) {
+            Params* p = static_cast<Params*>(data);
+            if (p->buffer) {
+                free(p->buffer);
+            }
+            delete p;
         },
         p);
 

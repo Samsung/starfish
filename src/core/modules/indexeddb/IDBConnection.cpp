@@ -21,53 +21,27 @@
 
 #include "StarfishConfig.h"
 #include "core/util/debug/Trace.h"
-#include "core/storage/StorageInternal.h"
 #include "core/modules/indexeddb/IDBStorageManager.h"
 #include "core/modules/indexeddb/MemoryBackingStore.h"
-#include "core/modules/indexeddb/IDBKeyRange.h"
 #include "core/modules/indexeddb/IDBOpenDBRequest.h"
 #include "core/modules/indexeddb/IDBConnection.h"
 
 namespace Starfish {
-
-IDBConnectionData::IDBConnectionData()
-    : m_storageKey(nullptr)
-{
-}
-
-StorageInternal* IDBConnectionData::storageKey(WebOrigin* origin)
-{
-    if (m_storageKey == nullptr) {
-        // TODO: change to persistent storage
-        // resolve the issues when multiple processes modify the same storage
-        // key.
-        m_storageKey = new StorageMemory(StorageType::Local, origin);
-    }
-
-    return m_storageKey;
-}
 
 void IDBConnection::openDatabase(IDBConnectionData* connectionData,
                                  OpenDBRequestData* data)
 {
     // https://w3c.github.io/IndexedDB/#open-a-database-connection
 
-    StorageInternal* storageKey = connectionData->storageKey(data->webOrigin);
-
-    // key is name, value is version.
-    Optional<String*> db = storageKey->getItem(data->name);
-    unsigned long long dbVersion = 1;
-
-    if (db.hasValue()) {
-        std::istringstream iss(CSTR(db.getValue()));
-        iss >> dbVersion;
-    }
+    auto found = connectionData->m_versions.find(data->name);
+    bool exists = found != connectionData->m_versions.end();
+    unsigned long long dbVersion = exists ? found->second : 1;
 
     if (!data->version.hasValue()) {
         data->version = Optional<unsigned long long>(dbVersion);
     }
 
-    if (!db.hasValue()) {
+    if (!exists) {
         dbVersion = 0;
     }
 
@@ -77,21 +51,18 @@ void IDBConnection::openDatabase(IDBConnectionData* connectionData,
     }
 
     data->connection = IDBStorageManager::instance().createConnection(
-        data->name->toUTF8NonGCString(), data->identifier);
+        data->name, data->identifier);
     data->connection->setVersion(data->version.getValue());
 
     if (dbVersion < data->version.getValue()) {
         // TODO: 10. If db’s version is less than version, then:
         dbVersion = data->version.getValue();
-        std::string versionString = std::to_string(dbVersion);
-        storageKey->setItem(data->name,
-                            String::createASCIIString(versionString.c_str(),
-                                                      versionString.length()));
+        connectionData->m_versions[data->name] = dbVersion;
 
         data->upgradeNeeded = true;
     }
 
-    TRACE(IDB, "dbname:", CSTR(data->name), "version:", dbVersion);
+    TRACE(IDB, "dbname:", data->name, "version:", dbVersion);
     data->connection->m_backingStore->open(data->name, dbVersion);
 }
 
@@ -104,25 +75,22 @@ IDBConnection::IDBConnection(const std::string& dbName,
 {
 }
 
-IDBRequestErrorType IDBConnection::storeRecode(String* name, const char* data,
-                                               size_t dataSize, IDBKey* key,
+IDBRequestErrorType IDBConnection::storeRecode(const std::string& name,
+                                               const char* data,
+                                               size_t dataSize, int64_t keyHash,
                                                bool noOverwrite)
 {
     // TODO:
     // https://w3c.github.io/IndexedDB/#store-a-record-into-an-object-store
-    return m_backingStore->addOrPut(name, data, dataSize, key, noOverwrite);
+    return m_backingStore->addOrPut(name, data, dataSize, keyHash, noOverwrite);
 }
 
-bool IDBConnection::retrieveValue(String* name, IDBKeyRange* range, char*& data,
-                                  size_t& dataSize)
+bool IDBConnection::retrieveValue(const std::string& name, int64_t keyHash,
+                                  char*& data, size_t& dataSize)
 {
     // TODO:
     // https://w3c.github.io/IndexedDB/#retrieve-a-value-from-an-object-store
-    if (!range->isOnly()) {
-        return false;
-    }
-
-    return m_backingStore->get(name, range->lower(), data, dataSize);
+    return m_backingStore->get(name, keyHash, data, dataSize);
 }
 
 IDBBackingStore* IDBConnection::backingStore()
