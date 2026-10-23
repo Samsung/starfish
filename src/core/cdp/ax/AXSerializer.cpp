@@ -39,7 +39,11 @@
 #include "core/page/BrowsingContext.h"
 
 #include <cctype>
+#include <cerrno>
 #include <climits>
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
 
 namespace Starfish {
 
@@ -52,6 +56,9 @@ namespace {
 
     // Chrome shows each character of a password field as this bullet.
     const char* kPasswordBullet = "\xE2\x80\xA2";
+
+    // The largest whole number a double holds exactly, 2^53.
+    const double kMaxExactInteger = 9007199254740992.0;
 
     // The input types whose value a user types in. Chrome exposes the value
     // of these inputs. It exposes no value for the other types, such as a
@@ -293,6 +300,24 @@ namespace {
             }
         }
         return EditableKind::None;
+    }
+
+    // Parses the whole string as a decimal number.
+    // "5", "-2.5", and "1e3" pass. "", "5px", and "1,5" do not.
+    bool parseWholeNumber(const std::string& text, double& out)
+    {
+        if (text.empty()) {
+            return false;
+        }
+        const char* begin = text.c_str();
+        char* end = nullptr;
+        errno = 0;
+        double parsed = std::strtod(begin, &end);
+        if (errno == ERANGE || end != begin + text.size()) {
+            return false;
+        }
+        out = parsed;
+        return true;
     }
 
 } // namespace
@@ -966,8 +991,13 @@ void AXSerializer::addDescriptionAndValue(rapidjson::Value& out, AXNode* node)
 
     std::string tag = tagOf(element);
     std::string controlValue;
+    bool numberValue = false;
     if (tag == "input" || tag == "textarea" || tag == "select") {
         controlValue = formControlValue(element, tag);
+        // Chrome reports the value of <input type="number"> as a number.
+        // Every other control keeps the string form.
+        numberValue =
+            tag == "input" && lowered(axAttribute(element, "type")) == "number";
     } else if (axHasAttribute(element, "aria-valuetext")) {
         controlValue = axAttribute(element, "aria-valuetext");
     } else if (axHasAttribute(element, "aria-valuenow")) {
@@ -975,8 +1005,22 @@ void AXSerializer::addDescriptionAndValue(rapidjson::Value& out, AXNode* node)
     }
     if (!controlValue.empty()) {
         rapidjson::Value value(rapidjson::kObjectType);
-        value.AddMember("type", "string", *m_allocator);
-        value.AddMember("value", stringValue(controlValue), *m_allocator);
+        double parsed = 0.0;
+        if (numberValue && parseWholeNumber(controlValue, parsed)) {
+            value.AddMember("type", "number", *m_allocator);
+            // A whole number is sent as an integer, as Chrome does.
+            // Chrome sends 5, not 5.0.
+            if (std::isfinite(parsed) && parsed == std::floor(parsed) &&
+                std::fabs(parsed) <= kMaxExactInteger) {
+                value.AddMember("value", static_cast<int64_t>(parsed),
+                                *m_allocator);
+            } else {
+                value.AddMember("value", parsed, *m_allocator);
+            }
+        } else {
+            value.AddMember("type", "string", *m_allocator);
+            value.AddMember("value", stringValue(controlValue), *m_allocator);
+        }
         out.AddMember("value", value, *m_allocator);
     }
 }
