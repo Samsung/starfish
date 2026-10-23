@@ -103,6 +103,10 @@
       "expected": "fail",
       "category": "script-error"
     },
+    "accessibility/accessibility-number-input-value.js": {
+      "expected": "pass",
+      "suite": "internal"
+    },
     "accessibility/accessibility-properties.js": {
       "expected": "pass",
       "suite": "internal"
