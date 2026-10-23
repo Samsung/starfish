@@ -112,10 +112,13 @@ std::string axRoleForElement(Element* element, const std::string& tag)
         if (type == "range") {
             return "slider";
         }
+        if (type == "number") {
+            return "spinbutton";
+        }
         if (type == "hidden") {
             return std::string();
         }
-        // text, search, email, url, tel, password, number, "" ...
+        // text, search, email, url, tel, password, "" ...
         return "textbox";
     }
     if (tag == "textarea") {
