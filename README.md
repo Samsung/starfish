@@ -544,7 +544,8 @@ xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/impl_unload_test.py 
 STARFISH_BIN="$PWD/out/release/bin/Starfish" xvfb-run -s '-screen 0 1920x1080x24' -a \
   python3 tool/drivers/run_test.py basic tool/reftest/cairo/internal.res common -p8
 
-# Web Audio (x86_64 builds enable STARFISH_ENABLE_WEBAUDIO by default).
+# Web Audio (x86_64 builds enable STARFISH_ENABLE_WEBAUDIO by default, except
+# the Tizen x86_64 emulator, whose buildroot has no FFmpeg).
 # CI (.github/workflows/x64_test.yml, x64_test_clang.yml) runs:
 #  - webaudio_*.res WPT lists, inside wpt_serve_testharness (2 jobs, 60 s
 #    per test, same wpt serve session as the other lists);
