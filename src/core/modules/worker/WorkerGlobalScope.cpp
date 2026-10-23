@@ -113,6 +113,15 @@ void WorkerGlobalScope::dispose()
 #if !defined(STARFISH_WEBWORKER_HOST)
     m_executionContext->disposeActiveWorkers();
 #endif
+#ifdef STARFISH_ENABLE_WEBSOCKET
+    // A socket's service thread posts to this scope's loop, which goes away
+    // right after the scope; close and join the sockets first, then drop the
+    // tasks they posted while closing so nothing runs on a torn-down scope.
+    // The root map goes with the scope, as it does for a document.
+    m_executionContext->disposeActiveWebSockets();
+    m_webWorker->messageLoop()->clearPendingIdlers(nullptr);
+    m_executionContext->clearPointerRootMap();
+#endif
     if (m_scriptBindingInstance != nullptr) {
         m_scriptBindingInstance->destroy();
         m_scriptBindingInstance = nullptr;

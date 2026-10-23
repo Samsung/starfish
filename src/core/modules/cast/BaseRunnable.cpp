@@ -26,8 +26,9 @@ namespace Starfish {
 
 #define CV_STATUS_TIMEOUT_MS 1
 
-BaseRunnable::BaseRunnable(MessageLoop* messageLoop)
+BaseRunnable::BaseRunnable(MessageLoop* messageLoop, GlobalScope* globalScope)
     : m_messageLoop(messageLoop)
+    , m_globalScope(globalScope)
     , m_isClientsUpdated(true)
     , m_isStopped(false)
 {
@@ -93,8 +94,8 @@ void BaseRunnable::postRun()
             self->onStopped();
         };
 
-        m_messageLoop->addIdlerWithNoGCRootingInOtherThread(nullptr, notifier,
-                                                            client);
+        m_messageLoop->addIdlerWithNoGCRootingInOtherThread(m_globalScope,
+                                                            notifier, client);
     }
 }
 

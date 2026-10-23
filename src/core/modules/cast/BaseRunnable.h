@@ -24,6 +24,7 @@
 
 namespace Starfish {
 
+class GlobalScope;
 class MessageLoop;
 
 class BaseRunnable : public IRunnable {
@@ -36,7 +37,10 @@ public:
         virtual void onStopped() = 0;
     };
 
-    BaseRunnable(MessageLoop* messageLoop);
+    // The stop notification is posted to `messageLoop` on behalf of
+    // `globalScope`, so tearing that scope down drops it with the scope's
+    // other tasks instead of running it against a collected client.
+    BaseRunnable(MessageLoop* messageLoop, GlobalScope* globalScope = nullptr);
     virtual ~BaseRunnable();
 
     void run() override;
@@ -53,6 +57,7 @@ protected:
 
 private:
     MessageLoop* m_messageLoop;
+    GlobalScope* m_globalScope;
     GCVector<Client*> m_clients;
 
     std::atomic_bool m_isClientsUpdated;
