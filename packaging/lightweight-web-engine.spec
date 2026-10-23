@@ -65,6 +65,15 @@ Requires(postun): /sbin/ldconfig
 %define tizen_version_minor 0
 %endif
 
+# Avoid the legacy Ninja posix_spawn failure during Tizen 5 links.
+%if 0%{?tizen_version_major} == 5
+%define cmake_generator Unix Makefiles
+%define cmake_build_tool make %{?_smp_mflags}
+%else
+%define cmake_generator Ninja
+%define cmake_build_tool ninja
+%endif
+
 %if %{?_vd_cfg_product_type:1}%{!?_vd_cfg_product_type:0}
   %if "%{_vd_cfg_product_type}" == "AUDIO" || "%{rpm}" == "headless"
 %define rpm headless
@@ -578,23 +587,23 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DSHELL='%{lwe_shell_type}' -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' \
   -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
   -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \
-  -G Ninja
-ninja -C %{out_tizen} starfish.shared_library
-ninja -C %{out_tizen} starfish.executable
+  -G "%{cmake_generator}"
+%{cmake_build_tool} -C %{out_tizen} starfish.shared_library
+%{cmake_build_tool} -C %{out_tizen} starfish.executable
 
 %if "%{?enable_sharedworker}" == "1"
-ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
+%{cmake_build_tool} -C %{out_tizen} starfish_api.sharedworker.shared_library
 %endif
 %if "%{?enable_serviceworker}" == "1"
-ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
+%{cmake_build_tool} -C %{out_tizen} starfish_api.serviceworker.shared_library
 %endif
 
 %if "%{?build_uwe_tpk}" == "1"
-ninja -C %{out_tizen} starfish.uwe.tpk
+%{cmake_build_tool} -C %{out_tizen} starfish.uwe.tpk
 %endif
 
 %if "%{?build_shell_tpk}" == "1"
-ninja -C %{out_tizen} starfish.executable.tpk
+%{cmake_build_tool} -C %{out_tizen} starfish.executable.tpk
 %endif
 
 %endif
@@ -614,7 +623,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DSHELL='%{lwe_shell_type}' -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}'\
   -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
   -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \
-  -G Ninja
+  -G "%{cmake_generator}"
 %else # 0%{?build_option:1}
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
@@ -625,33 +634,33 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DSHELL='%{lwe_shell_type}' -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' \
   -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
   -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \
-  -G Ninja
+  -G "%{cmake_generator}"
 %endif
 %endif
 
-ninja -C %{out_tizen} starfish.shared_library
-ninja -C %{out_tizen} starfish_api.shared_library
+%{cmake_build_tool} -C %{out_tizen} starfish.shared_library
+%{cmake_build_tool} -C %{out_tizen} starfish_api.shared_library
 %if "%{?disable_shell}" == "0"
-ninja -C %{out_tizen} starfish.executable
+%{cmake_build_tool} -C %{out_tizen} starfish.executable
 %endif
 
 %if "%{?enable_sharedworker}" == "1"
-ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
+%{cmake_build_tool} -C %{out_tizen} starfish_api.sharedworker.shared_library
 %endif
 %if "%{?enable_serviceworker}" == "1"
-ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
+%{cmake_build_tool} -C %{out_tizen} starfish_api.serviceworker.shared_library
 %endif
 
 %if "%{?build_uwe_tpk}" == "1"
-ninja -C %{out_tizen} starfish.uwe.tpk
+%{cmake_build_tool} -C %{out_tizen} starfish.uwe.tpk
 %endif
 
 %if "%{?build_shell_tpk}" == "1"
-ninja -C %{out_tizen} starfish.executable.tpk
+%{cmake_build_tool} -C %{out_tizen} starfish.executable.tpk
 %endif
 
 %if "%{?enable_test}" == "1"
-ninja -C %{out_tizen} install_pixel_test_dep
+%{cmake_build_tool} -C %{out_tizen} install_pixel_test_dep
 %endif
 
 %endif # "%{rpm}" == "prod_tv"
@@ -671,24 +680,24 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' \
   -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
   -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \
-  -G Ninja
-ninja -C %{out_tizen} starfish.shared_library
-ninja -C %{out_tizen} starfish_api.shared_library
-ninja -C %{out_tizen} starfish.executable
+  -G "%{cmake_generator}"
+%{cmake_build_tool} -C %{out_tizen} starfish.shared_library
+%{cmake_build_tool} -C %{out_tizen} starfish_api.shared_library
+%{cmake_build_tool} -C %{out_tizen} starfish.executable
 
 %if "%{?enable_sharedworker}" == "1"
-ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
+%{cmake_build_tool} -C %{out_tizen} starfish_api.sharedworker.shared_library
 %endif
 %if "%{?enable_serviceworker}" == "1"
-ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
+%{cmake_build_tool} -C %{out_tizen} starfish_api.serviceworker.shared_library
 %endif
 
 %if "%{?build_uwe_tpk}" == "1"
-ninja -C %{out_tizen} starfish.uwe.tpk
+%{cmake_build_tool} -C %{out_tizen} starfish.uwe.tpk
 %endif
 
 %if "%{?build_shell_tpk}" == "1"
-ninja -C %{out_tizen} starfish.executable.tpk
+%{cmake_build_tool} -C %{out_tizen} starfish.executable.tpk
 %endif
 
 %endif
@@ -706,24 +715,24 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
   -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' -DENABLE_A11Y_TOUCH=1 \
   -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \
-  -G Ninja
-ninja -C %{out_tizen} starfish.shared_library
-ninja -C %{out_tizen} starfish_api.shared_library
-ninja -C %{out_tizen} starfish.executable
+  -G "%{cmake_generator}"
+%{cmake_build_tool} -C %{out_tizen} starfish.shared_library
+%{cmake_build_tool} -C %{out_tizen} starfish_api.shared_library
+%{cmake_build_tool} -C %{out_tizen} starfish.executable
 
 %if "%{?enable_sharedworker}" == "1"
-ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
+%{cmake_build_tool} -C %{out_tizen} starfish_api.sharedworker.shared_library
 %endif
 %if "%{?enable_serviceworker}" == "1"
-ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
+%{cmake_build_tool} -C %{out_tizen} starfish_api.serviceworker.shared_library
 %endif
 
 %if "%{?build_uwe_tpk}" == "1"
-ninja -C %{out_tizen} starfish.uwe.tpk
+%{cmake_build_tool} -C %{out_tizen} starfish.uwe.tpk
 %endif
 
 %if "%{?build_shell_tpk}" == "1"
-ninja -C %{out_tizen} starfish.executable.tpk
+%{cmake_build_tool} -C %{out_tizen} starfish.executable.tpk
 %endif
 
 %endif
@@ -738,9 +747,9 @@ cmake CMakeLists.txt -B%{out_tizen} -DTIZEN_MAJOR_VERSION='%{tizen_version_major
   -DBACKEND=flutter -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DTARGETNAME=lightweight-web-engine.flutter -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
   -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \
-  -G Ninja
-ninja -C %{out_tizen} starfish.shared_library
-ninja -C %{out_tizen} starfish_api.shared_library
+  -G "%{cmake_generator}"
+%{cmake_build_tool} -C %{out_tizen} starfish.shared_library
+%{cmake_build_tool} -C %{out_tizen} starfish_api.shared_library
 %endif
 
 ##############################################

@@ -311,6 +311,13 @@ cd starfish
 gbs -c ../gbs-conf/gbs.conf build -A armv7l -P profile.50std  --incremental --include-all
 ```
 
+GBS/RPM builds (including release CI) use Unix Makefiles and Make on Tizen
+5.0/5.5 to avoid a legacy Ninja process-spawn failure during linking. Other
+Tizen versions use Ninja. Make uses the RPM buildroot's parallel job settings.
+When switching an existing incremental Tizen 5 build from Ninja, use a fresh
+build directory and re-run configuration; CMake cannot switch generators in
+an existing build directory.
+
 The following build options are supported when building RPMs.
 Default values are in **bold**.
 

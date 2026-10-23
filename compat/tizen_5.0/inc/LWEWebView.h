@@ -147,6 +147,12 @@ public:
      */
     static void Finalize();
 
+    // Query after Finalize, with no remaining engine-backed API objects or
+    // callbacks. True means the dynamic loader released its implementation
+    // and the caller may dlclose this API library. False for static linkage,
+    // legacy implementations, and shutdown from an invalid lifecycle thread.
+    static bool CanUnload();
+
     /**
      * \brief Returns GC frequency. default value is 12
      * If you want to cause more GC while running,
