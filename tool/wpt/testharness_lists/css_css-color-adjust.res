@@ -1,0 +1,10 @@
+# [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/css/css-color-adjust/animation/color-scheme-no-interpolation.html
+# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-color-adjust/animation/forced-color-adjust-no-interpolation.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-color-adjust/parsing/print-color-adjust.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-color-adjust/rendering/dark-color-scheme/color-scheme-color-initial-affected-by-color-scheme-property.html
+# [vacuous-pass:COLOR_SCHEME_UNIMPLEMENTED] http://web-platform.test:8000/css/css-color-adjust/rendering/dark-color-scheme/color-scheme-color-initial-affected-by-meta-color-scheme-dynamic.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-color-adjust/rendering/dark-color-scheme/color-scheme-iframe-dynamic.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-color-adjust/rendering/dark-color-scheme/color-scheme-iframe-preferred-change.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-color-adjust/rendering/dark-color-scheme/color-scheme-iframe-preferred-nested.sub.html
+# [vacuous-pass:COLOR_SCHEME_UNIMPLEMENTED] http://web-platform.test:8000/css/css-color-adjust/rendering/dark-color-scheme/color-scheme-root-background.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-color-adjust/rendering/dark-color-scheme/color-scheme-system-colors.html
