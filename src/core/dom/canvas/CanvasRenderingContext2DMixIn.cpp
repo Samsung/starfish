@@ -124,23 +124,18 @@ static inline String* canvasTextBaselineToString(
     return String::createASCIIString("alphabetic");
 }
 
-static inline String* canvasDirectionToString(CanvasDirection direction,
-                                              ComputedStyle* style)
+static inline String* canvasDirectionToString(CanvasDirection direction)
 {
-    STARFISH_ASSERT(style != nullptr);
-
-    if (direction == CanvasDirection::Inherit) {
-        if (style->direction() == DirectionValue::RtlDirectionValue) {
-            return String::createASCIIString("rtl");
-        }
-    } else if (direction == CanvasDirection::Rtl) {
+    if (direction == CanvasDirection::Rtl) {
         return String::createASCIIString("rtl");
     } else if (direction == CanvasDirection::Ltr) {
         return String::createASCIIString("ltr");
+    } else if (direction == CanvasDirection::Inherit) {
+        return String::createASCIIString("inherit");
     }
 
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    return String::createASCIIString("ltr");
+    return String::createASCIIString("inherit");
 }
 
 static inline bool stringToCanvasTextAlign(String* textAlign,
@@ -2099,12 +2094,10 @@ void CanvasRenderingContext2DMixIn::setTextBaseline(String* value)
 
 String* CanvasRenderingContext2DMixIn::direction()
 {
-    if (m_ownerHTMLCanvasElement->style() != nullptr) {
-        return canvasDirectionToString(m_canvas->canvasTextDirection(),
-                                       m_ownerHTMLCanvasElement->style());
-    }
-    return canvasDirectionToString(m_canvas->canvasTextDirection(),
-                                   executionContext()->document()->style());
+    // "inherit" is a value of the attribute in its own right (HTML,
+    // CanvasTextDrawingStyles); it is only resolved against the canvas
+    // element's directionality when text is measured or drawn.
+    return canvasDirectionToString(m_canvas->canvasTextDirection());
 }
 
 void CanvasRenderingContext2DMixIn::setDirection(String* value)

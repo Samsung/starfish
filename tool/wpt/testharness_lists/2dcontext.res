@@ -586,6 +586,15 @@ http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.stroke.cap.2
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.stroke.join.1.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.stroke.join.2.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.stroke.join.3.html
+http://web-platform.test:8000/html/canvas/element/text/2d.text.align.default.html
+http://web-platform.test:8000/html/canvas/element/text/2d.text.align.invalid.html
+http://web-platform.test:8000/html/canvas/element/text/2d.text.align.valid.html
+http://web-platform.test:8000/html/canvas/element/text/2d.text.baseline.default.html
+http://web-platform.test:8000/html/canvas/element/text/2d.text.baseline.invalid.html
+http://web-platform.test:8000/html/canvas/element/text/2d.text.baseline.valid.html
+http://web-platform.test:8000/html/canvas/element/text/2d.text.direction.default.html
+http://web-platform.test:8000/html/canvas/element/text/2d.text.direction.invalid.html
+http://web-platform.test:8000/html/canvas/element/text/2d.text.direction.valid.html
 # [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.center.html
 # [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.end.ltr.html
 # [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.align.end.rtl.html
@@ -609,6 +618,7 @@ http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.kern.consist
 # [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.space.collapse.nonspace.html
 http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.stroke.basic-manual.html
 http://web-platform.test:8000/html/canvas/element/text/2d.text.draw.stroke.unaffected.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/canvas/element/text/2d.text.drawing.style.measure.direction.html
 # [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.measure.width.basic.html
 # [auto-fail] http://web-platform.test:8000/html/canvas/element/text/2d.text.measure.width.empty.html
 http://web-platform.test:8000/html/canvas/element/the-canvas-state/2d.state.saverestore.bitmap.html
