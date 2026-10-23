@@ -109,6 +109,11 @@ void SocketLWS::serviceTxQueueLocked(struct lws* wsi, bool* failed)
     }
 }
 
+// Every task posted to the owning loop carries a reference so the socket
+// outlives the queue. A task is only dropped unrun when its global scope is
+// torn down, and the teardown clears the context's root map wholesale, so a
+// dropped task leaves the socket alone: by the time its discard callback runs
+// the socket may already be collected. Discards free the task payload only.
 // Service thread. bufferedAmount is defined as of the last time the event
 // loop reached step 1
 // (https://websockets.spec.whatwg.org/#dom-websocket-bufferedamount), so the
@@ -133,7 +138,7 @@ void SocketLWS::publishTransmitted()
         ->webBase()
         ->messageLoop()
         ->addIdlerWithNoGCRootingInOtherThread(
-            nullptr,
+            parent()->executionContext()->globalScope(),
             [](size_t handle, void* data) {
                 SocketLWS* lws = (SocketLWS*)data;
                 // Clear the flag before draining so bytes written after the
@@ -141,14 +146,6 @@ void SocketLWS::publishTransmitted()
                 lws->m_transmitPublishPending.store(false);
                 uint64_t bytes = lws->m_transmittedBytes.exchange(0);
                 lws->parent()->didTransmit(bytes);
-                lws->deref();
-            },
-            // A worker tearing down discards its queued idlers without running
-            // them; without this the ref taken above would pin the socket
-            // graph in the root set for good.
-            [](void* data) {
-                SocketLWS* lws = (SocketLWS*)data;
-                lws->m_transmitPublishPending.store(false);
                 lws->deref();
             },
             this);
@@ -427,8 +424,7 @@ SocketLWS::SocketLWS(WebSocket* socket)
     m_thread->start(m_runnable);
 
     ref();
-    parent()->executionContext()->webBase()->starfish()->addPointerInRootSet(
-        this);
+    parent()->executionContext()->addPointerInRootSet(this);
 
     STARFISH_LOG_INFO("%p SocketLWS::SocketLWS called", this);
 }
@@ -446,11 +442,7 @@ void SocketLWS::deref()
 {
     STARFISH_RELEASE_ASSERT(m_refCount >= 1);
     if (m_refCount.fetch_sub(1) == 1) {
-        parent()
-            ->executionContext()
-            ->webBase()
-            ->starfish()
-            ->removePointerFromRootSet(this);
+        parent()->executionContext()->removePointerFromRootSet(this);
     }
 }
 
@@ -646,13 +638,14 @@ void SocketLWS::updateState(WebSocket::ReadyState state)
     CHECK_ALIVE()
 
     WebBase* webBase = parent()->executionContext()->webBase();
+    GlobalScope* globalScope = parent()->executionContext()->globalScope();
 
     switch (state) {
     case WebSocket::ReadyState::OPEN: {
         m_isReady = true;
         ref();
         webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-            nullptr,
+            globalScope,
             [](size_t handle, void* data) {
                 SocketLWS* socket = (SocketLWS*)data;
                 socket->parent()->setProtocol(
@@ -676,10 +669,10 @@ void SocketLWS::updateState(WebSocket::ReadyState state)
         };
         ref();
         if (isMainThread()) {
-            webBase->messageLoop()->addIdler(nullptr, fn, this);
+            webBase->messageLoop()->addIdler(globalScope, fn, this);
         } else {
             webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-                nullptr, fn, this);
+                globalScope, fn, this);
         }
         break;
     }
@@ -694,12 +687,13 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
     CHECK_ALIVE()
 
     WebBase* webBase = parent()->executionContext()->webBase();
+    GlobalScope* globalScope = parent()->executionContext()->globalScope();
 
     switch (eventType) {
     case LwsEvent::OPEN: {
         ref();
         webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-            nullptr,
+            globalScope,
             [](size_t handle, void* data) {
                 SocketLWS* lws = (SocketLWS*)data;
                 WebSocket* socket = lws->parent();
@@ -728,10 +722,10 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
         };
         ref();
         if (isMainThread()) {
-            webBase->messageLoop()->addIdler(nullptr, fn, this);
+            webBase->messageLoop()->addIdler(globalScope, fn, this);
         } else {
             webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-                nullptr, fn, this);
+                globalScope, fn, this);
         }
     } break;
     case LwsEvent::CLOSE: {
@@ -757,10 +751,10 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
         };
         ref();
         if (isMainThread()) {
-            webBase->messageLoop()->addIdler(nullptr, fn, this);
+            webBase->messageLoop()->addIdler(globalScope, fn, this);
         } else {
             webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-                nullptr, fn, this);
+                globalScope, fn, this);
         }
     } break;
     case LwsEvent::ONMESSAGE: {
@@ -777,7 +771,7 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
             m_rxBuffer.clear();
 
             webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-                nullptr,
+                globalScope,
                 [](size_t handle, void* data) {
                     Param* p = (Param*)data;
                     SocketLWS* lws = p->lws;
@@ -812,7 +806,7 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
                     delete p;
                     lws->deref();
                 },
-                p);
+                [](void* data) { delete (Param*)data; }, p);
         } else {
             // Text
             struct Param {
@@ -827,7 +821,7 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
             m_rxBuffer.clear();
 
             webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-                nullptr,
+                globalScope,
                 [](size_t handle, void* data) {
                     Param* p = (Param*)data;
                     SocketLWS* lws = p->lws;
@@ -850,7 +844,7 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
                     delete p;
                     lws->deref();
                 },
-                p);
+                [](void* data) { delete (Param*)data; }, p);
         }
     } break;
     }

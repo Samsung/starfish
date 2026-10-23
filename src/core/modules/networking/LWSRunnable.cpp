@@ -40,7 +40,8 @@ errno_t strerror_r(char* buffer, size_t sizeInBytes, int errnum)
 namespace Starfish {
 
 LWSRunnable::LWSRunnable(MessageLoop* messageLoop, SocketLWS* socket)
-    : BaseRunnable(messageLoop)
+    : BaseRunnable(messageLoop,
+                   socket->parent()->executionContext()->globalScope())
     , m_socket(socket)
 {
     class LWSRunnableClient : public BaseRunnable::Client {
