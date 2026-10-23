@@ -67,12 +67,10 @@ void WorkerObjectProxy::postSerializedMessage(
 
 void WorkerObjectProxy::terminateWorker()
 {
-    postTask(
-        [](void* data) {
-            auto* workerObjectProxy = static_cast<WorkerObjectProxy*>(data);
-            workerObjectProxy->workerObject()->terminate();
-        },
-        this);
+    // The task runs on the page's thread, possibly after this thread and its
+    // heap are gone; it carries the Worker, which lives on the page's heap.
+    postTask([](void* data) { static_cast<Worker*>(data)->terminate(); },
+             m_workerObject);
     close();
 }
 
