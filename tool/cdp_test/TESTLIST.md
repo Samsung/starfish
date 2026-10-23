@@ -7,8 +7,7 @@
   "entries": {
     "access-inspected-object.js": {
       "expected": "fail",
-      "category": "timeout",
-      "detail": "line 2: expected '{', got 'HARNESS TIMEOUT'"
+      "category": "timeout"
     },
     "cpu-profiler/record-cpu-profile-with-cpu-throttling.js": {
       "expected": "pass"
@@ -23,7 +22,7 @@
 | `expected` | `pass` runs every time. `fail` runs only with `--include-fails` |
 | `suite` | `internal` identifies a Starfish-owned behavior test |
 | `category` | how the failure was grouped, from what the run saw. Never from the expected output |
-| `detail` | the first line that differs, cut at 1000 characters |
+| `detail` | schema only. The error the run saw, cut at 1000 characters |
 
 ## Categories
 
@@ -42,7 +41,12 @@
 | `harness-error` | Node itself failed, so the test never ran |
 
 `output-differs` takes every failure the categories above did not match, so
-its entries have no one cause. Read the detail.
+its entries have no one cause. Run the entry to see the first line that
+differs.
+
+A behavior entry keeps no detail. The first line that differs moves with
+every change to the output, so the list would change in every patch that
+touches the output, even when the result stays the same.
 
 ## Running one entry
 
