@@ -48,7 +48,7 @@ The compile-time flags that gate large chunks of this spec. "Default" is for the
 | Workers | `WORKER=1`, `SHARED_WORKER=1`, `SERVICE_WORKER=1` | off, off, off | Worker globals undefined. Setting `SHARED_WORKER` or `SERVICE_WORKER` forces `WORKER=1`. |
 | IndexedDB | `IDB=1` | off | `indexedDB` undefined. |
 | WebRTC, MediaStream | `WEBRTC=1` (→ `STARFISH_ENABLE_WEBRTC`/`MULTIMEDIA`/`WEBSOCKET`/`WEBAUDIO`) | off | All `RTC*`/`MediaStream*` interfaces undefined. |
-| WebAudio | `STARFISH_ENABLE_WEBAUDIO` (also from `WEBAUDIO=1`; Tizen RPM: `--define 'enable_webaudio 1'`) | on for `CMAKE_SYSTEM_PROCESSOR=x86_64` except the Tizen flutter port; **off** elsewhere unless `WEBAUDIO=1`; also implied by `WEBRTC=1` | `AudioContext` etc. undefined. |
+| WebAudio | `STARFISH_ENABLE_WEBAUDIO` (also from `WEBAUDIO=1`; Tizen RPM: `--define 'enable_webaudio 1'`) | on for `CMAKE_SYSTEM_PROCESSOR=x86_64` except the Tizen flutter port and the Tizen x86_64 emulator; **off** elsewhere unless `WEBAUDIO=1`; also implied by `WEBRTC=1` | `AudioContext` etc. undefined. |
 | WebSocket | `STARFISH_ENABLE_WEBSOCKET` | on (every `CMAKE_SYSTEM_PROCESSOR`) | `WebSocket` undefined. |
 | Web Speech (TTS) | `STARFISH_ENABLE_TTS` | on for `CMAKE_SYSTEM_PROCESSOR=x86_64` except the Tizen flutter port | `SpeechSynthesis*` undefined. |
 | [WAI-ARIA](#accessible-rich-internet-applications-wai-aria) touch exploration | `STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION` (from `ENABLE_A11Y_TOUCH=1`) | on for `CMAKE_SYSTEM_PROCESSOR=x86_64` except the Tizen flutter port; on `CMAKE_SYSTEM_NAME=Tizen` it needs `-DENABLE_A11Y_TOUCH=1` and is force-disabled on TV profiles | Tap-to-speak / double-tap-activate / swipe navigation absent; ARIA attributes still reflect. |
@@ -242,7 +242,7 @@ section are supported.
 
 > **Build-conditional interfaces.** The following classes of IDL interfaces are only exposed when their build flag is on; when off, the constructor is `undefined` at runtime:
 > - `RTC*`, `MediaStream`, `MediaStreamTrack`, `MediaDevices` — `WEBRTC=1` (`STARFISH_ENABLE_WEBRTC`)
-> - `AudioContext`, `BaseAudioContext`, `AudioBuffer*`, `AudioNode*` — `STARFISH_ENABLE_WEBAUDIO` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64` except the Tizen flutter port)
+> - `AudioContext`, `BaseAudioContext`, `AudioBuffer*`, `AudioNode*` — `STARFISH_ENABLE_WEBAUDIO` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64` except the Tizen flutter port and the Tizen x86_64 emulator)
 > - `WebSocket` — `STARFISH_ENABLE_WEBSOCKET` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64`)
 > - `WebGL*`, `EXT_*`, `OES_*`, `WEBGL_*` — `WEBGL=1`
 > - `Worker`, `WorkerGlobalScope`, `DedicatedWorkerGlobalScope`, `WorkerLocation` — `WORKER=1`. `WorkerGlobalScope` is exposed in Workers; `DedicatedWorkerGlobalScope` is exposed only in dedicated Workers. Both global interface objects have prototypes but cannot be constructed with `new`. They are absent from Window.
@@ -3630,7 +3630,7 @@ device samples are not copied back into the graph.
 Progressive video, MediaStream, and Tizen media-player PCM routes are not yet
 connected to this node.
 
-> **Build flag:** WebAudio is gated by `STARFISH_ENABLE_WEBAUDIO` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64` except the Tizen flutter port; also implicitly enabled when `WEBRTC=1`). Without it, `AudioContext`/`BaseAudioContext`/`AudioBuffer*`/`AudioNode` globals are not exposed. See [Build-Conditional Surface](#build-conditional-surface).
+> **Build flag:** WebAudio is gated by `STARFISH_ENABLE_WEBAUDIO` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64` except the Tizen flutter port and the Tizen x86_64 emulator; also implicitly enabled when `WEBRTC=1`). Without it, `AudioContext`/`BaseAudioContext`/`AudioBuffer*`/`AudioNode` globals are not exposed. See [Build-Conditional Surface](#build-conditional-surface).
 
 | Interface | Type | Name | Description | Note |
 |-----------|------|------|-------------|------|

@@ -163,6 +163,14 @@ IF (BACKEND STREQUAL "flutter" AND CMAKE_SYSTEM_NAME STREQUAL "Tizen"
     )
 ENDIF ()
 
+# The Tizen x86_64 emulator (profile.60emul) buildroot lacks FFmpeg, so the
+# x86_64 WebAudio default cannot build there. TTS stays on because its tts
+# package is present in that buildroot. Same ordering rule as the flutter
+# block above. Linux x86_64 hosts keep WebAudio.
+IF (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND CMAKE_SYSTEM_NAME STREQUAL "Tizen")
+    LIST (REMOVE_ITEM LWE_DEFINES_ARCH -DSTARFISH_ENABLE_WEBAUDIO)
+ENDIF ()
+
 IF (${USE_LIBWEBSOCKETS} STREQUAL "1")
     SET (LWE_DEFINES_ARCH
         ${LWE_DEFINES_ARCH}
@@ -424,9 +432,9 @@ IF (${ENABLE_WASM} STREQUAL "1")
     SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM} -DSTARFISH_ENABLE_WASM)
 ENDIF()
 
-# Web Audio is already on for x86_64; WEBAUDIO=1 adds it to the other
-# processors and profiles, which leave it off for its render thread and
-# decoded-PCM memory.
+# Web Audio is already on for x86_64 (except the Tizen emulator, see above);
+# WEBAUDIO=1 adds it to the other processors and profiles, which leave it off
+# for its render thread and decoded-PCM memory.
 IF (${WEBAUDIO} STREQUAL "1")
     SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM} -DSTARFISH_ENABLE_WEBAUDIO)
 ENDIF()
