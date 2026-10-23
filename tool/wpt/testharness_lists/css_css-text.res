@@ -125,19 +125,19 @@ http://web-platform.test:8000/css/css-text/i18n/css3-text-line-break-baspglwj-13
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-cj-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-cj-strict.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-cpm-loose.html
-http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-cpm-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-cpm-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-cpm-strict.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-hyphens-loose.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-hyphens-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-hyphens-strict.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-in-loose.html
-http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-in-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-in-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-in-strict.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-iteration-loose.html
-http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-iteration-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-iteration-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-iteration-strict.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-po-loose.html
-http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-po-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-po-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-po-strict.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-pr-loose.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-pr-normal.html
@@ -146,61 +146,61 @@ http://web-platform.test:8000/css/css-text/i18n/ja/css-text-line-break-ja-po-nor
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-cj-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-cj-strict.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-cpm-loose.html
-http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-cpm-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-cpm-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-cpm-strict.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-hyphens-loose.html
-http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-hyphens-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-hyphens-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-hyphens-strict.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-in-loose.html
-http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-in-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-in-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-in-strict.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-iteration-loose.html
-http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-iteration-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-iteration-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-iteration-strict.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-po-loose.html
-http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-po-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-po-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-po-strict.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-pr-loose.html
-http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-pr-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-pr-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/other-lang/css-text-line-break-de-pr-strict.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-cj-loose.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-cj-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-cj-strict.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-cpm-loose.html
-http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-cpm-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-cpm-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-cpm-strict.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-hyphens-loose.html
-http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-hyphens-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-hyphens-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-hyphens-strict.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-in-loose.html
-http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-in-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-in-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-in-strict.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-iteration-loose.html
-http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-iteration-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-iteration-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-iteration-strict.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-po-loose.html
-http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-po-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-po-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-po-strict.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-pr-loose.html
-http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-pr-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-pr-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/unknown-lang/css-text-line-break-pr-strict.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-cj-loose.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-cj-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-cj-strict.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-cpm-loose.html
-http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-cpm-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-cpm-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-cpm-strict.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-hyphens-loose.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-hyphens-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-hyphens-strict.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-in-loose.html
-http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-in-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-in-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-in-strict.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-iteration-loose.html
-http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-iteration-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-iteration-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-iteration-strict.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-po-loose.html
-http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-po-normal.html
+# [vacuous-pass:FONTS_READY_BEFORE_WEBFONT_LOAD] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-po-normal.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-po-strict.html
 # [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-pr-loose.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/i18n/zh/css-text-line-break-zh-pr-normal.html
