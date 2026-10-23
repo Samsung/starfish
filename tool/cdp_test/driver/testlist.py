@@ -75,18 +75,21 @@ def revision_of(list_path):
     return json.loads(list_path.read_text()).get("revision")
 
 
-def save(list_path, layer_name, revision, active, skipped, metadata=None):
+def save(list_path, layer_name, revision, active, skipped, metadata=None,
+         keeps_detail=True):
     metadata = metadata or {}
     records = []
     for name in active:
         records.append((name, {"expected": "pass", **metadata.get(name, {})}))
     for name, record in skipped.items():
-        records.append((name, {
+        fields = {
             "expected": "fail",
             **metadata.get(name, {}),
             "category": record["category"],
-            "detail": _fit(record["detail"]),
-        }))
+        }
+        if keeps_detail:
+            fields["detail"] = fit(record["detail"])
+        records.append((name, fields))
     document = {
         "layer": layer_name,
         "revision": revision,
@@ -165,7 +168,7 @@ def _release(lock_path):
         pass
 
 
-def _fit(detail):
+def fit(detail):
     """One line, bounded, so one huge failure cannot dominate the file."""
     flattened = " ".join(str(detail).split())
     if len(flattened) <= DETAIL_LIMIT:

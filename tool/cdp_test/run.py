@@ -37,8 +37,10 @@ A category is derived from what the run saw, never from the expected output,
 and names the observation rather than a cause: timeout, output-differs,
 script-error, not-implemented, bad-params, no-connection, harness-error,
 protocol-error, schema-mismatch, and probe-error. A schema request that cannot
-run without parameters is reported as UNPROBEABLE and is not saved. detail
-carries the first line that differs.
+run without parameters is reported as UNPROBEABLE and is not saved. A schema
+entry also keeps a detail, the error it saw. A behavior entry keeps none: its
+detail is the first line that differs, which moves with every change to the
+output. The run prints it instead.
 """
 import argparse
 import concurrent.futures
@@ -93,7 +95,7 @@ class Layer:
     """What differs between the two layers, so the runner can share the rest."""
 
     def __init__(self, name, list_path, revision, known, run_one, label,
-                 metadata=None):
+                 metadata=None, keeps_detail=True):
         self.name = name
         self.list_path = list_path
         self.revision = revision
@@ -101,6 +103,7 @@ class Layer:
         self.run_one = run_one       # (starfish, entry, timeout) -> None
         self.label = label
         self.metadata = metadata or {}
+        self.keeps_detail = keeps_detail
 
 
 def schema_layer(args):
@@ -140,7 +143,8 @@ def behavior_layer(args):
         label=behavior.label,
         metadata={entry: {"suite": "internal"}
                   for entry, root in roots.items()
-                  if root == internal_dir})
+                  if root == internal_dir},
+        keeps_detail=False)
 
 
 LAYERS = {"schema": schema_layer, "behavior": behavior_layer}
@@ -204,7 +208,8 @@ def run_layer(args, layer):
             if entry not in ran:
                 skipped[entry] = record
         testlist.save(layer.list_path, layer.name, layer.revision,
-                      sorted(active), skipped, layer.metadata)
+                      sorted(active), skipped, layer.metadata,
+                      layer.keeps_detail)
         return active, skipped
 
     def measure(entry):
@@ -258,8 +263,9 @@ def run_layer(args, layer):
                     print("%d/%d FAIL %s: %s: %s"
                           % (position, len(to_run), name, category, detail))
                 else:
-                    print("%d/%d %s %s"
-                          % (position, len(to_run), category, name))
+                    print("%d/%d %s %s: %s"
+                          % (position, len(to_run), category, name,
+                             testlist.fit(detail)))
             ran.add(entry)
             save_progress()
     elapsed = time.monotonic() - started
