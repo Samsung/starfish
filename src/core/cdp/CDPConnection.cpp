@@ -53,6 +53,7 @@ CDPConnection::~CDPConnection()
 
 void CDPConnection::writeAll(const char* data, size_t len)
 {
+    std::lock_guard<std::mutex> lock(m_writeMutex);
     size_t sent = 0;
     while (sent < len) {
         ssize_t n = ::send(m_fd, data + sent, len - sent, MSG_NOSIGNAL);

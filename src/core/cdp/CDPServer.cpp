@@ -49,7 +49,8 @@ CDPServer::CDPServer(WebView* webView, uint16_t port)
 
 CDPServer::~CDPServer()
 {
-    if (m_isRunning) {
+    // Also joins an IO thread that already ended on its own (a failed bind).
+    if (m_ioThread) {
         stop();
     }
     delete m_dispatcher;
@@ -60,10 +61,14 @@ void CDPServer::start()
 {
     STARFISH_ASSERT(isMainThread());
     m_ioThread = new Thread(m_webView->threadPool());
+    // Set before the thread starts, so a stop() that runs before the thread
+    // gets going is not overwritten.
+    m_isRunning = true;
     try {
         m_ioThread->run(m_webView->messageLoop(), CDPServer::acceptLoop, this);
     } catch (...) {
         m_ioThread = nullptr;
+        m_isRunning = false;
     }
 }
 
@@ -73,8 +78,17 @@ void CDPServer::stop()
     m_isRunning = false;
 
     // Wake a blocking accept() by shutting down the listen socket.
-    if (m_listenFd >= 0) {
-        ::shutdown(m_listenFd, SHUT_RDWR);
+    {
+        // Wake a blocking accept() and a recv() on the connected client. The
+        // lock keeps the IO thread from closing either socket meanwhile, so
+        // a reused descriptor number is never shut down.
+        std::lock_guard<std::mutex> lock(m_connMutex);
+        if (m_listenFd >= 0) {
+            ::shutdown(m_listenFd, SHUT_RDWR);
+        }
+        if (m_conn) {
+            ::shutdown(m_conn->fd(), SHUT_RDWR);
+        }
     }
 
     if (!m_ioThread) {
@@ -97,7 +111,6 @@ void CDPServer::sendText(const std::string& utf8json)
 void* CDPServer::acceptLoop(void* data)
 {
     CDPServer* self = (CDPServer*)data;
-    self->m_isRunning = true;
 
     int listenFd = ::socket(AF_INET, SOCK_STREAM, 0);
     if (listenFd < 0) {
@@ -173,8 +186,12 @@ void* CDPServer::acceptLoop(void* data)
         }
     }
 
-    ::close(listenFd);
-    self->m_listenFd = -1;
+    {
+        // Unpublish and close under the lock stop() shuts the socket down with.
+        std::lock_guard<std::mutex> lock(self->m_connMutex);
+        self->m_listenFd = -1;
+        ::close(listenFd);
+    }
     self->m_isRunning = false;
     STARFISH_LOG_INFO("cdp: devtools io thread end");
     return nullptr;
