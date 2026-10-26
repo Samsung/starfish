@@ -24,6 +24,7 @@
 #include "rapidjson/writer.h"
 
 #include <cmath>
+#include <map>
 
 #include <vector>
 
@@ -199,7 +200,63 @@ bool formatInteractiveSnapshot(const std::string& axTree, std::string& output,
     }
     size_t reference = 0;
     const rapidjson::Value& nodes = document["nodes"];
+
+    // getFullAXTree lists nodes level by level. The snapshot lists them in
+    // document order, so walk the tree depth first through childIds. Nodes
+    // the walk does not reach follow in the order they were sent.
+    std::vector<rapidjson::SizeType> order;
+    std::vector<bool> visited(nodes.Size(), false);
+    std::map<std::string, rapidjson::SizeType> indexById;
     for (rapidjson::SizeType index = 0; index < nodes.Size(); index++) {
+        if (nodes[index].IsObject() && nodes[index].HasMember("nodeId") &&
+            nodes[index]["nodeId"].IsString()) {
+            indexById[nodes[index]["nodeId"].GetString()] = index;
+        }
+    }
+    if (nodes.Size() > 0) {
+        rapidjson::SizeType root = 0;
+        for (rapidjson::SizeType index = 0; index < nodes.Size(); index++) {
+            if (nodes[index].IsObject() &&
+                !nodes[index].HasMember("parentId")) {
+                root = index;
+                break;
+            }
+        }
+        std::vector<rapidjson::SizeType> pending;
+        pending.push_back(root);
+        while (!pending.empty()) {
+            rapidjson::SizeType index = pending.back();
+            pending.pop_back();
+            if (visited[index]) {
+                continue;
+            }
+            visited[index] = true;
+            order.push_back(index);
+            const rapidjson::Value& node = nodes[index];
+            if (!node.IsObject() || !node.HasMember("childIds") ||
+                !node["childIds"].IsArray()) {
+                continue;
+            }
+            const rapidjson::Value& childIds = node["childIds"];
+            for (rapidjson::SizeType child = childIds.Size(); child > 0;
+                 child--) {
+                if (!childIds[child - 1].IsString()) {
+                    continue;
+                }
+                auto found = indexById.find(childIds[child - 1].GetString());
+                if (found != indexById.end()) {
+                    pending.push_back(found->second);
+                }
+            }
+        }
+    }
+    for (rapidjson::SizeType index = 0; index < nodes.Size(); index++) {
+        if (!visited[index]) {
+            order.push_back(index);
+        }
+    }
+
+    for (rapidjson::SizeType index : order) {
         const rapidjson::Value& node = nodes[index];
         if (!node.IsObject() ||
             (node.HasMember("ignored") && node["ignored"].IsBool() &&
