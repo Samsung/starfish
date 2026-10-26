@@ -106,7 +106,8 @@ std::string axRoleForElement(Element* element, const std::string& tag)
         if (type == "radio") {
             return "radio";
         }
-        if (type == "button" || type == "submit" || type == "reset") {
+        if (type == "button" || type == "submit" || type == "reset" ||
+            type == "image") {
             return "button";
         }
         if (type == "range") {
