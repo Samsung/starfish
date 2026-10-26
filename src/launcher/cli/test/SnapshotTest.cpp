@@ -47,6 +47,29 @@ TEST(SnapshotTest, IncludesOnlyReferenceableInteractiveNodes)
     EXPECT_TRUE(error.empty());
 }
 
+TEST(SnapshotTest, ListsElementsInDocumentOrder)
+{
+    // The tree is sent level by level. The snapshot follows document order.
+    const std::string axTree = R"({"nodes":[
+        {"nodeId":"1","ignored":false,"role":{"value":"RootWebArea"},
+         "childIds":["2","3"]},
+        {"nodeId":"2","parentId":"1","ignored":true,"role":{"value":"none"},
+         "childIds":["4"]},
+        {"nodeId":"3","parentId":"1","ignored":false,
+         "role":{"value":"button"},"name":{"value":"Last"},
+         "backendDOMNodeId":13},
+        {"nodeId":"4","parentId":"2","ignored":false,
+         "role":{"value":"link"},"name":{"value":"First"},
+         "backendDOMNodeId":14}
+    ]})";
+    std::string output;
+    std::string error;
+    std::vector<int> nodeIds;
+
+    EXPECT_TRUE(formatInteractiveSnapshot(axTree, output, error, nodeIds));
+    EXPECT_EQ("@e1 [link] \"First\"\n@e2 [button] \"Last\"\n", output);
+}
+
 TEST(SnapshotTest, EscapesTerminalControlCharacters)
 {
     const std::string axTree =
