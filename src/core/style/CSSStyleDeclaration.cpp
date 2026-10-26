@@ -1652,46 +1652,60 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
     bool inParenthesis = false;
     size_t numberOfnesting = 0;
     bool inQuotes = false;
+    char quote = '\0';
+    bool isEscaped = false;
     bool isWhiteSpaceState = false;
-    for (size_t i = 0; i < length; i++) {
-        if (data[i] == '(' && !inQuotes) {
+    // CSS closes open functions at EOF, including url() and trailing space.
+    // https://drafts.csswg.org/css-syntax/#consume-function
+    for (size_t i = 0; i < length || (numberOfnesting && !inQuotes); i++) {
+        char ch = i < length ? data[i] : ')';
+        if (ch == '(' && !inQuotes && !isEscaped) {
             inParenthesis = true;
             numberOfnesting++;
-        } else if (data[i] == ')' && !inQuotes) {
+        } else if (ch == ')' && !inQuotes && !isEscaped) {
             if (numberOfnesting) {
                 numberOfnesting--;
             }
-        } else if (data[i] == '"' || data[i] == '\'') {
-            inQuotes = !inQuotes;
+        } else if ((ch == '"' || ch == '\'') && !isEscaped) {
+            // CSSScanner has already decoded escapes in unquoted URLs;
+            // quotes inside their content are not string delimiters.
+            if (!inQuotes &&
+                (str.empty() || str.back() == '(' || isWhiteSpaceState)) {
+                quote = ch;
+                inQuotes = true;
+            } else if (inQuotes && ch == quote) {
+                inQuotes = false;
+            }
         }
+        isEscaped = ch == '\\' && !isEscaped;
 
         if (!preserveContentWS && isWhiteSpaceState &&
-            String::isSpaceOrNewline(data[i])) {
+            String::isSpaceOrNewline(ch)) {
             continue;
         }
 
         isWhiteSpaceState = false;
-        str += data[i];
+        str += ch;
         if (!preserveContentWS && (inParenthesis || inQuotes) &&
-            String::isSpaceOrNewline(data[i])) {
+            String::isSpaceOrNewline(ch)) {
             str[str.length() - 1] = ' ';
             isWhiteSpaceState = true;
             continue;
         }
         bool hasSepChar = false;
         if (seperatorCount > 0 && !inParenthesis) {
-            hasSepChar = seperatorContains(seperator, seperatorCount, data[i]);
+            hasSepChar = seperatorContains(seperator, seperatorCount, ch);
             // Added to cover the following cases.
             // "1.37916809e-13 58.2301959 58.2301959 58.2301959 58.2301959 0
             // 1.37916809e-13 0"
-            if (data[i] == '-' && i >= 1 && data[i - 1] == 'e') {
+            if (ch == '-' && i >= 1 && data[i - 1] == 'e') {
                 hasSepChar = false;
             }
         }
 
         if ((!inParenthesis && !inQuotes &&
-             (String::isSpaceOrNewline(data[i]) || hasSepChar)) ||
-            (data[i] == '(' && hasSepChar) || (data[i] == ')' && hasSepChar)) {
+             (String::isSpaceOrNewline(ch) || hasSepChar)) ||
+            (ch == '(' && hasSepChar) || (ch == ')' && hasSepChar)) {
             str.pop_back();
             bool onlyWhiteSpace = true;
             for (size_t i = 0; i < str.length(); i++) {
@@ -1704,38 +1718,35 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
 
             if (!onlyWhiteSpace && !numberOfnesting) {
                 tokens.push_back(CSSTokenValue(std::move(str)));
+                str.clear();
             }
             isWhiteSpaceState = true;
             if (hasSepChar && !numberOfnesting) {
-                tokens.push_back(CSSTokenValue(std::string(data + i, 1)));
+                tokens.push_back(CSSTokenValue(std::string(1, ch)));
             }
-        } else if (((inParenthesis && !numberOfnesting) && data[i] == ')') ||
-                   i == length - 1) {
+        } else if (((inParenthesis && !numberOfnesting) && ch == ')') ||
+                   (i == length - 1 && !numberOfnesting)) {
             if (str.length() > 3 && (str[0] == 'u' || str[0] == 'U') &&
                 (str[1] == 'r' || str[1] == 'R') &&
                 (str[2] == 'l' || str[2] == 'L')) {
                 std::transform(str.begin(), str.begin() + 3, str.begin(),
                                tolower);
                 tokens.push_back(std::move(str));
+                str.clear();
             } else if (str.length() > 3 && (str[0] == 'v' || str[0] == 'V') &&
                        (str[1] == 'a' || str[1] == 'a') &&
                        (str[2] == 'r' || str[2] == 'R')) {
                 std::transform(str.begin(), str.begin() + 3, str.begin(),
                                tolower);
                 tokens.push_back(std::move(str));
+                str.clear();
             } else if (str.length() != 0) {
                 if (!isCaseSensitive && !inQuotes) {
                     std::transform(str.begin(), str.end(), str.begin(),
                                    tolower);
                 }
-                // https://drafts.csswg.org/css-syntax/#consume-function
-                // The end of input closes an open function or block, so
-                // keep the value and close it instead of dropping it.
-                if (numberOfnesting) {
-                    str.append(numberOfnesting, ')');
-                    numberOfnesting = 0;
-                }
                 tokens.push_back(std::move(str));
+                str.clear();
             }
             inParenthesis = false;
             isWhiteSpaceState = true;
