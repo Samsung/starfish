@@ -13,7 +13,8 @@ Two sets of test cases, called layers in `run.py`.
 
 ## Prerequisites
 
-- Starfish built with `STARFISH_ENABLE_CDP=1`
+- Starfish built with `STARFISH_ENABLE_CDP=1`. The runner starts it with
+  `--headless`, so a windowed x11 build runs without a display too.
 - Python 3
 - Node 18 or later, for `behavior` tests.
 

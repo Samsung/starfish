@@ -45,9 +45,10 @@ XVFB_SCREEN = "-screen 0 1920x1080x24"
 # entry. None means no setpriv, and the fork-time fallback is used instead.
 SETPRIV = shutil.which("setpriv")
 
-# Whether to give the browser a virtual display of its own. Off by default: a
-# headless build needs none, and running Starfish as our direct child is what
-# lets the kernel kill it together with us. An x11 build needs this unless
+# Whether to give the browser a virtual display of its own. Off by default:
+# the browser runs with --headless, which needs none, and running Starfish as
+# our direct child is what lets the kernel kill it together with us. Only the
+# efl and x11_webcontainer shells, which ignore --headless, need this unless
 # the environment already has a working DISPLAY. There is no fallback, so a
 # build that needs a display and was not given one fails instead of quietly
 # behaving differently. Set once at start-up.
@@ -177,7 +178,8 @@ def wait_for_transport(endpoint, timeout):
         "CDP endpoint did not become ready: %s%s"
         % (last_error,
            "" if virtual_display
-           else "; an x11 build needs a DISPLAY or --virtual-display"))
+           else "; an efl or x11_webcontainer build needs a DISPLAY or "
+                "--virtual-display"))
 
 
 def _set_parent_death_signal():
@@ -239,7 +241,9 @@ def running(starfish, timeout):
     The process is always stopped, including on assertion failure or timeout,
     so a failing case cannot leak a browser into the next one.
     """
-    command = [str(starfish), TEST_PAGE, "--disable-console"]
+    # Every behavior test opens a tab (Target.createTarget), which needs a
+    # headless engine; a headless build already is one and ignores the flag.
+    command = [str(starfish), TEST_PAGE, "--disable-console", "--headless"]
     if virtual_display:
         # xvfb-run gives the browser a throwaway X server and picks a free
         # display number, which is what the rest of this repository uses.

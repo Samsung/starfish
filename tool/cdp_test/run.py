@@ -483,8 +483,9 @@ def add_shared_options(parser):
     parser.add_argument(
         "--virtual-display", action="store_true",
         help="run the browser under xvfb-run on a throwaway 1920x1080x24 "
-             "screen, which needs xvfb-run on PATH. An x11 build needs this "
-             "unless DISPLAY is already set; a headless build never does")
+             "screen, which needs xvfb-run on PATH. Only an efl or "
+             "x11_webcontainer build needs this, unless DISPLAY is already "
+             "set; every other build runs with --headless")
 
 
 def main():
