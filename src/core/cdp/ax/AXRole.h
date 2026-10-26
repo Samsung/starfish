@@ -35,6 +35,11 @@ std::string axRoleForElement(Element* element, const std::string& tag);
 // with role="none" or role="presentation".
 bool axHasPresentationalRole(Element* element);
 
+// Whether a list item loses its role because the native list around it has
+// an explicit role other than list. This is the ShouldIgnoreListItem rule of
+// Chromium.
+bool axIsPresentationalListItem(Element* element);
+
 // The numeric role Chromium reports as chromeRole. The values are the
 // ax::mojom::Role enum, which clients read as a stable machine-facing id.
 int axChromeRoleForRole(const std::string& role);

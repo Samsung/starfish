@@ -184,7 +184,7 @@ namespace {
                role == "paragraph" || role == "region" || role == "strong" ||
                role == "subscript" || role == "superscript" || role == "time" ||
                role == "DisclosureTriangle" || role == "disclosureTriangle" ||
-               role == "canvas";
+               role == "LabelText" || role == "canvas";
     }
 
     bool isAriaHiddenElement(Element* element, const std::string& tag)

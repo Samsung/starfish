@@ -382,12 +382,12 @@ void AXSerializer::addRole(rapidjson::Value& out, const std::string& role)
 {
     // A role the ARIA vocabulary does not have is reported as an internal
     // role, which is how a client tells the two apart.
-    const char* type = (role == "StaticText" || role == "InlineTextBox" ||
-                        role == "RootWebArea" || role == "Iframe" ||
-                        role == "DisclosureTriangle" ||
-                        role == "DisclosureTriangleGrouped")
-                           ? "internalRole"
-                           : "role";
+    const char* type =
+        (role == "StaticText" || role == "InlineTextBox" ||
+         role == "RootWebArea" || role == "Iframe" || role == "LabelText" ||
+         role == "DisclosureTriangle" || role == "DisclosureTriangleGrouped")
+            ? "internalRole"
+            : "role";
 
     rapidjson::Value roleValue(rapidjson::kObjectType);
     roleValue.AddMember("type", rapidjson::StringRef(type), *m_allocator);
