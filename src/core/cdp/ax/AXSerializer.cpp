@@ -141,6 +141,15 @@ namespace {
         return token.empty() || token == "undefined";
     }
 
+    // The elements Chromium treats as listed form controls
+    // (ListedElement in the HTML standard).
+    bool isListedFormControl(const std::string& tag)
+    {
+        return tag == "button" || tag == "fieldset" || tag == "input" ||
+               tag == "object" || tag == "output" || tag == "select" ||
+               tag == "textarea";
+    }
+
     // The roles that support aria-readonly, except cells and headers.
     bool roleSupportsAriaReadonly(const std::string& role)
     {
@@ -648,6 +657,8 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
 
     // An empty value and "undefined" mean the attribute is not set.
     // The spelling and grammar values count as true on a text field only.
+    // Without the attribute, a listed form control reports its validity.
+    // Starfish has no ValidityState, so such a control always reports false.
     const std::string invalid = lowered(axAttribute(element, "aria-invalid"));
     if (!isUnsetToken(invalid)) {
         if (invalid == "false") {
@@ -657,10 +668,9 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
         } else if (role == "textbox") {
             addStringProperty(properties, "invalid", "token", "true");
         }
+    } else if (isListedFormControl(tag)) {
+        addStringProperty(properties, "invalid", "token", "false");
     }
-    // Chromium also reports invalid true or false for every listed form
-    // control, such as input, select, and textarea.
-    // Starfish leaves that out because ValidityState is not implemented.
 
     const bool nativeDialogIsOpen = element->isHTMLDialogElement() &&
                                     element->asHTMLDialogElement()->open();
