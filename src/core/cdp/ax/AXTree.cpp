@@ -28,6 +28,8 @@
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLDialogElement.h"
+#include "core/dom/HTMLLabelElement.h"
+#include "core/dom/HTMLInputElement.h"
 #include "core/dom/Node.h"
 #include "core/dom/ShadowRoot.h"
 #include "core/dom/Traverse.h"
@@ -50,6 +52,8 @@ const char* axIgnoredReasonName(AXIgnoredReason reason)
         return "emptyAlt";
     case AXIgnoredReason::EmptyText:
         return "emptyText";
+    case AXIgnoredReason::LabelFor:
+        return "labelFor";
     case AXIgnoredReason::NotRendered:
         return "notRendered";
     case AXIgnoredReason::NotVisible:
@@ -367,6 +371,47 @@ private:
         return tag != "html" && tag != "body" && tag != "option";
     }
 
+    // The checkbox or radio a label makes redundant, or null
+    // (AXNodeObject::IsRedundantLabel).
+    // That happens when the control is visible, the label is what names it,
+    // and the label holds nothing but the control.
+    Element* redundantLabelControl(Element* element)
+    {
+        if (!element->isHTMLLabelElement()) {
+            return nullptr;
+        }
+        HTMLElement* control = element->asHTMLLabelElement()->control();
+        if (!control || !control->isHTMLInputElement() || !control->frame()) {
+            return nullptr;
+        }
+        ComputedStyle* style = control->style();
+        if (style &&
+            style->visibility() != VisibilityValue::VisibleVisibilityValue) {
+            return nullptr;
+        }
+        std::string type = axAttribute(control, "type");
+        for (char& c : type) {
+            c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        }
+        if (type != "checkbox" && type != "radio") {
+            return nullptr;
+        }
+        // aria-label and aria-labelledby take precedence over the label.
+        if (!axAttribute(control, "aria-label").empty() ||
+            !axLabelledByAttribute(control).empty()) {
+            return nullptr;
+        }
+        // An element child other than the control may carry meaning.
+        Element* first = element->firstElementChild();
+        if (!first) {
+            return control;
+        }
+        if (first != control || first->nextElementSibling()) {
+            return nullptr;
+        }
+        return control;
+    }
+
     void computeIgnored(AXNode* node, Element* element, const std::string& tag,
                         bool rendered, const InheritedState& state)
     {
@@ -407,11 +452,39 @@ private:
 
         // role="none" and role="presentation" ask for the element's own
         // semantics to be dropped while its content stays.
-        if (axHasPresentationalRole(element)) {
+        if (axHasPresentationalRole(element) ||
+            (tag == "li" && axIsPresentationalListItem(element))) {
             node->m_ignored = true;
             node->m_ignoredReasons.push_back(
                 AXIgnoredReason::PresentationalRole);
             return;
+        }
+
+        // A label that only repeats the name of a checkbox or radio adds
+        // nothing, so it is ignored in favor of the control.
+        if (tag == "label") {
+            if (Element* control = redundantLabelControl(element)) {
+                node->m_ignored = true;
+                node->m_ignoredReasons.push_back(AXIgnoredReason::LabelFor);
+                node->m_ignoredReasonTarget = control;
+            }
+            return;
+        }
+
+        // A canvas of one pixel or less is too small to see. A canvas with
+        // fallback content stays, as it holds that content.
+        if (tag == "canvas" && !element->firstChild()) {
+            Frame* frame = element->frame();
+            if (frame && frame->isFrameBox()) {
+                FrameBox* box = frame->asFrameBox();
+                if (box->width().toFloat() <= 1 ||
+                    box->height().toFloat() <= 1) {
+                    node->m_ignored = true;
+                    node->m_ignoredReasons.push_back(
+                        AXIgnoredReason::ProbablyPresentational);
+                    return;
+                }
+            }
         }
 
         // Everything left without semantics of its own is structure the

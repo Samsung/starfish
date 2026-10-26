@@ -40,6 +40,7 @@ enum class AXIgnoredReason {
     AriaHiddenSubtree,
     EmptyAlt,
     EmptyText,
+    LabelFor,
     NotRendered,
     NotVisible,
     PresentationalRole,

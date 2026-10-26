@@ -68,6 +68,20 @@ bool axHasPresentationalRole(Element* element)
     return role == "none" || role == "presentation";
 }
 
+bool axIsPresentationalListItem(Element* element)
+{
+    Element* parent = element->parentElement();
+    if (!parent || !parent->localName()) {
+        return false;
+    }
+    std::string parentTag = lowered(parent->localName()->toUTF8NonGCString());
+    if (parentTag != "ul" && parentTag != "ol" && parentTag != "menu") {
+        return false;
+    }
+    std::string role = attributeOf(parent, "role");
+    return !role.empty() && role != "list" && role != "directory";
+}
+
 std::string axRoleForElement(Element* element, const std::string& tag)
 {
     std::string explicitRole = firstRoleToken(element);
@@ -159,7 +173,7 @@ std::string axRoleForElement(Element* element, const std::string& tag)
         return "list";
     }
     if (tag == "li") {
-        return "listitem";
+        return axIsPresentationalListItem(element) ? std::string() : "listitem";
     }
     if (tag == "p") {
         return "paragraph";
@@ -188,6 +202,9 @@ std::string axRoleForElement(Element* element, const std::string& tag)
     if (tag == "canvas") {
         return "canvas";
     }
+    if (tag == "label") {
+        return "LabelText";
+    }
     if (tag == "summary") {
         // Only the summary of a details element is a disclosure widget.
         // A details element with a name belongs to an exclusive group.
@@ -206,33 +223,59 @@ std::string axRoleForElement(Element* element, const std::string& tag)
 int axChromeRoleForRole(const std::string& role)
 {
     static const std::unordered_map<std::string, int> mapping = {
-        { "RootWebArea", 144 },   { "article", 5 },
-        { "main", 118 },          { "paragraph", 133 },
-        { "heading", 96 },        { "button", 9 },
-        { "link", 110 },          { "image", 99 },
-        { "textbox", 170 },       { "StaticText", 158 },
-        { "checkbox", 14 },       { "combobox", 209 },
-        { "banner", 7 },          { "contentinfo", 26 },
-        { "complementary", 22 },  { "dialog", 35 },
-        { "alertdialog", 3 },     { "figure", 84 },
-        { "caption", 11 },        { "generic", 88 },
-        { "list", 111 },          { "listitem", 115 },
-        { "table", 167 },         { "row", 145 },
-        { "cell", 13 },           { "columnheader", 19 },
-        { "form", 87 },           { "region", 143 },
-        { "Iframe", 97 },         { "radio", 141 },
-        { "radiogroup", 142 },    { "slider", 155 },
-        { "menu", 122 },          { "menuitem", 124 },
-        { "option", 113 },        { "alert", 2 },
-        { "progressbar", 140 },   { "searchbox", 153 },
-        { "spinbutton", 156 },    { "status", 159 },
-        { "switch", 163 },        { "DisclosureTriangle", 37 },
+        { "RootWebArea", 144 },
+        { "article", 5 },
+        { "main", 118 },
+        { "paragraph", 133 },
+        { "heading", 96 },
+        { "button", 9 },
+        { "link", 110 },
+        { "image", 99 },
+        { "textbox", 170 },
+        { "StaticText", 158 },
+        { "checkbox", 14 },
+        { "combobox", 209 },
+        { "banner", 7 },
+        { "contentinfo", 26 },
+        { "complementary", 22 },
+        { "dialog", 35 },
+        { "alertdialog", 3 },
+        { "figure", 84 },
+        { "caption", 11 },
+        { "generic", 88 },
+        { "list", 111 },
+        { "listitem", 115 },
+        { "table", 167 },
+        { "row", 145 },
+        { "cell", 13 },
+        { "columnheader", 19 },
+        { "form", 87 },
+        { "region", 143 },
+        { "Iframe", 97 },
+        { "radio", 141 },
+        { "radiogroup", 142 },
+        { "slider", 155 },
+        { "menu", 122 },
+        { "menuitem", 124 },
+        { "option", 113 },
+        { "alert", 2 },
+        { "progressbar", 140 },
+        { "searchbox", 153 },
+        { "spinbutton", 156 },
+        { "status", 159 },
+        { "switch", 163 },
+        { "DisclosureTriangle", 37 },
         { "DisclosureTriangleGrouped", 38 },
-        { "treeitem", 180 },      { "navigation", 130 },
-        { "InlineTextBox", 101 }, { "group", 93 },
-        { "tab", 164 },           { "tablist", 165 },
-        { "tabPanel", 166 },      { "canvas", 10 },
+        { "treeitem", 180 },
+        { "navigation", 130 },
+        { "InlineTextBox", 101 },
+        { "group", 93 },
+        { "tab", 164 },
+        { "tablist", 165 },
+        { "tabPanel", 166 },
+        { "canvas", 10 },
         { "tree", 179 },
+        { "LabelText", 104 },
     };
     auto it = mapping.find(role);
     return it != mapping.end() ? it->second : 0;
@@ -242,8 +285,9 @@ bool axRoleSupportsNameFromContents(const std::string& role)
 {
     return role == "button" || role == "cell" || role == "checkbox" ||
            role == "DisclosureTriangle" ||
-           role == "DisclosureTriangleGrouped" || role == "columnheader" || role == "gridcell" || role == "heading" ||
-           role == "link" || role == "menuitem" || role == "menuitemcheckbox" ||
+           role == "DisclosureTriangleGrouped" || role == "columnheader" ||
+           role == "gridcell" || role == "heading" || role == "link" ||
+           role == "menuitem" || role == "menuitemcheckbox" ||
            role == "menuitemradio" || role == "option" || role == "radio" ||
            role == "row" || role == "rowheader" || role == "sectionhead" ||
            role == "switch" || role == "tab" || role == "tooltip" ||
