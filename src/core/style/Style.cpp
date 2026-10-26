@@ -11121,7 +11121,7 @@ static void extractValuesforSelector(const CSSSelector* selector,
 
 void StyleResolver::recalcWebFonts()
 {
-#if !defined(PORT_CANVAS_BACKEND_MOCK)
+#if defined(PORT_FONT_BACKEND_FREETYPE)
     for (size_t i = 0; i < m_webFonts.size(); i++) {
         CSSStyleDeclaration* decl = m_webFonts[i].first;
         if (!decl->hasCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily) ||

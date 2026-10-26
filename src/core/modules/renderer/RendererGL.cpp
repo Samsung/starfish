@@ -53,6 +53,10 @@ void screenShotImpl(Renderer* renderer, const char* path,
 void screenShotInRendering(WebView* wv, const char* path,
                            std::function<void()> callback)
 {
+    // A headless view never renders a frame, so the callback would never run.
+    if (wv->starfish()->isHeadless()) {
+        STARFISH_UNSUPPORTED("Capture a screenshot of a headless view");
+    }
     g_screenShotCallback = callback;
     g_screenShotPath = path;
     return;

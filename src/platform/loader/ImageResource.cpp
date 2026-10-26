@@ -189,7 +189,10 @@ void ImageResource::didLoadFinished()
     }
 
 #if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
-    if (!m_resourceRequest->isSync() &&
+    // Background decoding produces pixels ahead of painting, which headless
+    // never does; it decodes only the header below.
+    if (!m_resourceRequest->executionContext()->starfish()->isHeadless() &&
+        !m_resourceRequest->isSync() &&
         m_resourceRequest->executionContext()->hasDocument()) {
         bool insertedToActiveSet = false;
         if (!m_resourceRequest->executionContext()
@@ -325,7 +328,13 @@ void ImageResource::didLoadFinished()
 #endif
 
     if (m_resourceRequest->response().size() != 0) {
-        if (ImageDecoder::isAnimatedGIF(m_resourceRequest->response())) {
+        // Without painting no frame is ever shown, and detecting animation
+        // decodes the first frame and walks the rest; headless keeps the GIF
+        // as a size-only image.
+        bool isAnimatedGIF =
+            !m_resourceRequest->executionContext()->starfish()->isHeadless() &&
+            ImageDecoder::isAnimatedGIF(m_resourceRequest->response());
+        if (isAnimatedGIF) {
             // use devicePixelRatio 1 for AnimatedGIF
             // since It may have a lots of frame what we have to decode
             ImageDecoder id(m_resourceRequest->response(),

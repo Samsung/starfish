@@ -149,6 +149,10 @@ Optional<RenderingContextBindindingUnion> HTMLCanvasElement::getContext(
                     (ImageBitmapRenderingContext*)m_canvasRenderingContext);
         }
 #if defined(STARFISH_ENABLE_WEBGL)
+    } else if (starfish()->isHeadless()) {
+        // Headless has no GL context, so WebGL contexts cannot be created and
+        // getContext() returns null. WebGL 1.0 section 2.1 also fires
+        // webglcontextcreationerror first; that event is not implemented.
     } else if (contextId->equals("webgl") ||
                contextId->equals("experimental-webgl")) {
         if (m_contextMode == CanvasContextModeNone) {

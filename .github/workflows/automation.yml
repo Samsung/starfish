@@ -54,7 +54,7 @@ jobs:
         run: |
           cmake CMakeLists.txt -G Ninja \
             -DCMAKE_BUILD_TYPE=Release -DBACKEND=glib_headless -DSHELL=glib_headless \
-            -DSTARFISH_ENABLE_CDP=1 -DCLI=1
+            -DHEADLESS_ACCURATE_LAYOUT=1 -DSTARFISH_ENABLE_CDP=1 -DCLI=1
           ninja starfish.executable starfish.cli.executable starfish.cli.unit_test
 
       - name: Run CDP tests

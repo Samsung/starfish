@@ -395,6 +395,8 @@ public:
 
     bool m_inPrepare : 1;
     bool m_pendingPlay : 1;
+    // Headless shows no frame and plays no sound; timing and metadata stay.
+    bool m_headless : 1;
     bool m_underrunMode : 1;
     size_t m_seekingTimer;
     LayoutRect m_lastAbsoluteROIArea;

@@ -647,7 +647,8 @@ void FfmpegWrapperPlayer::decodingThread()
             } else {
                 int width = frame->width;
                 int height = frame->height;
-                if (width <= 0 || height <= 0) {
+                // Nobody takes the frame (headless), so skip the RGBA copy.
+                if (!m_framedecodedCallback || width <= 0 || height <= 0) {
                     av_frame_unref(frame);
                     continue;
                 }
@@ -968,6 +969,7 @@ MediaPlayerFFmpeg::MediaPlayerFFmpeg(HTMLMediaElement* element)
     : MediaPlayer(element)
     , m_inPrepare(false)
     , m_pendingPlay(false)
+    , m_headless(element->starfish()->isHeadless())
     , m_underrunMode(false)
     , m_seekingTimer(TimerInvalidID)
     , m_mseClient(nullptr)
@@ -1606,7 +1608,9 @@ void MediaPlayerFFmpeg::prepare(ResourceURL* url)
     // The wrapper's prepare() runs handlePrepared() synchronously, and that
     // may destroy() this player (e.g. an oversized stream), so nothing may
     // touch m_nativePlayer after it returns.
-    setNativePlayerDisplayModeWithGL();
+    if (!m_headless) {
+        setNativePlayerDisplayModeWithGL();
+    }
     openPreparingMode();
 
     if (!m_nativePlayer->prepare(preparedCallback, this)) {
@@ -2495,7 +2499,8 @@ void MediaPlayerFFmpeg::flushFramePoolLocked(int newWidth, int newHeight)
 
 void MediaPlayerFFmpeg::publishDecodedFrame(AVFrame* frame)
 {
-    if (frame == nullptr || frame->width <= 0 || frame->height <= 0) {
+    if (m_headless || frame == nullptr || frame->width <= 0 ||
+        frame->height <= 0) {
         return;
     }
     int width = frame->width;
@@ -2643,9 +2648,11 @@ void MediaPlayerFFmpeg::ensureAudioSink(int channels, int sampleRate)
         m_audioOutputReady = false;
         m_audioOutputOpened = false;
     }
-    m_audioWriterThread = new std::thread([this, output, channels,
-                                           sampleRate]() {
-        bool opened = output->open(channels, sampleRate);
+    bool headless = m_headless;
+    m_audioWriterThread = new std::thread([this, output, channels, sampleRate,
+                                           headless]() {
+        // Headless takes the same path as a machine without an audio device.
+        bool opened = !headless && output->open(channels, sampleRate);
         PLAYER_LOGI("FFmpeg audio device channels=%d rate=%d opened=%d",
                     channels, sampleRate, opened);
         {

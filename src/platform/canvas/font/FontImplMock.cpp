@@ -19,7 +19,7 @@
 
 #include "StarfishConfig.h"
 
-#if defined(PORT_CANVAS_BACKEND_MOCK)
+#if defined(PORT_FONT_BACKEND_MOCK)
 #include "Starfish.h"
 
 #include "core/style/UnitHelper.h"

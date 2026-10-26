@@ -132,8 +132,17 @@ Default values are in **bold**.
   Tizen, or Windows platform
 * -DCMAKE_BUILD_TYPE=[ Debug | **Release** ]<br>
   Compile Starfish for either release or debug mode
-* -DBACKEND=[ **glib_cairo_gl** | uv_cairo_gl ]<br>
-  Use either cairo or cairo_gl as the backend graphics library
+* -DBACKEND=[ **glib_cairo_gl** | uv_cairo_gl | glib_headless ]<br>
+  Use either cairo or cairo_gl as the backend graphics library.
+  `glib_headless` links neither and never paints or composites, so no
+  layer buffers are allocated and embedder `OnRendered` callbacks never
+  fire. By default it measures text as font size times length and loads
+  no images; see `-DHEADLESS_ACCURATE_LAYOUT`.
+* -DHEADLESS_ACCURATE_LAYOUT=[ **0** | 1 ]<br>
+  With `-DBACKEND=glib_headless`, lay out text with real font metrics and
+  images with their real intrinsic sizes. Needs freetype2, fontconfig,
+  harfbuzz, libpng, libjpeg, giflib and libwebp, and costs the memory of
+  the font and image header caches.
 * -DCMAKE_SYSTEM_PROCESSOR=[ **x86_64** | aarch64 | arm | x86 ]<br>
   Target architecture. Native `x86_64` needs no flag; `aarch64` / `arm` (armhf) / `x86` (i386) are
   cross targets (see "How to Cross-Compile: Linux").
