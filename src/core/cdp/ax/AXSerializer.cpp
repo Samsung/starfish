@@ -436,6 +436,76 @@ rapidjson::Value AXSerializer::relatedNodes(Element* element,
     return related;
 }
 
+rapidjson::Value AXSerializer::relatedTextNodes(
+    const std::vector<AXRelatedText>& related)
+{
+    rapidjson::Value nodes(rapidjson::kArrayType);
+    for (const AXRelatedText& item : related) {
+        rapidjson::Value node(rapidjson::kObjectType);
+        node.AddMember("backendDOMNodeId",
+                       m_registry->getOrCreate(item.element), *m_allocator);
+        std::string id = axAttribute(item.element, "id");
+        if (!id.empty()) {
+            node.AddMember("idref", stringValue(id), *m_allocator);
+        }
+        node.AddMember("text", stringValue(item.text), *m_allocator);
+        nodes.PushBack(node, *m_allocator);
+    }
+    return nodes;
+}
+
+rapidjson::Value AXSerializer::nameSourceValue(const AXNameSource& source)
+{
+    rapidjson::Value out(rapidjson::kObjectType);
+    out.AddMember("type", rapidjson::StringRef(source.type), *m_allocator);
+    if (!source.attribute.empty()) {
+        out.AddMember("attribute", stringValue(source.attribute), *m_allocator);
+    }
+    if (!source.nativeSource.empty()) {
+        out.AddMember("nativeSource", stringValue(source.nativeSource),
+                      *m_allocator);
+    }
+
+    bool isLabelledBy = source.attribute == "aria-labelledby" ||
+                        source.attribute == "aria-labeledby";
+    if (!source.related.empty() && (isLabelledBy || source.attribute.empty())) {
+        rapidjson::Value list(rapidjson::kObjectType);
+        list.AddMember(
+            "type",
+            rapidjson::StringRef(isLabelledBy ? "idrefList" : "nodeList"),
+            *m_allocator);
+        list.AddMember("relatedNodes", relatedTextNodes(source.related),
+                       *m_allocator);
+        if (isLabelledBy && source.hasAttributeValue) {
+            list.AddMember("value", stringValue(source.attributeValue),
+                           *m_allocator);
+        }
+        out.AddMember(rapidjson::StringRef(isLabelledBy ? "attributeValue"
+                                                        : "nativeSourceValue"),
+                      list, *m_allocator);
+    } else if (source.related.empty() && source.hasAttributeValue) {
+        rapidjson::Value attributeValue(rapidjson::kObjectType);
+        attributeValue.AddMember("type", "string", *m_allocator);
+        attributeValue.AddMember("value", stringValue(source.attributeValue),
+                                 *m_allocator);
+        out.AddMember("attributeValue", attributeValue, *m_allocator);
+    }
+
+    if (source.hasText) {
+        rapidjson::Value value(rapidjson::kObjectType);
+        value.AddMember("type", "computedString", *m_allocator);
+        value.AddMember("value", stringValue(source.text), *m_allocator);
+        out.AddMember("value", value, *m_allocator);
+    }
+    if (source.superseded) {
+        out.AddMember("superseded", true, *m_allocator);
+    }
+    if (source.invalid) {
+        out.AddMember("invalid", true, *m_allocator);
+    }
+    return out;
+}
+
 void AXSerializer::addNameWithSources(rapidjson::Value& out, AXNode* node)
 {
     Element* element = node->element();
@@ -462,95 +532,15 @@ void AXSerializer::addNameWithSources(rapidjson::Value& out, AXNode* node)
             source.AddMember("value", value, *m_allocator);
             sources.PushBack(source, *m_allocator);
         }
-    } else {
-        std::string labelledBy = axLabelledByAttribute(element);
-        bool hasLabelledBy = !labelledBy.empty();
-        bool hasLabel = axHasAttribute(element, "aria-label");
-        bool hasTitle = axHasAttribute(element, "title");
-        bool supportsContent = axRoleSupportsNameFromContents(role);
-
-        bool usedLabelledBy =
-            hasLabelledBy && !axTextFromIdRefs(element, labelledBy).empty();
-        bool usedLabel = !usedLabelledBy && hasLabel &&
-                         !axAttribute(element, "aria-label").empty();
-        bool usedContent =
-            !usedLabelledBy && !usedLabel && supportsContent && !name.empty();
-        bool usedTitle =
-            !usedLabelledBy && !usedLabel && !usedContent && hasTitle;
-
-        {
-            rapidjson::Value source(rapidjson::kObjectType);
-            source.AddMember("attribute", "aria-labelledby", *m_allocator);
-            source.AddMember("type", "relatedElement", *m_allocator);
-            if (hasLabelledBy) {
-                rapidjson::Value attributeValue(rapidjson::kObjectType);
-                attributeValue.AddMember("type", "idrefList", *m_allocator);
-                attributeValue.AddMember("value", stringValue(labelledBy),
-                                         *m_allocator);
-                rapidjson::Value related =
-                    relatedNodes(element, labelledBy, true);
-                if (!related.Empty()) {
-                    attributeValue.AddMember("relatedNodes", related,
-                                             *m_allocator);
-                }
-                source.AddMember("attributeValue", attributeValue,
-                                 *m_allocator);
-            }
-            if (usedLabelledBy) {
-                rapidjson::Value value(rapidjson::kObjectType);
-                value.AddMember("type", "computedString", *m_allocator);
-                value.AddMember("value", stringValue(name), *m_allocator);
-                source.AddMember("value", value, *m_allocator);
-            } else if (hasLabelledBy) {
-                source.AddMember("superseded", true, *m_allocator);
-            }
-            sources.PushBack(source, *m_allocator);
-        }
-        {
-            rapidjson::Value source(rapidjson::kObjectType);
-            source.AddMember("attribute", "aria-label", *m_allocator);
-            source.AddMember("type", "attribute", *m_allocator);
-            if (hasLabel) {
-                rapidjson::Value attributeValue(rapidjson::kObjectType);
-                attributeValue.AddMember("type", "string", *m_allocator);
-                attributeValue.AddMember(
-                    "value", stringValue(axAttribute(element, "aria-label")),
-                    *m_allocator);
-                source.AddMember("attributeValue", attributeValue,
-                                 *m_allocator);
-            }
-            if (usedLabel) {
-                rapidjson::Value value(rapidjson::kObjectType);
-                value.AddMember("type", "computedString", *m_allocator);
-                value.AddMember("value", stringValue(name), *m_allocator);
-                source.AddMember("value", value, *m_allocator);
-            } else if (usedLabelledBy) {
-                source.AddMember("superseded", true, *m_allocator);
-            }
-            sources.PushBack(source, *m_allocator);
-        }
-        if (supportsContent) {
-            rapidjson::Value source(rapidjson::kObjectType);
-            source.AddMember("type", "contents", *m_allocator);
-            if (usedContent) {
-                rapidjson::Value value(rapidjson::kObjectType);
-                value.AddMember("type", "computedString", *m_allocator);
-                value.AddMember("value", stringValue(name), *m_allocator);
-                source.AddMember("value", value, *m_allocator);
-            }
-            sources.PushBack(source, *m_allocator);
-        }
-        if (!axRoleIsNameProhibited(role)) {
-            rapidjson::Value source(rapidjson::kObjectType);
-            source.AddMember("attribute", "title", *m_allocator);
-            source.AddMember("type", "attribute", *m_allocator);
-            if (!usedTitle && (usedLabelledBy || usedLabel || usedContent)) {
-                source.AddMember("superseded", true, *m_allocator);
-            }
-            sources.PushBack(source, *m_allocator);
+    } else if (!node->ignored()) {
+        for (const AXNameSource& source : axNameSources(element, role)) {
+            sources.PushBack(nameSourceValue(source), *m_allocator);
         }
     }
-    nameValue.AddMember("sources", sources, *m_allocator);
+    // Chromium reports no sources for a node that is ignored.
+    if (!sources.Empty()) {
+        nameValue.AddMember("sources", sources, *m_allocator);
+    }
     out.AddMember("name", nameValue, *m_allocator);
 }
 
@@ -916,13 +906,41 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
         { "aria-controls", "controls", "idrefList", true, false },
         { "aria-details", "details", "idrefList", true, false },
         { "aria-flowto", "flowto", "idrefList", true, false },
-        { "aria-labelledby", "labelledby", "nodeList", false, true },
     };
     for (const Relation& relation : lastRelations) {
         addRelation(relation);
     }
 
+    // Chromium reports each source that gave the name from other elements
+    // as a labelledby property.
+    for (const AXNameSource& source : axNameSources(element, node->role())) {
+        if (!source.hasText || source.superseded || source.related.empty()) {
+            continue;
+        }
+        rapidjson::Value property(rapidjson::kObjectType);
+        property.AddMember("name", "labelledby", *m_allocator);
+        rapidjson::Value value(rapidjson::kObjectType);
+        value.AddMember("type", "nodeList", *m_allocator);
+        value.AddMember("relatedNodes", relatedTextNodes(source.related),
+                        *m_allocator);
+        property.AddMember("value", value, *m_allocator);
+        properties.PushBack(property, *m_allocator);
+    }
+
     out.AddMember("properties", properties, *m_allocator);
+}
+
+// The attribute of the source that gave the name. It is empty when the
+// source is not an attribute.
+static std::string nameSourceAttribute(Element* element,
+                                       const std::string& role)
+{
+    for (const AXNameSource& source : axNameSources(element, role)) {
+        if (source.hasText && !source.superseded) {
+            return source.attribute;
+        }
+    }
+    return std::string();
 }
 
 // The value Chrome exposes for a form control. This is the current value,
@@ -978,18 +996,43 @@ void AXSerializer::addDescriptionAndValue(rapidjson::Value& out, AXNode* node)
         return;
     }
 
+    std::string description;
     std::string describedBy = axAttribute(element, "aria-describedby");
     if (!describedBy.empty()) {
-        std::string description = axTextFromIdRefs(element, describedBy);
-        if (!description.empty()) {
-            rapidjson::Value value(rapidjson::kObjectType);
-            value.AddMember("type", "computedString", *m_allocator);
-            value.AddMember("value", stringValue(description), *m_allocator);
-            out.AddMember("description", value, *m_allocator);
+        description = axTextFromIdRefs(element, describedBy);
+    }
+    std::string tag = tagOf(element);
+    std::string type =
+        tag == "input" ? lowered(axAttribute(element, "type")) : std::string();
+    bool isTextButton = type == "button" || type == "submit" || type == "reset";
+    bool hasTitle = axHasAttribute(element, "title");
+    std::string nameAttribute;
+    if (description.empty() &&
+        ((isTextButton && axHasAttribute(element, "value")) || hasTitle)) {
+        nameAttribute = nameSourceAttribute(element, node->role());
+    }
+    // The value of a button that did not name it describes it.
+    if (description.empty() && isTextButton && nameAttribute != "value") {
+        description = axAttribute(element, "value");
+    }
+    // A title that did not name the element describes it.
+    if (description.empty() && hasTitle && nameAttribute != "title") {
+        std::string title = axAttribute(element, "title");
+        Optional<String*> content = element->textContent();
+        std::string text = axCollapseWhitespace(
+            content.hasValue() ? content.value()->toUTF8NonGCString()
+                               : std::string());
+        if (title != text) {
+            description = title;
         }
     }
+    if (!description.empty()) {
+        rapidjson::Value value(rapidjson::kObjectType);
+        value.AddMember("type", "computedString", *m_allocator);
+        value.AddMember("value", stringValue(description), *m_allocator);
+        out.AddMember("description", value, *m_allocator);
+    }
 
-    std::string tag = tagOf(element);
     std::string controlValue;
     bool numberValue = false;
     if (tag == "input" || tag == "textarea" || tag == "select") {

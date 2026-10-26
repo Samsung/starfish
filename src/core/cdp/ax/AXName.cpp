@@ -77,12 +77,31 @@ namespace {
         return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f';
     }
 
+    std::string trimmed(const std::string& text)
+    {
+        size_t begin = 0;
+        size_t end = text.size();
+        while (begin < end && isHtmlSpace(text[begin])) {
+            ++begin;
+        }
+        while (end > begin && isHtmlSpace(text[end - 1])) {
+            --end;
+        }
+        return text.substr(begin, end - begin);
+    }
+
     // The labels of a submit or reset button that has no value.
     const char* const kSubmitLabel = "Submit";
     const char* const kResetLabel = "Reset";
 
     // Where a piece of a name came from. It decides whether a space is put
     // between two neighbors in a name from contents.
+    // The source types of the protocol.
+    const char* const kTypeAttribute = "attribute";
+    const char* const kTypeContents = "contents";
+    const char* const kTypePlaceholder = "placeholder";
+    const char* const kTypeRelatedElement = "relatedElement";
+
     enum class NameFrom {
         None,
         Attribute,
@@ -275,13 +294,30 @@ namespace {
                 textFromElements(true, elementsFromIdRefs(element, idRefs)));
         }
 
-        // The text of the elements, as a name from the labels that point at
-        // a control.
-        std::string fromLabels(Element* control)
+        // Every source Chromium looks at to name the element, in order.
+        std::vector<AXNameSource> sources(Element* element,
+                                          const std::string& role)
         {
-            m_visited.insert(control);
-            return axCollapseWhitespace(
-                textFromElements(false, labelsOf(control)));
+            m_topRole = role;
+            std::string tag = tagOf(element);
+            std::vector<AXNameSource> list;
+            m_visited.insert(element);
+            if (isHiddenForTextAlternative(element, tag, nullptr)) {
+                return list;
+            }
+
+            bool found = false;
+            collectAriaSources(element, list, found);
+            bool explicitlyEmpty =
+                collectNativeSources(element, tag, role, list, found);
+            collectContentsSource(element, tag, role, list, found);
+
+            bool prohibited = axRoleIsNameProhibited(role);
+            if (!prohibited &&
+                !(explicitlyEmpty && (tag == "img" || tag == "area"))) {
+                collectTitleSource(element, list, found);
+            }
+            return list;
         }
 
         static std::vector<Element*> elementsFromIdRefs(
@@ -436,14 +472,20 @@ namespace {
 
         // Several elements, as the target of aria-labelledby or the labels
         // of a control. Their texts are joined by spaces.
-        std::string textFromElements(bool inLabelledByTraversal,
-                                     const std::vector<Element*>& elements)
+        std::string textFromElements(
+            bool inLabelledByTraversal, const std::vector<Element*>& elements,
+            std::vector<AXRelatedText>* related = nullptr,
+            bool* anyElement = nullptr)
         {
             std::string accumulated;
             for (Element* element : elements) {
                 TextResult result = recursiveTextAlternative(
                     element, inLabelledByTraversal ? element : nullptr);
+                result.text = trimmed(result.text);
                 m_visited.insert(element);
+                if (related) {
+                    related->push_back({ element, result.text });
+                }
                 if (!result.text.empty()) {
                     if (!accumulated.empty()) {
                         accumulated.push_back(' ');
@@ -451,7 +493,271 @@ namespace {
                     accumulated += result.text;
                 }
             }
+            if (anyElement) {
+                *anyElement = !elements.empty();
+            }
             return accumulated;
+        }
+
+        void collectAriaSources(Element* element,
+                                std::vector<AXNameSource>& list, bool& found)
+        {
+            // Step 2B. The misspelled attribute counts only when the correct
+            // one is absent.
+            const char* labelledByName =
+                axHasAttribute(element, "aria-labeledby") &&
+                        !axHasAttribute(element, "aria-labelledby")
+                    ? "aria-labeledby"
+                    : "aria-labelledby";
+            AXNameSource labelledBy(found, labelledByName, kTypeRelatedElement);
+            if (axHasAttribute(element, labelledByName)) {
+                std::string idRefs = axAttribute(element, labelledByName);
+                labelledBy.hasAttributeValue = true;
+                labelledBy.attributeValue = idRefs;
+                std::vector<AXRelatedText> related;
+                bool anyElement = false;
+                std::string text =
+                    textFromElements(true, elementsFromIdRefs(element, idRefs),
+                                     &related, &anyElement);
+                if (anyElement && !onlyWhitespace(text)) {
+                    labelledBy.related = related;
+                    labelledBy.hasText = true;
+                    labelledBy.text = text;
+                    found = true;
+                } else {
+                    labelledBy.invalid = true;
+                }
+            }
+            list.push_back(labelledBy);
+
+            // Step 2C.
+            AXNameSource label(found, "aria-label", kTypeAttribute);
+            std::string ariaLabel = axAttribute(element, "aria-label");
+            if (!onlyWhitespace(ariaLabel)) {
+                label.hasText = true;
+                label.text = ariaLabel;
+                label.hasAttributeValue = true;
+                label.attributeValue = ariaLabel;
+                found = true;
+            }
+            list.push_back(label);
+        }
+
+        // A source that reads one attribute and takes its value as the text.
+        void collectAttributeSource(Element* element, const char* attribute,
+                                    const char* type,
+                                    std::vector<AXNameSource>& list,
+                                    bool& found, bool takeEmpty)
+        {
+            AXNameSource source(found, attribute, type);
+            if (axHasAttribute(element, attribute)) {
+                std::string value = axAttribute(element, attribute);
+                if (takeEmpty || !value.empty()) {
+                    source.hasText = true;
+                    source.text = value;
+                    source.hasAttributeValue = true;
+                    source.attributeValue = value;
+                    found = true;
+                }
+            }
+            list.push_back(source);
+        }
+
+        // The title attribute, which is a source unless it repeats the
+        // text of the element.
+        void collectTitleSource(Element* element,
+                                std::vector<AXNameSource>& list, bool& found)
+        {
+            AXNameSource source(found, "title", kTypeAttribute);
+            if (axHasAttribute(element, "title")) {
+                std::string title = axAttribute(element, "title");
+                if (!innerTextEquals(element, title)) {
+                    source.hasText = true;
+                    source.text = title;
+                    source.hasAttributeValue = true;
+                    source.attributeValue = title;
+                    found = true;
+                }
+            }
+            list.push_back(source);
+        }
+
+        // The label text of an input button that has no value attribute.
+        static std::string defaultButtonLabel(const std::string& type)
+        {
+            if (type == "submit") {
+                return kSubmitLabel;
+            }
+            return type == "reset" ? kResetLabel : std::string();
+        }
+
+        // Step 2D. Returns whether the native text is an explicitly empty
+        // alt attribute, which stops the title from naming the element.
+        bool collectNativeSources(Element* element, const std::string& tag,
+                                  const std::string& role,
+                                  std::vector<AXNameSource>& list, bool& found)
+        {
+            std::string type = tag == "input"
+                                   ? lowered(axAttribute(element, "type"))
+                                   : std::string();
+
+            if (isOptionWithOneTextChild(element, tag)) {
+                std::string label = axAttribute(element, "label");
+                if (label.empty()) {
+                    label = axCollapseWhitespace(
+                        toUTF8(element->textContent().value()));
+                }
+                if (!label.empty()) {
+                    AXNameSource source(found, "", kTypeContents);
+                    source.hasText = true;
+                    source.text = label;
+                    list.push_back(source);
+                    found = true;
+                }
+            }
+
+            if (isLabelable(element, tag)) {
+                AXNameSource source(found, "", kTypeRelatedElement);
+                source.nativeSource = "label";
+                std::vector<Element*> labels = labelsOf(element);
+                if (!labels.empty()) {
+                    std::string id = axAttribute(element, "id");
+                    for (Element* label : labels) {
+                        bool byFor = !axAttribute(label, "for").empty() &&
+                                     axAttribute(label, "for") == id;
+                        source.nativeSource =
+                            byFor ? "labelfor" : "labelwrapped";
+                    }
+                    std::vector<AXRelatedText> related;
+                    std::string text = axCollapseWhitespace(
+                        textFromElements(false, labels, &related));
+                    source.related = related;
+                    source.hasText = true;
+                    source.text = text;
+                    found = true;
+                }
+                list.push_back(source);
+            }
+
+            if (tag == "input" &&
+                (type == "button" || type == "submit" || type == "reset")) {
+                collectAttributeSource(element, "value", kTypeAttribute, list,
+                                       found, true);
+                // Only the text is wanted: Chromium sets no attribute value
+                // for a button value.
+                list.back().hasAttributeValue = false;
+                return false;
+            }
+
+            if (tag == "input" && type == "image") {
+                collectAttributeSource(element, "alt", kTypeAttribute, list,
+                                       found, false);
+                collectAttributeSource(element, "value", kTypeAttribute, list,
+                                       found, true);
+                list.back().hasAttributeValue = false;
+                collectTitleSource(element, list, found);
+                AXNameSource source(found, "type", kTypeAttribute);
+                source.hasAttributeValue = true;
+                source.attributeValue = type;
+                source.hasText = true;
+                source.text = kSubmitLabel;
+                list.push_back(source);
+                found = true;
+                return false;
+            }
+
+            if (isTextControl(element, tag)) {
+                collectTitleSource(element, list, found);
+                collectAttributeSource(element, "placeholder", kTypePlaceholder,
+                                       list, found, false);
+            }
+            if (isTextField(role)) {
+                collectAttributeSource(element, "aria-placeholder",
+                                       kTypePlaceholder, list, found, false);
+                return false;
+            }
+
+            if (tag == "img" || tag == "area") {
+                collectAttributeSource(element, "alt", kTypeAttribute, list,
+                                       found, true);
+                return axHasAttribute(element, "alt") &&
+                       axAttribute(element, "alt").empty();
+            }
+
+            if (element->isSVGElement()) {
+                AXNameSource source(found, "", kTypeRelatedElement);
+                source.nativeSource = "title";
+                std::string text = svgTitle(element);
+                if (!text.empty()) {
+                    source.hasText = true;
+                    source.text = text;
+                    found = true;
+                }
+                list.push_back(source);
+            }
+            return false;
+        }
+
+        // Steps 2F and 2G.
+        void collectContentsSource(Element* element, const std::string& tag,
+                                   const std::string& role,
+                                   std::vector<AXNameSource>& list, bool& found)
+        {
+            if (isOptionWithOneTextChild(element, tag) ||
+                !shouldIncludeContents(element, tag, role, false, nullptr)) {
+                return;
+            }
+            AXNameSource source(found, "", kTypeContents);
+            std::string text;
+            std::string type = tag == "input"
+                                   ? lowered(axAttribute(element, "type"))
+                                   : std::string();
+            if (tag == "input" &&
+                (type == "button" || type == "submit" || type == "reset")) {
+                // The button is drawn with its value, or with a default.
+                text = axHasAttribute(element, "value")
+                           ? axAttribute(element, "value")
+                           : defaultButtonLabel(type);
+            } else if (tag == "input" && type == "image") {
+                // The image is drawn with the text that named it.
+                for (const AXNameSource& earlier : list) {
+                    if (earlier.hasText && !earlier.superseded) {
+                        text = earlier.text;
+                        break;
+                    }
+                }
+            } else {
+                text = trimmed(textFromDescendants(element, nullptr));
+            }
+            if (!text.empty()) {
+                source.hasText = true;
+                source.text = text;
+                found = true;
+            }
+            list.push_back(source);
+        }
+
+        static bool isOptionWithOneTextChild(Element* element,
+                                             const std::string& tag)
+        {
+            Node* child = element->firstChild();
+            return tag == "option" && child && child == element->lastChild() &&
+                   child->isText();
+        }
+
+        static std::string svgTitle(Element* element)
+        {
+            for (Node* child = element->firstChild(); child;
+                 child = child->nextSibling()) {
+                if (child->isElement() &&
+                    tagOf(child->asElement()) == "title") {
+                    Optional<String*> content = child->textContent();
+                    return axCollapseWhitespace(content.hasValue()
+                                                    ? toUTF8(content.value())
+                                                    : std::string());
+                }
+            }
+            return std::string();
         }
 
         bool innerTextEquals(Element* element, const std::string& text)
@@ -619,17 +925,7 @@ namespace {
 
             if (element->isSVGElement()) {
                 result.from = NameFrom::RelatedElement;
-                for (Node* child = element->firstChild(); child;
-                     child = child->nextSibling()) {
-                    if (child->isElement() &&
-                        tagOf(child->asElement()) == "title") {
-                        Optional<String*> content = child->textContent();
-                        result.text = axCollapseWhitespace(
-                            content.hasValue() ? toUTF8(content.value())
-                                               : std::string());
-                        break;
-                    }
-                }
+                result.text = svgTitle(element);
             }
             return result;
         }
@@ -662,6 +958,18 @@ namespace {
                     result.text = textFromDescendants(child, labelRoot);
                 } else {
                     result = recursiveTextAlternative(child, labelRoot);
+                }
+
+                // A space after a space is collapsed, as it is when the text
+                // is drawn. An image between the two keeps them apart.
+                if (!accumulated.empty() && isHtmlSpace(accumulated.back()) &&
+                    !(previous && isAtomicInline(previous))) {
+                    size_t skip = 0;
+                    while (skip < result.text.size() &&
+                           isHtmlSpace(result.text[skip])) {
+                        ++skip;
+                    }
+                    result.text.erase(0, skip);
                 }
 
                 if (!result.text.empty() && previous && !accumulated.empty() &&
@@ -924,6 +1232,13 @@ std::string axTextFromIdRefs(Element* element, const std::string& idRefs)
 {
     NameComputer computer;
     return computer.fromIdRefs(element, idRefs);
+}
+
+std::vector<AXNameSource> axNameSources(Element* element,
+                                        const std::string& role)
+{
+    NameComputer computer;
+    return computer.sources(element, role);
 }
 
 std::string axNameForElement(Element* element, const std::string& tag,
