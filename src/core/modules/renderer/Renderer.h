@@ -384,7 +384,7 @@ public:
 protected:
     Renderer(Starfish* starfish);
     void clearNativeHandlers();
-    void scheduleNextFrame();
+    void scheduleNextFrame(unsigned delayMs);
 
     Starfish* m_starfish;
     WebView* m_webView;

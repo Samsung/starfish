@@ -421,6 +421,9 @@ void Renderer::clearResources()
     }
 }
 
+// One frame at 60Hz.
+static constexpr unsigned frameIntervalMs = 16;
+
 void Renderer::setNeedsRendering()
 {
     if (UNLIKELY(!canRendering())) {
@@ -438,6 +441,12 @@ void Renderer::setNeedsRendering()
         return;
     }
 
+    // The paced next frame renders this change too; rendering now would
+    // add a frame inside the interval.
+    if (renderer->m_nextFrameTimer != TimerInvalidID) {
+        return;
+    }
+
     renderer->m_renderingAnimator = webView()->timer()->addAnimator(
         nullptr,
         [](void* data) {
@@ -447,6 +456,7 @@ void Renderer::setNeedsRendering()
                 return false;
             }
 
+            uint64_t frameStartMs = tickCount();
             bool presented = false;
             if (renderer->width() != 0 && renderer->height() != 0) {
                 presented = renderer->rendering().didPaintingOrCompositing;
@@ -456,16 +466,24 @@ void Renderer::setNeedsRendering()
 
             if (renderer->webView()->needsContinuousRendering()) {
                 STARFISH_ASSERT(!renderer->m_setNeedsRenderingCallback);
-                if (presented) {
-                    // Presenting the frame waits for the display.
+                uint64_t elapsedMs = tickCount() - frameStartMs;
+                // A frame that took a whole interval was paced, by a swap
+                // that waited for vsync or by its own work. Whether a swap
+                // waits is up to the embedder, so its time proves nothing.
+                // shortcut: caps displays above 60Hz at 60Hz, take the
+                // interval from the embedder if high refresh rates matter.
+                if (presented && elapsedMs >= frameIntervalMs) {
                     return true;
                 }
-                // Nothing reached the display, so nothing paces the next
-                // frame; without a wait, requestAnimationFrame callbacks
-                // would run back to back instead of once per frame.
+                // Nothing reached the display, or presenting did not wait
+                // for it, so nothing paced this frame; without a wait,
+                // requestAnimationFrame callbacks would run back to back
+                // instead of once per frame.
                 // https://html.spec.whatwg.org/multipage/webappapis.html#update-the-rendering
                 renderer->m_renderingAnimator = TimerInvalidID;
-                renderer->scheduleNextFrame();
+                renderer->scheduleNextFrame(
+                    frameIntervalMs -
+                    std::min<uint64_t>(elapsedMs, frameIntervalMs));
                 return false;
             }
 
@@ -475,15 +493,13 @@ void Renderer::setNeedsRendering()
         renderer);
 }
 
-void Renderer::scheduleNextFrame()
+void Renderer::scheduleNextFrame(unsigned delayMs)
 {
     if (m_nextFrameTimer != TimerInvalidID) {
         return;
     }
-    // One frame at 60Hz.
-    constexpr unsigned frameIntervalMs = 16;
     m_nextFrameTimer = webView()->timer()->addTimer(
-        frameIntervalMs, nullptr,
+        delayMs, nullptr,
         [](void* data) {
             Renderer* renderer = (Renderer*)data;
             renderer->m_nextFrameTimer = TimerInvalidID;
