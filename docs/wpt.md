@@ -34,7 +34,7 @@ Runner coverage is defined by `wpt_status.py`, `wpt_runner.py`,
 | Browser automation | There is no Starfish testdriver vendor adapter in this path. Tests requiring automated input, permission changes, or other testdriver commands cannot be assumed to run correctly. Merely loading `testdriver.js` is not an exclusion criterion. |
 | Dedicated Worker | Nightly builds with `WORKER=1`. Worker support must not be classified as generally absent. |
 | SharedWorker / ServiceWorker | `worker.yml` builds the daemon executables and runs the dedicated suites through `test_runner.py`. Nightly does not build/start those peers or use that suite's shared storage setup. This is an execution-setup gap in nightly. |
-| URL selection | `wpt_manifest_inventory.py` prefixes candidates with `http://web-platform.test:8000`; it does not select HTTPS from test metadata. The server starts HTTPS ports too, so this is not a claim that the server or engine lacks HTTPS support. |
+| URL selection | `wpt_manifest_inventory.py` uses `wpt_urls.test_url()` to select HTTP (8000), HTTPS (8443), or HTTP/2 over TLS (9000) from the pinned WPT filename flags and `wpt_flags` query values; HTTP/2 takes priority. URL selection does not verify browser protocol support. |
 | Target overlap | Nightly expands each target directory separately. Overlapping targets can schedule the same URL more than once; the reporter does not deduplicate across categories. |
 | Test metadata | Nightly uses a fixed CLI timeout and concurrency. It does not apply per-test timeout metadata or the aggregate CI suite's separate Web Audio settings. |
 | MANIFEST freshness | `ensure_manifest()` creates a missing MANIFEST but leaves an existing file untouched. Regenerate it after a WPT pin change before measuring. |
