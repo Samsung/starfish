@@ -362,6 +362,13 @@ void TargetDomain::processMessage(CDPCommand& cmd, const std::string& method)
     }
 
     if (method == "createTarget") {
+        // A windowed engine gets its GL context and window from the embedder;
+        // a view spawned here would have neither.
+        if (!wv->starfish()->isHeadless()) {
+            cmd.sendError(-32000,
+                          "Target.createTarget needs a headless engine");
+            return;
+        }
         // Spawn a brand-new, independent WebView for this tab. It shares the
         // process Starfish + the single app glib main loop, but has its own
         // MessageLoop/Timer/Renderer and JS global, giving an independent DOM

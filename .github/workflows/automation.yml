@@ -17,7 +17,7 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
       options: --user root
-    timeout-minutes: 45
+    timeout-minutes: 75
 
     steps:
       - name: Checkout
@@ -69,3 +69,24 @@ jobs:
         run: |
           python3 tool/cli_test/run_cli_test.py \
             --binary $PWD/out/release/bin/lightweight-web-engine-cli
+
+      # A regular x11 build runs headless at run time: the CLI starts its
+      # engine with --headless. xvfb only serves the tests that start the
+      # engine themselves without that flag.
+      - name: Build x11 for run-time headless
+        run: |
+          cmake -S . -B out/x11 -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release -DBACKEND=glib_cairo_gl -DSHELL=x11 \
+            -DSTARFISH_ENABLE_CDP=1 -DCLI=1 -DWEBGL=1
+          ninja -C out/x11 starfish.executable starfish.cli.executable
+
+      - name: Run CDP tests on run-time headless
+        run: |
+          python3 tool/cdp_test/run.py all \
+            --starfish $PWD/out/x11/bin/lightweight-web-engine --worker
+
+      - name: Run CLI integration tests on run-time headless
+        run: |
+          xvfb-run -s '-screen 0 1920x1080x24' -a \
+            python3 tool/cli_test/run_cli_test.py \
+            --binary $PWD/out/x11/bin/lightweight-web-engine-cli

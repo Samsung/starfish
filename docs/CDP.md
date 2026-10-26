@@ -133,7 +133,9 @@ await browser.disconnect();
 ### Multiple tabs
 
 `newPage()` spawns a **genuinely independent second WebView** with its own DOM
-and JavaScript global. Both pages can be driven concurrently.
+and JavaScript global. Both pages can be driven concurrently. This needs a
+headless engine (`glib_headless`, or any build started with `--headless`); a
+windowed engine answers `Target.createTarget` with `-32000`.
 
 ```js
 const browser = await puppeteer.connect({ browserWSEndpoint: "ws://127.0.0.1:9222/" });
@@ -219,7 +221,10 @@ await p2.close();                             // tears down the spawned WebView
   `*_cairo_gl` backend (real pixels) and emit structurally-valid blank output
   on the Mock `*_headless` backend (see §6).
 - Multiple tabs: `Target.createTarget` (Puppeteer `newPage()`) spawns an
-  independent WebView; console output routes to each tab's own session.
+  independent WebView; console output routes to each tab's own session. Only
+  a headless engine (`glib_headless` or `--headless`) can open one; a
+  windowed engine answers `-32000`, since its views get their window and GL
+  context from the embedder.
 - Unimplemented domains (`Console`, `WebMCP`, …) and unknown methods are **acked
   with an empty result** so client handshakes proceed; they are not real
   implementations.
@@ -259,7 +264,8 @@ await p2.close();                             // tears down the spawned WebView
   dispatcher accessors, so single→multi-tab required no handler changes.
 - **`TargetContext`** = `{WebView*, CDPSession, NodeRegistry, RemoteObjectStore}`.
   `Target.createTarget` clones the originating WebView's settings and calls
-  `WebView::create` to spawn a new headless WebView; `closeTarget` destroys it.
+  `WebView::create` to spawn a new headless WebView (refused with `-32000`
+  unless the engine is headless); `closeTarget` destroys it.
   All WebViews share the single GLib default main context, so their
   timers/idlers pump on the one app loop.
 - **`RemoteObject`** serializes Escargot `ValueRef*` to CDP RemoteObjects;
