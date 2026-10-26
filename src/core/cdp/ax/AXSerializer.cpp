@@ -37,6 +37,7 @@
 #include "core/dom/HTMLTextEditable.h"
 #include "core/dom/Node.h"
 #include "core/page/BrowsingContext.h"
+#include "platform/loader/ResourceURL.h"
 
 #include <cctype>
 #include <cerrno>
@@ -905,6 +906,23 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
     };
     for (const Relation& relation : firstRelations) {
         addRelation(relation);
+    }
+
+    // The url of an image or a link, resolved against the document.
+    // A blank or missing attribute gives no url.
+    const char* urlAttribute =
+        role == "image" && tag == "img"
+            ? "src"
+            : (role == "link" && tag == "a" ? "href" : nullptr);
+    if (urlAttribute) {
+        std::string target =
+            axCollapseWhitespace(axAttribute(element, urlAttribute));
+        if (!target.empty()) {
+            ResourceURL resolved(String::fromUTF8(target.data(), target.size()),
+                                 element->document()->baseURL()->baseURI());
+            addStringProperty(properties, "url", "string",
+                              resolved.urlString()->toUTF8NonGCString());
+        }
     }
 
     static const char* const sparseAttributes[][2] = {
