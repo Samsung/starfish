@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPAXSerializer__)
 #define __StarfishCDPAXSerializer__
 
+#include "AXName.h"
 #include "rapidjson/document.h"
 #include <string>
 
@@ -55,6 +56,9 @@ public:
 
 private:
     void addRole(rapidjson::Value& out, const std::string& role);
+    rapidjson::Value relatedTextNodes(
+        const std::vector<AXRelatedText>& related);
+    rapidjson::Value nameSourceValue(const AXNameSource& source);
     void addNameWithSources(rapidjson::Value& out, AXNode* node);
     void addDocumentName(rapidjson::Value& out, AXNode* node);
     void addProperties(rapidjson::Value& out, AXNode* node);

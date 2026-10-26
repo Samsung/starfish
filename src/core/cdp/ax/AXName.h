@@ -21,6 +21,7 @@
 #define __StarfishCDPAXName__
 
 #include <string>
+#include <vector>
 
 namespace Starfish {
 
@@ -45,6 +46,41 @@ std::string axDocumentName(Document* document);
 // element's own content for roles that allow it, then title.
 std::string axNameForElement(Element* element, const std::string& tag,
                              const std::string& role);
+
+// An element that contributed text to a name, with the text it gave.
+struct AXRelatedText {
+    Element* element;
+    std::string text;
+};
+
+// One place a name can come from, in the form the protocol reports it. An
+// absent text means the source gave nothing. A source is superseded when
+// an earlier source already gave the name.
+struct AXNameSource {
+    AXNameSource(bool supersededBy, const char* attributeName,
+                 const char* sourceType)
+        : attribute(attributeName)
+        , type(sourceType)
+        , superseded(supersededBy)
+    {
+    }
+
+    std::string attribute;
+    std::string nativeSource;
+    const char* type;
+    bool hasText = false;
+    std::string text;
+    bool hasAttributeValue = false;
+    std::string attributeValue;
+    bool superseded;
+    bool invalid = false;
+    std::vector<AXRelatedText> related;
+};
+
+// Every source Chromium looks at to name an element, in its order. This is
+// the list the protocol reports as name.sources.
+std::vector<AXNameSource> axNameSources(Element* element,
+                                        const std::string& role);
 
 // The value of aria-labelledby, falling back to the misspelled
 // aria-labeledby that Chromium also accepts.
