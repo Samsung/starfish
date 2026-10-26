@@ -20,14 +20,8 @@
 #ifndef __FontImplCairo__
 #define __FontImplCairo__
 
-#include <cairo.h>
-
-#if defined(STARFISH_ANDROID) || defined(STARFISH_WINDOWS) || \
-    defined(STARFISH_TIZEN)
-#include <cairo-ft.h>
-#else
-#include <cairo/cairo-ft.h>
-#endif
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 #include <fontconfig/fontconfig.h>
 #include FT_ADVANCES_H

@@ -100,16 +100,18 @@ Renderer* RendererFactory::createHeadless(Starfish* starfish, uint32_t width,
     return new RendererHeadless(starfish, width, height);
 }
 
+// WebView::rendering never paints or composites when headless, and a cairo
+// canvas without a surface would crash, so reaching these is a bug.
 Canvas* RendererHeadless::preparePainting()
 {
-    Canvas* canvas = Canvas::create(webView(), (CanvasSurface*)NULL);
-    return canvas;
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    return nullptr;
 }
 
 Compositor* RendererHeadless::prepareCompositor()
 {
-    return Compositor::create2D(webView(), m_compositorContext,
-                                (CanvasSurface*)NULL);
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    return nullptr;
 }
 
 } // namespace Starfish

@@ -62,9 +62,12 @@ public:
                 m_width = idResult.m_width;
                 m_height = idResult.m_height;
                 m_stride = idResult.m_stride;
+#if !defined(PORT_CANVAS_BACKEND_MOCK)
+                // A mock canvas never decodes, so only the size is kept.
                 m_inputBuffer.insert(m_inputBuffer.end(),
                                      compressedImageData.begin(),
                                      compressedImageData.end());
+#endif
             }
         }
     }
@@ -121,6 +124,13 @@ public:
 
     virtual uint8_t* data() override
     {
+#if defined(PORT_CANVAS_BACKEND_MOCK)
+        // Blank pixels stand in for the bytes the constructor did not keep.
+        if (!m_image && m_height) {
+            m_image = calloc(m_stride * m_height, 1);
+            STARFISH_RELEASE_ASSERT(m_image);
+        }
+#endif
         if (!m_image && m_inputBuffer.size()) {
             ImageDecoder id(m_inputBuffer,
                             m_needsDownScaleImageResourceLargerThan,

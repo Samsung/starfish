@@ -1666,12 +1666,14 @@ RenderResult WebView::rendering(bool force)
                             .documentOpenTime()) < 1000)) {
         STARFISH_LOG_INFO("delay rendering due to pending stylesheet");
         m_needsRendering = false;
-        Canvas* canvas = renderer()->preparePainting();
-        mainBrowsingContext()->clearingBeforePaint(canvas);
-        renderResult.didPaintingOrCompositing = true;
-        renderResult.updateRect =
-            LayoutRect(0, 0, renderer()->width(), renderer()->height());
-        delete canvas;
+        if (!starfish()->isHeadless()) {
+            Canvas* canvas = renderer()->preparePainting();
+            mainBrowsingContext()->clearingBeforePaint(canvas);
+            renderResult.didPaintingOrCompositing = true;
+            renderResult.updateRect =
+                LayoutRect(0, 0, renderer()->width(), renderer()->height());
+            delete canvas;
+        }
         m_didFirstRenderingAfterWakeup = true;
         return renderResult;
     }
@@ -1722,13 +1724,27 @@ RenderResult WebView::rendering(bool force)
         CanvasSurface::g_totalAllocatedCanvasSurfaceSize;
 
     layoutIfNeeded();
-    computeLayoutPaintingDirty();
+    if (starfish()->isHeadless()) {
+        // Repaint regions only feed painting, which headless never does.
+        m_browsingContextsDidLayout.clear();
+    } else {
+        computeLayoutPaintingDirty();
+    }
     longFrame.endPhase(LongFrameLogger::Phase::Layout);
 
     // Geometry is settled from here to the end of the frame; repaint
     // tracking, painting and compositing all walk box matrices from the
     // same layers.
     ScreenMatrixCacheScope screenMatrixCache(this);
+
+    if (starfish()->isHeadless()) {
+        // Agents read geometry, not pixels: layout above already settled the
+        // boxes, stacking contexts and hit-test order, so painting and
+        // compositing would only allocate layer buffers nobody looks at.
+        m_needsPainting = false;
+        m_needsFullPainting = false;
+        m_needsComposite = false;
+    }
 
     bool didPainting = false;
     if (m_needsPainting) {

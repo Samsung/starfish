@@ -1,7 +1,9 @@
 # Agent headless memory bench
 
 Compares engine memory, and optionally layout geometry, across builds by
-driving the same pages through the LWE CLI (`-DCLI=1`).
+driving the same pages through the LWE CLI (`-DCLI=1`). Configure a
+`glib_headless` build with `-DHEADLESS_ACCURATE_LAYOUT=1` to compare its
+geometry.
 
 ```sh
 ./gen_pages.py /tmp/agent-pages          # text, images, gifs, effects pages (needs Pillow)

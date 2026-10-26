@@ -19,17 +19,11 @@
 
 #include "StarfishConfig.h"
 
-#if defined(PORT_CANVAS_BACKEND_CAIRO)
+#if defined(PORT_FONT_BACKEND_FREETYPE)
 #include "Starfish.h"
 
-#include <cairo.h>
-
-#if defined(STARFISH_ANDROID) || defined(STARFISH_WINDOWS) || \
-    defined(STARFISH_TIZEN)
-#include <cairo-ft.h>
-#else
-#include <cairo/cairo-ft.h>
-#endif
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 #include <fontconfig/fontconfig.h>
 #include <hb.h>

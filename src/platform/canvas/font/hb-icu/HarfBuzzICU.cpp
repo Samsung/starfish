@@ -29,7 +29,7 @@
 
 #include "StarfishBase.h"
 
-#if defined(PORT_CANVAS_BACKEND_CAIRO)
+#if defined(PORT_FONT_BACKEND_FREETYPE)
 
 #if !defined(STARFISH_ENABLE_RUNTIME_ICU_BINDER)
 #if defined(STARFISH_WINDOWS)
