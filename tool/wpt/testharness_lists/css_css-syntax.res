@@ -36,7 +36,7 @@ http://web-platform.test:8000/css/css-syntax/ident-three-code-points.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-syntax/serialize-escape-identifiers.html
 http://web-platform.test:8000/css/css-syntax/trailing-braces.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-syntax/unclosed-constructs.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-syntax/unclosed-url-at-eof.html
+http://web-platform.test:8000/css/css-syntax/unclosed-url-at-eof.html
 http://web-platform.test:8000/css/css-syntax/unicode-range-selector.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-syntax/urange-parsing.html
 http://web-platform.test:8000/css/css-syntax/url-whitespace-consumption.html
