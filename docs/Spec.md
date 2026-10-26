@@ -3205,7 +3205,7 @@ The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` 
 | `addEventListener('animationstart' / 'animationend')` | Fires correctly. `event.animationName` and `event.elapsedTime` are populated. |
 | `addEventListener('animationiteration')` | **NEVER fires.** No dispatch site for iteration boundaries; even animations with `animation-iteration-count: 3` do not emit this event. |
 | `addEventListener('animationcancel')` | Implemented. |
-| `addEventListener('transitionstart' / 'transitionend')` | Fires correctly. **Bug:** `event.elapsedTime` is always `0` for transition events (the C++ `fireTransition*Event` paths never call `init.setElapsedTime()`). |
+| `addEventListener('transitionstart' / 'transitionend')` | Fires correctly. `event.propertyName` and `event.elapsedTime` are populated (`transitioncancel` too). |
 | `addEventListener('transitionrun')` | **NEVER fires.** LWE collapses `transitionrun` into `transitionstart` (fired immediately on creation, regardless of `transition-delay`). |
 | `addEventListener('transitioncancel')` | Implemented. |
 | On-handler attributes (`onanimationstart`/`end`/`iteration`/`cancel`, `ontransitionstart`/`end`/`run`/`cancel`) | **None exist** as IDL attributes. Use `addEventListener` for all animation/transition events. |

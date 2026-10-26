@@ -590,7 +590,8 @@ void AnimationExecutor::checkActiveTransitionsState(ExecutionContext& context)
                     m_activeTransitions[i]->fraction(context.m_tick);
                 context.m_canceledAnimationProgress.push_back(
                     std::make_pair(key, progress));
-                m_activeTransitions[i]->fireTransitionCancelEvent();
+                m_activeTransitions[i]->fireTransitionCancelEvent(
+                    context.m_tick);
             }
             m_activeTransitions[i]->detachFromElement();
             m_activeTransitions.erase(i);
@@ -753,7 +754,8 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
 
             if (shouldRemove) {
                 if (!isCancel) {
-                    endTick = task->duration() / 1000.0;
+                    // css-animations-1 4.2: the active duration.
+                    endTick = task->duration() * iterationCount / 1000.0;
                     needsToFireAnimationEndEvent = true;
                 } else {
                     auto key = task->property();
@@ -761,7 +763,10 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
                     context.m_canceledAnimationProgress.push_back(
                         std::make_pair(key, progress));
 
-                    cancelTick = task->duration() * progress / 1000.0;
+                    // css-animations-1 4.2: the active time at cancellation.
+                    cancelTick = task->duration() *
+                                 (task->completedIterations() + progress) /
+                                 1000.0;
                     needsToFireAnimationCancelEvent = true;
                 }
 

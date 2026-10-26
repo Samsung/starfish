@@ -281,7 +281,7 @@ void BrowsingContext::resolveStyleIfNeeds()
                     l[i]->targetElement()->style()->display() ==
                         DisplayValue::NoneDisplayValue) {
                     canceled = true;
-                    l[i]->fireTransitionCancelEvent();
+                    l[i]->fireTransitionCancelEvent(currentTick);
                     l[i]->detachFromElement();
                     l.erase(i);
                     i--;
@@ -305,7 +305,7 @@ void BrowsingContext::resolveStyleIfNeeds()
                  animationIter != animations.end(); animationIter++) {
                 auto& animation = animationIter.value();
                 uint64_t currentTick = tickCount();
-                uint64_t cancelTick = 0;
+                double cancelTick = 0;
                 bool canceled = false;
                 for (auto task = animation.begin(); task != animation.end();) {
                     Element* targetElement = (*task)->targetElement();
@@ -327,7 +327,10 @@ void BrowsingContext::resolveStyleIfNeeds()
                         canceled = true;
                         (*task)->detachFromElement();
                         double progress = (*task)->fraction(currentTick);
-                        cancelTick = (*task)->duration() * progress / 1000;
+                        // css-animations-1 4.2: the active time.
+                        cancelTick =
+                            (*task)->duration() *
+                            ((*task)->completedIterations() + progress) / 1000;
                         task = animation.erase(task);
                     } else {
                         task++;

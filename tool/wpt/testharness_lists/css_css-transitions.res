@@ -38,10 +38,10 @@
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/display-none-no-animations.html
 http://web-platform.test:8000/css/css-transitions/dynamic-root-element.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/event-dispatch.tentative.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/events-001.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/events-002.html
+http://web-platform.test:8000/css/css-transitions/events-001.html
+http://web-platform.test:8000/css/css-transitions/events-002.html
 # [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/css/css-transitions/events-003.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/events-004.html
+http://web-platform.test:8000/css/css-transitions/events-004.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/events-005.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/events-006.html
 http://web-platform.test:8000/css/css-transitions/events-007.html
