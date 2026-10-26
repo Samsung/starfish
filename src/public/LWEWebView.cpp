@@ -65,6 +65,17 @@ void LWE::SetVersionPreference(bool preferUpdatedVersion)
     // Supported only when using a loader.
 }
 
+// The option bits cross the API/implementation boundary as plain integers.
+static_assert(static_cast<uint32_t>(InitializeOption::PreferSeparateThread) ==
+                  LWEDelegate::kInitializeOptionPreferSeparateThread,
+              "InitializeOption must match the contract");
+static_assert(static_cast<uint32_t>(InitializeOption::PreferIncrementalGC) ==
+                  LWEDelegate::kInitializeOptionPreferIncrementalGC,
+              "InitializeOption must match the contract");
+static_assert(static_cast<uint32_t>(InitializeOption::Headless) ==
+                  LWEDelegate::kInitializeOptionHeadless,
+              "InitializeOption must match the contract");
+
 void LWE::Initialize(const char* storageDirectoryPath, InitializeOption option)
 {
     STARFISH_API_RECORD_INIT();

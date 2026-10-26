@@ -67,6 +67,13 @@ enum class InitializeOption : uint32_t {
      * \brief Prefer using incremental garbage collection if the GC supports it.
      */
     PreferIncrementalGC = 1 << 1,
+    /**
+     * \brief Run without a window or GPU: layout, scripting, input,
+     * accessibility and CDP work, but nothing is painted or composited.
+     * Create views with WebContainer::CreateHeadless. The glib_headless
+     * backend is always headless.
+     */
+    Headless = 1 << 2,
 };
 
 inline InitializeOption operator|(InitializeOption a, InitializeOption b)

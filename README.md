@@ -188,6 +188,15 @@ out
 ./out/release/lightweight-web-engine 'html/file/path'
 ```
 
+Add `--headless` to run without a window, display or GPU: layout,
+scripting, input, accessibility and CDP work, but nothing is painted (see
+the Painting row in `docs/Spec.md`). The x11, ecore and tcore_wl shells
+support it; the efl and x11_webcontainer shells need a display for their
+window and start windowed. Embedders pass `LWE::InitializeOption::Headless`
+to `LWE::Initialize` and create views with
+`LWE::WebContainer::CreateHeadless`. The LWE CLI always starts the engine
+this way, so on the x11 shell it needs no display.
+
 ## YouTube playback CI
 
 The Linux `glib_cairo_gl` / `x11` x64 port runs

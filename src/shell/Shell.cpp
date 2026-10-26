@@ -162,6 +162,9 @@ int Shell::runMiniBrowser(int argc, char* argv[])
     if (others.preferIncrementalGC) {
         initOption = initOption | LWE::InitializeOption::PreferIncrementalGC;
     }
+    if (init.headless) {
+        initOption = initOption | LWE::InitializeOption::Headless;
+    }
     browser->setStorageDirOverride(others.storageDir);
     if (!browser->init(init, initOption)) {
         return false;
@@ -307,6 +310,10 @@ void Shell::printUsage()
         "  --timeout=<value>                      Set execution timeout in "
         "seconds");
     puts("  --storage-dir=<value>                  Set storage directory path");
+    puts(
+        "  --headless                             Run without a window, "
+        "display or GPU; nothing is painted (not on efl or x11_webcontainer "
+        "shells)");
     puts(
         "  --max-video-decode-size=<WxH>          Largest video frame to "
         "decode (default: 1920x1080)");

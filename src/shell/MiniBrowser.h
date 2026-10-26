@@ -66,6 +66,7 @@ public:
     struct InitOption {
         Geometry geometry;
         float scaleFactor = 1;
+        bool headless = false;
     };
 
     struct EnvironmentValues {
@@ -173,6 +174,12 @@ private:
 
     Window* m_window = nullptr;
     LWEType m_lwe = nullptr;
+#if defined(STARFISH_SHELL_EFL) || defined(STARFISH_SHELL_X11) ||           \
+    defined(STARFISH_SHELL_ECORE_X) || defined(STARFISH_SHELL_ECORE_WL2) || \
+    defined(STARFISH_SHELL_TCORE_WL)
+    // Set instead of m_lwe when started with --headless.
+    LWE::WebContainer* m_headlessLwe = nullptr;
+#endif
     Console* m_console = nullptr;
 };
 } // namespace StarfishShell

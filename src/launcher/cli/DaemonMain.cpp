@@ -124,14 +124,17 @@ namespace {
         std::string portText = std::to_string(port);
         setenv("STARFISH_ENABLE_CDP", "1", 1);
         setenv("STARFISH_CDP_PORT", portText.c_str(), 1);
+        // Agents drive the engine through CDP only, so it needs no window or
+        // display wherever the shell supports --headless.
         if (storageDirectory.empty()) {
             execl(engine.c_str(), engine.c_str(), "about:blank",
-                  "--disable-console", nullptr);
+                  "--disable-console", "--headless", nullptr);
         } else {
             std::string storageOption =
                 std::string(kStorageDirOptionPrefix) + storageDirectory;
             execl(engine.c_str(), engine.c_str(), "about:blank",
-                  "--disable-console", storageOption.c_str(), nullptr);
+                  "--disable-console", "--headless", storageOption.c_str(),
+                  nullptr);
         }
         _exit(127);
     }

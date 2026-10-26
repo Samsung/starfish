@@ -62,8 +62,8 @@ The compile-time flags that gate large chunks of this spec. "Default" is for the
 | MSE playback backend | `ENABLE_ESPLUSPLAYER=1` | off; auto-enabled on `CMAKE_SYSTEM_NAME=Tizen` with `TIZEN_MAJOR_VERSION >= 10`. Requires `CMAKE_SYSTEM_NAME=Tizen` | Media Source playback uses the platform-default media path. |
 | ffmpeg media player | `USE_FFMPEG_MEDIA_PLAYER=1` (and `STARFISH_WINDOWS_ENABLE_MULTIMEDIA=ON` on Windows) | off on Linux; on on Windows | `<video>`/`<audio>` use the platform-default media path (mock on Windows). |
 | CI media playback instrumentation | `STARFISH_MEDIA_PLAYBACK_TEST=ON` | off | Normal native audio output and platform TLS defaults; no CI frame fingerprints or paced test PCM sink. This test-only build also skips TLS certificate checks, adds no web API and must not ship. |
-| Painting | `BACKEND=glib_headless` (→ `STARFISH_HEADLESS`) | not selected (`glib_cairo_gl`) | Pages paint normally. With `glib_headless`, text is still shaped with FreeType/HarfBuzz/fontconfig, web fonts load and images report their real sizes and fire `load` (only with `HEADLESS_ACCURATE_LAYOUT=1`, see below), but nothing is painted or composited: animated GIFs stay on their first frame, `<canvas>` draws nothing, `Page.captureScreenshot` returns a blank image and embedder `OnRendered` callbacks never fire. |
-| Accurate headless layout | `HEADLESS_ACCURATE_LAYOUT=1` (→ `STARFISH_HEADLESS_ACCURATE_LAYOUT`), with `BACKEND=glib_headless` | off | `glib_headless` measures text as font size × character count, loads no web fonts and fails every image (`error`, no intrinsic size). |
+| Painting | `BACKEND=glib_headless` (→ `STARFISH_HEADLESS`), or at run time the shell's `--headless` / `LWE::InitializeOption::Headless` | not selected (`glib_cairo_gl`, windowed) | Pages paint normally. Headless, text is still shaped with FreeType/HarfBuzz/fontconfig, web fonts load and images report their real sizes and fire `load` (on `glib_headless` only with `HEADLESS_ACCURATE_LAYOUT=1`, see below), but nothing is painted or composited: animated GIFs stay on their first frame, video frames are not converted to pixels and no audio is played, WebGL `getContext()` returns null, a 2D `<canvas>` draws nothing on `glib_headless` (it still rasterizes when a cairo build runs headless), `Page.captureScreenshot` returns a blank image and embedder `OnRendered` callbacks never fire. |
+| Accurate headless layout | `HEADLESS_ACCURATE_LAYOUT=1` (→ `STARFISH_HEADLESS_ACCURATE_LAYOUT`), with `BACKEND=glib_headless` | off | `glib_headless` measures text as font size × character count, loads no web fonts and fails every image (`error`, no intrinsic size). Builds started headless at run time always lay out accurately. |
 | Chrome DevTools Protocol server | `STARFISH_ENABLE_CDP=1` | off | No CDP endpoint. This surface is never visible to page script either way — see `docs/CDP.md`. |
 
 When you read a row in the tables below, assume the corresponding flag in this table is on unless the row's "Note" column says otherwise.
@@ -2449,7 +2449,7 @@ Apps relying on the right-hand list get **no protection** — the directive is p
 
 ### WebGL
 
-> **Build flag:** WebGL is gated by `-DWEBGL=1` (also requires `BACKEND=*_cairo_gl`) and is **off by default** — pass `-DWEBGL=1` at configure time. Headless backends without GL return `null` from `canvas.getContext('webgl')`.
+> **Build flag:** WebGL is gated by `-DWEBGL=1` (also requires `BACKEND=*_cairo_gl`) and is **off by default** — pass `-DWEBGL=1` at configure time. Headless backends without GL, and any build started headless at run time, return `null` from `canvas.getContext('webgl')`.
 
 | Interface | Notes |
 |-----------|-------|

@@ -34,7 +34,10 @@ ninja -C out/headless
 - The transport is plain POSIX sockets, so **no extra link libraries** are
   required for CDP itself.
 - Any `glib`/`efl`/`uv` backend works; the examples here use the
-  dependency-light `glib_headless` shell.
+  dependency-light `glib_headless` shell. A `glib_cairo_gl` x11 build
+  started with `--headless` needs no display and lays pages out the same;
+  unlike `glib_headless` it still rasterizes 2D `<canvas>`, and the CDP
+  layer tree can differ because no GPU limits apply.
 
 ---
 
@@ -301,8 +304,9 @@ signatures.
   breakpoints are accepted but never fire; `getScriptSource` does serve real
   source for scripts persisted via `Runtime.compileScript`.
 - **`Page.captureScreenshot` returns blank pixels on the `*_headless`
-  backends.** `glib_headless`/`efl_headless` compile a Mock graphics stack
-  (`PORT_GRAPHIC_BACKEND_MOCK`), so the renderer rasterizes nothing — the PNG
+  backends and under `--headless`.** `glib_headless`/`efl_headless` compile a
+  Mock graphics stack (`PORT_GRAPHIC_BACKEND_MOCK`), and `--headless` selects
+  the same headless renderer at run time, so the renderer rasterizes nothing — the PNG
   is structurally valid (correct viewport dimensions, base64 transport,
   `clip` honored) but every pixel is transparent. Real pixels require a
   rasterizing backend (`*_cairo_gl`, i.e. `RendererSoftware`/`RendererGL`).

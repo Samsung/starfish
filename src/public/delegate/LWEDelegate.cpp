@@ -145,7 +145,7 @@ void LWE::Initialize(const char* storageDirectoryPath, uint32_t option)
         // These backends always require thread mode regardless of preference
         isThreadMode = true;
     }
-    if (backend == "glib_headless") {
+    if (backend == "glib_headless" || (option & kInitializeOptionHeadless)) {
         rendererType = Starfish::StarfishRendererType::kHeadless;
     }
 #ifdef STARFISH_ENABLE_TEST
