@@ -29,6 +29,8 @@
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/HTMLBRElement.h"
+#include "core/dom/DocumentFragment.h"
+#include "core/dom/RenderedText.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/page/BrowsingContext.h"
@@ -340,27 +342,71 @@ long HTMLElement::offsetTop()
 
 String* HTMLElement::innerText()
 {
-    // TODO
-    // https://html.spec.whatwg.org/multipage/dom.html#the-innertext-idl-attribute
-    STARFISH_UNSUPPORTED("HTMLElement property: innerText");
-    auto v = textContent();
-    return v.hasValue() ? v.getValue() : String::emptyString;
+    // Style and the frame tree decide what is rendered; line breaking does
+    // not change the result, so no layout is needed.
+    if (Window* window = document()->window()) {
+        window->browsingContext()->buildFrameTreeIfNeeds();
+    }
+    // An element that is not being rendered gives its descendant text
+    // content instead (HTML, "the innerText and outerText properties").
+    // display:contents generates no box but its contents are rendered.
+    if (!frame() && !(style() && style()->display() == ContentsDisplayValue)) {
+        auto v = textContent();
+        return v.hasValue() ? v.getValue() : String::emptyString;
+    }
+    return collectRenderedText(this);
 }
 
 void HTMLElement::setInnerText(String* text)
 {
+    DocumentFragment* fragment = renderedTextFragment(document(), text);
     while (firstChild()) {
         removeChild(firstChild());
     }
+    appendChild(fragment);
+}
 
-    GCVector<StringView> v;
-    StringUtils::tokenize(text, "\r\n", 2, v);
-    const QualifiedName& brQname = starfish()->staticStrings()->m_brTagName;
-    for (size_t i = 0; i < v.size(); i++) {
-        appendChild(new Text(document(), new StringView(v[i])));
-        if (i + 1 < v.size()) {
-            appendChild(new HTMLBRElement(document(), brQname));
-        }
+String* HTMLElement::outerText()
+{
+    return innerText();
+}
+
+// Merge with the next text node (HTML, "the innerText and outerText
+// properties").
+static void mergeWithNextTextNode(Node* node)
+{
+    Node* next = node->nextSibling();
+    if (!next || !next->isText()) {
+        return;
+    }
+    CharacterData* data = node->asCharacterData();
+    data->replaceData(data->length(), 0, next->asCharacterData()->data());
+    if (next->parentNode()) {
+        next->parentNode()->removeChild(next);
+    }
+}
+
+void HTMLElement::setOuterText(String* text)
+{
+    Node* parent = parentNode();
+    if (!parent) {
+        throw new DOMException(executionContext(),
+                               DOMException::NO_MODIFICATION_ALLOWED_ERR,
+                               "The element has no parent");
+    }
+    Node* next = nextSibling();
+    Node* previous = previousSibling();
+    DocumentFragment* fragment = renderedTextFragment(document(), text);
+    // Replacing with nothing still leaves a text node to merge into.
+    if (!fragment->firstChild()) {
+        fragment->appendChild(new Text(document(), String::emptyString));
+    }
+    parent->replaceChild(fragment, this);
+    if (next && next->previousSibling() && next->previousSibling()->isText()) {
+        mergeWithNextTextNode(next->previousSibling());
+    }
+    if (previous && previous->isText()) {
+        mergeWithNextTextNode(previous);
     }
 }
 

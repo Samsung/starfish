@@ -1959,6 +1959,11 @@ Node* Node::removeChild(Node* child)
         } else {
             child->setNeedsFrameTreeBuild();
         }
+    } else if (child->style() && child->style()->display() ==
+                                     DisplayValue::ContentsDisplayValue) {
+        // A display:contents child owns no frame, but its descendants' frames
+        // sit under this node's frame; rebuild so they do not outlive it.
+        child->setNeedsFrameTreeBuild();
     }
 
     if (document()) {

@@ -18,6 +18,7 @@ interface HTMLElement : Element {
   [Unimplemented] void forceSpellCheck();
 
   [CEReactions, TreatNullAs=EmptyString] attribute DOMString innerText;
+  [CEReactions, RaisesException, TreatNullAs=EmptyString] attribute DOMString outerText;
 
   // https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface
   readonly attribute Element? offsetParent;

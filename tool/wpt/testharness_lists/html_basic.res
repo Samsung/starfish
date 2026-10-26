@@ -307,6 +307,25 @@ http://web-platform.test:8000/html/dom/elements/global-attributes/dataset-enumer
 http://web-platform.test:8000/html/dom/elements/global-attributes/data_unicode_attr.html
 http://web-platform.test:8000/html/dom/elements/global-attributes/classlist-nonstring.html
 http://web-platform.test:8000/html/dom/elements/elements-in-the-dom/historical.html
+http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/dynamic-getter.html
+http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/getter-first-letter-marker-multicol.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/getter.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/innertext-setter.html
+http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/innertext-whitespace-pre-line.html
+http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/multiple-text-nodes.window.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/outertext-setter.html
+http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/innertext-with-white-spaces.html?white-space=normal
+http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/innertext-with-white-spaces.html?white-space=pre
+http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/innertext-with-white-spaces.html?white-space=pre-line
+http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/innertext-with-white-spaces.html?white-space=pre-wrap
+http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/innertext-with-white-spaces.html?white-space=normal&contenteditable=true
+http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/innertext-with-white-spaces.html?white-space=pre&contenteditable=true
+http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/innertext-with-white-spaces.html?white-space=pre-line&contenteditable=true
+http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/innertext-with-white-spaces.html?white-space=pre-wrap&contenteditable=true
+http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/innertext-with-white-spaces.html?white-space=normal&contenteditable=plaintext-only
+http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/innertext-with-white-spaces.html?white-space=pre&contenteditable=plaintext-only
+http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/innertext-with-white-spaces.html?white-space=pre-line&contenteditable=plaintext-only
+http://web-platform.test:8000/html/dom/elements/the-innertext-and-outertext-properties/innertext-with-white-spaces.html?white-space=pre-wrap&contenteditable=plaintext-only
 http://web-platform.test:8000/html/webappapis/dynamic-markup-insertion/opening-the-input-stream/014.html
 http://web-platform.test:8000/html/webappapis/dynamic-markup-insertion/opening-the-input-stream/013.html
 http://web-platform.test:8000/html/webappapis/dynamic-markup-insertion/opening-the-input-stream/012.html
