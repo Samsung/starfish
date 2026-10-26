@@ -67,9 +67,11 @@ private:
     CDPDispatcher* m_dispatcher; // non-GC, main-thread handlers
     CDPConnection* m_conn;       // current single connection, non-GC (IO owned)
     Thread* m_ioThread;
-    int m_listenFd;
+    // Atomic: stop() sets m_isRunning and then reads m_listenFd while the IO
+    // thread publishes the fd and then reads the flag; one must see the other.
+    std::atomic<int> m_listenFd;
     uint16_t m_port;
-    volatile bool m_isRunning;
+    std::atomic<bool> m_isRunning;
     std::atomic<bool> m_connAlive;
     // Guards m_conn against the IO thread tearing it down while the main thread
     // is writing via sendText() (read=IO, write=main; see design 2.6).

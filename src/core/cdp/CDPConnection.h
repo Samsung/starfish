@@ -21,6 +21,7 @@
 #define __StarfishCDPConnection__
 
 #include <cstdint>
+#include <mutex>
 #include <string>
 
 namespace Starfish {
@@ -62,6 +63,9 @@ private:
 
     CDPServer* m_server;
     int m_fd;
+    // The IO thread answers pings while the main thread sends replies; one
+    // frame must reach the socket whole before the next starts.
+    std::mutex m_writeMutex;
     State m_state;
     std::string m_recvBuf;
 };
