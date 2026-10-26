@@ -426,21 +426,26 @@ public:
             return UTF8StringDataNonGCStd();
         }
 
-        FcChar8* fontNameAfterMatch;
-        FcPatternGetString(resultPattern, FC_FAMILY, 0, &fontNameAfterMatch);
-        UTF8StringDataNonGCStd after = (char*)fontNameAfterMatch;
-        std::transform(after.begin(), after.end(), after.begin(), tolower);
-
-        FcPatternGetString(resultPattern, FC_FULLNAME, 0, &fontNameAfterMatch);
-        UTF8StringDataNonGCStd fullName = (char*)fontNameAfterMatch;
-        std::transform(fullName.begin(), fullName.end(), fullName.begin(),
-                       tolower);
+        auto matchesName = [&](const char* object) {
+            FcChar8* name;
+            for (int i = 0; FcPatternGetString(resultPattern, object, i,
+                                               &name) == FcResultMatch;
+                 i++) {
+                if (FcStrCmpIgnoreCase(
+                        name, (const FcChar8*)familyName.c_str()) == 0) {
+                    return true;
+                }
+            }
+            return false;
+        };
 
         if (familyName != m_webView->initialFontFamilyDatas()[1]
                               .m_familyName.string()
                               ->toUTF8NonGCString()) {
-            if (after.find(familyName) == std::string::npos &&
-                fullName.find(familyName) == std::string::npos) {
+            // CSS font names match case-insensitively as whole names;
+            // a substring of an installed name must not prevent fallback.
+            // https://drafts.csswg.org/css-fonts-4/#font-matching-algorithm
+            if (!matchesName(FC_FAMILY) && !matchesName(FC_FULLNAME)) {
                 if (!isGenericName) {
                     FcPatternDestroy(resultPattern);
                     FcPatternDestroy(pattern);
