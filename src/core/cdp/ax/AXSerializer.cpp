@@ -61,6 +61,9 @@ namespace {
     // The largest whole number a double holds exactly, 2^53.
     const double kMaxExactInteger = 9007199254740992.0;
 
+    // The internal role of a native option inside a drop down list.
+    const int kChromeRoleMenuListOption = 127;
+
     // The input types whose value a user types in. Chrome exposes the value
     // of these inputs. It exposes no value for the other types, such as a
     // checkbox or a button.
@@ -390,6 +393,31 @@ void AXSerializer::addStringProperty(rapidjson::Value& properties,
 
 void AXSerializer::addRole(rapidjson::Value& out, const std::string& role)
 {
+    addRole(out, role, axChromeRoleForRole(role));
+}
+
+// A native option of a drop down list has its own internal role in Chrome,
+// while the ARIA role stays option.
+void AXSerializer::addRole(rapidjson::Value& out, AXNode* node,
+                           const std::string& role)
+{
+    int chromeRole = axChromeRoleForRole(role);
+    Element* element = node->element();
+    if (element && role == "option" && element->isHTMLOptionElement() &&
+        !axHasAttribute(element, "role")) {
+        HTMLSelectElement* select =
+            element->asHTMLOptionElement()->selectElement();
+        if (select && !axHasAttribute(select, "multiple") &&
+            parseLooseInteger(axAttribute(select, "size")) <= 1) {
+            chromeRole = kChromeRoleMenuListOption;
+        }
+    }
+    addRole(out, role, chromeRole);
+}
+
+void AXSerializer::addRole(rapidjson::Value& out, const std::string& role,
+                           int chromeRole)
+{
     // A role the ARIA vocabulary does not have is reported as an internal
     // role, which is how a client tells the two apart.
     const char* type =
@@ -404,10 +432,10 @@ void AXSerializer::addRole(rapidjson::Value& out, const std::string& role)
     roleValue.AddMember("value", stringValue(role), *m_allocator);
     out.AddMember("role", roleValue, *m_allocator);
 
-    rapidjson::Value chromeRole(rapidjson::kObjectType);
-    chromeRole.AddMember("type", "internalRole", *m_allocator);
-    chromeRole.AddMember("value", axChromeRoleForRole(role), *m_allocator);
-    out.AddMember("chromeRole", chromeRole, *m_allocator);
+    rapidjson::Value chromeRoleValue(rapidjson::kObjectType);
+    chromeRoleValue.AddMember("type", "internalRole", *m_allocator);
+    chromeRoleValue.AddMember("value", chromeRole, *m_allocator);
+    out.AddMember("chromeRole", chromeRoleValue, *m_allocator);
 }
 
 rapidjson::Value AXSerializer::relatedNodes(Element* element,
@@ -1174,7 +1202,7 @@ rapidjson::Value AXSerializer::serialize(AXNode* node, bool forceNameAndRole)
         addRole(out, "none");
         addIgnoredReasons(out, node);
     } else if (node->ignored()) {
-        addRole(out, node->role().empty() ? "none" : node->role());
+        addRole(out, node, node->role().empty() ? "none" : node->role());
         addNameWithSources(out, node);
         addIgnoredReasons(out, node);
     } else if (node->kind() == AXNodeKind::Root) {
@@ -1182,7 +1210,7 @@ rapidjson::Value AXSerializer::serialize(AXNode* node, bool forceNameAndRole)
         addDocumentName(out, node);
         addProperties(out, node);
     } else {
-        addRole(out, node->role());
+        addRole(out, node, node->role());
         addNameWithSources(out, node);
         addProperties(out, node);
         addDescriptionAndValue(out, node);
