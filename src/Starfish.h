@@ -124,6 +124,15 @@ public:
         return m_rendererType;
     }
 
+    bool isHeadless()
+    {
+#if defined(STARFISH_HEADLESS)
+        return true;
+#else
+        return m_rendererType == StarfishRendererType::kHeadless;
+#endif
+    }
+
     bool isThreadMode()
     {
         return m_isThreadMode;

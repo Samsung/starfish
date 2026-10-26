@@ -31,10 +31,8 @@ namespace RendererFactory {
                              uint32_t height);
     Renderer* createGL(Starfish* starfish, uint32_t width, uint32_t height);
 #endif
-#if defined(STARFISH_HEADLESS)
     Renderer* createHeadless(Starfish* starfish, uint32_t width,
                              uint32_t height);
-#endif
 }; // namespace RendererFactory
 } // namespace Starfish
 

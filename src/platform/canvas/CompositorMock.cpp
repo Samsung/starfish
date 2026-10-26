@@ -18,7 +18,6 @@
  */
 
 #include "StarfishConfig.h"
-#ifdef STARFISH_HEADLESS
 
 #include "core/modules/canvas/BlendMode.h"
 #include "core/modules/canvas/Compositor.h"
@@ -182,5 +181,3 @@ CompositorContext* CompositorFactory::initCompositorContextMock(
 }
 
 } // namespace Starfish
-
-#endif
