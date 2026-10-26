@@ -55,7 +55,10 @@ public:
     rapidjson::Value serializeMissing(Node* domNode);
 
 private:
+    void addRole(rapidjson::Value& out, const std::string& role,
+                 int chromeRole);
     void addRole(rapidjson::Value& out, const std::string& role);
+    void addRole(rapidjson::Value& out, AXNode* node, const std::string& role);
     rapidjson::Value relatedTextNodes(
         const std::vector<AXRelatedText>& related);
     rapidjson::Value nameSourceValue(const AXNameSource& source);
