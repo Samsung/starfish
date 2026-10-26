@@ -43,6 +43,16 @@ enum StarfishStartUpFlag {
 };
 } // namespace
 
+#if defined(STARFISH_SHELL_EFL) || defined(STARFISH_SHELL_X11) ||           \
+    defined(STARFISH_SHELL_ECORE_X) || defined(STARFISH_SHELL_ECORE_WL2) || \
+    defined(STARFISH_SHELL_TCORE_WL)
+// --headless runs a WebContainer instead of a windowed WebView; both expose
+// the calls made through this.
+#define LWE_CALL(call) (m_headlessLwe ? m_headlessLwe->call : m_lwe->call)
+#else
+#define LWE_CALL(call) (m_lwe->call)
+#endif
+
 namespace StarfishShell {
 
 void MiniBrowser::parseArgs(int argc, char* argv[],
@@ -151,6 +161,16 @@ void MiniBrowser::parseArgs(int argc, char* argv[],
             others.preferIsolatedThread = false;
         } else if (strcmp(argv[i], "--prefer-incremental-gc") == 0) {
             others.preferIncrementalGC = true;
+        } else if (strcmp(argv[i], "--headless") == 0) {
+#if defined(STARFISH_SHELL_EFL) || defined(STARFISH_SHELL_X11_WEBCONTAINER)
+            // These shells need a display for their window and event loop
+            // before the engine starts, so they cannot run headless.
+            fprintf(stderr,
+                    "--headless is not supported by this shell; "
+                    "starting with a window\n");
+#else
+            init.headless = true;
+#endif
         }
     }
 }
@@ -210,8 +230,8 @@ MiniBrowser::~MiniBrowser()
     if (m_console) {
         delete m_console;
     }
-    m_lwe->Blur();
-    m_lwe->Destroy();
+    LWE_CALL(Blur());
+    LWE_CALL(Destroy());
 
     m_window->terminate();
     delete m_window;
@@ -249,7 +269,7 @@ bool MiniBrowser::init(const InitOption& initOption,
 
 void MiniBrowser::setSettings(const Settings& settings)
 {
-    LWE::Settings lweSettings = m_lwe->GetSettings();
+    LWE::Settings lweSettings = LWE_CALL(GetSettings());
     if (settings.customUserAgentString.length()) {
         lweSettings.SetUserAgentString(settings.customUserAgentString);
     }
@@ -293,27 +313,27 @@ void MiniBrowser::setSettings(const Settings& settings)
     lweSettings.SetTTSLanguage(settings.language);
     lweSettings.SetUseHttp2(settings.useHTTP2);
 
-    m_lwe->SetSettings(lweSettings);
+    LWE_CALL(SetSettings(lweSettings));
 }
 
 void MiniBrowser::loadURL(const std::string& url)
 {
-    m_lwe->LoadURL(url);
+    LWE_CALL(LoadURL(url));
 }
 
 std::string MiniBrowser::evaluateJavaScript(const std::string& script)
 {
-    return m_lwe->EvaluateJavaScript(script);
+    return LWE_CALL(EvaluateJavaScript(script));
 }
 
 void MiniBrowser::reload()
 {
-    m_lwe->Reload();
+    LWE_CALL(Reload());
 }
 
 void MiniBrowser::focus()
 {
-    m_lwe->Focus();
+    LWE_CALL(Focus());
 }
 
 void MiniBrowser::setRotate(int degree)
@@ -323,7 +343,7 @@ void MiniBrowser::setRotate(int degree)
 
 void MiniBrowser::setDevicePixelRatio(float dpr)
 {
-    m_lwe->SetDevicePixelRatio(dpr);
+    LWE_CALL(SetDevicePixelRatio(dpr));
 }
 
 int MiniBrowser::runMainLoop()
@@ -481,6 +501,12 @@ bool MiniBrowser::createLWE(const InitOption& initOption)
 #elif defined(STARFISH_SHELL_EFL) || defined(STARFISH_SHELL_X11) ||         \
     defined(STARFISH_SHELL_ECORE_X) || defined(STARFISH_SHELL_ECORE_WL2) || \
     defined(STARFISH_SHELL_TCORE_WL)
+    if (initOption.headless) {
+        m_headlessLwe = LWE::WebContainer::CreateHeadless(
+            initOption.geometry.width, initOption.geometry.height,
+            initOption.scaleFactor, "serif", "ko-KR", "Asia/Seoul");
+        return true;
+    }
     m_lwe = LWE::WebView::Create(
         m_window->getNativeWindowHandle(), initOption.geometry.x,
         initOption.geometry.y, initOption.geometry.width,

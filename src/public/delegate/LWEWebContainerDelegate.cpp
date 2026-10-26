@@ -179,7 +179,8 @@ static Starfish::WebView* createStarfishWebViewInstance(
     STARFISH_RELEASE_ASSERT(locale != nullptr);
     STARFISH_RELEASE_ASSERT(timezoneID != nullptr);
 
-    if (useSwRenderer) {
+    // A headless process never paints, so it keeps its headless renderer.
+    if (useSwRenderer && !LWEDelegate::g_starfishInstance->isHeadless()) {
         LWEDelegate::g_starfishInstance->setRendererType(
             Starfish::StarfishRendererType::kSoftware);
     }
@@ -506,6 +507,11 @@ void WebContainerImpl::RegisterOnRenderedHandler(
 WebContainer* WebContainer::CreateGL(const WebContainerArguments& args,
                                      const RendererGLConfiguration& config)
 {
+    if (LWEDelegate::g_starfishInstance->isHeadless()) {
+        STARFISH_LOG_ERROR(
+            "LWE was initialized headless; a GL view never "
+            "paints, create it with CreateHeadless instead");
+    }
     WebContainer* newWebContainer = nullptr;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
         Starfish::WebView* webView = createStarfishWebViewInstance(
@@ -731,10 +737,13 @@ WebContainer* WebContainer::CreateHeadless(unsigned width, unsigned height,
                                            const char* locale,
                                            const char* timezoneID)
 {
-    Starfish::WebView* webView = createStarfishWebViewInstance(
-        width, height, devicePixelRatio, defaultFontName, locale, timezoneID);
-    WebContainer* newWebContainer = new (NoGC) WebContainerImpl(webView);
-
+    WebContainer* newWebContainer = nullptr;
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
+        Starfish::WebView* webView =
+            createStarfishWebViewInstance(width, height, devicePixelRatio,
+                                          defaultFontName, locale, timezoneID);
+        newWebContainer = new (NoGC) WebContainerImpl(webView);
+    });
     return newWebContainer;
 }
 

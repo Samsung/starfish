@@ -29,6 +29,7 @@ namespace LWEDelegate {
 // LWEWebView.h)
 constexpr uint32_t kInitializeOptionPreferSeparateThread = 1 << 0;
 constexpr uint32_t kInitializeOptionPreferIncrementalGC = 1 << 1;
+constexpr uint32_t kInitializeOptionHeadless = 1 << 2;
 
 class EXPORT_UNMANAGED_API LWE {
 public:
