@@ -48,7 +48,9 @@ CSSTime::CSSTime(const CSSTokenValue& str, float f)
 double CSSTime::toTimeValue() const
 {
     if (m_kind == S) {
-        return m_value * 1000; // to ms
+        // to ms; the float seconds carry noise below a microsecond that
+        // would truncate 0.01s to 9ms.
+        return std::round(m_value * 1e6) / 1e3;
     } else if (m_kind == MS) {
         return m_value;
     }

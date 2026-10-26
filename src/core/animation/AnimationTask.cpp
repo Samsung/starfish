@@ -308,7 +308,10 @@ void ActiveAnimationTask::fireTransitionStartEvent()
     init.setPropertyName(CSSPropertyHelper::toGCString(m_property));
     init.setBubbles(true);
     init.setCancelable(false);
-    // TODO add more information to init
+    // css-transitions-1 6.1: min(max(-transition-delay, 0), duration).
+    init.setElapsedTime(
+        std::min<double>(std::max<int64_t>(-m_startDelayMs, 0), m_durationMs) /
+        1000.0);
     TransitionEvent* event =
         new TransitionEvent(m_targetElement->executionContext(),
                             m_targetElement->starfish()
@@ -326,7 +329,8 @@ void ActiveAnimationTask::fireTransitionEndEvent()
     init.setPropertyName(CSSPropertyHelper::toGCString(m_property));
     init.setBubbles(true);
     init.setCancelable(true);
-    // TODO add more information to init
+    // css-transitions-1 6.1: the transition-duration.
+    init.setElapsedTime(m_durationMs / 1000.0);
     TransitionEvent* event =
         new TransitionEvent(m_targetElement->executionContext(),
                             m_targetElement->starfish()
@@ -336,7 +340,7 @@ void ActiveAnimationTask::fireTransitionEndEvent()
     m_targetElement->dispatchEventIdleTimeByUA(event);
 }
 
-void ActiveAnimationTask::fireTransitionCancelEvent()
+void ActiveAnimationTask::fireTransitionCancelEvent(uint64_t tickCount)
 {
     // STARFISH_LOG_INFO("element %p property %s transitionCancel",
     // m_targetElement, CSSPropertyHelper::toString(m_property));
@@ -344,7 +348,8 @@ void ActiveAnimationTask::fireTransitionCancelEvent()
     init.setPropertyName(CSSPropertyHelper::toGCString(m_property));
     init.setBubbles(true);
     init.setCancelable(false);
-    // TODO add more information to init
+    // css-transitions-1 6.1: the time run since the delay ended.
+    init.setElapsedTime(fraction(tickCount) * m_durationMs / 1000.0);
     TransitionEvent* event =
         new TransitionEvent(m_targetElement->executionContext(),
                             m_targetElement->starfish()

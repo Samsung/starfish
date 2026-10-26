@@ -175,7 +175,7 @@ public:
 
     void fireTransitionStartEvent();
     void fireTransitionEndEvent();
-    void fireTransitionCancelEvent();
+    void fireTransitionCancelEvent(uint64_t tickCount);
 
     void updateDuration(uint64_t d)
     {
@@ -232,6 +232,16 @@ public:
     float iterationStart()
     {
         return m_iterationStart;
+    }
+
+    // Iterations already run. An infinite count only alternates the
+    // iteration start between 0 and 1, so it has no count to report.
+    double completedIterations()
+    {
+        if (std::isinf(m_iterationCount)) {
+            return 0;
+        }
+        return m_iterationCount - m_iterationStart;
     }
 
     void setIterationStart(float f)
