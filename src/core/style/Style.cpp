@@ -57,6 +57,7 @@
 #include "core/layout/Frame.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/FrameBlockBox.h"
+#include "core/layout/FrameText.h"
 #include "core/layout/StackingContext.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
@@ -10652,6 +10653,9 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
                     }
                 }
 
+                TextTransformValue oldTextTransform =
+                    child->style() ? child->style()->textTransform()
+                                   : NoneTextTransformValue;
                 child->setStyle(childTextNodeStyle);
                 child->clearNeedsStyleRecalc();
                 child->clearChildNeedsStyleRecalc();
@@ -10659,6 +10663,21 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
                 if (childTextNodeComputedStyleDamage &
                     ComputedStyleDamagePainting) {
                     child->setNeedsPainting();
+                }
+
+                // The text frame keeps the transformed text; a text-transform
+                // change on a kept frame must recompute it from the data.
+                if (child->frame() && child->frame()->isFrameText() &&
+                    childTextNodeStyle->textTransform() != oldTextTransform) {
+                    FrameText* frameText = child->frame()->asFrameText();
+                    if (childTextNodeStyle->textTransform() ==
+                        NoneTextTransformValue) {
+                        frameText->setText(child->asCharacterData()->data());
+                    } else {
+                        frameText->transformText(
+                            child->asCharacterData()->data());
+                    }
+                    child->setNeedsLayout();
                 }
 
                 if (!child->frame()) {

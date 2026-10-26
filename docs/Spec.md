@@ -769,13 +769,14 @@ section are supported.
 |  | attribute | title | Reflects the "title" content attribute of HTMLElement. |
 |  | attribute | lang |  Reflects the "lang" content attribute of HTMLElement. |
 |  | attribute | hidden | Reflects the `hidden` boolean content attribute. |
-|  | attribute | innerText | Like `textContent`, but observes CSS `display:none`/`white-space` rules. Writable. |
+|  | attribute | innerText | Getter returns the rendered text (CSS `display`, `visibility`, `white-space`, `text-transform`; line breaks at blocks, `br`, table rows; tabs between cells); for an element that is not rendered, its descendant text content. Setter replaces the children with text nodes and `br`s. |
+|  | attribute | outerText | Getter as `innerText`. Setter replaces the element itself and merges the new text with adjacent text nodes; throws `NoModificationAllowedError` without a parent. |
 |  | attribute | dataset | Returns a `DOMStringMap` for `data-*` attributes (kebab-case → camelCase). |
 |  | mixin | ElementContentEditable | Provides `contentEditable`/`isContentEditable`. |
 |  | mixin | ElementCSSInlineStyle | Provides `style` (`CSSStyleDeclaration`). |
 |  | mixin | ElementAnimation | Provides `animate()`; `getAnimations()` is unimplemented. |
 |  | misc | **Unsupported in LWE** (IDL `[Unimplemented]` — return `undefined`) | `translate`, `accessKey`, `accessKeyLabel`, `draggable`, `contextMenu`, `spellcheck`, `forceSpellCheck`, `nonce`, `autofocus`. |
-|  | misc | **Not exposed at all** | `popover`/`togglePopover`/`showPopover`/`hidePopover`, `outerText`, `inert`, `enterKeyHint`, `inputMode`. |
+|  | misc | **Not exposed at all** | `popover`/`togglePopover`/`showPopover`/`hidePopover`, `inert`, `enterKeyHint`, `inputMode`. |
 |  | method | Promise&lt;void&gt; requestFullscreen() | Requests that the element be displayed fullscreen. `webkitRequestFullscreen()`/`webkitRequestFullScreen()` are aliases of the same operation. |
 |  | method | void click() | Acts as if the element was clicked. |
 |  | attribute | tabIndex | Reflects the value of the "tabindex" content attribute of HTMLElement. Its default value is 0 for elements that are focusable and −1 for elements that are not focusable. |

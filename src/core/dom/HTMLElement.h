@@ -72,6 +72,8 @@ public:
     // https://html.spec.whatwg.org/multipage/dom.html#the-innertext-idl-attribute
     String* innerText();
     void setInnerText(String* text);
+    String* outerText();
+    void setOuterText(String* text);
 
     String* title();
     void setTitle(String* title);
