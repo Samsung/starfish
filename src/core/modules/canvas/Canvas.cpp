@@ -309,7 +309,8 @@ CanvasSurface* CanvasSurface::create(Renderer* renderer, size_t w, size_t h,
     if (rendererType == StarfishRendererType::kOpenGL) {
         return CanvasSurfaceFactory::createGL(renderer, w, h,
                                               additionalPixelRatio, flag);
-    } else if (rendererType == StarfishRendererType::kSoftware) {
+    } else if (rendererType == StarfishRendererType::kSoftware ||
+               rendererType == StarfishRendererType::kHeadless) {
         return CanvasSurfaceFactory::createSimple(renderer, w, h,
                                                   additionalPixelRatio, flag);
     }

@@ -53,7 +53,6 @@ namespace CompositorFactory {
     uint32_t maximumTextureSizeGl();
     bool supportsFilterEffectGl(size_t textureWidth, size_t textureHeight);
 #endif
-#if defined(STARFISH_HEADLESS)
     Compositor* create3dMock(WebView* webview, CompositorContext* ctx);
     Compositor* create2dMock(WebView* webview, CompositorContext* ctx,
                              CanvasSurface* surface);
@@ -62,7 +61,6 @@ namespace CompositorFactory {
                                       CompositorContext* ctx);
     uint32_t maximumTextureSizeMock();
     bool supportsFilterEffectMock(size_t textureWidth, size_t textureHeight);
-#endif
 
 }; // namespace CompositorFactory
 } // namespace Starfish

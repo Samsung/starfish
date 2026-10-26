@@ -18,7 +18,6 @@
  */
 
 #include "StarfishConfig.h"
-#ifdef STARFISH_HEADLESS
 
 #include <SkMatrix.h>
 
@@ -44,7 +43,7 @@ extern Starfish::CanvasSurface* g_surfaceForScreehShot;
 
 namespace Starfish {
 
-#ifdef STARFISH_ENABLE_TEST
+#if defined(STARFISH_ENABLE_TEST) && defined(STARFISH_HEADLESS)
 void screenShotInRendering(WebView*, char const*, std::function<void()>)
 {
     STARFISH_UNSUPPORTED("Capture a screenshot for internal test build");
@@ -114,4 +113,3 @@ Compositor* RendererHeadless::prepareCompositor()
 }
 
 } // namespace Starfish
-#endif

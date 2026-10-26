@@ -71,16 +71,16 @@ const TransformationMatrix& TransformationMatrix::identityMatrix()
 Renderer* Renderer::create(Starfish* starfish, uint32_t width, uint32_t height)
 {
     StarfishRendererType rendererType = starfish->rendererType();
-#if defined(STARFISH_HEADLESS)
-    STARFISH_ASSERT(rendererType == StarfishRendererType::kHeadless);
-    return RendererFactory::createHeadless(starfish, width, height);
-#else
+#if !defined(STARFISH_HEADLESS)
     if (rendererType == StarfishRendererType::kOpenGL) {
         return RendererFactory::createGL(starfish, width, height);
     } else if (rendererType == StarfishRendererType::kSoftware) {
         return RendererFactory::createSoftware(starfish, width, height);
     }
 #endif
+    if (rendererType == StarfishRendererType::kHeadless) {
+        return RendererFactory::createHeadless(starfish, width, height);
+    }
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return nullptr;
 }
