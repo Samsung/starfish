@@ -383,7 +383,9 @@ void AXSerializer::addRole(rapidjson::Value& out, const std::string& role)
     // A role the ARIA vocabulary does not have is reported as an internal
     // role, which is how a client tells the two apart.
     const char* type = (role == "StaticText" || role == "InlineTextBox" ||
-                        role == "RootWebArea" || role == "Iframe")
+                        role == "RootWebArea" || role == "Iframe" ||
+                        role == "DisclosureTriangle" ||
+                        role == "DisclosureTriangleGrouped")
                            ? "internalRole"
                            : "role";
 
@@ -666,6 +668,7 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
         axHasAttribute(element, "tabindex") || tag == "input" ||
         tag == "button" || tag == "select" || tag == "textarea" ||
         tag == "option" || editingHost || nativeDialogIsOpen ||
+        role == "DisclosureTriangle" || role == "DisclosureTriangleGrouped" ||
         (tag == "a" && axHasAttribute(element, "href"));
     if (focusableCandidate && !nativeDisabled) {
         addBooleanProperty(properties, "focusable", "booleanOrUndefined", true);
@@ -819,6 +822,11 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
                            expanded != "false");
     } else if (tag == "select") {
         addBooleanProperty(properties, "expanded", "booleanOrUndefined", false);
+    } else if (tag == "summary" && element->parentElement() &&
+               tagOf(element->parentElement()) == "details") {
+        // The open state of the details element decides it.
+        addBooleanProperty(properties, "expanded", "booleanOrUndefined",
+                           axHasAttribute(element->parentElement(), "open"));
     }
 
     // A cell, header, or row can be selected only inside a grid.

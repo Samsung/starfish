@@ -188,6 +188,18 @@ std::string axRoleForElement(Element* element, const std::string& tag)
     if (tag == "canvas") {
         return "canvas";
     }
+    if (tag == "summary") {
+        // Only the summary of a details element is a disclosure widget.
+        // A details element with a name belongs to an exclusive group.
+        Element* parent = element->parentElement();
+        if (parent && parent->localName() &&
+            parent->localName()->toUTF8NonGCString() == "details") {
+            return attributeOf(parent, "name").empty()
+                       ? "DisclosureTriangle"
+                       : "DisclosureTriangleGrouped";
+        }
+        return "generic";
+    }
     return "generic";
 }
 
@@ -214,7 +226,8 @@ int axChromeRoleForRole(const std::string& role)
         { "option", 113 },        { "alert", 2 },
         { "progressbar", 140 },   { "searchbox", 153 },
         { "spinbutton", 156 },    { "status", 159 },
-        { "switch", 163 },        { "disclosureTriangle", 37 },
+        { "switch", 163 },        { "DisclosureTriangle", 37 },
+        { "DisclosureTriangleGrouped", 38 },
         { "treeitem", 180 },      { "navigation", 130 },
         { "InlineTextBox", 101 }, { "group", 93 },
         { "tab", 164 },           { "tablist", 165 },
@@ -228,7 +241,8 @@ int axChromeRoleForRole(const std::string& role)
 bool axRoleSupportsNameFromContents(const std::string& role)
 {
     return role == "button" || role == "cell" || role == "checkbox" ||
-           role == "columnheader" || role == "gridcell" || role == "heading" ||
+           role == "DisclosureTriangle" ||
+           role == "DisclosureTriangleGrouped" || role == "columnheader" || role == "gridcell" || role == "heading" ||
            role == "link" || role == "menuitem" || role == "menuitemcheckbox" ||
            role == "menuitemradio" || role == "option" || role == "radio" ||
            role == "row" || role == "rowheader" || role == "sectionhead" ||
