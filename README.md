@@ -486,6 +486,11 @@ machine with a live desktop session: the suites launch Starfish instances
 8-way in parallel, which spikes load on a real X server, and the fixed
 virtual screen keeps pixel/reftest comparisons reproducible.
 
+Internal tests that load a web font should use a family name containing
+`Ahem` (case-insensitive): the drivers' `--hide-window` enables regression mode,
+which otherwise substitutes SamsungOne in `ComputedStyle::loadFont` and
+bypasses the intended web font.
+
 ### Summary
 ``` sh
 # Run all test at once

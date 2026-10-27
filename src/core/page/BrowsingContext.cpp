@@ -53,6 +53,7 @@
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/FontFaceSrcData.h"
+#include "core/style/FontFaceSet.h"
 #include "core/style/StyleRule.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
@@ -513,6 +514,10 @@ bool BrowsingContext::layoutIfNeeded()
 
     if (!webView()->hasActiveAnimationExecutor()) {
         document()->resourceLoader().cachePruning();
+    }
+
+    if (auto fonts = document()->fontsIfCreated()) {
+        fonts.value()->didFinishLayout();
     }
 
     return ret;

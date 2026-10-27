@@ -25,9 +25,13 @@
 #include "core/dom/Event.h"
 #include "binding/ScriptWrappable.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
+#include "core/page/BrowsingContext.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/WebFont.h"
 #include "platform/loader/Resource.h"
+#include "platform/loader/ResourceLoader.h"
 
 namespace Starfish {
 
@@ -46,6 +50,7 @@ FontFaceSet::FontFaceSet(Document* document)
     : m_document(document)
     , m_isReadyPromiseFulfilled(false)
     , m_hasFailedFonts(false)
+    , m_hasPendingLayoutTask(false)
 {
     // Created lazily on first script access, possibly mid-load.
     m_isLoading = hasLoadingFonts();
@@ -70,7 +75,12 @@ bool FontFaceSet::hasLoadingFonts() const
 // https://drafts.csswg.org/css-font-loading/#fontfaceset-pending-on-the-environment
 bool FontFaceSet::isPendingOnTheEnvironment() const
 {
-    return !m_document->domContentLoadedFired();
+    auto* context = m_document->browsingContext();
+    return !m_document->domContentLoadedFired() ||
+           m_document->resourceLoader().isDocumentInOpenState() ||
+           context->hasPendingStyleSheet() || context->needsStyleRecalc() ||
+           context->needsStyleRecalcForWholeDocument() ||
+           context->needsFrameTreeBuild() || context->needsLayout();
 }
 
 String* FontFaceSet::status() const
@@ -93,6 +103,26 @@ Promise* FontFaceSet::ready()
         }
     }
     return m_readyPromise;
+}
+
+void FontFaceSet::didFinishLayout()
+{
+    if (m_hasPendingLayoutTask ||
+        (!m_isLoading && (!m_readyPromise || m_isReadyPromiseFulfilled)) ||
+        isPendingOnTheEnvironment() || hasLoadingFonts()) {
+        return;
+    }
+
+    // Font completion can run script; never dispatch it inside layout.
+    m_hasPendingLayoutTask = true;
+    m_document->webView()->messageLoop()->addIdler(
+        m_document->window(),
+        [](size_t, void* data) {
+            auto* fonts = static_cast<FontFaceSet*>(data);
+            fonts->m_hasPendingLayoutTask = false;
+            fonts->didChangeFontLoadingState();
+        },
+        this);
 }
 
 void FontFaceSet::fireEvent(String* type)
@@ -126,13 +156,14 @@ void FontFaceSet::didChangeFontLoadingState(bool fontLoadFailed)
         return;
     }
 
+    bool wasLoading = m_isLoading;
+    m_isLoading = false;
     if (m_readyPromise && !m_isReadyPromiseFulfilled) {
         m_isReadyPromiseFulfilled = true;
         m_readyPromise->fulfill(scriptValue());
     }
 
-    if (m_isLoading) {
-        m_isLoading = false;
+    if (wasLoading) {
         fireEvent(staticStrings->m_loadingdone.localName());
         if (m_hasFailedFonts) {
             m_hasFailedFonts = false;
