@@ -195,9 +195,12 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     // If the Document is the initial "about:blank" document
     // The one it was assigned when its browsing context was created.
-    // A javascript: navigation's document takes the origin of the document
-    // it replaces, which in a fresh iframe is that initial about:blank.
-    if ((uri->urlString()->equals("about:blank") || uri->isJavascriptURL()) &&
+    // A javascript: document is not given the parent's origin: a frame of
+    // any origin can navigate itself to javascript:, and its script would
+    // then run as the parent. HTML derives that origin from the navigation's
+    // initiator and the replaced document, which this constructor cannot see
+    // (https://html.spec.whatwg.org/multipage/browsing-the-web.html#evaluate-a-javascript:-url).
+    if (uri->urlString()->equals("about:blank") &&
         browsingContext()->parentBrowsingContext()) {
         setWebOrigin(browsingContext()
                          ->parentBrowsingContext()
