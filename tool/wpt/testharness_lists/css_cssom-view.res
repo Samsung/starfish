@@ -87,7 +87,7 @@ http://web-platform.test:8000/css/cssom-view/matchMedia.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/cssom-view/offsetParent-fixed.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/cssom-view/offsetTop-offsetLeft-nested-offsetParents.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/cssom-view/offsetTop-offsetLeft-with-zoom.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/cssom-view/offsetTopLeft-border-box.html
+http://web-platform.test:8000/css/cssom-view/offsetTopLeft-border-box.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/cssom-view/offsetTopLeft-empty-inline-offset.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/cssom-view/offsetTopLeft-empty-inline.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/cssom-view/offsetTopLeft-leading-space-inline.html

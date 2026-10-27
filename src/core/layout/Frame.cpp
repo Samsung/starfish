@@ -2104,9 +2104,11 @@ LayoutLocation Frame::adjustedPositionRelativeToOffsetParent()
     }
 
     FrameBox* box = frameObj->findNearestAssociateBox();
+    // CSSOM View offsetTop/Left: measured from the offsetParent's padding
+    // edge, i.e. inside its border; absoluteRect() is border-box relative.
     LayoutRect rect = box->absoluteRect(offsetParent);
-    rect.setX(rect.x() - offsetParent->paddingLeft());
-    rect.setY(rect.y() - offsetParent->paddingTop());
+    rect.setX(rect.x() - offsetParent->borderLeft());
+    rect.setY(rect.y() - offsetParent->borderTop());
     result.unite(rect);
 
     if (offsetParent->node()->isHTMLBodyElement()) {
