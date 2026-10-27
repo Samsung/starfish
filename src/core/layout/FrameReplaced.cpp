@@ -423,7 +423,14 @@ LayoutSize FrameReplaced::contentSizeConsiderContainingBlockWidth(
     } else if (isFrameReplacedImage()) {
         NativeImageData* imageData = nullptr;
         imageData = node()->asHTMLImageElement()->imageData();
-        if (imageData && imageData->isSVGNativeImageData()) {
+        // The width and height attributes map to the 'width' and 'height'
+        // properties, so an image sized by them keeps that size instead of
+        // stretching a viewBox-only SVG to the containing block.
+        const auto& attributeSize =
+            computeIntrinsicSizeForLayout()
+                .m_intrinsicSizeIsSpecifiedByAttributeOfElement;
+        if (imageData && imageData->isSVGNativeImageData() &&
+            attributeSize.first.isAuto() && attributeSize.second.isAuto()) {
             svg = imageData->asSVGNativeImageData()->frameSVGSVGBox();
         }
     }
