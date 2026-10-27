@@ -72,7 +72,10 @@ void URL::revokeObjectURL(ExecutionContext* executionContext,
                           String* blobURLRef)
 {
     BlobURLStore store;
-    if (WebBase::stringToBlobURLString(blobURLRef, store)) {
+    // Only the URL's own origin may revoke it; frames of other origins share
+    // this store. https://w3c.github.io/FileAPI/#dfn-revokeObjectURL
+    if (WebBase::stringToBlobURLString(blobURLRef, store) &&
+        store.m_origin->equals(executionContext->webOrigin()->serialize())) {
         WebBase* webBase = executionContext->webBase();
         if (webBase->isValidBlobURL(store)) {
             webBase->removeBlobFromBlobURLStore((Blob*)store.m_blob);
