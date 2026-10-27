@@ -177,18 +177,9 @@ public:
         auto iter = m_glyphIndexCache.find(ch);
         if (iter != m_glyphIndexCache.end()) {
             if (iter->second.first) {
-                LayoutUnit width;
-                if (intSize < STARFISH_FONT_CAIRO_MIN_ENABLE_KERNING_SIZE
-#if defined(STARFISH_ENABLE_TEST)
-                    && false
-#endif
-                ) {
-                    width = ceilf(((float)iter->second.second * intSize) /
-                                  m_unitsPerEM);
-                } else {
-                    width = LayoutUnit((int)(iter->second.second * intSize)) /
-                            LayoutUnit((int)(m_unitsPerEM));
-                }
+                LayoutUnit width =
+                    LayoutUnit((int)(iter->second.second * intSize)) /
+                    LayoutUnit((int)(m_unitsPerEM));
                 result = std::make_pair(
                     this, std::make_pair(iter->second.first, width));
                 return true;
@@ -204,18 +195,10 @@ public:
                 std::make_pair(ch, std::make_pair(glyphIndex, advance)));
 
             if (glyphIndex) {
-                LayoutUnit width;
-
-                if (intSize < STARFISH_FONT_CAIRO_MIN_ENABLE_KERNING_SIZE
-#if defined(STARFISH_ENABLE_TEST)
-                    && false
-#endif
-                ) {
-                    width = ceilf((float)advance * intSize / m_unitsPerEM);
-                } else {
-                    width = LayoutUnit((int)(advance * intSize)) /
-                            LayoutUnit((int)(m_unitsPerEM));
-                }
+                // Fractional advances, as text runs measure them; rounding
+                // each glyph up made text wider than in other engines.
+                LayoutUnit width = LayoutUnit((int)(advance * intSize)) /
+                                   LayoutUnit((int)(m_unitsPerEM));
                 result =
                     std::make_pair(this, std::make_pair(glyphIndex, width));
                 return true;
