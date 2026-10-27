@@ -104,6 +104,9 @@ public:
     bool defaultNamedSetter(String* name, Optional<String*> value);
     void defaultNamedEnumerator(GCVector<String*>& enums);
 
+    // The @font-face unicode-range descriptor, set by the @font-face parser.
+    void setUnicodeRange(const char* value, size_t len, bool isImportant);
+
     template <typename T>
     void setProperty(T name, T value, bool isImportant, bool allowSrcProperty)
     {

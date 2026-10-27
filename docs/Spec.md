@@ -2003,7 +2003,7 @@ The CSS section above does not enumerate at-rules. Implementation status:
 |--------|--------|
 | `@import` | Supported. Forms: `@import url("a.css");`, `@import url("a.css") <media-query>;`. **The CSS Cascade 5 `supports(<condition>)` clause** (`@import url(...) supports(<cond>) <media-query>;`) is **NOT specifically parsed** — the `supports(...)` function tokens are consumed as media query text and the import is loaded unconditionally. |
 | `@media` | Supported. |
-| `@font-face` | Supported (descriptors `unicode-range` and `font-display` are NOT). |
+| `@font-face` | Supported (descriptor `font-display` is NOT). `unicode-range` limits a face to its code points: the best-matching faces of a family form a composite font tried in reverse declaration order, and a ranged face is downloaded only once a character in its range is laid out. The descriptor is not exposed through CSSOM (`CSSFontFaceRule.style.getPropertyValue("unicode-range")` returns an empty string). |
 | `@keyframes` | Supported. **`@-webkit-keyframes` is NOT recognized** — only the unprefixed `@keyframes` token is in `CSSParser::parseAtRule`. (Earlier docs claiming the prefixed form worked were incorrect.) |
 | `@supports` | Parsed via `parseSupportsRule`. Condition evaluation works for the basic `<feature> := (prop: value)` form (a declaration is "supported" iff `parseDeclaration` produces non-empty `cssText`), and the boolean operators `and` / `or` / `not` plus parenthesized groups are honored (`m_supportOperand`/`m_supportOperator` stacks). The JS-side `CSS.supports(prop, value)` wraps its arguments into the same `(prop: value)` declaration condition, so it agrees with `@supports`. The general-enclosed `<supports-feature>` fallback (function syntax: `selector(...)`, `font-tech(...)`, `font-format(...)`) is recognized as the catch-all but does not check actual support. |
 | `@namespace` | Implemented. Prefixes declared here are resolved by the parser and drive namespace-aware type selector matching (`ns\|E`, `*\|E`, `\|E`, `ns\|*`), including the default-namespace rule. Placement validity (after `@charset`/`@import`, before style rules) is enforced, and the rule is exposed as a `CSSNamespaceRule`. |
@@ -3049,7 +3049,6 @@ The following font-related CSS properties are **not in the parser trie** at all 
 | `font-optical-sizing` | NOT recognized. |
 | `font-language-override` | NOT recognized. |
 | `font-palette`, `@font-palette-values` | NOT recognized. |
-| `@font-face` `unicode-range` descriptor | NOT recognized — entire `unicode-range:` declaration inside `@font-face` is silently dropped, so all glyphs from a face apply unconditionally. |
 | `@font-face` `font-display` descriptor | NOT recognized — there is no FOIT/FOUT control. |
 | `@font-face` `font-stretch`/`font-variant`/`font-feature-settings`/`font-variation-settings` descriptors | NOT recognized. |
 | Generic family keywords | `serif`, `sans-serif`, `monospace`, `cursive`, `fantasy` parse. **`system-ui`, `ui-serif`, `ui-sans-serif`, `ui-monospace`, `ui-rounded`, `emoji`, `math`, `fangsong`** are NOT recognized as keywords; they fall back to family-name lookup which usually fails. |

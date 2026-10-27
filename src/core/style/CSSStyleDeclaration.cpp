@@ -4861,6 +4861,22 @@ void CSSStyleDeclaration::setSrc(const char* value, size_t len,
     }
 }
 
+void CSSStyleDeclaration::setUnicodeRange(const char* value, size_t len,
+                                          bool isImportant)
+{
+    if (len == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::UnicodeRange);
+        return;
+    }
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len, ",", 1, true);
+    CSSStyleValuePair ret;
+    if (ret.updateValueUnicodeRange(tokens)) {
+        ret.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::UnicodeRange, ret);
+    }
+}
+
 String* CSSStyleDeclaration::GridTemplate()
 {
     String* gridTemplateRows =
