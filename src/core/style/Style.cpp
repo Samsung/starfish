@@ -17304,7 +17304,10 @@ bool CSSStyleValuePair::updateValueStrokeDasharray(Document* document,
 bool CSSStyleValuePair::updateValueStrokeDashoffset(
     Document* document, const CSSTokenVector& tokens)
 {
-    return updateValueNumber(tokens, CSSPropertyParser::AllowNone);
+    // SVG 2 stroke-dashoffset: negative offsets are valid and shift dashes
+    // forward along the path.
+    return updateValueNumber(tokens, CSSPropertyParser::AllowNone |
+                                         CSSPropertyParser::AllowNegative);
 }
 
 bool CSSStyleValuePair::updateValueX(Document* document,
