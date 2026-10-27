@@ -362,6 +362,12 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
 
         switch (f.kind()) {
         case CSSTransformFunction::Kind::Matrix:
+            // A var() can expand to fewer than the six numbers matrix()
+            // takes; the value is then invalid at computed-value time.
+            // https://drafts.csswg.org/css-variables/#invalid-at-computed-value-time
+            if (valueSize < 6) {
+                return;
+            }
             style->setTransformMatrix(dValues[0], dValues[1], dValues[2],
                                       dValues[3], dValues[4], dValues[5]);
 
