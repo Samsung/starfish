@@ -882,6 +882,10 @@ static ImageDecoder::DecodeResult decodeWebP(
         if (result.m_buffer == nullptr) {
             return result;
         }
+        // libwebp returns straight alpha; fully transparent pixels can keep
+        // color data that would otherwise show through.
+        convertImageBufferAsPremultipliedAlphaIfNeeds(result.m_buffer, width,
+                                                      width * 4, height);
     } else {
         if (!WebPGetInfo(readData.mem, readData.size, &width, &height)) {
             return result;
