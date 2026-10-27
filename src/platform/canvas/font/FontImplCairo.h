@@ -314,7 +314,7 @@ public:
 
     std::pair<std::pair<FontFaceImplCairo*, size_t>,
               std::pair<unsigned, LayoutUnit>>
-    loadGlyph(char32_t ch);
+    loadGlyph(char32_t ch, char32_t variationSelector = 0);
 };
 
 class PlatformFontSelectorImplCairo : public PlatformFontSelector {
