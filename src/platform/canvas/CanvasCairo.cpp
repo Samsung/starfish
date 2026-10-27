@@ -2565,7 +2565,9 @@ private:
 
         bool needsToDrawWithPath = false;
 #if !defined(STARFISH_ENABLE_TEST)
-        if (glyphCount && canUsePath && m_state.back()->m_font->size() >= 32) {
+        // A glyph path has no color, so color glyphs are always shown.
+        if (glyphCount && canUsePath && m_state.back()->m_font->size() >= 32 &&
+            !FT_HAS_COLOR(fontFace->freetypeFace())) {
             cairo_matrix_t m;
             cairo_get_matrix(m_canvas, &m);
 

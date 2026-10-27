@@ -95,7 +95,7 @@ FontFace* FontFace::create(const uint8_t* data, size_t dataLen)
 
 std::pair<std::pair<FontFaceImplCairo*, size_t>,
           std::pair<unsigned, LayoutUnit>>
-FontImplCairo::loadGlyph(char32_t ch)
+FontImplCairo::loadGlyph(char32_t ch, char32_t variationSelector)
 {
     std::pair<std::pair<FontFaceImplCairo*, size_t>,
               std::pair<unsigned, LayoutUnit>>
@@ -107,10 +107,21 @@ FontImplCairo::loadGlyph(char32_t ch)
 
     int intSize = int(size() + .5f);
 
+    // UTS #51: U+FE0F asks for emoji presentation and U+FE0E for text
+    // presentation of the preceding character, whatever its default.
+    bool emojiPresentation =
+        variationSelector == 0xFE0F ||
+        (variationSelector != 0xFE0E &&
+         u_hasBinaryProperty(ch, UCHAR_EMOJI_PRESENTATION));
+
     const auto& faceList = fontFaceList();
     for (size_t i = 0; i < faceList.size(); i++) {
         FontFaceImplCairo* impl = ((FontFaceImplCairo*)faceList[i]);
 
+        if (variationSelector == 0xFE0F &&
+            !FT_HAS_COLOR(impl->freetypeFace())) {
+            continue;
+        }
         if (impl->loadGlyph(intSize, ch, glyphResult)) {
             return std::make_pair(std::make_pair(impl, i), glyphResult.second);
         }
@@ -124,10 +135,9 @@ FontImplCairo::loadGlyph(char32_t ch)
     bool hasCacheItem = false;
     char fontStyle = style();
     char fontWeight = weight();
-    // UTS #51: characters with default emoji presentation are drawn from a
-    // color emoji font, as Blink does; their code blocks also hold
-    // text-presentation characters, so the cache keeps the two apart.
-    bool emojiPresentation = u_hasBinaryProperty(ch, UCHAR_EMOJI_PRESENTATION);
+    // Emoji presentation is drawn from a color emoji font, as Blink does;
+    // code blocks also hold text-presentation characters, so the cache keeps
+    // the two apart.
     for (size_t i = 0; i < fallbackFontFaceCachePerCodeBlock.size(); i++) {
         auto a = fallbackFontFaceCachePerCodeBlock[i];
         if (std::get<0>(a) == blockCode && std::get<2>(a) == fontStyle &&
@@ -333,9 +343,16 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
 
             int unicodeBlock = u_getIntPropertyValue(ch, UCHAR_BLOCK);
 
+            // A variation selector shapes with the character it follows.
+            if (pos > 0 && (ch == 0xFE0E || ch == 0xFE0F)) {
+                pos++;
+                continue;
+            }
+            char32_t next = idx + 1 < length ? accessData.charAt(idx + 1) : 0;
             std::pair<std::pair<FontFaceImplCairo*, size_t>,
                       std::pair<unsigned, LayoutUnit>>
-                glyphData = font->loadGlyph(ch);
+                glyphData = font->loadGlyph(
+                    ch, (next == 0xFE0E || next == 0xFE0F) ? next : 0);
 
             if (pos == 0 && glyphData.first.first == nullptr) {
                 failedToFindFont = true;
