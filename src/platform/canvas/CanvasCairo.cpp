@@ -60,6 +60,7 @@
 #else
 #include <cairo/cairo-ft.h>
 #endif
+#include <fontconfig/fcfreetype.h>
 
 #include <hb.h>
 
@@ -2513,6 +2514,29 @@ private:
     }
 #endif
 
+    // CSS Fonts 4 font-synthesis-weight: a bold request (600 or more) on a
+    // face lighter than that is drawn emboldened, as Blink does; advances
+    // stay those of the face. The emboldened face comes from a pattern so
+    // cairo caches it apart from the plain face of the same FT_Face.
+    // A cairo built without its fontconfig backend (Android) has no
+    // pattern-based face, so text there keeps the face's own weight.
+    cairo_font_face_t* createCairoFontFace(FontFaceImplCairo* fontFace)
+    {
+#if CAIRO_HAS_FC_FONT
+        if (lastState()->m_font->weight() >= 6 && !fontFace->m_isBold) {
+            FcPattern* pattern = FcPatternCreate();
+            FcPatternAddFTFace(pattern, FC_FT_FACE, fontFace->freetypeFace());
+            FcPatternAddBool(pattern, FC_EMBOLDEN, FcTrue);
+            cairo_font_face_t* face =
+                cairo_ft_font_face_create_for_pattern(pattern);
+            FcPatternDestroy(pattern);
+            return face;
+        }
+#endif
+        return cairo_ft_font_face_create_for_ft_face(fontFace->freetypeFace(),
+                                                     0);
+    }
+
     void drawGlyphs(cairo_t* canvas, FontFaceImplCairo* fontFace,
                     const cairo_matrix_t& sizeMatrix,
                     const cairo_matrix_t& identityMatrix, cairo_glyph_t* glyphs,
@@ -2520,8 +2544,7 @@ private:
     {
         STARFISH_ASSERT(canvas != nullptr);
         STARFISH_ASSERT(glyphs != nullptr);
-        cairo_font_face_t* cairofontFace =
-            cairo_ft_font_face_create_for_ft_face(fontFace->freetypeFace(), 0);
+        cairo_font_face_t* cairofontFace = createCairoFontFace(fontFace);
 
         FontFaceReferenceHolder* holder =
             new (NoGC) FontFaceReferenceHolder(fontFace);
@@ -2579,8 +2602,7 @@ private:
         STARFISH_ASSERT(canvas != nullptr);
         STARFISH_ASSERT(glyphs != nullptr);
 
-        cairo_font_face_t* cairofontFace =
-            cairo_ft_font_face_create_for_ft_face(fontFace->freetypeFace(), 0);
+        cairo_font_face_t* cairofontFace = createCairoFontFace(fontFace);
 
         FontFaceReferenceHolder* holder =
             new (NoGC) FontFaceReferenceHolder(fontFace);

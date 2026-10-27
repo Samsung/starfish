@@ -25,6 +25,7 @@
 
 #include <fontconfig/fontconfig.h>
 #include FT_ADVANCES_H
+#include FT_TRUETYPE_TABLES_H
 #include <hb.h>
 #include <hb-ft.h>
 #include "platform/canvas/font/hb-icu/HarfBuzzICU.h"
@@ -102,6 +103,9 @@ public:
         }
 
         m_supportsKerning = m_face->face_flags & FT_FACE_FLAG_KERNING;
+        TT_OS2* os2 = (TT_OS2*)FT_Get_Sfnt_Table(m_face, FT_SFNT_OS2);
+        m_isBold = os2 ? os2->usWeightClass >= 600
+                       : (m_face->style_flags & FT_STYLE_FLAG_BOLD);
         m_xHeight += m_descender;
         if (m_xHeight < 0) {
             m_xHeight = 0;
@@ -245,6 +249,7 @@ public:
     int m_ascender;
     int m_descender;
     bool m_supportsKerning;
+    bool m_isBold;
 
     typedef std::unordered_map<char32_t, std::pair<unsigned, unsigned>>
         GlyphIndexCache;
