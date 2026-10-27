@@ -2382,6 +2382,12 @@ bool CSSStyleDeclaration::setPropertyInternal(
 void CSSStyleDeclaration::setProperty(String* name, String* value,
                                       String* prior)
 {
+    // CSSOM setProperty(): an empty value removes the declaration.
+    if (value->length() == 0) {
+        removeProperty(name);
+        return;
+    }
+
     bool isImportant = false;
     if (prior && !prior->equals("undefined") && prior->length() > 0) {
         if (prior->equalsIgnoreCase("important")) {
