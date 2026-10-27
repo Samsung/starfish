@@ -319,7 +319,11 @@ namespace {
     // "5", "-2.5", and "1e3" pass. "", "5px", and "1,5" do not.
     bool parseWholeNumber(const std::string& text, double& out)
     {
-        if (text.empty()) {
+        // strtod also takes "inf", "nan", hex, and leading spaces. An
+        // unsanitized value attribute can carry those, and JSON has no
+        // Infinity or NaN.
+        if (text.empty() ||
+            text.find_first_not_of("0123456789+-.eE") != std::string::npos) {
             return false;
         }
         const char* begin = text.c_str();
