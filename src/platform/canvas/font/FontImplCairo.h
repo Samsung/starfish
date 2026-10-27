@@ -513,7 +513,8 @@ public:
 
 class PlatformFontCacheImplCairo : public PlatformFontCache {
 public:
-    GCVector<std::tuple<int, FontFaceImplCairo*, char, char>>
+    // (code block, face, style, weight, emoji presentation)
+    GCVector<std::tuple<int, FontFaceImplCairo*, char, char, bool>>
         m_fallbackFontFaceCachePerCodeBlock;
 };
 

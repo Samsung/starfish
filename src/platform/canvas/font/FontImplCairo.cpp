@@ -124,10 +124,15 @@ FontImplCairo::loadGlyph(char32_t ch)
     bool hasCacheItem = false;
     char fontStyle = style();
     char fontWeight = weight();
+    // UTS #51: characters with default emoji presentation are drawn from a
+    // color emoji font, as Blink does; their code blocks also hold
+    // text-presentation characters, so the cache keeps the two apart.
+    bool emojiPresentation = u_hasBinaryProperty(ch, UCHAR_EMOJI_PRESENTATION);
     for (size_t i = 0; i < fallbackFontFaceCachePerCodeBlock.size(); i++) {
         auto a = fallbackFontFaceCachePerCodeBlock[i];
         if (std::get<0>(a) == blockCode && std::get<2>(a) == fontStyle &&
-            std::get<3>(a) == fontWeight) {
+            std::get<3>(a) == fontWeight &&
+            std::get<4>(a) == emojiPresentation) {
             hasCacheItem = true;
             auto face = std::get<1>(fallbackFontFaceCachePerCodeBlock[i]);
             if (face->loadGlyph(intSize, ch, glyphResult)) {
@@ -196,6 +201,11 @@ FontImplCairo::loadGlyph(char32_t ch)
     }
 
     FcPatternAddBool(pattern, FC_SCALABLE, FcTrue);
+#if defined(FC_COLOR)
+    if (emojiPresentation) {
+        FcPatternAddBool(pattern, FC_COLOR, FcTrue);
+    }
+#endif
 
     FcCharSet* fontConfigCharSet = FcCharSetCreate();
     FcCharSetAddChar(fontConfigCharSet, ch);
@@ -252,8 +262,8 @@ FontImplCairo::loadGlyph(char32_t ch)
             ->loadFontFace(u8FilePath);
 
     if (!hasCacheItem) {
-        fallbackFontFaceCachePerCodeBlock.push_back(
-            std::make_tuple(blockCode, face, fontStyle, fontWeight));
+        fallbackFontFaceCachePerCodeBlock.push_back(std::make_tuple(
+            blockCode, face, fontStyle, fontWeight, emojiPresentation));
     }
 
     face->loadGlyph(intSize, ch, glyphResult);
