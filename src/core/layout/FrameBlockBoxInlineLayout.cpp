@@ -3123,12 +3123,19 @@ void LineFormattingContext::handleTextToken(TextToken& token)
         generateInlineTextBox(t);
 
         // Consider direction for hyphen
-        char32_t c = t.m_frameText->text()->charAt(t.m_end - 1);
+        String* text = t.m_frameText->text();
+        char32_t c = text->charAt(t.m_end - 1);
         bool isHyphenAtLast = isSoftHyphen(c) || isHyphen(c);
+        // The token ends at a UAX #14 break opportunity; besides after a
+        // CJK character, it is a soft wrap opportunity before one too, as
+        // between "2026" and a following Hangul syllable.
+        bool isSoftWrapOpportunityNext =
+            t.m_end < text->length() &&
+            isSoftWrapOpportunity(text->charAt(t.m_end));
 
         WordBreakValue wb = t.m_frameText->style()->wordBreak();
         if ((wb == WordBreakValue::BreakAllWordBreakValue) ||
-            (isSoftWrapOpportunity(c) &&
+            ((isSoftWrapOpportunity(c) || isSoftWrapOpportunityNext) &&
              wb != WordBreakValue::KeepAllWordBreakValue) ||
             isHyphenAtLast) {
             insertWord(t.m_frameText);
