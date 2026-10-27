@@ -47,6 +47,7 @@ public:
     // Called when a web font starts or stops loading, and when the document
     // stops being pending on the environment.
     void didChangeFontLoadingState(bool fontLoadFailed = false);
+    void didFinishLayout();
 
 #define VIRTUAL
 #define OVERRIDE
@@ -66,6 +67,7 @@ private:
     bool m_isLoading : 1;
     bool m_isReadyPromiseFulfilled : 1;
     bool m_hasFailedFonts : 1;
+    bool m_hasPendingLayoutTask : 1;
 };
 
 } // namespace Starfish
