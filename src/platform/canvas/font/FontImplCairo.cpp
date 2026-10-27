@@ -115,6 +115,7 @@ FontImplCairo::loadGlyph(char32_t ch, char32_t variationSelector)
          u_hasBinaryProperty(ch, UCHAR_EMOJI_PRESENTATION));
 
     const auto& faceList = fontFaceList();
+    m_fontSelector->loadPendingRangedFonts(m_fontFaceList, ch);
     for (size_t i = 0; i < faceList.size(); i++) {
         FontFaceImplCairo* impl = ((FontFaceImplCairo*)faceList[i]);
 
@@ -122,7 +123,8 @@ FontImplCairo::loadGlyph(char32_t ch, char32_t variationSelector)
             !FT_HAS_COLOR(impl->freetypeFace())) {
             continue;
         }
-        if (impl->loadGlyph(intSize, ch, glyphResult)) {
+        if (faceList.mayCover(i, ch) &&
+            impl->loadGlyph(intSize, ch, glyphResult)) {
             return std::make_pair(std::make_pair(impl, i), glyphResult.second);
         }
     }

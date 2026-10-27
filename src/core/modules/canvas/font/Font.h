@@ -27,6 +27,8 @@ namespace Starfish {
 class FontFace;
 class Font;
 class FontSelector;
+class FontResource;
+class UnicodeRangeList;
 
 enum FontStyle {
     FontStyleNormal,
@@ -94,10 +96,47 @@ public:
     FontFaceList()
     {
         m_seenUnresolvedWebFontIndex = SIZE_MAX;
+        m_unicodeRanges = nullptr;
+        m_pendingRangedFonts = nullptr;
+        m_pendingCoverage = nullptr;
     }
 
+    // A face from an @font-face rule with a unicode-range only supplies the
+    // code points in that range (CSS Fonts 4).
+    bool mayCover(size_t index, char32_t ch) const;
+
+    bool hasPendingRangedFonts() const
+    {
+        return m_pendingRangedFonts && !m_pendingRangedFonts->empty();
+    }
+
+    // Whether a ranged web font not fetched yet covers ch. Binary search
+    // over the merged ranges, since every glyph lookup asks.
+    bool pendingRangedFontsCover(char32_t ch) const;
+
+    struct PendingRangedFont {
+        UnicodeRangeList* m_ranges;
+        FontResource* m_resource;
+        // Index in the face list the font takes once fetched.
+        size_t m_position;
+    };
+
 protected:
+    void pushRangedFace(FontFace* face, UnicodeRangeList* ranges);
+    void insertRangedFace(size_t position, FontFace* face,
+                          UnicodeRangeList* ranges);
+    void addPendingRangedFont(UnicodeRangeList* ranges, FontResource* resource);
+    void rebuildPendingCoverage();
+
     size_t m_seenUnresolvedWebFontIndex;
+    // Parallel to the faces, allocated once a ranged face is added; faces
+    // past its end cover everything.
+    GCVector<UnicodeRangeList*>* m_unicodeRanges;
+    // Ranged web fonts not fetched yet; fetched when a character in their
+    // range is needed, so unused subsets are never downloaded.
+    GCVector<PendingRangedFont>* m_pendingRangedFonts;
+    // Sorted, merged union of the pending fonts' ranges.
+    GCAtomicVector<std::pair<char32_t, char32_t>>* m_pendingCoverage;
 };
 
 class Font : public gc {
@@ -303,6 +342,12 @@ public:
     {
         return m_platformFontCache;
     }
+
+    FontFace* loadLocalWebFont(String* localFontName, char style, char weight);
+
+    // Fetches the pending ranged web fonts covering ch; those already
+    // available join the face list at their place.
+    void loadPendingRangedFonts(FontFaceList* list, char32_t ch);
 
     void clearCache(String* relatedFamilyName);
     void clearWholeCache()

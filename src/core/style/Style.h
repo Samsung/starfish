@@ -861,6 +861,7 @@ class CSSFilterFunction;
     F(D, d, "d")                                                      \
     F(FontFamily, fontFamily, "font-family")                          \
     F(Src, src, "src")                                                \
+    F(UnicodeRange, unicodeRange, "unicode-range")                    \
     F(TransitionDelay, transitionDelay, "transition-delay")           \
     F(TransitionDuration, transitionDuration, "transition-duration")  \
     F(TransitionProperty, transitionProperty, "transition-property")  \
@@ -2719,6 +2720,7 @@ public:
 #undef NEW_SET_VALUE_DECL
     bool updateValueFontFamily(const CSSTokenVector& tokens);
     bool updateValueSrc(const CSSTokenVector& tokens);
+    bool updateValueUnicodeRange(const CSSTokenVector& tokens);
 
     bool updateValueNumber(const CSSTokenVector& tokens, uint8_t option);
     bool updateValueUnitNumber(const CSSTokenValue& token, uint8_t option);

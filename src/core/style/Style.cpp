@@ -11137,6 +11137,15 @@ void StyleResolver::recalcWebFonts()
         FontFaceSrcData* src =
             decl->getCSSValuePair(CSSStyleValuePair::KeyKind::Src)
                 .fontFaceSrcDataValue();
+        UnicodeRangeList* unicodeRanges = nullptr;
+        if (decl->hasCSSValuePair(CSSStyleValuePair::KeyKind::UnicodeRange)) {
+            auto rangeText =
+                decl->getCSSValuePair(CSSStyleValuePair::KeyKind::UnicodeRange)
+                    .keywordValue()
+                    ->toUTF8NonGCString();
+            unicodeRanges =
+                UnicodeRangeList::parse(rangeText.data(), rangeText.length());
+        }
         bool isFontWeightSpecified =
             decl->hasCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight);
         bool isFontStyleSpecified =
@@ -11266,7 +11275,7 @@ void StyleResolver::recalcWebFonts()
             }
 
             WebFont webFont(isFontStyleSpecified, isFontWeightSpecified,
-                            fontFamily, style, weight, res);
+                            fontFamily, style, weight, res, unicodeRanges);
 
             bool found = false;
             for (size_t i = 0; i < document()->m_webFontList.size(); i++) {
@@ -11295,7 +11304,7 @@ void StyleResolver::recalcWebFonts()
         } else {
             WebFont webFont(isFontStyleSpecified, isFontWeightSpecified,
                             fontFamily, style, weight,
-                            std::get<0>(fontFaceData));
+                            std::get<0>(fontFaceData), unicodeRanges);
 
             bool found = false;
             for (size_t i = 0; i < document()->m_webFontList.size(); i++) {
@@ -17438,6 +17447,119 @@ bool CSSStyleValuePair::updateValueOutlineOffset(Document* document,
     }
     return updateValueUnitLengthOrCalc(
         tokens[0], CSSPropertyParser::ParserOption::AllowNegative);
+}
+
+static bool isUnicodeRangeHexDigit(char c)
+{
+    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
+           (c >= 'A' && c <= 'F');
+}
+
+static bool parseUnicodeRange(const std::string& text, char32_t& start,
+                              char32_t& end)
+{
+    // css-syntax-3 <urange>: U+ followed by 1-6 hex digits, optionally ending
+    // in '?' wildcards, or two hex values joined by '-'.
+    if (text.size() < 3 || (text[0] != 'u' && text[0] != 'U') ||
+        text[1] != '+') {
+        return false;
+    }
+    size_t i = 2;
+    std::string first;
+    while (i < text.size() && isUnicodeRangeHexDigit(text[i])) {
+        first += text[i++];
+    }
+    size_t wildcards = 0;
+    while (i < text.size() && text[i] == '?') {
+        wildcards++;
+        i++;
+    }
+    if (first.size() + wildcards == 0 || first.size() + wildcards > 6) {
+        return false;
+    }
+    if (wildcards) {
+        if (i != text.size()) {
+            return false;
+        }
+        start = std::stoul((first.empty() ? "0" : first) +
+                               std::string(wildcards, '0'),
+                           nullptr, 16);
+        end = std::stoul((first.empty() ? "0" : first) +
+                             std::string(wildcards, 'F'),
+                         nullptr, 16);
+    } else {
+        start = end = std::stoul(first, nullptr, 16);
+        if (i < text.size()) {
+            if (text[i++] != '-') {
+                return false;
+            }
+            std::string second;
+            while (i < text.size() && isUnicodeRangeHexDigit(text[i])) {
+                second += text[i++];
+            }
+            if (second.empty() || second.size() > 6 || i != text.size()) {
+                return false;
+            }
+            end = std::stoul(second, nullptr, 16);
+        }
+    }
+    return start <= end && end <= 0x10FFFF;
+}
+
+UnicodeRangeList* UnicodeRangeList::parse(const char* data, size_t length)
+{
+    UnicodeRangeList* list = new UnicodeRangeList();
+    size_t pieceStart = 0;
+    for (size_t i = 0; i <= length; i++) {
+        if (i == length || data[i] == ',') {
+            size_t begin = pieceStart, end = i;
+            while (begin < end && String::isASCIISpace(data[begin])) {
+                begin++;
+            }
+            while (end > begin && String::isASCIISpace(data[end - 1])) {
+                end--;
+            }
+            char32_t first, last;
+            if (!parseUnicodeRange(std::string(data + begin, end - begin),
+                                   first, last)) {
+                return nullptr;
+            }
+            list->push_back(std::make_pair(first, last));
+            pieceStart = i + 1;
+        }
+    }
+    return list;
+}
+
+bool CSSStyleValuePair::updateValueUnicodeRange(const CSSTokenVector& tokens)
+{
+    std::string text;
+    for (size_t i = 0; i < tokens.size(); i++) {
+        if (tokens[i] == ",") {
+            text += ", ";
+        } else {
+            text.append(tokens[i].data(), tokens[i].length());
+        }
+    }
+    UnicodeRangeList* list = UnicodeRangeList::parse(text.data(), text.size());
+    if (!list) {
+        return false;
+    }
+    // Serialize in the canonical form, e.g. u+4?? becomes U+400-4FF.
+    std::string canonical;
+    char buffer[32];
+    for (const auto& range : *list) {
+        if (range.first == range.second) {
+            snprintf(buffer, sizeof(buffer), "U+%X", (unsigned)range.first);
+        } else {
+            snprintf(buffer, sizeof(buffer), "U+%X-%X", (unsigned)range.first,
+                     (unsigned)range.second);
+        }
+        canonical += (canonical.empty() ? "" : ", ") + std::string(buffer);
+    }
+    setKeyKind(KeyKind::UnicodeRange);
+    setKeywordValue(String::fromUTF8(canonical.data(), canonical.size()));
+    return true;
 }
 
 bool CSSStyleValuePair::updateValueSrc(const CSSTokenVector& tokens)

@@ -27,6 +27,8 @@
 #include "core/page/WebView.h"
 #include "platform/loader/ResourceLoader.h"
 
+#include <algorithm>
+
 namespace Starfish {
 
 static UTF8StringDataNonGCStd mergeStyleWeightWithString(
@@ -179,6 +181,158 @@ FontFace* FontSelector::loadFromPlatform(const UTF8StringDataNonGCStd& fm,
     }
 }
 
+FontFace* FontSelector::loadLocalWebFont(String* localFontName, char style,
+                                         char weight)
+{
+    auto localFm = localFontName->toUTF8NonGCString();
+    std::transform(localFm.begin(), localFm.end(), localFm.begin(), tolower);
+    UTF8StringDataNonGCStd localCacheStr =
+        mergeStyleWeightWithString(localFm, style, weight);
+
+    auto iter = m_webFontLocalSrcCache.find(localCacheStr);
+    if (iter != m_webFontLocalSrcCache.end()) {
+        return iter->second;
+    }
+    FontFace* face =
+        loadFromPlatform(localFm, isGenericFontName(localFm), style, weight);
+    m_webFontLocalSrcCache.insert(std::make_pair(localCacheStr, face));
+    return face;
+}
+
+bool FontFaceList::mayCover(size_t index, char32_t ch) const
+{
+    if (!m_unicodeRanges || index >= m_unicodeRanges->size()) {
+        return true;
+    }
+    UnicodeRangeList* ranges = (*m_unicodeRanges)[index];
+    return !ranges || ranges->contains(ch);
+}
+
+void FontFaceList::pushRangedFace(FontFace* face, UnicodeRangeList* ranges)
+{
+    insertRangedFace(size(), face, ranges);
+}
+
+void FontFaceList::insertRangedFace(size_t position, FontFace* face,
+                                    UnicodeRangeList* ranges)
+{
+    if (!m_unicodeRanges) {
+        m_unicodeRanges = new GCVector<UnicodeRangeList*>();
+    }
+    while (m_unicodeRanges->size() < size()) {
+        m_unicodeRanges->push_back(nullptr);
+    }
+    insert(begin() + position, face);
+    m_unicodeRanges->insert(m_unicodeRanges->begin() + position, ranges);
+    if (m_pendingRangedFonts) {
+        for (auto& pending : *m_pendingRangedFonts) {
+            if (pending.m_position >= position) {
+                pending.m_position++;
+            }
+        }
+    }
+}
+
+void FontFaceList::addPendingRangedFont(UnicodeRangeList* ranges,
+                                        FontResource* resource)
+{
+    if (!m_pendingRangedFonts) {
+        m_pendingRangedFonts = new GCVector<PendingRangedFont>();
+    }
+    m_pendingRangedFonts->push_back({ ranges, resource, size() });
+}
+
+void FontFaceList::rebuildPendingCoverage()
+{
+    if (!m_pendingCoverage) {
+        m_pendingCoverage = new GCAtomicVector<std::pair<char32_t, char32_t>>();
+    }
+    m_pendingCoverage->clear();
+    for (const auto& pending : *m_pendingRangedFonts) {
+        for (const auto& range : *pending.m_ranges) {
+            m_pendingCoverage->push_back(range);
+        }
+    }
+    std::sort(m_pendingCoverage->begin(), m_pendingCoverage->end());
+    size_t merged = 0;
+    for (size_t i = 0; i < m_pendingCoverage->size(); i++) {
+        auto range = (*m_pendingCoverage)[i];
+        if (merged &&
+            range.first <= (*m_pendingCoverage)[merged - 1].second + 1) {
+            auto& last = (*m_pendingCoverage)[merged - 1];
+            last.second = std::max(last.second, range.second);
+        } else {
+            (*m_pendingCoverage)[merged++] = range;
+        }
+    }
+    m_pendingCoverage->resize(merged);
+}
+
+bool FontFaceList::pendingRangedFontsCover(char32_t ch) const
+{
+    if (!hasPendingRangedFonts()) {
+        return false;
+    }
+    auto iter =
+        std::upper_bound(m_pendingCoverage->begin(), m_pendingCoverage->end(),
+                         std::make_pair(ch, (char32_t)0x10FFFF));
+    return iter != m_pendingCoverage->begin() && ch <= (iter - 1)->second;
+}
+
+static int webFontMatchScore(WebFont& webFont, char style, char weight)
+{
+    int score = 1;
+    if (webFont.isFontStyleSpecified() &&
+        (char)webFont.fontStyleValue() == style) {
+        score++;
+    }
+    if (webFont.isFontWeightSpecified() &&
+        webFont.fontWeightValue() == weight) {
+        score++;
+    }
+    return score;
+}
+
+static void requestWebFont(Document* document, FontResource* resource)
+{
+    if (resource->isRequested()) {
+        return;
+    }
+    RequestData* reqData = new RequestData();
+    reqData->m_url = resource->url();
+    reqData->m_referrer = new ReferrerURL(document->documentURI());
+    reqData->m_destination = RequestDestination::Font;
+    reqData->m_syncLevel = RequestSyncLevel::SyncIfAlreadyLoaded;
+
+    resource->request(reqData, true);
+    if (auto fonts = document->fontsIfCreated()) {
+        fonts.value()->didChangeFontLoadingState();
+    }
+}
+
+void FontSelector::loadPendingRangedFonts(FontFaceList* list, char32_t ch)
+{
+    if (!list->pendingRangedFontsCover(ch)) {
+        return;
+    }
+    auto& pending = *list->m_pendingRangedFonts;
+    for (size_t i = 0; i < pending.size();) {
+        if (!pending[i].m_ranges->contains(ch)) {
+            i++;
+            continue;
+        }
+        FontFaceList::PendingRangedFont entry = pending[i];
+        pending.erase(pending.begin() + i);
+        // Once the download finishes the font lists are rebuilt; until then
+        // the character falls back like any uncovered one.
+        requestWebFont(document(), entry.m_resource);
+        if (FontFace* face = entry.m_resource->fontFace()) {
+            list->insertRangedFace(entry.m_position, face, entry.m_ranges);
+        }
+    }
+    list->rebuildPendingCoverage();
+}
+
 Font* FontSelector::loadFont(String* familyNameArray[],
                              size_t familyNameArraySize, float size, char style,
                              char weight, float letterSpacing,
@@ -217,41 +371,74 @@ Font* FontSelector::loadFont(String* familyNameArray[],
         for (size_t k = 0; k < document()->m_webFontList.size(); k++) {
             auto& webFont = document()->m_webFontList[k];
             if (webFont.familyName()->equalsIgnoreCase(familyNameArray[i])) {
-                int currentScore = 1;
-
-                if (webFont.isFontStyleSpecified() &&
-                    (char)webFont.fontStyleValue() == style) {
-                    currentScore++;
-                }
-
-                if (webFont.isFontWeightSpecified() &&
-                    webFont.fontWeightValue() == weight) {
-                    currentScore++;
-                }
-
+                int currentScore = webFontMatchScore(webFont, style, weight);
                 if (currentScore > fitScore) {
                     selectedWebFont = &webFont;
                     fitScore = currentScore;
                 }
             }
         }
-        if (selectedWebFont) {
-            if (!selectedWebFont->fromLocal()) {
-                // download from web
-                if (!selectedWebFont->fontResource()->isRequested()) {
-                    RequestData* reqData = new RequestData();
-                    reqData->m_url = selectedWebFont->fontResource()->url();
-                    reqData->m_referrer =
-                        new ReferrerURL(document()->documentURI());
-                    reqData->m_destination = RequestDestination::Font;
-                    reqData->m_syncLevel =
-                        RequestSyncLevel::SyncIfAlreadyLoaded;
 
-                    selectedWebFont->fontResource()->request(reqData, true);
-                    if (auto fonts = document()->fontsIfCreated()) {
-                        fonts.value()->didChangeFontLoadingState();
+        bool hasRangedFace = false;
+        for (size_t k = 0;
+             selectedWebFont && k < document()->m_webFontList.size(); k++) {
+            auto& webFont = document()->m_webFontList[k];
+            hasRangedFace |=
+                webFont.unicodeRanges() &&
+                webFont.familyName()->equalsIgnoreCase(familyNameArray[i]) &&
+                webFontMatchScore(webFont, style, weight) == fitScore;
+        }
+
+        if (hasRangedFace) {
+            // CSS Fonts 4: the best matching faces of a family form a
+            // composite font, tried in reverse declaration order; a face with
+            // a unicode-range only supplies the code points in that range.
+            bool usable = false;
+            for (size_t k = document()->m_webFontList.size(); k-- > 0;) {
+                auto& webFont = document()->m_webFontList[k];
+                if (!webFont.familyName()->equalsIgnoreCase(
+                        familyNameArray[i]) ||
+                    webFontMatchScore(webFont, style, weight) != fitScore) {
+                    continue;
+                }
+                UnicodeRangeList* ranges = webFont.unicodeRanges();
+                FontFace* face = nullptr;
+                if (webFont.fromLocal()) {
+                    face = loadLocalWebFont(webFont.localFontName(), style,
+                                            weight);
+                } else {
+                    FontResource* resource = webFont.fontResource();
+                    if (!ranges) {
+                        requestWebFont(document(), resource);
+                    }
+                    face = resource->fontFace();
+                    if (!face && !resource->isFaildToFetchResource()) {
+                        usable = true;
+                        if (ranges && !resource->isRequested()) {
+                            result->m_fontFaceList->addPendingRangedFont(
+                                ranges, resource);
+                        } else if (!ranges &&
+                                   result->m_fontFaceList
+                                           ->m_seenUnresolvedWebFontIndex ==
+                                       SIZE_MAX) {
+                            result->m_fontFaceList
+                                ->m_seenUnresolvedWebFontIndex =
+                                result->m_fontFaceList->size();
+                        }
                     }
                 }
+                if (face) {
+                    result->m_fontFaceList->pushRangedFace(face, ranges);
+                    usable = true;
+                }
+            }
+            if (usable) {
+                continue;
+            }
+        } else if (selectedWebFont) {
+            if (!selectedWebFont->fromLocal()) {
+                // download from web
+                requestWebFont(document(), selectedWebFont->fontResource());
                 if (selectedWebFont->fontResource()->fontFace()) {
                     // fontface loaded!
                     FontFace* face =
@@ -269,25 +456,8 @@ Font* FontSelector::loadFont(String* familyNameArray[],
                 }
             } else {
                 // local font
-                auto localFm =
-                    selectedWebFont->localFontName()->toUTF8NonGCString();
-                std::transform(localFm.begin(), localFm.end(), localFm.begin(),
-                               tolower);
-                UTF8StringDataNonGCStd localCacheStr =
-                    mergeStyleWeightWithString(localFm, style, weight);
-
-                auto iter = m_webFontLocalSrcCache.find(localCacheStr);
-                FontFace* face = nullptr;
-                if (iter == m_webFontLocalSrcCache.end()) {
-                    bool isLocalGeneric = isGenericFontName(localFm);
-                    face = loadFromPlatform(localFm, isLocalGeneric, style,
-                                            weight);
-                    m_webFontLocalSrcCache.insert(
-                        std::make_pair(localCacheStr, face));
-                } else {
-                    face = iter->second;
-                }
-
+                FontFace* face = loadLocalWebFont(
+                    selectedWebFont->localFontName(), style, weight);
                 if (face) {
                     result->m_fontFaceList->push_back(face);
                     continue;
@@ -322,6 +492,10 @@ Font* FontSelector::loadFont(String* familyNameArray[],
                 m_platformFontCache->insertFaceCache(cacheStr, nullptr);
             }
         }
+    }
+
+    if (result->m_fontFaceList->hasPendingRangedFonts()) {
+        result->m_fontFaceList->rebuildPendingCoverage();
     }
 
     UTF8StringDataNonGCStd familyName = document()

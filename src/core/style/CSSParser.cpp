@@ -2211,6 +2211,17 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                     auto s = aToken->value()->toString()->toUTF8NonGCString();
                     STARFISH_LOG_ERROR("CSSParser: Unsupported property: %s",
                                        s.data());
+                } else if (allowSrcProperty &&
+                           aToken->value()->equalsIgnoreCase("unicode-range")) {
+                    // A @font-face descriptor only, not a property, so it
+                    // stays out of the property name lookup.
+                    value.peekUTF8Buffer(
+                        [](const char* buf, size_t len, void* data) -> size_t {
+                            ((CSSStyleDeclaration*)data)
+                                ->setUnicodeRange(buf, len, false);
+                            return 0;
+                        },
+                        declaration);
                 } else {
                     declaration->setProperty(aToken->value(), &value, priority,
                                              allowSrcProperty);
@@ -2602,7 +2613,8 @@ static bool isFontRelatedKey(CSSStyleValuePair::KeyKind key)
     if ((key >= CSSStyleValuePair::KeyKind::FontSize &&
          key <= CSSStyleValuePair::KeyKind::FontKerning) ||
         key == CSSStyleValuePair::KeyKind::FontFamily ||
-        key == CSSStyleValuePair::KeyKind::Src) {
+        key == CSSStyleValuePair::KeyKind::Src ||
+        key == CSSStyleValuePair::KeyKind::UnicodeRange) {
         return true;
     }
     return false;
