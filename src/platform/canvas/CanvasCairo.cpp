@@ -2580,7 +2580,24 @@ private:
         }
 #endif
 
-        if (needsToDrawWithPath) {
+        // Color glyphs ignore the source color, so apply its alpha to them:
+        // transparent or translucent text must not show opaque emoji.
+        double red, green, blue, alpha = 1;
+        if (FT_HAS_COLOR(fontFace->freetypeFace()) &&
+            cairo_pattern_get_rgba(cairo_get_source(canvas), &red, &green,
+                                   &blue, &alpha) == CAIRO_STATUS_SUCCESS &&
+            alpha < 1) {
+            if (alpha > 0) {
+                cairo_pattern_t* source =
+                    cairo_pattern_reference(cairo_get_source(canvas));
+                cairo_push_group(canvas);
+                cairo_show_glyphs(canvas, glyphs, glyphCount);
+                cairo_pop_group_to_source(canvas);
+                cairo_paint_with_alpha(canvas, alpha);
+                cairo_set_source(canvas, source);
+                cairo_pattern_destroy(source);
+            }
+        } else if (needsToDrawWithPath) {
             cairo_glyph_path(canvas, glyphs, glyphCount);
             cairo_fill(canvas);
         } else {
