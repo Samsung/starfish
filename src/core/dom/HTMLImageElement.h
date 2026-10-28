@@ -93,6 +93,10 @@ public:
     virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
+    virtual void styleForPresentationAttribute(
+        CSSStyleValuePairVectorHolder& cssValues,
+        MatchedStyleRules<>& matchedRules,
+        Optional<const MutablePropertyValueList*> cssCustomValues) override;
     virtual void didNodeAdopted(Document* oldDocument) override;
 
     virtual void didNodeInsertedToDocumentTree() override;

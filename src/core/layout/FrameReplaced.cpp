@@ -53,10 +53,10 @@ IntrinsicSizeUsedInLayout FrameReplaced::computeIntrinsicSizeForLayout()
     IntrinsicSize siz = intrinsicSize();
     IntrinsicSizeUsedInLayout result;
     result.m_hasAspectRatio = siz.m_hasAspectRatio;
-    String* widthString = node()->asElement()->getAttributeOrEmpty(
-        node()->starfish()->staticStrings()->m_width);
-    String* heightString = node()->asElement()->getAttributeOrEmpty(
-        node()->starfish()->staticStrings()->m_height);
+    String* widthString =
+        sizeAttribute(node()->starfish()->staticStrings()->m_width);
+    String* heightString =
+        sizeAttribute(node()->starfish()->staticStrings()->m_height);
     if (siz.m_isContentExists) {
         result.m_intrinsicContentSize =
             LayoutSize(siz.m_intrinsicContentSize.width(),
@@ -165,10 +165,21 @@ IntrinsicSizeUsedInLayout FrameReplaced::computeIntrinsicSizeForLayout()
     return result;
 }
 
+// img maps its width and height attributes to style instead (see
+// HTMLImageElement::styleForPresentationAttribute), so layout must not apply
+// them a second time.
+String* FrameReplaced::sizeAttribute(const QualifiedName& name)
+{
+    if (node()->isHTMLImageElement()) {
+        return String::emptyString;
+    }
+    return node()->asElement()->getAttributeOrEmpty(name);
+}
+
 bool FrameReplaced::hasPercentageWidthAttribute()
 {
-    String* widthString = node()->asElement()->getAttributeOrEmpty(
-        node()->starfish()->staticStrings()->m_width);
+    String* widthString =
+        sizeAttribute(node()->starfish()->staticStrings()->m_width);
     return !widthString->isEmpty() &&
            widthString->lastIndexOf('%') == widthString->length() - 1;
 }

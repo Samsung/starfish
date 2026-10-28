@@ -139,6 +139,7 @@ public:
     virtual IntrinsicSize intrinsicSize() = 0;
     IntrinsicSizeUsedInLayout computeIntrinsicSizeForLayout();
     bool hasPercentageWidthAttribute();
+    String* sizeAttribute(const QualifiedName& name);
     void computeContentWidthAndHeight(LayoutContext& ctx, FrameBox* cb);
 
     virtual void paintReplaced(Canvas* canvas)

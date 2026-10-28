@@ -248,6 +248,40 @@ uint32_t HTMLImageElement::naturalHeight()
     return 0;
 }
 
+// The width and height attributes map to the dimension properties as
+// presentational hints (HTML 15.4.3), so any author 'width' or 'height',
+// 'auto' included, overrides them.
+void HTMLImageElement::styleForPresentationAttribute(
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
+    Optional<const MutablePropertyValueList*> cssCustomValues)
+{
+    HTMLElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                               cssCustomValues);
+
+    auto strings = starfish()->staticStrings();
+    auto mapDimension = [&](String* value, CSSStyleValuePair::KeyKind key) {
+        // Rules for parsing dimension values: anything not starting with a
+        // digit is an error, so "-5" and "abc" map to nothing.
+        value = value->trim();
+        if (value->isEmpty() || !String::isASCIIDigit(value->charAt(0))) {
+            return;
+        }
+        float number = String::parseFloat(value);
+        CSSStyleValuePair pair;
+        pair.setKeyKind(key);
+        if (value->lastIndexOf('%') == value->length() - 1) {
+            pair.setPercentageValue(number / 100.f);
+        } else {
+            pair.setLengthValue(CSSLength(number));
+        }
+        cssValues.push_back(pair);
+    };
+    mapDimension(getAttributeOrEmpty(strings->m_width),
+                 CSSStyleValuePair::KeyKind::Width);
+    mapDimension(getAttributeOrEmpty(strings->m_height),
+                 CSSStyleValuePair::KeyKind::Height);
+}
+
 void HTMLImageElement::didAttributeChanged(QualifiedName name,
                                            Optional<String*> old, String* value,
                                            bool attributeCreated,
@@ -264,9 +298,7 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name,
         }
     } else if (name == starfish()->staticStrings()->m_width ||
                name == starfish()->staticStrings()->m_height) {
-        if (frame()) {
-            setNeedsLayout();
-        }
+        setNeedsStyleRecalc();
     } else if (name == starfish()->staticStrings()->m_crossorigin) {
         if (attributeRemoved) {
             removeAttribute(value);
