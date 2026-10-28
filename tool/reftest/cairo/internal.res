@@ -320,7 +320,11 @@ test/cairo/internal-test/css/table/table_fixed_22.html
 test/cairo/internal-test/css/table/table_fixed_23.html
 test/cairo/internal-test/css/table/table_auto_10.html
 test/cairo/internal-test/css/clear/linebox-relayout.html
+test/cairo/internal-test/css/url/font-face-local-loading.html
+test/cairo/internal-test/css/url/font-face-url-loading.html
+test/cairo/internal-test/css/url/url-computed.html
 test/cairo/internal-test/css/url/url-invalid.html
+test/cairo/internal-test/css/url/url-parsing.html
 test/cairo/internal-test/css/border/starting_unprocessed_mbp.html
 test/cairo/internal-test/css/position2/replaced-left-margin-auto-right-margin-fixed-width-fixed.html
 test/cairo/internal-test/css/table/table_auto_08.html

@@ -1655,11 +1655,20 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
     char quote = '\0';
     bool isEscaped = false;
     bool isWhiteSpaceState = false;
-    // CSS closes open functions at EOF, including url() and trailing space.
+    bool inURL = false;
+    // CSS closes open functions at EOF. URL parsing handles its own EOF
+    // recovery so that a trailing escape cannot consume a synthetic ')'.
     // https://drafts.csswg.org/css-syntax/#consume-function
-    for (size_t i = 0; i < length || (numberOfnesting && !inQuotes); i++) {
+    for (size_t i = 0; i < length || (numberOfnesting && !inQuotes && !inURL);
+         i++) {
         char ch = i < length ? data[i] : ')';
         if (ch == '(' && !inQuotes && !isEscaped) {
+            if (str.length() == 3 && (str[0] == 'u' || str[0] == 'U') &&
+                (str[1] == 'r' || str[1] == 'R') &&
+                (str[2] == 'l' || str[2] == 'L')) {
+                inURL = true;
+                str = "url";
+            }
             inParenthesis = true;
             numberOfnesting++;
         } else if (ch == ')' && !inQuotes && !isEscaped) {
@@ -1667,8 +1676,6 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
                 numberOfnesting--;
             }
         } else if ((ch == '"' || ch == '\'') && !isEscaped) {
-            // CSSScanner has already decoded escapes in unquoted URLs;
-            // quotes inside their content are not string delimiters.
             if (!inQuotes &&
                 (str.empty() || str.back() == '(' || isWhiteSpaceState)) {
                 quote = ch;
@@ -1679,16 +1686,18 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
         }
         isEscaped = ch == '\\' && !isEscaped;
 
-        if (!preserveContentWS && isWhiteSpaceState &&
+        if (!inURL && !preserveContentWS && isWhiteSpaceState &&
             String::isSpaceOrNewline(ch)) {
             continue;
         }
 
         isWhiteSpaceState = false;
         str += ch;
-        if (!preserveContentWS && (inParenthesis || inQuotes) &&
+        if ((inURL || !preserveContentWS) && (inParenthesis || inQuotes) &&
             String::isSpaceOrNewline(ch)) {
-            str[str.length() - 1] = ' ';
+            if (!inURL) {
+                str[str.length() - 1] = ' ';
+            }
             isWhiteSpaceState = true;
             continue;
         }
@@ -1726,11 +1735,7 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
             }
         } else if (((inParenthesis && !numberOfnesting) && ch == ')') ||
                    (i == length - 1 && !numberOfnesting)) {
-            if (str.length() > 3 && (str[0] == 'u' || str[0] == 'U') &&
-                (str[1] == 'r' || str[1] == 'R') &&
-                (str[2] == 'l' || str[2] == 'L')) {
-                std::transform(str.begin(), str.begin() + 3, str.begin(),
-                               tolower);
+            if (inURL) {
                 tokens.push_back(std::move(str));
                 str.clear();
             } else if (str.length() > 3 && (str[0] == 'v' || str[0] == 'V') &&
@@ -1749,8 +1754,12 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
                 str.clear();
             }
             inParenthesis = false;
+            inURL = false;
             isWhiteSpaceState = true;
         }
+    }
+    if (inURL && !str.empty()) {
+        tokens.push_back(std::move(str));
     }
 }
 
@@ -4832,7 +4841,9 @@ void CSSStyleDeclaration::setSrc(const char* value, size_t len,
         return;
     }
     CSSTokenVector tokens;
-    tokenizeCSSValue(tokens, value, len, ",", 1, true);
+    // Font source strings retain their whitespace and escapes until parsed.
+    // https://drafts.csswg.org/css-fonts-4/#src-desc
+    tokenizeCSSValue(tokens, value, len, ",", 1, true, true);
     CSSStyleValuePair ret;
     if (ret.updateValueSrc(tokens)) {
         ret.setFlagImportant(isImportant);

@@ -509,36 +509,8 @@ public:
         return true;
     }
 
-    bool consumeFunctionContent()
-    {
-        consumeWhitespaces();
-        int len = 0;
-        char mark = '\0';
-        consumeIfNext('\\');
-        if (*m_curPos == '"' || *m_curPos == '\'') {
-            mark = *m_curPos;
-            m_curPos++;
-        }
-        char* start = m_curPos;
-        while (*m_curPos != ')' && m_curPos < m_endPos) {
-            m_curPos++;
-            len++;
-            if (mark != '\0' && mark == *m_curPos) {
-                if (*(m_curPos - 1) == '\\') {
-                    len--;
-                }
-                m_curPos++;
-                consumeWhitespaces();
-                break;
-            }
-        }
-        if (*m_curPos != ')') {
-            return false;
-        }
-        m_parsedFunctionContent = CSSTokenValue(start, len);
-        m_curPos++;
-        return true;
-    }
+    bool consumeFunctionContent();
+    static bool parseLocal(const CSSTokenValue& token, String** result);
 
     bool consumeContentStringAll()
     {
@@ -672,9 +644,10 @@ public:
         return (m_curPos == m_endPos);
     }
 
-    static bool parseUrl(const char* token, CSSStyleValuePair* pair)
+    static bool parseUrl(const char* token, size_t length,
+                         CSSStyleValuePair* pair)
     {
-        CSSPropertyParser parser((char*)token);
+        CSSPropertyParser parser((char*)token, length);
         if (parser.consumeString(0)) {
             const CSSTokenValue& name = parser.parsedString();
             if (name == "url" && parser.consumeIfNext('(')) {
@@ -2307,7 +2280,7 @@ public:
 
 private:
     RefPtr<CSSToken> getToken(bool aSkipWS, bool aSkipComment,
-                              bool isURL = false);
+                              bool isURL = false, bool preserveSource = false);
     RefPtr<CSSToken> currentToken();
     void ungetToken();
     void preserveState();
@@ -2358,7 +2331,8 @@ private:
     CSSSelector::AttributeMatchType getAttributeFlags();
     String* getStringWithoutQuotationMarks(const CSSTokenString& value);
 
-    CSSTokenString parseDefaultPropertyValue(RefPtr<CSSToken> token);
+    CSSTokenString parseDefaultPropertyValue(RefPtr<CSSToken> token,
+                                             bool preserveSource = false);
     ParseResult parseDeclaration(RefPtr<CSSToken> aToken,
                                  CSSStyleDeclaration* declaration,
                                  bool allowSrcProperty = false);
@@ -2366,7 +2340,7 @@ private:
     void reportError(const char* aMsg);
     bool parseCharsetRule(GCVector<StyleRuleBase*>& rules);
     static CSSTokenString combineAndTrimTokenValues(
-        const GCVector<RefPtr<CSSToken>>& list);
+        const GCVector<RefPtr<CSSToken>>& list, bool preserveSource);
     bool isBlockStart(RefPtr<CSSToken> token) const;
     bool isBlockEnd(RefPtr<CSSToken> token) const;
 
