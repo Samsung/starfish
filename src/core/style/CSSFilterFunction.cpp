@@ -162,7 +162,7 @@ String* CSSFilterFunction::toString() const
 CSSFilterFunction* CSSFilterFunction::parse(const CSSTokenValue& from)
 {
     CSSStyleValuePair item;
-    if (CSSPropertyParser::parseUrl(from.data(), &item)) {
+    if (CSSPropertyParser::parseUrl(from.data(), from.length(), &item)) {
         return new CSSFilterFunction(
             FilterFunctionType::SVGUrlFilterFunctionType, item);
     }

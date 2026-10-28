@@ -214,6 +214,122 @@ const char* unitTypeToString(UnitType type)
     return "";
 }
 
+bool CSSPropertyParser::consumeFunctionContent()
+{
+    auto isWhitespace = [](char c) {
+        return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f';
+    };
+    auto skipWhitespace = [&]() {
+        while (m_curPos < m_endPos && isWhitespace(*m_curPos)) {
+            m_curPos++;
+        }
+    };
+    auto appendCodePoint = [&](char32_t code) {
+        char bytes[4];
+        size_t length = utf32ToUtf8(code, bytes);
+        m_parsedFunctionContent.append(bytes, length);
+    };
+    auto hexValue = [](unsigned char c) -> int {
+        if (c >= '0' && c <= '9') {
+            return c - '0';
+        }
+        if (c >= 'a' && c <= 'f') {
+            return c - 'a' + 10;
+        }
+        if (c >= 'A' && c <= 'F') {
+            return c - 'A' + 10;
+        }
+        return -1;
+    };
+
+    skipWhitespace();
+    char quote = '\0';
+    if (m_curPos < m_endPos && isQuote(*m_curPos)) {
+        quote = *m_curPos++;
+    }
+    m_parsedFunctionContent.clear();
+    // CSS Syntax distinguishes strings from unquoted URL tokens: only
+    // strings allow literal parentheses and escaped newlines.
+    // https://drafts.csswg.org/css-syntax/#consume-string-token
+    // https://drafts.csswg.org/css-syntax/#consume-url-token
+    while (m_curPos < m_endPos) {
+        unsigned char c = *m_curPos++;
+        if (quote != '\0') {
+            if (c == quote) {
+                skipWhitespace();
+                return isEnd() || consumeIfNext(')');
+            }
+            if (c == '\n' || c == '\r' || c == '\f') {
+                return false;
+            }
+        } else {
+            if (c == ')') {
+                return true;
+            }
+            if (isWhitespace(c)) {
+                skipWhitespace();
+                return isEnd() || consumeIfNext(')');
+            }
+            if (isQuote(c) || c == '(' || (c > 0 && c < 0x20) || c == 0x7f) {
+                return false;
+            }
+        }
+        if (c != '\\') {
+            if (c == 0) {
+                appendCodePoint(0xfffd);
+            } else {
+                m_parsedFunctionContent += c;
+            }
+            continue;
+        }
+        if (isEnd()) {
+            // An escaped EOF is ignored in a string and becomes U+FFFD
+            // in a URL token.
+            if (quote == '\0') {
+                appendCodePoint(0xfffd);
+            }
+            break;
+        }
+        c = *m_curPos++;
+        if (c == '\n' || c == '\r' || c == '\f') {
+            if (quote == '\0') {
+                return false;
+            }
+            if (c == '\r' && m_curPos < m_endPos && *m_curPos == '\n') {
+                m_curPos++;
+            }
+        } else if (hexValue(c) >= 0) {
+            // https://drafts.csswg.org/css-syntax/#consume-escaped-code-point
+            char32_t code = hexValue(c);
+            for (size_t i = 1; i < 6 && m_curPos < m_endPos; i++) {
+                int digit = hexValue(*m_curPos);
+                if (digit < 0) {
+                    break;
+                }
+                code = code * 16 + digit;
+                m_curPos++;
+            }
+            if (m_curPos < m_endPos && isWhitespace(*m_curPos)) {
+                char whitespace = *m_curPos++;
+                if (whitespace == '\r' && m_curPos < m_endPos &&
+                    *m_curPos == '\n') {
+                    m_curPos++;
+                }
+            }
+            if (code == 0 || (code >= 0xd800 && code <= 0xdfff) ||
+                code > 0x10ffff) {
+                code = 0xfffd;
+            }
+            appendCodePoint(code);
+        } else if (c == 0) {
+            appendCodePoint(0xfffd);
+        } else {
+            m_parsedFunctionContent += c;
+        }
+    }
+    return true;
+}
+
 class CSSParser;
 
 void* CSSToken::operator new(size_t size, CSSParser* parser)
@@ -364,6 +480,9 @@ public:
             size_t i;
             for (i = 0; i < 6; i++) {
                 c = read();
+                if (c == -1) {
+                    break;
+                }
                 if (isDigit((char32_t)c)) {
                     code = code * 16 + (c - '0');
                 } else if (isHexDigit((char32_t)c)) {
@@ -420,8 +539,9 @@ public:
         return builder;
     }
 
-    RefPtr<CSSToken> parseIdent(int c)
+    RefPtr<CSSToken> parseIdent(int c, bool preserveSource)
     {
+        size_t start = m_pos - 1;
         CSSTokenString builder = gatherIdent(c);
         int nextChar = peek();
         if ((char32_t)nextChar == '(') {
@@ -430,35 +550,47 @@ public:
             return CSSToken::createStringValueToken(
                 m_parser, CSSToken::FUNCTION_TYPE, std::move(builder));
         }
+        if (preserveSource) {
+            builder.clear();
+            for (size_t i = start; i < m_pos; i++) {
+                builder.appendChar(m_stringBufferData.charAt(i));
+            }
+        }
         return CSSToken::createStringValueToken(m_parser, CSSToken::IDENT_TYPE,
                                                 std::move(builder));
     }
 
     RefPtr<CSSToken> parseURL(int c)
     {
+        // Preserve the URL source for CSSPropertyParser, which also parses
+        // CSSOM setters. Decoding here would lose escaped delimiters and
+        // decode literal backslashes twice.
         CSSTokenString builder;
-        if (c == CSS_ESCAPE) {
-            builder.appendChar((char32_t)gatherEscape());
-        } else {
+        int quote = isQuote(c) ? c : 0;
+        if (quote != 0) {
             builder.appendChar((char32_t)c);
-        }
-        c = read();
-        while (c != -1 && c != ' ' && c != ')') {
-            if (c == CSS_ESCAPE) {
-                int code = gatherEscape();
-                if (code == -1) {
-                    return CSSToken::createStringValueToken(
-                        m_parser, CSSToken::STRING_TYPE, CSSTokenString());
-                } else {
-                    builder.appendChar((char32_t)code);
-                }
-            } else {
-                builder.appendChar((char32_t)c);
-            }
             c = read();
         }
-        if (c != -1) {
-            pushback();
+        while (c != -1) {
+            if (quote == 0 && c == ')') {
+                pushback();
+                break;
+            }
+            builder.appendChar((char32_t)c);
+            if (c == CSS_ESCAPE) {
+                c = read();
+                if (c == -1) {
+                    break;
+                }
+                builder.appendChar((char32_t)c);
+                if (c == '\r' && peek() == '\n') {
+                    builder.appendChar((char32_t)read());
+                }
+            } else if (quote != 0 &&
+                       (c == quote || c == '\n' || c == '\r' || c == '\f')) {
+                break;
+            }
+            c = read();
         }
         return CSSToken::createStringValueToken(m_parser, CSSToken::STRING_TYPE,
                                                 std::move(builder));
@@ -629,15 +761,14 @@ public:
                                                 std::move(s));
     }
 
-    RefPtr<CSSToken> nextToken(bool isURL = false)
+    RefPtr<CSSToken> nextToken(bool isURL = false, bool preserveSource = false)
     {
         int c = read();
         if (c == -1) {
             return CSSToken::createNullToken(m_parser);
         }
 
-        // url starts without \' nor \"
-        if (isURL && c != '\'' && c != '"' && c != ')' && c != ' ') {
+        if (isURL && c != ')' && !isWhiteSpace(c)) {
             return parseURL(c);
         }
 
@@ -678,7 +809,7 @@ public:
         }
 
         if (startsWithIdent(c, peek())) {
-            return parseIdent(c);
+            return parseIdent(c, preserveSource);
         }
 
         if (c == '.' || c == '+' || c == '-') {
@@ -700,7 +831,7 @@ public:
         }
 
         if (c == '\'' || c == '"') {
-            return parseString(c);
+            return preserveSource ? parseURL(c) : parseString(c);
         }
 
         if (isWhiteSpace(c)) {
@@ -757,6 +888,61 @@ bool CSSPropertyParser::stringIsIdent(String* v)
     CSSScanner scanner(nullptr, v);
     RefPtr<CSSToken> token = scanner.nextToken();
     return token->isIdent();
+}
+
+bool CSSPropertyParser::parseLocal(const CSSTokenValue& token, String** result)
+{
+    if (token.length() < 7 || !token.startsWith("local(") ||
+        token.back() != ')') {
+        return false;
+    }
+
+    CSSPropertyParser parser(const_cast<char*>(token.data()) + 6,
+                             token.length() - 7);
+    parser.consumeWhitespaces();
+    if (parser.isEnd()) {
+        return false;
+    }
+    if (isQuote(*parser.m_curPos)) {
+        if (!parser.consumeFunctionContent() || !parser.isEnd()) {
+            return false;
+        }
+        *result = parser.parsedFunctionContentToGCString();
+        return true;
+    }
+
+    // Unquoted local names are identifiers joined by single spaces;
+    // whitespace decoded inside an identifier remains part of its name.
+    // https://drafts.csswg.org/css-fonts-4/#src-desc
+    CSSScanner scanner(nullptr,
+                       String::fromUTF8(token.data() + 6, token.length() - 7));
+    StringBuilder name;
+    size_t identifiers = 0;
+    for (RefPtr<CSSToken> part = scanner.nextToken(); part->isNotNull();
+         part = scanner.nextToken()) {
+        if (part->isWhiteSpace() || part->isComment()) {
+            continue;
+        }
+        if (!part->isIdent()) {
+            return false;
+        }
+        if (identifiers++) {
+            name.appendChar(' ');
+        }
+        const auto& value = *part->value();
+        for (size_t i = 0; i < value.length(); i++) {
+            char32_t c = value.charAt(i);
+            if (!c || (c >= 0xd800 && c <= 0xdfff) || c > 0x10ffff) {
+                c = 0xfffd;
+            }
+            name.appendChar(c);
+        }
+    }
+    if (!identifiers) {
+        return false;
+    }
+    *result = name.finalize();
+    return true;
 }
 
 CSSParser::CSSParser(Node* origin)
@@ -821,7 +1007,7 @@ Starfish* CSSParser::starfish()
 }
 
 RefPtr<CSSToken> CSSParser::getToken(bool aSkipWS, bool aSkipComment,
-                                     bool isURL)
+                                     bool isURL, bool preserveSource)
 {
     if (m_lookAhead) {
         m_token = m_lookAhead;
@@ -829,10 +1015,10 @@ RefPtr<CSSToken> CSSParser::getToken(bool aSkipWS, bool aSkipComment,
         return m_token;
     }
 
-    m_token = m_scanner->nextToken(isURL);
+    m_token = m_scanner->nextToken(isURL, preserveSource);
     while (m_token && ((aSkipWS && m_token->isWhiteSpace()) ||
                        (aSkipComment && m_token->isComment()))) {
-        m_token = m_scanner->nextToken(isURL);
+        m_token = m_scanner->nextToken(isURL, preserveSource);
     }
     return m_token;
 }
@@ -1887,7 +2073,8 @@ void CSSParser::parseForgivingSelectorList(GCVector<CSSSelectorList*>& list)
     }
 }
 
-CSSTokenString CSSParser::parseDefaultPropertyValue(RefPtr<CSSToken> token)
+CSSTokenString CSSParser::parseDefaultPropertyValue(RefPtr<CSSToken> token,
+                                                    bool preserveSource)
 {
     GCVector<RefPtr<CSSToken>> willBeConcat;
     GCVector<RefPtr<CSSToken>> blocks;
@@ -1936,7 +2123,7 @@ CSSTokenString CSSParser::parseDefaultPropertyValue(RefPtr<CSSToken> token)
                     return CSSTokenString();
                 }
             } else {
-                return combineAndTrimTokenValues(willBeConcat);
+                return combineAndTrimTokenValues(willBeConcat, preserveSource);
             }
         }
 
@@ -1945,7 +2132,7 @@ CSSTokenString CSSParser::parseDefaultPropertyValue(RefPtr<CSSToken> token)
             token = getToken(true, false, true);
             urlTokens++;
         } else {
-            token = getToken(false, false);
+            token = getToken(false, false, false, preserveSource);
         }
     }
     /*
@@ -1958,15 +2145,19 @@ CSSTokenString CSSParser::parseDefaultPropertyValue(RefPtr<CSSToken> token)
     if (willBeConcat.size() > 0) {
         forgetState();
     }
-    return combineAndTrimTokenValues(willBeConcat);
+    return combineAndTrimTokenValues(willBeConcat, preserveSource);
 }
 
 // Remove comments from both sides of a tokenList & Concat
 CSSTokenString CSSParser::combineAndTrimTokenValues(
-    const GCVector<RefPtr<CSSToken>>& list)
+    const GCVector<RefPtr<CSSToken>>& list, bool preserveSource)
 {
     CSSTokenString result;
     for (RefPtr<CSSToken> item : list) {
+        if (preserveSource && item->isComment()) {
+            // Keep adjacent identifiers separate when reconstructing src.
+            result.appendChar(' ');
+        }
         if (item->hasStringValue()) {
             auto s = item->value();
             for (size_t i = 0; i < s->length(); i++) {
@@ -1986,8 +2177,13 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
     if (aToken->isIdent()) {
         RefPtr<CSSToken> token = getToken(true, true);
         if (token->isSymbol(':')) {
-            token = getToken(true, true);
-            CSSTokenString value = parseDefaultPropertyValue(token);
+            // src is parsed again by CSSPropertyParser. Preserve its source
+            // so decoded quotes and backslashes cannot become CSS syntax.
+            // https://drafts.csswg.org/css-syntax/#consume-string-token
+            bool preserveSource = allowSrcProperty && aToken->isIdent("src");
+            token = getToken(true, true, false, preserveSource);
+            CSSTokenString value =
+                parseDefaultPropertyValue(token, preserveSource);
             token = currentToken();
             if (value.length()) { // no error above
                 bool priority = false;
@@ -2924,31 +3120,34 @@ Optional<String*> CSSParser::parseURLString()
 
     CSSTokenString urlSource;
     if (token->isString()) {
-        urlSource.appendChar('u');
-        urlSource.appendChar('r');
-        urlSource.appendChar('l');
-        urlSource.appendChar('(');
-        urlSource.appendOther(*token->value());
-        urlSource.appendChar(')');
+        // A bare string has already had its escapes decoded by CSSScanner.
+        // It is a URL value, not source text to parse a second time.
+        String* value = token->value()->toString();
+        size_t length = value->length();
+        if (length < 2 || value->charAt(0) != value->charAt(length - 1)) {
+            return NullOption;
+        }
+        return value->substring(1, length - 2);
     } else if (token->isFunction() && token->value()->equals("url(")) {
         urlSource = *token->value();
-        token = getToken(true, false);
+        token = getToken(true, false, true);
         while (token->isNotNull() && !token->isSymbol(')')) {
             urlSource.appendOther(*(token->value()));
-            token = getToken(true, false);
+            token = getToken(true, false, true);
         }
         urlSource.appendOther(*(token->value()));
     } else {
         return nullptr;
     }
 
-    String* ret = String::emptyString;
+    Optional<String*> ret;
     urlSource.peekUTF8Buffer(
         [](const char* str, size_t len, void* data) -> size_t {
-            String** ret = (String**)data;
+            auto* ret = static_cast<Optional<String*>*>(data);
             CSSStyleValuePair value;
-            CSSPropertyParser::parseUrl(str, &value);
-            *ret = value.value().m_stringValue;
+            if (CSSPropertyParser::parseUrl(str, len, &value)) {
+                *ret = value.urlStringValue();
+            }
             return 0;
         },
         &ret);

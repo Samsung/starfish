@@ -12528,7 +12528,7 @@ bool CSSStyleValuePair::updateValueUnitUrlOrNone(const CSSTokenValue& value)
     if (value.equals("none")) {
         m_valueKind = CSSStyleValuePair::ValueKind::None;
     } else {
-        return CSSPropertyParser::parseUrl(value.data(), this);
+        return CSSPropertyParser::parseUrl(value.data(), value.length(), this);
     }
 
     return true;
@@ -14543,7 +14543,8 @@ bool CSSStyleValuePair::updateValueClipPath(Document* document,
     STARFISH_ASSERT(document != nullptr);
     if (tokens.size() != 1)
         return false;
-    return CSSPropertyParser::parseUrl(tokens[0].data(), this);
+    return CSSPropertyParser::parseUrl(tokens[0].data(), tokens[0].length(),
+                                       this);
 }
 
 static bool parseMinMax(CSSTokenValue& token, GridLength& min, GridLength& max)
@@ -17145,7 +17146,8 @@ bool CSSStyleValuePair::updateValueFill(Document* document,
         }
     }
 
-    if (CSSPropertyParser::parseUrl(tokens[0].data(), this)) {
+    if (CSSPropertyParser::parseUrl(tokens[0].data(), tokens[0].length(),
+                                    this)) {
         return true;
     } else {
         return updateValueUnitColor(tokens[0]);
@@ -17215,7 +17217,8 @@ bool CSSStyleValuePair::updateValueStroke(Document* document,
             return true;
         }
     }
-    if (CSSPropertyParser::parseUrl(tokens[0].data(), this)) {
+    if (CSSPropertyParser::parseUrl(tokens[0].data(), tokens[0].length(),
+                                    this)) {
         return true;
     } else {
         return updateValueUnitColor(tokens[0]);
@@ -17452,25 +17455,23 @@ bool CSSStyleValuePair::updateValueSrc(const CSSTokenVector& tokens)
     for (size_t i = 0; i < tokens.size(); i++) {
         const auto& token = tokens[i];
         if (mode == 0) {
-            CSSTokenValue s;
             if (token.startsWith("url(")) {
+                CSSStyleValuePair url;
+                if (!CSSPropertyParser::parseUrl(token.data(), token.length(),
+                                                 &url)) {
+                    return false;
+                }
                 loadFrom = FontFaceSrcData::URL;
-                s = token.substring(4, token.size() - 5);
-                mode = 1;
+                srcStr = url.urlStringValue();
             } else if (token.startsWith("local(")) {
                 loadFrom = FontFaceSrcData::Local;
-                s = token.substring(6, token.size() - 7);
-                mode = 1;
+                if (!CSSPropertyParser::parseLocal(token, &srcStr)) {
+                    return false;
+                }
             } else {
                 return false;
             }
-            if (s.length() > 2 && s.startsWith("\"")) {
-                s = s.substring(1, s.length() - 2);
-            } else if (s.length() > 2 && s.startsWith("'")) {
-                s = s.substring(1, s.length() - 2);
-            }
-
-            srcStr = String::fromUTF8(s.data(), s.length());
+            mode = 1;
 
             if (i == tokens.size() - 1) {
                 src->m_data.push_back(std::make_tuple(
@@ -17485,7 +17486,12 @@ bool CSSStyleValuePair::updateValueSrc(const CSSTokenVector& tokens)
             } else if (!token.startsWith("format(")) {
                 return false;
             }
-            CSSTokenValue s = token;
+            CSSPropertyParser parser(const_cast<char*>(token.data()) + 7,
+                                     token.length() - 7);
+            if (!parser.consumeFunctionContent() || !parser.isEnd()) {
+                return false;
+            }
+            CSSTokenValue s = parser.parsedFunctionContent();
             std::transform(s.begin(), s.end(), s.begin(), tolower);
 
             if (s.find("truetype") != std::string::npos) {
@@ -17775,7 +17781,7 @@ bool CSSStyleValuePair::updateValueUnitListStyleImage(
         setValueKind(CSSStyleValuePair::None);
         return true;
     }
-    return CSSPropertyParser::parseUrl(value.data(), this);
+    return CSSPropertyParser::parseUrl(value.data(), value.length(), this);
 }
 
 bool CSSStyleValuePair::updateValueListStyleType(Document* document,
