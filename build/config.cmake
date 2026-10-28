@@ -151,7 +151,8 @@ ENDIF()
 
 # The Tizen flutter port drops these x86_64 defaults: its buildroot lacks
 # FFmpeg (WebAudio) and vconf (TTS), and touch exploration is inert without
-# TTS. Must precede LWE_DEFINES_ENABLED so their pkg_check_modules never run.
+# TTS. The Inspector goes too, so the port needs no nanomsg.
+# Must precede LWE_DEFINES_ENABLED so their pkg_check_modules never run.
 # DEFINED: i686 sets no arch defaults, and Tizen 6.0's CMake 3.9 rejects
 # REMOVE_ITEM on an unset list.
 IF (BACKEND STREQUAL "flutter" AND CMAKE_SYSTEM_NAME STREQUAL "Tizen"
@@ -160,6 +161,7 @@ IF (BACKEND STREQUAL "flutter" AND CMAKE_SYSTEM_NAME STREQUAL "Tizen"
         -DSTARFISH_ENABLE_WEBAUDIO
         -DSTARFISH_ENABLE_TTS
         -DSTARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
+        -DSTARFISH_ENABLE_INSPECTOR
     )
 ENDIF ()
 
