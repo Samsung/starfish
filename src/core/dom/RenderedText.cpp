@@ -69,8 +69,10 @@ private:
             collectChildren(element, ChildFilter::Option, false);
         } else if (element->isHTMLOptionElement()) {
             collectChildren(element, ChildFilter::Any, true);
-        } else if (!element->isHTMLMediaElement() &&
-                   !element->isHTMLIFrameElement() &&
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+        } else if (element->isHTMLMediaElement()) {
+#endif
+        } else if (!element->isHTMLIFrameElement() &&
                    !element->isHTMLObjectElement()) {
             collectChildren(element, ChildFilter::Any, false);
         }
