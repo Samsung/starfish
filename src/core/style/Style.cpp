@@ -1630,9 +1630,9 @@ String* CSSStyleValuePair::toString() const
         return unresolvedColorValue()->toString();
     case CSSStyleValuePair::ValueKind::UrlValueKind: {
         StringBuilder builder;
-        builder.appendString("url(\"");
-        builder.appendString(urlStringValue());
-        builder.appendString("\")");
+        builder.appendString("url(");
+        StyleUtil::appendCSSString(builder, urlStringValue());
+        builder.appendChar(')');
         return builder.finalize();
     }
     case CSSStyleValuePair::ValueKind::DisplayValueKind:

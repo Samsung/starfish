@@ -74,49 +74,7 @@ public:
         return true;
     }
 
-    String* toString()
-    {
-        StringBuilder builder;
-
-        for (size_t i = 0; i < m_data.size(); i++) {
-            auto loadFrom = std::get<1>(m_data[i]);
-            if (loadFrom == URL) {
-                builder.appendString("url(\"");
-            } else {
-                builder.appendString("local(\"");
-            }
-            builder.appendString(std::get<0>(m_data[i]));
-            builder.appendString("\")");
-
-            auto format = std::get<2>(m_data[i]);
-            if (format >= SVG) {
-                builder.appendString(" format(\"");
-
-                if (format == TrueType) {
-                    builder.appendString("truetype");
-                } else if (format == WOFF) {
-                    builder.appendString("woff");
-                } else if (format == WOFF2) {
-                    builder.appendString("woff2");
-                } else if (format == OpenType) {
-                    builder.appendString("opentype");
-                } else if (format == EmbeddedOpenType) {
-                    builder.appendString("embedded-opentype");
-                } else if (format == SVG) {
-                    builder.appendString("svg");
-                } else {
-                    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-                }
-                builder.appendString("\")");
-            }
-
-            if (i + 1 != m_data.size()) {
-                builder.appendString(", ");
-            }
-        }
-
-        return builder.finalize();
-    }
+    String* toString();
 
 protected:
     FontFaceSrcDataList m_data;

@@ -26,6 +26,7 @@ namespace Starfish {
 
 class StyleUtil {
 public:
+    static void appendCSSString(StringBuilder& builder, String* value);
     static String* fontWeightToString(FontWeightValue weight);
     static FontWeightValue bolderWeight(FontWeightValue weight);
     static FontWeightValue lighterWeight(FontWeightValue weight);

@@ -33,6 +33,7 @@
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/StyleRule.h"
+#include "core/style/StyleUtil.h"
 #include "core/style/MediaQuerySet.h"
 #include "core/style/MediaList.h"
 
@@ -338,9 +339,9 @@ CSSImportRule::CSSImportRule(StyleRuleImport* importRule, CSSStyleSheet* parent)
 String* CSSImportRule::cssText()
 {
     StringBuilder result;
-    result.appendString("@import url(\"");
-    result.appendString(m_importRule->href());
-    result.appendString("\")");
+    result.appendString("@import url(");
+    StyleUtil::appendCSSString(result, m_importRule->href());
+    result.appendChar(')');
 
     if (m_importRule->mediaQuerySet()) {
         String* mediaText = m_importRule->mediaQuerySet()->mediaText();
@@ -485,11 +486,9 @@ String* CSSNamespaceRule::cssText()
         result.appendString(prefix());
         result.appendChar(' ');
     }
-    result.appendString("url(\"");
-    if (!namespaceURI()->equals(String::emptyString)) {
-        result.appendString(namespaceURI());
-    }
-    result.appendString("\");");
+    result.appendString("url(");
+    StyleUtil::appendCSSString(result, namespaceURI());
+    result.appendString(");");
     return result.finalize();
 }
 
