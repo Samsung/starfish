@@ -208,9 +208,16 @@ void HTMLIFrameElement::loadSrc()
     String* s = src();
     GET_EFFECTIVE_REFERRERPOLICY();
     if (s->length()) {
-        navigate(new ResourceURL(s, document()->baseURL()->baseURI()),
-                 HistoryManagerAction::Intact,
+        ResourceURL* url = new ResourceURL(s, document()->baseURL()->baseURI());
+        navigate(url, HistoryManagerAction::Intact,
                  new ReferrerURL(document()->documentURI(), policy));
+        // Only the container's document can set src, so it initiated this
+        // javascript: navigation and the script runs with its origin.
+        // https://html.spec.whatwg.org/multipage/browsing-the-web.html#evaluate-a-javascript:-url
+        if (url->isJavascriptURL() && m_browsingContext) {
+            m_browsingContext->document()->setWebOrigin(
+                document()->webOrigin());
+        }
     } else {
         navigate(new ResourceURL(String::createASCIIString("about:blank")),
                  HistoryManagerAction::Intact,
