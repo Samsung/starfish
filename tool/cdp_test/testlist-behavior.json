@@ -7,8 +7,7 @@
       "category": "timeout"
     },
     "accessibility/accessibility-aria-1.1.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "accessibility/accessibility-getAXNodeAndAncestors-errors.js": {
       "expected": "pass",
@@ -68,36 +67,31 @@
       "category": "output-differs"
     },
     "accessibility/accessibility-nameSources-buttons.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "accessibility/accessibility-nameSources-img-figure.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "accessibility/accessibility-nameSources-input-buttons.js": {
       "expected": "fail",
       "category": "output-differs"
     },
     "accessibility/accessibility-nameSources-input.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "accessibility/accessibility-nameSources-labelledby.js": {
       "expected": "fail",
       "category": "output-differs"
     },
     "accessibility/accessibility-nameSources-options.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "accessibility/accessibility-nameSources-summary.js": {
       "expected": "fail",
       "category": "output-differs"
     },
     "accessibility/accessibility-nameSources-visiblity.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "accessibility/accessibility-nodes-updated-retrieves-children.js": {
       "expected": "fail",
