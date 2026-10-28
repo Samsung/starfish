@@ -23,7 +23,7 @@ http://web-platform.test:8000/css/css-fonts/crash-large-grapheme-cluster.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/font-display/font-display-failure-fallback.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/font-face-range-order.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/font-face-style-normal.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/font-family-src-quoted.html
+http://web-platform.test:8000/css/css-fonts/font-family-src-quoted.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/font-feature-settings-serialization-001.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/font-feature-values-map-live.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/font-feature-values-sameobject.tentative.html

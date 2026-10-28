@@ -22,6 +22,39 @@
 
 namespace Starfish {
 
+void StyleUtil::appendCSSString(StringBuilder& builder, String* value)
+{
+    // CSSOM escapes delimiters and control characters so that parsing
+    // the serialized string preserves its value.
+    // https://drafts.csswg.org/cssom/#serialize-a-string
+    builder.appendChar('"');
+    size_t start = 0;
+    for (size_t i = 0; i < value->length(); i++) {
+        char32_t c = value->charAt(i);
+        if (c > 0x1f && c != 0x7f && c != '"' && c != '\\') {
+            continue;
+        }
+        builder.appendSubString(value, start, i);
+        if (c == 0) {
+            builder.appendChar(static_cast<char32_t>(0xfffd));
+        } else if (c <= 0x1f || c == 0x7f) {
+            const char* hex = "0123456789abcdef";
+            builder.appendChar('\\');
+            if (c >= 0x10) {
+                builder.appendChar(hex[c >> 4]);
+            }
+            builder.appendChar(hex[c & 0xf]);
+            builder.appendChar(' ');
+        } else {
+            builder.appendChar('\\');
+            builder.appendChar(c);
+        }
+        start = i + 1;
+    }
+    builder.appendSubString(value, start, value->length());
+    builder.appendChar('"');
+}
+
 String* StyleUtil::fontWeightToString(FontWeightValue weight)
 {
     switch (weight) {
