@@ -2523,7 +2523,9 @@ private:
     cairo_font_face_t* createCairoFontFace(FontFaceImplCairo* fontFace)
     {
 #if CAIRO_HAS_FC_FONT
-        if (lastState()->m_font->weight() >= 6 && !fontFace->m_isBold) {
+        // Color glyphs such as emoji are not emboldened, as in Blink.
+        if (lastState()->m_font->weight() >= 6 && !fontFace->m_isBold &&
+            !FT_HAS_COLOR(fontFace->freetypeFace())) {
             FcPattern* pattern = FcPatternCreate();
             FcPatternAddFTFace(pattern, FC_FT_FACE, fontFace->freetypeFace());
             FcPatternAddBool(pattern, FC_EMBOLDEN, FcTrue);

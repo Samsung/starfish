@@ -224,6 +224,12 @@ void FontFaceList::insertRangedFace(size_t position, FontFace* face,
     }
     insert(begin() + position, face);
     m_unicodeRanges->insert(m_unicodeRanges->begin() + position, ranges);
+    // The unresolved web font moves back too, or the inserted face would be
+    // hidden as one of its fallbacks while it loads.
+    if (m_seenUnresolvedWebFontIndex != SIZE_MAX &&
+        m_seenUnresolvedWebFontIndex >= position) {
+        m_seenUnresolvedWebFontIndex++;
+    }
     if (m_pendingRangedFonts) {
         for (auto& pending : *m_pendingRangedFonts) {
             if (pending.m_position >= position) {
