@@ -51,7 +51,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-type
 # http://localhost:11010/conformance-suites/1.0.3/conformance/context/resources/context-release-upon-reload-child.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/context/resource-sharing-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/angle-instanced-arrays.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/angle-instanced-arrays-out-of-bounds.html # @ignore Needs vertex buffer range validation, same gap as draw-arrays-out-of-bounds.html.
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/angle-instanced-arrays-out-of-bounds.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-blend-minmax.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-frag-depth.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-shader-texture-lod.html # @ignore Passed due to unsupported extension.
@@ -400,8 +400,8 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/buffe
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexSubImage2DBadArgs.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexSubImage2D.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/deleteBufferBadArgs.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawArrays.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawArraysOutOfBounds.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawArrays.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawArraysOutOfBounds.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawElements.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/isTestsBadArgs.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/isTests.html
@@ -595,7 +595,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/reading/read-pixels-
 # http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-test.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/renderbuffer-initialization.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/culling.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/draw-arrays-out-of-bounds.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/draw-arrays-out-of-bounds.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/draw-elements-out-of-bounds.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/framebuffer-switch.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/framebuffer-texture-switch.html

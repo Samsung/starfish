@@ -61,25 +61,7 @@ void WebGLRenderingContextState::enableVertexAttribArray(GLuint index)
 Optional<WebGLBuffer*>
 WebGLRenderingContextState::getBufferBoundToVertexAttributes(GLuint index)
 {
-    GLuint vao = vertexArray();
-    const auto& iter = m_buffersBoundToVertexAttributes[vao].find(index);
-    if (iter == m_buffersBoundToVertexAttributes[vao].end()) {
-        return nullptr;
-    }
-
-    STARFISH_ASSERT(iter->second != nullptr);
-    return iter->second;
-}
-
-void WebGLRenderingContextState::setBufferBoundToVertexAttributes(
-    GLuint index, Optional<WebGLBuffer*> maybe)
-{
-    GLuint vao = vertexArray();
-    if (maybe.hasValue()) {
-        m_buffersBoundToVertexAttributes[vao][index] = maybe.value();
-    } else {
-        m_buffersBoundToVertexAttributes[vao].erase(index);
-    }
+    return getVertexAttribPointer(index).buffer;
 }
 
 Optional<WebGLBuffer*> WebGLRenderingContextState::getBoundBuffer(GLuint target)
@@ -132,8 +114,8 @@ void WebGLRenderingContextState::deleteVertexArray(GLuint vao)
     }
     m_arraysEnabled.erase(vao);
     m_elementArrayBuffers.erase(vao);
-    m_buffersBoundToVertexAttributes.erase(vao);
     m_vertexAttribType.erase(vao);
+    m_vertexAttribPointer.erase(vao);
 }
 
 void WebGLRenderingContextState::deleteVertexArrayOES(GLuint vao)
@@ -145,8 +127,8 @@ void WebGLRenderingContextState::deleteVertexArrayOES(GLuint vao)
     }
     m_arraysEnabled.erase(vao);
     m_elementArrayBuffers.erase(vao);
-    m_buffersBoundToVertexAttributes.erase(vao);
     m_vertexAttribType.erase(vao);
+    m_vertexAttribPointer.erase(vao);
 }
 
 void WebGLRenderingContextState::unbindBuffer(WebGLBuffer* buffer)
@@ -167,13 +149,10 @@ void WebGLRenderingContextState::unbindBuffer(WebGLBuffer* buffer)
     if (iter != m_elementArrayBuffers.end() && iter->second == buffer) {
         m_elementArrayBuffers.erase(iter);
     }
-    if (m_buffersBoundToVertexAttributes.count(vao)) {
-        auto& attrMap = m_buffersBoundToVertexAttributes[vao];
-        for (auto it = attrMap.begin(); it != attrMap.end();) {
-            if (it->second == buffer) {
-                it = attrMap.erase(it);
-            } else {
-                ++it;
+    if (m_vertexAttribPointer.count(vao)) {
+        for (AttribPointer& pointer : m_vertexAttribPointer[vao].pointers) {
+            if (pointer.buffer.hasValue() && pointer.buffer.value() == buffer) {
+                pointer.buffer = nullptr;
             }
         }
     }
@@ -217,6 +196,46 @@ void WebGLRenderingContextState::setVertexAttribType(GLuint index, GLenum type)
     }
     GLuint vao = vertexArray();
     m_vertexAttribType[vao].types[index] = type;
+}
+
+WebGLRenderingContextState::AttribPointer
+WebGLRenderingContextState::getVertexAttribPointer(GLuint index)
+{
+    if (index >= kMaxVertexAttribs) {
+        return AttribPointer();
+    }
+    GLuint vao = vertexArray();
+    const auto& iter = m_vertexAttribPointer.find(vao);
+    if (iter == m_vertexAttribPointer.end()) {
+        return AttribPointer();
+    }
+    return iter->second.pointers[index];
+}
+
+void WebGLRenderingContextState::setVertexAttribPointer(
+    GLuint index, Optional<WebGLBuffer*> buffer, GLint size, GLenum type,
+    GLsizei stride, GLintptr offset)
+{
+    if (index >= kMaxVertexAttribs) {
+        return;
+    }
+    GLuint vao = vertexArray();
+    AttribPointer& pointer = m_vertexAttribPointer[vao].pointers[index];
+    pointer.buffer = buffer;
+    pointer.size = size;
+    pointer.type = type;
+    pointer.stride = stride;
+    pointer.offset = offset;
+}
+
+void WebGLRenderingContextState::setVertexAttribDivisor(GLuint index,
+                                                        GLuint divisor)
+{
+    if (index >= kMaxVertexAttribs) {
+        return;
+    }
+    GLuint vao = vertexArray();
+    m_vertexAttribPointer[vao].pointers[index].divisor = divisor;
 }
 
 GLenum WebGLRenderingContextState::getGenericVertexAttribType(GLuint index)

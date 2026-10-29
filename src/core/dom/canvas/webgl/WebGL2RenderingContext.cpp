@@ -1649,8 +1649,9 @@ void WebGL2RenderingContext::vertexAttribIPointer(GLuint index, GLint size,
                             ? GL_UNSIGNED_INT
                             : GL_INT;
     getState()->setVertexAttribType(index, mappedType);
-    getState()->setBufferBoundToVertexAttributes(
-        index, getState()->getBoundBuffer(GL_ARRAY_BUFFER));
+    getState()->setVertexAttribPointer(
+        index, getState()->getBoundBuffer(GL_ARRAY_BUFFER), size, type, stride,
+        offset);
 }
 
 Optional<WebGLSync*> WebGL2RenderingContext::fenceSync(GLenum condition,

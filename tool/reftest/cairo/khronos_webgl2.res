@@ -521,7 +521,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/reading/read-pixels-
 http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/renderbuffer-initialization.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/culling.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/default-texture-draw-bug.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/draw-arrays-out-of-bounds.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/draw-arrays-out-of-bounds.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/draw-elements-out-of-bounds.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/draw-with-changing-start-vertex-bug.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/framebuffer-switch.html
@@ -694,8 +694,8 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/buffe
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/copyTexSubImage2D.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/copyTexSubImage2DBadArgs.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/deleteBufferBadArgs.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/drawArrays.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/drawArraysOutOfBounds.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/drawArrays.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/drawArraysOutOfBounds.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/drawElements.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/isTests.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/isTestsBadArgs.html
