@@ -2620,6 +2620,19 @@ static bool isFontRelatedKey(CSSStyleValuePair::KeyKind key)
     return false;
 }
 
+// An @font-face block consists of descriptors only (css-fonts-4 §4), so what
+// parsed as an ordinary property has no place in it.
+static void removeNonFontFaceDescriptors(CSSStyleDeclaration* decl)
+{
+    for (size_t i = 0; i < decl->cssValues().size(); i++) {
+        auto keyKind = decl->cssValues()[i].keyKind();
+        if (!isFontRelatedKey(keyKind)) {
+            decl->removeCSSValuePair(keyKind);
+            i--;
+        }
+    }
+}
+
 StyleRuleFontFace* CSSParser::parseFontFaceRule()
 {
     preserveState();
@@ -2648,13 +2661,7 @@ StyleRuleFontFace* CSSParser::parseFontFaceRule()
     if (valid) {
         forgetState();
 
-        for (size_t i = 0; i < decl->cssValues().size(); i++) {
-            auto keyKind = decl->cssValues()[i].keyKind();
-            if (!isFontRelatedKey(keyKind)) {
-                decl->removeCSSValuePair(keyKind);
-                i--;
-            }
-        }
+        removeNonFontFaceDescriptors(decl);
 
         if (decl->hasCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily)) {
             return new StyleRuleFontFace(decl);
@@ -3335,6 +3342,22 @@ void CSSParser::parseRules(RefPtr<CSSToken> token,
 void CSSParser::parseStyleDeclaration(String* str,
                                       CSSStyleDeclaration* declarations)
 {
+    parseDeclarationList(str, declarations, false);
+}
+
+// CSSOM re-parses an @font-face block in its own rule's context: the src
+// descriptor is taken and, as for sheet text, only descriptors stay.
+void CSSParser::parseFontFaceDeclaration(String* str,
+                                         CSSStyleDeclaration* declarations)
+{
+    parseDeclarationList(str, declarations, true);
+    removeNonFontFaceDescriptors(declarations);
+}
+
+void CSSParser::parseDeclarationList(String* str,
+                                     CSSStyleDeclaration* declarations,
+                                     bool allowSrcProperty)
+{
     m_lookAhead = nullptr;
     m_token = nullptr;
     m_preserveWS = false;
@@ -3347,7 +3370,7 @@ void CSSParser::parseStyleDeclaration(String* str,
             valid = true;
             break;
         }
-        parseDeclaration(token, declarations);
+        parseDeclaration(token, declarations, allowSrcProperty);
         token = getToken(true, false);
     }
 }

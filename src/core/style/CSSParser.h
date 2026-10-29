@@ -2249,6 +2249,8 @@ public:
     void parseRules(RefPtr<CSSToken> token, GCVector<StyleRuleBase*>& rootRule,
                     RuleListType ruleListType, bool isInsertedByUser = false);
     void parseStyleDeclaration(String* str, CSSStyleDeclaration* declaration);
+    void parseFontFaceDeclaration(String* str,
+                                  CSSStyleDeclaration* declaration);
     ParseResult parseStyleDeclarations(CSSStyleDeclaration* declarations,
                                        bool& valid, bool& invalidDeclaration,
                                        bool hasSelector, bool validSelector,
@@ -2336,6 +2338,8 @@ private:
     ParseResult parseDeclaration(RefPtr<CSSToken> aToken,
                                  CSSStyleDeclaration* declaration,
                                  bool allowSrcProperty = false);
+    void parseDeclarationList(String* str, CSSStyleDeclaration* declaration,
+                              bool allowSrcProperty);
     void addUnknownAtRule();
     void reportError(const char* aMsg);
     bool parseCharsetRule(GCVector<StyleRuleBase*>& rules);

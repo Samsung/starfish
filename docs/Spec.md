@@ -422,6 +422,8 @@ section are supported.
 |  | attribute | conditionText | Experimental. Partial support (only getter works). Returns the result of serializing the associated condition. |
 | [CSSMediaRule](https://drafts.csswg.org/css-conditional-3/#cssmediarule) | interface | CSSMediaRule | Represents a @media at-rule. |
 |  | attribute | media | Returns a MediaList object for the list of media queries specified with the @media at-rule.|
+| [CSSFontFaceRule](https://drafts.csswg.org/css-fonts-4/#om-fontface) | interface | CSSFontFaceRule | Represents an @font-face at-rule. |
+|  | attribute | style | Returns a CSSStyleDeclaration object for the descriptors of the @font-face at-rule. |
 | [CSSSupportsRule](https://drafts.csswg.org/css-conditional-3/#csssupportsrule) | interface | CSSSupportsRule | Represents a @supports at-rule. |
 |  | attribute | conditionText | Returns the value of conditionText on the rule. (CSSSupportsRule-specific definition for attribute on CSSConditionRule) On setting, if the given conditionText evaluates to true, the original conditionText is replaced by the given conditionText. |
 | [CSSKeyframesRule](https://drafts.csswg.org/css-animations/#interface-csskeyframesrule) | interface | CSSKeyframesRule | Represents a complete set of keyframes for a single animation. |
@@ -3136,7 +3138,7 @@ The following font-related CSS properties are **not in the parser trie** at all 
 |  | **Quirk:** `getComputedStyle()` returns a writable `CSSStyleDeclaration` (not frozen), `length === 0`, mutations don't throw. Iterate via known property names with `getPropertyValue("…")` instead of indexed `length`. |
 | `CSSRule` | The `cssText` setter is **silently ignored** despite being writable in IDL. |
 | `CSSStyleSheet` | **Constructable** — `new CSSStyleSheet(options)` works, with `replace()` (returns a `Promise`) and `replaceSync()`. `adoptedStyleSheets` is exposed on both `Document` and `ShadowRoot` as an observable array. `rules === cssRules` (legacy alias is the same live list). `insertRule` throws `SyntaxError` on bad text and `IndexSizeError` on out-of-range index; `deleteRule` throws `IndexSizeError` on out-of-range. |
-| `CSSFontFaceRule` | The `style` accessor **crashes the engine in debug builds** (`Assertion 'isCSSStyleRule()' failed.`). Treat `CSSFontFaceRule.style` as unsupported. |
+| `CSSFontFaceRule` | `style` returns the descriptor block as a plain `CSSStyleDeclaration` (not the `CSSFontFaceDescriptors` subclass of css-fonts-4); `parentRule` is the `@font-face` rule, and `style.cssText = ...` (or `style = ...`) re-parses the block as descriptors, keeping `src` and dropping declarations that are not descriptors. Descriptors the parser does not recognize (`unicode-range`, `font-display`, ...) are absent from it, and an `@font-face` without `font-family` keeps an empty block. |
 | `CSSNamespaceRule`, `CSSCounterStyleRule` | Produced by the parser. `CSSNamespaceRule` exposes `prefix` and `namespaceURI`. |
 | `CSSPageRule` | The CSSRule-type constant exists but the parser never produces a rule of this type. |
 | `MediaList` | `mediaText` is also a stringifier (`String(ml)` serializes). Indexed getter `ml[i]` works. `deleteMedium(name)` throws `NotFoundError` if the medium isn't in the list. |

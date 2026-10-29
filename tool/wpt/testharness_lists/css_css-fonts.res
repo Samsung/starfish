@@ -49,7 +49,7 @@ http://web-platform.test:8000/css/css-fonts/font-size-zero-ligatures.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/generic-family-keywords-001.html
 http://web-platform.test:8000/css/css-fonts/generic-family-keywords-002.html
 # [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/css/css-fonts/generic-family-keywords-003.html
-# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-fonts/idlharness.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/idlharness.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/inheritance.html
 # [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/css/css-fonts/matching/font-unicode-PUA.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/math-script-level-and-math-style/math-script-level-001.tentative.html
@@ -60,10 +60,10 @@ http://web-platform.test:8000/css/css-fonts/generic-family-keywords-002.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/palette-mix-computed.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/parsing/font-computed.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/parsing/font-face-size-adjust.html
-# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-fonts/parsing/font-face-src-format.html
-# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-fonts/parsing/font-face-src-list.html
-# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-fonts/parsing/font-face-src-local.html
-# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-fonts/parsing/font-face-src-tech.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/parsing/font-face-src-format.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/parsing/font-face-src-list.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/parsing/font-face-src-local.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/parsing/font-face-src-tech.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/parsing/font-family-computed.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/parsing/font-family-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/parsing/font-family-valid.html
@@ -145,7 +145,7 @@ http://web-platform.test:8000/css/css-fonts/parsing/font-kerning-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/test_font_family_parsing.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/test_font_feature_values_parsing.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/variable-in-font-variation-settings.html
-# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-fonts/variations/at-font-face-descriptors.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/variations/at-font-face-descriptors.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-fonts/variations/at-font-face-font-matching.html
 http://web-platform.test:8000/css/css-fonts/variations/font-opentype-collections.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/variations/font-parse-numeric-stretch-style-weight.html

@@ -396,7 +396,7 @@ CSSStyleDeclaration* CSSFontFaceRule::style()
 {
     if (!m_propertiesWrapper) {
         m_propertiesWrapper = new StyleRuleCSSStyleDeclaration(
-            m_fontFaceRule->styleDeclaration(), this->asCSSStyleRule());
+            m_fontFaceRule->styleDeclaration(), this);
     }
 
     return m_propertiesWrapper;
