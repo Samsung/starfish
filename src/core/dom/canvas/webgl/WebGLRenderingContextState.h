@@ -24,6 +24,7 @@
 
 #include "StarfishBase.h"
 #include "platform/canvas/gl/GLTypes.h"
+#include "platform/canvas/gl/IncludeGL.h"
 
 namespace Starfish {
 
@@ -66,8 +67,6 @@ public:
     void setBoundBuffer(GLenum target, Optional<WebGLBuffer*> maybe);
 
     Optional<WebGLBuffer*> getBufferBoundToVertexAttributes(GLuint index);
-    void setBufferBoundToVertexAttributes(GLuint index,
-                                          Optional<WebGLBuffer*> maybe);
 
     void deleteVertexArray(GLuint vao);
     void deleteVertexArrayOES(GLuint vao);
@@ -80,9 +79,32 @@ public:
         AttribTypes();
     };
 
+    // What vertexAttribPointer and vertexAttribDivisor set for one array:
+    // the buffer it reads and how, kept so a draw can be checked against
+    // it. The buffer belongs in this record rather than in a std container
+    // of its own because the table below is GC-allocated and scanned, which
+    // is what keeps a buffer that script has dropped alive for as long as
+    // an array still reads it.
+    struct AttribPointer {
+        Optional<WebGLBuffer*> buffer;
+        GLintptr offset = 0;
+        GLint size = 4;
+        GLsizei stride = 0;
+        GLenum type = GL_FLOAT;
+        GLuint divisor = 0;
+    };
+    struct AttribPointers {
+        AttribPointer pointers[kMaxVertexAttribs];
+    };
+
     bool isVertexAttribArrayEnabled(GLuint index);
     GLenum getVertexAttribType(GLuint index);
     void setVertexAttribType(GLuint index, GLenum type);
+    AttribPointer getVertexAttribPointer(GLuint index);
+    void setVertexAttribPointer(GLuint index, Optional<WebGLBuffer*> buffer,
+                                GLint size, GLenum type, GLsizei stride,
+                                GLintptr offset);
+    void setVertexAttribDivisor(GLuint index, GLuint divisor);
     GLenum getGenericVertexAttribType(GLuint index);
     void setGenericVertexAttribType(GLuint index, GLenum type);
 
@@ -97,9 +119,8 @@ private:
     GCUnorderedMap<GLuint, std::unordered_set<GLuint>> m_arraysEnabled;
     GCUnorderedMap<GLuint, WebGLBuffer*> m_elementArrayBuffers;
     GCUnorderedMap<GLenum, WebGLBuffer*> m_globalBuffersBound;
-    GCUnorderedMap<GLuint, std::unordered_map<GLuint, WebGLBuffer*>>
-        m_buffersBoundToVertexAttributes;
     GCUnorderedMap<GLuint, AttribTypes> m_vertexAttribType;
+    GCUnorderedMap<GLuint, AttribPointers> m_vertexAttribPointer;
     GLenum m_genericVertexAttribType[kMaxVertexAttribs];
 };
 } // namespace Starfish

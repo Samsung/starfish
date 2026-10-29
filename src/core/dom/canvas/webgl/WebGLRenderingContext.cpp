@@ -1376,6 +1376,10 @@ void WebGLRenderingContext::vertexAttribDivisor(GLuint index, GLuint divisor)
 {
     ENTER_CONTEXT_SCOPE();
     m_gl->vertexAttribDivisor(index, divisor);
+    if (hasNewGLError()) {
+        return;
+    }
+    m_state->setVertexAttribDivisor(index, divisor);
 }
 
 bool WebGLRenderingContext::hasOnlyNonZeroAttribDivisors()
@@ -1438,6 +1442,11 @@ bool WebGLRenderingContext::hasEnoughElementArrayData(GLsizei count,
                                                       GLenum type,
                                                       GLintptr offset)
 {
+    if (count == 0) {
+        // Nothing is fetched, so the offset need not be inside the buffer.
+        return true;
+    }
+
     int64_t indexSize = 0;
     switch (type) {
     case GL_UNSIGNED_BYTE:
@@ -1467,6 +1476,126 @@ bool WebGLRenderingContext::hasEnoughElementArrayData(GLsizei count,
            static_cast<int64_t>(elementBuffer.value()->byteLength());
 }
 
+bool WebGLRenderingContext::hasEnoughVertexArrayData(int64_t vertexCount,
+                                                     GLsizei instanceCount)
+{
+    // Only arrays the program reads are fetched, so only they can run past
+    // their buffer.
+    GLint program = getCurrentProgram();
+    if (!program) {
+        return true;
+    }
+
+    GLint activeAttribCount = 0;
+    m_gl->getProgramiv(program, GL_ACTIVE_ATTRIBUTES, &activeAttribCount);
+    GLint maxNameLength = 0;
+    m_gl->getProgramiv(program, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &maxNameLength);
+    if (activeAttribCount <= 0 || maxNameLength <= 0) {
+        return true;
+    }
+    std::vector<char> name(static_cast<size_t>(maxNameLength) + 1);
+
+    for (GLint i = 0; i < activeAttribCount; ++i) {
+        GLsizei nameLength = 0;
+        GLint size = 0;
+        GLenum type = 0;
+        m_gl->getActiveAttrib(program, static_cast<GLuint>(i), maxNameLength,
+                              &nameLength, &size, &type, name.data());
+        name[static_cast<size_t>(nameLength)] = '\0';
+
+        int location = m_gl->getAttribLocation(program, name.data());
+        if (location < 0) {
+            continue;
+        }
+
+        // A matrix attribute takes one location per column.
+        GLint columns = 1;
+        switch (type) {
+        case GL_FLOAT_MAT2:
+        case GL_FLOAT_MAT2x3:
+        case GL_FLOAT_MAT2x4:
+            columns = 2;
+            break;
+        case GL_FLOAT_MAT3:
+        case GL_FLOAT_MAT3x2:
+        case GL_FLOAT_MAT3x4:
+            columns = 3;
+            break;
+        case GL_FLOAT_MAT4:
+        case GL_FLOAT_MAT4x2:
+        case GL_FLOAT_MAT4x3:
+            columns = 4;
+            break;
+        default:
+            break;
+        }
+
+        for (GLint column = 0; column < columns; ++column) {
+            GLuint index = static_cast<GLuint>(location + column);
+            if (!m_state->isVertexAttribArrayEnabled(index)) {
+                continue;
+            }
+            WebGLRenderingContextState::AttribPointer pointer =
+                m_state->getVertexAttribPointer(index);
+            if (!pointer.buffer) {
+                // The missing buffer is reported separately.
+                continue;
+            }
+
+            int64_t elementBytes = 0;
+            switch (pointer.type) {
+            case GL_BYTE:
+            case GL_UNSIGNED_BYTE:
+                elementBytes = pointer.size;
+                break;
+            case GL_SHORT:
+            case GL_UNSIGNED_SHORT:
+            case GL_HALF_FLOAT:
+                elementBytes = static_cast<int64_t>(pointer.size) * 2;
+                break;
+            case GL_INT:
+            case GL_UNSIGNED_INT:
+            case GL_FLOAT:
+                elementBytes = static_cast<int64_t>(pointer.size) * 4;
+                break;
+            case GL_INT_2_10_10_10_REV:
+            case GL_UNSIGNED_INT_2_10_10_10_REV:
+                elementBytes = 4;
+                break;
+            default:
+                // An unknown type is GL's to reject.
+                continue;
+            }
+
+            // How many elements of this array the draw fetches. An instanced
+            // array advances once per divisor instances, from instance 0.
+            int64_t elements = 0;
+            if (pointer.divisor == 0) {
+                if (vertexCount < 0) {
+                    continue;
+                }
+                elements = vertexCount;
+            } else {
+                elements = (static_cast<int64_t>(instanceCount) +
+                            pointer.divisor - 1) /
+                           pointer.divisor;
+            }
+            if (elements <= 0) {
+                continue;
+            }
+
+            int64_t stride = pointer.stride ? pointer.stride : elementBytes;
+            int64_t needed = static_cast<int64_t>(pointer.offset) +
+                             (elements - 1) * stride + elementBytes;
+            if (needed >
+                static_cast<int64_t>(pointer.buffer.value()->byteLength())) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 void WebGLRenderingContext::drawArraysInstanced(GLenum mode, GLint first,
                                                 GLsizei count,
                                                 GLsizei instanceCount)
@@ -1489,6 +1618,15 @@ void WebGLRenderingContext::drawArraysInstanced(GLenum mode, GLint first,
         setGLError(GL_INVALID_OPERATION,
                    "all enabled vertex attribute arrays have a non-zero "
                    "divisor");
+        return;
+    }
+
+    if (count > 0 && instanceCount > 0 &&
+        !hasEnoughVertexArrayData(static_cast<int64_t>(first) + count,
+                                  instanceCount)) {
+        setGLError(GL_INVALID_OPERATION,
+                   "drawArraysInstanced: vertices or instances reach past "
+                   "the bound ARRAY_BUFFER");
         return;
     }
 
@@ -1547,10 +1685,19 @@ void WebGLRenderingContext::drawElementsInstanced(GLenum mode, GLsizei count,
         }
     }
 
-    if (!hasEnoughElementArrayData(count, type, offset)) {
+    // A draw of zero instances fetches nothing.
+    if (instanceCount > 0 && !hasEnoughElementArrayData(count, type, offset)) {
         setGLError(GL_INVALID_OPERATION,
                    "drawElementsInstanced: indices reach past "
                    "ELEMENT_ARRAY_BUFFER");
+        return;
+    }
+
+    if (count > 0 && instanceCount > 0 &&
+        !hasEnoughVertexArrayData(-1, instanceCount)) {
+        setGLError(GL_INVALID_OPERATION,
+                   "drawElementsInstanced: instances reach past the bound "
+                   "ARRAY_BUFFER");
         return;
     }
 
@@ -1596,6 +1743,19 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
             setGLError(GL_INVALID_OPERATION);
             return;
         }
+    }
+
+    // A bad mode is INVALID_ENUM even when the range is wrong too.
+    if (!isValidDrawMode(mode)) {
+        setGLError(GL_INVALID_ENUM, "invalid draw mode");
+        return;
+    }
+
+    if (count > 0 &&
+        !hasEnoughVertexArrayData(static_cast<int64_t>(first) + count, 1)) {
+        setGLError(GL_INVALID_OPERATION,
+                   "drawArrays: vertices reach past the bound ARRAY_BUFFER");
+        return;
     }
 
     bool restoreDrawBuffers = false;
@@ -4376,8 +4536,9 @@ void WebGLRenderingContext::vertexAttribPointer(GLuint index, GLint size,
         return;
     }
     m_state->setVertexAttribType(index, GL_FLOAT);
-    m_state->setBufferBoundToVertexAttributes(
-        index, m_state->getBoundBuffer(GL_ARRAY_BUFFER));
+    m_state->setVertexAttribPointer(index,
+                                    m_state->getBoundBuffer(GL_ARRAY_BUFFER),
+                                    size, type, stride, offset);
 }
 
 void WebGLRenderingContext::viewport(uint32_t x, uint32_t y, uint32_t width,

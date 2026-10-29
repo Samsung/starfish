@@ -494,6 +494,13 @@ protected:
     // Whether the buffer bound to ELEMENT_ARRAY_BUFFER actually holds the
     // indices a draw asks for. Reading past it crashes some drivers.
     bool hasEnoughElementArrayData(GLsizei count, GLenum type, GLintptr offset);
+    // Whether the buffers behind the enabled attribute arrays the current
+    // program reads hold every element a draw fetches: vertexCount of them
+    // for the arrays without a divisor (-1 when the vertices come from
+    // the indices and are not checked), and one per divisor instances for
+    // the rest. Not every driver clamps a fetch past the buffer, and a draw of
+    // 2^31 instances wedges some GPUs.
+    bool hasEnoughVertexArrayData(int64_t vertexCount, GLsizei instanceCount);
 
     bool hasDepthBuffer() const
     {
