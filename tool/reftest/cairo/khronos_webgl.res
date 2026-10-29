@@ -297,7 +297,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-wit
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-precision.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-preprocessor-whitespace.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-quoted-error.frag.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-reserved-words.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-reserved-words.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-short-circuiting-operators.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-similar-uniform-array-names.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-too-many-uniforms.html
@@ -311,8 +311,8 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-wit
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-version-100.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-version-120.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-version-130.vert.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-_webgl-identifier.vert.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-webgl-identifier.vert.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-_webgl-identifier.vert.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-webgl-identifier.vert.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-while-loop.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shared.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/struct-equals.html
@@ -325,14 +325,14 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/struct-una
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/ternary-operators-in-global-initializers.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/ternary-operators-in-initializers.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/uniform-location-length-limits.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/reserved/_webgl_field.vert.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/reserved/webgl_field.vert.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/reserved/_webgl_function.vert.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/reserved/webgl_function.vert.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/reserved/_webgl_struct.vert.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/reserved/webgl_struct.vert.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/reserved/_webgl_variable.vert.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/reserved/webgl_variable.vert.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/reserved/_webgl_field.vert.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/reserved/webgl_field.vert.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/reserved/_webgl_function.vert.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/reserved/webgl_function.vert.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/reserved/_webgl_struct.vert.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/reserved/webgl_struct.vert.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/reserved/_webgl_variable.vert.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/reserved/webgl_variable.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/samplers/glsl-function-texture2d-bias.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/samplers/glsl-function-texture2dlod.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/samplers/glsl-function-texture2dproj.html
