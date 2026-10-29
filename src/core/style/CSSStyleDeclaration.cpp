@@ -6325,17 +6325,37 @@ void StyleRuleCSSStyleDeclaration::setCssText(String* text)
     STARFISH_ASSERT(text != nullptr);
     STARFISH_ASSERT(m_parentRule != nullptr);
 
+    // The wrapper belongs to whichever rule created it, so re-parse into that
+    // rule's own declaration block and in that rule's context: an @font-face
+    // block takes descriptors such as src and nothing else (css-fonts-4 §4).
     CSSStyleDeclaration* decl;
-    if (m_parentRule->type() == CSSRule::Type::KEYFRAME_RULE) {
+    bool isFontFace = false;
+    switch (m_parentRule->type()) {
+    case CSSRule::Type::STYLE_RULE:
+        decl = m_parentRule->asCSSStyleRule()->styleRule()->styleDeclaration();
+        break;
+    case CSSRule::Type::KEYFRAME_RULE:
         decl =
-            ((CSSKeyframeRule*)m_parentRule)->styleRule()->styleDeclaration();
-    } else {
-        decl = ((CSSStyleRule*)m_parentRule)->styleRule()->styleDeclaration();
+            m_parentRule->asCSSKeyframeRule()->styleRule()->styleDeclaration();
+        break;
+    case CSSRule::Type::FONT_FACE_RULE:
+        decl = m_parentRule->asCSSFontFaceRule()
+                   ->fontFaceRule()
+                   ->styleDeclaration();
+        isFontFace = true;
+        break;
+    default:
+        STARFISH_ASSERT_NOT_REACHED();
+        return;
     }
     decl->clear();
 
     CSSParser parser(m_node);
-    parser.parseStyleDeclaration(text, decl);
+    if (isFontFace) {
+        parser.parseFontFaceDeclaration(text, decl);
+    } else {
+        parser.parseStyleDeclaration(text, decl);
+    }
     m_cssValues = decl->cssValues();
     m_pointerRooter = decl->m_pointerRooter;
 

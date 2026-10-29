@@ -70,8 +70,8 @@ http://web-platform.test:8000/css/cssom/cssimportrule-sheet-identity.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/cssom/cssimportrule.html
 http://web-platform.test:8000/css/cssom/cssom-cssText-serialize.html
 http://web-platform.test:8000/css/cssom/cssom-cssstyledeclaration-set.html
-# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/cssom/cssom-fontfacerule-constructors.html
-# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/cssom/cssom-fontfacerule.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/cssom/cssom-fontfacerule-constructors.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/cssom/cssom-fontfacerule.html
 # [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/css/cssom/cssom-getPropertyValue-common-checks.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/cssom/cssom-pagerule.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/cssom/cssom-ruleTypeAndOrder.html
