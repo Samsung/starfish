@@ -789,6 +789,131 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
         }
     }
 
+    // WebGL specification (4.3.5 Supported GLSL Constructs):
+    // User shaders may not define or use identifiers starting with "webgl_" or
+    // "_webgl_", or containing two consecutive underscores ("__"). Any such
+    // identifier generates a compilation error.
+    bool inLineComment = false;
+    bool inBlockComment = false;
+    bool inString = false;
+    bool inIdentifier = false;
+    size_t idStart = 0;
+
+    auto isReservedIdentifier = [&src](size_t start, size_t len) -> bool {
+        if ((len >= 6 && src.compare(start, 6, "webgl_") == 0) ||
+            (len >= 7 && src.compare(start, 7, "_webgl_") == 0)) {
+            return true;
+        }
+        if (src.substr(start, len).find("__") != std::string::npos) {
+            std::string id = src.substr(start, len);
+            if (id != "__LINE__" && id != "__FILE__" && id != "__VERSION__") {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    for (size_t i = 0; i < src.length(); ++i) {
+        char c = src[i];
+
+        if (inLineComment) {
+            if (c == '\n') {
+                inLineComment = false;
+            }
+            continue;
+        }
+
+        if (inBlockComment) {
+            if (c == '*' && i + 1 < src.length() && src[i + 1] == '/') {
+                inBlockComment = false;
+                i++;
+            }
+            continue;
+        }
+
+        if (inString) {
+            if (c == '\\') {
+                i++;
+            } else if (c == '"') {
+                inString = false;
+            }
+            continue;
+        }
+
+        if (c == '/' && i + 1 < src.length()) {
+            if (src[i + 1] == '/') {
+                inLineComment = true;
+                if (inIdentifier) {
+                    size_t idLen = i - idStart;
+                    if (isReservedIdentifier(idStart, idLen)) {
+                        shader->setCompileFailed(true);
+                        shader->setInfoLog(
+                            "Reserved identifier in shader source");
+                        return;
+                    }
+                    inIdentifier = false;
+                }
+                i++;
+                continue;
+            } else if (src[i + 1] == '*') {
+                inBlockComment = true;
+                if (inIdentifier) {
+                    size_t idLen = i - idStart;
+                    if (isReservedIdentifier(idStart, idLen)) {
+                        shader->setCompileFailed(true);
+                        shader->setInfoLog(
+                            "Reserved identifier in shader source");
+                        return;
+                    }
+                    inIdentifier = false;
+                }
+                i++;
+                continue;
+            }
+        }
+
+        if (c == '"') {
+            inString = true;
+            if (inIdentifier) {
+                size_t idLen = i - idStart;
+                if (isReservedIdentifier(idStart, idLen)) {
+                    shader->setCompileFailed(true);
+                    shader->setInfoLog("Reserved identifier in shader source");
+                    return;
+                }
+                inIdentifier = false;
+            }
+            continue;
+        }
+
+        bool isIdChar = isalnum(static_cast<unsigned char>(c)) || c == '_';
+        if (isIdChar) {
+            if (!inIdentifier) {
+                inIdentifier = true;
+                idStart = i;
+            }
+        } else {
+            if (inIdentifier) {
+                size_t idLen = i - idStart;
+                if (isReservedIdentifier(idStart, idLen)) {
+                    shader->setCompileFailed(true);
+                    shader->setInfoLog("Reserved identifier in shader source");
+                    return;
+                }
+                inIdentifier = false;
+            }
+        }
+    }
+
+    if (inIdentifier) {
+        size_t idLen = src.length() - idStart;
+        if (isReservedIdentifier(idStart, idLen)) {
+            shader->setCompileFailed(true);
+            shader->setInfoLog("Reserved identifier in shader source");
+            return;
+        }
+    }
+
     if (webGLVersion() >= 2) {
         // 1. Misplaced version directive: #version 300 es must be on line 1,
         // column 0
