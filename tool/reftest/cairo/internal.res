@@ -330,6 +330,7 @@ test/cairo/internal-test/css/url/url-invalid.html
 test/cairo/internal-test/css/url/url-parsing.html
 test/cairo/internal-test/css/url/url-serialization.html
 test/cairo/internal-test/css/cssom/cssfontfacerule-style.html
+test/cairo/internal-test/css/cssom/rule-csstext-custom-properties.html
 test/cairo/internal-test/css/cssom/stylerule-keyframerule-csstext.html
 test/cairo/internal-test/css/border/starting_unprocessed_mbp.html
 test/cairo/internal-test/css/position2/replaced-left-margin-auto-right-margin-fixed-width-fixed.html

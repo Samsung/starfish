@@ -6358,6 +6358,16 @@ void StyleRuleCSSStyleDeclaration::setCssText(String* text)
     }
     m_cssValues = decl->cssValues();
     m_pointerRooter = decl->m_pointerRooter;
+    // The wrapper is a snapshot of the rule's block (see the constructor), so
+    // its custom properties must follow the re-parse as the values above do.
+    if (decl->m_cssCustomValues) {
+        if (!m_cssCustomValues) {
+            m_cssCustomValues = new MutablePropertyValueList();
+        }
+        *m_cssCustomValues = *decl->m_cssCustomValues;
+    } else if (m_cssCustomValues) {
+        m_cssCustomValues->clear();
+    }
 
     m_node->styleResolver().setNeedsRecalcRuleSet();
 
