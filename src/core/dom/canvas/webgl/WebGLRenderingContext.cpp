@@ -1386,9 +1386,13 @@ void WebGLRenderingContext::deleteRenderbuffer(
         m_gl->deleteRenderbuffers(1, &buffer);
         value->markDeleted();
 
-        Optional<WebGLFramebuffer*> boundFb = m_state->webGLFramebuffer();
-        if (boundFb.hasValue() && boundFb.value()) {
-            boundFb.value()->detachRenderbuffer(value);
+        // Deleting detaches it from the bound draw and read framebuffers
+        // (OpenGL ES 3.0 §4.4.2.3).
+        for (GLenum target : { GL_READ_FRAMEBUFFER, GL_DRAW_FRAMEBUFFER }) {
+            Optional<WebGLFramebuffer*> boundFb = getBoundFramebuffer(target);
+            if (boundFb) {
+                boundFb.value()->detachRenderbuffer(value);
+            }
         }
     }
 }
@@ -1407,9 +1411,12 @@ void WebGLRenderingContext::deleteTexture(Optional<WebGLTexture*> maybe)
             m_gl->deleteTextures(1, &buffer);
             value->markDeleted();
 
-            Optional<WebGLFramebuffer*> boundFb = m_state->webGLFramebuffer();
-            if (boundFb.hasValue() && boundFb.value()) {
-                boundFb.value()->detachTexture(value);
+            for (GLenum target : { GL_READ_FRAMEBUFFER, GL_DRAW_FRAMEBUFFER }) {
+                Optional<WebGLFramebuffer*> boundFb =
+                    getBoundFramebuffer(target);
+                if (boundFb) {
+                    boundFb.value()->detachTexture(value);
+                }
             }
 
             for (auto it = m_boundTextureObjects.begin();

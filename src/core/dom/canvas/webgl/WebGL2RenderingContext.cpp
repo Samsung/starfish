@@ -276,7 +276,12 @@ void WebGL2RenderingContext::bindFramebuffer(
         }
 
         gl()->bindFramebuffer(target, frameBuffer->glObject());
-        getState()->setWebGLFramebuffer(frameBuffer);
+        // The shared state is the draw framebuffer, which draws and
+        // compositing render into; binding READ_FRAMEBUFFER alone must leave
+        // it as is (OpenGL ES 3.0 §4.4.1).
+        if (target != GL_READ_FRAMEBUFFER) {
+            getState()->setWebGLFramebuffer(frameBuffer);
+        }
 
         if (target == GL_FRAMEBUFFER) {
             m_readFramebuffer = maybeFramebuffer;
@@ -296,7 +301,9 @@ void WebGL2RenderingContext::bindFramebuffer(
         }
     } else {
         gl()->bindFramebuffer(target, m_framebufferTexture->fbo());
-        getState()->setWebGLFramebuffer(nullptr);
+        if (target != GL_READ_FRAMEBUFFER) {
+            getState()->setWebGLFramebuffer(nullptr);
+        }
 
         if (target == GL_FRAMEBUFFER) {
             m_readFramebuffer = maybeFramebuffer;
@@ -467,16 +474,12 @@ Optional<ScriptValue> WebGL2RenderingContext::getParameterImpl(GLenum pname)
         return createScriptValue(static_cast<uint32_t>(GL_NONE));
     }
     case GL_READ_BUFFER: {
-        if (isDefaultFramebufferBound()) {
+        if (!m_readFramebuffer) {
             return createScriptValue(
                 static_cast<uint32_t>(m_defaultReadBuffer));
         }
-        Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
-        if (maybeFb.hasValue() && maybeFb.value()) {
-            return createScriptValue(
-                static_cast<uint32_t>(maybeFb.value()->readBuffer()));
-        }
-        return createScriptValue(static_cast<uint32_t>(GL_COLOR_ATTACHMENT0));
+        return createScriptValue(
+            static_cast<uint32_t>(m_readFramebuffer.value()->readBuffer()));
     }
     // GLint64
     case kMAX_CLIENT_WAIT_TIMEOUT_WEBGL:
@@ -3493,7 +3496,15 @@ void WebGL2RenderingContext::framebufferTextureLayer(
 {
     ENTER_CONTEXT_SCOPE();
 
-    if (isDefaultFramebufferBound()) {
+    if (target != GL_FRAMEBUFFER && target != GL_READ_FRAMEBUFFER &&
+        target != GL_DRAW_FRAMEBUFFER) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+    // The default framebuffer of the given target cannot take attachments
+    // (OpenGL ES 3.0 §4.4.2); in GL it is the canvas's drawing buffer.
+    WebGLFramebuffer* fb = getBoundFramebuffer(target).valueOrNull();
+    if (!fb) {
         setGLError(GL_INVALID_OPERATION);
         return;
     }
@@ -3519,13 +3530,9 @@ void WebGL2RenderingContext::framebufferTextureLayer(
         gl()->framebufferTextureLayer(target, attachment, texName, level,
                                       layer);
     }
-    Optional<WebGLFramebuffer*> maybeFb = getBoundFramebuffer(target);
-    if (maybeFb.hasValue() && maybeFb.value()) {
-        maybeFb.value()->setAttachmentTextureLayer(
-            attachment,
-            maybeTexture.hasValue() ? maybeTexture.value() : nullptr, level,
-            layer);
-    }
+    fb->setAttachmentTextureLayer(
+        attachment, maybeTexture.hasValue() ? maybeTexture.value() : nullptr,
+        level, layer);
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
@@ -3760,17 +3767,10 @@ void WebGL2RenderingContext::invalidateFramebuffer(
     GLint maxColorAttachments = 0;
     gl()->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
 
-    WebGLFramebuffer* userFb = nullptr;
-    if (!isDefaultFramebufferBound()) {
-        Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
-        if (maybeFb.hasValue()) {
-            userFb = maybeFb.value();
-        }
-    }
+    WebGLFramebuffer* userFb = getBoundFramebuffer(target).valueOrNull();
 
     std::vector<GLenum> validAttachments;
-    if (!filterInvalidateAttachments(target, attachments,
-                                     isDefaultFramebufferBound(), userFb,
+    if (!filterInvalidateAttachments(target, attachments, !userFb, userFb,
                                      hasDepthBuffer(), hasStencilBuffer(),
                                      maxColorAttachments, validAttachments)) {
         setGLError(GL_INVALID_ENUM);
@@ -3803,17 +3803,10 @@ void WebGL2RenderingContext::invalidateSubFramebuffer(
     GLint maxColorAttachments = 0;
     gl()->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
 
-    WebGLFramebuffer* userFb = nullptr;
-    if (!isDefaultFramebufferBound()) {
-        Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
-        if (maybeFb.hasValue()) {
-            userFb = maybeFb.value();
-        }
-    }
+    WebGLFramebuffer* userFb = getBoundFramebuffer(target).valueOrNull();
 
     std::vector<GLenum> validAttachments;
-    if (!filterInvalidateAttachments(target, attachments,
-                                     isDefaultFramebufferBound(), userFb,
+    if (!filterInvalidateAttachments(target, attachments, !userFb, userFb,
                                      hasDepthBuffer(), hasStencilBuffer(),
                                      maxColorAttachments, validAttachments)) {
         setGLError(GL_INVALID_ENUM);
@@ -3834,7 +3827,7 @@ void WebGL2RenderingContext::readBuffer(GLenum src)
     GLint maxColorAttachments = 0;
     gl()->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
 
-    if (isDefaultFramebufferBound()) {
+    if (!m_readFramebuffer) {
         if (src == GL_BACK) {
             m_defaultReadBuffer = GL_BACK;
             gl()->readBuffer(GL_COLOR_ATTACHMENT0);
@@ -3855,20 +3848,14 @@ void WebGL2RenderingContext::readBuffer(GLenum src)
     }
 
     if (src == GL_NONE) {
-        Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
-        if (maybeFb.hasValue() && maybeFb.value()) {
-            maybeFb.value()->setReadBuffer(GL_NONE);
-        }
+        m_readFramebuffer.value()->setReadBuffer(GL_NONE);
         gl()->readBuffer(GL_NONE);
         return;
     }
 
     if (src >= GL_COLOR_ATTACHMENT0 &&
         src < static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + maxColorAttachments)) {
-        Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
-        if (maybeFb.hasValue() && maybeFb.value()) {
-            maybeFb.value()->setReadBuffer(src);
-        }
+        m_readFramebuffer.value()->setReadBuffer(src);
         gl()->readBuffer(src);
         return;
     }
@@ -5388,14 +5375,10 @@ static bool isSupportedReadPixelsType(GLenum type, size_t& alignment)
 
 bool WebGL2RenderingContext::isReadBufferNone()
 {
-    if (isDefaultFramebufferBound()) {
+    if (!m_readFramebuffer) {
         return m_defaultReadBuffer == GL_NONE;
     }
-    Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
-    if (maybeFb.hasValue() && maybeFb.value()) {
-        return maybeFb.value()->readBuffer() == GL_NONE;
-    }
-    return false;
+    return m_readFramebuffer.value()->readBuffer() == GL_NONE;
 }
 
 void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
