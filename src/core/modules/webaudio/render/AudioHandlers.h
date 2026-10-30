@@ -649,6 +649,63 @@ private:
     double m_loopEnd{ 0 };
 };
 
+// https://webaudio.github.io/web-audio-api/#ScriptProcessorNode
+// Double-buffered: the input of block k (bufferSize frames) is handed to the
+// main thread for audioprocess event k, whose outputBuffer plays in block
+// k + 2, so the node delays its signal by 2 * bufferSize frames.
+class ScriptProcessorHandler final : public AudioHandler {
+public:
+    ScriptProcessorHandler(size_t bufferSize, size_t inputChannels,
+                           size_t outputChannels);
+    ~ScriptProcessorHandler() override;
+
+    // Main thread, under the graph lock. The slot of the oldest completed
+    // input block still waiting for its event, or -1.
+    int pendingSlot() const;
+    // Marks the slot's block dispatched and returns its index. Drops the
+    // slot's previous output, which has played by now, so the outputBuffer
+    // holding it can be reused without a copy.
+    uint64_t beginEvent(int slot);
+    // The context frame at which the pending block's input started.
+    uint64_t pendingStartFrame(int slot) const
+    {
+        return m_pendingStartFrame[slot];
+    }
+    // https://webaudio.github.io/web-audio-api/#dom-scriptprocessornode-onaudioprocess
+    // "audioprocess events are only dispatched if the ScriptProcessorNode
+    // has at least one input or one output connected."
+    bool isConnected()
+    {
+        return input(0).connectionCount() || !output(0).destinations().empty();
+    }
+    const float* inputBlock(int slot, size_t channel) const
+    {
+        return m_inputs.get() +
+               (slot * m_inputChannels + channel) * m_bufferSize;
+    }
+    // Takes a reference to the output of the event for |block|; it plays in
+    // block + 2 unless rendering has already passed it.
+    void setOutput(int slot, uint64_t block, AudioBufferData* data);
+
+protected:
+    void process(uint64_t frameStart, size_t frames) override;
+
+private:
+    size_t m_bufferSize;
+    size_t m_inputChannels;
+    size_t m_outputChannels;
+    // Two input blocks; allocated on the first quantum with a connection.
+    std::unique_ptr<float[]> m_inputs;
+    // Owned references; null before the first event of the slot.
+    AudioBufferData* m_outputs[2]{ nullptr, nullptr };
+    uint64_t m_outputBlock[2]{ 0, 0 };
+    uint64_t m_pendingBlock[2]{ 0, 0 };
+    uint64_t m_pendingStartFrame[2]{ 0, 0 };
+    uint64_t m_block{ 0 };
+    size_t m_position{ 0 };
+    bool m_pending[2]{ false, false };
+};
+
 } // namespace Starfish
 
 #endif

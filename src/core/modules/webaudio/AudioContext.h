@@ -102,6 +102,7 @@ public:
 
 protected:
     void didRegisterScheduledSource() override;
+    void didRegisterScriptProcessor() override;
 
 private:
     bool startRealtime();

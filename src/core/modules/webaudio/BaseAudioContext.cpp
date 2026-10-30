@@ -45,6 +45,7 @@
 #include "core/modules/webaudio/BiquadFilterNode.h"
 #include "core/modules/webaudio/WaveShaperNode.h"
 #include "core/modules/webaudio/AnalyserNode.h"
+#include "core/modules/webaudio/ScriptProcessorNode.h"
 #include "core/modules/webaudio/DynamicsCompressorNode.h"
 #include "core/modules/webaudio/PeriodicWave.h"
 #include "core/modules/webaudio/AudioDestinationNode.h"
@@ -58,6 +59,7 @@
 #include "core/page/WebBase.h"
 #include "core/page/WebView.h"
 
+#include <algorithm>
 #include <atomic>
 
 #include <EscargotPublic.h>
@@ -193,6 +195,32 @@ void BaseAudioContext::renderScheduledSources()
     }
 }
 
+void BaseAudioContext::registerScriptProcessor(ScriptProcessorNode* node)
+{
+    if (std::find(m_scriptProcessors.begin(), m_scriptProcessors.end(), node) !=
+        m_scriptProcessors.end()) {
+        return;
+    }
+    m_scriptProcessors.push_back(node);
+    didRegisterScriptProcessor();
+}
+
+void BaseAudioContext::dispatchScriptProcessorEvents()
+{
+    // Indexed: listeners may create nodes, which appends to the list.
+    for (size_t i = 0; i < m_scriptProcessors.size();) {
+        if (m_scriptProcessors[i]->dispatchAudioProcessEvents()) {
+            i++;
+        } else {
+            // shortcut: a node with neither listener nor connection is
+            // dropped; connecting it and calling addEventListener() later
+            // does not bring its events back (setting onaudioprocess does);
+            // upgrade: an EventTarget hook for listener changes.
+            m_scriptProcessors.erase(m_scriptProcessors.begin() + i);
+        }
+    }
+}
+
 String* BaseAudioContext::state()
 {
     switch (m_stateAttribute) {
@@ -307,6 +335,24 @@ WaveShaperNode* BaseAudioContext::createWaveShaper()
 AnalyserNode* BaseAudioContext::createAnalyser()
 {
     return new AnalyserNode(m_executionContext, this);
+}
+
+// https://webaudio.github.io/web-audio-api/#dom-baseaudiocontext-createscriptprocessor
+ScriptProcessorNode* BaseAudioContext::createScriptProcessor(
+    uint32_t bufferSize, uint32_t numberOfInputChannels,
+    uint32_t numberOfOutputChannels)
+{
+    if ((bufferSize && (bufferSize < 256 || bufferSize > 16384 ||
+                        (bufferSize & (bufferSize - 1)))) ||
+        numberOfInputChannels > 32 || numberOfOutputChannels > 32 ||
+        (!numberOfInputChannels && !numberOfOutputChannels)) {
+        throw new DOMException(m_executionContext, DOMException::INDEX_SIZE_ERR,
+                               "Invalid ScriptProcessorNode configuration");
+    }
+    // 0 lets the implementation pick a constant power of two.
+    return new ScriptProcessorNode(
+        m_executionContext, this, bufferSize ? bufferSize : 1024,
+        numberOfInputChannels, numberOfOutputChannels);
 }
 
 DynamicsCompressorNode* BaseAudioContext::createDynamicsCompressor()

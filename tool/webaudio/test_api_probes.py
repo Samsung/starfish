@@ -67,6 +67,9 @@ class APIProbesTest(unittest.TestCase):
     def test_scheduled_sources_use_exact_times(self):
         self.run_group('exact-times')
 
+    def test_script_processor(self):
+        self.run_group('script-processor')
+
 
 if __name__ == '__main__':
     unittest.main()

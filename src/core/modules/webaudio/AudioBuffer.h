@@ -82,6 +82,9 @@ public:
     void copyToChannel(ScriptFloat32Array source, uint32_t channelNumber,
                        uint32_t bufferOffset = 0);
     void acquireContents();
+    // Native write access for the UA (ScriptProcessorNode event buffers);
+    // copies first if a node acquired the contents.
+    float* mutableChannel(uint32_t channel);
 
     AudioBufferData* data() const
     {

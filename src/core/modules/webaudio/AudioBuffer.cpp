@@ -150,6 +150,12 @@ void AudioBuffer::ensureMutableData()
     m_dataAcquired = false;
 }
 
+float* AudioBuffer::mutableChannel(uint32_t channel)
+{
+    ensureMutableData();
+    return m_data->channel(channel);
+}
+
 ScriptFloat32Array AudioBuffer::getChannelData(uint32_t channel)
 {
     if (channel >= m_numberOfChannels) {
