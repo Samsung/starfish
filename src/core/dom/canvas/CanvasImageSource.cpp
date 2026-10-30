@@ -25,7 +25,6 @@
 #include "core/dom/canvas/CanvasImageSource.h"
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/CanvasRenderingContext2DMixIn.h"
-#include "core/dom/WebOrigin.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/dom/HTMLImageElement.h"
 #include "core/dom/ImageBitmap.h"
@@ -33,11 +32,6 @@
 #include "core/dom/DOMException.h"
 
 namespace Starfish {
-static bool isDataURLOrigin(WebOrigin* origin)
-{
-    return origin->url().hasValue() && origin->url().value()->isDataURL();
-}
-
 DOMExceptionOr<bool> CanvasImageSourceUtils::checkUsability(
     ExecutionContext* executionContext, CanvasImageSource image)
 {
@@ -113,24 +107,11 @@ CanvasImageSourceUtils::toNativeImageData(ExecutionContext* executionContext,
     if (image.isHTMLImageElementValue() || image.isSVGImageElementValue()) {
         if (image.isHTMLImageElementValue()) {
             auto htmlImage = image.getHTMLImageElementValue();
-            auto imageOrigin = htmlImage->webOrigin();
-
-            if (!isDataURLOrigin(imageOrigin) &&
-                executionContext->document()->webOrigin()->isSameOrigin(
-                    imageOrigin) == false) {
-                clean = false;
-            }
-
+            clean = htmlImage->isImageCORSSameOrigin();
             nativeImageData = htmlImage->imageData();
         } else if (image.isSVGImageElementValue()) {
             auto svgImage = image.getSVGImageElementValue();
-            auto imageOrigin = svgImage->webOrigin();
-
-            if (!isDataURLOrigin(imageOrigin) &&
-                executionContext->document()->webOrigin()->isSameOrigin(
-                    imageOrigin) == false) {
-                clean = false;
-            }
+            clean = svgImage->isImageCORSSameOrigin();
             nativeImageData = svgImage->imageData();
         } else {
             STARFISH_ASSERT(image.isNoneValue());

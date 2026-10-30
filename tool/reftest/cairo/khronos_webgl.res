@@ -405,7 +405,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawA
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawElements.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/isTestsBadArgs.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/isTests.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/readPixelsBadArgs.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/readPixelsBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/readPixels.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2DBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2D.html
@@ -633,7 +633,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/gl-get-tex-
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/gl-pixelstorei.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/gl-teximage.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/mipmap-fbo.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/origin-clean-conformance.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/origin-clean-conformance.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-array-buffer-view.html # Failed with unpackAlignments as 8
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-canvas.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-canvas-rgb565.html

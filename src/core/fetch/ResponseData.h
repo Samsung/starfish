@@ -53,6 +53,10 @@ public:
     // at any hop; the response is then "cors" even if the final URL is same
     // origin (https://fetch.spec.whatwg.org/#main-fetch).
     bool m_redirectTainted;
+    // Set by the network job when the final response of a cross-origin
+    // request passed the CORS check
+    // (https://fetch.spec.whatwg.org/#concept-cors-check).
+    bool m_passedCorsCheck;
     uint32_t m_status;
     String* m_statusText;
     String* m_mimeType;

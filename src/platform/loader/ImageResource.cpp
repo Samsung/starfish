@@ -134,12 +134,25 @@ protected:
     ImageResource* m_resource;
 };
 
+UTF8String ImageResource::cacheKey()
+{
+    std::string key = url()->urlString()->toUTF8NonGCString();
+    // A URL never starts with a control character.
+    if (m_isCORSRequest) {
+        key.insert(0, 1, m_isCredentialedCORSRequest ? '\x02' : '\x01');
+    }
+    return UTF8String(key.data(), key.length());
+}
+
 void ImageResource::didLoadFinished()
 {
     if (!m_resourceRequest) {
         Resource::didLoadFailed();
         return;
     }
+    // Decided from the final response, after redirects, so later changes to
+    // the element's src or base URL cannot change it.
+    m_isCORSSameOrigin = m_resourceRequest->isCORSSameOrigin();
 
     bool isSVG = false;
     auto m = MimeType::parseFromString(m_resourceRequest->responseMimeType());

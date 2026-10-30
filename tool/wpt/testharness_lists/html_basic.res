@@ -198,6 +198,30 @@ http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.zeroheight.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.zerosize.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.zerowidth.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.dataURI.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.drawImage.canvas.cross.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.drawImage.canvas.redirect.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.drawImage.image.cross.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.drawImage.image.redirect.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.pattern.canvas.fillStyle.cross.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.pattern.canvas.fillStyle.redirect.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.pattern.canvas.strokeStyle.cross.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.pattern.canvas.strokeStyle.redirect.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.pattern.canvas.timing.cross.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.pattern.canvas.timing.redirect.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.pattern.create.cross.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.pattern.create.redirect.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.pattern.cross.cross.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.pattern.cross.redirect.html
+# [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.pattern.fillStyle.sub.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.pattern.image.fillStyle.cross.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.pattern.image.fillStyle.redirect.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.pattern.image.strokeStyle.cross.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.pattern.image.strokeStyle.redirect.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.reset.cross.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.reset.redirect.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.resize.cross.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/security.resize.redirect.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/size.attributes.style.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/fallback.nested.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/fallback.multiple.html

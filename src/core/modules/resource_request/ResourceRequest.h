@@ -245,6 +245,16 @@ public:
         return m_responseData->m_type;
     }
 
+    // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#cors-same-origin
+    // A same-origin ("basic") response, or a cross-origin one the server
+    // approved through CORS. Anything else is CORS-cross-origin.
+    bool isCORSSameOrigin()
+    {
+        STARFISH_ASSERT(m_responseData);
+        return m_responseData->m_type == ResponseType::Basic ||
+               m_responseData->m_passedCorsCheck;
+    }
+
     String* responseMimeType()
     {
         STARFISH_ASSERT(m_responseData);

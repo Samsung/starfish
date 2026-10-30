@@ -60,12 +60,12 @@
 
 #include "platform/canvas/gl/IncludeGL.h"
 #include "platform/canvas/gl/GL.h"
-#ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/DOMException.h"
-#include "core/dom/Document.h"
-#include "core/dom/HTMLVideoElement.h"
 #include "core/page/WebBase.h"
 #include "PlatformIntegrationData.h"
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+#include "core/dom/Document.h"
+#include "core/dom/HTMLVideoElement.h"
 #include "platform/multimedia/MediaPlayer.h"
 #endif
 
@@ -5725,6 +5725,20 @@ void WebGLRenderingContext::handleTexImageWithArrayBufferView(
 static bool isVideoOriginClean(HTMLVideoElement* video);
 #endif
 
+// https://registry.khronos.org/webgl/specs/latest/1.0/#ORIGIN_RESTRICTIONS
+// Uploading a source that is not origin-clean would make cross-origin pixels
+// readable through the texture, so it throws unless the embedder turned web
+// security off.
+static void throwIfNotOriginClean(ExecutionContext* context, bool originClean)
+{
+    if (originClean || context->webBase()->getWebSecurityMode() ==
+                           LWE::WebSecurityMode::Disable) {
+        return;
+    }
+    throw new DOMException(context, DOMException::Code::SECURITY_ERR,
+                           "The source contains cross-origin data.");
+}
+
 void WebGLRenderingContext::handleTexImageWithImageSource(
     const GLenum format, const GLenum type, const TexImageSource& source,
     std::function<void(const TexImageHelper*)> updateImage, size_t sliceHeight,
@@ -5747,6 +5761,8 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
     } else if (source.isImageBitmapValue()) {
         TRACE(WEBGL, "source.isImageBitmapValue");
         ImageBitmap* imageBitmap = source.getImageBitmapValue();
+        throwIfNotOriginClean(executionContext(),
+                              imageBitmap->originCleanFlag());
         imageData = imageBitmap->nativeImageData();
         width = imageData->width();
         height = imageData->height();
@@ -5784,6 +5800,8 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
             setGLError(GL_INVALID_VALUE);
             return;
         }
+        throwIfNotOriginClean(executionContext(),
+                              element->isImageCORSSameOrigin());
         if (imageData->isSVGNativeImageData()) {
             width = imageData->width();
             height = imageData->height();
@@ -5809,6 +5827,8 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
         width = element->width();
         height = element->height();
         CanvasRenderingContext* context = element->canvasRenderingContext();
+        throwIfNotOriginClean(executionContext(),
+                              !context || context->originCleanFlag());
         if (!context) {
             // A canvas that has no rendering context yet still has a bitmap
             // of its size, initialized to transparent black (HTML, "The canvas
@@ -6049,13 +6069,6 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
         setGLError(GL_INVALID_OPERATION, "Texture is immutable.");
         return;
     }
-
-    // TODO: handle DOM exception with referring to CanvasImageSource. If this
-    // function is called with an HTMLImageElement or HTMLVideoElement whose
-    // origin differs from the origin of the containing Document, or with an
-    // HTMLCanvasElement, ImageBitmap or OffscreenCanvas whose bitmap's
-    // origin-clean flag is set to false, a SECURITY_ERR exception must be
-    // thrown. See Origin Restrictions.
 
     if (m_boundTextures.find(target) == m_boundTextures.end() &&
         !isBoundCubeMapTexture(target)) {

@@ -267,10 +267,8 @@ public:
                 }
 
                 auto& cache = m_resource->loader()->m_imageResourceCache;
-                auto u8Str =
-                    resource()->url()->urlString()->toUTF8NonGCString();
-                ASCIIString url(u8Str.data(), u8Str.length());
-                auto iter2 = cache.find(url);
+                auto iter2 =
+                    cache.find(m_resource->asImageResource()->cacheKey());
                 if (iter2 != cache.end() &&
                     iter2->second.m_resource == resource()) {
                     cache.erase(iter2);
@@ -393,8 +391,8 @@ void ResourceLoader::cachePruning()
             while (m_imageResourceCacheLRUList.size() &&
                    removedSize < STARFISH_RESOURCE_CACHE_SIZE * 0.25) {
                 Resource* res = (*iter);
-                auto utf8Data = res->url()->urlString()->toUTF8NonGCString();
-                auto iter2 = m_imageResourceCache.find(utf8Data.data());
+                auto iter2 = m_imageResourceCache.find(
+                    res->asImageResource()->cacheKey());
                 if (m_imageResourceCache.end() != iter2 &&
                     res->state() == Resource::State::Finished) {
                     size_t siz = res->contentSize();
@@ -451,8 +449,7 @@ void ResourceLoader::cachePruning()
 
 void ResourceLoader::notifyImageResourceActiveState(ImageResource* res)
 {
-    auto utf8Data = res->url()->urlString()->toUTF8NonGCString();
-    auto iter = m_imageResourceCache.find(utf8Data.data());
+    auto iter = m_imageResourceCache.find(res->cacheKey());
     if (iter != m_imageResourceCache.end()) {
         iter.value().m_lastUsedTime = tickCount();
     }
@@ -507,8 +504,7 @@ bool ResourceLoader::requestResourcePreprocess(Resource* res,
     // TODO cache text resource
     if (syncLevel != RequestSyncLevel::AlwaysSync) {
         if (res->isImageResource()) {
-            auto u8Str = res->url()->urlString()->toUTF8NonGCString();
-            ASCIIString url(u8Str.data(), u8Str.length());
+            UTF8String url = res->asImageResource()->cacheKey();
             auto iter = m_imageResourceCache.find(url);
             if (iter == m_imageResourceCache.end()) {
                 ResourceCacheData data;

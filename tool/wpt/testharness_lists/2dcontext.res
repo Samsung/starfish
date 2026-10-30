@@ -351,12 +351,18 @@ http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.width.inva
 http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.width.scaledefault.html
 http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.width.transformed.html
 http://web-platform.test:8000/html/canvas/element/line-styles/2d.line.width.valid.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/drawimage_crossorigin.sub.html
 http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/drawimage_html_image.html
 http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/drawimage_svg_image_1.html
 http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/drawimage_svg_image_with_foreign_object_does_not_taint.html
 http://web-platform.test:8000/html/canvas/element/manual/drawing-paths-to-the-canvas/canvas_complexshapes_ispointInpath_001.htm
+# [auto-fail:SUBTESTS_FAILED] https://web-platform.test:8443/html/canvas/element/manual/fill-and-stroke-styles/pattern-from-canvas-cross-origin-taint.https.sub.html
+# [auto-fail:SUBTESTS_FAILED] https://web-platform.test:8443/html/canvas/element/manual/fill-and-stroke-styles/pattern-from-image-cross-origin-taint.https.sub.html
+# [auto-fail:SUBTESTS_FAILED] https://web-platform.test:8443/html/canvas/element/manual/fill-and-stroke-styles/pattern-from-img-cross-origin-taint.https.sub.html
+# [auto-fail:SUBTESTS_FAILED] https://web-platform.test:8443/html/canvas/element/manual/fill-and-stroke-styles/pattern-from-video-cross-origin-taint.https.sub.html
 http://web-platform.test:8000/html/canvas/element/manual/image-smoothing/imagesmoothing.html
 http://web-platform.test:8000/html/canvas/element/manual/imagebitmap/createImageBitmap-blob-invalidtype.html
+# [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/html/canvas/element/manual/imagebitmap/createImageBitmap-origin.sub.html
 http://web-platform.test:8000/html/canvas/element/manual/line-styles/setLineDash.html
 http://web-platform.test:8000/html/canvas/element/manual/the-canvas-state/2d.state.saverestore.imageSmoothingEnabled.html
 http://web-platform.test:8000/html/canvas/element/path-objects/2d.path.arc.angle.1.html

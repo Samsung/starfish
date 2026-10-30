@@ -82,7 +82,12 @@ public:
         return m_imageData;
     }
 
-    WebOrigin* webOrigin();
+    // Whether the current image is CORS-same-origin, i.e. drawing it into a
+    // canvas leaves the canvas origin-clean. Decided when the load completed.
+    bool isImageCORSSameOrigin()
+    {
+        return m_isImageCORSSameOrigin;
+    }
     bool hasRequestError();
 
     // Re-issues the same fetch as the current href/xlink:href so the image
@@ -96,11 +101,11 @@ protected:
 
     void unloadImage();
     void loadImage(String* src);
-    ResourceURL* origin();
 
     ImageResource* m_imageResource{ nullptr };
     NativeImageData* m_imageData{ nullptr };
     RequestErrorType m_requestErrorType;
+    bool m_isImageCORSSameOrigin{ false };
 
     Optional<SVGAnimatedLength*> m_x;
     Optional<SVGAnimatedLength*> m_y;
