@@ -725,7 +725,7 @@ http://web-platform.test:8000/html/rendering/non-replaced-elements/tables/colgro
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/non-replaced-elements/tables/table-border-3s.html
 http://web-platform.test:8000/html/rendering/non-replaced-elements/tables/table-border-presentational-hints-ascii-case-insensitive.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/non-replaced-elements/tables/table-bordercolor-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/non-replaced-elements/tables/table-cell-nowrap-with-fixed-width.html
+http://web-platform.test:8000/html/rendering/non-replaced-elements/tables/table-cell-nowrap-with-fixed-width.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/non-replaced-elements/tables/table-cell-width-s.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/non-replaced-elements/tables/table-cell-width.html
 http://web-platform.test:8000/html/rendering/non-replaced-elements/tables/table-column-width.html

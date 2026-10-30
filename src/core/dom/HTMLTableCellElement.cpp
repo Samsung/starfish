@@ -76,8 +76,8 @@ void HTMLTableCellElement::styleForPresentationAttribute(
         }
     }
 
-    String* nowrap = getAttributeOrEmpty(starfish()->staticStrings()->m_nowrap);
-    if (!nowrap->isEmpty()) {
+    // A boolean attribute: its presence counts, whatever its value.
+    if (getAttribute(starfish()->staticStrings()->m_nowrap)) {
         // https://html.spec.whatwg.org/multipage/rendering.html#tables-2
         // maps the attribute to `white-space: nowrap`, i.e. both longhands.
         CSSStyleValuePair pair;
