@@ -973,6 +973,15 @@ void WebView::ensureScriptEngineInstance()
                     !state->context()->globalObject()) {
                     return;
                 }
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+                // An AudioWorkletGlobalScope's realm shares this VM. A
+                // WorkletGlobalScope has no rejection events to fire.
+                auto* global = static_cast<ScriptWrappable*>(
+                    state->context()->globalObject()->extraData());
+                if (global && !global->isWindow()) {
+                    return;
+                }
+#endif
                 Window* window = static_cast<Window*>(
                     state->context()->globalObject()->extraData());
                 if (!window) {

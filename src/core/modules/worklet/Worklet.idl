@@ -1,0 +1,21 @@
+/*
+ * Copyright (c) 2026 Samsung Electronics Co., Ltd
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ */
+
+// https://html.spec.whatwg.org/multipage/worklets.html#worklets-worklet
+// AudioWorklet is the only worklet type, so Worklet shares its build flag.
+[ STARFISH_ENABLE_AUDIO_WORKLET,
+  Exposed=Window ]
+interface Worklet {
+  [NewObject] Promise<void> addModule(USVString moduleURL, optional WorkletOptions options);
+};
+
+[ STARFISH_ENABLE_AUDIO_WORKLET ]
+dictionary WorkletOptions {
+  RequestCredentials credentials = "same-origin";
+};

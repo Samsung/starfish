@@ -142,6 +142,12 @@ public:
 
     ScriptWrappable* createTransferReceivingInstance(
         ExecutionContext* executionContext) const override;
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    bool isExposedToWorklets() const override
+    {
+        return true;
+    }
+#endif
 
     MessagePort* remotePort()
     {

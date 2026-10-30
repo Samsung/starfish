@@ -461,6 +461,16 @@ ELSEIF (NOT CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     )
 ENDIF()
 
+# AudioWorklet: a worklet realm per audio context that uses it, created only
+# when a page touches audioWorklet. Its sources are guarded by this macro
+# alone, so it requires Web Audio here.
+IF (${AUDIO_WORKLET} STREQUAL "1")
+    IF (NOT "${LWE_DEFINES_ARCH};${LWE_DEFINES_CUSTOM}" MATCHES "STARFISH_ENABLE_WEBAUDIO")
+        MESSAGE (FATAL_ERROR "AUDIO_WORKLET=1 requires Web Audio (WEBAUDIO=1 on this target)")
+    ENDIF()
+    SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM} -DSTARFISH_ENABLE_AUDIO_WORKLET)
+ENDIF()
+
 
 #######################################################
 # CXXFLAGS & LDFLAGS

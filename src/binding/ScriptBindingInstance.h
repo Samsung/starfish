@@ -56,6 +56,9 @@ class ErrorEventInit;
         ScriptBindingInstance* scriptBindingInstance);
 
 STARFISH_ENUM_BINDING_NAMES(FOR_EACH_DECLARE_FN);
+// The generator leaves worklet-only interfaces out of
+// STARFISH_ENUM_BINDING_NAMES; empty unless AUDIO_WORKLET=1.
+STARFISH_BINDING_GROUPS_AUDIOWORKLET(FOR_EACH_DECLARE_FN);
 #undef FOR_EACH_DECLARE_FN
 
 class ScriptBindingInstance;
@@ -143,6 +146,7 @@ public:
     Escargot::ValueRef* m_value##exportName = nullptr;
 
     STARFISH_ENUM_BINDING_NAMES(FOR_EACH_BINDING_DECLARATION)
+    STARFISH_BINDING_GROUPS_AUDIOWORKLET(FOR_EACH_BINDING_DECLARATION)
 #undef FOR_EACH_BINDING_DECLARATION
 
     Escargot::ContextRef* scriptContext()

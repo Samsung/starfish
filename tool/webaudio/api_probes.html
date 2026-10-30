@@ -469,6 +469,107 @@ const groups = {
     'idle': async () => {
         await new Promise((resolve) => setTimeout(resolve, 1000));
     },
+
+    // AudioWorkletGlobalScope, registerProcessor() and addModule() paths
+    // the webaudio WPT does not reach.
+    'audio-worklet': async () => {
+        if (typeof AudioWorklet !== 'function') {
+            console.log('API_PROBE_SKIP built without AUDIO_WORKLET=1');
+            return;
+        }
+        const module = (text, type = 'application/javascript') =>
+            URL.createObjectURL(new Blob([text], {type}));
+        const rejection = async (promise) => {
+            try {
+                await promise;
+            } catch (e) {
+                return e instanceof DOMException ? e.name
+                    : e instanceof SyntaxError ? 'SyntaxError (JS)' : '' + e;
+            }
+            return 'resolved';
+        };
+        const context = new OfflineAudioContext(1, 128, 8000);
+        check(context.audioWorklet === context.audioWorklet,
+              'audioWorklet is [SameObject]');
+        const scope = `
+            const result = {};
+            result.globals = ['AudioWorkletGlobalScope', 'WorkletGlobalScope',
+                              'MessagePort', 'MessageEvent', 'window', 'Blob']
+                .map((name) => typeof globalThis[name]).join();
+            result.values = [currentFrame, currentTime, sampleRate,
+                             renderQuantumSize].join();
+            result.errors = [];
+            const attempt = (fn) => {
+                try {
+                    fn();
+                    result.errors.push('none');
+                } catch (e) {
+                    result.errors.push(e.name);
+                }
+            };
+            const params = (list) => class {
+                static get parameterDescriptors() { return list; }
+            };
+            attempt(() => registerProcessor('a', {}));
+            attempt(() => registerProcessor('', class {}));
+            attempt(() => registerProcessor('b', () => {}));
+            attempt(() => registerProcessor('c', params(4)));
+            attempt(() => registerProcessor('d', params([{}])));
+            attempt(() => registerProcessor('e', params([{name: 'x'},
+                                                         {name: 'x'}])));
+            attempt(() => registerProcessor('f', params([
+                {name: 'x', defaultValue: 2, maxValue: 1}])));
+            attempt(() => registerProcessor('ok', class {}));
+            attempt(() => registerProcessor('ok', class {}));
+            attempt(() => globalThis.registerProcessor('ok2', class {}));
+            import('./x.js').then(() => 'resolved', (e) => e.name)
+                .then((imported) => { result.imported = imported; });
+            globalThis.runs = (globalThis.runs || 0) + 1;
+            port.onmessage = () => {
+                result.runs = globalThis.runs;
+                port.postMessage(result);
+            };`;
+        const url = module(scope);
+        await context.audioWorklet.addModule(url);
+        await context.audioWorklet.addModule(url);
+        const result = await new Promise((resolve) => {
+            context.audioWorklet.port.onmessage = (e) => resolve(e.data);
+            context.audioWorklet.port.postMessage('');
+        });
+        check(result.globals ===
+                  'function,function,function,function,undefined,undefined',
+              'worklet globals: ' + result.globals);
+        check(result.values === '0,0,8000,128',
+              'currentFrame, currentTime, sampleRate, renderQuantumSize: ' +
+                  result.values);
+        check(result.errors.join() ===
+                  'TypeError,NotSupportedError,TypeError,TypeError,' +
+                  'TypeError,NotSupportedError,InvalidStateError,none,' +
+                  'NotSupportedError,none',
+              'registerProcessor errors: ' + result.errors.join());
+        check(result.imported === 'TypeError',
+              'import() in a worklet: ' + result.imported);
+        check(result.runs === 1,
+              'a module added twice runs once: ' + result.runs);
+        const failures = [
+            [context.audioWorklet.addModule('http://invalid:123$'),
+             'SyntaxError'],
+            [context.audioWorklet.addModule('/missing-module.js'), 'AbortError'],
+            [context.audioWorklet.addModule(module('0', 'text/plain')),
+             'AbortError'],
+            [context.audioWorklet.addModule(module('not js(')),
+             'SyntaxError (JS)'],
+            [context.audioWorklet.addModule(module('import "./a.js";')),
+             'AbortError'],
+            // Evaluation errors are reported, not rejected.
+            [context.audioWorklet.addModule(module('throw 1;')), 'resolved'],
+        ];
+        for (const [promise, expected] of failures) {
+            const outcome = await rejection(promise);
+            check(outcome === expected,
+                  'addModule: expected ' + expected + ', got ' + outcome);
+        }
+    },
 };
 
 const group = groups[location.search.substring(1)];

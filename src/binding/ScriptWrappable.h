@@ -408,6 +408,8 @@ void invokeTestStartFunction(ScriptBindingInstance* instance);
 
 #define FOR_EACH_FORWARD_DECLARATION(exportName) class exportName;
 STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_FORWARD_DECLARATION)
+// Worklet-only interfaces (see ScriptBindingInstance.h).
+STARFISH_BINDING_GROUPS_AUDIOWORKLET(FOR_EACH_FORWARD_DECLARATION)
 #undef FOR_EACH_FORWARD_DECLARATION
 
 #define THROW_EXCEPTION(MSG)                                            \
@@ -480,6 +482,7 @@ public:
     }
 
     STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_REFLECT_FN);
+    STARFISH_BINDING_GROUPS_AUDIOWORKLET(FOR_EACH_REFLECT_FN);
 #undef FOR_EACH_REFLECT_FN
 
 #define FOR_EACH_CAST_FN(exportName)       \
@@ -490,6 +493,7 @@ public:
     }
 
     STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_CAST_FN);
+    STARFISH_BINDING_GROUPS_AUDIOWORKLET(FOR_EACH_CAST_FN);
 #undef FOR_EACH_CAST_FN
 
     ScriptWrappable(void* extraPointerData);

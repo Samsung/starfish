@@ -50,6 +50,9 @@
 #include "core/modules/webaudio/PeriodicWave.h"
 #include "core/modules/webaudio/AudioDestinationNode.h"
 #include "core/modules/webaudio/AudioListener.h"
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+#include "core/modules/webaudio/AudioWorklet.h"
+#endif
 #include "core/modules/webaudio/GainNode.h"
 #include "core/modules/webaudio/render/AudioBufferData.h"
 #include "binding/generated/AudioContextRenderSizeCategoryOrunsignedlongUnion.h"
@@ -216,6 +219,16 @@ double BaseAudioContext::currentTime() const
 {
     return m_graph->currentTime();
 }
+
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+AudioWorklet* BaseAudioContext::audioWorklet()
+{
+    if (!m_audioWorklet) {
+        m_audioWorklet = new AudioWorklet(this);
+    }
+    return m_audioWorklet.value();
+}
+#endif
 
 void BaseAudioContext::registerScheduledSource(AudioScheduledSourceNode* source)
 {

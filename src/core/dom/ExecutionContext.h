@@ -54,6 +54,18 @@ public:
     {
         return !m_hasDocument;
     }
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    // An AudioWorkletGlobalScope's context: its own realm, with the owner
+    // document that hasDocument() reports.
+    bool isWorklet() const
+    {
+        return m_isWorklet;
+    }
+    void setIsWorklet()
+    {
+        m_isWorklet = true;
+    }
+#endif
 
     Document* document();
 
@@ -129,6 +141,9 @@ private:
     GlobalScope* const m_globalScope;
     void* m_documentOrWorkerGlobalScope;
     bool m_hasDocument;
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    bool m_isWorklet{ false };
+#endif
     ScriptBindingInstance* const m_scriptBindingInstance;
     uint64_t m_createdTick;
     ResourceURL* m_documentURI;

@@ -762,6 +762,16 @@ public:
 
     virtual ScriptWrappable* createTransferReceivingInstance(
         ExecutionContext* executionContext) const = 0;
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    // https://html.spec.whatwg.org/multipage/structured-data.html#structureddeserialize
+    // An interface not exposed in the target realm fails with
+    // DataCloneError; MessagePort is the only transferable that worklets
+    // expose.
+    virtual bool isExposedToWorklets() const
+    {
+        return false;
+    }
+#endif
 };
 
 class TransferedTypedData : public SerializedTypedData {

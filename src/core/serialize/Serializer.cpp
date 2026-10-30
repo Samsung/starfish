@@ -625,6 +625,13 @@ static ScriptValue deserializeInternal(ExecutionContext* executionContext,
         if (transfered->isPlatformObject()) {
             TransferedData* data = transfered->data();
             STARFISH_ASSERT(data->isTransferedPlatformObjectData());
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+            if (executionContext->isWorklet() &&
+                !data->asTransferedPlatformObjectData()
+                     ->isExposedToWorklets()) {
+                return nullptr;
+            }
+#endif
             ScriptWrappable* sw =
                 data->asTransferedPlatformObjectData()
                     ->createTransferReceivingInstance(executionContext);
@@ -703,6 +710,13 @@ static ScriptValue deserializeInternal(ExecutionContext* executionContext,
         result = ObjectRef::create(state);
         deep = true;
     } else if (value->isPlatformObject()) {
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+        // StructuredDeserialize: none of the serializable platform objects
+        // Starfish implements is exposed to worklets (DataCloneError).
+        if (executionContext->isWorklet()) {
+            return nullptr;
+        }
+#endif
         result = value->data()
                      ->asSerializedPlatformObjectData()
                      ->createDeserializingInstance(executionContext)
