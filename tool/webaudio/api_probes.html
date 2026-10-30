@@ -556,6 +556,43 @@ const groups = {
               'processorerror for options a worklet cannot deserialize');
     },
 
+    // https://html.spec.whatwg.org/multipage/structured-data.html#structuredserializewithtransfer
+    'structured-clone-transfer': async () => {
+        const name = (fn) => {
+            try {
+                fn();
+            } catch (e) {
+                return e.name;
+            }
+            return 'no exception';
+        };
+        const buffer = new ArrayBuffer(8);
+        const channel = new MessageChannel();
+        const rejected = [
+            [() => structuredClone(1, {transfer: [{}]}), 'a plain object'],
+            [() => structuredClone(1, {transfer: [new Uint8Array(1)]}),
+             'a typed array'],
+            [() => structuredClone(1, {transfer: [buffer, buffer]}),
+             'an ArrayBuffer listed twice'],
+            [() => channel.port1.postMessage(1, [channel.port2, channel.port2]),
+             'a MessagePort listed twice'],
+            [() => postMessage(1, '*', [window]), 'a Window'],
+        ];
+        for (const [fn, label] of rejected) {
+            const thrown = name(fn);
+            check(thrown === 'DataCloneError', 'transfer of ' + label + ': ' +
+                                                   thrown);
+        }
+        const moved = new MessageChannel();
+        let thrown = name(() => postMessage(1, '*', [moved.port1]));
+        check(thrown === 'no exception', 'transfer of a MessagePort: ' + thrown);
+        thrown = name(() => postMessage(1, '*', [moved.port1]));
+        check(thrown === 'DataCloneError',
+              'transfer of a transferred MessagePort: ' + thrown);
+        thrown = name(() => structuredClone(buffer, {transfer: [buffer]}));
+        check(thrown === 'no exception', 'transfer of an ArrayBuffer: ' + thrown);
+    },
+
     // Waits briefly; test_api_probes.py measures the browser's address
     // space meanwhile.
     'idle': async () => {

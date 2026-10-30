@@ -825,15 +825,26 @@ void Serializer::serializeWithTransfer(
     SerializingMap initialMap;
     for (size_t i = 0; i < transferValues.size(); i++) {
         ScriptObject item = transferValues[i];
+        // https://html.spec.whatwg.org/multipage/structured-data.html#structuredserializewithtransfer
+        // Anything but a transferable platform object or an ArrayBuffer, or
+        // an object listed twice, is a DataCloneError.
+        if (initialMap.find(item) != initialMap.end()) {
+            throw new DOMException(executionContext,
+                                   DOMException::DATA_CLONE_ERR,
+                                   "Object listed twice in transfer");
+        }
         if (item->extraData()) {
             ScriptWrappable* sw =
                 static_cast<ScriptWrappable*>(item->extraData());
-            if (sw->isTransferable() && !sw->toTransferable()->isDetached()) {
-                TransferedTypedData* placeHolder = new TransferedTypedData(
-                    TransferedTypedData::PlatformObject);
-                initialMap.insert(std::make_pair(item, placeHolder));
-                result.m_serializedTransfer.push_back(placeHolder);
+            if (!sw->isTransferable()) {
+                throw new DOMException(executionContext,
+                                       DOMException::DATA_CLONE_ERR,
+                                       "Object cannot be transferred");
             }
+            TransferedTypedData* placeHolder =
+                new TransferedTypedData(TransferedTypedData::PlatformObject);
+            initialMap.insert(std::make_pair(item, placeHolder));
+            result.m_serializedTransfer.push_back(placeHolder);
         } else if (item->isArrayBufferObject()) {
             SerializedTypedData* serialized = new SerializedTypedData(
                 SerializedTypedData::ArrayBuffer,
@@ -841,10 +852,10 @@ void Serializer::serializeWithTransfer(
                                               item->asArrayBufferObject()));
             initialMap.insert(std::make_pair(item, serialized));
             result.m_serializedTransfer.push_back(nullptr);
-        } else if (item->isSharedArrayBufferObject()) {
-            STARFISH_UNSUPPORTED(
-                "serialize: unsupported type SharedArrayBuffer");
-            STARFISH_ASSERT_NOT_REACHED();
+        } else {
+            throw new DOMException(executionContext,
+                                   DOMException::DATA_CLONE_ERR,
+                                   "Object cannot be transferred");
         }
     }
     SerializedTypedData* serialized =
@@ -860,6 +871,12 @@ void Serializer::serializeWithTransfer(
                 Transferable* tf =
                     (static_cast<ScriptWrappable*>(item->extraData()))
                         ->toTransferable();
+                // Checked after serialization, which may have detached it.
+                if (tf->isDetached()) {
+                    throw new DOMException(executionContext,
+                                           DOMException::DATA_CLONE_ERR,
+                                           "Object is already detached");
+                }
                 TransferedData* dataHolder = tf->transfer();
                 tf->setDetached();
                 placeHolder->setPlatformObjectData(dataHolder);

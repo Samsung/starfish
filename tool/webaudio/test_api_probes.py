@@ -111,6 +111,9 @@ class APIProbesTest(unittest.TestCase):
     def test_source_node_options(self):
         self.run_group('source-options')
 
+    def test_structured_clone_transfer(self):
+        self.run_group('structured-clone-transfer')
+
     def test_out_of_memory(self):
         # The limits are relative to this build's own peak, so the groups
         # fail allocations deterministically regardless of host RAM: room
