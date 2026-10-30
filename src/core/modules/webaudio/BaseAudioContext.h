@@ -284,6 +284,14 @@ public:
     // Keeps |node| alive and dispatches its audioprocess events until it
     // has neither a listener nor a connection.
     void registerScriptProcessor(ScriptProcessorNode* node);
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    // Called by an AudioWorkletNode constructor, without the graph lock:
+    // the graph must render on the main thread, where the worklet runs.
+    // An offline graph always does.
+    virtual void renderOnMainThread()
+    {
+    }
+#endif
 
 protected:
     BaseAudioContext(ExecutionContext* executionContext, double sampleRate,

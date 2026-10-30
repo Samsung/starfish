@@ -24,6 +24,9 @@
 
 #include "core/modules/webaudio/AudioContext.h"
 
+#include "binding/ScriptBindingInstance.h"
+#include "binding/ScriptEngineInstance.h"
+
 #include "core/dom/DOMException.h"
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
@@ -39,6 +42,7 @@
 #include "core/page/Window.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 
 namespace Starfish {
@@ -223,6 +227,35 @@ void AudioContext::stopRealtime()
     graph()->stopRealtime();
 }
 
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+// The ED runs AudioWorkletGlobalScope on the rendering thread. Starfish keeps
+// one realm per context on the main thread so worklets need no thread-isolated
+// GC (WORKER=1); a context holding AudioWorkletNodes is rendered by the main
+// thread.
+void AudioContext::renderOnMainThread()
+{
+    if (graph()->mainThreadRendering()) {
+        return;
+    }
+    const bool running =
+        m_renderingQueue->state() == AudioContextState::Running;
+    if (running) {
+        // Joins the render thread; no state change is observable.
+        graph()->stopRealtime();
+    }
+    graph()->setMainThreadRendering(true);
+    if (running && !graph()->startRealtime(destination()->channelCount())) {
+        STARFISH_LOG_ERROR("Cannot restart audio rendering on the main thread");
+    }
+    // Re-armed below with the main-thread period.
+    if (m_realtimeTimer != TimerInvalidID) {
+        executionContext()->webBase()->timer()->removeTimer(m_realtimeTimer);
+        m_realtimeTimer = TimerInvalidID;
+    }
+    updateRealtimeTimer();
+}
+#endif
+
 void AudioContext::didRegisterScheduledSource()
 {
     updateRealtimeTimer();
@@ -233,16 +266,22 @@ void AudioContext::didRegisterScriptProcessor()
     updateRealtimeTimer();
 }
 
-// The timer only delivers source completion (`ended`) and ScriptProcessorNode
+// The timer delivers source completion (`ended`) and ScriptProcessorNode
 // `audioprocess` events to DOM tasks; the audio clock and all DSP run on the
-// render thread. It is armed only while there is a scheduled source or a
-// registered ScriptProcessorNode; a registered node keeps it armed even
-// while disconnected (documented in docs/Spec.md).
+// render thread, unless the graph renders on the main thread (AudioWorklet),
+// when the timer renders the due quanta too. It is armed only while there is
+// a scheduled source, a registered ScriptProcessorNode or main-thread
+// rendering; a registered node keeps it armed even while disconnected
+// (documented in docs/Spec.md).
 void AudioContext::updateRealtimeTimer()
 {
+    bool mainThread = false;
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    mainThread = graph()->mainThreadRendering();
+#endif
     const bool needed =
         m_renderingQueue->state() == AudioContextState::Running &&
-        (!m_activeSources.empty() || !m_scriptProcessors.empty());
+        (!m_activeSources.empty() || !m_scriptProcessors.empty() || mainThread);
     const bool armed = m_realtimeTimer != TimerInvalidID;
     if (needed == armed) {
         return;
@@ -253,8 +292,18 @@ void AudioContext::updateRealtimeTimer()
         m_realtimeTimer = TimerInvalidID;
         return;
     }
+    unsigned period = 8;
+    if (mainThread) {
+        // shortcut: real-time rendering of a context with AudioWorkletNodes
+        // is driven from the main thread, so long tasks underrun the
+        // output, and a graph slower than real time holds the main thread
+        // for 16 ms and one quantum per timer callback; upgrade: run the
+        // realm on the render thread once thread-isolated GC is the default.
+        period = std::max(1u, static_cast<unsigned>(1000 * renderQuantumSize() /
+                                                    sampleRate()));
+    }
     m_realtimeTimer = timer->addTimer(
-        8, executionContext()->document()->window(),
+        period, executionContext()->document()->window(),
         [](void* data) { static_cast<AudioContext*>(data)->renderRealtime(); },
         this, true);
 }
@@ -265,6 +314,28 @@ void AudioContext::renderRealtime()
         shutdownForNavigation();
         return;
     }
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    if (graph()->mainThreadRendering()) {
+        // https://webaudio.github.io/web-audio-api/#rendering-loop
+        // Every due quantum, each followed by a microtask checkpoint. One
+        // callback starts no new quantum after a display frame's time; a
+        // graph slower than real time then drops its backlog and underruns
+        // instead of starving every other task.
+        const auto stop =
+            std::chrono::steady_clock::now() + std::chrono::milliseconds(16);
+        while (true) {
+            MicroTaskExecutionManager microtasks(
+                scriptBindingInstance()->engineInstance());
+            if (std::chrono::steady_clock::now() >= stop) {
+                graph()->dropRenderBacklog();
+                break;
+            }
+            if (!graph()->renderDueQuantum()) {
+                break;
+            }
+        }
+    }
+#endif
     renderScheduledSources();
     // The render thread cannot run script, so audioprocess events are fired
     // here; the ScriptProcessorNode's double buffering covers the timer's

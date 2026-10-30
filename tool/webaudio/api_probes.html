@@ -556,6 +556,53 @@ const groups = {
               'processorerror for options a worklet cannot deserialize');
     },
 
+    // Main-thread rendering: a graph slower than real time underruns
+    // instead of starving the page's tasks.
+    'audio-worklet-slow-render': async () => {
+        if (typeof AudioWorkletNode !== 'function') {
+            console.log('API_PROBE_SKIP built without AUDIO_WORKLET=1');
+            return;
+        }
+        const context = new AudioContext();
+        // Each process() call takes two quanta of real time.
+        const busy = 2 * 1000 * context.renderQuantumSize / context.sampleRate;
+        await context.audioWorklet.addModule(URL.createObjectURL(new Blob([`
+            registerProcessor('slow', class extends AudioWorkletProcessor {
+                constructor() {
+                    super();
+                    this.calls = 0;
+                    this.port.onmessage = () => this.port.postMessage(this.calls);
+                }
+                process() {
+                    this.calls++;
+                    const end = Date.now() + ${busy};
+                    while (Date.now() < end) {}
+                    return true;
+                }
+            });`], {type: 'application/javascript'})));
+        const node = new AudioWorkletNode(context, 'slow');
+        node.connect(context.destination);
+        await context.resume();
+        const start = performance.now();
+        await new Promise((resolve) => {
+            let ticks = 0;
+            const id = setInterval(() => {
+                if (++ticks === 3) {
+                    clearInterval(id);
+                    resolve();
+                }
+            }, 300);
+        });
+        const elapsed = performance.now() - start;
+        check(elapsed < 2000, 'three 300 ms intervals took ' + elapsed + ' ms');
+        const calls = await new Promise((resolve) => {
+            node.port.onmessage = (e) => resolve(e.data);
+            node.port.postMessage('');
+        });
+        check(calls > 0, 'process() calls: ' + calls);
+        await context.close();
+    },
+
     // https://html.spec.whatwg.org/multipage/structured-data.html#structuredserializewithtransfer
     'structured-clone-transfer': async () => {
         const name = (fn) => {

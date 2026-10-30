@@ -29,18 +29,33 @@ namespace Starfish {
 // a DOM wrapper, a JS callback or the GC heap.
 class AudioRenderThread {
 public:
-    AudioRenderThread(AudioGraph* graph, double sampleRate)
+    // With |mainThread| no thread is created: the owner renders through
+    // renderDueQuantum() on the main thread.
+    AudioRenderThread(AudioGraph* graph, double sampleRate,
+                      bool mainThread = false)
         : m_graph(graph)
         , m_sampleRate(sampleRate)
         , m_device(AudioOutputDevice::create(
               static_cast<uint32_t>(std::round(sampleRate)),
               graph->quantumFrames()))
     {
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+        if (mainThread) {
+            m_period = std::chrono::duration_cast<Clock::duration>(
+                std::chrono::duration<double>(graph->quantumFrames() /
+                                              sampleRate));
+            m_deadline = Clock::now() + m_period;
+            return;
+        }
+#endif
         m_thread = std::thread([this]() { run(); });
     }
 
     ~AudioRenderThread()
     {
+        if (!m_thread.joinable()) {
+            return;
+        }
         {
             std::lock_guard<std::mutex> lock(m_waitMutex);
             m_stopping.store(true, std::memory_order_release);
@@ -48,6 +63,36 @@ public:
         m_wake.notify_one();
         m_thread.join();
     }
+
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    // Main-thread mode: renders the next quantum if its time has come, with
+    // the render thread's deadline and catch-up bound.
+    bool renderDueQuantum()
+    {
+        const auto now = Clock::now();
+        if (now < m_deadline) {
+            return false;
+        }
+        if (now > m_deadline + m_period * 16) {
+            m_deadline = now;
+        }
+        {
+            std::lock_guard<std::recursive_mutex> lock(m_graph->mutex());
+            const uint64_t firstFrame = m_graph->renderedFrames();
+            const AudioBus& bus = m_graph->renderQuantum();
+            if (m_device) {
+                m_device->submit(bus, firstFrame);
+            }
+        }
+        m_deadline += m_period;
+        return true;
+    }
+
+    void dropRenderBacklog()
+    {
+        m_deadline = Clock::now() + m_period;
+    }
+#endif
 
     double outputLatency() const
     {
@@ -101,9 +146,15 @@ private:
         }
     }
 
+    using Clock = std::chrono::steady_clock;
+
     AudioGraph* m_graph;
     double m_sampleRate;
     std::unique_ptr<AudioOutputDevice> m_device;
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    Clock::time_point m_deadline;
+    Clock::duration m_period{};
+#endif
     std::mutex m_waitMutex;
     std::condition_variable m_wake;
     std::atomic<bool> m_stopping{ false };
@@ -290,7 +341,12 @@ bool AudioGraph::startRealtime(size_t channels)
         return false;
     }
     try {
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+        m_renderThread.reset(
+            new AudioRenderThread(this, m_sampleRate, m_mainThreadRendering));
+#else
         m_renderThread.reset(new AudioRenderThread(this, m_sampleRate));
+#endif
     } catch (const std::system_error& error) {
         // Surface resource exhaustion instead of leaving a running context
         // whose rendering thread was never created.
@@ -306,6 +362,20 @@ void AudioGraph::stopRealtime()
     // Never hold m_mutex while joining: the worker may be waiting for it.
     m_renderThread.reset();
 }
+
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+bool AudioGraph::renderDueQuantum()
+{
+    return m_renderThread && m_renderThread->renderDueQuantum();
+}
+
+void AudioGraph::dropRenderBacklog()
+{
+    if (m_renderThread) {
+        m_renderThread->dropRenderBacklog();
+    }
+}
+#endif
 
 double AudioGraph::outputLatency() const
 {
