@@ -245,6 +245,15 @@ void WebGLRenderingContext::flushForReadback()
     GLint prevReadFbo = 0;
     m_gl->getIntegerv(GL_READ_FRAMEBUFFER_BINDING, &prevReadFbo);
     m_gl->bindFramebuffer(GL_READ_FRAMEBUFFER, m_framebufferTexture->fbo());
+    // A WebGL 2 page may have set the default framebuffer's read buffer to
+    // NONE; that limits the page's own reads, not the canvas's readback.
+    GLint prevReadBuffer = GL_COLOR_ATTACHMENT0;
+    if (isWebGL2RenderingContext()) {
+        m_gl->getIntegerv(GL_READ_BUFFER, &prevReadBuffer);
+        if (prevReadBuffer == GL_NONE) {
+            m_gl->readBuffer(GL_COLOR_ATTACHMENT0);
+        }
+    }
 
     size_t width = m_canvasSurface->bufferWidth();
     size_t height = m_canvasSurface->bufferHeight();
@@ -278,6 +287,9 @@ void WebGLRenderingContext::flushForReadback()
     m_gl->bindBuffer(GL_PIXEL_PACK_BUFFER,
                      static_cast<GLuint>(prevPixelPackBuffer));
 
+    if (prevReadBuffer == GL_NONE) {
+        m_gl->readBuffer(GL_NONE);
+    }
     m_gl->bindFramebuffer(GL_READ_FRAMEBUFFER,
                           static_cast<GLuint>(prevReadFbo));
 
@@ -321,9 +333,16 @@ void WebGLRenderingContext::onResize()
 {
     WebGLRenderingContextBaseMixIn::onResize();
 
-    // bind default frame buffer
+    // Resizing replaces only the drawing buffer; the page's framebuffer
+    // bindings must survive it (WebGL 1.0 §2.2), but the default framebuffer
+    // has a new GL name, so rebind what each target refers to.
     GLContextScope contextScope(m_context);
-    m_gl->bindFramebuffer(GL_FRAMEBUFFER, m_framebufferTexture->fbo());
+    for (GLenum target : { GL_READ_FRAMEBUFFER, GL_DRAW_FRAMEBUFFER }) {
+        Optional<WebGLFramebuffer*> framebuffer = getBoundFramebuffer(target);
+        m_gl->bindFramebuffer(target, framebuffer
+                                          ? framebuffer.value()->glObject()
+                                          : m_framebufferTexture->fbo());
+    }
 }
 
 #define ENTER_CONTEXT_SCOPE_IMPL(bailoutValue, ...) \
@@ -1288,25 +1307,6 @@ void WebGLRenderingContext::cullFace(GLenum mode)
     m_gl->cullFace(mode);
 }
 
-#define IMPLEMENT_DELETE_BUFFERS(Name, Deleter)                            \
-    void WebGLRenderingContext::delete##Name(Optional<WebGL##Name*> maybe) \
-    {                                                                      \
-        ENTER_CONTEXT_SCOPE();                                             \
-        if (maybe.hasValue()) {                                            \
-            WebGL##Name* value = maybe.value();                            \
-            if (!isFromCurrentContext(value)) {                            \
-                setGLError(GL_INVALID_OPERATION);                          \
-                return;                                                    \
-            }                                                              \
-            if (value->isDeleted()) {                                      \
-                return;                                                    \
-            }                                                              \
-            GLuint buffer = value->glObject();                             \
-            Deleter(1, &buffer);                                           \
-            value->markDeleted();                                          \
-        }                                                                  \
-    }
-
 void WebGLRenderingContext::deleteBuffer(Optional<WebGLBuffer*> maybe)
 {
     ENTER_CONTEXT_SCOPE();
@@ -1326,7 +1326,38 @@ void WebGLRenderingContext::deleteBuffer(Optional<WebGLBuffer*> maybe)
     }
 }
 
-IMPLEMENT_DELETE_BUFFERS(Framebuffer, m_gl->deleteFramebuffers);
+void WebGLRenderingContext::deleteFramebuffer(Optional<WebGLFramebuffer*> maybe)
+{
+    // Deleting a bound framebuffer reverts that binding to the default
+    // framebuffer (WebGL 1.0 §5.14.6), which here is an FBO of its own rather
+    // than GL's name 0. bindFramebuffer() also resets WebGL 2's read/draw
+    // state; it opens its own context scope, so it runs before ours.
+    if (maybe && isFromCurrentContext(maybe.value()) &&
+        !maybe.value()->isDeleted()) {
+        for (GLenum target : { GL_READ_FRAMEBUFFER, GL_DRAW_FRAMEBUFFER }) {
+            Optional<WebGLFramebuffer*> bound = getBoundFramebuffer(target);
+            if (bound && bound.value() == maybe.value()) {
+                bindFramebuffer(webGLVersion() == 1 ? GL_FRAMEBUFFER : target,
+                                nullptr);
+            }
+        }
+    }
+
+    ENTER_CONTEXT_SCOPE();
+    if (maybe.hasValue()) {
+        WebGLFramebuffer* value = maybe.value();
+        if (!isFromCurrentContext(value)) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+        if (value->isDeleted()) {
+            return;
+        }
+        GLuint framebuffer = value->glObject();
+        m_gl->deleteFramebuffers(1, &framebuffer);
+        value->markDeleted();
+    }
+}
 
 void WebGLRenderingContext::deleteRenderbuffer(
     Optional<WebGLRenderbuffer*> maybe)
@@ -1390,7 +1421,6 @@ void WebGLRenderingContext::deleteTexture(Optional<WebGLTexture*> maybe)
         }
     }
 }
-#undef IMPLEMENT_DELETE_BUFFERS
 
 #define IMPLEMENT_DELETE_OBJECT(Name, Deleter)                             \
     void WebGLRenderingContext::delete##Name(Optional<WebGL##Name*> maybe) \

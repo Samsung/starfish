@@ -27,7 +27,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/drawingbuffer
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/drawingbuffer-test.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/draw-static-webgl-to-multiple-canvas-test.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/draw-webgl-to-canvas-test.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/framebuffer-bindings-unaffected-on-resize.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/framebuffer-bindings-unaffected-on-resize.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/rapid-resizing.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/texture-bindings-unaffected-on-resize.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/to-data-url-test.html

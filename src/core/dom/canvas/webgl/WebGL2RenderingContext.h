@@ -227,10 +227,12 @@ public:
     // Implement WebGLRenderingContextBase
 
     void clear(uint32_t mask) override;
+    void onResize() override;
     bool isDefaultFramebufferBound() override;
     void bindBuffer(GLenum target, Optional<WebGLBuffer*> buffer);
     void deleteBuffer(Optional<WebGLBuffer*> buffer) override;
-    void bindFramebuffer(GLenum target, Optional<WebGLFramebuffer*> buffer);
+    void bindFramebuffer(GLenum target,
+                         Optional<WebGLFramebuffer*> buffer) override;
     void bindTexture(GLenum target, Optional<WebGLTexture*> texture);
 
     ScriptValue getBufferParameter(GLenum target, GLenum pname);
