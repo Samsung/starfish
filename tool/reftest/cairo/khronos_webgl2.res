@@ -522,7 +522,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/render
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/culling.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/default-texture-draw-bug.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/draw-arrays-out-of-bounds.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/draw-elements-out-of-bounds.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/draw-elements-out-of-bounds.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/draw-with-changing-start-vertex-bug.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/framebuffer-switch.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/framebuffer-texture-switch.html
