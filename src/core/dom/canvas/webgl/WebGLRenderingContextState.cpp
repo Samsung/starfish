@@ -40,22 +40,24 @@ WebGLRenderingContextState::WebGLRenderingContextState()
     }
 }
 
-std::unordered_set<GLuint> WebGLRenderingContextState::arraysEnabled()
+uint32_t WebGLRenderingContextState::arraysEnabled()
 {
-    GLuint vao = vertexArray();
-    return m_arraysEnabled[vao];
+    const auto& iter = m_arraysEnabled.find(vertexArray());
+    return iter == m_arraysEnabled.end() ? 0 : iter->second;
 }
 
 void WebGLRenderingContextState::disableVertexAttribArray(GLuint index)
 {
-    GLuint vao = vertexArray();
-    m_arraysEnabled[vao].erase(index);
+    if (index < kMaxVertexAttribs) {
+        m_arraysEnabled[vertexArray()] &= ~(1u << index);
+    }
 }
 
 void WebGLRenderingContextState::enableVertexAttribArray(GLuint index)
 {
-    GLuint vao = vertexArray();
-    m_arraysEnabled[vao].insert(index);
+    if (index < kMaxVertexAttribs) {
+        m_arraysEnabled[vertexArray()] |= 1u << index;
+    }
 }
 
 Optional<WebGLBuffer*>
@@ -171,9 +173,7 @@ GLuint WebGLRenderingContextState::vertexArray()
 
 bool WebGLRenderingContextState::isVertexAttribArrayEnabled(GLuint index)
 {
-    GLuint vao = vertexArray();
-    const auto& set = m_arraysEnabled[vao];
-    return set.find(index) != set.end();
+    return index < kMaxVertexAttribs && (arraysEnabled() & (1u << index));
 }
 
 GLenum WebGLRenderingContextState::getVertexAttribType(GLuint index)

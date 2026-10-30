@@ -1956,7 +1956,12 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
         return;
     }
 
-    for (GLuint array : getState()->arraysEnabled()) {
+    const uint32_t enabled = getState()->arraysEnabled();
+    for (GLuint array = 0;
+         array < WebGLRenderingContextState::kMaxVertexAttribs; ++array) {
+        if (!(enabled & (1u << array))) {
+            continue;
+        }
         // If a vertex attribute is enabled as an array via
         // enableVertexAttribArray but no buffer is bound to that attribute
         // (generally via bindBuffer and vertexAttribPointer), then draw
@@ -2058,7 +2063,12 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
 
     completePendingJobs();
 
-    for (GLuint array : getState()->arraysEnabled()) {
+    const uint32_t enabled = getState()->arraysEnabled();
+    for (GLuint array = 0;
+         array < WebGLRenderingContextState::kMaxVertexAttribs; ++array) {
+        if (!(enabled & (1u << array))) {
+            continue;
+        }
         if (!m_state->getBufferBoundToVertexAttributes(array)) {
             setGLError(
                 GL_INVALID_OPERATION,

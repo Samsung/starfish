@@ -3375,7 +3375,12 @@ void WebGL2RenderingContext::drawRangeElements(GLenum mode, GLuint start,
         }
     }
 
-    for (GLuint array : getState()->arraysEnabled()) {
+    const uint32_t enabled = getState()->arraysEnabled();
+    for (GLuint array = 0;
+         array < WebGLRenderingContextState::kMaxVertexAttribs; ++array) {
+        if (!(enabled & (1u << array))) {
+            continue;
+        }
         if (!getState()->getBufferBoundToVertexAttributes(array)) {
             setGLError(
                 GL_INVALID_OPERATION,

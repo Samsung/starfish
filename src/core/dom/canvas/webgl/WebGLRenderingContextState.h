@@ -59,7 +59,8 @@ public:
     STATEFUL_VALUES(V);
 #undef V
 
-    std::unordered_set<GLuint> arraysEnabled();
+    // Bit i set: vertex attribute array i is enabled in the bound VAO.
+    uint32_t arraysEnabled();
     void disableVertexAttribArray(GLuint index);
     void enableVertexAttribArray(GLuint index);
 
@@ -115,7 +116,7 @@ private:
     STATEFUL_VALUES(V);
 #undef V
 
-    GCUnorderedMap<GLuint, std::unordered_set<GLuint>> m_arraysEnabled;
+    GCAtomicUnorderedMap<GLuint, uint32_t> m_arraysEnabled;
     GCUnorderedMap<GLuint, WebGLBuffer*> m_elementArrayBuffers;
     GCUnorderedMap<GLenum, WebGLBuffer*> m_globalBuffersBound;
     GCUnorderedMap<GLuint, AttribTypes> m_vertexAttribType;
