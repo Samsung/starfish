@@ -35,7 +35,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/canvas/texture-bindi
 http://localhost:11010/conformance-suites/2.0.0/conformance/canvas/to-data-url-test.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/canvas/viewport-unchanged-upon-resize.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-attribute-preserve-drawing-buffer.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-attributes-alpha-depth-stencil-antialias.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-attributes-alpha-depth-stencil-antialias.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-size-change.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-no-alpha-fbo-with-alpha.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-creation-and-destruction.html
