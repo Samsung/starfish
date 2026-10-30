@@ -12,3 +12,12 @@ http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-i
 http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/audiobuffersource-playbackrate-negative.html
 # [auto-fail:SUBTESTS_FAILED] WPT passes offset 255 as frames, but start() offset is seconds: http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/audiobuffersource-playbackrate-dynamic-direction.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/audiobuffersource-duration-loop-playbackrate.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/audiobuffersource-duration-loop.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/audiobuffersource-grain.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/audiobuffersource-loop-short-duration.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/audiobuffersource-multi-channels.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/audiobuffersource-null.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/audiobuffersource-one-sample-loop.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/looped-constant-buffer.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/note-grain-on-play.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/note-grain-on-timing.html
