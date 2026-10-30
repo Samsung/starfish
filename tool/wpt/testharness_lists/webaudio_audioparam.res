@@ -40,3 +40,5 @@ http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/k-
 http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/k-rate-delay.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/k-rate-delay-connections.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/audioparam-exceptional-values.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/k-rate-audiobuffersource-connections.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/k-rate-dynamics-compressor-connections.html

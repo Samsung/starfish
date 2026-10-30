@@ -320,8 +320,11 @@ float AudioParamTimeline::valueAt(double time) const
                         std::pow(static_cast<double>(event.value) / startValue,
                                  fraction));
                 }
-                return static_cast<float>(
-                    startValue + (event.value - startValue) * fraction);
+                // Single precision makes a ramp on the param equal the same
+                // ramp fed into its input from another param (the k-rate
+                // connection tests compare them bit for bit).
+                return startValue + (event.value - startValue) *
+                                        static_cast<float>(fraction);
             }
             break;
         }
@@ -338,13 +341,11 @@ float AudioParamTimeline::valueAt(double time) const
 float AudioParamTimeline::computedValueAt(double time,
                                           float modulationValue) const
 {
-    double value = static_cast<double>(valueAt(time)) + modulationValue;
+    float value = valueAt(time) + modulationValue;
     if (std::isnan(value)) {
         value = m_defaultValue;
     }
-    return static_cast<float>(
-        std::max(static_cast<double>(m_minValue),
-                 std::min(static_cast<double>(m_maxValue), value)));
+    return std::max(m_minValue, std::min(m_maxValue, value));
 }
 
 // https://webaudio.github.io/web-audio-api/#dom-audioparam-automationrate
