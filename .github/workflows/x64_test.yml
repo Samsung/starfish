@@ -216,6 +216,13 @@ jobs:
         run: |
           xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/webaudio/test_media_output.py -v || exit 1
 
+      # Web Audio API checks that no WPT on this build gates. Loopback HTTP
+      # server only; PULSE_SERVER points at a missing socket, so no audio
+      # device is opened.
+      - name: Run Web Audio API probes
+        run: |
+          xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/webaudio/test_api_probes.py -v || exit 1
+
   test_reftest_all:
     needs: build_x64
     timeout-minutes: 60

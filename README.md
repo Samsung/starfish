@@ -580,6 +580,9 @@ STARFISH_BIN="$PWD/out/release/bin/Starfish" xvfb-run -s '-screen 0 1920x1080x24
 #  - webaudio_*.res WPT lists, inside wpt_serve_testharness (2 jobs, 60 s
 #    per test, same wpt serve session as the other lists);
 #  - tool/webaudio/test_media_output.py (skips without pulseaudio/parec);
+#  - tool/webaudio/test_api_probes.py (API checks no runnable WPT covers:
+#    SharedArrayBuffer views, MediaElementAudioSourceNode constructor,
+#    sub-sample AudioBufferSourceNode starts; no audio device needed);
 #  - tool/webaudio/test_graph_thread.py in the clang build job (skipped with
 #    a warning when Clang's TSan runtime is missing).
 # Everything needing FFmpeg (compressed decoding, MSE, decoder Valgrind)
@@ -599,6 +602,11 @@ ninja -C out/ffmpeg starfish.executable
 # To check audible output manually, open
 # test/cairo/internal-test/webaudio/manual-pulse-output.html and press Play.
 # OfflineAudioContext returns rendered PCM without an output device.
+
+# Web Audio API probes (CI): runs tool/webaudio/api_probes.html groups over a
+# loopback HTTP server and checks their PASS/FAIL lines.
+STARFISH_BIN="$PWD/out/release/bin/Starfish" xvfb-run -s '-screen 0 1920x1080x24' -a \
+  python3 tool/webaudio/test_api_probes.py
 
 # Linux media PCM regression (CI): needs pulseaudio, pactl, and parec.
 # Starts an isolated null sink; no sound is sent to physical speakers.
