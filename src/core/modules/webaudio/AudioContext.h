@@ -107,6 +107,10 @@ public:
     double outputLatency() const;
     AudioTimestamp getOutputTimestamp() const;
 
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    void renderOnMainThread() override;
+#endif
+
 protected:
     void didRegisterScheduledSource() override;
     void didRegisterScriptProcessor() override;

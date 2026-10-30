@@ -126,6 +126,7 @@ class APIProbesTest(unittest.TestCase):
         # Needs a build with AUDIO_WORKLET=1, as CI builds.
         self.run_group('audio-worklet')
         self.run_group('audio-worklet-node')
+        self.run_group('audio-worklet-slow-render')
 
 
 if __name__ == '__main__':

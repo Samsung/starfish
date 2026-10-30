@@ -455,7 +455,13 @@ void ChannelMergerHandler::process(uint64_t, size_t frames)
 {
     bool active = false;
     for (size_t index = 0; index < m_inputCount; index++) {
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+        // https://webaudio.github.io/web-audio-api/#ChannelMergerNode
+        // An actively processing input, even a silent one.
+        if (input(index).hasActiveSource()) {
+#else
         if (!input(index).bus().isSilent()) {
+#endif
             active = true;
             break;
         }

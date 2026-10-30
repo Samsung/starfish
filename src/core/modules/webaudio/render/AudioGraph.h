@@ -137,7 +137,8 @@ public:
     }
 #if defined(STARFISH_ENABLE_AUDIO_WORKLET)
     // Whether quanta are rendered on the main thread, between tasks, where
-    // AudioWorkletProcessors can run: offline contexts.
+    // AudioWorkletProcessors can run: offline contexts and real-time ones
+    // holding AudioWorkletNodes, whose startRealtime() creates no thread.
     bool mainThreadRendering() const
     {
         return m_mainThreadRendering;
@@ -146,6 +147,11 @@ public:
     {
         m_mainThreadRendering = mainThread;
     }
+    // Main-thread real-time rendering: renders the next quantum if it is
+    // due. The caller does not hold m_mutex.
+    bool renderDueQuantum();
+    // Skips the quanta that are due; the next one is due a period from now.
+    void dropRenderBacklog();
     // Caller holds m_mutex. The workletRecord() of every handler deleted
     // since the last call; the caller only compares them, as they may name
     // records of a collected global scope.

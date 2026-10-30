@@ -168,6 +168,7 @@ AudioWorkletNode::AudioWorkletNode(ExecutionContext* executionContext,
                                DOMException::INVALID_STATE_ERR,
                                "No AudioWorkletProcessor of this name");
     }
+    context->renderOnMainThread();
     // Initializing the AudioNode applies channelCount before the channel
     // configuration below is checked.
     if (options.hasChannelCount() &&
