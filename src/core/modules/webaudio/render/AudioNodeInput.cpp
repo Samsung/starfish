@@ -94,8 +94,14 @@ void AudioNodeInput::refreshChannels()
 const AudioBus& AudioNodeInput::pull(size_t frames)
 {
     m_bus.zero();
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    m_hasActiveSource = false;
+#endif
     for (AudioNodeOutput* source : m_sources) {
         m_bus.addFrom(source->bus(), frames, m_speakers);
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+        m_hasActiveSource |= source->owner()->activelyProcessing();
+#endif
     }
     return m_bus;
 }

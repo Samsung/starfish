@@ -1100,6 +1100,12 @@ void DelayHandler::renderDelayRead(uint64_t frameStart, size_t frames)
 {
     zeroOutputs();
     readOutput(frameStart, frames);
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    // ED: "A DelayNode in a cycle is actively processing only when the
+    // absolute value of any output sample for the current render quantum
+    // is greater than or equal to 2^-126."
+    setActivelyProcessing(!output(0).bus().isSilent());
+#endif
 }
 
 void DelayHandler::renderDelayWrite(uint64_t frameStart, size_t frames)
@@ -1367,6 +1373,35 @@ static bool frameIsBefore(double frame, double sampleRate, double time)
 {
     return frame / sampleRate < time;
 }
+
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+// https://webaudio.github.io/web-audio-api/#AudioNode-actively-processing
+// "An AudioScheduledSourceNode is actively processing if and only if it is
+// playing for at least part of the current rendering quantum." The end
+// is seen one quantum late (AudioHandler::render()).
+static bool startsBefore(uint64_t quantumEnd, double sampleRate,
+                         double startTime)
+{
+    return !frameIsBefore(static_cast<double>(quantumEnd - 1), sampleRate,
+                          startTime);
+}
+
+bool ConstantSourceHandler::isActivelyProcessing(uint64_t quantumEnd) const
+{
+    return m_started && startsBefore(quantumEnd, m_sampleRate, m_startTime);
+}
+
+bool OscillatorHandler::isActivelyProcessing(uint64_t quantumEnd) const
+{
+    return m_started && startsBefore(quantumEnd, m_sampleRate, m_startTime);
+}
+
+bool AudioBufferSourceHandler::isActivelyProcessing(uint64_t quantumEnd) const
+{
+    return m_started &&
+           startsBefore(quantumEnd, m_contextSampleRate, m_startTime);
+}
+#endif
 
 ConstantSourceHandler::ConstantSourceHandler(double sampleRate)
     : AudioHandler(0, 1, 1)

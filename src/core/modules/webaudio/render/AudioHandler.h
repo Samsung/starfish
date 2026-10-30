@@ -95,6 +95,15 @@ public:
     // whose wrapper was collected is removed from the graph.
     virtual bool hasPendingOutput() const;
 #if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    // https://webaudio.github.io/web-audio-api/#AudioNode-actively-processing
+    // As of this handler's last render. A source's end is seen one quantum
+    // late: ED AudioBufferSourceNode pseudo-code "End playback state ...
+    // Schedule a change to set the number of output channels to 1", so
+    // downstream nodes observe a source's end on the next quantum.
+    bool activelyProcessing() const
+    {
+        return m_activelyProcessing;
+    }
     // An AudioWorkletNode's processor record (a GC object the global scope
     // keeps): reported to the control thread when the graph deletes this
     // handler; see AudioGraph::takeReleasedWorkletRecords().
@@ -136,6 +145,16 @@ public:
 protected:
     virtual void process(uint64_t frameStart, size_t frames) = 0;
     void zeroOutputs();
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    // After process(): whether this node is actively processing in the
+    // quantum ending at |quantumEnd|, without the one-quantum lag. By
+    // default while an input is, or while a tail is pending.
+    virtual bool isActivelyProcessing(uint64_t quantumEnd) const;
+    void setActivelyProcessing(bool active)
+    {
+        m_activelyProcessing = active;
+    }
+#endif
 
 private:
     std::vector<std::unique_ptr<AudioNodeInput>> m_inputs;
@@ -145,6 +164,10 @@ private:
     bool m_cycleMuted{ false };
     bool m_releaseRequested{ false };
     bool m_releasable{ false };
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    bool m_activelyProcessing{ false };
+    bool m_finishedAtPreviousStart{ false };
+#endif
 };
 
 } // namespace Starfish

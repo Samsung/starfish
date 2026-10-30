@@ -136,6 +136,16 @@ public:
         return m_renderedFrames.load(std::memory_order_acquire);
     }
 #if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    // Whether quanta are rendered on the main thread, between tasks, where
+    // AudioWorkletProcessors can run: offline contexts.
+    bool mainThreadRendering() const
+    {
+        return m_mainThreadRendering;
+    }
+    void setMainThreadRendering(bool mainThread)
+    {
+        m_mainThreadRendering = mainThread;
+    }
     // Caller holds m_mutex. The workletRecord() of every handler deleted
     // since the last call; the caller only compares them, as they may name
     // records of a collected global scope.
@@ -196,6 +206,7 @@ private:
     std::vector<AudioParamTimeline*> m_takenTimelines;
 #if defined(STARFISH_ENABLE_AUDIO_WORKLET)
     std::vector<void*> m_releasedWorkletRecords;
+    bool m_mainThreadRendering{ false };
 #endif
     AudioNodeOutput* m_destination{ nullptr };
     AudioBus m_renderBus;

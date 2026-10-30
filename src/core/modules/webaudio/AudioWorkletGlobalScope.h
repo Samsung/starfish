@@ -16,6 +16,8 @@
 
 namespace Starfish {
 class AudioWorklet;
+class AudioWorkletGlobalScope;
+class AudioWorkletHandler;
 class AudioWorkletNode;
 class BaseAudioContext;
 class MessagePort;
@@ -47,26 +49,45 @@ struct AudioWorkletProcessorDefinition : public gc {
 // can outlive the node's wrapper.
 class AudioWorkletProcessorRecord : public gc {
 public:
-    AudioWorkletProcessorRecord(AudioWorkletNode* node,
+    AudioWorkletProcessorRecord(AudioWorkletGlobalScope* scope,
+                                AudioWorkletNode* node,
                                 AudioWorkletProcessorDefinition* definition,
                                 MessagePort* port,
                                 SerializeWithTransferResult* options);
 
-    // The node unless it was collected: a strong reference would keep it,
+    // The node unless it was collected. Only an active processor retains
+    // it (retainedNode); otherwise a strong reference would keep the node,
     // and so its handler and this record, alive for good.
     Optional<AudioWorkletNode*> node() const;
+    // https://webaudio.github.io/web-audio-api/#active-source
+    // "This flag causes the node to be retained in memory": set while the
+    // processor's active source flag is true (and before it is built).
+    void retainNode(bool retain);
 
+    AudioWorkletGlobalScope* const scope;
     AudioWorkletProcessorDefinition* const definition;
     // The processor's end of the node's MessageChannel.
     MessagePort* const port;
     // The serialized AudioWorkletNodeOptions until the processor is built.
     SerializeWithTransferResult* options;
     Optional<ScriptObject> processor;
+    // Construction threw: the processor outputs silence for good.
+    bool constructionFailed{ false };
+    // process() arguments, reused while their shape holds: the frozen
+    // inputs and outputs arrays and parameters object, every Float32Array
+    // in them (input channels, output channels, parameters), and the shape
+    // (channel counts, then parameter array lengths) they were built for.
+    ScriptValue inputs{ nullptr };
+    ScriptValue outputs{ nullptr };
+    ScriptValue parameters{ nullptr };
+    GCVector<ScriptValue> arrays;
+    GCAtomicVector<uint32_t> shape;
 
 private:
     // GC_MALLOC_ATOMIC cell holding the hidden node pointer; a disappearing
     // link clears it when the node is collected.
     void** m_nodeLink;
+    Optional<AudioWorkletNode*> m_retainedNode;
 };
 
 // https://webaudio.github.io/web-audio-api/#AudioWorkletGlobalScope
@@ -114,6 +135,11 @@ public:
     // The AudioWorkletProcessor constructor takes the transferred port; the
     // slot is then empty.
     Optional<MessagePort*> takePendingPort();
+    // Main thread, inside a render quantum: calls the processor's
+    // process() with the handler's inputs and parameters, and writes its
+    // outputs.
+    void process(AudioWorkletProcessorRecord* record,
+                 AudioWorkletHandler& handler);
 
 private:
     void dispose();
@@ -132,6 +158,8 @@ private:
     // node name to processor constructor map
     GCVector<std::pair<String*, ScriptValue>> m_processorConstructors;
     GCVector<AudioWorkletProcessorRecord*> m_records;
+    // Scratch for process(), reused every quantum.
+    GCAtomicVector<uint32_t> m_shape;
     Optional<MessagePort*> m_pendingPort;
 };
 } // namespace Starfish
