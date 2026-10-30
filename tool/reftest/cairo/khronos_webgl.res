@@ -13,8 +13,8 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/buffer-data-
 # http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/buffer-data-array-buffer.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/element-array-buffer-delete-recreate.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/index-validation-copies-indices.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/index-validation-crash-with-buffer-sub-data.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/index-validation.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/index-validation-crash-with-buffer-sub-data.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/index-validation.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/index-validation-large-buffer.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/index-validation-verifies-too-many-indices.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/index-validation-with-resized-buffer.html
@@ -29,7 +29,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/drawingbuffer
 # http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/draw-webgl-to-canvas-test.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/framebuffer-bindings-unaffected-on-resize.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/rapid-resizing.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/texture-bindings-unaffected-on-resize.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/texture-bindings-unaffected-on-resize.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/to-data-url-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/viewport-unchanged-upon-resize.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/constants-and-properties.html
@@ -38,14 +38,14 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/context/constants-an
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-creation-and-destruction.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-creation.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-eviction-with-garbage-collection.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-hidden-alpha.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-hidden-alpha.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-lost.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-lost-restored.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-release-upon-reload.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-release-with-workers.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-release-upon-reload.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-release-with-workers.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-type-test.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/context/incorrect-context-object-behaviour.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/context/methods.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/context/methods.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/context/premultiplyalpha-test.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/context/resources/context-release-child-with-worker.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/context/resources/context-release-upon-reload-child.html
@@ -74,11 +74,11 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-textu
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-with-video.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-vertex-array-object-bufferData.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-vertex-array-object.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-compressed-texture-atc.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-compressed-texture-pvrtc.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-compressed-texture-s3tc.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-compressed-texture-atc.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-compressed-texture-pvrtc.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-compressed-texture-s3tc.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-compressed-texture-size-limit.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-debug-renderer-info.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-debug-renderer-info.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-debug-shaders.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-depth-texture.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-draw-buffers.html
@@ -90,11 +90,11 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/compare-lo
 # http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/complex-glsl-does-not-crash.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/conditional-discard-in-loop.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/conditional-discard-optimization.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/constant-precision-qualifier.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/constant-precision-qualifier.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/essl3-shaders-with-webgl1.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/floored-division-accuracy.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/fragcoord-linking-bug.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/long-expressions-should-not-crash.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/long-expressions-should-not-crash.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/modulo-arithmetic-accuracy.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/multiplication-assignment.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/nested-functions-should-not-crash.html
@@ -222,7 +222,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/matrices/glsl-m
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/matrices/glsl-mat4-to-mat3.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/attrib-location-length-limits.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/boolean_precision.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/embedded-struct-definitions-forbidden.html # @ignore Flaky, possibly due to driver issues
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/embedded-struct-definitions-forbidden.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/empty_main.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/expression-list-in-declarator-initializer.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/gl_position_unset.vert.html
@@ -234,22 +234,22 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/large-loop
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/non-ascii-comments.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/non-ascii.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/re-compile-re-link.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-precision-format-obeyed.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-precision-format-obeyed.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-struct-scope.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-constant-expression-loop-conditions.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-invariance.html # @ignore Flaky, possibly due to driver issues
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-invariance.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-mis-matching-uniforms.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-mis-matching-varyings.html # @ignore Flaky, possibly due to driver issues
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-missing-varyings.html # @ignore Flaky, possibly due to driver issues
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-uniform-structs.html # @ignore Flaky, possibly due to driver issues
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-varyings.html # @ignore Flaky, possibly due to driver issues
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-mis-matching-varyings.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-missing-varyings.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-uniform-structs.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-varyings.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-uniform-packing-restrictions.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-varying-packing-restrictions.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-256-character-define.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-256-character-identifier.frag.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-257-character-define.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-257-character-identifier.frag.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-arbitrary-indexing.frag.html # @ignore Flaky, possibly due to driver issues
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-arbitrary-indexing.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-arbitrary-indexing.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-array-of-structs-containing-arrays.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-array-of-structs-uniform.html
@@ -271,13 +271,13 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-wit
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-for-loop.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-for-scoping.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-frag-depth.frag.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-functional-scoping.html # @ignore Flaky, possibly due to driver issues
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-functional-scoping.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-function-recursion.frag.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-function-scoped-struct.html # @ignore Flaky, possibly due to driver issues
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-function-scoped-struct.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-glcolor.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-gles-1.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-gles-symbol.frag.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-global-variable-precision-mismatch.html # @ignore Flaky, possibly due to driver issues
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-global-variable-precision-mismatch.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-glprojectionmatrix.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-hex-int-constant-macro.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-illegal-default-precision.frag.html
@@ -341,7 +341,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/variables/gl-fr
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/variables/gl-fragcoord-xy-values.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/variables/gl-fragdata-and-fragcolor.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/variables/gl-frontfacing.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/variables/gl-pointcoord.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/variables/gl-pointcoord.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/variables/glsl-built-ins.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/limits/gl-max-texture-dimensions.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/limits/gl-min-attribs.html
@@ -363,8 +363,8 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/misc/instanceof-test
 http://localhost:11010/conformance-suites/1.0.3/conformance/misc/null-object-behaviour.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/misc/object-deletion-behaviour.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/misc/shader-precision-format.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/misc/type-conversion-test.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/misc/uninitialized-test.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/misc/type-conversion-test.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/misc/uninitialized-test.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/misc/webgl-specific.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/all_tests.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/all_tests_linkonly.html
@@ -373,18 +373,18 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/bad
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/constants.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/fuzzTheAPI.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/getContext.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/methods.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/quickCheckAPI-A.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/methods.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/quickCheckAPI-A.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/quickCheckAPI-B1.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/quickCheckAPI-B2.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/quickCheckAPI-B3.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/quickCheckAPI-B4.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/quickCheckAPI-B4.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/quickCheckAPIBadArgs.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/quickCheckAPI-C.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/quickCheckAPI-D_G.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/quickCheckAPI-C.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/quickCheckAPI-D_G.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/quickCheckAPI-G_I.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/quickCheckAPI-L_S.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/quickCheckAPI-S_V.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/quickCheckAPI-L_S.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/quickCheckAPI-S_V.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/conformance/webGLArrays.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/demos/opengl_web.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/demos/video.html
@@ -397,28 +397,28 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/buffe
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/bufferSubData.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexImage2DBadArgs.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexImage2D.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexSubImage2DBadArgs.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexSubImage2DBadArgs.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexSubImage2D.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/deleteBufferBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawArrays.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawArraysOutOfBounds.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawElements.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawElements.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/isTestsBadArgs.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/isTests.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/readPixelsBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/readPixels.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2DBadArgs.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2DBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2D.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2DHTMLBadArgs.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2DHTMLBadArgs.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2DHTML.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2DBadArgs.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2D.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2D.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2DHTMLBadArgs.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2DHTML.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformfArrayLen1.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformfBadArgs.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformfBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformf.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformiBadArgs.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformiBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformi.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformMatrixBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformMatrix.html
@@ -456,7 +456,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/ogles/GL/build/build
 http://localhost:11010/conformance-suites/1.0.3/conformance/ogles/GL/build/build_049_to_056.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/ogles/GL/build/build_057_to_064.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/ogles/GL/build/build_065_to_072.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/ogles/GL/build/build_073_to_080.html # @ignore Flaky, possibly due to driver issues
+http://localhost:11010/conformance-suites/1.0.3/conformance/ogles/GL/build/build_073_to_080.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/ogles/GL/build/build_081_to_088.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/ogles/GL/build/build_089_to_096.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/ogles/GL/build/build_097_to_104.html
@@ -587,23 +587,23 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/programs/gl-shader-t
 http://localhost:11010/conformance-suites/1.0.3/conformance/programs/invalid-UTF-16.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/programs/program-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/programs/use-program-crash-with-discard-in-fragment-shader.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/reading/read-pixels-pack-alignment.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/reading/read-pixels-pack-alignment.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/reading/read-pixels-test.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/feedback-loop.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-object-attachment.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-state-restoration.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-test.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/renderbuffer-initialization.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/renderbuffer-initialization.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/culling.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/draw-arrays-out-of-bounds.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/draw-elements-out-of-bounds.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/framebuffer-switch.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/framebuffer-texture-switch.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/framebuffer-switch.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/framebuffer-texture-switch.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/gl-clear.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/gl-drawarrays.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/gl-drawelements.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/gl-scissor-canvas-dimensions.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/gl-scissor-fbo-test.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/gl-scissor-canvas-dimensions.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/gl-scissor-fbo-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/gl-scissor-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/gl-viewport-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/line-loop-tri-fan.html
@@ -612,19 +612,19 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/more-than-
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/multisample-corruption.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/negative-one-index.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/point-no-attributes.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/point-size.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/point-with-gl-pointcoord-in-fragment-shader.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/point-size.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/point-with-gl-pointcoord-in-fragment-shader.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/polygon-offset.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/simple.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/triangle.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/vertex-texture-fetch.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/state/gl-enable-enum-test.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/state/gl-enable-enum-test.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/state/gl-enum-tests.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/state/gl-get-calls.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/state/gl-get-calls.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/state/gl-geterror.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/state/gl-getstring.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/state/gl-object-get-calls.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/state/state-uneffected-after-compositing.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/state/state-uneffected-after-compositing.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/compressed-tex-image.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/copy-tex-image-2d-formats.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/copy-tex-image-and-sub-image-2d.html
@@ -635,19 +635,19 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/gl-get-tex-
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/mipmap-fbo.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/origin-clean-conformance.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-array-buffer-view.html # Failed with unpackAlignments as 8
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-canvas.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-canvas-rgb565.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-canvas-rgba4444.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-canvas-rgba5551.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-data.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-data-rgb565.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-data-rgba4444.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-data-rgba5551.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-canvas.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-canvas-rgb565.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-canvas-rgba4444.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-canvas-rgba5551.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-data.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-data-rgb565.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-data-rgba4444.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-data-rgba5551.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-rgb565.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-rgba4444.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-rgba5551.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-svg-image.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-rgb565.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-rgba4444.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-rgba5551.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-svg-image.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video-rgb565.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video-rgba4444.html
@@ -656,7 +656,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-a
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-webgl-canvas-rgb565.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-webgl-canvas-rgba4444.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-webgl-canvas-rgba5551.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-uniform-binding-bugs.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-uniform-binding-bugs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-canvas-corruption.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-webgl.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-with-format-and-type.html
@@ -664,7 +664,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-c
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-input-validation.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texparameter-test.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-sub-image-2d-bad-args.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-sub-image-2d.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-sub-image-2d.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-active-bind-2.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-active-bind.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-attachment-formats.html
@@ -673,17 +673,17 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-com
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-copying-feedback-loops.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-draw-with-2d-and-cube.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-fakeblack.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-formats-test.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-hd-dpi.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-formats-test.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-hd-dpi.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-mips.html # @ignore Flaky, possibly due to driver issues
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-npot.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-npot-video.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-size-cube-maps.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-size.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-size.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-size-limit.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-sub-image-cube-maps.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-sub-image-cube-maps.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-transparent-pixels-initialized.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-upload-cube-maps.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-upload-cube-maps.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-upload-size.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/array-buffer-crash.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/array-buffer-view-crash.html
@@ -696,12 +696,12 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/data-vie
 http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniform-bool.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniformmatrix4fv.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniform-struct-unused.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniform-unused-array-elements-get-truncated.html # @ignore Flaky, possibly due to driver issues
+http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniform-unused-array-elements-get-truncated.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-unknown-uniform.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/null-uniform-location.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/out-of-bounds-uniform-array-access.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/uniform-default-values.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/uniform-location.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/uniform-default-values.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/uniform-location.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/uniform-samplers-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/uniform-values-per-program.html
 # http://localhost:11010/conformance-suites/1.0.3/extra/big-fbos-example.html
@@ -718,7 +718,7 @@ http://localhost:11010/conformance-suites/1.0.3/extra/context-creation-and-destr
 # http://localhost:11010/conformance-suites/1.0.3/extra/out-of-memory.html
 # http://localhost:11010/conformance-suites/1.0.3/extra/out-of-resources.html
 # http://localhost:11010/conformance-suites/1.0.3/extra/out-of-vram.html
-# http://localhost:11010/conformance-suites/1.0.3/extra/point-no-attributes-stress.html
+http://localhost:11010/conformance-suites/1.0.3/extra/point-no-attributes-stress.html
 # http://localhost:11010/conformance-suites/1.0.3/extra/readpixels-after-alert.html
 # http://localhost:11010/conformance-suites/1.0.3/extra/simulated-attrib-0-bug-test.html
 # http://localhost:11010/conformance-suites/1.0.3/extra/slow-shader-example.html
