@@ -127,6 +127,51 @@ const groups = {
             check(!ended, label + ': the looped source does not end');
         }
     },
+
+    // Scheduled sources use the exact start and stop times. At 44100 Hz,
+    // (90 / 44100) * 44100 rounds above 90, so rounding to frames would
+    // start or stop at frame 91.
+    'exact-times': async () => {
+        const sampleRate = 44100;
+        const frame = 90;
+        const when = frame / sampleRate;
+        const context = new OfflineAudioContext(6, 256, sampleRate);
+        const merger = new ChannelMergerNode(context, {numberOfInputs: 6});
+        merger.connect(context.destination);
+        const ones = new AudioBuffer({length: 256, sampleRate});
+        ones.getChannelData(0).fill(1);
+        const cosine = context.createPeriodicWave([0, 1], [0, 0]);
+        const sources = [
+            new AudioBufferSourceNode(context, {buffer: ones}),
+            new AudioBufferSourceNode(context, {buffer: ones}),
+            new ConstantSourceNode(context),
+            new ConstantSourceNode(context),
+            new OscillatorNode(context, {periodicWave: cosine, frequency: 100}),
+            new OscillatorNode(context, {periodicWave: cosine, frequency: 100}),
+        ];
+        sources.forEach((source, i) => {
+            source.connect(merger, 0, i);
+            if (i % 2) {
+                source.start(0);
+                source.stop(when);
+            } else {
+                source.start(when);
+            }
+        });
+        const rendered = await context.startRendering();
+        const names = ['AudioBufferSourceNode', 'ConstantSourceNode',
+                       'OscillatorNode'];
+        names.forEach((name, n) => {
+            const started = rendered.getChannelData(2 * n);
+            const stopped = rendered.getChannelData(2 * n + 1);
+            check(started[frame - 1] === 0 && started[frame] !== 0,
+                  name + ' started at ' + frame + '/sampleRate plays from ' +
+                  'frame ' + frame);
+            check(stopped[frame - 1] !== 0 && stopped[frame] === 0,
+                  name + ' stopped at ' + frame + '/sampleRate is silent ' +
+                  'from frame ' + frame);
+        });
+    },
 };
 
 const group = groups[location.search.substring(1)];
