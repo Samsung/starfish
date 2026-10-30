@@ -507,15 +507,19 @@ void WebGLRenderingContext::activeTexture(GLenum texture)
 void WebGLRenderingContext::attachShader(WebGLProgram* program,
                                          WebGLShader* shader)
 {
-    if (!isFromCurrentContext(program) || !isFromCurrentContext(shader)) {
-        setGLError(GL_INVALID_OPERATION);
+    ENTER_CONTEXT_SCOPE();
+
+    if (!validateProgramOrShader(program) || !validateProgramOrShader(shader)) {
         return;
     }
 
-    ENTER_CONTEXT_SCOPE();
-
+    hasNewGLError(); // Keep an earlier error from failing this call.
     m_gl->attachShader(program->glObject(), shader->glObject());
+    if (hasNewGLError()) {
+        return;
+    }
     program->addAttachedShader(shader);
+    shader->incrementAttachCount();
 }
 
 void WebGLRenderingContext::bindAttribLocation(WebGLProgram* program,
@@ -523,8 +527,7 @@ void WebGLRenderingContext::bindAttribLocation(WebGLProgram* program,
 {
     ENTER_CONTEXT_SCOPE();
 
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return;
     }
 
@@ -542,6 +545,18 @@ void WebGLRenderingContext::bindBuffer(GLenum target,
 
     if (buffer.hasValue()) {
         WebGLBuffer* value = buffer.value();
+
+        if (!isFromCurrentContext(value)) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        // Binding a deleted buffer leaves the binding untouched (WebGL 1.0
+        // §5.14.5).
+        if (value->isDeleted()) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
 
         if (value->target() != GL_NONE && value->target() != target) {
             // An attempt to bind a buffer object to the other target will
@@ -793,8 +808,7 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
 {
     ENTER_CONTEXT_SCOPE();
 
-    if (!isFromCurrentContext(shader)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(shader)) {
         return;
     }
 
@@ -1439,27 +1453,58 @@ void WebGLRenderingContext::deleteTexture(Optional<WebGLTexture*> maybe)
     }
 }
 
-#define IMPLEMENT_DELETE_OBJECT(Name, Deleter)                             \
-    void WebGLRenderingContext::delete##Name(Optional<WebGL##Name*> maybe) \
-    {                                                                      \
-        ENTER_CONTEXT_SCOPE();                                             \
-        if (maybe.hasValue()) {                                            \
-            WebGL##Name* value = maybe.value();                            \
-            if (!isFromCurrentContext(value)) {                            \
-                setGLError(GL_INVALID_OPERATION);                          \
-                return;                                                    \
-            }                                                              \
-            if (value->isDeleted()) {                                      \
-                return;                                                    \
-            }                                                              \
-            Deleter(value->glObject());                                    \
-            value->markDeleted();                                          \
-        }                                                                  \
+void WebGLRenderingContext::deleteShader(Optional<WebGLShader*> maybe)
+{
+    ENTER_CONTEXT_SCOPE();
+    if (!maybe) {
+        return;
     }
+    WebGLShader* shader = maybe.value();
+    if (!isFromCurrentContext(shader)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    if (shader->isDeleted()) {
+        return;
+    }
+    // GL keeps an attached shader alive until it is detached; attachCount()
+    // mirrors that (OpenGL ES 2.0 §2.10.1).
+    m_gl->deleteShader(shader->glObject());
+    shader->markDeleted();
+}
 
-IMPLEMENT_DELETE_OBJECT(Program, m_gl->deleteProgram);
-IMPLEMENT_DELETE_OBJECT(Shader, m_gl->deleteShader);
-#undef IMPLEMENT_DELETE_OBJECT
+void WebGLRenderingContext::deleteProgram(Optional<WebGLProgram*> maybe)
+{
+    ENTER_CONTEXT_SCOPE();
+    if (!maybe) {
+        return;
+    }
+    WebGLProgram* program = maybe.value();
+    if (!isFromCurrentContext(program)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    if (program->isDeleted()) {
+        return;
+    }
+    program->markDeleted();
+    // The current program stays in use until replaced (OpenGL ES 2.0
+    // §2.10.3). It reaches glDeleteProgram only then, so an internal
+    // useProgram (video uploads) cannot free it behind the page's back.
+    if (m_state->webGLProgram() != program) {
+        releaseProgram(program);
+    }
+}
+
+void WebGLRenderingContext::releaseProgram(WebGLProgram* program)
+{
+    // Freeing a program detaches its shaders (OpenGL ES 2.0 §2.10.3).
+    for (WebGLShader* shader : program->getWebGLShaders()) {
+        program->removeDetachedShader(shader);
+        shader->decrementAttachCount();
+    }
+    m_gl->deleteProgram(program->glObject());
+}
 
 void WebGLRenderingContext::depthFunc(GLenum func)
 {
@@ -1487,11 +1532,17 @@ void WebGLRenderingContext::detachShader(WebGLProgram* program,
 {
     ENTER_CONTEXT_SCOPE();
 
-    STARFISH_ASSERT(program != nullptr);
-    STARFISH_ASSERT(shader != nullptr);
+    if (!validateProgramOrShader(program) || !validateProgramOrShader(shader)) {
+        return;
+    }
 
+    hasNewGLError(); // Keep an earlier error from failing this call.
     m_gl->detachShader(program->glObject(), shader->glObject());
+    if (hasNewGLError()) {
+        return;
+    }
     program->removeDetachedShader(shader);
+    shader->decrementAttachCount();
 }
 
 static bool isValidEnableCap(GLenum cap, bool isWebGL2)
@@ -2346,6 +2397,10 @@ void WebGLRenderingContext::shaderSource(WebGLShader* shader, String* source)
 {
     ENTER_CONTEXT_SCOPE();
 
+    if (!validateProgramOrShader(shader)) {
+        return;
+    }
+
     std::string str = source->toUTF8NonGCString();
     shader->setSource(str);
     const char* sourceArray[1] = { str.c_str() };
@@ -2473,7 +2528,7 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
             if (maybeFb.hasValue() && maybeFb.value()) {
                 WebGLRenderbuffer* rb =
                     maybeFb.value()->attachedRenderbuffer(GL_DEPTH_ATTACHMENT);
-                if (rb && !rb->isDeleted()) {
+                if (rb) {
                     GLenum fmt = rb->internalFormat();
                     if (fmt == GL_DEPTH_COMPONENT16) {
                         return ValueRef::create(16);
@@ -2490,7 +2545,7 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
                 }
                 WebGLTexture* tex =
                     maybeFb.value()->attachedTexture(GL_DEPTH_ATTACHMENT);
-                if (tex && !tex->isDeleted()) {
+                if (tex) {
                     return ValueRef::create(24);
                 }
                 return ValueRef::create(0);
@@ -2510,12 +2565,12 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
             if (maybeFb.hasValue() && maybeFb.value()) {
                 WebGLRenderbuffer* rb = maybeFb.value()->attachedRenderbuffer(
                     GL_STENCIL_ATTACHMENT);
-                if (rb && !rb->isDeleted()) {
+                if (rb) {
                     return ValueRef::create(8);
                 }
                 WebGLTexture* tex =
                     maybeFb.value()->attachedTexture(GL_STENCIL_ATTACHMENT);
-                if (tex && !tex->isDeleted()) {
+                if (tex) {
                     return ValueRef::create(8);
                 }
                 return ValueRef::create(0);
@@ -2561,8 +2616,9 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         GLint value = -1;
         m_gl->getIntegerv(pname, &value);
 
+        // A program deleted while current is still the current program.
         Optional<WebGLProgram*> maybe = m_state->webGLProgram();
-        if (!maybe.hasValue() || maybe.value()->isDeleted()) {
+        if (!maybe.hasValue()) {
             return scriptNull();
         }
         STARFISH_ASSERT(static_cast<GLint>(maybe.value()->glObject()) == value);
@@ -2800,8 +2856,7 @@ WebGLActiveInfo* WebGLRenderingContext::getActiveAttrib(WebGLProgram* program,
 {
     ENTER_CONTEXT_SCOPE(nullptr);
 
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return nullptr;
     }
 
@@ -2838,8 +2893,7 @@ WebGLActiveInfo* WebGLRenderingContext::getActiveUniform(WebGLProgram* program,
 {
     ENTER_CONTEXT_SCOPE(nullptr);
 
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return nullptr;
     }
 
@@ -2876,7 +2930,7 @@ Optional<GCVector<WebGLShader*>> WebGLRenderingContext::getAttachedShaders(
 {
     ENTER_CONTEXT_SCOPE(nullptr);
 
-    if (!isFromCurrentContext(program)) {
+    if (!validateProgramOrShader(program)) {
         return nullptr;
     }
 
@@ -2888,8 +2942,7 @@ GLint WebGLRenderingContext::getAttribLocation(WebGLProgram* program,
 {
     ENTER_CONTEXT_SCOPE(-1);
 
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return -1;
     }
 
@@ -3047,11 +3100,29 @@ ScriptValue WebGLRenderingContext::getFramebufferAttachmentParameter(
     WebGLTexture* tex = fb->attachedTexture(attachment);
     WebGLRenderbuffer* rb = fb->attachedRenderbuffer(attachment);
 
+    // DEPTH_STENCIL_ATTACHMENT names one image only when depth and stencil
+    // hold the same one (OpenGL ES 3.0 GetFramebufferAttachmentParameteriv).
+    if (attachment == GL_DEPTH_STENCIL_ATTACHMENT && !tex && !rb &&
+        (fb->attachedTexture(GL_DEPTH_ATTACHMENT) ||
+         fb->attachedRenderbuffer(GL_DEPTH_ATTACHMENT) ||
+         fb->attachedTexture(GL_STENCIL_ATTACHMENT) ||
+         fb->attachedRenderbuffer(GL_STENCIL_ATTACHMENT))) {
+        setGLError(GL_INVALID_OPERATION);
+        return scriptNull();
+    }
+
     if (!tex && !rb) {
         if (pname == GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE) {
             return Escargot::ValueRef::create(static_cast<GLenum>(GL_NONE));
         }
-        setGLError(GL_INVALID_OPERATION);
+        // With nothing attached, OpenGL ES 2.0 makes every other pname
+        // INVALID_ENUM; OpenGL ES 3.0 answers OBJECT_NAME with 0 and makes
+        // the rest INVALID_OPERATION (GetFramebufferAttachmentParameteriv).
+        if (!isWebGL2) {
+            setGLError(GL_INVALID_ENUM);
+        } else if (pname != GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME) {
+            setGLError(GL_INVALID_OPERATION);
+        }
         return scriptNull();
     }
 
@@ -3148,8 +3219,7 @@ ScriptValue WebGLRenderingContext::getProgramParameter(WebGLProgram* program,
 {
     ENTER_CONTEXT_SCOPE(scriptNull());
 
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return scriptNull();
     }
 
@@ -3180,7 +3250,8 @@ ScriptValue WebGLRenderingContext::getProgramParameter(WebGLProgram* program,
 
     switch (pname) {
     case GL_DELETE_STATUS:
-        return Escargot::ValueRef::create(static_cast<bool>(params));
+        // GL learns of the deletion only once the program stops being current.
+        return Escargot::ValueRef::create(program->isDeleted());
     case GL_LINK_STATUS:
         if (program->linkFailed()) {
             return Escargot::ValueRef::create(false);
@@ -3202,6 +3273,10 @@ ScriptValue WebGLRenderingContext::getProgramParameter(WebGLProgram* program,
 String* WebGLRenderingContext::getProgramInfoLog(WebGLProgram* program)
 {
     ENTER_CONTEXT_SCOPE(nullptr);
+
+    if (!validateProgramOrShader(program)) {
+        return nullptr;
+    }
 
     GLsizei length = 0, bufferSize = 0;
     m_gl->getProgramiv(program->glObject(), GL_INFO_LOG_LENGTH, &bufferSize);
@@ -3263,8 +3338,7 @@ ScriptValue WebGLRenderingContext::getShaderParameter(WebGLShader* shader,
 {
     ENTER_CONTEXT_SCOPE(scriptNull());
 
-    if (!isFromCurrentContext(shader)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(shader)) {
         return scriptNull();
     }
 
@@ -3319,6 +3393,10 @@ String* WebGLRenderingContext::getShaderInfoLog(WebGLShader* shader)
 {
     ENTER_CONTEXT_SCOPE(nullptr);
 
+    if (!validateProgramOrShader(shader)) {
+        return nullptr;
+    }
+
     if (shader->compileFailed()) {
         return String::fromUTF8(shader->infoLog().c_str(),
                                 shader->infoLog().length());
@@ -3344,6 +3422,10 @@ String* WebGLRenderingContext::getShaderInfoLog(WebGLShader* shader)
 String* WebGLRenderingContext::getShaderSource(WebGLShader* shader)
 {
     ENTER_CONTEXT_SCOPE(nullptr);
+
+    if (!validateProgramOrShader(shader)) {
+        return nullptr;
+    }
 
     GLsizei length = 0, bufferSize = 0;
     m_gl->getShaderiv(shader->glObject(), GL_SHADER_SOURCE_LENGTH, &bufferSize);
@@ -3615,8 +3697,7 @@ Optional<ScriptValue> WebGLRenderingContext::getUniformImpl(
 ScriptValue WebGLRenderingContext::getUniform(WebGLProgram* program,
                                               WebGLUniformLocation* location)
 {
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return scriptNull();
     }
 
@@ -3637,8 +3718,7 @@ WebGLUniformLocation* WebGLRenderingContext::getUniformLocation(
 {
     ENTER_CONTEXT_SCOPE(nullptr);
 
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return nullptr;
     }
 
@@ -3685,13 +3765,6 @@ ScriptValue WebGLRenderingContext::getVertexAttrib(GLuint index, GLenum pname)
         m_gl->getVertexAttribiv(index, pname, &value);
 
         TRACE(WEBGL, KV(index), KV(value));
-
-        Optional<WebGLVertexArrayObjectOES*> maybe =
-            m_state->webGLVertexArrayObjectOES();
-
-        if (!maybe.hasValue()) {
-            return scriptNull(); // No mention found for this in the spec.
-        }
 
         Optional<WebGLBuffer*> maybeBuffer =
             m_state->getBufferBoundToVertexAttributes(index);
@@ -3773,7 +3846,7 @@ bool WebGLRenderingContext::isBuffer(Optional<WebGLBuffer*> maybe)
     ENTER_CONTEXT_SCOPE(false);
 
     if (!maybe.hasValue() || !isFromCurrentContext(maybe.value()) ||
-        maybe.value()->invalidated()) {
+        maybe.value()->invalidated() || maybe.value()->isDeleted()) {
         return false;
     }
 
@@ -3801,11 +3874,11 @@ bool WebGLRenderingContext::isFramebuffer(Optional<WebGLFramebuffer*> maybe)
     ENTER_CONTEXT_SCOPE(false);
 
     if (!maybe.hasValue() || !isFromCurrentContext(maybe.value()) ||
-        maybe.value()->invalidated()) {
+        maybe.value()->invalidated() || maybe.value()->isDeleted()) {
         return false;
     }
 
-    return true;
+    return m_gl->isFramebuffer(maybe.value()->glObject());
 }
 
 bool WebGLRenderingContext::isProgram(Optional<WebGLProgram*> maybe)
@@ -3817,7 +3890,7 @@ bool WebGLRenderingContext::isProgram(Optional<WebGLProgram*> maybe)
         return false;
     }
 
-    return true;
+    return hasGLObject(maybe.value());
 }
 
 bool WebGLRenderingContext::isRenderbuffer(Optional<WebGLRenderbuffer*> maybe)
@@ -3825,11 +3898,11 @@ bool WebGLRenderingContext::isRenderbuffer(Optional<WebGLRenderbuffer*> maybe)
     ENTER_CONTEXT_SCOPE(false);
 
     if (!maybe.hasValue() || !isFromCurrentContext(maybe.value()) ||
-        maybe.value()->invalidated()) {
+        maybe.value()->invalidated() || maybe.value()->isDeleted()) {
         return false;
     }
 
-    return true;
+    return m_gl->isRenderbuffer(maybe.value()->glObject());
 }
 
 bool WebGLRenderingContext::isShader(Optional<WebGLShader*> maybe)
@@ -3841,7 +3914,7 @@ bool WebGLRenderingContext::isShader(Optional<WebGLShader*> maybe)
         return false;
     }
 
-    return true;
+    return hasGLObject(maybe.value());
 }
 
 bool WebGLRenderingContext::isTexture(Optional<WebGLTexture*> maybe)
@@ -3849,11 +3922,11 @@ bool WebGLRenderingContext::isTexture(Optional<WebGLTexture*> maybe)
     ENTER_CONTEXT_SCOPE(false);
 
     if (!maybe.hasValue() || !isFromCurrentContext(maybe.value()) ||
-        maybe.value()->invalidated()) {
+        maybe.value()->invalidated() || maybe.value()->isDeleted()) {
         return false;
     }
 
-    return true;
+    return m_gl->isTexture(maybe.value()->glObject());
 }
 
 void WebGLRenderingContext::lineWidth(GLfloat width)
@@ -3969,8 +4042,7 @@ void WebGLRenderingContext::linkProgram(WebGLProgram* program)
 {
     ENTER_CONTEXT_SCOPE();
 
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return;
     }
 
@@ -4554,17 +4626,31 @@ void WebGLRenderingContext::useProgram(Optional<WebGLProgram*> maybeProgram)
 {
     ENTER_CONTEXT_SCOPE();
 
+    Optional<WebGLProgram*> previous = m_state->webGLProgram();
     if (maybeProgram.hasValue()) {
         WebGLProgram* program = maybeProgram.value();
-        if (!isFromCurrentContext(program)) {
-            setGLError(GL_INVALID_OPERATION);
+        if (!validateProgramOrShader(program)) {
             return;
         }
+        // A program marked for deletion cannot be made current again.
+        if (program->isDeleted()) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        hasNewGLError(); // Keep an earlier error from failing this call.
         m_gl->useProgram(program->glObject());
+        if (hasNewGLError()) {
+            return;
+        }
         m_state->setWebGLProgram(program);
     } else {
         m_gl->useProgram(0);
         m_state->setWebGLProgram(nullptr);
+    }
+
+    if (previous && previous.value()->isDeleted() &&
+        m_state->webGLProgram() != previous) {
+        releaseProgram(previous.value());
     }
 }
 
@@ -4572,10 +4658,10 @@ void WebGLRenderingContext::validateProgram(WebGLProgram* program)
 {
     ENTER_CONTEXT_SCOPE();
 
-    STARFISH_ASSERT(program != nullptr);
+    if (!validateProgramOrShader(program)) {
+        return;
+    }
 
-    // If program was generated by a different WebGLRenderingContext than this
-    // one, generates an INVALID_OPERATION error.
     m_gl->validateProgram(program->glObject());
 }
 
@@ -6964,6 +7050,40 @@ bool WebGLRenderingContext::isFromCurrentContext(WebGLObject* object)
     return object->context() == this;
 }
 
+bool WebGLRenderingContext::hasGLObject(WebGLProgram* program)
+{
+    return !program->isDeleted() || m_state->webGLProgram() == program;
+}
+
+bool WebGLRenderingContext::hasGLObject(WebGLShader* shader)
+{
+    return !shader->isDeleted() || shader->attachCount() > 0;
+}
+
+template <typename T>
+static bool validateLiveObject(WebGLRenderingContext* context, T* object)
+{
+    if (!context->isFromCurrentContext(object)) {
+        context->setGLError(GL_INVALID_OPERATION);
+        return false;
+    }
+    if (!context->hasGLObject(object)) {
+        context->setGLError(GL_INVALID_VALUE);
+        return false;
+    }
+    return true;
+}
+
+bool WebGLRenderingContext::validateProgramOrShader(WebGLProgram* program)
+{
+    return validateLiveObject(this, program);
+}
+
+bool WebGLRenderingContext::validateProgramOrShader(WebGLShader* shader)
+{
+    return validateLiveObject(this, shader);
+}
+
 bool WebGLRenderingContext::isBoundCubeMapTexture(GLenum target)
 {
     if (target > GL_TEXTURE_BINDING_CUBE_MAP &&
@@ -6978,22 +7098,11 @@ bool WebGLRenderingContext::isBoundCubeMapTexture(GLenum target)
 
 bool WebGLRenderingContext::isFromCurrentProgram(WebGLUniformLocation* location)
 {
-    // Consider caching this program id when useProgram is called.
-    GLint program = getCurrentProgram();
-    if (program == 0) {
-        // no program object is active.
-        return false;
-    }
-
-    if (location->program()->context() != this ||
-        location->program()->glObject() != static_cast<GLuint>(program) ||
-        location->linkCount() != location->program()->linkCount()) {
-        // If program were generated by a different WebGLRenderingContext than
-        // this one, and location were generated by a different program, or
-        // if program was re-linked after the uniform location was created.
-        return false;
-    }
-    return true;
+    // Compare objects, not GL names: a freed name may be reused. The location
+    // must also predate no relink of its program.
+    Optional<WebGLProgram*> current = m_state->webGLProgram();
+    return current && location->program() == current.value() &&
+           location->linkCount() == current.value()->linkCount();
 }
 
 bool WebGLRenderingContext::isExtensionEnabled(const char* name)

@@ -618,8 +618,7 @@ ScriptValue WebGL2RenderingContext::getProgramParameter(WebGLProgram* program,
 {
     ENTER_CONTEXT_SCOPE(scriptNull());
 
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return scriptNull();
     }
 
@@ -649,7 +648,8 @@ ScriptValue WebGL2RenderingContext::getProgramParameter(WebGLProgram* program,
     switch (pname) {
     // GLboolean
     case GL_DELETE_STATUS:
-        return createScriptValue(static_cast<bool>(params));
+        // GL learns of the deletion only once the program stops being current.
+        return createScriptValue(program->isDeleted());
     case GL_LINK_STATUS:
         if (program->linkFailed()) {
             return createScriptValue(false);
@@ -872,12 +872,12 @@ Optional<ScriptValue> WebGL2RenderingContext::getUniformImpl(
 ScriptValue WebGL2RenderingContext::getUniform(WebGLProgram* program,
                                                WebGLUniformLocation* location)
 {
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return scriptNull();
     }
 
-    if (location->program()->context() != this) {
+    if (location->program() != program ||
+        location->linkCount() != program->linkCount()) {
         setGLError(GL_INVALID_OPERATION);
         return scriptNull();
     }
@@ -1259,8 +1259,7 @@ GLint WebGL2RenderingContext::getFragDataLocation(WebGLProgram* program,
 {
     ENTER_CONTEXT_SCOPE(-1);
 
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return -1;
     }
     return gl()->getFragDataLocation(program->glObject(), CSTR(name));
@@ -1718,6 +1717,11 @@ GLenum WebGL2RenderingContext::clientWaitSync(WebGLSync* sync, GLbitfield flags,
         setGLError(GL_INVALID_OPERATION);
         return GL_WAIT_FAILED;
     }
+    // A deleted sync's GLsync is freed; it must not reach the driver.
+    if (sync->isDeleted()) {
+        setGLError(GL_INVALID_VALUE);
+        return GL_WAIT_FAILED;
+    }
     return gl()->clientWaitSync(sync->glObject(), flags, timeout);
 }
 
@@ -1730,6 +1734,10 @@ void WebGL2RenderingContext::waitSync(WebGLSync* sync, GLbitfield flags,
         setGLError(GL_INVALID_OPERATION);
         return;
     }
+    if (sync->isDeleted()) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
     gl()->waitSync(sync->glObject(), flags, timeout);
 }
 
@@ -1740,6 +1748,10 @@ ScriptValue WebGL2RenderingContext::getSyncParameter(WebGLSync* sync,
 
     if (!isFromCurrentContext(sync)) {
         setGLError(GL_INVALID_OPERATION);
+        return scriptNull();
+    }
+    if (sync->isDeleted()) {
+        setGLError(GL_INVALID_VALUE);
         return scriptNull();
     }
     switch (pname) {
@@ -1775,8 +1787,7 @@ void WebGL2RenderingContext::transformFeedbackVaryings(
 {
     ENTER_CONTEXT_SCOPE();
 
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return;
     }
 
@@ -2124,8 +2135,7 @@ GLuint WebGL2RenderingContext::getUniformBlockIndex(WebGLProgram* program,
                                                     String* uniformBlockName)
 {
     ENTER_CONTEXT_SCOPE(GL_INVALID_INDEX);
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return GL_INVALID_INDEX;
     }
     if (!uniformBlockName || uniformBlockName->length() == 0) {
@@ -2139,8 +2149,7 @@ ScriptValue WebGL2RenderingContext::getActiveUniformBlockParameter(
     WebGLProgram* program, GLuint uniformBlockIndex, GLenum pname)
 {
     ENTER_CONTEXT_SCOPE(scriptNull());
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return scriptNull();
     }
     GLint linkStatus = 0;
@@ -2210,8 +2219,7 @@ String* WebGL2RenderingContext::getActiveUniformBlockName(
     WebGLProgram* program, GLuint uniformBlockIndex)
 {
     ENTER_CONTEXT_SCOPE(nullptr);
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return nullptr;
     }
     GLint linkStatus = 0;
@@ -2249,8 +2257,7 @@ void WebGL2RenderingContext::uniformBlockBinding(WebGLProgram* program,
                                                  GLuint uniformBlockBinding)
 {
     ENTER_CONTEXT_SCOPE();
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return;
     }
 
@@ -2273,8 +2280,7 @@ Optional<GCAtomicVector<GLuint>> WebGL2RenderingContext::getUniformIndices(
 {
     ENTER_CONTEXT_SCOPE(Optional<GCAtomicVector<GLuint>>());
 
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return Optional<GCAtomicVector<GLuint>>();
     }
 
@@ -2312,8 +2318,7 @@ ScriptValue WebGL2RenderingContext::getActiveUniforms(
 {
     ENTER_CONTEXT_SCOPE(scriptNull());
 
-    if (!isFromCurrentContext(program)) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return scriptNull();
     }
     switch (pname) {
@@ -3108,8 +3113,7 @@ WebGLActiveInfo* WebGL2RenderingContext::getTransformFeedbackVarying(
     WebGLProgram* program, GLuint index)
 {
     ENTER_CONTEXT_SCOPE(nullptr);
-    if (!program || !isFromCurrentContext(program) || program->isDeleted()) {
-        setGLError(GL_INVALID_OPERATION);
+    if (!validateProgramOrShader(program)) {
         return nullptr;
     }
 
@@ -3200,6 +3204,10 @@ bool WebGL2RenderingContext::validateDrawCallUBO()
 void WebGL2RenderingContext::shaderSource(WebGLShader* shader, String* source)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!validateProgramOrShader(shader)) {
+        return;
+    }
 
     std::string originalStr = source->toUTF8NonGCString();
     shader->setSource(originalStr);

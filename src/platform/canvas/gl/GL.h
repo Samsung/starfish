@@ -209,6 +209,9 @@ public:
                                           GLint *precision) = 0;
     virtual void hint(GLenum target, GLenum mode) = 0;
     virtual GLboolean isBuffer(GLuint buffer) = 0;
+    virtual GLboolean isFramebuffer(GLuint framebuffer) = 0;
+    virtual GLboolean isRenderbuffer(GLuint renderbuffer) = 0;
+    virtual GLboolean isTexture(GLuint texture) = 0;
     virtual void lineWidth(GLfloat width) = 0;
     virtual void linkProgram(GLuint program) = 0;
     virtual void pixelStorei(GLenum pname, GLint param) = 0;

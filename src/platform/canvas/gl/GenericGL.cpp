@@ -647,6 +647,21 @@ public:
         return glIsBuffer(buffer);
     }
 
+    virtual GLboolean isFramebuffer(GLuint framebuffer) override
+    {
+        return glIsFramebuffer(framebuffer);
+    }
+
+    virtual GLboolean isRenderbuffer(GLuint renderbuffer) override
+    {
+        return glIsRenderbuffer(renderbuffer);
+    }
+
+    virtual GLboolean isTexture(GLuint texture) override
+    {
+        return glIsTexture(texture);
+    }
+
     virtual void lineWidth(GLfloat width) override
     {
         glLineWidth(width);

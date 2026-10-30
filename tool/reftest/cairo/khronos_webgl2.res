@@ -46,9 +46,9 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-rele
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-release-with-workers.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-lost-restored.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-lost.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/context/incorrect-context-object-behaviour.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/context/incorrect-context-object-behaviour.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/context/premultiplyalpha-test.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/context/resource-sharing-test.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/context/resource-sharing-test.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/user-defined-properties-on-context.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/ext-color-buffer-half-float.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/ext-disjoint-timer-query.html
@@ -355,9 +355,9 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/misc/error-reporting
 # http://localhost:11010/conformance-suites/2.0.0/conformance/misc/expando-loss.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/misc/functions-returning-strings.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/misc/invalid-passed-params.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/misc/is-object.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/misc/is-object.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/misc/null-object-behaviour.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/misc/object-deletion-behaviour.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/misc/object-deletion-behaviour.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/misc/shader-precision-format.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/misc/type-conversion-test.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/misc/uninitialized-test.html
@@ -697,7 +697,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/delet
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/drawArrays.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/drawArraysOutOfBounds.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/drawElements.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/isTests.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/isTests.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/isTestsBadArgs.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/readPixels.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/readPixelsBadArgs.html
@@ -1458,8 +1458,8 @@ http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/internalfo
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/multisample.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativebufferapi.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativefragmentapi.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativeshaderapi.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativestateapi.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativeshaderapi.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativestateapi.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativetextureapi.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativevertexarrayapi.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/occlusionquery_strict.html
@@ -1470,7 +1470,7 @@ http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/internalfo
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/readpixel.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/samplerobject.html
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/samplerstatequery.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderapi.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderapi.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderbuiltinvar.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shadercommonfunction.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderderivate_dfdx.html
@@ -1487,7 +1487,7 @@ http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/samplersta
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderstruct.html
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderswitch.html
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/stringquery.html
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/sync.html
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/sync.html
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/texturestatequery.html
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrayobject.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/attribs/gl-vertex-attrib.html
@@ -1546,7 +1546,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/uniform-block
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/uniform-location-length-limits.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/valid-invariant.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/vector-dynamic-indexing.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/expando-loss-2.html
+http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/expando-loss-2.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/getextension-while-pbo-bound-stability.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/instanceof-test.html
 http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/object-deletion-behaviour-2.html

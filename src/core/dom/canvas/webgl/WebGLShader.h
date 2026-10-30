@@ -50,6 +50,20 @@ public:
     {
         return m_compileFailed;
     }
+
+    // Number of live programs this shader is attached to.
+    uint32_t attachCount() const
+    {
+        return m_attachCount;
+    }
+    void incrementAttachCount()
+    {
+        m_attachCount++;
+    }
+    void decrementAttachCount()
+    {
+        m_attachCount--;
+    }
     void setInfoLog(const std::string& infoLog)
     {
         m_infoLog = infoLog;
@@ -65,6 +79,7 @@ public:
 private:
     std::string m_source;
     bool m_compileFailed = false;
+    uint32_t m_attachCount = 0;
     std::string m_infoLog;
 };
 } // namespace Starfish
