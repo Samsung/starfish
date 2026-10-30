@@ -772,6 +772,7 @@ public:
 #endif
 #if defined(STARFISH_ENABLE_WEBAUDIO)
     QualifiedName m_complete;
+    QualifiedName m_audioprocess;
 #endif
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_cuechange;

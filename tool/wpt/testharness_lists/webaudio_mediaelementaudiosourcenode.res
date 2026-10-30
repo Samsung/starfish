@@ -3,3 +3,4 @@
 # Unmeasured (cross-origin PCM routing is not implemented): https://web-platform.test:8443/webaudio/the-audio-api/the-mediaelementaudiosourcenode-interface/cors-check.https.html
 # Unmeasured (cross-origin PCM routing is not implemented): https://web-platform.test:8443/webaudio/the-audio-api/the-mediaelementaudiosourcenode-interface/no-cors.https.html
 # [auto-fail:HARNESS_STATUS_2] no testdriver vendor adapter / mediaDevices: https://web-platform.test:8443/webaudio/the-audio-api/the-mediaelementaudiosourcenode-interface/setSinkId-with-MediaElementAudioSourceNode.https.html
+# [auto-fail:SUBTESTS_FAILED] the element plays, but no media PCM reaches the ScriptProcessorNode input (all zeros): http://web-platform.test:8000/webaudio/the-audio-api/the-mediaelementaudiosourcenode-interface/mediaElementAudioSourceToScriptProcessorTest.html

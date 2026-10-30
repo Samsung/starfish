@@ -172,6 +172,108 @@ const groups = {
                   'from frame ' + frame);
         });
     },
+
+    // createScriptProcessor() validation and the fixed channel settings,
+    // and a node with no input: its output lags by 2 * bufferSize frames.
+    'script-processor': async () => {
+        const context = new OfflineAudioContext(1, 4096, 8000);
+        const indexSizeError = (fn, message) => {
+            let error = null;
+            try {
+                fn();
+            } catch (e) {
+                error = e;
+            }
+            check(error && error.name === 'IndexSizeError',
+                  message + ' throws IndexSizeError');
+        };
+        indexSizeError(() => context.createScriptProcessor(100),
+                       'bufferSize 100');
+        indexSizeError(() => context.createScriptProcessor(0, 0, 0),
+                       'zero input and output channels');
+        indexSizeError(() => context.createScriptProcessor(0, 33, 1),
+                       '33 input channels');
+        const defaults = context.createScriptProcessor();
+        check(defaults.bufferSize === 1024, 'bufferSize 0 selects 1024');
+        check(defaults.channelCount === 2 &&
+                  defaults.channelCountMode === 'explicit',
+              'channelCount is numberOfInputChannels, mode explicit');
+        let error = null;
+        try {
+            defaults.channelCount = 1;
+        } catch (e) {
+            error = e;
+        }
+        check(error && error.name === 'NotSupportedError',
+              'channelCount cannot change');
+        const node = context.createScriptProcessor(256, 0, 1);
+        node.connect(context.destination);
+        let events = 0;
+        node.onaudioprocess = (event) => {
+            events++;
+            event.outputBuffer.getChannelData(0).fill(0.25);
+        };
+        const data = (await context.startRendering()).getChannelData(0);
+        check(events === 16, '16 events for 4096 frames: ' + events);
+        check(data[511] === 0 && data[512] === 0.25 && data[4095] === 0.25,
+              'output starts 512 frames late');
+
+        // playbackTime is in the context's time coordinates: a node created
+        // at a suspend at frame 2048 first plays its output at frame
+        // 2048 + 2 * 1024. A listener added with addEventListener() while
+        // the node is connected but has had none still gets events.
+        const late = new OfflineAudioContext(1, 8192, 8000);
+        let firstTime = null;
+        let inputChannels = null;
+        let unlistened = null;
+        let listenedEvents = 0;
+        let firstListenedTime = null;
+        late.suspend(2048 / 8000).then(() => {
+            const node = late.createScriptProcessor(1024, 3, 1);
+            node.connect(late.destination);
+            node.onaudioprocess = (event) => {
+                if (firstTime === null) {
+                    firstTime = event.playbackTime;
+                    inputChannels = event.inputBuffer.numberOfChannels;
+                }
+            };
+            unlistened = late.createScriptProcessor(256, 1, 1);
+            unlistened.connect(late.destination);
+            late.suspend(4096 / 8000).then(() => {
+                unlistened.addEventListener('audioprocess', (event) => {
+                    listenedEvents++;
+                    if (firstListenedTime === null) {
+                        firstListenedTime = event.playbackTime;
+                    }
+                });
+                late.resume();
+            });
+            late.resume();
+        });
+        await late.startRendering();
+        check(firstTime === (2048 + 2 * 1024) / 8000,
+              'playbackTime is in context time: ' + firstTime);
+        check(inputChannels === 3, 'inputBuffer has numberOfInputChannels');
+        // Blocks that completed with no listener are not delivered late.
+        check(listenedEvents === 16 && firstListenedTime === (4096 + 512) / 8000,
+              'a listener added later with addEventListener() gets the ' +
+                  'events of later blocks: ' + listenedEvents + ' from ' +
+                  firstListenedTime);
+
+        const input = new AudioBuffer({length: 1, sampleRate: 8000});
+        const output = new AudioBuffer({length: 1, sampleRate: 8000});
+        const event = new AudioProcessingEvent(
+            'audioprocess',
+            {playbackTime: 1.5, inputBuffer: input, outputBuffer: output});
+        check(event.type === 'audioprocess' && event.playbackTime === 1.5 &&
+                  event.inputBuffer === input &&
+                  event.outputBuffer === output,
+              'AudioProcessingEvent constructor keeps its members');
+        throwsType(() => new AudioProcessingEvent(
+                       'audioprocess', {playbackTime: 0, inputBuffer: input}),
+                   'AudioProcessingEvent without outputBuffer');
+        throwsType(() => new ScriptProcessorNode(), 'new ScriptProcessorNode');
+    },
 };
 
 const group = groups[location.search.substring(1)];

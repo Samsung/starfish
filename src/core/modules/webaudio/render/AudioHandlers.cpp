@@ -1742,6 +1742,95 @@ void AudioBufferSourceHandler::process(uint64_t frameStart, size_t frames)
     }
 }
 
+ScriptProcessorHandler::ScriptProcessorHandler(size_t bufferSize,
+                                               size_t inputChannels,
+                                               size_t outputChannels)
+    : AudioHandler(1, 1, std::max<size_t>(outputChannels, 1))
+    , m_bufferSize(bufferSize)
+    , m_inputChannels(inputChannels)
+    , m_outputChannels(outputChannels)
+{
+}
+
+ScriptProcessorHandler::~ScriptProcessorHandler()
+{
+    for (AudioBufferData* output : m_outputs) {
+        if (output) {
+            output->release();
+        }
+    }
+}
+
+int ScriptProcessorHandler::pendingSlot() const
+{
+    if (m_pending[0] && m_pending[1]) {
+        return m_pendingBlock[0] < m_pendingBlock[1] ? 0 : 1;
+    }
+    return m_pending[0] ? 0 : (m_pending[1] ? 1 : -1);
+}
+
+uint64_t ScriptProcessorHandler::beginEvent(int slot)
+{
+    m_pending[slot] = false;
+    if (m_outputs[slot]) {
+        m_outputs[slot]->release();
+        m_outputs[slot] = nullptr;
+    }
+    return m_pendingBlock[slot];
+}
+
+void ScriptProcessorHandler::setOutput(int slot, uint64_t block,
+                                       AudioBufferData* data)
+{
+    if (block + 2 < m_block) {
+        return;
+    }
+    data->retain();
+    if (m_outputs[slot]) {
+        m_outputs[slot]->release();
+    }
+    m_outputs[slot] = data;
+    m_outputBlock[slot] = block + 2;
+}
+
+void ScriptProcessorHandler::process(uint64_t frameStart, size_t frames)
+{
+    if (!isConnected()) {
+        return;
+    }
+    if (!m_inputs) {
+        m_inputs.reset(new float[2 * m_inputChannels * m_bufferSize]());
+    }
+    const AudioBus& source = input(0).bus();
+    AudioBus& target = output(0).bus();
+    bool wrote = false;
+    for (size_t i = 0; i < frames; i++) {
+        const int slot = static_cast<int>(m_block & 1);
+        for (size_t channel = 0; channel < m_inputChannels; channel++) {
+            m_inputs[(slot * m_inputChannels + channel) * m_bufferSize +
+                     m_position] = source.channel(channel)[i];
+        }
+        const AudioBufferData* data = m_outputs[slot];
+        if (data && m_outputBlock[slot] == m_block) {
+            for (size_t channel = 0; channel < m_outputChannels; channel++) {
+                target.channel(channel)[i] = data->channel(channel)[m_position];
+            }
+            wrote = true;
+        }
+        if (++m_position == m_bufferSize) {
+            // shortcut: an event still pending when its slot comes round
+            // again (render quanta of 2 * bufferSize or more, or a stalled
+            // main thread) is dropped; upgrade: a deeper event queue.
+            m_pending[slot] = true;
+            m_pendingBlock[slot] = m_block;
+            m_pendingStartFrame[slot] = frameStart + i + 1 - m_bufferSize;
+            m_block++;
+            m_position = 0;
+        }
+    }
+    target.setSilent(!wrote);
+}
+
 } // namespace Starfish
 
 #endif

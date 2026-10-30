@@ -818,6 +818,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
 #if defined(STARFISH_ENABLE_WEBAUDIO)
     m_complete =
         QualifiedName(AtomicString::createAtomicString(starfish, "complete"));
+    m_audioprocess = QualifiedName(
+        AtomicString::createAtomicString(starfish, "audioprocess"));
 #endif
     m_ttsstart =
         QualifiedName(AtomicString::createAtomicString(starfish, "ttsstart"));

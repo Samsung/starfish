@@ -211,14 +211,21 @@ void AudioContext::didRegisterScheduledSource()
     updateRealtimeTimer();
 }
 
-// The timer only delivers source completion (`ended`) to DOM tasks; the audio
-// clock and all DSP run on the render thread. It is armed only while there
-// is a scheduled source to watch, so an idle context costs no wakeups.
+void AudioContext::didRegisterScriptProcessor()
+{
+    updateRealtimeTimer();
+}
+
+// The timer only delivers source completion (`ended`) and ScriptProcessorNode
+// `audioprocess` events to DOM tasks; the audio clock and all DSP run on the
+// render thread. It is armed only while there is a scheduled source or a
+// registered ScriptProcessorNode; a registered node keeps it armed even
+// while disconnected (documented in docs/Spec.md).
 void AudioContext::updateRealtimeTimer()
 {
     const bool needed =
         m_renderingQueue->state() == AudioContextState::Running &&
-        !m_activeSources.empty();
+        (!m_activeSources.empty() || !m_scriptProcessors.empty());
     const bool armed = m_realtimeTimer != TimerInvalidID;
     if (needed == armed) {
         return;
@@ -242,6 +249,10 @@ void AudioContext::renderRealtime()
         return;
     }
     renderScheduledSources();
+    // The render thread cannot run script, so audioprocess events are fired
+    // here; the ScriptProcessorNode's double buffering covers the timer's
+    // period for buffers of 512 frames or more.
+    dispatchScriptProcessorEvents();
     updateRealtimeTimer();
 }
 

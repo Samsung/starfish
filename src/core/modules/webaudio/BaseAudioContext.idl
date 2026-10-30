@@ -55,9 +55,9 @@ interface BaseAudioContext : EventTarget {
   OscillatorNode createOscillator ();
   PannerNode createPanner ();
   [RaisesException] PeriodicWave createPeriodicWave (sequence<float> real, sequence<float> imag, optional PeriodicWaveConstraints constraints);
-  //ScriptProcessorNode createScriptProcessor(optional unsigned long bufferSize = 0,
-  //                                          optional unsigned long numberOfInputChannels = 2,
-  //                                          optional unsigned long numberOfOutputChannels = 2);
+  [RaisesException] ScriptProcessorNode createScriptProcessor(optional unsigned long bufferSize = 0,
+                                                               optional unsigned long numberOfInputChannels = 2,
+                                                               optional unsigned long numberOfOutputChannels = 2);
   StereoPannerNode createStereoPanner ();
   WaveShaperNode createWaveShaper ();
 

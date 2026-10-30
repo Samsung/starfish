@@ -262,6 +262,14 @@ void OfflineAudioContext::renderChunk()
         }
         m_renderedFrames += frames;
         renderScheduledSources();
+        if (!m_scriptProcessors.empty()) {
+            // An offline context waits for script: each event runs before
+            // the next quantum renders. The handler may detach the document.
+            dispatchScriptProcessorEvents();
+            if (!executionContext()->document()->isFullyActive()) {
+                break;
+            }
+        }
     }
 
     if (m_renderedFrames < m_length) {

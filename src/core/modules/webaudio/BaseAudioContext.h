@@ -49,6 +49,7 @@ class IIRFilterNode;
 class BiquadFilterNode;
 class WaveShaperNode;
 class AnalyserNode;
+class ScriptProcessorNode;
 class DynamicsCompressorNode;
 class PeriodicWave;
 struct PeriodicWaveConstraints;
@@ -209,6 +210,9 @@ public:
     BiquadFilterNode* createBiquadFilter();
     WaveShaperNode* createWaveShaper();
     AnalyserNode* createAnalyser();
+    ScriptProcessorNode* createScriptProcessor(
+        uint32_t bufferSize = 0, uint32_t numberOfInputChannels = 2,
+        uint32_t numberOfOutputChannels = 2);
     DynamicsCompressorNode* createDynamicsCompressor();
     PeriodicWave* createPeriodicWave(const GCAtomicVector<double>& real,
                                      const GCAtomicVector<double>& imag);
@@ -247,6 +251,9 @@ public:
     }
     void registerScheduledSource(AudioScheduledSourceNode* source);
     void renderScheduledSources();
+    // Keeps |node| alive and dispatches its audioprocess events until it
+    // has neither a listener nor a connection.
+    void registerScriptProcessor(ScriptProcessorNode* node);
 
 protected:
     BaseAudioContext(ExecutionContext* executionContext,
@@ -267,6 +274,11 @@ protected:
     virtual void didRegisterScheduledSource()
     {
     }
+    // Main thread, between render quanta: fires pending audioprocess events.
+    void dispatchScriptProcessorEvents();
+    virtual void didRegisterScriptProcessor()
+    {
+    }
 
     ExecutionContext* m_executionContext{ nullptr };
 
@@ -278,6 +290,7 @@ protected:
     ControlMessageQueue* m_controlQueue{ nullptr };
     RenderingMessageQueue* m_renderingQueue{ nullptr };
     GCVector<AudioScheduledSourceNode*> m_activeSources;
+    GCVector<ScriptProcessorNode*> m_scriptProcessors;
     AudioContextState m_stateAttribute{ AudioContextState::Suspended };
     bool m_suspendedByUser{ false };
 };
