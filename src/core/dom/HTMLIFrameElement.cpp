@@ -316,6 +316,14 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
                                  ReferrerURL* referrerURL,
                                  CustomHTMLIFrameElementType elementType)
 {
+    // An SVG document used as an image runs no script and loads nothing
+    // external (SVG Integration, secure animated and static modes), so an
+    // iframe in it gets no browsing context; only a nested SVG image renders
+    // through one of its own.
+    if (elementType != CustomHTMLIFrameElementType::SVG &&
+        document()->browsingContext()->isInSVGImage()) {
+        return;
+    }
     if (ResourceURL::isValidURL(url->urlString())) {
         String* name = nameAttr();
         if (m_browsingContext) {
@@ -355,6 +363,8 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
         }
 
         m_browsingContext = BrowsingContext::create(this, allowScripting);
+        m_browsingContext->m_isSVGImage =
+            elementType == CustomHTMLIFrameElementType::SVG;
         m_browsingContext->setName(name);
         m_browsingContext->open(url, type, referrerURL);
 

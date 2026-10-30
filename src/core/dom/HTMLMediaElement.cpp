@@ -1561,6 +1561,14 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
     STARFISH_ASSERT(self->m_resourceSelectionContext);
     ResourceSelectionContext* context = self->m_resourceSelectionContext;
 
+    // An SVG document used as an image loads nothing external (SVG
+    // Integration, secure animated and static modes), and the media player
+    // fetches on its own, so its media elements are left without a source.
+    if (self->document()->browsingContext()->isInSVGImage()) {
+        self->m_networkState = HTMLMediaElement::NETWORK_EMPTY;
+        return;
+    }
+
     // TODO: 5. If the media element's blocked-on-parser flag is false, then
     // populate the list of pending text tracks.
     // 6. If the media element has an assigned media provider object, then
