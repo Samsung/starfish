@@ -43,7 +43,10 @@ AudioDestinationNode::AudioDestinationNode(ExecutionContext* executionContext,
 {
     AudioGraphLock graphLock(context->graph());
     m_numberOfInputs = 1;
-    m_numberOfOutputs = 0;
+    // https://webaudio.github.io/web-audio-api/#AudioDestinationNode
+    // The property table gives numberOfOutputs 1: the output carries the
+    // summed input so the context's output can be captured.
+    m_numberOfOutputs = 1;
     m_channelCount = 2;
     m_channelCountMode = ChannelCountMode::Explicit;
     m_destinationHandler =
