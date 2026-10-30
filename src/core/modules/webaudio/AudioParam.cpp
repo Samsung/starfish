@@ -24,6 +24,17 @@
 
 namespace Starfish {
 
+// WebIDL: converting a non-finite value to the restricted float type throws
+// a TypeError. The binding generator checks only double arguments, and this
+// conversion error must win over the RangeErrors below.
+static void throwIfNotFinite(ExecutionContext* executionContext, float value)
+{
+    if (!std::isfinite(value)) {
+        throw new DOMException(executionContext, DOMException::SCRIPT_TYPE_ERR,
+                               "AudioParam value must be finite");
+    }
+}
+
 AudioParam::AudioParam(BaseAudioContext* context, AudioParamTimeline* timeline)
     : ScriptWrappable(this)
     , m_context(context)
@@ -112,7 +123,8 @@ void AudioParam::ensureEventOutsideValueCurve(double time) const
 AudioParam* AudioParam::setValueAtTime(float value, double startTime)
 {
     AudioGraphLock graphLock(m_context->graph());
-    if (!std::isfinite(startTime) || startTime < 0 || !std::isfinite(value)) {
+    throwIfNotFinite(m_context->executionContext(), value);
+    if (!std::isfinite(startTime) || startTime < 0) {
         throw new DOMException(m_context->executionContext(),
                                DOMException::SCRIPT_RANGE_ERR,
                                "Invalid AudioParam event");
@@ -126,7 +138,8 @@ AudioParam* AudioParam::setValueAtTime(float value, double startTime)
 AudioParam* AudioParam::linearRampToValueAtTime(float value, double endTime)
 {
     AudioGraphLock graphLock(m_context->graph());
-    if (!std::isfinite(endTime) || endTime < 0 || !std::isfinite(value)) {
+    throwIfNotFinite(m_context->executionContext(), value);
+    if (!std::isfinite(endTime) || endTime < 0) {
         throw new DOMException(m_context->executionContext(),
                                DOMException::SCRIPT_RANGE_ERR,
                                "Invalid AudioParam ramp");
@@ -142,8 +155,8 @@ AudioParam* AudioParam::exponentialRampToValueAtTime(float value,
                                                      double endTime)
 {
     AudioGraphLock graphLock(m_context->graph());
-    if (!std::isfinite(endTime) || endTime < 0 || !std::isfinite(value) ||
-        value == 0) {
+    throwIfNotFinite(m_context->executionContext(), value);
+    if (!std::isfinite(endTime) || endTime < 0 || value == 0) {
         throw new DOMException(m_context->executionContext(),
                                DOMException::SCRIPT_RANGE_ERR,
                                "Invalid AudioParam exponential ramp");
@@ -159,9 +172,9 @@ AudioParam* AudioParam::setTargetAtTime(float target, double startTime,
                                         float timeConstant)
 {
     AudioGraphLock graphLock(m_context->graph());
-    if (!std::isfinite(startTime) || startTime < 0 ||
-        !std::isfinite(timeConstant) || timeConstant < 0 ||
-        !std::isfinite(target)) {
+    throwIfNotFinite(m_context->executionContext(), target);
+    throwIfNotFinite(m_context->executionContext(), timeConstant);
+    if (!std::isfinite(startTime) || startTime < 0 || timeConstant < 0) {
         throw new DOMException(m_context->executionContext(),
                                DOMException::SCRIPT_RANGE_ERR,
                                "Invalid AudioParam target event");

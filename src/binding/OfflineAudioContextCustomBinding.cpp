@@ -14,6 +14,7 @@
 #include "core/dom/DOMException.h"
 #include "core/modules/webaudio/OfflineAudioContext.h"
 #include <EscargotPublic.h>
+#include <cmath>
 
 using namespace Escargot;
 
@@ -73,6 +74,40 @@ ValueRef* offlineaudiocontextConstructor(ExecutionStateRef* state,
         result->scriptObject()->setPrototype(state, prototype);
     }
     return result->scriptValue();
+}
+
+// https://webidl.spec.whatwg.org/#js-operations
+// suspend() returns a promise, so a failed argument conversion (a missing
+// or non-finite suspendTime, or a throwing valueOf) rejects it instead of
+// throwing.
+ValueRef* suspendOfflineAudioContextFunction(ExecutionStateRef* state,
+                                             ValueRef* thisValue, size_t argc,
+                                             ValueRef** argv,
+                                             bool isNewExpression)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(OfflineAudioContext);
+    auto converted = Evaluator::execute(
+        state->context(),
+        [](ExecutionStateRef* state, ValueRef* value) -> ValueRef* {
+            return ValueRef::create(value->toNumber(state));
+        },
+        argc ? argv[0] : ValueRef::createUndefined());
+    ValueRef* error = nullptr;
+    if (converted.error.hasValue()) {
+        error = converted.error.value();
+    } else if (!std::isfinite(converted.result->asNumber())) {
+        error = (new DOMException(originalObj->executionContext(),
+                                  DOMException::SCRIPT_TYPE_ERR,
+                                  "suspendTime must be a finite number"))
+                    ->scriptValue();
+    }
+    if (error) {
+        Promise* promise =
+            new Promise(fetchScriptBindingInstance(state->context()));
+        promise->reject(error);
+        return promise->scriptValue();
+    }
+    return originalObj->suspend(converted.result->asNumber())->scriptValue();
 }
 
 } // namespace Starfish
