@@ -660,7 +660,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/typedarrays/data-vie
 http://localhost:11010/conformance-suites/2.0.0/conformance/typedarrays/array-large-array-tests.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/gl-uniform-arrays.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/gl-uniform-bool.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/gl-uniformmatrix4fv.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/gl-uniformmatrix4fv.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/gl-unknown-uniform.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/null-uniform-location.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/out-of-bounds-uniform-array-access.html

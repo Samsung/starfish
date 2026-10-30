@@ -694,7 +694,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/data-vie
 # http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/typed-arrays-in-workers.html # @ignore Passed when Worker is disabled.
 # http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniform-arrays.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniform-bool.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniformmatrix4fv.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniformmatrix4fv.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniform-struct-unused.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniform-unused-array-elements-get-truncated.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-unknown-uniform.html
