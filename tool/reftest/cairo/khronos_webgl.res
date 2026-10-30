@@ -596,7 +596,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/reading/read-pixels-
 # http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/renderbuffer-initialization.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/culling.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/draw-arrays-out-of-bounds.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/draw-elements-out-of-bounds.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/draw-elements-out-of-bounds.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/framebuffer-switch.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/framebuffer-texture-switch.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/gl-clear.html

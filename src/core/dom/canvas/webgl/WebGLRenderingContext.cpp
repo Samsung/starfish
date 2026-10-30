@@ -1921,16 +1921,42 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
 {
     ENTER_CONTEXT_SCOPE();
 
+    if (!isValidDrawMode(mode)) {
+        setGLError(GL_INVALID_ENUM, "invalid draw mode");
+        return;
+    }
+
+    bool isUintAllowed =
+        (webGLVersion() >= 2) || isExtensionEnabled("OES_element_index_uint");
+    if (type != GL_UNSIGNED_BYTE && type != GL_UNSIGNED_SHORT &&
+        (!isUintAllowed || type != GL_UNSIGNED_INT)) {
+        setGLError(GL_INVALID_ENUM, "invalid type");
+        return;
+    }
+
+    if (count < 0 || offset < 0) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    if ((type == GL_UNSIGNED_SHORT && (offset % 2) != 0) ||
+        (type == GL_UNSIGNED_INT && (offset % 4) != 0)) {
+        setGLError(GL_INVALID_OPERATION, "offset not properly aligned");
+        return;
+    }
+
+    if (count == 0) {
+        return;
+    }
+
     completePendingJobs();
 
-    if (count > 0) {
-        Optional<WebGLBuffer*> elementBuffer =
-            getState()->getBoundBuffer(GL_ELEMENT_ARRAY_BUFFER);
-        if (!elementBuffer.hasValue() || !elementBuffer.value()) {
-            setGLError(GL_INVALID_OPERATION,
-                       "drawElements: no buffer bound to ELEMENT_ARRAY_BUFFER");
-            return;
-        }
+    Optional<WebGLBuffer*> elementBuffer =
+        getState()->getBoundBuffer(GL_ELEMENT_ARRAY_BUFFER);
+    if (!elementBuffer.hasValue() || !elementBuffer.value()) {
+        setGLError(GL_INVALID_OPERATION,
+                   "drawElements: no buffer bound to ELEMENT_ARRAY_BUFFER");
+        return;
     }
 
     for (GLuint array : getState()->arraysEnabled()) {
@@ -1940,13 +1966,6 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
                 "drawElements: vertex attribute enabled without bound buffer");
             return;
         }
-    }
-
-    if (offset < 0) {
-        // the offset must be non-negative or an INVALID_VALUE error will be
-        // generated.
-        setGLError(GL_INVALID_VALUE);
-        return;
     }
 
     if (!getCurrentProgram()) {
