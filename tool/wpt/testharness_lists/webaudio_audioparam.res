@@ -35,3 +35,7 @@ http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/re
 http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/retrospective-setValueCurveAtTime.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/setTargetAtTime-after-event-within-block.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/setValueAtTime-within-block.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/k-rate-biquad.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/k-rate-oscillator.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/k-rate-delay.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/k-rate-delay-connections.html
