@@ -3723,6 +3723,27 @@ ScriptValue WebGLRenderingContext::getUniform(WebGLProgram* program,
     return uniform.valueOr(scriptNull());
 }
 
+// An array subscript is a GLSL int, so one beyond INT32_MAX names no uniform
+// even where the driver would wrap it to a valid index.
+static bool hasOutOfRangeSubscript(const std::string& name)
+{
+    for (size_t open = name.find('['); open != std::string::npos;
+         open = name.find('[', open + 1)) {
+        size_t first = name.find_first_not_of('0', open + 1);
+        size_t close = name.find(']', open);
+        if (first == std::string::npos || close == std::string::npos ||
+            first > close) {
+            continue;
+        }
+        size_t digits = close - first;
+        if (digits > 10 ||
+            (digits == 10 && name.compare(first, 10, "2147483647") > 0)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 WebGLUniformLocation* WebGLRenderingContext::getUniformLocation(
     WebGLProgram* program, String* name)
 {
@@ -3733,6 +3754,10 @@ WebGLUniformLocation* WebGLRenderingContext::getUniformLocation(
     }
 
     if (!checkAttribOrUniformName(name)) {
+        return nullptr;
+    }
+
+    if (hasOutOfRangeSubscript(name->toUTF8NonGCString())) {
         return nullptr;
     }
 
@@ -6913,6 +6938,11 @@ void WebGLRenderingContext::implementUniformMatrixMxNfv(
     }
     if (!isFromCurrentProgram(location.value())) {
         setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    // OpenGL ES 2.0 §2.10.4: transpose must be FALSE (WebGL 2 allows TRUE).
+    if (transpose && !isWebGL2RenderingContext()) {
+        setGLError(GL_INVALID_VALUE);
         return;
     }
     if (data.isFloat32ArrayValue()) {
