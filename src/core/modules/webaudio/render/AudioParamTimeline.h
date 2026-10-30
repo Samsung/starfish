@@ -47,6 +47,10 @@ public:
     void cancelAndHoldAtTime(double cancelTime);
     float valueAt(double time) const;
     float computedValueAt(double time, float modulationValue) const;
+    // computedValueAt() for |frame| of the render quantum at |frameStart|,
+    // honouring the automation rate.
+    float computedValue(uint64_t frameStart, size_t frame, double sampleRate,
+                        const AudioBus* modulation) const;
     // Render quanta start at non-decreasing times; events that can no longer
     // affect any later query are folded into a single anchor state here.
     void beginQuantum(double time);

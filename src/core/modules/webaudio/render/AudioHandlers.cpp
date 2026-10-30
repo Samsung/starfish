@@ -741,12 +741,17 @@ void DynamicsCompressorHandler::process(uint64_t frameStart, size_t frames)
         return;
     }
 
-    const double time = static_cast<double>(frameStart) / m_sampleRate;
-    const double threshold = m_threshold.computedValueAt(time, 0);
-    const double knee = m_knee.computedValueAt(time, 0);
-    const double ratio = m_ratio.computedValueAt(time, 0);
-    const double attack = m_attack.computedValueAt(time, 0);
-    const double release = m_release.computedValueAt(time, 0);
+    // These params are fixed k-rate; their inputs are sampled like their
+    // automation.
+    auto value = [this, frameStart, frames](AudioParamTimeline& param) {
+        return static_cast<double>(param.computedValue(
+            frameStart, 0, m_sampleRate, param.modulation(frames)));
+    };
+    const double threshold = value(m_threshold);
+    const double knee = value(m_knee);
+    const double ratio = value(m_ratio);
+    const double attack = value(m_attack);
+    const double release = value(m_release);
     auto shapedDb = [threshold, knee, ratio](double inputDb) {
         if (inputDb <= threshold) {
             return inputDb;
@@ -1018,9 +1023,8 @@ void DelayHandler::readOutput(uint64_t frameStart, size_t frames)
     double readFrames[AudioBus::RenderQuantumFrames];
     size_t outputChannels = 1;
     for (size_t i = 0; i < frames; i++) {
-        const double time = static_cast<double>(frameStart + i) / m_sampleRate;
-        const double delay = m_delayTime.computedValueAt(
-            time, modulation ? modulation->channel(0)[i] : 0);
+        const double delay =
+            m_delayTime.computedValue(frameStart, i, m_sampleRate, modulation);
         // https://webaudio.github.io/web-audio-api/#dom-delaynode-delaytime
         // A cycle's delay line cannot read from the current render quantum.
         const double delayFrames =
@@ -1287,16 +1291,14 @@ void BiquadFilterHandler::process(uint64_t frameStart, size_t frames)
     double lastGain = lastFrequency;
     bool wrote = false;
     for (size_t frame = 0; frame < frames; frame++) {
-        const double time =
-            static_cast<double>(frameStart + frame) / m_sampleRate;
-        const double frequency = m_frequency.computedValueAt(
-            time, frequencyMod ? frequencyMod->channel(0)[frame] : 0);
-        const double detune = m_detune.computedValueAt(
-            time, detuneMod ? detuneMod->channel(0)[frame] : 0);
+        const double frequency = m_frequency.computedValue(
+            frameStart, frame, m_sampleRate, frequencyMod);
+        const double detune =
+            m_detune.computedValue(frameStart, frame, m_sampleRate, detuneMod);
         const double Q =
-            m_Q.computedValueAt(time, QMod ? QMod->channel(0)[frame] : 0);
-        const double gain = m_gain.computedValueAt(
-            time, gainMod ? gainMod->channel(0)[frame] : 0);
+            m_Q.computedValue(frameStart, frame, m_sampleRate, QMod);
+        const double gain =
+            m_gain.computedValue(frameStart, frame, m_sampleRate, gainMod);
         if (frequency != lastFrequency || detune != lastDetune || Q != lastQ ||
             gain != lastGain) {
             c = coefficients(frequency, detune, Q, gain);
@@ -1464,11 +1466,10 @@ void OscillatorHandler::process(uint64_t frameStart, size_t frames)
         if (frame < startFrame || frame >= stopFrame) {
             continue;
         }
-        const double time = frame / m_sampleRate;
-        const double frequency = m_frequency.computedValueAt(
-            time, frequencyModulation ? frequencyModulation->channel(0)[i] : 0);
-        const double detune = m_detune.computedValueAt(
-            time, detuneModulation ? detuneModulation->channel(0)[i] : 0);
+        const double frequency = m_frequency.computedValue(
+            frameStart, i, m_sampleRate, frequencyModulation);
+        const double detune = m_detune.computedValue(
+            frameStart, i, m_sampleRate, detuneModulation);
         const double computedFrequency =
             frequency * std::pow(2.0, detune / 1200.0);
         const bool audible = std::isfinite(computedFrequency) &&

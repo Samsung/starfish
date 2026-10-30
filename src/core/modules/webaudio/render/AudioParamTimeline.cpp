@@ -347,5 +347,20 @@ float AudioParamTimeline::computedValueAt(double time,
                  std::min(static_cast<double>(m_maxValue), value)));
 }
 
+// https://webaudio.github.io/web-audio-api/#dom-audioparam-automationrate
+// "For each render quantum, the value of a k-rate parameter MUST be sampled
+// at the time of the very first sample-frame, and that value MUST be used for
+// the entire block." That includes the AudioParam's input.
+float AudioParamTimeline::computedValue(uint64_t frameStart, size_t frame,
+                                        double sampleRate,
+                                        const AudioBus* modulation) const
+{
+    if (!m_isARate) {
+        frame = 0;
+    }
+    return computedValueAt(static_cast<double>(frameStart + frame) / sampleRate,
+                           modulation ? modulation->channel(0)[frame] : 0);
+}
+
 } // namespace Starfish
 #endif
