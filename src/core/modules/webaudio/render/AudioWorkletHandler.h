@@ -22,12 +22,13 @@ namespace Starfish {
 class AudioWorkletProcessorRecord;
 
 // https://webaudio.github.io/web-audio-api/#AudioWorkletNode
-// The render side of an AudioWorkletNode: its AudioParam timelines, and the
-// global scope's record of its processor, which the scope keeps until the
-// graph deletes this handler.
+// The render side of an AudioWorkletNode: its AudioParam timelines, its
+// processor's flags, and the global scope's record of the processor, which
+// the scope keeps until the graph deletes this handler.
 class AudioWorkletHandler final : public AudioHandler {
 public:
-    AudioWorkletHandler(size_t inputs, const std::vector<size_t>& outputs);
+    AudioWorkletHandler(size_t inputs, const std::vector<size_t>& outputs,
+                        bool outputFollowsInput);
 
     AudioParamTimeline* addTimeline(float defaultValue, float minValue,
                                     float maxValue, bool isARate);
@@ -47,13 +48,41 @@ public:
     {
         return m_record;
     }
+    // https://webaudio.github.io/web-audio-api/#active-source
+    // Keeps the node rendering, and alive, without active inputs.
+    void setActiveSourceFlag(bool active)
+    {
+        m_activeSourceFlag = active;
+    }
+    // [[callable process]] became false: process() threw.
+    void clearCallableProcess()
+    {
+        m_callableProcess = false;
+    }
+    bool hasPendingOutput() const override
+    {
+        return m_activeSourceFlag || AudioHandler::hasPendingOutput();
+    }
+    bool hasActiveInput() const;
+    // This quantum's values of parameter |index|; |constant| when every
+    // frame has values[0].
+    const float* parameterValues(size_t index, bool& constant) const;
 
 protected:
     void process(uint64_t frameStart, size_t frames) override;
+    bool isActivelyProcessing(uint64_t quantumEnd) const override;
 
 private:
+    void computeParameters(uint64_t frameStart);
+
     std::vector<std::unique_ptr<AudioParamTimeline>> m_timelines;
+    // Parameters × render quantum floats, allocated on the first process().
+    std::unique_ptr<float[]> m_parameterValues;
+    std::vector<bool> m_constantParameters;
     AudioWorkletProcessorRecord* m_record{ nullptr };
+    bool m_outputFollowsInput;
+    bool m_activeSourceFlag{ true };
+    bool m_callableProcess{ true };
 };
 } // namespace Starfish
 

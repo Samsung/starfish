@@ -214,7 +214,11 @@ AudioWorkletNode::AudioWorkletNode(ExecutionContext* executionContext,
     const auto& descriptors = definition.value()->descriptors;
     std::unique_ptr<AudioWorkletHandler> handler;
     try {
-        handler.reset(new AudioWorkletHandler(inputs, outputChannels));
+        // One input and one output without outputChannelCount: the output
+        // follows the input's computedNumberOfChannels.
+        handler.reset(new AudioWorkletHandler(
+            inputs, outputChannels,
+            inputs == 1 && outputs == 1 && !options.hasOutputChannelCount()));
         for (const AudioParamDescriptor& descriptor : descriptors) {
             handler->addTimeline(descriptor.defaultValue(),
                                  descriptor.minValue(), descriptor.maxValue(),
@@ -225,6 +229,10 @@ AudioWorkletNode::AudioWorkletNode(ExecutionContext* executionContext,
     }
     AudioWorkletHandler* workletHandler = handler.get();
     m_handler = context->addHandler(std::move(handler));
+    // https://webaudio.github.io/web-audio-api/#active-source
+    // Rendered every quantum, connected or not: the active source flag and
+    // inputs decide whether process() runs (automatic pull).
+    context->graph()->registerAnalysisHandler(m_handler);
     applyOptions(options);
 
     // The node's port and the processor's port are one MessageChannel.

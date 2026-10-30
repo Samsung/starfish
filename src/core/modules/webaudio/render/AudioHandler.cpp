@@ -96,18 +96,47 @@ void AudioHandler::zeroOutputs()
 void AudioHandler::renderMuted()
 {
     zeroOutputs();
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    m_activelyProcessing = false;
+#endif
 }
+
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+bool AudioHandler::isActivelyProcessing(uint64_t) const
+{
+    for (const auto& input : m_inputs) {
+        if (input->hasActiveSource()) {
+            return true;
+        }
+    }
+    return hasPendingOutput();
+}
+#endif
 
 void AudioHandler::render(uint64_t frameStart, size_t frames)
 {
     zeroOutputs();
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    const bool finishedAtStart = finished();
+#endif
     if (m_cycleMuted) {
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+        m_activelyProcessing = false;
+        m_finishedAtPreviousStart = finishedAtStart;
+#endif
         return;
     }
     for (const auto& input : m_inputs) {
         input->pull(frames);
     }
     process(frameStart, frames);
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    // A source that finished during the previous quantum still counts as
+    // actively processing in this one (see activelyProcessing()).
+    m_activelyProcessing =
+        !m_finishedAtPreviousStart && isActivelyProcessing(frameStart + frames);
+    m_finishedAtPreviousStart = finishedAtStart;
+#endif
 }
 
 } // namespace Starfish

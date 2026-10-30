@@ -522,6 +522,9 @@ public:
     {
         return m_started && !m_finished;
     }
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    bool isActivelyProcessing(uint64_t quantumEnd) const override;
+#endif
 
 protected:
     void process(uint64_t frameStart, size_t frames) override;
@@ -570,6 +573,9 @@ public:
     {
         return m_started && !m_finished;
     }
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    bool isActivelyProcessing(uint64_t quantumEnd) const override;
+#endif
 
 protected:
     void process(uint64_t frameStart, size_t frames) override;
@@ -614,6 +620,9 @@ public:
     {
         return m_started && !m_finished;
     }
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    bool isActivelyProcessing(uint64_t quantumEnd) const override;
+#endif
 
     void setBuffer(AudioBufferData* data, double sampleRate);
     void start(double when, double offset, bool hasDuration, double duration);

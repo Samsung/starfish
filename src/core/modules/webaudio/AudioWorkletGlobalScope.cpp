@@ -26,6 +26,9 @@
 #include "core/modules/webaudio/AudioWorkletNode.h"
 #include "core/modules/webaudio/BaseAudioContext.h"
 #include "core/modules/webaudio/render/AudioGraph.h"
+#include "core/modules/webaudio/render/AudioNodeInput.h"
+#include "core/modules/webaudio/render/AudioNodeOutput.h"
+#include "core/modules/webaudio/render/AudioWorkletHandler.h"
 #include "core/page/WebBase.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
@@ -42,15 +45,23 @@ namespace Starfish {
 using namespace Escargot;
 
 AudioWorkletProcessorRecord::AudioWorkletProcessorRecord(
-    AudioWorkletNode* node, AudioWorkletProcessorDefinition* definition,
-    MessagePort* port, SerializeWithTransferResult* options)
-    : definition(definition)
+    AudioWorkletGlobalScope* scope, AudioWorkletNode* node,
+    AudioWorkletProcessorDefinition* definition, MessagePort* port,
+    SerializeWithTransferResult* options)
+    : scope(scope)
+    , definition(definition)
     , port(port)
     , options(options)
     , m_nodeLink(static_cast<void**>(GC_MALLOC_ATOMIC(sizeof(void*))))
 {
     *m_nodeLink = reinterpret_cast<void*>(GC_HIDE_POINTER(node));
     GC_GENERAL_REGISTER_DISAPPEARING_LINK(m_nodeLink, node);
+    m_retainedNode = node;
+}
+
+void AudioWorkletProcessorRecord::retainNode(bool retain)
+{
+    m_retainedNode = retain ? node() : nullptr;
 }
 
 Optional<AudioWorkletNode*> AudioWorkletProcessorRecord::node() const
@@ -183,7 +194,7 @@ AudioWorkletProcessorRecord* AudioWorkletGlobalScope::createProcessor(
 {
     sweepRecords();
     auto* record =
-        new AudioWorkletProcessorRecord(node, definition, port, options);
+        new AudioWorkletProcessorRecord(this, node, definition, port, options);
     m_records.push_back(record);
     // The ED queues a control message for the rendering thread; with the
     // realm on the main thread a task constructs the processor even while
@@ -196,6 +207,26 @@ AudioWorkletProcessorRecord* AudioWorkletGlobalScope::createProcessor(
         },
         this, record);
     return record;
+}
+
+// An exception from the processor's constructor or process(): logged, and
+// fired as processorerror with the position of the frame that threw.
+static void errorPosition(ScriptBindingInstance* instance,
+                          Evaluator::EvaluatorResult& result, String*& message,
+                          String*& filename, uint32_t& lineno, uint32_t& colno)
+{
+    message = toBrowserString(instance, result.error.value());
+    STARFISH_LOG_ERROR("AudioWorkletProcessor: %s",
+                       message->toUTF8NonGCString().data());
+    filename = String::emptyString;
+    lineno = 0;
+    colno = 0;
+    if (result.stackTrace.size()) {
+        const auto& frame = result.stackTrace[result.stackTrace.size() - 1];
+        filename = toBrowserString(instance, ValueRef::create(frame.srcName));
+        lineno = frame.loc.line;
+        colno = frame.loc.column;
+    }
 }
 
 // https://webaudio.github.io/web-audio-api/#instantiation-of-AudioWorkletProcessor
@@ -218,6 +249,7 @@ void AudioWorkletGlobalScope::constructProcessor(
                                             deserialized);
     } catch (DOMException* exception) {
         delete options;
+        record->constructionFailed = true;
         queueProcessorError(record, exception->message(), String::emptyString,
                             0, 0);
         return;
@@ -236,28 +268,229 @@ void AudioWorkletGlobalScope::constructProcessor(
         processorCtor, deserialized.m_deserialized);
     m_pendingPort = nullptr;
     if (result.error.hasValue()) {
-        String* message =
-            toBrowserString(m_scriptBindingInstance, result.error.value());
-        STARFISH_LOG_ERROR("AudioWorkletProcessor constructor: %s",
-                           message->toUTF8NonGCString().data());
-        String* filename = String::emptyString;
-        uint32_t lineno = 0;
-        uint32_t colno = 0;
-        if (result.stackTrace.size()) {
-            const auto& frame = result.stackTrace[result.stackTrace.size() - 1];
-            filename = toBrowserString(m_scriptBindingInstance,
-                                       ValueRef::create(frame.srcName));
-            lineno = frame.loc.line;
-            colno = frame.loc.column;
-        }
+        record->constructionFailed = true;
+        String* message;
+        String* filename;
+        uint32_t lineno;
+        uint32_t colno;
+        errorPosition(m_scriptBindingInstance, result, message, filename,
+                      lineno, colno);
         queueProcessorError(record, message, filename, lineno, colno);
         return;
     }
     record->processor = result.result->asObject();
 }
 
-struct AudioWorkletProcessorError : public gc {
+struct AudioWorkletProcessCall {
     AudioWorkletProcessorRecord* record;
+    AudioWorkletHandler* handler;
+    size_t quantum;
+    bool rebuild;
+};
+
+static ValueRef* createFloat32Array(ExecutionStateRef* state, size_t length)
+{
+    auto* buffer = ArrayBufferObjectRef::create(state);
+    buffer->allocateBuffer(state, length * sizeof(float));
+    auto* view = Float32ArrayObjectRef::create(state);
+    view->setBuffer(buffer, 0, length * sizeof(float), length);
+    return view;
+}
+
+static float* floatData(ScriptValue array)
+{
+    return reinterpret_cast<float*>(array->asArrayBufferView()->rawBuffer());
+}
+
+// "New arrays are also reallocated if any part of the inputs or outputs
+// arrays are transferred."
+static bool anyDetached(const GCVector<ScriptValue>& arrays)
+{
+    for (ScriptValue array : arrays) {
+        if (!array->asArrayBufferView()->byteLength()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Builds the frozen inputs/outputs arrays and parameters object of
+// |call->record| for its current shape.
+static void buildProcessArguments(ExecutionStateRef* state,
+                                  AudioWorkletProcessCall* call)
+{
+    AudioWorkletProcessorRecord* record = call->record;
+    AudioWorkletHandler& handler = *call->handler;
+    const GCAtomicVector<uint32_t>& shape = record->shape;
+    record->arrays.clear();
+    size_t next = 0;
+    auto channels = [&](size_t count) {
+        ArrayObjectRef* list = ArrayObjectRef::create(state);
+        for (size_t channel = 0; channel < count; channel++) {
+            ValueRef* array = createFloat32Array(state, call->quantum);
+            record->arrays.push_back(array);
+            list->defineDataProperty(state, ValueRef::create(channel), array,
+                                     true, true, true);
+        }
+        list->setIntegrityLevel(state, false);
+        return list;
+    };
+    ArrayObjectRef* inputs = ArrayObjectRef::create(state);
+    for (size_t index = 0; index < handler.inputCount(); index++) {
+        inputs->defineDataProperty(state, ValueRef::create(index),
+                                   channels(shape[next++]), true, true, true);
+    }
+    inputs->setIntegrityLevel(state, false);
+    ArrayObjectRef* outputs = ArrayObjectRef::create(state);
+    for (size_t index = 0; index < handler.outputCount(); index++) {
+        outputs->defineDataProperty(state, ValueRef::create(index),
+                                    channels(shape[next++]), true, true, true);
+    }
+    outputs->setIntegrityLevel(state, false);
+    ObjectRef* parameters = ObjectRef::create(state);
+    const auto& descriptors = record->definition->descriptors;
+    for (size_t index = 0; index < descriptors.size(); index++) {
+        ValueRef* values = createFloat32Array(state, shape[next++]);
+        record->arrays.push_back(values);
+        // CreateDataProperty: an accessor on Object.prototype must not
+        // intercept the parameter (param-getter-overridden).
+        parameters->defineDataProperty(state,
+                                       toJSString(descriptors[index].name()),
+                                       values, true, true, true);
+    }
+    parameters->setIntegrityLevel(state, false);
+    record->inputs = inputs;
+    record->outputs = outputs;
+    record->parameters = parameters;
+}
+
+// https://webaudio.github.io/web-audio-api/#rendering-a-graph
+// The AudioWorkletNode substeps, on the main thread inside a render quantum.
+void AudioWorkletGlobalScope::process(AudioWorkletProcessorRecord* record,
+                                      AudioWorkletHandler& handler)
+{
+    if (!record->processor) {
+        if (record->constructionFailed) {
+            handler.setActiveSourceFlag(false);
+        }
+        return;
+    }
+    const size_t quantum = m_context->graph()->quantumFrames();
+    // The arrays' shape: channels of each input (0 without an actively
+    // processing source) and output, then each parameter array's length
+    // (1 when its values are constant this quantum).
+    m_shape.clear();
+    for (size_t index = 0; index < handler.inputCount(); index++) {
+        AudioNodeInput& input = handler.input(index);
+        m_shape.push_back(input.hasActiveSource() ? input.bus().channels() : 0);
+    }
+    for (size_t index = 0; index < handler.outputCount(); index++) {
+        m_shape.push_back(handler.output(index).channels());
+    }
+    for (size_t index = 0; index < handler.timelineCount(); index++) {
+        bool constant;
+        handler.parameterValues(index, constant);
+        m_shape.push_back(constant ? 1 : quantum);
+    }
+    AudioWorkletProcessCall call = { record, &handler, quantum, false };
+    if (!record->inputs || record->shape.size() != m_shape.size() ||
+        !std::equal(m_shape.begin(), m_shape.end(), record->shape.begin()) ||
+        anyDetached(record->arrays)) {
+        record->shape = m_shape;
+        call.rebuild = true;
+    }
+
+    auto result = Evaluator::execute(
+        m_scriptBindingInstance->scriptContext(),
+        [](ExecutionStateRef* state,
+           AudioWorkletProcessCall* call) -> ValueRef* {
+            AudioWorkletProcessorRecord* record = call->record;
+            AudioWorkletHandler& handler = *call->handler;
+            if (call->rebuild) {
+                buildProcessArguments(state, call);
+            }
+            // Inputs are copied in, outputs zero-filled, parameters filled.
+            size_t next = 0;
+            for (size_t index = 0; index < handler.inputCount(); index++) {
+                const AudioBus& bus = handler.input(index).bus();
+                for (size_t channel = 0; channel < record->shape[index];
+                     channel++) {
+                    std::copy_n(bus.channel(channel), call->quantum,
+                                floatData(record->arrays[next++]));
+                }
+            }
+            for (size_t index = 0; index < handler.outputCount(); index++) {
+                const size_t channels =
+                    record->shape[handler.inputCount() + index];
+                for (size_t channel = 0; channel < channels; channel++) {
+                    std::fill_n(floatData(record->arrays[next++]),
+                                call->quantum, 0.0f);
+                }
+            }
+            for (size_t index = 0; index < handler.timelineCount(); index++) {
+                bool constant;
+                const float* values = handler.parameterValues(index, constant);
+                std::copy_n(values, constant ? 1 : call->quantum,
+                            floatData(record->arrays[next++]));
+            }
+            ObjectRef* processor = record->processor.value();
+            ValueRef* process =
+                processor->get(state, StringRef::createFromASCII("process"));
+            if (!process->isCallable()) {
+                const char* message = "process is not a function";
+                state->throwException(TypeErrorObjectRef::create(
+                    state,
+                    StringRef::createFromASCII(message, strlen(message))));
+            }
+            ValueRef* argv[] = { record->inputs, record->outputs,
+                                 record->parameters };
+            return ValueRef::create(
+                process->call(state, processor, 3, argv)->toBoolean(state));
+        },
+        &call);
+
+    if (result.error.hasValue()) {
+        // "Set [[callable process]] to false. Set processor's active source
+        // flag to false. Make a silent output buffer available for reading.
+        // Queue a task ... processorerror."
+        handler.clearCallableProcess();
+        handler.setActiveSourceFlag(false);
+        for (size_t index = 0; index < handler.outputCount(); index++) {
+            handler.output(index).bus().zero();
+        }
+        String* message;
+        String* filename;
+        uint32_t lineno;
+        uint32_t colno;
+        errorPosition(m_scriptBindingInstance, result, message, filename,
+                      lineno, colno);
+        queueProcessorError(record, message, filename, lineno, colno);
+        return;
+    }
+    const bool active = result.result->asBoolean();
+    handler.setActiveSourceFlag(active);
+    record->retainNode(active);
+    // The outputs' copies are made available for reading; an output array
+    // that process() transferred is silent.
+    size_t next = 0;
+    for (size_t index = 0; index < handler.inputCount(); index++) {
+        next += record->shape[index];
+    }
+    for (size_t index = 0; index < handler.outputCount(); index++) {
+        AudioBus& bus = handler.output(index).bus();
+        const size_t channels = record->shape[handler.inputCount() + index];
+        for (size_t channel = 0; channel < channels; channel++) {
+            ScriptValue array = record->arrays[next++];
+            if (array->asArrayBufferView()->byteLength()) {
+                std::copy_n(floatData(array), quantum, bus.channel(channel));
+            }
+        }
+        bus.setSilent(false);
+    }
+}
+
+struct AudioWorkletProcessorError : public gc {
+    Optional<AudioWorkletNode*> node;
     String* message;
     String* filename;
     uint32_t lineno;
@@ -272,7 +505,10 @@ void AudioWorkletGlobalScope::queueProcessorError(
     uint32_t lineno, uint32_t colno)
 {
     auto* error = new AudioWorkletProcessorError;
-    error->record = record;
+    // The processor outputs silence from now on and no longer retains the
+    // node; the queued event does until it is fired.
+    error->node = record->node();
+    record->retainNode(false);
     error->message = message;
     error->filename = filename;
     error->lineno = lineno;
@@ -281,7 +517,7 @@ void AudioWorkletGlobalScope::queueProcessorError(
         m_executionContext->globalScope(),
         [](size_t, void* data) {
             auto* error = static_cast<AudioWorkletProcessorError*>(data);
-            Optional<AudioWorkletNode*> node = error->record->node();
+            Optional<AudioWorkletNode*> node = error->node;
             if (!node) {
                 return;
             }

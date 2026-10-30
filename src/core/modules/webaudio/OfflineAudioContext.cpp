@@ -16,6 +16,8 @@
 #include "core/dom/DOMException.h"
 #include "core/dom/Document.h"
 #include "core/dom/ExecutionContext.h"
+#include "binding/ScriptBindingInstance.h"
+#include "binding/ScriptEngineInstance.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/webaudio/AudioBuffer.h"
 #include "core/modules/webaudio/AudioDestinationNode.h"
@@ -87,6 +89,10 @@ OfflineAudioContext::OfflineAudioContext(ExecutionContext* executionContext,
                                "Unsupported offline audio dimensions");
     }
     destination()->configureOfflineChannelCount(numberOfChannels);
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    // renderChunk() renders on the main thread, between tasks.
+    graph()->setMainThreadRendering(true);
+#endif
 }
 
 ScriptBindingInstance* OfflineAudioContext::scriptBindingInstance()
@@ -293,7 +299,21 @@ void OfflineAudioContext::renderChunk()
         }
         size_t frames =
             std::min<size_t>(quantumFrames, m_length - m_renderedFrames);
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+        const AudioBus* rendered;
+        {
+            // https://webaudio.github.io/web-audio-api/#rendering-loop
+            // "Perform a microtask checkpoint" after each render quantum:
+            // promise jobs of AudioWorkletProcessors run between quanta,
+            // never between two process() calls of one quantum.
+            MicroTaskExecutionManager microtasks(
+                scriptBindingInstance()->engineInstance());
+            rendered = &graph()->renderQuantum(frames);
+        }
+        const AudioBus& output = *rendered;
+#else
         const AudioBus& output = graph()->renderQuantum(frames);
+#endif
         for (size_t channel = 0; channel < m_numberOfChannels; channel++) {
             memcpy(m_renderedBuffer->data()->channel(channel) +
                        m_renderedFrames,

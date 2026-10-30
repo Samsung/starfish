@@ -57,6 +57,15 @@ public:
     {
         return m_sources.size();
     }
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    // https://webaudio.github.io/web-audio-api/#AudioNode-actively-processing
+    // Whether a source connected here was actively processing when pull()
+    // mixed it.
+    bool hasActiveSource() const
+    {
+        return m_hasActiveSource;
+    }
+#endif
     AudioHandler* owner() const
     {
         return m_owner;
@@ -70,6 +79,9 @@ private:
     size_t m_channelCount{ 2 };
     AudioInputChannelMode m_mode{ AudioInputChannelMode::Max };
     bool m_speakers{ true };
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    bool m_hasActiveSource{ false };
+#endif
 };
 
 } // namespace Starfish

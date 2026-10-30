@@ -23,3 +23,4 @@ http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-i
 http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/note-grain-on-timing.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/sub-sample-scheduling.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/sub-sample-buffer-stitching.html
+https://web-platform.test:8443/webaudio/the-audio-api/the-audiobuffersourcenode-interface/active-processing.https.html
