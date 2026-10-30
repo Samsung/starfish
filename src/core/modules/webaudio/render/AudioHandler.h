@@ -94,6 +94,15 @@ public:
     // playing source, or a tail that has not decayed. Checked before a node
     // whose wrapper was collected is removed from the graph.
     virtual bool hasPendingOutput() const;
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    // An AudioWorkletNode's processor record (a GC object the global scope
+    // keeps): reported to the control thread when the graph deletes this
+    // handler; see AudioGraph::takeReleasedWorkletRecords().
+    virtual void* workletRecord() const
+    {
+        return nullptr;
+    }
+#endif
     // Graph teardown only: forget every connection without notifying the
     // peers, which are being destroyed too.
     void detachForTeardown();

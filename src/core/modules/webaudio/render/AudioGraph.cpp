@@ -698,6 +698,11 @@ void AudioGraph::releaseHandlers()
         for (AudioHandler* handler : m_releaseCandidates) {
             if (handler->releasable()) {
                 detachHandler(handler);
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+                if (void* record = handler->workletRecord()) {
+                    m_releasedWorkletRecords.push_back(record);
+                }
+#endif
                 removed = true;
             }
         }

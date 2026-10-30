@@ -15,12 +15,15 @@
 #include "core/modules/webaudio/AudioWorkletGlobalScope.h"
 
 #include "binding/ScriptBindingAudioWorkletInstance.h"
+#include "binding/ScriptEngineInstance.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/Document.h"
+#include "core/dom/ErrorEvent.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/MessagePort.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/webaudio/AudioWorklet.h"
+#include "core/modules/webaudio/AudioWorkletNode.h"
 #include "core/modules/webaudio/BaseAudioContext.h"
 #include "core/modules/webaudio/render/AudioGraph.h"
 #include "core/page/WebBase.h"
@@ -28,11 +31,36 @@
 #include "core/page/Window.h"
 #include "platform/loader/ResourceURL.h"
 
+#include "core/serialize/Serializer.h"
+
 #include <EscargotPublic.h>
+
+#include <algorithm>
 
 namespace Starfish {
 
 using namespace Escargot;
+
+AudioWorkletProcessorRecord::AudioWorkletProcessorRecord(
+    AudioWorkletNode* node, AudioWorkletProcessorDefinition* definition,
+    MessagePort* port, SerializeWithTransferResult* options)
+    : definition(definition)
+    , port(port)
+    , options(options)
+    , m_nodeLink(static_cast<void**>(GC_MALLOC_ATOMIC(sizeof(void*))))
+{
+    *m_nodeLink = reinterpret_cast<void*>(GC_HIDE_POINTER(node));
+    GC_GENERAL_REGISTER_DISAPPEARING_LINK(m_nodeLink, node);
+}
+
+Optional<AudioWorkletNode*> AudioWorkletProcessorRecord::node() const
+{
+    if (!*m_nodeLink) {
+        return nullptr;
+    }
+    return static_cast<AudioWorkletNode*>(
+        GC_REVEAL_POINTER(reinterpret_cast<GC_hidden_pointer>(*m_nodeLink)));
+}
 
 AudioWorkletGlobalScope::AudioWorkletGlobalScope(BaseAudioContext* context,
                                                  AudioWorklet* worklet)
@@ -125,6 +153,149 @@ float AudioWorkletGlobalScope::sampleRate() const
 uint32_t AudioWorkletGlobalScope::renderQuantumSize() const
 {
     return m_context->renderQuantumSize();
+}
+
+Optional<MessagePort*> AudioWorkletGlobalScope::takePendingPort()
+{
+    Optional<MessagePort*> port = m_pendingPort;
+    m_pendingPort = nullptr;
+    return port;
+}
+
+void AudioWorkletGlobalScope::sweepRecords()
+{
+    std::vector<void*> released;
+    {
+        AudioGraphLock graphLock(m_context->graph());
+        m_context->graph()->takeReleasedWorkletRecords(released);
+    }
+    for (void* record : released) {
+        m_records.erase(
+            std::remove(m_records.begin(), m_records.end(),
+                        static_cast<AudioWorkletProcessorRecord*>(record)),
+            m_records.end());
+    }
+}
+
+AudioWorkletProcessorRecord* AudioWorkletGlobalScope::createProcessor(
+    AudioWorkletNode* node, AudioWorkletProcessorDefinition* definition,
+    MessagePort* port, SerializeWithTransferResult* options)
+{
+    sweepRecords();
+    auto* record =
+        new AudioWorkletProcessorRecord(node, definition, port, options);
+    m_records.push_back(record);
+    // The ED queues a control message for the rendering thread; with the
+    // realm on the main thread a task constructs the processor even while
+    // the context is not rendering, which the port tests rely on.
+    m_executionContext->webBase()->messageLoop()->addIdler(
+        m_executionContext->globalScope(),
+        [](size_t, void* scope, void* record) {
+            static_cast<AudioWorkletGlobalScope*>(scope)->constructProcessor(
+                static_cast<AudioWorkletProcessorRecord*>(record));
+        },
+        this, record);
+    return record;
+}
+
+// https://webaudio.github.io/web-audio-api/#instantiation-of-AudioWorkletProcessor
+void AudioWorkletGlobalScope::constructProcessor(
+    AudioWorkletProcessorRecord* record)
+{
+    ScriptValue processorCtor = nullptr;
+    for (const auto& entry : m_processorConstructors) {
+        if (entry.first->equals(record->definition->name)) {
+            processorCtor = entry.second;
+        }
+    }
+    SerializeWithTransferResult* options = record->options;
+    record->options = nullptr;
+    DeserializeWithTransferResult deserialized;
+    try {
+        // StructuredDeserialize in this realm: an object of an interface
+        // not exposed here fails with DataCloneError.
+        Serializer::deserializeWithTransfer(m_executionContext, *options,
+                                            deserialized);
+    } catch (DOMException* exception) {
+        delete options;
+        queueProcessorError(record, exception->message(), String::emptyString,
+                            0, 0);
+        return;
+    }
+    delete options;
+
+    MicroTaskExecutionManager microtasks(
+        m_scriptBindingInstance->engineInstance());
+    m_pendingPort = record->port;
+    auto result = Evaluator::execute(
+        m_scriptBindingInstance->scriptContext(),
+        [](ExecutionStateRef* state, ValueRef* processorCtor,
+           ValueRef* options) -> ValueRef* {
+            return processorCtor->asObject()->construct(state, 1, &options);
+        },
+        processorCtor, deserialized.m_deserialized);
+    m_pendingPort = nullptr;
+    if (result.error.hasValue()) {
+        String* message =
+            toBrowserString(m_scriptBindingInstance, result.error.value());
+        STARFISH_LOG_ERROR("AudioWorkletProcessor constructor: %s",
+                           message->toUTF8NonGCString().data());
+        String* filename = String::emptyString;
+        uint32_t lineno = 0;
+        uint32_t colno = 0;
+        if (result.stackTrace.size()) {
+            const auto& frame = result.stackTrace[result.stackTrace.size() - 1];
+            filename = toBrowserString(m_scriptBindingInstance,
+                                       ValueRef::create(frame.srcName));
+            lineno = frame.loc.line;
+            colno = frame.loc.column;
+        }
+        queueProcessorError(record, message, filename, lineno, colno);
+        return;
+    }
+    record->processor = result.result->asObject();
+}
+
+struct AudioWorkletProcessorError : public gc {
+    AudioWorkletProcessorRecord* record;
+    String* message;
+    String* filename;
+    uint32_t lineno;
+    uint32_t colno;
+};
+
+// https://webaudio.github.io/web-audio-api/#dom-audioworkletnode-onprocessorerror
+// A task fires processorerror at the node, if it is still alive, with the
+// error's position but not the error object, which belongs to this realm.
+void AudioWorkletGlobalScope::queueProcessorError(
+    AudioWorkletProcessorRecord* record, String* message, String* filename,
+    uint32_t lineno, uint32_t colno)
+{
+    auto* error = new AudioWorkletProcessorError;
+    error->record = record;
+    error->message = message;
+    error->filename = filename;
+    error->lineno = lineno;
+    error->colno = colno;
+    m_executionContext->webBase()->messageLoop()->addIdler(
+        m_executionContext->globalScope(),
+        [](size_t, void* data) {
+            auto* error = static_cast<AudioWorkletProcessorError*>(data);
+            Optional<AudioWorkletNode*> node = error->record->node();
+            if (!node) {
+                return;
+            }
+            ErrorEventInit init;
+            init.setMessage(error->message);
+            init.setFilename(error->filename);
+            init.setLineno(error->lineno);
+            init.setColno(error->colno);
+            AudioWorkletNode* target = node.value();
+            target->dispatchEventByUA(new ErrorEvent(
+                target->executionContext(),
+                target->staticStrings()->m_processorerror.localName(), init));
+        },
+        error);
 }
 
 static ScriptValue createSyntaxError(ScriptBindingInstance* instance)

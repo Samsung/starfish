@@ -821,6 +821,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_audioprocess = QualifiedName(
         AtomicString::createAtomicString(starfish, "audioprocess"));
 #endif
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    m_processorerror = QualifiedName(
+        AtomicString::createAtomicString(starfish, "processorerror"));
+#endif
     m_ttsstart =
         QualifiedName(AtomicString::createAtomicString(starfish, "ttsstart"));
     m_onttsstart =

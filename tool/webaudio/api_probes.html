@@ -401,6 +401,15 @@ const groups = {
         }
         check(!node || node.channelCount === 2,
               'ConstantSourceNode channelCount stays 2');
+        // The constructor reports its own errors instead of aborting.
+        let thrown = 'no exception';
+        try {
+            new AudioBufferSourceNode(context, {detune: Infinity});
+        } catch (e) {
+            thrown = e.name;
+        }
+        check(thrown !== 'no exception',
+              'AudioBufferSourceNode with a non-finite detune throws');
     },
 
     // Run by test_api_probes.py under an address-space limit a few GB above
@@ -440,28 +449,111 @@ const groups = {
               'renders silence after the failure');
     },
 
-    // Same limit: node creation throws NotSupportedError when its buses
-    // cannot be allocated, for factories and constructors alike.
+    // Under a limit about 0.5 GB above the browser's own: a 32-input
+    // ChannelMergerNode's 1.2 GB of buses cannot be allocated, so its
+    // factory and constructor throw NotSupportedError, and the context
+    // remains usable. One failed allocation, not an exhausted process.
     'oom-node-creation': async () => {
         const context = new OfflineAudioContext({
             numberOfChannels: 1, length: 1, sampleRate: 768000,
             renderSizeHint: 4608000});
-        const nodes = [];
-        const fill = (create, label) => {
-            for (let i = 0; i < 400; i++) {
-                try {
-                    nodes.push(create());
-                } catch (e) {
-                    check(e.name === 'NotSupportedError', label + ': ' + e);
-                    return;
-                }
+        const name = (fn) => {
+            try {
+                fn();
+            } catch (e) {
+                return e.name;
             }
-            check(false, label + ' never ran out of memory');
+            return 'no exception';
         };
-        fill(() => context.createChannelMerger(32), 'createChannelMerger');
-        fill(() => new AudioBufferSourceNode(context),
-             'new AudioBufferSourceNode');
-        fill(() => new ConstantSourceNode(context), 'new ConstantSourceNode');
+        let thrown = name(() => context.createChannelMerger(32));
+        check(thrown === 'NotSupportedError', 'createChannelMerger: ' + thrown);
+        thrown = name(() => new ChannelMergerNode(
+            context, {numberOfInputs: 32}));
+        check(thrown === 'NotSupportedError',
+              'new ChannelMergerNode: ' + thrown);
+        thrown = name(() => new GainNode(context));
+        check(thrown === 'no exception',
+              'a small node afterwards: ' + thrown);
+    },
+
+    // AudioWorkletNode construction paths the webaudio WPT reaches only
+    // together with process(): parameterData conversion, processorerror
+    // from the processor constructor and from options that cannot be
+    // deserialized in the worklet, and the pending construction data.
+    'audio-worklet-node': async () => {
+        if (typeof AudioWorkletNode !== 'function') {
+            console.log('API_PROBE_SKIP built without AUDIO_WORKLET=1');
+            return;
+        }
+        const context = new OfflineAudioContext(1, 128, 8000);
+        const source = `
+            let direct = 'no exception';
+            try {
+                new AudioWorkletProcessor();
+            } catch (e) {
+                direct = e.name;
+            }
+            registerProcessor('echo', class extends AudioWorkletProcessor {
+                static get parameterDescriptors() {
+                    return [{name: 'x', defaultValue: 1, minValue: 0,
+                             maxValue: 2, automationRate: 'k-rate'}];
+                }
+                constructor(options) {
+                    super();
+                    this.port.postMessage({direct, options});
+                }
+            });
+            registerProcessor('throws', class extends AudioWorkletProcessor {
+                constructor() {
+                    throw new Error('constructor failed');
+                }
+            });`;
+        await context.audioWorklet.addModule(URL.createObjectURL(
+            new Blob([source], {type: 'application/javascript'})));
+
+        const node = new AudioWorkletNode(context, 'echo', {
+            parameterData: {x: 0.5, unknown: 3},
+            processorOptions: {list: [1, 2]},
+        });
+        const x = node.parameters.get('x');
+        check(node.parameters.size === 1 && x instanceof AudioParam,
+              'parameters holds the descriptor\'s AudioParam');
+        check(x.value === 0.5 && x.defaultValue === 1 && x.maxValue === 2 &&
+                  x.automationRate === 'k-rate',
+              'AudioParam from the descriptor and parameterData');
+        const message = await new Promise((resolve) => {
+            node.port.onmessage = (e) => resolve(e.data);
+        });
+        check(message.direct === 'TypeError',
+              'new AudioWorkletProcessor() outside a node construction: ' +
+                  message.direct);
+        check(JSON.stringify(message.options) ===
+                  '{"numberOfInputs":1,"numberOfOutputs":1,' +
+                  '"parameterData":{"x":0.5,"unknown":3},' +
+                  '"processorOptions":{"list":[1,2]}}',
+              'processor options: ' + JSON.stringify(message.options));
+
+        let thrown = 'no exception';
+        try {
+            new AudioWorkletNode(context, 'echo', {parameterData: {x: NaN}});
+        } catch (e) {
+            thrown = e.name;
+        }
+        check(thrown === 'TypeError', 'non-finite parameterData: ' + thrown);
+
+        const processorError = (node) => new Promise((resolve) => {
+            node.onprocessorerror = resolve;
+        });
+        const failed = await processorError(
+            new AudioWorkletNode(context, 'throws'));
+        check(failed instanceof ErrorEvent && failed.lineno > 0 &&
+                  failed.message.includes('constructor failed'),
+              'processorerror from the constructor: ' + failed.message +
+                  ' at line ' + failed.lineno);
+        const notCloned = await processorError(new AudioWorkletNode(
+            context, 'echo', {processorOptions: {blob: new Blob([])}}));
+        check(notCloned instanceof ErrorEvent,
+              'processorerror for options a worklet cannot deserialize');
     },
 
     // Waits briefly; test_api_probes.py measures the browser's address

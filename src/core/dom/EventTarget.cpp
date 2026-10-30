@@ -69,7 +69,11 @@ ScriptValue EventListener::call(Event* event)
         // Prepare arguments
         ScriptValue* argv;
         size_t argc = 0;
-        if (event->isErrorEvent() && isAttribute()) {
+        // https://html.spec.whatwg.org/multipage/webappapis.html#the-event-handler-processing-algorithm
+        // Only "error" events get the five-argument handler call; others
+        // carried by an ErrorEvent, such as processorerror, pass the event.
+        if (event->isErrorEvent() && isAttribute() &&
+            event->type()->equals("error")) {
             argc = ERROR_ARG_SIZE;
             argv = ALLOCA(sizeof(ScriptValue) * argc, ScriptValue);
             ErrorEvent* errorEvent = event->asErrorEvent();
