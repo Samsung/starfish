@@ -558,7 +558,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/copy-t
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/default-texture.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/gl-pixelstorei.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/gl-teximage.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/origin-clean-conformance.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/origin-clean-conformance.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/tex-image-and-sub-image-2d-with-array-buffer-view.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/tex-image-and-uniform-binding-bugs.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/tex-image-canvas-corruption.html
@@ -700,7 +700,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/drawE
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/isTests.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/isTestsBadArgs.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/readPixels.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/readPixelsBadArgs.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/readPixelsBadArgs.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texImage2D.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texImage2DBadArgs.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texImage2DHTML.html

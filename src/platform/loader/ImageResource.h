@@ -34,6 +34,9 @@ class ImageResource : public Resource {
 
     ImageResource(ResourceURL* url, ResourceLoader* loader)
         : Resource(url, loader)
+        , m_isCORSRequest(false)
+        , m_isCredentialedCORSRequest(false)
+        , m_isCORSSameOrigin(false)
     {
         m_imageData = nullptr;
         m_mockFrameForSVGDocument = nullptr;
@@ -84,11 +87,34 @@ public:
         return Type::ImageResourceType;
     }
 
+    virtual void request(RequestData* requestData, bool allowCache) override
+    {
+        m_isCORSRequest = requestData->m_mode == RequestMode::CORS;
+        m_isCredentialedCORSRequest =
+            m_isCORSRequest &&
+            requestData->m_credentials == RequestCredentials::Include;
+        Resource::request(requestData, allowCache);
+    }
+
+    // Whether the loaded image is CORS-same-origin, decided once from the
+    // response when the load completed; drawing a CORS-cross-origin image
+    // into a canvas taints it.
+    bool isCORSSameOrigin()
+    {
+        return m_isCORSSameOrigin;
+    }
+
+    // The image cache key. A CORS request must never be answered with a
+    // no-cors response or the reverse, so the CORS mode and credentials are
+    // part of it (https://fetch.spec.whatwg.org/#http-network-or-cache-fetch).
+    UTF8String cacheKey();
+
     virtual void didLoadFinished();
     virtual void didCacheHit(Resource* cache)
     {
         m_imageData = cache->asImageResource()->m_imageData;
         m_requestErrorType = cache->asImageResource()->requestErrorType();
+        m_isCORSSameOrigin = cache->asImageResource()->m_isCORSSameOrigin;
         Resource::didLoadFinished();
     }
 
@@ -96,6 +122,9 @@ protected:
     NativeImageData* m_imageData;
     MockHTMLIFrameElement* m_mockFrameForSVGDocument;
     float m_devicePixelRatioAtFetch;
+    bool m_isCORSRequest : 1;
+    bool m_isCredentialedCORSRequest : 1;
+    bool m_isCORSSameOrigin : 1;
 #if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
     void* m_pendingDecodeData{ nullptr };
 #endif

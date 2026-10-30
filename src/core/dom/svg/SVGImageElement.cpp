@@ -24,7 +24,6 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/loader/ElementResourceClient.h"
 #include "platform/loader/ResourceLoader.h"
-#include "core/dom/WebOrigin.h"
 
 namespace Starfish {
 
@@ -59,18 +58,20 @@ public:
     virtual void didLoadFailed()
     {
         ResourceClient::didLoadFailed();
-        updateImage(m_element->document()->brokenImage());
+        updateImage(m_element->document()->brokenImage(), false);
     }
 
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
-        updateImage(m_resource->asImageResource()->imageData());
+        ImageResource* resource = m_resource->asImageResource();
+        updateImage(resource->imageData(), resource->isCORSSameOrigin());
     }
 
-    void updateImage(NativeImageData* imageData)
+    void updateImage(NativeImageData* imageData, bool isCORSSameOrigin)
     {
         m_element->m_requestErrorType = m_resource->requestErrorType();
+        m_element->m_isImageCORSSameOrigin = isCORSSameOrigin;
         m_element->m_imageResource = nullptr;
         m_element->m_imageData = imageData;
         if (!imageData) {
@@ -99,6 +100,7 @@ void SVGImageElement::unloadImage()
         m_imageResource = nullptr;
     }
     m_imageData = nullptr;
+    m_isImageCORSSameOrigin = false;
     m_requestErrorType = RequestErrorType::NoError;
     if (frame()) {
         setNeedsPainting();
@@ -189,22 +191,6 @@ void SVGImageElement::styleForPresentationAttribute(
 {
     SVGElement::styleForPresentationAttribute(cssValues, matchedRules,
                                               cssCustomValues);
-}
-
-WebOrigin* SVGImageElement::webOrigin()
-{
-    return WebOrigin::createDocumentOrigin(origin());
-}
-
-ResourceURL* SVGImageElement::origin()
-{
-    if (hasAttribute(starfish()->staticStrings()->m_href) != SIZE_MAX) {
-        return new ResourceURL(
-            getAttributeOrEmpty(starfish()->staticStrings()->m_href),
-            document()->baseURI());
-    } else {
-        return new ResourceURL(String::emptyString);
-    }
 }
 
 bool SVGImageElement::hasRequestError()

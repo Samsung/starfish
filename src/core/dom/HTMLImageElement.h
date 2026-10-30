@@ -27,7 +27,6 @@ namespace Starfish {
 class NativeImageData;
 class ImageResource;
 class Document;
-class WebOrigin;
 class ElementResourceClient;
 enum class RequestErrorType;
 
@@ -102,7 +101,12 @@ public:
     virtual void didNodeInsertedToDocumentTree() override;
     virtual void didNodeRemovedFromDocumentTree() override;
 
-    WebOrigin* webOrigin();
+    // Whether the current image is CORS-same-origin, i.e. drawing it into a
+    // canvas leaves the canvas origin-clean. Decided when the load completed.
+    bool isImageCORSSameOrigin()
+    {
+        return m_isImageCORSSameOrigin;
+    }
     bool hasRequestError();
 
     void updateFrame(uint64_t delayInMs);
@@ -131,6 +135,7 @@ private:
     ElementResourceClient* m_elementResourceClient;
     NativeImageData* m_imageData;
     RequestErrorType m_requestErrorType;
+    bool m_isImageCORSSameOrigin{ false };
 
     // Drive the animated GIF: the timer wakes us up when the next frame falls
     // due, and it then asks for an animation frame so the frame is swapped by

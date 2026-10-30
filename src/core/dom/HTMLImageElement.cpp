@@ -30,7 +30,6 @@
 #include "platform/loader/ResourceLoader.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
-#include "core/dom/WebOrigin.h"
 #include "core/modules/message_loop/Timer.h"
 
 namespace Starfish {
@@ -64,18 +63,20 @@ public:
     virtual void didLoadFailed()
     {
         ResourceClient::didLoadFailed();
-        updateImage(m_element->document()->brokenImage());
+        updateImage(m_element->document()->brokenImage(), false);
     }
 
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
-        updateImage(m_resource->asImageResource()->imageData());
+        ImageResource* resource = m_resource->asImageResource();
+        updateImage(resource->imageData(), resource->isCORSSameOrigin());
     }
 
-    void updateImage(NativeImageData* imageData)
+    void updateImage(NativeImageData* imageData, bool isCORSSameOrigin)
     {
         m_element->m_requestErrorType = m_resource->requestErrorType();
+        m_element->m_isImageCORSSameOrigin = isCORSSameOrigin;
         m_element->m_imageResource = nullptr;
         NativeImageData* imageDataBefore = m_element->imageData();
         if (!imageData) {
@@ -282,6 +283,16 @@ void HTMLImageElement::styleForPresentationAttribute(
                  CSSStyleValuePair::KeyKind::Height);
 }
 
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#cors-settings-attribute
+// 0: No CORS, 1: Anonymous (also the invalid value default), 2: Use Credentials
+static int corsSettingsState(Optional<String*> value)
+{
+    if (!value) {
+        return 0;
+    }
+    return value->equalsIgnoreCase("use-credentials") ? 2 : 1;
+}
+
 void HTMLImageElement::didAttributeChanged(QualifiedName name,
                                            Optional<String*> old, String* value,
                                            bool attributeCreated,
@@ -309,6 +320,16 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name,
                 setAttribute(starfish()->staticStrings()->m_crossorigin,
                              String::fromUTF8("anonymous"));
             }
+        }
+        // https://html.spec.whatwg.org/multipage/images.html#relevant-mutations
+        // A changed CORS setting refetches the image in the new mode.
+        String* srcValue =
+            getAttributeOrEmpty(starfish()->staticStrings()->m_src);
+        if (corsSettingsState(old) !=
+                corsSettingsState(attributeRemoved ? nullptr : value) &&
+            srcValue->length() && !inHTMLConstructionSite() &&
+            document()->doesParticipateInRendering()) {
+            loadImage(srcValue);
         }
     }
 }
@@ -357,6 +378,7 @@ void HTMLImageElement::unloadImage()
         m_elementResourceClient = nullptr;
     }
     m_imageData = nullptr;
+    m_isImageCORSSameOrigin = false;
     stopFrameTimer();
     m_requestErrorType = RequestErrorType::NoError;
     if (frame()) {
@@ -444,11 +466,6 @@ String* HTMLImageElement::usemap()
 void HTMLImageElement::setUsemap(String* usemap)
 {
     setAttribute(starfish()->staticStrings()->m_usemap, usemap);
-}
-
-WebOrigin* HTMLImageElement::webOrigin()
-{
-    return WebOrigin::createDocumentOrigin(origin());
 }
 
 ResourceURL* HTMLImageElement::origin()

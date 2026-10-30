@@ -2106,7 +2106,7 @@ The [X-Frame-Options](https://tools.ietf.org/html/rfc7034) HTTP response header 
 | [sameorigin]() | The page cannot be displayed in a frame, regardless of the site attempting to do so. | |
 | [allow-from uri]() | The page cannot be displayed in a frame, regardless of the site attempting to do so. | |
 
-Note: CORS handling is wired through the network stack and runs for `XMLHttpRequest` and the (partial) `fetch()` implementation. The `fetch()` global is exposed but parts of the Fetch spec (streaming response bodies, `Request.body.getReader()`) remain incomplete; for production paths prefer `XMLHttpRequest`.
+Note: CORS handling is wired through the network stack and runs for `XMLHttpRequest`, the (partial) `fetch()` implementation and `<img crossorigin>` loads: an image that fails the check fires `error`, one that passes stays readable from a 2D canvas or a WebGL texture. `<script>`, `<link>` and media elements still fetch without CORS whatever their `crossorigin` attribute, so `<script>` and `<link>` send cookies to other origins even with `crossorigin="anonymous"`, and media requests carry whatever credentials the platform media player sends. `@font-face` fonts are fetched the same way: a cross-origin font loads without the CORS check CSS Fonts requires, and its request carries cookies. The `fetch()` global is exposed but parts of the Fetch spec (streaming response bodies, `Request.body.getReader()`) remain incomplete; for production paths prefer `XMLHttpRequest`.
 
 ### Content Security Policy
 

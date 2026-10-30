@@ -111,6 +111,22 @@ NetworkURLWorkerData::~NetworkURLWorkerData()
     }
 }
 
+// Navigations and no-cors subresource loads carry credentials for the whole
+// redirect chain and are never CORS-checked. A CORS-mode image request
+// (<img crossorigin>) follows its credentials mode and is checked, because
+// the result decides whether its pixels may be read back
+// (https://html.spec.whatwg.org/multipage/urls-and-fetching.html#cors-same-origin).
+// Other CORS-mode subresources keep the no-cors handling for now.
+static bool bypassesCors(ResourceRequest* request)
+{
+    if (request->requestMode() == RequestMode::Navigate) {
+        return true;
+    }
+    return request->isSubresourceRequest() &&
+           !(request->requestMode() == RequestMode::CORS &&
+             request->requestDestination() == RequestDestination::Image);
+}
+
 static const size_t kMaxResponseReserveBytes = 64 * 1024 * 1024;
 
 // Caller must hold request->m_mutex.
@@ -454,8 +470,12 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         uint64_t start = longTickCount();
 #endif
 #ifdef STARFISH_ENABLE_HTTPCACHE
+        // A stored response (or a 304 revalidating one) never meets the CORS
+        // check, which runs on a final network response only, so a
+        // cross-origin request that needs the check skips the disk cache.
         if (allowCache && m_orgProxy->starfish()->httpCache() &&
-            m_orgProxy->requestDestination() != RequestDestination::Document) {
+            m_orgProxy->requestDestination() != RequestDestination::Document &&
+            (bypassesCors(m_orgProxy) || m_orgProxy->isSameOriginRequest())) {
             auto entry =
                 m_orgProxy->starfish()->httpCache()->get(m_orgProxy->url());
 
@@ -487,8 +507,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         break;
     }
 
-    if (m_orgProxy->requestMode() == RequestMode::Navigate ||
-        m_orgProxy->isSubresourceRequest()) {
+    if (bypassesCors(m_orgProxy)) {
         includeCredentials = true;
     }
     auto unsafeHeaders = FetchUtils::corsUnsafeRequestHeaderNames(headers);
@@ -1059,10 +1078,8 @@ static void taintIfEffectiveURLIsCrossOrigin(NetworkURLWorkerData* nwd)
 static void excludeCredentialsIfRedirectLeavesOrigin(NetworkURLWorkerData* nwd)
 {
     ResourceRequest* request = nwd->request;
-    // Navigations and subresources are credentialed for the whole chain.
     if (request->requestCredentials() == RequestCredentials::Include ||
-        request->isSubresourceRequest() ||
-        request->requestMode() == RequestMode::Navigate) {
+        bypassesCors(request)) {
         return;
     }
     HTTPTransaction* transaction = nwd->httpTransaction.get();
@@ -1170,9 +1187,7 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
                 // when it lands back on the requester's origin.
                 request->m_responseData->m_redirectTainted = nwd->corsFlag;
             }
-            if (nwd->corsFlag &&
-                !(request->isSubresourceRequest() ||
-                  request->requestMode() == RequestMode::Navigate)) {
+            if (nwd->corsFlag && !bypassesCors(request)) {
                 bool allowed = true;
                 if (checkCors(nwd)) {
                     if (nwd->httpTransaction->inPreflightRequest()) {
@@ -1187,6 +1202,7 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
                     nwd->isAborted = true;
                     nwd->needsToHandleError = true;
                 }
+                request->m_responseData->m_passedCorsCheck = allowed;
             }
             request->m_lastLocation =
                 nwd->httpTransaction->httpResponse().lastLocation();
