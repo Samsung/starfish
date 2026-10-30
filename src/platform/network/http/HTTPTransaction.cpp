@@ -51,6 +51,7 @@ HTTPTransaction::HTTPTransaction(CurlMultiRequestData* curlMultiRequestData)
     , m_timeout(0)
     , m_curl(nullptr)
     , m_res(CURLE_OK)
+    , m_redirectCount(0)
     , m_curlMultiRequestData(curlMultiRequestData)
     , m_procCB(nullptr)
     , m_procData(nullptr)
@@ -360,6 +361,7 @@ void HTTPTransaction::updateTransactionStatus()
         long responseCode;
         curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &responseCode);
         m_httpResponse->setResponseCode(responseCode);
+        curl_easy_getinfo(m_curl, CURLINFO_REDIRECT_COUNT, &m_redirectCount);
     }
 }
 

@@ -78,6 +78,12 @@ public:
         return *m_httpResponse;
     }
     void updateTransactionStatus();
+    // CURLINFO_REDIRECT_COUNT as of the last updateTransactionStatus(): the
+    // Locations curl followed, plus its auth reloads and Expect retries.
+    long redirectCount() const
+    {
+        return m_redirectCount;
+    }
     void updateLastLocationIfNeeds(const std::string& header);
     void didReceiveHeader(const std::string& header);
     char* effectiveURL();
@@ -158,6 +164,7 @@ private:
     unsigned long m_timeout;
     CURL* m_curl;
     CURLcode m_res;
+    long m_redirectCount;
 
     CurlMultiRequestData* m_curlMultiRequestData;
 

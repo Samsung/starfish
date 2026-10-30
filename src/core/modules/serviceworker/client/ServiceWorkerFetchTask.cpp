@@ -103,6 +103,10 @@ void ServiceWorkerFetchTask::onResponse(FetchEventResponseData* data)
         return;
     }
 
+    // The worker may answer with another origin's response, e.g.
+    // respondWith(fetch(e.request)) for a no-cors image, and that response's
+    // type is not carried over, so it never counts as same-origin.
+    m_resourceRequest->m_responseData->m_corsTainted = true;
     m_resourceRequest->handleResponseEOF();
 }
 
