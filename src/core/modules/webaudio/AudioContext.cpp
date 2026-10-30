@@ -251,6 +251,12 @@ bool AudioContext::shutdownForNavigation()
     m_controlQueue->setState(AudioContextState::Closed);
     m_renderingQueue->setState(AudioContextState::Closed);
     // https://webaudio.github.io/web-audio-api/#unloading-a-document
+    // The ED aborts the close control message on unload without notifying
+    // the control thread, so it never sets state to "closed". WPT
+    // (audionode-iframe) and other engines report "closed" synchronously,
+    // without statechange; this follows them.
+    setStateAttribute(AudioContextState::Closed);
+    // https://webaudio.github.io/web-audio-api/#unloading-a-document
     // Reject [[pending promises]]; their settling tasks never run once the
     // Window's queued tasks are cleared.
     if (m_pendingPromises.empty()) {

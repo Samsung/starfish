@@ -7,3 +7,4 @@ http://web-platform.test:8000/webaudio/the-audio-api/the-audionode-interface/cha
 http://web-platform.test:8000/webaudio/the-audio-api/the-audionode-interface/audionode-connect-order.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audionode-interface/audionode.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audionode-interface/audionode-disconnect.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audionode-interface/audionode-iframe.window.html
