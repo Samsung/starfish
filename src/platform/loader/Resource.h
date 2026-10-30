@@ -146,7 +146,9 @@ public:
             std::find(m_resourceClients.begin(), m_resourceClients.end(), rc));
     }
 
-    ResourceRequest* resourceRequest()
+    // Absent before the load is sent, once it has ended, and for a load that
+    // never had a request: a resource-cache hit or a fetch refused unsent.
+    Optional<ResourceRequest*> resourceRequest()
     {
         return m_resourceRequest;
     }
