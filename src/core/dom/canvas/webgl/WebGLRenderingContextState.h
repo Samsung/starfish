@@ -107,10 +107,9 @@ public:
     void setVertexAttribDivisor(GLuint index, GLuint divisor);
     GLenum getGenericVertexAttribType(GLuint index);
     void setGenericVertexAttribType(GLuint index, GLenum type);
-
-private:
     GLuint vertexArray();
 
+private:
     // Define variables
 #define V(Constructor, Type, MemberName) Type m_##MemberName;
     STATEFUL_VALUES(V);

@@ -2383,7 +2383,11 @@ void WebGL2RenderingContext::deleteVertexArray(
 
     GLuint vao = value->glObject();
     TRACE(WEBGL, KV(vao));
+    bool isCurrent = (getState()->vertexArray() == vao);
     gl()->deleteVertexArrays(1, &vao);
+    if (isCurrent) {
+        gl()->bindVertexArray(0);
+    }
     value->markDeleted();
     getState()->deleteVertexArray(vao);
 }
