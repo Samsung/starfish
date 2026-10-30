@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <array>
+#include <vector>
 #include <atomic>
 #include <chrono>
 #include <cmath>
@@ -41,9 +42,11 @@ namespace Starfish {
 namespace {
 
     constexpr size_t outputChannels = 2;
-    constexpr size_t quantumSamples =
-        AudioBus::RenderQuantumFrames * outputChannels;
-    constexpr size_t queuedQuanta = 8;
+    // Output is queued in chunks of the default render quantum, whatever
+    // the context's quantum size.
+    constexpr size_t chunkFrames = AudioBus::RenderQuantumFrames;
+    constexpr size_t quantumSamples = chunkFrames * outputChannels;
+    constexpr size_t minQueuedChunks = 8;
     // Each device is an audio server client plus a writer thread. Writers that
     // are still closing after their owner went away count too, so a stalled
     // server cannot accumulate threads; further devices fall back to the
@@ -197,8 +200,13 @@ namespace {
     // Shared by the owning device and its detached writer thread, so either
     // may go away first.
     struct OutputState {
-        explicit OutputState(uint32_t sampleRate)
+        OutputState(uint32_t sampleRate, size_t quantumFrames)
             : sampleRate(sampleRate)
+            , queuedQuanta(std::max(
+                  minQueuedChunks,
+                  2 * ((quantumFrames + chunkFrames - 1) / chunkFrames)))
+            , queue(queuedQuanta)
+            , firstFrames(queuedQuanta)
         {
         }
 
@@ -206,10 +214,11 @@ namespace {
         PulseSimpleApi* api{ nullptr };
 #endif
         uint32_t sampleRate;
+        size_t queuedQuanta;
         // Single-producer/single-consumer ring: submit() fills slots and
         // advances head; the writer drains them and advances tail.
-        std::array<std::array<int16_t, quantumSamples>, queuedQuanta> queue;
-        std::array<uint64_t, queuedQuanta> firstFrames{};
+        std::vector<std::array<int16_t, quantumSamples>> queue;
+        std::vector<uint64_t> firstFrames;
         std::atomic<size_t> head{ 0 };
         std::atomic<size_t> tail{ 0 };
         std::atomic<bool> stop{ false };
@@ -282,7 +291,7 @@ namespace {
                 state->writerWaiting.store(false);
                 continue;
             }
-            const size_t slot = tail % queuedQuanta;
+            const size_t slot = tail % state->queuedQuanta;
             if (!sink->write(state->queue[slot].data(),
                              quantumSamples * sizeof(int16_t))) {
                 state->failed.store(true, std::memory_order_relaxed);
@@ -320,17 +329,21 @@ namespace {
             if (state.failed.load(std::memory_order_relaxed)) {
                 return;
             }
-            const size_t head = state.head.load(std::memory_order_relaxed);
-            if (head - state.tail.load(std::memory_order_acquire) ==
-                queuedQuanta) {
-                // The writer is a full queue behind the server; blocking here
-                // would stall rendering, so the newest quantum is dropped.
-                return;
-            }
-            const size_t slot = head % queuedQuanta;
-            std::array<int16_t, quantumSamples>& pcm = state.queue[slot];
-            for (size_t frame = 0; frame < AudioBus::RenderQuantumFrames;
-                 frame++) {
+            for (size_t frame = 0; frame < bus.frames(); frame++) {
+                const size_t head = state.head.load(std::memory_order_relaxed);
+                if (!m_chunkFill) {
+                    if (head - state.tail.load(std::memory_order_acquire) ==
+                        state.queuedQuanta) {
+                        // The writer is a full queue behind the server;
+                        // blocking here would stall rendering, so the rest
+                        // of the newest quantum is dropped.
+                        return;
+                    }
+                    state.firstFrames[head % state.queuedQuanta] =
+                        firstFrame + frame;
+                }
+                std::array<int16_t, quantumSamples>& pcm =
+                    state.queue[head % state.queuedQuanta];
                 for (size_t channel = 0; channel < outputChannels; channel++) {
                     const size_t sourceChannel =
                         std::min(channel, bus.channels() - 1);
@@ -339,16 +352,20 @@ namespace {
                         std::isfinite(sample)
                             ? std::max(-1.0f, std::min(1.0f, sample))
                             : 0.0f;
-                    pcm[frame * outputChannels + channel] =
+                    pcm[m_chunkFill * outputChannels + channel] =
                         static_cast<int16_t>(std::lrint(clamped * 32767.0f));
                 }
-            }
-            state.firstFrames[slot] = firstFrame;
-            state.head.store(head + 1);
-            // Only take the lock when the writer sleeps on an empty queue.
-            if (state.writerWaiting.load()) {
-                std::lock_guard<std::mutex> lock(state.wakeMutex);
-                state.wake.notify_one();
+                if (++m_chunkFill < chunkFrames) {
+                    continue;
+                }
+                m_chunkFill = 0;
+                state.head.store(head + 1);
+                // Only take the lock when the writer sleeps on an empty
+                // queue.
+                if (state.writerWaiting.load()) {
+                    std::lock_guard<std::mutex> lock(state.wakeMutex);
+                    state.wake.notify_one();
+                }
             }
         }
 
@@ -376,13 +393,15 @@ namespace {
 
     private:
         std::shared_ptr<OutputState> m_state;
+        // Frames written to the slot at head, which is published when full.
+        size_t m_chunkFill{ 0 };
     };
 
 } // namespace
 #endif
 
 std::unique_ptr<AudioOutputDevice> AudioOutputDevice::create(
-    uint32_t sampleRate)
+    uint32_t sampleRate, size_t quantumFrames)
 {
 #if defined(STARFISH_LINUX) || defined(STARFISH_TIZEN)
 #if defined(STARFISH_LINUX)
@@ -397,7 +416,7 @@ std::unique_ptr<AudioOutputDevice> AudioOutputDevice::create(
         return nullptr;
     }
     try {
-        auto state = std::make_shared<OutputState>(sampleRate);
+        auto state = std::make_shared<OutputState>(sampleRate, quantumFrames);
 #if defined(STARFISH_LINUX)
         state->api = api;
 #endif

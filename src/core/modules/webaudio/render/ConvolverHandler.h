@@ -55,6 +55,7 @@ public:
         m_speakers = speakers;
     }
     void inputChannelsChanged(size_t index) override;
+    void setQuantumFrames(size_t frames) override;
     bool hasPendingOutput() const override
     {
         return m_audiblePartitions || AudioHandler::hasPendingOutput();
@@ -66,7 +67,12 @@ protected:
 private:
     static void fft(Spectrum& values, bool inverse);
     void processShort(size_t frames);
-    void processPartitioned(size_t frames);
+    // One partition: |frames| (at most BlockSize) frames of |source| from
+    // |offset| into |destination| from |outOffset|. Returns whether it wrote
+    // a non-zero sample.
+    bool processPartitioned(const AudioBus& source, size_t offset,
+                            size_t frames, AudioBus& destination,
+                            size_t outOffset);
     void resetHistory();
     void updateOutputChannels();
 
@@ -84,6 +90,11 @@ private:
     std::vector<bool> m_silentPartitions;
     size_t m_audiblePartitions{ 0 };
     std::array<std::array<float, BlockSize>, 2> m_overlap{};
+    // Only for render quanta that are not a multiple of BlockSize: input
+    // collected for, and output produced by, the partition being filled.
+    std::unique_ptr<AudioBus> m_fifoInput;
+    std::unique_ptr<AudioBus> m_fifoOutput;
+    size_t m_fifoFrames{ 0 };
 };
 } // namespace Starfish
 #endif

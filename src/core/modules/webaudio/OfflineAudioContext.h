@@ -13,6 +13,8 @@
 #define __StarfishOfflineAudioContext__
 
 #include "core/modules/webaudio/BaseAudioContext.h"
+#include "core/modules/webaudio/render/AudioBus.h"
+#include "binding/generated/AudioContextRenderSizeCategoryOrunsignedlongUnion.h"
 
 namespace Starfish {
 class AudioBuffer;
@@ -21,6 +23,8 @@ struct OfflineAudioContextOptions {
     DEFINE_GETTER_SETTER(uint32_t, numberOfChannels, NumberOfChannels)
     DEFINE_GETTER_SETTER(uint32_t, length, Length)
     DEFINE_GETTER(double, sampleRate)
+    DEFINE_GETTER_SETTER(AudioContextRenderSizeCategoryOrunsignedlong,
+                         renderSizeHint, RenderSizeHint)
 
     void setSampleRate(double value)
     {
@@ -36,15 +40,20 @@ struct OfflineAudioContextOptions {
     uint32_t m_length{ 0 };
     double m_sampleRate{ 0 };
     bool m_hasSampleRate{ false };
+    AudioContextRenderSizeCategoryOrunsignedlong m_renderSizeHint =
+        AudioContextRenderSizeCategoryOrunsignedlong::
+            createAudioContextRenderSizeCategory(
+                String::createASCIIString("default"));
 };
 
 class OfflineAudioContext : public BaseAudioContext {
 public:
     OfflineAudioContext(ExecutionContext* executionContext,
                         OfflineAudioContextOptions options);
-    OfflineAudioContext(ExecutionContext* executionContext,
-                        uint32_t numberOfChannels, uint32_t length,
-                        double sampleRate);
+    OfflineAudioContext(
+        ExecutionContext* executionContext, uint32_t numberOfChannels,
+        uint32_t length, double sampleRate,
+        size_t renderQuantumSize = AudioBus::RenderQuantumFrames);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(OfflineAudioContext)
     DEFINE_GETTER(uint32_t, length)

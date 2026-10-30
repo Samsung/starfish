@@ -35,6 +35,16 @@ void AudioHandler::inputChannelsChanged(size_t)
 {
 }
 
+void AudioHandler::setQuantumFrames(size_t frames)
+{
+    for (const auto& input : m_inputs) {
+        input->setQuantumFrames(frames);
+    }
+    for (const auto& output : m_outputs) {
+        output->setQuantumFrames(frames);
+    }
+}
+
 AudioNodeInput& AudioHandler::input(size_t index)
 {
     STARFISH_ASSERT(index < m_inputs.size());

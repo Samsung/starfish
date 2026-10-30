@@ -25,7 +25,10 @@ class AudioOutputDevice {
 public:
     virtual ~AudioOutputDevice() = default;
 
-    static std::unique_ptr<AudioOutputDevice> create(uint32_t sampleRate);
+    // |quantumFrames| is the size of each submitted bus; the queue holds at
+    // least two of them.
+    static std::unique_ptr<AudioOutputDevice> create(uint32_t sampleRate,
+                                                     size_t quantumFrames);
     virtual void submit(const AudioBus& bus, uint64_t firstFrame) = 0;
     virtual bool failed() const = 0;
     virtual double outputLatency() const

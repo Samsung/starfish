@@ -33,6 +33,10 @@ public:
     void disconnectAll();
     void configure(size_t channelCount, AudioInputChannelMode mode,
                    bool speakers);
+    void setQuantumFrames(size_t frames)
+    {
+        m_bus.resize(m_bus.channels(), frames);
+    }
     void refreshChannels();
     // Mixes the sources' outputs, which the graph rendered earlier this
     // quantum.

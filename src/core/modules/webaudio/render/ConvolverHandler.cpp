@@ -79,6 +79,24 @@ void ConvolverHandler::resetHistory()
     if (m_responseChannels == 4 || input(0).bus().channels() == 2) {
         m_inputSpectra[1].assign(m_partitions, HalfSpectrum{});
     }
+    if (m_fifoInput) {
+        m_fifoInput->zero();
+        m_fifoOutput->zero();
+        m_fifoFrames = 0;
+    }
+}
+
+void ConvolverHandler::setQuantumFrames(size_t frames)
+{
+    AudioHandler::setQuantumFrames(frames);
+    if (frames % BlockSize) {
+        // Room for stereo up front: the render thread never allocates when
+        // the input or the response turns stereo.
+        m_fifoInput.reset(new AudioBus(2, BlockSize));
+        m_fifoOutput.reset(new AudioBus(2, BlockSize));
+        m_fifoInput->resize(1);
+        m_fifoOutput->resize(1);
+    }
 }
 
 std::unique_ptr<ConvolverHandler::Response> ConvolverHandler::createResponse(
@@ -230,10 +248,10 @@ void ConvolverHandler::processShort(size_t frames)
     destination.setSilent(!wrote);
 }
 
-void ConvolverHandler::processPartitioned(size_t frames)
+bool ConvolverHandler::processPartitioned(const AudioBus& source, size_t offset,
+                                          size_t frames, AudioBus& destination,
+                                          size_t outOffset)
 {
-    const AudioBus& source = input(0).bus();
-    AudioBus& destination = output(0).bus();
     const size_t sourceChannels = source.channels();
     const size_t matrixInputs =
         m_responseChannels == 4 ||
@@ -254,7 +272,7 @@ void ConvolverHandler::processPartitioned(size_t frames)
         for (size_t ch = 0; ch < sourceChannels; ++ch) {
             spectrum.fill({ 0, 0 });
             for (size_t i = 0; i < frames; ++i) {
-                spectrum[i] = source.channel(ch)[i];
+                spectrum[i] = source.channel(ch)[offset + i];
             }
             fft(spectrum, false);
             std::copy_n(spectrum.begin(), SpectrumBins,
@@ -273,13 +291,12 @@ void ConvolverHandler::processPartitioned(size_t frames)
         bool wrote = false;
         for (size_t out = 0; out < destination.channels(); ++out) {
             for (size_t i = 0; i < frames; ++i) {
-                destination.channel(out)[i] = m_overlap[out][i];
+                destination.channel(out)[outOffset + i] = m_overlap[out][i];
                 wrote = wrote || m_overlap[out][i] != 0;
             }
             m_overlap[out].fill(0);
         }
-        destination.setSilent(!wrote);
-        return;
+        return wrote;
     }
     // The cursor has advanced, so the current block sits one slot behind it.
     const size_t current = (m_cursor + m_partitions - 1) % m_partitions;
@@ -319,13 +336,14 @@ void ConvolverHandler::processPartitioned(size_t frames)
         }
         fft(full, true);
         for (size_t i = 0; i < frames; ++i) {
-            destination.channel(out)[i] = full[i].real() + m_overlap[out][i];
+            destination.channel(out)[outOffset + i] =
+                full[i].real() + m_overlap[out][i];
         }
         for (size_t i = 0; i < BlockSize; ++i) {
             m_overlap[out][i] = full[BlockSize + i].real();
         }
     }
-    destination.setSilent(false);
+    return true;
 }
 
 void ConvolverHandler::process(uint64_t, size_t frames)
@@ -333,11 +351,52 @@ void ConvolverHandler::process(uint64_t, size_t frames)
     if (!m_responseChannels) {
         return;
     }
-    if (m_partitions) {
-        processPartitioned(frames);
-    } else {
+    if (!m_partitions) {
         processShort(frames);
+        return;
     }
+    const AudioBus& source = input(0).bus();
+    AudioBus& destination = output(0).bus();
+    bool wrote = false;
+    if (!m_fifoInput) {
+        // A quantum that is a multiple of the partition size (the default
+        // 128 frames is one) runs partition by partition, with no latency.
+        for (size_t offset = 0; offset < frames; offset += BlockSize) {
+            wrote |= processPartitioned(
+                source, offset, std::min(frames - offset, size_t(BlockSize)),
+                destination, offset);
+        }
+        destination.setSilent(!wrote);
+        return;
+    }
+    // shortcut: render quanta that are not a multiple of 128 frames go
+    // through a one-partition FIFO, adding 128 frames of convolver latency;
+    // upgrade: a direct-form head partition.
+    if (m_fifoInput->channels() != source.channels()) {
+        m_fifoInput->resize(source.channels());
+    }
+    if (m_fifoOutput->channels() != destination.channels()) {
+        m_fifoOutput->resize(destination.channels());
+    }
+    if (!source.isSilent()) {
+        m_fifoInput->setSilent(false);
+    }
+    for (size_t i = 0; i < frames; ++i) {
+        for (size_t ch = 0; ch < source.channels(); ++ch) {
+            m_fifoInput->channel(ch)[m_fifoFrames] = source.channel(ch)[i];
+        }
+        for (size_t out = 0; out < destination.channels(); ++out) {
+            const float value = m_fifoOutput->channel(out)[m_fifoFrames];
+            destination.channel(out)[i] = value;
+            wrote = wrote || value != 0;
+        }
+        if (++m_fifoFrames == BlockSize) {
+            processPartitioned(*m_fifoInput, 0, BlockSize, *m_fifoOutput, 0);
+            m_fifoFrames = 0;
+            m_fifoInput->setSilent(source.isSilent());
+        }
+    }
+    destination.setSilent(!wrote);
 }
 
 } // namespace Starfish

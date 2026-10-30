@@ -274,6 +274,101 @@ const groups = {
                    'AudioProcessingEvent without outputBuffer');
         throwsType(() => new ScriptProcessorNode(), 'new ScriptProcessorNode');
     },
+
+    // renderSizeHint: the ConvolverNode reproduces its impulse response
+    // with any quantum; a DelayNode renders the same with a quantum longer
+    // or shorter than the default.
+    'render-quantum': async () => {
+        const sampleRate = 48000;
+        const response = new AudioBuffer({length: 300, sampleRate});
+        const responseData = response.getChannelData(0);
+        for (let i = 0; i < responseData.length; i++) {
+            responseData[i] = (i % 7) / 7 - 0.5;
+        }
+        const impulse = new AudioBuffer({length: 1, sampleRate});
+        impulse.getChannelData(0)[0] = 1;
+        for (const quantum of [128, 256, 100]) {
+            const context = new OfflineAudioContext(
+                {length: 1024, sampleRate, renderSizeHint: quantum});
+            check(context.renderQuantumSize === quantum,
+                  'renderQuantumSize is ' + quantum);
+            const source = new AudioBufferSourceNode(context, {buffer: impulse});
+            const convolver = new ConvolverNode(
+                context, {buffer: response, disableNormalization: true});
+            source.connect(convolver).connect(context.destination);
+            source.start();
+            const data = (await context.startRendering()).getChannelData(0);
+            // The spec has no extra latency. Starfish's convolver adds 128
+            // frames for a quantum that is not a multiple of its 128-frame
+            // partitions (a documented deviation), so accept either.
+            const latency = data[0] ? 0 : data.findIndex((v) => v !== 0);
+            let error = 0;
+            for (let i = 0; i < responseData.length; i++) {
+                error = Math.max(error,
+                                 Math.abs(data[i + latency] - responseData[i]));
+            }
+            check(error < 1e-5 && (latency === 0 ||
+                                   (latency === 128 && quantum % 128)),
+                  'ConvolverNode with a ' + quantum + '-frame quantum ' +
+                  'reproduces its response (latency ' + latency + ', ' +
+                  'error ' + error + ')');
+        }
+        const delayed = [];
+        for (const quantum of [128, 1024]) {
+            const context = new OfflineAudioContext(
+                {length: 2048, sampleRate, renderSizeHint: quantum});
+            const source = new AudioBufferSourceNode(context, {buffer: impulse});
+            const delay = new DelayNode(context, {delayTime: 240 / sampleRate});
+            source.connect(delay).connect(context.destination);
+            source.start();
+            delayed.push((await context.startRendering()).getChannelData(0));
+        }
+        check(Math.abs(delayed[1][240] - 1) < 1e-4 &&
+                  delayed[1].every((v, i) => v === delayed[0][i]),
+              'DelayNode output with a 1024-frame quantum equals the ' +
+              '128-frame one');
+        // A quantum below 128 frames, rendered far past the delay line's
+        // length, so the ring wraps many times.
+        const rendered = [];
+        for (const quantum of [128, 100]) {
+            const context = new OfflineAudioContext(
+                {length: sampleRate, sampleRate, renderSizeHint: quantum});
+            const source = new ConstantSourceNode(context, {offset: 0.5});
+            const delay = new DelayNode(
+                context, {maxDelayTime: 0.01, delayTime: 0.005});
+            source.connect(delay).connect(context.destination);
+            source.start();
+            rendered.push((await context.startRendering()).getChannelData(0));
+        }
+        check(rendered[1][sampleRate - 1] === 0.5 &&
+                  rendered[1].every((v, i) => v === rendered[0][i]),
+              'DelayNode output with a 100-frame quantum equals the ' +
+              '128-frame one over 1 s');
+    },
+
+    // A context constructor from a document that is not fully active throws
+    // InvalidStateError before it validates its options.
+    'detached-document': async () => {
+        const frame = document.createElement('iframe');
+        document.documentElement.appendChild(frame);
+        const frameWindow = frame.contentWindow;
+        frame.remove();
+        const name = (fn) => {
+            try {
+                fn();
+            } catch (e) {
+                return e.name;
+            }
+            return 'no exception';
+        };
+        check(name(() => new frameWindow.AudioContext({renderSizeHint: 0})) ===
+                  'InvalidStateError',
+              'AudioContext with a bad hint in a detached document');
+        check(name(() => new frameWindow.OfflineAudioContext(
+                  {length: 1, sampleRate: 8000, renderSizeHint: 0})) ===
+                  'InvalidStateError',
+              'OfflineAudioContext with a bad hint in a detached document');
+    },
 };
 
 const group = groups[location.search.substring(1)];

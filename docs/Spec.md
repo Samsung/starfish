@@ -3651,6 +3651,7 @@ connected to this node.
 | | attribute | readonly double currentTime | Time advanced by completed render quanta. | Real-time contexts use PulseAudio on Linux or a silent fallback. |
 | | attribute | readonly AudioListener listener | The context's spatial-audio listener. | Same object for the lifetime of the context. |
 | | attribute | readonly attribute AudioContextState state | Describes the current state of the AudioContext. | |
+| | attribute | readonly unsigned long renderQuantumSize | The context's render quantum size in frames. | 128 unless the context was created with a numeric `renderSizeHint`. |
 | | attribute | attribute EventHandler onstatechange; | A property used to set the EventHandler for an event that is dispatched to BaseAudioContext when the state of the AudioContext has changed (i.e. when the corresponding promise would have resolved). | |
 | | method | AudioBufferSourceNode createBufferSource(); | Factory method for a AudioBufferSourceNode. | |
 | | method | ChannelMergerNode createChannelMerger(optional unsigned long numberOfInputs = 6); ChannelSplitterNode createChannelSplitter(optional unsigned long numberOfOutputs = 6); | Factory methods for channel routing. | |
@@ -3662,7 +3663,7 @@ connected to this node.
 | | method | BiquadFilterNode createBiquadFilter(); | Factory method for a second-order filter. | |
 | | method | WaveShaperNode createWaveShaper(); | Factory method for a nonlinear shaping node. | |
 | | method | AnalyserNode createAnalyser(); | Factory method for time- and frequency-domain analysis. | |
-| | method | ScriptProcessorNode createScriptProcessor(optional unsigned long bufferSize = 0, optional unsigned long numberOfInputChannels = 2, optional unsigned long numberOfOutputChannels = 2); | Factory method for a ScriptProcessorNode (deprecated in the spec). | bufferSize 0 selects 1024. IndexSizeError for other sizes than 256–16384 powers of two, channel counts above 32, or both counts 0. |
+| | method | ScriptProcessorNode createScriptProcessor(optional unsigned long bufferSize = 0, optional unsigned long numberOfInputChannels = 2, optional unsigned long numberOfOutputChannels = 2); | Factory method for a ScriptProcessorNode (deprecated in the spec). | bufferSize 0 selects 1024, or the next power of two at least the render quantum size (up to 16384). IndexSizeError for other sizes than 256–16384 powers of two, channel counts above 32, or both counts 0. |
 | | method | DynamicsCompressorNode createDynamicsCompressor(); | Factory method for dynamics compression. | |
 | | method | GainNode createGain(); | Factory method for a GainNode. | |
 | | method | StereoPannerNode createStereoPanner(); | Factory method for a StereoPannerNode. | |
@@ -3673,7 +3674,7 @@ connected to this node.
 | [AudioListener](https://webaudio.github.io/web-audio-api/#AudioListener) | interface | AudioListener | Nine position and orientation AudioParams, plus setPosition() and setOrientation(). | Allocated only on first access or PannerNode creation. |
 | [AudioContext](https://webaudio.github.io/web-audio-api/#AudioContext) | interface | AudioContext | | |
 | | constructor | constructor (optional AudioContextOptions contextOptions = {}); | | |
-| | attribute | readonly double baseLatency; | Estimated graph-to-host processing latency in seconds. | Based on the fixed 128-frame render quantum and bounded output handoff. |
+| | attribute | readonly double baseLatency; | Estimated graph-to-host processing latency in seconds. | 2 × renderQuantumSize / sampleRate: one quantum of rendering plus the bounded output handoff. |
 | | attribute | readonly double outputLatency; | Estimated host-to-device output delay in seconds. | Measured from PulseAudio's queued latency on Linux; zero before measurement or with null output. |
 | | method | AudioTimestamp getOutputTimestamp(); | Returns the estimated device playback position in context and Performance time coordinates. | Zero before the first device measurement; Linux PulseAudio only. |
 | | method | Promise<void> close (); | Closes the AudioContext, releasing the system resources being used. | |
@@ -3681,8 +3682,10 @@ connected to this node.
 | | method | MediaElementAudioSourceNode createMediaElementSource(HTMLMediaElement mediaElement); | Factory method for a MediaElementAudioSourceNode. | |
 | [AudioContextOptions](https://webaudio.github.io/web-audio-api/#dictdef-audiocontextoptions) | dictionary | AudioContextOptions | Constructor options. | |
 | [AudioTimestamp](https://webaudio.github.io/web-audio-api/#dictdef-audiotimestamp) | dictionary | AudioTimestamp | `contextTime` and `performanceTime` for the estimated output position. | |
-| | attribute | (AudioContextLatencyCategory or double) latencyHint = "interactive"; | Advisory latency category or seconds. | The current fixed-quantum output does not vary its buffering by hint. |
+| | attribute | (AudioContextLatencyCategory or double) latencyHint = "interactive"; | Advisory latency category or seconds. | Output buffering does not vary with the hint. |
 | | attribute | float sampleRate; | Requested context sample rate in hertz. | Valid range: 3000–768000. |
+| | attribute | (AudioContextRenderSizeCategory or unsigned long) renderSizeHint = "default"; | Requested render quantum size in frames. | `"default"` and `"hardware"` give 128 frames. A number is used exactly; outside 1 to floor(6 × sampleRate) throws NotSupportedError. With a numeric hint other than 128, every node allocates its buffers at creation: about 4 bytes × renderQuantumSize × (input channels + output channels), plus 4 bytes × renderQuantumSize per AudioParam with a connected input, and a DelayNode 8 bytes × renderQuantumSize more (its delay line, allocated on audible input, also grows by renderQuantumSize frames per channel). For example a 32-input ChannelMergerNode at 4,608,000 frames needs about 1.2 GB. When such a buffer cannot be allocated, node creation, `channelCount`/`channelCountMode`/`channelInterpretation`, `ConvolverNode.buffer` and the context constructors throw NotSupportedError and `startRendering()` rejects with it; a failure while rendering or applying a connection makes the context render silence from then on. ConvolverNode keeps 128-frame FFT partitions: quanta that are not a multiple of 128 add 128 frames of latency to it. Real-time contexts queue output in 128-frame chunks, at least two quanta deep; quanta below 128 frames are rendered in batches per wake-up, and a large quantum is rendered in one piece under the graph lock, so script calls that touch the graph (creating or connecting nodes, AudioParam setters) can wait for up to one quantum's render time. |
+| [AudioContextRenderSizeCategory](https://webaudio.github.io/web-audio-api/#enumdef-audiocontextrendersizecategory) | enum | AudioContextRenderSizeCategory | `"default"`, `"hardware"` | |
 | [AudioContextLatencyCategory](https://webaudio.github.io/web-audio-api/#enumdef-audiocontextlatencycategory) | enum | AudioContextLatencyCategory | `"balanced"`, `"interactive"`, `"playback"` | |
 | [OfflineAudioContext](https://webaudio.github.io/web-audio-api/#OfflineAudioContext) | interface | OfflineAudioContext | Renders a connected graph into an AudioBuffer. | Fixed-length rendering only. |
 | | constructor | constructor(OfflineAudioContextOptions contextOptions); | Creates an offline context from an options object. | A missing `length` or `sampleRate` throws TypeError. |
@@ -3692,7 +3695,8 @@ connected to this node.
 | | method | Promise<AudioBuffer> startRendering(); | Starts offline rendering once and resolves with the output buffer. | |
 | | method | Promise<void> suspend(double suspendTime); | Suspends rendering at the next requested render-quantum boundary. | Fixed-length contexts only. |
 | | method | Promise<void> resume(); | Resumes a suspended offline render. | Rendering must have started. |
-| [OfflineAudioContextOptions](https://www.w3.org/TR/webaudio-1.0/#dictdef-offlineaudiocontextoptions) | dictionary | OfflineAudioContextOptions | Constructor options. | Web Audio 1.0 shape; fixed render quantum, `renderSizeHint` is not exposed. |
+| [OfflineAudioContextOptions](https://www.w3.org/TR/webaudio-1.0/#dictdef-offlineaudiocontextoptions) | dictionary | OfflineAudioContextOptions | Constructor options. | Web Audio 1.0 shape plus `renderSizeHint` from the editor's draft. |
+| | attribute | (AudioContextRenderSizeCategory or unsigned long) renderSizeHint = "default"; | Requested render quantum size. | Same rules as AudioContextOptions; `"hardware"` also gives 128. |
 | | attribute | unsigned long numberOfChannels = 1; | Output channels. | |
 | | attribute | required unsigned long length; | Render length in frames. | The editor's draft `unsigned long? length = null` (undefined-length rendering) is not implemented; 0 throws NotSupportedError. |
 | | attribute | required float sampleRate; | Render sample rate. | |

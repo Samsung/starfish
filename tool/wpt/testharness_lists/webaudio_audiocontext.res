@@ -16,3 +16,4 @@ http://web-platform.test:8000/webaudio/the-audio-api/the-audiocontext-interface/
 # [auto-fail:SUBTESTS_FAILED] no testdriver vendor adapter / mediaDevices: http://web-platform.test:8000/webaudio/the-audio-api/the-audiocontext-interface/constructor-allowed-to-start.html
 # [auto-fail:SUBTESTS_FAILED] window.open unsupported: http://web-platform.test:8000/webaudio/the-audio-api/the-audiocontext-interface/suspend-with-navigation.html
 # [auto-fail:SUBTESTS_FAILED] needs MediaStream nodes (STARFISH_ENABLE_WEBRTC; CI builds WEBRTC=0): http://web-platform.test:8000/webaudio/the-audio-api/the-audiocontext-interface/audiocontext-suspend-resume-close.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audiocontext-interface/audiocontext-rendersizehint.html

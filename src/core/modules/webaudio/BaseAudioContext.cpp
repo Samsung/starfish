@@ -52,6 +52,7 @@
 #include "core/modules/webaudio/AudioListener.h"
 #include "core/modules/webaudio/GainNode.h"
 #include "core/modules/webaudio/render/AudioBufferData.h"
+#include "binding/generated/AudioContextRenderSizeCategoryOrunsignedlongUnion.h"
 #include "core/modules/webaudio/render/AudioDecoder.h"
 #include "core/modules/webaudio/render/AudioGraph.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -60,6 +61,7 @@
 #include "core/page/WebView.h"
 
 #include <algorithm>
+#include <cmath>
 #include <atomic>
 
 #include <EscargotPublic.h>
@@ -68,6 +70,34 @@ using Escargot::BackingStoreRef;
 using Escargot::OptionalRef;
 
 namespace Starfish {
+
+size_t renderQuantumSizeFromHint(
+    ExecutionContext* executionContext,
+    const AudioContextRenderSizeCategoryOrunsignedlong& hint, double sampleRate)
+{
+    if (hint.isunsignedlongValue()) {
+        // "Implementations MUST support [[render quantum size]] between 1
+        // sample frame and 6 times the context sample rate, inclusive,
+        // rounding down", else NotSupportedError.
+        const uint32_t frames = hint.getunsignedlongValue();
+        if (!frames || frames > std::floor(6 * sampleRate)) {
+            throw new DOMException(executionContext,
+                                   DOMException::NOT_SUPPORTED_ERR,
+                                   "Unsupported renderSizeHint");
+        }
+        return frames;
+    }
+    if (hint.isAudioContextRenderSizeCategoryValue()) {
+        String* category = hint.getAudioContextRenderSizeCategoryValue();
+        // "hardware" lets the UA pick; Starfish has no preferred device
+        // size, so it is the default as well.
+        if (category->equals("default") || category->equals("hardware")) {
+            return AudioBus::RenderQuantumFrames;
+        }
+    }
+    throw new DOMException(executionContext, DOMException::SCRIPT_TYPE_ERR,
+                           "Invalid renderSizeHint");
+}
 
 void throwIfSharedView(ExecutionContext* executionContext,
                        Escargot::ArrayBufferViewRef* view)
@@ -120,14 +150,14 @@ void DecodeErrorCallback::call(ScriptBindingInstance* instance,
 }
 
 BaseAudioContext::BaseAudioContext(ExecutionContext* executionContext,
-                                   double sampleRate)
+                                   double sampleRate, size_t renderQuantumSize)
     : EventTarget()
     , m_executionContext(executionContext)
     , m_sampleRate(sampleRate)
     , m_controlQueue(new ControlMessageQueue(executionContext))
     , m_renderingQueue(new RenderingMessageQueue(executionContext))
 {
-    m_graph = new AudioGraph(sampleRate);
+    m_graph = new AudioGraph(sampleRate, renderQuantumSize);
     m_destination = new AudioDestinationNode(executionContext, this);
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -337,6 +367,11 @@ AnalyserNode* BaseAudioContext::createAnalyser()
     return new AnalyserNode(m_executionContext, this);
 }
 
+uint32_t BaseAudioContext::renderQuantumSize() const
+{
+    return static_cast<uint32_t>(m_graph->quantumFrames());
+}
+
 // https://webaudio.github.io/web-audio-api/#dom-baseaudiocontext-createscriptprocessor
 ScriptProcessorNode* BaseAudioContext::createScriptProcessor(
     uint32_t bufferSize, uint32_t numberOfInputChannels,
@@ -349,10 +384,17 @@ ScriptProcessorNode* BaseAudioContext::createScriptProcessor(
         throw new DOMException(m_executionContext, DOMException::INDEX_SIZE_ERR,
                                "Invalid ScriptProcessorNode configuration");
     }
-    // 0 lets the implementation pick a constant power of two.
-    return new ScriptProcessorNode(
-        m_executionContext, this, bufferSize ? bufferSize : 1024,
-        numberOfInputChannels, numberOfOutputChannels);
+    // 0 lets the implementation pick a constant power of two: 1024, or the
+    // next power of two holding a larger render quantum (up to 16384).
+    if (!bufferSize) {
+        bufferSize = 1024;
+        while (bufferSize < 16384 && bufferSize < m_graph->quantumFrames()) {
+            bufferSize *= 2;
+        }
+    }
+    return new ScriptProcessorNode(m_executionContext, this, bufferSize,
+                                   numberOfInputChannels,
+                                   numberOfOutputChannels);
 }
 
 DynamicsCompressorNode* BaseAudioContext::createDynamicsCompressor()

@@ -9,7 +9,7 @@
 namespace Starfish {
 
 // Exercise the real graph worker without a device, DOM, or a GC runtime.
-std::unique_ptr<AudioOutputDevice> AudioOutputDevice::create(uint32_t)
+std::unique_ptr<AudioOutputDevice> AudioOutputDevice::create(uint32_t, size_t)
 {
     return std::unique_ptr<AudioOutputDevice>();
 }
@@ -34,7 +34,8 @@ int main()
 {
     using namespace Starfish;
     for (size_t iteration = 0; iteration < 32; iteration++) {
-        AudioGraph graph(48000);
+        // Alternate the default render quantum with a renderSizeHint one.
+        AudioGraph graph(48000, iteration % 2 ? 100 : 128);
         auto* source = graph.addHandler(
             std::unique_ptr<AudioHandler>(new StressHandler()));
         auto* destination = graph.addHandler(

@@ -22,11 +22,18 @@ namespace Starfish {
 // ChannelMergerNode going inactive) does not allocate on the render thread.
 class AudioBus {
 public:
+    // The default render quantum; a context's renderSizeHint can choose
+    // another (AudioGraph::quantumFrames()).
     static const size_t RenderQuantumFrames = 128;
 
     AudioBus(size_t channels = 0, size_t frames = RenderQuantumFrames);
 
-    void resize(size_t channels, size_t frames = RenderQuantumFrames);
+    void resize(size_t channels, size_t frames);
+    // Keeps the frame count.
+    void resize(size_t channels)
+    {
+        resize(channels, m_frames);
+    }
     void zero();
     void addFrom(const AudioBus& source, size_t frames, bool speakers);
     void copyFrom(const AudioBus& source, size_t frames, bool speakers);

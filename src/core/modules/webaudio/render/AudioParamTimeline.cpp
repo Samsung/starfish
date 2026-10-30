@@ -38,7 +38,8 @@ void AudioParamTimeline::connect(AudioNodeOutput* output)
     }
     m_sources.push_back(output);
     if (!m_modulationBus) {
-        m_modulationBus.reset(new AudioBus(1));
+        m_modulationBus.reset(
+            new AudioBus(1, output->owner()->graph()->quantumFrames()));
     }
     // Param inputs are graph edges for ordering and cycle detection.
     output->owner()->graph()->markTopologyDirty();
