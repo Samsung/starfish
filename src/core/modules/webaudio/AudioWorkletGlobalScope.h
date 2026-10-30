@@ -16,9 +16,11 @@
 
 namespace Starfish {
 class AudioWorklet;
+class AudioWorkletNode;
 class BaseAudioContext;
 class MessagePort;
 class ResourceURL;
+class SerializeWithTransferResult;
 
 // https://webaudio.github.io/web-audio-api/#AudioParamDescriptor
 struct AudioParamDescriptor {
@@ -38,6 +40,33 @@ struct AudioParamDescriptor {
 struct AudioWorkletProcessorDefinition : public gc {
     String* name;
     GCVector<AudioParamDescriptor> descriptors;
+};
+
+// The global scope's side of one AudioWorkletNode. The scope keeps it, and
+// with it the processor, until the graph deletes the node's handler, which
+// can outlive the node's wrapper.
+class AudioWorkletProcessorRecord : public gc {
+public:
+    AudioWorkletProcessorRecord(AudioWorkletNode* node,
+                                AudioWorkletProcessorDefinition* definition,
+                                MessagePort* port,
+                                SerializeWithTransferResult* options);
+
+    // The node unless it was collected: a strong reference would keep it,
+    // and so its handler and this record, alive for good.
+    Optional<AudioWorkletNode*> node() const;
+
+    AudioWorkletProcessorDefinition* const definition;
+    // The processor's end of the node's MessageChannel.
+    MessagePort* const port;
+    // The serialized AudioWorkletNodeOptions until the processor is built.
+    SerializeWithTransferResult* options;
+    Optional<ScriptObject> processor;
+
+private:
+    // GC_MALLOC_ATOMIC cell holding the hidden node pointer; a disappearing
+    // link clears it when the node is collected.
+    void** m_nodeLink;
 };
 
 // https://webaudio.github.io/web-audio-api/#AudioWorkletGlobalScope
@@ -76,8 +105,24 @@ public:
     // reported, as "run a module script" does.
     bool runModuleScript(String* source, ResourceURL* url, ScriptValue& error);
 
+    // Called by the AudioWorkletNode constructor: records the node and
+    // queues the construction of its processor.
+    AudioWorkletProcessorRecord* createProcessor(
+        AudioWorkletNode* node, AudioWorkletProcessorDefinition* definition,
+        MessagePort* port, SerializeWithTransferResult* options);
+    // https://webaudio.github.io/web-audio-api/#pending-processor-construction-data
+    // The AudioWorkletProcessor constructor takes the transferred port; the
+    // slot is then empty.
+    Optional<MessagePort*> takePendingPort();
+
 private:
     void dispose();
+    void constructProcessor(AudioWorkletProcessorRecord* record);
+    void queueProcessorError(AudioWorkletProcessorRecord* record,
+                             String* message, String* filename, uint32_t lineno,
+                             uint32_t colno);
+    // Drops the records of handlers the graph has deleted.
+    void sweepRecords();
 
     BaseAudioContext* m_context;
     AudioWorklet* m_worklet;
@@ -86,6 +131,8 @@ private:
     MessagePort* m_port;
     // node name to processor constructor map
     GCVector<std::pair<String*, ScriptValue>> m_processorConstructors;
+    GCVector<AudioWorkletProcessorRecord*> m_records;
+    Optional<MessagePort*> m_pendingPort;
 };
 } // namespace Starfish
 

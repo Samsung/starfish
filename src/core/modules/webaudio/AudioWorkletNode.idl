@@ -1,0 +1,33 @@
+/*
+ * Copyright (c) 2026 Samsung Electronics Co., Ltd
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ */
+
+// https://webaudio.github.io/web-audio-api/#dictdef-audioworkletnodeoptions
+[ STARFISH_ENABLE_AUDIO_WORKLET ]
+dictionary AudioWorkletNodeOptions : AudioNodeOptions {
+  unsigned long numberOfInputs = 1;
+  unsigned long numberOfOutputs = 1;
+  sequence<unsigned long> outputChannelCount;
+  // NOTE transfer: record<DOMString, double> -> object (generator lacks
+  // record<>); converted as the record type in C++.
+  object parameterData;
+  object processorOptions;
+};
+
+// https://webaudio.github.io/web-audio-api/#AudioWorkletNode
+// NOTE transfer: [SecureContext] is not enforced (no generator support).
+[ STARFISH_ENABLE_AUDIO_WORKLET,
+  Constructor(BaseAudioContext context, DOMString name, optional AudioWorkletNodeOptions options),
+  ConstructorCallWith=ExecutionContext,
+  RaisesException=Constructor,
+  Exposed=Window ]
+interface AudioWorkletNode : AudioNode {
+  readonly attribute AudioParamMap parameters;
+  readonly attribute MessagePort port;
+  attribute EventHandler onprocessorerror;
+};

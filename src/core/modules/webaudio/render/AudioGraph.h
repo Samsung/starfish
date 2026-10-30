@@ -135,6 +135,16 @@ public:
     {
         return m_renderedFrames.load(std::memory_order_acquire);
     }
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    // Caller holds m_mutex. The workletRecord() of every handler deleted
+    // since the last call; the caller only compares them, as they may name
+    // records of a collected global scope.
+    void takeReleasedWorkletRecords(std::vector<void*>& records)
+    {
+        records.swap(m_releasedWorkletRecords);
+        m_releasedWorkletRecords.clear();
+    }
+#endif
     // Wrappers retain this to report their collection; see the class above.
     AudioGraphReleaseQueue* releaseQueue() const
     {
@@ -184,6 +194,9 @@ private:
     std::vector<AudioHandler*> m_releaseCandidates;
     std::vector<AudioHandler*> m_takenHandlers;
     std::vector<AudioParamTimeline*> m_takenTimelines;
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    std::vector<void*> m_releasedWorkletRecords;
+#endif
     AudioNodeOutput* m_destination{ nullptr };
     AudioBus m_renderBus;
     double m_sampleRate;

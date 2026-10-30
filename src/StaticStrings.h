@@ -774,6 +774,9 @@ public:
     QualifiedName m_complete;
     QualifiedName m_audioprocess;
 #endif
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    QualifiedName m_processorerror;
+#endif
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_cuechange;
     QualifiedName m_sourceopen;

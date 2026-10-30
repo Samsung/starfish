@@ -18,10 +18,6 @@ import threading
 import time
 import unittest
 
-# Address space the out-of-memory groups may use beyond the browser's own:
-# room for their graph, but far less than their largest allocations need.
-OOM_HEADROOM = 4 << 30
-
 
 class APIProbesTest(unittest.TestCase):
     @classmethod
@@ -116,15 +112,17 @@ class APIProbesTest(unittest.TestCase):
         self.run_group('source-options')
 
     def test_out_of_memory(self):
-        # The limit is relative to this build's own peak, so the groups
-        # fail allocations deterministically regardless of host RAM.
-        limit = self.address_space() + OOM_HEADROOM
-        self.run_group('oom-channel-count', limit)
-        self.run_group('oom-node-creation', limit)
+        # The limits are relative to this build's own peak, so the groups
+        # fail allocations deterministically regardless of host RAM: room
+        # for each group's graph, less than its failing allocations need.
+        peak = self.address_space()
+        self.run_group('oom-channel-count', peak + (4 << 30))
+        self.run_group('oom-node-creation', peak + (512 << 20))
 
     def test_audio_worklet(self):
         # Needs a build with AUDIO_WORKLET=1, as CI builds.
         self.run_group('audio-worklet')
+        self.run_group('audio-worklet-node')
 
 
 if __name__ == '__main__':
