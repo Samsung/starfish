@@ -52,6 +52,7 @@ HTTPTransaction::HTTPTransaction(CurlMultiRequestData* curlMultiRequestData)
     , m_curl(nullptr)
     , m_res(CURLE_OK)
     , m_redirectCount(0)
+    , m_headerList(nullptr)
     , m_curlMultiRequestData(curlMultiRequestData)
     , m_procCB(nullptr)
     , m_procData(nullptr)
@@ -234,17 +235,17 @@ void HTTPTransaction::start()
                              ->curlNonCookieShareHandle());
     }
 
-    struct curl_slist* list = m_httpRequest->headers().generateCurlList();
+    m_headerList = m_httpRequest->headers().generateCurlList();
     // Disable Expect: 100-contiune
     // https://gms.tf/when-curl-sends-100-continue.html
     if (m_httpRequest->method().compare("POST") == 0 ||
         m_httpRequest->method().compare("PUT") == 0) {
         if (m_httpRequest->headers().find(HTTPHeaderMap::kExpect) ==
             m_httpRequest->headers().headerMap().end()) {
-            list = curl_slist_append(list, "Expect:");
+            m_headerList = curl_slist_append(m_headerList, "Expect:");
         }
     }
-    curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, list);
+    curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, m_headerList);
 
     if (m_httpRequest->method().compare("POST") == 0) {
         curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE,
@@ -290,7 +291,8 @@ void HTTPTransaction::start()
             m_curl, m_injectedCookies);
         m_injectedCookies = nullptr;
     }
-    curl_slist_free_all(list);
+    curl_slist_free_all(m_headerList);
+    m_headerList = nullptr;
     postprocess();
 }
 
@@ -378,6 +380,25 @@ void HTTPTransaction::updateLastLocationIfNeeds(const std::string& header)
         std::string converted = HTTPUtil::tryToConvertToHeaderMapString(key);
         if (converted == HTTPHeaderMap::kLocation) {
             m_httpResponse->setLastLocation(value);
+        }
+    }
+}
+
+// A stored response's validators are those of its own URL; the request a
+// redirect leads to is a fetch of another URL.
+// https://www.rfc-editor.org/rfc/rfc9111#section-4.3.1
+void HTTPTransaction::excludeValidatorsFromRemainingRedirects()
+{
+    for (curl_slist* item = m_headerList; item; item = item->next) {
+        for (const char* name :
+             { HTTPHeaderMap::kIfNoneMatch, HTTPHeaderMap::kIfModifiedSince }) {
+            size_t length = strlen(name);
+            if (!strncmp(item->data, name, length) &&
+                item->data[length] == ':') {
+                // curl sends no custom header without a value; the list is
+                // read again for each request.
+                item->data[length + 1] = '\0';
+            }
         }
     }
 }

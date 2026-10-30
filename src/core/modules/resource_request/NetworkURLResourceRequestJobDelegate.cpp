@@ -222,8 +222,10 @@ void* NetworkURLResourceRequestJobDelegate::networkWorker(void* data)
 #ifdef STARFISH_ENABLE_HTTPCACHE
         if (nwd->cachedEntry) {
             nwd->cachedEntry->setNeedsPropertiesUpdate(true);
+            // Only a 304 for the stored response's own URL revalidates it.
             if (nwd->httpTransaction->httpResponse().responseCode() ==
-                HTTPStatusCode::HTTP_STATUS_NOT_MODIFIED) {
+                    HTTPStatusCode::HTTP_STATUS_NOT_MODIFIED &&
+                !nwd->redirectCountAtHop) {
                 NetworkURLResourceRequestJobDelegate::httpCacheWorker(nwd);
             } else {
                 nwd->cachedEntry->setNeedsRawDataUpdate(true);
@@ -1267,6 +1269,11 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
         }
     } else if (isRedirect) {
         nwd->redirectCountAtHop = nwd->httpTransaction->redirectCount();
+#ifdef STARFISH_ENABLE_HTTPCACHE
+        if (nwd->cachedEntry) {
+            nwd->httpTransaction->excludeValidatorsFromRemainingRedirects();
+        }
+#endif
         request->m_responseData->m_redirected = true;
         // Once a hop has left the initial origin the response stays "cors",
         // even if the chain returns there (A -> B -> A).

@@ -161,6 +161,10 @@ void HTTPCacheEntry::readEntryHeaders(HeaderMap& out)
                                   m_httpContentInfo.contentLanguage));
     }
 
+    // The stored body keeps its own length: a 304 revalidating it never
+    // updates Content-Length.
+    // https://www.rfc-editor.org/rfc/rfc9111#section-3.2
+    out.erase(HTTPHeaderMap::kContentLength);
     if (m_httpContentInfo.contentLength) {
         snprintf(buf, sizeof(buf), "%zu", m_httpContentInfo.contentLength);
         out.insert(
