@@ -10,7 +10,7 @@ http://web-platform.test:8000/webaudio/the-audio-api/the-biquadfilternode-interf
 http://web-platform.test:8000/webaudio/the-audio-api/the-biquadfilternode-interface/biquad-peaking.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-biquadfilternode-interface/biquad-notch.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-biquadfilternode-interface/biquad-allpass.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/webaudio/the-audio-api/the-biquadfilternode-interface/biquad-automation.html
+# [auto-fail:SUBTESTS_FAILED] ED acquire the content detaches getChannelData() views on start(); the modulation reference reads the detached view: http://web-platform.test:8000/webaudio/the-audio-api/the-biquadfilternode-interface/biquad-automation.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-biquadfilternode-interface/biquad-tail.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-biquadfilternode-interface/no-dezippering.html
 https://web-platform.test:8443/webaudio/the-audio-api/the-biquadfilternode-interface/biquadfilter-rendersizehint.https.html

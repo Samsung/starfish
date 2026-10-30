@@ -1,5 +1,5 @@
 http://web-platform.test:8000/webaudio/the-audio-api/the-delaynode-interface/ctor-delay.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/webaudio/the-audio-api/the-delaynode-interface/no-dezippering.html
+# [auto-fail:SUBTESTS_FAILED] ED acquire the content detaches getChannelData() views on start(): http://web-platform.test:8000/webaudio/the-audio-api/the-delaynode-interface/no-dezippering.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-delaynode-interface/delaynode-max-default-delay.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-delaynode-interface/delaynode-maxdelay.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-delaynode-interface/delaynode.html
