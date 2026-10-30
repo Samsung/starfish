@@ -582,7 +582,7 @@ STARFISH_BIN="$PWD/out/release/bin/Starfish" xvfb-run -s '-screen 0 1920x1080x24
 #  - tool/webaudio/test_media_output.py (skips without pulseaudio/parec);
 #  - tool/webaudio/test_api_probes.py (API checks no runnable WPT covers:
 #    SharedArrayBuffer views, MediaElementAudioSourceNode constructor,
-#    sub-sample AudioBufferSourceNode starts; no audio device needed);
+#    sub-sample and exact-time scheduling; no audio device needed);
 #  - tool/webaudio/test_graph_thread.py in the clang build job (skipped with
 #    a warning when Clang's TSan runtime is missing).
 # Everything needing FFmpeg (compressed decoding, MSE, decoder Valgrind)

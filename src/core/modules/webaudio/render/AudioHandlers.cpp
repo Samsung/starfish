@@ -1324,6 +1324,16 @@ void BiquadFilterHandler::process(uint64_t frameStart, size_t frames)
     target.setSilent(!wrote);
 }
 
+// https://webaudio.github.io/web-audio-api/#dom-audioscheduledsourcenode-start
+// "the exact value of when is always used without rounding to the nearest
+// sample frame": scheduled sources compare a frame's time with their start
+// and stop times, as the ED playback algorithm does, instead of rounding
+// those times to frames.
+static bool frameIsBefore(double frame, double sampleRate, double time)
+{
+    return frame / sampleRate < time;
+}
+
 ConstantSourceHandler::ConstantSourceHandler(double sampleRate)
     : AudioHandler(0, 1, 1)
     , m_offset(1)
@@ -1349,10 +1359,6 @@ void ConstantSourceHandler::process(uint64_t frameStart, size_t frames)
     if (!m_started || m_finished) {
         return;
     }
-    const double startFrame = std::ceil(m_startTime * m_sampleRate);
-    const double stopFrame = m_hasStopTime
-                                 ? std::ceil(m_stopTime * m_sampleRate)
-                                 : std::numeric_limits<double>::infinity();
     AudioBus& bus = output(0).bus();
     const AudioBus* modulation = m_offset.modulation(frames);
     const bool isARate = m_offset.isARate();
@@ -1364,7 +1370,9 @@ void ConstantSourceHandler::process(uint64_t frameStart, size_t frames)
     bool wrote = false;
     for (size_t i = 0; i < frames; i++) {
         const double frame = static_cast<double>(frameStart + i);
-        if (frame < startFrame || frame >= stopFrame) {
+        if (frameIsBefore(frame, m_sampleRate, m_startTime) ||
+            (m_hasStopTime &&
+             !frameIsBefore(frame, m_sampleRate, m_stopTime))) {
             continue;
         }
         bus.channel(0)[i] =
@@ -1375,8 +1383,10 @@ void ConstantSourceHandler::process(uint64_t frameStart, size_t frames)
         wrote = true;
     }
     bus.setSilent(!wrote);
-    m_finished = m_hasStopTime && static_cast<double>(frameStart + frames) >=
-                                      std::max(startFrame, stopFrame);
+    m_finished =
+        m_hasStopTime &&
+        !frameIsBefore(static_cast<double>(frameStart + frames), m_sampleRate,
+                       std::max(m_startTime, m_stopTime));
 }
 
 OscillatorHandler::OscillatorHandler(double sampleRate)
@@ -1453,17 +1463,15 @@ void OscillatorHandler::process(uint64_t frameStart, size_t frames)
         return;
     }
     constexpr double twoPi = 6.28318530717958647692;
-    const double startFrame = std::ceil(m_startTime * m_sampleRate);
-    const double stopFrame = m_hasStopTime
-                                 ? std::ceil(m_stopTime * m_sampleRate)
-                                 : std::numeric_limits<double>::infinity();
     const AudioBus* frequencyModulation = m_frequency.modulation(frames);
     const AudioBus* detuneModulation = m_detune.modulation(frames);
     AudioBus& bus = output(0).bus();
     bool wrote = false;
     for (size_t i = 0; i < frames; i++) {
         const double frame = static_cast<double>(frameStart + i);
-        if (frame < startFrame || frame >= stopFrame) {
+        if (frameIsBefore(frame, m_sampleRate, m_startTime) ||
+            (m_hasStopTime &&
+             !frameIsBefore(frame, m_sampleRate, m_stopTime))) {
             continue;
         }
         const double frequency = m_frequency.computedValue(
@@ -1477,7 +1485,7 @@ void OscillatorHandler::process(uint64_t frameStart, size_t frames)
         const double step = audible ? computedFrequency / m_sampleRate : 0;
         if (!m_playbackBegun) {
             // The first frame may follow a fractional start time.
-            m_phase = step * (frame - m_startTime * m_sampleRate);
+            m_phase = step * std::max(0.0, frame - m_startTime * m_sampleRate);
             m_phase -= std::floor(m_phase);
             m_playbackBegun = true;
         }
@@ -1519,8 +1527,10 @@ void OscillatorHandler::process(uint64_t frameStart, size_t frames)
         m_phase -= std::floor(m_phase);
     }
     bus.setSilent(!wrote);
-    m_finished = m_hasStopTime && static_cast<double>(frameStart + frames) >=
-                                      std::max(startFrame, stopFrame);
+    m_finished =
+        m_hasStopTime &&
+        !frameIsBefore(static_cast<double>(frameStart + frames), m_sampleRate,
+                       std::max(m_startTime, m_stopTime));
 }
 
 AudioBufferSourceHandler::AudioBufferSourceHandler(double sampleRate)
@@ -1593,9 +1603,6 @@ void AudioBufferSourceHandler::process(uint64_t frameStart, size_t frames)
 
     AudioBus& bus = output(0).bus();
     const double sourceFrames = m_data ? m_data->frames() : 0;
-    const double stopFrame = m_hasStopTime
-                                 ? std::ceil(m_stopTime * m_contextSampleRate)
-                                 : std::numeric_limits<double>::infinity();
     const double durationFrames = m_duration * m_bufferSampleRate;
     const AudioBus* rateModulation = m_playbackRate.modulation(frames);
     const AudioBus* detuneModulation = m_detune.modulation(frames);
@@ -1625,15 +1632,12 @@ void AudioBufferSourceHandler::process(uint64_t frameStart, size_t frames)
     bool wrote = false;
     for (size_t i = 0; i < frames; i++) {
         const double contextFrame = static_cast<double>(frameStart + i);
-        if (contextFrame >= stopFrame) {
+        if (m_hasStopTime &&
+            !frameIsBefore(contextFrame, m_contextSampleRate, m_stopTime)) {
             m_finished = true;
             break;
         }
-        // https://webaudio.github.io/web-audio-api/#dom-audioscheduledsourcenode-start
-        // "the exact value of when is always used without rounding to the
-        // nearest sample frame": compare times, as the playback algorithm
-        // does, instead of a rounded start frame.
-        if (contextFrame / m_contextSampleRate < m_startTime) {
+        if (frameIsBefore(contextFrame, m_contextSampleRate, m_startTime)) {
             continue;
         }
         if (!m_data ||

@@ -64,6 +64,9 @@ class APIProbesTest(unittest.TestCase):
     def test_reverse_loop_with_sub_sample_start(self):
         self.run_group('reverse-loop')
 
+    def test_scheduled_sources_use_exact_times(self):
+        self.run_group('exact-times')
+
 
 if __name__ == '__main__':
     unittest.main()
