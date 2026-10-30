@@ -61,6 +61,8 @@ static bool createFrameBufferObject(GL* gl, const unsigned width,
     // 2. Generate a texture and bind it
     GLint oldTextureId = 0;
     gl->getIntegerv(GL_TEXTURE_BINDING_2D, &oldTextureId);
+    GLint oldRenderbuffer = 0;
+    gl->getIntegerv(GL_RENDERBUFFER_BINDING, &oldRenderbuffer);
     gl->genTextures(1, &outTextureId);
     gl->bindTexture(GL_TEXTURE_2D, outTextureId);
 
@@ -121,7 +123,7 @@ static bool createFrameBufferObject(GL* gl, const unsigned width,
 
     gl->bindTexture(GL_TEXTURE_2D, oldTextureId);
     gl->bindFramebuffer(GL_FRAMEBUFFER, 0);
-    gl->bindRenderbuffer(GL_RENDERBUFFER, 0);
+    gl->bindRenderbuffer(GL_RENDERBUFFER, oldRenderbuffer);
 
     return true;
 }
@@ -168,9 +170,9 @@ bool FramebufferTexture::create(unsigned bufferWidth, unsigned bufferHeight,
 
 bool FramebufferTexture::destroy()
 {
-    // Ensure no FBO is bound.
+    // Ensure no FBO is bound. The renderbuffer binding is the page's: GL
+    // reverts it by itself if it is one of the renderbuffers deleted here.
     m_gl->bindFramebuffer(GL_FRAMEBUFFER, 0);
-    m_gl->bindRenderbuffer(GL_RENDERBUFFER, 0);
 
     m_gl->deleteTextures(1, &m_textureId);
     if (m_rboDepth != 0) {

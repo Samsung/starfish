@@ -142,7 +142,8 @@ public:
     void attachShader(WebGLProgram* program, WebGLShader* shader);
     void bindAttribLocation(WebGLProgram* program, GLuint index, String* name);
     void bindBuffer(GLenum target, Optional<WebGLBuffer*> buffer);
-    void bindFramebuffer(GLenum target, Optional<WebGLFramebuffer*> buffer);
+    virtual void bindFramebuffer(GLenum target,
+                                 Optional<WebGLFramebuffer*> buffer);
     void bindRenderbuffer(GLenum target, Optional<WebGLRenderbuffer*> buffer);
     void bindTexture(GLenum target, Optional<WebGLTexture*> texture);
     void blendColor(GLclampf red, GLclampf green, GLclampf blue,

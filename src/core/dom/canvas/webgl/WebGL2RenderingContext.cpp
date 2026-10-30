@@ -160,6 +160,18 @@ void WebGL2RenderingContext::clear(uint32_t mask)
     WebGLRenderingContext::clear(mask);
 }
 
+void WebGL2RenderingContext::onResize()
+{
+    WebGLRenderingContext::onResize();
+
+    // The new default framebuffer starts with GL's initial read buffer, but
+    // a readBuffer(NONE) the page set on the default framebuffer must stay.
+    if (!m_readFramebuffer && m_defaultReadBuffer == GL_NONE) {
+        GLContextScope contextScope(m_context);
+        gl()->readBuffer(GL_NONE);
+    }
+}
+
 bool WebGL2RenderingContext::isDefaultFramebufferBound()
 {
     return !m_drawFramebuffer.hasValue() ||
