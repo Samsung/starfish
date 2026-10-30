@@ -667,6 +667,21 @@ public:
         return m_evasGLAPI->glIsBuffer(buffer);
     }
 
+    virtual GLboolean isFramebuffer(GLuint framebuffer) override
+    {
+        return m_evasGLAPI->glIsFramebuffer(framebuffer);
+    }
+
+    virtual GLboolean isRenderbuffer(GLuint renderbuffer) override
+    {
+        return m_evasGLAPI->glIsRenderbuffer(renderbuffer);
+    }
+
+    virtual GLboolean isTexture(GLuint texture) override
+    {
+        return m_evasGLAPI->glIsTexture(texture);
+    }
+
     virtual void lineWidth(GLfloat width) override
     {
         m_evasGLAPI->glLineWidth(width);

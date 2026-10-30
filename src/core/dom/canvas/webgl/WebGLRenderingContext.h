@@ -367,11 +367,23 @@ public:
     WebGLRenderingContextState* getState();
 
     bool isFromCurrentContext(WebGLObject* object);
+    // Whether the GL object still exists: after delete*() a program lives on
+    // while current, a shader while attached (OpenGL ES 2.0 §2.10.3, §2.10.1).
+    bool hasGLObject(WebGLProgram* program);
+    bool hasGLObject(WebGLShader* shader);
+    // INVALID_OPERATION for another context's object (WebGL 1.0 §5.14),
+    // INVALID_VALUE once its GL object is gone. The name must not reach the
+    // driver then: every context shares one GL namespace, so a freed name
+    // may already name another context's object.
+    bool validateProgramOrShader(WebGLProgram* program);
+    bool validateProgramOrShader(WebGLShader* shader);
     bool isExtensionEnabled(const char* requestedName);
     bool validateDrawCallVertexAttribs();
 
 private:
     bool checkAttribOrUniformName(String* name);
+    // Frees the GL program of a deleted program that is no longer current.
+    void releaseProgram(WebGLProgram* program);
 
 protected:
     void handleTexImageWithArrayBufferView(

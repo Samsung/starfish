@@ -44,12 +44,12 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-lost
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-release-upon-reload.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-release-with-workers.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-type-test.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/context/incorrect-context-object-behaviour.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/context/incorrect-context-object-behaviour.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/methods.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/context/premultiplyalpha-test.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/context/resources/context-release-child-with-worker.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/context/resources/context-release-upon-reload-child.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/context/resource-sharing-test.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/context/resource-sharing-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/angle-instanced-arrays.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/angle-instanced-arrays-out-of-bounds.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-blend-minmax.html
@@ -359,9 +359,9 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/misc/error-reporting
 http://localhost:11010/conformance-suites/1.0.3/conformance/misc/functions-returning-strings.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/misc/instanceof-test.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/misc/invalid-passed-params.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/misc/is-object.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/misc/is-object.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/misc/null-object-behaviour.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/misc/object-deletion-behaviour.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/misc/object-deletion-behaviour.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/misc/shader-precision-format.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/misc/type-conversion-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/misc/uninitialized-test.html
@@ -404,7 +404,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawA
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawArraysOutOfBounds.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawElements.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/isTestsBadArgs.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/isTests.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/isTests.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/readPixelsBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/readPixels.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2DBadArgs.html

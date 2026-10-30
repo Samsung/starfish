@@ -53,6 +53,9 @@ public:
     DEFINE_GETTER_SETTER(WebGLRenderbuffer*, attachedRenderBuffer,
                          AttachedRenderBuffer);
 
+    // A deleted image stays attached to a framebuffer that was not bound when
+    // it was deleted (OpenGL ES 2.0 §4.4.3), so attachments are not filtered
+    // by isDeleted(); delete* detaches them from the bound framebuffers.
     WebGLTexture* attachedTexture(GLenum attachment) const
     {
         WebGLTexture* tex = nullptr;
@@ -68,7 +71,7 @@ public:
                 tex = m_attachedDepthTexture;
             }
         }
-        return (tex && !tex->isDeleted()) ? tex : nullptr;
+        return tex;
     }
 
     WebGLRenderbuffer* attachedRenderbuffer(GLenum attachment) const
@@ -86,7 +89,7 @@ public:
                 rb = m_attachedDepthRenderbuffer;
             }
         }
-        return (rb && !rb->isDeleted()) ? rb : nullptr;
+        return rb;
     }
 
     void detachTexture(WebGLTexture* texture)
@@ -354,12 +357,10 @@ public:
         if (index >= 16) {
             return 0;
         }
-        if (m_attachedColorRenderbuffers[index] &&
-            !m_attachedColorRenderbuffers[index]->isDeleted()) {
+        if (m_attachedColorRenderbuffers[index]) {
             return m_attachedColorRenderbuffers[index]->internalFormat();
         }
-        if (m_attachedColorTextures[index] &&
-            !m_attachedColorTextures[index]->isDeleted()) {
+        if (m_attachedColorTextures[index]) {
             WebGLTexture* tex = m_attachedColorTextures[index];
             GLenum tgt = m_attachedColorIsLayers[index]
                              ? 0x806F /* GL_TEXTURE_3D */
@@ -378,8 +379,7 @@ public:
         if (index >= 16) {
             return 0;
         }
-        if (m_attachedColorRenderbuffers[index] &&
-            !m_attachedColorRenderbuffers[index]->isDeleted()) {
+        if (m_attachedColorRenderbuffers[index]) {
             return m_attachedColorRenderbuffers[index]->samples();
         }
         return 0;
@@ -390,12 +390,10 @@ public:
         if (index >= 16) {
             return nullptr;
         }
-        if (m_attachedColorRenderbuffers[index] &&
-            !m_attachedColorRenderbuffers[index]->isDeleted()) {
+        if (m_attachedColorRenderbuffers[index]) {
             return m_attachedColorRenderbuffers[index];
         }
-        if (m_attachedColorTextures[index] &&
-            !m_attachedColorTextures[index]->isDeleted()) {
+        if (m_attachedColorTextures[index]) {
             return m_attachedColorTextures[index];
         }
         return nullptr;
@@ -486,21 +484,12 @@ public:
     bool hasAnyAttachment() const
     {
         for (size_t i = 0; i < 16; ++i) {
-            if ((m_attachedColorTextures[i] &&
-                 !m_attachedColorTextures[i]->isDeleted()) ||
-                (m_attachedColorRenderbuffers[i] &&
-                 !m_attachedColorRenderbuffers[i]->isDeleted())) {
+            if (m_attachedColorTextures[i] || m_attachedColorRenderbuffers[i]) {
                 return true;
             }
         }
-        return (m_attachedDepthTexture &&
-                !m_attachedDepthTexture->isDeleted()) ||
-               (m_attachedDepthRenderbuffer &&
-                !m_attachedDepthRenderbuffer->isDeleted()) ||
-               (m_attachedStencilTexture &&
-                !m_attachedStencilTexture->isDeleted()) ||
-               (m_attachedStencilRenderbuffer &&
-                !m_attachedStencilRenderbuffer->isDeleted());
+        return m_attachedDepthTexture || m_attachedDepthRenderbuffer ||
+               m_attachedStencilTexture || m_attachedStencilRenderbuffer;
     }
 
     GLenum checkWebGLStatus() const
@@ -515,13 +504,12 @@ public:
             for (size_t j = i + 1; j < 16; ++j) {
                 if (m_attachedColorRenderbuffers[i] &&
                     m_attachedColorRenderbuffers[i] ==
-                        m_attachedColorRenderbuffers[j] &&
-                    !m_attachedColorRenderbuffers[i]->isDeleted()) {
+                        m_attachedColorRenderbuffers[j]) {
                     return 0x8CDD; /* GL_FRAMEBUFFER_UNSUPPORTED */
                 }
                 WebGLTexture* t1 = m_attachedColorTextures[i];
                 WebGLTexture* t2 = m_attachedColorTextures[j];
-                if (t1 && t1 == t2 && !t1->isDeleted()) {
+                if (t1 && t1 == t2) {
                     if (m_attachedColorLevels[i] == m_attachedColorLevels[j]) {
                         if (m_attachedColorIsLayers[i] &&
                             m_attachedColorIsLayers[j]) {
@@ -582,7 +570,7 @@ public:
 
         for (size_t i = 0; i < 16; ++i) {
             WebGLTexture* tex = m_attachedColorTextures[i];
-            if (tex && !tex->isDeleted()) {
+            if (tex) {
                 GLsizei w = tex->width();
                 GLsizei h = tex->height();
                 GLenum fmt = 0x1908;
@@ -611,7 +599,7 @@ public:
                 }
             }
             WebGLRenderbuffer* rb = m_attachedColorRenderbuffers[i];
-            if (rb && !rb->isDeleted()) {
+            if (rb) {
                 GLenum res = checkImage(rb->width(), rb->height(),
                                         rb->internalFormat(), true);
                 if (res != 0x8CD5) {
@@ -620,7 +608,7 @@ public:
             }
         }
 
-        if (m_attachedDepthTexture && !m_attachedDepthTexture->isDeleted()) {
+        if (m_attachedDepthTexture) {
             WebGLTexture* tex = m_attachedDepthTexture;
             GLsizei w = tex->width();
             GLsizei h = tex->height();
@@ -644,8 +632,7 @@ public:
                 return res;
             }
         }
-        if (m_attachedDepthRenderbuffer &&
-            !m_attachedDepthRenderbuffer->isDeleted()) {
+        if (m_attachedDepthRenderbuffer) {
             GLenum res = checkImage(
                 m_attachedDepthRenderbuffer->width(),
                 m_attachedDepthRenderbuffer->height(),
@@ -654,8 +641,7 @@ public:
                 return res;
             }
         }
-        if (m_attachedStencilTexture &&
-            !m_attachedStencilTexture->isDeleted()) {
+        if (m_attachedStencilTexture) {
             WebGLTexture* tex = m_attachedStencilTexture;
             GLsizei w = tex->width();
             GLsizei h = tex->height();
@@ -679,8 +665,7 @@ public:
                 return res;
             }
         }
-        if (m_attachedStencilRenderbuffer &&
-            !m_attachedStencilRenderbuffer->isDeleted()) {
+        if (m_attachedStencilRenderbuffer) {
             GLenum res = checkImage(
                 m_attachedStencilRenderbuffer->width(),
                 m_attachedStencilRenderbuffer->height(),
