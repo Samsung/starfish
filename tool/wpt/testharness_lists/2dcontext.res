@@ -356,9 +356,9 @@ http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-c
 http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/drawimage_svg_image_1.html
 http://web-platform.test:8000/html/canvas/element/manual/drawing-images-to-the-canvas/drawimage_svg_image_with_foreign_object_does_not_taint.html
 http://web-platform.test:8000/html/canvas/element/manual/drawing-paths-to-the-canvas/canvas_complexshapes_ispointInpath_001.htm
-# [auto-fail:SUBTESTS_FAILED] https://web-platform.test:8443/html/canvas/element/manual/fill-and-stroke-styles/pattern-from-canvas-cross-origin-taint.https.sub.html
-# [auto-fail:SUBTESTS_FAILED] https://web-platform.test:8443/html/canvas/element/manual/fill-and-stroke-styles/pattern-from-image-cross-origin-taint.https.sub.html
-# [auto-fail:SUBTESTS_FAILED] https://web-platform.test:8443/html/canvas/element/manual/fill-and-stroke-styles/pattern-from-img-cross-origin-taint.https.sub.html
+https://web-platform.test:8443/html/canvas/element/manual/fill-and-stroke-styles/pattern-from-canvas-cross-origin-taint.https.sub.html
+https://web-platform.test:8443/html/canvas/element/manual/fill-and-stroke-styles/pattern-from-image-cross-origin-taint.https.sub.html
+https://web-platform.test:8443/html/canvas/element/manual/fill-and-stroke-styles/pattern-from-img-cross-origin-taint.https.sub.html
 # [auto-fail:SUBTESTS_FAILED] https://web-platform.test:8443/html/canvas/element/manual/fill-and-stroke-styles/pattern-from-video-cross-origin-taint.https.sub.html
 http://web-platform.test:8000/html/canvas/element/manual/image-smoothing/imagesmoothing.html
 http://web-platform.test:8000/html/canvas/element/manual/imagebitmap/createImageBitmap-blob-invalidtype.html

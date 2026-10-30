@@ -696,6 +696,12 @@ void CanvasRenderingContext2DMixIn::setFillStyle(CanvasStyle value)
             m_canvas->setFillColor(color);
         }
     } else if (value.isNoneValue() == false) {
+        // Setting a pattern that is not origin-clean taints the canvas
+        // (https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-fillstyle).
+        if (value.isCanvasPatternValue() &&
+            !value.getCanvasPatternValue()->originCleanFlag()) {
+            setOriginCleanFlag(false);
+        }
         m_canvas->setFillSource(new CanvasFillStrokeSource(value));
     }
 }
@@ -720,6 +726,12 @@ void CanvasRenderingContext2DMixIn::setStrokeStyle(CanvasStyle value)
             m_canvas->setStrokeColor(color);
         }
     } else if (value.isNoneValue() == false) {
+        // Setting a pattern that is not origin-clean taints the canvas
+        // (https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-strokestyle).
+        if (value.isCanvasPatternValue() &&
+            !value.getCanvasPatternValue()->originCleanFlag()) {
+            setOriginCleanFlag(false);
+        }
         m_canvas->setStrokeSource(new CanvasFillStrokeSource(value));
     }
 }
