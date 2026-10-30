@@ -389,6 +389,14 @@ protected:
     void setOverflow(const char* value, size_t len, bool isImportant);
     void removeOverflow();
 
+    String* TextWrap();
+    void setTextWrap(const char* value, size_t len, bool isImportant);
+    void removeTextWrap();
+
+    String* WhiteSpace();
+    void setWhiteSpace(const char* value, size_t len, bool isImportant);
+    void removeWhiteSpace();
+
     String* Transition();
     void setTransition(const char* value, size_t len, bool isImportant);
     void removeTransition();

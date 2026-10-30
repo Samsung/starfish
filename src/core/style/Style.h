@@ -308,12 +308,43 @@ enum FontSizeValue ENSURE_ENUM_UNSIGNED {
     SmallerFontSizeValue,
 };
 
+// The computed white-space state. Bits 0-1 hold the white-space-collapse
+// longhand and bit 2 the text-wrap-mode longhand, so a value is the pair of
+// longhands that `white-space` is a shorthand for
+// (https://drafts.csswg.org/css-text-4/#white-space-property). The legacy
+// keywords name the predefined combinations; `preserve-breaks nowrap` is the
+// one combination without a keyword (value 0).
 enum WhiteSpaceValue ENSURE_ENUM_UNSIGNED {
     NoWrapWhiteSpaceValue = 1 << 0,  /* Ignore newline characters */
     PreWhiteSpaceValue = 1 << 1,     /* Preserve spaces */
     PreLineWhiteSpaceValue = 1 << 2, /* Wrap lines */
     NormalWhiteSpaceValue = PreLineWhiteSpaceValue | NoWrapWhiteSpaceValue,
     PreWrapWhiteSpaceValue = PreLineWhiteSpaceValue | PreWhiteSpaceValue,
+    WhiteSpaceCollapseMask = NoWrapWhiteSpaceValue | PreWhiteSpaceValue,
+    TextWrapModeMask = PreLineWhiteSpaceValue,
+};
+
+// https://drafts.csswg.org/css-text-4/#white-space-collapse-property
+// `preserve-spaces` and `break-spaces` are not supported.
+enum WhiteSpaceCollapseValue ENSURE_ENUM_UNSIGNED {
+    CollapseWhiteSpaceCollapseValue,
+    PreserveWhiteSpaceCollapseValue,
+    PreserveBreaksWhiteSpaceCollapseValue,
+};
+
+// https://drafts.csswg.org/css-text-4/#text-wrap-mode
+enum TextWrapModeValue ENSURE_ENUM_UNSIGNED {
+    WrapTextWrapModeValue,
+    NoWrapTextWrapModeValue,
+};
+
+// https://drafts.csswg.org/css-text-4/#text-wrap-style
+enum TextWrapStyleValue ENSURE_ENUM_UNSIGNED {
+    AutoTextWrapStyleValue,
+    BalanceTextWrapStyleValue,
+    StableTextWrapStyleValue,
+    PrettyTextWrapStyleValue,
+    AvoidOrphansTextWrapStyleValue,
 };
 
 enum OverflowValue ENSURE_ENUM_UNSIGNED {
@@ -659,7 +690,9 @@ class CSSFilterFunction;
     F(CounterReset, counterReset, "counter-reset")                             \
     F(CounterIncrement, counterIncrement, "counter-increment")                 \
     F(LineHeight, lineHeight, "line-height")                                   \
-    F(WhiteSpace, whiteSpace, "white-space")                                   \
+    F(WhiteSpaceCollapse, whiteSpaceCollapse, "white-space-collapse")          \
+    F(TextWrapMode, textWrapMode, "text-wrap-mode")                            \
+    F(TextWrapStyle, textWrapStyle, "text-wrap-style")                         \
     F(WordSpacing, wordSpacing, "word-spacing")                                \
     F(PaddingTop, paddingTop, "padding-top")                                   \
     F(PaddingRight, paddingRight, "padding-right")                             \
@@ -900,6 +933,8 @@ class CSSFilterFunction;
     F(GridTemplate, gridTemplate, "grid-template")                   \
     F(Inset, inset, "inset")                                         \
     F(TextDecoration, textDecoration, "text-decoration")             \
+    F(TextWrap, textWrap, "text-wrap")                               \
+    F(WhiteSpace, whiteSpace, "white-space")                         \
     F(Margin, margin, "margin")                                      \
     F(MarginBlock, marginBlock, "margin-block")                      \
     F(MarginInline, marginInline, "margin-inline")                   \
@@ -1105,7 +1140,9 @@ public:
         TextAlignValueKind,
         SideValueKind,
         DirectionValueKind,
-        WhiteSpaceValueKind,
+        WhiteSpaceCollapseValueKind,
+        TextWrapModeValueKind,
+        TextWrapStyleValueKind,
 
         ValueListKind,
         ValuePairKind,
@@ -1406,10 +1443,22 @@ public:
         return m_value.m_direction;
     }
 
-    WhiteSpaceValue whiteSpaceValue() const
+    WhiteSpaceCollapseValue whiteSpaceCollapseValue() const
     {
-        STARFISH_ASSERT(m_valueKind == WhiteSpaceValueKind);
-        return m_value.m_whiteSpace;
+        STARFISH_ASSERT(m_valueKind == WhiteSpaceCollapseValueKind);
+        return m_value.m_whiteSpaceCollapse;
+    }
+
+    TextWrapModeValue textWrapModeValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == TextWrapModeValueKind);
+        return m_value.m_textWrapMode;
+    }
+
+    TextWrapStyleValue textWrapStyleValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == TextWrapStyleValueKind);
+        return m_value.m_textWrapStyle;
     }
 
     ObjectFitValue objectFitValue() const
@@ -1987,7 +2036,9 @@ public:
         TextAlignValue m_textAlign;
         SideValue m_side;
         DirectionValue m_direction;
-        WhiteSpaceValue m_whiteSpace;
+        WhiteSpaceCollapseValue m_whiteSpaceCollapse;
+        TextWrapModeValue m_textWrapMode;
+        TextWrapStyleValue m_textWrapStyle;
         CSSLength m_length;
         CSSAngle m_angle;
         String* m_stringValue;
@@ -2122,8 +2173,16 @@ public:
             : m_direction(v)
         {
         }
-        ValueData(WhiteSpaceValue v)
-            : m_whiteSpace(v)
+        ValueData(WhiteSpaceCollapseValue v)
+            : m_whiteSpaceCollapse(v)
+        {
+        }
+        ValueData(TextWrapModeValue v)
+            : m_textWrapMode(v)
+        {
+        }
+        ValueData(TextWrapStyleValue v)
+            : m_textWrapStyle(v)
         {
         }
         ValueData(CSSLength v)
@@ -2738,6 +2797,9 @@ public:
                                      uint8_t option);
     bool updateValueWidthHeightKeyword(const CSSTokenVector& tokens);
     bool updateValueUnitWidthHeightKeyword(const CSSTokenValue& value);
+    bool updateValueUnitWhiteSpaceCollapse(const CSSTokenValue& token);
+    bool updateValueUnitTextWrapMode(const CSSTokenValue& token);
+    bool updateValueUnitTextWrapStyle(const CSSTokenValue& token);
     bool updateValueTime(const CSSTokenVector& tokens, uint8_t option);
     bool updateValueUnitTime(const CSSTokenValue& token, uint8_t option);
     bool updateValueUnitTimeOrCalc(const CSSTokenValue& token, uint8_t option);

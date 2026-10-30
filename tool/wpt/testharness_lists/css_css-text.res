@@ -273,22 +273,22 @@ http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-break-wor
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/text-transform-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-text/parsing/text-transform-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/text-transform-valid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/text-wrap-computed.html
-# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-text/parsing/text-wrap-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/text-wrap-mode-computed.html
-# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-text/parsing/text-wrap-mode-invalid.html
+http://web-platform.test:8000/css/css-text/parsing/text-wrap-computed.html
+http://web-platform.test:8000/css/css-text/parsing/text-wrap-invalid.html
+http://web-platform.test:8000/css/css-text/parsing/text-wrap-mode-computed.html
+http://web-platform.test:8000/css/css-text/parsing/text-wrap-mode-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/text-wrap-mode-valid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/text-wrap-pretty.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/text-wrap-style-computed.html
-# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-text/parsing/text-wrap-style-invalid.html
+http://web-platform.test:8000/css/css-text/parsing/text-wrap-pretty.html
+http://web-platform.test:8000/css/css-text/parsing/text-wrap-style-computed.html
+http://web-platform.test:8000/css/css-text/parsing/text-wrap-style-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/text-wrap-style-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/text-wrap-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/white-space-collapse-computed.html
-# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-text/parsing/white-space-collapse-invalid.html
+http://web-platform.test:8000/css/css-text/parsing/white-space-collapse-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/white-space-collapse-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/white-space-computed.html
-# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-text/parsing/white-space-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/white-space-shorthand-text-wrap.html
+http://web-platform.test:8000/css/css-text/parsing/white-space-invalid.html
+http://web-platform.test:8000/css/css-text/parsing/white-space-shorthand-text-wrap.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/white-space-shorthand.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/white-space-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/word-break-computed.html

@@ -4719,9 +4719,8 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
             // if FrameBlockBox doesn't allow line-break with content is bigger
             // than FrameBlockBox
             // we should update minimum preferred width as preferred width
-            if (style()->whiteSpace() ==
-                    WhiteSpaceValue::NoWrapWhiteSpaceValue ||
-                style()->whiteSpace() == WhiteSpaceValue::PreWhiteSpaceValue) {
+            if (style()->textWrapMode() ==
+                TextWrapModeValue::NoWrapTextWrapModeValue) {
                 ctx.updatePreferredMinWidth(ctx.preferredWidth());
             }
         }

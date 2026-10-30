@@ -331,6 +331,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             if (memcmp(data, "transform", 9) == 0) {
                 return CSSStyleValuePair::KeyKind::Transform;
             }
+            if (memcmp(data, "text-wrap", 9) == 0) {
+                return CSSStyleValuePair::KeyKind::TextWrap;
+            }
             break;
         case 'd':
             if (memcmp(data, "direction", 9) == 0) {
@@ -843,6 +846,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             if (memcmp(data, "text-transform", 14) == 0) {
                 return CSSStyleValuePair::KeyKind::TextTransform;
             }
+            if (memcmp(data, "text-wrap-mode", 14) == 0) {
+                return CSSStyleValuePair::KeyKind::TextWrapMode;
+            }
             break;
         case 'l':
             if (memcmp(data, "letter-spacing", 14) == 0) {
@@ -900,6 +906,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         case 't':
             if (memcmp(data, "text-decoration", 15) == 0) {
                 return CSSStyleValuePair::KeyKind::TextDecoration;
+            }
+            if (memcmp(data, "text-wrap-style", 15) == 0) {
+                return CSSStyleValuePair::KeyKind::TextWrapStyle;
             }
             break;
         case 'b':
@@ -1297,6 +1306,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         case 't':
             if (memcmp(data, "text-decoration-line", 20) == 0) {
                 return CSSStyleValuePair::KeyKind::TextDecorationLine;
+            }
+            break;
+        case 'w':
+            if (memcmp(data, "white-space-collapse", 20) == 0) {
+                return CSSStyleValuePair::KeyKind::WhiteSpaceCollapse;
             }
             break;
         }
@@ -1754,6 +1768,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
                 return CSSStyleValuePair::KeyKind::WordWrap;
             }
             break;
+        case 't':
+            if (memcmp(data, "textWrap", 8) == 0) {
+                return CSSStyleValuePair::KeyKind::TextWrap;
+            }
+            break;
         case 'g':
             if (memcmp(data, "gridArea", 8) == 0) {
                 return CSSStyleValuePair::KeyKind::GridArea;
@@ -2109,6 +2128,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             if (memcmp(data, "textOverflow", 12) == 0) {
                 return CSSStyleValuePair::KeyKind::TextOverflow;
             }
+            if (memcmp(data, "textWrapMode", 12) == 0) {
+                return CSSStyleValuePair::KeyKind::TextWrapMode;
+            }
             break;
         case 'g':
             if (memcmp(data, "gridRowStart", 12) == 0) {
@@ -2160,6 +2182,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
         case 't':
             if (memcmp(data, "textTransform", 13) == 0) {
                 return CSSStyleValuePair::KeyKind::TextTransform;
+            }
+            if (memcmp(data, "textWrapStyle", 13) == 0) {
+                return CSSStyleValuePair::KeyKind::TextWrapStyle;
             }
             break;
         case 'l':
@@ -2522,16 +2547,19 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
                 return CSSStyleValuePair::KeyKind::TextDecorationLine;
             }
             break;
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
         case 'w':
+            if (memcmp(data, "whiteSpaceCollapse", 18) == 0) {
+                return CSSStyleValuePair::KeyKind::WhiteSpaceCollapse;
+            }
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
             if (memcmp(data, "webkitMaskPosition", 18) == 0) {
                 return CSSStyleValuePair::KeyKind::MaskPosition;
             }
             if (memcmp(data, "webkitAlignContent", 18) == 0) {
                 return CSSStyleValuePair::KeyKind::AlignContent;
             }
-            break;
 #endif
+            break;
         }
         break;
     case 19:

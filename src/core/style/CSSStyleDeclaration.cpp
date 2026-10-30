@@ -4658,6 +4658,220 @@ void CSSStyleDeclaration::removeOverflow()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::Overflow);
 }
 
+static bool isCSSWideKeyword(String* value)
+{
+    return value->equals(String::initialString) ||
+           value->equals(String::inheritString) ||
+           value->equals(String::unsetString);
+}
+
+// Serialization of a two-longhand shorthand whose longhands may each hold a
+// CSS-wide keyword: both the same keyword serializes as that keyword, and a
+// keyword on only one side has no shorthand form
+// (https://drafts.csswg.org/cssom/#serialize-a-css-value).
+static Optional<String*> cssWideShorthandValue(String* first, String* second)
+{
+    if (isCSSWideKeyword(first) || isCSSWideKeyword(second)) {
+        return first->equals(second) ? first : String::emptyString;
+    }
+    return nullptr;
+}
+
+// https://drafts.csswg.org/css-text-4/#text-wrap
+//   <'text-wrap-mode'> || <'text-wrap-style'>
+String* CSSStyleDeclaration::TextWrap()
+{
+    String* mode = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::TextWrapMode);
+    String* style = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::TextWrapStyle);
+    if (mode->isEmpty() || style->isEmpty()) {
+        return String::emptyString;
+    }
+    if (Optional<String*> wide = cssWideShorthandValue(mode, style)) {
+        return wide.value();
+    }
+    // Shortest form: an initial-valued longhand is omitted, unless both are
+    // initial, in which case the mode keyword stands for the whole value.
+    if (style->equals("auto")) {
+        return mode;
+    }
+    if (mode->equals("wrap")) {
+        return style;
+    }
+    return mode->concat(String::spaceString)->concat(style);
+}
+
+void CSSStyleDeclaration::setTextWrap(const char* value, size_t length,
+                                      bool isImportant)
+{
+    if (length == 0) {
+        removeTextWrap();
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length);
+
+    CSSStyleValuePair v;
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, length));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::TextWrap, v);
+        return;
+    }
+
+    CSSStyleValuePair mode, style;
+    if (v.updateValueCommon(tokens)) {
+        mode = v;
+        style = v;
+    } else {
+        // An omitted longhand takes its initial value.
+        mode.updateValueUnitTextWrapMode(CSSTokenValue("wrap"));
+        style.updateValueUnitTextWrapStyle(CSSTokenValue("auto"));
+        bool seenMode = false, seenStyle = false;
+        if (tokens.size() < 1 || tokens.size() > 2) {
+            return;
+        }
+        for (size_t i = 0; i < tokens.size(); i++) {
+            if (!seenMode && mode.updateValueUnitTextWrapMode(tokens[i])) {
+                seenMode = true;
+            } else if (!seenStyle &&
+                       style.updateValueUnitTextWrapStyle(tokens[i])) {
+                seenStyle = true;
+            } else {
+                return;
+            }
+        }
+    }
+    mode.setFlagImportant(isImportant);
+    style.setFlagImportant(isImportant);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::TextWrapMode, mode);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::TextWrapStyle, style);
+}
+
+void CSSStyleDeclaration::removeTextWrap()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::TextWrapMode);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::TextWrapStyle);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::TextWrap);
+}
+
+// https://drafts.csswg.org/css-text-4/#white-space-property
+//   normal | pre | pre-wrap | pre-line |
+//   <'white-space-collapse'> || <'text-wrap-mode'> || <'white-space-trim'>
+// white-space-trim is not supported. The legacy keywords name the predefined
+// longhand combinations; `preserve-breaks nowrap` is the one without a
+// keyword and serializes as its longhands.
+String* CSSStyleDeclaration::WhiteSpace()
+{
+    String* collapse = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::WhiteSpaceCollapse);
+    String* mode = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::TextWrapMode);
+    if (collapse->isEmpty() || mode->isEmpty()) {
+        return String::emptyString;
+    }
+    if (Optional<String*> wide = cssWideShorthandValue(collapse, mode)) {
+        return wide.value();
+    }
+    bool wrap = mode->equals("wrap");
+    if (collapse->equals("collapse")) {
+        return wrap ? String::fromUTF8("normal") : String::fromUTF8("nowrap");
+    }
+    if (collapse->equals("preserve")) {
+        return wrap ? String::fromUTF8("pre-wrap") : String::fromUTF8("pre");
+    }
+    if (wrap) {
+        return String::fromUTF8("pre-line");
+    }
+    return collapse->concat(String::spaceString)->concat(mode);
+}
+
+void CSSStyleDeclaration::setWhiteSpace(const char* value, size_t length,
+                                        bool isImportant)
+{
+    if (length == 0) {
+        removeWhiteSpace();
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length);
+
+    CSSStyleValuePair v;
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, length));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::WhiteSpace, v);
+        return;
+    }
+
+    CSSStyleValuePair collapse, mode;
+    if (v.updateValueCommon(tokens)) {
+        collapse = v;
+        mode = v;
+    } else {
+        if (tokens.size() < 1 || tokens.size() > 2) {
+            return;
+        }
+        const char* collapseKeyword = nullptr;
+        const char* modeKeyword = nullptr;
+        if (tokens.size() == 1) {
+            const CSSTokenValue& token = tokens[0];
+            if (token.equals("normal")) {
+                collapseKeyword = "collapse";
+                modeKeyword = "wrap";
+            } else if (token.equals("nowrap")) {
+                collapseKeyword = "collapse";
+                modeKeyword = "nowrap";
+            } else if (token.equals("pre")) {
+                collapseKeyword = "preserve";
+                modeKeyword = "nowrap";
+            } else if (token.equals("pre-wrap")) {
+                collapseKeyword = "preserve";
+                modeKeyword = "wrap";
+            } else if (token.equals("pre-line")) {
+                collapseKeyword = "preserve-breaks";
+                modeKeyword = "wrap";
+            }
+        }
+        if (collapseKeyword) {
+            collapse.updateValueUnitWhiteSpaceCollapse(
+                CSSTokenValue(collapseKeyword));
+            mode.updateValueUnitTextWrapMode(CSSTokenValue(modeKeyword));
+        } else {
+            // An omitted longhand takes its initial value.
+            collapse.updateValueUnitWhiteSpaceCollapse(
+                CSSTokenValue("collapse"));
+            mode.updateValueUnitTextWrapMode(CSSTokenValue("wrap"));
+            bool seenCollapse = false, seenMode = false;
+            for (size_t i = 0; i < tokens.size(); i++) {
+                if (!seenCollapse &&
+                    collapse.updateValueUnitWhiteSpaceCollapse(tokens[i])) {
+                    seenCollapse = true;
+                } else if (!seenMode &&
+                           mode.updateValueUnitTextWrapMode(tokens[i])) {
+                    seenMode = true;
+                } else {
+                    return;
+                }
+            }
+        }
+    }
+    collapse.setFlagImportant(isImportant);
+    mode.setFlagImportant(isImportant);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::WhiteSpaceCollapse, collapse);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::TextWrapMode, mode);
+}
+
+void CSSStyleDeclaration::removeWhiteSpace()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::WhiteSpaceCollapse);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::TextWrapMode);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::WhiteSpace);
+}
+
 String* CSSStyleDeclaration::Padding(bool* isCombined)
 {
     String* top = getPropertyValueInternalFor<PropertyType::kLonghand>(

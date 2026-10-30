@@ -1484,10 +1484,24 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->m_inheritedStyles.m_whiteSpace !=
         oldStyle->m_inheritedStyles.m_whiteSpace) {
-        damagedKeys[CSSStyleValuePair::KeyKind::WhiteSpace] = true;
+        if (newStyle->whiteSpaceCollapse() != oldStyle->whiteSpaceCollapse()) {
+            damagedKeys[CSSStyleValuePair::KeyKind::WhiteSpaceCollapse] = true;
+        }
+        if (newStyle->textWrapMode() != oldStyle->textWrapMode()) {
+            damagedKeys[CSSStyleValuePair::KeyKind::TextWrapMode] = true;
+        }
         damage = static_cast<ComputedStyleDamage>(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    // text-wrap-style has no layout effect yet (see TextWrapStyleValue), so
+    // only descendants' computed values need refreshing.
+    if (newStyle->m_inheritedStyles.m_textWrapStyle !=
+        oldStyle->m_inheritedStyles.m_textWrapStyle) {
+        damagedKeys[CSSStyleValuePair::KeyKind::TextWrapStyle] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageInherited | damage);
     }
 
     if (newStyle->fontSize() != oldStyle->fontSize()) {
