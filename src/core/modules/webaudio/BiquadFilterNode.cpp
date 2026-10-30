@@ -41,7 +41,7 @@ BiquadFilterNode::BiquadFilterNode(ExecutionContext* executionContext,
     m_numberOfInputs = 1;
     m_numberOfOutputs = 1;
     m_filterHandler = static_cast<BiquadFilterHandler*>(
-        context->graph()->addHandler(std::unique_ptr<AudioHandler>(
+        context->addHandler(std::unique_ptr<AudioHandler>(
             new BiquadFilterHandler(context->sampleRate()))));
     m_handler = m_filterHandler;
     m_frequency = new AudioParam(context, m_filterHandler->frequencyTimeline());

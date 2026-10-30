@@ -30,13 +30,12 @@ ConstantSourceNode::ConstantSourceNode(ExecutionContext* executionContext,
     m_numberOfInputs = 0;
     m_numberOfOutputs = 1;
     m_sourceHandler = static_cast<ConstantSourceHandler*>(
-        context->graph()->addHandler(std::unique_ptr<AudioHandler>(
+        context->addHandler(std::unique_ptr<AudioHandler>(
             new ConstantSourceHandler(context->sampleRate()))));
     m_handler = m_sourceHandler;
     m_offset = new AudioParam(context, m_sourceHandler->offsetTimeline());
     context->graph()->registerTimeline(m_sourceHandler->offsetTimeline());
     m_sourceHandler->offsetTimeline()->setInitialValue(options.offset());
-    applyOptions(options);
 }
 
 ScriptBindingInstance* ConstantSourceNode::scriptBindingInstance()

@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <new>
 
 namespace Starfish {
 
@@ -46,12 +47,17 @@ ScriptProcessorNode::ScriptProcessorNode(ExecutionContext* executionContext,
     m_channelCount = numberOfInputChannels;
     m_channelCountMode = ChannelCountMode::Explicit;
     m_processorHandler =
-        static_cast<ScriptProcessorHandler*>(context->graph()->addHandler(
+        static_cast<ScriptProcessorHandler*>(context->addHandler(
             std::unique_ptr<AudioHandler>(new ScriptProcessorHandler(
                 bufferSize, numberOfInputChannels, numberOfOutputChannels))));
     m_handler = m_processorHandler;
-    m_handler->input(0).configure(std::max<uint32_t>(numberOfInputChannels, 1),
-                                  AudioInputChannelMode::Explicit, true);
+    try {
+        m_handler->input(0).configure(
+            std::max<uint32_t>(numberOfInputChannels, 1),
+            AudioInputChannelMode::Explicit, true);
+    } catch (const std::bad_alloc&) {
+        context->throwAllocationError();
+    }
     // Rendered every quantum, even when nothing downstream pulls it, so an
     // input-only node still gets its events.
     context->graph()->registerAnalysisHandler(m_handler);

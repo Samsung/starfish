@@ -43,12 +43,35 @@
 
 namespace Starfish {
 
+static void validateLatencyHint(ExecutionContext* executionContext,
+                                const AudioContextOptions& options)
+{
+    const auto& hint = options.latencyHint();
+    if (hint.isAudioContextLatencyCategoryValue()) {
+        String* category = hint.getAudioContextLatencyCategoryValue();
+        if (category->equals("interactive") || category->equals("balanced") ||
+            category->equals("playback")) {
+            return;
+        }
+    } else if (hint.isdoubleValue() && std::isfinite(hint.getdoubleValue())) {
+        // latencyHint is advisory; output buffering does not vary with it.
+        return;
+    }
+    throw new DOMException(executionContext, DOMException::SCRIPT_TYPE_ERR,
+                           "Invalid AudioContext latencyHint");
+}
+
 static double audioContextSampleRate(ExecutionContext* executionContext,
                                      const AudioContextOptions& options)
 {
+    // WebIDL converts the options, enum values included, before the
+    // constructor steps run.
+    validateLatencyHint(executionContext, options);
+    throwIfInvalidRenderSizeCategory(executionContext,
+                                     options.renderSizeHint());
     // https://webaudio.github.io/web-audio-api/#AudioContext-constructors
-    // Step 1, before any option is validated: a document that is not fully
-    // active throws InvalidStateError.
+    // Step 1, before the options' values are checked: a document that is
+    // not fully active throws InvalidStateError.
     if (!executionContext->document()->isFullyActive()) {
         throw new DOMException(executionContext,
                                DOMException::INVALID_STATE_ERR,
@@ -66,24 +89,6 @@ static double audioContextSampleRate(ExecutionContext* executionContext,
                                "Unsupported AudioContext sample rate");
     }
     return sampleRate;
-}
-
-static void validateLatencyHint(ExecutionContext* executionContext,
-                                const AudioContextOptions& options)
-{
-    const auto& hint = options.latencyHint();
-    if (hint.isAudioContextLatencyCategoryValue()) {
-        String* category = hint.getAudioContextLatencyCategoryValue();
-        if (category->equals("interactive") || category->equals("balanced") ||
-            category->equals("playback")) {
-            return;
-        }
-    } else if (hint.isdoubleValue() && std::isfinite(hint.getdoubleValue())) {
-        // latencyHint is advisory; output buffering does not vary with it.
-        return;
-    }
-    throw new DOMException(executionContext, DOMException::SCRIPT_TYPE_ERR,
-                           "Invalid AudioContext latencyHint");
 }
 
 // Carries the promise of a suspend()/resume()/close() call through its
@@ -110,7 +115,6 @@ AudioContext::AudioContext(ExecutionContext* executionContext,
               audioContextSampleRate(executionContext, contextOptions)))
 {
     // https://webaudio.github.io/web-audio-api/#AudioContext-constructors
-    validateLatencyHint(executionContext, contextOptions);
     if (!executionContext->document()->isFullyActive()) {
         throw new DOMException(executionContext,
                                DOMException::INVALID_STATE_ERR,

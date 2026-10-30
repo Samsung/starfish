@@ -60,8 +60,8 @@ IIRFilterNode::IIRFilterNode(ExecutionContext* executionContext,
     }
     m_numberOfInputs = 1;
     m_numberOfOutputs = 1;
-    m_handler = context->graph()->addHandler(
-        std::unique_ptr<AudioHandler>(new IIRFilterHandler(
+    m_handler =
+        context->addHandler(std::unique_ptr<AudioHandler>(new IIRFilterHandler(
             std::vector<double>(feedforward.begin(), feedforward.end()),
             std::vector<double>(feedback.begin(), feedback.end()))));
     configureInputs();

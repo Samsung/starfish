@@ -20,6 +20,7 @@
 #include <condition_variable>
 #include <cmath>
 #include <system_error>
+#include <new>
 #include <thread>
 
 namespace Starfish {
@@ -282,7 +283,12 @@ AudioGraph::~AudioGraph()
 bool AudioGraph::startRealtime(size_t channels)
 {
     STARFISH_ASSERT(!m_renderThread);
-    prepareOutput(channels);
+    try {
+        prepareOutput(channels);
+    } catch (const std::bad_alloc&) {
+        setOutOfMemory();
+        return false;
+    }
     try {
         m_renderThread.reset(new AudioRenderThread(this, m_sampleRate));
     } catch (const std::system_error& error) {
@@ -377,21 +383,40 @@ void AudioGraph::processPendingConnections()
         std::lock_guard<std::mutex> lock(m_connectionMutex);
         m_pendingConnections.swap(m_processingConnections);
     }
-    for (const auto& command : m_processingConnections) {
-        if (command.isParam) {
-            if (command.connect) {
-                command.destination.param->connect(command.source);
+    // A connection can grow an input bus or create an AudioParam input bus,
+    // sized by the render quantum, and a release report grows
+    // m_releaseCandidates. This runs on the render thread too, so nothing
+    // may escape it.
+    try {
+        for (const auto& command : m_processingConnections) {
+            if (command.isParam) {
+                if (command.connect) {
+                    command.destination.param->connect(command.source);
+                } else {
+                    command.destination.param->disconnect(command.source);
+                }
+            } else if (command.connect) {
+                command.destination.input->connect(command.source);
             } else {
-                command.destination.param->disconnect(command.source);
+                command.destination.input->disconnect(command.source);
             }
-        } else if (command.connect) {
-            command.destination.input->connect(command.source);
-        } else {
-            command.destination.input->disconnect(command.source);
         }
+        if (!m_takenHandlers.empty()) {
+            for (AudioHandler* handler : m_takenHandlers) {
+                if (!handler->releaseRequested() &&
+                    (!m_destination || handler != m_destination->owner())) {
+                    m_releaseCandidates.push_back(handler);
+                    handler->setReleaseRequested();
+                }
+            }
+            m_releaseDirty = true;
+        }
+    } catch (const std::bad_alloc&) {
+        setOutOfMemory();
     }
-    // Retain the two bounded buffers to avoid allocations on every quantum.
+    // Retain the bounded buffers to avoid allocations on every quantum.
     m_processingConnections.clear();
+    m_takenHandlers.clear();
     if (!m_takenTimelines.empty()) {
         for (AudioParamTimeline* timeline : m_takenTimelines) {
             timeline->releaseWrapper();
@@ -400,23 +425,14 @@ void AudioGraph::processPendingConnections()
         m_releaseDirty = true;
         m_timelineSweepNeeded = true;
     }
-    if (!m_takenHandlers.empty()) {
-        for (AudioHandler* handler : m_takenHandlers) {
-            if (!handler->releaseRequested() &&
-                (!m_destination || handler != m_destination->owner())) {
-                handler->setReleaseRequested();
-                m_releaseCandidates.push_back(handler);
-            }
-        }
-        m_takenHandlers.clear();
-        m_releaseDirty = true;
-    }
 }
 
 AudioHandler* AudioGraph::addHandler(std::unique_ptr<AudioHandler> handler)
 {
     AudioHandler* raw = handler.get();
     raw->setGraph(this);
+    // Before the graph takes the handler: if the buses cannot be allocated,
+    // std::bad_alloc leaves the graph unchanged and frees the handler.
     if (m_quantumFrames != AudioBus::RenderQuantumFrames) {
         raw->setQuantumFrames(m_quantumFrames);
     }
@@ -777,11 +793,50 @@ void AudioGraph::setDestination(AudioNodeOutput* destination)
     m_topologyDirty = true;
 }
 
+void AudioGraph::setOutOfMemory()
+{
+    if (!m_outOfMemory) {
+        STARFISH_LOG_ERROR("Web Audio graph out of memory; rendering silence");
+    }
+    m_outOfMemory = true;
+}
+
 void AudioGraph::renderQuantum(AudioBus& destination, size_t frames)
 {
     processPendingConnections();
     STARFISH_ASSERT(destination.frames() == m_quantumFrames);
     STARFISH_ASSERT(frames >= 1 && frames <= m_quantumFrames);
+    if (!m_outOfMemory) {
+        // A bus, delay line or topology buffer sized by the render quantum
+        // or the channel count can fail to allocate while rendering. The
+        // handlers stop being processed: buses keep their previous size
+        // (AudioBus::resize allocates before changing anything), so nothing
+        // indexes past them, and the context renders silence from then on.
+        try {
+            renderHandlers(destination, frames);
+        } catch (const std::bad_alloc&) {
+            setOutOfMemory();
+        }
+    }
+    if (m_outOfMemory) {
+        destination.zero();
+        // Nothing is processed any more, but handlers of collected nodes
+        // are still freed. Detaching only shrinks buses, which keep their
+        // allocation.
+        if (m_releaseDirty) {
+            try {
+                releaseHandlers();
+            } catch (const std::bad_alloc&) {
+            }
+        }
+    }
+    // Rendering time advances by a full quantum even when an offline
+    // destination stores only the final partial quantum.
+    m_renderedFrames.fetch_add(m_quantumFrames, std::memory_order_release);
+}
+
+void AudioGraph::renderHandlers(AudioBus& destination, size_t frames)
+{
     // Handle new collection reports now; re-check the tails of collected
     // nodes that are still sounding only every few quanta.
     constexpr uint64_t ReleaseInterval = 64;
@@ -829,9 +884,6 @@ void AudioGraph::renderQuantum(AudioBus& destination, size_t frames)
                                                  return handler->finished();
                                              }),
                               m_scheduledHandlers.end());
-    // Rendering time advances by a full quantum even when an offline
-    // destination stores only the final partial quantum.
-    m_renderedFrames.fetch_add(m_quantumFrames, std::memory_order_release);
 }
 
 } // namespace Starfish

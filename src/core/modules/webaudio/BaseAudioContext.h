@@ -25,6 +25,8 @@
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
+#include <memory>
+
 namespace Escargot {
 class ValueRef;
 class BackingStoreRef;
@@ -54,6 +56,7 @@ class DynamicsCompressorNode;
 class PeriodicWave;
 struct PeriodicWaveConstraints;
 class AudioGraph;
+class AudioHandler;
 class AudioDecodeWork;
 class BaseAudioContext;
 class Window;
@@ -70,6 +73,13 @@ void throwIfSharedView(ExecutionContext* executionContext,
                        Escargot::ArrayBufferViewRef* view);
 
 // https://webaudio.github.io/web-audio-api/#dom-audiocontextoptions-rendersizehint
+// TypeError for a string that is not an AudioContextRenderSizeCategory: the
+// generated union conversion does not check enum values, and WebIDL
+// converts the options before any constructor step runs.
+void throwIfInvalidRenderSizeCategory(
+    ExecutionContext* executionContext,
+    const AudioContextRenderSizeCategoryOrunsignedlong& hint);
+
 // The [[render quantum size]] a context's renderSizeHint asks for.
 size_t renderQuantumSizeFromHint(
     ExecutionContext* executionContext,
@@ -260,6 +270,11 @@ public:
     }
     void registerScheduledSource(AudioScheduledSourceNode* source);
     void renderScheduledSources();
+    // Adds a node's render handler to the graph; see throwAllocationError().
+    AudioHandler* addHandler(std::unique_ptr<AudioHandler> handler);
+    // For a buffer sized by the render quantum that cannot be allocated
+    // while script creates or configures a node: throws NotSupportedError.
+    void throwAllocationError();
     // Keeps |node| alive and dispatches its audioprocess events until it
     // has neither a listener nor a connection.
     void registerScriptProcessor(ScriptProcessorNode* node);

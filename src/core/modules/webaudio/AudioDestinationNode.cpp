@@ -30,6 +30,8 @@
 #include "core/modules/webaudio/BaseAudioContext.h"
 #include "core/modules/webaudio/render/AudioHandlers.h"
 
+#include <new>
+
 namespace Starfish {
 
 AudioDestinationNode::AudioDestinationNode(ExecutionContext* executionContext)
@@ -50,7 +52,7 @@ AudioDestinationNode::AudioDestinationNode(ExecutionContext* executionContext,
     m_channelCount = 2;
     m_channelCountMode = ChannelCountMode::Explicit;
     m_destinationHandler =
-        static_cast<AudioDestinationHandler*>(context->graph()->addHandler(
+        static_cast<AudioDestinationHandler*>(context->addHandler(
             std::unique_ptr<AudioHandler>(new AudioDestinationHandler(2))));
     m_handler = m_destinationHandler;
     context->graph()->setDestination(&m_destinationHandler->output(0));
@@ -62,7 +64,11 @@ void AudioDestinationNode::configureOfflineChannelCount(uint32_t value)
     m_maxChannelCount = value;
     m_channelCount = value;
     m_channelCountFixed = true;
-    m_destinationHandler->configureChannels(value);
+    try {
+        m_destinationHandler->configureChannels(value);
+    } catch (const std::bad_alloc&) {
+        context()->throwAllocationError();
+    }
 }
 
 // https://webaudio.github.io/web-audio-api/#dom-audionode-channelcount
@@ -93,8 +99,15 @@ void AudioDestinationNode::setChannelCount(uint32_t value)
         throw new DOMException(executionContext(), DOMException::INDEX_SIZE_ERR,
                                "Destination channel count exceeds maximum");
     }
+    try {
+        m_destinationHandler->configureChannels(value);
+    } catch (const std::bad_alloc&) {
+        // Input and output resize one after the other; see
+        // AudioNode::configureInputs().
+        context()->graph()->setOutOfMemory();
+        context()->throwAllocationError();
+    }
     m_channelCount = value;
-    m_destinationHandler->configureChannels(value);
 }
 
 ScriptBindingInstance* AudioDestinationNode::scriptBindingInstance()

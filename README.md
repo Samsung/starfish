@@ -584,7 +584,9 @@ STARFISH_BIN="$PWD/out/release/bin/Starfish" xvfb-run -s '-screen 0 1920x1080x24
 #    SharedArrayBuffer views, MediaElementAudioSourceNode constructor,
 #    sub-sample and exact-time scheduling, ScriptProcessorNode setup and
 #    latency, renderSizeHint quanta, constructor checks in a detached
-#    document; no audio device needed);
+#    document, and node creation and channel changes running out of
+#    memory under an address-space limit (RLIMIT_AS) set relative to the
+#    browser's own peak; no audio device needed);
 #  - tool/webaudio/test_graph_thread.py in the clang build job (skipped with
 #    a warning when Clang's TSan runtime is missing).
 # Everything needing FFmpeg (compressed decoding, MSE, decoder Valgrind)

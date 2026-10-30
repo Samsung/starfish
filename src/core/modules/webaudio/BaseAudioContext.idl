@@ -41,26 +41,26 @@ interface BaseAudioContext : EventTarget {
   //[SameObject, SecureContext] readonly attribute AudioWorklet audioWorklet;
   attribute EventHandler onstatechange;
 
-  AnalyserNode createAnalyser ();
-  BiquadFilterNode createBiquadFilter ();
+  [RaisesException] AnalyserNode createAnalyser ();
+  [RaisesException] BiquadFilterNode createBiquadFilter ();
   [RaisesException] AudioBuffer createBuffer (unsigned long numberOfChannels, unsigned long length, float sampleRate);
-  AudioBufferSourceNode createBufferSource ();
+  [RaisesException] AudioBufferSourceNode createBufferSource ();
   [RaisesException] ChannelMergerNode createChannelMerger (optional unsigned long numberOfInputs = 6);
   [RaisesException] ChannelSplitterNode createChannelSplitter (optional unsigned long numberOfOutputs = 6);
-  ConstantSourceNode createConstantSource ();
-  ConvolverNode createConvolver ();
+  [RaisesException] ConstantSourceNode createConstantSource ();
+  [RaisesException] ConvolverNode createConvolver ();
   [RaisesException] DelayNode createDelay (optional double maxDelayTime = 1.0);
-  DynamicsCompressorNode createDynamicsCompressor ();
-  GainNode createGain ();
+  [RaisesException] DynamicsCompressorNode createDynamicsCompressor ();
+  [RaisesException] GainNode createGain ();
   [RaisesException] IIRFilterNode createIIRFilter (sequence<double> feedforward, sequence<double> feedback);
-  OscillatorNode createOscillator ();
-  PannerNode createPanner ();
+  [RaisesException] OscillatorNode createOscillator ();
+  [RaisesException] PannerNode createPanner ();
   [RaisesException] PeriodicWave createPeriodicWave (sequence<float> real, sequence<float> imag, optional PeriodicWaveConstraints constraints);
   [RaisesException] ScriptProcessorNode createScriptProcessor(optional unsigned long bufferSize = 0,
                                                                optional unsigned long numberOfInputChannels = 2,
                                                                optional unsigned long numberOfOutputChannels = 2);
-  StereoPannerNode createStereoPanner ();
-  WaveShaperNode createWaveShaper ();
+  [RaisesException] StereoPannerNode createStereoPanner ();
+  [RaisesException] WaveShaperNode createWaveShaper ();
 
   Promise<AudioBuffer> decodeAudioData (ArrayBuffer audioData,
                                         optional DecodeSuccessCallback? successCallback,

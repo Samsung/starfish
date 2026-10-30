@@ -32,7 +32,7 @@ StereoPannerNode::StereoPannerNode(ExecutionContext* executionContext,
     m_numberOfOutputs = 1;
     m_channelCountMode = ChannelCountMode::ClampedMax;
     auto* handler = static_cast<StereoPannerHandler*>(
-        context->graph()->addHandler(std::unique_ptr<AudioHandler>(
+        context->addHandler(std::unique_ptr<AudioHandler>(
             new StereoPannerHandler(context->sampleRate()))));
     m_handler = handler;
     m_pan = new AudioParam(context, handler->panTimeline());

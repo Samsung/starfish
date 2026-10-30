@@ -44,7 +44,7 @@ OscillatorNode::OscillatorNode(ExecutionContext* executionContext,
     m_numberOfInputs = 0;
     m_numberOfOutputs = 1;
     m_sourceHandler = static_cast<OscillatorHandler*>(
-        context->graph()->addHandler(std::unique_ptr<AudioHandler>(
+        context->addHandler(std::unique_ptr<AudioHandler>(
             new OscillatorHandler(context->sampleRate()))));
     m_handler = m_sourceHandler;
     m_frequency = new AudioParam(context, m_sourceHandler->frequencyTimeline());

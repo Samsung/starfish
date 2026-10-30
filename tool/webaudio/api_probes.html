@@ -347,7 +347,8 @@ const groups = {
     },
 
     // A context constructor from a document that is not fully active throws
-    // InvalidStateError before it validates its options.
+    // InvalidStateError before it checks the options' values; WebIDL type
+    // errors in the options come first.
     'detached-document': async () => {
         const frame = document.createElement('iframe');
         document.documentElement.appendChild(frame);
@@ -368,6 +369,105 @@ const groups = {
                   {length: 1, sampleRate: 8000, renderSizeHint: 0})) ===
                   'InvalidStateError',
               'OfflineAudioContext with a bad hint in a detached document');
+        const typeErrors = [
+            [() => new frameWindow.AudioContext({renderSizeHint: 'bogus'}),
+             'detached AudioContext, renderSizeHint string'],
+            [() => new frameWindow.AudioContext({latencyHint: 'bogus'}),
+             'detached AudioContext, latencyHint string'],
+            [() => new frameWindow.OfflineAudioContext(
+                 {length: 1, sampleRate: 8000, renderSizeHint: 'bogus'}),
+             'detached OfflineAudioContext, renderSizeHint string'],
+            [() => new OfflineAudioContext(
+                 {length: 1, sampleRate: 1, renderSizeHint: 'bogus'}),
+             'OfflineAudioContext, bad sampleRate and renderSizeHint string'],
+            [() => new AudioContext({sampleRate: 1, renderSizeHint: 'bogus'}),
+             'AudioContext, bad sampleRate and renderSizeHint string'],
+        ];
+        for (const [fn, label] of typeErrors) {
+            const thrown = name(fn);
+            check(thrown === 'TypeError', label + ': ' + thrown);
+        }
+    },
+
+    // https://webaudio.github.io/web-audio-api/#dictdef-constantsourceoptions
+    // ConstantSourceOptions has no channel members, so they are ignored.
+    'source-options': async () => {
+        const context = new OfflineAudioContext(1, 128, 8000);
+        let node = null;
+        try {
+            node = new ConstantSourceNode(context, {channelCount: 0});
+        } catch (e) {
+            check(false, 'ConstantSourceNode with channelCount 0 threw ' + e);
+        }
+        check(!node || node.channelCount === 2,
+              'ConstantSourceNode channelCount stays 2');
+    },
+
+    // Run by test_api_probes.py under an address-space limit a few GB above
+    // the browser's own (RLIMIT_AS), with the largest render quantum, where
+    // one channel of a bus is 18 MB. A failed channel count change throws
+    // NotSupportedError, keeps the old value and leaves a silent context
+    // instead of rendering half-resized buses.
+    'oom-channel-count': async () => {
+        const context = new OfflineAudioContext({
+            numberOfChannels: 1, length: 1, sampleRate: 768000,
+            renderSizeHint: 4608000});
+        const source = new ConstantSourceNode(context, {offset: 0.5});
+        const first = new GainNode(
+            context, {channelCountMode: 'explicit', channelCount: 1});
+        source.connect(first);
+        // Max-mode gains follow their input, so 32 channels resize two
+        // 590 MB buses per node, more than the limit allows.
+        let last = first;
+        for (let i = 0; i < 16; i++) {
+            last = last.connect(new GainNode(context));
+        }
+        last.connect(context.destination);
+        source.start();
+        const rendering = context.startRendering();
+        let thrown = 'no exception';
+        try {
+            first.channelCount = 32;
+        } catch (e) {
+            thrown = e.name;
+        }
+        check(thrown === 'NotSupportedError',
+              'channelCount = 32 out of memory: ' + thrown);
+        check(first.channelCount === 1,
+              'channelCount after the failure: ' + first.channelCount);
+        const rendered = (await rendering).getChannelData(0);
+        check(rendered.every((v) => v === 0),
+              'renders silence after the failure');
+    },
+
+    // Same limit: node creation throws NotSupportedError when its buses
+    // cannot be allocated, for factories and constructors alike.
+    'oom-node-creation': async () => {
+        const context = new OfflineAudioContext({
+            numberOfChannels: 1, length: 1, sampleRate: 768000,
+            renderSizeHint: 4608000});
+        const nodes = [];
+        const fill = (create, label) => {
+            for (let i = 0; i < 400; i++) {
+                try {
+                    nodes.push(create());
+                } catch (e) {
+                    check(e.name === 'NotSupportedError', label + ': ' + e);
+                    return;
+                }
+            }
+            check(false, label + ' never ran out of memory');
+        };
+        fill(() => context.createChannelMerger(32), 'createChannelMerger');
+        fill(() => new AudioBufferSourceNode(context),
+             'new AudioBufferSourceNode');
+        fill(() => new ConstantSourceNode(context), 'new ConstantSourceNode');
+    },
+
+    // Waits briefly; test_api_probes.py measures the browser's address
+    // space meanwhile.
+    'idle': async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
     },
 };
 

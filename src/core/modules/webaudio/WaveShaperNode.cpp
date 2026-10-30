@@ -32,9 +32,8 @@ WaveShaperNode::WaveShaperNode(ExecutionContext* executionContext,
     AudioGraphLock graphLock(context->graph());
     m_numberOfInputs = 1;
     m_numberOfOutputs = 1;
-    m_shaperHandler =
-        static_cast<WaveShaperHandler*>(context->graph()->addHandler(
-            std::unique_ptr<AudioHandler>(new WaveShaperHandler())));
+    m_shaperHandler = static_cast<WaveShaperHandler*>(context->addHandler(
+        std::unique_ptr<AudioHandler>(new WaveShaperHandler())));
     m_handler = m_shaperHandler;
     if (options.hasCurve()) {
         if (options.curve().size() < 2) {

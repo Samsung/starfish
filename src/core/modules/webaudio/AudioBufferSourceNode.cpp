@@ -55,7 +55,7 @@ AudioBufferSourceNode::AudioBufferSourceNode(ExecutionContext* executionContext,
     m_channelInterpretation = ChannelInterpretation::Speakers;
 
     m_sourceHandler = static_cast<AudioBufferSourceHandler*>(
-        context->graph()->addHandler(std::unique_ptr<AudioHandler>(
+        context->addHandler(std::unique_ptr<AudioHandler>(
             new AudioBufferSourceHandler(context->sampleRate()))));
     m_handler = m_sourceHandler;
     m_detune = new AudioParam(context, m_sourceHandler->detuneTimeline());

@@ -951,13 +951,24 @@ size_t DelayHandler::historyChannelsAt(int64_t frame) const
     return it == m_layoutHistory.begin() ? 1 : std::prev(it)->second;
 }
 
+// The ring's length at a render quantum of |quantum| frames, given its length
+// at the default quantum. Computed in the ring's own 64-bit type: a size_t
+// difference would wrap for quanta below 128 on 32-bit targets.
+template <typename Size>
+static constexpr uint64_t delayRingFrames(uint64_t defaultQuantumRingFrames,
+                                          Size quantum)
+{
+    return defaultQuantumRingFrames - AudioBus::RenderQuantumFrames +
+           static_cast<uint64_t>(quantum);
+}
+// A 100-frame quantum with 32-bit sizes keeps the ring 28 frames shorter.
+static_assert(delayRingFrames<uint32_t>(130, 100) == 102,
+              "DelayNode ring length wraps for small quanta on 32-bit");
+
 void DelayHandler::setQuantumFrames(size_t frames)
 {
     AudioHandler::setQuantumFrames(frames);
-    // In the ring's own 64-bit type: a size_t difference would wrap for
-    // quanta below 128 on 32-bit targets.
-    m_ringFrames = m_ringFrames - AudioBus::RenderQuantumFrames +
-                   static_cast<uint64_t>(frames);
+    m_ringFrames = delayRingFrames(m_ringFrames, frames);
     if (frames > AudioBus::RenderQuantumFrames) {
         m_readFrames.resize(frames);
     }

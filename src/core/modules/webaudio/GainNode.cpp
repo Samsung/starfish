@@ -36,7 +36,7 @@ GainNode::GainNode(ExecutionContext* executionContext,
     }
     m_numberOfInputs = 1;
     m_numberOfOutputs = 1;
-    auto* handler = static_cast<GainHandler*>(context->graph()->addHandler(
+    auto* handler = static_cast<GainHandler*>(context->addHandler(
         std::unique_ptr<AudioHandler>(new GainHandler(context->sampleRate()))));
     m_handler = handler;
     m_gain = new AudioParam(context, handler->gainTimeline());

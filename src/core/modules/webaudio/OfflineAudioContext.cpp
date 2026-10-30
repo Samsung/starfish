@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <new>
 
 namespace Starfish {
 
@@ -47,6 +48,18 @@ static double validatedSampleRate(ExecutionContext* executionContext,
     return sampleRate;
 }
 
+// WebIDL converts the options (an invalid hint string is a TypeError) before
+// the ED's constructor steps check the document, the sample rate and then the
+// hint's value.
+static double validatedOptionsSampleRate(
+    ExecutionContext* executionContext,
+    const OfflineAudioContextOptions& options)
+{
+    throwIfInvalidRenderSizeCategory(executionContext,
+                                     options.renderSizeHint());
+    return validatedSampleRate(executionContext, options.sampleRate());
+}
+
 OfflineAudioContext::OfflineAudioContext(ExecutionContext* executionContext,
                                          OfflineAudioContextOptions options)
     : OfflineAudioContext(
@@ -54,10 +67,7 @@ OfflineAudioContext::OfflineAudioContext(ExecutionContext* executionContext,
           options.sampleRate(),
           renderQuantumSizeFromHint(
               executionContext, options.renderSizeHint(),
-              // The document and the sample rate are
-              // checked before the hint, as the ED orders
-              // its constructor steps.
-              validatedSampleRate(executionContext, options.sampleRate())))
+              validatedOptionsSampleRate(executionContext, options)))
 {
 }
 
@@ -116,10 +126,20 @@ Promise* OfflineAudioContext::startRendering()
         promise->reject(error->scriptValue());
         return promise;
     }
+    try {
+        graph()->prepareOutput(m_numberOfChannels);
+    } catch (const std::bad_alloc&) {
+        // See BaseAudioContext::throwAllocationError().
+        data->release();
+        auto* error = new DOMException(
+            executionContext(), DOMException::NOT_SUPPORTED_ERR,
+            "Not enough memory for this render quantum size");
+        promise->reject(error->scriptValue());
+        return promise;
+    }
     m_renderedBuffer = new AudioBuffer(executionContext(), data, sampleRate());
     m_renderPromise = promise;
     m_started = true;
-    graph()->prepareOutput(m_numberOfChannels);
     m_controlQueue->setState(AudioContextState::Running);
     m_renderingQueue->setState(AudioContextState::Running);
     // startRendering() itself does not define a state change, but rendering

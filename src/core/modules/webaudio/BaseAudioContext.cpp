@@ -63,6 +63,7 @@
 #include <algorithm>
 #include <cmath>
 #include <atomic>
+#include <new>
 
 #include <EscargotPublic.h>
 
@@ -70,6 +71,22 @@ using Escargot::BackingStoreRef;
 using Escargot::OptionalRef;
 
 namespace Starfish {
+
+void throwIfInvalidRenderSizeCategory(
+    ExecutionContext* executionContext,
+    const AudioContextRenderSizeCategoryOrunsignedlong& hint)
+{
+    if (hint.isAudioContextRenderSizeCategoryValue()) {
+        String* category = hint.getAudioContextRenderSizeCategoryValue();
+        if (category->equals("default") || category->equals("hardware")) {
+            return;
+        }
+    } else if (hint.isunsignedlongValue()) {
+        return;
+    }
+    throw new DOMException(executionContext, DOMException::SCRIPT_TYPE_ERR,
+                           "Invalid renderSizeHint");
+}
 
 size_t renderQuantumSizeFromHint(
     ExecutionContext* executionContext,
@@ -87,16 +104,10 @@ size_t renderQuantumSizeFromHint(
         }
         return frames;
     }
-    if (hint.isAudioContextRenderSizeCategoryValue()) {
-        String* category = hint.getAudioContextRenderSizeCategoryValue();
-        // "hardware" lets the UA pick; Starfish has no preferred device
-        // size, so it is the default as well.
-        if (category->equals("default") || category->equals("hardware")) {
-            return AudioBus::RenderQuantumFrames;
-        }
-    }
-    throw new DOMException(executionContext, DOMException::SCRIPT_TYPE_ERR,
-                           "Invalid renderSizeHint");
+    throwIfInvalidRenderSizeCategory(executionContext, hint);
+    // "hardware" lets the UA pick; Starfish has no preferred device size,
+    // so it is the default as well.
+    return AudioBus::RenderQuantumFrames;
 }
 
 void throwIfSharedView(ExecutionContext* executionContext,
@@ -158,7 +169,13 @@ BaseAudioContext::BaseAudioContext(ExecutionContext* executionContext,
     , m_renderingQueue(new RenderingMessageQueue(executionContext))
 {
     m_graph = new AudioGraph(sampleRate, renderQuantumSize);
-    m_destination = new AudioDestinationNode(executionContext, this);
+    try {
+        m_destination = new AudioDestinationNode(executionContext, this);
+    } catch (...) {
+        // An unsupported render quantum size: this destructor will not run.
+        delete m_graph;
+        throw;
+    }
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void*) {
@@ -223,6 +240,30 @@ void BaseAudioContext::renderScheduledSources()
     for (AudioScheduledSourceNode* source : finished) {
         source->dispatchEnded();
     }
+}
+
+AudioHandler* BaseAudioContext::addHandler(
+    std::unique_ptr<AudioHandler> handler)
+{
+    try {
+        return m_graph->addHandler(std::move(handler));
+    } catch (const std::bad_alloc&) {
+        throwAllocationError();
+    }
+    return nullptr;
+}
+
+// https://webaudio.github.io/web-audio-api/#render-quantum-size
+// "A NotSupportedError MUST be thrown if a [[render quantum size]] outside
+// this range is specified." The ED has no out-of-memory path. A node's
+// buses hold channels x [[render quantum size]] frames, and web content
+// picks the size; when they cannot be allocated, that size is not
+// supported here, the same error as for an AudioBuffer that cannot be
+// allocated, instead of aborting the process.
+void BaseAudioContext::throwAllocationError()
+{
+    throw new DOMException(m_executionContext, DOMException::NOT_SUPPORTED_ERR,
+                           "Not enough memory for this render quantum size");
 }
 
 void BaseAudioContext::registerScriptProcessor(ScriptProcessorNode* node)

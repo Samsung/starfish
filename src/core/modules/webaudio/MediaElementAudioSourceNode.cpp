@@ -53,7 +53,7 @@ MediaElementAudioSourceNode::MediaElementAudioSourceNode(
     m_mediaElement->setAudioSourceNode(this);
     m_numberOfInputs = 0;
     m_numberOfOutputs = 1;
-    m_handler = context->graph()->addHandler(std::unique_ptr<AudioHandler>(
+    m_handler = context->addHandler(std::unique_ptr<AudioHandler>(
         new MediaElementSourceHandler(context->sampleRate())));
     m_sourceHandler = static_cast<MediaElementSourceHandler*>(m_handler);
     MediaPlayer* player = m_mediaElement->activeMediaPlayer();
