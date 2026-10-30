@@ -72,7 +72,13 @@ void OES_vertex_array_object::deleteVertexArrayOES(
         if (!value->isDeleted()) {
             GLuint vao = value->glObject();
             TRACE(WEBGL, KV(vao));
-            glDeleteVertexArrays(1, &vao);
+            bool isCurrent = (m_context->getState()->vertexArray() == vao);
+            m_context->executeInContextScope([vao, isCurrent]() {
+                glDeleteVertexArrays(1, &vao);
+                if (isCurrent) {
+                    glBindVertexArray(0);
+                }
+            });
             value->markDeleted();
             m_context->getState()->deleteVertexArrayOES(vao);
         }
