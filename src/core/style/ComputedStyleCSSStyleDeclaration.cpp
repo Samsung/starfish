@@ -961,11 +961,25 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setValue(String::emptyString);
         addValuePair(p);
     } break;
-    case CSSStyleValuePair::KeyKind::WhiteSpace: {
+    case CSSStyleValuePair::KeyKind::WhiteSpaceCollapse: {
         CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::WhiteSpace);
-        p.setValueKind(CSSStyleValuePair::WhiteSpaceValueKind);
-        p.setValue(CSSStyleValuePair::ValueData(style->whiteSpace()));
+        p.setKeyKind(CSSStyleValuePair::KeyKind::WhiteSpaceCollapse);
+        p.setValueKind(CSSStyleValuePair::WhiteSpaceCollapseValueKind);
+        p.setValue(CSSStyleValuePair::ValueData(style->whiteSpaceCollapse()));
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::TextWrapMode: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::TextWrapMode);
+        p.setValueKind(CSSStyleValuePair::TextWrapModeValueKind);
+        p.setValue(CSSStyleValuePair::ValueData(style->textWrapMode()));
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::TextWrapStyle: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::TextWrapStyle);
+        p.setValueKind(CSSStyleValuePair::TextWrapStyleValueKind);
+        p.setValue(CSSStyleValuePair::ValueData(style->textWrapStyle()));
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::FlexBasis: {

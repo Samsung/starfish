@@ -1763,7 +1763,11 @@ section are supported.
 | | text-decoration-color | &lt;color&gt; |  The text-decoration-color CSS property sets the color of the decorative additions to text that are specified by text-decoration-line.  | |
 | | text-shadow | none &#124; [ &lt;length&gt;{2,3} && &lt;color&gt;? ]# | Adds shadows to text. Lengths accept `calc()`. It accepts a comma-separated list of shadows to be applied to the text and any of its decorations. Each shadow is described by some combination of X and Y offsets from the element, blur radius, and color. | |
 | | text-transform | none &#124; capitalize &#124; uppercase &#124; lowercase | Appears in all-uppercase or all-lowercase, or with each word capitalized. (CSS-wide keywords like `initial`, `inherit`, `unset` work via the cascade — they are not specific to this property.) **`full-width`, `full-size-kana`, `math-auto` are NOT supported.** | |
-| | white-space | normal &#124; pre &#124; nowrap &#124; pre-wrap &#124; pre-line | Describes how whitespace inside the element is handled. | |
+| | white-space | normal &#124; pre &#124; nowrap &#124; pre-wrap &#124; pre-line &#124; [ &lt;'white-space-collapse'&gt; &#124;&#124; &lt;'text-wrap-mode'&gt; ] | Shorthand for `white-space-collapse` and `text-wrap-mode` (CSS Text 4). The legacy keywords name the predefined longhand pairs; `preserve-breaks nowrap` is the one pair without a keyword and serializes as its longhands. `break-spaces` and `white-space-trim` are not accepted. | |
+| | white-space-collapse | collapse &#124; preserve &#124; preserve-breaks | Whether and how white space is collapsed. `preserve-spaces` and `break-spaces` are rejected. | |
+| | text-wrap-mode | wrap &#124; nowrap | Whether text wraps at soft wrap opportunities. | |
+| | text-wrap-style | auto &#124; balance &#124; stable &#124; pretty &#124; avoid-orphans | Parsed, inherited and reported by `getComputedStyle`, but every value lays out as `auto` (no balancing or last-line adjustment). | |
+| | text-wrap | &lt;'text-wrap-mode'&gt; &#124;&#124; &lt;'text-wrap-style'&gt; | Shorthand for `text-wrap-mode` and `text-wrap-style`. | |
 | | word-spacing | normal &#124; length &#124; initial &#124; inherit | Specifies the spacing behavior between tags and words. | |
 | | line-break | auto &#124; normal &#124; loose &#124; strict | Specifies how (or if) to break lines when working with punctuation and symbols. This only affects text in Chinese, Japanese, or Korean (CJK). | At present, loose and strict behaves the same as normal. |
 | | hyphens | none &#124; auto | This property controls whether hyphenation is allowed to create more soft wrap opportunities within a line of text. | At present, only none is supported. auto behaves the same as none. |
@@ -2906,16 +2910,15 @@ The logical-direction sizing properties from CSS Logical Properties 1 are **not*
 
 > **Practical guidance:** physical longhands cover the typical needs. The audit-added logical entries are mostly margin/padding/border shorthands; modern `inline-size`/`block-size` and `inset-*-*` longhands are absent.
 
-### CSS Text 4 wrapping — modern surface absent
+### CSS Text 4 wrapping — partial surface
 
-The CSS Text Module Level 4 wrapping/whitespace shorthands are unavailable. Stick to `white-space` + `word-break` + `overflow-wrap`/`word-wrap`.
+`white-space` is the CSS Text 4 shorthand over `white-space-collapse` and `text-wrap-mode`, and `text-wrap` the shorthand over `text-wrap-mode` and `text-wrap-style` (see the Text table above). The rest of the Level 4 surface is absent.
 
 | Construct | Status |
 |-----------|--------|
-| `white-space-collapse` (longhand) | NOT recognized — only the legacy combined `white-space` property parses. |
-| `white-space: break-spaces` | NOT recognized — only `normal`/`nowrap`/`pre`/`pre-wrap`/`pre-line` parse. |
-| `text-wrap` (`wrap`/`nowrap`/`balance`/`pretty`/`stable`) | NOT recognized. |
-| `text-wrap-mode`, `text-wrap-style` | NOT recognized. |
+| `white-space-collapse: preserve-spaces`, `break-spaces` (also via `white-space`) | NOT recognized — `collapse`/`preserve`/`preserve-breaks` parse. |
+| `white-space-trim` | NOT recognized. |
+| `text-wrap-style` values other than `auto` | Parsed and inherited, but have no layout effect (`balance`/`stable`/`pretty`/`avoid-orphans` lay out as `auto`). |
 | `wrap-before`, `wrap-after`, `wrap-inside` | NOT recognized. |
 | `line-clamp` (unprefixed) | NOT recognized — use `-webkit-line-clamp` (already documented). |
 | `text-spacing` | NOT recognized. |

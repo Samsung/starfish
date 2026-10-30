@@ -78,10 +78,18 @@ void HTMLTableCellElement::styleForPresentationAttribute(
 
     String* nowrap = getAttributeOrEmpty(starfish()->staticStrings()->m_nowrap);
     if (!nowrap->isEmpty()) {
+        // https://html.spec.whatwg.org/multipage/rendering.html#tables-2
+        // maps the attribute to `white-space: nowrap`, i.e. both longhands.
         CSSStyleValuePair pair;
-        pair.setKeyKind(CSSStyleValuePair::KeyKind::WhiteSpace);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::WhiteSpaceValueKind);
-        pair.setValue(WhiteSpaceValue::NoWrapWhiteSpaceValue);
+        pair.setKeyKind(CSSStyleValuePair::KeyKind::WhiteSpaceCollapse);
+        pair.setValueKind(
+            CSSStyleValuePair::ValueKind::WhiteSpaceCollapseValueKind);
+        pair.setValue(WhiteSpaceCollapseValue::CollapseWhiteSpaceCollapseValue);
+        cssValues.push_back(pair);
+        pair.setKeyKind(CSSStyleValuePair::KeyKind::TextWrapMode);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::TextWrapModeValueKind);
+        pair.setValue(TextWrapModeValue::NoWrapTextWrapModeValue);
+        cssValues.push_back(pair);
     }
 
     String* h = getAttributeOrEmpty(starfish()->staticStrings()->m_height);

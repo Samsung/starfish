@@ -1233,8 +1233,14 @@ bool CSSStyleValuePair::valueEquals(const CSSStyleValuePair& src) const
     case DirectionValueKind:
         return m_value.m_direction == src.m_value.m_direction;
 
-    case WhiteSpaceValueKind:
-        return m_value.m_whiteSpace == src.m_value.m_whiteSpace;
+    case WhiteSpaceCollapseValueKind:
+        return m_value.m_whiteSpaceCollapse == src.m_value.m_whiteSpaceCollapse;
+
+    case TextWrapModeValueKind:
+        return m_value.m_textWrapMode == src.m_value.m_textWrapMode;
+
+    case TextWrapStyleValueKind:
+        return m_value.m_textWrapStyle == src.m_value.m_textWrapStyle;
 
     case ValueListKind:
         return m_value.m_multiValue->equals(src.m_value.m_multiValue);
@@ -1823,18 +1829,40 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
-    case CSSStyleValuePair::ValueKind::WhiteSpaceValueKind:
-        switch (whiteSpaceValue()) {
-        case NormalWhiteSpaceValue:
-            return String::fromUTF8("normal");
-        case NoWrapWhiteSpaceValue:
+    case CSSStyleValuePair::ValueKind::WhiteSpaceCollapseValueKind:
+        switch (whiteSpaceCollapseValue()) {
+        case CollapseWhiteSpaceCollapseValue:
+            return String::fromUTF8("collapse");
+        case PreserveWhiteSpaceCollapseValue:
+            return String::fromUTF8("preserve");
+        case PreserveBreaksWhiteSpaceCollapseValue:
+            return String::fromUTF8("preserve-breaks");
+        default:
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::ValueKind::TextWrapModeValueKind:
+        switch (textWrapModeValue()) {
+        case WrapTextWrapModeValue:
+            return String::fromUTF8("wrap");
+        case NoWrapTextWrapModeValue:
             return String::fromUTF8("nowrap");
-        case PreWhiteSpaceValue:
-            return String::fromUTF8("pre");
-        case PreWrapWhiteSpaceValue:
-            return String::fromUTF8("pre-wrap");
-        case PreLineWhiteSpaceValue:
-            return String::fromUTF8("pre-line");
+        default:
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::ValueKind::TextWrapStyleValueKind:
+        switch (textWrapStyleValue()) {
+        case AutoTextWrapStyleValue:
+            return String::fromUTF8("auto");
+        case BalanceTextWrapStyleValue:
+            return String::fromUTF8("balance");
+        case StableTextWrapStyleValue:
+            return String::fromUTF8("stable");
+        case PrettyTextWrapStyleValue:
+            return String::fromUTF8("pretty");
+        case AvoidOrphansTextWrapStyleValue:
+            return String::fromUTF8("avoid-orphans");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -4533,21 +4561,50 @@ void StyleResolver::applyProperty(Element* element,
             style->m_inheritedStyles.m_direction = newCssValue.directionValue();
         }
         break;
-    case CSSStyleValuePair::KeyKind::WhiteSpace:
+    case CSSStyleValuePair::KeyKind::WhiteSpaceCollapse:
         if ((newCssValue.valueKind() ==
              CSSStyleValuePair::ValueKind::Inherit) ||
             (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
-            style->m_inheritedStyles.m_whiteSpace =
-                parentStyle->m_inheritedStyles.m_whiteSpace;
+            style->setWhiteSpaceCollapse(parentStyle->whiteSpaceCollapse());
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::Initial) {
-            style->m_inheritedStyles.m_whiteSpace =
-                WhiteSpaceValue::NormalWhiteSpaceValue;
+            style->setWhiteSpaceCollapse(
+                WhiteSpaceCollapseValue::CollapseWhiteSpaceCollapseValue);
         } else {
-            STARFISH_ASSERT(newCssValue.valueKind() ==
-                            CSSStyleValuePair::ValueKind::WhiteSpaceValueKind);
-            style->m_inheritedStyles.m_whiteSpace =
-                newCssValue.whiteSpaceValue();
+            STARFISH_ASSERT(
+                newCssValue.valueKind() ==
+                CSSStyleValuePair::ValueKind::WhiteSpaceCollapseValueKind);
+            style->setWhiteSpaceCollapse(newCssValue.whiteSpaceCollapseValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::TextWrapMode:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setTextWrapMode(parentStyle->textWrapMode());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->setTextWrapMode(TextWrapModeValue::WrapTextWrapModeValue);
+        } else {
+            STARFISH_ASSERT(
+                newCssValue.valueKind() ==
+                CSSStyleValuePair::ValueKind::TextWrapModeValueKind);
+            style->setTextWrapMode(newCssValue.textWrapModeValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::TextWrapStyle:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setTextWrapStyle(parentStyle->textWrapStyle());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->setTextWrapStyle(TextWrapStyleValue::AutoTextWrapStyleValue);
+        } else {
+            STARFISH_ASSERT(
+                newCssValue.valueKind() ==
+                CSSStyleValuePair::ValueKind::TextWrapStyleValueKind);
+            style->setTextWrapStyle(newCssValue.textWrapStyleValue());
         }
         break;
     case CSSStyleValuePair::KeyKind::WordSpacing:
@@ -11887,31 +11944,81 @@ bool CSSStyleValuePair::updateValueDirection(Document* document,
     return true;
 }
 
-bool CSSStyleValuePair::updateValueWhiteSpace(Document* document,
-                                              const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueUnitWhiteSpaceCollapse(
+    const CSSTokenValue& token)
 {
-    STARFISH_ASSERT(document != nullptr);
-
-    if (tokens.size() != 1) {
-        return false;
-    }
-
-    const CSSTokenValue& value = tokens[0];
-    m_valueKind = CSSStyleValuePair::ValueKind::WhiteSpaceValueKind;
-    if (value.equals("normal")) {
-        m_value.m_whiteSpace = WhiteSpaceValue::NormalWhiteSpaceValue;
-    } else if (value.equals("nowrap")) {
-        m_value.m_whiteSpace = WhiteSpaceValue::NoWrapWhiteSpaceValue;
-    } else if (value.equals("pre")) {
-        m_value.m_whiteSpace = WhiteSpaceValue::PreWhiteSpaceValue;
-    } else if (value.equals("pre-wrap")) {
-        m_value.m_whiteSpace = WhiteSpaceValue::PreWrapWhiteSpaceValue;
-    } else if (value.equals("pre-line")) {
-        m_value.m_whiteSpace = WhiteSpaceValue::PreLineWhiteSpaceValue;
+    // https://drafts.csswg.org/css-text-4/#white-space-collapse-property
+    // `preserve-spaces` and `break-spaces` are not supported: the inline
+    // layout has no notion of preserved-but-collapsible spaces, and a
+    // rejected declaration is better than one that silently behaves as
+    // `preserve`.
+    if (token.equals("collapse")) {
+        setValue(WhiteSpaceCollapseValue::CollapseWhiteSpaceCollapseValue);
+    } else if (token.equals("preserve")) {
+        setValue(WhiteSpaceCollapseValue::PreserveWhiteSpaceCollapseValue);
+    } else if (token.equals("preserve-breaks")) {
+        setValue(
+            WhiteSpaceCollapseValue::PreserveBreaksWhiteSpaceCollapseValue);
     } else {
         return false;
     }
+    m_valueKind = CSSStyleValuePair::ValueKind::WhiteSpaceCollapseValueKind;
     return true;
+}
+
+bool CSSStyleValuePair::updateValueUnitTextWrapMode(const CSSTokenValue& token)
+{
+    // https://drafts.csswg.org/css-text-4/#text-wrap-mode
+    if (token.equals("wrap")) {
+        setValue(TextWrapModeValue::WrapTextWrapModeValue);
+    } else if (token.equals("nowrap")) {
+        setValue(TextWrapModeValue::NoWrapTextWrapModeValue);
+    } else {
+        return false;
+    }
+    m_valueKind = CSSStyleValuePair::ValueKind::TextWrapModeValueKind;
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueUnitTextWrapStyle(const CSSTokenValue& token)
+{
+    // https://drafts.csswg.org/css-text-4/#text-wrap-style
+    if (token.equals("auto")) {
+        setValue(TextWrapStyleValue::AutoTextWrapStyleValue);
+    } else if (token.equals("balance")) {
+        setValue(TextWrapStyleValue::BalanceTextWrapStyleValue);
+    } else if (token.equals("stable")) {
+        setValue(TextWrapStyleValue::StableTextWrapStyleValue);
+    } else if (token.equals("pretty")) {
+        setValue(TextWrapStyleValue::PrettyTextWrapStyleValue);
+    } else if (token.equals("avoid-orphans")) {
+        setValue(TextWrapStyleValue::AvoidOrphansTextWrapStyleValue);
+    } else {
+        return false;
+    }
+    m_valueKind = CSSStyleValuePair::ValueKind::TextWrapStyleValueKind;
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueWhiteSpaceCollapse(
+    Document* document, const CSSTokenVector& tokens)
+{
+    STARFISH_ASSERT(document != nullptr);
+    return tokens.size() == 1 && updateValueUnitWhiteSpaceCollapse(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueTextWrapMode(Document* document,
+                                                const CSSTokenVector& tokens)
+{
+    STARFISH_ASSERT(document != nullptr);
+    return tokens.size() == 1 && updateValueUnitTextWrapMode(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueTextWrapStyle(Document* document,
+                                                 const CSSTokenVector& tokens)
+{
+    STARFISH_ASSERT(document != nullptr);
+    return tokens.size() == 1 && updateValueUnitTextWrapStyle(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueObjectFit(Document* document,

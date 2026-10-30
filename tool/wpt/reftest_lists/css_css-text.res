@@ -1254,7 +1254,7 @@ http://web-platform.test:8000/css/css-text/white-space/text-wrap-balance-line-cl
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/text-wrap-balance-overflow-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/text-wrap-balance-text-indent-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/text-wrap-balance-word-spacing-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/text-wrap-nowrap-001.html
+http://web-platform.test:8000/css/css-text/white-space/text-wrap-nowrap-001.html
 http://web-platform.test:8000/css/css-text/white-space/textarea-always-preserves-spaces-001.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/textarea-break-spaces-001.html
 http://web-platform.test:8000/css/css-text/white-space/textarea-break-spaces-002.html

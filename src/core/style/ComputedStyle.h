@@ -932,6 +932,8 @@ class ComputedStyle : public gc {
         m_inheritedStyles.m_textAlign = TextAlignValue::StartTextAlignValue;
         m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
         m_inheritedStyles.m_whiteSpace = WhiteSpaceValue::NormalWhiteSpaceValue;
+        m_inheritedStyles.m_textWrapStyle =
+            TextWrapStyleValue::AutoTextWrapStyleValue;
         m_inheritedStyles.m_visibility =
             VisibilityValue::VisibleVisibilityValue;
         m_inheritedStyles.m_borderCollapse =
@@ -1748,6 +1750,70 @@ public:
     void setWhiteSpace(WhiteSpaceValue val)
     {
         m_inheritedStyles.m_whiteSpace = val;
+    }
+
+    // The two longhands `white-space` is a shorthand for, stored as the halves
+    // of m_whiteSpace (see WhiteSpaceValue).
+    WhiteSpaceCollapseValue whiteSpaceCollapse()
+    {
+        switch (m_inheritedStyles.m_whiteSpace &
+                WhiteSpaceValue::WhiteSpaceCollapseMask) {
+        case WhiteSpaceValue::NoWrapWhiteSpaceValue:
+            return WhiteSpaceCollapseValue::CollapseWhiteSpaceCollapseValue;
+        case WhiteSpaceValue::PreWhiteSpaceValue:
+            return WhiteSpaceCollapseValue::PreserveWhiteSpaceCollapseValue;
+        default:
+            return WhiteSpaceCollapseValue::
+                PreserveBreaksWhiteSpaceCollapseValue;
+        }
+    }
+
+    void setWhiteSpaceCollapse(WhiteSpaceCollapseValue val)
+    {
+        unsigned bits = 0;
+        switch (val) {
+        case WhiteSpaceCollapseValue::CollapseWhiteSpaceCollapseValue:
+            bits = WhiteSpaceValue::NoWrapWhiteSpaceValue;
+            break;
+        case WhiteSpaceCollapseValue::PreserveWhiteSpaceCollapseValue:
+            bits = WhiteSpaceValue::PreWhiteSpaceValue;
+            break;
+        default:
+            break;
+        }
+        m_inheritedStyles.m_whiteSpace =
+            static_cast<WhiteSpaceValue>((m_inheritedStyles.m_whiteSpace &
+                                          WhiteSpaceValue::TextWrapModeMask) |
+                                         bits);
+    }
+
+    TextWrapModeValue textWrapMode()
+    {
+        return (m_inheritedStyles.m_whiteSpace &
+                WhiteSpaceValue::TextWrapModeMask)
+                   ? TextWrapModeValue::WrapTextWrapModeValue
+                   : TextWrapModeValue::NoWrapTextWrapModeValue;
+    }
+
+    void setTextWrapMode(TextWrapModeValue val)
+    {
+        unsigned bits = val == TextWrapModeValue::WrapTextWrapModeValue
+                            ? WhiteSpaceValue::PreLineWhiteSpaceValue
+                            : 0;
+        m_inheritedStyles.m_whiteSpace = static_cast<WhiteSpaceValue>(
+            (m_inheritedStyles.m_whiteSpace &
+             WhiteSpaceValue::WhiteSpaceCollapseMask) |
+            bits);
+    }
+
+    TextWrapStyleValue textWrapStyle()
+    {
+        return m_inheritedStyles.m_textWrapStyle;
+    }
+
+    void setTextWrapStyle(TextWrapStyleValue val)
+    {
+        m_inheritedStyles.m_textWrapStyle = val;
     }
 
     void setLineHeight(Length length)
@@ -5405,6 +5471,7 @@ protected:
         TextAlignValue m_textAlign : 3;
         DirectionValue m_direction : 1;
         WhiteSpaceValue m_whiteSpace : 3;
+        TextWrapStyleValue m_textWrapStyle : 3;
         VisibilityValue m_visibility : 2;
         BorderCollapseValue m_borderCollapse : 1; // table
         CaptionSideValue m_captionSide : 1;       // table
