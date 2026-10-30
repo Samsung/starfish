@@ -6,3 +6,4 @@ http://web-platform.test:8000/webaudio/the-audio-api/the-audiocontext-interface/
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/webaudio/the-audio-api/the-audiocontext-interface/audiocontext-suspend-resume.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audiocontext-interface/audiocontextoptions.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audiocontext-interface/audiocontext-getoutputtimestamp.html
+http://web-platform.test:8000/webaudio/the-audio-api/the-audiocontext-interface/audiocontext-getoutputtimestamp-cross-realm.html
