@@ -39,6 +39,14 @@ HITS_PATH = "/hits/"
 hits = Counter()
 hits_lock = threading.Lock()
 
+# /revalidate/<key> serves a script, revalidated(<key>), that the HTTP cache
+# stores and must revalidate on every use (Last-Modified, or an ETag with
+# "?etag"). A conditional request gets a 304 that repeats no validator and says
+# "Content-Length: 0", neither of which may change the stored response; with
+# "?moved" it gets a redirect to /revalidate/<key>-moved?etag instead.
+# /hits/<key> counts the full requests and /hits/<key>-304 the conditional ones.
+REVALIDATE_PATH = "/revalidate/"
+
 
 class RequestHandler(SimpleHTTPRequestHandler):
     def is_echo_request(self):
@@ -119,6 +127,38 @@ class RequestHandler(SimpleHTTPRequestHandler):
             with hits_lock:
                 count = hits[url.path[len(HITS_PATH) :]]
             self.answer(200, str(count).encode("ascii"), True)
+        elif url.path.startswith(REVALIDATE_PATH):
+            key = url.path[len(REVALIDATE_PATH) :]
+            conditional = (
+                "If-None-Match" in self.headers or "If-Modified-Since" in self.headers
+            )
+            with hits_lock:
+                hits[key + "-304" if conditional else key] += 1
+            # super().end_headers() leaves out the no-cache headers this server
+            # adds by default (see end_headers()), which would keep the script
+            # out of the cache.
+            if conditional and "moved" in url.query:
+                self.send_response(302)
+                self.send_header("Location", REVALIDATE_PATH + key + "-moved?etag")
+                self.send_header("Content-Length", "0")
+                super().end_headers()
+                return True
+            if conditional:
+                self.send_response(304)
+                self.send_header("Content-Length", "0")
+                super().end_headers()
+                return True
+            payload = b"revalidated(%s);" % json.dumps(key).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/javascript")
+            self.send_header("Content-Length", str(len(payload)))
+            self.send_header("Cache-Control", "max-age=60, no-cache")
+            if "etag" in url.query:
+                self.send_header("ETag", '"v1"')
+            else:
+                self.send_header("Last-Modified", "Mon, 05 Oct 2026 10:00:00 GMT")
+            super().end_headers()
+            self.wfile.write(payload)
         else:
             return False
         return True

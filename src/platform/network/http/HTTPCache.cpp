@@ -28,6 +28,7 @@
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "platform/network/http/HTTPResponse.h"
+#include "platform/network/http/HTTPStatus.h"
 #include "platform/network/http/HTTPRequest.h"
 #include "platform/network/http/HTTPTransaction.h"
 #include "platform/network/http/HTTPUtil.h"
@@ -405,6 +406,24 @@ void HTTPCache::update(NetworkURLWorkerData* nwd, HTTPCacheEntry* entry)
         HTTPFreshnessInfo finfo;
 
         extractHTTPCacheEntryProperty(nwd, cc, cinfo, finfo);
+
+        // A 304 freshens the stored response: the fields it carries replace
+        // the stored ones, the stored ones it omits are kept.
+        // https://www.rfc-editor.org/rfc/rfc9111#section-4.3.4
+        if (nwd->httpTransaction->httpResponse().responseCode() ==
+            HTTPStatusCode::HTTP_STATUS_NOT_MODIFIED) {
+            const HeaderMap& headers = nwd->request->responseHeaderMap();
+            if (headers.find(HTTPHeaderMap::kCacheControl) == headers.end()) {
+                cc = entry->cacheControl();
+            }
+            HTTPFreshnessInfo stored = entry->httpFreshnessInfo();
+            if (finfo.etag.empty()) {
+                finfo.etag = stored.etag;
+            }
+            if (!finfo.lastModified) {
+                finfo.lastModified = stored.lastModified;
+            }
+        }
 
         entry->setCacheControl(cc);
         entry->setHTTPContentInfo(cinfo);

@@ -91,6 +91,10 @@ public:
     // keeping what the hops so far stored. Call from the header callback
     // of the redirect response before curl follows it.
     void excludeCredentialsFromRemainingRedirects();
+    // Leaves the conditional headers that revalidate a stored response out
+    // of the requests that follow redirects. Call from the header callback
+    // of the redirect response before curl follows it.
+    void excludeValidatorsFromRemainingRedirects();
 
     void setTimeout(const long timeout)
     {
@@ -165,6 +169,8 @@ private:
     CURL* m_curl;
     CURLcode m_res;
     long m_redirectCount;
+    // The request headers of the transfer start() runs.
+    struct curl_slist* m_headerList;
 
     CurlMultiRequestData* m_curlMultiRequestData;
 
