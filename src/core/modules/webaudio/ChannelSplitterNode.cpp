@@ -36,7 +36,7 @@ ChannelSplitterNode::ChannelSplitterNode(ExecutionContext* executionContext,
     m_channelCount = outputs;
     m_channelCountMode = ChannelCountMode::Explicit;
     m_channelInterpretation = ChannelInterpretation::Discrete;
-    m_handler = context->graph()->addHandler(
+    m_handler = context->addHandler(
         std::unique_ptr<AudioHandler>(new ChannelSplitterHandler(outputs)));
     applyOptions(options);
     configureInputs();

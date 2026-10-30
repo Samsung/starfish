@@ -40,7 +40,7 @@ DynamicsCompressorNode::DynamicsCompressorNode(
     m_numberOfOutputs = 1;
     m_channelCountMode = ChannelCountMode::ClampedMax;
     m_compressorHandler = static_cast<DynamicsCompressorHandler*>(
-        context->graph()->addHandler(std::unique_ptr<AudioHandler>(
+        context->addHandler(std::unique_ptr<AudioHandler>(
             new DynamicsCompressorHandler(context->sampleRate()))));
     m_handler = m_compressorHandler;
     m_threshold =

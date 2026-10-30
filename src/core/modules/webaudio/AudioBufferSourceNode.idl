@@ -32,6 +32,7 @@ dictionary AudioBufferSourceOptions {
 [ STARFISH_ENABLE_WEBAUDIO,
   Constructor (BaseAudioContext context, optional AudioBufferSourceOptions options),
   ConstructorCallWith=ExecutionContext,
+  RaisesException=Constructor,
   Exposed=Window ]
 interface AudioBufferSourceNode : AudioScheduledSourceNode {
   [RaisesException] attribute AudioBuffer? buffer;

@@ -20,6 +20,8 @@
 #include "core/modules/webaudio/BaseAudioContext.h"
 #include "core/modules/webaudio/render/ConvolverHandler.h"
 
+#include <new>
+
 namespace Starfish {
 
 ConvolverNode::ConvolverNode(ExecutionContext* executionContext,
@@ -32,9 +34,8 @@ ConvolverNode::ConvolverNode(ExecutionContext* executionContext,
         m_numberOfInputs = 1;
         m_numberOfOutputs = 1;
         m_channelCountMode = ChannelCountMode::ClampedMax;
-        m_convolverHandler =
-            static_cast<ConvolverHandler*>(context->graph()->addHandler(
-                std::unique_ptr<AudioHandler>(new ConvolverHandler())));
+        m_convolverHandler = static_cast<ConvolverHandler*>(context->addHandler(
+            std::unique_ptr<AudioHandler>(new ConvolverHandler())));
         m_handler = m_convolverHandler;
         configureInputs();
     }
@@ -73,9 +74,15 @@ void ConvolverNode::setBuffer(Optional<AudioBuffer*> buffer)
         response = ConvolverHandler::createResponse(buffer->data(), m_normalize,
                                                     context()->sampleRate());
     }
-    {
-        AudioGraphLock graphLock(context()->graph());
+    AudioGraphLock graphLock(context()->graph());
+    try {
         response = m_convolverHandler->swapResponse(std::move(response));
+    } catch (const std::bad_alloc&) {
+        // A stereo response needs a second render-quantum-sized output.
+        // The response is already swapped in and its history may be half
+        // reset, so the graph stops rendering (silence).
+        context()->graph()->setOutOfMemory();
+        context()->throwAllocationError();
     }
     m_buffer = buffer;
 }

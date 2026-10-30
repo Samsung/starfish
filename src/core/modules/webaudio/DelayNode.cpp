@@ -43,7 +43,7 @@ DelayNode::DelayNode(ExecutionContext* executionContext,
     m_numberOfInputs = 1;
     m_numberOfOutputs = 1;
     auto* handler = static_cast<DelayHandler*>(
-        context->graph()->addHandler(std::unique_ptr<AudioHandler>(
+        context->addHandler(std::unique_ptr<AudioHandler>(
             new DelayHandler(context->sampleRate(), options.maxDelayTime()))));
     m_handler = handler;
     m_delayTime = new AudioParam(context, handler->delayTimeline());

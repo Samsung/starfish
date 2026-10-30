@@ -10,11 +10,17 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import os
 from pathlib import Path
+import resource
 import shutil
 import subprocess
 import tempfile
 import threading
+import time
 import unittest
+
+# Address space the out-of-memory groups may use beyond the browser's own:
+# room for their graph, but far less than their largest allocations need.
+OOM_HEADROOM = 4 << 30
 
 
 class APIProbesTest(unittest.TestCase):
@@ -40,14 +46,44 @@ class APIProbesTest(unittest.TestCase):
         cls.addClassCleanup(thread.join)
         cls.addClassCleanup(cls.server.shutdown)
 
-    def run_group(self, group):
-        result = subprocess.run([
+    def command(self, group):
+        return [
             str(self.browser),
             f'http://127.0.0.1:{self.server.server_port}/?{group}',
             '--hide-window', '--timeout=20',
             f'--storage-dir={self.path / "storage"}',
-        ], env=dict(os.environ,
-                    PULSE_SERVER=f'unix:{self.path}/no-audio-device'),
+        ]
+
+    def environment(self):
+        return dict(os.environ,
+                    PULSE_SERVER=f'unix:{self.path}/no-audio-device')
+
+    def address_space(self):
+        """Peak virtual size (bytes) of the browser on an idle probe page."""
+        process = subprocess.Popen(self.command('idle'),
+                                   env=self.environment(),
+                                   stdout=subprocess.DEVNULL,
+                                   stderr=subprocess.DEVNULL)
+        peak = 0
+        while process.poll() is None:
+            try:
+                with open(f'/proc/{process.pid}/status') as status:
+                    for line in status:
+                        if line.startswith('VmPeak:'):
+                            peak = max(peak, int(line.split()[1]) * 1024)
+            except OSError:
+                pass
+            time.sleep(0.05)
+        self.assertGreater(peak, 0, 'could not read the browser VmPeak')
+        return peak
+
+    def run_group(self, group, address_space_limit=None):
+        def limit():
+            resource.setrlimit(resource.RLIMIT_AS,
+                               (address_space_limit, address_space_limit))
+        result = subprocess.run(
+            self.command(group), env=self.environment(),
+            preexec_fn=limit if address_space_limit else None,
             capture_output=True, text=True, timeout=40)
         output = result.stdout + result.stderr
         self.assertEqual(result.returncode, 0, output)
@@ -75,6 +111,16 @@ class APIProbesTest(unittest.TestCase):
 
     def test_detached_document(self):
         self.run_group('detached-document')
+
+    def test_source_node_options(self):
+        self.run_group('source-options')
+
+    def test_out_of_memory(self):
+        # The limit is relative to this build's own peak, so the groups
+        # fail allocations deterministically regardless of host RAM.
+        limit = self.address_space() + OOM_HEADROOM
+        self.run_group('oom-channel-count', limit)
+        self.run_group('oom-node-creation', limit)
 
 
 if __name__ == '__main__':

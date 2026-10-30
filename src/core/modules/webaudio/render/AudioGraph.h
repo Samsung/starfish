@@ -85,6 +85,13 @@ public:
                          AudioParamTimeline* destination, bool connect);
     // Caller holds m_mutex, or is the offline renderer on the main thread.
     void processPendingConnections();
+    // A render-quantum-sized allocation failed while rendering or applying a
+    // connection: the graph renders silence from now on.
+    void setOutOfMemory();
+    bool outOfMemory() const
+    {
+        return m_outOfMemory;
+    }
 
     AudioHandler* addHandler(std::unique_ptr<AudioHandler> handler);
     void markTopologyDirty()
@@ -152,6 +159,7 @@ private:
     struct Scratch;
 
     void queueConnection(const ConnectionCommand& command);
+    void renderHandlers(AudioBus& destination, size_t frames);
     void refreshTopology();
     void releaseHandlers();
     bool isReleasable(AudioHandler* handler) const;
@@ -185,6 +193,7 @@ private:
     bool m_topologyDirty{ true };
     bool m_releaseDirty{ false };
     bool m_timelineSweepNeeded{ false };
+    bool m_outOfMemory{ false };
 };
 
 class AudioGraphLock {

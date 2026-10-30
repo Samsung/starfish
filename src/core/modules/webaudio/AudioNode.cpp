@@ -31,6 +31,8 @@
 #include "core/modules/webaudio/render/AudioGraph.h"
 #include "core/modules/webaudio/render/AudioParamTimeline.h"
 
+#include <new>
+
 namespace Starfish {
 
 AudioNode::AudioNode(ExecutionContext* executionContext)
@@ -297,8 +299,15 @@ void AudioNode::setChannelCount(uint32_t value)
                                DOMException::NOT_SUPPORTED_ERR,
                                "Unsupported AudioNode channel count");
     }
+    const uint32_t previous = m_channelCount;
     m_channelCount = value;
-    configureInputs();
+    try {
+        configureInputs();
+    } catch (DOMException*) {
+        // The setter threw, so the attribute keeps its value.
+        m_channelCount = previous;
+        throw;
+    }
 }
 
 void AudioNode::applyOptions(const AudioNodeOptions& options)
@@ -324,10 +333,20 @@ void AudioNode::configureInputs()
     } else if (m_channelCountMode == ChannelCountMode::Explicit) {
         mode = AudioInputChannelMode::Explicit;
     }
-    for (uint32_t index = 0; index < m_numberOfInputs; index++) {
-        m_handler->input(index).configure(m_channelCount, mode,
-                                          m_channelInterpretation ==
-                                              ChannelInterpretation::Speakers);
+    try {
+        for (uint32_t index = 0; index < m_numberOfInputs; index++) {
+            m_handler->input(index).configure(
+                m_channelCount, mode,
+                m_channelInterpretation == ChannelInterpretation::Speakers);
+        }
+    } catch (const std::bad_alloc&) {
+        // More channels need more render-quantum-sized buffers. The change
+        // resizes an input bus, then the node's output and every input it
+        // feeds, one bus at a time, so a failure can leave some of them
+        // resized: the graph stops rendering (silence) instead of
+        // processing mismatched buses.
+        context()->graph()->setOutOfMemory();
+        context()->throwAllocationError();
     }
 }
 
@@ -350,6 +369,7 @@ String* AudioNode::channelCountModeStr()
 void AudioNode::setChannelCountModeStr(String* channelCountMode)
 {
     AudioGraphLock graphLock(context()->graph());
+    const ChannelCountMode previous = m_channelCountMode;
     if (channelCountMode->equals("max")) {
         m_channelCountMode = ChannelCountMode::Max;
     } else if (channelCountMode->equals("clamped-max")) {
@@ -357,7 +377,12 @@ void AudioNode::setChannelCountModeStr(String* channelCountMode)
     } else if (channelCountMode->equals("explicit")) {
         m_channelCountMode = ChannelCountMode::Explicit;
     }
-    configureInputs();
+    try {
+        configureInputs();
+    } catch (DOMException*) {
+        m_channelCountMode = previous;
+        throw;
+    }
 }
 
 String* AudioNode::channelInterpretationStr()
@@ -378,12 +403,18 @@ String* AudioNode::channelInterpretationStr()
 void AudioNode::setChannelInterpretationStr(String* channelInterpretation)
 {
     AudioGraphLock graphLock(context()->graph());
+    const ChannelInterpretation previous = m_channelInterpretation;
     if (channelInterpretation->equals("speakers")) {
         m_channelInterpretation = ChannelInterpretation::Speakers;
     } else if (channelInterpretation->equals("discrete")) {
         m_channelInterpretation = ChannelInterpretation::Discrete;
     }
-    configureInputs();
+    try {
+        configureInputs();
+    } catch (DOMException*) {
+        m_channelInterpretation = previous;
+        throw;
+    }
 }
 } // namespace Starfish
 

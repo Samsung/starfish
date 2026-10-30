@@ -35,7 +35,7 @@ ChannelMergerNode::ChannelMergerNode(ExecutionContext* executionContext,
     m_numberOfOutputs = 1;
     m_channelCount = 1;
     m_channelCountMode = ChannelCountMode::Explicit;
-    m_handler = context->graph()->addHandler(
+    m_handler = context->addHandler(
         std::unique_ptr<AudioHandler>(new ChannelMergerHandler(inputs)));
     applyOptions(options);
     configureInputs();

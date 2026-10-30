@@ -18,7 +18,9 @@ namespace Starfish {
 class AudioParam;
 class ConstantSourceHandler;
 
-struct ConstantSourceOptions : public AudioNodeOptions {
+// https://webaudio.github.io/web-audio-api/#dictdef-constantsourceoptions
+// Not an AudioNodeOptions: the constructor takes no channel options.
+struct ConstantSourceOptions {
     DEFINE_GETTER_SETTER(float, offset, Offset)
     float m_offset{ 1 };
 };

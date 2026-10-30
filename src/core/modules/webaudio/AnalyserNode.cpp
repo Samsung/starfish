@@ -41,9 +41,8 @@ AnalyserNode::AnalyserNode(ExecutionContext* executionContext,
     }
     m_numberOfInputs = 1;
     m_numberOfOutputs = 1;
-    m_analyserHandler =
-        static_cast<AnalyserHandler*>(context->graph()->addHandler(
-            std::unique_ptr<AudioHandler>(new AnalyserHandler())));
+    m_analyserHandler = static_cast<AnalyserHandler*>(context->addHandler(
+        std::unique_ptr<AudioHandler>(new AnalyserHandler())));
     m_handler = m_analyserHandler;
     m_fftSize = options.fftSize();
     m_minDecibels = options.minDecibels();
