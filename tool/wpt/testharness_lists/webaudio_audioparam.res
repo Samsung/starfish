@@ -1,5 +1,5 @@
 http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/automation-rate.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/audioparam-nominal-range.html
+# [auto-fail:SUBTESTS_FAILED] ED [[current value]] is unclamped; needs MediaStream nodes (STARFISH_ENABLE_WEBRTC; CI builds WEBRTC=0): http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/audioparam-nominal-range.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/audioparam-linearRampToValueAtTime.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/audioparam-method-chaining.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audioparam-interface/cancel-scheduled-values.html

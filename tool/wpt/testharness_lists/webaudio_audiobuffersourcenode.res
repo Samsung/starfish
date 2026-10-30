@@ -10,7 +10,7 @@ http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-i
 http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/audiosource-onended.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/audiobuffersource-playbackrate-zero.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/audiobuffersource-playbackrate-negative.html
-# [auto-fail:SUBTESTS_FAILED] WPT passes offset 255 as frames, but start() offset is seconds: http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/audiobuffersource-playbackrate-dynamic-direction.html
+# [auto-fail:SUBTESTS_FAILED] WPT passes offset 255 as frames, but start() offset is seconds and ED clamps offset to duration: http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/audiobuffersource-playbackrate-dynamic-direction.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/audiobuffersource-duration-loop-playbackrate.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/audiobuffersource-duration-loop.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-audiobuffersourcenode-interface/audiobuffersource-grain.html
