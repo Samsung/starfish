@@ -72,6 +72,9 @@ void IIRFilterNode::getFrequencyResponse(ScriptFloat32Array frequencyHz,
                                          ScriptFloat32Array magResponse,
                                          ScriptFloat32Array phaseResponse)
 {
+    throwIfSharedView(executionContext(), frequencyHz);
+    throwIfSharedView(executionContext(), magResponse);
+    throwIfSharedView(executionContext(), phaseResponse);
     AudioGraphLock graphLock(context()->graph());
     const size_t length = frequencyHz->arrayLength();
     if (magResponse->arrayLength() != length ||

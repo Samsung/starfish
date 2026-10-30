@@ -79,6 +79,7 @@ void WaveShaperNode::setCurve(ScriptFloat32Array curve)
         m_shaperHandler->setCurve({});
         return;
     }
+    throwIfSharedView(executionContext(), curve);
     if (m_curveSet || curve->arrayLength() < 2) {
         throw new DOMException(
             executionContext(), DOMException::INVALID_STATE_ERR,
