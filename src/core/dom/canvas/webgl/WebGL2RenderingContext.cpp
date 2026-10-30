@@ -3404,6 +3404,7 @@ void WebGL2RenderingContext::blitFramebuffer(GLint srcX0, GLint srcY0,
                                              GLbitfield mask, GLenum filter)
 {
     ENTER_CONTEXT_SCOPE();
+    completePendingJobs();
 
     if (filter != GL_NEAREST && filter != GL_LINEAR) {
         setGLError(GL_INVALID_ENUM, "filter must be GL_NEAREST or GL_LINEAR.");
@@ -3952,6 +3953,7 @@ void WebGL2RenderingContext::clearBufferfv(GLenum buffer, GLint drawbuffer,
                                            unsigned long long srcOffset)
 {
     ENTER_CONTEXT_SCOPE();
+    completePendingJobs();
     if (buffer != GL_COLOR && buffer != GL_DEPTH) {
         setGLError(GL_INVALID_ENUM, "buffer must be GL_COLOR or GL_DEPTH.");
         return;
@@ -4010,6 +4012,7 @@ void WebGL2RenderingContext::clearBufferiv(GLenum buffer, GLint drawbuffer,
                                            unsigned long long srcOffset)
 {
     ENTER_CONTEXT_SCOPE();
+    completePendingJobs();
     if (buffer != GL_COLOR && buffer != GL_STENCIL) {
         setGLError(GL_INVALID_ENUM, "buffer must be GL_COLOR or GL_STENCIL.");
         return;
@@ -4070,6 +4073,7 @@ void WebGL2RenderingContext::clearBufferuiv(GLenum buffer, GLint drawbuffer,
                                             unsigned long long srcOffset)
 {
     ENTER_CONTEXT_SCOPE();
+    completePendingJobs();
     if (buffer != GL_COLOR) {
         setGLError(GL_INVALID_ENUM, "buffer must be GL_COLOR.");
         return;
@@ -4125,6 +4129,7 @@ void WebGL2RenderingContext::clearBufferfi(GLenum buffer, GLint drawbuffer,
                                            GLfloat depth, GLint stencil)
 {
     ENTER_CONTEXT_SCOPE();
+    completePendingJobs();
     if (buffer != GL_DEPTH_STENCIL) {
         setGLError(GL_INVALID_ENUM, "buffer must be GL_DEPTH_STENCIL.");
         return;
@@ -5412,6 +5417,7 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
                                         GLenum type, GLintptr offset)
 {
     ENTER_CONTEXT_SCOPE();
+    completePendingJobs();
 
     if (isReadBufferNone()) {
         setGLError(GL_INVALID_OPERATION, "readBuffer is GL_NONE");
@@ -5466,6 +5472,7 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
                                         unsigned long long dstOffset)
 {
     ENTER_CONTEXT_SCOPE();
+    completePendingJobs();
 
     if (isReadBufferNone()) {
         setGLError(GL_INVALID_OPERATION, "readBuffer is GL_NONE");
@@ -5575,6 +5582,7 @@ void WebGL2RenderingContext::copyTexSubImage3D(GLenum target, GLint level,
                                                GLsizei width, GLsizei height)
 {
     ENTER_CONTEXT_SCOPE();
+    completePendingJobs();
 
     if (target != GL_TEXTURE_3D && target != GL_TEXTURE_2D_ARRAY) {
         setGLError(GL_INVALID_ENUM, "Invalid texture target");

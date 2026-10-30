@@ -19,8 +19,8 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/buffers/index-valida
 http://localhost:11010/conformance-suites/2.0.0/conformance/buffers/index-validation-verifies-too-many-indices.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/buffers/index-validation-with-resized-buffer.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/buffers/index-validation.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/canvas/buffer-offscreen-test.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/canvas/buffer-preserve-test.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/canvas/buffer-offscreen-test.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/canvas/buffer-preserve-test.html
 # http://localhost:11010/conformance-suites/2.0.0/conformance/canvas/canvas-test.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/canvas/canvas-zero-size.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/canvas/drawingbuffer-static-canvas-test.html

@@ -423,7 +423,6 @@ protected:
 
 private:
     GLuint getCurrentFBO();
-    void setPendingClearMask(uint32_t mask);
     void flushDrawingCommands();
 
 protected:
@@ -494,7 +493,6 @@ private:
     }
 
     bool m_hasPendingJobsBetweenFrames;
-    uint32_t m_pendingClearMask;
 
 protected:
     GLErrorSet m_GLErrors;

@@ -105,7 +105,6 @@ WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
     m_activeTextureUnit = GL_TEXTURE0;
     m_isContextLost = false;
     m_hasPendingJobsBetweenFrames = false;
-    m_pendingClearMask = 0;
     m_unpackColorSpace = String::createASCIIString("srgb");
     m_drawingBufferColorSpace = String::createASCIIString("srgb");
     m_state = new WebGLRenderingContextState();
@@ -760,8 +759,6 @@ void WebGLRenderingContext::clearColor(float red, float green, float blue,
 {
     ENTER_CONTEXT_SCOPE();
 
-    setPendingClearMask(GL_COLOR_BUFFER_BIT);
-
     m_gl->clearColor(red, green, blue, alpha);
 
     TRACE(WEBGL_V, KV(red), KV(green), KV(blue), KV(alpha));
@@ -775,8 +772,6 @@ void WebGLRenderingContext::clearDepth(GLclampf depth)
         return;
     }
 
-    setPendingClearMask(GL_DEPTH_BUFFER_BIT);
-
     m_gl->clearDepthf(depth);
 
     TRACE(WEBGL_V, KV(depth));
@@ -789,8 +784,6 @@ void WebGLRenderingContext::clearStencil(GLint s)
     if (!m_attributes.stencil()) {
         return;
     }
-
-    setPendingClearMask(GL_STENCIL_BUFFER_BIT);
 
     m_gl->clearStencil(s);
     TRACE(WEBGL_V, KV(s));
@@ -1139,6 +1132,7 @@ void WebGLRenderingContext::copyTexImage2D(GLenum target, GLint level,
                                            GLsizei height, GLint border)
 {
     ENTER_CONTEXT_SCOPE();
+    completePendingJobs();
 
     if (target != GL_TEXTURE_2D && (target < GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
                                     target > GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)) {
@@ -1215,6 +1209,7 @@ void WebGLRenderingContext::copyTexSubImage2D(GLenum target, GLint level,
                                               GLsizei height)
 {
     ENTER_CONTEXT_SCOPE();
+    completePendingJobs();
 
     if (target != GL_TEXTURE_2D && (target < GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
                                     target > GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)) {
@@ -5405,8 +5400,7 @@ void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
 
         GLvoid* data = pixelsView->rawBuffer();
 
-        // completePendingJobs() is not related as this function is a read
-        // operation.
+        completePendingJobs();
         m_gl->readPixels(x, y, width, height, format, type, data);
     } else {
         // If pixels is null, an INVALID_VALUE error is generated.
@@ -7294,47 +7288,75 @@ void WebGLRenderingContext::completePendingJobs()
         default behavior can be changed by setting the `preserveDrawingBuffer`
         attribute of the WebGLContextAttributes object.
     */
-
-    if (m_hasPendingJobsBetweenFrames) {
-        // If `preserveDrawingBuffer` is true, the contents of the drawing
-        // buffer shall be preserved until the author either clears or
-        // overwrites them.
-        if (!m_attributes.preserveDrawingBuffer()) {
-            uint32_t mask = GL_COLOR_BUFFER_BIT;
-
-            // NOTE: If a bit of m_pendingClearMask is 1, it means that users
-            // have already set a value corresponding to that bit. Therefore, we
-            // will keep the value set by users instead of the default value.
-
-            if (!(m_pendingClearMask & GL_COLOR_BUFFER_BIT)) {
-                m_gl->clearColor(0, 0, 0, 0);
-            }
-
-            if (m_attributes.depth()) {
-                if (!(m_pendingClearMask & GL_DEPTH_BUFFER_BIT)) {
-                    m_gl->clearDepthf(1.0);
-                }
-                mask |= GL_DEPTH_BUFFER_BIT;
-            }
-
-            if (m_attributes.stencil()) {
-                if (!(m_pendingClearMask & GL_STENCIL_BUFFER_BIT)) {
-                    m_gl->clearStencil(0);
-                }
-                mask |= GL_STENCIL_BUFFER_BIT;
-            }
-
-            if (mask != 0) {
-                m_gl->clear(mask);
-            }
-        }
-        m_hasPendingJobsBetweenFrames = false;
+    if (!m_hasPendingJobsBetweenFrames) {
+        return;
     }
-}
+    m_hasPendingJobsBetweenFrames = false;
+    if (m_attributes.preserveDrawingBuffer()) {
+        return;
+    }
 
-void WebGLRenderingContext::setPendingClearMask(uint32_t mask)
-{
-    m_pendingClearMask |= mask;
+    GLbitfield mask = GL_COLOR_BUFFER_BIT;
+    if (m_attributes.depth()) {
+        mask |= GL_DEPTH_BUFFER_BIT;
+    }
+    if (m_attributes.stencil()) {
+        mask |= GL_STENCIL_BUFFER_BIT;
+    }
+
+    // The clear targets the drawing buffer as a whole, whatever framebuffer,
+    // scissor, write masks and clear values the page has set (WebGL 1.0
+    // §2.2); all of that is page state and is put back afterwards.
+    GLint drawFramebuffer = 0;
+    GLfloat clearColor[4];
+    GLfloat clearDepth = 1;
+    GLint clearStencil = 0;
+    GLboolean colorMask[4];
+    GLboolean depthMask = GL_TRUE;
+    GLint stencilMask = 0;
+    GLint stencilBackMask = 0;
+    m_gl->getIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFramebuffer);
+    m_gl->getFloatv(GL_COLOR_CLEAR_VALUE, clearColor);
+    m_gl->getFloatv(GL_DEPTH_CLEAR_VALUE, &clearDepth);
+    m_gl->getIntegerv(GL_STENCIL_CLEAR_VALUE, &clearStencil);
+    m_gl->getBooleanv(GL_COLOR_WRITEMASK, colorMask);
+    m_gl->getBooleanv(GL_DEPTH_WRITEMASK, &depthMask);
+    m_gl->getIntegerv(GL_STENCIL_WRITEMASK, &stencilMask);
+    m_gl->getIntegerv(GL_STENCIL_BACK_WRITEMASK, &stencilBackMask);
+    const bool scissorTest = m_gl->isEnabled(GL_SCISSOR_TEST);
+    const bool rasterizerDiscard =
+        isWebGL2RenderingContext() && m_gl->isEnabled(GL_RASTERIZER_DISCARD);
+
+    m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER, m_framebufferTexture->fbo());
+    m_gl->disable(GL_SCISSOR_TEST);
+    if (rasterizerDiscard) {
+        m_gl->disable(GL_RASTERIZER_DISCARD);
+    }
+    m_gl->colorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    m_gl->depthMask(GL_TRUE);
+    m_gl->stencilMask(0xFFFFFFFF);
+    m_gl->clearColor(0, 0, 0, 0);
+    m_gl->clearDepthf(1);
+    m_gl->clearStencil(0);
+
+    m_gl->clear(mask);
+
+    m_gl->clearColor(clearColor[0], clearColor[1], clearColor[2],
+                     clearColor[3]);
+    m_gl->clearDepthf(clearDepth);
+    m_gl->clearStencil(clearStencil);
+    m_gl->colorMask(colorMask[0], colorMask[1], colorMask[2], colorMask[3]);
+    m_gl->depthMask(depthMask);
+    m_gl->stencilMaskSeparate(GL_FRONT, static_cast<GLuint>(stencilMask));
+    m_gl->stencilMaskSeparate(GL_BACK, static_cast<GLuint>(stencilBackMask));
+    if (rasterizerDiscard) {
+        m_gl->enable(GL_RASTERIZER_DISCARD);
+    }
+    if (scissorTest) {
+        m_gl->enable(GL_SCISSOR_TEST);
+    }
+    m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER,
+                          static_cast<GLuint>(drawFramebuffer));
 }
 
 GL* WebGLRenderingContext::gl()
