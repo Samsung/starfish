@@ -1593,7 +1593,6 @@ void AudioBufferSourceHandler::process(uint64_t frameStart, size_t frames)
 
     AudioBus& bus = output(0).bus();
     const double sourceFrames = m_data ? m_data->frames() : 0;
-    const double startFrame = std::ceil(m_startTime * m_contextSampleRate);
     const double stopFrame = m_hasStopTime
                                  ? std::ceil(m_stopTime * m_contextSampleRate)
                                  : std::numeric_limits<double>::infinity();
@@ -1630,7 +1629,11 @@ void AudioBufferSourceHandler::process(uint64_t frameStart, size_t frames)
             m_finished = true;
             break;
         }
-        if (contextFrame < startFrame) {
+        // https://webaudio.github.io/web-audio-api/#dom-audioscheduledsourcenode-start
+        // "the exact value of when is always used without rounding to the
+        // nearest sample frame": compare times, as the playback algorithm
+        // does, instead of a rounded start frame.
+        if (contextFrame / m_contextSampleRate < m_startTime) {
             continue;
         }
         if (!m_data ||
@@ -1638,6 +1641,7 @@ void AudioBufferSourceHandler::process(uint64_t frameStart, size_t frames)
             m_finished = true;
             break;
         }
+        double startShift = 0;
         if (!m_playbackBegun) {
             m_playbackBegun = true;
             if (m_loop && rate >= 0 && m_position >= loopEndFrame) {
@@ -1645,20 +1649,32 @@ void AudioBufferSourceHandler::process(uint64_t frameStart, size_t frames)
             } else if (m_loop && rate < 0 && m_position < loopStartFrame) {
                 m_position = loopStartFrame;
             }
-        }
-        if (m_loop) {
-            if (!m_enteredLoop) {
-                const double initialPosition = m_offset * m_bufferSampleRate;
-                if (rate >= 0) {
-                    m_enteredLoop = initialPosition >= loopEndFrame
-                                        ? m_position >= loopEndFrame
-                                        : m_position >= loopStartFrame;
-                } else {
-                    m_enteredLoop = initialPosition >= loopEndFrame
-                                        ? m_position < loopEndFrame
-                                        : m_position >= loopStartFrame;
-                }
+            // The ED pseudocode starts at bufferTime = offset; this follows
+            // WPT sub-sample-scheduling and Chrome instead: a start time
+            // between two frames puts the first rendered frame that far into
+            // the buffer. It is applied after the loop-entry test, which the
+            // ED makes on the unshifted start position.
+            const double late =
+                contextFrame - m_startTime * m_contextSampleRate;
+            if (late > 0 && late < 1) {
+                startShift = late * rate;
             }
+        }
+        if (m_loop && !m_enteredLoop) {
+            const double initialPosition = m_offset * m_bufferSampleRate;
+            if (rate >= 0) {
+                m_enteredLoop = initialPosition >= loopEndFrame
+                                    ? m_position >= loopEndFrame
+                                    : m_position >= loopStartFrame;
+            } else {
+                m_enteredLoop = initialPosition >= loopEndFrame
+                                    ? m_position < loopEndFrame
+                                    : m_position >= loopStartFrame;
+            }
+        }
+        m_position += startShift;
+        m_elapsedBufferFrames += std::abs(startShift);
+        if (m_loop) {
             if (m_enteredLoop &&
                 (m_position < loopStartFrame || m_position >= loopEndFrame)) {
                 const double span = loopEndFrame - loopStartFrame;
@@ -1711,8 +1727,7 @@ void AudioBufferSourceHandler::process(uint64_t frameStart, size_t frames)
         m_elapsedBufferFrames += std::abs(rate);
     }
     bus.setSilent(!wrote);
-    if (m_data && !m_loop &&
-        static_cast<double>(frameStart + frames) > startFrame &&
+    if (m_data && !m_loop && m_playbackBegun &&
         (m_position < 0 || m_position >= sourceFrames ||
          (m_hasDuration && m_elapsedBufferFrames >= durationFrames))) {
         m_finished = true;
