@@ -32,7 +32,8 @@ public:
         : m_graph(graph)
         , m_sampleRate(sampleRate)
         , m_device(AudioOutputDevice::create(
-              static_cast<uint32_t>(std::round(sampleRate))))
+              static_cast<uint32_t>(std::round(sampleRate)),
+              graph->quantumFrames()))
     {
         m_thread = std::thread([this]() { run(); });
     }
@@ -61,8 +62,13 @@ private:
     void run()
     {
         using Clock = std::chrono::steady_clock;
+        // A quantum below 128 frames (renderSizeHint) renders a batch of
+        // quanta per wake, so a 1-frame quantum does not wake the thread
+        // once per frame. The graph lock is still taken per quantum.
+        const size_t batch = std::max<size_t>(1, AudioBus::RenderQuantumFrames /
+                                                     m_graph->quantumFrames());
         const auto quantum = std::chrono::duration_cast<Clock::duration>(
-            std::chrono::duration<double>(AudioBus::RenderQuantumFrames /
+            std::chrono::duration<double>(batch * m_graph->quantumFrames() /
                                           m_sampleRate));
         auto deadline = Clock::now() + quantum;
         while (true) {
@@ -74,7 +80,7 @@ private:
                     return;
                 }
             }
-            {
+            for (size_t i = 0; i < batch; i++) {
                 std::lock_guard<std::recursive_mutex> lock(m_graph->mutex());
                 if (m_stopping.load(std::memory_order_acquire)) {
                     return;
@@ -242,10 +248,11 @@ struct AudioGraph::Scratch {
     }
 };
 
-AudioGraph::AudioGraph(double sampleRate)
+AudioGraph::AudioGraph(double sampleRate, size_t quantumFrames)
     : m_scratch(new Scratch)
     , m_releaseQueue(new AudioGraphReleaseQueue)
     , m_sampleRate(sampleRate)
+    , m_quantumFrames(quantumFrames)
 {
     STARFISH_ASSERT(sampleRate >= 3000 && sampleRate <= 768000);
 }
@@ -410,6 +417,9 @@ AudioHandler* AudioGraph::addHandler(std::unique_ptr<AudioHandler> handler)
 {
     AudioHandler* raw = handler.get();
     raw->setGraph(this);
+    if (m_quantumFrames != AudioBus::RenderQuantumFrames) {
+        raw->setQuantumFrames(m_quantumFrames);
+    }
     m_handlers.push_back(std::move(handler));
     m_topologyDirty = true;
     return raw;
@@ -770,8 +780,8 @@ void AudioGraph::setDestination(AudioNodeOutput* destination)
 void AudioGraph::renderQuantum(AudioBus& destination, size_t frames)
 {
     processPendingConnections();
-    STARFISH_ASSERT(destination.frames() == AudioBus::RenderQuantumFrames);
-    STARFISH_ASSERT(frames >= 1 && frames <= AudioBus::RenderQuantumFrames);
+    STARFISH_ASSERT(destination.frames() == m_quantumFrames);
+    STARFISH_ASSERT(frames >= 1 && frames <= m_quantumFrames);
     // Handle new collection reports now; re-check the tails of collected
     // nodes that are still sounding only every few quanta.
     constexpr uint64_t ReleaseInterval = 64;
@@ -821,8 +831,7 @@ void AudioGraph::renderQuantum(AudioBus& destination, size_t frames)
                               m_scheduledHandlers.end());
     // Rendering time advances by a full quantum even when an offline
     // destination stores only the final partial quantum.
-    m_renderedFrames.fetch_add(AudioBus::RenderQuantumFrames,
-                               std::memory_order_release);
+    m_renderedFrames.fetch_add(m_quantumFrames, std::memory_order_release);
 }
 
 } // namespace Starfish

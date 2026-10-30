@@ -951,6 +951,18 @@ size_t DelayHandler::historyChannelsAt(int64_t frame) const
     return it == m_layoutHistory.begin() ? 1 : std::prev(it)->second;
 }
 
+void DelayHandler::setQuantumFrames(size_t frames)
+{
+    AudioHandler::setQuantumFrames(frames);
+    // In the ring's own 64-bit type: a size_t difference would wrap for
+    // quanta below 128 on 32-bit targets.
+    m_ringFrames = m_ringFrames - AudioBus::RenderQuantumFrames +
+                   static_cast<uint64_t>(frames);
+    if (frames > AudioBus::RenderQuantumFrames) {
+        m_readFrames.resize(frames);
+    }
+}
+
 bool DelayHandler::hasPendingOutput() const
 {
     return AudioHandler::hasPendingOutput() || m_ring;
@@ -960,7 +972,7 @@ void DelayHandler::writeInput(uint64_t frameStart, size_t frames)
 {
     const AudioBus& source = input(0).bus();
     const size_t channels = source.channels();
-    const size_t quantumFrames = AudioBus::RenderQuantumFrames;
+    const size_t quantumFrames = graph()->quantumFrames();
     if (!source.isSilent()) {
         m_lastAudibleFrame = frameStart + frames;
         if (!m_ring || m_ringChannels < channels) {
@@ -968,6 +980,14 @@ void DelayHandler::writeInput(uint64_t frameStart, size_t frames)
             // gains channels; the ring is reused afterwards. Eager
             // allocation at construction would cost maxDelayTime of storage
             // per channel for every DelayNode, audible or not.
+            // channels x m_ringFrames floats can exceed size_t on 32-bit
+            // targets (long maxDelayTime, many channels, high rate); the
+            // ring then stays unallocated and the node outputs silence
+            // rather than indexing past a truncated allocation.
+            if (m_ringFrames >
+                std::numeric_limits<size_t>::max() / sizeof(float) / channels) {
+                return;
+            }
             std::unique_ptr<float[]> ring(new float[channels * m_ringFrames]());
             if (m_ring) {
                 std::copy_n(m_ring.get(), m_ringChannels * m_ringFrames,
@@ -1020,7 +1040,10 @@ void DelayHandler::writeInput(uint64_t frameStart, size_t frames)
 void DelayHandler::readOutput(uint64_t frameStart, size_t frames)
 {
     const AudioBus* modulation = m_delayTime.modulation(frames);
-    double readFrames[AudioBus::RenderQuantumFrames];
+    double stackReadFrames[AudioBus::RenderQuantumFrames];
+    double* readFrames = frames <= AudioBus::RenderQuantumFrames
+                             ? stackReadFrames
+                             : m_readFrames.data();
     size_t outputChannels = 1;
     for (size_t i = 0; i < frames; i++) {
         const double delay =
@@ -1030,7 +1053,7 @@ void DelayHandler::readOutput(uint64_t frameStart, size_t frames)
         const double delayFrames =
             m_inFeedbackCycle
                 ? std::max(delay * m_sampleRate,
-                           static_cast<double>(AudioBus::RenderQuantumFrames))
+                           static_cast<double>(graph()->quantumFrames()))
                 : delay * m_sampleRate;
         readFrames[i] = static_cast<double>(frameStart + i) - delayFrames;
         outputChannels = std::max(

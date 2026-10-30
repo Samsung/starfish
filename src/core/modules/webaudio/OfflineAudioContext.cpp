@@ -49,16 +49,25 @@ static double validatedSampleRate(ExecutionContext* executionContext,
 
 OfflineAudioContext::OfflineAudioContext(ExecutionContext* executionContext,
                                          OfflineAudioContextOptions options)
-    : OfflineAudioContext(executionContext, options.numberOfChannels(),
-                          options.length(), options.sampleRate())
+    : OfflineAudioContext(
+          executionContext, options.numberOfChannels(), options.length(),
+          options.sampleRate(),
+          renderQuantumSizeFromHint(
+              executionContext, options.renderSizeHint(),
+              // The document and the sample rate are
+              // checked before the hint, as the ED orders
+              // its constructor steps.
+              validatedSampleRate(executionContext, options.sampleRate())))
 {
 }
 
 OfflineAudioContext::OfflineAudioContext(ExecutionContext* executionContext,
                                          uint32_t numberOfChannels,
-                                         uint32_t length, double sampleRate)
+                                         uint32_t length, double sampleRate,
+                                         size_t renderQuantumSize)
     : BaseAudioContext(executionContext,
-                       validatedSampleRate(executionContext, sampleRate))
+                       validatedSampleRate(executionContext, sampleRate),
+                       renderQuantumSize)
     , m_length(length)
     , m_numberOfChannels(numberOfChannels)
 {
@@ -143,10 +152,18 @@ Promise* OfflineAudioContext::suspend(double suspendTime)
         return promise;
     }
 
-    const uint64_t quantumSize = AudioBus::RenderQuantumFrames;
-    const uint64_t frame = static_cast<uint64_t>(std::ceil(
-                               suspendTime * sampleRate() / quantumSize)) *
-                           quantumSize;
+    // The first render quantum boundary at or after suspendTime, compared
+    // as times like currentTime, so n * quantum / sampleRate maps to
+    // boundary n despite rounding in suspendTime * sampleRate.
+    const uint64_t quantumSize = graph()->quantumFrames();
+    uint64_t quanta = static_cast<uint64_t>(
+        std::ceil(suspendTime * sampleRate() / quantumSize));
+    if (quanta &&
+        static_cast<double>((quanta - 1) * quantumSize) / sampleRate() >=
+            suspendTime) {
+        quanta--;
+    }
+    const uint64_t frame = quanta * quantumSize;
     if (frame >= m_length ||
         std::any_of(m_pendingSuspends.begin(), m_pendingSuspends.end(),
                     [frame](const PendingSuspend& pending) {
@@ -233,10 +250,12 @@ void OfflineAudioContext::renderChunk()
         return;
     }
 
-    // Yield after a bounded number of quanta so long offline renders leave
-    // room for document tasks and event dispatch.
-    for (size_t quantum = 0; quantum < 64 && m_renderedFrames < m_length;
-         quantum++) {
+    // Yield after about 8192 frames (at least one quantum) so long offline
+    // renders leave room for document tasks and event dispatch.
+    const size_t quantumFrames = graph()->quantumFrames();
+    for (size_t chunkFrames = 0;
+         chunkFrames < 8192 && m_renderedFrames < m_length;
+         chunkFrames += quantumFrames) {
         if (!m_pendingSuspends.empty() &&
             m_pendingSuspends.front().frame <= graph()->renderedFrames()) {
             // This chunk is itself a queued task: suspend rendering, resolve
@@ -252,8 +271,8 @@ void OfflineAudioContext::renderChunk()
             promise->fulfill(scriptUndefined());
             return;
         }
-        size_t frames = std::min<size_t>(AudioBus::RenderQuantumFrames,
-                                         m_length - m_renderedFrames);
+        size_t frames =
+            std::min<size_t>(quantumFrames, m_length - m_renderedFrames);
         const AudioBus& output = graph()->renderQuantum(frames);
         for (size_t channel = 0; channel < m_numberOfChannels; channel++) {
             memcpy(m_renderedBuffer->data()->channel(channel) +

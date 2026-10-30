@@ -58,6 +58,7 @@ class AudioDecodeWork;
 class BaseAudioContext;
 class Window;
 class WebView;
+class AudioContextRenderSizeCategoryOrunsignedlong;
 
 enum class AudioContextState { Suspended, Running, Closed };
 
@@ -67,6 +68,13 @@ typedef void (*MessageQueueFunction)(void*);
 // Web Audio operation has; the binding generator does not implement it.
 void throwIfSharedView(ExecutionContext* executionContext,
                        Escargot::ArrayBufferViewRef* view);
+
+// https://webaudio.github.io/web-audio-api/#dom-audiocontextoptions-rendersizehint
+// The [[render quantum size]] a context's renderSizeHint asks for.
+size_t renderQuantumSizeFromHint(
+    ExecutionContext* executionContext,
+    const AudioContextRenderSizeCategoryOrunsignedlong& hint,
+    double sampleRate);
 
 class WebAudioMessageQueue : public gc {
 public:
@@ -188,6 +196,7 @@ public:
     // can lag behind [[control thread state]] (m_controlQueue).
     virtual String* state();
     DEFINE_GETTER(double, sampleRate)
+    uint32_t renderQuantumSize() const;
     double currentTime() const;
 
 #define VIRTUAL
@@ -256,8 +265,8 @@ public:
     void registerScriptProcessor(ScriptProcessorNode* node);
 
 protected:
-    BaseAudioContext(ExecutionContext* executionContext,
-                     double sampleRate = 48000);
+    BaseAudioContext(ExecutionContext* executionContext, double sampleRate,
+                     size_t renderQuantumSize);
 
     void setStateAttribute(AudioContextState state)
     {

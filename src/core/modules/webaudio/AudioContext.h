@@ -28,6 +28,7 @@
 #include "core/modules/webaudio/BaseAudioContext.h"
 #include "core/modules/message_loop/Timer.h"
 #include "binding/generated/doubleOrAudioContextLatencyCategoryUnion.h"
+#include "binding/generated/AudioContextRenderSizeCategoryOrunsignedlongUnion.h"
 
 namespace Starfish {
 class ExecutionContext;
@@ -38,6 +39,8 @@ struct AudioContextOptions {
     DEFINE_GETTER(float, sampleRate)
     DEFINE_GETTER_SETTER(doubleOrAudioContextLatencyCategory, latencyHint,
                          LatencyHint)
+    DEFINE_GETTER_SETTER(AudioContextRenderSizeCategoryOrunsignedlong,
+                         renderSizeHint, RenderSizeHint)
 
     void setSampleRate(float value)
     {
@@ -55,6 +58,10 @@ struct AudioContextOptions {
     doubleOrAudioContextLatencyCategory m_latencyHint =
         doubleOrAudioContextLatencyCategory::createAudioContextLatencyCategory(
             String::createASCIIString("interactive"));
+    AudioContextRenderSizeCategoryOrunsignedlong m_renderSizeHint =
+        AudioContextRenderSizeCategoryOrunsignedlong::
+            createAudioContextRenderSizeCategory(
+                String::createASCIIString("default"));
 };
 
 struct AudioTimestamp {

@@ -186,7 +186,7 @@ void MediaPlayerAudioLinux::play()
     }
     if (!m_playbackState->routed()) {
         std::unique_ptr<AudioOutputDevice> output =
-            AudioOutputDevice::create(48000);
+            AudioOutputDevice::create(48000, AudioBus::RenderQuantumFrames);
         m_outputDevice = output.release();
         if (m_outputDevice) {
             m_outputBus = new AudioBus(2);

@@ -61,7 +61,7 @@ private:
 
 class AudioGraph {
 public:
-    explicit AudioGraph(double sampleRate);
+    AudioGraph(double sampleRate, size_t quantumFrames);
     ~AudioGraph();
 
     // Control-side native accesses must hold this lock. It is acquired once
@@ -98,12 +98,27 @@ public:
     void renderQuantum(AudioBus& destination, size_t frames);
     void prepareOutput(size_t channels)
     {
-        m_renderBus.resize(channels);
+        m_renderBus.resize(channels, m_quantumFrames);
     }
-    const AudioBus& renderQuantum(size_t frames = AudioBus::RenderQuantumFrames)
+    // Renders one quantum; an offline context's last one may store fewer
+    // than quantumFrames() frames.
+    const AudioBus& renderQuantum(size_t frames)
     {
         renderQuantum(m_renderBus, frames);
         return m_renderBus;
+    }
+    const AudioBus& renderQuantum()
+    {
+        return renderQuantum(m_quantumFrames);
+    }
+    // https://webaudio.github.io/web-audio-api/#render-quantum-size
+    size_t quantumFrames() const
+    {
+        return m_quantumFrames;
+    }
+    double sampleRate() const
+    {
+        return m_sampleRate;
     }
     double currentTime() const
     {
@@ -164,6 +179,7 @@ private:
     AudioNodeOutput* m_destination{ nullptr };
     AudioBus m_renderBus;
     double m_sampleRate;
+    size_t m_quantumFrames;
     uint64_t m_quantum{ 0 };
     std::atomic<uint64_t> m_renderedFrames{ 0 };
     bool m_topologyDirty{ true };

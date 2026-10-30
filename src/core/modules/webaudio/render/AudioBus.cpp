@@ -29,7 +29,6 @@ AudioBus::AudioBus(size_t channels, size_t frames)
 void AudioBus::resize(size_t channels, size_t frames)
 {
     STARFISH_ASSERT(channels <= 32);
-    STARFISH_ASSERT(frames <= RenderQuantumFrames);
     if (m_channels == channels && m_frames == frames) {
         return;
     }

@@ -43,6 +43,10 @@ public:
         return m_bus.channels();
     }
     void configureChannels(size_t channels);
+    void setQuantumFrames(size_t frames)
+    {
+        m_bus.resize(m_bus.channels(), frames);
+    }
     void attachInput(AudioNodeInput* input);
     void detachInput(AudioNodeInput* input);
     AudioHandler* owner() const

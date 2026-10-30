@@ -75,6 +75,9 @@ public:
     {
     }
     virtual void inputChannelsChanged(size_t index);
+    // Called once, when the handler joins a graph whose render quantum is
+    // not the default: sizes the I/O buses (and any per-quantum state).
+    virtual void setQuantumFrames(size_t frames);
     virtual bool finished() const
     {
         return false;

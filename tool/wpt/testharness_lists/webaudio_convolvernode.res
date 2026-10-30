@@ -9,6 +9,6 @@ http://web-platform.test:8000/webaudio/the-audio-api/the-convolvernode-interface
 http://web-platform.test:8000/webaudio/the-audio-api/the-convolvernode-interface/convolver-setBuffer-null.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-convolvernode-interface/convolver-upmixing-1-channel-response.html
 # [auto-fail:SUBTESTS_FAILED] convolver keeps rendering a buffer with a detached channel (ED acquire the content returns a zero-length buffer, which renders silence): http://web-platform.test:8000/webaudio/the-audio-api/the-convolvernode-interface/transferred-buffer-output.html
-# [vacuous-pass:renderSizeHint is ignored] https://web-platform.test:8443/webaudio/the-audio-api/the-convolvernode-interface/convolver-rendersizehint.https.html
+https://web-platform.test:8443/webaudio/the-audio-api/the-convolvernode-interface/convolver-rendersizehint.https.html
 http://web-platform.test:8000/webaudio/the-audio-api/the-convolvernode-interface/realtime-conv.html
 # https://web-platform.test:8443/webaudio/the-audio-api/the-convolvernode-interface/active-processing.https.html

@@ -70,6 +70,12 @@ class APIProbesTest(unittest.TestCase):
     def test_script_processor(self):
         self.run_group('script-processor')
 
+    def test_render_quantum_size(self):
+        self.run_group('render-quantum')
+
+    def test_detached_document(self):
+        self.run_group('detached-document')
+
 
 if __name__ == '__main__':
     unittest.main()

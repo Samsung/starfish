@@ -215,6 +215,7 @@ public:
         return &m_delayTime;
     }
     bool hasPendingOutput() const override;
+    void setQuantumFrames(size_t frames) override;
 
 protected:
     void process(uint64_t frameStart, size_t frames) override;
@@ -238,6 +239,9 @@ private:
     uint64_t m_lastAudibleFrame{ 0 };
     // (first frame, channel count) for each input layout still in the ring.
     std::deque<std::pair<uint64_t, size_t>> m_layoutHistory;
+    // Read positions of a quantum larger than the default one, which fits a
+    // stack array.
+    std::vector<double> m_readFrames;
     bool m_inFeedbackCycle{ false };
 };
 
@@ -374,6 +378,11 @@ private:
 class AnalyserHandler final : public AudioHandler {
 public:
     AnalyserHandler();
+    void setQuantumFrames(size_t frames) override
+    {
+        AudioHandler::setQuantumFrames(frames);
+        m_mono.resize(1, frames);
+    }
     // Control thread, under the graph lock.
     void setFftSize(size_t size);
     void setSmoothing(double value)

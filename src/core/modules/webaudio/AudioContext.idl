@@ -21,11 +21,16 @@
 [ STARFISH_ENABLE_WEBAUDIO ]
 enum AudioContextLatencyCategory { "balanced", "interactive", "playback" };
 
+// https://webaudio.github.io/web-audio-api/#enumdef-audiocontextrendersizecategory
+[ STARFISH_ENABLE_WEBAUDIO ]
+enum AudioContextRenderSizeCategory { "default", "hardware" };
+
 // https://webaudio.github.io/web-audio-api/#dictdef-audiocontextoptions
 [ STARFISH_ENABLE_WEBAUDIO ]
 dictionary AudioContextOptions {
   (double or AudioContextLatencyCategory) latencyHint = "interactive";
   float sampleRate;
+  (AudioContextRenderSizeCategory or unsigned long) renderSizeHint = "default";
 };
 
 // https://webaudio.github.io/web-audio-api/#dictdef-audiotimestamp

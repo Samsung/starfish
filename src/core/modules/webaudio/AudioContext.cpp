@@ -46,6 +46,14 @@ namespace Starfish {
 static double audioContextSampleRate(ExecutionContext* executionContext,
                                      const AudioContextOptions& options)
 {
+    // https://webaudio.github.io/web-audio-api/#AudioContext-constructors
+    // Step 1, before any option is validated: a document that is not fully
+    // active throws InvalidStateError.
+    if (!executionContext->document()->isFullyActive()) {
+        throw new DOMException(executionContext,
+                               DOMException::INVALID_STATE_ERR,
+                               "AudioContext document is not active");
+    }
     if (!options.hasSampleRate()) {
         return 48000;
     }
@@ -71,7 +79,7 @@ static void validateLatencyHint(ExecutionContext* executionContext,
             return;
         }
     } else if (hint.isdoubleValue() && std::isfinite(hint.getdoubleValue())) {
-        // latencyHint is advisory; the current fixed-quantum output ignores it.
+        // latencyHint is advisory; output buffering does not vary with it.
         return;
     }
     throw new DOMException(executionContext, DOMException::SCRIPT_TYPE_ERR,
@@ -93,8 +101,13 @@ struct AudioContextPromiseMessage : public gc {
 // https://webaudio.github.io/web-audio-api/#AudioContext-constructors
 AudioContext::AudioContext(ExecutionContext* executionContext,
                            AudioContextOptions contextOptions)
-    : BaseAudioContext(executionContext,
-                       audioContextSampleRate(executionContext, contextOptions))
+    : BaseAudioContext(
+          executionContext,
+          audioContextSampleRate(executionContext, contextOptions),
+          // Validates the sample rate (and the document) first.
+          renderQuantumSizeFromHint(
+              executionContext, contextOptions.renderSizeHint(),
+              audioContextSampleRate(executionContext, contextOptions)))
 {
     // https://webaudio.github.io/web-audio-api/#AudioContext-constructors
     validateLatencyHint(executionContext, contextOptions);
@@ -142,7 +155,7 @@ double AudioContext::baseLatency() const
 {
     // The render quantum and the bounded handoff to the host audio API each
     // contribute one quantum of processing delay in the current output path.
-    return 2.0 * AudioBus::RenderQuantumFrames / sampleRate();
+    return 2.0 * renderQuantumSize() / sampleRate();
 }
 
 double AudioContext::outputLatency() const
