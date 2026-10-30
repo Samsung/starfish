@@ -34,7 +34,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/to-data-url-t
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/viewport-unchanged-upon-resize.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/constants-and-properties.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-attribute-preserve-drawing-buffer.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-attributes-alpha-depth-stencil-antialias.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-attributes-alpha-depth-stencil-antialias.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-creation-and-destruction.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-creation.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-eviction-with-garbage-collection.html

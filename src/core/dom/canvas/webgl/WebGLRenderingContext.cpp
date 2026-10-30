@@ -188,6 +188,16 @@ void WebGLRenderingContext::preInitialize(ScriptValue contextAttributes)
         m_frameBufferAttributes.depth = m_attributes.depth();
         m_frameBufferAttributes.stencil = m_attributes.stencil();
     }
+
+    // In WebGL 1.0 antialias is only a request, and getContextAttributes()
+    // reports the drawing buffer actually created (§5.2), which is never
+    // multisampled. Deviation: WebGL 2.0 must obey the request (§3.2), but a
+    // multisampled default framebuffer is not implemented, so a WebGL 2
+    // context reports the requested value while its drawing buffer stays
+    // single-sampled (SAMPLES 0).
+    if (webGLVersion() == 1) {
+        m_attributes.setAntialias(false);
+    }
 }
 
 void WebGLRenderingContext::initialize()
