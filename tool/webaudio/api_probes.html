@@ -1,0 +1,139 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Web Audio API probes</title>
+<script>
+// Served by test_api_probes.py; the query string picks one group. Each
+// failed check prints API_PROBE_FAIL, then the page prints API_PROBE_PASS or
+// API_PROBE_FAILED. This page also runs unchanged in a browser.
+let failures = 0;
+function check(condition, message) {
+    console.assert(condition, message);
+    if (!condition) {
+        failures++;
+        console.log('API_PROBE_FAIL ' + message);
+    }
+}
+function throwsType(fn, message) {
+    try {
+        fn();
+    } catch (e) {
+        check(e instanceof TypeError, message + ': threw ' + e);
+        return;
+    }
+    check(false, message + ': did not throw');
+}
+function finish() {
+    console.log(failures ? 'API_PROBE_FAILED' : 'API_PROBE_PASS');
+    if (typeof testEnd === 'function') testEnd(!failures);
+}
+
+const groups = {
+    // WebIDL rejects SharedArrayBuffer views without [AllowShared], which no
+    // Web Audio operation has.
+    'shared-views': async () => {
+        if (typeof SharedArrayBuffer !== 'function') {
+            console.log('API_PROBE_SKIP SharedArrayBuffer is unavailable');
+            return;
+        }
+        const context = new OfflineAudioContext(1, 128, 8000);
+        const f32 = () => new Float32Array(new SharedArrayBuffer(64));
+        const u8 = () => new Uint8Array(new SharedArrayBuffer(64));
+        const buffer = new AudioBuffer({length: 16, sampleRate: 8000});
+        const analyser = context.createAnalyser();
+        const plain = (n) => new Float32Array(n);
+        throwsType(() => buffer.copyFromChannel(f32(), 0), 'copyFromChannel');
+        // Argument conversion comes before the channel range check.
+        throwsType(() => buffer.copyFromChannel(f32(), 5),
+                   'copyFromChannel with a bad channel');
+        throwsType(() => buffer.copyToChannel(f32(), 0), 'copyToChannel');
+        throwsType(() => analyser.getFloatFrequencyData(f32()),
+                   'getFloatFrequencyData');
+        throwsType(() => analyser.getByteFrequencyData(u8()),
+                   'getByteFrequencyData');
+        throwsType(() => analyser.getFloatTimeDomainData(f32()),
+                   'getFloatTimeDomainData');
+        throwsType(() => analyser.getByteTimeDomainData(u8()),
+                   'getByteTimeDomainData');
+        throwsType(() => context.createBiquadFilter().getFrequencyResponse(
+                       plain(4), f32(), plain(4)),
+                   'BiquadFilterNode.getFrequencyResponse');
+        throwsType(() => context.createIIRFilter([1], [1]).getFrequencyResponse(
+                       f32(), plain(16), plain(16)),
+                   'IIRFilterNode.getFrequencyResponse');
+        throwsType(() => { context.createWaveShaper().curve = f32(); },
+                   'WaveShaperNode.curve');
+        const copy = plain(16);
+        buffer.copyToChannel(plain(16).fill(2), 0);
+        buffer.copyFromChannel(copy, 0);
+        check(copy[3] === 2, 'unshared views are still accepted');
+    },
+
+    'media-element-source': async () => {
+        check(MediaElementAudioSourceNode.length === 2,
+              'MediaElementAudioSourceNode.length is 2');
+        const context = new AudioContext();
+        const audio = document.createElement('audio');
+        const node = new MediaElementAudioSourceNode(context,
+                                                     {mediaElement: audio});
+        check(node.mediaElement === audio, 'mediaElement is the element');
+        check(node.numberOfInputs === 0 && node.numberOfOutputs === 1,
+              'no inputs, one output');
+        let error = null;
+        try {
+            new MediaElementAudioSourceNode(context, {mediaElement: audio});
+        } catch (e) {
+            error = e;
+        }
+        check(error && error.name === 'InvalidStateError',
+              'a second source for the element throws InvalidStateError');
+        throwsType(() => new MediaElementAudioSourceNode(context, {}),
+                   'missing mediaElement');
+        throwsType(() => MediaElementAudioSourceNode(
+                       context, {mediaElement: document.createElement('audio')}),
+                   'call without new');
+        throwsType(() => new MediaElementAudioSourceNode(
+                       new OfflineAudioContext(1, 1, 8000),
+                       {mediaElement: document.createElement('audio')}),
+                   'OfflineAudioContext is not an AudioContext');
+        await context.close();
+    },
+
+    // A looped source with a negative rate enters its loop on the first
+    // frame; a start time between two frames must not change that.
+    'reverse-loop': async () => {
+        const sampleRate = 8000;
+        const cases = [
+            // [label, when (frames), offset, loopStart, loopEnd (seconds)]
+            ['whole buffer, integer start', 10, 0, 0, 0],
+            ['whole buffer, start 10.5', 10.5, 0, 0, 0],
+            ['loop [64,192), offset clamped to loopStart, start 10.5', 10.5,
+             0, 64 / sampleRate, 192 / sampleRate],
+            ['loop [64,192), offset at loopStart, start 10.25', 10.25,
+             64 / sampleRate, 64 / sampleRate, 192 / sampleRate],
+        ];
+        for (const [label, when, offset, loopStart, loopEnd] of cases) {
+            const context = new OfflineAudioContext(1, 1024, sampleRate);
+            const buffer = new AudioBuffer({length: 256, sampleRate});
+            buffer.getChannelData(0).fill(1);
+            const source = new AudioBufferSourceNode(context, {
+                buffer, loop: true, loopStart, loopEnd, playbackRate: -1});
+            source.connect(context.destination);
+            let ended = false;
+            source.onended = () => { ended = true; };
+            source.start(when / sampleRate, offset);
+            const data = (await context.startRendering()).getChannelData(0);
+            check(data.subarray(Math.ceil(when)).every((v) => v !== 0),
+                  label + ': the looped source keeps sounding');
+            check(!ended, label + ': the looped source does not end');
+        }
+    },
+};
+
+const group = groups[location.search.substring(1)];
+if (!group) {
+    check(false, 'unknown group ' + location.search);
+    finish();
+} else {
+    group().catch((e) => check(false, 'exception ' + e)).then(finish);
+}
+</script>
