@@ -10,7 +10,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/attribs/gl-vertex-at
 http://localhost:11010/conformance-suites/1.0.3/conformance/attribs/gl-vertex-attrib-zero-issues.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/buffer-bind-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/buffer-data-array-buffer-delete.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/buffer-data-array-buffer.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/buffer-data-array-buffer.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/element-array-buffer-delete-recreate.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/index-validation-copies-indices.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/index-validation-crash-with-buffer-sub-data.html

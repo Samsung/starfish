@@ -4869,10 +4869,27 @@ void WebGLRenderingContext::bufferData(GLenum target, GLsizeiptr size,
 {
     ENTER_CONTEXT_SCOPE();
 
-    // Set the size of the currently bound WebGLBuffer object for the passed
-    // target. The buffer is initialized to 0.
-    std::vector<unsigned char> zeros(size);
-    m_gl->bufferData(target, size, zeros.data(), usage);
+    if (size < 0) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    // The driver reports a bad target or usage, a missing buffer and an
+    // allocation failure (OUT_OF_MEMORY) before anything is filled.
+    hasNewGLError(); // Keep an earlier error from failing this call.
+    m_gl->bufferData(target, size, nullptr, usage);
+    if (hasNewGLError()) {
+        return;
+    }
+
+    // The buffer is initialized to 0 (WebGL 1.0 §5.14.5). Fill it in bounded
+    // chunks so a large buffer costs no client-side copy of its size.
+    const GLsizeiptr chunk = std::min<GLsizeiptr>(size, 64 * 1024);
+    const std::vector<unsigned char> zeros(chunk);
+    for (GLsizeiptr offset = 0; offset < size; offset += chunk) {
+        m_gl->bufferSubData(target, offset, std::min(chunk, size - offset),
+                            zeros.data());
+    }
 
     Optional<WebGLBuffer*> maybeBound = m_state->getBoundBuffer(target);
     if (maybeBound.hasValue() && maybeBound.value()) {
