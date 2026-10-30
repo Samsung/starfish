@@ -49,10 +49,11 @@ public:
     String* m_url;
     bool m_redirected;
     bool m_ok;
-    // Set by the network job when a redirect chain left the request's origin
-    // at any hop; the response is then "cors" even if the final URL is same
-    // origin (https://fetch.spec.whatwg.org/#main-fetch).
-    bool m_redirectTainted;
+    // The response is "cors" even if its URL is same origin
+    // (https://fetch.spec.whatwg.org/#main-fetch): a redirect chain left the
+    // request's origin at any hop or ended without a final HTTP response, or
+    // a service worker provided the response without its tainting.
+    bool m_corsTainted;
     // Set by the network job when the final response of a cross-origin
     // request passed the CORS check
     // (https://fetch.spec.whatwg.org/#concept-cors-check).

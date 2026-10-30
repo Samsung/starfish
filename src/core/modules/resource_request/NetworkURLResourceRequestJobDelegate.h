@@ -40,6 +40,9 @@ struct NetworkURLWorkerData {
     std::atomic<bool> isAborted;
     bool needsToHandleError;
     long lastTransactionResponseCode;
+    // curl's redirect count when the last header block taken for a redirect
+    // hop ended; see curlFollowedLastHop().
+    Optional<long> redirectCountAtHop;
 
     // FIXME : These flags should better be arguments of http-fetch
     // https://fetch.spec.whatwg.org/#http-fetch

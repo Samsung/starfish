@@ -70,6 +70,7 @@ NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
     : isAborted(false)
     , needsToHandleError(false)
     , lastTransactionResponseCode(0)
+    , redirectCountAtHop()
     , corsFlag(false)
     , corsPreflightFlag(false)
     , hasCorsUnsafeRequestHeaderNames(false)
@@ -167,6 +168,20 @@ static void flushPendingResponseData(NetworkURLWorkerData* nwd)
     nwd->pendingResponseData.clear();
 }
 
+// A 3xx header block with a Location is taken for a redirect hop and skips
+// the CORS check, but curl alone decides whether to follow it. A block taken
+// for a hop that curl did not follow is the final response, unchecked, so the
+// load fails closed. curl's redirect count grows when it follows a Location,
+// and also when it re-requests after a 401, 407 or 417 (an auth reload, an
+// Expect retry). Those never answer a 3xx, so after a hop the count grows
+// only if curl followed that hop.
+// https://fetch.spec.whatwg.org/#concept-cors-check
+static bool curlFollowedLastHop(NetworkURLWorkerData* nwd)
+{
+    return !nwd->redirectCountAtHop || nwd->httpTransaction->redirectCount() >
+                                           nwd->redirectCountAtHop.value();
+}
+
 void* NetworkURLResourceRequestJobDelegate::networkWorker(void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
@@ -195,6 +210,12 @@ void* NetworkURLResourceRequestJobDelegate::networkWorker(void* data)
     }
 
     nwd->httpTransaction->start();
+
+    // A response without a body reaches no write callback.
+    if (nwd->httpTransaction->res() == CURLE_OK && !curlFollowedLastHop(nwd)) {
+        nwd->helper->abortHandlerWrapper(nwd);
+        return nullptr;
+    }
 
     if (!(nwd->httpTransaction->res() == CURLE_ABORTED_BY_CALLBACK ||
           nwd->httpTransaction->res() == CURLE_WRITE_ERROR)) {
@@ -841,6 +862,12 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
         return realSize;
     }
 
+    // curl never hands over the body of a redirect it follows.
+    if (!curlFollowedLastHop(nwd)) {
+        nwd->isAborted = true;
+        return 0;
+    }
+
     const char* memPtr = (const char*)ptr;
     if (request->isSync()) {
         auto& entityBody = request->response();
@@ -1173,19 +1200,31 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
     request->m_responseData->m_status =
         nwd->httpTransaction->httpResponse().responseCode();
 
+    HTTPResponse& response = nwd->httpTransaction->httpResponse();
+    bool isEndOfHeaders =
+        rawHeader.compare("\r\n") == 0 || rawHeader.compare("\n") == 0;
+    // A 3xx response is a redirect only when it has a Location, which curl
+    // follows; without one it is the final response like any other.
+    // https://fetch.spec.whatwg.org/#http-redirect-fetch
+    // This guesses what curl does; curlFollowedLastHop() checks the guess.
+    auto location = response.headers().find(HTTPHeaderMap::kLocation);
+    bool isRedirect = response.isRedirectionResponseStatus() &&
+                      isEndOfHeaders &&
+                      location != response.headers().headerMap().end() &&
+                      !location->second.empty();
+
     // The CORS check applies to every final (non-1xx, non-redirect) response;
     // https://fetch.spec.whatwg.org/#concept-cors-check
     if (request->m_responseData->m_status >= HTTPStatusCode::HTTP_STATUS_OK &&
-        !nwd->httpTransaction->httpResponse().isRedirectionResponseStatus()) {
-        if ((rawHeader.compare("\r\n") == 0) ||
-            (rawHeader.compare("\n") == 0)) {
+        !isRedirect) {
+        if (isEndOfHeaders) {
             // A redirect to another origin taints the response "cors";
             // https://fetch.spec.whatwg.org/#http-redirect-fetch
             if (request->m_responseData->m_redirected) {
                 taintIfEffectiveURLIsCrossOrigin(nwd);
                 // A redirected cross-origin request stays "cors" too, even
                 // when it lands back on the requester's origin.
-                request->m_responseData->m_redirectTainted = nwd->corsFlag;
+                request->m_responseData->m_corsTainted = nwd->corsFlag;
             }
             if (nwd->corsFlag && !bypassesCors(request)) {
                 bool allowed = true;
@@ -1222,17 +1261,23 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
 
         } else {
             nwd->httpTransaction->didReceiveHeader(rawHeader);
+            if (response.isRedirectionResponseStatus()) {
+                nwd->httpTransaction->updateLastLocationIfNeeds(rawHeader);
+            }
         }
-    } else if (nwd->httpTransaction->httpResponse()
-                   .isRedirectionResponseStatus()) {
+    } else if (isRedirect) {
+        nwd->redirectCountAtHop = nwd->httpTransaction->redirectCount();
         request->m_responseData->m_redirected = true;
-        nwd->httpTransaction->updateLastLocationIfNeeds(rawHeader);
         // Once a hop has left the initial origin the response stays "cors",
         // even if the chain returns there (A -> B -> A).
-        if (rawHeader.compare("\r\n") == 0 || rawHeader.compare("\n") == 0) {
-            taintIfEffectiveURLIsCrossOrigin(nwd);
-            excludeCredentialsIfRedirectLeavesOrigin(nwd);
-        }
+        taintIfEffectiveURLIsCrossOrigin(nwd);
+        excludeCredentialsIfRedirectLeavesOrigin(nwd);
+        // curl follows the Location. Until the final response's header block
+        // above recomputes it, the response is tainted, so a chain that ends
+        // without one is never judged same-origin.
+        request->m_responseData->m_corsTainted = true;
+        // The hop's headers are not the final response's.
+        response.headers().clear();
     }
 
     return realSize;

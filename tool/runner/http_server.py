@@ -5,19 +5,39 @@
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from contextlib import contextmanager
 from functools import partial
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
+from collections import Counter
 import json
 import re
 import signal
 import errno
 import sys
 import os
+import threading
 
 # A request to this path is answered with a description of that request instead
 # of a file. Serving files can only show a test what is on disk; a test that
 # checks what its own request put on the wire -- the bytes of a fetch() body,
 # the method it went out with -- needs the request itself reflected back.
 ECHO_PATH = "/echo"
+
+# /status/<code> answers with that status and no Location, so a 3xx from it is
+# a final response, not a redirect; "?acao" lets any origin read it.
+# "?loc=<kind>" adds a malformed Location field, one curl does not follow.
+STATUS_PATH = "/status/"
+MALFORMED_LOCATIONS = {
+    "empty": [("Location", "")],
+    "twoempty": [("Location", ""), ("Location", "")],
+    "space": [("Location ", "/status/200")],  # space before the colon
+    "cr": [("Location", "\r/status/200")],  # bare CR before the value
+}
+
+# A request to /hit/<key> is counted, and /hits/<key> answers how many arrived:
+# only the server can show a test that a request was never sent.
+HIT_PATH = "/hit/"
+HITS_PATH = "/hits/"
+hits = Counter()
+hits_lock = threading.Lock()
 
 
 class RequestHandler(SimpleHTTPRequestHandler):
@@ -71,6 +91,38 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(payload)
 
+    def answer(self, code, payload, acao, fields=()):
+        self.send_response(code)
+        self.send_header("Content-Type", "text/plain")
+        self.send_header("Content-Length", str(len(payload)))
+        if acao:
+            self.send_header("Access-Control-Allow-Origin", "*")
+        for name, value in fields:
+            self.send_header(name, value)
+        self.end_headers()
+        self.wfile.write(payload)
+
+    def answer_test_path(self):
+        url = urlparse(self.path)
+        if url.path.startswith(STATUS_PATH):
+            code = int(url.path[len(STATUS_PATH) :])
+            # 204 and 304 responses have no body.
+            payload = b"" if code in (204, 304) else b"status %d" % code
+            loc = parse_qs(url.query).get("loc", [""])[0]
+            fields = MALFORMED_LOCATIONS.get(loc, ())
+            self.answer(code, payload, "acao" in url.query, fields)
+        elif url.path.startswith(HIT_PATH):
+            with hits_lock:
+                hits[url.path[len(HIT_PATH) :]] += 1
+            self.answer(200, b"", False)
+        elif url.path.startswith(HITS_PATH):
+            with hits_lock:
+                count = hits[url.path[len(HITS_PATH) :]]
+            self.answer(200, str(count).encode("ascii"), True)
+        else:
+            return False
+        return True
+
     # A single "bytes=start-end" Range (RFC 9110 14.1.2): a media demuxer
     # reading over HTTP seeks with it, and without it an MP4 whose "moov" atom
     # follows the media data (the suite's video assets) cannot be probed, so
@@ -109,6 +161,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.is_echo_request():
             self.echo_request()
+            return
+        if self.answer_test_path():
             return
         target = self.inject_target()
         if target:
