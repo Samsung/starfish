@@ -99,6 +99,7 @@ void AnalyserNode::setSmoothingTimeConstant(double value)
 
 void AnalyserNode::getFloatTimeDomainData(ScriptFloat32Array array)
 {
+    throwIfSharedView(executionContext(), array);
     AudioGraphLock graphLock(context()->graph());
     float* data = reinterpret_cast<float*>(array->rawBuffer());
     m_analyserHandler->copyTimeDomain(data, array->arrayLength());
@@ -106,6 +107,7 @@ void AnalyserNode::getFloatTimeDomainData(ScriptFloat32Array array)
 
 void AnalyserNode::getByteTimeDomainData(ScriptUint8Array array)
 {
+    throwIfSharedView(executionContext(), array);
     AudioGraphLock graphLock(context()->graph());
     uint8_t* data = array->rawBuffer();
     const size_t count = std::min<size_t>(array->arrayLength(), m_fftSize);
@@ -118,6 +120,7 @@ void AnalyserNode::getByteTimeDomainData(ScriptUint8Array array)
 
 void AnalyserNode::getFloatFrequencyData(ScriptFloat32Array array)
 {
+    throwIfSharedView(executionContext(), array);
     AudioGraphLock graphLock(context()->graph());
     float* data = reinterpret_cast<float*>(array->rawBuffer());
     const std::vector<float>& frequencies = m_analyserHandler->frequencyData();
@@ -128,6 +131,7 @@ void AnalyserNode::getFloatFrequencyData(ScriptFloat32Array array)
 
 void AnalyserNode::getByteFrequencyData(ScriptUint8Array array)
 {
+    throwIfSharedView(executionContext(), array);
     AudioGraphLock graphLock(context()->graph());
     uint8_t* data = array->rawBuffer();
     const std::vector<float>& frequencies = m_analyserHandler->frequencyData();

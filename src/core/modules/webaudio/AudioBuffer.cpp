@@ -27,6 +27,7 @@
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/webaudio/BaseAudioContext.h"
 #include "core/modules/webaudio/render/AudioBufferData.h"
 
 #include <algorithm>
@@ -194,6 +195,7 @@ ScriptFloat32Array AudioBuffer::getChannelData(uint32_t channel)
 void AudioBuffer::copyFromChannel(ScriptFloat32Array destination,
                                   uint32_t channelNumber, uint32_t bufferOffset)
 {
+    throwIfSharedView(m_executionContext, destination);
     if (channelNumber >= m_numberOfChannels) {
         throw new DOMException(m_executionContext, DOMException::INDEX_SIZE_ERR,
                                "Channel index exceeds AudioBuffer channels");
@@ -215,6 +217,7 @@ void AudioBuffer::copyFromChannel(ScriptFloat32Array destination,
 void AudioBuffer::copyToChannel(ScriptFloat32Array source,
                                 uint32_t channelNumber, uint32_t bufferOffset)
 {
+    throwIfSharedView(m_executionContext, source);
     if (channelNumber >= m_numberOfChannels) {
         throw new DOMException(m_executionContext, DOMException::INDEX_SIZE_ERR,
                                "Channel index exceeds AudioBuffer channels");

@@ -67,6 +67,15 @@ using Escargot::OptionalRef;
 
 namespace Starfish {
 
+void throwIfSharedView(ExecutionContext* executionContext,
+                       Escargot::ArrayBufferViewRef* view)
+{
+    if (view->buffer()->isSharedArrayBufferObject()) {
+        throw new DOMException(executionContext, DOMException::SCRIPT_TYPE_ERR,
+                               "SharedArrayBuffer views are not allowed");
+    }
+}
+
 WebAudioMessageQueue::WebAudioMessageQueue(ExecutionContext* executionContext)
     : m_executionContext(executionContext)
     , m_state(AudioContextState::Suspended)

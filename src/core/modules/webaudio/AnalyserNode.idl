@@ -14,10 +14,10 @@ dictionary AnalyserOptions : AudioNodeOptions {
   RaisesException=Constructor,
   Exposed=Window ]
 interface AnalyserNode : AudioNode {
-  void getFloatFrequencyData(Float32Array array);
-  void getByteFrequencyData(Uint8Array array);
-  void getFloatTimeDomainData(Float32Array array);
-  void getByteTimeDomainData(Uint8Array array);
+  [RaisesException] void getFloatFrequencyData(Float32Array array);
+  [RaisesException] void getByteFrequencyData(Uint8Array array);
+  [RaisesException] void getFloatTimeDomainData(Float32Array array);
+  [RaisesException] void getByteTimeDomainData(Uint8Array array);
   [RaisesException] attribute unsigned long fftSize;
   readonly attribute unsigned long frequencyBinCount;
   [RaisesException] attribute double minDecibels;

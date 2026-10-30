@@ -28,6 +28,7 @@
 namespace Escargot {
 class ValueRef;
 class BackingStoreRef;
+class ArrayBufferViewRef;
 } // namespace Escargot
 
 namespace Starfish {
@@ -60,6 +61,11 @@ class WebView;
 enum class AudioContextState { Suspended, Running, Closed };
 
 typedef void (*MessageQueueFunction)(void*);
+
+// WebIDL rejects SharedArrayBuffer views without [AllowShared], which no
+// Web Audio operation has; the binding generator does not implement it.
+void throwIfSharedView(ExecutionContext* executionContext,
+                       Escargot::ArrayBufferViewRef* view);
 
 class WebAudioMessageQueue : public gc {
 public:
