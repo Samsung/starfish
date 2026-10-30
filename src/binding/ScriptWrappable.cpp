@@ -192,6 +192,18 @@ public:
                                              StringRef* src, ModuleType type,
                                              PromiseObjectRef* promise) override
     {
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+        // https://html.spec.whatwg.org/multipage/webappapis.html#hostloadimportedmodule
+        // import() in a WorkletGlobalScope completes with a TypeError.
+        if (fetchExecutionContext(relatedContext)->isWorklet()) {
+            this->notifyHostImportModuleDynamicallyResult(
+                relatedContext, referrer, src, promise,
+                LoadModuleResult(Escargot::ErrorObjectRef::Code::TypeError,
+                                 StringRef::createFromASCII(
+                                     "import() is not allowed in worklets")));
+            return;
+        }
+#endif
         auto loadedModuleResult =
             loadModule(relatedContext, referrer, src, type);
 

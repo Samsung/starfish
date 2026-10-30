@@ -229,7 +229,9 @@ void PortMessageQueue::enableBy(MessagePort* target)
         for (size_t i = 0; i < m_innerQueue.size(); i++) {
             target->registerDispatchMessageTask(m_innerQueue[i]);
         }
-        clearAllTasks();
+        // The dispatch tasks own (and delete) the messages now.
+        m_innerQueue.clear();
+        m_innerQueue.shrink_to_fit();
 #ifndef NDEBUG
     } else {
         STARFISH_ASSERT(m_innerQueue.size() == 0);

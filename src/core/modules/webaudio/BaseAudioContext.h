@@ -62,6 +62,9 @@ class BaseAudioContext;
 class Window;
 class WebView;
 class AudioContextRenderSizeCategoryOrunsignedlong;
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+class AudioWorklet;
+#endif
 
 enum class AudioContextState { Suspended, Running, Closed };
 
@@ -208,6 +211,9 @@ public:
     DEFINE_GETTER(double, sampleRate)
     uint32_t renderQuantumSize() const;
     double currentTime() const;
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    AudioWorklet* audioWorklet();
+#endif
 
 #define VIRTUAL
 #define OVERRIDE
@@ -317,6 +323,9 @@ protected:
     GCVector<ScriptProcessorNode*> m_scriptProcessors;
     AudioContextState m_stateAttribute{ AudioContextState::Suspended };
     bool m_suspendedByUser{ false };
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    Optional<AudioWorklet*> m_audioWorklet;
+#endif
 };
 } // namespace Starfish
 #endif

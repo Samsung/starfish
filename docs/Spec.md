@@ -49,6 +49,7 @@ The compile-time flags that gate large chunks of this spec. "Default" is for the
 | IndexedDB | `IDB=1` | off | `indexedDB` undefined. |
 | WebRTC, MediaStream | `WEBRTC=1` (→ `STARFISH_ENABLE_WEBRTC`/`MULTIMEDIA`/`WEBSOCKET`/`WEBAUDIO`) | off | All `RTC*`/`MediaStream*` interfaces undefined. |
 | WebAudio | `STARFISH_ENABLE_WEBAUDIO` (also from `WEBAUDIO=1`; Tizen RPM: `--define 'enable_webaudio 1'`) | on for `CMAKE_SYSTEM_PROCESSOR=x86_64` except the Tizen flutter port and the Tizen x86_64 emulator; **off** elsewhere unless `WEBAUDIO=1`; also implied by `WEBRTC=1` | `AudioContext` etc. undefined. |
+| AudioWorklet | `AUDIO_WORKLET=1` (→ `STARFISH_ENABLE_AUDIO_WORKLET`; needs WebAudio, cmake fails otherwise) | **off** | `Worklet`, `AudioWorklet` and `BaseAudioContext.audioWorklet` are undefined. |
 | WebSocket | `STARFISH_ENABLE_WEBSOCKET` | on (every `CMAKE_SYSTEM_PROCESSOR`) | `WebSocket` undefined. |
 | Web Speech (TTS) | `STARFISH_ENABLE_TTS` | on for `CMAKE_SYSTEM_PROCESSOR=x86_64` except the Tizen flutter port | `SpeechSynthesis*` undefined. |
 | [WAI-ARIA](#accessible-rich-internet-applications-wai-aria) touch exploration | `STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION` (from `ENABLE_A11Y_TOUCH=1`) | on for `CMAKE_SYSTEM_PROCESSOR=x86_64` except the Tizen flutter port; on `CMAKE_SYSTEM_NAME=Tizen` it needs `-DENABLE_A11Y_TOUCH=1` and is force-disabled on TV profiles | Tap-to-speak / double-tap-activate / swipe navigation absent; ARIA attributes still reflect. |
@@ -3652,6 +3653,7 @@ connected to this node.
 | | attribute | readonly AudioListener listener | The context's spatial-audio listener. | Same object for the lifetime of the context. |
 | | attribute | readonly attribute AudioContextState state | Describes the current state of the AudioContext. | |
 | | attribute | readonly unsigned long renderQuantumSize | The context's render quantum size in frames. | 128 unless the context was created with a numeric `renderSizeHint`. |
+| | attribute | readonly AudioWorklet audioWorklet | The context's AudioWorklet. | Only with `AUDIO_WORKLET=1`. Created on first access; `[SecureContext]` is not enforced. |
 | | attribute | attribute EventHandler onstatechange; | A property used to set the EventHandler for an event that is dispatched to BaseAudioContext when the state of the AudioContext has changed (i.e. when the corresponding promise would have resolved). | |
 | | method | AudioBufferSourceNode createBufferSource(); | Factory method for a AudioBufferSourceNode. | |
 | | method | ChannelMergerNode createChannelMerger(optional unsigned long numberOfInputs = 6); ChannelSplitterNode createChannelSplitter(optional unsigned long numberOfOutputs = 6); | Factory methods for channel routing. | |
@@ -3841,6 +3843,15 @@ connected to this node.
 | [MediaElementAudioSourceNode](https://webaudio.github.io/web-audio-api/#MediaElementAudioSourceNode) | interface | MediaElementAudioSourceNode | | |
 | | constructor | constructor (AudioContext context, MediaElementAudioSourceOptions options) | Creates a MediaElementAudioSourceNode from an HTMLMediaElement. | |
 | | attribute | readonly HTMLMediaElement mediaElement | The media element originally passed to the constructor. | |
+| [Worklet](https://html.spec.whatwg.org/multipage/worklets.html#worklets-worklet) | interface | Worklet | | Only with `AUDIO_WORKLET=1`; AudioWorklet is the only worklet type. |
+| | method | Promise<undefined> addModule(USVString moduleURL, optional WorkletOptions options = {}); | Fetches a module script (CORS mode) and runs it in the worklet's global scope. | An invalid URL rejects with SyntaxError; a network error, a non-2xx status or a non-JavaScript MIME type with AbortError; a parse error with a SyntaxError. A module with `import` declarations is rejected with AbortError, and `import()` in a worklet rejects with TypeError. Adding a URL that already ran resolves without running it again. `credentials` is ignored (same-origin). |
+| [AudioWorklet](https://webaudio.github.io/web-audio-api/#AudioWorklet) | interface | AudioWorklet : Worklet | | Only with `AUDIO_WORKLET=1`. |
+| | attribute | readonly MessagePort port; | Entangled with the global scope's `port`. | |
+| [AudioWorkletGlobalScope](https://webaudio.github.io/web-audio-api/#AudioWorkletGlobalScope) | interface | AudioWorkletGlobalScope : WorkletGlobalScope | The worklet realm. | One per context, created on the first `addModule()` or `audioWorklet.port` access. It runs on the main thread (the ED uses the rendering thread). Its global names are `AudioWorkletGlobalScope`, `WorkletGlobalScope`, `DOMException`, `Event`, `EventTarget`, `MessageEvent`, `MessagePort` and `console`. Unloading the document drops its queued jobs. |
+| | method | undefined registerProcessor(DOMString name, AudioWorkletProcessorConstructor processorCtor); | Registers a processor class and its parameter descriptors. | |
+| | attribute | readonly unsigned long long currentFrame; readonly double currentTime; readonly float sampleRate; readonly unsigned long renderQuantumSize; | The context's render position and configuration. | |
+| | attribute | readonly MessagePort port; | Entangled with `AudioWorklet.port`. | |
+| [AudioParamDescriptor](https://webaudio.github.io/web-audio-api/#AudioParamDescriptor) | dictionary | AudioParamDescriptor | Read from a processor class's `parameterDescriptors`. | |
 
 ## WebSocket
 The following describes WebSocket APIs supported by lightweight web engine. Please, see [WebSocket Spec](https://html.spec.whatwg.org/multipage/web-sockets.html/) for more information.

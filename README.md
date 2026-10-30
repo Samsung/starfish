@@ -164,6 +164,10 @@ Default values are in **bold**.
   On Tizen it needs capi-media-audio-io, capi-media-sound-manager and the
   platform FFmpeg (libavcodec, libavformat, libavutil, libswresample) for
   compressed `decodeAudioData()`.
+* -DAUDIO_WORKLET=[ **0** | 1 ]<br>
+  Enable AudioWorklet (`Worklet`, `AudioWorklet` and the worklet global
+  scope). Needs Web Audio. A context creates its worklet realm only when a
+  page adds a module or reads `audioWorklet.port`. CI builds with it.
 * -DUSE_FFMPEG_MEDIA_PLAYER=[ **0** | 1 ]<br>
   Use the common FFmpeg software media player. The default is `1` on Windows
   and `0` on Linux. Linux also enables Web Audio compressed `decodeAudioData()`
@@ -584,9 +588,11 @@ STARFISH_BIN="$PWD/out/release/bin/Starfish" xvfb-run -s '-screen 0 1920x1080x24
 #    SharedArrayBuffer views, MediaElementAudioSourceNode constructor,
 #    sub-sample and exact-time scheduling, ScriptProcessorNode setup and
 #    latency, renderSizeHint quanta, constructor checks in a detached
-#    document, and node creation and channel changes running out of
-#    memory under an address-space limit (RLIMIT_AS) set relative to the
-#    browser's own peak; no audio device needed);
+#    document, AudioWorklet module loading and registerProcessor(), and
+#    node creation and channel changes running out of memory under an
+#    address-space limit (RLIMIT_AS) set relative to the browser's own
+#    peak; no audio device needed; the AudioWorklet group needs
+#    -DAUDIO_WORKLET=1, which CI builds with);
 #  - tool/webaudio/test_graph_thread.py in the clang build job (skipped with
 #    a warning when Clang's TSan runtime is missing).
 # Everything needing FFmpeg (compressed decoding, MSE, decoder Valgrind)

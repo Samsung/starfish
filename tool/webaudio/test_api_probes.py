@@ -122,6 +122,10 @@ class APIProbesTest(unittest.TestCase):
         self.run_group('oom-channel-count', limit)
         self.run_group('oom-node-creation', limit)
 
+    def test_audio_worklet(self):
+        # Needs a build with AUDIO_WORKLET=1, as CI builds.
+        self.run_group('audio-worklet')
+
 
 if __name__ == '__main__':
     unittest.main()
