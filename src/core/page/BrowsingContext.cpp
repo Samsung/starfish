@@ -123,6 +123,7 @@ BrowsingContext::BrowsingContext(WebView* webView, HTMLIFrameElement* source,
                                      : nullptr)
     , m_sourceElement(source)
     , m_isScriptingEnabled(isScriptingEnabled)
+    , m_isSVGImage(false)
     , m_pendingStyleSheetCount(0)
     , m_pendingRenderingCount(0)
     , m_touchDownPoint(0, 0)

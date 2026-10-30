@@ -32,7 +32,7 @@ http://web-platform.test:8000/svg/coordinate-systems/viewBox-change-repaint-001.
 http://web-platform.test:8000/svg/embedded/image-embedding-nested-data-url-png.html
 http://web-platform.test:8000/svg/embedded/image-embedding-nested-data-url.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/embedded/image-embedding-nested-external-data-url-png.html
-# [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/svg/embedded/image-embedding-nested-http-url.sub.html
+http://web-platform.test:8000/svg/embedded/image-embedding-nested-http-url.sub.html
 http://web-platform.test:8000/svg/embedded/image-embedding-nesteder-data-url.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/embedded/image-embedding-svg-nested-svg-in-foreignobject.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/embedded/image-embedding-svg-viewref-with-viewbox.svg

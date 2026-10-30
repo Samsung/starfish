@@ -287,6 +287,18 @@ public:
         return m_parentBrowsingContext;
     }
 
+    // Whether this context renders an SVG document used as an image, itself
+    // or through an ancestor.
+    bool isInSVGImage()
+    {
+        for (BrowsingContext* c = this; c; c = c->m_parentBrowsingContext) {
+            if (c->m_isSVGImage) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // dispose() has run: the document is no longer fully active and its
     // pending tasks were dropped (HTML "destroy a document").
     bool isDisposed()
@@ -385,6 +397,7 @@ private:
     bool m_hasBodyElementBackground : 1;
 
     bool m_isScriptingEnabled : 1;
+    bool m_isSVGImage : 1;
 
     size_t m_pendingStyleSheetCount;
     size_t m_pendingRenderingCount;

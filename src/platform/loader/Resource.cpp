@@ -25,7 +25,9 @@
 #include "platform/loader/ResourceURL.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/ResourceRequest.h"
+#include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
+#include "core/page/Window.h"
 #include "core/xml/FormData.h"
 #if defined(STARFISH_ENABLE_CDP)
 #include "core/cdp/CDPServer.h"
@@ -65,6 +67,25 @@ void Resource::request(RequestData* requestData, bool allowCache)
 
     m_isRequested = true;
     m_requestErrorType = RequestErrorType::NoError;
+
+    // An SVG document used as an image loads nothing but data: URLs (SVG
+    // Integration, secure animated and static modes); anything else could
+    // draw another origin's pixels into an image its embedder can read back.
+    if (!requestData->m_url->isDataURL() &&
+        loader()->document()->browsingContext()->isInSVGImage()) {
+        m_state = Receiving;
+        m_requestErrorType = RequestErrorType::UnknownError;
+        size_t handle = loader()->webView()->messageLoop()->addIdler(
+            loader()->window(),
+            [](size_t handle, void* data) {
+                Resource* self = (Resource*)data;
+                self->removeIdlerHandle(handle);
+                self->didLoadFailed();
+            },
+            this);
+        pushIdlerHandle(handle);
+        return;
+    }
 
     if (!loader()->requestResourcePreprocess(this, syncLevel)) {
         // cache miss
