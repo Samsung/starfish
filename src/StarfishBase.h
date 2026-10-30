@@ -675,7 +675,7 @@ public:
 
     Optional(T value)
         : m_value(value)
-        , m_hasValue(true)
+        , m_hasValue(checkHasValue(value))
     {
     }
 
@@ -689,6 +689,27 @@ public:
         : m_value()
         , m_hasValue(false)
     {
+    }
+
+    Optional& operator=(const T& value)
+    {
+        m_value = value;
+        m_hasValue = checkHasValue(value);
+        return *this;
+    }
+
+    Optional& operator=(std::nullptr_t)
+    {
+        m_value = T();
+        m_hasValue = false;
+        return *this;
+    }
+
+    Optional& operator=(NullOptionType)
+    {
+        m_value = T();
+        m_hasValue = false;
+        return *this;
     }
 
     T& value()
@@ -773,6 +794,18 @@ public:
     }
 
 protected:
+    template <typename U>
+    static inline bool checkHasValue(U* ptr)
+    {
+        return ptr != nullptr;
+    }
+
+    template <typename U>
+    static inline bool checkHasValue(const U&)
+    {
+        return true;
+    }
+
     T m_value;
     bool m_hasValue;
 };
@@ -815,6 +848,24 @@ public:
     Optional(NullOptionType)
         : m_value(nullptr)
     {
+    }
+
+    Optional& operator=(T* value)
+    {
+        m_value = value;
+        return *this;
+    }
+
+    Optional& operator=(std::nullptr_t)
+    {
+        m_value = nullptr;
+        return *this;
+    }
+
+    Optional& operator=(NullOptionType)
+    {
+        m_value = nullptr;
+        return *this;
     }
 
     T* value() const
