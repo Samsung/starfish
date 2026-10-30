@@ -170,7 +170,7 @@ public:
 
     void didLoadFinished() override
     {
-        ResourceRequest* request = m_resource->resourceRequest();
+        ResourceRequest* request = m_resource->resourceRequest().value();
         finish(!request->isRedirected() && request->status() / 100 == 2 &&
                !isPlaylistResponse(m_resource, m_url));
     }

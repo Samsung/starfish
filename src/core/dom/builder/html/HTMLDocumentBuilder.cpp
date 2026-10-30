@@ -329,7 +329,8 @@ public:
                 "<sfrtfailed>Reference test load fail</sfrtfailed>"));
         }
 #endif
-        load();
+        // A network error has no response, so no type to present it as.
+        load(MimeType());
     }
 
     virtual void didDataReceived(const char* buffer, size_t length)
@@ -351,13 +352,12 @@ public:
         m_builder.m_document->window()->performance()->timing()->m_responseEnd =
             timestamp();
 
-        if (!m_isAllowedResponse) {
-            load();
-            return;
-        }
-
         auto mimetype = MimeType::parseFromString(
             m_resource->resourceRequest()->responseMimeType());
+        if (!m_isAllowedResponse) {
+            load(mimetype);
+            return;
+        }
 
         String* m = String::emptyString;
         if (mimetype.hasParameter() &&
@@ -538,14 +538,12 @@ public:
                 MimeType::isXMLMIMEType(mimeEssence));
         }
         m_builder.document()->resourceLoader().updateDocumentOpenTime();
-        load();
+        load(mimetype);
     }
 
-    void load()
+    void load(MimeType mimetype)
     {
         Document* document = m_builder.document();
-        auto mimetype = MimeType::parseFromString(
-            m_resource->resourceRequest()->responseMimeType());
         if (!m_isAllowedResponse) {
             m_htmlSource = String::emptyString;
         } else if (m_htmlSource->isEmpty()) {
