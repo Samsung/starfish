@@ -361,7 +361,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/misc/object-deletion
 http://localhost:11010/conformance-suites/2.0.0/conformance/misc/shader-precision-format.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/misc/type-conversion-test.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/misc/uninitialized-test.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/misc/webgl-specific.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/misc/webgl-specific.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/abs/abs_001_to_006.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/acos/acos_001_to_006.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/ogles/GL/all/all_001_to_004.html

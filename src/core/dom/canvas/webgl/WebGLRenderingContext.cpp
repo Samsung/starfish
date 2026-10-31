@@ -530,6 +530,13 @@ void WebGLRenderingContext::bindAttribLocation(WebGLProgram* program,
         return;
     }
 
+    // Names with a reserved WebGL prefix are an error here, unlike in the
+    // location queries (WebGL 1.0 "GLSL Constructs").
+    if (name->startsWith("webgl_") || name->startsWith("_webgl_")) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
     if (!checkAttribOrUniformName(name)) {
         return;
     }
@@ -695,9 +702,27 @@ void WebGLRenderingContext::blendEquationSeparate(GLenum modeRGB,
     m_gl->blendEquationSeparate(modeRGB, modeAlpha);
 }
 
+// Constant color and constant alpha cannot be used together as source and
+// destination factors (WebGL 1.0 "Blending With Constant Color").
+static bool mixesConstantColorAndAlpha(GLenum src, GLenum dst)
+{
+    auto isColor = [](GLenum f) {
+        return f == GL_CONSTANT_COLOR || f == GL_ONE_MINUS_CONSTANT_COLOR;
+    };
+    auto isAlpha = [](GLenum f) {
+        return f == GL_CONSTANT_ALPHA || f == GL_ONE_MINUS_CONSTANT_ALPHA;
+    };
+    return (isColor(src) && isAlpha(dst)) || (isAlpha(src) && isColor(dst));
+}
+
 void WebGLRenderingContext::blendFunc(GLenum sfactor, GLenum dfactor)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (mixesConstantColorAndAlpha(sfactor, dfactor)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
 
     m_gl->blendFunc(sfactor, dfactor);
 }
@@ -706,6 +731,11 @@ void WebGLRenderingContext::blendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
                                               GLenum srcAlpha, GLenum dstAlpha)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (mixesConstantColorAndAlpha(srcRGB, dstRGB)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
 
     m_gl->blendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
 }
@@ -1519,6 +1549,12 @@ void WebGLRenderingContext::depthRange(GLclampf zNear, GLclampf zFar)
 {
     ENTER_CONTEXT_SCOPE();
 
+    // WebGL 1.0 "Viewport Depth Range": zNear must not exceed zFar.
+    if (zNear > zFar) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
     m_gl->depthRangef(zNear, zFar);
 }
 
@@ -1849,7 +1885,8 @@ void WebGLRenderingContext::drawArraysInstanced(GLenum mode, GLint first,
     }
 
     completePendingJobs();
-    if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs())
+    if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs() ||
+        !validateStencilSettings())
         return;
     m_gl->drawArraysInstanced(mode, first, count, instanceCount);
     m_ownerHTMLCanvasElement->setNeedsComposite();
@@ -1920,7 +1957,8 @@ void WebGLRenderingContext::drawElementsInstanced(GLenum mode, GLsizei count,
     }
 
     completePendingJobs();
-    if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs())
+    if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs() ||
+        !validateStencilSettings())
         return;
     m_gl->drawElementsInstanced(mode, count, type,
                                 reinterpret_cast<const void*>(offset),
@@ -1947,7 +1985,8 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
         return;
     }
 
-    if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs()) {
+    if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs() ||
+        !validateStencilSettings()) {
         return;
     }
 
@@ -2085,7 +2124,8 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
         return;
     }
 
-    if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs()) {
+    if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs() ||
+        !validateStencilSettings()) {
         return;
     }
 
@@ -3962,6 +4002,13 @@ bool WebGLRenderingContext::isTexture(Optional<WebGLTexture*> maybe)
 void WebGLRenderingContext::lineWidth(GLfloat width)
 {
     ENTER_CONTEXT_SCOPE();
+
+    // NaN slips through the driver's width <= 0 check (WebGL 1.0 "NaN Line
+    // Width").
+    if (std::isnan(width)) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
 
     m_gl->lineWidth(width);
 }
@@ -7182,6 +7229,41 @@ GLint WebGLRenderingContext::getCurrentProgram()
     GLint program = 0;
     m_gl->getIntegerv(GL_CURRENT_PROGRAM, &program);
     return program;
+}
+
+bool WebGLRenderingContext::validateStencilSettings()
+{
+    // WebGL 1.0 "Stencil Separate Mask and Reference Value": Direct3D has a
+    // single stencil reference and mask, so front and back must agree on the
+    // bits the draw framebuffer's stencil buffer has.
+    if (!m_gl->isEnabled(GL_STENCIL_TEST)) {
+        return true;
+    }
+    GLint bits = 0;
+    m_gl->getIntegerv(GL_STENCIL_BITS, &bits);
+    if (bits <= 0) {
+        return true;
+    }
+    const GLint maxValue = (1 << std::min(bits, 30)) - 1;
+    GLint front[3] = {};
+    GLint back[3] = {};
+    m_gl->getIntegerv(GL_STENCIL_WRITEMASK, &front[0]);
+    m_gl->getIntegerv(GL_STENCIL_BACK_WRITEMASK, &back[0]);
+    m_gl->getIntegerv(GL_STENCIL_VALUE_MASK, &front[1]);
+    m_gl->getIntegerv(GL_STENCIL_BACK_VALUE_MASK, &back[1]);
+    m_gl->getIntegerv(GL_STENCIL_REF, &front[2]);
+    m_gl->getIntegerv(GL_STENCIL_BACK_REF, &back[2]);
+    auto clampRef = [maxValue](GLint ref) {
+        return std::min(std::max(ref, 0), maxValue);
+    };
+    if ((front[0] & maxValue) != (back[0] & maxValue) ||
+        (front[1] & maxValue) != (back[1] & maxValue) ||
+        clampRef(front[2]) != clampRef(back[2])) {
+        setGLError(GL_INVALID_OPERATION,
+                   "front and back stencil settings do not match");
+        return false;
+    }
+    return true;
 }
 
 bool WebGLRenderingContext::validateDrawCallVertexAttribs()

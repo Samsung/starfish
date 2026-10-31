@@ -379,6 +379,7 @@ public:
     bool validateProgramOrShader(WebGLShader* shader);
     bool isExtensionEnabled(const char* requestedName);
     bool validateDrawCallVertexAttribs();
+    bool validateStencilSettings();
 
 private:
     bool checkAttribOrUniformName(String* name);
