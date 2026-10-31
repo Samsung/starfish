@@ -3390,7 +3390,8 @@ void WebGL2RenderingContext::drawRangeElements(GLenum mode, GLuint start,
         }
     }
 
-    if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs())
+    if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs() ||
+        !validateStencilSettings())
         return;
     gl()->drawRangeElements(mode, start, end, count, type,
                             reinterpret_cast<const void*>(offset));
