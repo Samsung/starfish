@@ -149,7 +149,7 @@ ELSEIF (CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm|x86)$")
     )
 ENDIF()
 
-# The Tizen flutter port drops these x86_64 defaults: its buildroot lacks
+# The Tizen flutter port drops these arch defaults: its buildroot lacks
 # FFmpeg (WebAudio) and vconf (TTS), and touch exploration is inert without
 # TTS. The Inspector goes too, so the port needs no nanomsg.
 # Must precede LWE_DEFINES_ENABLED so their pkg_check_modules never run.
@@ -162,6 +162,7 @@ IF (BACKEND STREQUAL "flutter" AND CMAKE_SYSTEM_NAME STREQUAL "Tizen"
         -DSTARFISH_ENABLE_TTS
         -DSTARFISH_ENABLE_A11Y_TOUCH_EXPLORATION
         -DSTARFISH_ENABLE_INSPECTOR
+        -DSTARFISH_ENABLE_MULTIMEDIA
     )
 ENDIF ()
 
