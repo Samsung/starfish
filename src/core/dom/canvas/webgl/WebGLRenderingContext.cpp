@@ -53,6 +53,10 @@
 #include <regex>
 #include <array>
 #include <limits>
+#include <algorithm>
+#include <cctype>
+#include <cstring>
+#include <vector>
 #include "core/dom/canvas/webgl/WebGLOES_VertexArrayObject.h"
 #include "core/dom/canvas/webgl/WebGLShaderPrecisionFormat.h"
 #include "core/page/WebView.h"
@@ -825,6 +829,288 @@ void WebGLRenderingContext::colorMask(GLboolean red, GLboolean green,
     m_gl->colorMask(red, green, blue, alpha);
 }
 
+// The deepest expression nesting compileShader() accepts. 256 is the limit
+// the web has converged on (ANGLE's MaxExpressionComplexity, enforced by
+// the other browsers). Shader source is web content, so a shader that can kill
+// the engine fails to compile here instead of reaching the driver.
+static constexpr size_t kMaxShaderExpressionDepth = 256;
+
+// Precedence of a GLSL binary operator token (higher binds tighter).
+// The conditional and assignment operators are right associative and sit
+// lowest.
+static int binaryOperatorPrecedence(const char* op, size_t length)
+{
+    if (length == 1) {
+        switch (op[0]) {
+        case '*':
+        case '/':
+        case '%':
+            return 13;
+        case '+':
+        case '-':
+            return 12;
+        case '<':
+        case '>':
+            return 10;
+        case '&':
+            return 8;
+        case '^':
+            return 7;
+        case '|':
+            return 6;
+        case '?':
+        case ':':
+            return 2;
+        case '=':
+            return 1;
+        default:
+            return 0;
+        }
+    }
+    if (op[length - 1] == '=') {
+        if (length == 2 && (op[0] == '<' || op[0] == '>')) {
+            return 10;
+        }
+        if (length == 2 && (op[0] == '=' || op[0] == '!')) {
+            return 9;
+        }
+        return 1; // compound assignment
+    }
+    if (op[0] == '<' || op[0] == '>') {
+        return 11;
+    }
+    if (op[0] == '&') {
+        return 5;
+    }
+    if (op[0] == '^') {
+        return 4;
+    }
+    if (op[0] == '|') {
+        return 3;
+    }
+    return 0;
+}
+
+// Estimates how deeply the deepest expression in a GLSL source nests: every
+// binary, unary, conditional, call, index, field selection and parenthesis
+// level counts one, the way a driver's parser builds its tree. Only
+// expression structure is tracked; declarations and statements are not
+// parsed and preprocessor lines are skipped, so an expression a macro
+// expands to is not seen. The scan stops once the estimate exceeds `limit`
+// (which also bounds its bookkeeping) and then returns `limit + 1`.
+static size_t shaderExpressionDepth(const std::string& source, size_t limit)
+{
+    struct Frame {
+        size_t extra;       // depth the frame applies to: the callee or indexed
+                            // operand, or a unary prefix on a parenthesis
+        size_t maxArg;      // deepest completed sub-expression inside
+        size_t operandBase; // stack sizes when the frame opened
+        size_t operatorBase;
+    };
+    std::vector<size_t> operands; // depth of each pending operand
+    std::vector<int> operators;   // precedence of each pending binary operator
+    std::vector<Frame> frames;    // open parentheses and brackets
+    size_t statementMax = 0; // deepest completed expression of the statement
+    size_t deepest = 0;
+    size_t pendingUnary = 0; // prefix operators awaiting their operand
+    bool prevIsOperand = false;
+
+    auto operandBase = [&]() {
+        return frames.empty() ? 0 : frames.back().operandBase;
+    };
+    auto operatorBase = [&]() {
+        return frames.empty() ? 0 : frames.back().operatorBase;
+    };
+    auto reduceTop = [&]() {
+        operators.pop_back();
+        size_t depth = 0;
+        for (int side = 0; side < 2 && operands.size() > operandBase();
+             side++) {
+            depth = std::max(depth, operands.back());
+            operands.pop_back();
+        }
+        operands.push_back(depth + 1);
+    };
+    // Reduces the pending expression of the innermost frame and folds its
+    // depth into that frame (or the statement) maximum.
+    auto foldExpression = [&]() {
+        while (operators.size() > operatorBase()) {
+            reduceTop();
+        }
+        size_t depth = pendingUnary;
+        while (operands.size() > operandBase()) {
+            depth = std::max(depth, operands.back());
+            operands.pop_back();
+        }
+        size_t& target = frames.empty() ? statementMax : frames.back().maxArg;
+        target = std::max(target, depth);
+        pendingUnary = 0;
+        prevIsOperand = false;
+    };
+    auto closeFrame = [&]() {
+        foldExpression();
+        Frame frame = frames.back();
+        frames.pop_back();
+        operands.push_back(frame.extra + 1 + frame.maxArg);
+        prevIsOperand = true;
+    };
+    auto endStatement = [&]() {
+        while (!frames.empty()) {
+            closeFrame();
+        }
+        foldExpression();
+        deepest = std::max(deepest, statementMax);
+        statementMax = 0;
+    };
+    auto pushBinary = [&](int precedence) {
+        bool rightAssociative = precedence <= 2;
+        while (operators.size() > operatorBase() &&
+               (operators.back() > precedence ||
+                (operators.back() == precedence && !rightAssociative))) {
+            reduceTop();
+        }
+        operators.push_back(precedence);
+        prevIsOperand = false;
+    };
+    auto openFrame = [&](bool appliesToOperand) {
+        size_t extra = pendingUnary;
+        if (appliesToOperand && operands.size() > operandBase()) {
+            extra += operands.back();
+            operands.pop_back();
+        }
+        frames.push_back({ extra, 0, operands.size(), operators.size() });
+        pendingUnary = 0;
+        prevIsOperand = false;
+    };
+    // A lower bound of the depth the pending structure reduces to, checked
+    // after every token so the scan can stop early.
+    auto exceedsLimit = [&]() {
+        size_t bound = frames.size() + operators.size() + pendingUnary;
+        for (const Frame& frame : frames) {
+            bound += frame.extra;
+        }
+        if (operands.size() > operandBase()) {
+            bound += operands.back();
+        }
+        return std::max(bound, statementMax) > limit;
+    };
+    auto pushOperand = [&]() {
+        if (!prevIsOperand) {
+            operands.push_back(pendingUnary);
+            pendingUnary = 0;
+            prevIsOperand = true;
+        }
+    };
+
+    size_t n = source.size();
+    size_t i = 0;
+    while (i < n) {
+        char c = source[i];
+        if (isspace(c)) {
+            i++;
+            continue;
+        }
+        if (c == '#') {
+            // preprocessor directive, possibly continued with '\'
+            while (i < n && source[i] != '\n') {
+                if (source[i] == '\\' && i + 1 < n &&
+                    (source[i + 1] == '\n' || source[i + 1] == '\r')) {
+                    i++;
+                }
+                i++;
+            }
+            continue;
+        }
+        if (c == '/' && i + 1 < n && source[i + 1] == '/') {
+            while (i < n && source[i] != '\n') {
+                i++;
+            }
+            continue;
+        }
+        if (c == '/' && i + 1 < n && source[i + 1] == '*') {
+            size_t end = source.find("*/", i + 2);
+            i = (end == std::string::npos) ? n : end + 2;
+            continue;
+        }
+        if (isalpha(static_cast<unsigned char>(c)) || c == '_') {
+            while (i < n && (isalnum(static_cast<unsigned char>(source[i])) ||
+                             source[i] == '_')) {
+                i++;
+            }
+            pushOperand();
+        } else if (isdigit(static_cast<unsigned char>(c)) ||
+                   (c == '.' && i + 1 < n &&
+                    isdigit(static_cast<unsigned char>(source[i + 1])))) {
+            char prev = 0;
+            while (i < n) {
+                char d = source[i];
+                bool exponentSign =
+                    (d == '+' || d == '-') && (prev == 'e' || prev == 'E');
+                if (!(isalnum(static_cast<unsigned char>(d)) || d == '.' ||
+                      exponentSign)) {
+                    break;
+                }
+                prev = d;
+                i++;
+            }
+            pushOperand();
+        } else {
+            // punctuator, longest match first
+            size_t length = 1;
+            if (i + 2 < n && source[i + 2] == '=' &&
+                ((c == '<' && source[i + 1] == '<') ||
+                 (c == '>' && source[i + 1] == '>'))) {
+                length = 3;
+            } else if (i + 1 < n) {
+                char d = source[i + 1];
+                if ((d == c && strchr("+-<>&|^=", c)) ||
+                    (d == '=' && strchr("+-*/%&|^<>!", c))) {
+                    length = 2;
+                }
+            }
+            const char* op = source.data() + i;
+            i += length;
+            if (length == 2 && (c == '+' || c == '-') && op[1] == c) {
+                if (prevIsOperand) {
+                    operands.back()++; // postfix ++ / --
+                } else {
+                    pendingUnary++;
+                }
+            } else if (length == 1 &&
+                       (c == '!' || c == '~' ||
+                        ((c == '+' || c == '-') && !prevIsOperand))) {
+                pendingUnary++;
+            } else if (length == 1 && c == '.') {
+                if (prevIsOperand) {
+                    operands.back()++; // field selection or swizzle
+                }
+            } else if (length == 1 && (c == '(' || c == '[')) {
+                openFrame(prevIsOperand);
+            } else if (length == 1 && (c == ')' || c == ']')) {
+                if (!frames.empty()) {
+                    closeFrame();
+                }
+            } else if (length == 1 &&
+                       (c == ',' || (c == ';' && !frames.empty()))) {
+                // argument, declarator or for-header separator
+                foldExpression();
+            } else if (length == 1 && (c == ';' || c == '{' || c == '}')) {
+                endStatement();
+            } else {
+                int precedence = binaryOperatorPrecedence(op, length);
+                if (precedence > 0) {
+                    pushBinary(precedence);
+                }
+            }
+        }
+        if (exceedsLimit()) {
+            return limit + 1;
+        }
+    }
+    endStatement();
+    return std::min(deepest, limit + 1);
+}
+
 void WebGLRenderingContext::compileShader(WebGLShader* shader)
 {
     ENTER_CONTEXT_SCOPE();
@@ -851,6 +1137,13 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
         } else {
             tokenLen = 0;
         }
+    }
+
+    if (shaderExpressionDepth(src, kMaxShaderExpressionDepth) >
+        kMaxShaderExpressionDepth) {
+        shader->setCompileFailed(true);
+        shader->setInfoLog("Expression too complex");
+        return;
     }
 
     // WebGL specification (4.3.5 Supported GLSL Constructs):

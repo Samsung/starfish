@@ -82,7 +82,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/gl-fragcoo
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/global-invariant-does-not-leak-across-shaders.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/invariant-does-not-leak-across-shaders.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/logic-inside-block-without-braces.html
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/long-expressions-should-not-crash.html
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/long-expressions-should-not-crash.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/loop-if-loop-gradient.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/modulo-arithmetic-accuracy.html
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/multiplication-assignment.html
