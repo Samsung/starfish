@@ -15,7 +15,7 @@ https://web-platform.test:8443/webaudio/the-audio-api/the-audioworklet-interface
 https://web-platform.test:8443/webaudio/the-audio-api/the-audioworklet-interface/audioworkletnode-disconnected-input.https.html
 https://web-platform.test:8443/webaudio/the-audio-api/the-audioworklet-interface/audioworkletnode-onerror.https.html
 https://web-platform.test:8443/webaudio/the-audio-api/the-audioworklet-interface/audioworkletnode-output-channel-count.https.html
-# [auto-fail:HARNESS_STATUS_1] needs crossOriginIsolated (COOP/COEP): https://web-platform.test:8443/webaudio/the-audio-api/the-audioworklet-interface/audioworklet-postmessage-sharedarraybuffer.https.html
+# [auto-fail:SUBTESTS_FAILED] needs crossOriginIsolated (COOP/COEP): https://web-platform.test:8443/webaudio/the-audio-api/the-audioworklet-interface/audioworklet-postmessage-sharedarraybuffer.https.html
 https://web-platform.test:8443/webaudio/the-audio-api/the-audioworklet-interface/audioworkletprocessor-no-process-function.https.html
 https://web-platform.test:8443/webaudio/the-audio-api/the-audioworklet-interface/audioworkletprocessor-options.https.html
 # [auto-fail:SUBTESTS_FAILED] expects silence from a processor two nodes share; the ED runs its process(), which writes 1s: https://web-platform.test:8443/webaudio/the-audio-api/the-audioworklet-interface/audioworkletprocessor-param-getter-overridden.https.html
