@@ -1944,7 +1944,7 @@ bool Document::isInertNode(Node* node)
 
     if (m_dialogsInShowModal.size() > 0) {
         for (auto dialog : m_dialogsInShowModal) {
-            if (node->isDescendantOf(dialog)) {
+            if (node == dialog || node->isDescendantOf(dialog)) {
                 return false;
             }
         }

@@ -81,6 +81,56 @@ void HTMLDialogElement::showModal()
 
     m_isInShowModal = true;
     setAttribute(starfish()->staticStrings()->m_open, String::emptyString);
+    runDialogFocusingSteps();
+}
+
+Element* HTMLDialogElement::findFocusDelegate()
+{
+    // Prefer a focusable descendant with autofocus.
+    // Otherwise use the first focusable descendant.
+    Element* firstFocusable = nullptr;
+    Node* node = firstChild();
+    while (node) {
+        Node* next = nullptr;
+        if (node->isElement()) {
+            Element* e = node->asElement();
+            if (e->isFocusable()) {
+                if (e->hasAttribute(starfish()->staticStrings()->m_autofocus) !=
+                    SIZE_MAX) {
+                    return e;
+                }
+                if (!firstFocusable) {
+                    firstFocusable = e;
+                }
+            }
+            next = e->firstChild();
+        }
+        if (!next) {
+            while (node && node != this && !node->nextSibling()) {
+                node = node->parentNode();
+            }
+            if (!node || node == this) {
+                break;
+            }
+            next = node->nextSibling();
+        }
+        node = next;
+    }
+    return firstFocusable;
+}
+
+void HTMLDialogElement::runDialogFocusingSteps()
+{
+    // HTML dialog focusing steps. If there is no focus delegate,
+    // the dialog itself gets focus.
+    Element* target = findFocusDelegate();
+    if (!target) {
+        target = this;
+    }
+    // The focusing steps do not scroll, unlike the focus() method.
+    FocusOptions options;
+    options.setPreventScroll(true);
+    target->focus(options);
 }
 
 void HTMLDialogElement::close(String* returnValue)

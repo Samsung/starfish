@@ -55,7 +55,15 @@ public:
                              String* value, bool attributeCreated,
                              bool attributeRemoved) override;
 
+    // Like Chrome, a dialog can always receive script focus.
+    bool supportsFocus() override
+    {
+        return true;
+    }
+
 private:
+    void runDialogFocusingSteps();
+    Element* findFocusDelegate();
     String* m_returnValue{ String::emptyString };
     bool m_isInShowModal{ false };
 };
