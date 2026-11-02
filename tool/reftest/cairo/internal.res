@@ -857,6 +857,9 @@ test/cairo/internal-test/canvas/font-weight-values.html
 # [known-fail:PRE_FIX_BASELINE] test/cairo/internal-test/canvas/webgl-imagedata-texture.html
 # [known-fail:PRE_FIX_BASELINE] test/cairo/internal-test/canvas/webgl2-cube-face-tex-image-overloads.html
 test/cairo/internal-test/canvas/webgl2-compressed-tex-image-overloads.html
+test/cairo/internal-test/canvas/webgl2-read-draw-framebuffer-split.html
+test/cairo/internal-test/canvas/webgl-deleted-and-foreign-objects.html
+test/cairo/internal-test/canvas/webgl-composite-clear-keeps-state.html
 test/cairo/internal-test/canvas/webgl-teximage-contextless-canvas.html
 test/cairo/internal-test/canvas/toDataURL-nocontext.html
 test/cairo/internal-test/css/overflow/overflow-pseudo-element.html
@@ -868,6 +871,7 @@ test/cairo/internal-test/iframe/iframe-mouse-screen-coords.html
 test/cairo/internal-test/iframe/iframe-resize-media-query.html
 test/cairo/internal-test/iframe/iframe-focus-mouse-event.html
 test/cairo/internal-test/iframe/fixed-iframe-click-in-scrolled-document.html
+test/cairo/internal-test/iframe/svg-image-iframe-no-script.html
 test/cairo/internal-test/fullscreen/fullscreen-element-above-sibling-stacking-context.html
 test/cairo/internal-test/click/click-on-scrolled-document.html
 test/cairo/internal-test/event/touch-generates-pointer-events.html
