@@ -91,6 +91,12 @@ public:
     bool hasLabelOrText();
     void updateExtenedMarker();
 
+    // The arrow the engine adds inside the option. It is not author content.
+    Node* marker() const
+    {
+        return m_marker;
+    }
+
 private:
     bool m_dirtiness;
     bool m_selectedness;
