@@ -368,6 +368,7 @@ test/cairo/internal-test/css/text/text-align-001.html
 test/cairo/internal-test/css/width/dont-break-line.html
 test/cairo/internal-test/css/width/replaced_percent_width_resolves_against_content_width.html
 test/cairo/internal-test/css/text/word-concatenating.html
+test/cairo/internal-test/css/text/text-wrap-mode.html
 test/cairo/internal-test/css/border/starting_unprocessed_mbp_with_pre.html
 test/cairo/internal-test/css/length/simple_calc.html
 test/cairo/internal-test/css/length/simple_calc2.html
