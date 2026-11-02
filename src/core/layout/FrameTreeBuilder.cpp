@@ -1192,7 +1192,11 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
           current->style()->display() ==
               DisplayValue::TableColumnDisplayValue) ||
          current->isBeforePseudoElement() || current->isAfterPseudoElement() ||
-         currentFrame->isFrameOptionBox());
+         currentFrame->isFrameOptionBox() ||
+         // content-visibility: hidden skips the contents. The element keeps
+         // its own box and has no content, which acts as size containment.
+         current->style()->usedContentVisibility() ==
+             ContentVisibilityValue::HiddenContentVisibilityValue);
 
     FrameBlockBox* back = ctx.currentBlockContainer();
     FrameTableObjectBox* lastAnonymousTableObject = nullptr;

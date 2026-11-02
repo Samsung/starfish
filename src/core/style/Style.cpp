@@ -1312,6 +1312,9 @@ bool CSSStyleValuePair::valueEquals(const CSSStyleValuePair& src) const
     case ResizeValueKind:
         return m_value.m_resize == src.m_value.m_resize;
 
+    case ContentVisibilityValueKind:
+        return m_value.m_contentVisibility == src.m_value.m_contentVisibility;
+
     case VisibilityValueKind:
         return m_value.m_visibility == src.m_value.m_visibility;
 
@@ -2181,6 +2184,18 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("left");
         case TextUnderlinePositionValue::RightTextUnderlinePositionValue:
             return String::fromUTF8("right");
+        default:
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::ValueKind::ContentVisibilityValueKind:
+        switch (contentVisibilityValue()) {
+        case ContentVisibilityValue::VisibleContentVisibilityValue:
+            return String::fromUTF8("visible");
+        case ContentVisibilityValue::AutoContentVisibilityValue:
+            return String::fromUTF8("auto");
+        case ContentVisibilityValue::HiddenContentVisibilityValue:
+            return String::fromUTF8("hidden");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -4384,6 +4399,24 @@ void StyleResolver::applyProperty(Element* element,
                 CSSStyleValuePair::ValueKind::TextUnderlinePositionValueKind);
             style->setTextUnderlinePosition(
                 newCssValue.textUnderlinePositionValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::ContentVisibility:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+            style->setContentVisibility(parentStyle->contentVisibility());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->setContentVisibility(
+                ContentVisibilityValue::VisibleContentVisibilityValue);
+            break;
+        default:
+            STARFISH_ASSERT(
+                newCssValue.valueKind() ==
+                CSSStyleValuePair::ValueKind::ContentVisibilityValueKind);
+            style->setContentVisibility(newCssValue.contentVisibilityValue());
         }
         break;
     case CSSStyleValuePair::KeyKind::Resize:
@@ -16287,6 +16320,32 @@ bool CSSStyleValuePair::updateValueTextUnderlinePosition(
         m_value.m_textUnderlinePosition =
             TextUnderlinePositionValue::RightTextUnderlinePositionValue;
         return false; // unsupported yet
+    } else {
+        return false;
+    }
+
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueContentVisibility(
+    Document* document, const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::ContentVisibilityValueKind;
+
+    if (value.equals("visible")) {
+        m_value.m_contentVisibility =
+            ContentVisibilityValue::VisibleContentVisibilityValue;
+    } else if (value.equals("auto")) {
+        m_value.m_contentVisibility =
+            ContentVisibilityValue::AutoContentVisibilityValue;
+    } else if (value.equals("hidden")) {
+        m_value.m_contentVisibility =
+            ContentVisibilityValue::HiddenContentVisibilityValue;
     } else {
         return false;
     }

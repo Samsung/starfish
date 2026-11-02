@@ -39,6 +39,8 @@
 
 namespace Starfish {
 
+static const char kHiddenUntilFound[] = "until-found";
+
 static bool isEditinghost(Node* node)
 {
     // https://w3c.github.io/editing/execCommand.html#editing-host
@@ -239,9 +241,20 @@ void HTMLElement::styleForPresentationAttribute(
         }
     } else if (m_hasHiddenAttribute) {
         CSSStyleValuePair pair;
-        pair.setKeyKind(CSSStyleValuePair::KeyKind::Display);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
-        pair.setValue(DisplayValue::NoneDisplayValue);
+        Optional<String*> hiddenValue =
+            getAttribute(starfish()->staticStrings()->m_hidden);
+        if (hiddenValue.hasValue() &&
+            hiddenValue.value()->equalsIgnoreCase(kHiddenUntilFound)) {
+            // hidden=until-found keeps the box and locks its contents.
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::ContentVisibility);
+            pair.setValueKind(
+                CSSStyleValuePair::ValueKind::ContentVisibilityValueKind);
+            pair.setValue(ContentVisibilityValue::HiddenContentVisibilityValue);
+        } else {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Display);
+            pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+            pair.setValue(DisplayValue::NoneDisplayValue);
+        }
         cssValues.push_back(pair);
     }
 }

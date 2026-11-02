@@ -598,6 +598,13 @@ enum AppearanceValue ENSURE_ENUM_UNSIGNED {
     NoneAppearanceValue,
 };
 
+// https://drafts.csswg.org/css-contain-2/#content-visibility
+enum ContentVisibilityValue ENSURE_ENUM_UNSIGNED {
+    VisibleContentVisibilityValue,
+    AutoContentVisibilityValue,
+    HiddenContentVisibilityValue,
+};
+
 enum ResizeValue ENSURE_ENUM_UNSIGNED {
     NoneResizeValue,
     BothResizeValue,
@@ -883,6 +890,7 @@ class CSSFilterFunction;
     F(Appearance, appearance, "appearance")                                    \
     F(PointerEvents, pointerEvents, "pointer-events")                          \
     F(Resize, resize, "resize")                                                \
+    F(ContentVisibility, contentVisibility, "content-visibility")              \
     F(WillChange, willChange, "will-change")                                   \
     F(LineClamp, lineClamp, "line-clamp")                                      \
     F(MixBlendMode, mixBlendMode, "mix-blend-mode")
@@ -1175,6 +1183,7 @@ public:
         TextDecorationStyleValueKind,
         TextUnderlinePositionValueKind,
         ResizeValueKind,
+        ContentVisibilityValueKind,
         VisibilityValueKind,
         UnicodeBidiValueKind,
         BoxSizingValueKind,
@@ -1901,6 +1910,12 @@ public:
         return m_value.m_appearance;
     }
 
+    ContentVisibilityValue contentVisibilityValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == ContentVisibilityValueKind);
+        return m_value.m_contentVisibility;
+    }
+
     ResizeValue resizeValue() const
     {
         STARFISH_ASSERT(m_valueKind == ResizeValueKind);
@@ -2070,6 +2085,7 @@ public:
         TextDecorationStyleValue m_textDecorationStyle;
         TextUnderlinePositionValue m_textUnderlinePosition;
         ResizeValue m_resize;
+        ContentVisibilityValue m_contentVisibility;
         CSSTransformFunctions* m_transforms;
         Unit::Color m_color;
         NamedColor::NamedColorValue m_namedColor;
@@ -2282,6 +2298,11 @@ public:
             : m_textUnderlinePosition(v)
         {
         }
+        ValueData(ContentVisibilityValue v)
+            : m_contentVisibility(v)
+        {
+        }
+
         ValueData(ResizeValue v)
             : m_resize(v)
         {
