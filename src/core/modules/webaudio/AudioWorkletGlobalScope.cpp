@@ -181,12 +181,17 @@ void AudioWorkletGlobalScope::sweepRecords()
         AudioGraphLock graphLock(m_context->graph());
         m_context->graph()->takeReleasedWorkletRecords(released);
     }
-    for (void* record : released) {
-        m_records.erase(
-            std::remove(m_records.begin(), m_records.end(),
-                        static_cast<AudioWorkletProcessorRecord*>(record)),
-            m_records.end());
+    if (released.empty()) {
+        return;
     }
+    std::sort(released.begin(), released.end());
+    m_records.erase(std::remove_if(m_records.begin(), m_records.end(),
+                                   [&](AudioWorkletProcessorRecord* record) {
+                                       return std::binary_search(
+                                           released.begin(), released.end(),
+                                           static_cast<void*>(record));
+                                   }),
+                    m_records.end());
 }
 
 AudioWorkletProcessorRecord* AudioWorkletGlobalScope::createProcessor(
@@ -293,7 +298,8 @@ struct AudioWorkletProcessCall {
     AudioWorkletProcessorRecord* record;
     AudioWorkletHandler* handler;
     size_t quantum;
-    bool rebuild;
+    // The shape to build the arguments for; null to reuse them.
+    const GCAtomicVector<uint32_t>* rebuild;
 };
 
 static ValueRef* createFloat32Array(ExecutionStateRef* state, size_t length)
@@ -302,6 +308,12 @@ static ValueRef* createFloat32Array(ExecutionStateRef* state, size_t length)
     buffer->allocateBuffer(state, length * sizeof(float));
     auto* view = Float32ArrayObjectRef::create(state);
     view->setBuffer(buffer, 0, length * sizeof(float), length);
+    // A failed allocation leaves a null buffer of the requested length.
+    if (!view->rawBuffer()) {
+        state->throwException(ErrorObjectRef::create(
+            state, ErrorObjectRef::RangeError,
+            StringRef::createFromASCII("Out of memory for process() arrays")));
+    }
     return view;
 }
 
@@ -323,43 +335,70 @@ static bool anyDetached(const GCVector<ScriptValue>& arrays)
 }
 
 // Builds the frozen inputs/outputs arrays and parameters object of
-// |call->record| for its current shape.
+// |call->record| for the shape |call->rebuild|. A Float32Array of the
+// previous call is kept where its channel or parameter keeps its length and
+// it was not transferred; only the others are allocated.
 static void buildProcessArguments(ExecutionStateRef* state,
                                   AudioWorkletProcessCall* call)
 {
     AudioWorkletProcessorRecord* record = call->record;
     AudioWorkletHandler& handler = *call->handler;
-    const GCAtomicVector<uint32_t>& shape = record->shape;
-    record->arrays.clear();
-    size_t next = 0;
-    auto channels = [&](size_t count) {
+    const GCAtomicVector<uint32_t>& shape = *call->rebuild;
+    const GCAtomicVector<uint32_t>& previousShape = record->shape;
+    const size_t lists = handler.inputCount() + handler.outputCount();
+    GCVector<ScriptValue> previous;
+    previous.swap(record->arrays);
+    // |previous| holds previousShape[position] arrays per input or output
+    // and one per parameter; |base| is the first one of |position|.
+    size_t base = 0;
+    auto array = [&](size_t position, size_t index,
+                     size_t length) -> ValueRef* {
+        if (!previousShape.empty() &&
+            (position < lists ? index < previousShape[position]
+                              : previousShape[position] == length)) {
+            ScriptValue kept = previous[base + index];
+            if (kept->asArrayBufferView()->byteLength()) {
+                return kept;
+            }
+        }
+        return createFloat32Array(state, length);
+    };
+    auto next = [&](size_t position) {
+        if (!previousShape.empty()) {
+            base += position < lists ? previousShape[position] : 1;
+        }
+    };
+    auto channels = [&](size_t position) {
         ArrayObjectRef* list = ArrayObjectRef::create(state);
-        for (size_t channel = 0; channel < count; channel++) {
-            ValueRef* array = createFloat32Array(state, call->quantum);
-            record->arrays.push_back(array);
-            list->defineDataProperty(state, ValueRef::create(channel), array,
+        for (size_t channel = 0; channel < shape[position]; channel++) {
+            ValueRef* values = array(position, channel, call->quantum);
+            record->arrays.push_back(values);
+            list->defineDataProperty(state, ValueRef::create(channel), values,
                                      true, true, true);
         }
         list->setIntegrityLevel(state, false);
+        next(position);
         return list;
     };
     ArrayObjectRef* inputs = ArrayObjectRef::create(state);
     for (size_t index = 0; index < handler.inputCount(); index++) {
         inputs->defineDataProperty(state, ValueRef::create(index),
-                                   channels(shape[next++]), true, true, true);
+                                   channels(index), true, true, true);
     }
     inputs->setIntegrityLevel(state, false);
     ArrayObjectRef* outputs = ArrayObjectRef::create(state);
     for (size_t index = 0; index < handler.outputCount(); index++) {
         outputs->defineDataProperty(state, ValueRef::create(index),
-                                    channels(shape[next++]), true, true, true);
+                                    channels(handler.inputCount() + index),
+                                    true, true, true);
     }
     outputs->setIntegrityLevel(state, false);
     ObjectRef* parameters = ObjectRef::create(state);
     const auto& descriptors = record->definition->descriptors;
     for (size_t index = 0; index < descriptors.size(); index++) {
-        ValueRef* values = createFloat32Array(state, shape[next++]);
+        ValueRef* values = array(lists + index, 0, shape[lists + index]);
         record->arrays.push_back(values);
+        next(lists + index);
         // CreateDataProperty: an accessor on Object.prototype must not
         // intercept the parameter (param-getter-overridden).
         parameters->defineDataProperty(state,
@@ -370,6 +409,7 @@ static void buildProcessArguments(ExecutionStateRef* state,
     record->inputs = inputs;
     record->outputs = outputs;
     record->parameters = parameters;
+    record->shape = shape;
 }
 
 // https://webaudio.github.io/web-audio-api/#rendering-a-graph
@@ -400,12 +440,11 @@ void AudioWorkletGlobalScope::process(AudioWorkletProcessorRecord* record,
         handler.parameterValues(index, constant);
         m_shape.push_back(constant ? 1 : quantum);
     }
-    AudioWorkletProcessCall call = { record, &handler, quantum, false };
+    AudioWorkletProcessCall call = { record, &handler, quantum, nullptr };
     if (!record->inputs || record->shape.size() != m_shape.size() ||
         !std::equal(m_shape.begin(), m_shape.end(), record->shape.begin()) ||
         anyDetached(record->arrays)) {
-        record->shape = m_shape;
-        call.rebuild = true;
+        call.rebuild = &m_shape;
     }
 
     auto result = Evaluator::execute(

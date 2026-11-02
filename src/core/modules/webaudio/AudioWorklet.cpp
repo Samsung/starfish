@@ -163,6 +163,13 @@ void AudioWorklet::addDefinition(AudioWorkletProcessorDefinition* definition)
     m_definitions.push_back(definition);
 }
 
+void AudioWorklet::sweepRecords()
+{
+    if (m_globalScope) {
+        m_globalScope.value()->sweepRecords();
+    }
+}
+
 // https://html.spec.whatwg.org/multipage/worklets.html#dom-worklet-addmodule
 Promise* AudioWorklet::addModule(String* moduleURL, WorkletOptions)
 {

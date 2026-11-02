@@ -33,6 +33,7 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/HTMLMediaElement.h"
 #include "core/modules/webaudio/AudioDestinationNode.h"
+#include "core/modules/webaudio/AudioWorklet.h"
 #include "core/modules/webaudio/render/AudioBus.h"
 #include "core/modules/webaudio/render/AudioGraph.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -333,6 +334,9 @@ void AudioContext::renderRealtime()
             if (!graph()->renderDueQuantum()) {
                 break;
             }
+        }
+        if (m_audioWorklet) {
+            m_audioWorklet.value()->sweepRecords();
         }
     }
 #endif
