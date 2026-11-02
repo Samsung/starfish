@@ -601,7 +601,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/draw-eleme
 # http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/framebuffer-texture-switch.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/gl-clear.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/gl-drawarrays.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/gl-drawelements.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/gl-drawelements.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/gl-scissor-canvas-dimensions.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/gl-scissor-fbo-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/gl-scissor-test.html
