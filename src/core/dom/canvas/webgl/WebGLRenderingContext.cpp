@@ -109,14 +109,12 @@ WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
     m_drawingBufferColorSpace = String::createASCIIString("srgb");
     m_state = new WebGLRenderingContextState();
     m_gl = m_ownerHTMLCanvasElement->webView()->renderer()->gl();
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            auto self = reinterpret_cast<WebGLRenderingContext*>(obj);
-            GLErrorSet().swap(self->m_GLErrors);
-            GLTextureMap().swap(self->m_boundTextures);
-        },
-        NULL, NULL, NULL);
+}
+
+void WebGLRenderingContext::releaseOutOfHeapMembers()
+{
+    GLErrorSet().swap(m_GLErrors);
+    GLTextureMap().swap(m_boundTextures);
 }
 
 WebGLRenderingContext::~WebGLRenderingContext()

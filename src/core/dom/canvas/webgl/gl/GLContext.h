@@ -37,6 +37,15 @@ public:
     void reset();
     bool isValid();
 
+    uintptr_t handle() const
+    {
+        return m_context;
+    }
+    Renderer* renderer() const
+    {
+        return m_renderer;
+    }
+
 private:
     uintptr_t m_context{ UINTPTR_MAX };
     Renderer* m_renderer{ nullptr };

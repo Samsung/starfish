@@ -196,6 +196,16 @@ void Window::registerDisposer(void* object, Disposer function)
 
     STARFISH_ASSERT(result == 0);
 
+    // Drop entries whose holder was already collected, so a document that
+    // keeps creating holders does not grow the registry for its lifetime.
+    for (auto iter = m_disposers.begin(); iter != m_disposers.end();) {
+        if (*iter->first) {
+            ++iter;
+        } else {
+            iter = m_disposers.erase(iter);
+        }
+    }
+
     m_disposers[link] = function;
 }
 
@@ -264,7 +274,8 @@ void Window::dispose()
         void** link = pair.first;
         Disposer disposer = pair.second;
         if (*link) {
-            disposer();
+            disposer(
+                GC_REVEAL_POINTER(reinterpret_cast<GC_hidden_pointer>(*link)));
         }
     }
     m_disposers.clear();
