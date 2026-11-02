@@ -88,7 +88,7 @@ public:
     // an array still reads it.
     struct AttribPointer {
         Optional<WebGLBuffer*> buffer;
-        GLintptr offset = 0;
+        WebGLintptr offset = 0;
         GLint size = 4;
         GLsizei stride = 0;
         GLenum type = GL_FLOAT;
@@ -104,7 +104,7 @@ public:
     AttribPointer getVertexAttribPointer(GLuint index);
     void setVertexAttribPointer(GLuint index, Optional<WebGLBuffer*> buffer,
                                 GLint size, GLenum type, GLsizei stride,
-                                GLintptr offset);
+                                WebGLintptr offset);
     void setVertexAttribDivisor(GLuint index, GLuint divisor);
     GLenum getGenericVertexAttribType(GLuint index);
     void setGenericVertexAttribType(GLuint index, GLenum type);

@@ -21,6 +21,7 @@
 #define __StarfishGLTypes__
 
 #include <stdint.h>
+#include <limits>
 
 typedef void GLvoid;
 typedef char GLchar;
@@ -56,6 +57,34 @@ typedef long long int GLsizeiptr;
 typedef long int GLintptr;
 typedef long int GLsizeiptr;
 #endif
+
+// WebGL's GLintptr and GLsizeiptr are Web IDL `long long` on every platform,
+// unlike the pointer-sized GL types above (32-bit on armv7). Values from
+// script are held in these and range-checked before being narrowed to the
+// GL types, so a large or negative value is never silently truncated.
+typedef int64_t WebGLintptr;
+typedef int64_t WebGLsizeiptr;
+
+// A value outside the GL type's range cannot address data in any buffer the
+// GL could allocate on this platform, so clamping it keeps the GL's own
+// validation result (INVALID_VALUE for a range past the buffer or a
+// negative value, OUT_OF_MEMORY for an unallocatable size) where truncation
+// could turn it into a valid in-range value.
+inline GLintptr clampToGLintptr(WebGLintptr value)
+{
+    if (value > std::numeric_limits<GLintptr>::max()) {
+        return std::numeric_limits<GLintptr>::max();
+    }
+    if (value < std::numeric_limits<GLintptr>::min()) {
+        return std::numeric_limits<GLintptr>::min();
+    }
+    return static_cast<GLintptr>(value);
+}
+
+inline GLsizeiptr clampToGLsizeiptr(WebGLsizeiptr value)
+{
+    return static_cast<GLsizeiptr>(clampToGLintptr(value));
+}
 
 #ifndef GL_NONE
 #define GL_NONE 0

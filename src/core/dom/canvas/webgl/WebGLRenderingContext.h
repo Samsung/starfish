@@ -190,13 +190,14 @@ public:
     void disable(GLenum cap);
     void disableVertexAttribArray(GLuint index);
     void drawArrays(GLenum mode, GLint first, GLsizei count);
-    void drawElements(GLenum mode, GLsizei count, GLenum type, GLintptr offset);
+    void drawElements(GLenum mode, GLsizei count, GLenum type,
+                      WebGLintptr offset);
     // Core in WebGL 2, reached through ANGLE_instanced_arrays in WebGL 1.
     void vertexAttribDivisor(GLuint index, GLuint divisor);
     void drawArraysInstanced(GLenum mode, GLint first, GLsizei count,
                              GLsizei instanceCount);
     void drawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
-                               GLintptr offset, GLsizei instanceCount);
+                               WebGLintptr offset, GLsizei instanceCount);
     void enable(GLenum cap);
     void enableVertexAttribArray(GLuint index);
     void finish();
@@ -233,7 +234,7 @@ public:
     WebGLUniformLocation* getUniformLocation(WebGLProgram* program,
                                              String* name);
     ScriptValue getVertexAttrib(GLuint index, GLenum pname);
-    GLintptr getVertexAttribOffset(GLuint index, GLenum pname);
+    WebGLintptr getVertexAttribOffset(GLuint index, GLenum pname);
 
     void hint(GLenum target, GLenum mode);
     bool isBuffer(Optional<WebGLBuffer*> buffer);
@@ -295,14 +296,14 @@ public:
     void vertexAttrib4fv(GLuint index, Float32List values);
     void vertexAttribPointer(GLuint index, GLint size, GLenum type,
                              GLboolean normalized, GLsizei stride,
-                             GLintptr offset);
+                             WebGLintptr offset);
     void viewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 
     // Implement WebGLRenderingContextOverloads
-    void bufferData(GLenum target, GLsizeiptr size, GLenum usage);
+    void bufferData(GLenum target, WebGLsizeiptr size, GLenum usage);
     void bufferData(GLenum target, Optional<AllowSharedBufferSource> data,
                     GLenum usage);
-    void bufferSubData(GLenum target, GLintptr offset,
+    void bufferSubData(GLenum target, WebGLintptr offset,
                        AllowSharedBufferSource data);
 
     void compressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
@@ -505,7 +506,8 @@ protected:
     bool hasOnlyNonZeroAttribDivisors();
     // Whether the buffer bound to ELEMENT_ARRAY_BUFFER actually holds the
     // indices a draw asks for. Reading past it crashes some drivers.
-    bool hasEnoughElementArrayData(GLsizei count, GLenum type, GLintptr offset);
+    bool hasEnoughElementArrayData(GLsizei count, GLenum type,
+                                   WebGLintptr offset);
     // Whether the buffers behind the enabled attribute arrays the current
     // program reads hold every element a draw fetches: vertexCount of them
     // for the arrays without a divisor (-1 when the vertices come from

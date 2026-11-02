@@ -265,9 +265,9 @@ public:
 
     /* Buffer objects */
     void copyBufferSubData(GLenum readTarget, GLenum writeTarget,
-                           GLintptr readOffset, GLintptr writeOffset,
-                           GLsizeiptr size);
-    void getBufferSubData(GLenum target, GLintptr srcByteOffset,
+                           WebGLintptr readOffset, WebGLintptr writeOffset,
+                           WebGLsizeiptr size);
+    void getBufferSubData(GLenum target, WebGLintptr srcByteOffset,
                           ScriptArrayBufferView dstBuffer,
                           unsigned long long dstOffset = 0, GLuint length = 0);
 
@@ -325,7 +325,7 @@ public:
     void vertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w);
     void vertexAttribI4uiv(GLuint index, Uint32List values);
     void vertexAttribIPointer(GLuint index, GLint size, GLenum type,
-                              GLsizei stride, GLintptr offset);
+                              GLsizei stride, WebGLintptr offset);
 
     /* Query Objects */
     WebGLQuery* createQuery();
@@ -373,8 +373,8 @@ public:
     void bindBufferBase(GLenum target, GLuint index,
                         Optional<WebGLBuffer*> buffer);
     void bindBufferRange(GLenum target, GLuint index,
-                         Optional<WebGLBuffer*> buffer, GLintptr offset,
-                         GLsizeiptr size);
+                         Optional<WebGLBuffer*> buffer, WebGLintptr offset,
+                         WebGLsizeiptr size);
     ScriptValue getIndexedParameter(GLenum target, GLuint index);
     ScriptValue getActiveUniforms(WebGLProgram* program,
                                   GCAtomicVector<GLuint> uniformIndices,
@@ -397,7 +397,7 @@ public:
     GLboolean isVertexArray(Optional<WebGLVertexArrayObject*> vertexArray);
     void bindVertexArray(Optional<WebGLVertexArrayObject*> array);
     void drawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count,
-                           GLenum type, GLintptr offset);
+                           GLenum type, WebGLintptr offset);
 
     /* Framebuffer objects */
     void blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
@@ -437,16 +437,16 @@ public:
     bool validateDrawCallUBO() override;
 
     // WebGL1:
-    void bufferData(GLenum target, GLsizeiptr size, GLenum usage);
+    void bufferData(GLenum target, WebGLsizeiptr size, GLenum usage);
     void bufferData(GLenum target, Optional<AllowSharedBufferSource> srcData,
                     GLenum usage);
-    void bufferSubData(GLenum target, GLintptr dstByteOffset,
+    void bufferSubData(GLenum target, WebGLintptr dstByteOffset,
                        AllowSharedBufferSource srcData);
 
     // WebGL2:
     void bufferData(GLenum target, ScriptArrayBufferView srcData, GLenum usage,
                     unsigned long long srcOffset, GLuint length = 0);
-    void bufferSubData(GLenum target, GLintptr dstByteOffset,
+    void bufferSubData(GLenum target, WebGLintptr dstByteOffset,
                        ScriptArrayBufferView srcData,
                        unsigned long long srcOffset, GLuint length = 0);
 
@@ -471,7 +471,7 @@ public:
 
     void texImage2D(GLenum target, GLint level, GLint internalformat,
                     GLsizei width, GLsizei height, GLint border, GLenum format,
-                    GLenum type, GLintptr pboOffset);
+                    GLenum type, WebGLintptr pboOffset);
     void texImage2D(GLenum target, GLint level, GLint internalformat,
                     GLsizei width, GLsizei height, GLint border, GLenum format,
                     GLenum type, TexImageSource source);
@@ -482,7 +482,7 @@ public:
 
     void texImage3D(GLenum target, GLint level, GLint internalformat,
                     GLsizei width, GLsizei height, GLsizei depth, GLint border,
-                    GLenum format, GLenum type, GLintptr pboOffset);
+                    GLenum format, GLenum type, WebGLintptr pboOffset);
     void texImage3D(GLenum target, GLint level, GLint internalformat,
                     GLsizei width, GLsizei height, GLsizei depth, GLint border,
                     GLenum format, GLenum type, TexImageSource source);
@@ -498,7 +498,7 @@ public:
     void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLint zoffset, GLsizei width, GLsizei height,
                        GLsizei depth, GLenum format, GLenum type,
-                       GLintptr pboOffset);
+                       WebGLintptr pboOffset);
     void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLint zoffset, GLsizei width, GLsizei height,
                        GLsizei depth, GLenum format, GLenum type,
@@ -511,7 +511,7 @@ public:
 
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLsizei width, GLsizei height, GLenum format,
-                       GLenum type, GLintptr pboOffset);
+                       GLenum type, WebGLintptr pboOffset);
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLsizei width, GLsizei height, GLenum format,
                        GLenum type, TexImageSource source);
@@ -525,7 +525,7 @@ public:
                            GLsizei width, GLsizei height);
     void compressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
                               GLsizei width, GLsizei height, GLint border,
-                              GLsizei imageSize, GLintptr offset);
+                              GLsizei imageSize, WebGLintptr offset);
     void compressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
                               GLsizei width, GLsizei height, GLint border,
                               ScriptArrayBufferView srcData,
@@ -534,7 +534,7 @@ public:
     void compressedTexSubImage2D(GLenum target, GLint level, GLint xoffset,
                                  GLint yoffset, GLsizei width, GLsizei height,
                                  GLenum format, GLsizei imageSize,
-                                 GLintptr offset);
+                                 WebGLintptr offset);
     void compressedTexSubImage2D(GLenum target, GLint level, GLint xoffset,
                                  GLint yoffset, GLsizei width, GLsizei height,
                                  GLenum format, ScriptArrayBufferView srcData,
@@ -542,7 +542,8 @@ public:
                                  GLuint srcLengthOverride = 0);
     void compressedTexImage3D(GLenum target, GLint level, GLenum internalformat,
                               GLsizei width, GLsizei height, GLsizei depth,
-                              GLint border, GLsizei imageSize, GLintptr offset);
+                              GLint border, GLsizei imageSize,
+                              WebGLintptr offset);
     void compressedTexImage3D(GLenum target, GLint level, GLenum internalformat,
                               GLsizei width, GLsizei height, GLsizei depth,
                               GLint border, ScriptArrayBufferView srcData,
@@ -551,7 +552,7 @@ public:
     void compressedTexSubImage3D(GLenum target, GLint level, GLint xoffset,
                                  GLint yoffset, GLint zoffset, GLsizei width,
                                  GLsizei height, GLsizei depth, GLenum format,
-                                 GLsizei imageSize, GLintptr offset);
+                                 GLsizei imageSize, WebGLintptr offset);
     void compressedTexSubImage3D(GLenum target, GLint level, GLint xoffset,
                                  GLint yoffset, GLint zoffset, GLsizei width,
                                  GLsizei height, GLsizei depth, GLenum format,
@@ -596,7 +597,7 @@ public:
                     Optional<ScriptArrayBufferView> dstData);
     // WebGL2:
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
-                    GLenum format, GLenum type, GLintptr offset);
+                    GLenum format, GLenum type, WebGLintptr offset);
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                     GLenum format, GLenum type, ScriptArrayBufferView dstData,
                     unsigned long long dstOffset);
@@ -638,8 +639,8 @@ private:
 
     class IndexedBufferBinding : public gc {
     public:
-        IndexedBufferBinding(WebGLBuffer* b = nullptr, GLintptr o = 0,
-                             GLsizeiptr s = 0, bool r = false)
+        IndexedBufferBinding(WebGLBuffer* b = nullptr, WebGLintptr o = 0,
+                             WebGLsizeiptr s = 0, bool r = false)
             : buffer(b)
             , offset(o)
             , size(s)
@@ -647,8 +648,8 @@ private:
         {
         }
         WebGLBuffer* buffer;
-        GLintptr offset;
-        GLsizeiptr size;
+        WebGLintptr offset;
+        WebGLsizeiptr size;
         bool isRange;
     };
     GCVector<IndexedBufferBinding*> m_uniformBufferBindings;
