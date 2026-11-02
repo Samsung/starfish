@@ -317,9 +317,10 @@ void Shell::printUsage()
     puts(
         "  --max-video-decode-size=<WxH>          Largest video frame to "
         "decode (default: 1920x1080)");
+    puts("  --hide-window                          Run with window hidden");
     puts(
-        "  --hide-window                          Run with window hidden "
-        "(regression/pixel test only)");
+        "  --regression-test                      Test mode: substitute "
+        "SamsungOne for non-Ahem fonts and load images synchronously");
 }
 
 void Shell::runCrashTestThread()
