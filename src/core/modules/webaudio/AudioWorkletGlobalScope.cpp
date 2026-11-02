@@ -113,6 +113,7 @@ ScriptBindingInstance* AudioWorkletGlobalScope::scriptBindingInstance()
 // for the Window's own realm.
 void AudioWorkletGlobalScope::dispose()
 {
+    m_disposed = true;
     m_port->close();
     m_scriptBindingInstance->destroy();
 }
@@ -233,6 +234,13 @@ static void errorPosition(ScriptBindingInstance* instance,
 void AudioWorkletGlobalScope::constructProcessor(
     AudioWorkletProcessorRecord* record)
 {
+    // https://html.spec.whatwg.org/multipage/document-lifecycle.html#destroy-a-document
+    // The worklet's global scopes go with their document: a node constructed
+    // later gets no processor and outputs silence.
+    if (m_disposed) {
+        record->constructionFailed = true;
+        return;
+    }
     ScriptValue processorCtor = nullptr;
     for (const auto& entry : m_processorConstructors) {
         if (entry.first->equals(record->definition->name)) {

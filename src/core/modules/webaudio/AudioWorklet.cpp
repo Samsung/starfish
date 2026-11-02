@@ -14,7 +14,9 @@
 
 #include "core/modules/webaudio/AudioWorklet.h"
 
+#include "core/csp/ContentSecurityPolicy.h"
 #include "core/dom/DOMException.h"
+#include "core/dom/Document.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/MessagePort.h"
 #include "core/fetch/HeadersData.h"
@@ -133,7 +135,15 @@ AudioWorkletGlobalScope* AudioWorklet::globalScope()
 
 MessagePort* AudioWorklet::port()
 {
-    globalScope();
+    // A document that is not fully active gets no realm; its port stays
+    // unentangled.
+    if (!m_port &&
+        !m_context->executionContext()->document()->isFullyActive()) {
+        m_port = new MessagePort(m_context->executionContext());
+    }
+    if (!m_port) {
+        globalScope();
+    }
     return m_port.value();
 }
 
@@ -166,12 +176,30 @@ Promise* AudioWorklet::addModule(String* moduleURL, WorkletOptions)
                             ->scriptValue());
         return promise;
     }
+    // The fetch of a document that is not fully active fails, as its
+    // fetches are aborted on unload; no realm is created for it.
+    if (!outside->document()->isFullyActive()) {
+        promise->reject((new DOMException(outside, DOMException::ABORT_ERR,
+                                          "The document is not fully active"))
+                            ->scriptValue());
+        return promise;
+    }
     globalScope();
     for (ResourceURL* added : m_moduleURLs) {
         if (*added == *url) {
             queueSettle(promise, nullptr);
             return promise;
         }
+    }
+
+    // https://w3c.github.io/webappsec-csp/#directive-script-src
+    // The audioworklet destination is governed by script-src-elem, which
+    // falls back to script-src and default-src; a blocked fetch is a network
+    // error.
+    if (!outside->contentSecurityPolicy()->allowSource(CSPDirectives::ScriptSrc,
+                                                       url)) {
+        runModule(url, promise, nullptr);
+        return promise;
     }
 
     // https://html.spec.whatwg.org/multipage/worklets.html#fetch-a-worklet-script-graph

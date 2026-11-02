@@ -806,6 +806,67 @@ const groups = {
             check(outcome === expected,
                   'addModule: expected ' + expected + ', got ' + outcome);
         }
+
+        // The fetch obeys the context's document: its CSP (script-src), and
+        // it fails once the document is no longer fully active. The errors
+        // come from the frame's realm, so only their names are compared.
+        const outcomeName = async (promise) => {
+            try {
+                await promise;
+            } catch (e) {
+                return e.name;
+            }
+            return 'resolved';
+        };
+        const framed = async (policy) => {
+            const frame = document.createElement('iframe');
+            frame.srcdoc = '<meta http-equiv="Content-Security-Policy" ' +
+                           'content="' + policy + '">';
+            await new Promise((resolve) => {
+                frame.onload = resolve;
+                document.documentElement.appendChild(frame);
+            });
+            const framedContext =
+                new frame.contentWindow.OfflineAudioContext(1, 128, 8000);
+            const outcome = await outcomeName(
+                framedContext.audioWorklet.addModule(module('')));
+            frame.remove();
+            return outcome;
+        };
+        let outcome = await framed("script-src 'none'");
+        check(outcome === 'AbortError',
+              'addModule blocked by script-src: ' + outcome);
+        outcome = await framed('script-src blob:');
+        check(outcome === 'resolved',
+              'addModule allowed by script-src: ' + outcome);
+
+        const frame = document.createElement('iframe');
+        document.documentElement.appendChild(frame);
+        const detached =
+            new frame.contentWindow.OfflineAudioContext(1, 128, 8000);
+        const loaded =
+            new frame.contentWindow.OfflineAudioContext(1, 128, 8000);
+        // Printed by the worklet realm, which test_api_probes.py reads.
+        await loaded.audioWorklet.addModule(module(`
+            registerProcessor('late', class extends AudioWorkletProcessor {
+                constructor() {
+                    super();
+                    console.log('API_PROBE_FAIL processor constructed for ' +
+                                'a detached document');
+                }
+            });`));
+        frame.remove();
+        try {
+            new AudioWorkletNode(loaded, 'late');
+        } catch (e) {
+        }
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        check(detached.audioWorklet.port === detached.audioWorklet.port,
+              'audioWorklet.port of a detached document is [SameObject]');
+        outcome = await outcomeName(
+            detached.audioWorklet.addModule(module('')));
+        check(outcome === 'AbortError',
+              'addModule in a detached document: ' + outcome);
     },
 };
 

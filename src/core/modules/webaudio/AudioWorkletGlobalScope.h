@@ -161,6 +161,8 @@ private:
     // Scratch for process(), reused every quantum.
     GCAtomicVector<uint32_t> m_shape;
     Optional<MessagePort*> m_pendingPort;
+    // Set when the owner document is unloaded.
+    bool m_disposed{ false };
 };
 } // namespace Starfish
 
