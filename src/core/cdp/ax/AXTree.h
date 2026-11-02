@@ -40,6 +40,7 @@ enum class AXIgnoredReason {
     AriaHiddenSubtree,
     EmptyAlt,
     EmptyText,
+    InertElement,
     LabelFor,
     NotRendered,
     NotVisible,
@@ -54,10 +55,11 @@ const char* axIgnoredReasonName(AXIgnoredReason reason);
 // node and the InlineTextBox under it, so the DOM node alone does not
 // identify an AX node.
 enum class AXNodeKind {
-    Root,       // the document
-    Element,    // an element
-    StaticText, // a text node
-    InlineText, // the box under a StaticText node
+    Root,          // the document
+    Element,       // an element
+    StaticText,    // a text node
+    InlineText,    // the box under a StaticText node
+    MenuListPopup, // the list a drop down select shows its options in
 };
 
 // One node of the accessibility tree.

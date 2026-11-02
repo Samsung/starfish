@@ -427,7 +427,8 @@ void AXSerializer::addRole(rapidjson::Value& out, const std::string& role,
     const char* type =
         (role == "StaticText" || role == "InlineTextBox" ||
          role == "RootWebArea" || role == "Iframe" || role == "LabelText" ||
-         role == "DisclosureTriangle" || role == "DisclosureTriangleGrouped")
+         role == "MenuListPopup" || role == "DisclosureTriangle" ||
+         role == "DisclosureTriangleGrouped")
             ? "internalRole"
             : "role";
 
@@ -855,6 +856,11 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
             checked = "true";
         }
         addStringProperty(properties, "checked", "tristate", checked);
+    }
+
+    // A drop down select opens a menu.
+    if (tag == "select" && role == "combobox") {
+        addStringProperty(properties, "hasPopup", "token", "menu");
     }
 
     std::string expanded = ariaToken(element, "aria-expanded");

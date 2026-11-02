@@ -780,7 +780,7 @@ section are supported.
 |  | mixin | ElementCSSInlineStyle | Provides `style` (`CSSStyleDeclaration`). |
 |  | mixin | ElementAnimation | Provides `animate()`; `getAnimations()` is unimplemented. |
 |  | misc | **Unsupported in LWE** (IDL `[Unimplemented]` — return `undefined`) | `translate`, `accessKey`, `accessKeyLabel`, `draggable`, `contextMenu`, `spellcheck`, `forceSpellCheck`, `nonce`, `autofocus`. |
-|  | misc | **Not exposed at all** | `popover`/`togglePopover`/`showPopover`/`hidePopover`, `inert`, `enterKeyHint`, `inputMode`. |
+|  | misc | **Not exposed at all** | `popover`/`togglePopover`/`showPopover`/`hidePopover`, `inert`, `enterKeyHint`, `inputMode`. The `inert` content attribute is honored: the element and its descendants cannot be focused and are left out of the CDP accessibility tree. It does not block hit testing or pointer events. |
 |  | method | Promise&lt;void&gt; requestFullscreen() | Requests that the element be displayed fullscreen. `webkitRequestFullscreen()`/`webkitRequestFullScreen()` are aliases of the same operation. |
 |  | method | void click() | Acts as if the element was clicked. |
 |  | attribute | tabIndex | Reflects the value of the "tabindex" content attribute of HTMLElement. Its default value is 0 for elements that are focusable and −1 for elements that are not focusable. |

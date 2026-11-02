@@ -29,6 +29,8 @@
 #include "core/dom/Element.h"
 #include "core/dom/HTMLDialogElement.h"
 #include "core/dom/HTMLLabelElement.h"
+#include "core/dom/HTMLOptionElement.h"
+#include "core/dom/HTMLSelectElement.h"
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/Node.h"
 #include "core/dom/ShadowRoot.h"
@@ -52,6 +54,8 @@ const char* axIgnoredReasonName(AXIgnoredReason reason)
         return "emptyAlt";
     case AXIgnoredReason::EmptyText:
         return "emptyText";
+    case AXIgnoredReason::InertElement:
+        return "inertElement";
     case AXIgnoredReason::LabelFor:
         return "labelFor";
     case AXIgnoredReason::NotRendered:
@@ -103,7 +107,13 @@ namespace {
         // The modal dialog that makes everything outside it inert. Null when
         // the node is inside the dialog, or when no dialog is showing.
         Element* blockingModal = nullptr;
+        // True inside an element that has the inert attribute.
+        bool inert = false;
     };
+
+    constexpr const char* kInertAttribute = "inert";
+    constexpr const char* kPopupIdSuffix = "-popup";
+    constexpr const char* kMenuListPopupRole = "MenuListPopup";
 
     std::string toUTF8(String* s)
     {
@@ -268,7 +278,11 @@ private:
 
         Element* element = domNode->asElement();
         std::string tag = tagOf(element);
-        bool rendered = element->frame() != nullptr;
+        // An element with display: contents has no box but is not hidden.
+        bool rendered =
+            element->frame() != nullptr ||
+            (element->style() &&
+             element->style()->display() == DisplayValue::ContentsDisplayValue);
 
         // A container the tree never enters prunes itself and everything
         // under it, so no ignored node is reported for any of them.
@@ -285,6 +299,10 @@ private:
             state.ariaHiddenRoot = element;
             state.ariaHiddenSelf = true;
         }
+        if (!state.inert && element->hasAttribute(String::fromUTF8(
+                                kInertAttribute, strlen(kInertAttribute)))) {
+            state.inert = true;
+        }
         if (state.blockingModal == element) {
             state.blockingModal = nullptr; // inside the dialog
         }
@@ -300,8 +318,45 @@ private:
         }
         attach(node, parentAXNode);
 
-        addChildren(element, node->m_includedInTree ? node : parentAXNode,
-                    state);
+        AXNode* childParent = node->m_includedInTree ? node : parentAXNode;
+        // Chrome puts the options of a drop down under a popup node.
+        if (element->isHTMLSelectElement() && !node->m_ignored &&
+            isDropDown(element)) {
+            childParent = createMenuListPopup(element, node);
+        }
+        // The text of an option is already its name.
+        if (element->isHTMLOptionElement() && isInsideDropDown(element)) {
+            return;
+        }
+        addChildren(element, childParent, state);
+    }
+
+    static bool isInsideDropDown(Element* option)
+    {
+        HTMLSelectElement* select =
+            option->asHTMLOptionElement()->selectElement();
+        return select && isDropDown(select);
+    }
+
+    // A select with no multiple attribute and a size of at most one.
+    static bool isDropDown(Element* element)
+    {
+        if (axHasAttribute(element, "multiple")) {
+            return false;
+        }
+        return element->asHTMLSelectElement()->size() <= 1;
+    }
+
+    AXNode* createMenuListPopup(Element* select, AXNode* selectNode)
+    {
+        std::string id = idFor(select, AXNodeKind::Element) + kPopupIdSuffix;
+        m_tree->m_nodes.push_back(std::unique_ptr<AXNode>(
+            new AXNode(nullptr, AXNodeKind::MenuListPopup, id)));
+        AXNode* popup = m_tree->m_nodes.back().get();
+        m_tree->m_byId[id] = popup;
+        popup->m_role = kMenuListPopupRole;
+        attach(popup, selectNode);
+        return popup;
     }
 
     void addTextNode(Node* domNode, AXNode* parentAXNode,
@@ -423,6 +478,11 @@ private:
             node->m_ignoredReasonTarget = state.ariaHiddenRoot;
             return;
         }
+        if (state.inert) {
+            node->m_ignored = true;
+            node->m_ignoredReasons.push_back(AXIgnoredReason::InertElement);
+            return;
+        }
         if (state.blockingModal) {
             node->m_ignored = true;
             node->m_ignoredReasons.push_back(
@@ -537,7 +597,11 @@ private:
         std::string tag = tagOf(element);
 
         // The document element anchors the chain from the root down.
-        if (tag == "html") {
+        if (tag == "html" || tag == "body") {
+            return true;
+        }
+        // A list item of a presentational list keeps its place.
+        if (tag == "li") {
             return true;
         }
         // A label is read to name the control it belongs to, so it has to
@@ -575,8 +639,22 @@ private:
         }
         // A visible element that lays out as a block holds the shape of
         // the tree. Dropping it would move its children up one level.
-        if (element->frame() && element->frame()->isFrameBlockBox()) {
+        // An element that is hidden or presentational on purpose does not.
+        if (element->frame() && element->frame()->isFrameBlockBox() &&
+            !isHiddenReason(node) &&
+            !hasReason(node, AXIgnoredReason::InertElement) &&
+            !hasReason(node, AXIgnoredReason::PresentationalRole)) {
             return true;
+        }
+        return false;
+    }
+
+    static bool hasReason(AXNode* node, AXIgnoredReason wanted)
+    {
+        for (AXIgnoredReason reason : node->m_ignoredReasons) {
+            if (reason == wanted) {
+                return true;
+            }
         }
         return false;
     }

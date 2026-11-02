@@ -47,8 +47,7 @@
       "suite": "internal"
     },
     "accessibility/accessibility-ignoredNodes.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "accessibility/accessibility-ignoredNodesModal.js": {
       "expected": "pass"
