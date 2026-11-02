@@ -1773,8 +1773,10 @@ void WebGLRenderingContext::drawElementsInstanced(GLenum mode, GLsizei count,
         return;
     }
 
+    bool isUintAllowed =
+        (webGLVersion() >= 2) || isExtensionEnabled("OES_element_index_uint");
     if (type != GL_UNSIGNED_BYTE && type != GL_UNSIGNED_SHORT &&
-        type != GL_UNSIGNED_INT) {
+        (!isUintAllowed || type != GL_UNSIGNED_INT)) {
         setGLError(GL_INVALID_ENUM, "invalid type");
         return;
     }
