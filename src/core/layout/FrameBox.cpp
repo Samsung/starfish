@@ -5633,19 +5633,31 @@ ALWAYS_INLINE void applyTransformIfNeeded(FrameBox* fBox, SkMatrix& m,
 // upward (the overflow status and whether scroll offsets still apply). Two
 // walks that reach the same box with the same state produce the same matrix
 // for everything above it, which is what the cache below keys on.
+//
+// The walk above a box reads OverflowStatus::m_child and m_absChild only for
+// whether they are fixed positioned (OverflowStatus::canApplyOverflow and
+// Frame::canBeContainingBlockOfAbsolutePositionedBox), so the key holds that
+// rather than the frames themselves. Keying on the frames gave every sibling
+// under a stacking context its own entry, and the linear scan in lookup()
+// made a repaint of many siblings quadratic.
+static bool isFixedPositioned(Frame* f)
+{
+    return f && f->style() && f->style()->position() == FixedPositionValue;
+}
+
 struct ScreenMatrixCacheState {
-    Frame* child;
-    FrameBox* absChild;
     ComputeMatrixFor forWhat;
+    bool childIsFixed;
+    bool absChildIsFixed;
     bool seenContainingBlockForAbsBlock;
     bool seenAbsBlock;
     bool seenFixedBlock;
     bool canScroll;
 
     ScreenMatrixCacheState()
-        : child(nullptr)
-        , absChild(nullptr)
-        , forWhat(ComputeMatrixFor::Screen)
+        : forWhat(ComputeMatrixFor::Screen)
+        , childIsFixed(false)
+        , absChildIsFixed(false)
         , seenContainingBlockForAbsBlock(false)
         , seenAbsBlock(false)
         , seenFixedBlock(false)
@@ -5655,9 +5667,9 @@ struct ScreenMatrixCacheState {
 
     ScreenMatrixCacheState(const OverflowStatus& status,
                            ComputeMatrixFor forWhat, bool canScroll)
-        : child(status.m_child)
-        , absChild(status.m_absChild)
-        , forWhat(forWhat)
+        : forWhat(forWhat)
+        , childIsFixed(isFixedPositioned(status.m_child))
+        , absChildIsFixed(isFixedPositioned(status.m_absChild))
         , seenContainingBlockForAbsBlock(
               status.m_seenContainingBlockForAbsBlock)
         , seenAbsBlock(status.m_seenAbsBlock)
@@ -5668,8 +5680,8 @@ struct ScreenMatrixCacheState {
 
     bool operator==(const ScreenMatrixCacheState& o) const
     {
-        return child == o.child && absChild == o.absChild &&
-               forWhat == o.forWhat &&
+        return forWhat == o.forWhat && childIsFixed == o.childIsFixed &&
+               absChildIsFixed == o.absChildIsFixed &&
                seenContainingBlockForAbsBlock ==
                    o.seenContainingBlockForAbsBlock &&
                seenAbsBlock == o.seenAbsBlock &&
