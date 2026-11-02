@@ -25,7 +25,8 @@ sudo apt-get install -y \
     libx11-dev libxext-dev libxrender-dev libxi-dev \
     libegl-dev libgles-dev libgl1-mesa-dev \
     libpng-dev libturbojpeg0-dev libjpeg-dev libgif-dev libwebp-dev \
-    libcurl4-openssl-dev libssl-dev libicu-dev libcap-dev libasound2-dev zlib1g-dev
+    libcurl4-openssl-dev libssl-dev libicu-dev libcap-dev libasound2-dev zlib1g-dev \
+    fonts-dejavu-core fonts-liberation
 
 # optional for zeromq.
 sudo apt-get install -y asciidoc xmlto
@@ -513,7 +514,10 @@ family whose name does not contain `Ahem` or `CanvasTest` and loads images
 synchronously (`ComputedStyle::loadFont`); it is what the pixel suites and
 `--font-dep` lists ask for. `--hide-window` only hides the window, so a
 test run without `--regression-test` (internal tests, the WPT suites)
-renders with the page's own web fonts and the system fonts.
+renders with the page's own web fonts and the system fonts. The WPT
+runners additionally pin the font set to the CI image's (DejaVu,
+Liberation, Ahem, SamsungOne) through `tool/wpt/fonts.conf`; see
+`docs/wpt.md`.
 
 ### Summary
 ``` sh

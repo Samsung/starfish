@@ -1,13 +1,13 @@
-http://web-platform.test:8000/css/css-fonts/alternates-order.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/alternates-order.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/ascent-descent-override.html
 http://web-platform.test:8000/css/css-fonts/downloadable-font-scoped-to-document.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/first-available-font-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/first-available-font-002.html
 http://web-platform.test:8000/css/css-fonts/first-available-font-003.html
-http://web-platform.test:8000/css/css-fonts/first-available-font-004.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/first-available-font-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/first-available-font-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/first-available-font-006.html
-http://web-platform.test:8000/css/css-fonts/first-available-font-007.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/first-available-font-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-colorization.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-default-01.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-default-02.html
@@ -26,7 +26,7 @@ http://web-platform.test:8000/css/css-fonts/font-face-style-auto-static.html
 http://web-platform.test:8000/css/css-fonts/font-face-style-auto-variable.html
 http://web-platform.test:8000/css/css-fonts/font-face-style-default-variable.html
 http://web-platform.test:8000/css/css-fonts/font-face-unicode-range-2.html
-http://web-platform.test:8000/css/css-fonts/font-face-unicode-range-nbsp.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-face-unicode-range-nbsp.html
 http://web-platform.test:8000/css/css-fonts/font-face-weight-auto-static.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-face-weight-auto-variable.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-face-weight-default-variable.html
@@ -96,13 +96,13 @@ http://web-platform.test:8000/css/css-fonts/font-palette-27.html
 http://web-platform.test:8000/css/css-fonts/font-palette-28.html
 http://web-platform.test:8000/css/css-fonts/font-palette-29.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/font-palette-3.html
-http://web-platform.test:8000/css/css-fonts/font-palette-30.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-palette-30.html
 http://web-platform.test:8000/css/css-fonts/font-palette-31.html
 http://web-platform.test:8000/css/css-fonts/font-palette-32.html
 http://web-platform.test:8000/css/css-fonts/font-palette-33.html
 http://web-platform.test:8000/css/css-fonts/font-palette-34.html
 http://web-platform.test:8000/css/css-fonts/font-palette-35.html
-http://web-platform.test:8000/css/css-fonts/font-palette-36.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-palette-36.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/font-palette-4.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/font-palette-5.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/font-palette-6.html
@@ -111,7 +111,7 @@ http://web-platform.test:8000/css/css-fonts/font-palette-36.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/font-palette-9.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-fonts/font-palette-add-2.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/font-palette-add.html
-http://web-platform.test:8000/css/css-fonts/font-palette-empty-font-family.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-palette-empty-font-family.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-fonts/font-palette-modify-2.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/font-palette-modify.html
 http://web-platform.test:8000/css/css-fonts/font-palette-non-ident-font-family.html
@@ -145,17 +145,17 @@ http://web-platform.test:8000/css/css-fonts/font-size-zero-1-ref.html
 http://web-platform.test:8000/css/css-fonts/font-size-zero-1.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-size-zero-2.html
 http://web-platform.test:8000/css/css-fonts/font-size-zero-3.html
-http://web-platform.test:8000/css/css-fonts/font-stretch-01.html
-http://web-platform.test:8000/css/css-fonts/font-stretch-02.html
-http://web-platform.test:8000/css/css-fonts/font-stretch-03.html
-http://web-platform.test:8000/css/css-fonts/font-stretch-04.html
-http://web-platform.test:8000/css/css-fonts/font-stretch-05.html
-http://web-platform.test:8000/css/css-fonts/font-stretch-06.html
-http://web-platform.test:8000/css/css-fonts/font-stretch-07.html
-http://web-platform.test:8000/css/css-fonts/font-stretch-08.html
-http://web-platform.test:8000/css/css-fonts/font-stretch-09.html
-http://web-platform.test:8000/css/css-fonts/font-stretch-10.html
-http://web-platform.test:8000/css/css-fonts/font-stretch-11.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-stretch-01.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-stretch-02.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-stretch-03.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-stretch-04.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-stretch-05.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-stretch-06.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-stretch-07.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-stretch-08.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-stretch-09.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-stretch-10.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-stretch-11.html
 http://web-platform.test:8000/css/css-fonts/font-stretch-12.html
 http://web-platform.test:8000/css/css-fonts/font-stretch-13.html
 http://web-platform.test:8000/css/css-fonts/font-stretch-14.html
@@ -271,7 +271,7 @@ http://web-platform.test:8000/css/css-fonts/font-variation-settings-descriptor-0
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-weight-lighter-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/font-weight-normal-001.xht
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/hiragana-katakana-kerning.html
-http://web-platform.test:8000/css/css-fonts/italic-oblique-fallback.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/italic-oblique-fallback.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/lang-attribute-affects-rendering-of-second-text-run.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/lang-attribute-affects-rendering.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/line-gap-override.html
@@ -291,13 +291,13 @@ http://web-platform.test:8000/css/css-fonts/math-script-level-and-math-style/mat
 http://web-platform.test:8000/css/css-fonts/math-script-level-and-math-style/math-script-level-auto-and-math-style-004.tentative.html
 http://web-platform.test:8000/css/css-fonts/math-script-level-and-math-style/math-script-level-auto-and-math-style-005.tentative.html
 http://web-platform.test:8000/css/css-fonts/math-script-level-and-math-style/math-script-level-font-size-clamping-001.tentative.html
-http://web-platform.test:8000/css/css-fonts/metrics-override-normal-keyword.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/metrics-override-normal-keyword.html
 http://web-platform.test:8000/css/css-fonts/oblique-last-resort-weight-selection.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-fonts/palette-values-rule-add-2.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/palette-values-rule-add.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-fonts/palette-values-rule-delete-2.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/palette-values-rule-delete.html
-http://web-platform.test:8000/css/css-fonts/quoted-generic-ignored.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/quoted-generic-ignored.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/rcap-in-monospace.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/rch-in-monospace.html
 http://web-platform.test:8000/css/css-fonts/rem-in-monospace.html
@@ -306,7 +306,7 @@ http://web-platform.test:8000/css/css-fonts/rem-in-monospace.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/rlh-in-monospace.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/separators.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/size-adjust-01.html
-http://web-platform.test:8000/css/css-fonts/size-adjust-02.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/size-adjust-02.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/size-adjust-03.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/size-adjust-text-decoration.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/size-adjust-unicode-range-system-fallback.html
@@ -337,7 +337,7 @@ http://web-platform.test:8000/css/css-fonts/synthetic-oblique-out-of-capabilitie
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/system-ui-ar.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/system-ui-ja-vs-zh.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/system-ui-ja.html
-http://web-platform.test:8000/css/css-fonts/system-ui-mixed.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/system-ui-mixed.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/system-ui-ur-vs-ar.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/system-ui-ur.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/system-ui-zh.html
@@ -346,7 +346,7 @@ http://web-platform.test:8000/css/css-fonts/test-synthetic-bold.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/test-synthetic-italic-2.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/test-synthetic-italic-3.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-fonts/test-synthetic-italic.html
-http://web-platform.test:8000/css/css-fonts/variation-sequences.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/variation-sequences.html
 http://web-platform.test:8000/css/css-fonts/variations/font-descriptor-range-reversed.html
 http://web-platform.test:8000/css/css-fonts/variations/font-slant-1.html
 http://web-platform.test:8000/css/css-fonts/variations/font-slant-2a.html

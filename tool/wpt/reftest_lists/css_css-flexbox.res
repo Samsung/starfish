@@ -934,8 +934,8 @@ http://web-platform.test:8000/css/css-flexbox/position-fixed-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/scrollbars-no-margin.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/scrollbars.html
 http://web-platform.test:8000/css/css-flexbox/select-element-multiple.html
-http://web-platform.test:8000/css/css-flexbox/select-element-zero-height-001.html
-http://web-platform.test:8000/css/css-flexbox/select-element-zero-height-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/select-element-zero-height-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/select-element-zero-height-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/stretch-flex-item-checkbox-input.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/stretch-flex-item-radio-input.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/stretch-input-in-column.html
@@ -987,4 +987,4 @@ http://web-platform.test:8000/css/css-flexbox/table-with-float-paint.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/table-with-infinite-max-intrinsic-width.html
 http://web-platform.test:8000/css/css-flexbox/text-overflow-on-flexbox-001.html
 http://web-platform.test:8000/css/css-flexbox/webkit-box-vertical-writing-mode.html
-http://web-platform.test:8000/css/css-flexbox/whitespace-in-flexitem-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/whitespace-in-flexitem-001.html

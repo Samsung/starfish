@@ -94,8 +94,8 @@ http://web-platform.test:8000/css/css-text-decor/text-decoration-subelements-004
 http://web-platform.test:8000/css/css-text-decor/text-decoration-subelements-005.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-text-decor/text-decoration-thickness-001.html
 http://web-platform.test:8000/css/css-text-decor/text-decoration-thickness-calc.html
-http://web-platform.test:8000/css/css-text-decor/text-decoration-thickness-fixed.html
-http://web-platform.test:8000/css/css-text-decor/text-decoration-thickness-from-font-variable.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text-decor/text-decoration-thickness-fixed.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text-decor/text-decoration-thickness-from-font-variable.html
 http://web-platform.test:8000/css/css-text-decor/text-decoration-thickness-from-zero-sized-font.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text-decor/text-decoration-thickness-ink-skip-dilation.html
 http://web-platform.test:8000/css/css-text-decor/text-decoration-thickness-length-rounding-001.html
@@ -290,7 +290,7 @@ http://web-platform.test:8000/css/css-text-decor/text-underline-offset-variable.
 http://web-platform.test:8000/css/css-text-decor/text-underline-position-001a.html
 http://web-platform.test:8000/css/css-text-decor/text-underline-position-001b.html
 http://web-platform.test:8000/css/css-text-decor/text-underline-position-auto-001.html
-http://web-platform.test:8000/css/css-text-decor/text-underline-position-from-font-variable.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text-decor/text-underline-position-from-font-variable.html
 http://web-platform.test:8000/css/css-text-decor/text-underline-position-horizontal.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text-decor/text-underline-position-vertical-ja.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text-decor/text-underline-position-vertical.html

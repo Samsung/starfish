@@ -70,7 +70,7 @@ from wpt_runner import (RE_PASS, RE_FAIL, RE_DONE, STARFISH,  # noqa: E402
 # is parsed once in main() and passed directly to enumerate_tests()/
 # run_one_reftest() -- no separate load_manifest() call (see enumerate_tests()
 # docstring).
-from wpt_reftest import ensure_manifest, ensure_imgdiff  # noqa: E402,F401
+from wpt_reftest import ensure_manifest, ensure_imgdiff, starfish_env  # noqa: E402,F401
 
 TEST_TYPES = ("testharness", "reftest", "crashtest")
 
@@ -124,12 +124,7 @@ def run_test(url, timeout, test_type="testharness", manifest=None):
         return {"status": "OK" if ok else reason, "subtests": [],
                 "message": None if ok else reason}
 
-    env = dict(os.environ)
-    env["HIDE_WINDOW"] = "1"
-    wpt_domains = ".web-platform.test,.not-web-platform.test"
-    for key in ("no_proxy", "NO_PROXY"):
-        existing = env.get(key, "")
-        env[key] = (existing + "," + wpt_domains) if existing else wpt_domains
+    env = starfish_env()
     try:
         with isolated_storage_dir() as storage_dir:
             cmd = [STARFISH, url, "--hide-window", "--width=800", "--height=600",

@@ -53,8 +53,8 @@ http://web-platform.test:8000/css/css-text/hyphens/hyphens-auto-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/hyphens/hyphens-auto-min-content.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/hyphens/hyphens-character.html
 http://web-platform.test:8000/css/css-text/hyphens/hyphens-manual-010.html
-http://web-platform.test:8000/css/css-text/hyphens/hyphens-manual-011.html
-http://web-platform.test:8000/css/css-text/hyphens/hyphens-manual-012.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/hyphens/hyphens-manual-011.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/hyphens/hyphens-manual-012.html
 http://web-platform.test:8000/css/css-text/hyphens/hyphens-manual-013.html
 http://web-platform.test:8000/css/css-text/hyphens/hyphens-manual-inline-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/hyphens/hyphens-manual-inline-011.html
@@ -380,7 +380,7 @@ http://web-platform.test:8000/css/css-text/line-break/line-break-strict-hyphens-
 http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-012.html
 http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-013.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-014.html
-http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-015.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-015.html
 http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-016.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-017.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-018.html
@@ -560,26 +560,26 @@ http://web-platform.test:8000/css/css-text/shaping/reference/shaping-012-ref.htm
 http://web-platform.test:8000/css/css-text/shaping/reference/shaping-024-ref.html
 http://web-platform.test:8000/css/css-text/shaping/reference/shaping-025-ref.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-000.html
-http://web-platform.test:8000/css/css-text/shaping/shaping-001.html
-http://web-platform.test:8000/css/css-text/shaping/shaping-002.html
-http://web-platform.test:8000/css/css-text/shaping/shaping-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-002.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-007.html
-http://web-platform.test:8000/css/css-text/shaping/shaping-008.html
-http://web-platform.test:8000/css/css-text/shaping/shaping-009.html
-http://web-platform.test:8000/css/css-text/shaping/shaping-010.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-008.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-009.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-011.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-012.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-013.html
-http://web-platform.test:8000/css/css-text/shaping/shaping-014.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-014.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-016.html
-http://web-platform.test:8000/css/css-text/shaping/shaping-017.html
-http://web-platform.test:8000/css/css-text/shaping/shaping-018.html
-http://web-platform.test:8000/css/css-text/shaping/shaping-020.html
-http://web-platform.test:8000/css/css-text/shaping/shaping-021.html
-http://web-platform.test:8000/css/css-text/shaping/shaping-022.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-017.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-018.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-020.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-021.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping-022.html
 http://web-platform.test:8000/css/css-text/shaping/shaping-023.html
 http://web-platform.test:8000/css/css-text/shaping/shaping-024.html
 http://web-platform.test:8000/css/css-text/shaping/shaping-025.html
@@ -934,7 +934,7 @@ http://web-platform.test:8000/css/css-text/text-transform/text-transform-lowerca
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-transform/text-transform-tailoring-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-transform/text-transform-tailoring-001a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-transform/text-transform-tailoring-002.html
-http://web-platform.test:8000/css/css-text/text-transform/text-transform-tailoring-002a.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-transform/text-transform-tailoring-002a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-transform/text-transform-tailoring-003.html
 http://web-platform.test:8000/css/css-text/text-transform/text-transform-tailoring-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-transform/text-transform-tailoring-005.html
@@ -1151,8 +1151,8 @@ http://web-platform.test:8000/css/css-text/white-space/full-width-leading-spaces
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/line-edge-white-space-collapse-001.html
 http://web-platform.test:8000/css/css-text/white-space/line-edge-white-space-collapse-002.html
 http://web-platform.test:8000/css/css-text/white-space/lone-cr-001.tentative.html
-http://web-platform.test:8000/css/css-text/white-space/object-replacement-1.html
-http://web-platform.test:8000/css/css-text/white-space/object-replacement-2.html
+# [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-text/white-space/object-replacement-1.html
+# [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-text/white-space/object-replacement-2.html
 http://web-platform.test:8000/css/css-text/white-space/pre-001.html
 http://web-platform.test:8000/css/css-text/white-space/pre-float-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/pre-line-051.html

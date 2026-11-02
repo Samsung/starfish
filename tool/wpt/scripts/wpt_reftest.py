@@ -90,6 +90,26 @@ SERVER = ORIGINS["http"]
 # block-buffer.
 STARFISH_CMD_PREFIX = ["stdbuf", "-oL", "-eL"]
 
+# Fonts the runners pin: tool/wpt/fonts.conf exposes only the CI image's
+# font directories and FC_LANG=en makes generic families resolve as they
+# do there, so a host's extra fonts or locale cannot change a verdict.
+# Both are overridable from the environment for a deliberate measurement.
+WPT_FONTS_CONF = os.path.join(REPO_ROOT, "tool", "wpt", "fonts.conf")
+
+
+def starfish_env():
+    """Environment for one Starfish run: hidden window, direct access to the
+    WPT hosts, and the pinned font set (see WPT_FONTS_CONF)."""
+    env = dict(os.environ)
+    env["HIDE_WINDOW"] = "1"
+    wpt_domains = ".web-platform.test,.not-web-platform.test"
+    for key in ("no_proxy", "NO_PROXY"):
+        existing = env.get(key, "")
+        env[key] = (existing + "," + wpt_domains) if existing else wpt_domains
+    env.setdefault("FONTCONFIG_FILE", WPT_FONTS_CONF)
+    env.setdefault("FC_LANG", "en")
+    return env
+
 
 def _manifest_path(wpt_root):
     return os.path.join(wpt_root, "MANIFEST.json")
@@ -232,12 +252,7 @@ def _screenshot(url, out_path, timeout, width=800, height=600):
     to stdout, see src/shell/Shell.cpp) on any failure path, so a caller can
     surface it (e.g. wpt_runner.py's --verbose); it is None on success.
     """
-    env = dict(os.environ)
-    env["HIDE_WINDOW"] = "1"
-    wpt_domains = ".web-platform.test,.not-web-platform.test"
-    for key in ("no_proxy", "NO_PROXY"):
-        existing = env.get(key, "")
-        env[key] = (existing + "," + wpt_domains) if existing else wpt_domains
+    env = starfish_env()
     try:
         with _isolated_storage_dir() as storage_dir:
             cmd = STARFISH_CMD_PREFIX + [STARFISH, url, "--hide-window", "--screen-shot=" + out_path,
