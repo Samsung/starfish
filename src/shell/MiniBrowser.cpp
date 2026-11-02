@@ -96,9 +96,10 @@ void MiniBrowser::parseArgs(int argc, char* argv[],
         } else if (strstr(argv[i], "--screen-shot-height=") == argv[i]) {
             env.screenShotHeight = argv[i] + strlen("--screen-shot-height=");
         } else if (strcmp(argv[i], "--hide-window") == 0) {
-            // regression test, pixel test only
+            // Only hides the window. Regression mode (font substitution,
+            // synchronous image loads) is opt-in via --regression-test so a
+            // headless run can still exercise the page's own web fonts.
             env.hideWindow = true;
-            env.flag |= StarfishStartUpFlag::enableRegressionTest;
         } else if (strcmp(argv[i], "--network-log-verbose") == 0) {
             env.networkLogVerbose = true;
         } else if (strstr(argv[i], "--posX=") == argv[i]) {
