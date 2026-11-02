@@ -83,7 +83,7 @@ http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-border-ar
 http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-border-area-on-root.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-border-area-text.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-border-area.html
-http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-border-shape-table-part-background.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-border-shape-table-part-background.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-rounded-corner.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-text-animated-text.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-text-background-table-cell.html

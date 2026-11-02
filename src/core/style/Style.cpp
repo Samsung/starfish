@@ -64,6 +64,7 @@
 #include "core/page/WebView.h"
 #include "core/style/AncestorSelectorFilter.h"
 #include "core/style/CalcData.h"
+#include "core/style/ClipPathShape.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/CSSCounterFunction.h"
 #include "core/style/CSSGradientValue.h"
@@ -1386,6 +1387,9 @@ bool CSSStyleValuePair::valueEquals(const CSSStyleValuePair& src) const
     case RectValueKind:
         return *m_value.m_rect == *src.m_value.m_rect;
 
+    case ClipPathShapeValueKind:
+        return m_value.m_clipPathShape->equals(src.m_value.m_clipPathShape);
+
     case UserSelectValueKind:
         return m_value.m_userSelect == src.m_value.m_userSelect;
 
@@ -1495,6 +1499,9 @@ void* CSSStyleValuePair::toPointerValueIfPossible() const
         break;
     case RectValueKind:
         ptr = m_value.m_rect;
+        break;
+    case ClipPathShapeValueKind:
+        ptr = m_value.m_clipPathShape;
         break;
     case GridTemplateUnits:
         ptr = m_value.m_gridTemplateUnits;
@@ -2459,6 +2466,8 @@ String* CSSStyleValuePair::toString() const
             return clip()->toString();
         }
         return String::fromUTF8("auto");
+    case CSSStyleValuePair::ValueKind::ClipPathShapeValueKind:
+        return clipPathShape()->toString();
     case CSSStyleValuePair::ValueKind::BorderCollapseValueKind:
         switch (borderCollapseValue()) {
         case SeparateBorderCollapseValue:
@@ -7880,9 +7889,21 @@ void StyleResolver::applyProperty(Element* element,
         }
         break;
     case CSSStyleValuePair::KeyKind::ClipPath:
+        // A shape and a url() are mutually exclusive; the inherit/initial
+        // branches below only reset the url, so drop any shape up front.
+        style->setClipPathShape(nullptr);
         if (newCssValue.valueKind() ==
             CSSStyleValuePair::ValueKind::UrlValueKind) {
             style->setClipPath(newCssValue.urlStringValue());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ClipPathShapeValueKind) {
+            // The specified value is shared between elements; the computed
+            // copy gets its own lengths resolved.
+            style->setClipPath(String::emptyString);
+            style->setClipPathShape(newCssValue.clipPathShape()->clone());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::None) {
+            style->setClipPath(String::emptyString);
         } else if (newCssValue.valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial ||
                    newCssValue.valueKind() ==
@@ -7890,7 +7911,10 @@ void StyleResolver::applyProperty(Element* element,
             style->setClipPath(String::emptyString);
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::Inherit) {
-            style->setClipPath(String::emptyString);
+            style->setClipPath(parentStyle->clipPath());
+            if (auto shape = parentStyle->clipPathShape()) {
+                style->setClipPathShape(shape->clone());
+            }
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::Auto) {
@@ -14663,10 +14687,20 @@ bool CSSStyleValuePair::updateValueClipPath(Document* document,
                                             const CSSTokenVector& tokens)
 {
     STARFISH_ASSERT(document != nullptr);
-    if (tokens.size() != 1)
+    if (tokens.size() == 1 && CSSPropertyParser::parseUrl(
+                                  tokens[0].data(), tokens[0].length(), this)) {
+        return true;
+    }
+    if (tokens.size() == 1 && tokens[0].equals("none")) {
+        setValueKind(ValueKind::None);
+        return true;
+    }
+    ClipPathShape* shape = ClipPathShape::parse(tokens);
+    if (!shape) {
         return false;
-    return CSSPropertyParser::parseUrl(tokens[0].data(), tokens[0].length(),
-                                       this);
+    }
+    setClipPathShape(shape);
+    return true;
 }
 
 static bool parseMinMax(CSSTokenValue& token, GridLength& min, GridLength& max)

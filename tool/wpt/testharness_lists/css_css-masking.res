@@ -39,7 +39,7 @@ http://web-platform.test:8000/css/css-masking/parsing/mask-composite-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-masking/parsing/clip-computed.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-masking/parsing/clip-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-masking/parsing/clip-path-computed.html
-# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-masking/parsing/clip-path-invalid.html
+http://web-platform.test:8000/css/css-masking/parsing/clip-path-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-masking/parsing/clip-path-shape-parsing.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-masking/parsing/clip-path-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-masking/parsing/clip-rule-computed.html

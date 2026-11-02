@@ -1756,7 +1756,13 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::ClipPath: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::ClipPath);
-        p.setUrlValue(style->clipPath());
+        if (auto shape = style->clipPathShape()) {
+            p.setClipPathShape(shape.value());
+        } else if (!style->clipPath()->length()) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::None);
+        } else {
+            p.setUrlValue(style->clipPath());
+        }
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::ColumnGap: {

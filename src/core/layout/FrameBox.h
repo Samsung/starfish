@@ -913,6 +913,9 @@ public:
     // Clips |canvas|, in this box's coordinates, to |box| with its corners
     // rounded by the border radius.
     void clipToBox(Canvas* canvas, BoxValue box);
+    // Clips |canvas|, in this box's local coordinates, to the clip-path
+    // <basic-shape> or <geometry-box>.
+    void clipToClipPathShape(Canvas* canvas, ClipPathShape* shape);
     static void paintBackground(Canvas* canvas, FrameBox* box,
                                 HTMLElement* rootOrBodyelement);
     static void paintGradient(Canvas* canvas, FrameBox* box,

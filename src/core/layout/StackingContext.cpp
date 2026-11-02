@@ -1335,12 +1335,13 @@ bool StackingContext::isOwnerBackgroundDrawnByCompositor()
         return false;
     }
     ComputedStyle* s = owner()->style();
-    if (s->maskLayerSize()) {
+    if (s->maskLayerSize() || s->clipPathShape()) {
         return false;
     }
     for (StackingContext* ancestor = parent(); ancestor;
          ancestor = ancestor->parent()) {
-        if (ancestor->owner()->style()->maskLayerSize()) {
+        ComputedStyle* ancestorStyle = ancestor->owner()->style();
+        if (ancestorStyle->maskLayerSize() || ancestorStyle->clipPathShape()) {
             return false;
         }
     }
@@ -1927,6 +1928,10 @@ void StackingContext::fillGraphicsBufferContents(
                 rect->left().numberData(), rect->top().numberData(),
                 rect->right().numberData(), rect->bottom().numberData()));
         }
+    }
+
+    if (auto shape = owner()->style()->clipPathShape()) {
+        owner()->clipToClipPathShape(canvas, shape.value());
     }
 
     bool canRejectPainting =
@@ -3125,6 +3130,10 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                 rect->left().numberData(), rect->top().numberData(),
                 rect->right().numberData(), rect->bottom().numberData()));
         }
+    }
+
+    if (auto shape = owner()->style()->clipPathShape()) {
+        owner()->clipToClipPathShape(canvas, shape.value());
     }
 
     bool canRejectPainting;

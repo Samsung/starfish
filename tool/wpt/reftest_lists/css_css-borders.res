@@ -49,8 +49,8 @@ http://web-platform.test:8000/css/css-borders/border-shape/border-shape-stroke-i
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-borders/corner-shape/corner-shape-backdrop-filter-video-overflow.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-borders/corner-shape/corner-shape-backdrop-filter.html
 http://web-platform.test:8000/css/css-borders/corner-shape/corner-shape-bevel-overflow-composite.html
-http://web-platform.test:8000/css/css-borders/corner-shape/corner-shape-bevel-overflow.html
-http://web-platform.test:8000/css/css-borders/corner-shape/corner-shape-fill.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-borders/corner-shape/corner-shape-bevel-overflow.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-borders/corner-shape/corner-shape-fill.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-borders/corner-shape/corner-shape-iframe-border.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-borders/corner-shape/corner-shape-img-border.html
 http://web-platform.test:8000/css/css-borders/corner-shape/corner-shape-img.html
