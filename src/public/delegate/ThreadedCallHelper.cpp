@@ -27,8 +27,14 @@
 #include <condition_variable>
 #include <mutex>
 
-#define THREAD_MINIMUM_STACK_SIZE \
-    4 * 1024 * 1024 // we need at least 4MB for stack
+// The engine thread runs page script and every GL call, so it needs the same
+// stack a process main thread gets by default (8MB on Linux): a GL driver's
+// shader compiler recurses per expression term, and a WebGL shader with a
+// long expression overflowed 4MB inside the driver. Escargot bounds its own
+// use separately (STACK_USAGE_LIMIT), so the extra room is native headroom.
+// Untouched stack pages are never committed, so this costs address space,
+// not memory.
+#define THREAD_MINIMUM_STACK_SIZE (8 * 1024 * 1024)
 
 namespace LWEDelegate {
 
