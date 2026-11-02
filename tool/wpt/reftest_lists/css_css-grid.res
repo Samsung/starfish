@@ -1155,8 +1155,8 @@ http://web-platform.test:8000/css/css-grid/grid-model/grid-areas-overflowing-gri
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-model/grid-areas-overflowing-grid-container-009.html
 http://web-platform.test:8000/css/css-grid/grid-model/grid-container-ignores-first-letter-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-model/grid-container-scrollbar-001.html
-http://web-platform.test:8000/css/css-grid/grid-model/grid-container-scrollbar-vertical-lr-001.html
-http://web-platform.test:8000/css/css-grid/grid-model/grid-container-scrollbar-vertical-rl-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-model/grid-container-scrollbar-vertical-lr-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-model/grid-container-scrollbar-vertical-rl-001.html
 http://web-platform.test:8000/css/css-grid/grid-model/grid-container-scrollbars-sizing-001.html
 http://web-platform.test:8000/css/css-grid/grid-model/grid-container-scrollbars-sizing-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-model/grid-display-grid-001.html

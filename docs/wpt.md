@@ -114,6 +114,16 @@ Verify: `getent hosts web-platform.test www.web-platform.test` should print two
 Pixel-diff fonts (Ahem etc.) and `tool/imgdiff` come from
 `ninja -C <build> install_pixel_test_dep` (already needed for other suites).
 
+The WPT runners launch Starfish with `--hide-window` only, never with
+`--regression-test`, so a test measures the web font it declares or the
+system font it names rather than the SamsungOne substitute. To keep that
+measurement identical on every machine, `starfish_env()` in
+`tool/wpt/scripts/wpt_reftest.py` pins `FONTCONFIG_FILE` to
+`tool/wpt/fonts.conf` (DejaVu, Liberation and the `~/.fonts` Ahem/SamsungOne
+set, i.e. the CI image's fonts) and `FC_LANG=en`; export either variable
+yourself to measure with a different set. The DejaVu and Liberation
+packages are build prerequisites (`README.md`).
+
 ## MANIFEST freshness
 
 `ensure_manifest()` generates `third_party/wpt/MANIFEST.json` when it is

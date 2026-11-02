@@ -1799,8 +1799,8 @@ http://web-platform.test:8000/css/CSS2/fonts/font-variant-applies-to-014.xht
 http://web-platform.test:8000/css/CSS2/fonts/font-variant-applies-to-015.xht
 http://web-platform.test:8000/css/CSS2/fonts/font-variant-applies-to-016.xht
 http://web-platform.test:8000/css/CSS2/fonts/font-variant-applies-to-017.xht
-http://web-platform.test:8000/css/CSS2/fonts/font-weight-applies-to-001.xht
-http://web-platform.test:8000/css/CSS2/fonts/font-weight-applies-to-002.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/fonts/font-weight-applies-to-001.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/fonts/font-weight-applies-to-002.xht
 http://web-platform.test:8000/css/CSS2/fonts/font-weight-applies-to-005.xht
 http://web-platform.test:8000/css/CSS2/fonts/font-weight-applies-to-006.xht
 http://web-platform.test:8000/css/CSS2/fonts/font-weight-applies-to-007.xht
@@ -1813,12 +1813,12 @@ http://web-platform.test:8000/css/CSS2/fonts/font-weight-applies-to-015.xht
 http://web-platform.test:8000/css/CSS2/fonts/font-weight-applies-to-016.xht
 http://web-platform.test:8000/css/CSS2/fonts/font-weight-applies-to-017.xht
 http://web-platform.test:8000/css/CSS2/fonts/font-weight-rule-001.xht
-http://web-platform.test:8000/css/CSS2/fonts/font-weight-rule-003.xht
-http://web-platform.test:8000/css/CSS2/fonts/font-weight-rule-004.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/fonts/font-weight-rule-003.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/fonts/font-weight-rule-004.xht
 http://web-platform.test:8000/css/CSS2/fonts/font-weight-rule-005.xht
 http://web-platform.test:8000/css/CSS2/fonts/font-weight-rule-006.xht
 http://web-platform.test:8000/css/CSS2/fonts/font-weight-rule-007.xht
-http://web-platform.test:8000/css/CSS2/fonts/font-weight-rule-008.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/fonts/font-weight-rule-008.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/fonts/fonts-010.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/fonts/fonts-011.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/fonts/fonts-012.xht
@@ -1994,7 +1994,7 @@ http://web-platform.test:8000/css/CSS2/generated-content/content-150.xht
 http://web-platform.test:8000/css/CSS2/generated-content/content-152.xht
 http://web-platform.test:8000/css/CSS2/generated-content/content-153.xht
 http://web-platform.test:8000/css/CSS2/generated-content/content-155.xht
-http://web-platform.test:8000/css/CSS2/generated-content/content-156.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/generated-content/content-156.xht
 http://web-platform.test:8000/css/CSS2/generated-content/content-157.xht
 http://web-platform.test:8000/css/CSS2/generated-content/content-158.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/generated-content/content-159.xht
@@ -2547,7 +2547,7 @@ http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-collapse-038.
 http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-collapse-clear-011.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-collapse-min-height-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-collapse-min-height-002.xht
-http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-em-inherit-001.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-em-inherit-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-inline-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-inline-002.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-left-004.xht
@@ -2845,7 +2845,7 @@ http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-114.htm
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-bottom-applies-to-013.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-bottom-applies-to-014.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-bottom-applies-to-015.xht
-http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-em-inherit-001.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-em-inherit-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-left-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-left-002.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-left-003.xht
@@ -3164,9 +3164,9 @@ http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-002i.x
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-003-nosplit-ref.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-003-ref.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-003.xht
-http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-004-nosplit-ref.xht
-http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-004-ref.xht
-http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-004.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-004-nosplit-ref.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-004-ref.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-004.xht
 http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-006-nosplit-ref.xht
 http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-006-ref.xht
 http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-006.xht
@@ -3181,8 +3181,8 @@ http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-008c.x
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-009-nosplit-ref.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-009-ref.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-009.xht
-http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-010-nosplit-ref.xht
-http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-010-ref.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-010-nosplit-ref.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-010-ref.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-010.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-011-nosplit-ref.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-insert-011-ref.xht
@@ -3212,7 +3212,7 @@ http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-margins-002b.
 http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-margins-004.html
 http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-margins-005.html
 http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-nested-001.xht
-http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-nested-002.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-nested-002.xht
 http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-percents-001.xht
 http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-remove-000.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-in-inline-remove-001-nosplit-ref.xht
@@ -5442,26 +5442,26 @@ http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-017.xht
 http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-018.xht
 http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-019.xht
 http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-020.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-059.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-060.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-061.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-062.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-063.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-064.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-065.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-066.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-067.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-068.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-069.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-070.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-071.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-072.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-073.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-074.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-075.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-076.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-077.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-078.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-059.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-060.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-061.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-062.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-063.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-064.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-065.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-066.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-067.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-068.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-069.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-070.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-071.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-072.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-073.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-074.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-075.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-076.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-077.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-078.xht
 http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-079.xht
 http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-080.xht
 http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-081.xht
@@ -5470,18 +5470,18 @@ http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-082.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-084.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-085.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-086.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-087.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-088.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-089.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-090.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-091.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-092.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-093.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-094.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-095.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-096.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-097.xht
-http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-098.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-087.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-088.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-089.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-090.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-091.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-092.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-093.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-094.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-095.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-096.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-097.xht
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-098.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-099.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-100.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-anonymous-objects-101.xht
@@ -6147,8 +6147,8 @@ http://web-platform.test:8000/css/CSS2/visudet/inline-block-baseline-016.html
 http://web-platform.test:8000/css/CSS2/visudet/line-height-201.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/visudet/line-height-202.html
 http://web-platform.test:8000/css/CSS2/visudet/line-height-203.html
-http://web-platform.test:8000/css/CSS2/visudet/line-height-204.html
-http://web-platform.test:8000/css/CSS2/visudet/line-height-205.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/visudet/line-height-204.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/visudet/line-height-205.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/CSS2/visudet/line-height-206.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/visudet/replaced-elements-all-auto.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/visudet/replaced-elements-height-20.html
@@ -6243,7 +6243,7 @@ http://web-platform.test:8000/css/CSS2/visuren/remove-from-split-inline-6.html
 http://web-platform.test:8000/css/CSS2/visuren/remove-split-inline-1.html
 http://web-platform.test:8000/css/CSS2/visuren/right-offset-position-fixed-001.xht
 http://web-platform.test:8000/css/CSS2/visuren/split-inner-inline-1.html
-http://web-platform.test:8000/css/CSS2/visuren/split-inner-inline-2.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/visuren/split-inner-inline-2.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/visuren/table-pseudo-in-part3-1.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/visuren/top-114.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/visuren/top-115.xht

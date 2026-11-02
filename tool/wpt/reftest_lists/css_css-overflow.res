@@ -230,7 +230,7 @@ http://web-platform.test:8000/css/css-overflow/line-clamp/webkit-line-clamp-005.
 http://web-platform.test:8000/css/css-overflow/line-clamp/webkit-line-clamp-006.html
 http://web-platform.test:8000/css/css-overflow/line-clamp/webkit-line-clamp-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/line-clamp/webkit-line-clamp-008.html
-http://web-platform.test:8000/css/css-overflow/line-clamp/webkit-line-clamp-009.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/line-clamp/webkit-line-clamp-009.html
 http://web-platform.test:8000/css/css-overflow/line-clamp/webkit-line-clamp-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/line-clamp/webkit-line-clamp-011.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/line-clamp/webkit-line-clamp-012.html

@@ -57,7 +57,7 @@ from repo_paths import REPO_ROOT  # noqa: E402
 from wpt_scope import collect, read_res  # noqa: E402, F401
 from wpt_server import wpt_serve, DEFAULT_WPT_ROOT  # noqa: E402
 from wpt_reftest import (run_reftest, load_manifest, ensure_manifest,  # noqa: E402
-                         ensure_imgdiff)
+                         ensure_imgdiff, starfish_env)
 
 STARFISH = os.path.abspath(os.environ.get(
     "STARFISH_BIN", os.path.join(REPO_ROOT, "Starfish")))
@@ -205,12 +205,7 @@ def run_one(url, timeout, storage_dir=None, _retries=CONNECT_REFUSED_RETRIES):
     _retries: bounded retries left for the connect-refused-on-navigation
     infra hiccup (RE_CONNECT_REFUSED); 0 disables retrying.
     """
-    env = dict(os.environ)
-    env["HIDE_WINDOW"] = "1"
-    wpt_domains = ".web-platform.test,.not-web-platform.test"
-    for key in ("no_proxy", "NO_PROXY"):
-        existing = env.get(key, "")
-        env[key] = (existing + "," + wpt_domains) if existing else wpt_domains
+    env = starfish_env()
     try:
         with _storage_dir_scope(storage_dir) as d:
             cmd = STARFISH_CMD_PREFIX + [STARFISH, url, "--hide-window", "--width=800", "--height=600",
@@ -278,12 +273,7 @@ def run_one_crashtest(url, timeout):
     to stdout, see src/shell/Shell.cpp) for the crash-ish reasons; None for OK.
     """
     gated_url = _with_crashtest_marker(url)
-    env = dict(os.environ)
-    env["HIDE_WINDOW"] = "1"
-    wpt_domains = ".web-platform.test,.not-web-platform.test"
-    for key in ("no_proxy", "NO_PROXY"):
-        existing = env.get(key, "")
-        env[key] = (existing + "," + wpt_domains) if existing else wpt_domains
+    env = starfish_env()
     try:
         with isolated_storage_dir() as storage_dir:
             cmd = STARFISH_CMD_PREFIX + [STARFISH, gated_url, "--hide-window", "--width=800", "--height=600",

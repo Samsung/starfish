@@ -307,9 +307,9 @@ http://web-platform.test:8000/css/css-writing-modes/bidi-dynamic-iframe-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-embed-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-embed-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-embed-004.html
-http://web-platform.test:8000/css/css-writing-modes/bidi-embed-005.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-embed-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-embed-006.html
-http://web-platform.test:8000/css/css-writing-modes/bidi-embed-007.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-embed-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-embed-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-embed-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-embed-010.html
@@ -318,10 +318,10 @@ http://web-platform.test:8000/css/css-writing-modes/bidi-embed-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-004.html
-http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-005.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-007.html
-http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-008.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-008.html
 http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-011.html
@@ -332,7 +332,7 @@ http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-override-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-override-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-override-007.html
-http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-override-008.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-override-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-override-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-override-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-override-011.html
@@ -341,9 +341,9 @@ http://web-platform.test:8000/css/css-writing-modes/bidi-isolate-override-008.ht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-normal-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-normal-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-normal-004.html
-http://web-platform.test:8000/css/css-writing-modes/bidi-normal-005.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-normal-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-normal-006.html
-http://web-platform.test:8000/css/css-writing-modes/bidi-normal-007.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-normal-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-normal-008.html
 http://web-platform.test:8000/css/css-writing-modes/bidi-normal-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-normal-010.html
@@ -367,7 +367,7 @@ http://web-platform.test:8000/css/css-writing-modes/bidi-normal-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-plaintext-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-plaintext-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-plaintext-007.html
-http://web-platform.test:8000/css/css-writing-modes/bidi-plaintext-008.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-plaintext-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-plaintext-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-plaintext-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-plaintext-011.html
@@ -377,9 +377,9 @@ http://web-platform.test:8000/css/css-writing-modes/bidi-table-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-unset-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-unset-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-unset-004.html
-http://web-platform.test:8000/css/css-writing-modes/bidi-unset-005.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-unset-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-unset-006.html
-http://web-platform.test:8000/css/css-writing-modes/bidi-unset-007.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-unset-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-unset-008.html
 http://web-platform.test:8000/css/css-writing-modes/bidi-unset-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/bidi-unset-010.html

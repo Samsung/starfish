@@ -192,9 +192,9 @@ http://web-platform.test:8000/css/css-inline/text-box-trim/text-box-trim-block-i
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-inline/text-box-trim/text-box-trim-end-001.html?class=vrl,auto
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-inline/text-box-trim/text-box-trim-end-001.html?class=vrl,text
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-inline/text-box-trim/text-box-trim-end-empty-line-001.html
-http://web-platform.test:8000/css/css-inline/text-box-trim/text-box-trim-float-clear-br-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-inline/text-box-trim/text-box-trim-float-clear-br-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-inline/text-box-trim/text-box-trim-float-clear-br-002.html
-http://web-platform.test:8000/css/css-inline/text-box-trim/text-box-trim-float-clear-br-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-inline/text-box-trim/text-box-trim-float-clear-br-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-inline/text-box-trim/text-box-trim-float-start-001.html
 http://web-platform.test:8000/css/css-inline/text-box-trim/text-box-trim-half-leading-block-box-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-inline/text-box-trim/text-box-trim-half-leading-block-box-002.html

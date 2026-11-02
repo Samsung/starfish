@@ -434,7 +434,7 @@ http://web-platform.test:8000/svg/text/reftests/multiple-textpaths.svg
 http://web-platform.test:8000/svg/text/reftests/no-background.svg
 http://web-platform.test:8000/svg/text/reftests/no-margin-border-padding.svg
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/text/reftests/opacity.svg
-http://web-platform.test:8000/svg/text/reftests/rtl-text-path.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/text/reftests/rtl-text-path.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/text/reftests/text-bidi-controls-anchors-1.svg
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/text/reftests/text-bidi-controls-anchors-2.svg
 http://web-platform.test:8000/svg/text/reftests/text-clipped-offscreen-move-onscreen.html

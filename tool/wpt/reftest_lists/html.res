@@ -1040,7 +1040,7 @@ http://web-platform.test:8000/html/semantics/forms/the-input-element/range-optio
 http://web-platform.test:8000/html/semantics/forms/the-input-element/range-option-value-change-repaint.html
 http://web-platform.test:8000/html/semantics/forms/the-input-element/range-setattribute-value.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/html/semantics/forms/the-input-element/range-tick-marks-01.html
-http://web-platform.test:8000/html/semantics/forms/the-input-element/range-tick-marks-02.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-input-element/range-tick-marks-02.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/html/semantics/forms/the-input-element/range-tick-marks-03.html
 http://web-platform.test:8000/html/semantics/forms/the-input-element/range-tick-marks-04.html
 http://web-platform.test:8000/html/semantics/forms/the-input-element/range-tick-marks-05.html
