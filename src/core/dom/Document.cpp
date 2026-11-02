@@ -1923,6 +1923,15 @@ void Document::clearDialogsInShowModalCache()
 // https://html.spec.whatwg.org/multipage/interaction.html#inert
 bool Document::isInertNode(Node* node)
 {
+    // An element with the inert attribute makes its whole subtree inert.
+    const QualifiedName& inertName = starfish()->staticStrings()->m_inert;
+    for (Node* n = node; n; n = n->parentNode()) {
+        if (n->isElement() &&
+            n->asElement()->hasAttribute(inertName) != SIZE_MAX) {
+            return true;
+        }
+    }
+
     if (!m_isDialogsInShowModalCacheValid) {
         m_dialogsInShowModal.clear();
         GCVector<Element*> dialogsInShowModal;

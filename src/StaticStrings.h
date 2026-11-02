@@ -430,6 +430,7 @@ public:
     QualifiedName m_scrolling;
     QualifiedName m_frameborder;
     QualifiedName m_autofocus;
+    QualifiedName m_inert;
     QualifiedName m_async;
     QualifiedName m_defer;
     QualifiedName m_compact;

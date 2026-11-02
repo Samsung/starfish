@@ -202,6 +202,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "frameborder"));
     m_autofocus =
         QualifiedName(AtomicString::createAtomicString(starfish, "autofocus"));
+    m_inert =
+        QualifiedName(AtomicString::createAtomicString(starfish, "inert"));
     m_async =
         QualifiedName(AtomicString::createAtomicString(starfish, "async"));
     m_defer =

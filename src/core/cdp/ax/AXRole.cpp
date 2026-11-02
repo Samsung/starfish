@@ -89,6 +89,10 @@ std::string axRoleForElement(Element* element, const std::string& tag)
         if (explicitRole == "none" || explicitRole == "presentation") {
             return std::string();
         }
+        // The ARIA role img is reported as the role image.
+        if (explicitRole == "img") {
+            return "image";
+        }
         return explicitRole;
     }
 
@@ -231,6 +235,7 @@ int axChromeRoleForRole(const std::string& role)
         { "button", 9 },
         { "link", 110 },
         { "image", 99 },
+        { "MenuListPopup", 128 },
         { "textbox", 170 },
         { "StaticText", 158 },
         { "checkbox", 14 },
