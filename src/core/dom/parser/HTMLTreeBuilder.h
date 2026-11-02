@@ -178,8 +178,6 @@ private:
         InTableBodyMode,
         InRowMode,
         InCellMode,
-        InSelectMode,
-        InSelectInTableMode,
         AfterBodyMode,
         InFramesetMode,
         AfterFramesetMode,
@@ -215,6 +213,7 @@ private:
     // FIXME: This function should be inlined into its one call site or it
     // needs to assert which tokens it can be called with.
     void processAnyOtherEndTagForInBody(AtomicHTMLToken*);
+    bool isSelectFragmentContext() const;
 
     void processCharacterBuffer(CharacterTokenBuffer&);
     inline void processCharacterBufferForInBody(CharacterTokenBuffer&);

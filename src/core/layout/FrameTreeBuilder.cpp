@@ -27,6 +27,7 @@
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/HTMLListContainer.h"
 #include "core/dom/HTMLLIElement.h"
+#include "core/dom/HTMLSelectElement.h"
 #include "core/dom/HTMLSlotElement.h"
 #include "core/dom/PseudoElement.h"
 #include "core/dom/Text.h"
@@ -815,11 +816,29 @@ void FrameTreeBuilder::createPseudoElement(Node* parent,
     STARFISH_ASSERT(parent->isElement());
 }
 
+// A drop-down select shows only its selected option. The HTML parser keeps
+// other elements, such as <hr> or <div>, inside a select. They get no box
+// while the select is a drop-down.
+static bool isHiddenInDropDownSelect(Node* node)
+{
+    if (!node->isElement() || node->isHTMLOptionElement() ||
+        node->isHTMLOptGroupElement()) {
+        return false;
+    }
+    Node* parent = node->parentNode();
+    if (parent && parent->isHTMLOptGroupElement()) {
+        parent = parent->parentNode();
+    }
+    return parent && parent->isHTMLSelectElement() &&
+           parent->asHTMLSelectElement()->displaySize() == 1;
+}
+
 Frame* FrameTreeBuilder::createFrame(Node* current,
                                      FrameTreeBuilderContext& ctx, bool force)
 {
     DisplayValue display = current->style()->display();
-    bool isVisible = display != DisplayValue::NoneDisplayValue;
+    bool isVisible = display != DisplayValue::NoneDisplayValue &&
+                     !isHiddenInDropDownSelect(current);
     if (!isVisible) {
         current->clearNeedsFrameTreeBuild();
         FrameTreeBuilder::clearTree(current);

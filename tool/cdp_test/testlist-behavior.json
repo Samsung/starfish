@@ -1722,8 +1722,7 @@
       "category": "timeout"
     },
     "issues/select-element-accessibility-issue-creation.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "issues/selective-permissions-intervention-issue.js": {
       "expected": "fail",

@@ -103,6 +103,13 @@ struct ResourceRecord {
     std::string mimeType;
 };
 
+// A problem the Audits domain reports with Audits.issueAdded.
+struct AuditsIssue {
+    std::string reason;
+    int nodeId = 0;
+    bool hasDisallowedAttributes = false;
+};
+
 // CDP session state. Main-thread only. GC: not inherited (plain members).
 class CDPSession {
 public:
@@ -138,6 +145,12 @@ public:
     bool profilerEnabled = false;            // Profiler.enable
     bool heapProfilerEnabled = false;        // HeapProfiler.enable
     bool debuggerEnabled = false;            // Debugger.enable
+
+    // Issues found in the current document, kept for Audits.enable.
+    std::vector<AuditsIssue> auditsIssues;
+    // Select elements that an <input> start tag closed while parsing. Only
+    // compared by address, never used as pointers.
+    std::vector<const void*> auditsClosedSelects;
 
     // Profiler.start state. Escargot exposes no CPU sampling profiler through
     // its public API, so no samples are ever collected; start records a start

@@ -66,6 +66,7 @@ namespace {
                item->hasTagName(s.m_captionTagName) ||
                item->hasTagName(s.m_marqueeTagName) ||
                item->hasTagName(s.m_objectTagName) ||
+               item->hasTagName(s.m_selectTagName) ||
                item->hasTagName(s.m_tableTagName) ||
                item->hasTagName(s.m_tdTagName) ||
                item->hasTagName(s.m_thTagName) /*
@@ -124,13 +125,6 @@ namespace {
     {
         const StaticStrings& s = *item->node()->starfish()->staticStrings();
         return isScopeMarker(item) || item->hasTagName(s.m_buttonTagName);
-    }
-
-    inline bool isSelectScopeMarker(HTMLStackItem* item)
-    {
-        const StaticStrings& s = *item->node()->starfish()->staticStrings();
-        return !item->hasTagName(s.m_optgroupTagName) &&
-               !item->hasTagName(s.m_optionTagName);
     }
 } // namespace
 
@@ -612,16 +606,6 @@ bool HTMLElementStack::inButtonScope(const AtomicString& targetTag) const
 bool HTMLElementStack::inButtonScope(const QualifiedName& tagName) const
 {
     return inButtonScope(tagName.localNameAtomic());
-}
-
-bool HTMLElementStack::inSelectScope(const AtomicString& targetTag) const
-{
-    return inScopeCommon<isSelectScopeMarker>(m_top, targetTag);
-}
-
-bool HTMLElementStack::inSelectScope(const QualifiedName& tagName) const
-{
-    return inSelectScope(tagName.localNameAtomic());
 }
 
 bool HTMLElementStack::hasTemplateInHTMLScope() const

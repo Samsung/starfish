@@ -44,6 +44,9 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#if defined(STARFISH_ENABLE_CDP)
+#include "core/cdp/AuditsNotifier.h"
+#endif
 #include "core/dom/DocumentFragment.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLElement.h"
@@ -1211,6 +1214,20 @@ void HTMLTreeBuilder::processStartTagForInBody(AtomicHTMLToken* token)
         return;
     }
     if (token->name() == s->m_inputTagName) {
+        if (isSelectFragmentContext()) {
+            parseError(token);
+            return;
+        }
+        if (m_tree.openElements()->inScope(s->m_selectTagName)) {
+            parseError(token);
+#if defined(STARFISH_ENABLE_CDP)
+            notifyAuditsSelectClosedByInput(
+                m_tree.openElements()
+                    ->topmost(s->m_selectTagName.localNameAtomic())
+                    ->element());
+#endif
+            m_tree.openElements()->popUntilPopped(s->m_selectTagName);
+        }
         Attribute* typeAttribute = token->getAttributeItem(s->m_type);
         m_tree.reconstructTheActiveFormattingElements();
         m_tree.insertSelfClosingHTMLElement(token);
@@ -1228,6 +1245,13 @@ void HTMLTreeBuilder::processStartTagForInBody(AtomicHTMLToken* token)
     }
     if (token->name() == s->m_hrTagName) {
         processFakePEndTagIfPInButtonScope();
+        if (m_tree.openElements()->inScope(s->m_selectTagName)) {
+            m_tree.generateImpliedEndTags();
+            if (m_tree.openElements()->inScope(s->m_optionTagName) ||
+                m_tree.openElements()->inScope(s->m_optgroupTagName)) {
+                parseError(token);
+            }
+        }
         m_tree.insertSelfClosingHTMLElement(token);
         m_framesetOk = false;
         return;
@@ -1264,26 +1288,43 @@ void HTMLTreeBuilder::processStartTagForInBody(AtomicHTMLToken* token)
         return;
     }
     if (token->name() == s->m_selectTagName) {
+        if (isSelectFragmentContext()) {
+            parseError(token);
+            return;
+        }
+        if (m_tree.openElements()->inScope(s->m_selectTagName)) {
+            parseError(token);
+            m_tree.openElements()->popUntilPopped(s->m_selectTagName);
+            return;
+        }
         m_tree.reconstructTheActiveFormattingElements();
         m_tree.insertHTMLElement(token);
         m_framesetOk = false;
-        if (m_insertionMode == InTableMode ||
-            m_insertionMode == InCaptionMode ||
-            m_insertionMode == InColumnGroupMode ||
-            m_insertionMode == InTableBodyMode ||
-            m_insertionMode == InRowMode || m_insertionMode == InCellMode) {
-            setInsertionMode(InSelectInTableMode);
-        } else {
-            setInsertionMode(InSelectMode);
-        }
         return;
     }
-    if (token->name() == s->m_optgroupTagName ||
-        token->name() == s->m_optionTagName) {
-        if (m_tree.currentStackItem()->hasTagName(s->m_optionTagName)) {
-            AtomicHTMLToken endOption(token->starfish(), HTMLToken::EndTag,
-                                      s->m_optionTagName.localNameAtomic());
-            processEndTag(&endOption);
+    if (token->name() == s->m_optionTagName) {
+        if (m_tree.openElements()->inScope(s->m_selectTagName)) {
+            m_tree.generateImpliedEndTagsWithExclusion(
+                s->m_optgroupTagName.localNameAtomic());
+            if (m_tree.openElements()->inScope(s->m_optionTagName)) {
+                parseError(token);
+            }
+        } else if (m_tree.currentStackItem()->hasTagName(s->m_optionTagName)) {
+            m_tree.openElements()->pop();
+        }
+        m_tree.reconstructTheActiveFormattingElements();
+        m_tree.insertHTMLElement(token);
+        return;
+    }
+    if (token->name() == s->m_optgroupTagName) {
+        if (m_tree.openElements()->inScope(s->m_selectTagName)) {
+            m_tree.generateImpliedEndTags();
+            if (m_tree.openElements()->inScope(s->m_optionTagName) ||
+                m_tree.openElements()->inScope(s->m_optgroupTagName)) {
+                parseError(token);
+            }
+        } else if (m_tree.currentStackItem()->hasTagName(s->m_optionTagName)) {
+            m_tree.openElements()->pop();
         }
         m_tree.reconstructTheActiveFormattingElements();
         m_tree.insertHTMLElement(token);
@@ -1768,83 +1809,6 @@ void HTMLTreeBuilder::processStartTag(AtomicHTMLToken* token)
         }
         parseError(token);
         break;
-    case InSelectInTableMode:
-        STARFISH_ASSERT(insertionMode() == InSelectInTableMode);
-        if (token->name() == s->m_captionTagName ||
-            token->name() == s->m_tableTagName ||
-            isTableBodyContextTag(s, token->name()) ||
-            token->name() == s->m_trTagName ||
-            isTableCellContextTag(s, token->name())) {
-            parseError(token);
-            AtomicHTMLToken endSelect(token->starfish(), HTMLToken::EndTag,
-                                      s->m_selectTagName.localNameAtomic());
-            processEndTag(&endSelect);
-            processStartTag(token);
-            return;
-        }
-    // Fall through
-    case InSelectMode:
-        STARFISH_ASSERT(insertionMode() == InSelectMode ||
-                        insertionMode() == InSelectInTableMode);
-        if (token->name() == s->m_htmlTagName) {
-            processHtmlStartTagForInBody(token);
-            return;
-        }
-        if (token->name() == s->m_optionTagName) {
-            if (m_tree.currentStackItem()->hasTagName(s->m_optionTagName)) {
-                AtomicHTMLToken endOption(token->starfish(), HTMLToken::EndTag,
-                                          s->m_optionTagName.localNameAtomic());
-                processEndTag(&endOption);
-            }
-            m_tree.insertHTMLElement(token);
-            return;
-        }
-        if (token->name() == s->m_optgroupTagName) {
-            if (m_tree.currentStackItem()->hasTagName(s->m_optionTagName)) {
-                AtomicHTMLToken endOption(token->starfish(), HTMLToken::EndTag,
-                                          s->m_optionTagName.localNameAtomic());
-                processEndTag(&endOption);
-            }
-            if (m_tree.currentStackItem()->hasTagName(s->m_optgroupTagName)) {
-                AtomicHTMLToken endOptgroup(
-                    token->starfish(), HTMLToken::EndTag,
-                    s->m_optgroupTagName.localNameAtomic());
-                processEndTag(&endOptgroup);
-            }
-            m_tree.insertHTMLElement(token);
-            return;
-        }
-        if (token->name() == s->m_selectTagName) {
-            parseError(token);
-            AtomicHTMLToken endSelect(token->starfish(), HTMLToken::EndTag,
-                                      s->m_selectTagName.localNameAtomic());
-            processEndTag(&endSelect);
-            return;
-        }
-        if (token->name() == s->m_inputTagName ||
-            token->name() == s->m_keygenTagName ||
-            token->name() == s->m_textareaTagName) {
-            parseError(token);
-            if (!m_tree.openElements()->inSelectScope(s->m_selectTagName)) {
-                STARFISH_ASSERT(isParsingFragment());
-                return;
-            }
-            AtomicHTMLToken endSelect(token->starfish(), HTMLToken::EndTag,
-                                      s->m_selectTagName.localNameAtomic());
-            processEndTag(&endSelect);
-            processStartTag(token);
-            return;
-        }
-        if (token->name() == s->m_scriptTagName) {
-            bool didProcess = processStartTagForInHead(token);
-            STARFISH_ASSERT_UNUSED(didProcess, didProcess);
-            return;
-        }
-        if (token->name() == s->m_templateTagName) {
-            processTemplateStartTag(token);
-            return;
-        }
-        break;
     case InTableTextMode:
         defaultForInTableText();
         processStartTag(token);
@@ -1916,6 +1880,13 @@ bool HTMLTreeBuilder::processBodyEndTagForInBody(AtomicHTMLToken* token)
     // contents.
     setInsertionMode(AfterBodyMode);
     return true;
+}
+
+bool HTMLTreeBuilder::isSelectFragmentContext() const
+{
+    return isParsingFragment() &&
+           m_fragmentContext.contextElementStackItem()->hasTagName(
+               m_tree.starfish()->staticStrings()->m_selectTagName);
 }
 
 void HTMLTreeBuilder::processAnyOtherEndTagForInBody(AtomicHTMLToken* token)
@@ -2075,19 +2046,6 @@ void HTMLTreeBuilder::resetInsertionModeAppropriately()
         }
         if (item->hasTagName(s->m_templateTagName)) {
             return setInsertionMode(m_templateInsertionModes.back());
-        }
-        if (item->hasTagName(s->m_selectTagName)) {
-            if (!last) {
-                while (item->node() != m_tree.openElements()->rootNode() &&
-                       !item->hasTagName(s->m_templateTagName)) {
-                    nodeRecord = nodeRecord->next();
-                    item = nodeRecord->stackItem();
-                    if (item->hasTagName(s->m_tableTagName)) {
-                        return setInsertionMode(InSelectInTableMode);
-                    }
-                }
-            }
-            return setInsertionMode(InSelectMode);
         }
         if (item->hasTagName(s->m_tdTagName) ||
             item->hasTagName(s->m_thTagName)) {
@@ -2294,6 +2252,7 @@ void HTMLTreeBuilder::processEndTagForInBody(AtomicHTMLToken* token)
         token->name() == s->m_menuTagName || token->name() == s->m_navTagName ||
         token->name() == s->m_olTagName || token->name() == s->m_preTagName ||
         token->name() == s->m_sectionTagName ||
+        token->name() == s->m_selectTagName ||
         token->name() == s->m_summaryTagName ||
         token->name() == s->m_ulTagName) {
         if (!m_tree.openElements()->inScope(token->name())) {
@@ -2699,61 +2658,6 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
                         insertionMode() == AfterAfterFramesetMode);
         parseError(token);
         break;
-    case InSelectInTableMode:
-        STARFISH_ASSERT(insertionMode() == InSelectInTableMode);
-        if (token->name() == s->m_captionTagName ||
-            token->name() == s->m_tableTagName ||
-            isTableBodyContextTag(s, token->name()) ||
-            token->name() == s->m_trTagName ||
-            isTableCellContextTag(s, token->name())) {
-            parseError(token);
-            if (m_tree.openElements()->inTableScope(token->name())) {
-                AtomicHTMLToken endSelect(token->starfish(), HTMLToken::EndTag,
-                                          s->m_selectTagName.localNameAtomic());
-                processEndTag(&endSelect);
-                processEndTag(token);
-            }
-            return;
-        }
-    // Fall through.
-    case InSelectMode:
-        STARFISH_ASSERT(insertionMode() == InSelectMode ||
-                        insertionMode() == InSelectInTableMode);
-        if (token->name() == s->m_optgroupTagName) {
-            if (m_tree.currentStackItem()->hasTagName(s->m_optionTagName) &&
-                m_tree.oneBelowTop() &&
-                m_tree.oneBelowTop()->hasTagName(s->m_optgroupTagName))
-                processFakeEndTag(s->m_optionTagName);
-            if (m_tree.currentStackItem()->hasTagName(s->m_optgroupTagName)) {
-                m_tree.openElements()->pop();
-                return;
-            }
-            parseError(token);
-            return;
-        }
-        if (token->name() == s->m_optionTagName) {
-            if (m_tree.currentStackItem()->hasTagName(s->m_optionTagName)) {
-                m_tree.openElements()->pop();
-                return;
-            }
-            parseError(token);
-            return;
-        }
-        if (token->name() == s->m_selectTagName) {
-            if (!m_tree.openElements()->inSelectScope(token->name())) {
-                STARFISH_ASSERT(isParsingFragment());
-                parseError(token);
-                return;
-            }
-            m_tree.openElements()->popUntilPopped(s->m_selectTagName);
-            resetInsertionModeAppropriately();
-            return;
-        }
-        if (token->name() == s->m_templateTagName) {
-            processTemplateEndTag(token);
-            return;
-        }
-        break;
     case InTableTextMode:
         defaultForInTableText();
         processEndTag(token);
@@ -2967,13 +2871,6 @@ ReprocessBuffer:
         // non-whitespace characters.
         break;
     }
-    case InSelectInTableMode:
-    case InSelectMode: {
-        STARFISH_ASSERT(insertionMode() == InSelectMode ||
-                        insertionMode() == InSelectInTableMode);
-        m_tree.insertTextNode(buffer.takeRemaining());
-        break;
-    }
     case AfterAfterFramesetMode: {
         String* leadingWhitespace = buffer.takeRemainingWhitespace();
         if (!(leadingWhitespace->length() == 0)) {
@@ -3067,11 +2964,7 @@ void HTMLTreeBuilder::processEndOfFile(AtomicHTMLToken* token)
     case InFramesetMode:
     case InTableMode:
     case InTableBodyMode:
-    case InSelectInTableMode:
-    case InSelectMode:
-        STARFISH_ASSERT(insertionMode() == InSelectMode ||
-                        insertionMode() == InSelectInTableMode ||
-                        insertionMode() == InTableMode ||
+        STARFISH_ASSERT(insertionMode() == InTableMode ||
                         insertionMode() == InFramesetMode ||
                         insertionMode() == InTableBodyMode ||
                         insertionMode() == InColumnGroupMode);

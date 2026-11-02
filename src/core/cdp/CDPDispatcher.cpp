@@ -24,6 +24,7 @@
 #include "CDPDispatcher.h"
 #include "CDPServer.h"
 #include "CDPCommand.h"
+#include "AuditsNotifier.h"
 #include "CDPSession.h"
 #include "TargetContext.h"
 #include "NodeRegistry.h"
@@ -1559,10 +1560,11 @@ void CDPDispatcher::route(CDPCommand& cmd, const std::string& domain,
         // is returned (encodedSize/body are omitted, matching a no-op encode).
         // The remaining Audits.* methods (enable/disable/checkContrast/
         // checkFormsIssues...) have no audit engine behind them and are acked
-        // with valid results. Audits.issueAdded is never emitted.
+        // with valid results. Audits.issueAdded comes from AuditsNotifier.
         if (method == "enable") {
             session()->auditsEnabled = true;
             cmd.sendResultEmpty();
+            replayAuditsIssues(this, session()->sessionId);
         } else if (method == "disable") {
             session()->auditsEnabled = false;
             cmd.sendResultEmpty();
