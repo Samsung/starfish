@@ -422,6 +422,17 @@ namespace {
                 }
                 children.push_back(next.value());
             }
+            // The elements named by aria-owns come after the real children.
+            if (parent->isElement() &&
+                axHasAttribute(parent->asElement(), "aria-owns")) {
+                Element* owner = parent->asElement();
+                for (Element* owned : elementsFromIdRefs(
+                         owner, axAttribute(owner, "aria-owns"))) {
+                    if (owned != owner && owned->parentNode() != parent) {
+                        children.push_back(owned);
+                    }
+                }
+            }
             return children;
         }
 

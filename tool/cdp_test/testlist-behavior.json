@@ -73,22 +73,19 @@
       "expected": "pass"
     },
     "accessibility/accessibility-nameSources-input-buttons.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "accessibility/accessibility-nameSources-input.js": {
       "expected": "pass"
     },
     "accessibility/accessibility-nameSources-labelledby.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "accessibility/accessibility-nameSources-options.js": {
       "expected": "pass"
     },
     "accessibility/accessibility-nameSources-summary.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "accessibility/accessibility-nameSources-visiblity.js": {
       "expected": "pass"

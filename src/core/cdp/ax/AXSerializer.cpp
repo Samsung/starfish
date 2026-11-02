@@ -942,10 +942,14 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
 
     // The url of an image or a link, resolved against the document.
     // A blank or missing attribute gives no url.
-    const char* urlAttribute =
-        role == "image" && tag == "img"
-            ? "src"
-            : (role == "link" && tag == "a" ? "href" : nullptr);
+    const char* urlAttribute = nullptr;
+    if (role == "image" && tag == "img") {
+        urlAttribute = "src";
+    } else if (role == "link" && tag == "a") {
+        urlAttribute = "href";
+    } else if (tag == "input" && axAttribute(element, "type") == "image") {
+        urlAttribute = "src";
+    }
     if (urlAttribute) {
         std::string target =
             axCollapseWhitespace(axAttribute(element, urlAttribute));
@@ -1078,6 +1082,23 @@ void AXSerializer::addDescriptionAndValue(rapidjson::Value& out, AXNode* node)
     if (description.empty() &&
         ((isTextButton && axHasAttribute(element, "value")) || hasTitle)) {
         nameAttribute = nameSourceAttribute(element, node->role());
+    }
+    // The contents of a summary describe it when they did not name it.
+    if (description.empty() && tag == "summary") {
+        bool namedByContents = false;
+        for (const AXNameSource& source :
+             axNameSources(element, node->role())) {
+            if (source.hasText && !source.superseded) {
+                namedByContents = std::string(source.type) == "contents";
+                break;
+            }
+        }
+        if (!namedByContents) {
+            Optional<String*> content = element->textContent();
+            description = axCollapseWhitespace(
+                content.hasValue() ? content.value()->toUTF8NonGCString()
+                                   : std::string());
+        }
     }
     // The value of a button that did not name it describes it.
     if (description.empty() && isTextButton && nameAttribute != "value") {
