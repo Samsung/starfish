@@ -1397,6 +1397,12 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         }
     }
 
+    if (auto shape = clipPathShape()) {
+        shape->resolveFontRelativeLengths(curFontSize, rootFontSize, font,
+                                          windowSize.width(),
+                                          windowSize.height(), this);
+    }
+
     GCVector<GridTrackSize*>* columns =
         m_rareComputedStyleData.gridTemplateColumns();
     if (columns) {
@@ -2902,6 +2908,25 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                         ComputedStyleDamage::ComputedStyleDamageComposite |
                         damage);
                 }
+            }
+        }
+    }
+
+    {
+        auto oldShape = oldStyle->clipPathShape();
+        auto newShape = newStyle->clipPathShape();
+        if (oldShape || newShape) {
+            if (!oldShape || !newShape) {
+                // A clip-path shape establishes a stacking context.
+                damagedKeys[CSSStyleValuePair::KeyKind::ClipPath] = true;
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::
+                        ComputedStyleDamageEstablishesStackingContext |
+                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+            } else if (!oldShape->equals(newShape.value())) {
+                damagedKeys[CSSStyleValuePair::KeyKind::ClipPath] = true;
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
             }
         }
     }

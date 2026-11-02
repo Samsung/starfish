@@ -23,6 +23,7 @@
 #include <SkMatrix.h>
 
 #include "core/style/BorderRadiusData.h"
+#include "core/style/ClipPathShape.h"
 #include "core/style/BorderData.h"
 #include "core/style/FlowRelativeBorderData.h"
 #include "core/style/LengthData.h"
@@ -179,6 +180,7 @@ public:
         D,
         Clip,
         ClipPath,
+        ClipShape,
         UserSelect,
         CaretColor,
         Hyphens,
@@ -236,6 +238,7 @@ public:
         ObjectSizingData* m_objectSizing;
         ShadowDataList* m_boxShadowDataList;
         RectData* m_clip;
+        ClipPathShape* m_clipPathShape;
         UserSelectValue m_userSelect;
         GCVector<GridTrackSize*>* m_gridTemplateUnits;
         NamedGridAreaDataMap* m_gridTemplateAreas;
@@ -391,6 +394,11 @@ public:
 
         RareComputedStyleValue(RectData* rect)
             : m_clip(rect)
+        {
+        }
+
+        RareComputedStyleValue(ClipPathShape* shape)
+            : m_clipPathShape(shape)
         {
         }
 
@@ -647,6 +655,7 @@ public:
                  boxDecorationBreak, BoxDecorationBreak,
                  SliceBoxDecorationBreakValue);
     GETTER_VALUE(String*, stringValue, clipPath, ClipPath, nullptr);
+    GETTER_VALUE(ClipPathShape*, clipPathShape, clipShape, ClipShape, nullptr);
     GETTER_VALUE(Length, length, columnGap, ColumnGap, 0);
     GETTER_VALUE(Length, length, rowGap, RowGap, 0);
     GETTER_VALUE(BlendMode, blendMode, mixBlendMode, MixBlendMode,
@@ -815,6 +824,7 @@ public:
     CLEARER(WillChange);
     CLEARER(TextDecorationLine);
     CLEARER(Clip);
+    CLEARER(ClipShape);
     CLEARER(Filter);
 
 #undef FIND_VALUE
@@ -1086,6 +1096,15 @@ public:
     void setClipPath(String* url)
     {
         *m_rareComputedStyleData.ensureClipPath() = url;
+    }
+
+    void setClipPathShape(ClipPathShape* shape)
+    {
+        if (shape) {
+            *m_rareComputedStyleData.ensureClipShape() = shape;
+        } else {
+            m_rareComputedStyleData.clearClipShape();
+        }
     }
 
     void setPaddingBlockEnd(FlowRelativeLengthBlockData length)
@@ -4349,6 +4368,18 @@ public:
             return clipPathValue.getValue();
         }
         return String::emptyString;
+    }
+
+    Optional<ClipPathShape*> clipPathShape()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return nullptr;
+        }
+        Optional<ClipPathShape*> shape = m_rareComputedStyleData.clipShape();
+        if (shape.hasValue()) {
+            return shape.getValue();
+        }
+        return nullptr;
     }
 
     FlowRelativeLengthBlockData paddingBlockEnd()

@@ -987,6 +987,195 @@ void FrameBox::clipToBox(Canvas* canvas, BoxValue box)
     canvas->clipPath();
 }
 
+// https://drafts.csswg.org/css-shapes/#basic-shape-functions
+void FrameBox::clipToClipPathShape(Canvas* canvas, ClipPathShape* shape)
+{
+    // On a CSS box, fill-box uses the content box, and stroke-box and view-box
+    // the border box.
+    // https://drafts.csswg.org/css-masking/#the-clip-path
+    Unit::Rect ref;
+    switch (shape->box()) {
+    case ClipPathShape::Box::MarginBox:
+        ref = Unit::Rect(-marginLeft().toFloat(), -marginTop().toFloat(),
+                         (width() + marginLeft() + marginRight()).toFloat(),
+                         (height() + marginTop() + marginBottom()).toFloat());
+        break;
+    case ClipPathShape::Box::PaddingBox:
+        ref = makeRect(BoxValue::PaddingBoxBoxValue);
+        break;
+    case ClipPathShape::Box::ContentBox:
+    case ClipPathShape::Box::FillBox:
+        ref = makeRect(BoxValue::ContentBoxBoxValue);
+        break;
+    default:
+        ref = makeRect(BoxValue::BorderBoxBoxValue);
+        break;
+    }
+
+    if (shape->type() == ClipPathShape::Type::BoxOnly) {
+        // The box alone clips to its rounded shape.
+        switch (shape->box()) {
+        case ClipPathShape::Box::PaddingBox:
+            clipToBox(canvas, BoxValue::PaddingBoxBoxValue);
+            break;
+        case ClipPathShape::Box::ContentBox:
+        case ClipPathShape::Box::FillBox:
+            clipToBox(canvas, BoxValue::ContentBoxBoxValue);
+            break;
+        case ClipPathShape::Box::MarginBox:
+            canvas->clip(ref);
+            break;
+        default:
+            clipToBox(canvas, BoxValue::BorderBoxBoxValue);
+            break;
+        }
+        return;
+    }
+
+    const float w = ref.width();
+    const float h = ref.height();
+    auto resolve = [&](const Length& length, float basis) {
+        return length.specifiedValue(LayoutUnit(basis), this);
+    };
+
+    canvas->beginPath();
+    switch (shape->type()) {
+    case ClipPathShape::Type::Polygon: {
+        const auto& points = shape->points();
+        for (size_t i = 0; i < points.size(); i += 2) {
+            float x = ref.x() + resolve(points[i].m_length, w);
+            float y = ref.y() + resolve(points[i + 1].m_length, h);
+            if (i) {
+                canvas->lineTo(x, y);
+            } else {
+                canvas->moveTo(x, y);
+            }
+        }
+        canvas->closePath();
+        break;
+    }
+    case ClipPathShape::Type::Inset: {
+        float top = resolve(shape->arg(0), h);
+        float right = resolve(shape->arg(1), w);
+        float bottom = resolve(shape->arg(2), h);
+        float left = resolve(shape->arg(3), w);
+        // Insets that overlap scale down to meet.
+        if (left + right > w && left + right > 0) {
+            float scale = w / (left + right);
+            left *= scale;
+            right *= scale;
+        }
+        if (top + bottom > h && top + bottom > 0) {
+            float scale = h / (top + bottom);
+            top *= scale;
+            bottom *= scale;
+        }
+        LayoutRect rect(ref.x() + left, ref.y() + top,
+                        std::max(0.0f, w - left - right),
+                        std::max(0.0f, h - top - bottom));
+        float radii[8] = { 0 };
+        const auto& insetRadii = shape->insetRadii();
+        for (size_t i = 0; i < insetRadii.size(); i++) {
+            radii[i] = resolve(insetRadii[i].m_length, i < 4 ? w : h);
+        }
+        // Corners: top-left, top-right, bottom-right, bottom-left; horizontal
+        // radii first. Overlapping radii scale down as for border-radius.
+        float rw = rect.width().toFloat();
+        float rh = rect.height().toFloat();
+        float scale = 1;
+        auto limit = [&](float sum, float side) {
+            if (sum > side && sum > 0) {
+                scale = std::min(scale, side / sum);
+            }
+        };
+        limit(radii[0] + radii[1], rw);
+        limit(radii[3] + radii[2], rw);
+        limit(radii[4] + radii[7], rh);
+        limit(radii[5] + radii[6], rh);
+        BorderRadiusFixedData fixed(radii[0] * scale, radii[4] * scale,
+                                    radii[1] * scale, radii[5] * scale,
+                                    radii[2] * scale, radii[6] * scale,
+                                    radii[3] * scale, radii[7] * scale);
+        emitBorderRadiusPath(canvas, rect, fixed);
+        canvas->closePath();
+        break;
+    }
+    case ClipPathShape::Type::Circle:
+    case ClipPathShape::Type::Ellipse: {
+        float cx = resolve(shape->arg(2), w);
+        float cy = resolve(shape->arg(3), h);
+        float dx[2] = { std::abs(cx), std::abs(w - cx) };
+        float dy[2] = { std::abs(cy), std::abs(h - cy) };
+        bool isCircle = shape->type() == ClipPathShape::Type::Circle;
+        auto keywordRadius = [&](ClipPathShape::Radius keyword,
+                                 const float* distances) {
+            switch (keyword) {
+            case ClipPathShape::Radius::ClosestSide:
+                if (isCircle) {
+                    return std::min(std::min(dx[0], dx[1]),
+                                    std::min(dy[0], dy[1]));
+                }
+                return std::min(distances[0], distances[1]);
+            case ClipPathShape::Radius::FarthestSide:
+                if (isCircle) {
+                    return std::max(std::max(dx[0], dx[1]),
+                                    std::max(dy[0], dy[1]));
+                }
+                return std::max(distances[0], distances[1]);
+            case ClipPathShape::Radius::ClosestCorner:
+            case ClipPathShape::Radius::FarthestCorner: {
+                bool closest = keyword == ClipPathShape::Radius::ClosestCorner;
+                float x =
+                    closest ? std::min(dx[0], dx[1]) : std::max(dx[0], dx[1]);
+                float y =
+                    closest ? std::min(dy[0], dy[1]) : std::max(dy[0], dy[1]);
+                // Both ellipse radii take the distance to the corner too.
+                return std::sqrt(x * x + y * y);
+            }
+            case ClipPathShape::Radius::Length:
+                break;
+            }
+            return 0.0f;
+        };
+        float rx, ry;
+        if (isCircle) {
+            if (shape->radiusX() == ClipPathShape::Radius::Length) {
+                // Percentages refer to the normalized diagonal.
+                float basis = std::sqrt(w * w + h * h) / float(M_SQRT2);
+                rx = resolve(shape->arg(0), basis);
+            } else {
+                rx = keywordRadius(shape->radiusX(), dx);
+            }
+            ry = rx;
+        } else {
+            rx = shape->radiusX() == ClipPathShape::Radius::Length
+                     ? resolve(shape->arg(0), w)
+                     : keywordRadius(shape->radiusX(), dx);
+            ry = shape->radiusY() == ClipPathShape::Radius::Length
+                     ? resolve(shape->arg(1), h)
+                     : keywordRadius(shape->radiusY(), dy);
+        }
+        if (rx <= 0 || ry <= 0) {
+            canvas->clip(Unit::Rect(0, 0, 0, 0));
+            return;
+        }
+        // A fully rounded rect, built like border-radius so the edge matches
+        // an equivalent rounded box.
+        LayoutRect bounds(ref.x() + cx - rx, ref.y() + cy - ry, 2 * rx, 2 * ry);
+        BorderRadiusFixedData fixed(rx, ry, rx, ry, rx, ry, rx, ry);
+        emitBorderRadiusPath(canvas, bounds, fixed);
+        canvas->closePath();
+        break;
+    }
+    case ClipPathShape::Type::BoxOnly:
+        break;
+    }
+
+    canvas->setFillRule(!shape->isEvenOdd());
+    canvas->clipPath();
+    canvas->setFillRule(true);
+}
+
 void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
 {
     if (canvas->canRejectPainting(frameVisibleRect())) {
@@ -4301,6 +4490,8 @@ bool FrameBox::canOwnsStackingContext()
     } else if (style()->hasAvailableFilter()) {
         return true;
     } else if (style()->maskLayerSize()) {
+        return true;
+    } else if (style()->clipPathShape()) {
         return true;
     } else if (needsToEstablishStackingContextForScrolling()) {
         return true;

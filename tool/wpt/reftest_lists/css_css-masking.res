@@ -93,30 +93,30 @@ http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-sha
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-shape-transition-with-zoom.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-transition-allow-discrete-shape.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-transition-allow-discrete.html
-http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-transition-custom-timing-function.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-transition-custom-timing-function.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-transition.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-xywh-interpolation-001.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/two-clip-path-animation-diff-length1.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/two-clip-path-animation-diff-length2.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/two-clip-path-animation-diff-length3.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-masking/clip-path/animations/two-clip-path-animation-diff-length4.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-blending-offset.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-blending-offset.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-borderBox-1a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-borderBox-1b.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-borderBox-1c.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-borderBox-1d.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-borderBox-1e.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-005.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-006.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-007.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-008.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-009.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-001.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-002.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-003.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-004.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-005.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-006.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-007.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-008.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-closest-corner.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-farthest-corner.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-circle-farthest-corner.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-columns-shape-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-columns-shape-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-contentBox-1a.html
@@ -131,20 +131,20 @@ http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-tra
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-element-userSpaceOnUse-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-element-userSpaceOnUse-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-element-userSpaceOnUse-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-005.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-006.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-007.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-008.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-001.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-002.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-003.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-004.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-005.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-006.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-007.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-closest-farthest-corner.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-fillBox-1a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-fillBox-1b.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-filter-order.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-filter-order.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-filter-radius-clips.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-fixed-nested.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-fixed-nested.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-fixed-scroll.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-foreignobject-non-zero-xy.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-geometryBox-2.html
@@ -153,13 +153,13 @@ http://web-platform.test:8000/css/css-masking/clip-path/animations/clip-path-tra
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-inline-003.html
 http://web-platform.test:8000/css/css-masking/clip-path/clip-path-inline-004.html
 http://web-platform.test:8000/css/css-masking/clip-path/clip-path-inline-005.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-inline-006.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-inline-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-inline-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-inline-008.html
 http://web-platform.test:8000/css/css-masking/clip-path/clip-path-inline-009.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-inline-010.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-inline-010.html
 http://web-platform.test:8000/css/css-masking/clip-path/clip-path-inset-round-percent.html
-http://web-platform.test:8000/css/css-masking/clip-path/clip-path-inset-round-rendering.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-inset-round-rendering.html
 http://web-platform.test:8000/css/css-masking/clip-path/clip-path-localRef-1.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-marginBox-1a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-marginBox-1b.html
@@ -170,33 +170,33 @@ http://web-platform.test:8000/css/css-masking/clip-path/clip-path-localRef-1.htm
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-paddingBox-1a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-paddingBox-1b.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-paddingBox-1c.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-paddingBox-1d.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-paddingBox-1e.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-paddingBox-1d.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-paddingBox-1e.html
 http://web-platform.test:8000/css/css-masking/clip-path/clip-path-path-001.html
 http://web-platform.test:8000/css/css-masking/clip-path/clip-path-path-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-path-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-path-with-zoom.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-005.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-006.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-007.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-008.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-009.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-010.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-011.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-012.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-001.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-002.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-003.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-004.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-005.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-006.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-007.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-008.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-009.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-010.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-011.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-012.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-013.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-polygon-014.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-rect-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-rect-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-rect-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-rect-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-reference-box-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-reference-box-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-reference-box-003.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-reference-box-001.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-reference-box-002.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-reference-box-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-reference-box-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-reference-restore.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-rotated-will-change-transform.html
@@ -218,7 +218,7 @@ http://web-platform.test:8000/css/css-masking/clip-path/clip-path-shape-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-shape-foreignobject-non-zero-xy.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-shape-hline-vline-keywords.html
 http://web-platform.test:8000/css/css-masking/clip-path/clip-path-shape-winding.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-stacking-context-001.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-stacking-context-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-strokeBox-1a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-strokeBox-1b.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-strokeBox-1c.html
@@ -247,7 +247,7 @@ http://web-platform.test:8000/css/css-masking/clip-path/reference-mutated.html
 http://web-platform.test:8000/css/css-masking/clip-path/reference-nonexisting-existing-local.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/svg-clip-path-circle-offset.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/svg-clip-path-ellipse-offset.html
-http://web-platform.test:8000/css/css-masking/clip-path/svg-clip-path-fixed-values.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/svg-clip-path-fixed-values.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path-svg-content/clip-path-clip-nested-twice.svg
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path-svg-content/clip-path-clip-rule-001.svg
 http://web-platform.test:8000/css/css-masking/clip-path-svg-content/clip-path-clip-rule-002.svg

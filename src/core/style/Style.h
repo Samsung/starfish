@@ -49,6 +49,7 @@ namespace Starfish {
 class AncestorSelectorFilter;
 class TimingFunction;
 class CalcData;
+class ClipPathShape;
 class ComputedStyle;
 class StyleRule;
 class StyleRuleImport;
@@ -1220,6 +1221,7 @@ public:
 
         // rect for clip
         RectValueKind,
+        ClipPathShapeValueKind,
 
         // user-select
         UserSelectValueKind,
@@ -1863,6 +1865,12 @@ public:
         return m_value.m_stringValue;
     }
 
+    ClipPathShape* clipPathShape() const
+    {
+        STARFISH_ASSERT(m_valueKind == ClipPathShapeValueKind);
+        return m_value.m_clipPathShape;
+    }
+
     UserSelectValue userSelectValue() const
     {
         STARFISH_ASSERT(m_valueKind == UserSelectValueKind);
@@ -2095,6 +2103,7 @@ public:
         WordBreakValue m_wordBreak;
         AppearanceValue m_appearance;
         RectData* m_rect;
+        ClipPathShape* m_clipPathShape;
         GCVector<GridTrackSize*>* m_gridTemplateUnits;
         NamedGridAreaDataMap* m_gridTemplateAreas;
         CSSCounterFunction* m_counterFunctionValue;
@@ -2408,6 +2417,11 @@ public:
         {
         }
 
+        ValueData(ClipPathShape* v)
+            : m_clipPathShape(v)
+        {
+        }
+
         ValueData(RectData* v)
             : m_rect(v)
         {
@@ -2641,6 +2655,12 @@ public:
     {
         m_valueKind = CSSStyleValuePair::ValueKind::FontFaceSrcDataValueKind;
         m_value.m_fontFaceSrcData = val;
+    }
+
+    void setClipPathShape(ClipPathShape* val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::ClipPathShapeValueKind;
+        m_value.m_clipPathShape = val;
     }
 
     void setClipData(RectData* val)

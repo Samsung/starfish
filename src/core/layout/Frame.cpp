@@ -1716,6 +1716,9 @@ void Frame::computeStyleFlags()
         m_flags.m_needToEstablishStackingContext |= true;
     }
     m_flags.m_needToEstablishStackingContext |= (style->maskLayerSize() > 0);
+    // SVG content keeps using its own clip-path handling.
+    m_flags.m_needToEstablishStackingContext |=
+        style->clipPathShape() && !isFrameSVGBox() && !isFrameSVGSVGBox();
     m_flags.m_needToEstablishStackingContext |=
         style->mixBlendMode() != BlendMode::Normal;
 
