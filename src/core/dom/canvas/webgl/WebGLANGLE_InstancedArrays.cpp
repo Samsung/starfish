@@ -45,8 +45,11 @@ void ANGLE_instanced_arrays::drawArraysInstancedANGLE(GLenum mode, GLint first,
     m_context->drawArraysInstanced(mode, first, count, primcount);
 }
 
-void ANGLE_instanced_arrays::drawElementsInstancedANGLE(
-    GLenum mode, GLsizei count, GLenum type, GLintptr offset, GLsizei primcount)
+void ANGLE_instanced_arrays::drawElementsInstancedANGLE(GLenum mode,
+                                                        GLsizei count,
+                                                        GLenum type,
+                                                        WebGLintptr offset,
+                                                        GLsizei primcount)
 {
     m_context->drawElementsInstanced(mode, count, type, offset, primcount);
 }

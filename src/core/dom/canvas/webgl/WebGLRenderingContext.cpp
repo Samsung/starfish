@@ -1694,7 +1694,7 @@ bool WebGLRenderingContext::hasOnlyNonZeroAttribDivisors()
 
 bool WebGLRenderingContext::hasEnoughElementArrayData(GLsizei count,
                                                       GLenum type,
-                                                      GLintptr offset)
+                                                      WebGLintptr offset)
 {
     if (count == 0) {
         // Nothing is fetched, so the offset need not be inside the buffer.
@@ -1893,7 +1893,8 @@ void WebGLRenderingContext::drawArraysInstanced(GLenum mode, GLint first,
 }
 
 void WebGLRenderingContext::drawElementsInstanced(GLenum mode, GLsizei count,
-                                                  GLenum type, GLintptr offset,
+                                                  GLenum type,
+                                                  WebGLintptr offset,
                                                   GLsizei instanceCount)
 {
     ENTER_CONTEXT_SCOPE();
@@ -1960,9 +1961,9 @@ void WebGLRenderingContext::drawElementsInstanced(GLenum mode, GLsizei count,
     if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs() ||
         !validateStencilSettings())
         return;
-    m_gl->drawElementsInstanced(mode, count, type,
-                                reinterpret_cast<const void*>(offset),
-                                instanceCount);
+    m_gl->drawElementsInstanced(
+        mode, count, type,
+        reinterpret_cast<const void*>(clampToGLintptr(offset)), instanceCount);
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
@@ -2054,7 +2055,7 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
 }
 
 void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
-                                         GLenum type, GLintptr offset)
+                                         GLenum type, WebGLintptr offset)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -2154,7 +2155,8 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
         }
     }
 
-    m_gl->drawElements(mode, count, type, reinterpret_cast<void*>(offset));
+    m_gl->drawElements(mode, count, type,
+                       reinterpret_cast<void*>(clampToGLintptr(offset)));
 
     if (restoreDrawBuffers) {
         m_gl->drawBuffers(originalCount, originalBuffers);
@@ -3894,14 +3896,21 @@ ScriptValue WebGLRenderingContext::getVertexAttrib(GLuint index, GLenum pname)
     return scriptNull();
 }
 
-GLintptr WebGLRenderingContext::getVertexAttribOffset(GLuint index,
-                                                      GLenum pname)
+WebGLintptr WebGLRenderingContext::getVertexAttribOffset(GLuint index,
+                                                         GLenum pname)
 {
     ENTER_CONTEXT_SCOPE(0);
 
+    // The GL reports a bad index or pname. The offset itself is answered
+    // from the recorded state: the GL pointer is pointer-sized, so it cannot
+    // carry back every offset vertexAttribPointer accepted.
+    hasNewGLError(); // Keep an earlier error from failing this call.
     GLvoid* pointer = nullptr;
     m_gl->getVertexAttribPointerv(index, pname, &pointer);
-    return reinterpret_cast<GLintptr>(pointer);
+    if (hasNewGLError()) {
+        return 0;
+    }
+    return m_state->getVertexAttribPointer(index).offset;
 }
 
 void WebGLRenderingContext::hint(GLenum target, GLenum mode)
@@ -4823,7 +4832,8 @@ IMPLEMENT_VERTEX_ATTRIB_NFV(4)
 void WebGLRenderingContext::vertexAttribPointer(GLuint index, GLint size,
                                                 GLenum type,
                                                 GLboolean normalized,
-                                                GLsizei stride, GLintptr offset)
+                                                GLsizei stride,
+                                                WebGLintptr offset)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -4886,7 +4896,7 @@ void WebGLRenderingContext::vertexAttribPointer(GLuint index, GLint size,
             pointer argument is not NULL.
     */
     m_gl->vertexAttribPointer(index, size, type, normalized, stride,
-                              reinterpret_cast<void*>(offset));
+                              reinterpret_cast<void*>(clampToGLintptr(offset)));
     if (hasNewGLError()) {
         return;
     }
@@ -4906,7 +4916,7 @@ void WebGLRenderingContext::viewport(uint32_t x, uint32_t y, uint32_t width,
 
 // WebGLRenderingContextOverloads
 
-void WebGLRenderingContext::bufferData(GLenum target, GLsizeiptr size,
+void WebGLRenderingContext::bufferData(GLenum target, WebGLsizeiptr size,
                                        GLenum usage)
 {
     ENTER_CONTEXT_SCOPE();
@@ -4919,23 +4929,24 @@ void WebGLRenderingContext::bufferData(GLenum target, GLsizeiptr size,
     // The driver reports a bad target or usage, a missing buffer and an
     // allocation failure (OUT_OF_MEMORY) before anything is filled.
     hasNewGLError(); // Keep an earlier error from failing this call.
-    m_gl->bufferData(target, size, nullptr, usage);
+    const GLsizeiptr glSize = clampToGLsizeiptr(size);
+    m_gl->bufferData(target, glSize, nullptr, usage);
     if (hasNewGLError()) {
         return;
     }
 
     // The buffer is initialized to 0 (WebGL 1.0 §5.14.5). Fill it in bounded
     // chunks so a large buffer costs no client-side copy of its size.
-    const GLsizeiptr chunk = std::min<GLsizeiptr>(size, 64 * 1024);
+    const GLsizeiptr chunk = std::min<GLsizeiptr>(glSize, 64 * 1024);
     const std::vector<unsigned char> zeros(chunk);
-    for (GLsizeiptr offset = 0; offset < size; offset += chunk) {
-        m_gl->bufferSubData(target, offset, std::min(chunk, size - offset),
+    for (GLsizeiptr offset = 0; offset < glSize; offset += chunk) {
+        m_gl->bufferSubData(target, offset, std::min(chunk, glSize - offset),
                             zeros.data());
     }
 
     Optional<WebGLBuffer*> maybeBound = m_state->getBoundBuffer(target);
     if (maybeBound.hasValue() && maybeBound.value()) {
-        maybeBound.value()->setByteLength(size);
+        maybeBound.value()->setByteLength(glSize);
     }
 }
 
@@ -4975,23 +4986,23 @@ void WebGLRenderingContext::bufferData(GLenum target,
     }
 }
 
-void WebGLRenderingContext::bufferSubData(GLenum target, GLintptr offset,
+void WebGLRenderingContext::bufferSubData(GLenum target, WebGLintptr offset,
                                           AllowSharedBufferSource data)
 {
     ENTER_CONTEXT_SCOPE();
 
     if (data.isArrayBufferValue()) {
         ScriptArrayBuffer buffer = data.getArrayBufferValue();
-        m_gl->bufferSubData(target, offset, buffer->byteLength(),
-                            buffer->rawBuffer());
+        m_gl->bufferSubData(target, clampToGLintptr(offset),
+                            buffer->byteLength(), buffer->rawBuffer());
     } else if (data.isArrayBufferViewValue()) {
         ScriptArrayBufferView view = data.getArrayBufferViewValue();
-        m_gl->bufferSubData(target, offset, view->byteLength(),
+        m_gl->bufferSubData(target, clampToGLintptr(offset), view->byteLength(),
                             view->rawBuffer());
     } else if (data.isSharedArrayBufferValue()) {
         ScriptSharedArrayBuffer buffer = data.getSharedArrayBufferValue();
-        m_gl->bufferSubData(target, offset, buffer->byteLength(),
-                            buffer->rawBuffer());
+        m_gl->bufferSubData(target, clampToGLintptr(offset),
+                            buffer->byteLength(), buffer->rawBuffer());
     } else {
         setGLError(GL_INVALID_VALUE);
     }

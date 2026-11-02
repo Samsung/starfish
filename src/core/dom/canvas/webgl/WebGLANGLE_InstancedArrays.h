@@ -47,7 +47,7 @@ public:
     void drawArraysInstancedANGLE(GLenum mode, GLint first, GLsizei count,
                                   GLsizei primcount);
     void drawElementsInstancedANGLE(GLenum mode, GLsizei count, GLenum type,
-                                    GLintptr offset, GLsizei primcount);
+                                    WebGLintptr offset, GLsizei primcount);
     void vertexAttribDivisorANGLE(GLuint index, GLuint divisor);
 
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(ANGLE_instanced_arrays);

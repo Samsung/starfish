@@ -214,7 +214,7 @@ WebGLRenderingContextState::getVertexAttribPointer(GLuint index)
 
 void WebGLRenderingContextState::setVertexAttribPointer(
     GLuint index, Optional<WebGLBuffer*> buffer, GLint size, GLenum type,
-    GLsizei stride, GLintptr offset)
+    GLsizei stride, WebGLintptr offset)
 {
     if (index >= kMaxVertexAttribs) {
         return;

@@ -359,7 +359,7 @@ ScriptValue WebGL2RenderingContext::getBufferParameter(GLenum target,
         if (hasNewGLError()) {
             return scriptNull();
         }
-        return createScriptValue(static_cast<GLsizeiptr>(value));
+        return createScriptValue(static_cast<WebGLsizeiptr>(value));
     }
     // GLenum
     case GL_BUFFER_USAGE: {
@@ -1103,9 +1103,9 @@ void WebGL2RenderingContext::texParameteri(GLenum target, GLenum pname,
 
 void WebGL2RenderingContext::copyBufferSubData(GLenum readTarget,
                                                GLenum writeTarget,
-                                               GLintptr readOffset,
-                                               GLintptr writeOffset,
-                                               GLsizeiptr size)
+                                               WebGLintptr readOffset,
+                                               WebGLintptr writeOffset,
+                                               WebGLsizeiptr size)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -1179,8 +1179,8 @@ void WebGL2RenderingContext::copyBufferSubData(GLenum readTarget,
     }
 
     if (readBuffer == writeBuffer) {
-        GLintptr readEnd = readOffset + size;
-        GLintptr writeEnd = writeOffset + size;
+        WebGLintptr readEnd = readOffset + size;
+        WebGLintptr writeEnd = writeOffset + size;
         if (readEnd > writeOffset && writeEnd > readOffset) {
             setGLError(GL_INVALID_VALUE);
             return;
@@ -1191,12 +1191,15 @@ void WebGL2RenderingContext::copyBufferSubData(GLenum readTarget,
         return;
     }
 
-    gl()->copyBufferSubData(readTarget, writeTarget, readOffset, writeOffset,
-                            size);
+    // The range checks above keep every value within a buffer, so the
+    // narrowing to the GL types is lossless.
+    gl()->copyBufferSubData(
+        readTarget, writeTarget, clampToGLintptr(readOffset),
+        clampToGLintptr(writeOffset), clampToGLsizeiptr(size));
 }
 
 void WebGL2RenderingContext::getBufferSubData(GLenum target,
-                                              GLintptr srcByteOffset,
+                                              WebGLintptr srcByteOffset,
                                               ScriptArrayBufferView dstBuffer,
                                               unsigned long long dstOffset,
                                               GLuint length)
@@ -1244,8 +1247,8 @@ void WebGL2RenderingContext::getBufferSubData(GLenum target,
         return;
     }
 
-    void* src = glMapBufferRange(target, srcByteOffset, copyByteLength,
-                                 GL_MAP_READ_BIT);
+    void* src = glMapBufferRange(target, clampToGLintptr(srcByteOffset),
+                                 copyByteLength, GL_MAP_READ_BIT);
     if (hasNewGLError() || src == nullptr) {
         return;
     }
@@ -1614,7 +1617,7 @@ void WebGL2RenderingContext::vertexAttribI4uiv(GLuint index, Uint32List values)
 
 void WebGL2RenderingContext::vertexAttribIPointer(GLuint index, GLint size,
                                                   GLenum type, GLsizei stride,
-                                                  GLintptr offset)
+                                                  WebGLintptr offset)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -1653,8 +1656,9 @@ void WebGL2RenderingContext::vertexAttribIPointer(GLuint index, GLint size,
         return;
     }
 
-    gl()->vertexAttribIPointer(index, size, type, stride,
-                               reinterpret_cast<const void*>(offset));
+    gl()->vertexAttribIPointer(
+        index, size, type, stride,
+        reinterpret_cast<const void*>(clampToGLintptr(offset)));
     if (hasNewGLError()) {
         return;
     }
@@ -1924,7 +1928,8 @@ void WebGL2RenderingContext::bindBufferBase(GLenum target, GLuint index,
 
 void WebGL2RenderingContext::bindBufferRange(GLenum target, GLuint index,
                                              Optional<WebGLBuffer*> buffer,
-                                             GLintptr offset, GLsizeiptr size)
+                                             WebGLintptr offset,
+                                             WebGLsizeiptr size)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -1989,7 +1994,8 @@ void WebGL2RenderingContext::bindBufferRange(GLenum target, GLuint index,
             return;
         }
 
-        gl()->bindBufferRange(target, index, value->glObject(), offset, size);
+        gl()->bindBufferRange(target, index, value->glObject(),
+                              clampToGLintptr(offset), clampToGLsizeiptr(size));
         if (hasNewGLError()) {
             return;
         }
@@ -2010,7 +2016,8 @@ void WebGL2RenderingContext::bindBufferRange(GLenum target, GLuint index,
                 new IndexedBufferBinding(value, offset, size, true);
         }
     } else {
-        gl()->bindBufferRange(target, index, 0, offset, size);
+        gl()->bindBufferRange(target, index, 0, clampToGLintptr(offset),
+                              clampToGLsizeiptr(size));
         if (hasNewGLError()) {
             return;
         }
@@ -3181,7 +3188,7 @@ bool WebGL2RenderingContext::validateDrawCallUBO()
         }
 
         IndexedBufferBinding* b = m_uniformBufferBindings[binding];
-        GLsizeiptr totalBufferSize = b->buffer->byteLength();
+        WebGLsizeiptr totalBufferSize = b->buffer->byteLength();
 
         if (totalBufferSize == 0) {
             setGLError(GL_INVALID_OPERATION,
@@ -3190,7 +3197,7 @@ bool WebGL2RenderingContext::validateDrawCallUBO()
             return false;
         }
 
-        GLsizeiptr effectiveSize = b->isRange ? b->size : totalBufferSize;
+        WebGLsizeiptr effectiveSize = b->isRange ? b->size : totalBufferSize;
         if (effectiveSize < dataSize) {
             setGLError(GL_INVALID_OPERATION,
                        "draw: bound UNIFORM_BUFFER size is smaller than "
@@ -3322,7 +3329,7 @@ void WebGL2RenderingContext::shaderSource(WebGLShader* shader, String* source)
 
 void WebGL2RenderingContext::drawRangeElements(GLenum mode, GLuint start,
                                                GLuint end, GLsizei count,
-                                               GLenum type, GLintptr offset)
+                                               GLenum type, WebGLintptr offset)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -3366,9 +3373,9 @@ void WebGL2RenderingContext::drawRangeElements(GLenum mode, GLuint start,
         } else if (type == GL_UNSIGNED_INT) {
             bytesPerIndex = 4;
         }
-        if (static_cast<size_t>(elementBuffer.value()->byteLength()) <
-            static_cast<size_t>(offset) +
-                static_cast<size_t>(count) * bytesPerIndex) {
+        if (static_cast<uint64_t>(elementBuffer.value()->byteLength()) <
+            static_cast<uint64_t>(offset) +
+                static_cast<uint64_t>(count) * bytesPerIndex) {
             setGLError(GL_INVALID_OPERATION,
                        "drawRangeElements: element buffer out of bounds");
             return;
@@ -3393,8 +3400,9 @@ void WebGL2RenderingContext::drawRangeElements(GLenum mode, GLuint start,
     if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs() ||
         !validateStencilSettings())
         return;
-    gl()->drawRangeElements(mode, start, end, count, type,
-                            reinterpret_cast<const void*>(offset));
+    gl()->drawRangeElements(
+        mode, start, end, count, type,
+        reinterpret_cast<const void*>(clampToGLintptr(offset)));
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
@@ -4143,7 +4151,7 @@ void WebGL2RenderingContext::clearBufferfi(GLenum buffer, GLint drawbuffer,
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
-void WebGL2RenderingContext::bufferData(GLenum target, GLsizeiptr size,
+void WebGL2RenderingContext::bufferData(GLenum target, WebGLsizeiptr size,
                                         GLenum usage)
 {
     WebGLRenderingContext::bufferData(target, size, usage);
@@ -4156,7 +4164,7 @@ void WebGL2RenderingContext::bufferData(
 }
 
 void WebGL2RenderingContext::bufferSubData(GLenum target,
-                                           GLintptr dstByteOffset,
+                                           WebGLintptr dstByteOffset,
                                            AllowSharedBufferSource srcData)
 {
     WebGLRenderingContext::bufferSubData(target, dstByteOffset, srcData);
@@ -4206,7 +4214,7 @@ void WebGL2RenderingContext::bufferData(GLenum target,
 }
 
 void WebGL2RenderingContext::bufferSubData(GLenum target,
-                                           GLintptr dstByteOffset,
+                                           WebGLintptr dstByteOffset,
                                            ScriptArrayBufferView srcData,
                                            unsigned long long srcOffset,
                                            GLuint length)
@@ -4247,7 +4255,7 @@ void WebGL2RenderingContext::bufferSubData(GLenum target,
         return;
     }
 
-    gl()->bufferSubData(target, dstByteOffset, copyByteLength,
+    gl()->bufferSubData(target, clampToGLintptr(dstByteOffset), copyByteLength,
                         srcData->rawBuffer() + srcOffset * elementSize);
 }
 
@@ -4439,7 +4447,7 @@ void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
                                         GLint internalformat, GLsizei width,
                                         GLsizei height, GLint border,
                                         GLenum format, GLenum type,
-                                        GLintptr pboOffset)
+                                        WebGLintptr pboOffset)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -4477,14 +4485,15 @@ void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
     GLint bufferSize = 0;
     gl()->getBufferParameteriv(GL_PIXEL_UNPACK_BUFFER, GL_BUFFER_SIZE,
                                &bufferSize);
-    if (static_cast<size_t>(pboOffset) + requiredBytes >
-        static_cast<size_t>(bufferSize)) {
+    if (static_cast<uint64_t>(pboOffset) + requiredBytes >
+        static_cast<uint64_t>(bufferSize)) {
         setGLError(GL_INVALID_OPERATION, "buffer too small");
         return;
     }
 
     gl()->texImage2D(target, level, internalformat, width, height, border,
-                     format, type, reinterpret_cast<const void*>(pboOffset));
+                     format, type,
+                     reinterpret_cast<const void*>(clampToGLintptr(pboOffset)));
     if (texture && !hasNewGLError()) {
         texture->setImageLevelInfo(target, level, internalformat, width, height,
                                    1);
@@ -4597,7 +4606,7 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
                                         GLint internalformat, GLsizei width,
                                         GLsizei height, GLsizei depth,
                                         GLint border, GLenum format,
-                                        GLenum type, GLintptr pboOffset)
+                                        GLenum type, WebGLintptr pboOffset)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -4635,15 +4644,15 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
     GLint bufferSize = 0;
     gl()->getBufferParameteriv(GL_PIXEL_UNPACK_BUFFER, GL_BUFFER_SIZE,
                                &bufferSize);
-    if (static_cast<size_t>(pboOffset) + requiredBytes >
-        static_cast<size_t>(bufferSize)) {
+    if (static_cast<uint64_t>(pboOffset) + requiredBytes >
+        static_cast<uint64_t>(bufferSize)) {
         setGLError(GL_INVALID_OPERATION, "buffer too small");
         return;
     }
 
     gl()->texImage3D(target, level, internalformat, width, height, depth,
                      border, format, type,
-                     reinterpret_cast<const void*>(pboOffset));
+                     reinterpret_cast<const void*>(clampToGLintptr(pboOffset)));
 
     if (texture && !hasNewGLError()) {
         texture->setImageLevelInfo(target, level, internalformat, width, height,
@@ -4826,7 +4835,7 @@ void WebGL2RenderingContext::texSubImage3D(GLenum target, GLint level,
                                            GLint zoffset, GLsizei width,
                                            GLsizei height, GLsizei depth,
                                            GLenum format, GLenum type,
-                                           GLintptr pboOffset)
+                                           WebGLintptr pboOffset)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -4863,15 +4872,15 @@ void WebGL2RenderingContext::texSubImage3D(GLenum target, GLint level,
     GLint bufferSize = 0;
     gl()->getBufferParameteriv(GL_PIXEL_UNPACK_BUFFER, GL_BUFFER_SIZE,
                                &bufferSize);
-    if (static_cast<size_t>(pboOffset) + requiredBytes >
-        static_cast<size_t>(bufferSize)) {
+    if (static_cast<uint64_t>(pboOffset) + requiredBytes >
+        static_cast<uint64_t>(bufferSize)) {
         setGLError(GL_INVALID_OPERATION, "buffer too small");
         return;
     }
 
-    gl()->texSubImage3D(target, level, xoffset, yoffset, zoffset, width, height,
-                        depth, format, type,
-                        reinterpret_cast<const void*>(pboOffset));
+    gl()->texSubImage3D(
+        target, level, xoffset, yoffset, zoffset, width, height, depth, format,
+        type, reinterpret_cast<const void*>(clampToGLintptr(pboOffset)));
 }
 
 void WebGL2RenderingContext::texSubImage3D(GLenum target, GLint level,
@@ -4966,7 +4975,7 @@ void WebGL2RenderingContext::texSubImage2D(GLenum target, GLint level,
                                            GLint xoffset, GLint yoffset,
                                            GLsizei width, GLsizei height,
                                            GLenum format, GLenum type,
-                                           GLintptr pboOffset)
+                                           WebGLintptr pboOffset)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -4998,14 +5007,15 @@ void WebGL2RenderingContext::texSubImage2D(GLenum target, GLint level,
     GLint bufferSize = 0;
     gl()->getBufferParameteriv(GL_PIXEL_UNPACK_BUFFER, GL_BUFFER_SIZE,
                                &bufferSize);
-    if (static_cast<size_t>(pboOffset) + requiredBytes >
-        static_cast<size_t>(bufferSize)) {
+    if (static_cast<uint64_t>(pboOffset) + requiredBytes >
+        static_cast<uint64_t>(bufferSize)) {
         setGLError(GL_INVALID_OPERATION, "buffer too small");
         return;
     }
 
-    gl()->texSubImage2D(target, level, xoffset, yoffset, width, height, format,
-                        type, reinterpret_cast<const void*>(pboOffset));
+    gl()->texSubImage2D(
+        target, level, xoffset, yoffset, width, height, format, type,
+        reinterpret_cast<const void*>(clampToGLintptr(pboOffset)));
 }
 
 void WebGL2RenderingContext::texSubImage2D(GLenum target, GLint level,
@@ -5136,14 +5146,14 @@ bool WebGL2RenderingContext::sliceCompressedTexData(
 
 void WebGL2RenderingContext::compressedTexImage2D(
     GLenum target, GLint level, GLenum internalformat, GLsizei width,
-    GLsizei height, GLint border, GLsizei imageSize, GLintptr offset)
+    GLsizei height, GLint border, GLsizei imageSize, WebGLintptr offset)
 {
     ENTER_CONTEXT_SCOPE();
 
     if (checkUnpackBufferBinding(true)) {
-        compressedTexImage(target, false, level, internalformat, width, height,
-                           1, border, imageSize,
-                           reinterpret_cast<const void*>(offset));
+        compressedTexImage(
+            target, false, level, internalformat, width, height, 1, border,
+            imageSize, reinterpret_cast<const void*>(clampToGLintptr(offset)));
     }
 }
 
@@ -5165,14 +5175,14 @@ void WebGL2RenderingContext::compressedTexImage2D(
 
 void WebGL2RenderingContext::compressedTexSubImage2D(
     GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
-    GLsizei height, GLenum format, GLsizei imageSize, GLintptr offset)
+    GLsizei height, GLenum format, GLsizei imageSize, WebGLintptr offset)
 {
     ENTER_CONTEXT_SCOPE();
 
     if (checkUnpackBufferBinding(true)) {
-        compressedTexSubImage(target, false, level, xoffset, yoffset, 0, width,
-                              height, 1, format, imageSize,
-                              reinterpret_cast<const void*>(offset));
+        compressedTexSubImage(
+            target, false, level, xoffset, yoffset, 0, width, height, 1, format,
+            imageSize, reinterpret_cast<const void*>(clampToGLintptr(offset)));
     }
 }
 
@@ -5197,14 +5207,14 @@ void WebGL2RenderingContext::compressedTexImage3D(GLenum target, GLint level,
                                                   GLsizei width, GLsizei height,
                                                   GLsizei depth, GLint border,
                                                   GLsizei imageSize,
-                                                  GLintptr offset)
+                                                  WebGLintptr offset)
 {
     ENTER_CONTEXT_SCOPE();
 
     if (checkUnpackBufferBinding(true)) {
-        compressedTexImage(target, true, level, internalformat, width, height,
-                           depth, border, imageSize,
-                           reinterpret_cast<const void*>(offset));
+        compressedTexImage(
+            target, true, level, internalformat, width, height, depth, border,
+            imageSize, reinterpret_cast<const void*>(clampToGLintptr(offset)));
     }
 }
 
@@ -5227,14 +5237,15 @@ void WebGL2RenderingContext::compressedTexImage3D(
 void WebGL2RenderingContext::compressedTexSubImage3D(
     GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
     GLsizei width, GLsizei height, GLsizei depth, GLenum format,
-    GLsizei imageSize, GLintptr offset)
+    GLsizei imageSize, WebGLintptr offset)
 {
     ENTER_CONTEXT_SCOPE();
 
     if (checkUnpackBufferBinding(true)) {
-        compressedTexSubImage(target, true, level, xoffset, yoffset, zoffset,
-                              width, height, depth, format, imageSize,
-                              reinterpret_cast<const void*>(offset));
+        compressedTexSubImage(
+            target, true, level, xoffset, yoffset, zoffset, width, height,
+            depth, format, imageSize,
+            reinterpret_cast<const void*>(clampToGLintptr(offset)));
     }
 }
 
@@ -5415,7 +5426,7 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
 
 void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
                                         GLsizei height, GLenum format,
-                                        GLenum type, GLintptr offset)
+                                        GLenum type, WebGLintptr offset)
 {
     ENTER_CONTEXT_SCOPE();
     completePendingJobs();
@@ -5456,14 +5467,14 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
     GLint bufferSize = 0;
     gl()->getBufferParameteriv(GL_PIXEL_PACK_BUFFER, GL_BUFFER_SIZE,
                                &bufferSize);
-    if (static_cast<size_t>(offset) + requiredSize >
-        static_cast<size_t>(bufferSize)) {
+    if (static_cast<uint64_t>(offset) + requiredSize >
+        static_cast<uint64_t>(bufferSize)) {
         setGLError(GL_INVALID_OPERATION, "Buffer not large enough");
         return;
     }
 
     gl()->readPixels(x, y, width, height, format, type,
-                     reinterpret_cast<void*>(offset));
+                     reinterpret_cast<void*>(clampToGLintptr(offset)));
 }
 
 void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
