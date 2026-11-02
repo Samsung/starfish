@@ -405,6 +405,7 @@ protected:
 
 private:
     bool isBoundCubeMapTexture(GLenum target);
+    void releaseOutOfHeapMembers() override;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     void releaseInternalGLObjects() override;
     // Copies the current frame of `video` on the GPU into `level` of the

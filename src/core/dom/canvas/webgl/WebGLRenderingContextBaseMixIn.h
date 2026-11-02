@@ -54,6 +54,12 @@ protected:
     {
     }
 
+    // Called once from the GC finalizer, after finalize(), to free members
+    // that live outside the GC heap and so are not reclaimed with the object.
+    virtual void releaseOutOfHeapMembers()
+    {
+    }
+
 public:
     void* operator new(size_t size)
     {

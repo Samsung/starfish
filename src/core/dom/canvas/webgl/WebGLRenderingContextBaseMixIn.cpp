@@ -59,12 +59,16 @@ WebGLRenderingContextBaseMixIn::WebGLRenderingContextBaseMixIn(
     , m_canvasSurface(nullptr)
     , m_isContextAttributesChecked(false)
 {
+    // bdwgc keeps one finalizer per object and a later registration replaces
+    // this one, so subclasses add their cleanup through
+    // releaseOutOfHeapMembers() rather than registering their own.
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
             WebGLRenderingContextBaseMixIn* c =
                 (WebGLRenderingContextBaseMixIn*)obj;
             c->finalize();
+            c->releaseOutOfHeapMembers();
         },
         NULL, NULL, NULL);
 }
@@ -91,7 +95,9 @@ void WebGLRenderingContextBaseMixIn::initialize()
     // after the GL is disconnected (terminated) from the native display, and
     // using any GL APIs inside will result in an error at the time.
     m_ownerHTMLCanvasElement->window()->registerDisposer(
-        this, [this]() { finalize(); });
+        this, [](void* holder) {
+            static_cast<WebGLRenderingContextBaseMixIn*>(holder)->finalize();
+        });
 
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
@@ -156,10 +162,21 @@ void WebGLRenderingContextBaseMixIn::resetSurface()
 void WebGLRenderingContextBaseMixIn::finalize()
 {
     if (m_context.isValid()) {
+        // As a GC finalizer this runs from whatever allocation triggered the
+        // collection, which may be in the middle of another context's GL
+        // calls, so the context current before is made current again.
+        Renderer* renderer = m_context.renderer();
+        const uintptr_t previous = renderer->getCurrentContext();
+        const uintptr_t own = m_context.handle();
         m_context.setCurrent();
         releaseInternalGLObjects();
         m_framebufferTexture.reset();
         m_context.destroy();
+        if (previous == Renderer::kEmptyContextOrUnknown || previous == own) {
+            renderer->makeCurrent();
+        } else {
+            renderer->makeCurrentWithContext(previous);
+        }
     }
     m_canvasSurface = nullptr;
 }

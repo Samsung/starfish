@@ -59,7 +59,11 @@ class AudioContext;
 #endif
 
 typedef void (*TimerHandler)(void* data);
-using Disposer = std::function<void()>;
+// Called with the registered holder while it is still alive. A plain
+// function pointer on purpose: the registry lives on the GC heap, so a
+// closure capturing the holder would keep it reachable and it could never be
+// collected (nor its finalizer run) before the window is disposed.
+using Disposer = void (*)(void* holder);
 
 class Window : public EventTarget, public GlobalScope {
     friend class MessageLoop;
