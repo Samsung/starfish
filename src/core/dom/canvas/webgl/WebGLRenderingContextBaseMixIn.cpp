@@ -28,7 +28,29 @@
 #include "core/page/Window.h"
 #include "core/modules/renderer/Renderer.h"
 
+#include <cmath>
+
 namespace Starfish {
+
+// WebGL 1.0 §2.2: when the requested drawing buffer size cannot be
+// satisfied, a smaller drawing buffer shall be created, its dimensions being
+// implementation dependent. The per-axis texture size limit alone still lets
+// a page ask for a buffer of several GiB (color plus depth/stencil), which
+// exhausts memory on low-end devices, so the area is bounded as well.
+static constexpr uint64_t kMaxDrawingBufferPixels = 4096 * 4096;
+
+static void clampDrawingBufferArea(uint32_t& width, uint32_t& height)
+{
+    const uint64_t area = static_cast<uint64_t>(width) * height;
+    if (area <= kMaxDrawingBufferPixels) {
+        return;
+    }
+    // Keep the aspect ratio; flooring keeps the result within the bound.
+    const double scale =
+        std::sqrt(static_cast<double>(kMaxDrawingBufferPixels) / area);
+    width = std::max<uint32_t>(1, static_cast<uint32_t>(width * scale));
+    height = std::max<uint32_t>(1, static_cast<uint32_t>(height * scale));
+}
 
 WebGLRenderingContextBaseMixIn::WebGLRenderingContextBaseMixIn(
     HTMLCanvasElement* ownerHTMLCanvasElement)
@@ -95,6 +117,7 @@ void WebGLRenderingContextBaseMixIn::resetSurface()
     calculateDimension(bufferWidth, bufferHeight,
                        m_ownerHTMLCanvasElement->width(),
                        m_ownerHTMLCanvasElement->height());
+    clampDrawingBufferArea(bufferWidth, bufferHeight);
 
     TRACE_SCOPE(WEBGL, KV(bufferWidth), KV(bufferHeight));
 
