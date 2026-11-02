@@ -765,6 +765,20 @@ void AudioGraph::releaseHandlers()
             }
         }
         bool removed = false;
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+        // Allocated before any handler is detached, so the loop cannot fail;
+        // graphs without worklet handlers allocate nothing.
+        size_t records = 0;
+        for (AudioHandler* handler : m_releaseCandidates) {
+            if (handler->releasable() && handler->workletRecord()) {
+                records++;
+            }
+        }
+        if (records) {
+            m_releasedWorkletRecords.reserve(m_releasedWorkletRecords.size() +
+                                             records);
+        }
+#endif
         for (AudioHandler* handler : m_releaseCandidates) {
             if (handler->releasable()) {
                 detachHandler(handler);

@@ -21,6 +21,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/webaudio/AudioBuffer.h"
 #include "core/modules/webaudio/AudioDestinationNode.h"
+#include "core/modules/webaudio/AudioWorklet.h"
 #include "core/modules/webaudio/OfflineAudioCompletionEvent.h"
 #include "core/modules/webaudio/render/AudioBufferData.h"
 #include "core/modules/webaudio/render/AudioGraph.h"
@@ -331,6 +332,11 @@ void OfflineAudioContext::renderChunk()
         }
     }
 
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    if (m_audioWorklet) {
+        m_audioWorklet.value()->sweepRecords();
+    }
+#endif
     if (m_renderedFrames < m_length) {
         queueRenderChunk();
         return;

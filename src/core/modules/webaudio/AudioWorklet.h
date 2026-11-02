@@ -41,6 +41,9 @@ public:
     // https://webaudio.github.io/web-audio-api/#dom-audioworklet-node-name-to-parameter-descriptor-map
     Optional<AudioWorkletProcessorDefinition*> definition(String* name) const;
     void addDefinition(AudioWorkletProcessorDefinition* definition);
+    // Called by the render drivers: frees the processor records of
+    // AudioWorkletNodes whose handlers the graph deleted.
+    void sweepRecords();
 
 private:
     void runModule(ResourceURL* url, Promise* promise, Optional<String*> text);

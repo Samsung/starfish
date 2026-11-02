@@ -140,6 +140,8 @@ public:
     // outputs.
     void process(AudioWorkletProcessorRecord* record,
                  AudioWorkletHandler& handler);
+    // Drops the records of handlers the graph has deleted.
+    void sweepRecords();
 
 private:
     void dispose();
@@ -147,8 +149,6 @@ private:
     void queueProcessorError(AudioWorkletProcessorRecord* record,
                              String* message, String* filename, uint32_t lineno,
                              uint32_t colno);
-    // Drops the records of handlers the graph has deleted.
-    void sweepRecords();
 
     BaseAudioContext* m_context;
     AudioWorklet* m_worklet;

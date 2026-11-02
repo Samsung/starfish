@@ -576,6 +576,41 @@ const groups = {
             context, 'echo', {processorOptions: {blob: new Blob([])}}));
         check(notCloned instanceof ErrorEvent,
               'processorerror for options a worklet cannot deserialize');
+
+        // When a parameter array changes length, the output channel arrays
+        // keep their identity.
+        const ramp = new OfflineAudioContext(1, 1024, 8000);
+        await ramp.audioWorklet.addModule(URL.createObjectURL(new Blob([`
+            registerProcessor('reuse', class extends AudioWorkletProcessor {
+                static get parameterDescriptors() {
+                    return [{name: 'x', defaultValue: 0}];
+                }
+                process(inputs, outputs, parameters) {
+                    const length = parameters.x.length;
+                    if (this.length !== undefined && length !== this.length) {
+                        this.port.postMessage({
+                            lengths: this.length + '->' + length,
+                            sameChannel: outputs[0][0] === this.channel,
+                        });
+                    }
+                    this.length = length;
+                    this.channel = outputs[0][0];
+                    return true;
+                }
+            });`], {type: 'application/javascript'})));
+        const reuse = new AudioWorkletNode(ramp, 'reuse');
+        const level = reuse.parameters.get('x');
+        level.setValueAtTime(0, 0);
+        level.linearRampToValueAtTime(1, 384 / 8000);
+        reuse.connect(ramp.destination);
+        const changed = new Promise((resolve) => {
+            reuse.port.onmessage = (e) => resolve(e.data);
+        });
+        await ramp.startRendering();
+        const change = await changed;
+        check(change.lengths === '128->1' && change.sameChannel,
+              'output arrays after a parameter length change: ' +
+                  JSON.stringify(change));
     },
 
     // Main-thread rendering: a graph slower than real time underruns
