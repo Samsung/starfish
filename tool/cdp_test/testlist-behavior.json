@@ -20,8 +20,7 @@
       "expected": "pass"
     },
     "accessibility/accessibility-getFullAXTree-display-locked.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "accessibility/accessibility-getFullAXTree.js": {
       "expected": "pass"

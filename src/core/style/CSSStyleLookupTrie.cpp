@@ -1106,6 +1106,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         // padding-inline-end
         // margin-block-start
         switch (data[0]) {
+        case 'c':
+            if (memcmp(data, "content-visibility", 18) == 0) {
+                return CSSStyleValuePair::KeyKind::ContentVisibility;
+            }
+            break;
         case 'a':
 #if defined(STARFISH_ENABLE_ANIMATION)
             if (memcmp(data, "animation-duration", 18) == 0) {
@@ -2455,6 +2460,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
         break;
     case 17:
         switch (data[0]) {
+        case 'c':
+            if (memcmp(data, "contentVisibility", 17) == 0) {
+                return CSSStyleValuePair::KeyKind::ContentVisibility;
+            }
+            break;
         case 'a':
 #if defined(STARFISH_ENABLE_ANIMATION)
             if (memcmp(data, "animationDuration", 17) == 0) {

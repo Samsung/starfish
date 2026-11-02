@@ -37,6 +37,8 @@
 #include "core/dom/Traverse.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
+#include "core/page/Window.h"
+#include "core/dom/DOMRect.h"
 #include "core/style/ComputedStyle.h"
 
 namespace Starfish {
@@ -109,6 +111,11 @@ namespace {
         Element* blockingModal = nullptr;
         // True inside an element that has the inert attribute.
         bool inert = false;
+        // Set inside a subtree that content-visibility has locked. Layout
+        // skipped it, so its nodes are built from the DOM alone.
+        bool displayLocked = false;
+        // Set on the element that owns the lock. It is always reported.
+        bool displayLockRoot = false;
     };
 
     constexpr const char* kInertAttribute = "inert";
@@ -265,6 +272,28 @@ private:
         }
     }
 
+    ContentVisibilityValue contentVisibilityOf(Element* element)
+    {
+        ComputedStyle* style = element->style();
+        return style ? style->usedContentVisibility()
+                     : ContentVisibilityValue::VisibleContentVisibilityValue;
+    }
+
+    // Chromium locks an auto subtree while it is far from the viewport.
+    // Here, outside the viewport is the only condition checked.
+    bool isOutsideViewport(Element* element)
+    {
+        Window* window = element->ownerDocument()->window();
+        if (!window) {
+            return false;
+        }
+        DOMRect* rect = element->getBoundingClientRect();
+        return rect->y() + rect->height() < 0 ||
+               rect->y() > window->innerHeight() ||
+               rect->x() + rect->width() < 0 ||
+               rect->x() > window->innerWidth();
+    }
+
     void addSubtree(Node* domNode, AXNode* parentAXNode,
                     const InheritedState& parentState)
     {
@@ -307,6 +336,25 @@ private:
             state.blockingModal = nullptr; // inside the dialog
         }
 
+        // content-visibility: hidden never exposes its contents. A locked
+        // auto subtree does, but it has no layout.
+        state.displayLockRoot = false;
+        bool lockedChildren = state.displayLocked;
+        bool skipChildren = false;
+        if (!state.displayLocked && rendered) {
+            ContentVisibilityValue visibility = contentVisibilityOf(element);
+            if (visibility ==
+                ContentVisibilityValue::HiddenContentVisibilityValue) {
+                state.displayLockRoot = true;
+                skipChildren = true;
+            } else if (visibility ==
+                           ContentVisibilityValue::AutoContentVisibilityValue &&
+                       isOutsideViewport(element)) {
+                state.displayLockRoot = true;
+                lockedChildren = true;
+            }
+        }
+
         AXNode* node = create(element, AXNodeKind::Element);
         node->m_role = axRoleForElement(element, tag);
         computeIgnored(node, element, tag, rendered, state);
@@ -318,6 +366,9 @@ private:
         }
         attach(node, parentAXNode);
 
+        if (skipChildren) {
+            return;
+        }
         AXNode* childParent = node->m_includedInTree ? node : parentAXNode;
         // Chrome puts the options of a drop down under a popup node.
         if (element->isHTMLSelectElement() && !node->m_ignored &&
@@ -328,6 +379,8 @@ private:
         if (element->isHTMLOptionElement() && isInsideDropDown(element)) {
             return;
         }
+        state.displayLockRoot = false;
+        state.displayLocked = lockedChildren;
         addChildren(element, childParent, state);
     }
 
@@ -362,10 +415,13 @@ private:
     void addTextNode(Node* domNode, AXNode* parentAXNode,
                      const InheritedState& state)
     {
-        std::string text = axTextForNode(domNode);
+        // A locked subtree has no layout, so its text is reported as written.
+        std::string text = state.displayLocked ? rawTextForNode(domNode)
+                                               : axTextForNode(domNode);
         // Collapsible whitespace between blocks produces no box and no
         // accessibility node (IsLayoutTextRelevantForAccessibility).
-        if (text.empty() || (!domNode->frame() && onlyWhitespace(text))) {
+        if (text.empty() || (!state.displayLocked && !domNode->frame() &&
+                             onlyWhitespace(text))) {
             return;
         }
 
@@ -375,7 +431,7 @@ private:
         computeIgnored(node, nullptr, std::string(),
                        domNode->frame() != nullptr, state);
         attach(node, parentAXNode);
-        if (!node->m_includedInTree) {
+        if (!node->m_includedInTree || state.displayLocked) {
             return;
         }
 
@@ -387,6 +443,13 @@ private:
         box->m_name = text;
         box->m_ignored = node->m_ignored;
         attach(box, node);
+    }
+
+    std::string rawTextForNode(Node* node)
+    {
+        return toUTF8(node->textContent().hasValue()
+                          ? node->textContent().value()
+                          : nullptr);
     }
 
     void attach(AXNode* node, AXNode* parent)
@@ -490,6 +553,9 @@ private:
             node->m_ignoredReasonTarget = state.blockingModal;
             return;
         }
+        if (state.displayLocked) {
+            return; // laid out never, but still part of the page
+        }
         if (!rendered) {
             // No box at all means the node was never rendered. A node that
             // has a box but cannot be seen is a different reason, reported
@@ -560,7 +626,8 @@ private:
                 // An author who wrote an ARIA attribute, a title or a tab
                 // stop meant this element to be reported, whatever its
                 // role says.
-                interesting = axHasAnyAriaAttribute(element) ||
+                interesting = state.displayLockRoot ||
+                              axHasAnyAriaAttribute(element) ||
                               axHasAttribute(element, "title") ||
                               axHasAttribute(element, "tabindex");
                 if (!interesting && element->frame() &&

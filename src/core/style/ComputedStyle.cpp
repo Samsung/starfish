@@ -2318,6 +2318,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
+    if (newStyle->contentVisibility() != oldStyle->contentVisibility()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::ContentVisibility] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+    }
+
     if (newStyle->resize() != oldStyle->resize()) {
         damagedKeys[CSSStyleValuePair::KeyKind::Resize] = true;
         damage = static_cast<ComputedStyleDamage>(

@@ -155,6 +155,7 @@ public:
         TextUnderlinePosition,
         TextDecorationLine,
         Resize,
+        ContentVisibility,
         Content,
         Quote,
         Outline,
@@ -249,6 +250,7 @@ public:
         TextDecorationStyleValue m_textDecorationStyle;
         TextUnderlinePositionValue m_textUnderlinePosition;
         ResizeValue m_resize;
+        ContentVisibilityValue m_contentVisibility;
         QuoteValue m_quote;
         TextOverflowData* m_textOverflow;
         CounterBaseList* m_counterBaseList;
@@ -414,6 +416,11 @@ public:
 
         RareComputedStyleValue(TextUnderlinePositionValue v)
             : m_textUnderlinePosition(v)
+        {
+        }
+
+        RareComputedStyleValue(ContentVisibilityValue v)
+            : m_contentVisibility(v)
         {
         }
 
@@ -650,6 +657,8 @@ public:
                  textDecorationStyle, TextDecorationStyle,
                  SolidTextDecorationStyleValue);
     GETTER_VALUE(ResizeValue, resize, resize, Resize, NoneResizeValue);
+    GETTER_VALUE(ContentVisibilityValue, contentVisibility, contentVisibility,
+                 ContentVisibility, VisibleContentVisibilityValue);
     GETTER_VALUE(QuoteValue, quote, quote, Quote, OpenQuoteValue);
     GETTER_VALUE(BoxDecorationBreakValue, boxDecorationBreak,
                  boxDecorationBreak, BoxDecorationBreak,
@@ -1731,6 +1740,50 @@ public:
     // The used color scheme: dark only when the element opts into `dark`
     // and either does not also offer `light` or the user prefers dark.
     bool usedColorSchemeIsDark();
+
+    ContentVisibilityValue contentVisibility()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return ContentVisibilityValue::VisibleContentVisibilityValue;
+        }
+
+        Optional<ContentVisibilityValue> v =
+            rareComputedStyleData()->contentVisibility();
+        if (v.hasValue()) {
+            return v.getValue();
+        }
+
+        return ContentVisibilityValue::VisibleContentVisibilityValue;
+    }
+
+    void setContentVisibility(ContentVisibilityValue v)
+    {
+        *m_rareComputedStyleData.ensureContentVisibility() = v;
+    }
+
+    // The content-visibility value that takes effect. The property has no
+    // effect on a non-atomic inline box, an internal table box other than a
+    // cell or caption, or an element that generates no box. Ruby boxes are
+    // inline boxes in Starfish, so they are covered too.
+    // https://drafts.csswg.org/css-contain-2/#content-visibility
+    ContentVisibilityValue usedContentVisibility()
+    {
+        switch (display()) {
+        case DisplayValue::InlineDisplayValue:
+        case DisplayValue::InlineListItemDisplayValue:
+        case DisplayValue::TableRowGroupDisplayValue:
+        case DisplayValue::TableHeaderGroupDisplayValue:
+        case DisplayValue::TableFooterGroupDisplayValue:
+        case DisplayValue::TableRowDisplayValue:
+        case DisplayValue::TableColumnGroupDisplayValue:
+        case DisplayValue::TableColumnDisplayValue:
+        case DisplayValue::ContentsDisplayValue:
+        case DisplayValue::NoneDisplayValue:
+            return ContentVisibilityValue::VisibleContentVisibilityValue;
+        default:
+            return contentVisibility();
+        }
+    }
 
     ResizeValue resize()
     {

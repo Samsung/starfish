@@ -300,17 +300,17 @@ http://web-platform.test:8000/css/css-contain/contain-style-ol-ordinal-li-contai
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/contain-style-ol-ordinal.html
 http://web-platform.test:8000/css/css-contain/contain-subgrid-001.html
 http://web-platform.test:8000/css/css-contain/container-iframe-resize-events.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-001.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-001.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-005.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-006.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-007.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-008.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-009.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-010.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-011.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-004.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-005.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-006.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-007.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-008.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-009.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-010.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-011.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-012.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-013.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-014.html
@@ -325,19 +325,19 @@ http://web-platform.test:8000/css/css-contain/content-visibility/content-visibil
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-028.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-032.html
 # [auto-fail:IMG_MISMATCH] https://web-platform.test:8443/css/css-contain/content-visibility/content-visibility-033.sub.https.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-034.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-037.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-040.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-034.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-037.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-040.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-041.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-042.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-043.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-045.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-043.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-045.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-046.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-049.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-051.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-051.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-052.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-055.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-056.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-056.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-057.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-058.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-060.html
@@ -347,16 +347,16 @@ http://web-platform.test:8000/css/css-contain/content-visibility/content-visibil
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-064.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-065.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-066.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-067.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-067.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-073.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-074.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-075.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-076.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-078.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-078.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-079.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-082.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-083.html
-# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-084.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-082.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-083.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-084.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-085.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-094.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-095.html
@@ -374,18 +374,18 @@ http://web-platform.test:8000/css/css-contain/content-visibility/content-visibil
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-auto-svg-image.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-auto-svg-text.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-canvas.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-fieldset-size.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-fieldset-size.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-hidden-and-innertext.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-hidden-with-column-spanner.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-hidden-with-column-spanner.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-intrinsic-size-001.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-on-display-contents.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-on-g.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-on-root-svg.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-on-ruby.html
-http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-paint-containment-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-paint-containment-001.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-paint-containment-002.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-paint-containment-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-paint-containment-004.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-paint-containment-004.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-resize-observer-no-error.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-video.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-vs-scrollIntoView-001.html
@@ -398,21 +398,21 @@ http://web-platform.test:8000/css/css-contain/content-visibility/content-visibil
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-popover-top-layer-005.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-popover-top-layer-and-auto-descendant.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-popover-top-layer-hide-after-addition.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-top-layer-000.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-top-layer-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-top-layer-002.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-top-layer-000.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-top-layer-001.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-top-layer-002.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-top-layer-003.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-top-layer-004.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-top-layer-005.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-top-layer-and-auto-descendant.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-top-layer-hide-after-addition.html
+http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-top-layer-hide-after-addition.html
 http://web-platform.test:8000/css/css-contain/content-visibility/content-visibility-with-top-layer-in-auto-subtree-removal.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/dynamic-change-paint-fully-obscuring-child-001.html
+http://web-platform.test:8000/css/css-contain/content-visibility/dynamic-change-paint-fully-obscuring-child-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/dynamic-change-with-slotted-text.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/element-reassigned-to-skipped-slot.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/element-reassigned-to-slot-in-skipped-subtree.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/scrollIntoView-target-with-contents-hidden.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/content-visibility/scrollIntoView-with-focus-target-with-contents-hidden.html
+http://web-platform.test:8000/css/css-contain/content-visibility/element-reassigned-to-skipped-slot.html
+http://web-platform.test:8000/css/css-contain/content-visibility/element-reassigned-to-slot-in-skipped-subtree.html
+http://web-platform.test:8000/css/css-contain/content-visibility/scrollIntoView-target-with-contents-hidden.html
+http://web-platform.test:8000/css/css-contain/content-visibility/scrollIntoView-with-focus-target-with-contents-hidden.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/counter-scoping-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/counter-scoping-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/counter-scoping-003.html
