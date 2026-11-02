@@ -3327,15 +3327,16 @@ void WebGL2RenderingContext::drawRangeElements(GLenum mode, GLuint start,
 
     completePendingJobs();
 
+    Optional<WebGLBuffer*> elementBuffer =
+        getState()->getBoundBuffer(GL_ELEMENT_ARRAY_BUFFER);
+    if (!elementBuffer.hasValue() || !elementBuffer.value()) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            "drawRangeElements: no buffer bound to ELEMENT_ARRAY_BUFFER");
+        return;
+    }
+
     if (count > 0) {
-        Optional<WebGLBuffer*> elementBuffer =
-            getState()->getBoundBuffer(GL_ELEMENT_ARRAY_BUFFER);
-        if (!elementBuffer.hasValue() || !elementBuffer.value()) {
-            setGLError(
-                GL_INVALID_OPERATION,
-                "drawRangeElements: no buffer bound to ELEMENT_ARRAY_BUFFER");
-            return;
-        }
         size_t bytesPerIndex = 1;
         if (type == GL_UNSIGNED_SHORT) {
             bytesPerIndex = 2;

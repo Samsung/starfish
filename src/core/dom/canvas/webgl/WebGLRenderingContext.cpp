@@ -1799,15 +1799,13 @@ void WebGLRenderingContext::drawElementsInstanced(GLenum mode, GLsizei count,
         return;
     }
 
-    if (count > 0) {
-        Optional<WebGLBuffer*> elementBuffer =
-            getState()->getBoundBuffer(GL_ELEMENT_ARRAY_BUFFER);
-        if (!elementBuffer.hasValue() || !elementBuffer.value()) {
-            setGLError(GL_INVALID_OPERATION,
-                       "drawElementsInstanced: no buffer bound to "
-                       "ELEMENT_ARRAY_BUFFER");
-            return;
-        }
+    Optional<WebGLBuffer*> elementBuffer =
+        getState()->getBoundBuffer(GL_ELEMENT_ARRAY_BUFFER);
+    if (!elementBuffer.hasValue() || !elementBuffer.value()) {
+        setGLError(GL_INVALID_OPERATION,
+                   "drawElementsInstanced: no buffer bound to "
+                   "ELEMENT_ARRAY_BUFFER");
+        return;
     }
 
     // A draw of zero instances fetches nothing.
@@ -1945,12 +1943,7 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
         return;
     }
 
-    if (count == 0) {
-        return;
-    }
-
-    completePendingJobs();
-
+    // A missing index buffer is an error even when nothing is drawn.
     Optional<WebGLBuffer*> elementBuffer =
         getState()->getBoundBuffer(GL_ELEMENT_ARRAY_BUFFER);
     if (!elementBuffer.hasValue() || !elementBuffer.value()) {
@@ -1958,6 +1951,12 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
                    "drawElements: no buffer bound to ELEMENT_ARRAY_BUFFER");
         return;
     }
+
+    if (count == 0) {
+        return;
+    }
+
+    completePendingJobs();
 
     for (GLuint array : getState()->arraysEnabled()) {
         if (!m_state->getBufferBoundToVertexAttributes(array)) {
