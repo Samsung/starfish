@@ -533,6 +533,28 @@ const groups = {
                   '"processorOptions":{"list":[1,2]}}',
               'processor options: ' + JSON.stringify(message.options));
 
+        // The options object is a dictionary conversion (CreateDataProperty):
+        // an Object.prototype setter does not run.
+        let setterRan = false;
+        Object.defineProperty(Object.prototype, 'numberOfInputs', {
+            set() {
+                setterRan = true;
+            },
+            configurable: true,
+        });
+        let intercepted;
+        try {
+            intercepted = new AudioWorkletNode(context, 'echo');
+        } finally {
+            delete Object.prototype.numberOfInputs;
+        }
+        const received = await new Promise((resolve) => {
+            intercepted.port.onmessage = (e) => resolve(e.data);
+        });
+        check(!setterRan && received.options.numberOfInputs === 1,
+              'options with an Object.prototype setter: ' +
+                  JSON.stringify(received.options));
+
         let thrown = 'no exception';
         try {
             new AudioWorkletNode(context, 'echo', {parameterData: {x: NaN}});
@@ -600,6 +622,45 @@ const groups = {
             node.port.postMessage('');
         });
         check(calls > 0, 'process() calls: ' + calls);
+        await context.close();
+    },
+
+    // A constructor that throws leaves a real-time context on its render
+    // thread, where currentTime advances while the main thread is busy.
+    'audio-worklet-failed-node': async () => {
+        if (typeof AudioWorkletNode !== 'function') {
+            console.log('API_PROBE_SKIP built without AUDIO_WORKLET=1');
+            return;
+        }
+        const context = new AudioContext();
+        await context.audioWorklet.addModule(URL.createObjectURL(new Blob([`
+            registerProcessor('p', class extends AudioWorkletProcessor {
+                process() {
+                    return true;
+                }
+            });`], {type: 'application/javascript'})));
+        await context.resume();
+        const failures = [
+            [{channelCount: 0}, 'NotSupportedError'],
+            [{processorOptions: {f() {}}}, 'DataCloneError'],
+        ];
+        for (const [options, expected] of failures) {
+            let thrown = 'no exception';
+            try {
+                new AudioWorkletNode(context, 'p', options);
+            } catch (e) {
+                thrown = e.name;
+            }
+            check(thrown === expected,
+                  'AudioWorkletNode expecting ' + expected + ': ' + thrown);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        const start = context.currentTime;
+        const end = performance.now() + 300;
+        while (performance.now() < end) {}
+        const advanced = context.currentTime - start;
+        check(advanced > 0.1,
+              'currentTime during a 300 ms busy loop: +' + advanced);
         await context.close();
     },
 

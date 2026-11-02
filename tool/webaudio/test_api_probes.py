@@ -127,6 +127,7 @@ class APIProbesTest(unittest.TestCase):
         self.run_group('audio-worklet')
         self.run_group('audio-worklet-node')
         self.run_group('audio-worklet-slow-render')
+        self.run_group('audio-worklet-failed-node')
 
 
 if __name__ == '__main__':

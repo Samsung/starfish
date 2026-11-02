@@ -98,12 +98,14 @@ static ScriptValue optionsObject(ScriptBindingInstance* instance,
                [](ExecutionStateRef* state,
                   const OptionsObjectInput* input) -> ValueRef* {
                    const AudioWorkletNodeOptions& options = *input->options;
+                   // WebIDL dictionary-to-JS conversion uses
+                   // CreateDataProperty: Object.prototype setters do not run.
                    ObjectRef* result = ObjectRef::create(state);
                    auto set = [&](const char* name, ValueRef* value) {
-                       result->set(
+                       result->defineDataProperty(
                            state,
                            StringRef::createFromASCII(name, strlen(name)),
-                           value);
+                           value, true, true, true);
                    };
                    if (options.hasChannelCount()) {
                        set("channelCount",
@@ -125,16 +127,19 @@ static ScriptValue optionsObject(ScriptBindingInstance* instance,
                        ArrayObjectRef* counts = ArrayObjectRef::create(state);
                        const auto& values = options.outputChannelCount();
                        for (size_t i = 0; i < values.size(); i++) {
-                           counts->set(state, ValueRef::create(i),
-                                       ValueRef::create(values[i]));
+                           counts->defineDataProperty(
+                               state, ValueRef::create(i),
+                               ValueRef::create(values[i]), true, true, true);
                        }
                        set("outputChannelCount", counts);
                    }
                    if (options.parameterData()) {
                        ObjectRef* data = ObjectRef::create(state);
                        for (const auto& entry : *input->parameterData) {
-                           data->set(state, toJSString(entry.first),
-                                     ValueRef::create(entry.second));
+                           data->defineDataProperty(
+                               state, toJSString(entry.first),
+                               ValueRef::create(entry.second), true, true,
+                               true);
                        }
                        set("parameterData", data);
                    }
@@ -168,7 +173,6 @@ AudioWorkletNode::AudioWorkletNode(ExecutionContext* executionContext,
                                DOMException::INVALID_STATE_ERR,
                                "No AudioWorkletProcessor of this name");
     }
-    context->renderOnMainThread();
     // Initializing the AudioNode applies channelCount before the channel
     // configuration below is checked.
     if (options.hasChannelCount() &&
@@ -209,9 +213,6 @@ AudioWorkletNode::AudioWorkletNode(ExecutionContext* executionContext,
         }
     }
 
-    AudioGraphLock graphLock(context->graph());
-    m_numberOfInputs = inputs;
-    m_numberOfOutputs = outputs;
     const auto& descriptors = definition.value()->descriptors;
     std::unique_ptr<AudioWorkletHandler> handler;
     try {
@@ -228,13 +229,6 @@ AudioWorkletNode::AudioWorkletNode(ExecutionContext* executionContext,
     } catch (const std::bad_alloc&) {
         context->throwAllocationError();
     }
-    AudioWorkletHandler* workletHandler = handler.get();
-    m_handler = context->addHandler(std::move(handler));
-    // https://webaudio.github.io/web-audio-api/#active-source
-    // Rendered every quantum, connected or not: the active source flag and
-    // inputs decide whether process() runs (automatic pull).
-    context->graph()->registerAnalysisHandler(m_handler);
-    applyOptions(options);
 
     // The node's port and the processor's port are one MessageChannel.
     // Serializing the processor's end with transfer and deserializing it in
@@ -245,12 +239,27 @@ AudioWorkletNode::AudioWorkletNode(ExecutionContext* executionContext,
     MessagePort* processorPort =
         new MessagePort(globalScope->executionContext());
     MessagePort::entangle(m_port, processorPort);
-    // StructuredSerialize(optionsObject); DataCloneError propagates.
+    // StructuredSerialize(optionsObject); DataCloneError propagates. It runs
+    // script (getters), so it stays outside the graph lock.
     auto* serializedOptions = new (GC) SerializeWithTransferResult();
     Serializer::serializeWithTransfer(
         executionContext,
         optionsObject(scriptBindingInstance(), { &options, &parameterData }),
         GCVector<ScriptObject>(), *serializedOptions);
+
+    // Past this point only an allocation failure can throw, so a rejected
+    // construction leaves the context on its render thread.
+    context->renderOnMainThread();
+    AudioGraphLock graphLock(context->graph());
+    m_numberOfInputs = inputs;
+    m_numberOfOutputs = outputs;
+    AudioWorkletHandler* workletHandler = handler.get();
+    m_handler = context->addHandler(std::move(handler));
+    // https://webaudio.github.io/web-audio-api/#active-source
+    // Rendered every quantum, connected or not: the active source flag and
+    // inputs decide whether process() runs (automatic pull).
+    context->graph()->registerAnalysisHandler(m_handler);
+    applyOptions(options);
 
     m_parameters = new AudioParamMap(executionContext);
     for (size_t index = 0; index < descriptors.size(); index++) {
