@@ -485,16 +485,27 @@ ELSE()
 ENDIF()
 
 IF (${CMAKE_CXX_COMPILER_ID} MATCHES  "GNU")
-    SET (LWE_CXXFLAGS_COMPILER -frounding-math -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-maybe-uninitialized -fsignaling-nans -Wno-aggressive-loop-optimizations -Wno-class-memaccess -Wno-stringop-truncation -Wno-stringop-overflow -Wno-array-bounds -Wno-stringop-overread -Wno-restrict)
+    SET (LWE_CXXFLAGS_COMPILER -frounding-math -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-maybe-uninitialized -fsignaling-nans -Wno-aggressive-loop-optimizations -Wno-class-memaccess -Wno-stringop-truncation -Wno-stringop-overflow -Wno-array-bounds -Wno-restrict)
     # GNU unique symbols pin a DSO in glibc even after the last dlclose.
     SET (LWE_CXXFLAGS_COMPILER ${LWE_CXXFLAGS_COMPILER} -fno-gnu-unique)
+    # -Wstringop-overread first appeared in GCC 11. Older GCC (Tizen 6.0 ships
+    # 9.2) rejects the -Wno- form under -Werror once any other warning fires.
+    IF (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 11)
+        SET (LWE_CXXFLAGS_COMPILER ${LWE_CXXFLAGS_COMPILER} -Wno-stringop-overread)
+    ENDIF()
 ELSEIF (${CMAKE_CXX_COMPILER_ID} MATCHES  "Clang")
     SET (LWE_CXXFLAGS_COMPILER -fno-fast-math -fno-unsafe-math-optimizations -fdenormal-fp-math=ieee -Wno-expansion-to-defined -Wno-dynamic-class-memaccess -Wno-unused-but-set-variable -Wno-unknown-warning-option -Wno-enum-int-mismatch -Wno-string-concatenation -Wno-inconsistent-missing-override
  -Wno-unused-but-set-parameter -Wno-tautological-pointer-compare -Wno-unused-lambda-capture -Wno-delete-non-abstract-non-virtual-dtor -Wno-array-parameter -Wno-error=character-conversion -Wno-error=unnecessary-virtual-specifier -Wno-nontrivial-memcall)
 ENDIF()
 
 if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9)
-    SET (LWE_CXXFLAGS_COMPILER ${LWE_CXXFLAGS_COMPILER} -Wno-attributes -Wno-deprecated-copy -Wno-cast-function-type -Wno-pessimizing-move -Wno-strict-aliasing -Wno-overloaded-virtual -Wno-mismatched-new-delete -Wno-builtin-macro-redefined)
+    SET (LWE_CXXFLAGS_COMPILER ${LWE_CXXFLAGS_COMPILER} -Wno-attributes -Wno-deprecated-copy -Wno-cast-function-type -Wno-pessimizing-move -Wno-strict-aliasing -Wno-overloaded-virtual -Wno-builtin-macro-redefined)
+endif()
+
+# -Wmismatched-new-delete first appeared in GCC 10; GCC 9 (Tizen 6.0) needs
+# this gate, since "> 9" also admits 9.2.
+if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
+    SET (LWE_CXXFLAGS_COMPILER ${LWE_CXXFLAGS_COMPILER} -Wno-mismatched-new-delete)
 endif()
 
 # ELSE so every non-Debug config gets -O2 -- the previous ELSEIF's exact
