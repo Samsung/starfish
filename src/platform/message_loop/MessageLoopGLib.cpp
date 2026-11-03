@@ -354,8 +354,10 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
             return G_SOURCE_REMOVE;
         },
         id, nullptr);
-    id->m_idler =
-        g_source_attach(source, reinterpret_cast<GMainContext*>(glibContext()));
+    // Once attached, the main thread may dispatch the source and delete id
+    // before this thread runs again, so id must not be touched from here on.
+    // m_idler is only read for idlers added on the main thread.
+    g_source_attach(source, reinterpret_cast<GMainContext*>(glibContext()));
     g_source_set_ready_time(source, 0);
     g_source_unref(source);
     return (size_t)id;
@@ -409,8 +411,8 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
             return G_SOURCE_REMOVE;
         },
         id, nullptr);
-    id->m_idler =
-        g_source_attach(source, reinterpret_cast<GMainContext*>(glibContext()));
+    // As above: id may already be deleted once the source is attached.
+    g_source_attach(source, reinterpret_cast<GMainContext*>(glibContext()));
     g_source_set_ready_time(source, 0);
     g_source_unref(source);
     return (size_t)id;
