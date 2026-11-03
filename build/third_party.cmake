@@ -649,9 +649,11 @@ ENDIF()
 IF (${USE_CUSTOM_WEBP} STREQUAL "1" OR ${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
     SET (WEBP_DIR ${THIRD_PARTY_ROOT}/libwebp)
     SET (WEBP_BUILD_DIR ${OUTPUT_DIRECTORY}/libwebp/)
-    SET (WEBP_LOCAL_TARGET ${OUTPUT_DIRECTORY}/libwebp/libwebp.so)
+    SET (WEBP_LOCAL_TARGET ${OUTPUT_DIRECTORY}/libwebp/libwebp.a)
     SET (WEBP_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebp_lwe.so)
-    SET (WEBP_OPTION "-DBUILD_SHARED_LIBS=TRUE")
+    # Build static PIC archives and link sharpyuv into libwebp_lwe.so, so that it
+    # does not depend on libsharpyuv.so.0, which Tizen 6.0 does not ship.
+    SET (WEBP_OPTION -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
 IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
     SET (WEBP_BUILD_OPTION "-D__TIZEN__")
 ELSE()
@@ -662,15 +664,16 @@ ENDIF()
                         COMMENT "BUILD WEBP"
                         COMMAND cp -r ${WEBP_DIR} ${OUTPUT_DIRECTORY}
                         COMMAND cd ${WEBP_BUILD_DIR} && CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} CFLAGS=${WEBP_BUILD_OPTION} ${CMAKE_COMMAND} ${WEBP_OPTION} -DCMAKE_C_COMPILER=${THIRD_PARTY_C_COMPILER_OPTION} -DCMAKE_CXX_COMPILER=${THIRD_PARTY_CXX_COMPILER_OPTION}
-                        COMMAND cd ${WEBP_BUILD_DIR} && ${CMAKE_COMMAND} --build .
+                        COMMAND cd ${WEBP_BUILD_DIR} && ${CMAKE_COMMAND} --build . --target webp
     )
 
     ADD_CUSTOM_COMMAND (OUTPUT ${WEBP_TARGET}
                         WORKING_DIRECTORY ${WEBP_BUILD_DIR}
                         DEPENDS ${WEBP_LOCAL_TARGET}
-                        COMMENT "COPY AND PATCH WEBP"
-                        COMMAND cp ${WEBP_LOCAL_TARGET} ${WEBP_TARGET}
-                        COMMAND patchelf --set-soname libwebp_lwe.so ${WEBP_TARGET}
+                        COMMENT "LINK WEBP"
+                        COMMAND ${CMAKE_C_COMPILER} -shared -o ${WEBP_TARGET} -Wl,-soname,libwebp_lwe.so
+                                -Wl,--whole-archive libwebp.a -Wl,--no-whole-archive
+                                libsharpyuv.a -Wl,--exclude-libs,libsharpyuv.a -lm -lpthread
     )
 
     ADD_CUSTOM_TARGET (libwebp_lwe
