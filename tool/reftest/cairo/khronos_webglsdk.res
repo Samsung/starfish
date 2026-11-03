@@ -5,3 +5,5 @@ http://localhost:11010/sdk/tests/conformance/extensions/webgl-compressed-texture
 http://localhost:11010/sdk/tests/conformance/extensions/webgl-compressed-texture-etc.html
 http://localhost:11010/sdk/tests/conformance/extensions/angle-instanced-arrays-out-of-bounds.html
 http://localhost:11010/sdk/tests/conformance/rendering/draw-elements-out-of-bounds.html
+http://localhost:11010/sdk/tests/conformance/extensions/angle-instanced-arrays.html
+http://localhost:11010/sdk/tests/conformance2/attribs/invalid-vertex-attribs.html
