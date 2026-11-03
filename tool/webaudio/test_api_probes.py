@@ -15,8 +15,70 @@ import shutil
 import subprocess
 import tempfile
 import threading
-import time
 import unittest
+
+
+class ProbeServer(ThreadingHTTPServer):
+    """Serves the probe page and limits the browser's address space on
+    request.
+
+    A limit measured on another run of the browser does not leave the same
+    room in this one: its threads' malloc arenas and other mappings differ
+    by hundreds of MB from run to run. The page therefore asks once its
+    setup is done, and the limit is set relative to what this browser
+    process uses at that moment.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.margin = None
+        self.pid = None
+        self.started = threading.Event()
+        self.limited = None
+        self.error = None
+
+    def expect(self, margin):
+        self.margin = margin
+        self.pid = None
+        self.started.clear()
+        self.limited = None
+        self.error = None
+
+    def attach(self, pid):
+        self.pid = pid
+        self.started.set()
+
+    def detach(self):
+        self.margin = None
+        self.pid = None
+        self.started.clear()
+
+    def limit_address_space(self):
+        if not self.margin:
+            return
+        if not self.started.wait(10):
+            self.error = 'the browser was not started'
+            return
+        try:
+            with open(f'/proc/{self.pid}/status') as status:
+                size = next(int(line.split()[1]) * 1024 for line in status
+                            if line.startswith('VmSize:'))
+            limit = size + self.margin
+            resource.prlimit(self.pid, resource.RLIMIT_AS, (limit, limit))
+            self.limited = limit
+        except (OSError, StopIteration) as error:
+            self.error = repr(error)
+
+
+class ProbeRequestHandler(SimpleHTTPRequestHandler):
+    def do_GET(self):
+        if self.path != '/address-space-limit':
+            super().do_GET()
+            return
+        self.server.limit_address_space()
+        self.send_response(200)
+        self.send_header('Content-Length', '0')
+        self.end_headers()
 
 
 class APIProbesTest(unittest.TestCase):
@@ -34,8 +96,8 @@ class APIProbesTest(unittest.TestCase):
         cls.path = Path(cls.directory.name)
         shutil.copyfile(Path(__file__).with_name('api_probes.html'),
                         cls.path / 'index.html')
-        cls.server = ThreadingHTTPServer(('127.0.0.1', 0),
-            partial(SimpleHTTPRequestHandler, directory=str(cls.path)))
+        cls.server = ProbeServer(('127.0.0.1', 0),
+            partial(ProbeRequestHandler, directory=str(cls.path)))
         thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         thread.start()
         cls.addClassCleanup(cls.server.server_close)
@@ -54,35 +116,29 @@ class APIProbesTest(unittest.TestCase):
         return dict(os.environ,
                     PULSE_SERVER=f'unix:{self.path}/no-audio-device')
 
-    def address_space(self):
-        """Peak virtual size (bytes) of the browser on an idle probe page."""
-        process = subprocess.Popen(self.command('idle'),
-                                   env=self.environment(),
-                                   stdout=subprocess.DEVNULL,
-                                   stderr=subprocess.DEVNULL)
-        peak = 0
-        while process.poll() is None:
-            try:
-                with open(f'/proc/{process.pid}/status') as status:
-                    for line in status:
-                        if line.startswith('VmPeak:'):
-                            peak = max(peak, int(line.split()[1]) * 1024)
-            except OSError:
-                pass
-            time.sleep(0.05)
-        self.assertGreater(peak, 0, 'could not read the browser VmPeak')
-        return peak
-
-    def run_group(self, group, address_space_limit=None):
-        def limit():
-            resource.setrlimit(resource.RLIMIT_AS,
-                               (address_space_limit, address_space_limit))
-        result = subprocess.run(
+    def run_group(self, group, address_space_margin=None):
+        """Runs one group. With |address_space_margin| (bytes), the page's
+        limitAddressSpace() leaves the browser that much more address space
+        than it uses at that point."""
+        self.server.expect(address_space_margin)
+        process = subprocess.Popen(
             self.command(group), env=self.environment(),
-            preexec_fn=limit if address_space_limit else None,
-            capture_output=True, text=True, timeout=40)
-        output = result.stdout + result.stderr
-        self.assertEqual(result.returncode, 0, output)
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        self.server.attach(process.pid)
+        try:
+            stdout, stderr = process.communicate(timeout=40)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.communicate()
+            raise
+        finally:
+            self.server.detach()
+        output = stdout + stderr
+        if address_space_margin:
+            self.assertIsNone(self.server.error, self.server.error)
+            self.assertIsNotNone(self.server.limited,
+                                 f'{group} never asked for the limit')
+        self.assertEqual(process.returncode, 0, output)
         self.assertNotIn('API_PROBE_FAIL', output, output)
         self.assertNotIn('API_PROBE_SKIP', output, output)
         self.assertIn('API_PROBE_PASS', output, output)
@@ -115,12 +171,11 @@ class APIProbesTest(unittest.TestCase):
         self.run_group('structured-clone-transfer')
 
     def test_out_of_memory(self):
-        # The limits are relative to this build's own peak, so the groups
-        # fail allocations deterministically regardless of host RAM: room
-        # for each group's graph, less than its failing allocations need.
-        peak = self.address_space()
-        self.run_group('oom-channel-count', peak + (4 << 30))
-        self.run_group('oom-node-creation', peak + (512 << 20))
+        # Each group asks for the limit once its graph is built, so the
+        # margin is what is left for the allocations under test, regardless
+        # of host RAM: less than the failing ones need, more than the rest.
+        self.run_group('oom-channel-count', 4 << 30)
+        self.run_group('oom-node-creation', 512 << 20)
 
     def test_audio_worklet(self):
         # Needs a build with AUDIO_WORKLET=1, as CI builds.

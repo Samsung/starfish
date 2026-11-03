@@ -590,9 +590,9 @@ STARFISH_BIN="$PWD/out/release/bin/Starfish" xvfb-run -s '-screen 0 1920x1080x24
 #    latency, renderSizeHint quanta, constructor checks in a detached
 #    document, AudioWorklet module loading and registerProcessor(), and
 #    node creation and channel changes running out of memory under an
-#    address-space limit (RLIMIT_AS) set relative to the browser's own
-#    peak; no audio device needed; the AudioWorklet group needs
-#    -DAUDIO_WORKLET=1, which CI builds with);
+#    address-space limit (RLIMIT_AS) set relative to what the browser
+#    uses once the page is set up; no audio device needed; the
+#    AudioWorklet group needs -DAUDIO_WORKLET=1, which CI builds with);
 #  - tool/webaudio/test_graph_thread.py in the clang build job (skipped with
 #    a warning when Clang's TSan runtime is missing).
 # Everything needing FFmpeg (compressed decoding, MSE, decoder Valgrind)
