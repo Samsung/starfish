@@ -511,11 +511,10 @@ virtual screen keeps pixel/reftest comparisons reproducible.
 
 Regression mode (`--regression-test`) substitutes SamsungOne for every font
 family whose name does not contain `Ahem` or `CanvasTest` and loads images
-synchronously (`ComputedStyle::loadFont`); it is what the pixel suites and
-`--font-dep` lists ask for. `--hide-window` only hides the window, so a
-test run without `--regression-test` (internal tests, the WPT suites)
-renders with the page's own web fonts and the system fonts. The WPT
-runners additionally pin the font set to the CI image's (DejaVu,
+synchronously (`ComputedStyle::loadFont`); the internal and pixel test
+drivers pass it by default. `--hide-window` only hides the window, so the
+WPT suites, which never pass `--regression-test`, render with the page's
+own web fonts and the system fonts, pinned to the CI image's set (DejaVu,
 Liberation, Ahem, SamsungOne) through `tool/wpt/fonts.conf`; see
 `docs/wpt.md`.
 

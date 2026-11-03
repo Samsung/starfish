@@ -49,6 +49,11 @@ public:
     void didChangeFontLoadingState(bool fontLoadFailed = false);
     void didFinishLayout();
 
+    // Whether any CSS-connected font of the document has been requested and
+    // not yet arrived: the "loading" half of fonts.ready, answerable without
+    // creating the (lazily created) FontFaceSet.
+    static bool isLoadingWebFonts(Document* document);
+
 #define VIRTUAL
 #define OVERRIDE
     DECLARE_EVENT_LISTENER(loading);
