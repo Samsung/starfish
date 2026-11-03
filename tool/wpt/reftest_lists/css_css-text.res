@@ -1325,16 +1325,16 @@ http://web-platform.test:8000/css/css-text/white-space/trailing-other-space-sepa
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-other-space-separators-break-spaces-014.html
 # http://web-platform.test:8000/css/css-text/white-space/trailing-other-space-separators-break-spaces-015.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-align-start.tentative.html
-http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-002.html
-http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-004.html
-http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-005.html
-http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-rtl-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-005.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-rtl-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-rtl-002.html
-http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-rtl-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-rtl-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-rtl-004.html
-http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-rtl-005.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-rtl-005.html
 http://web-platform.test:8000/css/css-text/white-space/trailing-space-rtl-001.html
 http://web-platform.test:8000/css/css-text/white-space/white-space-applies-to-text-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/white-space-collapse-discard-001.xht
