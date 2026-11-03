@@ -61,15 +61,20 @@ ExecutionContext* FontFaceSet::executionContext() const
     return m_document->executionContext();
 }
 
-bool FontFaceSet::hasLoadingFonts() const
+bool FontFaceSet::isLoadingWebFonts(Document* document)
 {
-    const auto& fonts = m_document->loadedWebFontList();
+    const auto& fonts = document->loadedWebFontList();
     for (size_t i = 0; i < fonts.size(); i++) {
         if (isLoadingState(fonts[i])) {
             return true;
         }
     }
     return false;
+}
+
+bool FontFaceSet::hasLoadingFonts() const
+{
+    return isLoadingWebFonts(m_document);
 }
 
 // https://drafts.csswg.org/css-font-loading/#fontfaceset-pending-on-the-environment

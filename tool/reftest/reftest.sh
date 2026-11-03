@@ -228,11 +228,11 @@ function doTest {
             RESIMG="out"$cnt".png"
             ./Starfish $i --regression-test --screen-shot=$RESIMG --screen-shot-width=900 --screen-shot-height=900 --width=900 --height=900 &> /dev/null 2>&1 &
         elif [ $TESTSUITE -eq 7 ]; then
-            ./Starfish $i --hide-window --width=800 --height=600 &> $RESFILE &
+            ./Starfish $i --regression-test --hide-window --width=800 --height=600 &> $RESFILE &
         elif [ $TESTSUITE -eq 8 ]; then
             ./Starfish $i --regression-test --hide-window --width=800 --height=600 &> $RESFILE &
         else
-            ./Starfish $i --hide-window &> $RESFILE &
+            ./Starfish $i --regression-test --hide-window &> $RESFILE &
         fi
         if [[ $cnt != $((ROTATE-1)) ]] && [[ $i != $last ]]; then
             continue;

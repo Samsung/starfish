@@ -35,6 +35,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
+#include "core/style/FontFaceSet.h"
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
 #if defined(STARFISH_ENABLE_CDP)
 #include "core/cdp/CDPServer.h"
@@ -66,6 +67,15 @@ static bool hasTestWait(Window* window)
                     root->hasClassName(String::fromUTF8("test-wait")));
 }
 
+// The load event does not wait for a web font that layout requested, but
+// the reference runner captures only once document.fonts.ready has settled
+// as well (tools/wptrunner/wptrunner/executors/test-wait.js), since a page
+// painted with fallback metrics is not the page under test.
+static bool isWaitingForWebFonts(Window* window)
+{
+    return FontFaceSet::isLoadingWebFonts(window->document());
+}
+
 static void startTest(Window* window)
 {
     g_fireOnloadEvent = true;
@@ -76,7 +86,7 @@ static void startTest(Window* window)
 static void pollTestWait(void* data)
 {
     Window* window = static_cast<Window*>(data);
-    if (hasTestWait(window)) {
+    if (hasTestWait(window) || isWaitingForWebFonts(window)) {
         window->setTimeout(pollTestWait, TestWaitPollIntervalInMS, window);
         return;
     }
@@ -87,7 +97,7 @@ static void startTestAfterLoad(void* data)
 {
     Window* window = static_cast<Window*>(data);
     if (!hasTestWait(window)) {
-        startTest(window);
+        pollTestWait(window);
         return;
     }
     // Once the page has rendered with the class still set, the harness fires

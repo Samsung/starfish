@@ -22,7 +22,11 @@ REGRESSION_OPT = "--regression-test"
 NON_REGRESSION_OPT = ""
 DEFAULT_WIDTH_OPT = WIDTH_OPT_PREFIX + "800"
 DEFAULT_HEIGHT_OPT = HEIGHT_OPT_PREFIX + "600"
-DEFAULT_REGRESSION_OPT = NON_REGRESSION_OPT
+# Internal tests were written and measured under regression mode (SamsungOne
+# for every non-Ahem family, synchronous image loads), so it stays the default
+# here; --hide-window alone no longer implies it. Real web fonts are the WPT
+# runners' business (tool/wpt/scripts/wpt_reftest.py starfish_env()).
+DEFAULT_REGRESSION_OPT = REGRESSION_OPT
 TEST_RESULT_PASS_FILE = TEST_RESULT_FAIL_FILE = None
 TIMEOUT_OPT_PREFIX = "--timeout="
 # Starfish's own AppLoop can end up idle forever if a test's JS never reaches
