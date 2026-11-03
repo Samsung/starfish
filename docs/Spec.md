@@ -3679,7 +3679,7 @@ connected to this node.
 | | constructor | constructor (optional AudioContextOptions contextOptions = {}); | | |
 | | attribute | readonly double baseLatency; | Estimated graph-to-host processing latency in seconds. | 2 × renderQuantumSize / sampleRate: one quantum of rendering plus the bounded output handoff. |
 | | attribute | readonly double outputLatency; | Estimated host-to-device output delay in seconds. | Measured from PulseAudio's queued latency on Linux; zero before measurement or with null output. |
-| | method | AudioTimestamp getOutputTimestamp(); | Returns the estimated device playback position in context and Performance time coordinates. | Zero before the first device measurement; Linux PulseAudio only. |
+| | method | AudioTimestamp getOutputTimestamp(); | Returns the estimated device playback position in context and Performance time coordinates. | Zero until the first quantum is rendered. With a working output device the position is measured on Linux PulseAudio only (zero until its first measurement; always zero on Tizen, whose audio_io reports no latency). Without a working device (no audio server, or past the 8-connection limit) it reports the render clock: the last rendered quantum's first frame and when it was rendered. |
 | | method | Promise<void> close (); | Closes the AudioContext, releasing the system resources being used. | |
 | | method | Promise<void> suspend (); Promise<void> resume (); | Pauses and resumes real-time graph rendering. | PulseAudio on Linux or silent fallback. No autoplay policy: a new context is always allowed to start. |
 | | method | MediaElementAudioSourceNode createMediaElementSource(HTMLMediaElement mediaElement); | Factory method for a MediaElementAudioSourceNode. | |

@@ -12,6 +12,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/modules/webaudio/render/AudioGraph.h"
+#include "core/modules/profiling/Profiling.h"
 #include "core/modules/webaudio/render/AudioParamTimeline.h"
 #include "platform/webaudio/AudioOutputDevice.h"
 
@@ -79,10 +80,7 @@ public:
         {
             std::lock_guard<std::recursive_mutex> lock(m_graph->mutex());
             const uint64_t firstFrame = m_graph->renderedFrames();
-            const AudioBus& bus = m_graph->renderQuantum();
-            if (m_device) {
-                m_device->submit(bus, firstFrame);
-            }
+            output(m_graph->renderQuantum(), firstFrame);
         }
         m_deadline += m_period;
         return true;
@@ -99,12 +97,40 @@ public:
         return m_device ? m_device->outputLatency() : 0;
     }
 
+    // https://webaudio.github.io/web-audio-api/#dom-audiocontext-getoutputtimestamp
+    // Zero is reserved for a graph that has not processed a block yet.
+    // Without a working device the render clock is the output, so its
+    // timestamp is the last quantum's first frame and when it was rendered.
     bool outputTimestamp(double& contextTime, uint64_t& wallClockUs) const
     {
-        return m_device && m_device->outputTimestamp(contextTime, wallClockUs);
+        if (m_device && !m_device->failed()) {
+            return m_device->outputTimestamp(contextTime, wallClockUs);
+        }
+        std::lock_guard<std::mutex> lock(m_clockMutex);
+        if (!m_clockWallClockUs) {
+            return false;
+        }
+        contextTime = m_clockContextTime;
+        wallClockUs = m_clockWallClockUs;
+        return true;
     }
 
 private:
+    // Called with the graph lock held, once per rendered quantum.
+    void output(const AudioBus& bus, uint64_t firstFrame)
+    {
+        if (m_device) {
+            m_device->submit(bus, firstFrame);
+            if (!m_device->failed()) {
+                return;
+            }
+        }
+        const uint64_t nowUs = longTickCount();
+        std::lock_guard<std::mutex> lock(m_clockMutex);
+        m_clockContextTime = firstFrame / m_sampleRate;
+        m_clockWallClockUs = nowUs;
+    }
+
     void run()
     {
         using Clock = std::chrono::steady_clock;
@@ -132,10 +158,7 @@ private:
                     return;
                 }
                 const uint64_t firstFrame = m_graph->renderedFrames();
-                const AudioBus& bus = m_graph->renderQuantum();
-                if (m_device) {
-                    m_device->submit(bus, firstFrame);
-                }
+                output(m_graph->renderQuantum(), firstFrame);
             }
             deadline += quantum;
             // Bound catch-up work after an overloaded DSP graph or a long
@@ -151,6 +174,11 @@ private:
     AudioGraph* m_graph;
     double m_sampleRate;
     std::unique_ptr<AudioOutputDevice> m_device;
+    // The render clock's output timestamp, used without a working device;
+    // written by the rendering thread and read by the control thread.
+    mutable std::mutex m_clockMutex;
+    double m_clockContextTime{ 0 };
+    uint64_t m_clockWallClockUs{ 0 };
 #if defined(STARFISH_ENABLE_AUDIO_WORKLET)
     Clock::time_point m_deadline;
     Clock::duration m_period{};
