@@ -26,6 +26,15 @@ function finish() {
     console.log(failures ? 'API_PROBE_FAILED' : 'API_PROBE_PASS');
     if (typeof testEnd === 'function') testEnd(!failures);
 }
+// test_api_probes.py answers this request by limiting the browser's address
+// space (RLIMIT_AS) to what it uses at that moment plus a margin it picks
+// per group. Elsewhere the request fails and nothing is limited.
+async function limitAddressSpace() {
+    try {
+        await fetch('/address-space-limit');
+    } catch (e) {
+    }
+}
 
 const groups = {
     // WebIDL rejects SharedArrayBuffer views without [AllowShared], which no
@@ -412,9 +421,9 @@ const groups = {
               'AudioBufferSourceNode with a non-finite detune throws');
     },
 
-    // Run by test_api_probes.py under an address-space limit a few GB above
-    // the browser's own (RLIMIT_AS), with the largest render quantum, where
-    // one channel of a bus is 18 MB. A failed channel count change throws
+    // Once the graph is built, test_api_probes.py leaves 4 GB of address
+    // space, with the largest render quantum, where one channel of a bus is
+    // 18 MB. A failed channel count change throws
     // NotSupportedError, keeps the old value and leaves a silent context
     // instead of rendering half-resized buses.
     'oom-channel-count': async () => {
@@ -432,6 +441,7 @@ const groups = {
             last = last.connect(new GainNode(context));
         }
         last.connect(context.destination);
+        await limitAddressSpace();
         source.start();
         const rendering = context.startRendering();
         let thrown = 'no exception';
@@ -449,14 +459,16 @@ const groups = {
               'renders silence after the failure');
     },
 
-    // Under a limit about 0.5 GB above the browser's own: a 32-input
-    // ChannelMergerNode's 1.2 GB of buses cannot be allocated, so its
-    // factory and constructor throw NotSupportedError, and the context
-    // remains usable. One failed allocation, not an exhausted process.
+    // Once the context exists, test_api_probes.py leaves 0.5 GB of address
+    // space: a 32-input ChannelMergerNode's 1.2 GB of buses cannot be
+    // allocated, so its factory and constructor throw NotSupportedError,
+    // and the context remains usable. One failed allocation, not an
+    // exhausted process.
     'oom-node-creation': async () => {
         const context = new OfflineAudioContext({
             numberOfChannels: 1, length: 1, sampleRate: 768000,
             renderSizeHint: 4608000});
+        await limitAddressSpace();
         const name = (fn) => {
             try {
                 fn();
@@ -734,12 +746,6 @@ const groups = {
               'transfer of a transferred MessagePort: ' + thrown);
         thrown = name(() => structuredClone(buffer, {transfer: [buffer]}));
         check(thrown === 'no exception', 'transfer of an ArrayBuffer: ' + thrown);
-    },
-
-    // Waits briefly; test_api_probes.py measures the browser's address
-    // space meanwhile.
-    'idle': async () => {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
     },
 
     // AudioWorkletGlobalScope, registerProcessor() and addModule() paths
