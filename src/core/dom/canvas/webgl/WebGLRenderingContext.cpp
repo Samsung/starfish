@@ -2157,6 +2157,18 @@ void WebGLRenderingContext::drawArraysInstanced(GLenum mode, GLint first,
         return;
     }
 
+    const uint32_t enabled = getState()->arraysEnabled();
+    for (GLuint array = 0;
+         array < WebGLRenderingContextState::kMaxVertexAttribs; ++array) {
+        if ((enabled & (1u << array)) &&
+            !m_state->getBufferBoundToVertexAttributes(array)) {
+            setGLError(GL_INVALID_OPERATION,
+                       "drawArraysInstanced: vertex attribute enabled without "
+                       "bound buffer");
+            return;
+        }
+    }
+
     // ANGLE_instanced_arrays keeps the ES 2.0 rule that something must still
     // advance per vertex; ES 3.0 dropped it, so WebGL 2 allows this draw.
     if (!isWebGL2RenderingContext() && hasOnlyNonZeroAttribDivisors()) {
@@ -2212,6 +2224,18 @@ void WebGLRenderingContext::drawElementsInstanced(GLenum mode, GLsizei count,
         (type == GL_UNSIGNED_INT && (offset % 4) != 0)) {
         setGLError(GL_INVALID_OPERATION, "offset not properly aligned");
         return;
+    }
+
+    const uint32_t enabled = getState()->arraysEnabled();
+    for (GLuint array = 0;
+         array < WebGLRenderingContextState::kMaxVertexAttribs; ++array) {
+        if ((enabled & (1u << array)) &&
+            !m_state->getBufferBoundToVertexAttributes(array)) {
+            setGLError(GL_INVALID_OPERATION,
+                       "drawElementsInstanced: vertex attribute enabled "
+                       "without bound buffer");
+            return;
+        }
     }
 
     // ANGLE_instanced_arrays keeps the ES 2.0 rule that something must still
