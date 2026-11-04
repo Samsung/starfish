@@ -35,18 +35,20 @@ struct TextureImageLevelInfo {
     GLsizei width = 0;
     GLsizei height = 0;
     GLsizei depth = 0;
+    GLenum type = 0;
     bool isDefined = false;
 
     TextureImageLevelInfo() = default;
     TextureImageLevelInfo(GLenum target, GLint level, GLenum internalFormat,
                           GLsizei width, GLsizei height, GLsizei depth,
-                          bool isDefined)
+                          GLenum type, bool isDefined)
         : target(target)
         , level(level)
         , internalFormat(internalFormat)
         , width(width)
         , height(height)
         , depth(depth)
+        , type(type)
         , isDefined(isDefined)
     {
     }
@@ -113,7 +115,7 @@ public:
 
     void setImageLevelInfo(GLenum imageTarget, GLint level,
                            GLenum internalFormat, GLsizei width, GLsizei height,
-                           GLsizei depth = 1)
+                           GLsizei depth = 1, GLenum type = 0)
     {
         for (auto& entry : m_imageLevels) {
             if (entry.target == imageTarget && entry.level == level) {
@@ -121,12 +123,16 @@ public:
                 entry.width = width;
                 entry.height = height;
                 entry.depth = depth;
+                if (type != 0) {
+                    entry.type = type;
+                }
                 entry.isDefined = true;
                 return;
             }
         }
-        m_imageLevels.push_back(TextureImageLevelInfo{
-            imageTarget, level, internalFormat, width, height, depth, true });
+        m_imageLevels.push_back(
+            TextureImageLevelInfo{ imageTarget, level, internalFormat, width,
+                                   height, depth, type, true });
     }
 
     const TextureImageLevelInfo* getImageLevelInfo(GLenum imageTarget,

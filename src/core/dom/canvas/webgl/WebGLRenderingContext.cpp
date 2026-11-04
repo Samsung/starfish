@@ -1447,6 +1447,11 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
     m_gl->compileShader(shader->glObject());
 }
 
+static inline bool isPowerOfTwo(size_t value)
+{
+    return value && !(value & (value - 1));
+}
+
 void WebGLRenderingContext::copyTexImage2D(GLenum target, GLint level,
                                            GLenum internalformat, GLint x,
                                            GLint y, GLsizei width,
@@ -1468,6 +1473,14 @@ void WebGLRenderingContext::copyTexImage2D(GLenum target, GLint level,
 
     if (level < 0 || width < 0 || height < 0) {
         setGLError(GL_INVALID_VALUE, "negative level or dimension");
+        return;
+    }
+
+    if (!isWebGL2RenderingContext() && level > 0 &&
+        (!isPowerOfTwo(static_cast<size_t>(width)) ||
+         !isPowerOfTwo(static_cast<size_t>(height)))) {
+        setGLError(GL_INVALID_VALUE,
+                   "level > 0 requires power of two dimensions in WebGL 1.0");
         return;
     }
 
@@ -3894,8 +3907,6 @@ ScriptValue WebGLRenderingContext::getTexParameter(GLenum target, GLenum pname)
 GLenum WebGLRenderingContext::getUniformType(WebGLProgram* program,
                                              WebGLUniformLocation* location)
 {
-    ENTER_CONTEXT_SCOPE(GL_NONE);
-
     GLint count = 0;
     m_gl->getProgramiv(program->glObject(), GL_ACTIVE_UNIFORMS, &count);
     GLint maxNameLength = 0;
@@ -6552,6 +6563,14 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
         return;
     }
 
+    if (!isWebGL2RenderingContext() && level > 0 &&
+        (!isPowerOfTwo(static_cast<size_t>(width)) ||
+         !isPowerOfTwo(static_cast<size_t>(height)))) {
+        setGLError(GL_INVALID_VALUE,
+                   "level > 0 requires power of two dimensions in WebGL 1.0");
+        return;
+    }
+
     WebGLTexture* texture = getBoundTextureObject(target);
     if (texture && texture->isImmutable()) {
         setGLError(GL_INVALID_OPERATION, "Texture is immutable.");
@@ -6606,7 +6625,7 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
 
     if (texture && !hasNewGLError()) {
         texture->setImageLevelInfo(target, level, internalFormat, width, height,
-                                   1);
+                                   1, type);
     }
 }
 
@@ -6663,7 +6682,7 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
                 texture->setImageLevelInfo(
                     target, level, helper->dataFormat().valueOr(internalFormat),
                     helper->sourceImage().width, helper->sourceImage().height,
-                    1);
+                    1, type);
             }
         });
 }
@@ -6684,6 +6703,21 @@ void WebGLRenderingContext::texSubImage2D(
     if (format == 0x80E0 /* GL_BGR */ || format == 0x80E1 /* GL_BGRA */ ||
         type == 0x8032 /* GL_UNSIGNED_BYTE_3_3_2 */) {
         setGLError(GL_INVALID_ENUM, "Invalid format or type");
+        return;
+    }
+
+    WebGLTexture* texture = getBoundTextureObject(target);
+    if (!texture || (m_boundTextures.find(target) == m_boundTextures.end() &&
+                     !isBoundCubeMapTexture(target))) {
+        setGLError(GL_INVALID_OPERATION, "No texture bound to target");
+        return;
+    }
+
+    const TextureImageLevelInfo* levelInfo =
+        texture->getImageLevelInfo(target, level);
+    if (levelInfo && levelInfo->isDefined && levelInfo->type != 0 &&
+        levelInfo->type != type) {
+        setGLError(GL_INVALID_OPERATION, "type does not match original");
         return;
     }
 
@@ -7321,6 +7355,34 @@ void WebGLRenderingContext::implementUniformMatrixMxNfv(
         return;
     }
     if (!isFromCurrentProgram(location.value())) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    GLenum expectedType = GL_NONE;
+    if (m == 2 && n == 2) {
+        expectedType = GL_FLOAT_MAT2;
+    } else if (m == 3 && n == 3) {
+        expectedType = GL_FLOAT_MAT3;
+    } else if (m == 4 && n == 4) {
+        expectedType = GL_FLOAT_MAT4;
+    } else if (m == 2 && n == 3) {
+        expectedType = GL_FLOAT_MAT2x3;
+    } else if (m == 3 && n == 2) {
+        expectedType = GL_FLOAT_MAT3x2;
+    } else if (m == 2 && n == 4) {
+        expectedType = GL_FLOAT_MAT2x4;
+    } else if (m == 4 && n == 2) {
+        expectedType = GL_FLOAT_MAT4x2;
+    } else if (m == 3 && n == 4) {
+        expectedType = GL_FLOAT_MAT3x4;
+    } else if (m == 4 && n == 3) {
+        expectedType = GL_FLOAT_MAT4x3;
+    }
+
+    GLenum actualType =
+        getUniformType(location.value()->program(), location.value());
+    if (actualType != GL_NONE && actualType != expectedType) {
         setGLError(GL_INVALID_OPERATION);
         return;
     }
