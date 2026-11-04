@@ -64,7 +64,7 @@ def run_bidi_test(list, backend, font_dep, out_file=None):
 # > Internal Test
 def run_default_basic_test(list, backend, font_dep, out_file=None):
     import basics.starfish_basic_test as basictest
-    result = basictest.run_parallel(list, nproc, regression=font_dep)
+    result = basictest.run_parallel(list, nproc)
     return default_result_summarizer(result)
 
 # Default test style (pixel based)
