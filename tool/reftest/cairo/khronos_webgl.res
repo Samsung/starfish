@@ -395,7 +395,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/buffe
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/bufferData.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/bufferSubDataBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/bufferSubData.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexImage2DBadArgs.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexImage2DBadArgs.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexImage2D.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexSubImage2DBadArgs.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexSubImage2D.html
@@ -411,7 +411,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texIm
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2D.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2DHTMLBadArgs.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2DHTML.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2DBadArgs.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2DBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2D.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2DHTMLBadArgs.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2DHTML.html
