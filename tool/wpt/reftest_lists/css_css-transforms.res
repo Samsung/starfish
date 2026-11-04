@@ -1,8 +1,8 @@
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/2d-rotate-001.html
 http://web-platform.test:8000/css/css-transforms/2d-rotate-notref.html
 http://web-platform.test:8000/css/css-transforms/2d-rotate-ref.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/3d-rendering-context-and-abspos.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/3d-rendering-context-and-fixpos.html
+http://web-platform.test:8000/css/css-transforms/3d-rendering-context-and-abspos.html
+http://web-platform.test:8000/css/css-transforms/3d-rendering-context-and-fixpos.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/3d-rendering-context-and-inline.html
 http://web-platform.test:8000/css/css-transforms/3d-rendering-context-and-z-ordering-001.html
 http://web-platform.test:8000/css/css-transforms/3d-rendering-context-and-z-ordering-002.html
@@ -53,7 +53,7 @@ http://web-platform.test:8000/css/css-transforms/backface-visibility-hidden-anim
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/backface-visibility-with-sibling-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/change-perspective-property.html
 http://web-platform.test:8000/css/css-transforms/change-scale-wide-range.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/change-transform-origin-property.html
+http://web-platform.test:8000/css/css-transforms/change-transform-origin-property.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/composited-under-rotateY-180deg-clip-perspective.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/composited-under-rotateY-180deg-clip.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/composited-under-rotateY-180deg-perspective.html
@@ -161,8 +161,8 @@ http://web-platform.test:8000/css/css-transforms/group/svg-transform-nested-029.
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-transforms/huge-length-tiny-scale.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/individual-transform/animation/individual-transform-combine.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/individual-transform/animation/individual-transform-ordering.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/individual-transform/change-rotate-property.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/individual-transform/change-scale-property.html
+http://web-platform.test:8000/css/css-transforms/individual-transform/change-rotate-property.html
+http://web-platform.test:8000/css/css-transforms/individual-transform/change-scale-property.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/individual-transform/change-translate-property.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/individual-transform/individual-transform-1.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/individual-transform/individual-transform-2a.html
@@ -267,9 +267,9 @@ http://web-platform.test:8000/css/css-transforms/overflow-perspective-003.html
 http://web-platform.test:8000/css/css-transforms/paint-order-with-transform-change.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/patternTransform/svg-patternTransform-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/patternTransform/svg-patternTransform-combination-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/perspective-children-only-abspos.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/perspective-children-only-fixpos.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/perspective-children-only-inline.html
+http://web-platform.test:8000/css/css-transforms/perspective-children-only-abspos.html
+http://web-platform.test:8000/css/css-transforms/perspective-children-only-fixpos.html
+http://web-platform.test:8000/css/css-transforms/perspective-children-only-inline.html
 http://web-platform.test:8000/css/css-transforms/perspective-containing-block-dynamic-1a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/perspective-containing-block-dynamic-1b.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/perspective-origin-001.html

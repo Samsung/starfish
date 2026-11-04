@@ -76,7 +76,7 @@ http://web-platform.test:8000/css/css-position/position-absolute-large-negative-
 http://web-platform.test:8000/css/css-position/position-absolute-multicol-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/position-absolute-replaced-intrinsic-size.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/position-absolute-replaced-no-intrinsic-size.tentative.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/position-absolute-replaced-with-display-table.html
+http://web-platform.test:8000/css/css-position/position-absolute-replaced-with-display-table.html
 http://web-platform.test:8000/css/css-position/position-absolute-root-element-flex.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/position-absolute-root-element-grid.html
 http://web-platform.test:8000/css/css-position/position-absolute-scrollable-overflow-zero.html
@@ -211,7 +211,7 @@ http://web-platform.test:8000/css/css-position/sticky/position-sticky-overflow-c
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/sticky/position-sticky-rtl.html
 http://web-platform.test:8000/css/css-position/sticky/position-sticky-scroll-reposition.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/sticky/position-sticky-scroll-with-clip-and-abspos.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/sticky/position-sticky-scrolled-remove-sibling-002.html
+http://web-platform.test:8000/css/css-position/sticky/position-sticky-scrolled-remove-sibling-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/sticky/position-sticky-stacking-context-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/sticky/position-sticky-stacking-context.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-position/sticky/position-sticky-table-parts.html

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Text at the edge of a composited layer is painted at whole pixels</title>
+<style>
+  @font-face {
+    font-family: Ahem;
+    src: url("../../../fixtures/resources/wpt/fonts/Ahem.ttf");
+  }
+  body { margin: 0; background: white; }
+  /* will-change: transform composites the layer into a buffer of its own.
+     The text starts on the layer's left edge, so the glyph overhang allowance
+     the text adds to the layer's extent moves the buffer origin off the pixel
+     grid (by 3.75px at 40px) while every glyph box stays on whole pixels.
+     40px keeps the Ahem baseline (0.8em) on a whole pixel too, so glyph rows
+     do not depend on how a fractional baseline is rounded. */
+  #layer { position: absolute; left: 20px; top: 20px; width: 200px; height: 60px;
+           will-change: transform; font: 40px/1 Ahem; color: black; }
+  /* Here the text overhangs the layer on the left and on the top, and sits
+     at a fractional offset inside it. The allowance has to end on whole
+     pixels of the layer, not of the text's own box, or that offset puts the
+     buffer origin between pixels again. The glyphs themselves are between
+     pixels by layout; the layer's background edges are not. */
+  #offset { position: absolute; left: 20px; top: 120px; width: 200px; height: 60px;
+            will-change: transform; background: rgb(0, 128, 0);
+            font: 40px/1 Ahem; color: black; }
+  #offset > div { margin: -10.4px 0 0 0.4px; }
+  p { position: absolute; left: 0; top: 200px; margin: 0; font: 16px sans-serif; }
+</style>
+</head>
+<body>
+<div id="layer"><span id="t">XXXX</span></div>
+<div id="offset"><div>XX</div></div>
+<p>Four Ahem glyphs fill 20..180 x 20..60 as one solid black box with crisp
+edges: no grey column where two glyphs meet, no grey outline. The layer's
+buffer origin is snapped to whole pixels, so content on whole pixels is
+neither painted at a sub-pixel phase nor resampled when it is composited.
+The green box below it fills 20..220 x 120..180 with crisp edges as well.</p>
+<script>
+  var shot = "composited-layer-fractional-origin.html.png";
+  window.onload = function () {
+    document.fonts.ready.then(function () {
+      var r = document.getElementById("t").getBoundingClientRect();
+      console.assert(r.width === 160 && r.left === 20, "Ahem metrics: " + r.left + " " + r.width);
+      if (typeof screenShot !== "function") {
+        return;
+      }
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          screenShot(shot, function () {
+            console.assert(checkPixelColors(shot, [
+              // left edge and first glyph
+              { x: 19, y: 40, r: 255, g: 255, b: 255, a: 255 },
+              { x: 20, y: 40, r: 0, g: 0, b: 0, a: 255 },
+              // columns where one glyph meets the next
+              { x: 59, y: 40, r: 0, g: 0, b: 0, a: 255 },
+              { x: 60, y: 40, r: 0, g: 0, b: 0, a: 255 },
+              { x: 99, y: 40, r: 0, g: 0, b: 0, a: 255 },
+              { x: 100, y: 40, r: 0, g: 0, b: 0, a: 255 },
+              { x: 139, y: 40, r: 0, g: 0, b: 0, a: 255 },
+              { x: 140, y: 40, r: 0, g: 0, b: 0, a: 255 },
+              // right edge
+              { x: 179, y: 40, r: 0, g: 0, b: 0, a: 255 },
+              { x: 180, y: 40, r: 255, g: 255, b: 255, a: 255 },
+              // top and bottom edges
+              { x: 100, y: 19, r: 255, g: 255, b: 255, a: 255 },
+              { x: 100, y: 20, r: 0, g: 0, b: 0, a: 255 },
+              { x: 100, y: 59, r: 0, g: 0, b: 0, a: 255 },
+              { x: 100, y: 60, r: 255, g: 255, b: 255, a: 255 },
+            ], 3), "text on the edge of a composited layer is crisp");
+            console.assert(checkPixelColors(shot, [
+              // left and right edges, on a row below the glyphs
+              { x: 19, y: 170, r: 255, g: 255, b: 255, a: 255 },
+              { x: 20, y: 170, r: 0, g: 128, b: 0, a: 255 },
+              { x: 219, y: 170, r: 0, g: 128, b: 0, a: 255 },
+              { x: 220, y: 170, r: 255, g: 255, b: 255, a: 255 },
+              // top and bottom edges, on a column right of the glyphs
+              { x: 150, y: 119, r: 255, g: 255, b: 255, a: 255 },
+              { x: 150, y: 120, r: 0, g: 128, b: 0, a: 255 },
+              { x: 150, y: 179, r: 0, g: 128, b: 0, a: 255 },
+              { x: 150, y: 180, r: 255, g: 255, b: 255, a: 255 },
+            ], 3), "a layer with text at a fractional offset has crisp edges");
+            testEnd();
+          });
+        });
+      });
+    });
+  };
+</script>
+</body>
+</html>

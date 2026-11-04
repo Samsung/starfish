@@ -1263,8 +1263,25 @@ Frame::ComputeVisibleRectContext::ComputeVisibleRectContext(
 
 void Frame::ComputeVisibleRectContext::uniteRect(const LayoutRect& r)
 {
-    LayoutRect tmp = computeBoxExtent(r, tranformMatrix);
+    uniteMappedRect(computeBoxExtent(r, tranformMatrix));
+}
 
+void Frame::ComputeVisibleRectContext::uniteRectRoundedOut(const LayoutRect& r)
+{
+    LayoutRect tmp = computeBoxExtent(r, tranformMatrix);
+    if (tmp.isEmpty()) {
+        // Contributes nothing; rounding it out would make it a pixel wide.
+        return;
+    }
+    LayoutUnit minX(tmp.x().floor());
+    LayoutUnit minY(tmp.y().floor());
+    LayoutUnit maxX(tmp.maxX().ceil());
+    LayoutUnit maxY(tmp.maxY().ceil());
+    uniteMappedRect(LayoutRect(minX, minY, maxX - minX, maxY - minY));
+}
+
+void Frame::ComputeVisibleRectContext::uniteMappedRect(LayoutRect tmp)
+{
     // TODO CanvasStateRestorer, CompositorStateRestorer,
     // Frame::ComputeVisibleRectContext::uniteRect have same source
 

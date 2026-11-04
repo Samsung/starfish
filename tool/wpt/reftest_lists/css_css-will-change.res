@@ -42,6 +42,6 @@ http://web-platform.test:8000/css/css-will-change/will-change-stacking-context-t
 http://web-platform.test:8000/css/css-will-change/will-change-transform-add-content.html
 http://web-platform.test:8000/css/css-will-change/will-change-transform-huge-offset-scrolled.html
 http://web-platform.test:8000/css/css-will-change/will-change-transform-image.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-will-change/will-change-transform-inline.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-will-change/will-change-transform-zero-size-child-overflow-visible.html
+http://web-platform.test:8000/css/css-will-change/will-change-transform-inline.html
+http://web-platform.test:8000/css/css-will-change/will-change-transform-zero-size-child-overflow-visible.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-will-change/will-change-will-change-1.html

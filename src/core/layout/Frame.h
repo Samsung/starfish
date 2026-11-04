@@ -2038,6 +2038,14 @@ public:
         }
 
         void uniteRect(const LayoutRect& r);
+        // For a rect that is an allowance rather than geometry: unites it
+        // rounded out to whole pixels of the space `result` is in. Rounding
+        // it before the mapping would not do, since any fractional offset on
+        // the way (padding, text-indent) makes it fractional again.
+        void uniteRectRoundedOut(const LayoutRect& r);
+
+    private:
+        void uniteMappedRect(LayoutRect tmp);
     };
 
     struct ComputeVisibleRectContextFragment {

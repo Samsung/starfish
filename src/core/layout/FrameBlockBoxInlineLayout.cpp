@@ -5396,7 +5396,13 @@ void InlineTextBox::computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         f.setY(f.y() - ydiff.first);
         f.setHeight(f.height() + ydiff.first + ydiff.second);
 
-        ctx.uniteRect(f);
+        // The paddings are an allowance for glyphs reaching past their
+        // advance box, not geometry, and are fractional for most font sizes.
+        // A layer whose edge is set by text takes this rect as the origin of
+        // its buffer, so a fractional edge would have the whole layer painted
+        // between pixels and resampled again when composited. Round it out
+        // to whole pixels; the allowance only gets more generous.
+        ctx.uniteRectRoundedOut(f);
     }
 }
 

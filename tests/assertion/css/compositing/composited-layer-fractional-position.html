@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>A composited layer laid out between pixels lands on whole pixels</title>
+<style>
+  body { margin: 0; background: white; }
+  /* Each layer sits a quarter pixel off the grid and its content the other
+     three quarters, so the red box covers whole pixels (70..120). The green
+     box above it is a layer of its own on the same pixels. The red box shows
+     unless the layer's buffer is placed on the pixels its content was painted
+     for. Quarters rather than halves: an engine that rounds each offset on
+     its own still ends up on the same pixels. */
+  .layer { position: absolute; width: 100px; height: 60px;
+           will-change: transform; }
+  .under, .over { position: absolute; left: 49.75px; top: 0;
+                  width: 50px; height: 50px; }
+  .under { background: red; }
+  .over { background: green; will-change: transform; }
+  #still { left: 20.25px; top: 20px; }
+  /* Reaches the same position only after the first frames, by moving an
+     ancestor: the layer itself is not touched. */
+  #mover { position: absolute; left: 0; top: 100px; }
+  #moved { left: 20px; top: 0; }
+  p { position: absolute; left: 0; top: 180px; margin: 0; font: 16px sans-serif; }
+</style>
+</head>
+<body>
+<div id="still" class="layer"><div class="under"></div><div class="over"></div></div>
+<div id="mover">
+  <div id="moved" class="layer"><div class="under"></div><div class="over"></div></div>
+</div>
+<p>Two green squares with crisp edges and no red.</p>
+<script>
+  var shot = "composited-layer-fractional-position.html.png";
+  function square(y) {
+    return [
+      { x: 69, y: y, r: 255, g: 255, b: 255, a: 255 },
+      { x: 70, y: y, r: 0, g: 128, b: 0, a: 255 },
+      { x: 119, y: y, r: 0, g: 128, b: 0, a: 255 },
+      { x: 120, y: y, r: 255, g: 255, b: 255, a: 255 },
+    ];
+  }
+  function afterTwoFrames(callback) {
+    requestAnimationFrame(function () {
+      requestAnimationFrame(callback);
+    });
+  }
+  window.onload = function () {
+    afterTwoFrames(function () {
+      document.getElementById("mover").style.left = "0.25px";
+      var r = document.querySelector("#moved .under").getBoundingClientRect();
+      console.assert(r.left === 70 && r.width === 50, "box position: " + r.left + " " + r.width);
+      if (typeof screenShot !== "function") {
+        return;
+      }
+      afterTwoFrames(function () {
+        screenShot(shot, function () {
+          console.assert(checkPixelColors(shot, square(40), 3),
+                         "layer laid out between pixels");
+          console.assert(checkPixelColors(shot, square(120), 3),
+                         "layer moved between pixels by an ancestor");
+          testEnd();
+        });
+      });
+    });
+  };
+</script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 http://web-platform.test:8000/css/css-overflow/abspos-shrink-to-fit-with-scrollable-descendant.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/add-scroller-then-scroll-content-into-view.html
+http://web-platform.test:8000/css/css-overflow/add-scroller-then-scroll-content-into-view.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/before-after-pseudo-element-scrolling.html
 http://web-platform.test:8000/css/css-overflow/button-with-scrollable-descendant.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/clip-001.html
@@ -7,12 +7,12 @@ http://web-platform.test:8000/css/css-overflow/button-with-scrollable-descendant
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/clip-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/clip-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/clip-005.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/clip-006.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/clip-007.html
+http://web-platform.test:8000/css/css-overflow/clip-006.html
+http://web-platform.test:8000/css/css-overflow/clip-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/clip-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/clipped-scroller-add-content.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/column-style-change-triggers-relayout.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/content-change-then-scroll-into-view.html
+http://web-platform.test:8000/css/css-overflow/content-change-then-scroll-into-view.html
 http://web-platform.test:8000/css/css-overflow/display-flex-svg-overflow-default.html
 http://web-platform.test:8000/css/css-overflow/document-element-overflow-hidden-scroll.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/dynamic-visible-to-clip-001.html
@@ -360,7 +360,7 @@ http://web-platform.test:8000/css/css-overflow/overflow-no-frameset-propagation.
 http://web-platform.test:8000/css/css-overflow/overflow-replaced-element-002.html
 http://web-platform.test:8000/css/css-overflow/overflow-scroll-big-border-small-content.html
 http://web-platform.test:8000/css/css-overflow/overflow-scroll-intrinsic-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/overflow-scroll-resize-visibility-hidden.html
+http://web-platform.test:8000/css/css-overflow/overflow-scroll-resize-visibility-hidden.html
 http://web-platform.test:8000/css/css-overflow/overflow-video-hidden.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/overflow-video.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/paint-containment-svg.html
