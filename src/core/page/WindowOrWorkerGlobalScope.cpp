@@ -231,7 +231,7 @@ namespace WindowOrWorkerGlobalScope {
             canvas->translate(0, outputHight);
             canvas->scale(1, -1);
         }
-        // TODO : Apply colorSpaceConversion, premultiplyAlpha
+        // TODO : Apply colorSpaceConversion
 
         Unit::Rect srcRect = Unit::Rect(sx, sy, sw, sh);
         Unit::Rect adjustSrcRect(0, 0, srcImage->width(), srcImage->height());
@@ -330,6 +330,7 @@ namespace WindowOrWorkerGlobalScope {
         NativeImageData* destImage = nullptr;
         bool needsToSetOriginCleanFlag = false;
         bool setOriginCleanFlagValue = false;
+        bool srcIsPremultiplied = true;
         uint32_t needsDownScaleImageResourceLargerThan =
             executionContext->webBase()
                 ->asWebView()
@@ -355,11 +356,19 @@ namespace WindowOrWorkerGlobalScope {
                     DOMException::Code::INVALID_STATE_ERR);
             }
 
-            auto pair = CanvasImageSourceUtils::toNativeImageData(
-                executionContext, canvasImageSource);
-            srcImage = pair.first;
             needsToSetOriginCleanFlag = true;
-            setOriginCleanFlagValue = pair.second;
+            if (canvasImageSource.isImageBitmapValue()) {
+                // The bitmap as it is kept, not the copy the 2D canvas paints.
+                ImageBitmap* bitmap = canvasImageSource.getImageBitmapValue();
+                srcImage = bitmap->nativeImageData();
+                srcIsPremultiplied = bitmap->isPremultiplied();
+                setOriginCleanFlagValue = bitmap->originCleanFlag();
+            } else {
+                auto pair = CanvasImageSourceUtils::toNativeImageData(
+                    executionContext, canvasImageSource);
+                srcImage = pair.first;
+                setOriginCleanFlagValue = pair.second;
+            }
 
         } else if (context.m_image.isBlobValue()) {
             auto blob = context.m_image.getBlobValue();
@@ -396,6 +405,7 @@ namespace WindowOrWorkerGlobalScope {
                     executionContext, promise,
                     DOMException::Code::INVALID_STATE_ERR);
             }
+            srcIsPremultiplied = false;
             uint8_t* srcPtr = pixels->rawBuffer();
             size_t bufferLength = stride * imagaDataHeight;
             uint8_t* dstPtr = (uint8_t*)malloc(bufferLength);
@@ -461,7 +471,24 @@ namespace WindowOrWorkerGlobalScope {
                 DOMException::Code::INVALID_STATE_ERR);
         }
 
+        // HTML "cropped to the source rectangle with formatting"; "default"
+        // keeps this engine's premultiplied form.
+        // shortcut: a resized straight-alpha source is filtered as if
+        // premultiplied; premultiply srcImage first if a test resizes one.
+        const bool premultiplied =
+            context.m_options.getPremultiplyAlpha() != PremultiplyAlpha::None;
+        if (premultiplied && !srcIsPremultiplied) {
+            convertImageBufferAsPremultipliedAlphaIfNeeds(
+                destImage->data(), destImage->width(), destImage->stride(),
+                destImage->height());
+        } else if (!premultiplied && srcIsPremultiplied) {
+            convertImageBufferAsUnmultipliedAlphaIfNeeds(
+                destImage->data(), destImage->width(), destImage->stride(),
+                destImage->height());
+        }
+
         ImageBitmap* imageBitmap = new ImageBitmap(executionContext, destImage);
+        imageBitmap->setPremultiplied(premultiplied);
 
         if (needsToSetOriginCleanFlag) {
             imageBitmap->setOriginCleanFlag(setOriginCleanFlagValue);

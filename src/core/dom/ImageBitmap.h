@@ -72,10 +72,26 @@ public:
         return m_nativeImageData;
     }
 
+    bool isPremultiplied()
+    {
+        return m_isPremultiplied;
+    }
+
+    void setPremultiplied(bool value)
+    {
+        m_isPremultiplied = value;
+    }
+
+    // The bitmap as the 2D canvas paints it: premultiplied.
+    NativeImageData* premultipliedImageData();
+
 private:
     ExecutionContext* m_executionContext{ nullptr };
     NativeImageData* m_nativeImageData{ nullptr };
+    // A premultiplied copy of a straight bitmap, made on its first 2D paint.
+    NativeImageData* m_premultipliedImageData{ nullptr };
     bool m_originCleanFlag{ true };
+    bool m_isPremultiplied{ true };
 };
 
 class SerializedImageBitmap : public SerializedPlatformObjectData {

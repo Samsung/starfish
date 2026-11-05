@@ -130,7 +130,7 @@ CanvasImageSourceUtils::toNativeImageData(ExecutionContext* executionContext,
         }
     } else if (image.isImageBitmapValue()) {
         auto imageBitmap = image.getImageBitmapValue();
-        nativeImageData = imageBitmap->nativeImageData();
+        nativeImageData = imageBitmap->premultipliedImageData();
         clean = imageBitmap->originCleanFlag();
     } else {
         STARFISH_UNSUPPORTED("Unsupported image type(%s)", __PRETTY_FUNCTION__);

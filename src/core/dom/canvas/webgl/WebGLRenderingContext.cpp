@@ -6628,6 +6628,8 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
     NativeImageData* rasterizedSVGImage = nullptr;
     ::Starfish::ImageData* sourceImageData = nullptr;
     std::vector<uint8_t> blankCanvasPixels;
+    bool flipY = m_unpackFlipY;
+    bool premultiplyAlpha = m_unpackPremultiplyAlpha;
 
     if (source.isNoneValue()) {
         setGLError(GL_INVALID_VALUE);
@@ -6635,11 +6637,20 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
     } else if (source.isImageBitmapValue()) {
         TRACE(WEBGL, "source.isImageBitmapValue");
         ImageBitmap* imageBitmap = source.getImageBitmapValue();
+        // WebGL 1.0 §5.14.8: a closed (neutered) bitmap is an INVALID_VALUE.
+        if (imageBitmap->isDetached()) {
+            setGLError(GL_INVALID_VALUE, "The ImageBitmap is closed.");
+            return;
+        }
         throwIfNotOriginClean(executionContext(),
                               imageBitmap->originCleanFlag());
         imageData = imageBitmap->nativeImageData();
         width = imageData->width();
         height = imageData->height();
+        // An ImageBitmap uploads as it was created; the unpack flags do not
+        // apply to it (WebGL 1.0, "Pixel Storage Parameters").
+        flipY = false;
+        premultiplyAlpha = false;
     } else if (source.isImageDataValue()) {
         sourceImageData = source.getImageDataValue();
         ScriptUint8ClampedArray pixels = sourceImageData->data();
@@ -6749,9 +6760,8 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
                         : TexImageHelper(width, height, stride, format,
                                          blankCanvasPixels.data());
     GLenum error = image.drawSubRectangle(
-        m_unpackFlipY, m_unpackPremultiplyAlpha, type,
-        hasSubRectangle ? skipPixels : 0, hasSubRectangle ? skipRows : 0,
-        hasSubRectangle ? destWidth : width,
+        flipY, premultiplyAlpha, type, hasSubRectangle ? skipPixels : 0,
+        hasSubRectangle ? skipRows : 0, hasSubRectangle ? destWidth : width,
         hasSubRectangle ? destHeight : height, hasSubRectangle ? depth : 1,
         imageHeight);
 
