@@ -452,6 +452,9 @@ private:
     // shader fails to compile instead.
     bool shaderSourceForDriver(const std::string& view, std::string& out,
                                std::string& error);
+    bool isShaderExtensionEnabled(const std::string& name);
+    void appendExtensionDirective(const std::string& view, size_t line,
+                                  size_t rest, size_t end, std::string& out);
     bool isBoundCubeMapTexture(GLenum target);
     void releaseOutOfHeapMembers() override;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
