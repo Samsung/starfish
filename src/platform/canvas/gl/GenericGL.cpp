@@ -415,20 +415,6 @@ public:
         }
     }
 
-    virtual void drawRangeElements(GLenum mode, GLuint start, GLuint end,
-                                   GLsizei count, GLenum type,
-                                   const void *indices) override
-    {
-        glDrawRangeElements(mode, start, end, count, type, indices);
-        GLenum err = glGetError();
-        if (err != GL_NO_ERROR) {
-            STARFISH_LOG_ERROR(
-                "[DEBUG GL] glDrawRangeElements failed with error 0x%x "
-                "(mode=%d start=%u end=%u count=%d type=0x%x indices=%p)",
-                err, mode, start, end, count, type, indices);
-        }
-    }
-
     virtual void enable(GLenum cap) override
     {
         glEnable(cap);

@@ -744,7 +744,7 @@ http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/switch.h
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/draw_elements.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/draw_arrays_instanced.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/draw_elements_instanced.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/draw_range_elements.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/draw_range_elements.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/instancing.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/draw/random.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/fbocolorbuffer/clear.html?webglVersion=2

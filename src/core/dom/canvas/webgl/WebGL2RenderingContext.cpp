@@ -3315,78 +3315,15 @@ void WebGL2RenderingContext::drawRangeElements(GLenum mode, GLuint start,
                                                GLuint end, GLsizei count,
                                                GLenum type, WebGLintptr offset)
 {
-    ENTER_CONTEXT_SCOPE();
-
-    if (!isValidDrawMode(mode)) {
-        setGLError(GL_INVALID_ENUM, "invalid draw mode");
+    // OpenGL ES 3.0.6 §2.9.3 keeps end < start an error; otherwise WebGL 2.0
+    // lets the range be ignored and the call be drawElements, so a range the
+    // indices do not respect never reaches a driver that trusts it.
+    if (end < start) {
+        setGLError(GL_INVALID_VALUE, "drawRangeElements: end < start");
         return;
     }
-
-    if (type != GL_UNSIGNED_BYTE && type != GL_UNSIGNED_SHORT &&
-        type != GL_UNSIGNED_INT) {
-        setGLError(GL_INVALID_ENUM, "invalid type");
-        return;
-    }
-
-    if (end < start || count < 0 || offset < 0) {
-        setGLError(GL_INVALID_VALUE, "invalid range, count or offset");
-        return;
-    }
-
-    if ((type == GL_UNSIGNED_SHORT && (offset % 2) != 0) ||
-        (type == GL_UNSIGNED_INT && (offset % 4) != 0)) {
-        setGLError(GL_INVALID_OPERATION, "offset not properly aligned");
-        return;
-    }
-
-    completePendingJobs();
-
-    Optional<WebGLBuffer*> elementBuffer =
-        getState()->getBoundBuffer(GL_ELEMENT_ARRAY_BUFFER);
-    if (!elementBuffer.hasValue() || !elementBuffer.value()) {
-        setGLError(
-            GL_INVALID_OPERATION,
-            "drawRangeElements: no buffer bound to ELEMENT_ARRAY_BUFFER");
-        return;
-    }
-
-    if (count > 0) {
-        size_t bytesPerIndex = 1;
-        if (type == GL_UNSIGNED_SHORT) {
-            bytesPerIndex = 2;
-        } else if (type == GL_UNSIGNED_INT) {
-            bytesPerIndex = 4;
-        }
-        if (!isRangeWithin(offset, static_cast<uint64_t>(count) * bytesPerIndex,
-                           elementBuffer.value()->byteLength())) {
-            setGLError(GL_INVALID_OPERATION,
-                       "drawRangeElements: element buffer out of bounds");
-            return;
-        }
-    }
-
-    const uint32_t enabled = getState()->arraysEnabled();
-    for (GLuint array = 0;
-         array < WebGLRenderingContextState::kMaxVertexAttribs; ++array) {
-        if (!(enabled & (1u << array))) {
-            continue;
-        }
-        if (!getState()->getBufferBoundToVertexAttributes(array)) {
-            setGLError(
-                GL_INVALID_OPERATION,
-                "drawRangeElements: vertex attribute enabled without bound "
-                "buffer");
-            return;
-        }
-    }
-
-    if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs() ||
-        !validateStencilSettings())
-        return;
-    gl()->drawRangeElements(
-        mode, start, end, count, type,
-        reinterpret_cast<const void*>(clampToGLintptr(offset)));
-    m_ownerHTMLCanvasElement->setNeedsComposite();
+    // drawElements opens the context scope (WEBGL.md §5.1).
+    WebGLRenderingContext::drawElements(mode, count, type, offset);
 }
 
 void WebGL2RenderingContext::blitFramebuffer(GLint srcX0, GLint srcY0,
