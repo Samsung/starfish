@@ -445,6 +445,8 @@ private:
     // The size of the color buffer reads come from, if it is known.
     bool readFramebufferSize(GLsizei& width, GLsizei& height);
     bool validateTexImageSource(GLenum format, GLenum type);
+    bool isTexSubImageTypeAllowed(GLenum target, GLint level, GLenum format,
+                                  GLenum type);
     bool isBoundCubeMapTexture(GLenum target);
     void releaseOutOfHeapMembers() override;
 #ifdef STARFISH_ENABLE_MULTIMEDIA

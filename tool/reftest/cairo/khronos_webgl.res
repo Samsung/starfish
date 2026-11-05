@@ -55,7 +55,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/angle-ins
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-blend-minmax.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-frag-depth.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-shader-texture-lod.html # @ignore Passed due to unsupported extension.
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-sRGB.html # @ignore WebGL 1 texImage2D accepts SRGB8_ALPHA8 (0x8C43) with EXT_sRGB not exposed; the test expects INVALID_ENUM.
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-sRGB.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-texture-filter-anisotropic.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/get-extension.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-element-index-uint.html
@@ -413,7 +413,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texIm
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2DHTML.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2DBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2D.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2DHTMLBadArgs.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2DHTMLBadArgs.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2DHTML.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformfArrayLen1.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformfBadArgs.html
@@ -661,9 +661,9 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-c
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-webgl.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-with-format-and-type.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-with-invalid-data.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-input-validation.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-input-validation.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texparameter-test.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-sub-image-2d-bad-args.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-sub-image-2d-bad-args.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-sub-image-2d.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-active-bind-2.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-active-bind.html

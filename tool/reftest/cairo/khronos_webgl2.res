@@ -708,7 +708,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texIm
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texSubImage2D.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texSubImage2DBadArgs.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texSubImage2DHTML.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texSubImage2DHTMLBadArgs.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/texSubImage2DHTMLBadArgs.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformf.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformfBadArgs.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformfArrayLen1.html?webglVersion=2
