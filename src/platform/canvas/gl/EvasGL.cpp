@@ -431,20 +431,6 @@ public:
         STARFISH_UNSUPPORTED("glDrawElementsInstanced");
     }
 
-    virtual void drawRangeElements(GLenum mode, GLuint start, GLuint end,
-                                   GLsizei count, GLenum type,
-                                   const void *indices) override
-    {
-#if defined(EVAS_GL_GLES3)
-        if (m_evasGLAPI->glDrawRangeElements) {
-            m_evasGLAPI->glDrawRangeElements(mode, start, end, count, type,
-                                             indices);
-            return;
-        }
-#endif
-        STARFISH_UNSUPPORTED("glDrawRangeElements");
-    }
-
     virtual void enable(GLenum cap) override
     {
         m_evasGLAPI->glEnable(cap);

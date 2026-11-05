@@ -144,9 +144,6 @@ public:
     virtual void drawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
                                        const void *indices,
                                        GLsizei instanceCount) = 0;
-    virtual void drawRangeElements(GLenum mode, GLuint start, GLuint end,
-                                   GLsizei count, GLenum type,
-                                   const void *indices) = 0;
     virtual void enable(GLenum cap) = 0;
     virtual void enableVertexAttribArray(GLuint index) = 0;
     virtual void finish(void) = 0;
