@@ -72,29 +72,56 @@ public:
                    void* data);
     TexImageHelper(NativeImageData* imageData, GLenum format);
     TexImageHelper(::Starfish::ImageData* imageData, GLenum format);
-    ~TexImageHelper();
 
-    void draw(const bool needsFlipY, const bool needsPremultiplyAlpha,
-              const GLenum type, const size_t bytesPerPixel,
-              size_t sliceHeight = 0);
+    // Copies ArrayBufferView data, whose rows are stride bytes apart, tightly
+    // packed and flipped or premultiplied as asked. Returns the GL error to
+    // report when the copy cannot be made.
+    GLenum draw(const bool needsFlipY, const bool needsPremultiplyAlpha,
+                const GLenum type, const size_t bytesPerPixel);
 
-    void drawSubRectangle(const bool needsFlipY,
-                          const bool needsPremultiplyAlpha, const GLenum type,
-                          const size_t bytesPerPixel, size_t skipPixels,
-                          size_t skipRows, size_t destWidth, size_t destHeight,
-                          size_t depth = 1, size_t imageHeight = 0);
+    // Converts the RGBA8 image of a TexImageSource to format/type. Returns
+    // the GL error to report when the conversion is not possible.
+    GLenum drawSubRectangle(const bool needsFlipY,
+                            const bool needsPremultiplyAlpha, const GLenum type,
+                            size_t skipPixels, size_t skipRows,
+                            size_t destWidth, size_t destHeight, size_t depth,
+                            size_t imageHeight);
 
+    // The pixels to upload: the converted copy once draw() or
+    // drawSubRectangle() made one, the source itself otherwise.
     const void* data() const;
-    const ImageData& sourceImage() const;
+    // The size of the image data() holds.
+    size_t width() const
+    {
+        return m_width;
+    }
+    size_t height() const
+    {
+        return m_height;
+    }
     Optional<GLenum> dataFormat() const;
 
 private:
+    struct FreeDeleter {
+        void operator()(unsigned char* data) const
+        {
+            free(data);
+        }
+    };
+
+    // Makes the zero-filled buffer of a copy; false when it cannot be had.
+    bool allocate(size_t byteLength);
     unsigned char multiplyAlpha(unsigned char color, float alpha);
-    void writeFloatPixel(size_t destOffset, const unsigned char* source,
-                         size_t srcOffset, bool needsPremultiplyAlpha);
+    void writePixel(unsigned char* dest, const uint8_t* rgba,
+                    const uint8_t* channels, size_t count, GLenum type,
+                    bool needsPremultiplyAlpha);
+    void premultiplyPixel(unsigned char* pixel, GLenum type);
 
     ImageData m_sourceImage;
-    std::vector<unsigned char> m_data;
+    std::unique_ptr<unsigned char, FreeDeleter> m_data;
+    bool m_isConverted = false;
+    size_t m_width;
+    size_t m_height;
     Optional<GLenum> m_dataFormat;
     bool m_isNativeImageDataUsed;
     bool m_isImageDataUsed = false;
@@ -396,14 +423,17 @@ protected:
         std::function<void(const std::vector<GLubyte>&)> updateBlackImage,
         std::function<void(const std::vector<GLushort>&)>
             updateTwoBytesBlackImage);
+    // A destWidth and destHeight of 0 upload the whole source.
     void handleTexImageWithImageSource(
-        const GLenum format, const GLenum type, const TexImageSource& source,
+        const GLenum target, const GLenum format, const GLenum type,
+        const TexImageSource& source,
         std::function<void(const TexImageHelper*)> updateImage,
-        size_t sliceHeight = 0, size_t skipPixels = 0, size_t skipRows = 0,
-        size_t destWidth = 0, size_t destHeight = 0, size_t depth = 1,
-        size_t imageHeight = 0);
+        size_t skipPixels = 0, size_t skipRows = 0, GLsizei destWidth = 0,
+        GLsizei destHeight = 0, GLsizei depth = 1, size_t imageHeight = 0);
 
 private:
+    bool isKnownFormatAndType(GLenum format, GLenum type);
+    bool validateTexImageSource(GLenum format, GLenum type);
     bool isBoundCubeMapTexture(GLenum target);
     void releaseOutOfHeapMembers() override;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
@@ -502,6 +532,20 @@ protected:
     GLint getCurrentProgram();
     void completePendingJobs();
     static bool isValidDrawMode(GLenum mode);
+    // Whether size bytes from offset stay within capacity bytes, computed
+    // so that no sum can wrap.
+    static bool isRangeWithin(uint64_t offset, uint64_t size, uint64_t capacity)
+    {
+        return size <= capacity && offset <= capacity - size;
+    }
+    // The bytes of one element of view, from its type: 1 for a DataView. Not
+    // byteLength() / arrayLength(), which divides by zero for an empty view.
+    static size_t viewElementSize(ScriptArrayBufferView view);
+    // A buffer binding point of this context's WebGL version.
+    bool isValidBufferTarget(GLenum target);
+    // Reads the error of the bufferData just issued to target and returns
+    // whether it succeeded; after OUT_OF_MEMORY the recorded size is 0.
+    bool bufferDataSucceeded(GLenum target);
     // True when every enabled attribute array advances per instance, which an
     // instanced draw is not allowed to do under ANGLE_instanced_arrays.
     bool hasOnlyNonZeroAttribDivisors();
@@ -528,9 +572,17 @@ protected:
 
     bool computeRequiredPackBytes(GLsizei width, GLsizei height, GLenum format,
                                   GLenum type, size_t& requiredBytes);
-    bool computeRequiredUnpackBytes(GLsizei width, GLsizei height,
-                                    GLsizei depth, GLenum format, GLenum type,
-                                    size_t& requiredBytes);
+    // The ArrayBufferView and TexImageSource overloads read client memory
+    // and must not run while a PIXEL_UNPACK_BUFFER is bound; the offset
+    // overloads read from that buffer (WebGL 2.0 §3.7.6).
+    bool checkUnpackBufferBinding(bool fromPixelUnpackBuffer);
+    // The bytes an upload to target reads from client memory or from the
+    // PIXEL_UNPACK_BUFFER under the current unpack state, and the distance
+    // between its rows.
+    bool computeRequiredUnpackBytes(GLenum target, GLsizei width,
+                                    GLsizei height, GLsizei depth,
+                                    GLenum format, GLenum type,
+                                    size_t& requiredBytes, size_t& rowStride);
 
     GLint packAlignment() const
     {
@@ -549,6 +601,14 @@ protected:
         return m_packSkipRows;
     }
 
+    bool unpackFlipY() const
+    {
+        return m_unpackFlipY;
+    }
+    bool unpackPremultiplyAlpha() const
+    {
+        return m_unpackPremultiplyAlpha;
+    }
     GLint unpackAlignment() const
     {
         return m_unpackAlignment;

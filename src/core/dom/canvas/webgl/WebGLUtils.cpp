@@ -24,6 +24,7 @@
 #include "platform/canvas/gl/IncludeGL.h"
 #include "core/util/debug/Trace.h"
 #include "core/util/String.h"
+#include <cstring>
 #include <unordered_map>
 
 static bool isInternalFormatValidWebGL1(GLint internalFormat, GLenum format)
@@ -334,6 +335,61 @@ GLushort Pixel::makePixel565(uint8_t r, uint8_t g, uint8_t b)
     return (((r >> 3) & 0x1F) << 11) | (((g >> 2) & 0x3F) << 5) |
            ((b >> 3) & 0x1F);
 }
+
+GLushort Pixel::makeHalfFloat(float value)
+{
+    STARFISH_ASSERT(value >= 0 && value <= 1);
+    uint32_t bits;
+    memcpy(&bits, &value, sizeof(bits));
+    int exponent = static_cast<int>((bits >> 23) & 0xFF) - 127 + 15;
+    uint32_t mantissa = bits & 0x7FFFFF;
+    if (exponent <= 0) {
+        // Below 2^-14 the half is denormal: the implicit leading one moves
+        // into the mantissa.
+        if (exponent < -10) {
+            return 0;
+        }
+        uint32_t shift = 14 - exponent;
+        return ((mantissa | 0x800000) + (1u << (shift - 1))) >> shift;
+    }
+    // Round to nearest; a carry out of the mantissa bumps the exponent.
+    return ((exponent << 10) | (mantissa >> 13)) + ((mantissa >> 12) & 1);
+}
+
+uint32_t Pixel::makePixel10F11F11F(float r, float g, float b)
+{
+    // The unsigned 11- and 10-bit floats are a half float without its sign
+    // and with 6 or 5 mantissa bits, rounded to nearest. Rounding through the
+    // half float can land one unit in the last place off a direct rounding.
+    uint32_t red = (makeHalfFloat(r) + 0x8) >> 4;
+    uint32_t green = (makeHalfFloat(g) + 0x8) >> 4;
+    uint32_t blue = (makeHalfFloat(b) + 0x10) >> 5;
+    return red | (green << 11) | (blue << 22);
+}
+
+uint32_t Pixel::makePixel2101010(float r, float g, float b, float a)
+{
+    auto unorm = [](float value, float max) -> uint32_t {
+        return static_cast<uint32_t>(value * max + 0.5f);
+    };
+    return unorm(r, 1023) | (unorm(g, 1023) << 10) | (unorm(b, 1023) << 20) |
+           (unorm(a, 3) << 30);
+}
+
+#if !defined(NDEBUG)
+// Known encodings, checked once when a debug build loads.
+static const bool s_pixelEncodingsChecked = [] {
+    STARFISH_ASSERT(Pixel::makeHalfFloat(0) == 0);
+    STARFISH_ASSERT(Pixel::makeHalfFloat(1) == 0x3C00);
+    STARFISH_ASSERT(Pixel::makeHalfFloat(0.5f) == 0x3800);
+    STARFISH_ASSERT(Pixel::makeHalfFloat(1 / 255.f) == 0x1C04);
+    STARFISH_ASSERT(Pixel::makeHalfFloat(1 / 16777216.f) == 0x0001);
+    STARFISH_ASSERT(Pixel::makePixel10F11F11F(1, 0.5f, 0) == 0x1C03C0);
+    STARFISH_ASSERT(Pixel::makePixel10F11F11F(0, 0, 1) == 0x78000000);
+    STARFISH_ASSERT(Pixel::makePixel2101010(1, 0, 1, 1) == 0xFFF003FF);
+    return true;
+}();
+#endif
 
 std::string glValueString(uint32_t value)
 {

@@ -625,7 +625,7 @@ private:
     }
     Optional<WebGLFramebuffer*> getBoundFramebuffer(GLenum target) override;
 
-    bool checkUnpackBufferBinding(bool fromPixelUnpackBuffer);
+    bool checkUnpackFromBuffer();
     bool sliceCompressedTexData(ScriptArrayBufferView srcData,
                                 unsigned long long srcOffset,
                                 GLuint srcLengthOverride, const uint8_t*& data,

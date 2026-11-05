@@ -1109,22 +1109,6 @@ void WebGL2RenderingContext::copyBufferSubData(GLenum readTarget,
 {
     ENTER_CONTEXT_SCOPE();
 
-    auto isValidBufferTarget = [](GLenum target) -> bool {
-        switch (target) {
-        case GL_ARRAY_BUFFER:
-        case GL_COPY_READ_BUFFER:
-        case GL_COPY_WRITE_BUFFER:
-        case GL_ELEMENT_ARRAY_BUFFER:
-        case GL_PIXEL_PACK_BUFFER:
-        case GL_PIXEL_UNPACK_BUFFER:
-        case GL_TRANSFORM_FEEDBACK_BUFFER:
-        case GL_UNIFORM_BUFFER:
-            return true;
-        default:
-            return false;
-        }
-    };
-
     if (!isValidBufferTarget(readTarget) || !isValidBufferTarget(writeTarget)) {
         setGLError(GL_INVALID_ENUM);
         return;
@@ -1216,13 +1200,14 @@ void WebGL2RenderingContext::getBufferSubData(GLenum target,
         return;
     }
 
-    size_t elementSize =
-        dstBuffer->isDataViewObject()
-            ? 1
-            : dstBuffer->byteLength() / dstBuffer->arrayLength();
+    size_t elementSize = viewElementSize(dstBuffer);
 
     unsigned long long copyByteLength = copyLength * elementSize;
 
+    if (!isValidBufferTarget(target)) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
     if (!getState()->getBoundBuffer(target).hasValue()) {
         setGLError(GL_INVALID_OPERATION);
         return;
@@ -1234,22 +1219,21 @@ void WebGL2RenderingContext::getBufferSubData(GLenum target,
         return;
     }
 
-    GLint64 bufSize;
-    gl()->getBufferParameteri64v(target, GL_BUFFER_SIZE, &bufSize);
-    if (hasNewGLError() || bufSize < 0) {
-        return;
-    }
+    // The size bufferData recorded, not a GL query, so that no unrelated
+    // pending GL error drops the read.
+    const uint64_t bufSize =
+        getState()->getBoundBuffer(target).value()->byteLength();
     if (dstOffset > dstLength || copyLength > dstLength - dstOffset ||
-        srcByteOffset < 0 || srcByteOffset > bufSize ||
-        copyByteLength >
-            static_cast<unsigned long long>(bufSize - srcByteOffset)) {
+        srcByteOffset < 0 ||
+        !isRangeWithin(srcByteOffset, copyByteLength, bufSize)) {
         setGLError(GL_INVALID_VALUE);
         return;
     }
 
     void* src = glMapBufferRange(target, clampToGLintptr(srcByteOffset),
                                  copyByteLength, GL_MAP_READ_BIT);
-    if (hasNewGLError() || src == nullptr) {
+    if (src == nullptr) {
+        // The GL keeps the reason for getError().
         return;
     }
     memcpy(dstBuffer->rawBuffer() + dstOffset * elementSize, src,
@@ -3373,9 +3357,8 @@ void WebGL2RenderingContext::drawRangeElements(GLenum mode, GLuint start,
         } else if (type == GL_UNSIGNED_INT) {
             bytesPerIndex = 4;
         }
-        if (static_cast<uint64_t>(elementBuffer.value()->byteLength()) <
-            static_cast<uint64_t>(offset) +
-                static_cast<uint64_t>(count) * bytesPerIndex) {
+        if (!isRangeWithin(offset, static_cast<uint64_t>(count) * bytesPerIndex,
+                           elementBuffer.value()->byteLength())) {
             setGLError(GL_INVALID_OPERATION,
                        "drawRangeElements: element buffer out of bounds");
             return;
@@ -4188,9 +4171,7 @@ void WebGL2RenderingContext::bufferData(GLenum target,
         return;
     }
 
-    size_t elementSize = srcData->isDataViewObject()
-                             ? 1
-                             : srcData->byteLength() / srcData->arrayLength();
+    size_t elementSize = viewElementSize(srcData);
 
     unsigned long long copyByteLength = copyLength * elementSize;
 
@@ -4204,8 +4185,14 @@ void WebGL2RenderingContext::bufferData(GLenum target,
         return;
     }
 
+    // The recorded size follows the GL's buffer only when this call
+    // succeeded, and an earlier error must not fail it.
+    hasNewGLError();
     gl()->bufferData(target, copyByteLength,
                      srcData->rawBuffer() + srcOffset * elementSize, usage);
+    if (!bufferDataSucceeded(target)) {
+        return;
+    }
 
     Optional<WebGLBuffer*> maybeBound = getState()->getBoundBuffer(target);
     if (maybeBound.hasValue() && maybeBound.value()) {
@@ -4231,26 +4218,26 @@ void WebGL2RenderingContext::bufferSubData(GLenum target,
         return;
     }
 
-    size_t elementSize = srcData->isDataViewObject()
-                             ? 1
-                             : srcData->byteLength() / srcData->arrayLength();
+    size_t elementSize = viewElementSize(srcData);
 
     unsigned long long copyByteLength = copyLength * elementSize;
 
+    if (!isValidBufferTarget(target)) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
     if (!getState()->getBoundBuffer(target).hasValue()) {
         setGLError(GL_INVALID_OPERATION);
         return;
     }
 
-    GLint64 bufSize;
-    gl()->getBufferParameteri64v(target, GL_BUFFER_SIZE, &bufSize);
-    if (hasNewGLError() || bufSize < 0) {
-        return;
-    }
-    if (dstByteOffset < 0 || dstByteOffset > bufSize ||
-        copyByteLength >
-            static_cast<unsigned long long>(bufSize - dstByteOffset) ||
-        srcOffset > srcLength || copyLength > srcLength - srcOffset) {
+    // The size bufferData recorded, not a GL query, so that no unrelated
+    // pending GL error drops the upload.
+    const uint64_t bufSize =
+        getState()->getBoundBuffer(target).value()->byteLength();
+    if (dstByteOffset < 0 || srcOffset > srcLength ||
+        copyLength > srcLength - srcOffset ||
+        !isRangeWithin(dstByteOffset, copyByteLength, bufSize)) {
         setGLError(GL_INVALID_VALUE);
         return;
     }
@@ -4465,9 +4452,7 @@ void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
         return;
     }
 
-    if (!getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).hasValue() ||
-        getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).value() == nullptr) {
-        setGLError(GL_INVALID_OPERATION, "PIXEL_UNPACK_BUFFER is not bound.");
+    if (!checkUnpackFromBuffer()) {
         return;
     }
 
@@ -4477,16 +4462,16 @@ void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
     }
 
     size_t requiredBytes = 0;
-    if (!computeRequiredUnpackBytes(width, height, 1, format, type,
-                                    requiredBytes)) {
+    size_t rowStride = 0;
+    if (!computeRequiredUnpackBytes(target, width, height, 1, format, type,
+                                    requiredBytes, rowStride)) {
         return;
     }
 
     GLint bufferSize = 0;
     gl()->getBufferParameteriv(GL_PIXEL_UNPACK_BUFFER, GL_BUFFER_SIZE,
                                &bufferSize);
-    if (static_cast<uint64_t>(pboOffset) + requiredBytes >
-        static_cast<uint64_t>(bufferSize)) {
+    if (!isRangeWithin(pboOffset, requiredBytes, bufferSize)) {
         setGLError(GL_INVALID_OPERATION, "buffer too small");
         return;
     }
@@ -4532,7 +4517,7 @@ void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
     gl()->getIntegerv(GL_UNPACK_SKIP_ROWS, &skipRows);
 
     handleTexImageWithImageSource(
-        format, type, source,
+        target, format, type, source,
         [&](const TexImageHelper* helper) {
             STARFISH_ASSERT(helper != nullptr);
             gl()->texImage2D(
@@ -4540,7 +4525,7 @@ void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
                 width, height, 0, helper->dataFormat().valueOr(format), type,
                 helper->data());
         },
-        0, skipPixels, skipRows, width, height, 1, 0);
+        skipPixels, skipRows, width, height, 1, 0);
 
     if (texture && !hasNewGLError()) {
         texture->setImageLevelInfo(target, level, internalformat, width, height,
@@ -4624,9 +4609,7 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
         return;
     }
 
-    if (!getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).hasValue() ||
-        getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).value() == nullptr) {
-        setGLError(GL_INVALID_OPERATION, "PIXEL_UNPACK_BUFFER is not bound.");
+    if (!checkUnpackFromBuffer()) {
         return;
     }
 
@@ -4636,16 +4619,16 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
     }
 
     size_t requiredBytes = 0;
-    if (!computeRequiredUnpackBytes(width, height, depth, format, type,
-                                    requiredBytes)) {
+    size_t rowStride = 0;
+    if (!computeRequiredUnpackBytes(target, width, height, depth, format, type,
+                                    requiredBytes, rowStride)) {
         return;
     }
 
     GLint bufferSize = 0;
     gl()->getBufferParameteriv(GL_PIXEL_UNPACK_BUFFER, GL_BUFFER_SIZE,
                                &bufferSize);
-    if (static_cast<uint64_t>(pboOffset) + requiredBytes >
-        static_cast<uint64_t>(bufferSize)) {
+    if (!isRangeWithin(pboOffset, requiredBytes, bufferSize)) {
         setGLError(GL_INVALID_OPERATION, "buffer too small");
         return;
     }
@@ -4694,7 +4677,7 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
     gl()->getIntegerv(GL_UNPACK_IMAGE_HEIGHT, &imageHeight);
 
     handleTexImageWithImageSource(
-        format, type, source,
+        target, format, type, source,
         [&](const TexImageHelper* helper) {
             STARFISH_ASSERT(helper != nullptr);
             gl()->texImage3D(
@@ -4702,7 +4685,7 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
                 width, height, depth, 0, helper->dataFormat().valueOr(format),
                 type, helper->data());
         },
-        height, skipPixels, skipRows, width, height, depth, imageHeight);
+        skipPixels, skipRows, width, height, depth, imageHeight);
 
     if (texture && !hasNewGLError()) {
         texture->setSize(width, height);
@@ -4852,9 +4835,7 @@ void WebGL2RenderingContext::texSubImage3D(GLenum target, GLint level,
         return;
     }
 
-    if (!getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).hasValue() ||
-        getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).value() == nullptr) {
-        setGLError(GL_INVALID_OPERATION, "PIXEL_UNPACK_BUFFER is not bound.");
+    if (!checkUnpackFromBuffer()) {
         return;
     }
 
@@ -4864,16 +4845,16 @@ void WebGL2RenderingContext::texSubImage3D(GLenum target, GLint level,
     }
 
     size_t requiredBytes = 0;
-    if (!computeRequiredUnpackBytes(width, height, depth, format, type,
-                                    requiredBytes)) {
+    size_t rowStride = 0;
+    if (!computeRequiredUnpackBytes(target, width, height, depth, format, type,
+                                    requiredBytes, rowStride)) {
         return;
     }
 
     GLint bufferSize = 0;
     gl()->getBufferParameteriv(GL_PIXEL_UNPACK_BUFFER, GL_BUFFER_SIZE,
                                &bufferSize);
-    if (static_cast<uint64_t>(pboOffset) + requiredBytes >
-        static_cast<uint64_t>(bufferSize)) {
+    if (!isRangeWithin(pboOffset, requiredBytes, bufferSize)) {
         setGLError(GL_INVALID_OPERATION, "buffer too small");
         return;
     }
@@ -4913,14 +4894,14 @@ void WebGL2RenderingContext::texSubImage3D(GLenum target, GLint level,
     gl()->getIntegerv(GL_UNPACK_IMAGE_HEIGHT, &imageHeight);
 
     handleTexImageWithImageSource(
-        format, type, source,
+        target, format, type, source,
         [&](const TexImageHelper* helper) {
             STARFISH_ASSERT(helper != nullptr);
             gl()->texSubImage3D(
                 target, level, xoffset, yoffset, zoffset, width, height, depth,
                 helper->dataFormat().valueOr(format), type, helper->data());
         },
-        height, skipPixels, skipRows, width, height, depth, imageHeight);
+        skipPixels, skipRows, width, height, depth, imageHeight);
 }
 
 void WebGL2RenderingContext::texSubImage3D(
@@ -4987,9 +4968,7 @@ void WebGL2RenderingContext::texSubImage2D(GLenum target, GLint level,
         return;
     }
 
-    if (!getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).hasValue() ||
-        getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER).value() == nullptr) {
-        setGLError(GL_INVALID_OPERATION, "PIXEL_UNPACK_BUFFER is not bound.");
+    if (!checkUnpackFromBuffer()) {
         return;
     }
 
@@ -4999,16 +4978,16 @@ void WebGL2RenderingContext::texSubImage2D(GLenum target, GLint level,
     }
 
     size_t requiredBytes = 0;
-    if (!computeRequiredUnpackBytes(width, height, 1, format, type,
-                                    requiredBytes)) {
+    size_t rowStride = 0;
+    if (!computeRequiredUnpackBytes(target, width, height, 1, format, type,
+                                    requiredBytes, rowStride)) {
         return;
     }
 
     GLint bufferSize = 0;
     gl()->getBufferParameteriv(GL_PIXEL_UNPACK_BUFFER, GL_BUFFER_SIZE,
                                &bufferSize);
-    if (static_cast<uint64_t>(pboOffset) + requiredBytes >
-        static_cast<uint64_t>(bufferSize)) {
+    if (!isRangeWithin(pboOffset, requiredBytes, bufferSize)) {
         setGLError(GL_INVALID_OPERATION, "buffer too small");
         return;
     }
@@ -5040,14 +5019,14 @@ void WebGL2RenderingContext::texSubImage2D(GLenum target, GLint level,
     gl()->getIntegerv(GL_UNPACK_SKIP_ROWS, &skipRows);
 
     handleTexImageWithImageSource(
-        format, type, source,
+        target, format, type, source,
         [&](const TexImageHelper* helper) {
             STARFISH_ASSERT(helper != nullptr);
             gl()->texSubImage2D(target, level, xoffset, yoffset, width, height,
                                 helper->dataFormat().valueOr(format), type,
                                 helper->data());
         },
-        0, skipPixels, skipRows, width, height, 1, 0);
+        skipPixels, skipRows, width, height, 1, 0);
 }
 
 void WebGL2RenderingContext::texSubImage2D(GLenum target, GLint level,
@@ -5102,19 +5081,18 @@ void WebGL2RenderingContext::texSubImage2D(GLenum target, GLint level,
                                          format, type, source);
 }
 
-// The ArrayBufferView overloads read client memory and must not run while a
-// PIXEL_UNPACK_BUFFER is bound; the offset overloads read from that buffer.
-// https://registry.khronos.org/webgl/specs/latest/2.0/#3.7.6
-bool WebGL2RenderingContext::checkUnpackBufferBinding(
-    bool fromPixelUnpackBuffer)
+// The offset overloads read the bound PIXEL_UNPACK_BUFFER, whose data is
+// neither flipped nor premultiplied (WebGL 2.0, "Pixel store parameter
+// constraints").
+bool WebGL2RenderingContext::checkUnpackFromBuffer()
 {
-    Optional<WebGLBuffer*> unpackBuffer =
-        getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER);
-    bool hasUnpackBuffer = unpackBuffer.hasValue() && unpackBuffer.value();
-    if (hasUnpackBuffer != fromPixelUnpackBuffer) {
+    if (!checkUnpackBufferBinding(true)) {
+        return false;
+    }
+    if (unpackFlipY() || unpackPremultiplyAlpha()) {
         setGLError(GL_INVALID_OPERATION,
-                   hasUnpackBuffer ? "PIXEL_UNPACK_BUFFER is bound."
-                                   : "PIXEL_UNPACK_BUFFER is not bound.");
+                   "UNPACK_FLIP_Y_WEBGL or UNPACK_PREMULTIPLY_ALPHA_WEBGL is "
+                   "set for an upload from a PIXEL_UNPACK_BUFFER.");
         return false;
     }
     return true;
@@ -5132,7 +5110,7 @@ bool WebGL2RenderingContext::sliceCompressedTexData(
 
     size_t length = srcData->isDataViewObject() ? srcData->byteLength()
                                                 : srcData->arrayLength();
-    size_t elementSize = length ? srcData->byteLength() / length : 1;
+    size_t elementSize = viewElementSize(srcData);
     if (srcOffset > length || srcLengthOverride > length - srcOffset) {
         setGLError(GL_INVALID_VALUE,
                    "srcOffset or srcLengthOverride is out of range.");
@@ -5467,8 +5445,7 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
     GLint bufferSize = 0;
     gl()->getBufferParameteriv(GL_PIXEL_PACK_BUFFER, GL_BUFFER_SIZE,
                                &bufferSize);
-    if (static_cast<uint64_t>(offset) + requiredSize >
-        static_cast<uint64_t>(bufferSize)) {
+    if (!isRangeWithin(offset, requiredSize, bufferSize)) {
         setGLError(GL_INVALID_OPERATION, "Buffer not large enough");
         return;
     }
@@ -5561,9 +5538,7 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
         return;
     }
 
-    size_t elementSize = dstData->isDataViewObject()
-                             ? 1
-                             : dstData->byteLength() / dstData->arrayLength();
+    size_t elementSize = viewElementSize(dstData);
     size_t elementCount = dstData->isDataViewObject() ? dstData->byteLength()
                                                       : dstData->arrayLength();
 

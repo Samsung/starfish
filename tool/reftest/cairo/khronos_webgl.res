@@ -62,15 +62,15 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-eleme
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-standard-derivatives.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-linear.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-with-canvas.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-with-canvas.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-with-image-data.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-with-image.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-with-image.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-with-video.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-linear.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-with-canvas.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-with-image-data.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-with-image.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-with-canvas.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-with-image-data.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-with-image.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-with-video.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-vertex-array-object-bufferData.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-vertex-array-object.html
@@ -634,7 +634,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/gl-get-tex-
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/gl-teximage.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/mipmap-fbo.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/origin-clean-conformance.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-array-buffer-view.html # Failed with unpackAlignments as 8
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-array-buffer-view.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-canvas.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-canvas-rgb565.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-canvas-rgba4444.html
@@ -659,8 +659,8 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-a
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-uniform-binding-bugs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-canvas-corruption.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-webgl.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-with-format-and-type.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-with-invalid-data.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-with-format-and-type.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-with-invalid-data.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-input-validation.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texparameter-test.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-sub-image-2d-bad-args.html
@@ -712,7 +712,7 @@ http://localhost:11010/conformance-suites/1.0.3/extra/context-creation-and-destr
 # http://localhost:11010/conformance-suites/1.0.3/extra/fbo-lost-context.html
 # http://localhost:11010/conformance-suites/1.0.3/extra/lots-of-polys-example.html
 # http://localhost:11010/conformance-suites/1.0.3/extra/lots-of-polys-shader-example.html
-# http://localhost:11010/conformance-suites/1.0.3/extra/multisample-corruption-stress.html
+# http://localhost:11010/conformance-suites/1.0.3/extra/multisample-corruption-stress.html # @ignore Passes, but takes ~720 s on a debug build, over the CI time budget.
 # http://localhost:11010/conformance-suites/1.0.3/extra/offscreen-issue.html
 # http://localhost:11010/conformance-suites/1.0.3/extra/out-of-bounds-uniform-array-access.html
 # http://localhost:11010/conformance-suites/1.0.3/extra/out-of-memory.html
