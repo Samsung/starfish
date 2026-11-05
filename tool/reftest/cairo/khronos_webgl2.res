@@ -9,7 +9,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/attribs/gl-vertexatt
 http://localhost:11010/conformance-suites/2.0.0/conformance/attribs/gl-vertex-attrib-render.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/attribs/gl-vertex-attrib-zero-issues.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/buffers/buffer-bind-test.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/buffers/buffer-data-and-buffer-sub-data.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/buffers/buffer-data-and-buffer-sub-data.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/buffers/buffer-data-array-buffer-delete.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/buffers/buffer-uninitialized.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/buffers/element-array-buffer-delete-recreate.html?webglVersion=2
@@ -565,7 +565,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/tex-im
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/tex-image-webgl.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/tex-image-with-format-and-type.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/tex-image-with-invalid-data.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/tex-sub-image-2d-bad-args.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/tex-sub-image-2d-bad-args.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/tex-sub-image-2d.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texparameter-test.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-active-bind-2.html?webglVersion=2
@@ -658,7 +658,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/typedarrays/data-vie
 http://localhost:11010/conformance-suites/2.0.0/conformance/typedarrays/data-view-test.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/conformance/typedarrays/typed-arrays-in-workers.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/typedarrays/array-large-array-tests.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/gl-uniform-arrays.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/gl-uniform-arrays.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/gl-uniform-bool.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/gl-uniformmatrix4fv.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/gl-unknown-uniform.html?webglVersion=2
@@ -715,7 +715,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/unifo
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformi.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformiBadArgs.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformMatrix.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformMatrixBadArgs.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/uniformMatrixBadArgs.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/vertexAttrib.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/vertexAttribBadArgs.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/vertexAttribPointer.html?webglVersion=2

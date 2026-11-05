@@ -1392,6 +1392,7 @@ void WebGL2RenderingContext::implementUniformNuiv(
     Optional<WebGLUniformLocation*> location, Uint32List data,
     unsigned long long srcOffset, GLuint srcLength)
 {
+    throwIfNotConverted(data);
     ENTER_CONTEXT_SCOPE();
     /* location is nullable. */
     if (!location.hasValue()) {
@@ -1535,6 +1536,7 @@ void WebGL2RenderingContext::vertexAttribI4i(GLuint index, GLint x, GLint y,
 
 void WebGL2RenderingContext::vertexAttribI4iv(GLuint index, Int32List values)
 {
+    throwIfNotConverted(values);
     ENTER_CONTEXT_SCOPE();
 
     if (values.isInt32ArrayValue()) {
@@ -1573,6 +1575,7 @@ void WebGL2RenderingContext::vertexAttribI4ui(GLuint index, GLuint x, GLuint y,
 
 void WebGL2RenderingContext::vertexAttribI4uiv(GLuint index, Uint32List values)
 {
+    throwIfNotConverted(values);
     ENTER_CONTEXT_SCOPE();
 
     if (values.isUint32ArrayValue()) {
@@ -3881,6 +3884,7 @@ void WebGL2RenderingContext::clearBufferfv(GLenum buffer, GLint drawbuffer,
                                            Float32List values,
                                            unsigned long long srcOffset)
 {
+    throwIfNotConverted(values);
     ENTER_CONTEXT_SCOPE();
     completePendingJobs();
     if (buffer != GL_COLOR && buffer != GL_DEPTH) {
@@ -3940,6 +3944,7 @@ void WebGL2RenderingContext::clearBufferiv(GLenum buffer, GLint drawbuffer,
                                            Int32List values,
                                            unsigned long long srcOffset)
 {
+    throwIfNotConverted(values);
     ENTER_CONTEXT_SCOPE();
     completePendingJobs();
     if (buffer != GL_COLOR && buffer != GL_STENCIL) {
@@ -4001,6 +4006,7 @@ void WebGL2RenderingContext::clearBufferuiv(GLenum buffer, GLint drawbuffer,
                                             Uint32List values,
                                             unsigned long long srcOffset)
 {
+    throwIfNotConverted(values);
     ENTER_CONTEXT_SCOPE();
     completePendingJobs();
     if (buffer != GL_COLOR) {
