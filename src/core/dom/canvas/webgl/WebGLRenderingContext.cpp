@@ -229,6 +229,12 @@ void WebGLRenderingContext::initialize()
     }
 
     m_gl->bindFramebuffer(GL_FRAMEBUFFER, m_framebufferTexture->fbo());
+
+    // WebGL 2.0, "PRIMITIVE_RESTART_FIXED_INDEX is always enabled"; the cap
+    // is not exposed to enable() or disable().
+    if (isWebGL2RenderingContext()) {
+        m_gl->enable(GL_PRIMITIVE_RESTART_FIXED_INDEX);
+    }
 }
 
 void WebGLRenderingContext::flushDrawingCommands()
