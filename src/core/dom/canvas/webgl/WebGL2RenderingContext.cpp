@@ -3253,7 +3253,9 @@ void WebGL2RenderingContext::shaderSource(WebGLShader* shader, String* source)
             nameEnd++;
         }
 
-        if (nameEnd == nameStart) {
+        // "uniform struct {" declares a struct uniform, not a block.
+        if (nameEnd == nameStart ||
+            str.compare(nameStart, nameEnd - nameStart, "struct") == 0) {
             pos += 7;
             continue;
         }
