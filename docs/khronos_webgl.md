@@ -48,6 +48,15 @@ own job (`test_khronos_webgl` in `.github/workflows/x64_test.yml`), which
 restores the submodule through `tool/ci/cache_webgl.sh` the same way the WPT
 jobs restore `third_party/wpt`. `test_all` still includes it.
 
+Both GCC (`glib_cairo_gl`) and Clang (`uv_cairo_gl`) WebGL jobs build their
+own binary with `-DCMAKE_BUILD_TYPE=Release -DENABLE_WASM=1 -DWALRUS_JIT=ON`
+in `out/webgl-ci`, independently of the Debug artifacts used by the other
+x64 suites. `STARFISH_BIN=./out/webgl-ci/bin/lightweight-web-engine` selects
+that binary for the basic driver. Each job allows 30 minutes to build and
+60 minutes to run the tests.
+These Release builds also set `-DENABLE_TEST=1` to retain the harness's
+`testEnd()` hook.
+
 The runner caps the suite at 4 parallel jobs and gives each test a 1200 s
 budget (`KHRONOS_WEBGL_JOBS` / `KHRONOS_WEBGL_TIMEOUT_SEC` in
 `tool/runner/test_runner.py`): every job drives its own GL context, and on a
