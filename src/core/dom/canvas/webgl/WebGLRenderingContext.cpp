@@ -6100,25 +6100,45 @@ void WebGLRenderingContext::vertexAttribPointer(GLuint index, GLint size,
     ENTER_CONTEXT_SCOPE();
 
     // See Buffer Offset and Stride Requirements.
+    GLsizei typeSize = 0;
     switch (type) {
     case GL_BYTE:
     case GL_UNSIGNED_BYTE:
+        typeSize = 1;
         break;
     case GL_SHORT:
     case GL_UNSIGNED_SHORT:
-        if (offset % 2 != 0 || stride % 2 != 0) {
-            setGLError(GL_INVALID_OPERATION);
-            return;
-        }
+        typeSize = 2;
         break;
     case GL_FLOAT:
-        if (offset % 4 != 0 || stride % 4 != 0) {
-            setGLError(GL_INVALID_OPERATION);
-            return;
-        }
+        typeSize = 4;
+        break;
+    // OpenGL ES 3.0.6 §2.8 table 2.5; FIXED stays out (WebGL 1.0 "Fixed point
+    // support").
+    case GL_HALF_FLOAT:
+        typeSize = webGLVersion() >= 2 ? 2 : 0;
+        break;
+    case GL_INT:
+    case GL_UNSIGNED_INT:
+    case GL_INT_2_10_10_10_REV:
+    case GL_UNSIGNED_INT_2_10_10_10_REV:
+        typeSize = webGLVersion() >= 2 ? 4 : 0;
         break;
     default:
+        break;
+    }
+    if (!typeSize) {
         setGLError(GL_INVALID_ENUM);
+        return;
+    }
+    // Rejected here, before the driver: Mesa applies the pointer of a call it
+    // rejects for a negative stride, which the recorded one then misses.
+    if (stride < 0) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+    if (offset % typeSize != 0 || stride % typeSize != 0) {
+        setGLError(GL_INVALID_OPERATION);
         return;
     }
 

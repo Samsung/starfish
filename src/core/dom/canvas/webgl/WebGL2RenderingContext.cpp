@@ -1608,6 +1608,19 @@ void WebGL2RenderingContext::vertexAttribIPointer(GLuint index, GLint size,
 {
     ENTER_CONTEXT_SCOPE();
 
+    // OpenGL ES 3.0.6 §2.8: the integer types only. Then a negative stride,
+    // rejected before the driver as in vertexAttribPointer.
+    if (type != GL_BYTE && type != GL_UNSIGNED_BYTE && type != GL_SHORT &&
+        type != GL_UNSIGNED_SHORT && type != GL_INT &&
+        type != GL_UNSIGNED_INT) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+    if (stride < 0) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
     switch (type) {
     case GL_SHORT:
     case GL_UNSIGNED_SHORT:
