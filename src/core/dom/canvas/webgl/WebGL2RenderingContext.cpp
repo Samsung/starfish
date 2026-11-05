@@ -3195,19 +3195,8 @@ bool WebGL2RenderingContext::validateDrawCallUBO()
     return true;
 }
 
-void WebGL2RenderingContext::shaderSource(WebGLShader* shader, String* source)
+void WebGL2RenderingContext::adjustShaderSourceForDriver(std::string& str)
 {
-    ENTER_CONTEXT_SCOPE();
-
-    if (!validateProgramOrShader(shader)) {
-        return;
-    }
-
-    std::string originalStr = source->toUTF8NonGCString();
-    shader->setSource(originalStr);
-
-    std::string str = originalStr;
-
     if (str.find("layout(packed)") != std::string::npos ||
         str.find("layout (packed)") != std::string::npos ||
         str.find("layout(shared)") != std::string::npos ||
@@ -3311,9 +3300,6 @@ void WebGL2RenderingContext::shaderSource(WebGLShader* shader, String* source)
     }
     result.append(str, lastPos, str.length() - lastPos);
     str = result;
-
-    const char* sourceArray[1] = { str.c_str() };
-    gl()->shaderSource(shader->glObject(), 1, sourceArray, nullptr);
 }
 
 void WebGL2RenderingContext::drawRangeElements(GLenum mode, GLuint start,
