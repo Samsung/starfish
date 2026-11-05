@@ -517,7 +517,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/programs/use-program
 http://localhost:11010/conformance-suites/2.0.0/conformance/reading/read-pixels-pack-alignment.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/conformance/reading/read-pixels-test.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/feedback-loop.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/framebuffer-state-restoration.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/framebuffer-state-restoration.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/renderbuffer-initialization.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/culling.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/default-texture-draw-bug.html?webglVersion=2
@@ -551,7 +551,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/state/gl-get-calls.h
 http://localhost:11010/conformance-suites/2.0.0/conformance/state/gl-geterror.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/state/gl-initial-state.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/state/state-uneffected-after-compositing.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/copy-tex-image-and-sub-image-2d.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/copy-tex-image-and-sub-image-2d.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/copy-tex-image-2d-formats.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/copy-tex-sub-image-2d-partial-texture.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/cube-incomplete-fbo.html?webglVersion=2
@@ -570,13 +570,13 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/tex-su
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texparameter-test.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-active-bind-2.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-active-bind.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-attachment-formats.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-attachment-formats.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-clear.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-complete.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-copying-feedback-loops.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-cube-as-fbo-attachment.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-hd-dpi.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-mips.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-mips.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-size.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-size-cube-maps.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-size-limit.html?webglVersion=2
@@ -689,7 +689,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/buffe
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/bufferDataBadArgs.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/bufferSubData.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/bufferSubDataBadArgs.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/copyTexImage2D.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/copyTexImage2D.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/copyTexImage2DBadArgs.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/copyTexSubImage2D.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/copyTexSubImage2DBadArgs.html?webglVersion=2

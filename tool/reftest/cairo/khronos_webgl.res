@@ -396,7 +396,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/buffe
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/bufferSubDataBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/bufferSubData.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexImage2DBadArgs.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexImage2D.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexImage2D.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexSubImage2DBadArgs.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexSubImage2D.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/deleteBufferBadArgs.html
@@ -591,7 +591,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/reading/read-pixels-
 http://localhost:11010/conformance-suites/1.0.3/conformance/reading/read-pixels-test.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/feedback-loop.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-object-attachment.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-state-restoration.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-state-restoration.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/renderbuffer-initialization.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/culling.html
@@ -627,7 +627,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/state/gl-getstring.h
 http://localhost:11010/conformance-suites/1.0.3/conformance/state/state-uneffected-after-compositing.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/compressed-tex-image.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/copy-tex-image-2d-formats.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/copy-tex-image-and-sub-image-2d.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/copy-tex-image-and-sub-image-2d.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/default-texture.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/gl-get-tex-parameter.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/gl-pixelstorei.html
@@ -667,7 +667,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texparamete
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-sub-image-2d.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-active-bind-2.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-active-bind.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-attachment-formats.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-attachment-formats.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-clear.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-complete.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-copying-feedback-loops.html
@@ -675,7 +675,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-dra
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-fakeblack.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-formats-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-hd-dpi.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-mips.html # @ignore Flaky, possibly due to driver issues
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-mips.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-npot.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-npot-video.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-size-cube-maps.html

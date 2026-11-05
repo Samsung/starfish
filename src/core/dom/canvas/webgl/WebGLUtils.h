@@ -65,7 +65,9 @@ public:
     static bool isSizedInternalFormat(GLenum internalformat);
     static size_t getBytesPerPixel(GLenum format, GLenum type,
                                    int webGLVersion = 1);
-    static bool isTwoBytesPerPixel(GLenum type);
+    // A format and type that upload to internalFormat, if it is known.
+    static bool formatAndTypeOf(GLint internalFormat, GLenum& format,
+                                GLenum& type);
     static GLushort makePixel5551(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
     static GLushort makePixel4444(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
     static GLushort makePixel565(uint8_t r, uint8_t g, uint8_t b);

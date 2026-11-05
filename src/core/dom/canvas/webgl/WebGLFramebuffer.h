@@ -374,6 +374,32 @@ public:
         return 0;
     }
 
+    bool getColorAttachmentSize(size_t index, GLsizei& width,
+                                GLsizei& height) const
+    {
+        if (index >= 16) {
+            return false;
+        }
+        if (m_attachedColorRenderbuffers[index]) {
+            width = m_attachedColorRenderbuffers[index]->width();
+            height = m_attachedColorRenderbuffers[index]->height();
+            return true;
+        }
+        if (m_attachedColorTextures[index]) {
+            // A layer's target is its texture's (setAttachmentTextureLayer).
+            const auto* info =
+                m_attachedColorTextures[index]->getImageLevelInfo(
+                    m_attachedColorTextargets[index],
+                    m_attachedColorLevels[index]);
+            if (info) {
+                width = info->width;
+                height = info->height;
+                return true;
+            }
+        }
+        return false;
+    }
+
     GLsizei getColorAttachmentSamples(size_t index) const
     {
         if (index >= 16) {
