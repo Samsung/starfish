@@ -58,6 +58,7 @@
 #include <cctype>
 #include <cstring>
 #include <vector>
+#include <unordered_map>
 #include "core/dom/canvas/webgl/WebGLOES_VertexArrayObject.h"
 #include "core/dom/canvas/webgl/WebGLShaderPrecisionFormat.h"
 #include "core/page/WebView.h"
@@ -948,6 +949,12 @@ void WebGLRenderingContext::colorMask(GLboolean red, GLboolean green,
 // the engine fails to compile here instead of reaching the driver.
 static constexpr size_t kMaxShaderExpressionDepth = 256;
 
+// The deepest call stack compileShader() accepts, in frames (main() is
+// one). 256 is ANGLE's MaxCallStackDepth, which the other browsers enforce:
+// a driver inlines every call, and Mesa needs gigabytes to link a chain of
+// thousands of functions.
+static constexpr size_t kMaxShaderCallDepth = 256;
+
 // Precedence of a GLSL binary operator token (higher binds tighter).
 // The conditional and assignment operators are right associative and sit
 // lowest.
@@ -1604,6 +1611,429 @@ bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
     return true;
 }
 
+// The frames of the deepest call stack the driver can reach in `view`
+// (preprocessorView()), or a value above `limit` when it provably exceeds
+// `limit` or the text cannot be bounded soundly. A text scanner neither
+// evaluates #if nor expands macros, so the result must never be below a depth
+// the driver can see whatever the preprocessor does.
+//
+// Sound brace bound first: every function body is one `{` and GLSL ES forbids
+// recursion, so a stack of d frames needs d `{` in the compiled text. B is
+// the `{` the driver can see -- every `{` in a non-directive line (dead #if
+// branches included, which only over-count) plus, for every macro name in a
+// non-directive line, the `{` its expansion adds (the `{` in its body and,
+// transitively, those of the macros its body names; a cycle saturates). If
+// B <= limit the depth is at most B, so the shader passes with no graph.
+//
+// Otherwise a per-definition call graph gives a tighter bound, but only when
+// the token structure can be trusted: braces and parentheses nest in order in
+// the code, no macro body holds a brace or an unbalanced parenthesis, and no
+// macro sits where it could reshape a function header (as the name before a
+// top-level `(`, between a header's `)` and `{`, or before a top-level `{`).
+// Then macro expansion changes neither the `(){}` structure nor a header's
+// name, every definition is seen as the driver sees it, a call to a name
+// reaches every definition of it (overloads included) through a frameless
+// name node, and a cyclic component weighs its definitions; a real chain of
+// distinct definitions maps to a path whose weight is at least its length, so
+// the depth can only come out too high. When the structure is not trusted the
+// shader fails conservatively. Time and memory are linear in the source.
+// shortcut: a shader the scanner cannot bound or trust fails even if its real
+// call depth is shallow; a translator that expanded macros could pass it.
+static size_t shaderCallDepth(const std::string& view, size_t limit)
+{
+    const size_t kSaturated = limit + 1;
+    // Prescan the macros: id, the `{` in the body, whether the body holds any
+    // brace or an unbalanced paren, and the macro names the body references.
+    // A macro defined more than once weighs the most `{` of its bodies plus
+    // every macro any of them names, so a redefinition cannot drop a brace.
+    // Every structure here is linear in the source: one entry per #define
+    // line and one reference per identifier in a body.
+    std::unordered_map<std::string, uint32_t> macroId;
+    std::vector<size_t> macroOwnBraces;
+    std::vector<std::vector<uint32_t>> macroRefs;
+    bool macroHasBrace = false;
+    bool macroHasUnbalancedParen = false;
+    struct MacroBody {
+        uint32_t id;
+        size_t begin;
+        size_t end;
+    };
+    std::vector<MacroBody> bodies; // every definition, in source order
+    auto macroNode = [&](const std::string& name) {
+        auto it = macroId.emplace(name, static_cast<uint32_t>(macroId.size()));
+        if (it.second) {
+            macroOwnBraces.push_back(0);
+            macroRefs.emplace_back();
+        }
+        return it.first->second;
+    };
+    for (size_t line = 0; line < view.size();) {
+        const size_t end =
+            std::min(view.find_first_of("\r\n", line), view.size());
+        const size_t hash = view.find_first_not_of(" \t\v\f", line);
+        if (hash < end && view[hash] == '#') {
+            const size_t d =
+                std::min(view.find_first_not_of(" \t\v\f", hash + 1), end);
+            if (identifierEnd(view, d) == d + 6 &&
+                view.compare(d, 6, "define") == 0) {
+                const size_t name =
+                    std::min(view.find_first_not_of(" \t\v\f", d + 6), end);
+                const size_t nameEnd = std::min(identifierEnd(view, name), end);
+                if (nameEnd > name) {
+                    const uint32_t id =
+                        macroNode(view.substr(name, nameEnd - name));
+                    size_t open = 0;
+                    int paren = 0;
+                    for (size_t k = nameEnd; k < end; k++) {
+                        const char c = view[k];
+                        if (c == '{') {
+                            open++;
+                            macroHasBrace = true;
+                        } else if (c == '}') {
+                            macroHasBrace = true;
+                        } else if (c == '(') {
+                            paren++;
+                        } else if (c == ')' && --paren < 0) {
+                            macroHasUnbalancedParen = true;
+                            paren = 0;
+                        }
+                    }
+                    if (paren != 0) {
+                        macroHasUnbalancedParen = true;
+                    }
+                    macroOwnBraces[id] = std::max(macroOwnBraces[id], open);
+                    bodies.push_back({ id, nameEnd, end });
+                }
+            }
+        }
+        line = std::min(view.find_first_not_of("\r\n", end), view.size());
+    }
+    // Resolve the macro names each body references (now that all are known).
+    for (const MacroBody& body : bodies) {
+        for (size_t k = body.begin; k < body.end;) {
+            const size_t e = identifierEnd(view, k);
+            if (e > k) {
+                auto found = macroId.find(view.substr(k, e - k));
+                if (found != macroId.end() && found->second != body.id) {
+                    macroRefs[body.id].push_back(found->second);
+                }
+                k = e;
+            } else {
+                k++;
+            }
+        }
+    }
+    // weight[id] = the `{` the macro's expansion adds, saturating; a cyclic
+    // dependency (illegal, infinite expansion) saturates. Memoized, explicit
+    // stack, no recursion.
+    const size_t macros = macroOwnBraces.size();
+    std::vector<size_t> weight(macros, 0);
+    std::vector<uint8_t> macroState(macros, 0); // 0 new, 1 on stack, 2 done
+    for (uint32_t start = 0; start < macros; start++) {
+        if (macroState[start] != 0) {
+            continue;
+        }
+        std::vector<std::pair<uint32_t, size_t>> stack;
+        stack.push_back({ start, 0 });
+        macroState[start] = 1;
+        while (!stack.empty()) {
+            uint32_t u = stack.back().first;
+            size_t& ci = stack.back().second;
+            if (ci < macroRefs[u].size()) {
+                const uint32_t v = macroRefs[u][ci++];
+                if (macroState[v] == 0) {
+                    macroState[v] = 1;
+                    stack.push_back({ v, 0 });
+                } else if (macroState[v] == 1) {
+                    weight[v] = kSaturated; // cycle
+                }
+                continue;
+            }
+            size_t w = macroOwnBraces[u];
+            for (uint32_t v : macroRefs[u]) {
+                w += weight[v];
+            }
+            weight[u] =
+                std::min(weight[u] == kSaturated ? kSaturated : w, kSaturated);
+            macroState[u] = 2;
+            stack.pop_back();
+        }
+    }
+
+    // The call graph: a node per function definition (one frame) and a node
+    // per name (no frame). A call to X is one edge to name X, which has an
+    // edge to every definition named X and, when X is a macro, to the names
+    // its body uses; so every definition of X stays reachable from every call
+    // of X. Nodes are at most definitions + names and edges at most call
+    // tokens + definitions: linear in the source.
+    std::unordered_map<std::string, uint32_t> nameNodes;
+    std::vector<bool> isFunction;
+    std::vector<std::vector<uint32_t>> callees;
+    std::vector<uint32_t> lastCaller; // per name: drops repeated calls
+    std::vector<uint32_t> defOrder;   // definition nodes in source order
+    auto newNode = [&](bool function) {
+        const uint32_t id = static_cast<uint32_t>(callees.size());
+        isFunction.push_back(function);
+        callees.emplace_back();
+        lastCaller.push_back(UINT32_MAX);
+        return id;
+    };
+    auto nameNode = [&](const std::string& name) {
+        auto found = nameNodes.find(name);
+        if (found != nameNodes.end()) {
+            return found->second;
+        }
+        const uint32_t id = newNode(false);
+        nameNodes.emplace(name, id);
+        return id;
+    };
+    auto makeDef = [&](const std::string& name) {
+        const uint32_t named = nameNode(name);
+        const uint32_t id = newNode(true);
+        callees[named].push_back(id);
+        defOrder.push_back(id);
+        return id;
+    };
+    auto addCall = [&](uint32_t caller, const std::string& name) {
+        auto found = nameNodes.find(name);
+        if (found == nameNodes.end() || lastCaller[found->second] == caller) {
+            return;
+        }
+        lastCaller[found->second] = caller;
+        callees[caller].push_back(found->second);
+    };
+
+    size_t braceBound = 0; // B
+    bool trusted = !macroHasBrace && !macroHasUnbalancedParen;
+    size_t defCursor = 0;
+    for (int pass = 0; pass < 2; pass++) {
+        if (pass == 1) {
+            if (braceBound <= limit) {
+                return braceBound; // sound brace bound
+            }
+            if (!trusted) {
+                return kSaturated;
+            }
+            defCursor = 0;
+        }
+        int braceBalance = 0;
+        int parenBalance = 0;
+        size_t braces = 0;
+        size_t parens = 0;
+        std::string last;
+        bool lastIsMacro = false;
+        std::string candidate;
+        bool afterParameters = false;
+        bool current = false;
+        uint32_t currentNode = 0;
+        bool lineStart = true;
+        for (size_t i = 0; i < view.size();) {
+            const char c = view[i];
+            if (c == '\r' || c == '\n') {
+                lineStart = true;
+                i++;
+                continue;
+            }
+            if (c == ' ' || c == '\t' || c == '\v' || c == '\f') {
+                i++;
+                continue;
+            }
+            if (lineStart && c == '#') {
+                const size_t end =
+                    std::min(view.find_first_of("\r\n", i), view.size());
+                const size_t directive =
+                    std::min(view.find_first_not_of(" \t\v\f", i + 1), end);
+                const size_t name = std::min(
+                    view.find_first_not_of(" \t\v\f", directive + 6), end);
+                if (identifierEnd(view, directive) == directive + 6 &&
+                    view.compare(directive, 6, "define") == 0 &&
+                    identifierEnd(view, name) > name) {
+                    const size_t nameEnd =
+                        std::min(identifierEnd(view, name), end);
+                    const uint32_t macro =
+                        nameNode(view.substr(name, nameEnd - name));
+                    for (size_t k = nameEnd; pass == 1 && k < end;) {
+                        const size_t e = std::min(identifierEnd(view, k), end);
+                        if (e > k) {
+                            addCall(macro, view.substr(k, e - k));
+                        }
+                        k = std::max(e, k + 1);
+                    }
+                }
+                i = end;
+                continue;
+            }
+            lineStart = false;
+            const size_t e = identifierEnd(view, i);
+            if (e > i) {
+                const std::string token = view.substr(i, e - i);
+                auto m = macroId.find(token);
+                const bool isMacro = m != macroId.end();
+                if (c < '0' || c > '9') {
+                    if (!braces) {
+                        last = token;
+                        lastIsMacro = isMacro;
+                        if (pass == 0 && afterParameters && isMacro) {
+                            trusted = false; // macro between ) and {
+                        }
+                    } else if (pass == 1 && current) {
+                        addCall(currentNode, token);
+                    }
+                }
+                if (pass == 0 && isMacro) {
+                    braceBound =
+                        std::min(braceBound + weight[m->second], kSaturated);
+                }
+                afterParameters = false;
+                i = e;
+                continue;
+            }
+            i++;
+            if (c == '{') {
+                if (pass == 0) {
+                    braceBound = std::min(braceBound + 1, kSaturated);
+                    braceBalance++;
+                }
+            } else if (c == '}') {
+                if (pass == 0 && --braceBalance < 0) {
+                    trusted = false;
+                    braceBalance = 0;
+                }
+            }
+            if (braces) {
+                if (c == '{') {
+                    braces++;
+                } else if (c == '}' && --braces == 0) {
+                    current = false;
+                }
+                continue;
+            }
+            if (c == '(') {
+                if (pass == 0) {
+                    parenBalance++;
+                }
+                if (parens++ == 0) {
+                    candidate = last;
+                    if (pass == 0 && lastIsMacro) {
+                        trusted = false; // macro as the name before a header (
+                    }
+                }
+            } else if (c == ')') {
+                if (pass == 0 && --parenBalance < 0) {
+                    trusted = false;
+                    parenBalance = 0;
+                }
+                if (parens && --parens == 0) {
+                    afterParameters = true;
+                    continue;
+                }
+            } else if (c == '{') {
+                if (pass == 0 && lastIsMacro) {
+                    trusted = false; // macro right before a top-level {
+                }
+                braces = 1;
+                current = false;
+                if (afterParameters && !candidate.empty()) {
+                    currentNode =
+                        pass == 0 ? makeDef(candidate) : defOrder[defCursor];
+                    defCursor += pass == 1 ? 1 : 0;
+                    current = true;
+                }
+            }
+            afterParameters = false;
+        }
+        if (pass == 0 && (braceBalance != 0 || parenBalance != 0)) {
+            trusted = false;
+        }
+    }
+
+    // Deepest stack of the per-definition graph by strongly connected
+    // components (Tarjan, explicit stack: no recursion). A component is
+    // finished after every one it calls; its frames are its own definitions
+    // plus the frames of the deepest component it calls.
+    constexpr uint32_t kUnvisited = UINT32_MAX;
+    const size_t count = callees.size();
+    std::vector<uint32_t> order(count, kUnvisited);
+    std::vector<uint32_t> low(count, 0);
+    std::vector<uint32_t> component(count, kUnvisited);
+    std::vector<size_t> componentFrames;
+    std::vector<uint32_t> members;
+    struct Entry {
+        uint32_t node;
+        size_t next;
+    };
+    std::vector<Entry> path;
+    size_t functionsOnPath = 0;
+    uint32_t visited = 0;
+    size_t deepest = 0;
+    auto enter = [&](uint32_t n) {
+        order[n] = low[n] = visited++;
+        members.push_back(n);
+        path.push_back({ n, 0 });
+        functionsOnPath += isFunction[n] ? 1 : 0;
+    };
+    for (uint32_t root = 0; root < count; root++) {
+        if (!isFunction[root] || order[root] != kUnvisited) {
+            continue;
+        }
+        enter(root);
+        while (!path.empty()) {
+            Entry& top = path.back();
+            if (top.next < callees[top.node].size()) {
+                const uint32_t callee = callees[top.node][top.next++];
+                if (order[callee] == kUnvisited) {
+                    // The path is a call stack: more than `limit` frames is
+                    // too deep. A frame takes a definition and a name entry,
+                    // and macros between frames add names; a path of 8 entries
+                    // per allowed frame is taken as too deep as well.
+                    if (functionsOnPath + (isFunction[callee] ? 1 : 0) >
+                            limit ||
+                        path.size() >= 8 * limit) {
+                        return kSaturated;
+                    }
+                    enter(callee);
+                } else if (component[callee] == kUnvisited) {
+                    low[top.node] = std::min(low[top.node], order[callee]);
+                }
+                continue;
+            }
+            const uint32_t n = top.node;
+            path.pop_back();
+            functionsOnPath -= isFunction[n] ? 1 : 0;
+            if (!path.empty()) {
+                low[path.back().node] = std::min(low[path.back().node], low[n]);
+            }
+            if (low[n] != order[n]) {
+                continue;
+            }
+            const uint32_t id = static_cast<uint32_t>(componentFrames.size());
+            size_t first = members.size();
+            do {
+                component[members[--first]] = id;
+            } while (members[first] != n);
+            size_t frames = 0;
+            size_t below = 0;
+            for (size_t k = first; k < members.size(); k++) {
+                frames += isFunction[members[k]] ? 1 : 0;
+                for (uint32_t callee : callees[members[k]]) {
+                    if (component[callee] != id) {
+                        below =
+                            std::max(below, componentFrames[component[callee]]);
+                    }
+                }
+            }
+            members.resize(first);
+            frames += below;
+            if (frames > limit) {
+                return kSaturated;
+            }
+            componentFrames.push_back(frames);
+            deepest = std::max(deepest, frames);
+        }
+    }
+    return deepest;
+}
+
 void WebGLRenderingContext::compileShader(WebGLShader* shader)
 {
     ENTER_CONTEXT_SCOPE();
@@ -1648,6 +2078,12 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
         kMaxShaderExpressionDepth) {
         shader->setCompileFailed(true);
         shader->setInfoLog("Expression too complex");
+        return;
+    }
+
+    if (shaderCallDepth(view, kMaxShaderCallDepth) > kMaxShaderCallDepth) {
+        shader->setCompileFailed(true);
+        shader->setInfoLog("Call stack too deep");
         return;
     }
 

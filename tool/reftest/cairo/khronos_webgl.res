@@ -97,7 +97,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/fragcoord-
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/long-expressions-should-not-crash.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/modulo-arithmetic-accuracy.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/multiplication-assignment.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/nested-functions-should-not-crash.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/nested-functions-should-not-crash.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/sampler-array-using-loop-index.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/temp-expressions-should-not-crash.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/uniforms-should-not-lose-values.html

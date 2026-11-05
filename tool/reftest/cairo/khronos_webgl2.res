@@ -86,7 +86,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/long-expre
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/loop-if-loop-gradient.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/modulo-arithmetic-accuracy.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/multiplication-assignment.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/nested-functions-should-not-crash.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/nested-functions-should-not-crash.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/nested-loops-with-break-and-continue.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/nested-sequence-operator.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/pow-of-small-constant-in-user-defined-function.html?webglVersion=2
