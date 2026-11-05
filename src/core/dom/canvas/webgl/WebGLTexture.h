@@ -35,13 +35,16 @@ struct TextureImageLevelInfo {
     GLsizei width = 0;
     GLsizei height = 0;
     GLsizei depth = 0;
-    GLenum type = 0;
+    // The type the level was defined with, 0 when not known (WebGL 1
+    // texSubImage2D must match it). Every type token fits in 16 bits, which
+    // keeps the struct at its size.
+    uint16_t type = 0;
     bool isDefined = false;
 
     TextureImageLevelInfo() = default;
     TextureImageLevelInfo(GLenum target, GLint level, GLenum internalFormat,
                           GLsizei width, GLsizei height, GLsizei depth,
-                          GLenum type, bool isDefined)
+                          uint16_t type, bool isDefined)
         : target(target)
         , level(level)
         , internalFormat(internalFormat)
@@ -53,6 +56,9 @@ struct TextureImageLevelInfo {
     {
     }
 };
+
+static_assert(sizeof(TextureImageLevelInfo) <= 7 * sizeof(GLenum),
+              "the type takes the padding after depth");
 
 class WebGLTexture : public WebGLObject {
 public:
@@ -123,16 +129,14 @@ public:
                 entry.width = width;
                 entry.height = height;
                 entry.depth = depth;
-                if (type != 0) {
-                    entry.type = type;
-                }
+                entry.type = static_cast<uint16_t>(type);
                 entry.isDefined = true;
                 return;
             }
         }
-        m_imageLevels.push_back(
-            TextureImageLevelInfo{ imageTarget, level, internalFormat, width,
-                                   height, depth, type, true });
+        m_imageLevels.push_back(TextureImageLevelInfo{
+            imageTarget, level, internalFormat, width, height, depth,
+            static_cast<uint16_t>(type), true });
     }
 
     const TextureImageLevelInfo* getImageLevelInfo(GLenum imageTarget,

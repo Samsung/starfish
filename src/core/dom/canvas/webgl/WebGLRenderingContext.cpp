@@ -1750,9 +1750,11 @@ void WebGLRenderingContext::copyTexSubImage2D(GLenum target, GLint level,
         if (info) {
             dstFormat = info->internalFormat;
         }
+        // A WebGL 1 RGBA level allocated without data is kept as BGRA
+        // (texImage2D, PORT_PIXEL_ORDER_BGRA).
         if (dstFormat == GL_RGBA || dstFormat == GL_RGBA4 ||
             dstFormat == GL_RGB5_A1 || dstFormat == GL_RGBA8 ||
-            dstFormat == 0) {
+            dstFormat == GL_BGRA_EXT || dstFormat == 0) {
             setGLError(GL_INVALID_OPERATION,
                        "Cannot copy non-alpha source to alpha destination");
             return;
@@ -2914,6 +2916,24 @@ void WebGLRenderingContext::frontFace(GLenum mode)
 void WebGLRenderingContext::generateMipmap(GLenum target)
 {
     ENTER_CONTEXT_SCOPE();
+
+    // OpenGL ES 2.0 §3.7.11: a WebGL 1 level 0 must be a power of two.
+    if (!isWebGL2RenderingContext() &&
+        (target == GL_TEXTURE_2D || target == GL_TEXTURE_CUBE_MAP)) {
+        WebGLTexture* texture = getBoundTextureObject(target);
+        const TextureImageLevelInfo* info =
+            texture ? texture->getImageLevelInfo(
+                          target == GL_TEXTURE_CUBE_MAP
+                              ? GL_TEXTURE_CUBE_MAP_POSITIVE_X
+                              : target,
+                          0)
+                    : nullptr;
+        if (info &&
+            !(isPowerOfTwo(info->width) && isPowerOfTwo(info->height))) {
+            setGLError(GL_INVALID_OPERATION, "level 0 is not a power of two");
+            return;
+        }
+    }
 
     if (isWebGL2RenderingContext()) {
         WebGLTexture* texture = getBoundTextureObject(target);
@@ -4914,6 +4934,17 @@ void WebGLRenderingContext::renderbufferStorage(GLenum target,
         setGLError(GL_INVALID_ENUM);
         return;
     }
+    // OpenGL ES 2.0 §4.4.3 and WebGL 1.0 "Framebuffer Object Attachments":
+    // the WebGL 1 formats. No WebGL 1 extension exposed here adds one
+    // (EXT_sRGB's SRGB8_ALPHA8 included).
+    if (webGLVersion() == 1 && internalformat != GL_RGBA4 &&
+        internalformat != GL_RGB565 && internalformat != GL_RGB5_A1 &&
+        internalformat != GL_DEPTH_COMPONENT16 &&
+        internalformat != GL_STENCIL_INDEX8 &&
+        internalformat != GL_DEPTH_STENCIL) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
 
     if (width < 0 || height < 0) {
         setGLError(GL_INVALID_VALUE);
@@ -4975,6 +5006,19 @@ void WebGLRenderingContext::scissor(GLint x, GLint y, GLsizei width,
 void WebGLRenderingContext::texParameterf(GLenum target, GLenum pname,
                                           GLfloat param)
 {
+    // OpenGL ES 2.0 §3.7.4: every WebGL 1 texture parameter but the
+    // anisotropy takes an enum, which texParameteri validates. A value that
+    // is no int is no enum either (and is not cast: NaN and out-of-range
+    // floats make a float-to-int cast undefined).
+    if (pname != GL_TEXTURE_MAX_ANISOTROPY_EXT) {
+        const double value = param;
+        texParameteri(target, pname,
+                      value > -2147483649.0 && value < 2147483648.0
+                          ? static_cast<GLint>(value)
+                          : 0);
+        return;
+    }
+
     ENTER_CONTEXT_SCOPE();
 
     if (pname == GL_TEXTURE_MAX_ANISOTROPY_EXT &&
@@ -6977,6 +7021,12 @@ bool WebGLRenderingContext::checkInternalFormat(GLint internalFormat,
         setGLError(GL_INVALID_ENUM, "format is not an accepted token");
         return false;
     }
+    // OpenGL ES 2.0 §3.7.1: an unknown type token is INVALID_ENUM, before the
+    // format and type are matched.
+    if (!isKnownFormatAndType(format, type)) {
+        setGLError(GL_INVALID_ENUM, "type is not an accepted token");
+        return false;
+    }
 
     if (!Pixel::isInternalFormatValid(internalFormat, format, type, 1)) {
         // The format, in WebGL 1, must be the same as internalFormat. See:
@@ -7128,6 +7178,16 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
                   KV(glValueString(helper->dataFormat().valueOr(format))));
             TRACE(WEBGL_V, KV(glValueString(type)));
 
+            // OpenGL ES 2.0 §3.7.1, as in the other texImage2D(): the source
+            // gives the size.
+            if (webGLVersion() == 1 && level > 0 &&
+                !(isPowerOfTwo(helper->width()) &&
+                  isPowerOfTwo(helper->height()))) {
+                setGLError(GL_INVALID_VALUE,
+                           "level > 0 of a non-power-of-two size");
+                return;
+            }
+
             // Uploads the given image data to the currently bound texture.
             m_gl->texImage2D(
                 target, level, helper->dataFormat().valueOr(internalFormat),
@@ -7139,6 +7199,26 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
                     helper->width(), helper->height(), 1, type);
             }
         });
+}
+
+// WebGL 1.0 "Texture Type in TexSubImage2D Calls": the type must be the one
+// that defined the level. Unknown tokens are left to the INVALID_ENUM
+// checks, and a level whose type is not recorded (copyTexImage2D,
+// generateMipmap) to the GL.
+bool WebGLRenderingContext::isTexSubImageTypeAllowed(GLenum target, GLint level,
+                                                     GLenum format, GLenum type)
+{
+    if (webGLVersion() >= 2 || !isKnownFormatAndType(format, type)) {
+        return true;
+    }
+    WebGLTexture* texture = getBoundTextureObject(target);
+    const TextureImageLevelInfo* info =
+        texture ? texture->getImageLevelInfo(target, level) : nullptr;
+    if (info && info->type && info->type != type) {
+        setGLError(GL_INVALID_OPERATION, "type differs from the level's type");
+        return false;
+    }
+    return true;
 }
 
 void WebGLRenderingContext::texSubImage2D(
@@ -7173,11 +7253,7 @@ void WebGLRenderingContext::texSubImage2D(
         return;
     }
 
-    const TextureImageLevelInfo* levelInfo =
-        texture->getImageLevelInfo(target, level);
-    if (levelInfo && levelInfo->isDefined && levelInfo->type != 0 &&
-        levelInfo->type != type) {
-        setGLError(GL_INVALID_OPERATION, "type does not match original");
+    if (!isTexSubImageTypeAllowed(target, level, format, type)) {
         return;
     }
 
@@ -7196,6 +7272,10 @@ void WebGLRenderingContext::texSubImage2D(GLenum target, GLint level,
                                           TexImageSource source)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!isTexSubImageTypeAllowed(target, level, format, type)) {
+        return;
+    }
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     // As in texImage2D(): a frame kept in memory converts on the CPU.
