@@ -678,6 +678,13 @@ void WebGLRenderingContext::bindFramebuffer(
 {
     ENTER_CONTEXT_SCOPE();
 
+    // OpenGL ES 2.0 §4.4.1 has only FRAMEBUFFER; READ_FRAMEBUFFER and
+    // DRAW_FRAMEBUFFER are WebGL 2's (WebGL2RenderingContext overrides this).
+    if (target != GL_FRAMEBUFFER) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
     if (maybeFramebuffer.hasValue()) {
         WebGLFramebuffer* frameBuffer = maybeFramebuffer.value();
 
@@ -688,11 +695,6 @@ void WebGLRenderingContext::bindFramebuffer(
 
         if (frameBuffer->isDeleted()) {
             setGLError(GL_INVALID_OPERATION);
-            return;
-        }
-
-        if (target != GL_FRAMEBUFFER) {
-            // NOTE: how to handle this case is not found in the specification.
             return;
         }
 
@@ -740,6 +742,13 @@ void WebGLRenderingContext::bindTexture(GLenum target,
 {
     ENTER_CONTEXT_SCOPE();
 
+    // OpenGL ES 2.0 §3.7.13; WebGL2RenderingContext checks its own targets.
+    if (webGLVersion() == 1 && target != GL_TEXTURE_2D &&
+        target != GL_TEXTURE_CUBE_MAP) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
     if (maybeTexture.hasValue()) {
         WebGLTexture* texture = maybeTexture.value();
 
@@ -774,9 +783,22 @@ void WebGLRenderingContext::blendColor(GLclampf red, GLclampf green,
     m_gl->blendColor(red, green, blue, alpha);
 }
 
+// MIN and MAX are core in WebGL 2 and come with EXT_blend_minmax in WebGL 1;
+// the driver checks every other mode.
+bool WebGLRenderingContext::isBlendEquationEnabled(GLenum mode)
+{
+    return (mode != GL_MIN && mode != GL_MAX) || webGLVersion() >= 2 ||
+           isExtensionEnabled("EXT_blend_minmax");
+}
+
 void WebGLRenderingContext::blendEquation(GLenum mode)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!isBlendEquationEnabled(mode)) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
 
     m_gl->blendEquation(mode);
 }
@@ -785,6 +807,12 @@ void WebGLRenderingContext::blendEquationSeparate(GLenum modeRGB,
                                                   GLenum modeAlpha)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!isBlendEquationEnabled(modeRGB) ||
+        !isBlendEquationEnabled(modeAlpha)) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
 
     m_gl->blendEquationSeparate(modeRGB, modeAlpha);
 }
@@ -2703,8 +2731,11 @@ void WebGLRenderingContext::framebufferRenderbuffer(
         return;
     }
 
-    GLint maxColorAttachments = 0;
-    m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+    // WebGL 1 has no WEBGL_draw_buffers: COLOR_ATTACHMENT0 is its only one.
+    GLint maxColorAttachments = 1;
+    if (isWebGL2) {
+        m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+    }
     if (maxColorAttachments < 1) {
         maxColorAttachments = 1;
     }
@@ -2789,8 +2820,11 @@ void WebGLRenderingContext::framebufferTexture2D(
         }
     }
 
-    GLint maxColorAttachments = 0;
-    m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+    // WebGL 1 has no WEBGL_draw_buffers: COLOR_ATTACHMENT0 is its only one.
+    GLint maxColorAttachments = 1;
+    if (isWebGL2) {
+        m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+    }
     if (maxColorAttachments < 1) {
         maxColorAttachments = 1;
     }
@@ -2834,7 +2868,8 @@ void WebGLRenderingContext::framebufferTexture2D(
         while ((maxTexSize >> maxLevels) > 0) {
             ++maxLevels;
         }
-        if (level < 0 || level >= maxLevels) {
+        // OpenGL ES 2.0 §4.4.3: a WebGL 1 attachment is level 0.
+        if (level < 0 || level >= (isWebGL2 ? maxLevels : 1)) {
             setGLError(GL_INVALID_VALUE);
             return;
         }
@@ -3590,8 +3625,11 @@ ScriptValue WebGLRenderingContext::getFramebufferAttachmentParameter(
         return scriptNull();
     }
 
-    GLint maxColorAttachments = 0;
-    m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+    // WebGL 1 has no WEBGL_draw_buffers: COLOR_ATTACHMENT0 is its only one.
+    GLint maxColorAttachments = 1;
+    if (isWebGL2) {
+        m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+    }
     if (maxColorAttachments < 1) {
         maxColorAttachments = 1;
     }
@@ -5380,6 +5418,13 @@ void WebGLRenderingContext::viewport(uint32_t x, uint32_t y, uint32_t width,
 
 // WebGLRenderingContextOverloads
 
+// OpenGL ES 2.0 §2.9 has these three usages; READ and COPY are ES 3.0's.
+static bool isWebGL1BufferUsage(GLenum usage)
+{
+    return usage == GL_STREAM_DRAW || usage == GL_STATIC_DRAW ||
+           usage == GL_DYNAMIC_DRAW;
+}
+
 void WebGLRenderingContext::bufferData(GLenum target, WebGLsizeiptr size,
                                        GLenum usage)
 {
@@ -5387,6 +5432,10 @@ void WebGLRenderingContext::bufferData(GLenum target, WebGLsizeiptr size,
 
     if (size < 0) {
         setGLError(GL_INVALID_VALUE);
+        return;
+    }
+    if (!isWebGL2RenderingContext() && !isWebGL1BufferUsage(usage)) {
+        setGLError(GL_INVALID_ENUM);
         return;
     }
 
@@ -5422,6 +5471,10 @@ void WebGLRenderingContext::bufferData(GLenum target,
 
     if (!data.hasValue()) {
         setGLError(GL_INVALID_VALUE);
+        return;
+    }
+    if (!isWebGL2RenderingContext() && !isWebGL1BufferUsage(usage)) {
+        setGLError(GL_INVALID_ENUM);
         return;
     }
 
@@ -7893,6 +7946,18 @@ WebGLRenderingContextState* WebGLRenderingContext::getState()
     return m_state;
 }
 
+// The GLSL ES 1.00 §3.1 source character set: printable ASCII except '"',
+// '$', '\'', '@', '\\' and '`', plus tab, newline, vertical tab, form feed
+// and carriage return.
+static bool isGLSLSourceCharacter(char32_t c)
+{
+    if (c >= 0x20 && c < 0x7F) {
+        return c != '"' && c != '$' && c != '\'' && c != '@' && c != '\\' &&
+               c != '`';
+    }
+    return c >= '\t' && c <= '\r';
+}
+
 bool WebGLRenderingContext::checkAttribOrUniformName(String* name)
 {
     // If the passed name is longer than the restriction defined in Maximum
@@ -7906,16 +7971,20 @@ bool WebGLRenderingContext::checkAttribOrUniformName(String* name)
         return false;
     }
 
+    // WebGL 1.0 and 2.0 "Characters Outside the GLSL Source Character Set".
+    for (size_t i = 0; i < name->length(); i++) {
+        if (!isGLSLSourceCharacter(name->charAt(i))) {
+            setGLError(GL_INVALID_VALUE);
+            return false;
+        }
+    }
+
     // Returns -1 if name starts with one of the reserved WebGL prefixes per
     // GLSL Constructs.
     if (name->startsWith("webgl_") || name->startsWith("_webgl_")) {
         return false;
     }
 
-    // TODO?: See Characters Outside the GLSL Source Character Set for
-    // additional validation performed by WebGL implementations. WebGL
-    // implementations generally must ensure that the shader source sent to a
-    // GLSL driver only contains ASCII for safety.
     return true;
 }
 

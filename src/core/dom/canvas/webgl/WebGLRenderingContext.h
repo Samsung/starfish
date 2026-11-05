@@ -416,6 +416,7 @@ public:
 
 private:
     bool checkAttribOrUniformName(String* name);
+    bool isBlendEquationEnabled(GLenum mode);
     // Frees the GL program of a deleted program that is no longer current.
     void releaseProgram(WebGLProgram* program);
 

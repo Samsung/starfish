@@ -5250,8 +5250,6 @@ static bool isSupportedReadPixelsFormat(GLenum format)
     case GL_RG_INTEGER:
     case GL_RED:
     case GL_RED_INTEGER:
-    case GL_DEPTH_COMPONENT:
-    case GL_DEPTH_STENCIL:
         return true;
     default:
         return false;
@@ -5302,6 +5300,14 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
 {
     if (isReadBufferNone()) {
         setGLError(GL_INVALID_OPERATION, "readBuffer is GL_NONE");
+        return;
+    }
+    // OpenGL ES 3.0 §4.3.2: anything outside the read formats and types is
+    // INVALID_ENUM, ahead of the format/type combination check.
+    size_t alignment = 1;
+    if (!isSupportedReadPixelsFormat(format) ||
+        !isSupportedReadPixelsType(type, alignment)) {
+        setGLError(GL_INVALID_ENUM);
         return;
     }
     WebGLRenderingContext::readPixels(x, y, width, height, format, type,
