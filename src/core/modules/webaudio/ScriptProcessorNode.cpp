@@ -129,8 +129,8 @@ bool ScriptProcessorNode::dispatchAudioProcessEvents()
     // At most one event per slot: in a real-time context the render thread
     // keeps completing blocks while script runs.
     for (int events = 0; events < 2; events++) {
-        // A channel that script detached stays empty, so such a buffer is
-        // replaced rather than reused.
+        // A channel that script detached stays empty, so a reused input or
+        // output buffer with one is replaced.
         if (!m_inputBuffer || m_inputBuffer.value()->hasDetachedChannel()) {
             options.setNumberOfChannels(
                 std::max<uint32_t>(m_numberOfInputChannels, 1));
@@ -146,7 +146,8 @@ bool ScriptProcessorNode::dispatchAudioProcessEvents()
             if (slot < 0) {
                 break;
             }
-            if (!m_outputBuffers[slot]) {
+            if (!m_outputBuffers[slot] ||
+                m_outputBuffers[slot].value()->hasDetachedChannel()) {
                 options.setNumberOfChannels(
                     std::max<uint32_t>(m_numberOfOutputChannels, 1));
                 m_outputBuffers[slot] =
@@ -182,15 +183,9 @@ bool ScriptProcessorNode::dispatchAudioProcessEvents()
         // "When the dispatch of an AudioProcessingEvent completes, it
         // acquires the contents of its outputBuffer."
         AudioGraphLock graphLock(graph);
-        if (output->acquireContents()) {
-            m_processorHandler->setOutput(slot, block, output->data());
-        } else {
-            // A detached channel leaves no output for this event: silence.
-            // A buffer with a detached channel stays unusable, so the next
-            // event on this slot gets a new one.
-            m_processorHandler->setOutput(slot, block, nullptr);
-            m_outputBuffers[slot] = nullptr;
-        }
+        // A detached channel leaves no output for this event: silence.
+        m_processorHandler->setOutput(
+            slot, block, output->acquireContents() ? output->data() : nullptr);
     }
     return true;
 }
