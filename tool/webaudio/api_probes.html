@@ -494,24 +494,36 @@ const groups = {
             check(!await audible((context) => build(context, true)),
                   label + ': silent with a detached channel');
         }
-        // A detached inputBuffer channel must not leave later events empty.
+        // A detached inputBuffer channel, or an outputBuffer channel detached
+        // after its event, must not leave later events empty.
         const context = new OfflineAudioContext(1, 2048, 8000);
         const source = new ConstantSourceNode(context);
         const node = context.createScriptProcessor(256, 1, 1);
         source.connect(node).connect(context.destination);
         source.start();
-        const lengths = [];
+        const inputs = [];
+        const outputs = [];
+        let previous = null;
         node.onaudioprocess = (event) => {
             const input = event.inputBuffer.getChannelData(0);
-            lengths.push(input.length);
-            if (lengths.length <= 2) {
+            const output = event.outputBuffer.getChannelData(0);
+            inputs.push(input.every((sample) => sample === 1) ? input.length
+                                                               : 'wrong');
+            outputs.push(output.length);
+            if (inputs.length <= 2) {
                 input.buffer.transfer();
             }
+            if (previous && outputs.length <= 3) {
+                previous.getChannelData(0).buffer.transfer();
+            }
+            previous = event.outputBuffer;
         };
         await context.startRendering();
-        check(lengths.length > 2 &&
-                  lengths.slice(2).every((length) => length === 256),
-              'inputBuffer lengths after a detach: ' + lengths);
+        check(inputs.length > 3 &&
+                  inputs.every((length) => length === 256),
+              'inputBuffer after a detach: ' + inputs);
+        check(outputs.every((length) => length === 256),
+              'outputBuffer after a later detach: ' + outputs);
     },
 
     // https://webidl.spec.whatwg.org/#dfn-attribute-getter
