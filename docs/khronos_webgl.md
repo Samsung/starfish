@@ -97,6 +97,14 @@ expected pass and gates CI; a `#`-commented line is a tracked known failure
 and is never deleted or uncommented just to make a run green. After fixing a
 feature, run the list with `-f`, then uncomment the tests that now pass.
 
+Every `khronos_webgl2.res` line ends in `?webglVersion=2`, the query Khronos's
+own runner (`webgl-conformance-tests.html`) appends to each page of the 2.0.0
+suite. The harness creates a WebGL 1 context unless that query says
+otherwise, so without it the `conformance/` half of the suite — and the
+`conformance2/glsl3` shader pages — would re-run as WebGL 1 tests. Keep the
+query on new lines. The 1.0.3 list needs none: that runner asks for WebGL 1,
+the default.
+
 ## Upgrading the pin
 
 ```sh
