@@ -101,6 +101,34 @@ public:
         m_height = h;
     }
 
+    // TEXTURE_MIN_FILTER as last set, and whether MAG_FILTER is NEAREST and
+    // WRAP_S and WRAP_T are CLAMP_TO_EDGE; other names are ignored.
+    void setSamplingParameter(GLenum pname, GLint value)
+    {
+        if (pname == GL_TEXTURE_MIN_FILTER) {
+            m_minFilter = static_cast<uint16_t>(value);
+        } else if (pname == GL_TEXTURE_MAG_FILTER) {
+            setSamplingFlag(kMagNearest, value == GL_NEAREST);
+        } else if (pname == GL_TEXTURE_WRAP_S) {
+            setSamplingFlag(kWrapSClamp, value == GL_CLAMP_TO_EDGE);
+        } else if (pname == GL_TEXTURE_WRAP_T) {
+            setSamplingFlag(kWrapTClamp, value == GL_CLAMP_TO_EDGE);
+        }
+    }
+    GLenum minFilter() const
+    {
+        return m_minFilter;
+    }
+    bool magFilterIsNearest() const
+    {
+        return m_samplingFlags & kMagNearest;
+    }
+    bool wrapsClampToEdge() const
+    {
+        return (m_samplingFlags & (kWrapSClamp | kWrapTClamp)) ==
+               (kWrapSClamp | kWrapTClamp);
+    }
+
     GLint baseLevel() const
     {
         return m_baseLevel;
@@ -193,14 +221,33 @@ public:
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 
 private:
+    enum : uint8_t {
+        kMagNearest = 1,
+        kWrapSClamp = 2,
+        kWrapTClamp = 4,
+    };
+
+    void setSamplingFlag(uint8_t flag, bool on)
+    {
+        m_samplingFlags = on ? m_samplingFlags | flag : m_samplingFlags & ~flag;
+    }
+
     GLenum m_target = 0;
     bool m_isImmutable = false;
+    // In the padding after m_isImmutable. The OpenGL ES defaults: LINEAR
+    // magnification, REPEAT wraps (no flag set), NEAREST_MIPMAP_LINEAR
+    // minification; every filter token fits 16 bits.
+    uint8_t m_samplingFlags = 0;
+    uint16_t m_minFilter = GL_NEAREST_MIPMAP_LINEAR;
     GLsizei m_width = 0;
     GLsizei m_height = 0;
     GLint m_baseLevel = 0;
     GLint m_maxLevel = 1000;
     GCAtomicVector<TextureImageLevelInfo> m_imageLevels;
 };
+// The sampling state lives in padding: a texture is as large as without it.
+static_assert(sizeof(void*) != 8 || sizeof(WebGLTexture) <= 88,
+              "WebGLTexture grew");
 } // namespace Starfish
 
 #endif

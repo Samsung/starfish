@@ -763,6 +763,14 @@ void WebGLRenderingContext::bindTexture(GLenum target,
             return;
         }
 
+        // OpenGL ES 2.0 §3.7.13: a texture keeps the target it was first
+        // bound to, and the failed bind changes no binding.
+        if (texture->target() != 0 && texture->target() != target) {
+            setGLError(GL_INVALID_OPERATION,
+                       "the texture was bound to another target");
+            return;
+        }
+
         texture->setTarget(target);
         m_gl->bindTexture(target, texture->glObject());
         m_boundTextures[target] = texture->glObject();
@@ -3083,7 +3091,11 @@ void WebGLRenderingContext::drawArraysInstanced(GLenum mode, GLint first,
     if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs() ||
         !validateStencilSettings())
         return;
+    const bool standIns = bindIncompleteTextureStandIns();
     m_gl->drawArraysInstanced(mode, first, count, instanceCount);
+    if (standIns) {
+        restoreSampledTextureBindings();
+    }
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
@@ -3168,9 +3180,13 @@ void WebGLRenderingContext::drawElementsInstanced(GLenum mode, GLsizei count,
     if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs() ||
         !validateStencilSettings())
         return;
+    const bool standIns = bindIncompleteTextureStandIns();
     m_gl->drawElementsInstanced(
         mode, count, type,
         reinterpret_cast<const void*>(clampToGLintptr(offset)), instanceCount);
+    if (standIns) {
+        restoreSampledTextureBindings();
+    }
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
@@ -3253,7 +3269,11 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
         }
     }
 
+    const bool standIns = bindIncompleteTextureStandIns();
     m_gl->drawArrays(mode, first, count);
+    if (standIns) {
+        restoreSampledTextureBindings();
+    }
 
     if (restoreDrawBuffers) {
         m_gl->drawBuffers(originalCount, originalBuffers);
@@ -3362,8 +3382,12 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
         }
     }
 
+    const bool standIns = bindIncompleteTextureStandIns();
     m_gl->drawElements(mode, count, type,
                        reinterpret_cast<void*>(clampToGLintptr(offset)));
+    if (standIns) {
+        restoreSampledTextureBindings();
+    }
 
     if (restoreDrawBuffers) {
         m_gl->drawBuffers(originalCount, originalBuffers);
@@ -5377,6 +5401,7 @@ void WebGLRenderingContext::linkProgram(WebGLProgram* program)
         compilation or linking must fail.
     */
 
+    hasNewGLError(); // Keep an earlier error from failing this call.
     m_gl->linkProgram(program->glObject());
 
     if (hasNewGLError()) {
@@ -5390,7 +5415,20 @@ void WebGLRenderingContext::linkProgram(WebGLProgram* program)
             error. See Current program invalidated upon unsuccessful
             link(https://registry.khronos.org/webgl/specs/latest/1.0/#6.43).
         */
-        STARFISH_UNIMPLEMENTED();
+        // A rejected call, as while transform feedback uses the program
+        // (OpenGL ES 3.0.6 §2.15.2), links nothing: the previous executable,
+        // its uniforms and its locations stay (§2.5).
+        return;
+    }
+
+    // The sampler table follows the driver's executable: a successful link
+    // resets every uniform even where WebGL then fails the program, and after
+    // a failed one the previous executable stays in use (OpenGL ES 2.0
+    // §2.10.3, §2.10.4).
+    GLint linkStatus = 0;
+    m_gl->getProgramiv(program->glObject(), GL_LINK_STATUS, &linkStatus);
+    if (linkStatus == GL_TRUE) {
+        program->updateSamplers(m_gl);
     }
 
     program->incrementLinkCount();
@@ -5410,8 +5448,6 @@ void WebGLRenderingContext::linkProgram(WebGLProgram* program)
         }
     }
 
-    GLint linkStatus = 0;
-    m_gl->getProgramiv(program->glObject(), GL_LINK_STATUS, &linkStatus);
     if (linkStatus != GL_TRUE) {
         program->setLinkFailed(true);
         return;
@@ -5804,7 +5840,12 @@ void WebGLRenderingContext::texParameteri(GLenum target, GLenum pname,
         return;
     }
 
+    hasNewGLError(); // Keep an earlier error from failing this call.
     m_gl->texParameteri(target, pname, param);
+    WebGLTexture* texture = getBoundTextureObject(target);
+    if (texture && !hasNewGLError()) {
+        texture->setSamplingParameter(pname, param);
+    }
 }
 
 void WebGLRenderingContext::uniform1f(
@@ -5908,7 +5949,21 @@ void WebGLRenderingContext::uniform1i(
         return;
     }
 
+    WebGLProgram* program = uniform->program();
+    Optional<size_t> sampler = program->samplerIndex(uniform->location());
+    if (!sampler) {
+        m_gl->uniform1i(uniform->location(), x);
+        return;
+    }
+    if (!areTextureUnits(&x, 1)) {
+        setGLError(GL_INVALID_VALUE, "sampler value is no texture unit");
+        return;
+    }
+    hasNewGLError(); // Keep an earlier error from failing this call.
     m_gl->uniform1i(uniform->location(), x);
+    if (!hasNewGLError()) {
+        program->setSamplerUnits(sampler.value(), &x, 1);
+    }
 }
 
 void WebGLRenderingContext::uniform2i(
@@ -7276,6 +7331,17 @@ bool WebGLRenderingContext::isSrcDataValid(ScriptArrayBufferView srcData,
         // UNSIGNED_SHORT_5_5_5_1, a Uint16Array must be supplied.
         return false;
     }
+    // OES_texture_float / OES_texture_half_float: FLOAT data comes in a
+    // Float32Array, HALF_FLOAT_OES data in a Uint16Array. Without the
+    // extension the type is the INVALID_ENUM the caller reports.
+    if (type == GL_FLOAT && !srcData->isFloat32ArrayObject() &&
+        isExtensionEnabled("OES_texture_float")) {
+        return false;
+    }
+    if (type == GL_HALF_FLOAT_OES && !srcData->isUint16ArrayObject() &&
+        isExtensionEnabled("OES_texture_half_float")) {
+        return false;
+    }
     return true;
 }
 
@@ -8299,8 +8365,9 @@ void WebGLRenderingContext::texImageVideo(GLenum target, GLint level,
             if (hasNewGLError()) {
                 sourceTarget = 0;
             } else {
-                texture->setImageLevelInfo(
-                    target, level, internalFormat.value(), width, height, 1);
+                texture->setImageLevelInfo(target, level,
+                                           internalFormat.value(), width,
+                                           height, 1, type);
                 allocated = true;
             }
         }
@@ -8431,9 +8498,15 @@ void WebGLRenderingContext::texImageVideo(GLenum target, GLint level,
     }
     m_gl->activeTexture(savedActiveTexture);
 }
+#endif
 
 void WebGLRenderingContext::releaseInternalGLObjects()
 {
+    // Every context shares one GL namespace, so destroying this one frees
+    // no name. A 0 name is ignored.
+    m_gl->deleteTextures(2, m_incompleteTextureStandIns);
+    m_incompleteTextureStandIns[0] = m_incompleteTextureStandIns[1] = 0;
+#ifdef STARFISH_ENABLE_MULTIMEDIA
     for (GLuint& program : m_videoCopyPrograms) {
         if (program) {
             m_gl->deleteProgram(program);
@@ -8448,8 +8521,8 @@ void WebGLRenderingContext::releaseInternalGLObjects()
         m_gl->deleteTextures(1, &m_videoCopySource);
         m_videoCopySource = 0;
     }
-}
 #endif
+}
 
 void WebGLRenderingContext::implementUniformNfv(
     size_t n, void (GL::*uniformNfv)(GLint, GLsizei, const GLfloat*),
@@ -8548,6 +8621,34 @@ void WebGLRenderingContext::implementUniformNiv(
         setGLError(GL_INVALID_OPERATION);
         return;
     }
+    WebGLProgram* program = location.value()->program();
+    const GLint uniform = location.value()->location();
+    // count specifies the number of sets. The values a sampler array takes
+    // from `data` must be texture units (OpenGL ES 3.0.6 §2.12.6).
+    auto upload = [&](const GLint* values, GLsizei count) {
+        const Optional<size_t> sampler =
+            n == 1 ? program->samplerIndex(uniform) : Optional<size_t>();
+        if (!sampler) {
+            (gl()->*uniformNiv)(uniform, count, values);
+            return;
+        }
+        // The count goes first, as in Mesa and ANGLE.
+        if (count > 1 && !program->samplers()[sampler.value()].isArray) {
+            setGLError(GL_INVALID_OPERATION,
+                       "more than one value for a sampler that is no array");
+            return;
+        }
+        if (!areTextureUnits(values,
+                             program->samplerSpan(sampler.value(), count))) {
+            setGLError(GL_INVALID_VALUE, "sampler value is no texture unit");
+            return;
+        }
+        hasNewGLError(); // Keep an earlier error from failing this call.
+        (gl()->*uniformNiv)(uniform, count, values);
+        if (!hasNewGLError()) {
+            program->setSamplerUnits(sampler.value(), values, count);
+        }
+    };
     if (data.isInt32ArrayValue()) {
         const ScriptInt32Array values = data.getInt32ArrayValue();
         const size_t dataLength = values->arrayLength();
@@ -8563,10 +8664,8 @@ void WebGLRenderingContext::implementUniformNiv(
             setGLError(GL_INVALID_VALUE);
             return;
         }
-        /* count specifies the number of sets. */
-        (gl()->*uniformNiv)(
-            location.value()->location(), srcLength / n,
-            reinterpret_cast<const GLint*>(values->rawBuffer()) + srcOffset);
+        upload(reinterpret_cast<const GLint*>(values->rawBuffer()) + srcOffset,
+               srcLength / n);
     } else if (data.isSequenceOfGLintValue()) {
         const GCAtomicVector<int32_t> values = data.getSequenceOfGLintValue();
         const size_t dataLength = values.size();
@@ -8582,9 +8681,7 @@ void WebGLRenderingContext::implementUniformNiv(
             setGLError(GL_INVALID_VALUE);
             return;
         }
-        /* count specifies the number of sets. */
-        (gl()->*uniformNiv)(location.value()->location(), srcLength / n,
-                            values.data() + srcOffset);
+        upload(values.data() + srcOffset, srcLength / n);
     } else {
         STARFISH_ASSERT_NOT_REACHED();
     }
@@ -8879,6 +8976,18 @@ bool WebGLRenderingContext::isFromCurrentProgram(WebGLUniformLocation* location)
            location->linkCount() == current.value()->linkCount();
 }
 
+bool WebGLRenderingContext::areTextureUnits(const GLint* values, size_t count)
+{
+    GLint maxUnits = 0;
+    m_gl->getIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxUnits);
+    for (size_t i = 0; i < count; ++i) {
+        if (values[i] < 0 || values[i] >= maxUnits) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool WebGLRenderingContext::isExtensionEnabled(const char* name)
 {
     const auto& iter = m_enabledExtensions.find(name);
@@ -8905,6 +9014,82 @@ GLint WebGLRenderingContext::getCurrentProgram()
     GLint program = 0;
     m_gl->getIntegerv(GL_CURRENT_PROGRAM, &program);
     return program;
+}
+
+WebGLTexture* WebGLRenderingContext::sampledTexture(GLuint unit,
+                                                    GLenum target) const
+{
+    auto it = m_boundTextureObjects.find(
+        textureBindingKey(GL_TEXTURE0 + unit, target));
+    return it != m_boundTextureObjects.end() ? it->second : nullptr;
+}
+
+bool WebGLRenderingContext::isIncompleteForWebGL1(const WebGLTexture* texture,
+                                                  GLenum target)
+{
+    const TextureImageLevelInfo* base = texture->getImageLevelInfo(
+        target == GL_TEXTURE_CUBE_MAP ? GL_TEXTURE_CUBE_MAP_POSITIVE_X
+                                      : GL_TEXTURE_2D,
+        0);
+    if (!base) {
+        return false; // The driver finds a texture without level 0 incomplete.
+    }
+    const GLenum minFilter = texture->minFilter();
+    const bool mipmapped = minFilter != GL_NEAREST && minFilter != GL_LINEAR;
+    if (!(isPowerOfTwo(base->width) && isPowerOfTwo(base->height)) &&
+        (mipmapped || !texture->wrapsClampToEdge())) {
+        return true;
+    }
+    if (base->type != GL_FLOAT && base->type != GL_HALF_FLOAT_OES) {
+        return false;
+    }
+    const bool linear =
+        !texture->magFilterIsNearest() ||
+        (minFilter != GL_NEAREST && minFilter != GL_NEAREST_MIPMAP_NEAREST);
+    // Names made once: a lookup by const char* would allocate on every draw.
+    static const std::string floatLinear("OES_texture_float_linear");
+    static const std::string halfFloatLinear("OES_texture_half_float_linear");
+    return linear &&
+           m_enabledExtensions.find(base->type == GL_FLOAT ? floatLinear
+                                                           : halfFloatLinear) ==
+               m_enabledExtensions.end();
+}
+
+bool WebGLRenderingContext::bindIncompleteTextureStandIns()
+{
+    WebGLProgram* program = m_state->webGLProgram().valueOrNull();
+    if (webGLVersion() != 1 || !program) {
+        return false;
+    }
+    bool bound = false;
+    for (const WebGLProgram::SamplerInfo& sampler : program->samplers()) {
+        WebGLTexture* texture = sampledTexture(sampler.unit, sampler.target);
+        if (!texture || !isIncompleteForWebGL1(texture, sampler.target)) {
+            continue;
+        }
+        // No image ever: incomplete, so it samples (0,0,0,1) (OpenGL ES 2.0
+        // §3.8.2). Its first bind fixes its target, hence one per target.
+        GLuint& standIn =
+            m_incompleteTextureStandIns[sampler.target == GL_TEXTURE_CUBE_MAP];
+        if (!standIn) {
+            m_gl->genTextures(1, &standIn);
+        }
+        m_gl->activeTexture(GL_TEXTURE0 + sampler.unit);
+        m_gl->bindTexture(sampler.target, standIn);
+        bound = true;
+    }
+    return bound;
+}
+
+void WebGLRenderingContext::restoreSampledTextureBindings()
+{
+    for (const WebGLProgram::SamplerInfo& sampler :
+         m_state->webGLProgram().value()->samplers()) {
+        WebGLTexture* texture = sampledTexture(sampler.unit, sampler.target);
+        m_gl->activeTexture(GL_TEXTURE0 + sampler.unit);
+        m_gl->bindTexture(sampler.target, texture ? texture->glObject() : 0);
+    }
+    m_gl->activeTexture(m_activeTextureUnit);
 }
 
 bool WebGLRenderingContext::validateStencilSettings()

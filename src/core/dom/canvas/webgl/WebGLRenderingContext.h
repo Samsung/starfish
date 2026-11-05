@@ -456,9 +456,23 @@ private:
     void appendExtensionDirective(const std::string& view, size_t line,
                                   size_t rest, size_t end, std::string& out);
     bool isBoundCubeMapTexture(GLenum target);
+    // The texture bound at texture unit `unit` (a number, not an enum) to
+    // `target`.
+    WebGLTexture* sampledTexture(GLuint unit, GLenum target) const;
+    // Whether OpenGL ES 2.0 §3.8.2, or the float filters before
+    // OES_texture_float_linear / OES_texture_half_float_linear, makes
+    // `texture` incomplete for a sampler of `target`, which the ES 3 driver
+    // underneath does not.
+    bool isIncompleteForWebGL1(const WebGLTexture* texture, GLenum target);
+    // Before a WebGL 1 draw: binds an image-less texture, which samples
+    // (0,0,0,1), in place of every such texture the current program samples,
+    // and returns whether it bound any. restoreSampledTextureBindings() then
+    // puts the page's bindings back.
+    bool bindIncompleteTextureStandIns();
+    void restoreSampledTextureBindings();
     void releaseOutOfHeapMembers() override;
-#ifdef STARFISH_ENABLE_MULTIMEDIA
     void releaseInternalGLObjects() override;
+#ifdef STARFISH_ENABLE_MULTIMEDIA
     // Copies the current frame of `video` on the GPU into `level` of the
     // texture bound to `target` at (xoffset, yoffset), first allocating the
     // level to the frame size when `internalFormat` is given (texImage2D).
@@ -470,6 +484,9 @@ private:
 
 protected:
     bool isFromCurrentProgram(WebGLUniformLocation* uniform);
+    // Whether every value is a texture unit a sampler can take: from 0 to
+    // MAX_COMBINED_TEXTURE_IMAGE_UNITS - 1 (OpenGL ES 3.0.6 §2.12.6).
+    bool areTextureUnits(const GLint* values, size_t count);
     bool isFormatGenerateMipmapSupported(GLenum internalFormat);
 
 protected:
@@ -707,6 +724,9 @@ private:
     String* m_drawingBufferColorSpace;
     Optional<WebGLRenderbuffer*> m_boundRenderbuffer;
     GLExtensionMap m_enabledExtensions;
+    // The image-less 2D and cube textures bindIncompleteTextureStandIns()
+    // binds, made on first use.
+    GLuint m_incompleteTextureStandIns[2] = { 0, 0 };
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     // Built on the first video upload: copy programs for a GL_TEXTURE_2D and a
     // GL_TEXTURE_EXTERNAL_OES source, their full-viewport quad, and the 2D

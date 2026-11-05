@@ -37,6 +37,19 @@ public:
         GLint binding = 0;
     };
 
+    // One element of an active sampler uniform, an array element included.
+    struct SamplerInfo {
+        GLint location = -1;
+        // GL_TEXTURE_2D, _CUBE_MAP, _3D or _2D_ARRAY; every one fits 16 bits.
+        uint16_t target = 0;
+        // This element and the ones after it in its array, consecutive here.
+        uint16_t remaining = 1;
+        // The texture unit, below MAX_COMBINED_TEXTURE_IMAGE_UNITS (so a
+        // GLint that fits 31 bits), and whether the uniform is an array.
+        uint32_t unit : 31;
+        uint32_t isArray : 1;
+    };
+
     WebGLProgram(ScriptBindingInstance* instance,
                  WebGLRenderingContext* context, GLuint object);
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
@@ -79,6 +92,37 @@ public:
 
     void updateUniformBlocks(GL* gl);
 
+    const GCAtomicVector<SamplerInfo>& samplers() const
+    {
+        return m_samplers;
+    }
+    Optional<size_t> samplerIndex(GLint location) const
+    {
+        for (size_t i = 0; i < m_samplers.size(); ++i) {
+            if (m_samplers[i].location == location) {
+                return i;
+            }
+        }
+        return NullOption;
+    }
+    // How many of count values from the sampler at index land in its array.
+    size_t samplerSpan(size_t index, size_t count) const
+    {
+        return std::min({ count,
+                          static_cast<size_t>(m_samplers[index].remaining),
+                          m_samplers.size() - index });
+    }
+    void setSamplerUnits(size_t index, const GLint* units, size_t count)
+    {
+        const size_t span = samplerSpan(index, count);
+        for (size_t i = 0; i < span; ++i) {
+            m_samplers[index + i].unit = static_cast<uint32_t>(units[i]);
+        }
+    }
+    // Rebuilds the sampler table from the driver's last successful link,
+    // every unit 0 (OpenGL ES 2.0 §2.10.4).
+    void updateSamplers(GL* gl);
+
     void setLinkFailed(bool linkFailed)
     {
         m_linkFailed = linkFailed;
@@ -120,11 +164,13 @@ public:
     GC_set_bit(desc, GC_WORD_OFFSET(WebGLProgram, m_attachedShaders));
     GC_set_bit(desc, GC_WORD_OFFSET(WebGLProgram, m_attachedShaders) + 1);
     FILL_GC_POINTER(WebGLProgram, m_uniformBlocks);
+    FILL_GC_POINTER(WebGLProgram, m_samplers);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 
 private:
     WebGLShader* m_attachedShaders[2] = { nullptr, nullptr };
     GCAtomicVector<UniformBlockInfo> m_uniformBlocks;
+    GCAtomicVector<SamplerInfo> m_samplers;
     bool m_usesFragColor = false;
     bool m_linkFailed = false;
     GLenum m_transformFeedbackBufferMode = 0x8C80; // GL_INTERLEAVED_ATTRIBS
