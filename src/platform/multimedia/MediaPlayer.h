@@ -191,7 +191,7 @@ public:
     // Binds the decoded frame on screen to `texture` of gl's current context,
     // for WebGL uploads: as GL_TEXTURE_EXTERNAL_OES over the decoder's buffer
     // (Tizen; `image` must then be released with gl->xglDestroyImage()) or as
-    // an RGBA GL_TEXTURE_2D copy (FFmpeg). `width`/`height` come in as the
+    // an RGBA GL_TEXTURE_2D copy. `width`/`height` come in as the
     // size of the texture's current 2D storage (0 if none) and go out as the
     // frame size. Returns the target bound, or 0 when no frame is available,
     // e.g. while the video is on the HW overlay plane.
@@ -200,6 +200,23 @@ public:
                                            void*& image)
     {
         return 0;
+    }
+
+    // Whether copyCurrentVideoFrame() reads this player's frames: the decoder
+    // keeps the frame on screen in memory as RGBA. A player that does not
+    // (zero-copy decoders) only has its frame bound by bindCurrentVideoFrame().
+    virtual bool keepsVideoFramesInMemory()
+    {
+        return false;
+    }
+
+    // Copies the frame on screen as straight RGBA, top row first, rows
+    // width * 4 bytes apart, into `pixels`, and its size into width/height.
+    // Returns false, leaving them as they were, when no frame is in memory.
+    virtual bool copyCurrentVideoFrame(std::vector<uint8_t>& pixels,
+                                       size_t& width, size_t& height)
+    {
+        return false;
     }
 
     virtual unsigned long videoWidth()

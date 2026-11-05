@@ -30,6 +30,12 @@
 #include "core/dom/ImageBitmap.h"
 #include "core/dom/svg/SVGImageElement.h"
 #include "core/dom/DOMException.h"
+#include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/image/BufferedNativeImageData.h"
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
+#include "core/dom/HTMLVideoElement.h"
+#include "platform/multimedia/MediaPlayer.h"
+#endif
 #if defined(STARFISH_ENABLE_WEBGL)
 #include "core/dom/canvas/webgl/WebGLRenderingContext.h"
 #endif
@@ -86,8 +92,9 @@ DOMExceptionOr<bool> CanvasImageSourceUtils::checkUsability(
         return true;
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
     } else if (image.isHTMLVideoElementValue()) {
-        STARFISH_UNSUPPORTED("video type is not supported (%s)",
-                             __PRETTY_FUNCTION__);
+        // A video without data for its current frame is bad.
+        return image.getHTMLVideoElementValue()->readyState() >=
+               HTMLMediaElement::HAVE_CURRENT_DATA;
 #endif
     } else {
         STARFISH_ASSERT(image.isNoneValue());
@@ -146,6 +153,35 @@ CanvasImageSourceImage CanvasImageSourceUtils::toNativeImageData(
         auto imageBitmap = image.getImageBitmapValue();
         result.image = imageBitmap->premultipliedImageData();
         result.originClean = imageBitmap->originCleanFlag();
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
+    } else if (image.isHTMLVideoElementValue()) {
+        // A video's image is its current frame (HTML "drawImage",
+        // createImageBitmap()).
+        HTMLVideoElement* video = image.getHTMLVideoElementValue();
+        result.originClean = video->mediaDataIsCORSSameOrigin();
+        MediaPlayer* player = video->activeMediaPlayer();
+        std::vector<uint8_t> pixels;
+        size_t width = 0;
+        size_t height = 0;
+        if (player && player->copyCurrentVideoFrame(pixels, width, height)) {
+            BufferedNativeImageData* frame =
+                BufferedNativeImageData::create(width, height);
+            for (size_t row = 0; row < height; row++) {
+                uint8_t* dest = frame->data() + row * frame->stride();
+                memcpy(dest, pixels.data() + row * width * 4, width * 4);
+#if defined(PORT_PIXEL_ORDER_BGRA)
+                for (size_t col = 0; col < width; col++) {
+                    std::swap(dest[col * 4], dest[col * 4 + 2]);
+                }
+#endif
+            }
+            // Canvas images hold premultiplied colors.
+            convertImageBufferAsPremultipliedAlphaIfNeeds(
+                frame->data(), width, frame->stride(), height);
+            result.image = frame;
+            result.isCopy = true;
+        }
+#endif
     } else {
         STARFISH_UNSUPPORTED("Unsupported image type(%s)", __PRETTY_FUNCTION__);
     }

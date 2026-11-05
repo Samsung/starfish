@@ -378,11 +378,12 @@ public:
     virtual void didDrawVideo(Compositor* canvas, const LayoutRect& videoRect,
                               const LayoutRect& absVideoRect);
     virtual void willDrawVideo(Compositor* canvas, const LayoutRect& videoRect);
-#if !defined(STARFISH_HEADLESS)
-    virtual unsigned bindCurrentVideoFrame(GL* gl, unsigned texture,
-                                           size_t& width, size_t& height,
-                                           void*& image) override;
-#endif
+    virtual bool keepsVideoFramesInMemory() override
+    {
+        return true;
+    }
+    virtual bool copyCurrentVideoFrame(std::vector<uint8_t>& pixels,
+                                       size_t& width, size_t& height) override;
     virtual void prepareMediaSource();
 
     void updateStreamInfo(MediaPlayerSourceStream* stream, size_t pastInitIndex,

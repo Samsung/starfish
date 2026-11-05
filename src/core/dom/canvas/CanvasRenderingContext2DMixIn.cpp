@@ -761,6 +761,15 @@ CanvasPattern* CanvasRenderingContext2DMixIn::createPattern(
 {
     STARFISH_ASSERT(repetition != nullptr);
 
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
+    // shortcut: HTML createPattern() uses the video's current frame; the 2D
+    // canvas still gives null for a video, as before, until WPT can check
+    // that surface.
+    if (image.isHTMLVideoElementValue()) {
+        return nullptr;
+    }
+#endif
+
     auto usability =
         CanvasImageSourceUtils::checkUsability(m_executionContext, image);
     if (usability.isDOMException() == true) {
@@ -1455,6 +1464,15 @@ void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
         isInfOrNan(dw) == true || isInfOrNan(dh) == true) {
         return;
     }
+
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
+    // shortcut: HTML drawImage() paints the video's current frame; the 2D
+    // canvas still draws nothing for a video, as before, until WPT can check
+    // that surface.
+    if (image.isHTMLVideoElementValue()) {
+        return;
+    }
+#endif
 
     auto usability =
         CanvasImageSourceUtils::checkUsability(m_executionContext, image);
