@@ -28,6 +28,7 @@
 #include "core/dom/ImageBitmap.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/canvas/webgl/WebGLExtensions.h"
+#include "core/modules/canvas/image/BufferedNativeImageData.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/modules/canvas/image/SVGNativeImageData.h"
 #include "core/util/debug/Trace.h"
@@ -259,6 +260,26 @@ void WebGLRenderingContext::flushForReadback()
     GLRevertableContextScope scope(
         m_context, executionContext()->webBase()->asWebView()->renderer());
 
+    size_t width = m_canvasSurface->bufferWidth();
+    size_t height = m_canvasSurface->bufferHeight();
+    size_t stride = m_canvasSurface->bufferStride();
+    STARFISH_ASSERT(stride % 4 == 0 && stride >= width * 4);
+
+    uint8_t* buffer = m_canvasSurface->mapBuffer();
+    readDrawingBuffer(buffer, stride);
+
+#if defined(PORT_PIXEL_ORDER_BGRA)
+    for (size_t row = 0; row < height; ++row) {
+        uint8_t* p = buffer + row * stride;
+        for (size_t col = 0; col < width; ++col) {
+            std::swap(p[col * 4 + 0], p[col * 4 + 2]);
+        }
+    }
+#endif
+}
+
+void WebGLRenderingContext::readDrawingBuffer(uint8_t* pixels, size_t stride)
+{
     GLint prevReadFbo = 0;
     m_gl->getIntegerv(GL_READ_FRAMEBUFFER_BINDING, &prevReadFbo);
     m_gl->bindFramebuffer(GL_READ_FRAMEBUFFER, m_framebufferTexture->fbo());
@@ -274,10 +295,7 @@ void WebGLRenderingContext::flushForReadback()
 
     size_t width = m_canvasSurface->bufferWidth();
     size_t height = m_canvasSurface->bufferHeight();
-    size_t stride = m_canvasSurface->bufferStride();
     STARFISH_ASSERT(stride % 4 == 0 && stride >= width * 4);
-
-    uint8_t* buffer = m_canvasSurface->mapBuffer();
 
     GLint prevPackAlignment = 4;
     GLint prevPackRowLength = 0;
@@ -295,7 +313,7 @@ void WebGLRenderingContext::flushForReadback()
     m_gl->pixelStorei(GL_PACK_SKIP_ROWS, 0);
     m_gl->bindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
-    m_gl->readPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+    m_gl->readPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
     m_gl->pixelStorei(GL_PACK_ALIGNMENT, prevPackAlignment);
     m_gl->pixelStorei(GL_PACK_ROW_LENGTH, prevPackRowLength);
@@ -312,19 +330,80 @@ void WebGLRenderingContext::flushForReadback()
 
     for (size_t top = 0; top < height / 2; ++top) {
         size_t bot = height - 1 - top;
-        uint8_t* pTop = buffer + top * stride;
-        uint8_t* pBot = buffer + bot * stride;
+        uint8_t* pTop = pixels + top * stride;
+        uint8_t* pBot = pixels + bot * stride;
         std::swap_ranges(pTop, pTop + width * 4, pBot);
     }
+}
 
+// A presented drawing buffer without preserveDrawingBuffer reads cleared
+// (WebGL 1.0 §2.2), but it stays on screen until the page draws again, so a
+// reader gets cleared pixels and the next WebGL call clears the buffer itself
+// (completePendingJobs()).
+bool WebGLRenderingContext::readClearedDrawingBuffer(uint8_t* pixels,
+                                                     size_t stride)
+{
+    if (!m_hasPendingJobsBetweenFrames ||
+        m_attributes.preserveDrawingBuffer()) {
+        return false;
+    }
+    const size_t width = m_canvasSurface->bufferWidth();
+    const size_t height = m_canvasSurface->bufferHeight();
+    for (size_t row = 0; row < height; ++row) {
+        uint8_t* p = pixels + row * stride;
+        memset(p, 0, width * 4);
+        if (!m_attributes.alpha()) {
+            for (size_t col = 0; col < width; ++col) {
+                p[col * 4 + 3] = 255;
+            }
+        }
+    }
+    return true;
+}
+
+Optional<NativeImageData*> WebGLRenderingContext::copyDrawingBuffer()
+{
+    // A context whose document is gone has no drawing buffer left.
+    if (!m_canvasSurface) {
+        return Optional<NativeImageData*>();
+    }
+
+    // shortcut: the drawing buffer size stands for the canvas size; they
+    // differ only for a clamped canvas.
+    const size_t width = m_canvasSurface->bufferWidth();
+    const size_t height = m_canvasSurface->bufferHeight();
+    BufferedNativeImageData* image =
+        BufferedNativeImageData::create(width, height);
+    // Cleared pixels are the same in every pixel order and alpha form.
+    if (readClearedDrawingBuffer(image->data(), image->stride())) {
+        return Optional<NativeImageData*>(image);
+    }
+
+    GLRevertableContextScope scope(
+        m_context, executionContext()->webBase()->asWebView()->renderer());
+    // Fail closed: reading with another context current would copy that
+    // context's framebuffer. The read follows this context's own draws, so
+    // nothing needs flushing first.
+    if (!m_context.setCurrent()) {
+        delete image;
+        return Optional<NativeImageData*>();
+    }
+    readDrawingBuffer(image->data(), image->stride());
+
+    // A 2D canvas composites premultiplied colors.
+    if (m_attributes.alpha() && !m_attributes.premultipliedAlpha()) {
+        convertImageBufferAsPremultipliedAlphaIfNeeds(image->data(), width,
+                                                      image->stride(), height);
+    }
 #if defined(PORT_PIXEL_ORDER_BGRA)
     for (size_t row = 0; row < height; ++row) {
-        uint8_t* p = buffer + row * stride;
+        uint8_t* p = image->data() + row * image->stride();
         for (size_t col = 0; col < width; ++col) {
             std::swap(p[col * 4 + 0], p[col * 4 + 2]);
         }
     }
 #endif
+    return Optional<NativeImageData*>(image);
 }
 
 void WebGLRenderingContext::flushForCompositing()
@@ -6627,7 +6706,7 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
     NativeImageData* imageData = nullptr;
     NativeImageData* rasterizedSVGImage = nullptr;
     ::Starfish::ImageData* sourceImageData = nullptr;
-    std::vector<uint8_t> blankCanvasPixels;
+    std::vector<uint8_t> canvasPixels;
     bool flipY = m_unpackFlipY;
     bool premultiplyAlpha = m_unpackPremultiplyAlpha;
 
@@ -6707,18 +6786,55 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
             // of its size, initialized to transparent black (HTML, "The canvas
             // element"). A 0x0 canvas still gets one byte so the upload has a
             // valid buffer to point at.
-            blankCanvasPixels.resize(
+            canvasPixels.resize(
                 std::max<size_t>(1, size_t(width) * height * 4));
         } else if (context->isCanvasRenderingContext2D()) {
             CanvasRenderingContext2DMixIn* context2d =
                 context->asCanvasRenderingContext2D();
             context2d->flushForReadback();
             imageData = NativeImageData::attach(context2d->canvas());
+        } else if (context->isWebGLRenderingContext() ||
+                   context->isWebGL2RenderingContext()) {
+            // A WebGL canvas uploads its drawing buffer (WebGL 1.0 §5.14.8).
+            WebGLRenderingContext* sourceContext =
+                static_cast<WebGLRenderingContext*>(context);
+            // A context whose document is gone has no drawing buffer left.
+            if (!sourceContext->m_canvasSurface) {
+                return;
+            }
+            // shortcut: the drawing buffer size stands for the canvas size;
+            // they differ only for a clamped or 0x0 canvas.
+            width = sourceContext->drawingBufferWidth();
+            height = sourceContext->drawingBufferHeight();
+            canvasPixels.resize(size_t(width) * height * 4);
+            // This context's scope is open, so the source's context is made
+            // current by hand rather than by a nested scope (WEBGL.md §5.1),
+            // and this one again after.
+            if (!sourceContext->readClearedDrawingBuffer(canvasPixels.data(),
+                                                         size_t(width) * 4)) {
+                if (sourceContext->m_context.setCurrent()) {
+                    sourceContext->readDrawingBuffer(canvasPixels.data(),
+                                                     size_t(width) * 4);
+                }
+                if (!m_context.setCurrent()) {
+                    return;
+                }
+            }
+            // A premultipliedAlpha drawing buffer holds premultiplied colors;
+            // they go back to straight ones unless the upload premultiplies
+            // (WebGL 1.0, "Pixel Storage Parameters").
+            const bool isPremultiplied =
+                sourceContext->m_attributes.alpha() &&
+                sourceContext->m_attributes.premultipliedAlpha();
+            if (isPremultiplied && !premultiplyAlpha) {
+                convertImageBufferAsUnmultipliedAlphaIfNeeds(
+                    canvasPixels.data(), width, size_t(width) * 4, height);
+            }
+            premultiplyAlpha = premultiplyAlpha && !isPremultiplied;
         } else {
-            // WebGL requires uploading the drawing buffer of a WebGL or
-            // bitmaprenderer canvas; reading those back is not supported yet,
-            // so the texture is left unchanged.
-            STARFISH_UNIMPLEMENTED("texImage from a non-2D canvas");
+            // A bitmaprenderer canvas cannot be read back yet; nothing is
+            // uploaded.
+            STARFISH_UNIMPLEMENTED("texImage from a bitmaprenderer canvas");
             return;
         }
     }
@@ -6747,7 +6863,7 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
     }
 
     if (imageData == nullptr && sourceImageData == nullptr &&
-        blankCanvasPixels.empty()) {
+        canvasPixels.empty()) {
         STARFISH_ASSERT_NOT_REACHED();
         return;
     }
@@ -6758,7 +6874,7 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
         sourceImageData ? TexImageHelper(sourceImageData, format)
         : imageData     ? TexImageHelper(imageData, format)
                         : TexImageHelper(width, height, stride, format,
-                                         blankCanvasPixels.data());
+                                         canvasPixels.data());
     GLenum error = image.drawSubRectangle(
         flipY, premultiplyAlpha, type, hasSubRectangle ? skipPixels : 0,
         hasSubRectangle ? skipRows : 0, hasSubRectangle ? destWidth : width,

@@ -327,6 +327,7 @@ namespace WindowOrWorkerGlobalScope {
         }
 
         NativeImageData* srcImage = nullptr;
+        std::unique_ptr<NativeImageData> ownedSource;
         NativeImageData* destImage = nullptr;
         bool needsToSetOriginCleanFlag = false;
         bool setOriginCleanFlagValue = false;
@@ -364,10 +365,15 @@ namespace WindowOrWorkerGlobalScope {
                 srcIsPremultiplied = bitmap->isPremultiplied();
                 setOriginCleanFlagValue = bitmap->originCleanFlag();
             } else {
-                auto pair = CanvasImageSourceUtils::toNativeImageData(
+                auto source = CanvasImageSourceUtils::toNativeImageData(
                     executionContext, canvasImageSource);
-                srcImage = pair.first;
-                setOriginCleanFlagValue = pair.second;
+                srcImage = source.image;
+                setOriginCleanFlagValue = source.originClean;
+                if (source.isCopy) {
+                    // Made for this call; the bitmap keeps its own cropped
+                    // copy.
+                    ownedSource.reset(srcImage);
+                }
             }
 
         } else if (context.m_image.isBlobValue()) {

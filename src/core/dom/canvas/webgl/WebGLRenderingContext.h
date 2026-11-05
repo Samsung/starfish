@@ -152,6 +152,11 @@ public:
     void flushForReadback() override;
     void flushForCompositing() override;
     void onResize() override;
+    // A copy of the drawing buffer as a 2D canvas draws it: premultiplied,
+    // in the platform's pixel order, the size of the drawing buffer; the
+    // caller owns it. Not for use inside a context scope: it makes this
+    // context current and the main one current again (WEBGL.md §5.1).
+    Optional<NativeImageData*> copyDrawingBuffer();
 
     GLsizei drawingBufferWidth() const;
     GLsizei drawingBufferHeight() const;
@@ -462,6 +467,13 @@ protected:
 private:
     GLuint getCurrentFBO();
     void flushDrawingCommands();
+    // Reads the drawing buffer as RGBA, top row first, into pixels whose rows
+    // are stride bytes apart. This context must be current; the page's read
+    // and pack state is left as it was.
+    void readDrawingBuffer(uint8_t* pixels, size_t stride);
+    // Fills pixels as readDrawingBuffer() would when the drawing buffer reads
+    // cleared, and returns whether it did.
+    bool readClearedDrawingBuffer(uint8_t* pixels, size_t stride);
 
 protected:
     bool hasBoundTexture(GLenum target) const;

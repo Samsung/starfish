@@ -30,6 +30,9 @@
 #include "core/dom/ImageBitmap.h"
 #include "core/dom/svg/SVGImageElement.h"
 #include "core/dom/DOMException.h"
+#if defined(STARFISH_ENABLE_WEBGL)
+#include "core/dom/canvas/webgl/WebGLRenderingContext.h"
+#endif
 
 namespace Starfish {
 DOMExceptionOr<bool> CanvasImageSourceUtils::checkUsability(
@@ -97,46 +100,57 @@ DOMExceptionOr<bool> CanvasImageSourceUtils::checkUsability(
     return false;
 }
 
-std::pair<NULLABLE NativeImageData*, bool>
-CanvasImageSourceUtils::toNativeImageData(ExecutionContext* executionContext,
-                                          CanvasImageSource& image)
+CanvasImageSourceImage CanvasImageSourceUtils::toNativeImageData(
+    ExecutionContext* executionContext, CanvasImageSource& image)
 {
-    NativeImageData* nativeImageData = nullptr;
-    bool clean = true;
+    CanvasImageSourceImage result;
 
     if (image.isHTMLImageElementValue() || image.isSVGImageElementValue()) {
         if (image.isHTMLImageElementValue()) {
             auto htmlImage = image.getHTMLImageElementValue();
-            clean = htmlImage->isImageCORSSameOrigin();
-            nativeImageData = htmlImage->imageData();
+            result.originClean = htmlImage->isImageCORSSameOrigin();
+            result.image = htmlImage->imageData();
         } else if (image.isSVGImageElementValue()) {
             auto svgImage = image.getSVGImageElementValue();
-            clean = svgImage->isImageCORSSameOrigin();
-            nativeImageData = svgImage->imageData();
+            result.originClean = svgImage->isImageCORSSameOrigin();
+            result.image = svgImage->imageData();
         } else {
             STARFISH_ASSERT(image.isNoneValue());
         }
     } else if (image.isHTMLCanvasElementValue()) {
         auto htmlCanvas = image.getHTMLCanvasElementValue();
         auto context = htmlCanvas->canvasRenderingContext();
-        // Only a 2D context exposes a Canvas bitmap to read back; other
-        // contexts (WebGL, bitmaprenderer) yield no image here.
+        // A bitmaprenderer canvas yields no image here.
         if (context != nullptr && context->isCanvasRenderingContext2D()) {
             auto context2d =
                 static_cast<CanvasRenderingContext2DMixIn*>(context);
             context2d->flushForReadback();
-            nativeImageData = NativeImageData::attach(context2d->canvas());
-            clean = context->originCleanFlag();
+            result.image = NativeImageData::attach(context2d->canvas());
+            result.originClean = context->originCleanFlag();
+#if defined(STARFISH_ENABLE_WEBGL)
+        } else if (context != nullptr &&
+                   (context->isWebGLRenderingContext() ||
+                    context->isWebGL2RenderingContext())) {
+            // A WebGL canvas draws its drawing buffer (WebGL 1.0 §2.2).
+            Optional<NativeImageData*> copy =
+                static_cast<WebGLRenderingContext*>(context)
+                    ->copyDrawingBuffer();
+            if (copy) {
+                result.image = copy.value();
+                result.isCopy = true;
+            }
+            result.originClean = context->originCleanFlag();
+#endif
         }
     } else if (image.isImageBitmapValue()) {
         auto imageBitmap = image.getImageBitmapValue();
-        nativeImageData = imageBitmap->premultipliedImageData();
-        clean = imageBitmap->originCleanFlag();
+        result.image = imageBitmap->premultipliedImageData();
+        result.originClean = imageBitmap->originCleanFlag();
     } else {
         STARFISH_UNSUPPORTED("Unsupported image type(%s)", __PRETTY_FUNCTION__);
     }
 
-    return std::make_pair(nativeImageData, clean);
+    return result;
 }
 } // namespace Starfish
 #endif
