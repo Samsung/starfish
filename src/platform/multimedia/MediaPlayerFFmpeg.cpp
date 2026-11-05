@@ -40,8 +40,6 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
-#include "platform/canvas/gl/IncludeGL.h"
-#include "platform/canvas/gl/GL.h"
 #include "platform/multimedia/MediaPlayerFFmpeg.h"
 #include "platform/multimedia/FFmpegAudioOutput.h"
 #if defined(STARFISH_ENABLE_WEBAUDIO)
@@ -1895,39 +1893,39 @@ void MediaPlayerFFmpeg::willDrawVideo(Compositor* canvas,
     }
 }
 
-#if !defined(STARFISH_HEADLESS)
-unsigned MediaPlayerFFmpeg::bindCurrentVideoFrame(GL* gl, unsigned texture,
-                                                  size_t& width, size_t& height,
-                                                  void*& image)
+bool MediaPlayerFFmpeg::copyCurrentVideoFrame(std::vector<uint8_t>& pixels,
+                                              size_t& width, size_t& height)
 {
-    // The element may not be painted (e.g. covered by the WebGL canvas that
-    // samples it), so advance to the frame due now as willDrawVideo() does.
+    // The element may not be painted (e.g. covered by the canvas that reads
+    // it), so advance to the frame due now as willDrawVideo() does.
     promoteVideoFrameForCurrentTime();
 
     Locker<Mutex> l(*m_decodedVideoFrameMutex);
     FFmpegMediaPacket* packet = m_lastDecodedVideoPacket;
-    if (packet == nullptr) {
-        return 0;
+    if (packet == nullptr || packet->buffer() == nullptr ||
+        packet->width() <= 0 || packet->height() <= 0 ||
+        packet->stride() <= 0) {
+        return false;
     }
-    // Frames are tightly packed RGBA (stride == width * 4). Same-sized frames
-    // reuse the texture's storage instead of reallocating it every frame.
-    gl->bindTexture(GL_TEXTURE_2D, texture);
-    if (width == size_t(packet->width()) &&
-        height == size_t(packet->height())) {
-        gl->texSubImage2D(GL_TEXTURE_2D, 0, 0, 0, packet->width(),
-                          packet->height(), GL_RGBA, GL_UNSIGNED_BYTE,
-                          packet->buffer());
-    } else {
-        gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, packet->width(),
-                       packet->height(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                       packet->buffer());
+    // The size comes from the media: a frame whose rows cannot hold
+    // width * 4 bytes, or whose extent overflows, is not read.
+    const size_t frameWidth = packet->width();
+    const size_t frameHeight = packet->height();
+    const size_t stride = packet->stride();
+    if (frameWidth > INT32_MAX / 4 || stride < frameWidth * 4 ||
+        frameHeight > SIZE_MAX / stride) {
+        return false;
     }
-    width = packet->width();
-    height = packet->height();
-    image = nullptr;
-    return GL_TEXTURE_2D;
+    const size_t rowBytes = frameWidth * 4;
+    pixels.resize(rowBytes * frameHeight);
+    for (size_t row = 0; row < frameHeight; row++) {
+        memcpy(pixels.data() + row * rowBytes, packet->buffer() + row * stride,
+               rowBytes);
+    }
+    width = frameWidth;
+    height = frameHeight;
+    return true;
 }
-#endif
 
 void MediaPlayerFFmpeg::didDrawVideo(Compositor* canvas,
                                      const LayoutRect& videoRect,

@@ -6642,6 +6642,11 @@ void WebGLRenderingContext::handleTexImageWithArrayBufferView(
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 static bool isVideoOriginClean(HTMLVideoElement* video);
+static bool keepsVideoFrameInMemory(HTMLVideoElement* video)
+{
+    MediaPlayer* player = video->activeMediaPlayer();
+    return player && player->keepsVideoFramesInMemory();
+}
 #endif
 
 // https://registry.khronos.org/webgl/specs/latest/1.0/#ORIGIN_RESTRICTIONS
@@ -6840,21 +6845,31 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
     }
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     else if (source.isHTMLVideoElementValue()) {
-        // Video frames are copied on the GPU by texImageVideo(), which only
-        // the WebGL 1 overloads reach; the explicit-size and 3D uploads do
-        // not take a video source yet, so nothing is uploaded. A tainted
-        // video is still rejected, as on every overload.
         HTMLVideoElement* video = source.getHTMLVideoElementValue();
-        if (video->activeMediaPlayer() && !video->currentSrc()->isEmpty() &&
-            video->readyState() >= HTMLMediaElement::HAVE_METADATA &&
-            !isVideoOriginClean(video)) {
+        MediaPlayer* player = video->activeMediaPlayer();
+        // No media data yet (its origin is only known from HAVE_METADATA on),
+        // or a srcObject stream (empty currentSrc): nothing to upload.
+        if (!player || video->currentSrc()->isEmpty() ||
+            video->readyState() < HTMLMediaElement::HAVE_METADATA) {
+            return;
+        }
+        if (!isVideoOriginClean(video)) {
             throw new DOMException(
                 video->document()->executionContext(),
                 DOMException::Code::SECURITY_ERR,
                 "The video element contains cross-origin data.");
         }
-        STARFISH_UNIMPLEMENTED("HTMLVideoElement");
-        return;
+        // The upload is the size of the frame (WebGL 1.0 "Texture Upload
+        // Width and Height"). A player without its frame in memory uploads
+        // nothing here; the WebGL 1 overloads copy its frame on the GPU.
+        size_t frameWidth = 0;
+        size_t frameHeight = 0;
+        if (!player->copyCurrentVideoFrame(canvasPixels, frameWidth,
+                                           frameHeight)) {
+            return;
+        }
+        width = static_cast<GLsizei>(frameWidth);
+        height = static_cast<GLsizei>(frameHeight);
     }
 #endif
     else {
@@ -7037,7 +7052,10 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
     }
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-    if (source.isHTMLVideoElementValue()) {
+    // A frame the player keeps in memory converts like any other source
+    // below; any other player's frame is copied on the GPU.
+    if (source.isHTMLVideoElementValue() &&
+        !keepsVideoFrameInMemory(source.getHTMLVideoElementValue())) {
         if (validateTexImageSource(format, type)) {
             texImageVideo(target, level, internalFormat, 0, 0, format, type,
                           source.getHTMLVideoElementValue());
@@ -7127,7 +7145,9 @@ void WebGLRenderingContext::texSubImage2D(GLenum target, GLint level,
     ENTER_CONTEXT_SCOPE();
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-    if (source.isHTMLVideoElementValue()) {
+    // As in texImage2D(): a frame kept in memory converts on the CPU.
+    if (source.isHTMLVideoElementValue() &&
+        !keepsVideoFrameInMemory(source.getHTMLVideoElementValue())) {
         if (validateTexImageSource(format, type)) {
             texImageVideo(target, level, Optional<GLint>(), xoffset, yoffset,
                           format, type, source.getHTMLVideoElementValue());
@@ -7244,9 +7264,9 @@ void WebGLRenderingContext::texImageVideo(GLenum target, GLint level,
                                DOMException::Code::SECURITY_ERR,
                                "The video element contains cross-origin data.");
     }
-    // shortcut: the GPU copy below renders the frame into the level, so only
-    // 8-bit RGB(A) destinations are handled; other format/type combinations
-    // need a CPU readback and conversion, add it when a page needs one.
+    // The GPU copy renders the frame into the level, so it takes only 8-bit
+    // RGB(A); a player that keeps its frame in memory is converted on the
+    // CPU instead (handleTexImageWithImageSource).
     if ((format != GL_RGBA && format != GL_RGB) || type != GL_UNSIGNED_BYTE) {
         setGLError(GL_INVALID_OPERATION,
                    "Unsupported format or type for a video source.");
@@ -7345,7 +7365,7 @@ void WebGLRenderingContext::texImageVideo(GLenum target, GLint level,
         savedCaps[i] = m_gl->isEnabled(caps[i]);
     }
 
-    // The FFmpeg frame is uploaded as tightly packed client memory.
+    // A frame a player uploads from memory is tightly packed.
     m_gl->pixelStorei(GL_UNPACK_ALIGNMENT, 4);
     if (isWebGL2) {
         m_gl->bindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);

@@ -65,13 +65,13 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-eleme
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-with-canvas.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-with-image-data.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-with-image.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-with-video.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-with-video.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-linear.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-with-canvas.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-with-image-data.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-with-image.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-with-video.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-with-video.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-vertex-array-object-bufferData.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-vertex-array-object.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-compressed-texture-atc.html
@@ -649,9 +649,9 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-a
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-rgba5551.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-svg-image.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video-rgb565.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video-rgba4444.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video-rgba5551.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video-rgb565.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video-rgba4444.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video-rgba5551.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-webgl-canvas.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-webgl-canvas-rgb565.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-webgl-canvas-rgba4444.html
