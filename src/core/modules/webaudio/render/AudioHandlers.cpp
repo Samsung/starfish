@@ -1860,7 +1860,9 @@ void ScriptProcessorHandler::setOutput(int slot, uint64_t block,
     if (block + 2 < m_block) {
         return;
     }
-    data->retain();
+    if (data) {
+        data->retain();
+    }
     if (m_outputs[slot]) {
         m_outputs[slot]->release();
     }

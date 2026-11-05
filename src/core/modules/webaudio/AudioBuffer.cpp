@@ -107,9 +107,18 @@ ScriptBindingInstance* AudioBuffer::scriptBindingInstance()
     return m_executionContext->scriptBindingInstance();
 }
 
-void AudioBuffer::acquireContents()
+bool AudioBuffer::acquireContents()
 {
     // https://webaudio.github.io/web-audio-api/#acquire-the-content
+    // "If any of the AudioBuffer's ArrayBuffers are detached, ... return a
+    // zero-length channel data buffer to the invoker." Views this operation
+    // detached were dropped below, so a detached one here was detached by
+    // script (e.g. transferred).
+    for (auto& view : m_channelViews) {
+        if (view && view->buffer()->asArrayBufferObject()->isDetachedBuffer()) {
+            return false;
+        }
+    }
     // The node keeps the old data; defer the spec's copied channel arrays
     // until script next asks to mutate them.
     for (auto& view : m_channelViews) {
@@ -119,6 +128,7 @@ void AudioBuffer::acquireContents()
         }
     }
     m_dataAcquired = true;
+    return true;
 }
 
 void AudioBuffer::ensureMutableData()
