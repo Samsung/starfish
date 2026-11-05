@@ -308,7 +308,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-wi
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-mis-matching-uniforms.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-mis-matching-varyings.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-missing-varyings.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-uniform-structs.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-uniform-structs.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-varyings.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shared.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-nesting-exceeds-maximum.html?webglVersion=2
