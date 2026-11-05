@@ -433,7 +433,6 @@ public:
 
     // Implement WebGL2RenderingContextOverloads
 
-    void shaderSource(WebGLShader* shader, String* source) override;
     bool validateDrawCallUBO() override;
 
     // WebGL1:
@@ -623,6 +622,7 @@ private:
     {
         return 2;
     }
+    void adjustShaderSourceForDriver(std::string& source) override;
     Optional<WebGLFramebuffer*> getBoundFramebuffer(GLenum target) override;
 
     bool checkUnpackFromBuffer();

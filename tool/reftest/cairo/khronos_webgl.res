@@ -87,11 +87,11 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/angle-d3d1
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/angle-dx-variable-bug.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/array-of-struct-with-int-first-position.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/compare-loop-index-to-uniform.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/complex-glsl-does-not-crash.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/complex-glsl-does-not-crash.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/conditional-discard-in-loop.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/conditional-discard-optimization.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/constant-precision-qualifier.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/essl3-shaders-with-webgl1.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/essl3-shaders-with-webgl1.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/floored-division-accuracy.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/fragcoord-linking-bug.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/long-expressions-should-not-crash.html
@@ -220,7 +220,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/literals/litera
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/literals/overflow_leak.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/matrices/glsl-mat3-construction.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/matrices/glsl-mat4-to-mat3.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/attrib-location-length-limits.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/attrib-location-length-limits.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/boolean_precision.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/embedded-struct-definitions-forbidden.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/empty_main.vert.html
@@ -247,8 +247,8 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-wi
 # http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-varying-packing-restrictions.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-256-character-define.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-256-character-identifier.frag.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-257-character-define.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-257-character-identifier.frag.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-257-character-define.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-257-character-identifier.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-arbitrary-indexing.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-arbitrary-indexing.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-array-of-structs-containing-arrays.html

@@ -70,7 +70,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/angle-dx-v
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/array-of-struct-with-int-first-position.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/bool-type-cast-bug-int-float.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/compare-loop-index-to-uniform.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/complex-glsl-does-not-crash.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/complex-glsl-does-not-crash.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/compound-assignment-type-combination.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/conditional-discard-in-loop.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/conditional-discard-optimization.html?webglVersion=2

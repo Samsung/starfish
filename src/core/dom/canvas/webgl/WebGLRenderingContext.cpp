@@ -1124,8 +1124,10 @@ static size_t shaderExpressionDepth(const std::string& source, size_t limit)
             continue;
         }
         if (c == '#') {
-            // preprocessor directive, possibly continued with '\'
-            while (i < n && source[i] != '\n') {
+            // A preprocessor directive runs to the line break. The source is
+            // the preprocessor view, so a CR also ends the line and there are
+            // no line continuations; the backslash case stays harmless.
+            while (i < n && source[i] != '\n' && source[i] != '\r') {
                 if (source[i] == '\\' && i + 1 < n &&
                     (source[i + 1] == '\n' || source[i + 1] == '\r')) {
                     i++;
@@ -1224,6 +1226,182 @@ static size_t shaderExpressionDepth(const std::string& source, size_t limit)
     return std::min(deepest, limit + 1);
 }
 
+// The length of the line break at `i`, 0 if there is none: CR, LF, and CR
+// and LF together in either order, each end one line (GLSL ES 3.00 §3.2).
+static size_t lineBreakLength(const std::string& s, size_t i)
+{
+    if (i >= s.size() || (s[i] != '\r' && s[i] != '\n')) {
+        return 0;
+    }
+    return s.compare(i, 2, "\r\n") == 0 || s.compare(i, 2, "\n\r") == 0 ? 2 : 1;
+}
+
+// The source as the preprocessor reads it, which is also the text the driver
+// compiles: a backslash before a line break joins the lines (GLSL ES 3.00
+// §3.2; Mesa does so for GLSL ES 1.00 too) and a comment is one space
+// (GLSL ES 1.00 and 3.00 §3.4). Lines keep their numbers: the line breaks a
+// join takes away follow the line it made, as Mesa's preprocessor adds them;
+// those of a comment stay in place, unless it is in a directive or a '#'
+// follows it (a line break would end the directive or start one), and then
+// they follow the line too. False when a comment is not terminated.
+static bool preprocessorView(const std::string& src, std::string& view)
+{
+    std::string joined;
+    joined.reserve(src.size());
+    size_t pending = 0;
+    // Before the line breaks of a line that lost some: a space keeps the
+    // first from pairing with a CR or LF before it into one line break, and
+    // from following a backslash (a continuation the source does not have).
+    auto separate = [&joined](char next) {
+        const char last = joined.empty() ? 0 : joined.back();
+        if (last == '\\' || ((last == '\r' || last == '\n') && last != next)) {
+            joined += ' ';
+        }
+    };
+    for (size_t i = 0; i < src.size();) {
+        const size_t joinLength = lineBreakLength(src, i + 1);
+        if (src[i] == '\\' && joinLength) {
+            i += 1 + joinLength;
+            pending++;
+            continue;
+        }
+        const size_t length = lineBreakLength(src, i);
+        if (!length) {
+            joined += src[i++];
+            continue;
+        }
+        if (pending) {
+            separate(src[i]);
+        }
+        for (size_t copies = 0; copies <= pending; copies++) {
+            joined.append(src, i, length);
+        }
+        pending = 0;
+        i += length;
+    }
+    if (pending) {
+        separate('\n');
+        joined.append(pending, '\n');
+    }
+
+    view.clear();
+    view.reserve(joined.size());
+    pending = 0;
+    bool lineHasToken = false;
+    bool lineIsDirective = false;
+    for (size_t i = 0; i < joined.size();) {
+        if (joined.compare(i, 2, "//") == 0) {
+            // A // comment keeps the line break that ends it.
+            i = std::min(joined.find_first_of("\r\n", i), joined.size());
+            view += ' ';
+            continue;
+        }
+        if (joined.compare(i, 2, "/*") == 0) {
+            const size_t end = joined.find("*/", i + 2);
+            if (end == std::string::npos) {
+                return false;
+            }
+            size_t breaks = 0;
+            for (size_t k = i + 2; k < end;) {
+                const size_t length = lineBreakLength(joined, k);
+                breaks += length ? 1 : 0;
+                k += std::max<size_t>(1, length);
+            }
+            i = end + 2;
+            view += ' ';
+            if (!breaks) {
+                continue;
+            }
+            const size_t next = joined.find_first_not_of(" \t\v\f", i);
+            if (lineIsDirective ||
+                (next < joined.size() && joined[next] == '#')) {
+                pending += breaks;
+            } else {
+                // The spaces keep these from pairing with a CR or LF next to
+                // them into one line break.
+                view.append(breaks, '\n');
+                view += ' ';
+            }
+            continue;
+        }
+        const size_t length = lineBreakLength(joined, i);
+        if (length) {
+            for (size_t copies = 0; copies <= pending; copies++) {
+                view.append(joined, i, length);
+            }
+            pending = 0;
+            lineHasToken = lineIsDirective = false;
+            i += length;
+            continue;
+        }
+        const char c = joined[i++];
+        if (!lineHasToken && c != ' ' && c != '\t' && c != '\v' && c != '\f') {
+            lineHasToken = true;
+            lineIsDirective = c == '#';
+        }
+        view += c;
+    }
+    if (pending) {
+        if (view.back() == '\\') {
+            view += ' ';
+        }
+        view.append(pending, '\n');
+    }
+    return true;
+}
+
+static bool isIdentifierCharacter(char c)
+{
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+           (c >= '0' && c <= '9') || c == '_';
+}
+
+// The end of the identifier characters from `i`.
+static size_t identifierEnd(const std::string& s, size_t i)
+{
+    while (i < s.size() && isIdentifierCharacter(s[i])) {
+        i++;
+    }
+    return i;
+}
+
+// Names no WebGL shader may use: the webgl_ and _webgl_ prefixes and two
+// consecutive underscores (WebGL 1.0 and 2.0 "Supported GLSL Constructs").
+static bool isReservedShaderName(const std::string& name)
+{
+    if (name.compare(0, 6, "webgl_") == 0 ||
+        name.compare(0, 7, "_webgl_") == 0) {
+        return true;
+    }
+    return name.find("__") != std::string::npos && name != "__LINE__" &&
+           name != "__FILE__" && name != "__VERSION__";
+}
+
+// The text the driver compiles: `view` as it is. Every identifier is
+// checked, as the driver sees them all.
+bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
+                                                  std::string& out,
+                                                  std::string& error)
+{
+    out.clear();
+    out.reserve(view.size());
+    for (size_t i = 0; i < view.size();) {
+        const size_t tokenEnd = identifierEnd(view, i);
+        if (tokenEnd == i) {
+            out += view[i++];
+            continue;
+        }
+        const std::string token = view.substr(i, tokenEnd - i);
+        if (isReservedShaderName(token)) {
+            error = "Reserved identifier " + token;
+            return false;
+        }
+        out += token;
+        i = tokenEnd;
+    }
+    return true;
+}
+
 void WebGLRenderingContext::compileShader(WebGLShader* shader)
 {
     ENTER_CONTEXT_SCOPE();
@@ -1237,14 +1415,26 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
 
     const std::string& src = shader->source();
 
-    // Token length limit: contiguous identifier token exceeding 1024 chars
+    // The checks read the source as the preprocessor does, and the driver
+    // compiles that same text.
+    std::string view;
+    if (!preprocessorView(src, view)) {
+        shader->setCompileFailed(true);
+        shader->setInfoLog("Unterminated comment");
+        return;
+    }
+
+    // WebGL 1.0 and 2.0 "Maximum GLSL Token Size".
+    const size_t maxTokenLength = webGLVersion() >= 2 ? 1024 : 256;
     size_t tokenLen = 0;
-    for (char c : src) {
+    for (char c : view) {
         if (isalnum(static_cast<unsigned char>(c)) || c == '_') {
             tokenLen++;
-            if (tokenLen > 1024) {
+            if (tokenLen > maxTokenLength) {
                 shader->setCompileFailed(true);
-                shader->setInfoLog("Token exceeds 1024 characters");
+                shader->setInfoLog("Token exceeds " +
+                                   std::to_string(maxTokenLength) +
+                                   " characters");
                 return;
             }
         } else {
@@ -1252,141 +1442,50 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
         }
     }
 
-    if (shaderExpressionDepth(src, kMaxShaderExpressionDepth) >
+    if (shaderExpressionDepth(view, kMaxShaderExpressionDepth) >
         kMaxShaderExpressionDepth) {
         shader->setCompileFailed(true);
         shader->setInfoLog("Expression too complex");
         return;
     }
 
-    // WebGL specification (4.3.5 Supported GLSL Constructs):
-    // User shaders may not define or use identifiers starting with "webgl_" or
-    // "_webgl_", or containing two consecutive underscores ("__"). Any such
-    // identifier generates a compilation error.
-    bool inLineComment = false;
-    bool inBlockComment = false;
-    bool inString = false;
-    bool inIdentifier = false;
-    size_t idStart = 0;
-
-    auto isReservedIdentifier = [&src](size_t start, size_t len) -> bool {
-        if ((len >= 6 && src.compare(start, 6, "webgl_") == 0) ||
-            (len >= 7 && src.compare(start, 7, "_webgl_") == 0)) {
-            return true;
-        }
-        if (src.substr(start, len).find("__") != std::string::npos) {
-            std::string id = src.substr(start, len);
-            if (id != "__LINE__" && id != "__FILE__" && id != "__VERSION__") {
-                return true;
-            }
-        }
-        return false;
-    };
-
-    for (size_t i = 0; i < src.length(); ++i) {
-        char c = src[i];
-
-        if (inLineComment) {
-            if (c == '\n') {
-                inLineComment = false;
-            }
-            continue;
-        }
-
-        if (inBlockComment) {
-            if (c == '*' && i + 1 < src.length() && src[i + 1] == '/') {
-                inBlockComment = false;
-                i++;
-            }
-            continue;
-        }
-
-        if (inString) {
-            if (c == '\\') {
-                i++;
-            } else if (c == '"') {
-                inString = false;
-            }
-            continue;
-        }
-
-        if (c == '/' && i + 1 < src.length()) {
-            if (src[i + 1] == '/') {
-                inLineComment = true;
-                if (inIdentifier) {
-                    size_t idLen = i - idStart;
-                    if (isReservedIdentifier(idStart, idLen)) {
-                        shader->setCompileFailed(true);
-                        shader->setInfoLog(
-                            "Reserved identifier in shader source");
-                        return;
-                    }
-                    inIdentifier = false;
-                }
-                i++;
-                continue;
-            } else if (src[i + 1] == '*') {
-                inBlockComment = true;
-                if (inIdentifier) {
-                    size_t idLen = i - idStart;
-                    if (isReservedIdentifier(idStart, idLen)) {
-                        shader->setCompileFailed(true);
-                        shader->setInfoLog(
-                            "Reserved identifier in shader source");
-                        return;
-                    }
-                    inIdentifier = false;
-                }
-                i++;
-                continue;
-            }
-        }
-
-        if (c == '"') {
-            inString = true;
-            if (inIdentifier) {
-                size_t idLen = i - idStart;
-                if (isReservedIdentifier(idStart, idLen)) {
-                    shader->setCompileFailed(true);
-                    shader->setInfoLog("Reserved identifier in shader source");
-                    return;
-                }
-                inIdentifier = false;
-            }
-            continue;
-        }
-
-        bool isIdChar = isalnum(static_cast<unsigned char>(c)) || c == '_';
-        if (isIdChar) {
-            if (!inIdentifier) {
-                inIdentifier = true;
-                idStart = i;
-            }
-        } else {
-            if (inIdentifier) {
-                size_t idLen = i - idStart;
-                if (isReservedIdentifier(idStart, idLen)) {
-                    shader->setCompileFailed(true);
-                    shader->setInfoLog("Reserved identifier in shader source");
-                    return;
-                }
-                inIdentifier = false;
-            }
-        }
+    std::string driverSource;
+    std::string error;
+    if (!shaderSourceForDriver(view, driverSource, error)) {
+        shader->setCompileFailed(true);
+        shader->setInfoLog(error);
+        return;
     }
 
-    if (inIdentifier) {
-        size_t idLen = src.length() - idStart;
-        if (isReservedIdentifier(idStart, idLen)) {
-            shader->setCompileFailed(true);
-            shader->setInfoLog("Reserved identifier in shader source");
-            return;
+    // WebGL 1.0 and 2.0 "Supported GLSL Constructs": GLSL ES 1.00 is taken,
+    // and GLSL ES 3.00 (GLSL ES 3.00 §3.3, "#version 300 es") only by WebGL 2;
+    // every other #version directive fails here rather than reach a driver
+    // that may accept a newer language. Where it stands is left to the checks
+    // below and to the driver.
+    for (size_t line = 0; line != std::string::npos;) {
+        const size_t end = view.find_first_of("\r\n", line);
+        const size_t hash = view.find_first_not_of(" \t\v\f", line);
+        if (hash < end && view[hash] == '#') {
+            std::istringstream directive(view.substr(hash + 1, end - hash - 1));
+            std::string name, number, profile, rest;
+            directive >> name >> number >> profile >> rest;
+            const bool isSupported =
+                rest.empty() &&
+                ((number == "100" && profile.empty()) ||
+                 (webGLVersion() >= 2 && number == "300" && profile == "es"));
+            if (name == "version" && !isSupported) {
+                shader->setCompileFailed(true);
+                shader->setInfoLog("Unsupported #version directive");
+                return;
+            }
         }
+        line = end == std::string::npos ? end : end + 1;
     }
 
     if (webGLVersion() >= 2) {
         // 1. Misplaced version directive: #version 300 es must be on line 1,
-        // column 0
+        // column 0. This stays on the raw source: it is a byte-0 check, and
+        // the view's comment and continuation folding would move the column.
         size_t versionPos = src.find("#version 300 es");
         if (versionPos != std::string::npos && versionPos != 0) {
             shader->setCompileFailed(true);
@@ -1422,25 +1521,27 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
             }
         }
 
-        // 3. textureOffset out of range: offset must be in [-8, 7]
+        // 3. textureOffset out of range: offset must be in [-8, 7]. Read on the
+        // view so a comment or a line continuation in the call cannot hide the
+        // offset from this scan while the driver still sees it.
         size_t texOffsetPos = 0;
-        while ((texOffsetPos = src.find("textureOffset", texOffsetPos)) !=
+        while ((texOffsetPos = view.find("textureOffset", texOffsetPos)) !=
                std::string::npos) {
-            size_t openParen = src.find('(', texOffsetPos);
+            size_t openParen = view.find('(', texOffsetPos);
             if (openParen != std::string::npos) {
                 int depth = 1;
                 size_t closeParen = openParen + 1;
-                while (closeParen < src.length() && depth > 0) {
-                    if (src[closeParen] == '(') {
+                while (closeParen < view.length() && depth > 0) {
+                    if (view[closeParen] == '(') {
                         depth++;
-                    } else if (src[closeParen] == ')') {
+                    } else if (view[closeParen] == ')') {
                         depth--;
                     }
                     closeParen++;
                 }
                 if (depth == 0) {
                     std::string callStr =
-                        src.substr(openParen, closeParen - openParen);
+                        view.substr(openParen, closeParen - openParen);
                     size_t ivecPos = callStr.find("ivec");
                     if (ivecPos != std::string::npos) {
                         size_t comma = callStr.find(',', ivecPos);
@@ -1474,8 +1575,8 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
         GLint shaderType = 0;
         m_gl->getShaderiv(shader->glObject(), GL_SHADER_TYPE, &shaderType);
         if (shaderType == GL_VERTEX_SHADER &&
-            src.find("#version 300 es") != std::string::npos) {
-            std::string compiledSrc = src;
+            driverSource.find("#version 300 es") != std::string::npos) {
+            std::string& compiledSrc = driverSource;
             std::string inits;
             size_t pos = 0;
             while ((pos = compiledSrc.find("out ", pos)) != std::string::npos) {
@@ -1548,15 +1649,15 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
                     size_t openBrace = compiledSrc.find('{', mainPos);
                     if (openBrace != std::string::npos) {
                         compiledSrc.insert(openBrace + 1, inits);
-                        const char* sourceArray[1] = { compiledSrc.c_str() };
-                        m_gl->shaderSource(shader->glObject(), 1, sourceArray,
-                                           nullptr);
                     }
                 }
             }
         }
     }
 
+    adjustShaderSourceForDriver(driverSource);
+    const char* sourceArray[1] = { driverSource.c_str() };
+    m_gl->shaderSource(shader->glObject(), 1, sourceArray, nullptr);
     m_gl->compileShader(shader->glObject());
 }
 
@@ -2971,9 +3072,6 @@ void WebGLRenderingContext::shaderSource(WebGLShader* shader, String* source)
 
     std::string str = source->toUTF8NonGCString();
     shader->setSource(str);
-    const char* sourceArray[1] = { str.c_str() };
-
-    m_gl->shaderSource(shader->glObject(), 1, sourceArray, nullptr);
 }
 
 void WebGLRenderingContext::stencilFunc(GLenum func, GLint ref, GLuint mask)
@@ -3998,19 +4096,9 @@ String* WebGLRenderingContext::getShaderSource(WebGLShader* shader)
         return nullptr;
     }
 
-    GLsizei length = 0, bufferSize = 0;
-    m_gl->getShaderiv(shader->glObject(), GL_SHADER_SOURCE_LENGTH, &bufferSize);
-
-    std::string buffer;
-    buffer.resize(bufferSize);
-    m_gl->getShaderSource(shader->glObject(), bufferSize, &length, &buffer[0]);
-
-    if (hasNewGLError()) {
-        return nullptr;
-    }
-    buffer.resize(length);
-
-    return String::fromUTF8(buffer.data(), length);
+    // The source as given: the driver has the text compileShader() made.
+    const std::string& source = shader->source();
+    return String::fromUTF8(source.data(), source.length());
 }
 
 WebGLTexture* WebGLRenderingContext::getBoundTextureObject(GLenum target) const

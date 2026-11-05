@@ -447,6 +447,11 @@ private:
     bool validateTexImageSource(GLenum format, GLenum type);
     bool isTexSubImageTypeAllowed(GLenum target, GLint level, GLenum format,
                                   GLenum type);
+    // The text the driver compiles for a shader whose source reads as `view`
+    // (the source as the preprocessor reads it); false with `error` when the
+    // shader fails to compile instead.
+    bool shaderSourceForDriver(const std::string& view, std::string& out,
+                               std::string& error);
     bool isBoundCubeMapTexture(GLenum target);
     void releaseOutOfHeapMembers() override;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
@@ -556,6 +561,10 @@ private:
     virtual int webGLVersion() const
     {
         return 1;
+    }
+    // The last edits of the text the driver compiles (compileShader()).
+    virtual void adjustShaderSourceForDriver(std::string& source)
+    {
     }
 
     bool m_hasPendingJobsBetweenFrames;
