@@ -425,34 +425,27 @@ public:
         return nullptr;
     }
 
+    // A null renderbuffer detaches a texture too (OpenGL ES 2.0 §4.4.2).
     void setAttachmentRenderbuffer(GLenum attachment, WebGLRenderbuffer* rb)
     {
         if (attachment >= 0x8CE0 && attachment < 0x8CE0 + 16) {
             size_t idx = attachment - 0x8CE0;
             m_attachedColorRenderbuffers[idx] = rb;
-            if (rb) {
-                m_attachedColorTextures[idx] = nullptr;
-            }
+            m_attachedColorTextures[idx] = nullptr;
             if (idx == 0) {
                 m_attachedRenderBuffer = rb;
             }
         } else if (attachment == 0x8D00 /* GL_DEPTH_ATTACHMENT */) {
             m_attachedDepthRenderbuffer = rb;
-            if (rb) {
-                m_attachedDepthTexture = nullptr;
-            }
+            m_attachedDepthTexture = nullptr;
         } else if (attachment == 0x8D20 /* GL_STENCIL_ATTACHMENT */) {
             m_attachedStencilRenderbuffer = rb;
-            if (rb) {
-                m_attachedStencilTexture = nullptr;
-            }
+            m_attachedStencilTexture = nullptr;
         } else if (attachment == 0x821A /* GL_DEPTH_STENCIL_ATTACHMENT */) {
             m_attachedDepthRenderbuffer = rb;
             m_attachedStencilRenderbuffer = rb;
-            if (rb) {
-                m_attachedDepthTexture = nullptr;
-                m_attachedStencilTexture = nullptr;
-            }
+            m_attachedDepthTexture = nullptr;
+            m_attachedStencilTexture = nullptr;
         }
     }
 
@@ -486,25 +479,40 @@ public:
         return false;
     }
 
-    bool hasFeedbackLoop(WebGLTexture* texture, GLint level,
-                         GLint layer = -1) const
+    // Whether a level of `texture` for which reads(level) holds is attached
+    // at any attachment point: the 16 color ones, depth and stencil.
+    template <typename Reads>
+    bool attachesReadLevel(const WebGLTexture* texture, Reads reads) const
     {
-        if (!texture) {
-            return false;
-        }
         for (size_t i = 0; i < 16; ++i) {
             if (m_attachedColorTextures[i] == texture &&
-                m_attachedColorLevels[i] == level) {
-                if (layer >= 0 && m_attachedColorIsLayers[i]) {
-                    if (m_attachedColorLayers[i] == layer) {
-                        return true;
-                    }
-                } else if (!m_attachedColorIsLayers[i]) {
-                    return true;
-                }
+                reads(m_attachedColorLevels[i])) {
+                return true;
             }
         }
-        return false;
+        return (m_attachedDepthTexture == texture &&
+                reads(m_attachedDepthLevel)) ||
+               (m_attachedStencilTexture == texture &&
+                reads(m_attachedStencilLevel));
+    }
+
+    // Whether the read buffer is `level` of `texture` at `target`
+    // (TEXTURE_2D or a cube face) or, for a layer of 0 or more, at `layer`.
+    bool readBufferIs(const WebGLTexture* texture, GLenum target, GLint level,
+                      GLint layer) const
+    {
+        if (m_readBuffer < 0x8CE0 || m_readBuffer >= 0x8CE0 + 16) {
+            return false; // NONE
+        }
+        const size_t i = m_readBuffer - 0x8CE0;
+        if (m_attachedColorTextures[i] != texture ||
+            m_attachedColorLevels[i] != level) {
+            return false;
+        }
+        return layer >= 0 ? m_attachedColorIsLayers[i] &&
+                                m_attachedColorLayers[i] == layer
+                          : !m_attachedColorIsLayers[i] &&
+                                m_attachedColorTextargets[i] == target;
     }
 
     bool hasAnyAttachment() const

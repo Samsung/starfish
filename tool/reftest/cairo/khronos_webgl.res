@@ -589,7 +589,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/programs/program-tes
 http://localhost:11010/conformance-suites/1.0.3/conformance/programs/use-program-crash-with-discard-in-fragment-shader.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/reading/read-pixels-pack-alignment.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/reading/read-pixels-test.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/feedback-loop.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/feedback-loop.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-object-attachment.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-state-restoration.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-test.html
@@ -670,7 +670,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-act
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-attachment-formats.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-clear.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-complete.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-copying-feedback-loops.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-copying-feedback-loops.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-draw-with-2d-and-cube.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-fakeblack.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-formats-test.html

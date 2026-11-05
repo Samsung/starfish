@@ -2344,6 +2344,10 @@ void WebGLRenderingContext::copyTexImage2D(GLenum target, GLint level,
         return;
     }
 
+    if (copiesIntoReadBuffer(texture, target, level)) {
+        return;
+    }
+
     // Check alpha compatibility with read framebuffer
     if (internalformat == GL_RGBA || internalformat == GL_RGBA4 ||
         internalformat == GL_RGB5_A1 || internalformat == GL_RGBA8) {
@@ -2402,6 +2406,21 @@ void WebGLRenderingContext::copyTexImage2D(GLenum target, GLint level,
     }
 }
 
+bool WebGLRenderingContext::copiesIntoReadBuffer(const WebGLTexture* texture,
+                                                 GLenum target, GLint level)
+{
+    // WebGL 1.0 "Feedback Loops Between Textures and the Framebuffer",
+    // OpenGL ES 3.0.6 §4.4.3.2.
+    WebGLFramebuffer* readFb =
+        getBoundFramebuffer(GL_READ_FRAMEBUFFER).valueOrNull();
+    if (readFb && readFb->readBufferIs(texture, target, level, -1)) {
+        setGLError(GL_INVALID_OPERATION,
+                   "the destination is the image the read buffer reads");
+        return true;
+    }
+    return false;
+}
+
 bool WebGLRenderingContext::readFramebufferSize(GLsizei& width, GLsizei& height)
 {
     Optional<WebGLFramebuffer*> maybeFb =
@@ -2443,6 +2462,10 @@ void WebGLRenderingContext::copyTexSubImage2D(GLenum target, GLint level,
     if (!texture || (m_boundTextures.find(target) == m_boundTextures.end() &&
                      !isBoundCubeMapTexture(target))) {
         setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    if (copiesIntoReadBuffer(texture, target, level)) {
         return;
     }
 
@@ -3089,7 +3112,7 @@ void WebGLRenderingContext::drawArraysInstanced(GLenum mode, GLint first,
 
     completePendingJobs();
     if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs() ||
-        !validateStencilSettings())
+        !validateStencilSettings() || !validateFeedbackLoops())
         return;
     const bool standIns = bindIncompleteTextureStandIns();
     m_gl->drawArraysInstanced(mode, first, count, instanceCount);
@@ -3178,7 +3201,7 @@ void WebGLRenderingContext::drawElementsInstanced(GLenum mode, GLsizei count,
 
     completePendingJobs();
     if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs() ||
-        !validateStencilSettings())
+        !validateStencilSettings() || !validateFeedbackLoops())
         return;
     const bool standIns = bindIncompleteTextureStandIns();
     m_gl->drawElementsInstanced(
@@ -3241,6 +3264,10 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
         !hasEnoughVertexArrayData(static_cast<int64_t>(first) + count, 1)) {
         setGLError(GL_INVALID_OPERATION,
                    "drawArrays: vertices reach past the bound ARRAY_BUFFER");
+        return;
+    }
+
+    if (!validateFeedbackLoops()) {
         return;
     }
 
@@ -3319,7 +3346,9 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
         return;
     }
 
+    // A draw of nothing still reports a feedback loop, as drawArrays does.
     if (count == 0) {
+        validateFeedbackLoops();
         return;
     }
 
@@ -3353,7 +3382,7 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
     }
 
     if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs() ||
-        !validateStencilSettings()) {
+        !validateStencilSettings() || !validateFeedbackLoops()) {
         return;
     }
 
@@ -3612,6 +3641,7 @@ void WebGLRenderingContext::framebufferTexture2D(
         }
 
         GLuint textureId = texture->glObject();
+        hasNewGLError(); // Keep an earlier error from failing this call.
         if (isWebGL2 && attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
             m_gl->framebufferTexture2D(target, GL_DEPTH_ATTACHMENT, textarget,
                                        textureId, level);
@@ -3621,6 +3651,10 @@ void WebGLRenderingContext::framebufferTexture2D(
             m_gl->framebufferTexture2D(target, attachment, textarget, textureId,
                                        level);
         }
+        // A rejected attach leaves the old image attached.
+        if (hasNewGLError()) {
+            return;
+        }
 
         fb->setAttachmentTexture2D(attachment, texture, textarget, level);
     } else {
@@ -3628,6 +3662,7 @@ void WebGLRenderingContext::framebufferTexture2D(
             setGLError(GL_INVALID_VALUE);
             return;
         }
+        hasNewGLError(); // Keep an earlier error from failing this call.
         if (isWebGL2 && attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
             m_gl->framebufferTexture2D(target, GL_DEPTH_ATTACHMENT, textarget,
                                        0, 0);
@@ -3635,6 +3670,9 @@ void WebGLRenderingContext::framebufferTexture2D(
                                        0, 0);
         } else {
             m_gl->framebufferTexture2D(target, attachment, textarget, 0, 0);
+        }
+        if (hasNewGLError()) {
+            return;
         }
 
         fb->setAttachmentTexture2D(attachment, nullptr, textarget, level);
@@ -3693,7 +3731,12 @@ void WebGLRenderingContext::generateMipmap(GLenum target)
         }
     }
 
+    hasNewGLError(); // Keep an earlier error from failing this call.
     m_gl->generateMipmap(target);
+    WebGLTexture* texture = getBoundTextureObject(target);
+    if (texture && !hasNewGLError()) {
+        texture->setMipmapLevels(target);
+    }
 }
 
 void WebGLRenderingContext::shaderSource(WebGLShader* shader, String* source)
@@ -8014,8 +8057,8 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
 
 // WebGL 1.0 "Texture Type in TexSubImage2D Calls": the type must be the one
 // that defined the level. Unknown tokens are left to the INVALID_ENUM
-// checks, and a level whose type is not recorded (copyTexImage2D,
-// generateMipmap) to the GL.
+// checks, and a level whose type is not recorded (copyTexImage2D, and the
+// levels generateMipmap makes from it) to the GL.
 bool WebGLRenderingContext::isTexSubImageTypeAllowed(GLenum target, GLint level,
                                                      GLenum format, GLenum type)
 {
@@ -9090,6 +9133,103 @@ void WebGLRenderingContext::restoreSampledTextureBindings()
         m_gl->bindTexture(sampler.target, texture ? texture->glObject() : 0);
     }
     m_gl->activeTexture(m_activeTextureUnit);
+}
+
+bool WebGLRenderingContext::validateFeedbackLoops()
+{
+    WebGLFramebuffer* framebuffer =
+        getBoundFramebuffer(GL_DRAW_FRAMEBUFFER).valueOrNull();
+    WebGLProgram* program = m_state->webGLProgram().valueOrNull();
+    if (!framebuffer || !program) {
+        return true; // No texture is attached to the default framebuffer.
+    }
+    for (const WebGLProgram::SamplerInfo& sampler : program->samplers()) {
+        WebGLTexture* texture = sampledTexture(sampler.unit, sampler.target);
+        if (!texture ||
+            !framebuffer->attachesReadLevel(texture, [&](GLint level) {
+                GLint base = 0;
+                GLint last = 0;
+                return sampledLevels(texture, sampler.unit, sampler.target,
+                                     base, last) &&
+                       level >= base && level <= last;
+            })) {
+            continue;
+        }
+        // A WebGL 1 texture replaced by a stand-in is not read either.
+        if (webGLVersion() == 1 &&
+            isIncompleteForWebGL1(texture, sampler.target)) {
+            continue;
+        }
+        setGLError(GL_INVALID_OPERATION,
+                   "feedback loop between a sampled texture and the draw "
+                   "framebuffer");
+        return false;
+    }
+    return true;
+}
+
+bool WebGLRenderingContext::sampledLevels(const WebGLTexture* texture,
+                                          GLuint unit, GLenum target,
+                                          GLint& base, GLint& last)
+{
+    // OpenGL ES 3.0.6 §3.8.10.4: the base level, and with a mipmap filter the
+    // levels up to q. Only a texture whose record defines all of them counts
+    // as read (an incomplete one samples no image, and a loop wrongly seen
+    // would drop a valid draw). shortcut: format filterability (an integer or
+    // depth texture filtered LINEAR) and the size and format consistency of
+    // the mip levels are not modelled; model them along with full
+    // completeness.
+    base = texture->baseLevel();
+    GLint maxLevel = texture->maxLevel();
+    const bool isCube = target == GL_TEXTURE_CUBE_MAP;
+    const GLenum firstFace = isCube ? GL_TEXTURE_CUBE_MAP_POSITIVE_X : target;
+    if (texture->isImmutable()) {
+        // The base and maximum levels clamp to the storage, every level of
+        // which is defined (setStorage*()).
+        GLint top = 0;
+        while (texture->getImageLevelInfo(firstFace, top + 1)) {
+            ++top;
+        }
+        base = std::min(base, top);
+        maxLevel = std::min(std::max(maxLevel, base), top);
+    }
+    const TextureImageLevelInfo* info =
+        texture->getImageLevelInfo(firstFace, base);
+    if (!info) {
+        return false;
+    }
+    last = base;
+    const GLenum minFilter = samplerMinFilter(unit, texture);
+    if (minFilter != GL_NEAREST && minFilter != GL_LINEAR) {
+        if (maxLevel < base) {
+            return false; // Incomplete.
+        }
+        GLsizei size = std::max(info->width, info->height);
+        if (target == GL_TEXTURE_3D) {
+            size = std::max(size, info->depth);
+        }
+        GLint levels = 0; // floor(log2(size))
+        for (; size > 1; size >>= 1) {
+            ++levels;
+        }
+        // Differences only: base + levels may not fit.
+        last = levels > maxLevel - base ? maxLevel : base + levels;
+    }
+    const GLenum lastFace = isCube ? GL_TEXTURE_CUBE_MAP_NEGATIVE_Z : target;
+    for (GLint level = base; level <= last; ++level) {
+        for (GLenum face = firstFace; face <= lastFace; ++face) {
+            if (!texture->getImageLevelInfo(face, level)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+GLenum WebGLRenderingContext::samplerMinFilter(
+    GLuint unit, const WebGLTexture* texture) const
+{
+    return texture->minFilter();
 }
 
 bool WebGLRenderingContext::validateStencilSettings()

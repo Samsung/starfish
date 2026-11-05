@@ -516,7 +516,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/programs/program-tes
 http://localhost:11010/conformance-suites/2.0.0/conformance/programs/use-program-crash-with-discard-in-fragment-shader.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/reading/read-pixels-pack-alignment.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/reading/read-pixels-test.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/feedback-loop.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/feedback-loop.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/framebuffer-state-restoration.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/renderbuffer-initialization.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/culling.html?webglVersion=2
@@ -573,7 +573,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/textur
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-attachment-formats.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-clear.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-complete.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-copying-feedback-loops.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-copying-feedback-loops.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-cube-as-fbo-attachment.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-hd-dpi.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-mips.html?webglVersion=2
