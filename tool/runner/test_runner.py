@@ -141,17 +141,12 @@ KHRONOS_INJECT_SCRIPT = "tool/khronos/inject_report.js"
 # Every test page loads exactly one of these two harnesses.
 KHRONOS_INJECT_INTO = ("/js-test-pre.js", "/more/unit.js")
 
-# Unlike the other run_test() call sites in this file, the Khronos WebGL
-# conformance suite is not capped by -p and so runs at full
-# multiprocessing.cpu_count() parallelism (e.g. 56 on this CI host). Each
-# worker is a full Starfish process driving its own GL context; on this
-# host's software Mesa (llvmpipe) driver, dozens of those running at once
-# oversubscribe the CPU (llvmpipe itself spawns a rasterizer thread pool
-# per context) badly enough that individual tests that pass fine in
-# isolation start hanging/timing out under full-width parallel load. Cap
-# this suite specifically -- the vendor suites (blink/gecko/webkit) are
-# plain DOM/CSS tests with no GL driver involved and don't need this.
-KHRONOS_WEBGL_JOBS = 4
+# Each worker drives a GL context, and software Mesa (llvmpipe) has its
+# own rasterizer threads. Avoid full host cpu_count() parallelism, which
+# previously made passing tests time out through CPU oversubscription.
+# CI bounds llvmpipe separately with LP_NUM_THREADS=4; keep an explicit
+# eight-test budget so short tests can progress alongside long GL tests.
+KHRONOS_WEBGL_JOBS = 8
 
 # Per-test timeout (seconds) for the Khronos WebGL suites only. The basic
 # driver's default watchdog (DEFAULT_NATIVE_TIMEOUT_SEC, 180s) is meant to
