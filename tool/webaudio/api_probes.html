@@ -422,55 +422,74 @@ const groups = {
     },
 
     // https://webaudio.github.io/web-audio-api/#acquire-the-content
-    // Acquiring a buffer with a detached channel array gives no content:
-    // an AudioBufferSourceNode plays nothing and a ScriptProcessorNode
-    // outputs silence for that event and a ConvolverNode renders silence.
+    // Acquiring a buffer with a detached channel array gives no content: an
+    // AudioBufferSourceNode plays nothing, a ConvolverNode renders silence
+    // and a ScriptProcessorNode outputs silence for that event. Each graph
+    // also runs without that detach and must then be audible.
     // ArrayBuffer.prototype.transfer() detaches; postMessage() transfer does
     // not yet, which keeps WPT transferred-buffer-output.html tracked.
     'detached-channel': async () => {
-        const detach = (array) => array.buffer.transfer();
-        const filled = () => {
+        const filled = (detached) => {
             const buffer = new AudioBuffer({length: 1024, sampleRate: 8000});
             const samples = buffer.getChannelData(0);
             samples.fill(1);
-            detach(samples);
+            if (detached) {
+                samples.buffer.transfer();
+                const length = buffer.getChannelData(0).length;
+                check(length === 0, 'getChannelData() after the channel ' +
+                                        'was detached: length ' + length);
+            }
             return buffer;
         };
         const audible = async (build) => {
-            const context = new OfflineAudioContext(1, 1024, 8000);
+            const context = new OfflineAudioContext(1, 2048, 8000);
             build(context);
             const data = (await context.startRendering()).getChannelData(0);
             return data.some((sample) => sample !== 0);
         };
-        check(!await audible((context) => {
-            const source = new AudioBufferSourceNode(context,
-                                                     {buffer: filled()});
-            source.connect(context.destination);
-            source.start();
-        }), 'start() with a detached channel plays nothing');
-        check(!await audible((context) => {
-            const source = new AudioBufferSourceNode(context);
-            source.connect(context.destination);
-            source.start();
-            source.buffer = filled();
-        }), 'a detached buffer set after start() plays nothing');
-        check(!await audible((context) => {
-            const node = context.createScriptProcessor(256, 0, 1);
-            node.connect(context.destination);
-            node.onaudioprocess = (event) => {
-                const output = event.outputBuffer.getChannelData(0);
-                output.fill(1);
-                detach(output);
-            };
-        }), 'a detached outputBuffer channel outputs silence');
-        check(!await audible((context) => {
-            const source = new ConstantSourceNode(context);
-            const convolver = new ConvolverNode(
-                context, {disableNormalization: true});
-            convolver.buffer = filled();
-            source.connect(convolver).connect(context.destination);
-            source.start();
-        }), 'a ConvolverNode with a detached channel renders silence');
+        const graphs = {
+            'start()': (context, detached) => {
+                const source = new AudioBufferSourceNode(
+                    context, {buffer: filled(detached)});
+                source.connect(context.destination);
+                source.start();
+            },
+            'buffer set after start()': (context, detached) => {
+                const source = new AudioBufferSourceNode(context);
+                source.connect(context.destination);
+                source.start();
+                source.buffer = filled(detached);
+            },
+            'ConvolverNode': (context, detached) => {
+                const source = new ConstantSourceNode(context);
+                const convolver = new ConvolverNode(
+                    context, {disableNormalization: true});
+                convolver.buffer = filled(detached);
+                source.connect(convolver).connect(context.destination);
+                source.start();
+            },
+            // Otherwise only the first two events detach, which covers both
+            // output buffers of a double-buffering implementation; later
+            // events must still be heard.
+            'ScriptProcessorNode': (context, detached) => {
+                const node = context.createScriptProcessor(256, 0, 1);
+                node.connect(context.destination);
+                let events = 0;
+                node.onaudioprocess = (event) => {
+                    const output = event.outputBuffer.getChannelData(0);
+                    output.fill(1);
+                    if (detached || events++ < 2) {
+                        output.buffer.transfer();
+                    }
+                };
+            },
+        };
+        for (const [label, build] of Object.entries(graphs)) {
+            check(await audible((context) => build(context, false)),
+                  label + ': audible without a detached channel');
+            check(!await audible((context) => build(context, true)),
+                  label + ': silent with a detached channel');
+        }
     },
 
     // https://webidl.spec.whatwg.org/#dfn-attribute-getter

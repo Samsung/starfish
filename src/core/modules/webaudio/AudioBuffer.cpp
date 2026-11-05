@@ -173,9 +173,11 @@ ScriptFloat32Array AudioBuffer::getChannelData(uint32_t channel)
                                "Channel index exceeds AudioBuffer channels");
     }
 
+    // acquireContents() drops the views it detaches, so a cached view that
+    // is detached was detached by script. Keep returning it: replacing it
+    // would hide the detach from the next "acquire the content".
     ScriptFloat32Array& cached = m_channelViews[channel];
-    if (cached &&
-        !cached->buffer()->asArrayBufferObject()->isDetachedBuffer()) {
+    if (cached) {
         return cached;
     }
 
