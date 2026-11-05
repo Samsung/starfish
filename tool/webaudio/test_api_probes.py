@@ -167,6 +167,9 @@ class APIProbesTest(unittest.TestCase):
     def test_source_node_options(self):
         self.run_group('source-options')
 
+    def test_detached_channel(self):
+        self.run_group('detached-channel')
+
     def test_attribute_accessor_names(self):
         self.run_group('accessor-names')
 

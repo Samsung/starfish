@@ -68,11 +68,14 @@ void ConvolverNode::setBuffer(Optional<AudioBuffer*> buffer)
                                    DOMException::NOT_SUPPORTED_ERR,
                                    "Unsupported impulse response");
         }
-        buffer->acquireContents();
-        // The FFTs of a long response would stall rendering if they ran
-        // under the graph lock; only the swap needs it.
-        response = ConvolverHandler::createResponse(buffer->data(), m_normalize,
-                                                    context()->sampleRate());
+        // A buffer whose contents can't be acquired leaves no response, so
+        // the node renders silence.
+        if (buffer->acquireContents()) {
+            // The FFTs of a long response would stall rendering if they ran
+            // under the graph lock; only the swap needs it.
+            response = ConvolverHandler::createResponse(
+                buffer->data(), m_normalize, context()->sampleRate());
+        }
     }
     AudioGraphLock graphLock(context()->graph());
     try {

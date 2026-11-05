@@ -100,10 +100,11 @@ void AudioBufferSourceNode::setBuffer(Optional<AudioBuffer*> buffer)
         m_bufferSet = true;
     }
     m_buffer = buffer;
-    m_sourceHandler->setBuffer(m_buffer ? m_buffer->data() : nullptr,
-                               m_buffer ? m_buffer->sampleRate() : 0);
-    if (m_buffer && m_hasStartCalled) {
-        m_buffer->acquireContents();
+    // "If the operation fails, nothing is played."
+    if (m_buffer && (!m_hasStartCalled || m_buffer->acquireContents())) {
+        m_sourceHandler->setBuffer(m_buffer->data(), m_buffer->sampleRate());
+    } else {
+        m_sourceHandler->setBuffer(nullptr, 0);
     }
 }
 
@@ -148,8 +149,13 @@ void AudioBufferSourceNode::start(double when, double offset)
         // Another node may have acquired this buffer since assignment, and
         // script may have replaced its PCM through copy-on-write meanwhile.
         // https://webaudio.github.io/web-audio-api/#acquire-the-content
-        m_sourceHandler->setBuffer(m_buffer->data(), m_buffer->sampleRate());
-        m_buffer->acquireContents();
+        // "If the operation fails, nothing is played."
+        if (m_buffer->acquireContents()) {
+            m_sourceHandler->setBuffer(m_buffer->data(),
+                                       m_buffer->sampleRate());
+        } else {
+            m_sourceHandler->setBuffer(nullptr, 0);
+        }
     }
     m_offset = offset;
     m_sourceHandler->start(when, offset, false, 0);
