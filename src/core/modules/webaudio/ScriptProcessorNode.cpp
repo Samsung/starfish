@@ -180,9 +180,15 @@ bool ScriptProcessorNode::dispatchAudioProcessEvents()
         // "When the dispatch of an AudioProcessingEvent completes, it
         // acquires the contents of its outputBuffer."
         AudioGraphLock graphLock(graph);
-        // A detached channel leaves no output for this event: silence.
-        m_processorHandler->setOutput(
-            slot, block, output->acquireContents() ? output->data() : nullptr);
+        if (output->acquireContents()) {
+            m_processorHandler->setOutput(slot, block, output->data());
+        } else {
+            // A detached channel leaves no output for this event: silence.
+            // A buffer with a detached channel stays unusable, so the next
+            // event on this slot gets a new one.
+            m_processorHandler->setOutput(slot, block, nullptr);
+            m_outputBuffers[slot] = nullptr;
+        }
     }
     return true;
 }
