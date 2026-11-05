@@ -21,6 +21,10 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/dom/ImageBitmap.h"
+#ifdef STARFISH_ENABLE_CANVAS
+#include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/image/BufferedNativeImageData.h"
+#endif
 
 namespace Starfish {
 
@@ -58,7 +62,30 @@ void ImageBitmap::close()
 {
     setDetached();
     m_nativeImageData = nullptr;
+    m_premultipliedImageData = nullptr;
 }
+
+#ifdef STARFISH_ENABLE_CANVAS
+NativeImageData* ImageBitmap::premultipliedImageData()
+{
+    if (m_isPremultiplied || !m_nativeImageData) {
+        return m_nativeImageData;
+    }
+    // Kept, so a page that paints the bitmap every frame copies it once; the
+    // copy's pixels are malloc'ed, out of the GC's sight.
+    if (!m_premultipliedImageData) {
+        const size_t width = m_nativeImageData->width();
+        const size_t height = m_nativeImageData->height();
+        NativeImageData* copy = BufferedNativeImageData::create(width, height);
+        STARFISH_ASSERT(copy->stride() == m_nativeImageData->stride());
+        memcpy(copy->data(), m_nativeImageData->data(), copy->bufferSize());
+        convertImageBufferAsPremultipliedAlphaIfNeeds(copy->data(), width,
+                                                      copy->stride(), height);
+        m_premultipliedImageData = copy;
+    }
+    return m_premultipliedImageData;
+}
+#endif
 
 SerializedData* ImageBitmap::serialize(SerializingMap& memory)
 {

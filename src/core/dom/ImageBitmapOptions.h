@@ -78,6 +78,11 @@ public:
         return m_imageOrientation;
     }
 
+    PremultiplyAlpha getPremultiplyAlpha()
+    {
+        return m_premultiplyAlpha;
+    }
+
 private:
     ImageOrientation m_imageOrientation{ ImageOrientation::None };
     PremultiplyAlpha m_premultiplyAlpha{ PremultiplyAlpha::Default };
