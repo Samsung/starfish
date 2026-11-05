@@ -679,8 +679,11 @@ The [Khronos WebGL conformance suites](https://github.com/KhronosGroup/WebGL)
 (1.0.3, 2.0.0 and the development `sdk/tests`) are pinned as the
 `third_party/webgl` submodule and served unmodified; `./tool/runner/test_runner.py
 khronos_test` runs the curated lists in `tool/reftest/cairo/khronos_webgl*.res`
-against a `-DWEBGL=1` build. See `docs/khronos_webgl.md` for how results are
-collected and how to move the pin.
+against a `-DWEBGL=1` build. GCC and Clang CI build this suite separately
+with `-DCMAKE_BUILD_TYPE=Release -DENABLE_WASM=1 -DWALRUS_JIT=ON` and run
+`out/webgl-ci/bin/lightweight-web-engine`; other x64 suites use their Debug
+artifacts. See `docs/khronos_webgl.md` for how results are collected and how
+to move the pin.
 
 ### Web Platform Tests
 

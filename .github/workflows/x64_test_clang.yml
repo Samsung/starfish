@@ -304,12 +304,9 @@ jobs:
         run: |
           xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py reftest_all || exit 1
 
-  # Khronos WebGL conformance suites on the clang build -- same shape as
-  # x64_test.yml's test_khronos_webgl (see the comment there); kept on both
-  # toolchains because reftest_all used to run them on both.
+  # Match the GCC WebGL job with an independent Release + Wasm JIT build.
   test_clang_khronos_webgl:
-    needs: build_x64_clang
-    timeout-minutes: 60
+    timeout-minutes: 90
     runs-on: [ code-linux, code-2xlarge ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
@@ -329,27 +326,35 @@ jobs:
       - name: Add safe directory
         run: git config --global --add safe.directory /__w/starfish/starfish
 
+      - name: Fetch thirdparty submodule cache
+        shell: bash
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: |
+          source tool/ci/lib_submodule_cache.sh
+          submodule_cache_fetch "${{ inputs.thirdparty_key }}" cache.tar.gz thirdparty.tar.gz
+
+      - name: Extract thirdparty submodules
+        run: tar xzf thirdparty.tar.gz
+
       - name: Checkout WebGL conformance submodule
         env:
           BART_API_KEY: ${{ secrets.BART_API_KEY }}
         run: ./tool/ci/cache_webgl.sh
 
-      - uses: CODE-Actions/download-artifact@v2
-        with:
-          name: starfish-x64_clang_debug
-
-      - name: Prepare Test
+      - name: Build Release Starfish with Wasm JIT
+        timeout-minutes: 30
         run: |
-          chmod a+x $PWD/out/debug/bin/lightweight-web-engine
-          ln -s -f $PWD/out/debug/bin/lightweight-web-engine Starfish
-          ln -s $PWD/out/debug/lib/libnanomsg.so ./out/debug/lib/libnanomsg.so.5
-          ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.1.1
-          ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.1.1
-          ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.3
-          ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.3
+          cmake -S . -B out/webgl-ci -G Ninja -DDOCKER=1 \
+            -DCMAKE_BUILD_TYPE=Release -DENABLE_TEST=1 -DBACKEND=uv_cairo_gl -DSHELL=x11 \
+            -DENABLE_DYNAMIC_LOADER=1 -DWEBGL=1 -DENABLE_WASM=1 -DWALRUS_JIT=ON \
+            -DWORKER=1 -DIDB=1 -DUSE_FFMPEG_MEDIA_PLAYER=1 -DAUDIO_WORKLET=1 -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+          cmake --build out/webgl-ci --target starfish.executable --parallel
 
       - name: Run khronos_test
+        timeout-minutes: 60
         env:
+          STARFISH_BIN: ./out/webgl-ci/bin/lightweight-web-engine
           LP_NUM_THREADS: "4"
         run: |
           xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py khronos_test || exit 1
