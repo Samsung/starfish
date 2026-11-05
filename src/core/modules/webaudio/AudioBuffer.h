@@ -83,6 +83,8 @@ public:
                        uint32_t bufferOffset = 0);
     // False when a channel array was detached: the invoker gets no content.
     bool acquireContents();
+    // Whether script detached the array of any channel.
+    bool hasDetachedChannel() const;
     // Native write access for the UA (ScriptProcessorNode event buffers);
     // copies first if a node acquired the contents.
     float* mutableChannel(uint32_t channel);
@@ -93,6 +95,7 @@ public:
     }
 
 private:
+    bool isChannelDetached(uint32_t channel) const;
     void ensureMutableData();
 
     ExecutionContext* m_executionContext{ nullptr };

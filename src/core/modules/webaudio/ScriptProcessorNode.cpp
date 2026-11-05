@@ -129,7 +129,9 @@ bool ScriptProcessorNode::dispatchAudioProcessEvents()
     // At most one event per slot: in a real-time context the render thread
     // keeps completing blocks while script runs.
     for (int events = 0; events < 2; events++) {
-        if (!m_inputBuffer) {
+        // A channel that script detached stays empty, so such a buffer is
+        // replaced rather than reused.
+        if (!m_inputBuffer || m_inputBuffer.value()->hasDetachedChannel()) {
             options.setNumberOfChannels(
                 std::max<uint32_t>(m_numberOfInputChannels, 1));
             m_inputBuffer = new AudioBuffer(executionContext(), options);
