@@ -5052,7 +5052,14 @@ ScriptValue WebGLRenderingContext::getUniform(WebGLProgram* program,
         return scriptNull();
     }
 
-    GLenum type = getUniformType(program, location);
+    // getUniformType() queries the driver without a scope of its own (the
+    // uniformMatrix* calls run it inside theirs), and getUniformImpl() opens
+    // one, so the query gets a scope that closes before that.
+    GLenum type = GL_NONE;
+    {
+        ENTER_CONTEXT_SCOPE(scriptNull());
+        type = getUniformType(program, location);
+    }
     Optional<ScriptValue> uniform = getUniformImpl(program, location, type);
     return uniform.valueOr(scriptNull());
 }

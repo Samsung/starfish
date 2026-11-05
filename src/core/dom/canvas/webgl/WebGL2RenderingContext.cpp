@@ -882,7 +882,13 @@ ScriptValue WebGL2RenderingContext::getUniform(WebGLProgram* program,
         return scriptNull();
     }
 
-    GLenum type = getUniformType(program, location);
+    // As in WebGLRenderingContext::getUniform(): the driver query needs a
+    // scope that closes before getUniformImpl() opens its own.
+    GLenum type = GL_NONE;
+    {
+        ENTER_CONTEXT_SCOPE(scriptNull());
+        type = getUniformType(program, location);
+    }
     Optional<ScriptValue> uniform = getUniformImpl(program, location, type);
     if (uniform.hasValue()) {
         return uniform.value();
