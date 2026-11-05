@@ -55,7 +55,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/angle-ins
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-blend-minmax.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-frag-depth.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-shader-texture-lod.html # @ignore Passed due to unsupported extension.
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-sRGB.html # @ignore Passed due to unsupported extension.
+# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-sRGB.html # @ignore WebGL 1 texImage2D accepts SRGB8_ALPHA8 (0x8C43) with EXT_sRGB not exposed; the test expects INVALID_ENUM.
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-texture-filter-anisotropic.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/get-extension.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-element-index-uint.html
@@ -691,7 +691,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/array-la
 http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/array-unit-tests.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/data-view-crash.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/data-view-test.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/typed-arrays-in-workers.html # @ignore Passed when Worker is disabled.
+# http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/typed-arrays-in-workers.html # @ignore The worker's postMessage() of a typed array throws DataCloneError (resources/typed-array-worker.js:82), so the page never finishes.
 # http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniform-arrays.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniform-bool.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniformmatrix4fv.html
