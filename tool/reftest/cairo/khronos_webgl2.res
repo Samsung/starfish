@@ -354,7 +354,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/misc/delayed-drawing
 http://localhost:11010/conformance-suites/2.0.0/conformance/misc/error-reporting.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/misc/expando-loss.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/misc/functions-returning-strings.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/misc/invalid-passed-params.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/misc/invalid-passed-params.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/misc/is-object.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/misc/null-object-behaviour.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/misc/object-deletion-behaviour.html?webglVersion=2
@@ -515,7 +515,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/programs/program-inf
 http://localhost:11010/conformance-suites/2.0.0/conformance/programs/program-test.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/programs/use-program-crash-with-discard-in-fragment-shader.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/reading/read-pixels-pack-alignment.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/reading/read-pixels-test.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/reading/read-pixels-test.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/feedback-loop.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/framebuffer-state-restoration.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/renderbuffer-initialization.html?webglVersion=2

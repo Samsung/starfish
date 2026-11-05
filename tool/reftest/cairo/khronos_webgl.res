@@ -52,7 +52,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/context/methods.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/resource-sharing-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/angle-instanced-arrays.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/angle-instanced-arrays-out-of-bounds.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-blend-minmax.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-blend-minmax.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-frag-depth.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-shader-texture-lod.html # @ignore Passed due to unsupported extension.
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-sRGB.html # @ignore WebGL 1 texImage2D accepts SRGB8_ALPHA8 (0x8C43) with EXT_sRGB not exposed; the test expects INVALID_ENUM.
@@ -358,7 +358,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/misc/delayed-drawing
 http://localhost:11010/conformance-suites/1.0.3/conformance/misc/error-reporting.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/misc/functions-returning-strings.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/misc/instanceof-test.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/misc/invalid-passed-params.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/misc/invalid-passed-params.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/misc/is-object.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/misc/null-object-behaviour.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/misc/object-deletion-behaviour.html
@@ -592,7 +592,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/reading/read-pixels-
 # http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/feedback-loop.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-object-attachment.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-state-restoration.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-test.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/renderbuffer-initialization.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/culling.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/draw-arrays-out-of-bounds.html
@@ -619,11 +619,11 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/simple.htm
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/triangle.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/vertex-texture-fetch.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/state/gl-enable-enum-test.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/state/gl-enum-tests.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/state/gl-enum-tests.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/state/gl-get-calls.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/state/gl-geterror.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/state/gl-getstring.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/state/gl-object-get-calls.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/state/gl-object-get-calls.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/state/state-uneffected-after-compositing.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/compressed-tex-image.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/copy-tex-image-2d-formats.html
