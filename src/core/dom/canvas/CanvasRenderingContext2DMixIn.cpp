@@ -791,10 +791,12 @@ CanvasPattern* CanvasRenderingContext2DMixIn::createPattern(
                                "'no-repeat', 'repeat-x', or 'repeat-y'.");
     }
 
-    auto pair =
+    // The pattern keeps the image, a copy included: it is a snapshot of the
+    // source (HTML createPattern()).
+    auto source =
         CanvasImageSourceUtils::toNativeImageData(m_executionContext, image);
 
-    NativeImageData* nativeImageData = pair.first;
+    NativeImageData* nativeImageData = source.image;
     if (nativeImageData == nullptr &&
         image.isHTMLCanvasElementValue() == false) {
         // FIXME : nativeImageData can be nullptr after call
@@ -805,7 +807,7 @@ CanvasPattern* CanvasRenderingContext2DMixIn::createPattern(
     auto ret = new CanvasPattern(executionContext(), nativeImageData, repeatX,
                                  repeatY);
 
-    if (pair.second == false) {
+    if (source.originClean == false) {
         ret->setOriginCleanFlag(false);
     }
 
@@ -1464,17 +1466,19 @@ void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
         }
     }
 
-    auto pair =
+    auto source =
         CanvasImageSourceUtils::toNativeImageData(m_executionContext, image);
+    std::unique_ptr<NativeImageData> copy(source.isCopy ? source.image
+                                                        : nullptr);
 
-    NativeImageData* nativeImageData = pair.first;
+    NativeImageData* nativeImageData = source.image;
     if (nativeImageData == nullptr) {
         // FIXME : nativeImageData can be nullptr after call
         // NativeImageData::attach on a canvas other than CanvasCairo currently
         return;
     }
 
-    if (pair.second == false) {
+    if (source.originClean == false) {
         setOriginCleanFlag(false);
     }
 

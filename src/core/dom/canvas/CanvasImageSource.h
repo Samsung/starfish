@@ -31,11 +31,20 @@ typedef HTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOr
 
 class NativeImageData;
 
+// The image a CanvasImageSource draws. A copy made for this call (a video
+// frame, a WebGL drawing buffer) is the caller's to delete once it is no
+// longer needed; any other image belongs to its source.
+struct CanvasImageSourceImage {
+    NULLABLE NativeImageData* image = nullptr;
+    bool originClean = true;
+    bool isCopy = false;
+};
+
 class CanvasImageSourceUtils {
 public:
     static DOMExceptionOr<bool> checkUsability(
         ExecutionContext* executionContext, CanvasImageSource image);
-    static std::pair<NULLABLE NativeImageData*, bool> toNativeImageData(
+    static CanvasImageSourceImage toNativeImageData(
         ExecutionContext* executionContext, CanvasImageSource& image);
 };
 } // namespace Starfish

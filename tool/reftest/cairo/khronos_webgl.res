@@ -20,20 +20,20 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/index-valida
 http://localhost:11010/conformance-suites/1.0.3/conformance/buffers/index-validation-with-resized-buffer.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/buffer-offscreen-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/buffer-preserve-test.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/canvas-test.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/canvas-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/canvas-zero-size.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/drawingbuffer-hd-dpi-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/drawingbuffer-static-canvas-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/drawingbuffer-test.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/draw-static-webgl-to-multiple-canvas-test.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/draw-webgl-to-canvas-test.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/draw-static-webgl-to-multiple-canvas-test.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/draw-webgl-to-canvas-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/framebuffer-bindings-unaffected-on-resize.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/rapid-resizing.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/texture-bindings-unaffected-on-resize.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/to-data-url-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/viewport-unchanged-upon-resize.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/constants-and-properties.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-attribute-preserve-drawing-buffer.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-attribute-preserve-drawing-buffer.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-attributes-alpha-depth-stencil-antialias.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-creation-and-destruction.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-creation.html
@@ -398,7 +398,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/buffe
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexImage2DBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexImage2D.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexSubImage2DBadArgs.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexSubImage2D.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexSubImage2D.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/deleteBufferBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawArrays.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawArraysOutOfBounds.html
@@ -630,7 +630,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/copy-tex-im
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/copy-tex-image-and-sub-image-2d.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/default-texture.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/gl-get-tex-parameter.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/gl-pixelstorei.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/gl-pixelstorei.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/gl-teximage.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/mipmap-fbo.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/origin-clean-conformance.html
@@ -652,13 +652,13 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-a
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video-rgb565.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video-rgba4444.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-video-rgba5551.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-webgl-canvas.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-webgl-canvas-rgb565.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-webgl-canvas-rgba4444.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-webgl-canvas-rgba5551.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-webgl-canvas.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-webgl-canvas-rgb565.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-webgl-canvas-rgba4444.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-webgl-canvas-rgba5551.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-uniform-binding-bugs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-canvas-corruption.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-webgl.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-webgl.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-with-format-and-type.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-with-invalid-data.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-input-validation.html
