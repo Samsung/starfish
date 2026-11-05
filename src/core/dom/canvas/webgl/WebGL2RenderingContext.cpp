@@ -4508,14 +4508,6 @@ void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
             STARFISH_ASSERT(helper != nullptr);
             gl()->texImage2D(target, level, internalformat, width, height, 0,
                              format, type, helper->data());
-        },
-        [&](const std::vector<GLubyte>& blackData) {
-            gl()->texImage2D(target, level, internalformat, width, height, 0,
-                             format, type, blackData.data());
-        },
-        [&](const std::vector<GLushort>& blackData) {
-            gl()->texImage2D(target, level, internalformat, width, height, 0,
-                             format, type, blackData.data());
         });
 
     if (texture && !hasNewGLError()) {
@@ -4669,6 +4661,7 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
         return;
     }
 
+    bool allocated = false;
     handleTexImageWithArrayBufferView(
         target, level, width, height, depth, format, type, srcData, 0,
         [&](const TexImageHelper* helper) {
@@ -4676,18 +4669,18 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
             gl()->texImage3D(target, level, internalformat, width, height,
                              depth, 0, format, type, helper->data());
         },
-        [&](const std::vector<GLubyte>& blackData) {
+        [&]() {
             gl()->texImage3D(target, level, internalformat, width, height,
-                             depth, 0, format, type, blackData.data());
-        },
-        [&](const std::vector<GLushort>& blackData) {
-            gl()->texImage3D(target, level, internalformat, width, height,
-                             depth, 0, format, type, blackData.data());
+                             depth, 0, format, type, nullptr);
+            allocated = true;
         });
 
     if (texture && !hasNewGLError()) {
         texture->setImageLevelInfo(target, level, internalformat, width, height,
                                    depth);
+        if (allocated) {
+            zeroTextureLevel(target, level, width, height, depth, format, type);
+        }
     }
 }
 
@@ -4733,14 +4726,6 @@ void WebGL2RenderingContext::texImage3D(
             STARFISH_ASSERT(helper != nullptr);
             gl()->texImage3D(target, level, internalformat, width, height,
                              depth, 0, format, type, helper->data());
-        },
-        [&](const std::vector<GLubyte>& blackData) {
-            gl()->texImage3D(target, level, internalformat, width, height,
-                             depth, 0, format, type, blackData.data());
-        },
-        [&](const std::vector<GLushort>& blackData) {
-            gl()->texImage3D(target, level, internalformat, width, height,
-                             depth, 0, format, type, blackData.data());
         });
 
     if (texture && !hasNewGLError()) {
@@ -4878,14 +4863,6 @@ void WebGL2RenderingContext::texSubImage3D(
             STARFISH_ASSERT(helper != nullptr);
             gl()->texSubImage3D(target, level, xoffset, yoffset, zoffset, width,
                                 height, depth, format, type, helper->data());
-        },
-        [&](const std::vector<GLubyte>& blackData) {
-            gl()->texSubImage3D(target, level, xoffset, yoffset, zoffset, width,
-                                height, depth, format, type, blackData.data());
-        },
-        [&](const std::vector<GLushort>& blackData) {
-            gl()->texSubImage3D(target, level, xoffset, yoffset, zoffset, width,
-                                height, depth, format, type, blackData.data());
         });
 }
 
@@ -4989,14 +4966,6 @@ void WebGL2RenderingContext::texSubImage2D(GLenum target, GLint level,
             STARFISH_ASSERT(helper != nullptr);
             gl()->texSubImage2D(target, level, xoffset, yoffset, width, height,
                                 format, type, helper->data());
-        },
-        [&](const std::vector<GLubyte>& blackData) {
-            gl()->texSubImage2D(target, level, xoffset, yoffset, width, height,
-                                format, type, blackData.data());
-        },
-        [&](const std::vector<GLushort>& blackData) {
-            gl()->texSubImage2D(target, level, xoffset, yoffset, width, height,
-                                format, type, blackData.data());
         });
 }
 

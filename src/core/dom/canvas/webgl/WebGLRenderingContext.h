@@ -420,9 +420,12 @@ protected:
         GLsizei depth, GLenum format, GLenum type,
         Optional<ScriptArrayBufferView> pixels, unsigned long long srcOffset,
         std::function<void(const TexImageHelper*)> updateImage,
-        std::function<void(const std::vector<GLubyte>&)> updateBlackImage,
-        std::function<void(const std::vector<GLushort>&)>
-            updateTwoBytesBlackImage);
+        // Defines the level for a null source; only overloads that take a
+        // null source pass it.
+        std::function<void()> allocateImage = nullptr);
+    void zeroTextureLevel(GLenum target, GLint level, GLsizei width,
+                          GLsizei height, GLsizei depth, GLenum format,
+                          GLenum type);
     // A destWidth and destHeight of 0 upload the whole source.
     void handleTexImageWithImageSource(
         const GLenum target, const GLenum format, const GLenum type,
@@ -433,6 +436,8 @@ protected:
 
 private:
     bool isKnownFormatAndType(GLenum format, GLenum type);
+    // The size of the color buffer reads come from, if it is known.
+    bool readFramebufferSize(GLsizei& width, GLsizei& height);
     bool validateTexImageSource(GLenum format, GLenum type);
     bool isBoundCubeMapTexture(GLenum target);
     void releaseOutOfHeapMembers() override;

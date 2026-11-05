@@ -220,6 +220,18 @@ bool Pixel::isKnownInternalFormatWebGL2(GLint internalFormat)
     return false;
 }
 
+bool Pixel::formatAndTypeOf(GLint internalFormat, GLenum& format, GLenum& type)
+{
+    for (const Combination& combination : combinationsWebGL2) {
+        if (combination.internalFormat == internalFormat) {
+            format = combination.format;
+            type = combination.type;
+            return true;
+        }
+    }
+    return false;
+}
+
 bool Pixel::isKnownFormatWebGL2(GLenum format)
 {
     for (const Combination& combination : combinationsWebGL2) {
@@ -309,13 +321,6 @@ size_t Pixel::getBytesPerPixel(GLenum format, GLenum type, int webGLVersion)
     }
     STARFISH_ASSERT_NOT_REACHED();
     return 0;
-}
-
-bool Pixel::isTwoBytesPerPixel(GLenum type)
-{
-    return (type == GL_UNSIGNED_SHORT_5_5_5_1 ||
-            type == GL_UNSIGNED_SHORT_4_4_4_4 ||
-            type == GL_UNSIGNED_SHORT_5_6_5);
 }
 
 GLushort Pixel::makePixel5551(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
