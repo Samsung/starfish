@@ -7,17 +7,9 @@
 # self-contained page screenshots. FFmpeg/media runtime probes are omitted;
 # YouTube playback CI runs on Linux.
 #
-# Three legs, not three redundant copies of the same thing: Ninja (x86) is
-# the fast path already proven by the Docker/Wine cross-build, the Visual
-# Studio/MSBuild generator (x64) is what actual developers on this project
-# build with day to day -- and it has already caught two real bugs (a wrong
-# exports.def path assumption and a parallel custom-build-step race in
-# escargot's own header generation) that the Ninja-only path never
-# exercised -- and dali-x64 builds the same shell against the DALi-era
-# dependency graph (tool/windows/dali-vcpkg), the versions the DALi Windows
-# port actually ships with, instead of the current graph the other two legs
-# use. Only x64: the DALi graph has never been asked to produce an x86
-# build, and there is no product need for one.
+# Ninja (x86) and Visual Studio/MSBuild (x64) cover both architectures and
+# generator paths. The Visual Studio build has caught exports.def path and
+# generated-header ordering bugs that the Ninja path did not exercise.
 #
 # The Linux MSVC-on-Wine cross-build is deliberately NOT what runs here: its
 # image acquires Microsoft-licensed material and lives in a separate internal
@@ -86,7 +78,6 @@ jobs:
             # that case.
             vcvars_bat: vcvarsamd64_x86.bat
             cmake_generator_args: '-G,Ninja,-DCMAKE_BUILD_TYPE=Release'
-            vcpkg_manifest_dir: ''
             build_config: Release
           - arch: x64
             vcpkg_triplet: x64-windows
@@ -102,25 +93,7 @@ jobs:
             # Visual-Studio leg -- the configuration is selected below via
             # `cmake --build ... --config Release` instead.
             cmake_generator_args: '-G,Visual Studio 17 2022,-A,x64'
-            vcpkg_manifest_dir: ''
             build_config: Release
-          - arch: dali-x64
-            vcpkg_triplet: x64-windows
-            cmake_processor: AMD64
-            vcvars_bat: vcvars64.bat
-            cmake_generator_args: '-G,Visual Studio 17 2022,-A,x64'
-            # Selects tool/windows/dali-vcpkg's vcpkg.json/vcpkg-configuration.json
-            # instead of the root manifest -- the same VCPKG_MANIFEST_DIR knob
-            # tool/windows/vcpkg_cmake.ps1's -Dali switch sets for a local build
-            # (see WINDOWS.md). Both manifests pin the same vcpkg baseline
-            # (VCPKG_COMMIT below), so the "Bootstrap vcpkg" step needs no
-            # per-leg change -- only the manifest/overlay-ports differ.
-            vcpkg_manifest_dir: 'tool/windows/dali-vcpkg'
-            # RelWithDebInfo, not Release: this is the exact configuration the
-            # DALi graph has actually been built and run with so far (see
-            # WINDOWS.md) -- match the validated recipe on this leg's first
-            # time in CI rather than deviating.
-            build_config: RelWithDebInfo
     # `runs-on: [code-windows, code-win-2xlarge]` (a label list) never
     # attached a runner -- confirmed against NUI/dali-ui's own working
     # windows-build.yml on this same GHES instance, which addresses this
@@ -203,20 +176,10 @@ jobs:
       # The key covers everything that determines the package set: the manifest,
       # the pinned baseline, and the overlay ports (a patch edit there must
       # invalidate the cache, or the fix silently does not reach the build).
-      # On the dali-x64 leg that means tool/windows/dali-vcpkg's own
-      # manifest/overlay instead of the root one -- plus vcpkg/ports-public
-      # either way, since dali-vcpkg's vcpkg-configuration.json references it
-      # as a second overlay-ports path too (e.g. the shared angle port).
       - name: Compute vcpkg cache key
         id: vcpkg_key
         run: |
-          $manifestDir = "${{ matrix.vcpkg_manifest_dir }}"
-          if ($manifestDir -eq '') {
-            $files = @('vcpkg.json', 'vcpkg-configuration.json')
-          } else {
-            $files = @((Join-Path $manifestDir 'vcpkg.json'), (Join-Path $manifestDir 'vcpkg-configuration.json')) +
-                     (Get-ChildItem -Recurse -File (Join-Path $manifestDir 'ports') | Sort-Object FullName | ForEach-Object { $_.FullName })
-          }
+          $files = @('vcpkg.json', 'vcpkg-configuration.json')
           $files = $files +
                    (Get-ChildItem -Recurse -File vcpkg/ports-public | Sort-Object FullName | ForEach-Object { $_.FullName })
           $sha = [System.Security.Cryptography.SHA256]::Create()
@@ -351,13 +314,6 @@ jobs:
             "-DCMAKE_TOOLCHAIN_FILE=$PWD\vcpkg-root\scripts\buildsystems\vcpkg.cmake",
             '-DVCPKG_TARGET_TRIPLET=${{ matrix.vcpkg_triplet }}'
           )
-          # dali-x64 only: points vcpkg at tool/windows/dali-vcpkg's manifest
-          # and overlay ports instead of the root one -- see the matrix entry's
-          # own comment.
-          if ("${{ matrix.vcpkg_manifest_dir }}" -ne '') {
-            $configureArgs += "-DVCPKG_MANIFEST_DIR=$PWD\${{ matrix.vcpkg_manifest_dir }}"
-          }
-
           # vcpkg's own downloader (libcurl linked straight into vcpkg.exe,
           # not a curl.exe subprocess it shells out to) can't get past
           # direct access's schannel CRYPT_E_NO_REVOCATION_CHECK for port
@@ -392,9 +348,8 @@ jobs:
           # build time instead. windows.cmake resolves its flags/defines/
           # output directory from this via $<CONFIG:Debug> generator
           # expressions, so this one flag genuinely selects a real,
-          # correctly-flagged build on the VS legs now (previously it always
-          # got Release flags/output regardless of --config). dali-x64 builds
-          # RelWithDebInfo here, not Release -- see its matrix entry.
+          # correctly-flagged build on the VS leg (previously it always got
+          # Release flags/output regardless of --config).
           cmake --build out_windows --target starfish.windows_shell --config ${{ matrix.build_config }} --parallel
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
