@@ -421,6 +421,18 @@ const groups = {
               'AudioBufferSourceNode with a non-finite detune throws');
     },
 
+    // https://webidl.spec.whatwg.org/#dfn-attribute-getter
+    // Attribute accessors are named "get <name>" and "set <name>". The
+    // idlharness test that checks this stays tracked for other reasons.
+    'accessor-names': async () => {
+        const descriptor = Object.getOwnPropertyDescriptor(
+            AudioNode.prototype, 'channelCount');
+        check(descriptor.get.name === 'get channelCount',
+              'getter name: ' + descriptor.get.name);
+        check(descriptor.set.name === 'set channelCount',
+              'setter name: ' + descriptor.set.name);
+    },
+
     // Once the graph is built, test_api_probes.py leaves 4 GB of address
     // space, with the largest render quantum, where one channel of a bus is
     // 18 MB. A failed channel count change throws
