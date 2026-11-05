@@ -536,7 +536,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-viewpor
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/many-draw-calls.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/more-than-65536-indices.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/multisample-corruption.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/negative-one-index.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/negative-one-index.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/out-of-bounds-index-buffers.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/point-no-attributes.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/point-size.html?webglVersion=2
