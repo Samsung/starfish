@@ -107,17 +107,31 @@ ScriptBindingInstance* AudioBuffer::scriptBindingInstance()
     return m_executionContext->scriptBindingInstance();
 }
 
+bool AudioBuffer::isChannelDetached(uint32_t channel) const
+{
+    // acquireContents() drops the views it detaches, so a cached view that
+    // is detached was detached by script (e.g. transferred).
+    const ScriptFloat32Array& view = m_channelViews[channel];
+    return view && view->buffer()->asArrayBufferObject()->isDetachedBuffer();
+}
+
+bool AudioBuffer::hasDetachedChannel() const
+{
+    for (uint32_t channel = 0; channel < m_numberOfChannels; channel++) {
+        if (isChannelDetached(channel)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool AudioBuffer::acquireContents()
 {
     // https://webaudio.github.io/web-audio-api/#acquire-the-content
     // "If any of the AudioBuffer's ArrayBuffers are detached, ... return a
-    // zero-length channel data buffer to the invoker." Views this operation
-    // detached were dropped below, so a detached one here was detached by
-    // script (e.g. transferred).
-    for (auto& view : m_channelViews) {
-        if (view && view->buffer()->asArrayBufferObject()->isDetachedBuffer()) {
-            return false;
-        }
+    // zero-length channel data buffer to the invoker."
+    if (hasDetachedChannel()) {
+        return false;
     }
     // The node keeps the old data; defer the spec's copied channel arrays
     // until script next asks to mutate them.
@@ -173,9 +187,8 @@ ScriptFloat32Array AudioBuffer::getChannelData(uint32_t channel)
                                "Channel index exceeds AudioBuffer channels");
     }
 
-    // acquireContents() drops the views it detaches, so a cached view that
-    // is detached was detached by script. Keep returning it: replacing it
-    // would hide the detach from the next "acquire the content".
+    // Keep returning a view that script detached (isChannelDetached()):
+    // replacing it would hide the detach from the next "acquire the content".
     ScriptFloat32Array& cached = m_channelViews[channel];
     if (cached) {
         return cached;
@@ -218,7 +231,9 @@ void AudioBuffer::copyFromChannel(ScriptFloat32Array destination,
         throw new DOMException(m_executionContext, DOMException::INDEX_SIZE_ERR,
                                "Channel index exceeds AudioBuffer channels");
     }
-    if (bufferOffset >= m_length) {
+    // A channel whose array script detached has no samples to copy, as
+    // getChannelData() reports.
+    if (bufferOffset >= m_length || isChannelDetached(channelNumber)) {
         return;
     }
 
@@ -240,7 +255,7 @@ void AudioBuffer::copyToChannel(ScriptFloat32Array source,
         throw new DOMException(m_executionContext, DOMException::INDEX_SIZE_ERR,
                                "Channel index exceeds AudioBuffer channels");
     }
-    if (bufferOffset >= m_length) {
+    if (bufferOffset >= m_length || isChannelDetached(channelNumber)) {
         return;
     }
 
