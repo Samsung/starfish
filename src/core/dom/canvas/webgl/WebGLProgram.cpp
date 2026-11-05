@@ -94,6 +94,82 @@ void WebGLProgram::updateUniformBlocks(GL* gl)
     }
 }
 
+// The texture target a sampler type reads, 0 for a type that is no sampler.
+static GLenum samplerTarget(GLenum type)
+{
+    switch (type) {
+    case GL_SAMPLER_2D:
+    case GL_SAMPLER_2D_SHADOW:
+    case GL_INT_SAMPLER_2D:
+    case GL_UNSIGNED_INT_SAMPLER_2D:
+        return GL_TEXTURE_2D;
+    case GL_SAMPLER_CUBE:
+    case GL_SAMPLER_CUBE_SHADOW:
+    case GL_INT_SAMPLER_CUBE:
+    case GL_UNSIGNED_INT_SAMPLER_CUBE:
+        return GL_TEXTURE_CUBE_MAP;
+    case GL_SAMPLER_3D:
+    case GL_INT_SAMPLER_3D:
+    case GL_UNSIGNED_INT_SAMPLER_3D:
+        return GL_TEXTURE_3D;
+    case GL_SAMPLER_2D_ARRAY:
+    case GL_SAMPLER_2D_ARRAY_SHADOW:
+    case GL_INT_SAMPLER_2D_ARRAY:
+    case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+        return GL_TEXTURE_2D_ARRAY;
+    default:
+        return 0;
+    }
+}
+
+void WebGLProgram::updateSamplers(GL* gl)
+{
+    m_samplers.clear();
+    GLint count = 0;
+    gl->getProgramiv(glObject(), GL_ACTIVE_UNIFORMS, &count);
+    GLint maxNameLength = 0;
+    gl->getProgramiv(glObject(), GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxNameLength);
+    if (count <= 0 || maxNameLength <= 0) {
+        return;
+    }
+    std::vector<char> name(maxNameLength, '\0');
+    for (GLint index = 0; index < count; ++index) {
+        GLint size = 0;
+        GLenum type = 0;
+        GLsizei length = 0;
+        gl->getActiveUniform(glObject(), index, maxNameLength, &length, &size,
+                             &type, name.data());
+        const GLenum target = samplerTarget(type);
+        if (!target || size <= 0) {
+            continue;
+        }
+        std::string base(name.data(), std::max<GLsizei>(length, 0));
+        // The driver names an array, even one of a single element, by its
+        // first element.
+        const bool isArray =
+            base.size() > 3 && base.compare(base.size() - 3, 3, "[0]") == 0;
+        if (size > 1 && isArray) {
+            base.resize(base.size() - 3);
+        }
+        // Every element gets an entry, in order, so that `remaining` counts
+        // entries; a sampler array is far shorter than 2^16 (it takes one
+        // texture unit per element).
+        for (GLint element = 0; element < size; ++element) {
+            SamplerInfo info;
+            info.location = gl->getUniformLocation(
+                glObject(),
+                size > 1 ? (base + "[" + std::to_string(element) + "]").c_str()
+                         : base.c_str());
+            info.target = static_cast<uint16_t>(target);
+            info.remaining = static_cast<uint16_t>(
+                std::min<GLint>(size - element, UINT16_MAX));
+            info.unit = 0;
+            info.isArray = isArray;
+            m_samplers.push_back(info);
+        }
+    }
+}
+
 } // namespace Starfish
 
 #endif

@@ -60,14 +60,14 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-textu
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/get-extension.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-element-index-uint.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-standard-derivatives.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-linear.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-linear.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-with-canvas.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-with-image-data.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-with-image.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-with-video.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-linear.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-linear.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-with-canvas.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-with-image-data.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-half-float-with-image.html
@@ -672,12 +672,12 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-cle
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-complete.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-copying-feedback-loops.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-draw-with-2d-and-cube.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-fakeblack.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-fakeblack.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-formats-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-hd-dpi.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-mips.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-npot.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-npot-video.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-npot.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-npot-video.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-size-cube-maps.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-size.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-size-limit.html
