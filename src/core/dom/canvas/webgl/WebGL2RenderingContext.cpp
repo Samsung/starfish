@@ -1005,6 +1005,7 @@ void WebGL2RenderingContext::texParameterf(GLenum target, GLenum pname,
         return;
     }
 
+    hasNewGLError(); // Keep an earlier error from failing this call.
     gl()->texParameterf(target, pname, param);
     if (!hasNewGLError()) {
         WebGLTexture* texture = getBoundTextureObject(target);
@@ -1013,6 +1014,14 @@ void WebGL2RenderingContext::texParameterf(GLenum target, GLenum pname,
                 texture->setBaseLevel(static_cast<GLint>(param));
             } else if (pname == GL_TEXTURE_MAX_LEVEL) {
                 texture->setMaxLevel(static_cast<GLint>(param));
+            } else if (pname == GL_TEXTURE_MIN_FILTER ||
+                       pname == GL_TEXTURE_MAG_FILTER ||
+                       pname == GL_TEXTURE_WRAP_S ||
+                       pname == GL_TEXTURE_WRAP_T) {
+                // An enum the driver took, so param is a finite number that
+                // rounds to it.
+                texture->setSamplingParameter(
+                    pname, static_cast<GLint>(std::lround(param)));
             }
         }
     }
@@ -1086,6 +1095,7 @@ void WebGL2RenderingContext::texParameteri(GLenum target, GLenum pname,
         return;
     }
 
+    hasNewGLError(); // Keep an earlier error from failing this call.
     gl()->texParameteri(target, pname, param);
     if (!hasNewGLError()) {
         WebGLTexture* texture = getBoundTextureObject(target);
@@ -1094,6 +1104,8 @@ void WebGL2RenderingContext::texParameteri(GLenum target, GLenum pname,
                 texture->setBaseLevel(param);
             } else if (pname == GL_TEXTURE_MAX_LEVEL) {
                 texture->setMaxLevel(param);
+            } else {
+                texture->setSamplingParameter(pname, param);
             }
         }
     }
@@ -2848,6 +2860,19 @@ void WebGL2RenderingContext::samplerParameteriImpl(WebGLSampler* sampler,
     }
 
     gl()->samplerParameteri(sampler->glObject(), pname, param);
+    // Validated above, so the driver takes it.
+    if (pname == GL_TEXTURE_MIN_FILTER) {
+        sampler->setMinFilter(param);
+    }
+}
+
+GLenum WebGL2RenderingContext::samplerMinFilter(
+    GLuint unit, const WebGLTexture* texture) const
+{
+    if (unit < m_samplerBindings.size() && m_samplerBindings[unit]) {
+        return m_samplerBindings[unit]->minFilter();
+    }
+    return texture->minFilter();
 }
 
 void WebGL2RenderingContext::samplerParameterf(WebGLSampler* sampler,
@@ -3468,6 +3493,7 @@ void WebGL2RenderingContext::framebufferTextureLayer(
         }
     }
 
+    hasNewGLError(); // Keep an earlier error from failing this call.
     if (attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
         gl()->framebufferTextureLayer(target, GL_DEPTH_ATTACHMENT, texName,
                                       level, layer);
@@ -3476,6 +3502,10 @@ void WebGL2RenderingContext::framebufferTextureLayer(
     } else {
         gl()->framebufferTextureLayer(target, attachment, texName, level,
                                       layer);
+    }
+    // A rejected attach leaves the old image attached.
+    if (hasNewGLError()) {
+        return;
     }
     fb->setAttachmentTextureLayer(
         attachment, maybeTexture.hasValue() ? maybeTexture.value() : nullptr,
@@ -5507,16 +5537,14 @@ void WebGL2RenderingContext::copyTexSubImage3D(GLenum target, GLint level,
         return;
     }
 
-    // Check feedback loop with bound read framebuffer
-    Optional<WebGLFramebuffer*> maybeFb =
-        getBoundFramebuffer(GL_READ_FRAMEBUFFER);
-    if (maybeFb.hasValue() && maybeFb.value()) {
-        WebGLFramebuffer* fb = maybeFb.value();
-        if (fb->hasFeedbackLoop(texture, level, zoffset)) {
-            setGLError(GL_INVALID_OPERATION,
-                       "Feedback loop detected in copyTexSubImage3D");
-            return;
-        }
+    // OpenGL ES 3.0.6 §4.4.3.2: the destination is the image the read
+    // buffer reads.
+    WebGLFramebuffer* readFb =
+        getBoundFramebuffer(GL_READ_FRAMEBUFFER).valueOrNull();
+    if (readFb && readFb->readBufferIs(texture, target, level, zoffset)) {
+        setGLError(GL_INVALID_OPERATION,
+                   "Feedback loop detected in copyTexSubImage3D");
+        return;
     }
 
     gl()->copyTexSubImage3D(target, level, xoffset, yoffset, zoffset, x, y,

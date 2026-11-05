@@ -91,8 +91,22 @@ public:
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLSampler() const override;
 
+    GLenum minFilter() const
+    {
+        return m_minFilter;
+    }
+    void setMinFilter(GLenum filter)
+    {
+        m_minFilter = static_cast<uint16_t>(filter);
+    }
+
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLSampler, WebGLObject);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
+
+private:
+    // The OpenGL ES default. 16 bits hold every filter token and fit the
+    // padding WebGLObject leaves, so a sampler is as large as without it.
+    uint16_t m_minFilter = GL_NEAREST_MIPMAP_LINEAR;
 };
 
 class WebGLSync : public WebGLObject {
@@ -624,6 +638,9 @@ private:
     }
     void adjustShaderSourceForDriver(std::string& source) override;
     Optional<WebGLFramebuffer*> getBoundFramebuffer(GLenum target) override;
+    // A sampler object bound to the unit supersedes the texture's state.
+    GLenum samplerMinFilter(GLuint unit,
+                            const WebGLTexture* texture) const override;
 
     bool checkUnpackFromBuffer();
     bool sliceCompressedTexData(ScriptArrayBufferView srcData,

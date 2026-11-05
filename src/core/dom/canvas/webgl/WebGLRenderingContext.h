@@ -444,6 +444,10 @@ private:
     bool isKnownFormatAndType(GLenum format, GLenum type);
     // The size of the color buffer reads come from, if it is known.
     bool readFramebufferSize(GLsizei& width, GLsizei& height);
+    // INVALID_OPERATION, and true, when a copy into `level` of `texture` at
+    // `target` would write the image the read buffer reads.
+    bool copiesIntoReadBuffer(const WebGLTexture* texture, GLenum target,
+                              GLint level);
     bool validateTexImageSource(GLenum format, GLenum type);
     bool isTexSubImageTypeAllowed(GLenum target, GLint level, GLenum format,
                                   GLenum type);
@@ -470,6 +474,16 @@ private:
     // puts the page's bindings back.
     bool bindIncompleteTextureStandIns();
     void restoreSampledTextureBindings();
+    // The draw's last check: INVALID_OPERATION when a texture the current
+    // program samples has a sampled level attached to the draw framebuffer.
+    bool validateFeedbackLoops();
+    // The levels [base, last] a sampler at `unit` of `target` reads from
+    // `texture`, and whether the engine's record defines every one of them.
+    bool sampledLevels(const WebGLTexture* texture, GLuint unit, GLenum target,
+                       GLint& base, GLint& last);
+    // The minification filter a sampler at `unit` reads `texture` with.
+    virtual GLenum samplerMinFilter(GLuint unit,
+                                    const WebGLTexture* texture) const;
     void releaseOutOfHeapMembers() override;
     void releaseInternalGLObjects() override;
 #ifdef STARFISH_ENABLE_MULTIMEDIA

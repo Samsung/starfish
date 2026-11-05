@@ -179,6 +179,42 @@ public:
         return nullptr;
     }
 
+    // The levels a successful generateMipmap defines (OpenGL ES 3.0.6
+    // §3.8.11): each like the base level at half the size of the one before,
+    // down to 1 or up to MAX_LEVEL. An immutable texture has every level
+    // already.
+    void setMipmapLevels(GLenum target)
+    {
+        if (m_isImmutable) {
+            return;
+        }
+        const bool isCube = target == GL_TEXTURE_CUBE_MAP;
+        const GLenum first = isCube ? GL_TEXTURE_CUBE_MAP_POSITIVE_X : target;
+        const GLenum last = isCube ? GL_TEXTURE_CUBE_MAP_NEGATIVE_Z : target;
+        for (GLenum face = first; face <= last; ++face) {
+            const TextureImageLevelInfo* base =
+                getImageLevelInfo(face, m_baseLevel);
+            if (!base) {
+                continue;
+            }
+            // A copy: setImageLevelInfo() may move the entries.
+            TextureImageLevelInfo info = *base;
+            for (GLint level = m_baseLevel;
+                 level < m_maxLevel &&
+                 (info.width > 1 || info.height > 1 ||
+                  (target == GL_TEXTURE_3D && info.depth > 1));) {
+                ++level;
+                info.width = std::max(1, info.width >> 1);
+                info.height = std::max(1, info.height >> 1);
+                if (target == GL_TEXTURE_3D) {
+                    info.depth = std::max(1, info.depth >> 1);
+                }
+                setImageLevelInfo(face, level, info.internalFormat, info.width,
+                                  info.height, info.depth, info.type);
+            }
+        }
+    }
+
     void setStorage2D(GLenum target, GLsizei levels, GLenum internalformat,
                       GLsizei width, GLsizei height)
     {
