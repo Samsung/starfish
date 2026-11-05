@@ -420,7 +420,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/unifo
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformf.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformiBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformi.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformMatrixBadArgs.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformMatrixBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformMatrix.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/vertexAttribBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/vertexAttrib.html
@@ -692,7 +692,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/array-un
 http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/data-view-crash.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/data-view-test.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/typed-arrays-in-workers.html # @ignore The worker's postMessage() of a typed array throws DataCloneError (resources/typed-array-worker.js:82), so the page never finishes.
-# http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniform-arrays.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniform-arrays.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniform-bool.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniformmatrix4fv.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniform-struct-unused.html

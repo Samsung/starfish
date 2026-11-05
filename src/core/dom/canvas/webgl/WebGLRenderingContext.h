@@ -520,6 +520,19 @@ protected:
                                          WebGLUniformLocation* location,
                                          GLenum type);
 
+    // Web IDL "converting an ECMAScript value to an IDL union type": a value
+    // that matches no member type is a TypeError. The bindings hand it over
+    // as an empty union, so the operation checks it before anything else
+    // (the conversion precedes its steps); its IDL needs [RaisesException].
+    template <typename Union>
+    void throwIfNotConverted(const Union& value)
+    {
+        if (value.isNoneValue()) {
+            throwConversionError();
+        }
+    }
+    [[noreturn]] void throwConversionError();
+
     void implementUniformNfv(
         size_t n, void (GL::*uniformNfv)(GLint, GLsizei, const GLfloat*),
         Optional<WebGLUniformLocation*> location, Float32List data,

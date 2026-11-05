@@ -5335,6 +5335,7 @@ void WebGLRenderingContext::vertexAttrib4f(GLuint index, GLfloat x, GLfloat y,
     void WebGLRenderingContext::vertexAttrib##N##fv(GLuint index,             \
                                                     Float32List variant)      \
     {                                                                         \
+        throwIfNotConverted(variant);                                         \
         ENTER_CONTEXT_SCOPE();                                                \
         m_state->setGenericVertexAttribType(index, GL_FLOAT);                 \
         if (variant.isFloat32ArrayValue()) {                                  \
@@ -5556,6 +5557,7 @@ void WebGLRenderingContext::bufferData(GLenum target,
 void WebGLRenderingContext::bufferSubData(GLenum target, WebGLintptr offset,
                                           AllowSharedBufferSource data)
 {
+    throwIfNotConverted(data);
     ENTER_CONTEXT_SCOPE();
 
     size_t byteLength = 0;
@@ -6760,6 +6762,13 @@ static void throwIfNotOriginClean(ExecutionContext* context, bool originClean)
                            "The source contains cross-origin data.");
 }
 
+void WebGLRenderingContext::throwConversionError()
+{
+    throw new DOMException(executionContext(),
+                           DOMException::Code::SCRIPT_TYPE_ERR,
+                           "The value matches no type of the argument");
+}
+
 void WebGLRenderingContext::handleTexImageWithImageSource(
     const GLenum target, const GLenum format, const GLenum type,
     const TexImageSource& source,
@@ -7133,6 +7142,7 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
                                        GLint internalFormat, GLenum format,
                                        GLenum type, TexImageSource source)
 {
+    throwIfNotConverted(source);
     ENTER_CONTEXT_SCOPE();
 
     WebGLTexture* texture = getBoundTextureObject(target);
@@ -7271,6 +7281,7 @@ void WebGLRenderingContext::texSubImage2D(GLenum target, GLint level,
                                           GLenum format, GLenum type,
                                           TexImageSource source)
 {
+    throwIfNotConverted(source);
     ENTER_CONTEXT_SCOPE();
 
     if (!isTexSubImageTypeAllowed(target, level, format, type)) {
@@ -7710,6 +7721,7 @@ void WebGLRenderingContext::implementUniformNfv(
     Optional<WebGLUniformLocation*> location, Float32List data,
     unsigned long long srcOffset, GLuint srcLength)
 {
+    throwIfNotConverted(data);
     ENTER_CONTEXT_SCOPE();
     /* location is nullable. */
     if (!location.hasValue()) {
@@ -7791,6 +7803,7 @@ void WebGLRenderingContext::implementUniformNiv(
     Optional<WebGLUniformLocation*> location, Int32List data,
     unsigned long long srcOffset, GLuint srcLength)
 {
+    throwIfNotConverted(data);
     ENTER_CONTEXT_SCOPE();
     /* location is nullable. */
     if (!location) {
@@ -7872,6 +7885,7 @@ void WebGLRenderingContext::implementUniformMatrixMxNfv(
     Optional<WebGLUniformLocation*> location, GLboolean transpose,
     Float32List data, unsigned long long srcOffset, GLuint srcLength)
 {
+    throwIfNotConverted(data);
     ENTER_CONTEXT_SCOPE();
     /* location is nullable. */
     if (!location.hasValue()) {

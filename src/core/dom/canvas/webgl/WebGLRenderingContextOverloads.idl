@@ -14,7 +14,7 @@ interface WebGLRenderingContextOverloads
 {
     undefined bufferData(GLenum target, GLsizeiptr size, GLenum usage);
     undefined bufferData(GLenum target, AllowSharedBufferSource? data, GLenum usage);
-    undefined bufferSubData(GLenum target, GLintptr offset, AllowSharedBufferSource data);
+    [RaisesException] undefined bufferSubData(GLenum target, GLintptr offset, AllowSharedBufferSource data);
 
     undefined compressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
                                    GLsizei width, GLsizei height, GLint border,
@@ -40,17 +40,17 @@ interface WebGLRenderingContextOverloads
     [RaisesException] undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                                               GLenum format, GLenum type, TexImageSource source); // May throw DOMException
 
-    undefined uniform1fv(WebGLUniformLocation? location, Float32List v);
-    undefined uniform2fv(WebGLUniformLocation? location, Float32List v);
-    undefined uniform3fv(WebGLUniformLocation? location, Float32List v);
-    undefined uniform4fv(WebGLUniformLocation? location, Float32List v);
+    [RaisesException] undefined uniform1fv(WebGLUniformLocation? location, Float32List v);
+    [RaisesException] undefined uniform2fv(WebGLUniformLocation? location, Float32List v);
+    [RaisesException] undefined uniform3fv(WebGLUniformLocation? location, Float32List v);
+    [RaisesException] undefined uniform4fv(WebGLUniformLocation? location, Float32List v);
 
-    undefined uniform1iv(WebGLUniformLocation? location, Int32List v);
-    undefined uniform2iv(WebGLUniformLocation? location, Int32List v);
-    undefined uniform3iv(WebGLUniformLocation? location, Int32List v);
-    undefined uniform4iv(WebGLUniformLocation? location, Int32List v);
+    [RaisesException] undefined uniform1iv(WebGLUniformLocation? location, Int32List v);
+    [RaisesException] undefined uniform2iv(WebGLUniformLocation? location, Int32List v);
+    [RaisesException] undefined uniform3iv(WebGLUniformLocation? location, Int32List v);
+    [RaisesException] undefined uniform4iv(WebGLUniformLocation? location, Int32List v);
 
-    undefined uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose, Float32List value);
-    undefined uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose, Float32List value);
-    undefined uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose, Float32List value);
+    [RaisesException] undefined uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose, Float32List value);
+    [RaisesException] undefined uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose, Float32List value);
+    [RaisesException] undefined uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose, Float32List value);
 };
