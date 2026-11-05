@@ -247,7 +247,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-wit
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-array-of-structs-uniform.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-attrib-array.vert.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-attrib-struct.vert.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-clipvertex.vert.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-clipvertex.vert.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-conditional-scoping.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-conditional-scoping-negative.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-default-precision.frag.html?webglVersion=2
@@ -267,10 +267,10 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-wit
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-comma-assignment.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-comma-conditional-assignment.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-comma-separated-variable-declarations.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-glcolor.vert.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-glcolor.vert.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-gles-1.frag.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-gles-symbol.frag.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-glprojectionmatrix.vert.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-glprojectionmatrix.vert.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-implicit-vec3-to-vec4-cast.vert.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-include.vert.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-int-return-value.frag.html?webglVersion=2
@@ -1511,7 +1511,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-colo
 # http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-color-buffer-half-float.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-disjoint-timer-query-webgl2.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/promoted-extensions.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/promoted-extensions-in-shaders.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/promoted-extensions-in-shaders.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/array-as-return-value.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/array-assign.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/array-assign-constructor.html?webglVersion=2

@@ -53,13 +53,13 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/context/resource-sha
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/angle-instanced-arrays.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/angle-instanced-arrays-out-of-bounds.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-blend-minmax.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-frag-depth.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-frag-depth.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-shader-texture-lod.html # @ignore Passed due to unsupported extension.
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-sRGB.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-texture-filter-anisotropic.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/get-extension.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-element-index-uint.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-standard-derivatives.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-standard-derivatives.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-linear.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-texture-float-with-canvas.html
@@ -81,7 +81,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-com
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-debug-renderer-info.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-debug-shaders.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-depth-texture.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-draw-buffers.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-draw-buffers.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-shared-resources.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/angle-d3d11-compiler-error.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/angle-dx-variable-bug.html
@@ -255,14 +255,14 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-wit
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-array-of-structs-uniform.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-attrib-array.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-attrib-struct.vert.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-clipvertex.vert.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-clipvertex.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-comma-assignment.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-comma-conditional-assignment.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-conditional-scoping.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-conditional-scoping-negative.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-default-precision.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-default-precision.vert.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-dfdx.frag.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-dfdx.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-dfdx-no-ext.frag.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-do-loop.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-error-directive.html
@@ -274,11 +274,11 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-wit
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-functional-scoping.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-function-recursion.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-function-scoped-struct.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-glcolor.vert.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-glcolor.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-gles-1.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-gles-symbol.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-global-variable-precision-mismatch.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-glprojectionmatrix.vert.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-glprojectionmatrix.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-hex-int-constant-macro.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-illegal-default-precision.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-illegal-default-precision.vert.html
@@ -342,7 +342,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/variables/gl-fr
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/variables/gl-fragdata-and-fragcolor.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/variables/gl-frontfacing.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/variables/gl-pointcoord.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/variables/glsl-built-ins.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/variables/glsl-built-ins.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/limits/gl-max-texture-dimensions.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/limits/gl-min-attribs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/limits/gl-min-textures.html

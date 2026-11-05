@@ -1365,39 +1365,241 @@ static size_t identifierEnd(const std::string& s, size_t i)
     return i;
 }
 
+// The GLSL ES 1.00 and 3.00 built-ins (§7); every other gl_ name is
+// reserved (GLSL ES 1.00 §3.7, 3.00 §3.8) and undeclared. Mesa also declares
+// desktop GLSL ones, such as gl_Color, in GLSL ES 1.00.
+static bool isGLSLESBuiltin(const std::string& name)
+{
+    static const char* const kBuiltins[] = {
+        "gl_Position",
+        "gl_PointSize",
+        "gl_FragCoord",
+        "gl_FrontFacing",
+        "gl_FragColor",
+        "gl_FragData",
+        "gl_PointCoord",
+        "gl_DepthRange",
+        "gl_DepthRangeParameters",
+        "gl_MaxVertexAttribs",
+        "gl_MaxVertexUniformVectors",
+        "gl_MaxVaryingVectors",
+        "gl_MaxVertexTextureImageUnits",
+        "gl_MaxCombinedTextureImageUnits",
+        "gl_MaxTextureImageUnits",
+        "gl_MaxFragmentUniformVectors",
+        "gl_MaxDrawBuffers",
+        // GLSL ES 3.00 only.
+        "gl_VertexID",
+        "gl_InstanceID",
+        "gl_FragDepth",
+        "gl_MaxVertexOutputVectors",
+        "gl_MaxFragmentInputVectors",
+        "gl_MinProgramTexelOffset",
+        "gl_MaxProgramTexelOffset",
+    };
+    for (const char* builtin : kBuiltins) {
+        if (name == builtin) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // Names no WebGL shader may use: the webgl_ and _webgl_ prefixes and two
-// consecutive underscores (WebGL 1.0 and 2.0 "Supported GLSL Constructs").
+// consecutive underscores (WebGL 1.0 and 2.0 "Supported GLSL Constructs"),
+// and gl_ names that are not built-ins.
 static bool isReservedShaderName(const std::string& name)
 {
     if (name.compare(0, 6, "webgl_") == 0 ||
         name.compare(0, 7, "_webgl_") == 0) {
         return true;
     }
-    return name.find("__") != std::string::npos && name != "__LINE__" &&
-           name != "__FILE__" && name != "__VERSION__";
+    if (name.find("__") != std::string::npos && name != "__LINE__" &&
+        name != "__FILE__" && name != "__VERSION__") {
+        return true;
+    }
+    return name.compare(0, 3, "gl_") == 0 && !isGLSLESBuiltin(name);
 }
 
-// The text the driver compiles: `view` as it is. Every identifier is
-// checked, as the driver sees them all.
+// The shader extensions of the WebGL 1 extensions (WebGL extension
+// registry). WebGL 2 has their features in core and enables none.
+static const struct {
+    const char* webgl;
+    const char* shader;
+} kShaderExtensions[] = {
+    { "OES_standard_derivatives", "GL_OES_standard_derivatives" },
+    { "EXT_frag_depth", "GL_EXT_frag_depth" },
+    { "WEBGL_draw_buffers", "GL_EXT_draw_buffers" },
+    { "EXT_shader_texture_lod", "GL_EXT_shader_texture_lod" },
+};
+
+// Whether shaders of this context may use the shader extension `name`
+// (WebGL 1.0 "Detecting and enabling extensions").
+bool WebGLRenderingContext::isShaderExtensionEnabled(const std::string& name)
+{
+    if (webGLVersion() >= 2) {
+        return false;
+    }
+    for (const auto& extension : kShaderExtensions) {
+        if (name == extension.shader) {
+            return isExtensionEnabled(extension.webgl);
+        }
+    }
+    return false;
+}
+
+// The macro a driver predefines for a shader extension it supports:
+// GL_<VENDOR>_<name> (Khronos extension naming). GL_FRAGMENT_PRECISION_HIGH
+// has that shape but is core.
+static bool isExtensionMacroName(const std::string& name)
+{
+    if (name.compare(0, 3, "GL_") != 0 ||
+        name == "GL_FRAGMENT_PRECISION_HIGH") {
+        return false;
+    }
+    size_t i = 3;
+    while (i < name.size() && ((name[i] >= 'A' && name[i] <= 'Z') ||
+                               (name[i] >= '0' && name[i] <= '9'))) {
+        i++;
+    }
+    return i > 3 && i < name.size() && name[i] == '_';
+}
+
+// Appends the line the driver gets for the #extension directive
+// view[line, end), whose text after "extension" starts at `rest` (GLSL ES
+// 1.00 and 3.00 §3.4). It stays for an extension the context enabled; of any
+// other one, `require` fails, and `enable`, `warn` and `disable` only drop
+// the line, so that the driver does not enable the extension.
+void WebGLRenderingContext::appendExtensionDirective(const std::string& view,
+                                                     size_t line, size_t rest,
+                                                     size_t end,
+                                                     std::string& out)
+{
+    auto skipSpaces = [&view, end](size_t i) {
+        while (i < end && (view[i] == ' ' || view[i] == '\t' ||
+                           view[i] == '\v' || view[i] == '\f')) {
+            i++;
+        }
+        return i;
+    };
+    const size_t nameBegin = skipSpaces(rest);
+    const size_t nameEnd = std::min(identifierEnd(view, nameBegin), end);
+    const std::string name = view.substr(nameBegin, nameEnd - nameBegin);
+    size_t i = skipSpaces(nameEnd);
+    std::string behavior;
+    if (i < end && view[i] == ':') {
+        const size_t behaviorBegin = skipSpaces(i + 1);
+        i = std::min(identifierEnd(view, behaviorBegin), end);
+        behavior = view.substr(behaviorBegin, i - behaviorBegin);
+        i = skipSpaces(i);
+    }
+    if (name == "all") {
+        // `all : warn` makes Mesa enable every extension it supports; the
+        // driver reports every other behavior that is an error for `all`.
+        if (behavior != "warn" || i != end) {
+            out.append(view, line, end - line);
+        } else {
+            // A dropped line keeps one space so the line breaks on its two
+            // sides cannot fuse into one (line numbers stay).
+            out += ' ';
+        }
+        return;
+    }
+    if (name.empty() || i != end ||
+        (behavior != "require" && behavior != "enable" && behavior != "warn" &&
+         behavior != "disable")) {
+        out += "#error malformed #extension directive";
+    } else if (isShaderExtensionEnabled(name)) {
+        out.append(view, line, end - line);
+    } else if (behavior == "require") {
+        out += "#error extension " + name + " is not supported";
+    } else {
+        // Dropped (enable/warn/disable of an unsupported extension): one space
+        // keeps the surrounding line breaks apart.
+        out += ' ';
+    }
+}
+
+// The text the driver compiles: `view` with the names of the shader
+// extensions the context did not enable hidden, and their #extension
+// directives replaced. Every identifier is checked, as the driver sees them
+// all: a macro expansion makes no new one, as token pasting fails here.
 bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
                                                   std::string& out,
                                                   std::string& error)
 {
+    static const char kSpaces[] = " \t\v\f";
+    const bool hidesMaxDrawBuffers =
+        webGLVersion() == 1 && !isShaderExtensionEnabled("GL_EXT_draw_buffers");
     out.clear();
     out.reserve(view.size());
-    for (size_t i = 0; i < view.size();) {
-        const size_t tokenEnd = identifierEnd(view, i);
-        if (tokenEnd == i) {
-            out += view[i++];
-            continue;
+    for (size_t line = 0; line < view.size();) {
+        const size_t end =
+            std::min(view.find_first_of("\r\n", line), view.size());
+        std::string directive;
+        size_t afterDirective = line;
+        const size_t hash = view.find_first_not_of(kSpaces, line);
+        const bool isDirective = hash < end && view[hash] == '#';
+        if (isDirective) {
+            const size_t name =
+                std::min(view.find_first_not_of(kSpaces, hash + 1), end);
+            afterDirective = std::min(identifierEnd(view, name), end);
+            directive = view.substr(name, afterDirective - name);
         }
-        const std::string token = view.substr(i, tokenEnd - i);
-        if (isReservedShaderName(token)) {
-            error = "Reserved identifier " + token;
-            return false;
+
+        if (directive == "extension") {
+            appendExtensionDirective(view, line, afterDirective, end, out);
+        } else {
+            for (size_t k = afterDirective;
+                 directive == "define" && k + 1 < end; k++) {
+                if (view[k] == '#' && view[k + 1] == '#') {
+                    error = "Token pasting (##) is not allowed";
+                    return false;
+                }
+            }
+            bool isMacroName = directive == "define";
+            for (size_t i = line; i < end;) {
+                const size_t tokenEnd = identifierEnd(view, i);
+                if (tokenEnd == i) {
+                    out += view[i++];
+                    continue;
+                }
+                const std::string token = view.substr(i, tokenEnd - i);
+                if (isReservedShaderName(token)) {
+                    error = "Reserved identifier " + token;
+                    return false;
+                }
+                // The name a #define defines keeps its spelling, so that the
+                // driver still rejects defining a reserved GL_ name.
+                const bool isDefined = isMacroName && i >= afterDirective;
+                if (isDefined) {
+                    isMacroName = false;
+                }
+                const bool isName =
+                    !isDefined && (token[0] < '0' || token[0] > '9');
+                if (isName && isExtensionMacroName(token) &&
+                    !isShaderExtensionEnabled(token)) {
+                    // Hidden behind a name no shader can define (see
+                    // isReservedShaderName()), it is undefined.
+                    // shortcut: a user name shaped like an extension macro
+                    // (GL_ABC_x) is renamed too; resolve names after
+                    // preprocessing to keep it.
+                    out += "webgl_" + token;
+                } else if (isName && hidesMaxDrawBuffers &&
+                           token == "gl_MaxDrawBuffers" &&
+                           (!isDirective || directive == "define")) {
+                    // GLSL ES 1.00 §7.4: 1 without WEBGL_draw_buffers.
+                    out += '1';
+                } else {
+                    out += token;
+                }
+                i = tokenEnd;
+            }
         }
-        out += token;
-        i = tokenEnd;
+        const size_t next =
+            std::min(view.find_first_not_of("\r\n", end), view.size());
+        out.append(view, end, next - end);
+        line = next;
     }
     return true;
 }
@@ -1493,35 +1695,7 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
             return;
         }
 
-        // 2. Promoted extensions: requiring or enabling them is forbidden in
-        // WebGL 2
-        static const char* kPromotedExtensions[] = {
-            "GL_EXT_draw_buffers", "GL_EXT_frag_depth",
-            "GL_EXT_shader_texture_lod", "GL_OES_standard_derivatives"
-        };
-        for (const char* extName : kPromotedExtensions) {
-            size_t extPos = src.find(extName);
-            if (extPos != std::string::npos) {
-                size_t lineStart = src.rfind('\n', extPos);
-                lineStart =
-                    (lineStart == std::string::npos) ? 0 : lineStart + 1;
-                size_t lineEnd = src.find('\n', extPos);
-                std::string line =
-                    src.substr(lineStart, (lineEnd == std::string::npos)
-                                              ? std::string::npos
-                                              : lineEnd - lineStart);
-                if (line.find("#extension") != std::string::npos &&
-                    (line.find("require") != std::string::npos ||
-                     line.find("enable") != std::string::npos)) {
-                    shader->setCompileFailed(true);
-                    shader->setInfoLog(std::string("Extension ") + extName +
-                                       " is not supported in WebGL 2");
-                    return;
-                }
-            }
-        }
-
-        // 3. textureOffset out of range: offset must be in [-8, 7]. Read on the
+        // 2. textureOffset out of range: offset must be in [-8, 7]. Read on the
         // view so a comment or a line continuation in the call cannot hide the
         // offset from this scan while the driver still sees it.
         size_t texOffsetPos = 0;
@@ -1569,7 +1743,7 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
             texOffsetPos += 13;
         }
 
-        // 4. Default zero initialization for vertex shader outputs:
+        // 3. Default zero initialization for vertex shader outputs:
         // WebGL 2.0 Transform Feedback specification requires that unwritten
         // output variables default to zero.
         GLint shaderType = 0;
@@ -3268,6 +3442,16 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         m_gl->getFloatv(pname, &value);
         return createScriptValue(value);
     }
+    case GL_FRAGMENT_SHADER_DERIVATIVE_HINT: {
+        // WebGL 2 answers this before; WebGL 1 has it with the extension.
+        if (!isExtensionEnabled("OES_standard_derivatives")) {
+            setGLError(GL_INVALID_ENUM);
+            return scriptNull();
+        }
+        GLint value = 0;
+        m_gl->getIntegerv(pname, &value);
+        return createScriptValue(static_cast<uint32_t>(value));
+    }
     case GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT: {
         if (!isExtensionEnabled("EXT_texture_filter_anisotropic")) {
             setGLError(GL_INVALID_ENUM);
@@ -4526,6 +4710,13 @@ WebGLintptr WebGLRenderingContext::getVertexAttribOffset(GLuint index,
 void WebGLRenderingContext::hint(GLenum target, GLenum mode)
 {
     ENTER_CONTEXT_SCOPE();
+
+    // OES_standard_derivatives adds this target to WebGL 1; WebGL 2 has it.
+    if (target == GL_FRAGMENT_SHADER_DERIVATIVE_HINT && webGLVersion() == 1 &&
+        !isExtensionEnabled("OES_standard_derivatives")) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
 
     m_gl->hint(target, mode);
 }
