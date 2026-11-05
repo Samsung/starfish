@@ -2034,10 +2034,10 @@ bool WebGLRenderingContext::hasEnoughElementArrayData(GLsizei count,
         return true;
     }
 
-    // count is a GLsizei, so the byte count needs the wider type.
-    int64_t needed = static_cast<int64_t>(count) * indexSize;
-    return static_cast<int64_t>(offset) + needed <=
-           static_cast<int64_t>(elementBuffer.value()->byteLength());
+    // count is a GLsizei, so the byte count needs the wider type. The caller
+    // rejected a negative offset.
+    return isRangeWithin(offset, static_cast<uint64_t>(count) * indexSize,
+                         elementBuffer.value()->byteLength());
 }
 
 bool WebGLRenderingContext::hasEnoughVertexArrayData(int64_t vertexCount,
@@ -2148,11 +2148,11 @@ bool WebGLRenderingContext::hasEnoughVertexArrayData(int64_t vertexCount,
                 continue;
             }
 
+            // vertexAttribPointer rejected a negative offset.
             int64_t stride = pointer.stride ? pointer.stride : elementBytes;
-            int64_t needed = static_cast<int64_t>(pointer.offset) +
-                             (elements - 1) * stride + elementBytes;
-            if (needed >
-                static_cast<int64_t>(pointer.buffer.value()->byteLength())) {
+            if (!isRangeWithin(pointer.offset,
+                               (elements - 1) * stride + elementBytes,
+                               pointer.buffer.value()->byteLength())) {
                 return false;
             }
         }
@@ -5263,7 +5263,7 @@ void WebGLRenderingContext::bufferData(GLenum target, WebGLsizeiptr size,
     hasNewGLError(); // Keep an earlier error from failing this call.
     const GLsizeiptr glSize = clampToGLsizeiptr(size);
     m_gl->bufferData(target, glSize, nullptr, usage);
-    if (hasNewGLError()) {
+    if (!bufferDataSucceeded(target)) {
         return;
     }
 
@@ -5293,6 +5293,9 @@ void WebGLRenderingContext::bufferData(GLenum target,
         return;
     }
 
+    // As in bufferData(size): the recorded size follows the GL's buffer only
+    // when this call succeeded, and an earlier error must not fail it.
+    hasNewGLError();
     GLsizeiptr byteLength = 0;
     if (data.value().isArrayBufferValue()) {
         ScriptArrayBuffer buffer = data.value().getArrayBufferValue();
@@ -5311,6 +5314,9 @@ void WebGLRenderingContext::bufferData(GLenum target,
         setGLError(GL_INVALID_VALUE);
         return;
     }
+    if (!bufferDataSucceeded(target)) {
+        return;
+    }
 
     Optional<WebGLBuffer*> maybeBound = m_state->getBoundBuffer(target);
     if (maybeBound.hasValue() && maybeBound.value()) {
@@ -5323,21 +5329,101 @@ void WebGLRenderingContext::bufferSubData(GLenum target, WebGLintptr offset,
 {
     ENTER_CONTEXT_SCOPE();
 
+    size_t byteLength = 0;
+    const void* source = nullptr;
     if (data.isArrayBufferValue()) {
         ScriptArrayBuffer buffer = data.getArrayBufferValue();
-        m_gl->bufferSubData(target, clampToGLintptr(offset),
-                            buffer->byteLength(), buffer->rawBuffer());
+        byteLength = buffer->byteLength();
+        source = buffer->rawBuffer();
     } else if (data.isArrayBufferViewValue()) {
         ScriptArrayBufferView view = data.getArrayBufferViewValue();
-        m_gl->bufferSubData(target, clampToGLintptr(offset), view->byteLength(),
-                            view->rawBuffer());
+        byteLength = view->byteLength();
+        source = view->rawBuffer();
     } else if (data.isSharedArrayBufferValue()) {
         ScriptSharedArrayBuffer buffer = data.getSharedArrayBufferValue();
-        m_gl->bufferSubData(target, clampToGLintptr(offset),
-                            buffer->byteLength(), buffer->rawBuffer());
+        byteLength = buffer->byteLength();
+        source = buffer->rawBuffer();
     } else {
         setGLError(GL_INVALID_VALUE);
+        return;
     }
+
+    if (!isValidBufferTarget(target)) {
+        setGLError(GL_INVALID_ENUM, "invalid target");
+        return;
+    }
+    // Every case is decided here, so no unchecked offset reaches the GL
+    // (OpenGL ES 2.0.25 §2.9, WebGL 1.0 §5.14.5).
+    Optional<WebGLBuffer*> buffer = getState()->getBoundBuffer(target);
+    if (!buffer) {
+        setGLError(GL_INVALID_OPERATION, "no buffer is bound to target");
+        return;
+    }
+    if (offset < 0) {
+        setGLError(GL_INVALID_VALUE, "negative offset");
+        return;
+    }
+    // The size every bufferData recorded is compared, not a GL query, so no
+    // unrelated pending GL error can drop the upload.
+    if (!isRangeWithin(offset, byteLength, buffer.value()->byteLength())) {
+        setGLError(GL_INVALID_VALUE, "buffer too small");
+        return;
+    }
+
+    m_gl->bufferSubData(target, clampToGLintptr(offset), byteLength, source);
+}
+
+size_t WebGLRenderingContext::viewElementSize(ScriptArrayBufferView view)
+{
+    if (view->isInt16ArrayObject() || view->isUint16ArrayObject() ||
+        view->isFloat16ArrayObject()) {
+        return 2;
+    }
+    if (view->isInt32ArrayObject() || view->isUint32ArrayObject() ||
+        view->isFloat32ArrayObject()) {
+        return 4;
+    }
+    if (view->isFloat64ArrayObject() || view->isBigInt64ArrayObject() ||
+        view->isBigUint64ArrayObject()) {
+        return 8;
+    }
+    return 1;
+}
+
+bool WebGLRenderingContext::isValidBufferTarget(GLenum target)
+{
+    switch (target) {
+    case GL_ARRAY_BUFFER:
+    case GL_ELEMENT_ARRAY_BUFFER:
+        return true;
+    case GL_COPY_READ_BUFFER:
+    case GL_COPY_WRITE_BUFFER:
+    case GL_PIXEL_PACK_BUFFER:
+    case GL_PIXEL_UNPACK_BUFFER:
+    case GL_TRANSFORM_FEEDBACK_BUFFER:
+    case GL_UNIFORM_BUFFER:
+        return isWebGL2RenderingContext();
+    default:
+        return false;
+    }
+}
+
+bool WebGLRenderingContext::bufferDataSucceeded(GLenum target)
+{
+    GLenum error = m_gl->getError();
+    if (error == GL_NO_ERROR) {
+        return true;
+    }
+    setGLError(error);
+    // A rejected call leaves the buffer as it was, but after OUT_OF_MEMORY its
+    // data store is undefined (OpenGL ES 2.0.25 §2.5), so no later check may
+    // trust the old size.
+    if (error == GL_OUT_OF_MEMORY) {
+        if (Optional<WebGLBuffer*> bound = m_state->getBoundBuffer(target)) {
+            bound.value()->setByteLength(0);
+        }
+    }
+    return false;
 }
 
 // A compressed format is only accepted once the WebGL extension defining it
@@ -5486,6 +5572,60 @@ size_t WebGLRenderingContext::getBytesPerPixel(GLenum format, GLenum type)
     return Pixel::getBytesPerPixel(format, type, webGLVersion());
 }
 
+// size_t arithmetic that refuses to wrap. (The unsigned multiply of the
+// vendored CheckedArithmetic.h misses overflows and takes x * 0 for one.)
+static bool multiplyChecked(size_t& value, size_t factor)
+{
+    if (factor && value > std::numeric_limits<size_t>::max() / factor) {
+        return false;
+    }
+    value *= factor;
+    return true;
+}
+
+static bool addChecked(size_t& value, size_t addend)
+{
+    if (value > std::numeric_limits<size_t>::max() - addend) {
+        return false;
+    }
+    value += addend;
+    return true;
+}
+
+// The bytes of client memory a width x height x depth pixel transfer spans,
+// from the start of the buffer to the end of its last pixel, under the given
+// pixel store layout (OpenGL ES 3.0.6 §3.7.4 for unpacking, §4.3.2 for
+// packing); imageHeight and skipImages only count for 3D transfers. Returns
+// false when the span does not fit in size_t. rowStride is the byte distance
+// between rows.
+static bool pixelStoreSpan(size_t bytesPerPixel, size_t width, size_t height,
+                           size_t depth, size_t rowLength, size_t imageHeight,
+                           size_t alignment, size_t skipPixels, size_t skipRows,
+                           size_t skipImages, size_t& span, size_t& rowStride)
+{
+    size_t stride = rowLength;
+    if (!multiplyChecked(stride, bytesPerPixel) ||
+        !addChecked(stride, alignment - 1)) {
+        return false;
+    }
+    rowStride = stride / alignment * alignment;
+
+    // Images first: a 2D transfer has none, whatever its image height.
+    size_t images = skipImages;
+    size_t rows = skipRows;
+    size_t pixels = skipPixels;
+    if (!addChecked(images, depth - 1) ||
+        !multiplyChecked(images, imageHeight) ||
+        !multiplyChecked(images, rowStride) || !addChecked(rows, height - 1) ||
+        !multiplyChecked(rows, rowStride) || !addChecked(pixels, width) ||
+        !multiplyChecked(pixels, bytesPerPixel) || !addChecked(images, rows) ||
+        !addChecked(images, pixels)) {
+        return false;
+    }
+    span = images;
+    return true;
+}
+
 bool WebGLRenderingContext::computeRequiredPackBytes(GLsizei width,
                                                      GLsizei height,
                                                      GLenum format, GLenum type,
@@ -5523,39 +5663,22 @@ bool WebGLRenderingContext::computeRequiredPackBytes(GLsizei width,
         return false;
     }
 
-    size_t effectiveWidth = width;
-    size_t skipPixels = 0;
-    size_t skipRows = 0;
-    size_t alignment = m_packAlignment;
-
-    if (isWebGL2RenderingContext()) {
-        if (m_packRowLength > 0) {
-            effectiveWidth = static_cast<size_t>(m_packRowLength);
-        }
-        skipPixels = static_cast<size_t>(m_packSkipPixels);
-        skipRows = static_cast<size_t>(m_packSkipRows);
+    // WebGL 1 has no PACK_ROW_LENGTH or PACK_SKIP_*; they stay 0.
+    size_t rowStride = 0;
+    if (!pixelStoreSpan(bytesPerPixel, width, height, 1,
+                        m_packRowLength > 0 ? m_packRowLength : width, 1,
+                        m_packAlignment, m_packSkipPixels, m_packSkipRows, 0,
+                        requiredBytes, rowStride)) {
+        // No buffer can be that large.
+        setGLError(GL_INVALID_OPERATION, "pixel store layout overflows");
+        return false;
     }
-
-    size_t rowBytes = effectiveWidth * bytesPerPixel;
-    size_t alignedRowBytes = rowBytes;
-    if (alignment > 1) {
-        size_t remainder = rowBytes % alignment;
-        if (remainder != 0) {
-            alignedRowBytes = rowBytes + (alignment - remainder);
-        }
-    }
-
-    size_t skipBytes = skipPixels * bytesPerPixel + skipRows * alignedRowBytes;
-    size_t payloadBytes = alignedRowBytes * (static_cast<size_t>(height) - 1) +
-                          bytesPerPixel * static_cast<size_t>(width);
-
-    requiredBytes = skipBytes + payloadBytes;
     return true;
 }
 
 bool WebGLRenderingContext::computeRequiredUnpackBytes(
-    GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
-    size_t& requiredBytes)
+    GLenum target, GLsizei width, GLsizei height, GLsizei depth, GLenum format,
+    GLenum type, size_t& requiredBytes, size_t& rowStride)
 {
     if (width < 0 || height < 0 || depth < 0) {
         setGLError(GL_INVALID_VALUE, "negative dimension");
@@ -5569,87 +5692,42 @@ bool WebGLRenderingContext::computeRequiredUnpackBytes(
 
     size_t bytesPerPixel = getBytesPerPixel(format, type);
     if (bytesPerPixel == 0) {
-        setGLError(GL_INVALID_ENUM, "invalid format or type");
+        setGLError(isKnownFormatAndType(format, type) ? GL_INVALID_OPERATION
+                                                      : GL_INVALID_ENUM,
+                   "invalid format and type combination");
         return false;
     }
 
-    if (isWebGL2RenderingContext()) {
-        size_t actualRowLength = (m_unpackRowLength > 0)
-                                     ? static_cast<size_t>(m_unpackRowLength)
-                                     : static_cast<size_t>(width);
-        if (m_unpackRowLength > 0 && m_unpackRowLength < width) {
-            setGLError(GL_INVALID_OPERATION, "UNPACK_ROW_LENGTH < width");
-            return false;
-        }
-        if (static_cast<size_t>(m_unpackSkipPixels) +
-                static_cast<size_t>(width) >
-            actualRowLength) {
-            setGLError(GL_INVALID_OPERATION,
-                       "UNPACK_SKIP_PIXELS + width > rowLength");
-            return false;
-        }
+    // UNPACK_IMAGE_HEIGHT and UNPACK_SKIP_IMAGES apply to every 3D upload,
+    // whatever its depth (OpenGL ES 3.0.6 §3.8.3).
+    const bool is3D = target == GL_TEXTURE_3D || target == GL_TEXTURE_2D_ARRAY;
+    // WebGL 1 has no UNPACK_ROW_LENGTH, UNPACK_IMAGE_HEIGHT or UNPACK_SKIP_*;
+    // they stay 0.
+    const size_t rowLength = m_unpackRowLength > 0 ? m_unpackRowLength : width;
+    const size_t imageHeight =
+        m_unpackImageHeight > 0 ? m_unpackImageHeight : height;
 
-        if (depth > 1) {
-            size_t actualImageHeight =
-                (m_unpackImageHeight > 0)
-                    ? static_cast<size_t>(m_unpackImageHeight)
-                    : static_cast<size_t>(height);
-            if (m_unpackImageHeight > 0 && m_unpackImageHeight < height) {
-                setGLError(GL_INVALID_OPERATION,
-                           "UNPACK_IMAGE_HEIGHT < height");
-                return false;
-            }
-            if (static_cast<size_t>(m_unpackSkipRows) +
-                    static_cast<size_t>(height) >
-                actualImageHeight) {
-                setGLError(GL_INVALID_OPERATION,
-                           "UNPACK_SKIP_ROWS + height > imageHeight");
-                return false;
-            }
-        }
+    // WebGL 2.0, "Pixel store parameter constraints".
+    if (static_cast<size_t>(m_unpackSkipPixels) + width > rowLength) {
+        setGLError(GL_INVALID_OPERATION,
+                   "UNPACK_SKIP_PIXELS + width > rowLength");
+        return false;
+    }
+    if (is3D && static_cast<size_t>(m_unpackSkipRows) + height > imageHeight) {
+        setGLError(GL_INVALID_OPERATION,
+                   "UNPACK_SKIP_ROWS + height > imageHeight");
+        return false;
     }
 
-    size_t effectiveWidth = width;
-    size_t effectiveHeight = height;
-    size_t skipPixels = 0;
-    size_t skipRows = 0;
-    size_t skipImages = 0;
-    size_t alignment = m_unpackAlignment;
-
-    if (isWebGL2RenderingContext()) {
-        if (m_unpackRowLength > 0) {
-            effectiveWidth = static_cast<size_t>(m_unpackRowLength);
-        }
-        skipPixels = static_cast<size_t>(m_unpackSkipPixels);
-        skipRows = static_cast<size_t>(m_unpackSkipRows);
-
-        if (depth > 1) {
-            if (m_unpackImageHeight > 0) {
-                effectiveHeight = static_cast<size_t>(m_unpackImageHeight);
-            }
-            skipImages = static_cast<size_t>(m_unpackSkipImages);
-        }
+    if (!pixelStoreSpan(bytesPerPixel, width, height, depth, rowLength,
+                        is3D ? imageHeight : 0, m_unpackAlignment,
+                        m_unpackSkipPixels, m_unpackSkipRows,
+                        is3D ? m_unpackSkipImages : 0, requiredBytes,
+                        rowStride)) {
+        // No buffer can be that large.
+        setGLError(GL_INVALID_OPERATION, "pixel store layout overflows");
+        return false;
     }
-
-    size_t rowBytes = effectiveWidth * bytesPerPixel;
-    size_t alignedRowBytes = rowBytes;
-    if (alignment > 1) {
-        size_t remainder = rowBytes % alignment;
-        if (remainder != 0) {
-            alignedRowBytes = rowBytes + (alignment - remainder);
-        }
-    }
-
-    size_t imageBytes = alignedRowBytes * effectiveHeight;
-
-    size_t skipBytes = skipPixels * bytesPerPixel + skipRows * alignedRowBytes +
-                       skipImages * imageBytes;
-
-    size_t payloadBytes = imageBytes * (static_cast<size_t>(depth) - 1) +
-                          alignedRowBytes * (static_cast<size_t>(height) - 1) +
-                          bytesPerPixel * static_cast<size_t>(width);
-
-    requiredBytes = skipBytes + payloadBytes;
     return true;
 }
 
@@ -5809,6 +5887,8 @@ TexImageHelper::TexImageHelper(size_t width, size_t height, size_t stride,
     m_sourceImage.format = format;
     m_sourceImage.data = static_cast<unsigned char*>(data);
     m_isNativeImageDataUsed = false;
+    m_width = width;
+    m_height = height;
 }
 
 TexImageHelper::TexImageHelper(NativeImageData* imageData, GLenum format)
@@ -5821,6 +5901,8 @@ TexImageHelper::TexImageHelper(NativeImageData* imageData, GLenum format)
     m_sourceImage.format = format;
     m_sourceImage.data = static_cast<unsigned char*>(imageData->data());
     m_isNativeImageDataUsed = true;
+    m_width = m_sourceImage.width;
+    m_height = m_sourceImage.height;
 }
 
 TexImageHelper::TexImageHelper(::Starfish::ImageData* imageData, GLenum format)
@@ -5832,166 +5914,123 @@ TexImageHelper::TexImageHelper(::Starfish::ImageData* imageData, GLenum format)
     m_sourceImage.data = imageData->data()->rawBuffer();
     m_isNativeImageDataUsed = false;
     m_isImageDataUsed = true;
+    m_width = m_sourceImage.width;
+    m_height = m_sourceImage.height;
 }
 
-TexImageHelper::~TexImageHelper()
+bool TexImageHelper::allocate(size_t byteLength)
 {
+    m_isConverted = true;
+    if (byteLength == 0) {
+        return true;
+    }
+    // calloc, not a vector: an oversized request fails instead of aborting,
+    // and pages the conversion never writes stay uncommitted.
+    m_data.reset(static_cast<unsigned char*>(calloc(byteLength, 1)));
+    return !!m_data;
 }
 
-void TexImageHelper::draw(const bool needsFlipY,
-                          const bool needsPremultiplyAlpha, const GLenum type,
-                          const size_t bytesPerPixel, size_t sliceHeight)
+GLenum TexImageHelper::draw(const bool needsFlipY,
+                            const bool needsPremultiplyAlpha, const GLenum type,
+                            const size_t bytesPerPixel)
 {
     const size_t width = m_sourceImage.width;
     const size_t height = m_sourceImage.height;
-    const unsigned char* image = m_sourceImage.data;
-
-    size_t offset = 0, newOffset = 0, srcOffset = 0, destOffset = 0;
-
-    if (m_sourceImage.format != GL_RGB && m_sourceImage.format != GL_RGBA) {
-        return;
+    const size_t rowBytes = width * bytesPerPixel;
+    if (!allocate(height * rowBytes)) {
+        return GL_OUT_OF_MEMORY;
     }
 
-    if (m_isNativeImageDataUsed && type != GL_UNSIGNED_BYTE &&
-        !Pixel::isTwoBytesPerPixel(type)) {
-        STARFISH_UNSUPPORTED(
-            "type (%s). Only GL_UNSIGNED_BYTE and packed short types are "
-            "supported for NativeImageData sources.",
-            hex(type).c_str());
-    }
-
-#if !defined(PORT_PIXEL_ORDER_RGBA) && !defined(PORT_PIXEL_ORDER_BGRA)
-    STARFISH_ASSERT_NOT_REACHED();
-    return;
-#endif
-
-    bool needsColorConversion = false;
-
-#if defined(PORT_PIXEL_ORDER_BGRA)
-    if (m_isNativeImageDataUsed) {
-        if (m_sourceImage.format == GL_BGRA_EXT && type == GL_UNSIGNED_BYTE &&
-            WebGLExtensionRegistry::instance()
-                .hasEXT_texture_format_BGRA8888()) {
-            m_dataFormat = GL_BGRA_EXT;
-            needsColorConversion = false;
-        } else {
-            needsColorConversion = true;
-        }
-    }
-#endif
-
-    const size_t srcBytesPerPixel =
-        (m_isNativeImageDataUsed || m_isImageDataUsed) ? 4 : bytesPerPixel;
-    const size_t srcStride = m_sourceImage.stride;
-    const size_t dstBytesPerPixel = bytesPerPixel;
-    const bool needsStrideConversion = (srcBytesPerPixel != dstBytesPerPixel);
-
-    if (!needsFlipY && !needsPremultiplyAlpha && !needsColorConversion &&
-        !needsStrideConversion) {
-        return;
-    }
-
-    const size_t dstStride = dstBytesPerPixel * width;
-    m_data.resize(height * dstStride);
-
-    std::array<uint8_t, 4> order;
-
-    if (needsColorConversion) {
-        order = { 2, 1, 0, 3 };
-    } else {
-        order = { 0, 1, 2, 3 };
-    }
-
-    const size_t effectiveSliceHeight =
-        (sliceHeight > 0 && sliceHeight <= height) ? sliceHeight : height;
-
-    for (size_t row = 0; row < height; row++) {
-        // Calculate the memory offset for the current row
-        offset = row * srcStride;
-
-        if (needsFlipY) {
-            size_t sliceIndex = row / effectiveSliceHeight;
-            size_t rowInSlice = row % effectiveSliceHeight;
-            size_t flippedRowInSlice = (effectiveSliceHeight - 1 - rowInSlice);
-            size_t flippedRow =
-                sliceIndex * effectiveSliceHeight + flippedRowInSlice;
-            if (flippedRow >= height) {
-                flippedRow = row;
-            }
-            newOffset = flippedRow * dstStride;
-        } else {
-            newOffset = row * dstStride;
-        }
-
-        for (size_t column = 0; column < width; column++) {
-            // Calculate the memory offset for the current pixel
-            srcOffset = offset + column * srcBytesPerPixel;
-            destOffset = newOffset + column * dstBytesPerPixel;
-
-            if (m_isImageDataUsed && type == GL_FLOAT) {
-                writeFloatPixel(destOffset, image, srcOffset,
-                                needsPremultiplyAlpha);
-            } else if (Pixel::isTwoBytesPerPixel(type)) {
-                if (m_isNativeImageDataUsed || m_isImageDataUsed) {
-                    uint8_t r = image[srcOffset + order[0]];
-                    uint8_t g = image[srcOffset + order[1]];
-                    uint8_t b = image[srcOffset + order[2]];
-                    uint8_t a = image[srcOffset + order[3]];
-                    if (needsPremultiplyAlpha) {
-                        float alpha = a / 255.f;
-                        r = multiplyAlpha(r, alpha);
-                        g = multiplyAlpha(g, alpha);
-                        b = multiplyAlpha(b, alpha);
-                    }
-                    GLushort packed;
-                    if (type == GL_UNSIGNED_SHORT_5_5_5_1) {
-                        packed = Pixel::makePixel5551(r, g, b, a);
-                    } else if (type == GL_UNSIGNED_SHORT_4_4_4_4) {
-                        packed = Pixel::makePixel4444(r, g, b, a);
-                    } else if (type == GL_UNSIGNED_SHORT_5_6_5) {
-                        packed = Pixel::makePixel565(r, g, b);
-                    } else {
-                        STARFISH_ASSERT_NOT_REACHED();
-                    }
-                    memcpy(&m_data[destOffset], &packed, sizeof(GLushort));
-                } else {
-                    m_data[destOffset + 0] = image[srcOffset + 0];
-                    m_data[destOffset + 1] = image[srcOffset + 1];
-                }
-            } else if (needsPremultiplyAlpha && srcBytesPerPixel == 4) {
-                float alpha = image[srcOffset + order[3]] / 255.f;
-                m_data[destOffset + 0] =
-                    multiplyAlpha(image[srcOffset + order[0]], alpha);
-                m_data[destOffset + 1] =
-                    multiplyAlpha(image[srcOffset + order[1]], alpha);
-                m_data[destOffset + 2] =
-                    multiplyAlpha(image[srcOffset + order[2]], alpha);
-                if (dstBytesPerPixel == 4) {
-                    m_data[destOffset + 3] = image[srcOffset + order[3]];
-                }
-            } else {
-                m_data[destOffset + 0] = image[srcOffset + order[0]];
-                m_data[destOffset + 1] = image[srcOffset + order[1]];
-                m_data[destOffset + 2] = image[srcOffset + order[2]];
-                if (dstBytesPerPixel == 4) {
-                    m_data[destOffset + 3] = image[srcOffset + order[3]];
-                }
+    for (size_t row = 0; row < height && rowBytes; row++) {
+        unsigned char* dest =
+            m_data.get() + (needsFlipY ? height - 1 - row : row) * rowBytes;
+        memcpy(dest, m_sourceImage.data + row * m_sourceImage.stride, rowBytes);
+        if (needsPremultiplyAlpha) {
+            for (size_t column = 0; column < width; column++) {
+                premultiplyPixel(dest + column * bytesPerPixel, type);
             }
         }
     }
+    return GL_NO_ERROR;
 }
 
-void TexImageHelper::drawSubRectangle(
-    const bool needsFlipY, const bool needsPremultiplyAlpha, const GLenum type,
-    const size_t bytesPerPixel, size_t skipPixels, size_t skipRows,
-    size_t destWidth, size_t destHeight, size_t depth, size_t imageHeight)
+GLenum TexImageHelper::drawSubRectangle(const bool needsFlipY,
+                                        const bool needsPremultiplyAlpha,
+                                        const GLenum type, size_t skipPixels,
+                                        size_t skipRows, size_t destWidth,
+                                        size_t destHeight, size_t depth,
+                                        size_t imageHeight)
 {
     const size_t srcWidth = m_sourceImage.width;
     const size_t srcHeight = m_sourceImage.height;
     const unsigned char* image = m_sourceImage.data;
+    const GLenum format = m_sourceImage.format;
 
-    if (m_sourceImage.format != GL_RGB && m_sourceImage.format != GL_RGBA) {
-        return;
+    // The source channel (R, G, B, A = 0..3) of each destination component.
+    // LUMINANCE is the red channel, as RED is (WebGL 2.0 §3.7.6).
+    static const struct {
+        GLenum format;
+        uint8_t count;
+        uint8_t channels[4];
+    } layouts[] = {
+        { GL_RGBA, 4, { 0, 1, 2, 3 } },
+        { GL_RGBA_INTEGER, 4, { 0, 1, 2, 3 } },
+        { GL_BGRA_EXT, 4, { 0, 1, 2, 3 } },
+        { GL_RGB, 3, { 0, 1, 2 } },
+        { GL_RGB_INTEGER, 3, { 0, 1, 2 } },
+        { GL_RG, 2, { 0, 1 } },
+        { GL_RG_INTEGER, 2, { 0, 1 } },
+        { GL_RED, 1, { 0 } },
+        { GL_RED_INTEGER, 1, { 0 } },
+        { GL_LUMINANCE, 1, { 0 } },
+        { GL_LUMINANCE_ALPHA, 2, { 0, 3 } },
+        { GL_ALPHA, 1, { 3 } },
+    };
+    const uint8_t* channels = nullptr;
+    size_t count = 0;
+    for (const auto& layout : layouts) {
+        if (layout.format == format) {
+            channels = layout.channels;
+            count = layout.count;
+            break;
+        }
+    }
+    const bool isInteger = format == GL_RGBA_INTEGER ||
+                           format == GL_RGB_INTEGER ||
+                           format == GL_RG_INTEGER || format == GL_RED_INTEGER;
+
+    // Only 8-bit unsigned integers, half floats and floats are converted
+    // to (WebGL 2.0 §3.7.6); anything else is not uploaded at all.
+    size_t dstBytesPerPixel = 0;
+    switch (type) {
+    case GL_UNSIGNED_BYTE:
+        dstBytesPerPixel = count;
+        break;
+    case GL_HALF_FLOAT:
+    case GL_HALF_FLOAT_OES:
+        dstBytesPerPixel = isInteger ? 0 : 2 * count;
+        break;
+    case GL_FLOAT:
+        dstBytesPerPixel = isInteger ? 0 : 4 * count;
+        break;
+    case GL_UNSIGNED_SHORT_5_6_5:
+        dstBytesPerPixel = format == GL_RGB ? 2 : 0;
+        break;
+    case GL_UNSIGNED_SHORT_4_4_4_4:
+    case GL_UNSIGNED_SHORT_5_5_5_1:
+        dstBytesPerPixel = format == GL_RGBA ? 2 : 0;
+        break;
+    case GL_UNSIGNED_INT_10F_11F_11F_REV:
+        dstBytesPerPixel = format == GL_RGB ? 4 : 0;
+        break;
+    case GL_UNSIGNED_INT_2_10_10_10_REV:
+        dstBytesPerPixel = format == GL_RGBA ? 4 : 0;
+        break;
+    default:
+        break;
+    }
+    if (dstBytesPerPixel == 0) {
+        return GL_INVALID_OPERATION;
     }
 
     bool needsColorConversion = false;
@@ -6008,14 +6047,28 @@ void TexImageHelper::drawSubRectangle(
     }
 #endif
 
-    const size_t srcBytesPerPixel =
-        (m_isNativeImageDataUsed || m_isImageDataUsed) ? 4 : bytesPerPixel;
+    // Every source is 4 bytes per pixel.
     const size_t srcStride = m_sourceImage.stride;
-    const size_t dstBytesPerPixel = bytesPerPixel;
+    m_width = destWidth;
+    m_height = destHeight;
+    if (!needsFlipY && !needsPremultiplyAlpha && !needsColorConversion &&
+        (format == GL_RGBA || format == GL_BGRA_EXT) &&
+        type == GL_UNSIGNED_BYTE && skipPixels == 0 && skipRows == 0 &&
+        destWidth == srcWidth && destHeight == srcHeight && depth == 1 &&
+        srcStride == srcWidth * 4) {
+        // The source already is the upload.
+        return GL_NO_ERROR;
+    }
+
+    size_t byteLength = dstBytesPerPixel;
+    if (!multiplyChecked(byteLength, destWidth) ||
+        !multiplyChecked(byteLength, destHeight) ||
+        !multiplyChecked(byteLength, depth) || !allocate(byteLength)) {
+        return GL_OUT_OF_MEMORY;
+    }
 
     const size_t dstSliceStride = dstBytesPerPixel * destWidth * destHeight;
     const size_t dstRowStride = dstBytesPerPixel * destWidth;
-    m_data.resize(depth * dstSliceStride);
 
     std::array<uint8_t, 4> order;
     if (needsColorConversion) {
@@ -6053,71 +6106,20 @@ void TexImageHelper::drawSubRectangle(
                 if (srcCol >= srcWidth) {
                     continue;
                 }
-                size_t srcOffset = srcRowOffset + srcCol * srcBytesPerPixel;
-                size_t destOffset = dstRowOffset + c * dstBytesPerPixel;
-
-                if (m_isImageDataUsed && type == GL_FLOAT) {
-                    writeFloatPixel(destOffset, image, srcOffset,
-                                    needsPremultiplyAlpha);
-                } else if (Pixel::isTwoBytesPerPixel(type)) {
-                    if (m_isNativeImageDataUsed || m_isImageDataUsed) {
-                        uint8_t red = image[srcOffset + order[0]];
-                        uint8_t green = image[srcOffset + order[1]];
-                        uint8_t blue = image[srcOffset + order[2]];
-                        uint8_t alpha = image[srcOffset + order[3]];
-                        if (needsPremultiplyAlpha) {
-                            float a = alpha / 255.f;
-                            red = multiplyAlpha(red, a);
-                            green = multiplyAlpha(green, a);
-                            blue = multiplyAlpha(blue, a);
-                        }
-                        GLushort packed = 0;
-                        if (type == GL_UNSIGNED_SHORT_5_5_5_1) {
-                            packed =
-                                Pixel::makePixel5551(red, green, blue, alpha);
-                        } else if (type == GL_UNSIGNED_SHORT_4_4_4_4) {
-                            packed =
-                                Pixel::makePixel4444(red, green, blue, alpha);
-                        } else if (type == GL_UNSIGNED_SHORT_5_6_5) {
-                            packed = Pixel::makePixel565(red, green, blue);
-                        }
-                        memcpy(&m_data[destOffset], &packed, sizeof(GLushort));
-                    } else {
-                        m_data[destOffset + 0] = image[srcOffset + 0];
-                        m_data[destOffset + 1] = image[srcOffset + 1];
-                    }
-                } else if (needsPremultiplyAlpha && srcBytesPerPixel == 4) {
-                    float alpha = image[srcOffset + order[3]] / 255.f;
-                    m_data[destOffset + 0] =
-                        multiplyAlpha(image[srcOffset + order[0]], alpha);
-                    m_data[destOffset + 1] =
-                        multiplyAlpha(image[srcOffset + order[1]], alpha);
-                    m_data[destOffset + 2] =
-                        multiplyAlpha(image[srcOffset + order[2]], alpha);
-                    if (dstBytesPerPixel == 4) {
-                        m_data[destOffset + 3] = image[srcOffset + order[3]];
-                    }
-                } else {
-                    m_data[destOffset + 0] = image[srcOffset + order[0]];
-                    m_data[destOffset + 1] = image[srcOffset + order[1]];
-                    m_data[destOffset + 2] = image[srcOffset + order[2]];
-                    if (dstBytesPerPixel == 4) {
-                        m_data[destOffset + 3] = image[srcOffset + order[3]];
-                    }
-                }
+                const unsigned char* src = image + srcRowOffset + srcCol * 4;
+                const uint8_t rgba[4] = { src[order[0]], src[order[1]],
+                                          src[order[2]], src[order[3]] };
+                writePixel(m_data.get() + dstRowOffset + c * dstBytesPerPixel,
+                           rgba, channels, count, type, needsPremultiplyAlpha);
             }
         }
     }
+    return GL_NO_ERROR;
 }
 
 const void* TexImageHelper::data() const
 {
-    return m_data.empty() ? m_sourceImage.data : m_data.data();
-}
-
-const TexImageHelper::ImageData& TexImageHelper::sourceImage() const
-{
-    return m_sourceImage;
+    return m_isConverted ? m_data.get() : m_sourceImage.data;
 }
 
 Optional<GLenum> TexImageHelper::dataFormat() const
@@ -6130,22 +6132,167 @@ unsigned char TexImageHelper::multiplyAlpha(unsigned char color, float alpha)
     return ((color / 255.f) * alpha) * 255;
 }
 
-void TexImageHelper::writeFloatPixel(size_t destOffset,
-                                     const unsigned char* source,
-                                     size_t srcOffset,
-                                     bool needsPremultiplyAlpha)
+void TexImageHelper::writePixel(unsigned char* dest, const uint8_t* rgba,
+                                const uint8_t* channels, size_t count,
+                                GLenum type, bool needsPremultiplyAlpha)
 {
-    float alpha = source[srcOffset + 3] / 255.f;
-    float pixel[4] = { source[srcOffset] / 255.f, source[srcOffset + 1] / 255.f,
-                       source[srcOffset + 2] / 255.f, alpha };
-    if (needsPremultiplyAlpha) {
-        pixel[0] *= alpha;
-        pixel[1] *= alpha;
-        pixel[2] *= alpha;
+    const float alpha = needsPremultiplyAlpha ? rgba[3] / 255.f : 1.f;
+    // Channel c normalized, or as an 8-bit value, with the color channels
+    // premultiplied when asked.
+    auto normalized = [&](uint8_t c) {
+        return c == 3 ? rgba[3] / 255.f : rgba[c] / 255.f * alpha;
+    };
+    auto byte = [&](uint8_t c) -> uint8_t {
+        return (needsPremultiplyAlpha && c != 3) ? multiplyAlpha(rgba[c], alpha)
+                                                 : rgba[c];
+    };
+
+    switch (type) {
+    case GL_UNSIGNED_BYTE:
+        for (size_t i = 0; i < count; i++) {
+            dest[i] = byte(channels[i]);
+        }
+        return;
+    case GL_HALF_FLOAT:
+    case GL_HALF_FLOAT_OES:
+        for (size_t i = 0; i < count; i++) {
+            GLushort value = Pixel::makeHalfFloat(normalized(channels[i]));
+            memcpy(dest + i * sizeof(value), &value, sizeof(value));
+        }
+        return;
+    case GL_FLOAT:
+        for (size_t i = 0; i < count; i++) {
+            float value = normalized(channels[i]);
+            memcpy(dest + i * sizeof(value), &value, sizeof(value));
+        }
+        return;
+    case GL_UNSIGNED_SHORT_5_6_5:
+    case GL_UNSIGNED_SHORT_4_4_4_4:
+    case GL_UNSIGNED_SHORT_5_5_5_1: {
+        GLushort packed =
+            type == GL_UNSIGNED_SHORT_5_6_5
+                ? Pixel::makePixel565(byte(0), byte(1), byte(2))
+            : type == GL_UNSIGNED_SHORT_4_4_4_4
+                ? Pixel::makePixel4444(byte(0), byte(1), byte(2), byte(3))
+                : Pixel::makePixel5551(byte(0), byte(1), byte(2), byte(3));
+        memcpy(dest, &packed, sizeof(packed));
+        return;
     }
-    size_t components = m_sourceImage.format == GL_RGB ? 3 : 4;
-    memcpy(m_data.data() + destOffset, pixel, components * sizeof(float));
+    case GL_UNSIGNED_INT_10F_11F_11F_REV:
+    case GL_UNSIGNED_INT_2_10_10_10_REV: {
+        uint32_t packed =
+            type == GL_UNSIGNED_INT_10F_11F_11F_REV
+                ? Pixel::makePixel10F11F11F(normalized(0), normalized(1),
+                                            normalized(2))
+                : Pixel::makePixel2101010(normalized(0), normalized(1),
+                                          normalized(2), normalized(3));
+        memcpy(dest, &packed, sizeof(packed));
+        return;
+    }
+    default:
+        STARFISH_ASSERT_NOT_REACHED();
+    }
 }
+
+// The alpha of the pixel, if its format has one, is multiplied into its color
+// channels in place.
+void TexImageHelper::premultiplyPixel(unsigned char* pixel, GLenum type)
+{
+    const GLenum format = m_sourceImage.format;
+    const bool hasAlpha = format == GL_RGBA || format == GL_LUMINANCE_ALPHA;
+    const size_t colors = format == GL_RGBA ? 3 : 1;
+    switch (type) {
+    case GL_UNSIGNED_BYTE:
+        if (hasAlpha) {
+            float alpha = pixel[colors] / 255.f;
+            for (size_t i = 0; i < colors; i++) {
+                pixel[i] = multiplyAlpha(pixel[i], alpha);
+            }
+        }
+        return;
+    case GL_FLOAT:
+        if (hasAlpha) {
+            float values[4];
+            memcpy(values, pixel, (colors + 1) * sizeof(float));
+            for (size_t i = 0; i < colors; i++) {
+                values[i] *= values[colors];
+            }
+            memcpy(pixel, values, (colors + 1) * sizeof(float));
+        }
+        return;
+    case GL_UNSIGNED_SHORT_4_4_4_4: {
+        GLushort value;
+        memcpy(&value, pixel, sizeof(value));
+        uint8_t channel[4];
+        for (size_t i = 0; i < 4; i++) {
+            channel[i] = ((value >> (12 - 4 * i)) & 0xF) * 17;
+        }
+        float alpha = channel[3] / 255.f;
+        value = Pixel::makePixel4444(
+            multiplyAlpha(channel[0], alpha), multiplyAlpha(channel[1], alpha),
+            multiplyAlpha(channel[2], alpha), channel[3]);
+        memcpy(pixel, &value, sizeof(value));
+        return;
+    }
+    case GL_UNSIGNED_SHORT_5_5_5_1: {
+        // A one-bit alpha keeps the color or clears it.
+        GLushort value;
+        memcpy(&value, pixel, sizeof(value));
+        if (!(value & 1)) {
+            value = 0;
+        }
+        memcpy(pixel, &value, sizeof(value));
+        return;
+    }
+    default:
+        // shortcut: half-float, packed 32-bit and integer data is copied
+        // without premultiplying; add it when a test exercises the case.
+        return;
+    }
+}
+
+// The buffers the engine builds itself (the zeroes for a null source, a
+// flipped, premultiplied or converted copy) are tightly packed client memory,
+// so the GL must read them that way whatever unpack state the page set. Every
+// user has already refused an upload while a PIXEL_UNPACK_BUFFER is bound.
+// WebGL 1 has only the first parameter.
+static const struct {
+    GLenum name;
+    GLint value;
+} s_tight[] = {
+    { GL_UNPACK_ALIGNMENT, 1 },    { GL_UNPACK_ROW_LENGTH, 0 },
+    { GL_UNPACK_IMAGE_HEIGHT, 0 }, { GL_UNPACK_SKIP_PIXELS, 0 },
+    { GL_UNPACK_SKIP_ROWS, 0 },    { GL_UNPACK_SKIP_IMAGES, 0 },
+};
+
+class ScopedTightUnpackState {
+public:
+    ScopedTightUnpackState(GL* gl, bool isWebGL2)
+        : m_gl(gl)
+        , m_count(isWebGL2 ? 6 : 1)
+    {
+        for (size_t i = 0; i < m_count; i++) {
+            m_gl->getIntegerv(s_tight[i].name, &m_saved[i]);
+            if (m_saved[i] != s_tight[i].value) {
+                m_gl->pixelStorei(s_tight[i].name, s_tight[i].value);
+            }
+        }
+    }
+
+    ~ScopedTightUnpackState()
+    {
+        for (size_t i = 0; i < m_count; i++) {
+            if (m_saved[i] != s_tight[i].value) {
+                m_gl->pixelStorei(s_tight[i].name, m_saved[i]);
+            }
+        }
+    }
+
+private:
+    GL* m_gl;
+    size_t m_count;
+    GLint m_saved[6];
+};
 
 bool WebGLRenderingContext::isSrcDataValid(ScriptArrayBufferView srcData,
                                            GLenum type)
@@ -6166,6 +6313,53 @@ bool WebGLRenderingContext::isSrcDataValid(ScriptArrayBufferView srcData,
     return true;
 }
 
+bool WebGLRenderingContext::checkUnpackBufferBinding(bool fromPixelUnpackBuffer)
+{
+    bool hasUnpackBuffer = !!getState()->getBoundBuffer(GL_PIXEL_UNPACK_BUFFER);
+    if (hasUnpackBuffer != fromPixelUnpackBuffer) {
+        setGLError(GL_INVALID_OPERATION,
+                   hasUnpackBuffer ? "PIXEL_UNPACK_BUFFER is bound."
+                                   : "PIXEL_UNPACK_BUFFER is not bound.");
+        return false;
+    }
+    return true;
+}
+
+// Unknown tokens are an INVALID_ENUM, a pair of known ones that does not go
+// together an INVALID_OPERATION (OpenGL ES 3.0.6 §3.8.3).
+bool WebGLRenderingContext::isKnownFormatAndType(GLenum format, GLenum type)
+{
+    if (isWebGL2RenderingContext()) {
+        return Pixel::isKnownFormatWebGL2(format) &&
+               Pixel::isKnownTypeWebGL2(type);
+    }
+    // FLOAT and HALF_FLOAT_OES are accepted tokens only once their OES
+    // extension is enabled; otherwise they are an INVALID_ENUM like any
+    // unknown token (OES_texture_float / OES_texture_half_float).
+    bool isKnownType =
+        type == GL_UNSIGNED_BYTE || type == GL_UNSIGNED_SHORT_5_6_5 ||
+        type == GL_UNSIGNED_SHORT_4_4_4_4 ||
+        type == GL_UNSIGNED_SHORT_5_5_5_1 ||
+        (type == GL_FLOAT && isExtensionEnabled("OES_texture_float")) ||
+        (type == GL_HALF_FLOAT_OES &&
+         isExtensionEnabled("OES_texture_half_float"));
+    return (format == GL_ALPHA || format == GL_RGB || format == GL_RGBA ||
+            format == GL_LUMINANCE || format == GL_LUMINANCE_ALPHA) &&
+           isKnownType;
+}
+
+// What every TexImageSource upload checks before it reads its source: known
+// format and type tokens, and no bound PIXEL_UNPACK_BUFFER (WebGL 2.0
+// §3.7.6).
+bool WebGLRenderingContext::validateTexImageSource(GLenum format, GLenum type)
+{
+    if (!isKnownFormatAndType(format, type)) {
+        setGLError(GL_INVALID_ENUM, "format or type is not an accepted token");
+        return false;
+    }
+    return checkUnpackBufferBinding(false);
+}
+
 void WebGLRenderingContext::handleTexImageWithArrayBufferView(
     GLenum target, GLint level, GLsizei width, GLsizei height, GLsizei depth,
     GLenum format, GLenum type, Optional<ScriptArrayBufferView> pixels,
@@ -6178,8 +6372,23 @@ void WebGLRenderingContext::handleTexImageWithArrayBufferView(
     STARFISH_ASSERT(updateBlackImage != nullptr);
     STARFISH_ASSERT(updateTwoBytesBlackImage != nullptr);
 
+    // A null source is no exception (WebGL 2.0 §3.7.6).
+    if (!checkUnpackBufferBinding(false)) {
+        return;
+    }
+
     if (pixels.hasValue()) {
         ArrayBufferViewRef* pixelsView = pixels.getValue();
+
+        // WebGL 2.0, "Pixel store parameter constraints": a 3D upload from
+        // client memory is neither flipped nor premultiplied.
+        if ((target == GL_TEXTURE_3D || target == GL_TEXTURE_2D_ARRAY) &&
+            (m_unpackFlipY || m_unpackPremultiplyAlpha)) {
+            setGLError(GL_INVALID_OPERATION,
+                       "UNPACK_FLIP_Y_WEBGL or UNPACK_PREMULTIPLY_ALPHA_WEBGL "
+                       "is set for a 3D upload.");
+            return;
+        }
 
         if (!isSrcDataValid(pixelsView, type)) {
             setGLError(GL_INVALID_OPERATION);
@@ -6192,28 +6401,19 @@ void WebGLRenderingContext::handleTexImageWithArrayBufferView(
             return;
         }
 
-        size_t elementSize = 1;
-        if (pixelsView->isInt16ArrayObject() ||
-            pixelsView->isUint16ArrayObject()) {
-            elementSize = 2;
-        } else if (pixelsView->isInt32ArrayObject() ||
-                   pixelsView->isUint32ArrayObject() ||
-                   pixelsView->isFloat32ArrayObject()) {
-            elementSize = 4;
-        } else if (pixelsView->isFloat64ArrayObject()) {
-            elementSize = 8;
-        }
+        size_t elementSize = viewElementSize(pixelsView);
 
-        size_t byteOffset = srcOffset * elementSize;
-        if (byteOffset > pixelsView->byteLength()) {
+        if (srcOffset > pixelsView->byteLength() / elementSize) {
             setGLError(GL_INVALID_OPERATION);
             return;
         }
+        size_t byteOffset = srcOffset * elementSize;
 
         size_t bytesPerPixel = getBytesPerPixel(format, type);
         size_t byteLengthOfPixels = 0;
-        if (!computeRequiredUnpackBytes(width, height, depth, format, type,
-                                        byteLengthOfPixels)) {
+        size_t stride = 0;
+        if (!computeRequiredUnpackBytes(target, width, height, depth, format,
+                                        type, byteLengthOfPixels, stride)) {
             return;
         }
         size_t availableBytes = pixelsView->byteLength() - byteOffset;
@@ -6223,23 +6423,49 @@ void WebGLRenderingContext::handleTexImageWithArrayBufferView(
             return;
         }
 
-        GLvoid* data = pixelsView->rawBuffer() + byteOffset;
+        uint8_t* data = pixelsView->rawBuffer() + byteOffset;
 
-        // Handle WebGL-specific pixel storage parameters that affect the
-        // behavior of this function. Treat 3D textures as multiple 2D layers
-        // stacked.
-        TexImageHelper image(width, height * depth, width * bytesPerPixel,
-                             format, data);
-        image.draw(m_unpackFlipY, m_unpackPremultiplyAlpha, type,
-                   bytesPerPixel);
+        if (!m_unpackFlipY && !m_unpackPremultiplyAlpha) {
+            // The GL reads the view in place with the page's unpack state,
+            // which computeRequiredUnpackBytes() checked it against.
+            TexImageHelper image(width, height * depth, width * bytesPerPixel,
+                                 format, data);
+            updateImage(&image);
+            return;
+        }
 
+        // A flipped or premultiplied copy reads the view with the page's
+        // unpack layout (OpenGL ES 3.0.6 §3.8.2). Only 2D uploads get here,
+        // so the rows it copies end exactly at byteLengthOfPixels.
+        STARFISH_ASSERT(depth == 1);
+        const size_t skipBytes =
+            byteLengthOfPixels
+                ? byteLengthOfPixels -
+                      (static_cast<size_t>(height) - 1) * stride -
+                      static_cast<size_t>(width) * bytesPerPixel
+                : 0;
+        TexImageHelper image(width, height, stride, format, data + skipBytes);
+        GLenum error = image.draw(m_unpackFlipY, m_unpackPremultiplyAlpha, type,
+                                  bytesPerPixel);
+        if (error != GL_NO_ERROR) {
+            setGLError(error);
+            return;
+        }
+
+        ScopedTightUnpackState unpackState(m_gl, isWebGL2RenderingContext());
         updateImage(&image);
     } else {
         // Refs: conformance/resources/tex-image-and-sub-image-2d-with-image.js,
         // initializing the texture to black by gl.texImage2D(..., null).
 
+        if (width < 0 || height < 0 || depth < 0) {
+            setGLError(GL_INVALID_VALUE, "negative dimension");
+            return;
+        }
         const size_t bytesPerPixel = getBytesPerPixel(format, type);
-        size_t byteLengthOfPixels = width * height * depth * bytesPerPixel;
+        // 64-bit so that no in-range size wraps to a short buffer.
+        uint64_t byteLengthOfPixels =
+            static_cast<uint64_t>(width) * height * depth * bytesPerPixel;
 
         TRACE(WEBGL_V, KV(glValueString(format)), KV(glValueString(type)));
         TRACE(WEBGL_V, KV(bytesPerPixel), KV(byteLengthOfPixels));
@@ -6251,6 +6477,7 @@ void WebGLRenderingContext::handleTexImageWithArrayBufferView(
             TRACE(WEBGL_V, KV(maxTextureSize));
         }
 
+        ScopedTightUnpackState unpackState(m_gl, isWebGL2RenderingContext());
         if (Pixel::isTwoBytesPerPixel(type)) {
             std::vector<GLushort> blackData;
             if (byteLengthOfPixels <= maxTextureSize) {
@@ -6309,12 +6536,46 @@ static void throwIfNotOriginClean(ExecutionContext* context, bool originClean)
 }
 
 void WebGLRenderingContext::handleTexImageWithImageSource(
-    const GLenum format, const GLenum type, const TexImageSource& source,
-    std::function<void(const TexImageHelper*)> updateImage, size_t sliceHeight,
-    size_t skipPixels, size_t skipRows, size_t destWidth, size_t destHeight,
-    size_t depth, size_t imageHeight)
+    const GLenum target, const GLenum format, const GLenum type,
+    const TexImageSource& source,
+    std::function<void(const TexImageHelper*)> updateImage, size_t skipPixels,
+    size_t skipRows, GLsizei destWidth, GLsizei destHeight, GLsizei depth,
+    size_t imageHeight)
 {
     STARFISH_ASSERT(updateImage != nullptr);
+
+    if (!validateTexImageSource(format, type)) {
+        return;
+    }
+
+    if (destWidth < 0 || destHeight < 0 || depth < 0) {
+        setGLError(GL_INVALID_VALUE, "negative size");
+        return;
+    }
+    // A sized upload with no texels converts nothing.
+    const bool hasSubRectangle = destWidth > 0 || destHeight > 0;
+    if (hasSubRectangle) {
+        // The size sets the size of the conversion buffer, so the GL's own
+        // limits (OpenGL ES 3.0.6 §3.8.3) are applied before it is built.
+        GLint maxSize = 0;
+        GLint maxDepth = 1;
+        if (target == GL_TEXTURE_3D) {
+            m_gl->getIntegerv(GL_MAX_3D_TEXTURE_SIZE, &maxSize);
+            maxDepth = maxSize;
+        } else if (target == GL_TEXTURE_2D_ARRAY) {
+            m_gl->getIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
+            m_gl->getIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &maxDepth);
+        } else {
+            m_gl->getIntegerv(target == GL_TEXTURE_2D
+                                  ? GL_MAX_TEXTURE_SIZE
+                                  : GL_MAX_CUBE_MAP_TEXTURE_SIZE,
+                              &maxSize);
+        }
+        if (destWidth > maxSize || destHeight > maxSize || depth > maxDepth) {
+            setGLError(GL_INVALID_VALUE, "size exceeds the texture limit");
+            return;
+        }
+    }
 
     GLsizei width = 0;
     GLsizei height = 0;
@@ -6347,18 +6608,6 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
         height = sourceImageData->height();
         if (height && size_t(width) > (pixels->byteLength() / 4) / height) {
             setGLError(GL_INVALID_VALUE, "ImageData buffer is too small");
-            return;
-        }
-        // WebGL's TexImageSource conversion requires the ImageData's RGBA8
-        // pixels to be converted to the requested upload type. Keep other
-        // combinations out of the raw-pointer path until they are converted.
-        if ((format != GL_RGB && format != GL_RGBA) ||
-            (type != GL_UNSIGNED_BYTE && type != GL_FLOAT &&
-             type != GL_UNSIGNED_SHORT_5_6_5 &&
-             type != GL_UNSIGNED_SHORT_4_4_4_4 &&
-             type != GL_UNSIGNED_SHORT_5_5_5_1)) {
-            setGLError(GL_INVALID_OPERATION,
-                       "Unsupported ImageData pixel conversion");
             return;
         }
     } else if (source.isHTMLImageElementValue()) {
@@ -6401,11 +6650,10 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
         if (!context) {
             // A canvas that has no rendering context yet still has a bitmap
             // of its size, initialized to transparent black (HTML, "The canvas
-            // element"). Transparent black is all-zero in every WebGL format
-            // and type, so no pixel conversion is needed. A 0x0 canvas still
-            // gets one byte so the upload has a valid buffer to point at.
-            blankCanvasPixels.resize(std::max<size_t>(
-                1, width * height * getBytesPerPixel(format, type)));
+            // element"). A 0x0 canvas still gets one byte so the upload has a
+            // valid buffer to point at.
+            blankCanvasPixels.resize(
+                std::max<size_t>(1, size_t(width) * height * 4));
         } else if (context->isCanvasRenderingContext2D()) {
             CanvasRenderingContext2DMixIn* context2d =
                 context->asCanvasRenderingContext2D();
@@ -6449,71 +6697,28 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
         return;
     }
 
-    size_t bytesPerPixel = getBytesPerPixel(format, type);
-    size_t byteLengthOfPixels = width * height * bytesPerPixel;
-    stride = bytesPerPixel * width;
+    stride = width * 4;
 
-    // Handle WebGL-specific pixel storage parameters that affect the behavior
-    // of this function.
     TexImageHelper image =
         sourceImageData ? TexImageHelper(sourceImageData, format)
         : imageData     ? TexImageHelper(imageData, format)
                         : TexImageHelper(width, height, stride, format,
                                          blankCanvasPixels.data());
+    GLenum error = image.drawSubRectangle(
+        m_unpackFlipY, m_unpackPremultiplyAlpha, type,
+        hasSubRectangle ? skipPixels : 0, hasSubRectangle ? skipRows : 0,
+        hasSubRectangle ? destWidth : width,
+        hasSubRectangle ? destHeight : height, hasSubRectangle ? depth : 1,
+        imageHeight);
 
-    GLint savedSkipPixels = 0, savedSkipRows = 0, savedRowLength = 0,
-          savedImageHeight = 0;
-    if (destWidth > 0 && destHeight > 0) {
-        image.drawSubRectangle(m_unpackFlipY, m_unpackPremultiplyAlpha, type,
-                               bytesPerPixel, skipPixels, skipRows, destWidth,
-                               destHeight, depth, imageHeight);
-        m_gl->getIntegerv(GL_UNPACK_SKIP_PIXELS, &savedSkipPixels);
-        m_gl->getIntegerv(GL_UNPACK_SKIP_ROWS, &savedSkipRows);
-        m_gl->getIntegerv(GL_UNPACK_ROW_LENGTH, &savedRowLength);
-        m_gl->getIntegerv(GL_UNPACK_IMAGE_HEIGHT, &savedImageHeight);
-        if (savedSkipPixels != 0) {
-            m_gl->pixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
-        }
-        if (savedSkipRows != 0) {
-            m_gl->pixelStorei(GL_UNPACK_SKIP_ROWS, 0);
-        }
-        if (savedRowLength != 0) {
-            m_gl->pixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-        }
-        if (savedImageHeight != 0) {
-            m_gl->pixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
-        }
+    TRACE(WEBGL_V, "source:", KV(width), KV(height), KV(stride), KV(imageData),
+          KV(error));
+
+    if (error == GL_NO_ERROR) {
+        ScopedTightUnpackState unpackState(m_gl, isWebGL2RenderingContext());
+        updateImage(&image);
     } else {
-        image.draw(m_unpackFlipY, m_unpackPremultiplyAlpha, type, bytesPerPixel,
-                   sliceHeight);
-    }
-
-    TRACE(WEBGL_V, "source:", KV(width), KV(height), KV(stride),
-          KV(byteLengthOfPixels), KV(imageData));
-
-    GLint savedAlignment = 4;
-    m_gl->getIntegerv(GL_UNPACK_ALIGNMENT, &savedAlignment);
-    if (savedAlignment != 1) {
-        m_gl->pixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    }
-    updateImage(&image);
-    if (savedAlignment != 1) {
-        m_gl->pixelStorei(GL_UNPACK_ALIGNMENT, savedAlignment);
-    }
-
-    if (destWidth > 0 && destHeight > 0) {
-        if (savedSkipPixels != 0) {
-            m_gl->pixelStorei(GL_UNPACK_SKIP_PIXELS, savedSkipPixels);
-        }
-        if (savedSkipRows != 0) {
-            m_gl->pixelStorei(GL_UNPACK_SKIP_ROWS, savedSkipRows);
-        }
-        if (savedRowLength != 0) {
-            m_gl->pixelStorei(GL_UNPACK_ROW_LENGTH, savedRowLength);
-        }
-        if (savedImageHeight != 0) {
-            m_gl->pixelStorei(GL_UNPACK_IMAGE_HEIGHT, savedImageHeight);
-        }
+        setGLError(error);
     }
     if (rasterizedSVGImage != nullptr) {
         delete rasterizedSVGImage;
@@ -6662,14 +6867,16 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     if (source.isHTMLVideoElementValue()) {
-        texImageVideo(target, level, internalFormat, 0, 0, format, type,
-                      source.getHTMLVideoElementValue());
+        if (validateTexImageSource(format, type)) {
+            texImageVideo(target, level, internalFormat, 0, 0, format, type,
+                          source.getHTMLVideoElementValue());
+        }
         return;
     }
 #endif
 
     handleTexImageWithImageSource(
-        format, type, source, [&](const TexImageHelper* helper) {
+        target, format, type, source, [&](const TexImageHelper* helper) {
             STARFISH_ASSERT(helper != nullptr);
 
             TRACE(WEBGL_V, KV(glValueString(internalFormat)),
@@ -6682,13 +6889,12 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
             // Uploads the given image data to the currently bound texture.
             m_gl->texImage2D(
                 target, level, helper->dataFormat().valueOr(internalFormat),
-                helper->sourceImage().width, helper->sourceImage().height, 0,
+                helper->width(), helper->height(), 0,
                 helper->dataFormat().valueOr(format), type, helper->data());
             if (texture && !hasNewGLError()) {
                 texture->setImageLevelInfo(
                     target, level, helper->dataFormat().valueOr(internalFormat),
-                    helper->sourceImage().width, helper->sourceImage().height,
-                    1, type);
+                    helper->width(), helper->height(), 1, type);
             }
         });
 }
@@ -6709,6 +6915,12 @@ void WebGLRenderingContext::texSubImage2D(
     if (format == 0x80E0 /* GL_BGR */ || format == 0x80E1 /* GL_BGRA */ ||
         type == 0x8032 /* GL_UNSIGNED_BYTE_3_3_2 */) {
         setGLError(GL_INVALID_ENUM, "Invalid format or type");
+        return;
+    }
+
+    // WebGL 1.0 §5.14.8: unlike texImage2D, a null source is an error.
+    if (!pixels.hasValue()) {
+        setGLError(GL_INVALID_VALUE, "pixels is null.");
         return;
     }
 
@@ -6766,14 +6978,16 @@ void WebGLRenderingContext::texSubImage2D(GLenum target, GLint level,
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     if (source.isHTMLVideoElementValue()) {
-        texImageVideo(target, level, Optional<GLint>(), xoffset, yoffset,
-                      format, type, source.getHTMLVideoElementValue());
+        if (validateTexImageSource(format, type)) {
+            texImageVideo(target, level, Optional<GLint>(), xoffset, yoffset,
+                          format, type, source.getHTMLVideoElementValue());
+        }
         return;
     }
 #endif
 
     handleTexImageWithImageSource(
-        format, type, source, [&](const TexImageHelper* helper) {
+        target, format, type, source, [&](const TexImageHelper* helper) {
             STARFISH_ASSERT(helper != nullptr);
 
             TRACE(WEBGL_V, KV(glValueString(format)),
@@ -6781,10 +6995,10 @@ void WebGLRenderingContext::texSubImage2D(GLenum target, GLint level,
             TRACE(WEBGL_V, KV(glValueString(type)));
 
             // Uploads the given image data to the currently bound texture.
-            m_gl->texSubImage2D(
-                target, level, xoffset, yoffset, helper->sourceImage().width,
-                helper->sourceImage().height,
-                helper->dataFormat().valueOr(format), type, helper->data());
+            m_gl->texSubImage2D(target, level, xoffset, yoffset,
+                                helper->width(), helper->height(),
+                                helper->dataFormat().valueOr(format), type,
+                                helper->data());
         });
 }
 

@@ -7,3 +7,5 @@ http://localhost:11010/sdk/tests/conformance/extensions/angle-instanced-arrays-o
 http://localhost:11010/sdk/tests/conformance/rendering/draw-elements-out-of-bounds.html
 http://localhost:11010/sdk/tests/conformance/extensions/angle-instanced-arrays.html
 http://localhost:11010/sdk/tests/conformance2/attribs/invalid-vertex-attribs.html
+http://localhost:11010/sdk/tests/conformance2/textures/misc/pbo-texture-uploads.html
+http://localhost:11010/sdk/tests/conformance2/textures/misc/tex-unpack-params-with-flip-y-and-premultiply-alpha.html

@@ -69,6 +69,11 @@ public:
     static GLushort makePixel5551(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
     static GLushort makePixel4444(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
     static GLushort makePixel565(uint8_t r, uint8_t g, uint8_t b);
+    // Encodings of a normalized channel value in [0, 1] (OpenGL ES 3.0.6
+    // §2.1.1-2.1.4 and §3.8.3 Table 3.5, R in the low bits).
+    static GLushort makeHalfFloat(float value);
+    static uint32_t makePixel10F11F11F(float r, float g, float b);
+    static uint32_t makePixel2101010(float r, float g, float b, float a);
 };
 
 std::string glValueString(uint32_t value);
