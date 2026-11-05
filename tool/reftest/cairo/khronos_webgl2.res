@@ -1417,9 +1417,9 @@ http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/uniformapi
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrays/single_attribute.output_type.unsigned_byte.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrays/single_attribute.output_type.unsigned_int.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrays/single_attribute.output_type.int.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrays/single_attribute.output_type.half.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrays/single_attribute.output_type.unsigned_int_2_10_10_10.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrays/single_attribute.output_type.int_2_10_10_10.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrays/single_attribute.output_type.half.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrays/single_attribute.output_type.unsigned_int_2_10_10_10.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrays/single_attribute.output_type.int_2_10_10_10.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrays/single_attribute.usage.static_draw.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrays/single_attribute.usage.stream_draw.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/vertexarrays/single_attribute.usage.dynamic_draw.html?webglVersion=2
@@ -1483,7 +1483,7 @@ http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderapi.
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderprecision_float.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderprecision_int.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderprecision_uint.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderstatequery.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderstatequery.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderstruct.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderswitch.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/stringquery.html?webglVersion=2
