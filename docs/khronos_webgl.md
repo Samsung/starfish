@@ -57,12 +57,15 @@ that binary for the basic driver. Each job allows 30 minutes to build and
 These Release builds also set `-DENABLE_TEST=1` to retain the harness's
 `testEnd()` hook.
 
-The runner caps the suite at 4 parallel jobs and gives each test a 1200 s
+The runner caps the suite at 8 parallel jobs and gives each test a 1200 s
 budget (`KHRONOS_WEBGL_JOBS` / `KHRONOS_WEBGL_TIMEOUT_SEC` in
 `tool/runner/test_runner.py`): every job drives its own GL context, and on a
 software Mesa (llvmpipe) host more of them oversubscribe the CPU until tests
 that pass in isolation start timing out. A few tests legitimately take
-several minutes (`uninitialized-test-2.html`, `multisample-corruption.html`).
+several minutes (`uninitialized-test-2.html`, `multisample-corruption.html`). CI
+sets `LP_NUM_THREADS=4` for each Starfish process, so up to eight tests run
+concurrently with four llvmpipe rasterizer threads each. The three suites
+still run sequentially.
 
 ## How results are collected
 

@@ -682,8 +682,9 @@ khronos_test` runs the curated lists in `tool/reftest/cairo/khronos_webgl*.res`
 against a `-DWEBGL=1` build. GCC and Clang CI build this suite separately
 with `-DCMAKE_BUILD_TYPE=Release -DENABLE_WASM=1 -DWALRUS_JIT=ON` and run
 `out/webgl-ci/bin/lightweight-web-engine`; other x64 suites use their Debug
-artifacts. See `docs/khronos_webgl.md` for how results are collected and how
-to move the pin.
+artifacts. CI runs up to eight tests concurrently with `LP_NUM_THREADS=4`.
+See `docs/khronos_webgl.md` for how results are collected and how to move
+the pin.
 
 ### Web Platform Tests
 
