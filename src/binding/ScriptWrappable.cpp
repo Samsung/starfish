@@ -486,15 +486,20 @@ void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
     ScriptNativeFunctionPointer getter, ScriptNativeFunctionPointer setter,
     bool isEnumerable, bool isConfigurable)
 {
+    // https://webidl.spec.whatwg.org/#dfn-attribute-getter
+    // https://webidl.spec.whatwg.org/#dfn-attribute-setter
+    // The accessor functions are named "get <id>" and "set <id>".
+    std::string name = "get " + propertyName->toStdUTF8String();
     FunctionObjectRef::NativeFunctionInfo nativeFunctionInfo(
-        AtomicStringRef::emptyAtomicString(),
+        AtomicStringRef::create(state->context(), name.data(), name.size()),
         (FunctionObjectRef::NativeFunctionPointer)getter, 0, true, false);
     ValueRef* getterValue =
         ValueRef::create(FunctionObjectRef::create(state, nativeFunctionInfo));
     OptionalRef<ValueRef> setterValue;
     if (setter) {
+        name[0] = 's';
         FunctionObjectRef::NativeFunctionInfo nativeFunctionInfo(
-            AtomicStringRef::emptyAtomicString(),
+            AtomicStringRef::create(state->context(), name.data(), name.size()),
             (FunctionObjectRef::NativeFunctionPointer)setter, 1, true, false);
         setterValue = FunctionObjectRef::create(state, nativeFunctionInfo);
     }
