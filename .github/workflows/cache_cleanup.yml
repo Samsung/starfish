@@ -1,7 +1,7 @@
 name: Weekly submodule cache cleanup + rebuild
 # Every Sunday: delete everything under BART's starfish-ci-cache/ folder
 # (see tool/ci/lib_submodule_cache.sh), then immediately republish fresh
-# tarballs for master's current submodule pins -- the common case for the
+# tarballs for main's current submodule pins -- the common case for the
 # following week's PRs. Without this, starfish-ci-cache/ accumulates
 # forever (a new path per distinct pin set ever seen); overwriting a path
 # with the same content again is a no-op, but it doesn't expire old keys on
@@ -102,7 +102,7 @@ jobs:
       - name: Force a fresh clone
         run: cd /__w/starfish/starfish 2>/dev/null && rm -rf .git || true
 
-      - name: Checkout source (master)
+      - name: Checkout source (main)
         uses: CODE-Actions/checkout@v2
         with:
           submodules: false
@@ -140,7 +140,7 @@ jobs:
     runs-on: [ code-linux, code-2xlarge ]
     timeout-minutes: 30
     steps:
-      - name: Checkout Starfish (master)
+      - name: Checkout Starfish (main)
         uses: CODE-Actions/checkout@v2
         with:
           submodules: false
@@ -181,7 +181,7 @@ jobs:
       - name: Force a fresh clone
         run: cd /__w/starfish/starfish 2>/dev/null && rm -rf .git || true
 
-      - name: Checkout source (master)
+      - name: Checkout source (main)
         uses: CODE-Actions/checkout@v2
         with:
           submodules: false
@@ -214,7 +214,7 @@ jobs:
       - name: Force a fresh clone
         run: cd /__w/starfish/starfish 2>/dev/null && rm -rf .git || true
 
-      - name: Checkout source (master)
+      - name: Checkout source (main)
         uses: CODE-Actions/checkout@v2
         with:
           submodules: false

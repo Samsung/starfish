@@ -3,7 +3,7 @@
 #
 # Triggers:
 #   - Manual (workflow_dispatch)
-#   - Push to docker/ directory on master
+#   - Push to docker/ directory on main
 #
 # starfish-build is tagged with :24.04 and also :latest for the default tag;
 # CI workflows reference starfish-build:24.04. starfish-android-build (see
@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - master
+      - main
     paths:
       - 'docker/**'
       - '.github/workflows/docker_build_push.yml'

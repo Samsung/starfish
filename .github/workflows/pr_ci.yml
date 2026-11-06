@@ -61,7 +61,7 @@ jobs:
       # No workflow here sets fetch-depth, so this checkout has only the PR
       # head commit -- comparing against the PR's *merge-base* with its base
       # branch (not the base branch's current tip) needs that one extra
-      # commit fetched by SHA. Merge-base, not tip: if master gained a
+      # commit fetched by SHA. Merge-base, not tip: if main gained a
       # legitimate contract append after this PR branched, tip-comparison
       # would misreport it as a removal on this PR, and the only documented
       # remedy for that verdict is adding a waiver -- training people to

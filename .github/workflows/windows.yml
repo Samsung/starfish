@@ -22,7 +22,7 @@ on:
     inputs:
       pr_number:
         description: 'PR Number'
-        default: 'master'
+        default: 'main'
         required: true
         type: string
       thirdparty_key:
