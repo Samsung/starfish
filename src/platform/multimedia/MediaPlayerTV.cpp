@@ -155,11 +155,8 @@ void MediaPlayerTizen::setNativePlayerDisplayMode()
         void* tcoreWaylandHandle =
             m_container->webView()->publicLayerUserDataMap()
                 ["__internalLWEWebViewTcoreWaylandHandle"];
-        auto width = m_container->webView()->renderer()->width();
-        auto height = m_container->webView()->renderer()->height();
-        player_set_tcore_display(m_nativePlayer,
-                                 PLAYER_DISPLAY_TYPE_TCORE_OVERLAY,
-                                 tcoreWaylandHandle);
+        player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_OVERLAY2,
+                           GET_DISPLAY(tcoreWaylandHandle));
 #else
         void* ecoreWaylandHandle =
             m_container->webView()->publicLayerUserDataMap()

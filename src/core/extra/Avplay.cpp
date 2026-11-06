@@ -28,11 +28,24 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/modules/renderer/Renderer.h"
-#include <Elementary.h>
 #include <EscargotPublic.h>
+
+#if !defined(STARFISH_TIZEN_MAJOR_VERSION) || STARFISH_TIZEN_MAJOR_VERSION < 11
+#include <Elementary.h>
 
 #ifndef STARFISH_SHELL_EFL
 #error "You must need STARFISH_SHELL_EFL to use this"
+#endif
+#endif
+
+#if !defined(STARFISH_TIZEN_USERAPP_SDK_API_ONLY)
+#ifndef EFL_BETA_API_SUPPORT
+#define EFL_BETA_API_SUPPORT
+#endif
+#include <media/player_internal.h>
+#if defined(STARFISH_TIZEN_TV)
+#include <media/player_product.h>
+#endif
 #endif
 
 namespace Starfish {
@@ -147,8 +160,8 @@ void printNativePlayerError(int errorCode)
     }
 }
 
-Avplay::Avplay(Starfish* starfish)
-    : StarfishHoldable(starfish)
+Avplay::Avplay(WebView* wv)
+    : WebViewHoldable(wv)
     , m_offsetLeft(0)
     , m_offsetTop(0)
     , m_offsetWidth(0)
@@ -202,6 +215,19 @@ void Avplay::open(String* url)
         printNativePlayerError(ret);
     }
 
+#if STARFISH_TIZEN_MAJOR_VERSION >= 11
+    void* tcoreWaylandHandle = starfish()->publicLayerUserDataMap()
+                                   ["__internalLWEWebViewTcoreWaylandHandle"];
+    STARFISH_RELEASE_ASSERT(tcoreWaylandHandle);
+
+    player_display_h display_handle = GET_DISPLAY(tcoreWaylandHandle);
+    player_display_type_e display_type =
+        (player_display_type_e)PLAYER_DISPLAY_TYPE_OVERLAY2;
+    player_display_mode_e display_mode = PLAYER_DISPLAY_MODE_DST_ROI;
+    player_set_display(m_nativePlayer, display_type, display_handle);
+    player_set_display_mode(m_nativePlayer, display_mode);
+    player_set_display_roi_area(m_nativePlayer, 0, 0, 1, 1);
+#else
     Evas_Object* wndObject =
         (Evas_Object*)starfish()->publicLayerUserDataMap()
             ["__internalLWEWebViewEFLNativeWindowEvasObject"];
@@ -214,6 +240,7 @@ void Avplay::open(String* url)
                        display_handle);
     player_set_display_mode(m_nativePlayer, display_mode);
     player_set_display_roi_area(m_nativePlayer, 0, 0, 1, 1);
+#endif
 
     ret = player_set_uri(m_nativePlayer, s.data());
     if (ret != PLAYER_ERROR_NONE) {
