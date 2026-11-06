@@ -1,5 +1,7 @@
 http://web-platform.test:8000/html/webappapis/timers/evil-spec-example.any.html
 http://web-platform.test:8000/html/webappapis/timers/evil-spec-example.any.worker.html
+http://web-platform.test:8000/html/webappapis/timers/setinterval-settimeout-clamping.html
+http://web-platform.test:8000/html/webappapis/timers/timer-nesting-not-inherited-in-microtask.html
 http://web-platform.test:8000/html/webappapis/system-state-and-capabilities/the-navigator-object/navigator-indexed.html
 # [auto-fail] http://web-platform.test:8000/html/webappapis/scripting/processing-model-2/window-onerror-runtime-error-throw.html
 http://web-platform.test:8000/html/webappapis/scripting/processing-model-2/runtime-error-same-origin-with-hash.html

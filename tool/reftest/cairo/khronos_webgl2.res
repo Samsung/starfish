@@ -1454,8 +1454,8 @@ http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativesh
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativestateapi.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativetextureapi.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativevertexarrayapi.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/occlusionquery_strict.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/occlusionquery_conservative.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/occlusionquery_strict.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/occlusionquery_conservative.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/rasterizerdiscard.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/rbostatequery.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/readpixel.html?webglVersion=2

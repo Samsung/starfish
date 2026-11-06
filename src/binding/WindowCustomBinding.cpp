@@ -21,6 +21,7 @@
 #include "Starfish.h"
 #include "PlatformIntegrationData.h"
 #include "binding/ScriptBindingInstance.h"
+#include "binding/ScriptEngineInstance.h"
 #include "core/dom/Document.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
@@ -30,6 +31,7 @@
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/message_loop/Timer.h"
 #include "core/modules/renderer/Renderer.h"
 #include "core/modules/sharedworker/SharedWorkerProcessManager.h"
 #include "core/page/BrowsingContext.h"
@@ -85,11 +87,13 @@ struct TimeOutData : public gc {
     TimeOutData(GlobalScope* globalScope)
         : listener(nullptr)
         , globalScope(globalScope)
+        , nestingLevel(0)
     {
     }
     void* listener;
     GCVector<ScriptValue> argVector;
     GlobalScope* globalScope;
+    uint8_t nestingLevel;
 };
 
 struct ScreenShotTimeOutData : public gc {
@@ -103,9 +107,18 @@ static void timeoutHandler(void* data)
     FunctionObjectRef* fn = (FunctionObjectRef*)td->listener;
     ScriptBindingInstance* instance =
         td->globalScope->executionContext()->scriptBindingInstance();
+    Timer* timer = td->globalScope->webBase()->timer();
 
+    // Declared first so microtasks drain after the level is restored: each
+    // runs as its own task and does not inherit the timer's nesting level.
+    MicroTaskExecutionManager microTasks(instance->engineInstance());
+    uint8_t outerLevel = timer->timerNestingLevel();
+    timer->setTimerNestingLevel(td->nestingLevel);
     callScriptFunction(instance, ValueRef::create(fn), td->argVector.data(),
                        td->argVector.size(), scriptUndefined());
+    timer->setTimerNestingLevel(outerLevel);
+    // setInterval's next run re-enters the initialization steps from here.
+    td->nestingLevel = Timer::nextTimerNestingLevel(td->nestingLevel);
 }
 
 ValueRef* setTimeoutWindowFunction(ExecutionStateRef* state,
@@ -148,6 +161,9 @@ ValueRef* setTimeoutWindowFunction(ExecutionStateRef* state,
         td->listener = createScriptFunction(window->scriptBindingInstance(),
                                             name, 1, bodyStr, error);
     }
+
+    td->nestingLevel =
+        window->webBase()->timer()->initializeNestedTimeout(value1);
 
     // Call native function (nargs: 3)
     result = window->setTimeout(timeoutHandler, value1, td);
@@ -197,6 +213,12 @@ ValueRef* setIntervalWindowFunction(ExecutionStateRef* state,
         td->listener = createScriptFunction(window->scriptBindingInstance(),
                                             name, 1, bodyStr, error);
     }
+
+    // shortcut: the native repeating timer keeps this period, so runs past
+    // level 5 are not re-clamped to 4 ms; it already yields between runs on
+    // both event loops. Re-arm per run if a test needs the spec's period.
+    td->nestingLevel =
+        window->webBase()->timer()->initializeNestedTimeout(value1);
 
     // Call native function (nargs: 3)
     result = window->setInterval(timeoutHandler, value1, td);

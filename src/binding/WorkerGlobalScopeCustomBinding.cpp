@@ -21,9 +21,11 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "binding/ScriptBindingInstance.h"
+#include "binding/ScriptEngineInstance.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/worker/WorkerGlobalScope.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/page/WebBase.h"
 
 #include <EscargotPublic.h>
 using namespace Escargot;
@@ -34,12 +36,14 @@ struct TimeOutData : public gc {
     TimeOutData(WorkerGlobalScope* globalScope)
         : listener(nullptr)
         , globalScope(globalScope)
+        , nestingLevel(0)
     {
         STARFISH_ASSERT(globalScope != nullptr);
     }
     void* listener;
     GCVector<ScriptValue> argVector;
     WorkerGlobalScope* globalScope;
+    uint8_t nestingLevel;
 };
 
 static void timeoutHandler(void* data)
@@ -54,9 +58,18 @@ static void timeoutHandler(void* data)
     FunctionObjectRef* fn = (FunctionObjectRef*)td->listener;
     ScriptBindingInstance* instance =
         td->globalScope->executionContext()->scriptBindingInstance();
+    Timer* timer = td->globalScope->webBase()->timer();
 
+    // Declared first so microtasks drain after the level is restored: each
+    // runs as its own task and does not inherit the timer's nesting level.
+    MicroTaskExecutionManager microTasks(instance->engineInstance());
+    uint8_t outerLevel = timer->timerNestingLevel();
+    timer->setTimerNestingLevel(td->nestingLevel);
     callScriptFunction(instance, ValueRef::create(fn), td->argVector.data(),
                        td->argVector.size(), scriptUndefined());
+    timer->setTimerNestingLevel(outerLevel);
+    // setInterval's next run re-enters the initialization steps from here.
+    td->nestingLevel = Timer::nextTimerNestingLevel(td->nestingLevel);
 }
 
 ValueRef* setTimeoutWorkerGlobalScopeFunction(ExecutionStateRef* state,
@@ -102,6 +115,9 @@ ValueRef* setTimeoutWorkerGlobalScopeFunction(ExecutionStateRef* state,
         td->listener = createScriptFunction(
             originalObj->scriptBindingInstance(), name, 1, bodyStr, error);
     }
+
+    td->nestingLevel =
+        originalObj->webBase()->timer()->initializeNestedTimeout(value1);
 
     // Call native function (nargs: 3)
     result = originalObj->setTimeout(timeoutHandler, value1, td);
@@ -153,6 +169,11 @@ ValueRef* setIntervalWorkerGlobalScopeFunction(ExecutionStateRef* state,
         td->listener = createScriptFunction(
             originalObj->scriptBindingInstance(), name, 1, bodyStr, error);
     }
+
+    // shortcut: like Window's setInterval, runs past level 5 keep this
+    // period instead of re-clamping to 4 ms.
+    td->nestingLevel =
+        originalObj->webBase()->timer()->initializeNestedTimeout(value1);
 
     // Call native function (nargs: 3)
     result = originalObj->setInterval(timeoutHandler, value1, td);

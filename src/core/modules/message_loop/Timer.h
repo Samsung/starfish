@@ -58,6 +58,34 @@ public:
                                    TimerHandler handler, void* data);
     void cancelAnimationFrame(size_t reqID);
 
+    // Timer initialization steps for setTimeout()/setInterval(): a timeout
+    // scheduled from a timer task nested more than 5 deep waits at least
+    // 4 ms, so a self-rescheduling setTimeout(0) chain still yields to
+    // rendering and I/O. Clamps |timeout| and returns the nesting level of
+    // the task it schedules.
+    // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#timer-initialisation-steps
+    uint8_t initializeNestedTimeout(int32_t& timeout) const
+    {
+        if (m_timerNestingLevel > 5 && timeout < 4) {
+            timeout = 4;
+        }
+        return nextTimerNestingLevel(m_timerNestingLevel);
+    }
+    // Only "more than 5" is observable, so the level saturates there.
+    static uint8_t nextTimerNestingLevel(uint8_t level)
+    {
+        return level > 5 ? level : static_cast<uint8_t>(level + 1);
+    }
+    // The level of the script timer task now running; 0 outside one.
+    uint8_t timerNestingLevel() const
+    {
+        return m_timerNestingLevel;
+    }
+    void setTimerNestingLevel(uint8_t level)
+    {
+        m_timerNestingLevel = level;
+    }
+
 protected:
     Timer(WebBase* webBase);
 
@@ -77,6 +105,7 @@ protected:
         m_requestAnimationFrameHandler;
     size_t m_animationCounter;
     GCAtomicUnorderedMap<uint32_t, void*> m_animationHandler;
+    uint8_t m_timerNestingLevel = 0;
 };
 } // namespace Starfish
 
