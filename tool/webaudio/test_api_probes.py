@@ -149,6 +149,15 @@ class APIProbesTest(unittest.TestCase):
     def test_media_element_source_constructor(self):
         self.run_group('media-element-source')
 
+    def test_media_blob_duration(self):
+        self.run_group('media-blob-duration')
+
+    def test_media_blob_invalid(self):
+        self.run_group('media-blob-invalid')
+
+    def test_media_blob_revoked(self):
+        self.run_group('media-blob-revoked')
+
     def test_reverse_loop_with_sub_sample_start(self):
         self.run_group('reverse-loop')
 

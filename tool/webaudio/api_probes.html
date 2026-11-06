@@ -107,6 +107,152 @@ const groups = {
         await context.close();
     },
 
+    // HTML requires the resource duration before HAVE_METADATA.
+    // https://html.spec.whatwg.org/multipage/media.html#dom-media-duration
+    'media-blob-duration': async () => {
+        const sampleRate = 8000;
+        const frames = sampleRate / 2;
+        const bytes = new Uint8Array(44 + frames * 2);
+        const view = new DataView(bytes.buffer);
+        const tag = (at, value) => {
+            for (let i = 0; i < 4; i++) {
+                bytes[at + i] = value.charCodeAt(i);
+            }
+        };
+        tag(0, 'RIFF'); view.setUint32(4, bytes.length - 8, true);
+        tag(8, 'WAVE'); tag(12, 'fmt '); view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 2, true);
+        view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+        tag(36, 'data'); view.setUint32(40, frames * 2, true);
+        const url = URL.createObjectURL(new Blob([bytes], {type: 'audio/wav'}));
+        const audio = document.createElement('audio');
+        let timer;
+        try {
+            const event = await new Promise((resolve, reject) => {
+                timer = setTimeout(() => reject(Error('metadata timeout')), 5000);
+                audio.onloadedmetadata = () => resolve('loadedmetadata');
+                audio.onerror = () => resolve('error');
+                audio.src = url;
+                audio.load();
+            });
+            check(event === 'loadedmetadata', 'Blob WAV fires loadedmetadata');
+            check(Math.abs(audio.duration - 0.5) < 0.001,
+                  'Blob WAV duration is 0.5 seconds: ' + audio.duration);
+            check(audio.readyState >= 1, 'Blob WAV has metadata');
+        } finally {
+            clearTimeout(timer);
+            audio.removeAttribute('src');
+            audio.load();
+            URL.revokeObjectURL(url);
+        }
+    },
+
+    // An unsupported resource produces one error and no metadata.
+    // https://html.spec.whatwg.org/multipage/media.html#dedicated-media-source-failure-steps
+    'media-blob-invalid': async () => {
+        const url = URL.createObjectURL(new Blob(['invalid'], {type: 'audio/wav'}));
+        const audio = document.createElement('audio');
+        let errors = 0;
+        let metadata = 0;
+        let timer;
+        audio.onloadedmetadata = () => { metadata++; };
+        try {
+            await new Promise((resolve, reject) => {
+                timer = setTimeout(() => reject(Error('error timeout')), 5000);
+                audio.onerror = () => {
+                    errors++;
+                    resolve();
+                };
+                audio.src = url;
+                audio.load();
+            });
+            // Allow a second queued error or a spurious metadata event to run.
+            await new Promise((resolve) => setTimeout(resolve, 150));
+            check(errors === 1, 'invalid Blob fires exactly one error: ' + errors);
+            check(audio.error && audio.error.code === 4,
+                  'invalid Blob reports MEDIA_ERR_SRC_NOT_SUPPORTED');
+            check(audio.readyState === 0, 'invalid Blob stays at HAVE_NOTHING');
+            check(metadata === 0, 'invalid Blob never fires loadedmetadata');
+        } finally {
+            clearTimeout(timer);
+            audio.removeAttribute('src');
+            audio.load();
+            URL.revokeObjectURL(url);
+        }
+    },
+
+    // Resolving a revoked Blob URL fails before the resource is usable.
+    // https://w3c.github.io/FileAPI/#blob-url-resolve
+    // https://html.spec.whatwg.org/multipage/media.html#dedicated-media-source-failure-steps
+    'media-blob-revoked': async () => {
+        const sampleRate = 8000;
+        const frames = sampleRate / 2;
+        const bytes = new Uint8Array(44 + frames * 2);
+        const view = new DataView(bytes.buffer);
+        const tag = (at, value) => {
+            for (let i = 0; i < 4; i++) {
+                bytes[at + i] = value.charCodeAt(i);
+            }
+        };
+        tag(0, 'RIFF'); view.setUint32(4, bytes.length - 8, true);
+        tag(8, 'WAVE'); tag(12, 'fmt '); view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 2, true);
+        view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+        tag(36, 'data'); view.setUint32(40, frames * 2, true);
+
+        for (const label of ['synchronous revoke', 'later-task revoke']) {
+            const url = URL.createObjectURL(new Blob([bytes], {type: 'audio/wav'}));
+            const audio = document.createElement('audio');
+            let errors = 0;
+            let metadata = 0;
+            let revoked = false;
+            let timer;
+            let revokeTimer;
+            audio.onloadedmetadata = () => { metadata++; };
+            try {
+                await new Promise((resolve, reject) => {
+                    timer = setTimeout(() => reject(Error(label + ': timeout')),
+                                       5000);
+                    audio.onerror = () => {
+                        errors++;
+                        resolve();
+                    };
+                    audio.src = url;
+                    if (label === 'synchronous revoke') {
+                        URL.revokeObjectURL(url);
+                        revoked = true;
+                        audio.load();
+                    } else {
+                        audio.load();
+                        revokeTimer = setTimeout(() => {
+                            check(metadata === 0,
+                                  label + ': revocation precedes metadata');
+                            URL.revokeObjectURL(url);
+                            revoked = true;
+                        }, 0);
+                    }
+                });
+                await new Promise((resolve) => setTimeout(resolve, 150));
+                check(revoked, label + ': revocation ran');
+                check(errors === 1, label + ': exactly one error: ' + errors);
+                check(audio.error && audio.error.code === 4,
+                      label + ': MEDIA_ERR_SRC_NOT_SUPPORTED');
+                check(audio.readyState === 0, label + ': HAVE_NOTHING');
+                check(metadata === 0, label + ': no loadedmetadata');
+            } finally {
+                clearTimeout(timer);
+                clearTimeout(revokeTimer);
+                audio.removeAttribute('src');
+                audio.load();
+                URL.revokeObjectURL(url);
+            }
+        }
+    },
+
     // A looped source with a negative rate enters its loop on the first
     // frame; a start time between two frames must not change that.
     'reverse-loop': async () => {

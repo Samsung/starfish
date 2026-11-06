@@ -344,6 +344,11 @@ void FfmpegWrapperPlayer::destroy()
     if (m_fmtCtx != nullptr) {
         avformat_close_input(&m_fmtCtx);
     }
+    if (m_memoryIO) {
+        // libavformat may replace the original AVIO buffer while probing.
+        av_freep(&m_memoryIO->buffer);
+        avio_context_free(&m_memoryIO);
+    }
     std::string().swap(m_requestedLocation);
 }
 
@@ -358,9 +363,11 @@ bool FfmpegWrapperPlayer::prepare(
         return false;
     }
 
-    if (m_url) {
-        PLAYER_LOGI("[FfmpegWrapperPlayer] Opening url : %s\n",
-                    m_url->urlString()->toUTF8NonGCString().c_str());
+    if (m_url || m_hasMemoryInput) {
+        if (m_url) {
+            PLAYER_LOGI("[FfmpegWrapperPlayer] Opening url : %s\n",
+                        m_url->urlString()->toUTF8NonGCString().c_str());
+        }
 
         // Let destroy() abort a network read that would otherwise block the
         // decoding thread, and so the join, until data arrives.
@@ -373,9 +380,14 @@ bool FfmpegWrapperPlayer::prepare(
         };
         m_fmtCtx->interrupt_callback.opaque = this;
 
-        if (avformat_open_input(&m_fmtCtx,
-                                m_url->urlString()->toUTF8NonGCString().c_str(),
-                                nullptr, nullptr) < 0) {
+        if (m_hasMemoryInput) {
+            if (!openMemoryInput()) {
+                return false;
+            }
+        } else if (avformat_open_input(
+                       &m_fmtCtx,
+                       m_url->urlString()->toUTF8NonGCString().c_str(), nullptr,
+                       nullptr) < 0) {
             PLAYER_LOGI(
                 "[FfmpegWrapperPlayer] Error: Could not open source url: %s\n",
                 m_url->urlString()->toUTF8NonGCString().c_str());
@@ -413,9 +425,11 @@ bool FfmpegWrapperPlayer::prepare(
         }
         // Checked after probing, which may itself re-request the input (an
         // MP4 with its moov after the media data seeks back to the start).
-        m_requestedLocation = m_url->urlString()->toUTF8NonGCString();
-        if (responseLocationIs(m_fmtCtx, m_requestedLocation.c_str())) {
-            m_owner->vouchResponseURL(m_url);
+        if (m_url) {
+            m_requestedLocation = m_url->urlString()->toUTF8NonGCString();
+            if (responseLocationIs(m_fmtCtx, m_requestedLocation.c_str())) {
+                m_owner->vouchResponseURL(m_url);
+            }
         }
     }
 
@@ -528,8 +542,83 @@ void FfmpegWrapperPlayer::setLooping(bool looping)
 {
 }
 
-void FfmpegWrapperPlayer::setMemoryBuffer(void* buffer, int size)
+void FfmpegWrapperPlayer::setMemoryBuffer(const uint8_t* data, uint64_t size)
 {
+    m_memoryData = data;
+    m_memorySize = size;
+    m_memoryPos = 0;
+    m_hasMemoryInput = true;
+}
+
+bool FfmpegWrapperPlayer::openMemoryInput()
+{
+    // AVIO uses signed offsets, including for AVSEEK_SIZE.
+    if (m_memorySize > static_cast<uint64_t>(INT64_MAX)) {
+        return false;
+    }
+    auto* buffer = static_cast<unsigned char*>(av_malloc(kMemoryIOBufferSize));
+    if (!buffer) {
+        return false;
+    }
+    m_memoryIO = avio_alloc_context(buffer, kMemoryIOBufferSize, 0, this,
+                                    readMemoryInput, nullptr, seekMemoryInput);
+    if (!m_memoryIO) {
+        av_free(buffer);
+        return false;
+    }
+    m_memoryIO->seekable = AVIO_SEEKABLE_NORMAL;
+    m_fmtCtx->pb = m_memoryIO;
+    m_fmtCtx->flags |= AVFMT_FLAG_CUSTOM_IO;
+    // On failure libavformat frees m_fmtCtx, but destroy() must release pb.
+    return avformat_open_input(&m_fmtCtx, nullptr, nullptr, nullptr) >= 0;
+}
+
+int FfmpegWrapperPlayer::readMemoryInput(void* opaque, uint8_t* buffer,
+                                         int size)
+{
+    // prepare() probes before the decode thread starts; afterwards only that
+    // thread reads the immutable Blob bytes and changes the cursor.
+    auto* self = static_cast<FfmpegWrapperPlayer*>(opaque);
+    uint64_t left = self->m_memorySize - self->m_memoryPos;
+    if (left == 0) {
+        return AVERROR_EOF;
+    }
+    int count =
+        static_cast<int>(std::min<uint64_t>(left, static_cast<uint64_t>(size)));
+    memcpy(buffer, self->m_memoryData + self->m_memoryPos, count);
+    self->m_memoryPos += count;
+    return count;
+}
+
+int64_t FfmpegWrapperPlayer::seekMemoryInput(void* opaque, int64_t offset,
+                                             int whence)
+{
+    auto* self = static_cast<FfmpegWrapperPlayer*>(opaque);
+    if (whence & AVSEEK_SIZE) {
+        return static_cast<int64_t>(self->m_memorySize);
+    }
+    int64_t base;
+    switch (whence & ~AVSEEK_FORCE) {
+    case SEEK_SET:
+        base = 0;
+        break;
+    case SEEK_CUR:
+        base = static_cast<int64_t>(self->m_memoryPos);
+        break;
+    case SEEK_END:
+        base = static_cast<int64_t>(self->m_memorySize);
+        break;
+    default:
+        return AVERROR(EINVAL);
+    }
+    // Check before adding so an invalid offset cannot overflow or move the
+    // cursor outside the Blob, including with INT64_MIN/MAX offsets.
+    if (offset < -base ||
+        offset > static_cast<int64_t>(self->m_memorySize) - base) {
+        return AVERROR(EINVAL);
+    }
+    self->m_memoryPos = static_cast<uint64_t>(base + offset);
+    return static_cast<int64_t>(self->m_memoryPos);
 }
 
 player_state_e FfmpegWrapperPlayer::getState()
@@ -572,6 +661,9 @@ double FfmpegWrapperPlayer::getDuration()
 // same way for the same-origin hops it can't see.
 void FfmpegWrapperPlayer::noteResponseLocation()
 {
+    if (m_hasMemoryInput) {
+        return;
+    }
     if (!m_owner->responseURLVouched()) {
         return;
     }
@@ -1514,6 +1606,20 @@ void MediaPlayerFFmpeg::closePreparingMode()
     }
 }
 
+void MediaPlayerFFmpeg::failPreparingBlobURL()
+{
+    // A missing or malformed Blob URL fails fetching before media is usable.
+    // HTML returns this failure to resource selection, which reports code 4.
+    // https://w3c.github.io/FileAPI/#blob-url-resolve
+    // https://html.spec.whatwg.org/multipage/media.html#media-data-processing-steps-list
+    // https://html.spec.whatwg.org/multipage/media.html#dedicated-media-source-failure-steps
+    m_container->giveupFetchingResource(
+        true, MediaError::MEDIA_ERR_SRC_NOT_SUPPORTED);
+    // giveupFetchingResource() already dispatched the sole error event.
+    m_foundError = false;
+    destroy();
+}
+
 void MediaPlayerFFmpeg::prepare(ResourceURL* url)
 {
     PLAYER_LOGI("MediaPlayerFFmpeg::prepare\n");
@@ -1551,12 +1657,16 @@ void MediaPlayerFFmpeg::prepare(ResourceURL* url)
         if (WebBase::stringToBlobURLString(url->urlString(), store) == false) {
             PLAYER_LOGE(
                 "MediaPlayerFFmpeg::prepare, seturl, FAIL - INVALID BLOB URL");
-            processNextOperationQueueInContainer();
+            failPreparingBlobURL();
             return;
         }
         if (m_container->webView()->isValidBlobURL(store) == true) {
-            m_nativePlayer->setMemoryBuffer(((Blob*)store.m_blob)->data(),
-                                            ((Blob*)store.m_blob)->size());
+            Blob* blob = static_cast<Blob*>(store.m_blob);
+            // Retain the Blob (and a slice's data owner) until dispose() has
+            // joined the decode thread that borrows its immutable bytes.
+            m_memoryBlob = blob;
+            m_nativePlayer->setMemoryBuffer(
+                static_cast<const uint8_t*>(blob->data()), blob->size());
         } else if (m_container->webView()->isValidMediaSourceBlobURL(store) ==
                    true) {
             MediaSource* ms = (MediaSource*)store.m_blob;
@@ -1571,8 +1681,8 @@ void MediaPlayerFFmpeg::prepare(ResourceURL* url)
             processNextOperationQueueInContainer();
             return;
         } else {
-            // fire eror
-            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            failPreparingBlobURL();
+            return;
         }
     } else {
         // Play with URL
@@ -1607,8 +1717,16 @@ void MediaPlayerFFmpeg::handlePrepared()
     closePreparingMode();
     if (m_foundError == true) {
         if (m_container != nullptr) {
-            m_container->giveupFetchingResource();
+            // A Blob has no network leg: an unusable resource is unsupported.
+            // https://html.spec.whatwg.org/multipage/media.html#media-data-processing-steps-list
+            m_container->giveupFetchingResource(
+                true, m_memoryBlob ? MediaError::MEDIA_ERR_SRC_NOT_SUPPORTED
+                                   : MediaError::MEDIA_ERR_NETWORK);
         }
+        // The failure steps fire one error event; giveupFetchingResource()
+        // already dispatched it, so destroy() must not repeat it.
+        // https://html.spec.whatwg.org/multipage/media.html#dedicated-media-source-failure-steps
+        m_foundError = false;
         destroy();
         return;
     }
@@ -1669,6 +1787,8 @@ void MediaPlayerFFmpeg::handlePrepared()
         m_foundError = true;
         m_container->giveupFetchingResource(
             true, MediaError::MEDIA_ERR_SRC_NOT_SUPPORTED);
+        // giveupFetchingResource() already dispatched the error event.
+        m_foundError = false;
         destroy();
         return;
     }
@@ -1736,6 +1856,7 @@ void MediaPlayerFFmpeg::dispose()
         m_nativePlayer->unsetBufferingCB();
         m_nativePlayer->destroy();
         m_nativePlayer = nullptr;
+        m_memoryBlob = nullptr;
     }
     {
         Locker<Mutex> l(*m_decodedVideoFrameMutex);

@@ -49,6 +49,7 @@ extern "C" {
 
 namespace Starfish {
 
+class Blob;
 class FFmpegAudioOutput;
 class CanvasSurface;
 class ExecutionContext;
@@ -152,7 +153,7 @@ public:
     }
     void setUrl(ResourceURL* url);
     void setLooping(bool looping);
-    void setMemoryBuffer(void* buffer, int size);
+    void setMemoryBuffer(const uint8_t* data, uint64_t size);
     player_state_e getState();
     int getPlayPosition();
     // Stream duration in seconds, or NaN if unknown.
@@ -183,6 +184,16 @@ private:
     // Internal methods
     void decodingThread();
     void noteResponseLocation();
+    bool openMemoryInput();
+    static int readMemoryInput(void* opaque, uint8_t* buffer, int size);
+    static int64_t seekMemoryInput(void* opaque, int64_t offset, int whence);
+
+    static constexpr size_t kMemoryIOBufferSize = 32 * 1024;
+    const uint8_t* m_memoryData{ nullptr };
+    uint64_t m_memorySize{ 0 };
+    uint64_t m_memoryPos{ 0 };
+    bool m_hasMemoryInput{ false };
+    AVIOContext* m_memoryIO{ nullptr };
 
     // State management
     enum class State { STOPPED, PREPARED, PLAYING, PAUSED };
@@ -416,6 +427,9 @@ public:
     FFmpegMediaPacket* m_lastDecodedVideoPacket;
 
     ResourceURL* m_currentURL;
+    // This GC-scanned player keeps the borrowed bytes alive; the native
+    // wrapper is PointerFreeGC and cannot root the Blob.
+    Blob* m_memoryBlob{ nullptr };
 
     Mutex* m_setNeedsCompositeEventIdlerHandleMutex;
     volatile size_t m_setNeedsCompositeEventIdlerHandle;
@@ -539,6 +553,9 @@ protected:
     void setNativePlayerDisplayMode();
     void setNativePlayerDisplayModeWithGL();
     void setPlayerDisplayVideoAtPausedState(int& ret);
+
+private:
+    void failPreparingBlobURL();
 };
 
 } // namespace Starfish
