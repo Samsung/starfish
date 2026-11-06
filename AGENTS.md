@@ -125,7 +125,7 @@ Conventions:
   placed before the `Signed-off-by` line — regardless of which agent tool
   was used.
 - Branch prefixes: `feat/ fix/ docs/ style/ refactor/ chore/`.
-- Never push directly or force-push to `master` — land changes through a PR.
+- Never push directly or force-push to `main` — land changes through a PR.
 
 ## Code review checkers
 

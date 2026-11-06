@@ -580,7 +580,7 @@ Web Audio execution settings are not currently part of the nightly reporter.
 `(test type, URL)` candidates across complete MANIFEST branches.
 `wpt_scope.compare_inventory` compares candidates with supplied active CI
 entries, retaining list provenance and diagnosing origin/type/URL mismatches.
-These are library helpers; the master nightly reporter does not call them
+These are library helpers; the main nightly reporter does not call them
 to select its execution scope. They neither prove execution completion nor
 add missing CI URLs automatically. Callers must include separately scheduled
 CI suites when constructing an inventory.
