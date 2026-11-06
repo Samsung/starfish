@@ -32,15 +32,12 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/rapid-resizin
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/texture-bindings-unaffected-on-resize.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/to-data-url-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/canvas/viewport-unchanged-upon-resize.html
-http://localhost:11010/conformance-suites/1.0.3/conformance/context/constants-and-properties.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-attribute-preserve-drawing-buffer.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-attributes-alpha-depth-stencil-antialias.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-creation-and-destruction.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-creation.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-eviction-with-garbage-collection.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-hidden-alpha.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-lost.html
-http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-lost-restored.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-release-upon-reload.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-release-with-workers.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-type-test.html
@@ -49,7 +46,6 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/context/methods.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/context/premultiplyalpha-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/resource-sharing-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/angle-instanced-arrays.html
-http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/angle-instanced-arrays-out-of-bounds.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-blend-minmax.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-frag-depth.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-shader-texture-lod.html # @ignore Passed due to unsupported extension.
@@ -74,7 +70,6 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-verte
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-vertex-array-object.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-compressed-texture-atc.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-compressed-texture-pvrtc.html
-http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-compressed-texture-s3tc.html
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-compressed-texture-size-limit.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-debug-renderer-info.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-debug-shaders.html
@@ -380,8 +375,6 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyT
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexSubImage2DBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/copyTexSubImage2D.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/deleteBufferBadArgs.html
-http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawArrays.html
-http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawArraysOutOfBounds.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/drawElements.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/isTestsBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/isTests.html
@@ -557,7 +550,6 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/programs/gl-get-acti
 http://localhost:11010/conformance-suites/1.0.3/conformance/programs/gl-getshadersource.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/programs/gl-shader-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/programs/invalid-UTF-16.html
-http://localhost:11010/conformance-suites/1.0.3/conformance/programs/program-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/programs/use-program-crash-with-discard-in-fragment-shader.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/reading/read-pixels-pack-alignment.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/reading/read-pixels-test.html
@@ -567,7 +559,6 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/frameb
 http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/renderbuffer-initialization.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/culling.html
-http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/draw-arrays-out-of-bounds.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/draw-elements-out-of-bounds.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/framebuffer-switch.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/rendering/framebuffer-texture-switch.html

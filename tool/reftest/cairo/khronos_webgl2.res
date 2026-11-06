@@ -45,12 +45,10 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-hidd
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-release-upon-reload.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-release-with-workers.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-lost-restored.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-lost.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/incorrect-context-object-behaviour.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/conformance/context/premultiplyalpha-test.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/resource-sharing-test.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/user-defined-properties-on-context.html?webglVersion=2
-http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/ext-color-buffer-half-float.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/ext-disjoint-timer-query.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/ext-texture-filter-anisotropic.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/get-extension.html?webglVersion=2
@@ -59,8 +57,6 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-deb
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-debug-shaders.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-etc.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-pvrtc.html?webglVersion=2
-http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-s3tc.html?webglVersion=2
-http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-s3tc-srgb.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-size-limit.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-shared-resources.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/angle-ambiguous-function-call.html?webglVersion=2
@@ -512,7 +508,6 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/programs/gl-getshade
 http://localhost:11010/conformance-suites/2.0.0/conformance/programs/gl-shader-test.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/programs/invalid-UTF-16.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/programs/program-infolog.html?webglVersion=2
-http://localhost:11010/conformance-suites/2.0.0/conformance/programs/program-test.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/programs/use-program-crash-with-discard-in-fragment-shader.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/reading/read-pixels-pack-alignment.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/reading/read-pixels-test.html?webglVersion=2
@@ -521,7 +516,6 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/frameb
 http://localhost:11010/conformance-suites/2.0.0/conformance/renderbuffers/renderbuffer-initialization.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/culling.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/default-texture-draw-bug.html?webglVersion=2
-http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/draw-arrays-out-of-bounds.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/draw-elements-out-of-bounds.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/draw-with-changing-start-vertex-bug.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/framebuffer-switch.html?webglVersion=2
@@ -694,8 +688,6 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/copyT
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/copyTexSubImage2D.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/copyTexSubImage2DBadArgs.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/deleteBufferBadArgs.html?webglVersion=2
-http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/drawArrays.html?webglVersion=2
-http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/drawArraysOutOfBounds.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/drawElements.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/isTests.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/isTestsBadArgs.html?webglVersion=2
@@ -1464,7 +1456,6 @@ http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativest
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativevertexarrayapi.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/occlusionquery_strict.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/occlusionquery_conservative.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/pixelbufferobject.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/rasterizerdiscard.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/rbostatequery.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/readpixel.html?webglVersion=2
@@ -1503,7 +1494,6 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/buffers/buffer-over
 http://localhost:11010/conformance-suites/2.0.0/conformance2/buffers/get-buffer-sub-data.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/buffers/one-large-uniform-buffer.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/buffers/uniform-buffers.html?webglVersion=2
-http://localhost:11010/conformance-suites/2.0.0/conformance2/context/constants-and-properties-2.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/context/context-attributes-depth-stencil-antialias-obeyed.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/context/context-type-test-2.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/context/methods-2.html?webglVersion=2
@@ -1555,7 +1545,6 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/misc/views-with-off
 http://localhost:11010/conformance-suites/2.0.0/conformance2/programs/gl-get-frag-data-location.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/query/occlusion-query.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/query/query.html?webglVersion=2
-http://localhost:11010/conformance-suites/2.0.0/conformance2/reading/read-pixels-from-fbo-test.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/reading/read-pixels-into-pixel-pack-buffer.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/reading/read-pixels-pack-parameters.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/renderbuffers/framebuffer-object-attachment.html?webglVersion=2
