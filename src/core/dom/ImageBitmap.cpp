@@ -93,7 +93,7 @@ SerializedData* ImageBitmap::serialize(SerializingMap& memory)
     // 1.Set serialized.[[BitmapData]] to a copy of value's bitmap data.
     // 2.Set serialized.[[OriginClean]] to true if value's origin-clean flag is
     // set, and false otherwise.
-    return new SerializedImageBitmap();
+    return nullptr;
 }
 
 void ImageBitmap::deserialize(SerializedData* serialized,
@@ -111,7 +111,7 @@ TransferedData* ImageBitmap::transfer()
     // 2.Set dataHolder.[[OriginClean]] to true if value's origin-clean flag is
     // set, and false otherwise.
     // 3.Unset value's bitmap data.
-    return new TransferedImageBitmap(this);
+    return nullptr;
 }
 
 void ImageBitmap::transferReceive(TransferedData* transfered)
@@ -119,20 +119,6 @@ void ImageBitmap::transferReceive(TransferedData* transfered)
     STARFISH_UNSUPPORTED_METHOD();
     // 1.Set value's bitmap data to dataHolder.[[BitmapData]].
     // 2.If dataHolder.[[OriginClean]] is true, set value's origin-clean flag.
-}
-
-ScriptWrappable* SerializedImageBitmap::createDeserializingInstance(
-    ExecutionContext* executionContext) const
-{
-    STARFISH_UNSUPPORTED_METHOD();
-    return new ImageBitmap(executionContext, nullptr);
-}
-
-ScriptWrappable* TransferedImageBitmap::createTransferReceivingInstance(
-    ExecutionContext* executionContext) const
-{
-    STARFISH_UNSUPPORTED_METHOD();
-    return new ImageBitmap(executionContext, nullptr);
 }
 
 } // namespace Starfish

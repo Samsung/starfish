@@ -1386,7 +1386,7 @@ section are supported.
 |  | method | DOMString btoa(DOMString data) | Returns the base64 encoding of `data`. |
 |  | method | DOMString atob(DOMString data) | Decodes a base64 string. Throws `InvalidCharacterError` on invalid input. |
 |  | method | undefined queueMicrotask(VoidFunction callback) | Queues `callback` to run as a microtask. |
-|  | method | any structuredClone(any value, optional StructuredSerializeOptions options) | Deep-clones `value` using the structured-clone algorithm. |
+|  | method | any structuredClone(any value, optional StructuredSerializeOptions options) | Deep-clones `value` using the structured-clone algorithm. `DataView` is cloned. `File`, `ImageData`, `DOMMatrix`, `DOMMatrixReadOnly` and `ImageBitmap` cannot be serialized yet and throw `DataCloneError`; an `ImageBitmap` cannot be transferred either. |
 |  | misc | `origin` is in IDL with `[Unimplemented]` and returns `undefined`. Timers (`setTimeout`/`setInterval`/`clearTimeout`/`clearInterval`) are listed under `WindowTimers` and reach through this mixin. |  |
 |  | method | Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options) | Creates a bitmap from a given source, optionally cropped to contain only a portion of that source |
 |  | method | Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options) | Creates a bitmap from a given source, optionally cropped to contain only a portion of that source |

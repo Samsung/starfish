@@ -653,7 +653,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/array-la
 http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/array-unit-tests.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/data-view-crash.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/data-view-test.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/typed-arrays-in-workers.html # @ignore The worker's postMessage() of a typed array throws DataCloneError (resources/typed-array-worker.js:82), so the page never finishes.
+http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/typed-arrays-in-workers.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniform-arrays.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniform-bool.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/uniforms/gl-uniformmatrix4fv.html

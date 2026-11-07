@@ -650,7 +650,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/typedarrays/array-bu
 http://localhost:11010/conformance-suites/2.0.0/conformance/typedarrays/array-unit-tests.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/typedarrays/data-view-crash.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/typedarrays/data-view-test.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/typedarrays/typed-arrays-in-workers.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/typedarrays/typed-arrays-in-workers.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/typedarrays/array-large-array-tests.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/gl-uniform-arrays.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/uniforms/gl-uniform-bool.html?webglVersion=2

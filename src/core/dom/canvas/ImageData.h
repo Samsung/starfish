@@ -69,16 +69,6 @@ private:
     uint32_t m_width;
     uint32_t m_height;
 };
-
-class SerializedImageData : public SerializedPlatformObjectData {
-public:
-    SerializedImageData()
-    {
-    }
-
-    virtual ScriptWrappable* createDeserializingInstance(
-        ExecutionContext* executionContext) const override;
-};
 } // namespace Starfish
 #endif
 #endif

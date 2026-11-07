@@ -64,6 +64,8 @@ public:
     virtual ~Serializable()
     {
     }
+    // Returns nullptr when this type cannot be serialized yet; the clone then
+    // fails with a DataCloneError before anything reaches the receiver.
     virtual SerializedData* serialize(SerializingMap& memory) = 0;
     virtual void deserialize(SerializedData* serialized,
                              DeserializingMap& memory) const = 0;
@@ -500,6 +502,7 @@ public:
         Float64Array,
         BigInt64Array,
         BigUint64Array,
+        DataView,
     };
 
     SerializedArrayBufferViewData(ExecutionContext* executionContext,
@@ -742,6 +745,8 @@ public:
     {
         m_detached = true;
     }
+    // Returns nullptr when this type cannot be transferred yet
+    // (DataCloneError).
     virtual TransferedData* transfer() = 0;
     virtual void transferReceive(TransferedData* transfered) = 0;
 

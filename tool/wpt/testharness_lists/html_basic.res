@@ -2,6 +2,7 @@ http://web-platform.test:8000/html/webappapis/timers/evil-spec-example.any.html
 http://web-platform.test:8000/html/webappapis/timers/evil-spec-example.any.worker.html
 http://web-platform.test:8000/html/webappapis/timers/setinterval-settimeout-clamping.html
 http://web-platform.test:8000/html/webappapis/timers/timer-nesting-not-inherited-in-microtask.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/webappapis/structured-clone/structured-clone.any.html
 http://web-platform.test:8000/html/webappapis/system-state-and-capabilities/the-navigator-object/navigator-indexed.html
 # [auto-fail] http://web-platform.test:8000/html/webappapis/scripting/processing-model-2/window-onerror-runtime-error-throw.html
 http://web-platform.test:8000/html/webappapis/scripting/processing-model-2/runtime-error-same-origin-with-hash.html
@@ -314,6 +315,8 @@ http://web-platform.test:8000/html/obsolete/requirements-for-implementations/oth
 http://web-platform.test:8000/html/obsolete/requirements-for-implementations/other-elements-attributes-and-apis/document-color-04.html
 http://web-platform.test:8000/html/obsolete/requirements-for-implementations/other-elements-attributes-and-apis/document-color-02.html
 http://web-platform.test:8000/html/infrastructure/conformance-requirements/extensibility/foreign.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/infrastructure/safe-passing-of-structured-data/window-postmessage.window.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/infrastructure/safe-passing-of-structured-data/messagechannel.any.html
 http://web-platform.test:8000/html/interaction/focus/focus-management/focus-event-targets-simple.html
 # [auto-fail] http://web-platform.test:8000/html/interaction/focus/focus-management/focus-events.html
 # [auto-fail] http://web-platform.test:8000/html/editing/editing-0/making-entire-documents-editable-the-designmode-idl-attribute/user-interaction-editing-designMode.html

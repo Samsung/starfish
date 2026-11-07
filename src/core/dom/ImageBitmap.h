@@ -93,25 +93,5 @@ private:
     bool m_originCleanFlag{ true };
     bool m_isPremultiplied{ true };
 };
-
-class SerializedImageBitmap : public SerializedPlatformObjectData {
-public:
-    SerializedImageBitmap()
-    {
-    }
-
-    virtual ScriptWrappable* createDeserializingInstance(
-        ExecutionContext* executionContext) const override;
-};
-
-class TransferedImageBitmap : public TransferedPlatformObjectData {
-public:
-    TransferedImageBitmap(ImageBitmap* origin)
-    {
-    }
-
-    ScriptWrappable* createTransferReceivingInstance(
-        ExecutionContext* executionContext) const override;
-};
 } // namespace Starfish
 #endif

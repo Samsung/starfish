@@ -134,7 +134,7 @@ ScriptBindingInstance* ImageData::scriptBindingInstance()
 SerializedData* ImageData::serialize(SerializingMap& memory)
 {
     STARFISH_UNSUPPORTED_METHOD();
-    return new SerializedImageData();
+    return nullptr;
 }
 
 void ImageData::deserialize(SerializedData* serialized,
@@ -172,13 +172,6 @@ void ImageData::setData(ScriptUint8ClampedArray value)
     m_data = value;
 }
 
-ScriptWrappable* SerializedImageData::createDeserializingInstance(
-    ExecutionContext* executionContext) const
-{
-    STARFISH_UNSUPPORTED_METHOD();
-    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    return nullptr;
-}
 } // namespace Starfish
 #undef CRASH
 #endif

@@ -239,6 +239,8 @@ SerializedArrayBufferViewData::SerializedArrayBufferViewData(
         m_type = Type::BigInt64Array;
     } else if (arrayBufferView->isBigUint64ArrayObject()) {
         m_type = Type::BigUint64Array;
+    } else if (arrayBufferView->isDataViewObject()) {
+        m_type = Type::DataView;
     } else {
         STARFISH_UNSUPPORTED("serialize: unknown ArrayBufferView type");
         throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR,
@@ -282,6 +284,8 @@ ScriptArrayBufferView SerializedArrayBufferViewData::createDeserializedValue(
         arrayBufferView = BigInt64ArrayObjectRef::create(state);
     } else if (m_type == Type::BigUint64Array) {
         arrayBufferView = BigUint64ArrayObjectRef::create(state);
+    } else if (m_type == Type::DataView) {
+        arrayBufferView = DataViewObjectRef::create(state);
     } else {
         STARFISH_UNSUPPORTED("deserialize: unknown ArrayBufferView type");
         throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR,
@@ -484,6 +488,9 @@ static bool serializingDeep(ExecutionContext* executionContext,
         ScriptWrappable* sw = (ScriptWrappable*)(src->asObject()->extraData());
         STARFISH_ASSERT(sw->isSerializable());
         SerializedData* result = sw->toSerializable()->serialize(memory);
+        if (!result) {
+            return false;
+        }
         dst->setPlatformObjectData(result);
     } else {
         STARFISH_ASSERT_NOT_REACHED();
@@ -878,6 +885,11 @@ void Serializer::serializeWithTransfer(
                                            "Object is already detached");
                 }
                 TransferedData* dataHolder = tf->transfer();
+                if (!dataHolder) {
+                    throw new DOMException(executionContext,
+                                           DOMException::DATA_CLONE_ERR,
+                                           "Object cannot be transferred");
+                }
                 tf->setDetached();
                 placeHolder->setPlatformObjectData(dataHolder);
             }

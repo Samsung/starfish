@@ -116,3 +116,4 @@ http://web-platform.test:8000/workers/semantics/xhr/002.html
 # [auto-fail] http://web-platform.test:8000/workers/semantics/xhr/004.html
 http://web-platform.test:8000/workers/semantics/xhr/005.html
 # [auto-fail] http://web-platform.test:8000/workers/semantics/xhr/006.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/webappapis/structured-clone/structured-clone.any.worker.html
