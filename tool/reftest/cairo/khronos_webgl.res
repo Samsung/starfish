@@ -254,7 +254,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-wit
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-default-precision.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-dfdx.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-dfdx-no-ext.frag.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-do-loop.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-do-loop.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-error-directive.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-explicit-int-cast.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-float-return-value.frag.html
@@ -301,7 +301,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-wit
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-version-130.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-_webgl-identifier.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-webgl-identifier.vert.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-while-loop.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-while-loop.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shared.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/struct-equals.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/struct-mixed-array-declarators.html

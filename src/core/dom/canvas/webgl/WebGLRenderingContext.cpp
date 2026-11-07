@@ -1421,20 +1421,24 @@ static bool isGLSLESBuiltin(const std::string& name)
     return false;
 }
 
-// Names no WebGL shader may use: the webgl_ and _webgl_ prefixes and two
-// consecutive underscores (WebGL 1.0 and 2.0 "Supported GLSL Constructs"),
-// and gl_ names that are not built-ins.
+// Names no WebGL shader may use: the webgl_ and _webgl_ prefixes (WebGL 1.0
+// and 2.0 "Supported GLSL Constructs") and gl_ names that are not built-ins.
 static bool isReservedShaderName(const std::string& name)
 {
     if (name.compare(0, 6, "webgl_") == 0 ||
         name.compare(0, 7, "_webgl_") == 0) {
         return true;
     }
-    if (name.find("__") != std::string::npos && name != "__LINE__" &&
-        name != "__FILE__" && name != "__VERSION__") {
-        return true;
-    }
     return name.compare(0, 3, "gl_") == 0 && !isGLSLESBuiltin(name);
+}
+
+// Identifiers with two consecutive underscores are reserved (GLSL ES 1.00
+// §3.7, 3.00 §3.8) and fail in WebGL, but a macro may have such a name
+// (GLSL ES 3.00 §3.5).
+static bool hasReservedUnderscores(const std::string& name)
+{
+    return name.find("__") != std::string::npos && name != "__LINE__" &&
+           name != "__FILE__" && name != "__VERSION__";
 }
 
 // The shader extensions of the WebGL 1 extensions (WebGL extension
@@ -1536,6 +1540,273 @@ void WebGLRenderingContext::appendExtensionDirective(const std::string& view,
     }
 }
 
+// GLSL ES 3.00 §3.4: "#version 300 es" is the first line of a GLSL ES 3.00
+// shader; compileShader() and the driver reject it elsewhere.
+static bool isESSL3Source(const std::string& view)
+{
+    const size_t hash = view.find_first_not_of(" \t\v\f\r\n");
+    if (hash == std::string::npos || view[hash] != '#') {
+        return false;
+    }
+    const size_t end = std::min(view.find_first_of("\r\n", hash), view.size());
+    std::istringstream directive(view.substr(hash + 1, end - hash - 1));
+    std::string name, number, profile;
+    directive >> name >> number >> profile;
+    return name == "version" && number == "300" && profile == "es";
+}
+
+// Reserved for GLSL ES 3.00 in WebGL 2 (the conformance suite's keywords
+// test; ANGLE does the same) though GLSL ES 3.00.6 §3.8 no longer lists
+// them, so a conforming driver accepts them.
+static bool isWebGLReservedESSL3Word(const std::string& name)
+{
+    return name == "image1DShadow" || name == "image2DShadow" ||
+           name == "image1DArrayShadow" || name == "image2DArrayShadow";
+}
+
+// The precedence of the preprocessor binary operator at text[i] (GLSL ES
+// 1.00 §3.4, 3.00 §3.5; higher binds tighter) and its length, or 0.
+static int integerOperatorPrecedence(const std::string& text, size_t i,
+                                     size_t end, size_t& length)
+{
+    const char c = text[i];
+    const char d = i + 1 < end ? text[i + 1] : '\0';
+    length = 2;
+    if ((c == '+' || c == '-') && d == c) {
+        return 0; // the ++ and -- tokens
+    }
+    if (c == '|' && d == '|') {
+        return 1;
+    }
+    if (c == '&' && d == '&') {
+        return 2;
+    }
+    if ((c == '=' || c == '!') && d == '=') {
+        return 6;
+    }
+    if ((c == '<' || c == '>') && d == c) {
+        return 8;
+    }
+    if ((c == '<' || c == '>') && d == '=') {
+        return 7;
+    }
+    length = 1;
+    switch (c) {
+    case '|':
+        return 3;
+    case '^':
+        return 4;
+    case '&':
+        return 5;
+    case '<':
+    case '>':
+        return 7;
+    case '+':
+    case '-':
+        return 9;
+    case '*':
+    case '/':
+    case '%':
+        return 10;
+    default:
+        return 0;
+    }
+}
+
+static bool readIntegerExpression(const std::string& text, size_t& i,
+                                  size_t end, size_t depth, int precedence,
+                                  int64_t& value);
+
+// An operand of readIntegerExpression(): an integer literal (GLSL ES 1.00
+// §4.1.3, 3.00 §4.1.3, without suffix), a parenthesized expression or an
+// operand after a unary + - ~ !.
+static bool readIntegerOperand(const std::string& text, size_t& i, size_t end,
+                               size_t depth, int64_t& value)
+{
+    i = std::min(text.find_first_not_of(" \t\v\f", i), end);
+    if (i == end || depth >= kMaxShaderExpressionDepth) {
+        return false;
+    }
+    const char c = text[i];
+    if (c == '(') {
+        i++;
+        if (!readIntegerExpression(text, i, end, depth + 1, 1, value)) {
+            return false;
+        }
+        i = std::min(text.find_first_not_of(" \t\v\f", i), end);
+        if (i == end || text[i] != ')') {
+            return false;
+        }
+        i++;
+        return true;
+    }
+    if (c == '+' || c == '-' || c == '~' || c == '!') {
+        if ((c == '+' || c == '-') && i + 1 < end && text[i + 1] == c) {
+            return false; // the ++ and -- tokens
+        }
+        i++;
+        if (!readIntegerOperand(text, i, end, depth + 1, value)) {
+            return false;
+        }
+        if (c == '-') {
+            value = -value;
+        } else if (c == '~') {
+            value = ~value;
+        } else if (c == '!') {
+            value = !value;
+        }
+        return value >= INT32_MIN && value <= INT32_MAX;
+    }
+    if (c < '0' || c > '9') {
+        return false;
+    }
+    const size_t literalEnd = std::min(identifierEnd(text, i), end);
+    int base = 10;
+    size_t k = i;
+    if (c == '0') {
+        base = 8;
+        if (k + 1 < literalEnd && (text[k + 1] == 'x' || text[k + 1] == 'X')) {
+            base = 16;
+            k += 2;
+            if (k == literalEnd) {
+                return false;
+            }
+        }
+    }
+    value = 0;
+    for (; k < literalEnd; k++) {
+        const char d = text[k];
+        int digit = base;
+        if (d >= '0' && d <= '9') {
+            digit = d - '0';
+        } else if (d >= 'a' && d <= 'f') {
+            digit = d - 'a' + 10;
+        } else if (d >= 'A' && d <= 'F') {
+            digit = d - 'A' + 10;
+        }
+        if (digit >= base) {
+            return false;
+        }
+        value = value * base + digit;
+        if (value > INT32_MAX) {
+            return false;
+        }
+    }
+    i = literalEnd;
+    return true;
+}
+
+// Reads into `value` the longest expression at text[i, end) of integer
+// literals, parentheses and the preprocessor's operators (GLSL ES 1.00 §3.4,
+// 3.00 §3.5) whose binary operators bind at least as tight as `precedence`,
+// evaluated as C does, and moves `i` past it. False, so that the caller
+// leaves the text to the driver, for any other text, a value outside int32
+// on the way, a division by zero, a shift outside [0, 31], or nesting deeper
+// than kMaxShaderExpressionDepth.
+static bool readIntegerExpression(const std::string& text, size_t& i,
+                                  size_t end, size_t depth, int precedence,
+                                  int64_t& value)
+{
+    if (!readIntegerOperand(text, i, end, depth, value)) {
+        return false;
+    }
+    while (true) {
+        const size_t op = std::min(text.find_first_not_of(" \t\v\f", i), end);
+        size_t length = 0;
+        const int opPrecedence =
+            op < end ? integerOperatorPrecedence(text, op, end, length) : 0;
+        if (opPrecedence < precedence) {
+            return true;
+        }
+        i = op + length;
+        int64_t rhs = 0;
+        if (!readIntegerExpression(text, i, end, depth, opPrecedence + 1,
+                                   rhs)) {
+            return false;
+        }
+        const char c = text[op];
+        const bool twoChars = length == 2;
+        if (c == '*') {
+            value *= rhs;
+        } else if (c == '/' || c == '%') {
+            if (!rhs) {
+                return false;
+            }
+            value = c == '/' ? value / rhs : value % rhs;
+        } else if (c == '+') {
+            value += rhs;
+        } else if (c == '-') {
+            value -= rhs;
+        } else if (opPrecedence == 8) {
+            if (rhs < 0 || rhs > 31) {
+                return false;
+            }
+            value = c == '<' ? value * (int64_t(1) << rhs) : value >> rhs;
+        } else if (c == '<') {
+            value = twoChars ? value <= rhs : value < rhs;
+        } else if (c == '>') {
+            value = twoChars ? value >= rhs : value > rhs;
+        } else if (c == '=') {
+            value = value == rhs;
+        } else if (c == '!') {
+            value = value != rhs;
+        } else if (c == '&') {
+            value = twoChars ? (value && rhs) : (value & rhs);
+        } else if (c == '|') {
+            value = twoChars ? (value || rhs) : (value | rhs);
+        } else {
+            value ^= rhs;
+        }
+        if (value < INT32_MIN || value > INT32_MAX) {
+            return false;
+        }
+    }
+}
+
+// Appends `#line line [source-string-number]` for the #line directive whose
+// text after "line" is view[i, end), when its constant integer expressions
+// hold only literals and operators (GLSL ES 1.00 §3.4, 3.00 §3.5): a driver's
+// preprocessor may take literals only (Mesa's does). False, with nothing
+// appended, for any other form, which the driver gets as written.
+static bool appendLineDirective(const std::string& view, size_t i, size_t end,
+                                std::string& out)
+{
+    int64_t line = 0;
+    int64_t source = -1;
+    if (!readIntegerExpression(view, i, end, 0, 1, line) || line < 0) {
+        return false;
+    }
+    i = std::min(view.find_first_not_of(" \t\v\f", i), end);
+    if (i < end &&
+        (!readIntegerExpression(view, i, end, 0, 1, source) || source < 0 ||
+         std::min(view.find_first_not_of(" \t\v\f", i), end) < end)) {
+        return false;
+    }
+    out += "#line " + std::to_string(line);
+    if (source >= 0) {
+        out += " " + std::to_string(source);
+    }
+    return true;
+}
+
+// Whether text[i, end) starts with `[`, an expression readIntegerExpression()
+// reads to a nonzero value, and `]`.
+static bool isNonZeroConstantIndex(const std::string& text, size_t i,
+                                   size_t end)
+{
+    i = std::min(text.find_first_not_of(" \t\v\f", i), end);
+    if (i == end || text[i] != '[') {
+        return false;
+    }
+    i++;
+    int64_t index = 0;
+    if (!readIntegerExpression(text, i, end, 0, 1, index)) {
+        return false;
+    }
+    i = std::min(text.find_first_not_of(" \t\v\f", i), end);
+    return index && i < end && text[i] == ']';
+}
+
 // The text the driver compiles: `view` with the names of the shader
 // extensions the context did not enable hidden, and their #extension
 // directives replaced. Every identifier is checked, as the driver sees them
@@ -1547,6 +1818,24 @@ bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
     static const char kSpaces[] = " \t\v\f";
     const bool hidesMaxDrawBuffers =
         webGLVersion() == 1 && !isShaderExtensionEnabled("GL_EXT_draw_buffers");
+    const bool essl3 = webGLVersion() >= 2 && isESSL3Source(view);
+    // GLSL ES 1.00 has one gl_FragData element without draw buffers: §7.4 in
+    // WebGL 1, WebGL 2.0 "GLSL ES 1.00 Fragment Shader Output" in WebGL 2.
+    const bool singleFragData =
+        !essl3 && !isShaderExtensionEnabled("GL_EXT_draw_buffers");
+    // Neither #if nor macros are evaluated here, so the language rules below
+    // reject a token only where the compiler surely sees it: outside every
+    // #if group, on a line that is no directive, not named by an earlier
+    // #define, and before any function-like macro, which may drop its
+    // arguments.
+    size_t conditionalDepth = 0;
+    std::unordered_set<std::string> macroNames;
+    bool hasFunctionLikeMacro = false;
+    // The names that are surely macros: defined outside every #if group and
+    // not #undef'd since. True for an object-like one whose body has
+    // `defined`, which in an #if is an error in WebGL (KhronosGroup/WebGL#1523;
+    // undefined behavior in C++ [cpp.cond]).
+    std::unordered_map<std::string, bool> topLevelMacros;
     out.clear();
     out.reserve(view.size());
     for (size_t line = 0; line < view.size();) {
@@ -1565,6 +1854,9 @@ bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
 
         if (directive == "extension") {
             appendExtensionDirective(view, line, afterDirective, end, out);
+        } else if (directive == "line" &&
+                   appendLineDirective(view, afterDirective, end, out)) {
+            // replaced by its value
         } else {
             for (size_t k = afterDirective;
                  directive == "define" && k + 1 < end; k++) {
@@ -1574,6 +1866,13 @@ bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
                 }
             }
             bool isMacroName = directive == "define";
+            std::string definedName;
+            bool isObjectLike = false;
+            bool bodyHasDefined = false;
+            const bool isSure = !conditionalDepth && !hasFunctionLikeMacro;
+            const bool isCode = !isDirective && isSure;
+            const bool isTopLevelIf = directive == "if" && isSure;
+            bool isDefinedOperand = false;
             for (size_t i = line; i < end;) {
                 const size_t tokenEnd = identifierEnd(view, i);
                 if (tokenEnd == i) {
@@ -1590,6 +1889,51 @@ bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
                 const bool isDefined = isMacroName && i >= afterDirective;
                 if (isDefined) {
                     isMacroName = false;
+                    definedName = token;
+                    isObjectLike = tokenEnd == end || view[tokenEnd] != '(';
+                } else if (directive == "define" && token == "defined") {
+                    bodyHasDefined = true;
+                } else if (directive == "undef" && i >= afterDirective) {
+                    topLevelMacros.erase(token);
+                }
+                const bool isMacro = macroNames.count(token);
+                // Code may use a macro with such a name while it is surely
+                // defined, as no macro body can bring the name back; other
+                // directives never pass a name to the compiler.
+                if (!isDefined && hasReservedUnderscores(token) &&
+                    (directive == "define" ||
+                     (!isDirective && !topLevelMacros.count(token)))) {
+                    error = "Reserved identifier " + token;
+                    return false;
+                }
+                if (isCode && !isMacro) {
+                    if (!essl3 && (token == "while" || token == "do")) {
+                        // WebGL 1.0 "Supported GLSL Constructs" (GLSL ES
+                        // 1.00 Appendix A §4).
+                        error = "while and do-while loops are not allowed";
+                        return false;
+                    }
+                    if (essl3 && isWebGLReservedESSL3Word(token)) {
+                        error = "Reserved word " + token;
+                        return false;
+                    }
+                    if (singleFragData && token == "gl_FragData" &&
+                        isNonZeroConstantIndex(view, tokenEnd, end)) {
+                        error = "gl_FragData index must be 0";
+                        return false;
+                    }
+                }
+                if (isTopLevelIf && i >= afterDirective) {
+                    // The operand of `defined` is not expanded.
+                    if (isDefinedOperand) {
+                        isDefinedOperand = false;
+                    } else if (token == "defined") {
+                        isDefinedOperand = true;
+                    } else if (topLevelMacros.count(token) &&
+                               topLevelMacros[token]) {
+                        error = "'defined' produced by macro expansion in #if";
+                        return false;
+                    }
                 }
                 const bool isName =
                     !isDefined && (token[0] < '0' || token[0] > '9');
@@ -1606,11 +1950,34 @@ bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
                            (!isDirective || directive == "define")) {
                     // GLSL ES 1.00 §7.4: 1 without WEBGL_draw_buffers.
                     out += '1';
+                } else if (isName && essl3 &&
+                           (token == "gl_MinProgramTexelOffset" ||
+                            token == "gl_MaxProgramTexelOffset") &&
+                           (!isDirective || directive == "define")) {
+                    // The range getParameter() reports, the GLSL ES 3.00 §7.3
+                    // minimums.
+                    out += token == "gl_MinProgramTexelOffset" ? "(-8)" : "7";
                 } else {
                     out += token;
                 }
                 i = tokenEnd;
             }
+            if (!definedName.empty()) {
+                if (!conditionalDepth) {
+                    topLevelMacros[definedName] =
+                        isObjectLike && bodyHasDefined;
+                } else if (topLevelMacros.count(definedName)) {
+                    topLevelMacros[definedName] = false;
+                }
+                macroNames.insert(definedName);
+                hasFunctionLikeMacro |= !isObjectLike;
+            }
+        }
+        if (directive == "if" || directive == "ifdef" ||
+            directive == "ifndef") {
+            conditionalDepth++;
+        } else if (directive == "endif" && conditionalDepth) {
+            conditionalDepth--;
         }
         const size_t next =
             std::min(view.find_first_not_of("\r\n", end), view.size());
@@ -2253,8 +2620,10 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
                                 zeroVal = "0u";
                             }
                             if (!zeroVal.empty()) {
-                                inits +=
-                                    "\n    " + name + " = " + zeroVal + ";";
+                                // On the line of main's brace, keeping
+                                // __LINE__ and log line numbers (GLSL ES 3.00
+                                // §3.5).
+                                inits += " " + name + " = " + zeroVal + ";";
                             }
                         }
                     }

@@ -250,7 +250,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-wit
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-default-precision.vert.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-dfdx-no-ext.frag.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-dfdx.frag.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-do-loop.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-do-loop.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-error-directive.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-explicit-int-cast.vert.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-float-return-value.frag.html?webglVersion=2
@@ -297,7 +297,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-wit
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-version-120.vert.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-version-130.vert.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-webgl-identifier.vert.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-while-loop.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-while-loop.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-without-precision.frag.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-constant-expression-loop-conditions.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-invariance.html?webglVersion=2
@@ -720,13 +720,13 @@ http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/constant
 http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/constant_expressions.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/conversions.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/declarations.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/fragdata.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/fragdata.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/functions.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/invalid_texture_functions.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/keywords.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/keywords.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/linkage.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/negative.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/preprocessor.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/preprocessor.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/qualification_order.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/scoping.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/switch.html?webglVersion=2
@@ -1462,7 +1462,7 @@ http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/readpixel.
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/samplerobject.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/samplerstatequery.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderapi.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderbuiltinvar.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderbuiltinvar.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shadercommonfunction.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderderivate_dfdx.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/shaderderivate_dfdy.html?webglVersion=2
