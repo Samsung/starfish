@@ -646,7 +646,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-siz
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-sub-image-cube-maps.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-transparent-pixels-initialized.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-upload-cube-maps.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-upload-size.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/texture-upload-size.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/array-buffer-crash.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/array-buffer-view-crash.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/typedarrays/array-large-array-tests.html

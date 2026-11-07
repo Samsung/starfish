@@ -577,7 +577,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/textur
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-sub-image-cube-maps.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-transparent-pixels-initialized.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-upload-cube-maps.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-upload-size.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-upload-size.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/mipmap-fbo.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/texture-draw-with-2d-and-cube.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/canvas/tex-2d-rgb-rgb-unsigned_byte.html?webglVersion=2

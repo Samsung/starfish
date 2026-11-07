@@ -45,9 +45,9 @@ public:
 
     virtual void updateContentSize(FrameBox* containingBlock) = 0;
 
-    // Returns a rasterized copy at the current size for consumers needing a
-    // pixel buffer (e.g. WebGL).
-    virtual NativeImageData* rasterize() = 0;
+    // Returns a rasterized copy scaled to width x height for consumers needing
+    // a pixel buffer (e.g. WebGL).
+    virtual NativeImageData* rasterize(size_t width, size_t height) = 0;
 
 protected:
     SVGNativeImageData()

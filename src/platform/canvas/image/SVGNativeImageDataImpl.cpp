@@ -125,7 +125,7 @@ public:
                               const DrawImageInfo& borderinfo,
                               ImageRenderingValue imageRenderingMode) override
     {
-        NativeImageData* img = rasterize();
+        NativeImageData* img = rasterize(width(), height());
         canvas->drawImage(img, src, dst, borderinfo, imageRenderingMode);
         delete img;
     }
@@ -135,16 +135,16 @@ public:
         float imageHeight, bool xRepeat, bool yRepeat,
         ImageRenderingValue imageRenderingMode) override
     {
-        NativeImageData* img = rasterize();
+        NativeImageData* img = rasterize(width(), height());
         canvas->drawRepeatImage(img, dst, imageWidth, imageHeight, xRepeat,
                                 yRepeat, imageRenderingMode);
         delete img;
     }
 
-    virtual NativeImageData* rasterize() override
+    virtual NativeImageData* rasterize(size_t w, size_t h) override
     {
         NativeImageData* rasterizedSVGImage =
-            BufferedNativeImageData::create(width(), height());
+            BufferedNativeImageData::create(w, h);
         rasterizedSVGImage->clear();
         Canvas* dummyCanvas = Canvas::create(
             rasterizedSVGImage->data(), rasterizedSVGImage->width(),
@@ -154,7 +154,13 @@ public:
                 ->webView()
                 ->screenInfo()
                 .devicePixelRatio);
-        m_frameSVGSVGBox->paintReplaced(dummyCanvas);
+        if (w == width() && h == height()) {
+            m_frameSVGSVGBox->paintReplaced(dummyCanvas);
+        } else {
+            // Another size scales the image the way <img> paints it.
+            paintContent(dummyCanvas, Unit::Rect(0, 0, w, h),
+                         ImageRenderingValue::ImageRenderingAutoValue);
+        }
         delete dummyCanvas;
         return rasterizedSVGImage;
     }

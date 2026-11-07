@@ -8647,18 +8647,30 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
         throwIfNotOriginClean(executionContext(),
                               element->isImageCORSSameOrigin());
         if (imageData->isSVGNativeImageData()) {
-            width = imageData->width();
-            height = imageData->height();
-            if (width == 0 || height == 0) {
-                width = element->width();
-                height = element->height();
+            // WebGL 1.0 "Texture Upload Width and Height": an SVG image
+            // uploads at the element's current width and height.
+            const uint32_t svgWidth = element->width();
+            const uint32_t svgHeight = element->height();
+            // The page sets that size, and it sizes the raster buffer.
+            GLint maxSize = 0;
+            m_gl->getIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
+            if (svgWidth > uint32_t(maxSize) || svgHeight > uint32_t(maxSize) ||
+                uint64_t(svgWidth) * svgHeight * 4 > SIZE_MAX) {
+                setGLError(GL_INVALID_VALUE,
+                           "SVG image size exceeds the texture limit");
+                return;
             }
+            width = svgWidth;
+            height = svgHeight;
             if (width > 0 && height > 0) {
                 rasterizedSVGImage =
-                    imageData->asSVGNativeImageData()->rasterize();
+                    imageData->asSVGNativeImageData()->rasterize(width, height);
                 imageData = rasterizedSVGImage;
-                width = imageData->width();
-                height = imageData->height();
+            } else {
+                // An SVG has no pixel buffer of its own; a zero size uploads
+                // no texels, and one byte gives the upload a buffer.
+                imageData = nullptr;
+                canvasPixels.resize(1);
             }
         } else {
             width = imageData->width();
