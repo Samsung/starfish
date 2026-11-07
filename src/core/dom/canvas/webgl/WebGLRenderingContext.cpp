@@ -922,6 +922,11 @@ void WebGLRenderingContext::clearDepth(GLclampf depth)
 {
     ENTER_CONTEXT_SCOPE();
 
+    // shortcut: with depth false and stencil true the drawing buffer still
+    // has the depth of its DEPTH24_STENCIL8, and only the clear value 1 keeps
+    // it passing the depth test as if absent (OpenGL ES 3.0.6 §4.1.5); the
+    // value is lost for framebuffer objects too. Drop the gate once the
+    // default framebuffer emulates the absent depth buffer.
     if (!m_attributes.depth()) {
         return;
     }
@@ -934,10 +939,6 @@ void WebGLRenderingContext::clearDepth(GLclampf depth)
 void WebGLRenderingContext::clearStencil(GLint s)
 {
     ENTER_CONTEXT_SCOPE();
-
-    if (!m_attributes.stencil()) {
-        return;
-    }
 
     m_gl->clearStencil(s);
     TRACE(WEBGL_V, KV(s));
