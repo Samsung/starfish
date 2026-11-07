@@ -631,7 +631,8 @@ void WebGLRenderingContext::bindAttribLocation(WebGLProgram* program,
         return;
     }
 
-    m_gl->bindAttribLocation(program->glObject(), index, CSTR(name));
+    m_gl->bindAttribLocation(program->glObject(), index,
+                             programNameForDriver(name).c_str());
 }
 
 void WebGLRenderingContext::bindBuffer(GLenum target,
@@ -1575,6 +1576,58 @@ static bool isWebGLReservedESSL3Word(const std::string& name)
            name == "image1DArrayShadow" || name == "image2DArrayShadow";
 }
 
+// dmat2 .. dmat4 and dmat2x2 .. dmat4x4: desktop GLSL 4.00 types that GLSL ES
+// does not reserve (GLSL ES 1.00 §3.7, 3.00 §3.8) but a driver may (Mesa does).
+static bool isDriverReservedWord(const std::string& name)
+{
+    auto isSize = [](char c) { return c >= '2' && c <= '4'; };
+    return name.compare(0, 4, "dmat") == 0 &&
+           ((name.size() == 5 && isSize(name[4])) ||
+            (name.size() == 7 && isSize(name[4]) && name[5] == 'x' &&
+             isSize(name[6])));
+}
+
+std::string WebGLRenderingContext::programNameForDriver(String* name)
+{
+    const std::string text = name->toUTF8NonGCString();
+    std::string out;
+    for (size_t i = 0; i < text.size();) {
+        const size_t end = identifierEnd(text, i);
+        if (end == i) {
+            out += text[i++];
+            continue;
+        }
+        const std::string token = text.substr(i, end - i);
+        if (token.compare(0, 6, "webgl_") == 0 ||
+            token.compare(0, 7, "_webgl_") == 0) {
+            return std::string();
+        }
+        out += isDriverReservedWord(token) ? "webgl_" + token : token;
+        i = end;
+    }
+    return out;
+}
+
+GLsizei WebGLRenderingContext::programNameFromDriver(char* name, GLsizei length)
+{
+    GLsizei out = 0;
+    for (GLsizei i = 0; i < length;) {
+        GLsizei end = i;
+        while (end < length && isIdentifierCharacter(name[end])) {
+            end++;
+        }
+        end = std::max(end, i + 1);
+        if (end - i > 6 && std::memcmp(name + i, "webgl_", 6) == 0 &&
+            isDriverReservedWord(std::string(name + i + 6, end - i - 6))) {
+            i += 6;
+        }
+        while (i < end) {
+            name[out++] = name[i++];
+        }
+    }
+    return out;
+}
+
 // The precedence of the preprocessor binary operator at text[i] (GLSL ES
 // 1.00 §3.4, 3.00 §3.5; higher binds tighter) and its length, or 0.
 static int integerOperatorPrecedence(const std::string& text, size_t i,
@@ -1968,8 +2021,14 @@ bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
                 }
                 const bool isName =
                     !isDefined && (token[0] < '0' || token[0] > '9');
-                if (isName && isExtensionMacroName(token) &&
-                    !isShaderExtensionEnabled(token)) {
+                if (isDriverReservedWord(token)) {
+                    // Renamed on every line, a #define's name included, so
+                    // that macros stay consistent; behind the webgl_ prefix
+                    // no shader name has (isReservedShaderName()), and back
+                    // at the program interface (programNameForDriver()).
+                    out += "webgl_" + token;
+                } else if (isName && isExtensionMacroName(token) &&
+                           !isShaderExtensionEnabled(token)) {
                     // Hidden behind a name no shader can define (see
                     // isReservedShaderName()), it is undefined.
                     // shortcut: a user name shaped like an extension macro
@@ -2492,8 +2551,10 @@ static bool isDeclarationPrefix(const std::string& token)
     return false;
 }
 
-// The GLSL ES 1.00 Appendix A §4, §5 and §7 rules and the WebGL 1.0 "Maximum
-// Nesting of Structures" a driver may let through, checked on `code`
+// The GLSL ES 1.00 Appendix A §4, §5 and §7 rules, the WebGL 1.0 "Maximum
+// Nesting of Structures" and the operators on arrays, structures containing
+// arrays and void (GLSL ES 1.00 §5.7-§5.9, WebGL 2.0 "Disallowed variants of
+// GLSL ES 3.00 operators") a driver may let through, checked on `code`
 // (shaderSourceForDriver()), where every name the preprocessor may change
 // or hide reads `#name`. Only tokens the compiler surely sees break a rule,
 // and a name is surely not a constant only if each of its declarations read
@@ -2533,6 +2594,9 @@ static std::string shaderLimitationError(const std::string& code, bool essl3,
         kMaybeConstant = 4, // const, or declared in a way not read here
         kUniform = 8,
         kRedeclared = 16,
+        kArrayLike = 32,    // an array, or a structure containing one
+        kVoidFunction = 64, // a function returning void
+        kFunction = 128,    // a function returning anything else
     };
     // What the declarations read so far say of each name.
     std::unordered_map<std::string, uint8_t> names;
@@ -2542,6 +2606,8 @@ static std::string shaderLimitationError(const std::string& code, bool essl3,
     };
     std::unordered_set<std::string> used; // names read outside declarations
     std::unordered_map<std::string, int> structDepths;
+    // The structures whose one definition read so far holds an array.
+    std::unordered_set<std::string> arrayStructs;
     struct Variable {
         std::string name;
         int64_t columns;
@@ -2557,6 +2623,8 @@ static std::string shaderLimitationError(const std::string& code, bool essl3,
         size_t token;
         int deepestField;
         bool hasVariable;
+        bool hasArray; // a `[` right inside, or a field of an arrayStructs type
+        bool isGroup;  // a `(` that groups an expression
     };
     std::vector<Open> open;  // the unclosed ( [ {
     size_t cleanFrom = 0;    // the token after the last #name
@@ -2564,6 +2632,7 @@ static std::string shaderLimitationError(const std::string& code, bool essl3,
     size_t declarationLevel = 0;
     std::string declarationType;
     char storage = 0; // 'u' or 'v' in a uniform or varying declaration
+    size_t declared = tokens.size(); // the name the last declaration declares
 
     // Whether token m is a name surely not a constant: every declaration of
     // it read so far, unless `exempt`, is of a variable, and it is no field,
@@ -2573,6 +2642,20 @@ static std::string shaderLimitationError(const std::string& code, bool essl3,
         return (bits & (kVariable | kLoopIndex)) && !(bits & exempt) &&
                text(m - 1) != "." && text(m + 1) != "(" && text(m + 1) != ".";
     };
+    // Whether token m names, by its one declaration read so far, surely an
+    // array or a structure containing one.
+    auto isArrayLike = [&](size_t m) {
+        const uint8_t bits = bitsOf(text(m));
+        return (bits & kArrayLike) && !(bits & (kMaybeConstant | kRedeclared));
+    };
+    // Whether token m, next to such a name, leaves it a whole operand: no
+    // field selector and no name a macro may turn into one.
+    auto isOperandEdge = [&](size_t m) {
+        const std::string t = text(m);
+        return t != "." && t[0] != '#';
+    };
+    const char* const kOperandError =
+        "?: or , on void, an array or a structure containing arrays";
 
     for (size_t k = 0; k < tokens.size(); k++) {
         const std::string token = text(k);
@@ -2600,6 +2683,14 @@ static std::string shaderLimitationError(const std::string& code, bool essl3,
                 !(bitsOf(token) & kMaybeConstant)) {
                 open.back().deepestField =
                     std::max(open.back().deepestField, structDepths[token]);
+                open.back().hasArray |= arrayStructs.count(token) > 0;
+            }
+            if (open.empty() && text(k + 1) == "(" &&
+                ((isName(prev) && !isDeclarationPrefix(prev)) || prev == "]" ||
+                 prev == "}")) {
+                // A function declaration (GLSL ES 1.00 and 3.00 §6.1); one
+                // with a return type not read here may return anything.
+                names[token] |= prev == "void" ? kVoidFunction : kFunction;
             }
             uint8_t bits = 0;
             if (isName(prev) && !isDeclarationPrefix(prev) &&
@@ -2625,7 +2716,9 @@ static std::string shaderLimitationError(const std::string& code, bool essl3,
                 } else {
                     bits = kMaybeConstant;
                 }
-                declaration = isStatement ? bits : 0;
+                // A GLSL ES 3.00 for header may declare several names.
+                declaration =
+                    isStatement || (essl3 && bits == kLoopIndex) ? bits : 0;
                 declarationLevel = open.size();
                 declarationType = prev;
                 storage = isUniform ? 'u' : isVarying ? 'v' : 0;
@@ -2640,6 +2733,12 @@ static std::string shaderLimitationError(const std::string& code, bool essl3,
                 }
                 continue;
             }
+            if (text(k + 1) == "[" ||
+                (arrayStructs.count(declarationType) &&
+                 !(bitsOf(declarationType) & kMaybeConstant))) {
+                bits |= kArrayLike;
+            }
+            declared = k;
             uint8_t& known = names[token];
             known |= bits | (known ? kRedeclared : 0);
             int64_t columns = 0;
@@ -2667,8 +2766,52 @@ static std::string shaderLimitationError(const std::string& code, bool essl3,
         if (token == ";") {
             declaration = 0;
         }
+        // GLSL ES 1.00 §5.7-§5.9 define no ==, != or assignment on arrays
+        // and structures containing arrays, and ?: on neither; WebGL 2.0
+        // "Disallowed variants of GLSL ES 3.00 operators" takes no ?: or , on
+        // them or on void.
+        // shortcut: only an operand that is exactly such a name or void call
+        // is judged (the second operand of ?:, a whole operand of , in
+        // grouping parentheses); a statement-level or for-header comma, the
+        // third operand of ?:, T[N] declarations, a GLSL ES 1.00 structure
+        // initializer, ?: on other GLSL ES 1.00 structures (§5.7) and the GLSL
+        // ES 3.00 rules in GLSL ES 1.00 shaders are left to the driver; type
+        // the expressions to judge those.
+        const size_t at = tokens[k];
+        if (!essl3 && (token == "=" || token == "!") && code[at + 1] == '=' &&
+            ((isArrayLike(k - 1) && isOperandEdge(k - 2)) ||
+             (isArrayLike(k + 2) && isOperandEdge(k + 3) &&
+              text(k + 3) != "[" && text(k + 3) != "("))) {
+            return "== or != on an array or a structure containing arrays";
+        }
+        if (!essl3 && token == "=" && code[at + 1] != '=' && k > 0 &&
+            std::string("=!<>+-*/%&|^").find(code[at - 1]) ==
+                std::string::npos &&
+            k - 1 != declared && isArrayLike(k - 1) && isOperandEdge(k - 2)) {
+            return "Assignment to an array or a structure containing arrays";
+        }
+        if (token == "?" && isArrayLike(k + 1) && text(k + 2) == ":") {
+            return kOperandError;
+        }
+        if (essl3 && token == "," && !open.empty() && open.back().isGroup &&
+            ((isArrayLike(k - 1) &&
+              (text(k - 2) == "(" || text(k - 2) == ",")) ||
+             (isArrayLike(k + 1) &&
+              (text(k + 2) == "," || text(k + 2) == ")")))) {
+            return kOperandError;
+        }
         if (token == "(" || token == "[" || token == "{") {
-            open.push_back({ k, 0, false });
+            const std::string prev = text(k - 1);
+            if (token == "[" && !open.empty() &&
+                code[tokens[open.back().token]] == '{') {
+                open.back().hasArray = true;
+            }
+            // Not a call, constructor, array constructor or for header.
+            const bool isGroup =
+                token == "(" && prev != "]" && prev[0] != '#' &&
+                (!isName(prev) || prev == "return" || prev == "if" ||
+                 prev == "while" || prev == "switch");
+            open.push_back({ k, 0, false, false, isGroup });
             continue;
         }
         if ((token != ")" && token != "]" && token != "}") || open.empty()) {
@@ -2684,6 +2827,21 @@ static std::string shaderLimitationError(const std::string& code, bool essl3,
             continue;
         }
         const bool isClean = o.token >= cleanFrom;
+        // A structure, which an inner scope may define, names no function.
+        if (essl3 && opener == '(' && isClean &&
+            bitsOf(text(o.token - 1)) == kVoidFunction &&
+            !structDepths.count(text(o.token - 1))) {
+            const std::string before = text(o.token - 2);
+            const std::string after = text(k + 1);
+            const bool isSequenceOperand = !open.empty() &&
+                                           open.back().isGroup &&
+                                           (before == "(" || before == ",") &&
+                                           (after == "," || after == ")") &&
+                                           (before == "," || after == ",");
+            if ((before == "?" && after == ":") || isSequenceOperand) {
+                return kOperandError;
+            }
+        }
         if (opener == '[' && isClean && o.hasVariable && !essl3) {
             // Any integer may index a uniform in a vertex shader (Appendix
             // A §5).
@@ -2746,12 +2904,25 @@ static std::string shaderLimitationError(const std::string& code, bool essl3,
             declaration = kMaybeConstant;
             declarationLevel = open.size();
             if (isNamedStruct) {
+                const std::string name = text(o.token - 1);
+                // A name defined again stands for either definition.
+                if (structDepths.count(name)) {
+                    arrayStructs.erase(name);
+                } else if (isClean && o.hasArray) {
+                    arrayStructs.insert(name);
+                }
                 // A name defined again, in an inner scope, counts its
                 // shallower definition.
                 const auto it =
                     structDepths.emplace(text(o.token - 1), depth).first;
                 it->second = std::min(it->second, depth);
             }
+        }
+        if (opener == '{' && text(o.token - 2) == "uniform") {
+            // The instance name of an interface block is a declaration not
+            // read here.
+            declaration = kMaybeConstant;
+            declarationLevel = open.size();
         }
     }
     if (essl3) {
@@ -2793,6 +2964,298 @@ static std::string shaderLimitationError(const std::string& code, bool essl3,
         return "Varyings exceed the GLSL ES 1.00 packing limit";
     }
     return std::string();
+}
+
+// The GLSL ES 1.00 §8 built-in functions but the texture lookups (§8.7).
+static bool isGLSLES100MathBuiltin(const std::string& name)
+{
+    static const char* const kFunctions[] = {
+        "radians",     "degrees",       "sin",         "cos",
+        "tan",         "asin",          "acos",        "atan",
+        "pow",         "exp",           "log",         "exp2",
+        "log2",        "sqrt",          "inversesqrt", "abs",
+        "sign",        "floor",         "ceil",        "fract",
+        "mod",         "min",           "max",         "clamp",
+        "mix",         "step",          "smoothstep",  "length",
+        "distance",    "dot",           "cross",       "normalize",
+        "faceforward", "reflect",       "refract",     "matrixCompMult",
+        "lessThan",    "lessThanEqual", "greaterThan", "greaterThanEqual",
+        "equal",       "notEqual",      "any",         "all",
+        "not",
+    };
+    for (const char* function : kFunctions) {
+        if (name == function) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// WebGL 1.0 "GLSL ES Global Variable Initialization" lets a GLSL ES 1.00
+// global be initialized with non-const globals and uniforms, which GLSL ES
+// 1.00 §4.3, and so the driver, takes only as a constant expression. A global
+// whose initializer surely is such an expression, and no constant one, gets
+// it as an assignment at the start of main(), where the spec runs it: on the
+// line of main's `{`, the initializer itself blanked, so that every line
+// keeps its number (__LINE__, #line, the info log).
+// shortcut: with #if, #ifdef, #ifndef, #elif, #else, #endif, #define or
+// #undef before main's body, or a form not read here (a structure with a
+// field of no basic type, a global named like a built-in function, ?: next to
+// a whole structure), the initializers stay for the driver to reject;
+// preprocess the text first to take those.
+static void moveGlobalInitializersIntoMain(std::string& source)
+{
+    static const char* const kConditionals[] = {
+        "if", "ifdef", "ifndef", "elif", "else", "endif", "define", "undef",
+    };
+    enum State {
+        kQualifiers, // where a declaration starts
+        kType,       // after its type, or a `,` that ends a declarator
+        kName,       // after the name it declares
+        kArrayName,  // after the size of the array it declares
+        kInitializer,
+        kStructName,
+        kStructBody,
+        kRest, // a form not read here, up to its `;`
+    };
+    struct Global {
+        char storage; // 'v' none, 'c' const, 'u' uniform, 'o' any other
+        bool isStructure;
+    };
+    // The globals of a basic type or a structure in plainStructs declared so
+    // far.
+    std::unordered_map<std::string, Global> globals;
+    // The structures whose fields all have basic types: no array, sampler or
+    // structure field, so that they may be assigned (GLSL ES 1.00 §5.7, §5.8).
+    std::unordered_set<std::string> plainStructs;
+    std::vector<std::pair<size_t, size_t>> blanks; // the [=, ;) moved
+    std::string inits;
+    State state = kQualifiers;
+    size_t level = 0; // of ( [ {
+    char storage = 'v';
+    std::string type;
+    std::string name;
+    std::string last; // the previous token
+    size_t equals = 0;
+    bool declares = false;
+    bool isNonConstant = false;
+    bool hasWholeStructure = false;
+    bool hasSelect = false;
+    bool isMainHeader = false;
+    bool isPlain = false;
+    bool expectsType = false;
+    bool hidesBuiltin = false;
+    auto isName = [](const std::string& t) {
+        return !t.empty() && isIdentifierCharacter(t[0]) &&
+               (t[0] < '0' || t[0] > '9');
+    };
+    int64_t columns = 0;
+    int64_t rows = 0;
+    for (size_t i = 0; i < source.size();) {
+        const char c = source[i];
+        if (std::isspace(static_cast<unsigned char>(c))) {
+            i++;
+            continue;
+        }
+        if (c == '#') {
+            const size_t begin = std::min(
+                source.find_first_not_of(" \t\v\f", i + 1), source.size());
+            const std::string directive =
+                source.substr(begin, identifierEnd(source, begin) - begin);
+            for (const char* conditional : kConditionals) {
+                if (directive == conditional) {
+                    return;
+                }
+            }
+            if (state == kInitializer) {
+                // Blanking the initializer would drop the directive.
+                state = kRest;
+            }
+            i = std::min(source.find_first_of("\r\n", i), source.size());
+            continue;
+        }
+        const size_t end = std::max(identifierEnd(source, i), i + 1);
+        const std::string token = source.substr(i, end - i);
+        const size_t after = std::min(
+            source.find_first_not_of(" \t\v\f\r\n", end), source.size());
+        const char next = after < source.size() ? source[after] : '\0';
+        const char following = end < source.size() ? source[end] : '\0';
+
+        // A global hides a built-in function from main() on (GLSL ES 1.00
+        // §4.2.6), where the moved initializers run.
+        if (!level && isGLSLES100MathBuiltin(token) &&
+            (isName(last) || last == "]" || last == "}" || last == ",")) {
+            hidesBuiltin = true;
+        }
+
+        if (state == kInitializer && (level || (c != ';' && c != ','))) {
+            // What the spec allows in the initializer, but no l-value use.
+            bool isTaken = true;
+            if (isName(token) && last != "." && token != "true" &&
+                token != "false") {
+                if (next == '(') {
+                    // A constructor or a built-in function.
+                    const bool isStructure = plainStructs.count(token) > 0;
+                    hasWholeStructure |= isStructure;
+                    isTaken = isStructure ||
+                              packingSize(token, columns, rows) ||
+                              isGLSLES100MathBuiltin(token);
+                } else {
+                    const auto it = globals.find(token);
+                    const char kind =
+                        it == globals.end() ? 'o' : it->second.storage;
+                    isTaken = kind == 'v' || kind == 'u' || kind == 'c';
+                    isNonConstant |= kind == 'v' || kind == 'u';
+                    hasWholeStructure |=
+                        isTaken && it->second.isStructure && next != '.';
+                }
+            } else if (c == '=') {
+                // ==, !=, <= and >=.
+                isTaken = following == '=' ||
+                          ((source[i - 1] == '=' || source[i - 1] == '!' ||
+                            source[i - 1] == '<' || source[i - 1] == '>') &&
+                           source[i - 2] != source[i - 1]);
+            } else if (c == '+' || c == '-') {
+                isTaken = following != c;
+            } else if (c == '{' || c == '}') {
+                isTaken = false;
+            }
+            // GLSL ES 1.00 §5.7 takes no ?: on a structure, but a driver may.
+            hasSelect |= c == '?';
+            if (!isTaken) {
+                state = kRest;
+            }
+        } else if (state == kStructBody && level == 1 && c != '}') {
+            if (expectsType) {
+                if (packingSize(token, columns, rows)) {
+                    expectsType = false;
+                } else if (token != "lowp" && token != "mediump" &&
+                           token != "highp") {
+                    isPlain = false;
+                }
+            } else if (c == ';') {
+                expectsType = true;
+            } else if (!isName(token) && c != ',') {
+                isPlain = false;
+            }
+        }
+
+        if (c == '(' || c == '[' || c == '{') {
+            if (!level && c == '{' && last == ")" && isMainHeader) {
+                if (hidesBuiltin) {
+                    return;
+                }
+                for (const auto& blank : blanks) {
+                    for (size_t j = blank.first; j < blank.second; j++) {
+                        if (source[j] != '\r' && source[j] != '\n') {
+                            source[j] = ' ';
+                        }
+                    }
+                }
+                source.insert(i + 1, inits);
+                return;
+            }
+            if (!level && c == '(') {
+                isMainHeader =
+                    state == kName && type == "void" && name == "main";
+            }
+            if (!level && state == kStructName && c == '{') {
+                state = kStructBody;
+                isPlain = true;
+                expectsType = true;
+            } else if (!level && state != kInitializer) {
+                // An array, which still declares a global, a function or a
+                // form not read here.
+                declares &= c == '[';
+                state = state == kName && c == '[' ? kArrayName : kRest;
+            }
+            level++;
+        } else if (c == ')' || c == ']' || c == '}') {
+            if (!level) {
+                return; // unbalanced, left to the driver
+            }
+            level--;
+            if (!level && c == '}') {
+                if (state == kStructBody) {
+                    // An unnamed structure is "" until the next one.
+                    if (isPlain) {
+                        plainStructs.insert(type);
+                    } else {
+                        plainStructs.erase(type);
+                    }
+                    state = kType; // its declarators follow
+                } else {
+                    // the end of a function body
+                    state = kQualifiers;
+                    storage = 'v';
+                    declares = false;
+                }
+            }
+        } else if (!level &&
+                   (c == ';' ||
+                    (c == ',' && (state == kName || state == kArrayName ||
+                                  state == kInitializer)))) {
+            const bool isStructure = plainStructs.count(type) > 0;
+            const bool isBasic =
+                isStructure || packingSize(type, columns, rows);
+            if (state == kInitializer && storage == 'v' && isBasic &&
+                isNonConstant && !(hasWholeStructure && hasSelect)) {
+                blanks.emplace_back(equals, i);
+                std::string init = source.substr(equals + 1, i - equals - 1);
+                std::replace(init.begin(), init.end(), '\r', ' ');
+                std::replace(init.begin(), init.end(), '\n', ' ');
+                inits += " " + name + " =" + init + ";";
+            }
+            if (declares && isBasic) {
+                globals[name] = { storage, isStructure };
+            }
+            if (c == ',') {
+                // The next declarator, of the same qualifiers and type.
+                state = kType;
+            } else {
+                state = kQualifiers;
+                storage = 'v';
+                declares = false;
+                isMainHeader = false;
+            }
+        } else if (!level && state == kQualifiers && isName(token)) {
+            if (token == "const") {
+                storage = 'c';
+            } else if (token == "uniform") {
+                storage = 'u';
+            } else if (token == "attribute" || token == "varying" ||
+                       token == "invariant") {
+                storage = 'o';
+            } else if (token == "struct") {
+                type.clear();
+                state = kStructName;
+            } else if (token != "lowp" && token != "mediump" &&
+                       token != "highp") {
+                type = token;
+                state = kType;
+            }
+        } else if (!level && state == kType && isName(token)) {
+            name = token;
+            declares = true;
+            state = kName;
+        } else if (!level && state == kName && c == '=') {
+            // Read for the declarators after it; only the initializer of a
+            // global with no qualifier moves.
+            state = kInitializer;
+            equals = i;
+            isNonConstant = false;
+            hasWholeStructure = false;
+            hasSelect = false;
+        } else if (!level && state == kStructName && isName(token) &&
+                   type.empty()) {
+            type = token;
+        } else if (!level && state != kInitializer && state != kRest) {
+            declares = false;
+            state = kRest;
+        }
+        last = token;
+        i = end;
+    }
 }
 
 void WebGLRenderingContext::compileShader(WebGLShader* shader)
@@ -2904,6 +3367,10 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
         shader->setCompileFailed(true);
         shader->setInfoLog(error);
         return;
+    }
+
+    if (!essl3) {
+        moveGlobalInitializersIntoMain(driverSource);
     }
 
     if (webGLVersion() >= 2) {
@@ -5152,7 +5619,7 @@ WebGLActiveInfo* WebGLRenderingContext::getActiveAttrib(WebGLProgram* program,
 
     GLint size;
     GLenum type;
-    GLsizei length;
+    GLsizei length = 0;
 
     std::vector<char> name;
     name.resize(maxNameLength, '\0');
@@ -5166,6 +5633,7 @@ WebGLActiveInfo* WebGLRenderingContext::getActiveAttrib(WebGLProgram* program,
         return nullptr;
     }
 
+    length = programNameFromDriver(name.data(), length);
     return new WebGLActiveInfo(scriptBindingInstance(), size, type,
                                String::createASCIIString(name.data(), length));
 }
@@ -5189,7 +5657,7 @@ WebGLActiveInfo* WebGLRenderingContext::getActiveUniform(WebGLProgram* program,
 
     GLint size;
     GLenum type;
-    GLsizei length;
+    GLsizei length = 0;
 
     std::vector<char> name;
     name.resize(maxNameLength, '\0');
@@ -5203,6 +5671,7 @@ WebGLActiveInfo* WebGLRenderingContext::getActiveUniform(WebGLProgram* program,
         return nullptr;
     }
 
+    length = programNameFromDriver(name.data(), length);
     return new WebGLActiveInfo(scriptBindingInstance(), size, type,
                                String::createASCIIString(name.data(), length));
 }
@@ -5241,7 +5710,8 @@ GLint WebGLRenderingContext::getAttribLocation(WebGLProgram* program,
         return -1;
     }
 
-    return m_gl->getAttribLocation(program->glObject(), CSTR(name));
+    return m_gl->getAttribLocation(program->glObject(),
+                                   programNameForDriver(name).c_str());
 }
 Optional<WebGLFramebuffer*> WebGLRenderingContext::getBoundFramebuffer(
     GLenum target)
@@ -6033,7 +6503,8 @@ WebGLUniformLocation* WebGLRenderingContext::getUniformLocation(
         return nullptr;
     }
 
-    GLint location = m_gl->getUniformLocation(program->glObject(), CSTR(name));
+    GLint location = m_gl->getUniformLocation(
+        program->glObject(), programNameForDriver(name).c_str());
     if (location == -1) {
         /*
           - WebGL: The return value is null if name does not correspond to an

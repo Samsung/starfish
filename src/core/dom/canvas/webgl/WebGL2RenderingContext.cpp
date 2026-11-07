@@ -1277,7 +1277,8 @@ GLint WebGL2RenderingContext::getFragDataLocation(WebGLProgram* program,
     if (!validateProgramOrShader(program)) {
         return -1;
     }
-    return gl()->getFragDataLocation(program->glObject(), CSTR(name));
+    return gl()->getFragDataLocation(program->glObject(),
+                                     programNameForDriver(name).c_str());
 }
 
 void WebGL2RenderingContext::vertexAttrib1f(GLuint index, GLfloat x)
@@ -1850,7 +1851,7 @@ void WebGL2RenderingContext::transformFeedbackVaryings(
     cstrings.reserve(varyings.size());
 
     for (size_t i = 0; i < varyings.size(); ++i) {
-        strings.push_back(varyings[i]->toUTF8NonGCString());
+        strings.push_back(programNameForDriver(varyings[i]));
         cstrings.push_back(strings.back().c_str());
     }
 
@@ -2188,7 +2189,7 @@ GLuint WebGL2RenderingContext::getUniformBlockIndex(WebGLProgram* program,
         return GL_INVALID_INDEX;
     }
     return gl()->getUniformBlockIndex(
-        program->glObject(), uniformBlockName->toUTF8NonGCString().c_str());
+        program->glObject(), programNameForDriver(uniformBlockName).c_str());
 }
 
 ScriptValue WebGL2RenderingContext::getActiveUniformBlockParameter(
@@ -2295,7 +2296,8 @@ String* WebGL2RenderingContext::getActiveUniformBlockName(
     if (hasNewGLError()) {
         return nullptr;
     }
-    return String::fromUTF8(name.data(), length);
+    return String::fromUTF8(name.data(),
+                            programNameFromDriver(name.data(), length));
 }
 
 void WebGL2RenderingContext::uniformBlockBinding(WebGLProgram* program,
@@ -2343,7 +2345,7 @@ Optional<GCAtomicVector<GLuint>> WebGL2RenderingContext::getUniformIndices(
         if (!uniformNames[i]) {
             return Optional<GCAtomicVector<GLuint>>();
         }
-        nameStrings.push_back(uniformNames[i]->toUTF8NonGCString());
+        nameStrings.push_back(programNameForDriver(uniformNames[i]));
         names.push_back(nameStrings.back().c_str());
     }
 
@@ -3205,6 +3207,7 @@ WebGLActiveInfo* WebGL2RenderingContext::getTransformFeedbackVarying(
         return nullptr;
     }
 
+    length = programNameFromDriver(nameBuffer.data(), length);
     return new WebGLActiveInfo(
         scriptBindingInstance(), size, type,
         String::createASCIIString(nameBuffer.data(), length));

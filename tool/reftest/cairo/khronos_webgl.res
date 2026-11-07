@@ -280,7 +280,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-wit
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-limited-indexing.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-long-line.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-non-ascii-error.frag.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-non-reserved-words.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-non-reserved-words.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-without-precision.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-precision.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-preprocessor-whitespace.html

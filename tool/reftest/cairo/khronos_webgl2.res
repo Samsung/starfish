@@ -222,7 +222,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/empty-decl
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/empty_main.vert.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/expression-list-in-declarator-initializer.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/gl_position_unset.vert.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/global-variable-init.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/global-variable-init.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/glsl-function-nodes.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/glsl-vertex-branch.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/glsl-long-variable-names.html?webglVersion=2
@@ -278,7 +278,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-wit
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-hex-int-constant-macro.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-long-line.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-non-ascii-error.frag.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-non-reserved-words.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-non-reserved-words.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-precision.frag.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-preprocessor-whitespace.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-quoted-error.frag.html?webglVersion=2
@@ -312,13 +312,13 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-nes
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-short-circuiting-operators.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-global-variable-precision-mismatch.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/large-loop-compile.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-equals.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-assign.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-equals.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-assign.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-mixed-array-declarators.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-nesting-of-variable-names.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-specifiers-in-uniforms.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-unary-operators.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/ternary-operator-on-arrays.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/ternary-operator-on-arrays.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/ternary-operators-in-global-initializers.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/ternary-operators-in-initializers.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/reserved/_webgl_field.vert.html?webglVersion=2
@@ -1514,7 +1514,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/bool-type-cas
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/compare-structs-containing-arrays.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/compound-assignment-type-combination.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/const-array-init.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/forbidden-operators.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/forbidden-operators.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/frag-depth.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/invalid-default-precision.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/glsl3/invalid-invariant.html?webglVersion=2

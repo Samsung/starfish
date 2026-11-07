@@ -651,6 +651,14 @@ protected:
     void initializeRenderbuffer(WebGLRenderbuffer* renderbuffer);
     static bool isValidDrawMode(GLenum mode);
     static bool isRenderbufferFormatWebGL2(GLenum format);
+    // A program variable, block or output name as the driver knows it: each
+    // identifier shaderSourceForDriver() renames, renamed. Empty, which names
+    // nothing, when an identifier has a prefix only WebGL may use (WebGL 1.0
+    // "Supported GLSL Constructs"): no shader declares such a name.
+    static std::string programNameForDriver(String* name);
+    // Gives a name the driver reports, in name[0, length), the shader's
+    // spelling back, in place; the new length.
+    static GLsizei programNameFromDriver(char* name, GLsizei length);
     // Whether size bytes from offset stay within capacity bytes, computed
     // so that no sum can wrap.
     static bool isRangeWithin(uint64_t offset, uint64_t size, uint64_t capacity)
