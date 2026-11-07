@@ -1734,9 +1734,14 @@ GLenum WebGL2RenderingContext::clientWaitSync(WebGLSync* sync, GLbitfield flags,
 {
     ENTER_CONTEXT_SCOPE(GL_WAIT_FAILED);
 
-    if (!isFromCurrentContext(sync) || flags & ~GL_SYNC_FLUSH_COMMANDS_BIT ||
-        timeout > kMaxClientWaitTimeoutWebgl) {
+    if (!isFromCurrentContext(sync) || timeout > kMaxClientWaitTimeoutWebgl) {
         setGLError(GL_INVALID_OPERATION);
+        return GL_WAIT_FAILED;
+    }
+    // ES 3.0.6 §5.2.1, as the conformance suite and other browsers expect;
+    // the WebGL 2.0 prose says INVALID_OPERATION.
+    if (flags & ~GL_SYNC_FLUSH_COMMANDS_BIT) {
+        setGLError(GL_INVALID_VALUE);
         return GL_WAIT_FAILED;
     }
     // A deleted sync's GLsync is freed; it must not reach the driver.

@@ -1449,7 +1449,7 @@ http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/internalfo
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/lifetime.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/multisample.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativebufferapi.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativefragmentapi.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativefragmentapi.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativeshaderapi.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativestateapi.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativetextureapi.html?webglVersion=2
