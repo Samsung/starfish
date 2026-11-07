@@ -30,16 +30,20 @@ public:
     };
     // src holds height rows of width 4-byte pixels, stride bytes apart. A
     // stride of 0 encodes the one row at src for every line, so a constant
-    // image needs only a single row of source pixels.
+    // image needs only a single row of source pixels. isPremultiplied says
+    // the colors are premultiplied by alpha: PNG stores them un-multiplied,
+    // and JPEG, which has no alpha, composites straight ones onto black.
     static std::vector<uint8_t> encodePNG(const uint8_t* src, size_t width,
                                           size_t height, size_t stride,
-                                          ImageColorSpace colorSpace);
+                                          ImageColorSpace colorSpace,
+                                          bool isPremultiplied = false);
     static std::vector<uint8_t> encodePNG(const uint8_t* src, size_t width,
                                           size_t height,
                                           ImageColorSpace colorSpace);
     static std::vector<uint8_t> encodeJPEG(const uint8_t* src, size_t width,
                                            size_t height, size_t stride,
-                                           ImageColorSpace colorSpace);
+                                           ImageColorSpace colorSpace,
+                                           bool isPremultiplied = false);
     static std::vector<uint8_t> encodeJPEG(const uint8_t* src, size_t width,
                                            size_t height,
                                            ImageColorSpace colorSpace);

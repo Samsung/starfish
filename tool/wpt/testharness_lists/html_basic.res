@@ -201,7 +201,7 @@ http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.jpg.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.lowercase.ascii.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.lowercase.unicode.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.png.complexcolours.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.png.complexcolours.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.png.primarycolours.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.unrecognised.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/toDataURL.zeroheight.html

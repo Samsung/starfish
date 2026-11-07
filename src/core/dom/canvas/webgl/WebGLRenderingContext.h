@@ -79,12 +79,15 @@ public:
     GLenum draw(const bool needsFlipY, const bool needsPremultiplyAlpha,
                 const GLenum type, const size_t bytesPerPixel);
 
-    // Converts the RGBA8 image of a TexImageSource to format/type. Returns
-    // the GL error to report when the conversion is not possible.
+    // Converts the RGBA8 image of a TexImageSource to format/type, its colors
+    // premultiplied or un-multiplied as asked. Returns the GL error to report
+    // when the conversion is not possible.
     GLenum drawSubRectangle(const bool needsFlipY,
-                            const bool needsPremultiplyAlpha, const GLenum type,
-                            size_t skipPixels, size_t skipRows,
-                            size_t destWidth, size_t destHeight, size_t depth,
+                            const bool needsPremultiplyAlpha,
+                            const bool needsUnpremultiplyAlpha,
+                            const GLenum type, size_t skipPixels,
+                            size_t skipRows, size_t destWidth,
+                            size_t destHeight, size_t depth,
                             size_t imageHeight);
 
     // The pixels to upload: the converted copy once draw() or
@@ -160,6 +163,11 @@ public:
 
     GLsizei drawingBufferWidth() const;
     GLsizei drawingBufferHeight() const;
+    // Whether the drawing buffer holds premultiplied colors.
+    bool hasPremultipliedDrawingBuffer() const
+    {
+        return m_attributes.alpha() && m_attributes.premultipliedAlpha();
+    }
     String* drawingBufferColorSpace();
     void setDrawingBufferColorSpace(String* value);
     String* unpackColorSpace();

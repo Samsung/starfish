@@ -146,11 +146,40 @@ public:
             }
             initInternalSurface();
 
-            if (bufferSize() < m_inputBuffer.size()) {
+            bool keepsInput = false;
+#if defined(STARFISH_ENABLE_WEBGL)
+            // A non-opaque PNG or WebP keeps its file for WebGL's
+            // decodeStraightRGBA(): the premultiplied pixels above lost the
+            // colors under low alpha.
+            keepsInput = bufferSize() < m_inputBuffer.size() &&
+                         idResult.m_isSuccessful &&
+                         id.decodeStraightRGBA(m_width, m_height, false)
+                             .m_isSuccessful &&
+                         !isOpaque();
+#endif
+            if (bufferSize() < m_inputBuffer.size() && !keepsInput) {
                 std::vector<char>().swap(m_inputBuffer);
             }
         }
         return (uint8_t*)m_image;
+    }
+
+    virtual uint8_t* decodeStraightRGBA() override
+    {
+        // data() decodes first; it may drop the file of an opaque image.
+        data();
+        if (!m_inputBuffer.size()) {
+            return nullptr;
+        }
+        ImageDecoder id(m_inputBuffer, m_needsDownScaleImageResourceLargerThan,
+                        m_devicePixelRatio);
+        // The header rules out an image without a straight form, such as a
+        // JPEG, before any pixel is read.
+        if (!id.decodeStraightRGBA(m_width, m_height, false).m_isSuccessful ||
+            isOpaque()) {
+            return nullptr;
+        }
+        return id.decodeStraightRGBA(m_width, m_height, true).m_buffer;
     }
 
     virtual void clear() override
@@ -218,6 +247,20 @@ public:
     }
 
 private:
+    // Whether every pixel of m_image is opaque.
+    bool isOpaque() const
+    {
+        const uint8_t* row = static_cast<const uint8_t*>(m_image);
+        for (size_t y = 0; y < m_height; ++y, row += m_stride) {
+            for (size_t x = 0; x < m_width; ++x) {
+                if (row[x * 4 + STARFISH_PIXEL_A_INDEX] != 255) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     virtual bool hasCompressedData() override
     {
         return m_inputBuffer.size();

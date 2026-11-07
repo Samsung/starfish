@@ -29,6 +29,7 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/canvas/webgl/WebGLExtensions.h"
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
+#include "core/modules/canvas/image/CompressedNativeImageData.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/modules/canvas/image/SVGNativeImageData.h"
 #include "core/util/debug/Trace.h"
@@ -8497,6 +8498,7 @@ GLenum TexImageHelper::draw(const bool needsFlipY,
 
 GLenum TexImageHelper::drawSubRectangle(const bool needsFlipY,
                                         const bool needsPremultiplyAlpha,
+                                        const bool needsUnpremultiplyAlpha,
                                         const GLenum type, size_t skipPixels,
                                         size_t skipRows, size_t destWidth,
                                         size_t destHeight, size_t depth,
@@ -8592,8 +8594,8 @@ GLenum TexImageHelper::drawSubRectangle(const bool needsFlipY,
     const size_t srcStride = m_sourceImage.stride;
     m_width = destWidth;
     m_height = destHeight;
-    if (!needsFlipY && !needsPremultiplyAlpha && !needsColorConversion &&
-        (format == GL_RGBA || format == GL_BGRA_EXT) &&
+    if (!needsFlipY && !needsPremultiplyAlpha && !needsUnpremultiplyAlpha &&
+        !needsColorConversion && (format == GL_RGBA || format == GL_BGRA_EXT) &&
         type == GL_UNSIGNED_BYTE && skipPixels == 0 && skipRows == 0 &&
         destWidth == srcWidth && destHeight == srcHeight && depth == 1 &&
         srcStride == srcWidth * 4) {
@@ -8648,8 +8650,14 @@ GLenum TexImageHelper::drawSubRectangle(const bool needsFlipY,
                     continue;
                 }
                 const unsigned char* src = image + srcRowOffset + srcCol * 4;
-                const uint8_t rgba[4] = { src[order[0]], src[order[1]],
-                                          src[order[2]], src[order[3]] };
+                uint8_t rgba[4] = { src[order[0]], src[order[1]], src[order[2]],
+                                    src[order[3]] };
+                if (needsUnpremultiplyAlpha && rgba[3] && rgba[3] != 255) {
+                    for (size_t i = 0; i < 3; i++) {
+                        rgba[i] =
+                            unpremultipliedComponentByte(rgba[i], rgba[3]);
+                    }
+                }
                 writePixel(m_data.get() + dstRowOffset + c * dstBytesPerPixel,
                            rgba, channels, count, type, needsPremultiplyAlpha);
             }
@@ -9140,6 +9148,12 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
     NativeImageData* rasterizedSVGImage = nullptr;
     ::Starfish::ImageData* sourceImageData = nullptr;
     std::vector<uint8_t> canvasPixels;
+    // An image decoded again with its file's straight colors (WebGL 1.0
+    // §5.14.8).
+    std::unique_ptr<uint8_t, decltype(&free)> straightPixels(nullptr, &free);
+    // A 2D canvas, an SVG raster and a decoded image hold cairo's
+    // premultiplied colors.
+    bool isSourcePremultiplied = false;
     bool flipY = m_unpackFlipY;
     bool premultiplyAlpha = m_unpackPremultiplyAlpha;
 
@@ -9187,6 +9201,7 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
         }
         throwIfNotOriginClean(executionContext(),
                               element->isImageCORSSameOrigin());
+        isSourcePremultiplied = true;
         if (imageData->isSVGNativeImageData()) {
             // WebGL 1.0 "Texture Upload Width and Height": an SVG image
             // uploads at the element's current width and height.
@@ -9216,6 +9231,14 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
         } else {
             width = imageData->width();
             height = imageData->height();
+            // Without UNPACK_PREMULTIPLY_ALPHA_WEBGL the image's colors must
+            // never have been premultiplied (WebGL 1.0 §5.14.8), which
+            // un-multiplying cannot give back at low alpha.
+            if (!premultiplyAlpha && imageData->isCompressedNativeImageData()) {
+                straightPixels.reset(imageData->asCompressedNativeImageData()
+                                         ->decodeStraightRGBA());
+                isSourcePremultiplied = !straightPixels;
+            }
         }
     } else if (source.isHTMLCanvasElementValue()) {
         TRACE(WEBGL, "source.isHTMLCanvasElementValue");
@@ -9238,6 +9261,7 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
                 context->asCanvasRenderingContext2D();
             context2d->flushForReadback();
             imageData = NativeImageData::attach(context2d->canvas());
+            isSourcePremultiplied = true;
         } else if (context->isWebGLRenderingContext() ||
                    context->isWebGL2RenderingContext()) {
             // A WebGL canvas uploads its drawing buffer (WebGL 1.0 §5.14.8).
@@ -9326,13 +9350,20 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
     stride = width * 4;
 
     TexImageHelper image =
-        sourceImageData ? TexImageHelper(sourceImageData, format)
-        : imageData     ? TexImageHelper(imageData, format)
-                        : TexImageHelper(width, height, stride, format,
-                                         canvasPixels.data());
+        sourceImageData  ? TexImageHelper(sourceImageData, format)
+        : straightPixels ? TexImageHelper(width, height, stride, format,
+                                          straightPixels.get())
+        : imageData      ? TexImageHelper(imageData, format)
+                         : TexImageHelper(width, height, stride, format,
+                                          canvasPixels.data());
+    // A premultiplied source is not multiplied again, and is un-multiplied
+    // when the upload does not premultiply (WebGL 1.0, "Pixel Storage
+    // Parameters").
     GLenum error = image.drawSubRectangle(
-        flipY, premultiplyAlpha, type, hasSubRectangle ? skipPixels : 0,
-        hasSubRectangle ? skipRows : 0, hasSubRectangle ? destWidth : width,
+        flipY, premultiplyAlpha && !isSourcePremultiplied,
+        isSourcePremultiplied && !premultiplyAlpha, type,
+        hasSubRectangle ? skipPixels : 0, hasSubRectangle ? skipRows : 0,
+        hasSubRectangle ? destWidth : width,
         hasSubRectangle ? destHeight : height, hasSubRectangle ? depth : 1,
         imageHeight);
 

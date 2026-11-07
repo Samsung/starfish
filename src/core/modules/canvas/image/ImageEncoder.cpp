@@ -27,6 +27,7 @@
 #include <jpeglib.h>
 #endif
 #include "ImageEncoder.h"
+#include "core/modules/canvas/Canvas.h"
 namespace Starfish {
 
 static void PngWriteCallback(png_structp png_ptr, png_bytep data,
@@ -38,9 +39,13 @@ static void PngWriteCallback(png_structp png_ptr, png_bytep data,
 
 static bool encodePNGOnce(const uint8_t* src, size_t w, size_t h, size_t stride,
                           ImageEncoder::ImageColorSpace colorSpace,
-                          std::vector<uint8_t>& result)
+                          bool isPremultiplied, std::vector<uint8_t>& result)
 {
     result.clear();
+    // PNG holds straight alpha, so a premultiplied row is un-multiplied into
+    // this copy first. It is made before setjmp(): a longjmp back must not
+    // skip the destructor of anything made after it.
+    std::vector<uint8_t> row(isPremultiplied ? w * 4 : 0);
     png_structp p =
         png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!p) {
@@ -61,22 +66,22 @@ static bool encodePNGOnce(const uint8_t* src, size_t w, size_t h, size_t stride,
     png_set_IHDR(p, info_ptr, w, h, 8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
     // png_set_compression_level(p, 1);
-    std::vector<uint8_t*> rows(h);
-    if (colorSpace == ImageEncoder::ImageColorSpace::RGBA ||
-        colorSpace == ImageEncoder::ImageColorSpace::BGRA) {
-        for (size_t y = 0; y < h; ++y) {
-            rows[y] = (uint8_t*)src + y * stride;
-        }
-    } else {
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    }
-    png_set_rows(p, info_ptr, &rows[0]);
     png_set_write_fn(p, &result, PngWriteCallback, NULL);
-    if (colorSpace == ImageEncoder::ImageColorSpace::RGBA) {
-        png_write_png(p, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
-    } else {
-        png_write_png(p, info_ptr, PNG_TRANSFORM_BGR, NULL);
+    png_write_info(p, info_ptr);
+    if (colorSpace == ImageEncoder::ImageColorSpace::BGRA) {
+        png_set_bgr(p);
     }
+    for (size_t y = 0; y < h; ++y) {
+        const uint8_t* line = src + y * stride;
+        if (isPremultiplied) {
+            memcpy(row.data(), line, w * 4);
+            convertImageBufferAsUnmultipliedAlphaIfNeeds(row.data(), w, w * 4,
+                                                         1);
+            line = row.data();
+        }
+        png_write_row(p, line);
+    }
+    png_write_end(p, info_ptr);
     png_destroy_write_struct(&p, &info_ptr);
 
     return true;
@@ -84,7 +89,8 @@ static bool encodePNGOnce(const uint8_t* src, size_t w, size_t h, size_t stride,
 
 std::vector<uint8_t> ImageEncoder::encodePNG(const uint8_t* src, size_t w,
                                              size_t h, size_t stride,
-                                             ImageColorSpace colorSpace)
+                                             ImageColorSpace colorSpace,
+                                             bool isPremultiplied)
 {
     STARFISH_ASSERT(src != nullptr);
 
@@ -96,7 +102,8 @@ std::vector<uint8_t> ImageEncoder::encodePNG(const uint8_t* src, size_t w,
 
     std::vector<uint8_t> result;
     for (int attempt = 0; attempt < maxAttempts; ++attempt) {
-        if (encodePNGOnce(src, w, h, stride, colorSpace, result)) {
+        if (encodePNGOnce(src, w, h, stride, colorSpace, isPremultiplied,
+                          result)) {
             break;
         }
     }
@@ -113,7 +120,8 @@ std::vector<uint8_t> ImageEncoder::encodePNG(const uint8_t* src, size_t w,
 
 std::vector<uint8_t> ImageEncoder::encodeJPEG(const uint8_t* src, size_t w,
                                               size_t h, size_t stride,
-                                              ImageColorSpace colorSpace)
+                                              ImageColorSpace colorSpace,
+                                              bool isPremultiplied)
 {
     STARFISH_ASSERT(src != nullptr);
 
@@ -146,9 +154,19 @@ std::vector<uint8_t> ImageEncoder::encodeJPEG(const uint8_t* src, size_t w,
 
     jpeg_start_compress(&cinfo, true);
 
+    // JPEG has no alpha: straight colors are composited onto black (HTML,
+    // "A serialization of the bitmap as a file"); premultiplied ones already
+    // are.
+    std::vector<uint8_t> row(isPremultiplied ? 0 : w * 4);
     for (size_t i = 0; i < cinfo.image_height; i++) {
-        JSAMPROW scanline =
-            static_cast<JSAMPROW>(const_cast<uint8_t*>(src) + i * stride);
+        const uint8_t* line = src + i * stride;
+        if (!isPremultiplied) {
+            memcpy(row.data(), line, w * 4);
+            convertImageBufferAsPremultipliedAlphaIfNeeds(row.data(), w, w * 4,
+                                                          1);
+            line = row.data();
+        }
+        JSAMPROW scanline = const_cast<uint8_t*>(line);
         jpeg_write_scanlines(&cinfo, &scanline, 1);
     }
     jpeg_finish_compress(&cinfo);

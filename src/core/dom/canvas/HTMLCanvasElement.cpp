@@ -218,6 +218,10 @@ String* HTMLCanvasElement::toDataURL(String* type, ScriptValue quality)
     uint32_t bitmapWidth = 0;
     uint32_t bitmapHeight = 0;
     std::vector<uint8_t> blankRow;
+    // A 2D bitmap holds premultiplied colors, a WebGL drawing buffer only with
+    // premultipliedAlpha (WebGL 1.0, "Premultiplied Alpha, Canvas APIs and
+    // texImage2D").
+    bool isPremultiplied = true;
     if (m_canvasRenderingContext) {
         m_canvasRenderingContext->flushForReadback();
         CanvasSurface* canvasSurface = m_canvasRenderingContext->surface();
@@ -228,6 +232,14 @@ String* HTMLCanvasElement::toDataURL(String* type, ScriptValue quality)
         bitmapHeight = canvasSurface->bufferHeight();
         pixels = canvasSurface->mapBuffer();
         pixelsStride = canvasSurface->bufferStride();
+#if defined(STARFISH_ENABLE_WEBGL)
+        if (m_contextMode == CanvasContextModeWebGL ||
+            m_contextMode == CanvasContextModeWebGL2) {
+            isPremultiplied =
+                static_cast<WebGLRenderingContext*>(m_canvasRenderingContext)
+                    ->hasPremultipliedDrawingBuffer();
+        }
+#endif
     } else {
         // Serialize the bitmap the engine would allocate for this element,
         // so an oversized canvas is bounded the same way as one that has a
@@ -255,11 +267,13 @@ String* HTMLCanvasElement::toDataURL(String* type, ScriptValue quality)
     if (type->equalsIgnoreCase("image/jpeg")) {
         // The quality argument is not applied; the encoder's default is used.
         mimeType = "image/jpeg";
-        encoded = ImageEncoder::encodeJPEG(pixels, bitmapWidth, bitmapHeight,
-                                           pixelsStride, colorSpace);
+        encoded =
+            ImageEncoder::encodeJPEG(pixels, bitmapWidth, bitmapHeight,
+                                     pixelsStride, colorSpace, isPremultiplied);
     } else {
-        encoded = ImageEncoder::encodePNG(pixels, bitmapWidth, bitmapHeight,
-                                          pixelsStride, colorSpace);
+        encoded =
+            ImageEncoder::encodePNG(pixels, bitmapWidth, bitmapHeight,
+                                    pixelsStride, colorSpace, isPremultiplied);
     }
     if (!encoded.empty()) {
         result = std::string("data:") + mimeType + ";base64," +

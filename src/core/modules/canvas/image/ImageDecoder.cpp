@@ -125,7 +125,8 @@ static void readPNGFromBufferedInput(png_structp png, png_bytep data,
 }
 
 static ImageDecoder::DecodeResult decodePNG(
-    const std::vector<char>& inputBuffer, bool needsDecoding)
+    const std::vector<char>& inputBuffer, bool needsDecoding,
+    bool straightRGBA = false)
 {
     READ_DATA readData;
     png_byte colorType;
@@ -201,7 +202,9 @@ static ImageDecoder::DecodeResult decodePNG(
         colorType == PNG_COLOR_TYPE_GRAY_ALPHA) {
         png_set_gray_to_rgb(png);
     }
-    png_set_bgr(png);
+    if (!straightRGBA) {
+        png_set_bgr(png);
+    }
     png_read_update_info(png, info);
 
     png_uint_32 rowbytes = png_get_rowbytes(png, info);
@@ -223,15 +226,16 @@ static ImageDecoder::DecodeResult decodePNG(
         png_read_image(png, rowPointers);
         png_read_end(png, nullptr);
 #if defined(PORT_CANVAS_NEEDS_PREMULTIPLIED_ALPHA)
-        uint8_t* data = (uint8_t*)result.m_buffer;
-        for (png_uint_32 y = 0; y < result.m_height; ++y) {
-            for (png_uint_32 x = 0; x < rowbytes; x += 4) {
-                png_uint_32 idx = y * rowbytes + x;
-                uint32_t* tmp = (uint32_t*)(&(data[idx]));
-                *tmp = convertPixelAsPremultiplyAlpha(tmp);
+        if (!straightRGBA) {
+            uint8_t* data = (uint8_t*)result.m_buffer;
+            for (png_uint_32 y = 0; y < result.m_height; ++y) {
+                for (png_uint_32 x = 0; x < rowbytes; x += 4) {
+                    png_uint_32 idx = y * rowbytes + x;
+                    uint32_t* tmp = (uint32_t*)(&(data[idx]));
+                    *tmp = convertPixelAsPremultiplyAlpha(tmp);
+                }
             }
         }
-
 #endif
         free(rowPointers);
     }
@@ -860,7 +864,8 @@ static ImageDecoder::DecodeResult decodeGIF(
 
 #if defined(STARFISH_ENABLE_WEBP)
 static ImageDecoder::DecodeResult decodeWebP(
-    const std::vector<char>& inputBuffer, bool needsDecoding)
+    const std::vector<char>& inputBuffer, bool needsDecoding,
+    bool straightRGBA = false)
 {
     ImageDecoder::DecodeResult result;
 
@@ -877,15 +882,19 @@ static ImageDecoder::DecodeResult decodeWebP(
             WebPDecodeRGBA(readData.mem, readData.size, &width, &height);
 #else
         result.m_buffer =
-            WebPDecodeBGRA(readData.mem, readData.size, &width, &height);
+            straightRGBA
+                ? WebPDecodeRGBA(readData.mem, readData.size, &width, &height)
+                : WebPDecodeBGRA(readData.mem, readData.size, &width, &height);
 #endif
         if (result.m_buffer == nullptr) {
             return result;
         }
         // libwebp returns straight alpha; fully transparent pixels can keep
         // color data that would otherwise show through.
-        convertImageBufferAsPremultipliedAlphaIfNeeds(result.m_buffer, width,
-                                                      width * 4, height);
+        if (!straightRGBA) {
+            convertImageBufferAsPremultipliedAlphaIfNeeds(
+                result.m_buffer, width, width * 4, height);
+        }
     } else {
         if (!WebPGetInfo(readData.mem, readData.size, &width, &height)) {
             return result;
@@ -996,6 +1005,37 @@ ImageDecoder::DecodeResult ImageDecoder::decode()
     return decodeBuffer(m_inputBuffer, true,
                         m_needsDownScaleImageResourceLargerThan,
                         m_devicePixelRatio);
+}
+
+ImageDecoder::DecodeResult ImageDecoder::decodeStraightRGBA(size_t width,
+                                                            size_t height,
+                                                            bool needsDecoding)
+{
+    // JPEG has no alpha and GIF alpha is 0 or 255, so decode() already
+    // holds their colors.
+    DecodeResult (*decodeFile)(const std::vector<char>&, bool, bool) = nullptr;
+    if (isPNGFormat(m_inputBuffer)) {
+        decodeFile = decodePNG;
+#if defined(STARFISH_ENABLE_WEBP)
+    } else if (isWebPFormat(m_inputBuffer)) {
+        decodeFile = decodeWebP;
+#endif
+    }
+    if (!decodeFile) {
+        return DecodeResult();
+    }
+    // decode() downscales premultiplied colors, so an image kept at another
+    // size has no straight form of that size; the header tells before any
+    // pixel is decoded.
+    DecodeResult header = decodeFile(m_inputBuffer, false, true);
+    if (!header.m_isSuccessful || header.m_width != width ||
+        header.m_height != height || header.m_stride != width * 4) {
+        return DecodeResult();
+    }
+    if (!needsDecoding) {
+        return header;
+    }
+    return decodeFile(m_inputBuffer, true, true);
 }
 
 bool ImageDecoder::isAnimatedGIF(const std::vector<char>& inputBuffer)
@@ -1303,6 +1343,13 @@ ImageDecoder::DecodeResult ImageDecoder::decodeJustImageSize()
 }
 
 ImageDecoder::DecodeResult ImageDecoder::decode()
+{
+    return ImageDecoder::DecodeResult();
+}
+
+ImageDecoder::DecodeResult ImageDecoder::decodeStraightRGBA(size_t width,
+                                                            size_t height,
+                                                            bool needsDecoding)
 {
     return ImageDecoder::DecodeResult();
 }

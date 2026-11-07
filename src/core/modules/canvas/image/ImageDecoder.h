@@ -67,6 +67,12 @@ public:
 
     DecodeResult decodeJustImageSize();
     DecodeResult decode();
+    // A PNG or WebP of width x height as its file holds it: RGBA order,
+    // straight alpha, rows width * 4 bytes apart, not downscaled. Any other
+    // image fails, as does one of another size. Without needsDecoding only
+    // the header is checked. The caller frees m_buffer.
+    DecodeResult decodeStraightRGBA(size_t width, size_t height,
+                                    bool needsDecoding);
     DecodeResult nextFrameOfAnimatedGIF(uint8_t* targetBuffer,
                                         size_t targetWidth,
                                         size_t targetHeight);

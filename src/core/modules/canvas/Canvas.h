@@ -801,7 +801,8 @@ inline void convertImageBufferAsPremultipliedAlphaIfNeeds(uint8_t* ptr,
 ALWAYS_INLINE uint16_t unpremultipliedComponentByte(uint8_t c, uint8_t a)
 {
     uint16_t u16Color = c;
-    return (((u16Color << 8) - u16Color) + a - 1) / a;
+    // A color above its alpha is out of range; it saturates.
+    return std::min<uint16_t>(255, (((u16Color << 8) - u16Color) + a - 1) / a);
 }
 
 inline void convertImageBufferAsUnmultipliedAlphaIfNeeds(uint8_t* ptr,

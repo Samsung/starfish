@@ -46,7 +46,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-rele
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-release-with-workers.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-lost-restored.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/incorrect-context-object-behaviour.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/context/premultiplyalpha-test.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/context/premultiplyalpha-test.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/resource-sharing-test.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/user-defined-properties-on-context.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/ext-disjoint-timer-query.html?webglVersion=2
@@ -551,7 +551,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/copy-t
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/cube-incomplete-fbo.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/default-texture.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/gl-pixelstorei.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/gl-teximage.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/gl-teximage.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/origin-clean-conformance.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/tex-image-and-sub-image-2d-with-array-buffer-view.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/tex-image-and-uniform-binding-bugs.html?webglVersion=2

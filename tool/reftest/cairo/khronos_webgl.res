@@ -43,7 +43,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-rele
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/context-type-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/incorrect-context-object-behaviour.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/methods.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/context/premultiplyalpha-test.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/context/premultiplyalpha-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/context/resource-sharing-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/angle-instanced-arrays.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-blend-minmax.html
@@ -593,7 +593,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/textures/copy-tex-im
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/default-texture.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/gl-get-tex-parameter.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/gl-pixelstorei.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/textures/gl-teximage.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/textures/gl-teximage.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/mipmap-fbo.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/origin-clean-conformance.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-array-buffer-view.html

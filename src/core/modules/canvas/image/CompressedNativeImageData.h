@@ -43,6 +43,11 @@ public:
     virtual bool hasCompressedData() = 0;
     virtual bool isDecompressed() = 0;
     virtual const std::string& compressedImageURL() = 0;
+    // The image decoded again as its file holds it: RGBA order, straight
+    // alpha, width() x height() with rows width() * 4 bytes apart; the
+    // caller frees it. nullptr when every pixel is opaque, so data() already
+    // holds those colors, or when the file cannot give them at this size.
+    virtual uint8_t* decodeStraightRGBA() = 0;
 
 protected:
     CompressedNativeImageData()
