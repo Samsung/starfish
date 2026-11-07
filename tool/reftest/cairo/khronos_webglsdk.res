@@ -9,3 +9,4 @@ http://localhost:11010/sdk/tests/conformance/extensions/angle-instanced-arrays.h
 http://localhost:11010/sdk/tests/conformance2/attribs/invalid-vertex-attribs.html
 http://localhost:11010/sdk/tests/conformance2/textures/misc/pbo-texture-uploads.html
 http://localhost:11010/sdk/tests/conformance2/textures/misc/tex-unpack-params-with-flip-y-and-premultiply-alpha.html
+http://localhost:11010/sdk/tests/conformance2/rendering/blitframebuffer-size-overflow.html

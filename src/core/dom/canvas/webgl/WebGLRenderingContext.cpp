@@ -4949,7 +4949,9 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         WebGLBuffer* buffer = m_state->getBoundBuffer(target).valueOr(nullptr);
         GLint value = 0;
         m_gl->getIntegerv(pname, &value);
-        if (buffer && !buffer->isDeleted()) {
+        // A buffer deleted while its vertex array object was not bound stays
+        // attached to it (OpenGL ES 3.0.6 Appendix D.1.2).
+        if (buffer) {
             return buffer->scriptValue();
         }
         return scriptNull();
@@ -5097,6 +5099,10 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
     case GL_VIEWPORT: {
         std::vector<int> values(4);
         m_gl->getIntegerv(pname, &values[0]);
+        if (pname == GL_VIEWPORT) {
+            values[0] = m_viewportX;
+            values[1] = m_viewportY;
+        }
         return createTypedArray<Int32ArrayObjectRef>(scriptBindingInstance(),
                                                      values);
     }
@@ -6650,6 +6656,60 @@ void WebGLRenderingContext::polygonOffset(GLfloat factor, GLfloat units)
     m_gl->polygonOffset(factor, units);
 }
 
+// OpenGL ES 3.0.6 §4.4.2.1: the sized color-renderable formats of table 3.13,
+// the depth and stencil formats of table 3.14 and STENCIL_INDEX8, and WebGL
+// 2.0's DEPTH_STENCIL; the float formats need EXT_color_buffer_float on top.
+bool WebGLRenderingContext::isRenderbufferFormatWebGL2(GLenum format)
+{
+    switch (format) {
+    case GL_R8:
+    case GL_RG8:
+    case GL_RGB8:
+    case GL_RGB565:
+    case GL_RGBA4:
+    case GL_RGB5_A1:
+    case GL_RGBA8:
+    case GL_RGB10_A2:
+    case GL_RGB10_A2UI:
+    case GL_SRGB8_ALPHA8:
+    case GL_R8I:
+    case GL_R8UI:
+    case GL_R16I:
+    case GL_R16UI:
+    case GL_R32I:
+    case GL_R32UI:
+    case GL_RG8I:
+    case GL_RG8UI:
+    case GL_RG16I:
+    case GL_RG16UI:
+    case GL_RG32I:
+    case GL_RG32UI:
+    case GL_RGBA8I:
+    case GL_RGBA8UI:
+    case GL_RGBA16I:
+    case GL_RGBA16UI:
+    case GL_RGBA32I:
+    case GL_RGBA32UI:
+    case GL_R16F:
+    case GL_RG16F:
+    case GL_RGBA16F:
+    case GL_R32F:
+    case GL_RG32F:
+    case GL_RGBA32F:
+    case GL_R11F_G11F_B10F:
+    case GL_DEPTH_COMPONENT16:
+    case GL_DEPTH_COMPONENT24:
+    case GL_DEPTH_COMPONENT32F:
+    case GL_DEPTH24_STENCIL8:
+    case GL_DEPTH32F_STENCIL8:
+    case GL_STENCIL_INDEX8:
+    case GL_DEPTH_STENCIL:
+        return true;
+    default:
+        return false;
+    }
+}
+
 void WebGLRenderingContext::renderbufferStorage(GLenum target,
                                                 GLenum internalformat,
                                                 GLsizei width, GLsizei height)
@@ -6671,17 +6731,16 @@ void WebGLRenderingContext::renderbufferStorage(GLenum target,
         setGLError(GL_INVALID_ENUM);
         return;
     }
+    if (webGLVersion() == 2 && !isRenderbufferFormatWebGL2(internalformat)) {
+        setGLError(GL_INVALID_ENUM, "not a renderable sized format");
+        return;
+    }
 
     if (width < 0 || height < 0) {
         setGLError(GL_INVALID_VALUE);
         return;
     }
 
-    if (internalformat == 0x881B /* GL_RGB16F */ ||
-        internalformat == 0x8815 /* GL_RGB32F */) {
-        setGLError(GL_INVALID_ENUM, "RGB float formats are not renderable");
-        return;
-    }
     if (WebGLFramebuffer::isFloatColorFormat(internalformat)) {
         if (!isExtensionEnabled("EXT_color_buffer_float")) {
             setGLError(GL_INVALID_ENUM, "EXT_color_buffer_float not enabled");
@@ -7225,6 +7284,13 @@ void WebGLRenderingContext::viewport(uint32_t x, uint32_t y, uint32_t width,
     ENTER_CONTEXT_SCOPE();
 
     m_gl->viewport(x, y, width, height);
+    // OpenGL ES 3.0.6 §2.12.1 clamps only the width and height; VIEWPORT
+    // reports x and y as given, which a driver may hold clamped to
+    // VIEWPORT_BOUNDS_RANGE. A negative size is an error that sets nothing.
+    if (static_cast<GLsizei>(width) >= 0 && static_cast<GLsizei>(height) >= 0) {
+        m_viewportX = static_cast<GLint>(x);
+        m_viewportY = static_cast<GLint>(y);
+    }
 }
 
 // WebGLRenderingContextOverloads
@@ -7656,7 +7722,10 @@ bool WebGLRenderingContext::computeRequiredPackBytes(GLsizei width,
 
     size_t bytesPerPixel = getBytesPerPixel(format, type);
     if (bytesPerPixel == 0) {
-        setGLError(GL_INVALID_ENUM, "invalid format or type");
+        // OpenGL ES 3.0.6 §4.3.2: the callers took out the unknown tokens, so
+        // this is an unsupported combination of known ones.
+        setGLError(GL_INVALID_OPERATION,
+                   "unsupported format and type combination");
         return false;
     }
 
@@ -8435,6 +8504,13 @@ void WebGLRenderingContext::handleTexImageWithArrayBufferView(
     if (pixels.hasValue()) {
         ArrayBufferViewRef* pixelsView = pixels.getValue();
 
+        // A token check comes before the data's type is matched against it.
+        if (!isKnownFormatAndType(format, type)) {
+            setGLError(GL_INVALID_ENUM,
+                       "format or type is not an accepted token");
+            return;
+        }
+
         // WebGL 2.0, "Pixel store parameter constraints": a 3D upload from
         // client memory is neither flipped nor premultiplied.
         if ((target == GL_TEXTURE_3D || target == GL_TEXTURE_2D_ARRAY) &&
@@ -8447,12 +8523,6 @@ void WebGLRenderingContext::handleTexImageWithArrayBufferView(
 
         if (!isSrcDataValid(pixelsView, type)) {
             setGLError(GL_INVALID_OPERATION);
-            return;
-        }
-
-        if (webGLVersion() == 1 && (type == GL_FLOAT) &&
-            !isExtensionEnabled("OES_texture_float")) {
-            setGLError(GL_INVALID_ENUM);
             return;
         }
 
@@ -10464,8 +10534,21 @@ void WebGLRenderingContext::completePendingJobs()
     // The clear targets the drawing buffer as a whole, whatever framebuffer,
     // scissor, write masks and clear values the page has set (WebGL 1.0
     // §2.2); all of that is page state and is put back afterwards.
-    clearWithDefaultState(m_framebufferTexture->fbo(),
-                          [&] { m_gl->clear(mask); });
+    clearWithDefaultState(m_framebufferTexture->fbo(), [&] {
+        // drawBuffers([NONE]) on the default framebuffer is page state too.
+        GLint drawBuffer = GL_COLOR_ATTACHMENT0;
+        if (isWebGL2RenderingContext()) {
+            m_gl->getIntegerv(GL_DRAW_BUFFER0, &drawBuffer);
+        }
+        const GLenum buffers[2] = { GL_COLOR_ATTACHMENT0, GL_NONE };
+        if (drawBuffer == GL_NONE) {
+            m_gl->drawBuffers(1, &buffers[0]);
+        }
+        m_gl->clear(mask);
+        if (drawBuffer == GL_NONE) {
+            m_gl->drawBuffers(1, &buffers[1]);
+        }
+    });
 }
 
 // WebGL 1.0 §4.1: a new image reads as color 0, depth 1.0 and stencil 0.

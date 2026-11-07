@@ -164,11 +164,15 @@ void WebGL2RenderingContext::onResize()
 {
     WebGLRenderingContext::onResize();
 
-    // The new default framebuffer starts with GL's initial read buffer, but
-    // a readBuffer(NONE) the page set on the default framebuffer must stay.
+    // The new default framebuffer starts with GL's initial read and draw
+    // buffers, but a NONE the page set on the default framebuffer must stay.
+    GLContextScope contextScope(m_context);
     if (!m_readFramebuffer && m_defaultReadBuffer == GL_NONE) {
-        GLContextScope contextScope(m_context);
         gl()->readBuffer(GL_NONE);
+    }
+    if (!m_drawFramebuffer && m_defaultDrawBuffer == GL_NONE) {
+        const GLenum none = GL_NONE;
+        gl()->drawBuffers(1, &none);
     }
 }
 
@@ -233,7 +237,10 @@ void WebGL2RenderingContext::bindBuffer(GLenum target,
 
 void WebGL2RenderingContext::deleteBuffer(Optional<WebGLBuffer*> maybe)
 {
-    if (maybe.hasValue()) {
+    // Deleting a deleted buffer has no effect (WebGL 1.0 §5.14.5); the
+    // bindings of a transform feedback object that is not bound keep it
+    // (OpenGL ES 3.0.6 Appendix D.1.2).
+    if (maybe.hasValue() && !maybe.value()->isDeleted()) {
         WebGLBuffer* buffer = maybe.value();
         for (size_t i = 0; i < m_uniformBufferBindings.size(); ++i) {
             if (m_uniformBufferBindings[i] &&
@@ -241,10 +248,11 @@ void WebGL2RenderingContext::deleteBuffer(Optional<WebGLBuffer*> maybe)
                 m_uniformBufferBindings[i] = nullptr;
             }
         }
-        for (size_t i = 0; i < m_transformFeedbackBufferBindings.size(); ++i) {
-            if (m_transformFeedbackBufferBindings[i] &&
-                m_transformFeedbackBufferBindings[i]->buffer == buffer) {
-                m_transformFeedbackBufferBindings[i] = nullptr;
+        GCVector<IndexedBufferBinding*>& bindings =
+            transformFeedbackBufferBindings();
+        for (size_t i = 0; i < bindings.size(); ++i) {
+            if (bindings[i] && bindings[i]->buffer == buffer) {
+                bindings[i] = nullptr;
             }
         }
     }
@@ -315,8 +323,9 @@ void WebGL2RenderingContext::bindFramebuffer(
         }
 
         if (target == GL_FRAMEBUFFER || target == GL_DRAW_FRAMEBUFFER) {
-            GLenum att0 = GL_COLOR_ATTACHMENT0;
-            gl()->drawBuffers(1, &att0);
+            const GLenum drawBuffer =
+                m_defaultDrawBuffer == GL_BACK ? GL_COLOR_ATTACHMENT0 : GL_NONE;
+            gl()->drawBuffers(1, &drawBuffer);
         }
         if (target == GL_FRAMEBUFFER || target == GL_READ_FRAMEBUFFER) {
             gl()->readBuffer(m_defaultReadBuffer == GL_BACK
@@ -459,7 +468,8 @@ Optional<ScriptValue> WebGL2RenderingContext::getParameterImpl(GLenum pname)
         size_t index = pname - GL_DRAW_BUFFER0;
         if (isDefaultFramebufferBound()) {
             if (index == 0) {
-                return createScriptValue(static_cast<uint32_t>(GL_BACK));
+                return createScriptValue(
+                    static_cast<uint32_t>(m_defaultDrawBuffer));
             }
             return createScriptValue(static_cast<uint32_t>(GL_NONE));
         }
@@ -1927,11 +1937,12 @@ void WebGL2RenderingContext::bindBufferBase(GLenum target, GLuint index,
             m_uniformBufferBindings[index] =
                 new IndexedBufferBinding(value, 0, 0, false);
         } else if (target == GL_TRANSFORM_FEEDBACK_BUFFER) {
-            if (index >= m_transformFeedbackBufferBindings.size()) {
-                m_transformFeedbackBufferBindings.resize(index + 1);
+            GCVector<IndexedBufferBinding*>& bindings =
+                transformFeedbackBufferBindings();
+            if (index >= bindings.size()) {
+                bindings.resize(index + 1);
             }
-            m_transformFeedbackBufferBindings[index] =
-                new IndexedBufferBinding(value, 0, 0, false);
+            bindings[index] = new IndexedBufferBinding(value, 0, 0, false);
         }
     } else {
         gl()->bindBufferBase(target, index, 0);
@@ -1943,8 +1954,8 @@ void WebGL2RenderingContext::bindBufferBase(GLenum target, GLuint index,
             index < m_uniformBufferBindings.size()) {
             m_uniformBufferBindings[index] = nullptr;
         } else if (target == GL_TRANSFORM_FEEDBACK_BUFFER &&
-                   index < m_transformFeedbackBufferBindings.size()) {
-            m_transformFeedbackBufferBindings[index] = nullptr;
+                   index < transformFeedbackBufferBindings().size()) {
+            transformFeedbackBufferBindings()[index] = nullptr;
         }
     }
 }
@@ -2032,10 +2043,12 @@ void WebGL2RenderingContext::bindBufferRange(GLenum target, GLuint index,
             m_uniformBufferBindings[index] =
                 new IndexedBufferBinding(value, offset, size, true);
         } else if (target == GL_TRANSFORM_FEEDBACK_BUFFER) {
-            if (index >= m_transformFeedbackBufferBindings.size()) {
-                m_transformFeedbackBufferBindings.resize(index + 1);
+            GCVector<IndexedBufferBinding*>& bindings =
+                transformFeedbackBufferBindings();
+            if (index >= bindings.size()) {
+                bindings.resize(index + 1);
             }
-            m_transformFeedbackBufferBindings[index] =
+            bindings[index] =
                 new IndexedBufferBinding(value, offset, size, true);
         }
     } else {
@@ -2049,8 +2062,8 @@ void WebGL2RenderingContext::bindBufferRange(GLenum target, GLuint index,
             index < m_uniformBufferBindings.size()) {
             m_uniformBufferBindings[index] = nullptr;
         } else if (target == GL_TRANSFORM_FEEDBACK_BUFFER &&
-                   index < m_transformFeedbackBufferBindings.size()) {
-            m_transformFeedbackBufferBindings[index] = nullptr;
+                   index < transformFeedbackBufferBindings().size()) {
+            transformFeedbackBufferBindings()[index] = nullptr;
         }
     }
 }
@@ -2069,12 +2082,13 @@ ScriptValue WebGL2RenderingContext::getIndexedParameter(GLenum target,
             setGLError(GL_INVALID_VALUE);
             return scriptNull();
         }
-        if (index < m_transformFeedbackBufferBindings.size() &&
-            m_transformFeedbackBufferBindings[index] != nullptr &&
-            m_transformFeedbackBufferBindings[index]->buffer != nullptr &&
-            !m_transformFeedbackBufferBindings[index]->buffer->isDeleted()) {
-            return m_transformFeedbackBufferBindings[index]
-                ->buffer->scriptValue();
+        // A buffer deleted while this object was not bound stays bound to
+        // it (OpenGL ES 3.0.6 Appendix D.1.2).
+        GCVector<IndexedBufferBinding*>& bindings =
+            transformFeedbackBufferBindings();
+        if (index < bindings.size() && bindings[index] &&
+            bindings[index]->buffer) {
+            return bindings[index]->buffer->scriptValue();
         }
         return scriptNull();
     }
@@ -2086,11 +2100,12 @@ ScriptValue WebGL2RenderingContext::getIndexedParameter(GLenum target,
             setGLError(GL_INVALID_VALUE);
             return scriptNull();
         }
-        if (index < m_transformFeedbackBufferBindings.size() &&
-            m_transformFeedbackBufferBindings[index] != nullptr &&
-            m_transformFeedbackBufferBindings[index]->isRange) {
-            return createScriptValue(static_cast<double>(
-                m_transformFeedbackBufferBindings[index]->size));
+        GCVector<IndexedBufferBinding*>& bindings =
+            transformFeedbackBufferBindings();
+        if (index < bindings.size() && bindings[index] &&
+            bindings[index]->isRange) {
+            return createScriptValue(
+                static_cast<double>(bindings[index]->size));
         }
         return createScriptValue(0.0);
     }
@@ -2102,11 +2117,12 @@ ScriptValue WebGL2RenderingContext::getIndexedParameter(GLenum target,
             setGLError(GL_INVALID_VALUE);
             return scriptNull();
         }
-        if (index < m_transformFeedbackBufferBindings.size() &&
-            m_transformFeedbackBufferBindings[index] != nullptr &&
-            m_transformFeedbackBufferBindings[index]->isRange) {
-            return createScriptValue(static_cast<double>(
-                m_transformFeedbackBufferBindings[index]->offset));
+        GCVector<IndexedBufferBinding*>& bindings =
+            transformFeedbackBufferBindings();
+        if (index < bindings.size() && bindings[index] &&
+            bindings[index]->isRange) {
+            return createScriptValue(
+                static_cast<double>(bindings[index]->offset));
         }
         return createScriptValue(0.0);
     }
@@ -2989,6 +3005,9 @@ void WebGL2RenderingContext::deleteTransformFeedback(
     GLuint id = value->glObject();
     gl()->deleteTransformFeedbacks(1, &id);
     value->markDeleted();
+    // A deleted transform feedback object has no contents (OpenGL ES 3.0.6
+    // §2.15.1), so a wrapper the page keeps holds no buffer either.
+    value->bufferBindings().clear();
 
     if (m_boundTransformFeedback == value) {
         gl()->bindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
@@ -3366,6 +3385,37 @@ void WebGL2RenderingContext::drawRangeElements(GLenum mode, GLuint start,
     WebGLRenderingContext::drawElements(mode, count, type, offset);
 }
 
+// The destination pixels [lo, hi) on one axis whose centres map into [0, size)
+// of the source: d0 + (sigma - s0) * q / p - 1/2, sigma = 0 and size, rounded
+// up when the axis keeps its direction and down plus one when it flips. Both
+// ends stay within the destination rectangle, lo <= hi.
+static void blitDestinationRange(int64_t s0, int64_t s1, int64_t d0, int64_t d1,
+                                 int64_t size, int64_t& lo, int64_t& hi)
+{
+    const int64_t p = s1 - s0;
+    const int64_t q = d1 - d0;
+    const bool flips = (p < 0) != (q < 0);
+    auto edge = [&](int64_t sigma) {
+        int64_t num = (sigma - s0) * q;
+        int64_t den = p;
+        if (den < 0) {
+            num = -num;
+            den = -den;
+        }
+        int64_t quot = num / den;
+        int64_t rem = num % den;
+        if (rem < 0) {
+            --quot;
+            rem += den;
+        }
+        return d0 + quot + ((flips ? 2 * rem >= den : 2 * rem > den) ? 1 : 0);
+    };
+    const int64_t dMin = std::min(d0, d1);
+    const int64_t dMax = std::max(d0, d1);
+    lo = std::min(std::max(flips ? edge(size) : edge(0), dMin), dMax);
+    hi = std::max(std::min(flips ? edge(0) : edge(size), dMax), lo);
+}
+
 void WebGL2RenderingContext::blitFramebuffer(GLint srcX0, GLint srcY0,
                                              GLint srcX1, GLint srcY1,
                                              GLint dstX0, GLint dstY0,
@@ -3384,6 +3434,17 @@ void WebGL2RenderingContext::blitFramebuffer(GLint srcX0, GLint srcY0,
                   GL_STENCIL_BUFFER_BIT)) != 0) {
         setGLError(GL_INVALID_VALUE, "invalid mask bitfield.");
         return;
+    }
+
+    // WebGL 2.0 "blitFramebuffer rectangle width/height limitations"; it also
+    // bounds the arithmetic of blitDestinationRange().
+    for (int64_t extent : { int64_t(srcX1) - srcX0, int64_t(srcY1) - srcY0,
+                            int64_t(dstX1) - dstX0, int64_t(dstY1) - dstY0 }) {
+        if (extent > INT32_MAX || extent < -INT32_MAX) {
+            setGLError(GL_INVALID_VALUE,
+                       "rectangle width or height overflows GLint");
+            return;
+        }
     }
 
     if (filter == GL_LINEAR &&
@@ -3473,8 +3534,76 @@ void WebGL2RenderingContext::blitFramebuffer(GLint srcX0, GLint srcY0,
         }
     }
 
+    GLsizei readWidth = drawingBufferWidth();
+    GLsizei readHeight = drawingBufferHeight();
+    WebGLFramebuffer* readFb =
+        getBoundFramebuffer(GL_READ_FRAMEBUFFER).valueOrNull();
+    const bool outside =
+        (!readFb || readFb->attachmentSize(readWidth, readHeight)) &&
+        srcX0 != srcX1 && srcY0 != srcY1 && dstX0 != dstX1 && dstY0 != dstY1 &&
+        (std::min(srcX0, srcX1) < 0 || std::max(srcX0, srcX1) > readWidth ||
+         std::min(srcY0, srcY1) < 0 || std::max(srcY0, srcY1) > readHeight);
+    if (!outside) {
+        gl()->blitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1,
+                              dstY1, mask, filter);
+        m_ownerHTMLCanvasElement->setNeedsComposite();
+        return;
+    }
+
+    // WebGL 2.0 §4.7.4: a destination pixel whose centre maps outside the
+    // source buffer stays untouched, while the scaling stays the one of the
+    // rectangles as given (OpenGL ES 3.0.6 §4.3.3). The driver clips the
+    // source in floating point and writes a pixel too many or too few, so the
+    // exact set is scissored and the rectangles go to the driver unchanged.
+    // shortcut: Mesa still clips the source against the buffer inside this
+    // scissor, so a minifying blit can miss the outermost row or column of
+    // the set; a shader blit would be exact.
+    int64_t x0, x1, y0, y1;
+    blitDestinationRange(srcX0, srcX1, dstX0, dstX1, readWidth, x0, x1);
+    blitDestinationRange(srcY0, srcY1, dstY0, dstY1, readHeight, y0, y1);
+    const bool scissorTest = gl()->isEnabled(GL_SCISSOR_TEST);
+    GLint box[4];
+    gl()->getIntegerv(GL_SCISSOR_BOX, box);
+    if (scissorTest) {
+        // The page's scissor test applies to a blit (OpenGL ES 3.0.6 §4.3.3).
+        x0 = std::max<int64_t>(x0, box[0]);
+        x1 = std::min<int64_t>(x1, int64_t(box[0]) + box[2]);
+        y0 = std::max<int64_t>(y0, box[1]);
+        y1 = std::min<int64_t>(y1, int64_t(box[1]) + box[3]);
+    }
+    GLsizei drawWidth = drawingBufferWidth();
+    GLsizei drawHeight = drawingBufferHeight();
+    WebGLFramebuffer* drawFb =
+        getBoundFramebuffer(GL_DRAW_FRAMEBUFFER).valueOrNull();
+    if (!drawFb || drawFb->attachmentSize(drawWidth, drawHeight)) {
+        x0 = std::max<int64_t>(x0, 0);
+        x1 = std::min<int64_t>(x1, drawWidth);
+        y0 = std::max<int64_t>(y0, 0);
+        y1 = std::min<int64_t>(y1, drawHeight);
+    }
+    if (x1 <= x0 || y1 <= y0) {
+        // Mesa writes outside an empty scissor box the destination straddles.
+        // A zero-size blit draws nothing but keeps the driver's validation;
+        // its two points match exactly when the rectangles do, as a
+        // multisample read framebuffer requires (OpenGL ES 3.0.6 §4.3.3).
+        const bool sameStart = srcX0 == dstX0 && srcY0 == dstY0;
+        const GLint sx = sameStart ? srcX1 : srcX0;
+        const GLint sy = sameStart ? srcY1 : srcY0;
+        const GLint dx = sameStart ? dstX1 : dstX0;
+        const GLint dy = sameStart ? dstY1 : dstY0;
+        gl()->blitFramebuffer(sx, sy, sx, sy, dx, dy, dx, dy, mask, filter);
+        return;
+    }
+    if (!scissorTest) {
+        gl()->enable(GL_SCISSOR_TEST);
+    }
+    gl()->scissor(x0, y0, x1 - x0, y1 - y0);
     gl()->blitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1,
                           dstY1, mask, filter);
+    gl()->scissor(box[0], box[1], box[2], box[3]);
+    if (!scissorTest) {
+        gl()->disable(GL_SCISSOR_TEST);
+    }
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
@@ -3661,9 +3790,8 @@ void WebGL2RenderingContext::renderbufferStorageMultisample(
         return;
     }
 
-    if (internalformat == 0x881B /* GL_RGB16F */ ||
-        internalformat == 0x8815 /* GL_RGB32F */) {
-        setGLError(GL_INVALID_ENUM, "RGB float formats are not renderable");
+    if (!isRenderbufferFormatWebGL2(internalformat)) {
+        setGLError(GL_INVALID_ENUM, "not a renderable sized format");
         return;
     }
     if (WebGLFramebuffer::isFloatColorFormat(internalformat)) {
@@ -3682,8 +3810,9 @@ void WebGL2RenderingContext::renderbufferStorageMultisample(
 
     GLint maxSamples = 0;
     gl()->getIntegerv(GL_MAX_SAMPLES, &maxSamples);
+    // OpenGL ES 3.0.6 §4.4.2.1; the driver judges the per-format maximum.
     if (maxSamples > 0 && samples > maxSamples) {
-        setGLError(GL_INVALID_VALUE);
+        setGLError(GL_INVALID_OPERATION, "samples exceeds MAX_SAMPLES");
         return;
     }
 
@@ -3706,7 +3835,8 @@ void WebGL2RenderingContext::renderbufferStorageMultisample(
     }
 }
 
-static bool filterInvalidateAttachments(
+// GL_NO_ERROR, or the error of the first attachment that is not accepted.
+static GLenum filterInvalidateAttachments(
     GLenum target, const GCAtomicVector<GLenum>& attachments, bool isDefaultFb,
     WebGLFramebuffer* userFb, bool hasDepth, bool hasStencil,
     GLint maxColorAttachments, std::vector<GLenum>& validAttachments)
@@ -3725,7 +3855,7 @@ static bool filterInvalidateAttachments(
                     validAttachments.push_back(GL_STENCIL_ATTACHMENT);
                 }
             } else {
-                return false;
+                return GL_INVALID_ENUM;
             }
         } else {
             if (a >= GL_COLOR_ATTACHMENT0 &&
@@ -3734,17 +3864,22 @@ static bool filterInvalidateAttachments(
                 if (userFb && userFb->attachedTexture(a)) {
                     validAttachments.push_back(a);
                 }
+            } else if (a >= GL_COLOR_ATTACHMENT0 &&
+                       a < GL_COLOR_ATTACHMENT0 + 32) {
+                // OpenGL ES 3.0.6 §4.5: COLOR_ATTACHMENTm, m >=
+                // MAX_COLOR_ATTACHMENTS.
+                return GL_INVALID_OPERATION;
             } else if (a == GL_DEPTH_ATTACHMENT || a == GL_STENCIL_ATTACHMENT ||
                        a == GL_DEPTH_STENCIL_ATTACHMENT) {
                 if (userFb && userFb->attachedRenderBuffer()) {
                     validAttachments.push_back(a);
                 }
             } else {
-                return false;
+                return GL_INVALID_ENUM;
             }
         }
     }
-    return true;
+    return GL_NO_ERROR;
 }
 
 void WebGL2RenderingContext::invalidateFramebuffer(
@@ -3764,10 +3899,10 @@ void WebGL2RenderingContext::invalidateFramebuffer(
     WebGLFramebuffer* userFb = getBoundFramebuffer(target).valueOrNull();
 
     std::vector<GLenum> validAttachments;
-    if (!filterInvalidateAttachments(target, attachments, !userFb, userFb,
-                                     hasDepthBuffer(), hasStencilBuffer(),
-                                     maxColorAttachments, validAttachments)) {
-        setGLError(GL_INVALID_ENUM);
+    if (GLenum error = filterInvalidateAttachments(
+            target, attachments, !userFb, userFb, hasDepthBuffer(),
+            hasStencilBuffer(), maxColorAttachments, validAttachments)) {
+        setGLError(error);
         return;
     }
 
@@ -3800,10 +3935,10 @@ void WebGL2RenderingContext::invalidateSubFramebuffer(
     WebGLFramebuffer* userFb = getBoundFramebuffer(target).valueOrNull();
 
     std::vector<GLenum> validAttachments;
-    if (!filterInvalidateAttachments(target, attachments, !userFb, userFb,
-                                     hasDepthBuffer(), hasStencilBuffer(),
-                                     maxColorAttachments, validAttachments)) {
-        setGLError(GL_INVALID_ENUM);
+    if (GLenum error = filterInvalidateAttachments(
+            target, attachments, !userFb, userFb, hasDepthBuffer(),
+            hasStencilBuffer(), maxColorAttachments, validAttachments)) {
+        setGLError(error);
         return;
     }
 
@@ -3880,43 +4015,47 @@ void WebGL2RenderingContext::drawBuffers(GCAtomicVector<GLenum> buffers)
         return;
     }
 
-    if (isDefaultFramebufferBound()) {
-        for (size_t i = 0; i < buffers.size(); ++i) {
-            if (i == 0) {
-                if (buffers[i] != GL_NONE && buffers[i] != GL_BACK) {
-                    setGLError(GL_INVALID_OPERATION);
-                    return;
-                }
-            } else {
-                if (buffers[i] != GL_NONE) {
-                    setGLError(GL_INVALID_OPERATION);
-                    return;
-                }
-            }
-        }
-    } else {
-        for (size_t i = 0; i < buffers.size(); ++i) {
-            if (buffers[i] != GL_NONE &&
-                buffers[i] != static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + i)) {
-                setGLError(GL_INVALID_OPERATION,
-                           "buffers[i] must be NONE or COLOR_ATTACHMENTi");
-                return;
-            }
+    // OpenGL ES 3.0.6 §4.2.1: a value outside NONE, BACK and the
+    // COLOR_ATTACHMENTi of table 4.3 is INVALID_ENUM, ahead of the checks
+    // against the bound framebuffer.
+    GLint maxColorAttachments = 0;
+    gl()->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+    for (size_t i = 0; i < buffers.size(); ++i) {
+        const GLenum buffer = buffers[i];
+        if (buffer != GL_NONE && buffer != GL_BACK &&
+            (buffer < GL_COLOR_ATTACHMENT0 ||
+             buffer >= GL_COLOR_ATTACHMENT0 +
+                           static_cast<GLenum>(maxColorAttachments))) {
+            setGLError(GL_INVALID_ENUM, "not NONE, BACK or COLOR_ATTACHMENTi");
+            return;
         }
     }
 
     if (isDefaultFramebufferBound()) {
+        if (buffers.size() != 1 ||
+            (buffers[0] != GL_NONE && buffers[0] != GL_BACK)) {
+            setGLError(GL_INVALID_OPERATION,
+                       "the default framebuffer takes [BACK] or [NONE]");
+            return;
+        }
+        m_defaultDrawBuffer = buffers[0];
         // The WebGL default framebuffer is emulated with m_framebufferTexture's
         // FBO, so GL_BACK is not a name GL accepts here -- the driver wants
         // COLOR_ATTACHMENTi or NONE and rejects anything else. Translate, the
         // same way bindFramebuffer() and readBuffer() already do.
-        std::vector<GLenum> translated(buffers.size(), GL_NONE);
-        for (size_t i = 0; i < buffers.size(); ++i) {
-            translated[i] =
-                buffers[i] == GL_BACK ? GL_COLOR_ATTACHMENT0 : GL_NONE;
-        }
-        gl()->drawBuffers(translated.size(), translated.data());
+        const GLenum drawBuffer =
+            buffers[0] == GL_BACK ? GL_COLOR_ATTACHMENT0 : GL_NONE;
+        gl()->drawBuffers(1, &drawBuffer);
         return;
+    }
+
+    for (size_t i = 0; i < buffers.size(); ++i) {
+        if (buffers[i] != GL_NONE &&
+            buffers[i] != static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + i)) {
+            setGLError(GL_INVALID_OPERATION,
+                       "buffers[i] must be NONE or COLOR_ATTACHMENTi");
+            return;
+        }
     }
 
     gl()->drawBuffers(buffers.size(), buffers.data());
@@ -4265,11 +4404,15 @@ void WebGL2RenderingContext::bufferSubData(GLenum target,
 bool WebGL2RenderingContext::checkInternalFormat(GLint internalFormat,
                                                  GLenum format, GLenum type)
 {
-    if (!Pixel::isKnownInternalFormatWebGL2(internalFormat) ||
-        !Pixel::isKnownFormatWebGL2(format) ||
+    if (!Pixel::isKnownFormatWebGL2(format) ||
         !Pixel::isKnownTypeWebGL2(type)) {
-        setGLError(GL_INVALID_ENUM,
-                   "internalFormat, format, or type is not an accepted token");
+        setGLError(GL_INVALID_ENUM, "format or type is not an accepted token");
+        return false;
+    }
+    // internalformat is an int, not an enum (OpenGL ES 3.0.6 §3.8.3); the
+    // ES 3.0 reference pages make an unknown one INVALID_VALUE.
+    if (!Pixel::isKnownInternalFormatWebGL2(internalFormat)) {
+        setGLError(GL_INVALID_VALUE, "internalformat is not an accepted token");
         return false;
     }
 

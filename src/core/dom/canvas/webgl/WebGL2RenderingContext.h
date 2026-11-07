@@ -128,6 +128,22 @@ private:
     GLsync m_glObject;
 };
 
+class IndexedBufferBinding : public gc {
+public:
+    IndexedBufferBinding(WebGLBuffer* b = nullptr, WebGLintptr o = 0,
+                         WebGLsizeiptr s = 0, bool r = false)
+        : buffer(b)
+        , offset(o)
+        , size(s)
+        , isRange(r)
+    {
+    }
+    WebGLBuffer* buffer;
+    WebGLintptr offset;
+    WebGLsizeiptr size;
+    bool isRange;
+};
+
 class WebGLTransformFeedback : public WebGLObject {
 public:
     WebGLTransformFeedback(ScriptBindingInstance* instance,
@@ -180,8 +196,16 @@ public:
         m_program = prog;
     }
 
+    // The indexed TRANSFORM_FEEDBACK_BUFFER bindings, state of this object
+    // (OpenGL ES 3.0.6 §2.15.1).
+    GCVector<IndexedBufferBinding*>& bufferBindings()
+    {
+        return m_bufferBindings;
+    }
+
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLTransformFeedback, WebGLObject);
     FILL_GC_POINTER(WebGLTransformFeedback, m_program);
+    FILL_GC_POINTER(WebGLTransformFeedback, m_bufferBindings);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 
 private:
@@ -190,6 +214,7 @@ private:
     bool m_isPaused = false;
     GLenum m_primitiveMode = 0;
     WebGLProgram* m_program = nullptr;
+    GCVector<IndexedBufferBinding*> m_bufferBindings;
 };
 
 class WebGLVertexArrayObject : public WebGLObject {
@@ -662,27 +687,22 @@ private:
 
     GLenum m_currentVertexAttribType = GL_FLOAT;
     GLenum m_defaultReadBuffer = 0x405; /* GL_BACK */
+    GLenum m_defaultDrawBuffer = 0x405; /* GL_BACK */
     Optional<WebGLFramebuffer*> m_readFramebuffer;
     Optional<WebGLFramebuffer*> m_drawFramebuffer;
     bool isReadBufferNone();
 
-    class IndexedBufferBinding : public gc {
-    public:
-        IndexedBufferBinding(WebGLBuffer* b = nullptr, WebGLintptr o = 0,
-                             WebGLsizeiptr s = 0, bool r = false)
-            : buffer(b)
-            , offset(o)
-            , size(s)
-            , isRange(r)
-        {
-        }
-        WebGLBuffer* buffer;
-        WebGLintptr offset;
-        WebGLsizeiptr size;
-        bool isRange;
-    };
     GCVector<IndexedBufferBinding*> m_uniformBufferBindings;
+    // The default transform feedback object's.
     GCVector<IndexedBufferBinding*> m_transformFeedbackBufferBindings;
+    // The bound transform feedback object's indexed buffer bindings; the
+    // context holds the default object's (OpenGL ES 3.0.6 §2.15.1).
+    GCVector<IndexedBufferBinding*>& transformFeedbackBufferBindings()
+    {
+        return m_boundTransformFeedback
+                   ? m_boundTransformFeedback->bufferBindings()
+                   : m_transformFeedbackBufferBindings;
+    }
     WebGLQuery* m_activeQueryAnySamplesPassed = nullptr;
     WebGLQuery* m_activeQueryAnySamplesPassedConservative = nullptr;
     WebGLQuery* m_activeQueryTransformFeedbackPrimitivesWritten = nullptr;

@@ -405,6 +405,39 @@ public:
         return false;
     }
 
+    // The size of the attached images, one size for all of them once the
+    // framebuffer is complete (WebGL 2.0 §6.27); false when none is known.
+    bool attachmentSize(GLsizei& width, GLsizei& height) const
+    {
+        for (size_t i = 0; i < 16; ++i) {
+            if (getColorAttachmentSize(i, width, height)) {
+                return true;
+            }
+        }
+        for (WebGLRenderbuffer* rb :
+             { m_attachedDepthRenderbuffer, m_attachedStencilRenderbuffer }) {
+            if (rb) {
+                width = rb->width();
+                height = rb->height();
+                return true;
+            }
+        }
+        const TextureImageLevelInfo* info =
+            m_attachedDepthTexture
+                ? m_attachedDepthTexture->getImageLevelInfo(
+                      m_attachedDepthTextarget, m_attachedDepthLevel)
+            : m_attachedStencilTexture
+                ? m_attachedStencilTexture->getImageLevelInfo(
+                      m_attachedStencilTextarget, m_attachedStencilLevel)
+                : nullptr;
+        if (!info) {
+            return false;
+        }
+        width = info->width;
+        height = info->height;
+        return true;
+    }
+
     GLsizei getColorAttachmentSamples(size_t index) const
     {
         if (index >= 16) {

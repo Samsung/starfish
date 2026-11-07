@@ -650,6 +650,7 @@ protected:
     // (initializeImage()).
     void initializeRenderbuffer(WebGLRenderbuffer* renderbuffer);
     static bool isValidDrawMode(GLenum mode);
+    static bool isRenderbufferFormatWebGL2(GLenum format);
     // Whether size bytes from offset stay within capacity bytes, computed
     // so that no sum can wrap.
     static bool isRangeWithin(uint64_t offset, uint64_t size, uint64_t capacity)
@@ -781,6 +782,9 @@ private:
     Optional<WebGLRenderbuffer*> m_boundRenderbuffer;
     GLExtensionMap m_enabledExtensions;
     uint32_t m_framebufferStatusEpoch = 0;
+    // VIEWPORT's x and y as the page gave them (see viewport()).
+    GLint m_viewportX = 0;
+    GLint m_viewportY = 0;
     // The image-less 2D and cube textures bindIncompleteTextureStandIns()
     // binds, made on first use.
     GLuint m_incompleteTextureStandIns[2] = { 0, 0 };
