@@ -72,6 +72,10 @@ public:
     FILL_GC_POINTER(WebGLObject, m_context);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 
+protected:
+    // For the setters of state WebGLFramebuffer::checkWebGLStatus() reads.
+    void invalidateFramebufferStatus();
+
 private:
     ScriptBindingInstance* m_scriptBindingInstance;
     WebGLRenderingContext* m_context;

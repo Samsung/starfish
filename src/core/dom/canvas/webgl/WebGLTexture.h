@@ -75,6 +75,7 @@ public:
     {
         if (m_target == 0) {
             m_target = target;
+            invalidateFramebufferStatus();
         }
     }
 
@@ -85,6 +86,7 @@ public:
     void setImmutable(bool immutable)
     {
         m_isImmutable = immutable;
+        invalidateFramebufferStatus();
     }
 
     GLsizei width() const
@@ -99,6 +101,7 @@ public:
     {
         m_width = w;
         m_height = h;
+        invalidateFramebufferStatus();
     }
 
     // TEXTURE_MIN_FILTER as last set, and whether MAG_FILTER is NEAREST and
@@ -136,6 +139,7 @@ public:
     void setBaseLevel(GLint level)
     {
         m_baseLevel = level;
+        invalidateFramebufferStatus();
     }
 
     GLint maxLevel() const
@@ -151,6 +155,7 @@ public:
                            GLenum internalFormat, GLsizei width, GLsizei height,
                            GLsizei depth = 1, GLenum type = 0)
     {
+        invalidateFramebufferStatus();
         for (auto& entry : m_imageLevels) {
             if (entry.target == imageTarget && entry.level == level) {
                 entry.internalFormat = internalFormat;
@@ -177,6 +182,35 @@ public:
             }
         }
         return nullptr;
+    }
+
+    // OpenGL ES 3.0.6 §3.8.13: the six levelbase images are defined, square
+    // and of one size and effective internal format; texStorage2D makes them
+    // so.
+    // shortcut: the formats are left to the driver, as the recorded ones are
+    // not effective formats (unsized next to sized, the BGRA a null WebGL 1
+    // upload records next to RGBA); compare them once the record maps every
+    // level to its effective format.
+    bool isCubeComplete() const
+    {
+        if (m_isImmutable) {
+            return true;
+        }
+        const TextureImageLevelInfo* first =
+            getImageLevelInfo(GL_TEXTURE_CUBE_MAP_POSITIVE_X, m_baseLevel);
+        if (!first || first->width <= 0 || first->width != first->height) {
+            return false;
+        }
+        for (GLenum face = GL_TEXTURE_CUBE_MAP_POSITIVE_X + 1;
+             face <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z; ++face) {
+            const TextureImageLevelInfo* info =
+                getImageLevelInfo(face, m_baseLevel);
+            if (!info || info->width != first->width ||
+                info->height != first->height) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // The levels a successful generateMipmap defines (OpenGL ES 3.0.6
@@ -218,6 +252,7 @@ public:
     void setStorage2D(GLenum target, GLsizei levels, GLenum internalformat,
                       GLsizei width, GLsizei height)
     {
+        invalidateFramebufferStatus();
         m_isImmutable = true;
         m_width = width;
         m_height = height;
@@ -238,6 +273,7 @@ public:
     void setStorage3D(GLenum target, GLsizei levels, GLenum internalformat,
                       GLsizei width, GLsizei height, GLsizei depth)
     {
+        invalidateFramebufferStatus();
         m_isImmutable = true;
         m_target = target;
         m_width = width;

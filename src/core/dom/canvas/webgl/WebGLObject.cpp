@@ -21,6 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "WebGLObject.h"
+#include "WebGLRenderingContext.h"
 
 namespace Starfish {
 
@@ -32,6 +33,11 @@ WebGLObject::WebGLObject(ScriptBindingInstance* instance,
     , m_glObject(object)
 
 {
+}
+
+void WebGLObject::invalidateFramebufferStatus()
+{
+    m_context->invalidateFramebufferStatus();
 }
 
 } // namespace Starfish

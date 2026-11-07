@@ -413,6 +413,17 @@ public:
     bool isExtensionEnabled(const char* requestedName);
     bool validateDrawCallVertexAttribs();
     bool validateStencilSettings();
+    // Bumped by every change to the state
+    // WebGLFramebuffer::checkWebGLStatus() reads, which
+    // WebGLFramebuffer::webGLStatus() caches against.
+    uint32_t framebufferStatusEpoch() const
+    {
+        return m_framebufferStatusEpoch;
+    }
+    void invalidateFramebufferStatus()
+    {
+        ++m_framebufferStatusEpoch;
+    }
 
 private:
     bool checkAttribOrUniformName(String* name);
@@ -442,6 +453,11 @@ protected:
 
 private:
     bool isKnownFormatAndType(GLenum format, GLenum type);
+    // Points the bound WebGL 1 framebuffer's driver DEPTH (with `depth`) and
+    // STENCIL (with `stencil`) attachment points at the images it has there
+    // for WebGL (WebGLFramebuffer::webGL1DepthStencilImage()).
+    void attachWebGL1DepthStencil(WebGLFramebuffer* framebuffer, bool depth,
+                                  bool stencil);
     // The size of the color buffer reads come from, if it is known.
     bool readFramebufferSize(GLsizei& width, GLsizei& height);
     // INVALID_OPERATION, and true, when a copy into `level` of `texture` at
@@ -449,6 +465,7 @@ private:
     bool copiesIntoReadBuffer(const WebGLTexture* texture, GLenum target,
                               GLint level);
     bool validateTexImageSource(GLenum format, GLenum type);
+    bool validateTexSubImageFormat(GLenum format);
     bool isTexSubImageTypeAllowed(GLenum target, GLint level, GLenum format,
                                   GLenum type);
     // The text the driver compiles for a shader whose source reads as `view`
@@ -507,6 +524,14 @@ protected:
 
 protected:
     virtual bool isDefaultFramebufferBound();
+    // INVALID_FRAMEBUFFER_OPERATION, and false, when the framebuffer bound to
+    // `target` is not complete for WebGL.
+    bool validateFramebufferComplete(GLenum target);
+    // Whether a transform feedback is active and not paused (WebGL 2).
+    virtual bool isTransformFeedbackActiveUnpaused() const
+    {
+        return false;
+    }
 
 private:
     GLuint getCurrentFBO();
@@ -515,6 +540,18 @@ private:
     // are stride bytes apart. This context must be current; the page's read
     // and pack state is left as it was.
     void readDrawingBuffer(uint8_t* pixels, size_t stride);
+    // Runs `clear` with `framebuffer` bound to DRAW_FRAMEBUFFER and every
+    // state a clear obeys at its default: no scissor test or rasterizer
+    // discard, every write mask on, clear values (0, 0, 0, 0), 1 and 0. The
+    // page's state is read back from the GL first and put back after. A
+    // template, so that no closure goes to the heap; only the .cpp uses it.
+    template <typename Clear>
+    void clearWithDefaultState(GLuint framebuffer, const Clear& clear);
+    // Clears a new image of `internalFormat` to color 0, depth 1.0 and
+    // stencil 0; `attach` attaches it at the point it is given to the
+    // DRAW_FRAMEBUFFER, a framebuffer made for the purpose.
+    void initializeImage(GLenum internalFormat,
+                         const std::function<void(GLenum)>& attach);
     // Fills pixels as readDrawingBuffer() would when the drawing buffer reads
     // cleared, and returns whether it did.
     bool readClearedDrawingBuffer(uint8_t* pixels, size_t stride);
@@ -609,6 +646,9 @@ protected:
     GLErrorSet m_GLErrors;
     GLint getCurrentProgram();
     void completePendingJobs();
+    // Clears the image of `renderbuffer`'s storage to its initial values
+    // (initializeImage()).
+    void initializeRenderbuffer(WebGLRenderbuffer* renderbuffer);
     static bool isValidDrawMode(GLenum mode);
     // Whether size bytes from offset stay within capacity bytes, computed
     // so that no sum can wrap.
@@ -740,6 +780,7 @@ private:
     String* m_drawingBufferColorSpace;
     Optional<WebGLRenderbuffer*> m_boundRenderbuffer;
     GLExtensionMap m_enabledExtensions;
+    uint32_t m_framebufferStatusEpoch = 0;
     // The image-less 2D and cube textures bindIncompleteTextureStandIns()
     // binds, made on first use.
     GLuint m_incompleteTextureStandIns[2] = { 0, 0 };

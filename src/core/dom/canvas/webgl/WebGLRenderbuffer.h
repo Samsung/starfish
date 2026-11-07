@@ -60,6 +60,7 @@ public:
         m_width = width;
         m_height = height;
         m_samples = samples;
+        invalidateFramebufferStatus();
     }
 
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLRenderbuffer, WebGLObject);

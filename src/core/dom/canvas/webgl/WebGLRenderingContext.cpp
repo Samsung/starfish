@@ -575,6 +575,8 @@ Optional<ScriptObject> WebGLRenderingContext::getExtension(
 
     ScriptObject object = maybeGenerator.value()(scriptBindingInstance(), this);
     m_enabledExtensions.insert({ name, object });
+    // EXT_color_buffer_float changes what a framebuffer is complete with.
+    invalidateFramebufferStatus();
     return object;
 }
 
@@ -888,7 +890,7 @@ GLenum WebGLRenderingContext::checkFramebufferStatus(GLenum target)
 
     Optional<WebGLFramebuffer*> maybeFb = getBoundFramebuffer(target);
     if (maybeFb.hasValue() && maybeFb.value()) {
-        GLenum webglStatus = maybeFb.value()->checkWebGLStatus();
+        GLenum webglStatus = maybeFb.value()->webGLStatus();
         if (webglStatus != GL_FRAMEBUFFER_COMPLETE) {
             return webglStatus;
         }
@@ -901,6 +903,15 @@ GLenum WebGLRenderingContext::checkFramebufferStatus(GLenum target)
 void WebGLRenderingContext::clear(uint32_t mask)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (mask &
+        ~(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)) {
+        setGLError(GL_INVALID_VALUE, "invalid clear mask");
+        return;
+    }
+    if (!validateFramebufferComplete(GL_DRAW_FRAMEBUFFER)) {
+        return;
+    }
 
     completePendingJobs();
 
@@ -3060,6 +3071,12 @@ static inline bool isPowerOfTwo(size_t value)
     return value && !(value & (value - 1));
 }
 
+// The formats WEBGL_depth_texture adds to WebGL 1.
+static bool isDepthTextureFormat(GLenum format)
+{
+    return format == GL_DEPTH_COMPONENT || format == GL_DEPTH_STENCIL;
+}
+
 void WebGLRenderingContext::copyTexImage2D(GLenum target, GLint level,
                                            GLenum internalformat, GLint x,
                                            GLint y, GLsizei width,
@@ -3108,6 +3125,18 @@ void WebGLRenderingContext::copyTexImage2D(GLenum target, GLint level,
         internalformat == GL_R8_SNORM || internalformat == GL_RG8_SNORM ||
         internalformat == GL_RGB8_SNORM || internalformat == GL_RGBA8_SNORM) {
         setGLError(GL_INVALID_ENUM, "Invalid internal format");
+        return;
+    }
+    // WEBGL_depth_texture: no copies into a depth texture.
+    if (webGLVersion() == 1 && isDepthTextureFormat(internalformat)) {
+        setGLError(isExtensionEnabled("WEBGL_depth_texture")
+                       ? GL_INVALID_OPERATION
+                       : GL_INVALID_ENUM,
+                   "Invalid internal format");
+        return;
+    }
+
+    if (!validateFramebufferComplete(GL_READ_FRAMEBUFFER)) {
         return;
     }
 
@@ -3229,6 +3258,18 @@ void WebGLRenderingContext::copyTexSubImage2D(GLenum target, GLint level,
     if (!texture || (m_boundTextures.find(target) == m_boundTextures.end() &&
                      !isBoundCubeMapTexture(target))) {
         setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    // WEBGL_depth_texture: no copies into a depth texture.
+    const TextureImageLevelInfo* destination =
+        texture->getImageLevelInfo(target, level);
+    if (webGLVersion() == 1 && destination &&
+        isDepthTextureFormat(destination->internalFormat)) {
+        setGLError(GL_INVALID_OPERATION, "the texture is a depth texture");
+        return;
+    }
+
+    if (!validateFramebufferComplete(GL_READ_FRAMEBUFFER)) {
         return;
     }
 
@@ -3402,6 +3443,16 @@ void WebGLRenderingContext::deleteRenderbuffer(
         if (value->isDeleted()) {
             return;
         }
+        // The driver drops it from the DEPTH and STENCIL points too, where a
+        // WebGL 1 DEPTH_STENCIL_ATTACHMENT image hides the WebGL 1 DEPTH or
+        // STENCIL one.
+        WebGLFramebuffer* webGL1Fb =
+            isWebGL2RenderingContext()
+                ? nullptr
+                : getBoundFramebuffer(GL_FRAMEBUFFER).valueOrNull();
+        const bool restore =
+            webGL1Fb && webGL1Fb->attachedRenderbuffer(
+                            GL_DEPTH_STENCIL_ATTACHMENT) == value;
         GLuint buffer = value->glObject();
         m_gl->deleteRenderbuffers(1, &buffer);
         value->markDeleted();
@@ -3413,6 +3464,9 @@ void WebGLRenderingContext::deleteRenderbuffer(
             if (boundFb) {
                 boundFb.value()->detachRenderbuffer(value);
             }
+        }
+        if (restore) {
+            attachWebGL1DepthStencil(webGL1Fb, true, true);
         }
     }
 }
@@ -3427,6 +3481,14 @@ void WebGLRenderingContext::deleteTexture(Optional<WebGLTexture*> maybe)
             return;
         }
         if (!value->isDeleted()) {
+            // As in deleteRenderbuffer().
+            WebGLFramebuffer* webGL1Fb =
+                isWebGL2RenderingContext()
+                    ? nullptr
+                    : getBoundFramebuffer(GL_FRAMEBUFFER).valueOrNull();
+            const bool restore =
+                webGL1Fb &&
+                webGL1Fb->attachedTexture(GL_DEPTH_STENCIL_ATTACHMENT) == value;
             GLuint buffer = value->glObject();
             m_gl->deleteTextures(1, &buffer);
             value->markDeleted();
@@ -3437,6 +3499,9 @@ void WebGLRenderingContext::deleteTexture(Optional<WebGLTexture*> maybe)
                 if (boundFb) {
                     boundFb.value()->detachTexture(value);
                 }
+            }
+            if (restore) {
+                attachWebGL1DepthStencil(webGL1Fb, true, true);
             }
 
             for (auto it = m_boundTextureObjects.begin();
@@ -3868,6 +3933,15 @@ void WebGLRenderingContext::drawArraysInstanced(GLenum mode, GLint first,
         return;
     }
 
+    // WebGL 1.0 §6.37, also for a draw of nothing.
+    if (!m_state->webGLProgram()) {
+        setGLError(GL_INVALID_OPERATION, "no current program");
+        return;
+    }
+    if (!validateFramebufferComplete(GL_DRAW_FRAMEBUFFER)) {
+        return;
+    }
+
     if (count > 0 && instanceCount > 0 &&
         !hasEnoughVertexArrayData(static_cast<int64_t>(first) + count,
                                   instanceCount)) {
@@ -3950,6 +4024,21 @@ void WebGLRenderingContext::drawElementsInstanced(GLenum mode, GLsizei count,
         return;
     }
 
+    // OpenGL ES 3.0.6 §2.15.2.
+    if (isTransformFeedbackActiveUnpaused()) {
+        setGLError(GL_INVALID_OPERATION,
+                   "transform feedback is active and not paused");
+        return;
+    }
+    // WebGL 1.0 §6.37, also for a draw of nothing.
+    if (!m_state->webGLProgram()) {
+        setGLError(GL_INVALID_OPERATION, "no current program");
+        return;
+    }
+    if (!validateFramebufferComplete(GL_DRAW_FRAMEBUFFER)) {
+        return;
+    }
+
     // A draw of zero instances fetches nothing.
     if (instanceCount > 0 && !hasEnoughElementArrayData(count, type, offset)) {
         setGLError(GL_INVALID_OPERATION,
@@ -4024,6 +4113,10 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
     // A bad mode is INVALID_ENUM even when the range is wrong too.
     if (!isValidDrawMode(mode)) {
         setGLError(GL_INVALID_ENUM, "invalid draw mode");
+        return;
+    }
+
+    if (!validateFramebufferComplete(GL_DRAW_FRAMEBUFFER)) {
         return;
     }
 
@@ -4113,6 +4206,21 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
         return;
     }
 
+    // OpenGL ES 3.0.6 §2.15.2.
+    if (isTransformFeedbackActiveUnpaused()) {
+        setGLError(GL_INVALID_OPERATION,
+                   "transform feedback is active and not paused");
+        return;
+    }
+    // WebGL 1.0 §6.37, also for a draw of nothing.
+    if (!m_state->webGLProgram()) {
+        setGLError(GL_INVALID_OPERATION, "no current program");
+        return;
+    }
+    if (!validateFramebufferComplete(GL_DRAW_FRAMEBUFFER)) {
+        return;
+    }
+
     // A draw of nothing still reports a feedback loop, as drawArrays does.
     if (count == 0) {
         validateFeedbackLoops();
@@ -4133,13 +4241,6 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
                 "drawElements: vertex attribute enabled without bound buffer");
             return;
         }
-    }
-
-    if (!getCurrentProgram()) {
-        // If the CURRENT_PROGRAM is null, an INVALID_OPERATION error will be
-        // generated.
-        setGLError(GL_INVALID_OPERATION);
-        return;
     }
 
     if (!hasEnoughElementArrayData(count, type, offset)) {
@@ -4307,7 +4408,7 @@ void WebGLRenderingContext::framebufferRenderbuffer(
         }
 
         GLuint rbId = renderBuffer->glObject();
-        if (isWebGL2 && attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
+        if (attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
             m_gl->framebufferRenderbuffer(target, GL_DEPTH_ATTACHMENT,
                                           renderbuffertarget, rbId);
             m_gl->framebufferRenderbuffer(target, GL_STENCIL_ATTACHMENT,
@@ -4319,7 +4420,7 @@ void WebGLRenderingContext::framebufferRenderbuffer(
 
         fb->setAttachmentRenderbuffer(attachment, renderBuffer);
     } else {
-        if (isWebGL2 && attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
+        if (attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
             m_gl->framebufferRenderbuffer(target, GL_DEPTH_ATTACHMENT,
                                           renderbuffertarget, 0);
             m_gl->framebufferRenderbuffer(target, GL_STENCIL_ATTACHMENT,
@@ -4330,6 +4431,12 @@ void WebGLRenderingContext::framebufferRenderbuffer(
         }
 
         fb->setAttachmentRenderbuffer(attachment, nullptr);
+    }
+    if (!isWebGL2 && (attachment == GL_DEPTH_ATTACHMENT ||
+                      attachment == GL_STENCIL_ATTACHMENT ||
+                      attachment == GL_DEPTH_STENCIL_ATTACHMENT)) {
+        attachWebGL1DepthStencil(fb, attachment != GL_STENCIL_ATTACHMENT,
+                                 attachment != GL_DEPTH_ATTACHMENT);
     }
 }
 
@@ -4409,7 +4516,7 @@ void WebGLRenderingContext::framebufferTexture2D(
 
         GLuint textureId = texture->glObject();
         hasNewGLError(); // Keep an earlier error from failing this call.
-        if (isWebGL2 && attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
+        if (attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
             m_gl->framebufferTexture2D(target, GL_DEPTH_ATTACHMENT, textarget,
                                        textureId, level);
             m_gl->framebufferTexture2D(target, GL_STENCIL_ATTACHMENT, textarget,
@@ -4430,7 +4537,7 @@ void WebGLRenderingContext::framebufferTexture2D(
             return;
         }
         hasNewGLError(); // Keep an earlier error from failing this call.
-        if (isWebGL2 && attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
+        if (attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
             m_gl->framebufferTexture2D(target, GL_DEPTH_ATTACHMENT, textarget,
                                        0, 0);
             m_gl->framebufferTexture2D(target, GL_STENCIL_ATTACHMENT, textarget,
@@ -4443,6 +4550,47 @@ void WebGLRenderingContext::framebufferTexture2D(
         }
 
         fb->setAttachmentTexture2D(attachment, nullptr, textarget, level);
+    }
+    if (!isWebGL2 && (attachment == GL_DEPTH_ATTACHMENT ||
+                      attachment == GL_STENCIL_ATTACHMENT ||
+                      attachment == GL_DEPTH_STENCIL_ATTACHMENT)) {
+        attachWebGL1DepthStencil(fb, attachment != GL_STENCIL_ATTACHMENT,
+                                 attachment != GL_DEPTH_ATTACHMENT);
+    }
+}
+
+// WebGL 1.0 §6.8: DEPTH_STENCIL_ATTACHMENT is a point of its own, which the
+// OpenGL ES 3 driver lacks. Its image takes the driver's DEPTH and STENCIL
+// points in place of the DEPTH and STENCIL images; with more than one of the
+// three, checkWebGLStatus() is FRAMEBUFFER_UNSUPPORTED and nothing draws.
+void WebGLRenderingContext::attachWebGL1DepthStencil(
+    WebGLFramebuffer* framebuffer, bool depth, bool stencil)
+{
+    for (bool isStencil : { false, true }) {
+        if (isStencil ? !stencil : !depth) {
+            continue;
+        }
+        WebGLTexture* texture;
+        WebGLRenderbuffer* renderbuffer;
+        GLenum textarget;
+        GLint level;
+        framebuffer->webGL1DepthStencilImage(isStencil, texture, renderbuffer,
+                                             textarget, level);
+        const GLenum point =
+            isStencil ? GL_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT;
+        // shortcut: an image deleted while another hid it is gone from the
+        // driver, and its name may name another object by now, so its point
+        // is left empty; keep the hidden image alive to restore it.
+        if (texture && !texture->isDeleted()) {
+            m_gl->framebufferTexture2D(GL_FRAMEBUFFER, point, textarget,
+                                       texture->glObject(), level);
+        } else {
+            m_gl->framebufferRenderbuffer(
+                GL_FRAMEBUFFER, point, GL_RENDERBUFFER,
+                renderbuffer && !renderbuffer->isDeleted()
+                    ? renderbuffer->glObject()
+                    : 0);
+        }
     }
 }
 
@@ -4468,6 +4616,11 @@ void WebGLRenderingContext::generateMipmap(GLenum target)
                               : target,
                           0)
                     : nullptr;
+        // WEBGL_depth_texture: no mipmaps of a depth texture.
+        if (info && isDepthTextureFormat(info->internalFormat)) {
+            setGLError(GL_INVALID_OPERATION, "the texture is a depth texture");
+            return;
+        }
         if (info &&
             !(isPowerOfTwo(info->width) && isPowerOfTwo(info->height))) {
             setGLError(GL_INVALID_OPERATION, "level 0 is not a power of two");
@@ -4636,15 +4789,20 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
             Optional<WebGLFramebuffer*> maybeFb =
                 getBoundFramebuffer(GL_FRAMEBUFFER);
             if (maybeFb.hasValue() && maybeFb.value()) {
+                // WebGL 1 has a DEPTH_STENCIL_ATTACHMENT of its own.
+                WebGLFramebuffer* fb = maybeFb.value();
                 WebGLRenderbuffer* rb =
-                    maybeFb.value()->attachedRenderbuffer(GL_DEPTH_ATTACHMENT);
+                    fb->attachedRenderbuffer(GL_DEPTH_STENCIL_ATTACHMENT);
+                if (!rb) {
+                    rb = fb->attachedRenderbuffer(GL_DEPTH_ATTACHMENT);
+                }
                 if (rb) {
                     GLenum fmt = rb->internalFormat();
                     if (fmt == GL_DEPTH_COMPONENT16) {
                         return ValueRef::create(16);
                     }
                     if (fmt == GL_DEPTH_COMPONENT24 ||
-                        fmt == GL_DEPTH24_STENCIL8) {
+                        fmt == GL_DEPTH24_STENCIL8 || fmt == GL_DEPTH_STENCIL) {
                         return ValueRef::create(24);
                     }
                     if (fmt == GL_DEPTH_COMPONENT32F ||
@@ -4653,9 +4811,8 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
                     }
                     return ValueRef::create(16);
                 }
-                WebGLTexture* tex =
-                    maybeFb.value()->attachedTexture(GL_DEPTH_ATTACHMENT);
-                if (tex) {
+                if (fb->attachedTexture(GL_DEPTH_STENCIL_ATTACHMENT) ||
+                    fb->attachedTexture(GL_DEPTH_ATTACHMENT)) {
                     return ValueRef::create(24);
                 }
                 return ValueRef::create(0);
@@ -4673,15 +4830,14 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
             Optional<WebGLFramebuffer*> maybeFb =
                 getBoundFramebuffer(GL_FRAMEBUFFER);
             if (maybeFb.hasValue() && maybeFb.value()) {
-                WebGLRenderbuffer* rb = maybeFb.value()->attachedRenderbuffer(
-                    GL_STENCIL_ATTACHMENT);
-                if (rb) {
-                    return ValueRef::create(8);
-                }
-                WebGLTexture* tex =
-                    maybeFb.value()->attachedTexture(GL_STENCIL_ATTACHMENT);
-                if (tex) {
-                    return ValueRef::create(8);
+                // WebGL 1 has a DEPTH_STENCIL_ATTACHMENT of its own.
+                WebGLFramebuffer* fb = maybeFb.value();
+                for (GLenum attachment :
+                     { GL_DEPTH_STENCIL_ATTACHMENT, GL_STENCIL_ATTACHMENT }) {
+                    if (fb->attachedRenderbuffer(attachment) ||
+                        fb->attachedTexture(attachment)) {
+                        return ValueRef::create(8);
+                    }
                 }
                 return ValueRef::create(0);
             }
@@ -5186,11 +5342,6 @@ ScriptValue WebGLRenderingContext::getFramebufferAttachmentParameter(
         return Escargot::ValueRef::create(params);
     }
 
-    if (!isWebGL2 && attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
-        setGLError(GL_INVALID_ENUM);
-        return scriptNull();
-    }
-
     if (attachment == GL_BACK || attachment == GL_DEPTH ||
         attachment == GL_STENCIL) {
         setGLError(GL_INVALID_ENUM);
@@ -5224,8 +5375,9 @@ ScriptValue WebGLRenderingContext::getFramebufferAttachmentParameter(
     WebGLRenderbuffer* rb = fb->attachedRenderbuffer(attachment);
 
     // DEPTH_STENCIL_ATTACHMENT names one image only when depth and stencil
-    // hold the same one (OpenGL ES 3.0 GetFramebufferAttachmentParameteriv).
-    if (attachment == GL_DEPTH_STENCIL_ATTACHMENT && !tex && !rb &&
+    // hold the same one (OpenGL ES 3.0 GetFramebufferAttachmentParameteriv);
+    // WebGL 1's is a point of its own (WebGL 1.0 §6.8).
+    if (isWebGL2 && attachment == GL_DEPTH_STENCIL_ATTACHMENT && !tex && !rb &&
         (fb->attachedTexture(GL_DEPTH_ATTACHMENT) ||
          fb->attachedRenderbuffer(GL_DEPTH_ATTACHMENT) ||
          fb->attachedTexture(GL_STENCIL_ATTACHMENT) ||
@@ -5433,6 +5585,12 @@ ScriptValue WebGLRenderingContext::getRenderbufferParameter(GLenum target,
 
     switch (pname) {
     case GL_RENDERBUFFER_INTERNAL_FORMAT:
+        // WebGL 1 keeps DEPTH_STENCIL as the format, which the driver holds
+        // as DEPTH24_STENCIL8; WebGL 2 maps it so (WebGL 2.0
+        // renderbufferStorage).
+        if (!isWebGL2RenderingContext() && params == GL_DEPTH24_STENCIL8) {
+            params = GL_DEPTH_STENCIL;
+        }
         return createScriptValue(static_cast<GLenum>(params));
     case GL_RENDERBUFFER_WIDTH:
     case GL_RENDERBUFFER_HEIGHT:
@@ -6553,6 +6711,7 @@ void WebGLRenderingContext::renderbufferStorage(GLenum target,
     m_gl->renderbufferStorage(target, glInternalFormat, width, height);
     if (!hasNewGLError()) {
         m_boundRenderbuffer.value()->setStorage(internalformat, width, height);
+        initializeRenderbuffer(m_boundRenderbuffer.value());
     }
 }
 
@@ -7704,6 +7863,10 @@ void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
             generated.
         */
 
+        if (!validateFramebufferComplete(GL_READ_FRAMEBUFFER)) {
+            return;
+        }
+
         GLvoid* data = pixelsView->rawBuffer();
 
         completePendingJobs();
@@ -8637,16 +8800,34 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
 bool WebGLRenderingContext::checkInternalFormat(GLint internalFormat,
                                                 GLenum format, GLenum type)
 {
+    const bool depthTextures = isExtensionEnabled("WEBGL_depth_texture");
     if (internalFormat != GL_ALPHA && internalFormat != GL_RGB &&
         internalFormat != GL_RGBA && internalFormat != GL_LUMINANCE &&
-        internalFormat != GL_LUMINANCE_ALPHA) {
+        internalFormat != GL_LUMINANCE_ALPHA &&
+        !(depthTextures && isDepthTextureFormat(internalFormat))) {
         setGLError(GL_INVALID_ENUM, "internalFormat is not an accepted token");
         return false;
     }
     if (format != GL_ALPHA && format != GL_RGB && format != GL_RGBA &&
-        format != GL_LUMINANCE && format != GL_LUMINANCE_ALPHA) {
+        format != GL_LUMINANCE && format != GL_LUMINANCE_ALPHA &&
+        !(depthTextures && isDepthTextureFormat(format))) {
         setGLError(GL_INVALID_ENUM, "format is not an accepted token");
         return false;
+    }
+    // WEBGL_depth_texture "Errors": its formats and types go only together.
+    if (depthTextures &&
+        (isDepthTextureFormat(format) || type == GL_UNSIGNED_SHORT ||
+         type == GL_UNSIGNED_INT || type == GL_UNSIGNED_INT_24_8)) {
+        const bool paired =
+            static_cast<GLenum>(internalFormat) == format &&
+            (format == GL_DEPTH_COMPONENT
+                 ? type == GL_UNSIGNED_SHORT || type == GL_UNSIGNED_INT
+                 : format == GL_DEPTH_STENCIL && type == GL_UNSIGNED_INT_24_8);
+        if (!paired) {
+            setGLError(GL_INVALID_OPERATION,
+                       "WEBGL_depth_texture format and type do not match");
+        }
+        return paired;
     }
     // OpenGL ES 2.0 §3.7.1: an unknown type token is INVALID_ENUM, before the
     // format and type are matched.
@@ -8719,6 +8900,16 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
         return;
     }
 
+    // WEBGL_depth_texture: a depth texture is a 2D level 0 with no data.
+    const bool isDepthTexture =
+        webGLVersion() == 1 && isDepthTextureFormat(format);
+    if (isDepthTexture &&
+        (target != GL_TEXTURE_2D || level != 0 || pixels.hasValue())) {
+        setGLError(GL_INVALID_OPERATION,
+                   "a depth texture is level 0 of a TEXTURE_2D with no data");
+        return;
+    }
+
     bool allocated = false;
     handleTexImageWithArrayBufferView(
         target, level, width, height, 1, format, type, pixels, 0,
@@ -8750,7 +8941,13 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
     if (texture && !hasNewGLError()) {
         texture->setImageLevelInfo(target, level, internalFormat, width, height,
                                    1, type);
-        if (allocated) {
+        if (isDepthTexture) {
+            initializeImage(format, [&](GLenum attachment) {
+                m_gl->framebufferTexture2D(GL_DRAW_FRAMEBUFFER, attachment,
+                                           GL_TEXTURE_2D, texture->glObject(),
+                                           0);
+            });
+        } else if (allocated) {
             zeroTextureLevel(target, level, width, height, 1, format, type);
         }
     }
@@ -8779,6 +8976,11 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
     }
 
     if (!checkInternalFormat(internalFormat, format, type)) {
+        return;
+    }
+    // WEBGL_depth_texture: a depth texture takes no data.
+    if (webGLVersion() == 1 && isDepthTextureFormat(format)) {
+        setGLError(GL_INVALID_OPERATION, "a depth texture takes no data");
         return;
     }
 
@@ -8827,6 +9029,17 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
                     helper->width(), helper->height(), 1, type);
             }
         });
+}
+
+// WEBGL_depth_texture: a depth texture takes no data.
+bool WebGLRenderingContext::validateTexSubImageFormat(GLenum format)
+{
+    if (webGLVersion() == 1 && isDepthTextureFormat(format) &&
+        isExtensionEnabled("WEBGL_depth_texture")) {
+        setGLError(GL_INVALID_OPERATION, "a depth texture takes no data");
+        return false;
+    }
+    return true;
 }
 
 // WebGL 1.0 "Texture Type in TexSubImage2D Calls": the type must be the one
@@ -8881,6 +9094,9 @@ void WebGLRenderingContext::texSubImage2D(
         return;
     }
 
+    if (!validateTexSubImageFormat(format)) {
+        return;
+    }
     if (!isTexSubImageTypeAllowed(target, level, format, type)) {
         return;
     }
@@ -8902,6 +9118,9 @@ void WebGLRenderingContext::texSubImage2D(GLenum target, GLint level,
     throwIfNotConverted(source);
     ENTER_CONTEXT_SCOPE();
 
+    if (!validateTexSubImageFormat(format)) {
+        return;
+    }
     if (!isTexSubImageTypeAllowed(target, level, format, type)) {
         return;
     }
@@ -9819,6 +10038,19 @@ bool WebGLRenderingContext::isDefaultFramebufferBound()
     return !m_state->hasWebGLFramebuffer();
 }
 
+// WebGL 1.0 §5.14.11, §5.14.12, §6.8; OpenGL ES 3.0.6 §4.4.4.4: drawing to or
+// reading from a framebuffer that is not complete for WebGL, which the driver
+// may still take, is INVALID_FRAMEBUFFER_OPERATION.
+bool WebGLRenderingContext::validateFramebufferComplete(GLenum target)
+{
+    WebGLFramebuffer* framebuffer = getBoundFramebuffer(target).valueOrNull();
+    if (!framebuffer || framebuffer->webGLStatus() == GL_FRAMEBUFFER_COMPLETE) {
+        return true;
+    }
+    setGLError(GL_INVALID_FRAMEBUFFER_OPERATION, "framebuffer is not complete");
+    return false;
+}
+
 GLuint WebGLRenderingContext::getCurrentFBO()
 {
     return m_state->hasWebGLFramebuffer()
@@ -10129,6 +10361,62 @@ bool WebGLRenderingContext::validateDrawCallVertexAttribs()
     return true;
 }
 
+template <typename Clear>
+void WebGLRenderingContext::clearWithDefaultState(GLuint framebuffer,
+                                                  const Clear& clear)
+{
+    GLint drawFramebuffer = 0;
+    GLfloat clearColor[4];
+    GLfloat clearDepth = 1;
+    GLint clearStencil = 0;
+    GLboolean colorMask[4];
+    GLboolean depthMask = GL_TRUE;
+    GLint stencilMask = 0;
+    GLint stencilBackMask = 0;
+    m_gl->getIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFramebuffer);
+    m_gl->getFloatv(GL_COLOR_CLEAR_VALUE, clearColor);
+    m_gl->getFloatv(GL_DEPTH_CLEAR_VALUE, &clearDepth);
+    m_gl->getIntegerv(GL_STENCIL_CLEAR_VALUE, &clearStencil);
+    m_gl->getBooleanv(GL_COLOR_WRITEMASK, colorMask);
+    m_gl->getBooleanv(GL_DEPTH_WRITEMASK, &depthMask);
+    m_gl->getIntegerv(GL_STENCIL_WRITEMASK, &stencilMask);
+    m_gl->getIntegerv(GL_STENCIL_BACK_WRITEMASK, &stencilBackMask);
+    const bool scissorTest = m_gl->isEnabled(GL_SCISSOR_TEST);
+    const bool rasterizerDiscard =
+        isWebGL2RenderingContext() && m_gl->isEnabled(GL_RASTERIZER_DISCARD);
+
+    m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+    m_gl->disable(GL_SCISSOR_TEST);
+    if (rasterizerDiscard) {
+        m_gl->disable(GL_RASTERIZER_DISCARD);
+    }
+    m_gl->colorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    m_gl->depthMask(GL_TRUE);
+    m_gl->stencilMask(0xFFFFFFFF);
+    m_gl->clearColor(0, 0, 0, 0);
+    m_gl->clearDepthf(1);
+    m_gl->clearStencil(0);
+
+    clear();
+
+    m_gl->clearColor(clearColor[0], clearColor[1], clearColor[2],
+                     clearColor[3]);
+    m_gl->clearDepthf(clearDepth);
+    m_gl->clearStencil(clearStencil);
+    m_gl->colorMask(colorMask[0], colorMask[1], colorMask[2], colorMask[3]);
+    m_gl->depthMask(depthMask);
+    m_gl->stencilMaskSeparate(GL_FRONT, static_cast<GLuint>(stencilMask));
+    m_gl->stencilMaskSeparate(GL_BACK, static_cast<GLuint>(stencilBackMask));
+    if (rasterizerDiscard) {
+        m_gl->enable(GL_RASTERIZER_DISCARD);
+    }
+    if (scissorTest) {
+        m_gl->enable(GL_SCISSOR_TEST);
+    }
+    m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER,
+                          static_cast<GLuint>(drawFramebuffer));
+}
+
 void WebGLRenderingContext::completePendingJobs()
 {
     /*
@@ -10164,56 +10452,77 @@ void WebGLRenderingContext::completePendingJobs()
     // The clear targets the drawing buffer as a whole, whatever framebuffer,
     // scissor, write masks and clear values the page has set (WebGL 1.0
     // §2.2); all of that is page state and is put back afterwards.
-    GLint drawFramebuffer = 0;
-    GLfloat clearColor[4];
-    GLfloat clearDepth = 1;
-    GLint clearStencil = 0;
-    GLboolean colorMask[4];
-    GLboolean depthMask = GL_TRUE;
-    GLint stencilMask = 0;
-    GLint stencilBackMask = 0;
-    m_gl->getIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFramebuffer);
-    m_gl->getFloatv(GL_COLOR_CLEAR_VALUE, clearColor);
-    m_gl->getFloatv(GL_DEPTH_CLEAR_VALUE, &clearDepth);
-    m_gl->getIntegerv(GL_STENCIL_CLEAR_VALUE, &clearStencil);
-    m_gl->getBooleanv(GL_COLOR_WRITEMASK, colorMask);
-    m_gl->getBooleanv(GL_DEPTH_WRITEMASK, &depthMask);
-    m_gl->getIntegerv(GL_STENCIL_WRITEMASK, &stencilMask);
-    m_gl->getIntegerv(GL_STENCIL_BACK_WRITEMASK, &stencilBackMask);
-    const bool scissorTest = m_gl->isEnabled(GL_SCISSOR_TEST);
-    const bool rasterizerDiscard =
-        isWebGL2RenderingContext() && m_gl->isEnabled(GL_RASTERIZER_DISCARD);
+    clearWithDefaultState(m_framebufferTexture->fbo(),
+                          [&] { m_gl->clear(mask); });
+}
 
-    m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER, m_framebufferTexture->fbo());
-    m_gl->disable(GL_SCISSOR_TEST);
-    if (rasterizerDiscard) {
-        m_gl->disable(GL_RASTERIZER_DISCARD);
+// WebGL 1.0 §4.1: a new image reads as color 0, depth 1.0 and stencil 0.
+void WebGLRenderingContext::initializeImage(
+    GLenum internalFormat, const std::function<void(GLenum)>& attach)
+{
+    GLbitfield mask = GL_COLOR_BUFFER_BIT;
+    switch (internalFormat) {
+    case GL_DEPTH_COMPONENT:
+    case GL_DEPTH_COMPONENT16:
+    case GL_DEPTH_COMPONENT24:
+    case GL_DEPTH_COMPONENT32F:
+        mask = GL_DEPTH_BUFFER_BIT;
+        break;
+    case GL_STENCIL_INDEX8:
+        mask = GL_STENCIL_BUFFER_BIT;
+        break;
+    case GL_DEPTH_STENCIL:
+    case GL_DEPTH24_STENCIL8:
+    case GL_DEPTH32F_STENCIL8:
+        mask = GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT;
+        break;
     }
-    m_gl->colorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    m_gl->depthMask(GL_TRUE);
-    m_gl->stencilMask(0xFFFFFFFF);
-    m_gl->clearColor(0, 0, 0, 0);
-    m_gl->clearDepthf(1);
-    m_gl->clearStencil(0);
+    GLuint framebuffer = 0;
+    m_gl->genFramebuffers(1, &framebuffer);
+    clearWithDefaultState(framebuffer, [&] {
+        if (mask & GL_COLOR_BUFFER_BIT) {
+            attach(GL_COLOR_ATTACHMENT0);
+        }
+        if (mask & GL_DEPTH_BUFFER_BIT) {
+            attach(GL_DEPTH_ATTACHMENT);
+        }
+        if (mask & GL_STENCIL_BUFFER_BIT) {
+            attach(GL_STENCIL_ATTACHMENT);
+        }
+        // An image no framebuffer can be complete with is never drawn or
+        // read.
+        if (m_gl->checkFramebufferStatus(GL_DRAW_FRAMEBUFFER) !=
+            GL_FRAMEBUFFER_COMPLETE) {
+            return;
+        }
+        // Clear leaves an integer color buffer undefined (OpenGL ES 3.0.6
+        // §4.2.3).
+        static const GLuint unsignedZeros[4] = {};
+        static const GLint signedZeros[4] = {};
+        if (WebGLFramebuffer::isUnsignedIntegerInternalFormat(internalFormat)) {
+            m_gl->clearBufferuiv(GL_COLOR, 0, unsignedZeros);
+        } else if (WebGLFramebuffer::isSignedIntegerInternalFormat(
+                       internalFormat)) {
+            m_gl->clearBufferiv(GL_COLOR, 0, signedZeros);
+        } else {
+            m_gl->clear(mask);
+        }
+    });
+    // Unbound again by now, so this releases the image too.
+    m_gl->deleteFramebuffers(1, &framebuffer);
+}
 
-    m_gl->clear(mask);
-
-    m_gl->clearColor(clearColor[0], clearColor[1], clearColor[2],
-                     clearColor[3]);
-    m_gl->clearDepthf(clearDepth);
-    m_gl->clearStencil(clearStencil);
-    m_gl->colorMask(colorMask[0], colorMask[1], colorMask[2], colorMask[3]);
-    m_gl->depthMask(depthMask);
-    m_gl->stencilMaskSeparate(GL_FRONT, static_cast<GLuint>(stencilMask));
-    m_gl->stencilMaskSeparate(GL_BACK, static_cast<GLuint>(stencilBackMask));
-    if (rasterizerDiscard) {
-        m_gl->enable(GL_RASTERIZER_DISCARD);
+void WebGLRenderingContext::initializeRenderbuffer(
+    WebGLRenderbuffer* renderbuffer)
+{
+    if (!renderbuffer->width() || !renderbuffer->height()) {
+        return;
     }
-    if (scissorTest) {
-        m_gl->enable(GL_SCISSOR_TEST);
-    }
-    m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER,
-                          static_cast<GLuint>(drawFramebuffer));
+    initializeImage(renderbuffer->internalFormat(), [&](GLenum attachment) {
+        m_gl->framebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, attachment,
+                                      GL_RENDERBUFFER,
+                                      renderbuffer->glObject());
+    });
 }
 
 GL* WebGLRenderingContext::gl()

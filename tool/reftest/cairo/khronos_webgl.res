@@ -73,7 +73,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-com
 # http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-compressed-texture-size-limit.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-debug-renderer-info.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-debug-shaders.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-depth-texture.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-depth-texture.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-draw-buffers.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-shared-resources.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/bugs/angle-d3d11-compiler-error.html
@@ -554,7 +554,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/programs/use-program
 http://localhost:11010/conformance-suites/1.0.3/conformance/reading/read-pixels-pack-alignment.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/reading/read-pixels-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/feedback-loop.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-object-attachment.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-object-attachment.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-state-restoration.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/framebuffer-test.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/renderbuffers/renderbuffer-initialization.html

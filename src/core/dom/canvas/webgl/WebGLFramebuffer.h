@@ -66,8 +66,10 @@ public:
         } else if (attachment == 0x8D20 /* GL_STENCIL_ATTACHMENT */) {
             tex = m_attachedStencilTexture;
         } else if (attachment == 0x821A /* GL_DEPTH_STENCIL_ATTACHMENT */) {
-            if (m_attachedDepthTexture &&
-                m_attachedDepthTexture == m_attachedStencilTexture) {
+            if (!context()->isWebGL2RenderingContext()) {
+                tex = m_attachedDepthStencilTexture;
+            } else if (m_attachedDepthTexture &&
+                       m_attachedDepthTexture == m_attachedStencilTexture) {
                 tex = m_attachedDepthTexture;
             }
         }
@@ -84,8 +86,11 @@ public:
         } else if (attachment == 0x8D20 /* GL_STENCIL_ATTACHMENT */) {
             rb = m_attachedStencilRenderbuffer;
         } else if (attachment == 0x821A /* GL_DEPTH_STENCIL_ATTACHMENT */) {
-            if (m_attachedDepthRenderbuffer &&
-                m_attachedDepthRenderbuffer == m_attachedStencilRenderbuffer) {
+            if (!context()->isWebGL2RenderingContext()) {
+                rb = m_attachedDepthStencilRenderbuffer;
+            } else if (m_attachedDepthRenderbuffer &&
+                       m_attachedDepthRenderbuffer ==
+                           m_attachedStencilRenderbuffer) {
                 rb = m_attachedDepthRenderbuffer;
             }
         }
@@ -111,6 +116,10 @@ public:
         if (m_attachedStencilTexture == texture) {
             m_attachedStencilTexture = nullptr;
         }
+        if (m_attachedDepthStencilTexture == texture) {
+            m_attachedDepthStencilTexture = nullptr;
+        }
+        invalidateFramebufferStatus();
     }
 
     void detachRenderbuffer(WebGLRenderbuffer* renderbuffer)
@@ -132,6 +141,10 @@ public:
         if (m_attachedStencilRenderbuffer == renderbuffer) {
             m_attachedStencilRenderbuffer = nullptr;
         }
+        if (m_attachedDepthStencilRenderbuffer == renderbuffer) {
+            m_attachedDepthStencilRenderbuffer = nullptr;
+        }
+        invalidateFramebufferStatus();
     }
 
     WebGLTexture* attachedColorTexture(size_t index) const
@@ -181,9 +194,11 @@ public:
                                0);
     }
 
+    // A null texture detaches the renderbuffer too (OpenGL ES 2.0 §4.4.3).
     void setAttachmentTexture2D(GLenum attachment, WebGLTexture* texture,
                                 GLenum textarget, GLint level)
     {
+        invalidateFramebufferStatus();
         if (attachment >= 0x8CE0 && attachment < 0x8CE0 + 16) {
             size_t idx = attachment - 0x8CE0;
             m_attachedColorTextures[idx] = texture;
@@ -191,9 +206,7 @@ public:
             m_attachedColorLevels[idx] = level;
             m_attachedColorLayers[idx] = 0;
             m_attachedColorIsLayers[idx] = false;
-            if (texture) {
-                m_attachedColorRenderbuffers[idx] = nullptr;
-            }
+            m_attachedColorRenderbuffers[idx] = nullptr;
             if (idx == 0) {
                 m_attachedTexture = texture;
             }
@@ -203,18 +216,19 @@ public:
             m_attachedDepthLevel = level;
             m_attachedDepthLayer = 0;
             m_attachedDepthIsLayer = false;
-            if (texture) {
-                m_attachedDepthRenderbuffer = nullptr;
-            }
+            m_attachedDepthRenderbuffer = nullptr;
         } else if (attachment == 0x8D20 /* GL_STENCIL_ATTACHMENT */) {
             m_attachedStencilTexture = texture;
             m_attachedStencilTextarget = textarget;
             m_attachedStencilLevel = level;
             m_attachedStencilLayer = 0;
             m_attachedStencilIsLayer = false;
-            if (texture) {
-                m_attachedStencilRenderbuffer = nullptr;
-            }
+            m_attachedStencilRenderbuffer = nullptr;
+        } else if (attachment == 0x821A /* GL_DEPTH_STENCIL_ATTACHMENT */ &&
+                   !context()->isWebGL2RenderingContext()) {
+            m_attachedDepthStencilTexture = texture;
+            m_attachedDepthStencilTextarget = static_cast<uint16_t>(textarget);
+            m_attachedDepthStencilRenderbuffer = nullptr;
         } else if (attachment == 0x821A /* GL_DEPTH_STENCIL_ATTACHMENT */) {
             m_attachedDepthTexture = texture;
             m_attachedDepthTextarget = textarget;
@@ -226,16 +240,15 @@ public:
             m_attachedStencilLevel = level;
             m_attachedStencilLayer = 0;
             m_attachedStencilIsLayer = false;
-            if (texture) {
-                m_attachedDepthRenderbuffer = nullptr;
-                m_attachedStencilRenderbuffer = nullptr;
-            }
+            m_attachedDepthRenderbuffer = nullptr;
+            m_attachedStencilRenderbuffer = nullptr;
         }
     }
 
     void setAttachmentTextureLayer(GLenum attachment, WebGLTexture* texture,
                                    GLint level, GLint layer)
     {
+        invalidateFramebufferStatus();
         GLenum tgt =
             texture && texture->target() != 0 ? texture->target() : 0x806F;
         if (attachment >= 0x8CE0 && attachment < 0x8CE0 + 16) {
@@ -245,9 +258,7 @@ public:
             m_attachedColorLevels[idx] = level;
             m_attachedColorLayers[idx] = layer;
             m_attachedColorIsLayers[idx] = true;
-            if (texture) {
-                m_attachedColorRenderbuffers[idx] = nullptr;
-            }
+            m_attachedColorRenderbuffers[idx] = nullptr;
             if (idx == 0) {
                 m_attachedTexture = texture;
             }
@@ -257,18 +268,14 @@ public:
             m_attachedDepthLevel = level;
             m_attachedDepthLayer = layer;
             m_attachedDepthIsLayer = true;
-            if (texture) {
-                m_attachedDepthRenderbuffer = nullptr;
-            }
+            m_attachedDepthRenderbuffer = nullptr;
         } else if (attachment == 0x8D20 /* GL_STENCIL_ATTACHMENT */) {
             m_attachedStencilTexture = texture;
             m_attachedStencilTextarget = tgt;
             m_attachedStencilLevel = level;
             m_attachedStencilLayer = layer;
             m_attachedStencilIsLayer = true;
-            if (texture) {
-                m_attachedStencilRenderbuffer = nullptr;
-            }
+            m_attachedStencilRenderbuffer = nullptr;
         } else if (attachment == 0x821A /* GL_DEPTH_STENCIL_ATTACHMENT */) {
             m_attachedDepthTexture = texture;
             m_attachedDepthTextarget = tgt;
@@ -280,10 +287,8 @@ public:
             m_attachedStencilLevel = level;
             m_attachedStencilLayer = layer;
             m_attachedStencilIsLayer = true;
-            if (texture) {
-                m_attachedDepthRenderbuffer = nullptr;
-                m_attachedStencilRenderbuffer = nullptr;
-            }
+            m_attachedDepthRenderbuffer = nullptr;
+            m_attachedStencilRenderbuffer = nullptr;
         }
     }
 
@@ -428,6 +433,7 @@ public:
     // A null renderbuffer detaches a texture too (OpenGL ES 2.0 §4.4.2).
     void setAttachmentRenderbuffer(GLenum attachment, WebGLRenderbuffer* rb)
     {
+        invalidateFramebufferStatus();
         if (attachment >= 0x8CE0 && attachment < 0x8CE0 + 16) {
             size_t idx = attachment - 0x8CE0;
             m_attachedColorRenderbuffers[idx] = rb;
@@ -441,6 +447,10 @@ public:
         } else if (attachment == 0x8D20 /* GL_STENCIL_ATTACHMENT */) {
             m_attachedStencilRenderbuffer = rb;
             m_attachedStencilTexture = nullptr;
+        } else if (attachment == 0x821A /* GL_DEPTH_STENCIL_ATTACHMENT */ &&
+                   !context()->isWebGL2RenderingContext()) {
+            m_attachedDepthStencilRenderbuffer = rb;
+            m_attachedDepthStencilTexture = nullptr;
         } else if (attachment == 0x821A /* GL_DEPTH_STENCIL_ATTACHMENT */) {
             m_attachedDepthRenderbuffer = rb;
             m_attachedStencilRenderbuffer = rb;
@@ -493,7 +503,8 @@ public:
         return (m_attachedDepthTexture == texture &&
                 reads(m_attachedDepthLevel)) ||
                (m_attachedStencilTexture == texture &&
-                reads(m_attachedStencilLevel));
+                reads(m_attachedStencilLevel)) ||
+               (m_attachedDepthStencilTexture == texture && reads(0));
     }
 
     // Whether the read buffer is `level` of `texture` at `target`
@@ -523,13 +534,67 @@ public:
             }
         }
         return m_attachedDepthTexture || m_attachedDepthRenderbuffer ||
-               m_attachedStencilTexture || m_attachedStencilRenderbuffer;
+               m_attachedStencilTexture || m_attachedStencilRenderbuffer ||
+               m_attachedDepthStencilTexture ||
+               m_attachedDepthStencilRenderbuffer;
+    }
+
+    // The image a WebGL 1 framebuffer has at the driver's DEPTH (or, with
+    // `stencil`, STENCIL) point: its DEPTH_STENCIL_ATTACHMENT image if it has
+    // one, else its DEPTH_ATTACHMENT (STENCIL_ATTACHMENT) image.
+    void webGL1DepthStencilImage(bool stencil, WebGLTexture*& texture,
+                                 WebGLRenderbuffer*& renderbuffer,
+                                 GLenum& textarget, GLint& level) const
+    {
+        if (m_attachedDepthStencilTexture ||
+            m_attachedDepthStencilRenderbuffer) {
+            texture = m_attachedDepthStencilTexture;
+            renderbuffer = m_attachedDepthStencilRenderbuffer;
+            textarget = m_attachedDepthStencilTextarget;
+            level = 0;
+        } else if (stencil) {
+            texture = m_attachedStencilTexture;
+            renderbuffer = m_attachedStencilRenderbuffer;
+            textarget = m_attachedStencilTextarget;
+            level = m_attachedStencilLevel;
+        } else {
+            texture = m_attachedDepthTexture;
+            renderbuffer = m_attachedDepthRenderbuffer;
+            textarget = m_attachedDepthTextarget;
+            level = m_attachedDepthLevel;
+        }
+    }
+
+    // checkWebGLStatus(), computed again only after a change it can see.
+    GLenum webGLStatus()
+    {
+        const uint32_t epoch = context()->framebufferStatusEpoch();
+        if (!m_webGLStatus || m_webGLStatusEpoch != epoch) {
+            m_webGLStatus = static_cast<uint16_t>(checkWebGLStatus());
+            m_webGLStatusEpoch = epoch;
+        }
+        // A setter that misses invalidateFramebufferStatus() shows up here.
+        STARFISH_ASSERT(m_webGLStatus == checkWebGLStatus());
+        return m_webGLStatus;
     }
 
     GLenum checkWebGLStatus() const
     {
         if (!hasAnyAttachment()) {
             return 0x8CD7; /* GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT */
+        }
+
+        const bool isWebGL2 = context()->isWebGL2RenderingContext();
+        // WebGL 1.0 §6.8: an error to attach images to more than one of
+        // DEPTH, STENCIL and DEPTH_STENCIL_ATTACHMENT at once.
+        if (!isWebGL2 &&
+            (m_attachedDepthTexture || m_attachedDepthRenderbuffer) +
+                    (m_attachedStencilTexture ||
+                     m_attachedStencilRenderbuffer) +
+                    (m_attachedDepthStencilTexture ||
+                     m_attachedDepthStencilRenderbuffer) >
+                1) {
+            return 0x8CDD; /* GL_FRAMEBUFFER_UNSUPPORTED */
         }
 
         // WebGL2: Check if identical image is attached to more than one color
@@ -566,9 +631,15 @@ public:
         GLsizei commonWidth = -1;
         GLsizei commonHeight = -1;
 
+        // `required`: the one internal format the attachment point takes, 0
+        // for any.
         auto checkImage = [&](GLsizei w, GLsizei h, GLenum format,
-                              bool isColorAttachment) -> GLenum {
+                              bool isColorAttachment,
+                              GLenum required) -> GLenum {
             if (w == 0 || h == 0) {
+                return 0x8CD6; /* GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT */
+            }
+            if (required && format != required) {
                 return 0x8CD6; /* GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT */
             }
             if (isColorAttachment) {
@@ -585,9 +656,8 @@ public:
                     return 0x8CD6; /* GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT */
                 }
                 if (isFloatColorFormat(format)) {
-                    if (context() && context()->isWebGL2RenderingContext() &&
-                        !context()->isExtensionEnabled(
-                            "EXT_color_buffer_float")) {
+                    if (isWebGL2 && !context()->isExtensionEnabled(
+                                        "EXT_color_buffer_float")) {
                         return 0x8CD6; /* GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT
                                         */
                     }
@@ -602,110 +672,99 @@ public:
             return 0x8CD5; /* GL_FRAMEBUFFER_COMPLETE */
         };
 
-        for (size_t i = 0; i < 16; ++i) {
-            WebGLTexture* tex = m_attachedColorTextures[i];
-            if (tex) {
-                GLsizei w = tex->width();
-                GLsizei h = tex->height();
-                GLenum fmt = 0x1908;
-                GLenum tgt = m_attachedColorIsLayers[i]
-                                 ? (tex->target() != 0 ? tex->target() : 0x806F)
-                                 : m_attachedColorTextargets[i];
-                const auto* info =
-                    tex->getImageLevelInfo(tgt, m_attachedColorLevels[i]);
-                if (info) {
-                    w = info->width;
-                    h = info->height;
-                    fmt = info->internalFormat;
-                } else if (m_attachedColorLevels[i] > 0) {
-                    const auto* info0 = tex->getImageLevelInfo(tgt, 0);
-                    if (info0) {
-                        w = std::max(1,
-                                     info0->width >> m_attachedColorLevels[i]);
-                        h = std::max(1,
-                                     info0->height >> m_attachedColorLevels[i]);
-                        fmt = info0->internalFormat;
-                    }
+        auto checkTexture =
+            [&](WebGLTexture* tex, GLenum textarget, GLint level, bool isLayer,
+                bool isColorAttachment, GLenum required) -> GLenum {
+            GLsizei w = tex->width();
+            GLsizei h = tex->height();
+            GLenum fmt = isColorAttachment ? 0x1908 /* GL_RGBA */ : 0;
+            GLenum tgt = isLayer ? (tex->target() != 0 ? tex->target() : 0x806F)
+                                 : textarget;
+            const auto* info = tex->getImageLevelInfo(tgt, level);
+            if (info) {
+                w = info->width;
+                h = info->height;
+                fmt = info->internalFormat;
+            } else if (level > 0) {
+                const auto* info0 = tex->getImageLevelInfo(tgt, 0);
+                if (info0) {
+                    w = std::max(1, info0->width >> level);
+                    h = std::max(1, info0->height >> level);
+                    fmt = info0->internalFormat;
                 }
-                GLenum res = checkImage(w, h, fmt, true);
+            }
+            // WebGL 1.0 §6.36, for both versions: a face of a cube map that
+            // is not cube complete is not attachment complete. OpenGL ES
+            // 3.0.6 §4.4.4.1 asks it only of a level other than the base.
+            if (tgt >= 0x8515 /* GL_TEXTURE_CUBE_MAP_POSITIVE_X */ &&
+                tgt <= 0x851A /* GL_TEXTURE_CUBE_MAP_NEGATIVE_Z */ &&
+                !tex->isCubeComplete()) {
+                return 0x8CD6; /* GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT */
+            }
+            return checkImage(w, h, fmt, isColorAttachment, required);
+        };
+
+        for (size_t i = 0; i < 16; ++i) {
+            if (WebGLTexture* tex = m_attachedColorTextures[i]) {
+                GLenum res = checkTexture(tex, m_attachedColorTextargets[i],
+                                          m_attachedColorLevels[i],
+                                          m_attachedColorIsLayers[i], true, 0);
                 if (res != 0x8CD5) {
                     return res;
                 }
             }
-            WebGLRenderbuffer* rb = m_attachedColorRenderbuffers[i];
-            if (rb) {
+            if (WebGLRenderbuffer* rb = m_attachedColorRenderbuffers[i]) {
                 GLenum res = checkImage(rb->width(), rb->height(),
-                                        rb->internalFormat(), true);
+                                        rb->internalFormat(), true, 0);
                 if (res != 0x8CD5) {
                     return res;
                 }
             }
         }
 
-        if (m_attachedDepthTexture) {
-            WebGLTexture* tex = m_attachedDepthTexture;
-            GLsizei w = tex->width();
-            GLsizei h = tex->height();
-            GLenum tgt = m_attachedDepthIsLayer
-                             ? (tex->target() != 0 ? tex->target() : 0x806F)
-                             : m_attachedDepthTextarget;
-            const auto* info =
-                tex->getImageLevelInfo(tgt, m_attachedDepthLevel);
-            if (info) {
-                w = info->width;
-                h = info->height;
-            } else if (m_attachedDepthLevel > 0) {
-                const auto* info0 = tex->getImageLevelInfo(tgt, 0);
-                if (info0) {
-                    w = std::max(1, info0->width >> m_attachedDepthLevel);
-                    h = std::max(1, info0->height >> m_attachedDepthLevel);
+        // WebGL 1.0 §6.8 makes a WebGL 1 depth, stencil or depth-stencil
+        // image of another format FRAMEBUFFER_UNSUPPORTED; such an image
+        // breaks the attachment completeness of OpenGL ES 2.0.25 §4.4.5,
+        // which is what the conformance tests and ANGLE report:
+        // INCOMPLETE_ATTACHMENT. WebGL 2 leaves the formats to the driver.
+        struct DepthStencilPoint {
+            WebGLTexture* texture;
+            GLenum textarget;
+            GLint level;
+            bool isLayer;
+            WebGLRenderbuffer* renderbuffer;
+            GLenum textureFormat;
+            GLenum renderbufferFormat;
+        };
+        const DepthStencilPoint points[] = {
+            { m_attachedDepthTexture, m_attachedDepthTextarget,
+              m_attachedDepthLevel, m_attachedDepthIsLayer,
+              m_attachedDepthRenderbuffer, 0x1902 /* GL_DEPTH_COMPONENT */,
+              0x81A5 /* GL_DEPTH_COMPONENT16 */ },
+            { m_attachedStencilTexture, m_attachedStencilTextarget,
+              m_attachedStencilLevel, m_attachedStencilIsLayer,
+              m_attachedStencilRenderbuffer, 0x8D48 /* GL_STENCIL_INDEX8 */,
+              0x8D48 /* GL_STENCIL_INDEX8 */ },
+            { m_attachedDepthStencilTexture, m_attachedDepthStencilTextarget, 0,
+              false, m_attachedDepthStencilRenderbuffer,
+              0x84F9 /* GL_DEPTH_STENCIL */, 0x84F9 /* GL_DEPTH_STENCIL */ },
+        };
+        for (const DepthStencilPoint& point : points) {
+            if (point.texture) {
+                GLenum res = checkTexture(point.texture, point.textarget,
+                                          point.level, point.isLayer, false,
+                                          isWebGL2 ? 0 : point.textureFormat);
+                if (res != 0x8CD5) {
+                    return res;
                 }
             }
-            GLenum res = checkImage(w, h, 0, false);
-            if (res != 0x8CD5) {
-                return res;
-            }
-        }
-        if (m_attachedDepthRenderbuffer) {
-            GLenum res = checkImage(
-                m_attachedDepthRenderbuffer->width(),
-                m_attachedDepthRenderbuffer->height(),
-                m_attachedDepthRenderbuffer->internalFormat(), false);
-            if (res != 0x8CD5) {
-                return res;
-            }
-        }
-        if (m_attachedStencilTexture) {
-            WebGLTexture* tex = m_attachedStencilTexture;
-            GLsizei w = tex->width();
-            GLsizei h = tex->height();
-            GLenum tgt = m_attachedStencilIsLayer
-                             ? (tex->target() != 0 ? tex->target() : 0x806F)
-                             : m_attachedStencilTextarget;
-            const auto* info =
-                tex->getImageLevelInfo(tgt, m_attachedStencilLevel);
-            if (info) {
-                w = info->width;
-                h = info->height;
-            } else if (m_attachedStencilLevel > 0) {
-                const auto* info0 = tex->getImageLevelInfo(tgt, 0);
-                if (info0) {
-                    w = std::max(1, info0->width >> m_attachedStencilLevel);
-                    h = std::max(1, info0->height >> m_attachedStencilLevel);
+            if (WebGLRenderbuffer* rb = point.renderbuffer) {
+                GLenum res =
+                    checkImage(rb->width(), rb->height(), rb->internalFormat(),
+                               false, isWebGL2 ? 0 : point.renderbufferFormat);
+                if (res != 0x8CD5) {
+                    return res;
                 }
-            }
-            GLenum res = checkImage(w, h, 0, false);
-            if (res != 0x8CD5) {
-                return res;
-            }
-        }
-        if (m_attachedStencilRenderbuffer) {
-            GLenum res = checkImage(
-                m_attachedStencilRenderbuffer->width(),
-                m_attachedStencilRenderbuffer->height(),
-                m_attachedStencilRenderbuffer->internalFormat(), false);
-            if (res != 0x8CD5) {
-                return res;
             }
         }
 
@@ -724,6 +783,8 @@ public:
     FILL_GC_POINTER(WebGLFramebuffer, m_attachedDepthRenderbuffer);
     FILL_GC_POINTER(WebGLFramebuffer, m_attachedStencilTexture);
     FILL_GC_POINTER(WebGLFramebuffer, m_attachedStencilRenderbuffer);
+    FILL_GC_POINTER(WebGLFramebuffer, m_attachedDepthStencilTexture);
+    FILL_GC_POINTER(WebGLFramebuffer, m_attachedDepthStencilRenderbuffer);
     for (size_t i = 0; i < 16; ++i) {
         GC_set_bit(desc,
                    GC_WORD_OFFSET(WebGLFramebuffer, m_attachedColorTextures) +
@@ -758,6 +819,15 @@ private:
     GLint m_attachedStencilLayer = 0;
     bool m_attachedStencilIsLayer = false;
     WebGLRenderbuffer* m_attachedStencilRenderbuffer = nullptr;
+    // WebGL 1's DEPTH_STENCIL_ATTACHMENT, a point of its own (WebGL 1.0
+    // §6.8); WebGL 2 makes it an alias of DEPTH and STENCIL (WebGL 2.0
+    // §5.1.5) and leaves these null. Its texture level is 0.
+    WebGLTexture* m_attachedDepthStencilTexture = nullptr;
+    WebGLRenderbuffer* m_attachedDepthStencilRenderbuffer = nullptr;
+    // Every target and status token fits 16 bits.
+    uint16_t m_attachedDepthStencilTextarget = 0;
+    uint16_t m_webGLStatus = 0; // 0: not computed yet
+    uint32_t m_webGLStatusEpoch = 0;
 };
 } // namespace Starfish
 

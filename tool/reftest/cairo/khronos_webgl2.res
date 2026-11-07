@@ -548,7 +548,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/state/state-uneffect
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/copy-tex-image-and-sub-image-2d.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/copy-tex-image-2d-formats.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/copy-tex-sub-image-2d-partial-texture.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/cube-incomplete-fbo.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/cube-incomplete-fbo.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/default-texture.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/gl-pixelstorei.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/conformance/textures/misc/gl-teximage.html?webglVersion=2
@@ -1453,7 +1453,7 @@ http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativefr
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativeshaderapi.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativestateapi.html?webglVersion=2
 # http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativetextureapi.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativevertexarrayapi.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/negativevertexarrayapi.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/occlusionquery_strict.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/occlusionquery_conservative.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/functional/gles3/rasterizerdiscard.html?webglVersion=2
@@ -1498,7 +1498,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance2/context/context-att
 http://localhost:11010/conformance-suites/2.0.0/conformance2/context/context-type-test-2.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/context/methods-2.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-color-buffer-float.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-color-buffer-half-float.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-color-buffer-half-float.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/ext-disjoint-timer-query-webgl2.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/promoted-extensions.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance2/extensions/promoted-extensions-in-shaders.html?webglVersion=2

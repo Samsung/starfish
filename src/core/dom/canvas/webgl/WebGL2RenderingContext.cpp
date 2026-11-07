@@ -3393,6 +3393,11 @@ void WebGL2RenderingContext::blitFramebuffer(GLint srcX0, GLint srcY0,
         return;
     }
 
+    if (!validateFramebufferComplete(GL_READ_FRAMEBUFFER) ||
+        !validateFramebufferComplete(GL_DRAW_FRAMEBUFFER)) {
+        return;
+    }
+
     if (mask & GL_COLOR_BUFFER_BIT) {
         Optional<WebGLFramebuffer*> maybeReadFb =
             getBoundFramebuffer(GL_READ_FRAMEBUFFER);
@@ -3697,6 +3702,7 @@ void WebGL2RenderingContext::renderbufferStorageMultisample(
                                          width, height);
     if (!hasNewGLError()) {
         rb.value()->setStorage(internalformat, width, height, samples);
+        initializeRenderbuffer(rb.value());
     }
 }
 
@@ -3922,6 +3928,32 @@ void WebGL2RenderingContext::drawBuffers(GCAtomicVector<GLenum> buffers)
     }
 }
 
+// OpenGL ES 3.0.6 §4.2.3: drawbuffer is a draw buffer for COLOR and 0 for
+// DEPTH and STENCIL. WebGL 2.0 clearBuffer: "if there's not enough elements
+// in values starting at srcOffset, generate INVALID_VALUE" -- four for COLOR,
+// one for DEPTH and STENCIL, all of which the driver reads.
+bool WebGL2RenderingContext::validateClearBuffer(GLenum buffer,
+                                                 GLint drawbuffer,
+                                                 size_t length,
+                                                 unsigned long long srcOffset)
+{
+    GLint maxDrawBuffers = 1;
+    if (buffer == GL_COLOR) {
+        gl()->getIntegerv(GL_MAX_DRAW_BUFFERS, &maxDrawBuffers);
+    }
+    if (buffer == GL_COLOR ? drawbuffer < 0 || drawbuffer >= maxDrawBuffers
+                           : drawbuffer != 0) {
+        setGLError(GL_INVALID_VALUE, "drawbuffer is out of range");
+        return false;
+    }
+    const size_t needed = buffer == GL_COLOR ? 4 : 1;
+    if (srcOffset > length || length - srcOffset < needed) {
+        setGLError(GL_INVALID_VALUE, "not enough values after srcOffset");
+        return false;
+    }
+    return true;
+}
+
 void WebGL2RenderingContext::clearBufferfv(GLenum buffer, GLint drawbuffer,
                                            Float32List values,
                                            unsigned long long srcOffset)
@@ -3933,8 +3965,21 @@ void WebGL2RenderingContext::clearBufferfv(GLenum buffer, GLint drawbuffer,
         setGLError(GL_INVALID_ENUM, "buffer must be GL_COLOR or GL_DEPTH.");
         return;
     }
-    if (buffer == GL_DEPTH && drawbuffer != 0) {
-        setGLError(GL_INVALID_VALUE, "drawbuffer must be 0 for DEPTH.");
+    std::vector<GLfloat> floats;
+    const GLfloat* data;
+    size_t length;
+    if (values.isFloat32ArrayValue()) {
+        const ScriptFloat32Array arr = values.getFloat32ArrayValue();
+        data = reinterpret_cast<const GLfloat*>(arr->rawBuffer());
+        length = arr->arrayLength();
+    } else {
+        const GCAtomicVector<double> seq = values.getSequenceOfGLfloatValue();
+        floats.assign(seq.begin(), seq.end());
+        data = floats.data();
+        length = floats.size();
+    }
+    if (!validateClearBuffer(buffer, drawbuffer, length, srcOffset) ||
+        !validateFramebufferComplete(GL_DRAW_FRAMEBUFFER)) {
         return;
     }
 
@@ -3961,24 +4006,7 @@ void WebGL2RenderingContext::clearBufferfv(GLenum buffer, GLint drawbuffer,
         }
     }
 
-    if (values.isFloat32ArrayValue()) {
-        const ScriptFloat32Array arr = values.getFloat32ArrayValue();
-        if (srcOffset >= arr->arrayLength()) {
-            setGLError(GL_INVALID_VALUE);
-            return;
-        }
-        const GLfloat* ptr =
-            reinterpret_cast<const GLfloat*>(arr->rawBuffer()) + srcOffset;
-        gl()->clearBufferfv(buffer, drawbuffer, ptr);
-    } else if (values.isSequenceOfGLfloatValue()) {
-        const GCAtomicVector<double> seq = values.getSequenceOfGLfloatValue();
-        if (srcOffset >= seq.size()) {
-            setGLError(GL_INVALID_VALUE);
-            return;
-        }
-        std::vector<GLfloat> floats(seq.begin(), seq.end());
-        gl()->clearBufferfv(buffer, drawbuffer, floats.data() + srcOffset);
-    }
+    gl()->clearBufferfv(buffer, drawbuffer, data + srcOffset);
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
@@ -3993,8 +4021,20 @@ void WebGL2RenderingContext::clearBufferiv(GLenum buffer, GLint drawbuffer,
         setGLError(GL_INVALID_ENUM, "buffer must be GL_COLOR or GL_STENCIL.");
         return;
     }
-    if (buffer == GL_STENCIL && drawbuffer != 0) {
-        setGLError(GL_INVALID_VALUE, "drawbuffer must be 0 for STENCIL.");
+    GCAtomicVector<int32_t> seq;
+    const GLint* data;
+    size_t length;
+    if (values.isInt32ArrayValue()) {
+        const ScriptInt32Array arr = values.getInt32ArrayValue();
+        data = reinterpret_cast<const GLint*>(arr->rawBuffer());
+        length = arr->arrayLength();
+    } else {
+        seq = values.getSequenceOfGLintValue();
+        data = seq.data();
+        length = seq.size();
+    }
+    if (!validateClearBuffer(buffer, drawbuffer, length, srcOffset) ||
+        !validateFramebufferComplete(GL_DRAW_FRAMEBUFFER)) {
         return;
     }
 
@@ -4024,23 +4064,7 @@ void WebGL2RenderingContext::clearBufferiv(GLenum buffer, GLint drawbuffer,
         }
     }
 
-    if (values.isInt32ArrayValue()) {
-        const ScriptInt32Array arr = values.getInt32ArrayValue();
-        if (srcOffset >= arr->arrayLength()) {
-            setGLError(GL_INVALID_VALUE);
-            return;
-        }
-        const GLint* ptr =
-            reinterpret_cast<const GLint*>(arr->rawBuffer()) + srcOffset;
-        gl()->clearBufferiv(buffer, drawbuffer, ptr);
-    } else if (values.isSequenceOfGLintValue()) {
-        const GCAtomicVector<int32_t> seq = values.getSequenceOfGLintValue();
-        if (srcOffset >= seq.size()) {
-            setGLError(GL_INVALID_VALUE);
-            return;
-        }
-        gl()->clearBufferiv(buffer, drawbuffer, seq.data() + srcOffset);
-    }
+    gl()->clearBufferiv(buffer, drawbuffer, data + srcOffset);
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
@@ -4053,6 +4077,22 @@ void WebGL2RenderingContext::clearBufferuiv(GLenum buffer, GLint drawbuffer,
     completePendingJobs();
     if (buffer != GL_COLOR) {
         setGLError(GL_INVALID_ENUM, "buffer must be GL_COLOR.");
+        return;
+    }
+    GCAtomicVector<uint32_t> seq;
+    const GLuint* data;
+    size_t length;
+    if (values.isUint32ArrayValue()) {
+        const ScriptUint32Array arr = values.getUint32ArrayValue();
+        data = reinterpret_cast<const GLuint*>(arr->rawBuffer());
+        length = arr->arrayLength();
+    } else {
+        seq = values.getSequenceOfGLuintValue();
+        data = seq.data();
+        length = seq.size();
+    }
+    if (!validateClearBuffer(buffer, drawbuffer, length, srcOffset) ||
+        !validateFramebufferComplete(GL_DRAW_FRAMEBUFFER)) {
         return;
     }
 
@@ -4082,23 +4122,7 @@ void WebGL2RenderingContext::clearBufferuiv(GLenum buffer, GLint drawbuffer,
         }
     }
 
-    if (values.isUint32ArrayValue()) {
-        const ScriptUint32Array arr = values.getUint32ArrayValue();
-        if (srcOffset >= arr->arrayLength()) {
-            setGLError(GL_INVALID_VALUE);
-            return;
-        }
-        const GLuint* ptr =
-            reinterpret_cast<const GLuint*>(arr->rawBuffer()) + srcOffset;
-        gl()->clearBufferuiv(buffer, drawbuffer, ptr);
-    } else if (values.isSequenceOfGLuintValue()) {
-        const GCAtomicVector<uint32_t> seq = values.getSequenceOfGLuintValue();
-        if (srcOffset >= seq.size()) {
-            setGLError(GL_INVALID_VALUE);
-            return;
-        }
-        gl()->clearBufferuiv(buffer, drawbuffer, seq.data() + srcOffset);
-    }
+    gl()->clearBufferuiv(buffer, drawbuffer, data + srcOffset);
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
@@ -4113,6 +4137,9 @@ void WebGL2RenderingContext::clearBufferfi(GLenum buffer, GLint drawbuffer,
     }
     if (drawbuffer != 0) {
         setGLError(GL_INVALID_VALUE, "drawbuffer must be 0 for DEPTH_STENCIL.");
+        return;
+    }
+    if (!validateFramebufferComplete(GL_DRAW_FRAMEBUFFER)) {
         return;
     }
     gl()->clearBufferfi(buffer, drawbuffer, depth, stencil);
@@ -5410,6 +5437,10 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
         return;
     }
 
+    if (!validateFramebufferComplete(GL_READ_FRAMEBUFFER)) {
+        return;
+    }
+
     gl()->readPixels(x, y, width, height, format, type,
                      reinterpret_cast<void*>(clampToGLintptr(offset)));
 }
@@ -5519,6 +5550,10 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
         return;
     }
 
+    if (!validateFramebufferComplete(GL_READ_FRAMEBUFFER)) {
+        return;
+    }
+
     GLvoid* data = dstData->rawBuffer() + (dstOffset * elementSize);
     gl()->readPixels(x, y, width, height, format, type, data);
 }
@@ -5545,6 +5580,10 @@ void WebGL2RenderingContext::copyTexSubImage3D(GLenum target, GLint level,
     WebGLTexture* texture = getBoundTextureObject(target);
     if (!texture || !hasBoundTexture(target)) {
         setGLError(GL_INVALID_OPERATION, "No texture bound to target");
+        return;
+    }
+
+    if (!validateFramebufferComplete(GL_READ_FRAMEBUFFER)) {
         return;
     }
 

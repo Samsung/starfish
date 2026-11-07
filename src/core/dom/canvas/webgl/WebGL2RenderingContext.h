@@ -638,10 +638,22 @@ private:
     }
     void adjustShaderSourceForDriver(std::string& source) override;
     Optional<WebGLFramebuffer*> getBoundFramebuffer(GLenum target) override;
+    // shortcut: the default transform feedback object's state is not
+    // tracked, so its draws are left to the driver; track it to cover them.
+    bool isTransformFeedbackActiveUnpaused() const override
+    {
+        return m_boundTransformFeedback &&
+               m_boundTransformFeedback->isActive() &&
+               !m_boundTransformFeedback->isPaused();
+    }
     // A sampler object bound to the unit supersedes the texture's state.
     GLenum samplerMinFilter(GLuint unit,
                             const WebGLTexture* texture) const override;
 
+    // INVALID_VALUE, and false, unless drawbuffer names a buffer of
+    // `buffer` and `length` values from srcOffset hold what the driver reads.
+    bool validateClearBuffer(GLenum buffer, GLint drawbuffer, size_t length,
+                             unsigned long long srcOffset);
     bool checkUnpackFromBuffer();
     bool sliceCompressedTexData(ScriptArrayBufferView srcData,
                                 unsigned long long srcOffset,
