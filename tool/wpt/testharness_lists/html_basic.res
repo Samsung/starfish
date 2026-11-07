@@ -166,6 +166,12 @@ http://web-platform.test:8000/html/semantics/embedded-content/the-object-element
 # [auto-fail] http://web-platform.test:8000/html/semantics/embedded-content/the-object-element/historical.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-img-element/not-rendered-dimension-getter.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-img-element/nonexistent-image.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-img-element/decode/image-decode.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-img-element/decode/image-decode-path-changes.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-img-element/decode/image-decode-with-quick-attach.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/semantics/embedded-content/the-img-element/decode/image-decode-picture.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/html/semantics/embedded-content/the-img-element/decode/image-decode-iframe.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-img-element/decode/image-decode-image-document.html
 # [auto-fail] http://web-platform.test:8000/html/semantics/embedded-content/the-iframe-element/same_origin_parentage.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-iframe-element/move_iframe_in_dom_04.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-iframe-element/move_iframe_in_dom_03.html

@@ -1295,7 +1295,7 @@ Node* Document::adoptNode(Node* node)
                                DOMException::Code::NOT_SUPPORTED_ERR, nullptr);
     }
 
-    Node* oldDocument = node->document();
+    Document* oldDocument = node->document();
     if (node->parentNode()) {
         node->remove();
     }
@@ -1313,6 +1313,11 @@ Node* Document::adoptNode(Node* node)
                 }
             }
             next = Traverse::next(next, node);
+        }
+        // DOM "adopt": once every node document is set, run the adopting
+        // steps for each inclusive descendant in tree order.
+        for (Node* n = node; n; n = Traverse::next(n, node)) {
+            n->didNodeAdopted(oldDocument);
         }
     }
 

@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/dom/DOMException.h"
 #include "core/dom/Event.h"
 #include "core/dom/HTMLImageElement.h"
 #include "core/modules/canvas/image/AnimatedGIFNativeImageData.h"
@@ -31,6 +32,7 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "core/modules/message_loop/Timer.h"
+#include "core/animation/AnimationExecutor.h"
 
 namespace Starfish {
 
@@ -64,6 +66,7 @@ public:
     {
         ResourceClient::didLoadFailed();
         updateImage(m_element->document()->brokenImage(), false);
+        m_element->settlePendingDecodes(m_element->document(), false);
     }
 
     virtual void didLoadFinished()
@@ -71,6 +74,7 @@ public:
         ResourceClient::didLoadFinished();
         ImageResource* resource = m_resource->asImageResource();
         updateImage(resource->imageData(), resource->isCORSSameOrigin());
+        m_element->settlePendingDecodes(m_element->document(), true);
     }
 
     void updateImage(NativeImageData* imageData, bool isCORSSameOrigin)
@@ -302,6 +306,11 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name,
                                      attributeRemoved);
     if (name == starfish()->staticStrings()->m_src &&
         !inHTMLConstructionSite()) {
+        // A src change replaces the current request (HTML relevant mutations);
+        // the same URL keeps its image, so its decode() still succeeds.
+        if (!old || !old->equals(value)) {
+            settlePendingDecodes(document(), false);
+        }
         if (value->length() && document()->doesParticipateInRendering()) {
             loadImage(value);
         } else {
@@ -329,6 +338,7 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name,
                 corsSettingsState(attributeRemoved ? nullptr : value) &&
             srcValue->length() && !inHTMLConstructionSite() &&
             document()->doesParticipateInRendering()) {
+            settlePendingDecodes(document(), false);
             loadImage(srcValue);
         }
     }
@@ -337,6 +347,8 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name,
 void HTMLImageElement::didNodeAdopted(Document* oldDocument)
 {
     HTMLElement::didNodeAdopted(oldDocument);
+    // Adoption updates the image data (HTML img adopting steps).
+    settlePendingDecodes(oldDocument, false);
     if (document()->doesParticipateInRendering()) {
         Optional<String*> srcStr =
             getAttribute(starfish()->staticStrings()->m_src);
@@ -351,6 +363,8 @@ void HTMLImageElement::didNodeAdopted(Document* oldDocument)
 void HTMLImageElement::didNodeInsertedToDocumentTree()
 {
     HTMLElement::didNodeInsertedToDocumentTree();
+    // The reload keeps pending decode() promises: insertion is not a relevant
+    // mutation.
     auto value = src();
     if (value->length() && document()->doesParticipateInRendering()) {
         loadImage(value);
@@ -401,10 +415,12 @@ void HTMLImageElement::loadImage(String* src)
     }
 
     m_imageResource = document()->resourceLoader().fetchImage(resourceURL);
-    m_imageResource->addResourceClient(
-        new ImageDownloadClient(this, m_imageResource));
     m_elementResourceClient = new ElementResourceClient(this, m_imageResource);
     m_imageResource->addResourceClient(m_elementResourceClient);
+    // Notified after the load or error event is queued, so the decode()
+    // promises it settles follow that event, as HTML orders them.
+    m_imageResource->addResourceClient(
+        new ImageDownloadClient(this, m_imageResource));
 
     GET_EFFECTIVE_REFERRERPOLICY();
     RequestData* reqData = new RequestData();
@@ -466,6 +482,125 @@ String* HTMLImageElement::usemap()
 void HTMLImageElement::setUsemap(String* usemap)
 {
     setAttribute(starfish()->staticStrings()->m_usemap, usemap);
+}
+
+static ScriptValue encodingError(ExecutionContext* executionContext)
+{
+    // EncodingError has no legacy code, so it is made by name.
+    return (new DOMException(executionContext,
+                             String::createASCIIString(
+                                 "The source image cannot be decoded."),
+                             String::createASCIIString("EncodingError")))
+        ->scriptValue();
+}
+
+// Settles a decode() promise from a task queued with the delay the load or
+// error event's task uses, so it runs after an event queued before it.
+static void queueDecodeSettle(HTMLImageElement* element, Promise* promise,
+                              bool fulfilled)
+{
+    struct DecodeSettle : public gc {
+        DecodeSettle(Promise* promise, ScriptValue error)
+            : promise(promise)
+            , error(error)
+        {
+        }
+        Promise* promise;
+        ScriptValue error;
+    };
+    ExecutionContext* executionContext = element->executionContext();
+    executionContext->webBase()->timer()->addTimer(
+        element->document()
+            ->animationExecutor()
+            ->transformOpacityAnimationRemainTime(),
+        executionContext->globalScope(),
+        [](void* data) {
+            DecodeSettle* settle = static_cast<DecodeSettle*>(data);
+            if (settle->error) {
+                settle->promise->reject(settle->error);
+            } else {
+                settle->promise->fulfill(scriptUndefined());
+            }
+        },
+        new DecodeSettle(promise,
+                         fulfilled ? nullptr : encodingError(executionContext)),
+        false);
+}
+
+// https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-decode
+Promise* HTMLImageElement::decode()
+{
+    Promise* promise = new Promise(scriptBindingInstance());
+    // The src setter starts its fetch at once, so a decode() after it waits on
+    // that request now and a later src change rejects it; any other state is
+    // read in a microtask, as HTML does, so an adoption right after is seen.
+    if (m_imageResource && document()->isFullyActive()) {
+        checkDecode(promise);
+        return promise;
+    }
+    struct DecodeCheck : public gc {
+        DecodeCheck(HTMLImageElement* element, Promise* promise)
+            : element(element)
+            , promise(promise)
+            , replacedRequestCount(element->m_replacedRequestCount)
+        {
+        }
+        HTMLImageElement* element;
+        Promise* promise;
+        uint32_t replacedRequestCount;
+    };
+    enqueueMicrotask(
+        scriptBindingInstance(),
+        [](void* data) {
+            DecodeCheck* check = static_cast<DecodeCheck*>(data);
+            HTMLImageElement* element = check->element;
+            // The request decode() saw was replaced before this microtask.
+            if (check->replacedRequestCount !=
+                element->m_replacedRequestCount) {
+                check->promise->reject(
+                    encodingError(element->executionContext()));
+            } else {
+                element->checkDecode(check->promise);
+            }
+        },
+        new DecodeCheck(this, promise));
+    return promise;
+}
+
+void HTMLImageElement::checkDecode(Promise* promise)
+{
+    Document* doc = document();
+    if (doc->isFullyActive() && m_imageResource) {
+        doc->pendingImageDecodes().push_back(std::make_pair(this, promise));
+    } else if (doc->isFullyActive() && m_imageData && !hasRequestError() &&
+               !doc->isBrokenImage(m_imageData)) {
+        // Nothing is decoded ahead of time: a decoded bitmap held before the
+        // image is painted costs memory, so a loaded image counts as decoded.
+        queueDecodeSettle(this, promise, true);
+    } else {
+        promise->reject(encodingError(executionContext()));
+    }
+}
+
+// A document that is no longer fully active runs no tasks, so its promises
+// are dropped.
+void HTMLImageElement::settlePendingDecodes(Document* document, bool fulfilled)
+{
+    if (!fulfilled) {
+        m_replacedRequestCount++;
+    }
+    auto& pending = document->pendingImageDecodes();
+    for (size_t i = 0; i < pending.size();) {
+        if (pending[i].first != this) {
+            i++;
+            continue;
+        }
+        Promise* promise = pending[i].second;
+        pending.erase(i);
+        if (document->isFullyActive()) {
+            queueDecodeSettle(this, promise, fulfilled);
+        }
+    }
 }
 
 ResourceURL* HTMLImageElement::origin()

@@ -46,6 +46,7 @@ class Element;
 class HTMLBodyElement;
 class HTMLHeadElement;
 class HTMLHtmlElement;
+class HTMLImageElement;
 class HTMLMapElement;
 class SVGElement;
 class SVGAnimationElement;
@@ -494,6 +495,18 @@ public:
     }
 
     NativeImageData* brokenImage();
+    // Whether imageData is the placeholder a failed load leaves, without
+    // loading the placeholder.
+    bool isBrokenImage(NativeImageData* imageData)
+    {
+        return m_didLoadBrokenImage && imageData == m_brokenImage;
+    }
+    // decode() promises of this document's images that wait on a fetch;
+    // HTMLImageElement settles them when the request ends or is replaced.
+    GCTightVector<std::pair<HTMLImageElement*, Promise*>>& pendingImageDecodes()
+    {
+        return m_pendingImageDecodes;
+    }
     AnimationExecutor* animationExecutor()
     {
         return m_animationExecutor;
@@ -881,6 +894,7 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_body));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_deferredScriptElements));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_deferredSVGScriptElements));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_pendingImageDecodes));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(Document, m_pendingDynamicLoadedModules));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_moduleScripts));
@@ -960,6 +974,7 @@ protected:
         m_deferredScriptElements;
     GCVector<std::pair<SVGScriptElement*, DeferredSVGScriptDownloadClient*>>
         m_deferredSVGScriptElements;
+    GCTightVector<std::pair<HTMLImageElement*, Promise*>> m_pendingImageDecodes;
     GCVector<std::pair<ResourceURL*, DeferredScriptDownloadClient*>>
         m_pendingDynamicLoadedModules;
     GCVector<ScriptModuleData*> m_moduleScripts;

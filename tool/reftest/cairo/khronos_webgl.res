@@ -383,11 +383,11 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/readP
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2DBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2D.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2DHTMLBadArgs.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2DHTML.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texImage2DHTML.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2DBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2D.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2DHTMLBadArgs.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2DHTML.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/texSubImage2DHTML.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformfArrayLen1.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformfBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/uniformf.html

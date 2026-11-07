@@ -1,4 +1,4 @@
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/custom-elements/CustomElementRegistry-constructor-and-callbacks-are-held-strongly.html
+http://web-platform.test:8000/custom-elements/CustomElementRegistry-constructor-and-callbacks-are-held-strongly.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/custom-elements/CustomElementRegistry-getName.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/custom-elements/CustomElementRegistry.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/custom-elements/Document-createElement-customized-builtins.html
@@ -26,7 +26,7 @@ http://web-platform.test:8000/custom-elements/connected-callbacks-template.html
 # [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/custom-elements/element-internals-aria-element-reflection.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/custom-elements/element-internals-behaviors.tentative.html
 # [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/custom-elements/element-internals-shadowroot.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/custom-elements/enqueue-custom-element-callback-reactions-inside-another-callback.html
+http://web-platform.test:8000/custom-elements/enqueue-custom-element-callback-reactions-inside-another-callback.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/custom-elements/form-associated/ElementInternals-NotSupportedError.html
 # [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/custom-elements/form-associated/ElementInternals-behavior-accessibility.tentative.html
 # [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/custom-elements/form-associated/ElementInternals-form.html

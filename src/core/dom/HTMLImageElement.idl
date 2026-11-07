@@ -21,6 +21,8 @@ interface HTMLImageElement : HTMLElement {
   [Unimplemented] readonly attribute DOMString currentSrc;
   [CEReactions] attribute DOMString referrerPolicy;
 
+  Promise<undefined> decode();
+
   // https://html.spec.whatwg.org/#HTMLImageElement-partial
   [CEReactions, Rename=nameAttr] attribute DOMString name;
   [Unimplemented, CEReactions] attribute USVString lowsrc;

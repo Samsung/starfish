@@ -28,6 +28,7 @@ class NativeImageData;
 class ImageResource;
 class Document;
 class ElementResourceClient;
+class Promise;
 enum class RequestErrorType;
 
 class HTMLImageElement : public HTMLElement {
@@ -71,6 +72,8 @@ public:
 
     String* usemap();
     void setUsemap(String* usemap);
+
+    Promise* decode();
 
     bool complete()
     {
@@ -126,6 +129,8 @@ public:
 private:
     void unloadImage();
     void loadImage(String* src);
+    void checkDecode(Promise* promise);
+    void settlePendingDecodes(Document* document, bool fulfilled);
     ResourceURL* origin();
 
     static void tickAnimatedGIFFrame(void* data);
@@ -143,6 +148,9 @@ private:
     // to the image data, which several elements can share.
     size_t m_updateFrameTimer{ 0 };
     uint32_t m_updateFrameAnimationFrame{ 0 };
+    // Counts the requests that were replaced or failed, so a decode() still
+    // waiting for its microtask rejects when its request is gone.
+    uint32_t m_replacedRequestCount{ 0 };
 };
 } // namespace Starfish
 
