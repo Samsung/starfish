@@ -1813,6 +1813,7 @@ static bool isNonZeroConstantIndex(const std::string& text, size_t i,
 // all: a macro expansion makes no new one, as token pasting fails here.
 bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
                                                   std::string& out,
+                                                  std::string& code,
                                                   std::string& error)
 {
     static const char kSpaces[] = " \t\v\f";
@@ -1831,13 +1832,16 @@ bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
     size_t conditionalDepth = 0;
     std::unordered_set<std::string> macroNames;
     bool hasFunctionLikeMacro = false;
-    // The names that are surely macros: defined outside every #if group and
-    // not #undef'd since. True for an object-like one whose body has
-    // `defined`, which in an #if is an error in WebGL (KhronosGroup/WebGL#1523;
+    // The names that are surely object-like macros: defined outside every #if
+    // group and not #undef'd since. True for one whose body has `defined`,
+    // which in an #if is an error in WebGL (KhronosGroup/WebGL#1523;
     // undefined behavior in C++ [cpp.cond]).
     std::unordered_map<std::string, bool> topLevelMacros;
+    // The same for function-like macros.
+    std::unordered_set<std::string> topLevelFunctionMacros;
     out.clear();
     out.reserve(view.size());
+    code.clear();
     for (size_t line = 0; line < view.size();) {
         const size_t end =
             std::min(view.find_first_of("\r\n", line), view.size());
@@ -1876,6 +1880,7 @@ bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
             for (size_t i = line; i < end;) {
                 const size_t tokenEnd = identifierEnd(view, i);
                 if (tokenEnd == i) {
+                    code += isCode ? view[i] : ' ';
                     out += view[i++];
                     continue;
                 }
@@ -1895,14 +1900,29 @@ bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
                     bodyHasDefined = true;
                 } else if (directive == "undef" && i >= afterDirective) {
                     topLevelMacros.erase(token);
+                    topLevelFunctionMacros.erase(token);
                 }
                 const bool isMacro = macroNames.count(token);
+                // shaderLimitationError() judges only what the compiler
+                // surely sees: a macro or a name on any other line may
+                // stand for other tokens.
+                if (!isCode || isMacro) {
+                    code += '#';
+                }
+                code += token;
                 // Code may use a macro with such a name while it is surely
-                // defined, as no macro body can bring the name back; other
+                // defined, as no macro body can bring the name back, a
+                // function-like one where its `(` follows on the line; other
                 // directives never pass a name to the compiler.
+                const size_t afterToken =
+                    std::min(view.find_first_not_of(kSpaces, tokenEnd), end);
+                const bool isCalled = topLevelFunctionMacros.count(token) &&
+                                      afterToken < end &&
+                                      view[afterToken] == '(';
                 if (!isDefined && hasReservedUnderscores(token) &&
                     (directive == "define" ||
-                     (!isDirective && !topLevelMacros.count(token)))) {
+                     (!isDirective && !topLevelMacros.count(token) &&
+                      !isCalled))) {
                     error = "Reserved identifier " + token;
                     return false;
                 }
@@ -1963,11 +1983,19 @@ bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
                 i = tokenEnd;
             }
             if (!definedName.empty()) {
-                if (!conditionalDepth) {
-                    topLevelMacros[definedName] =
-                        isObjectLike && bodyHasDefined;
+                if (!conditionalDepth && isObjectLike) {
+                    topLevelMacros[definedName] = bodyHasDefined;
+                } else if (!conditionalDepth) {
+                    // Without its parentheses a function-like macro's name is
+                    // no expansion: it reaches the compiler.
+                    topLevelMacros.erase(definedName);
                 } else if (topLevelMacros.count(definedName)) {
                     topLevelMacros[definedName] = false;
+                }
+                if (!conditionalDepth && !isObjectLike) {
+                    topLevelFunctionMacros.insert(definedName);
+                } else {
+                    topLevelFunctionMacros.erase(definedName);
                 }
                 macroNames.insert(definedName);
                 hasFunctionLikeMacro |= !isObjectLike;
@@ -1982,6 +2010,7 @@ bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
         const size_t next =
             std::min(view.find_first_not_of("\r\n", end), view.size());
         out.append(view, end, next - end);
+        code += '\n';
         line = next;
     }
     return true;
@@ -2410,6 +2439,351 @@ static size_t shaderCallDepth(const std::string& view, size_t limit)
     return deepest;
 }
 
+// The columns and rows a GLSL ES 1.00 variable of `type` takes in the
+// Appendix A §7 grid (a mat2 takes two full rows); false for the types not
+// counted (samplers, structures).
+static bool packingSize(const std::string& type, int64_t& columns,
+                        int64_t& rows)
+{
+    rows = 1;
+    columns = 1;
+    if (type == "float" || type == "int" || type == "bool") {
+        return true;
+    }
+    const char n = type.empty() ? '\0' : type.back();
+    if (n < '2' || n > '4') {
+        return false;
+    }
+    const std::string base = type.substr(0, type.size() - 1);
+    if (base == "mat") {
+        rows = n - '0';
+        columns = n == '3' ? 3 : 4;
+        return true;
+    }
+    columns = n - '0';
+    return base == "vec" || base == "ivec" || base == "bvec";
+}
+
+// The GLSL ES 1.00 words that stand before the type of a declaration
+// (qualifiers), or before a name they do not declare.
+static bool isDeclarationPrefix(const std::string& token)
+{
+    static const char* const kWords[] = {
+        "const", "uniform",   "attribute", "varying", "invariant",
+        "in",    "out",       "inout",     "lowp",    "mediump",
+        "highp", "precision", "struct",    "return",  "else",
+    };
+    for (const char* word : kWords) {
+        if (token == word) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// The GLSL ES 1.00 Appendix A §4, §5 and §7 rules and the WebGL 1.0 "Maximum
+// Nesting of Structures" a driver may let through, checked on `code`
+// (shaderSourceForDriver()), where every name the preprocessor may change
+// or hide reads `#name`. Only tokens the compiler surely sees break a rule,
+// and a name is surely not a constant only if each of its declarations read
+// so far surely declares a variable, so a shader fails here only if it
+// breaks the rule. The info log, or empty.
+static std::string shaderLimitationError(const std::string& code, bool essl3,
+                                         bool isVertex, GLint maxUniformVectors,
+                                         GLint maxVaryingVectors)
+{
+    auto tokenEnd = [&code](size_t i) {
+        return code[i] == '#' ? identifierEnd(code, i + 1)
+                              : std::max(identifierEnd(code, i), i + 1);
+    };
+    std::vector<size_t> tokens; // where each token starts
+    for (size_t i = 0; i < code.size();) {
+        if (std::isspace(static_cast<unsigned char>(code[i]))) {
+            i++;
+            continue;
+        }
+        tokens.push_back(i);
+        i = tokenEnd(i);
+    }
+    // Token k, empty outside the code.
+    auto text = [&](size_t k) {
+        return k < tokens.size()
+                   ? code.substr(tokens[k], tokenEnd(tokens[k]) - tokens[k])
+                   : std::string();
+    };
+    auto isName = [](const std::string& t) {
+        return !t.empty() && isIdentifierCharacter(t[0]) &&
+               (t[0] < '0' || t[0] > '9');
+    };
+
+    enum : uint8_t {
+        kVariable = 1,      // declared without const
+        kLoopIndex = 2,     // declared in a for header
+        kMaybeConstant = 4, // const, or declared in a way not read here
+        kUniform = 8,
+        kRedeclared = 16,
+    };
+    // What the declarations read so far say of each name.
+    std::unordered_map<std::string, uint8_t> names;
+    auto bitsOf = [&names](const std::string& name) {
+        const auto it = names.find(name);
+        return it == names.end() ? 0 : it->second;
+    };
+    std::unordered_set<std::string> used; // names read outside declarations
+    std::unordered_map<std::string, int> structDepths;
+    struct Variable {
+        std::string name;
+        int64_t columns;
+        int64_t rows;
+        bool isUniform;
+    };
+    // GLSL ES 1.00 Appendix A §7 counts these once a fragment shader reads
+    // them.
+    std::vector<Variable> packed = { { "gl_FragCoord", 4, 1, false },
+                                     { "gl_FrontFacing", 1, 1, false },
+                                     { "gl_PointCoord", 2, 1, false } };
+    struct Open {
+        size_t token;
+        int deepestField;
+        bool hasVariable;
+    };
+    std::vector<Open> open;  // the unclosed ( [ {
+    size_t cleanFrom = 0;    // the token after the last #name
+    uint8_t declaration = 0; // what further declarators of a statement get
+    size_t declarationLevel = 0;
+    std::string declarationType;
+    char storage = 0; // 'u' or 'v' in a uniform or varying declaration
+
+    // Whether token m is a name surely not a constant: every declaration of
+    // it read so far, unless `exempt`, is of a variable, and it is no field,
+    // call or structure.
+    auto isSurelyVariable = [&](size_t m, uint8_t exempt) {
+        const uint8_t bits = bitsOf(text(m));
+        return (bits & (kVariable | kLoopIndex)) && !(bits & exempt) &&
+               text(m - 1) != "." && text(m + 1) != "(" && text(m + 1) != ".";
+    };
+
+    for (size_t k = 0; k < tokens.size(); k++) {
+        const std::string token = text(k);
+        if (token[0] == '#') {
+            cleanFrom = k + 1;
+            names[token.substr(1)] |= kMaybeConstant;
+            // The macro may have started a declaration.
+            declaration = kMaybeConstant;
+            declarationLevel = open.size();
+            continue;
+        }
+        if (isName(token)) {
+            const std::string prev = text(k - 1);
+            if (prev == ".") {
+                continue; // a field or swizzle
+            }
+            if (prev[0] == '#') {
+                names[token] |= kMaybeConstant;
+                continue;
+            }
+            // The type of a field (GLSL ES 1.00 §4.1.8).
+            if ((prev == "{" || prev == ";" || prev == "lowp" ||
+                 prev == "mediump" || prev == "highp") &&
+                !open.empty() && structDepths.count(token) &&
+                !(bitsOf(token) & kMaybeConstant)) {
+                open.back().deepestField =
+                    std::max(open.back().deepestField, structDepths[token]);
+            }
+            uint8_t bits = 0;
+            if (isName(prev) && !isDeclarationPrefix(prev) &&
+                text(k + 1) != "(") {
+                // `prev` is the type of a variable or parameter.
+                size_t j = k - 2;
+                bool isConst = false;
+                bool isUniform = false;
+                bool isVarying = false;
+                for (; isDeclarationPrefix(text(j)); j--) {
+                    isConst |= text(j) == "const";
+                    isUniform |= text(j) == "uniform";
+                    isVarying |= text(j) == "varying";
+                }
+                const std::string context = text(j);
+                const bool isStatement = context.empty() || context == ";" ||
+                                         context == "{" || context == "}";
+                if (context == "(" && text(j - 1) == "for") {
+                    bits = kLoopIndex;
+                } else if (isStatement || context == "(" || context == ",") {
+                    bits = isConst ? kMaybeConstant
+                                   : kVariable | (isUniform ? kUniform : 0);
+                } else {
+                    bits = kMaybeConstant;
+                }
+                declaration = isStatement ? bits : 0;
+                declarationLevel = open.size();
+                declarationType = prev;
+                storage = isUniform ? 'u' : isVarying ? 'v' : 0;
+            } else if (declaration && (prev == "," || prev == "}") &&
+                       open.size() == declarationLevel) {
+                bits = declaration; // a further declarator
+            } else {
+                used.insert(token);
+                if (!open.empty() &&
+                    isSurelyVariable(k, kMaybeConstant | kLoopIndex)) {
+                    open.back().hasVariable = true;
+                }
+                continue;
+            }
+            uint8_t& known = names[token];
+            known |= bits | (known ? kRedeclared : 0);
+            int64_t columns = 0;
+            int64_t rows = 0;
+            int64_t size = 1;
+            if ((declaration & kVariable) && storage &&
+                packingSize(declarationType, columns, rows)) {
+                if (text(k + 1) == "[") {
+                    const std::string length = text(k + 2);
+                    size_t i = 0;
+                    if (text(k + 3) != "]" ||
+                        !readIntegerExpression(length, i, length.size(), 0, 1,
+                                               size) ||
+                        i != length.size()) {
+                        size = 0;
+                    }
+                }
+                if (size > 0) {
+                    packed.push_back(
+                        { token, columns, rows * size, storage == 'u' });
+                }
+            }
+            continue;
+        }
+        if (token == ";") {
+            declaration = 0;
+        }
+        if (token == "(" || token == "[" || token == "{") {
+            open.push_back({ k, 0, false });
+            continue;
+        }
+        if ((token != ")" && token != "]" && token != "}") || open.empty()) {
+            continue;
+        }
+        const Open o = open.back();
+        open.pop_back();
+        if (o.hasVariable && !open.empty()) {
+            open.back().hasVariable = true;
+        }
+        const char opener = token == ")" ? '(' : token == "]" ? '[' : '{';
+        if (code[tokens[o.token]] != opener) {
+            continue;
+        }
+        const bool isClean = o.token >= cleanFrom;
+        if (opener == '[' && isClean && o.hasVariable && !essl3) {
+            // Any integer may index a uniform in a vertex shader (Appendix
+            // A §5).
+            // shortcut: a vertex shader's index is judged only right after a
+            // plain name; follow a field, column or call to its root to judge
+            // those too.
+            const uint8_t target = bitsOf(text(o.token - 1));
+            if (!isVertex ||
+                (cleanFrom + 1 < o.token && text(o.token - 2) != "." &&
+                 (target & kVariable) &&
+                 !(target & (kUniform | kMaybeConstant)))) {
+                return "Index expression must be a constant-index-expression";
+            }
+        }
+        if (opener == '(' && isClean && text(o.token - 1) == "for" && !essl3) {
+            // The loop index is initialized, compared and changed with
+            // constant expressions only (Appendix A §4).
+            // shortcut: the other §4 forms (no declaration, an assignment in
+            // the body) are left to the driver.
+            size_t parts[4] = { o.token, 0, 0, k };
+            size_t semicolons = 0;
+            int depth = 0;
+            for (size_t m = o.token + 1; m < k; m++) {
+                const std::string t = text(m);
+                if (t == "for") {
+                    // A syntax error, left to the driver; stopping here also
+                    // reads each token in one header only.
+                    semicolons = 0;
+                    break;
+                }
+                depth += (t == "(" || t == "[") - (t == ")" || t == "]");
+                if (t == ";" && !depth && ++semicolons < 3) {
+                    parts[semicolons] = m;
+                }
+            }
+            for (size_t p = 0; semicolons == 2 && p < 3; p++) {
+                size_t m = parts[p] + 1;
+                while (m < parts[p + 1] && code[tokens[m]] != '<' &&
+                       code[tokens[m]] != '>' && code[tokens[m]] != '=' &&
+                       code[tokens[m]] != '!') {
+                    m++;
+                }
+                for (m++; m < parts[p + 1]; m++) {
+                    if (isSurelyVariable(m, kMaybeConstant)) {
+                        return "Loop index can only be initialized, compared "
+                               "and changed with constant expressions";
+                    }
+                }
+            }
+        }
+        const bool isNamedStruct =
+            isName(text(o.token - 1)) && text(o.token - 2) == "struct";
+        if (opener == '{' && (isNamedStruct || text(o.token - 1) == "struct")) {
+            // Unread fields leave a structure at least 1 deep.
+            const int depth = isClean ? 1 + o.deepestField : 1;
+            if (depth > 4) {
+                return "Structures are nested more than 4 levels deep";
+            }
+            // Its declarators may be const or uniform.
+            declaration = kMaybeConstant;
+            declarationLevel = open.size();
+            if (isNamedStruct) {
+                // A name defined again, in an inner scope, counts its
+                // shallower definition.
+                const auto it =
+                    structDepths.emplace(text(o.token - 1), depth).first;
+                it->second = std::min(it->second, depth);
+            }
+        }
+    }
+    if (essl3) {
+        return std::string();
+    }
+
+    // Appendix A §7 with the limits getParameter() reports (WebGL 1.0
+    // "Packing Restrictions"). As other browsers do, a shader counts the
+    // variables it reads and no literal constants, and a fragment shader the
+    // varyings it reads, at compile time: the spec counts the varyings both
+    // shaders read, at link.
+    // shortcut: only conditions the algorithm needs are checked (no variable
+    // taller than the grid, 3- and 4-column variables on rows of their own,
+    // all registers), so a set that fails only by fragmentation reaches the
+    // driver; run the algorithm to catch those.
+    auto exceeds = [&](bool uniforms, int64_t maxRows) {
+        int64_t wideRows = 0;
+        int64_t cells = 0;
+        for (const Variable& variable : packed) {
+            if (variable.isUniform != uniforms || !used.count(variable.name) ||
+                (bitsOf(variable.name) & kRedeclared)) {
+                continue;
+            }
+            if (variable.rows > maxRows) {
+                return true;
+            }
+            wideRows += variable.columns >= 3 ? variable.rows : 0;
+            cells += variable.columns * variable.rows;
+            if (wideRows > maxRows || cells > 4 * maxRows) {
+                return true;
+            }
+        }
+        return false;
+    };
+    if (maxUniformVectors > 0 && exceeds(true, maxUniformVectors)) {
+        return "Uniforms exceed the GLSL ES 1.00 packing limit";
+    }
+    if (maxVaryingVectors > 0 && exceeds(false, maxVaryingVectors)) {
+        return "Varyings exceed the GLSL ES 1.00 packing limit";
+    }
+    return std::string();
+}
+
 void WebGLRenderingContext::compileShader(WebGLShader* shader)
 {
     ENTER_CONTEXT_SCOPE();
@@ -2464,8 +2838,9 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
     }
 
     std::string driverSource;
+    std::string code;
     std::string error;
-    if (!shaderSourceForDriver(view, driverSource, error)) {
+    if (!shaderSourceForDriver(view, driverSource, code, error)) {
         shader->setCompileFailed(true);
         shader->setInfoLog(error);
         return;
@@ -2494,6 +2869,30 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
             }
         }
         line = end == std::string::npos ? end : end + 1;
+    }
+
+    GLint shaderType = 0;
+    m_gl->getShaderiv(shader->glObject(), GL_SHADER_TYPE, &shaderType);
+    const bool essl3 = webGLVersion() >= 2 && isESSL3Source(view);
+    const bool isVertex = shaderType != GL_FRAGMENT_SHADER;
+    // The GLSL ES 1.00 Appendix A §7 grid has the rows getParameter()
+    // reports (WebGL 1.0 "Packing Restrictions").
+    GLint maxUniformVectors = 0;
+    GLint maxVaryingVectors = 0;
+    if (!essl3) {
+        m_gl->getIntegerv(isVertex ? GL_MAX_VERTEX_UNIFORM_VECTORS
+                                   : GL_MAX_FRAGMENT_UNIFORM_VECTORS,
+                          &maxUniformVectors);
+        if (!isVertex) {
+            m_gl->getIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryingVectors);
+        }
+    }
+    error = shaderLimitationError(code, essl3, isVertex, maxUniformVectors,
+                                  maxVaryingVectors);
+    if (!error.empty()) {
+        shader->setCompileFailed(true);
+        shader->setInfoLog(error);
+        return;
     }
 
     if (webGLVersion() >= 2) {
@@ -2558,8 +2957,6 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
         // 3. Default zero initialization for vertex shader outputs:
         // WebGL 2.0 Transform Feedback specification requires that unwritten
         // output variables default to zero.
-        GLint shaderType = 0;
-        m_gl->getShaderiv(shader->glObject(), GL_SHADER_TYPE, &shaderType);
         if (shaderType == GL_VERTEX_SHADER &&
             driverSource.find("#version 300 es") != std::string::npos) {
             std::string& compiledSrc = driverSource;

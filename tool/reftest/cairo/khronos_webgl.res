@@ -226,15 +226,15 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/non-ascii.
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/re-compile-re-link.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-precision-format-obeyed.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-struct-scope.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-constant-expression-loop-conditions.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-constant-expression-loop-conditions.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-invariance.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-mis-matching-uniforms.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-mis-matching-varyings.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-missing-varyings.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-uniform-structs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shaders-with-varyings.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-uniform-packing-restrictions.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-varying-packing-restrictions.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-uniform-packing-restrictions.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-varying-packing-restrictions.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-256-character-define.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-256-character-identifier.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-257-character-define.html
@@ -290,7 +290,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-wit
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-similar-uniform-array-names.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-too-many-uniforms.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-undefined-preprocessor-symbol.frag.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-uniform-in-loop-condition.vert.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-uniform-in-loop-condition.vert.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-vec2-return-value.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-vec3-return-value.frag.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-with-vec4-return-value.frag.html
@@ -305,7 +305,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shader-wit
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/shared.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/struct-equals.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/struct-mixed-array-declarators.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/struct-nesting-exceeds-maximum.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/struct-nesting-exceeds-maximum.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/struct-nesting-of-variable-names.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/struct-nesting-under-maximum.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/glsl/misc/struct-specifiers-in-uniforms.html
@@ -399,7 +399,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/verte
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/vertexAttrib.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/vertexAttribPointerBadArgs.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/functions/vertexAttribPointer.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/more/glsl/arrayOutOfBounds.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/more/glsl/arrayOutOfBounds.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/more/glsl/uniformOutOfBounds.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/ogles/GL/abs/abs_001_to_006.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/ogles/GL/acos/acos_001_to_006.html

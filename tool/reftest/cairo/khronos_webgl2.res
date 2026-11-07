@@ -232,8 +232,8 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/re-compile
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/sequence-operator-returns-constant.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-precision-format-obeyed.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-struct-scope.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-uniform-packing-restrictions.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-varying-packing-restrictions.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-uniform-packing-restrictions.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-varying-packing-restrictions.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-256-character-define.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-256-character-identifier.frag.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-_webgl-identifier.vert.html?webglVersion=2
@@ -287,7 +287,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-wit
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-too-many-uniforms.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-two-initializer-types.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-undefined-preprocessor-symbol.frag.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-uniform-in-loop-condition.vert.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-uniform-in-loop-condition.vert.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-vec2-return-value.frag.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-vec3-return-value.frag.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-vec4-return-value.frag.html?webglVersion=2
@@ -299,7 +299,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-wit
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-webgl-identifier.vert.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-while-loop.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-without-precision.frag.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-constant-expression-loop-conditions.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-constant-expression-loop-conditions.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-invariance.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-mis-matching-uniforms.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-mis-matching-varyings.html?webglVersion=2
@@ -307,7 +307,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-wi
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-uniform-structs.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shaders-with-varyings.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shared.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-nesting-exceeds-maximum.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-nesting-exceeds-maximum.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/struct-nesting-under-maximum.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-short-circuiting-operators.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/misc/shader-with-global-variable-precision-mismatch.html?webglVersion=2
@@ -712,7 +712,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/verte
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/vertexAttribBadArgs.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/vertexAttribPointer.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/functions/vertexAttribPointerBadArgs.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/more/glsl/arrayOutOfBounds.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/more/glsl/arrayOutOfBounds.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/more/glsl/uniformOutOfBounds.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/arrays.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/deqp/data/gles3/shaders/conditionals.html?webglVersion=2

@@ -452,10 +452,12 @@ private:
     bool isTexSubImageTypeAllowed(GLenum target, GLint level, GLenum format,
                                   GLenum type);
     // The text the driver compiles for a shader whose source reads as `view`
-    // (the source as the preprocessor reads it); false with `error` when the
+    // (the source as the preprocessor reads it) and, in `code`, the lines the
+    // compiler surely sees as they are, with every other name and every macro
+    // name as `#name` (shaderLimitationError()); false with `error` when the
     // shader fails to compile instead.
     bool shaderSourceForDriver(const std::string& view, std::string& out,
-                               std::string& error);
+                               std::string& code, std::string& error);
     bool isShaderExtensionEnabled(const std::string& name);
     void appendExtensionDirective(const std::string& view, size_t line,
                                   size_t rest, size_t end, std::string& out);
