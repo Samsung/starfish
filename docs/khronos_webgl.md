@@ -103,7 +103,9 @@ suite. The harness creates a WebGL 1 context unless that query says
 otherwise, so without it the `conformance/` half of the suite — and the
 `conformance2/glsl3` shader pages — would re-run as WebGL 1 tests. Keep the
 query on new lines. The 1.0.3 list needs none: that runner asks for WebGL 1,
-the default.
+the default. The sdk list is bare for the same reason, but its harness also
+runs most pages as WebGL 2 (2.0.1), and each such page gets a second line
+with the query.
 
 ## Upgrading the pin
 

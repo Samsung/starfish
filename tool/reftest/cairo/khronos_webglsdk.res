@@ -3,8 +3,10 @@ http://localhost:11010/sdk/tests/conformance2/textures/misc/compressed-tex-from-
 http://localhost:11010/sdk/tests/conformance2/uniforms/gl-uniform-arrays-sub-source.html
 http://localhost:11010/sdk/tests/conformance/extensions/webgl-compressed-texture-astc.html
 http://localhost:11010/sdk/tests/conformance/extensions/webgl-compressed-texture-etc.html
+http://localhost:11010/sdk/tests/conformance/extensions/webgl-compressed-texture-etc.html?webglVersion=2
 http://localhost:11010/sdk/tests/conformance/extensions/angle-instanced-arrays-out-of-bounds.html
 http://localhost:11010/sdk/tests/conformance/rendering/draw-elements-out-of-bounds.html
+http://localhost:11010/sdk/tests/conformance/rendering/draw-elements-out-of-bounds.html?webglVersion=2
 http://localhost:11010/sdk/tests/conformance/extensions/angle-instanced-arrays.html
 http://localhost:11010/sdk/tests/conformance2/attribs/invalid-vertex-attribs.html
 http://localhost:11010/sdk/tests/conformance2/textures/misc/pbo-texture-uploads.html
