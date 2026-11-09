@@ -19,6 +19,7 @@ import fnmatch
 import os
 import subprocess
 import sys
+import tempfile
 import platform
 
 from argparse import ArgumentParser
@@ -144,8 +145,8 @@ KHRONOS_INJECT_INTO = ("/js-test-pre.js", "/more/unit.js")
 # Each worker drives a GL context, and software Mesa (llvmpipe) has its
 # own rasterizer threads. Avoid full host cpu_count() parallelism, which
 # previously made passing tests time out through CPU oversubscription.
-# CI bounds llvmpipe separately with LP_NUM_THREADS=4; keep an explicit
-# eight-test budget so short tests can progress alongside long GL tests.
+# Default to eight tests so short tests can progress alongside long ones.
+# CI sets --khronos-jobs and LP_NUM_THREADS for each runner pool separately.
 KHRONOS_WEBGL_JOBS = 8
 
 # Per-test timeout (seconds) for the Khronos WebGL suites only. The basic
@@ -182,6 +183,36 @@ def vendor_test_khronos2():
 
 def vendor_test_khronossdk():
     run_vendor_test_khronos("tool/reftest/cairo/khronos_webglsdk.res")
+
+
+def khronos_smoke_test():
+    run_vendor_test_khronos("tool/reftest/cairo/khronos_webgl_smoke.res")
+
+
+def _khronos_partition(deqp):
+    # Keep the curated lists authoritative, including their known failures.
+    # A temporary list retains comment markers so -f has the same meaning.
+    with tempfile.TemporaryDirectory(prefix="starfish-khronos-") as directory:
+        for name in ("khronos_webgl.res", "khronos_webgl2.res",
+                     "khronos_webglsdk.res"):
+            with open(join(working_directory, "tool/reftest/cairo", name)) as source:
+                lines = [line for line in source
+                         if line.lstrip("# ").startswith("http")
+                         and ("/deqp/" in line.lstrip("# ").split()[0]) == deqp]
+            if not lines:
+                continue
+            path = join(directory, name)
+            with open(path, "w") as output:
+                output.writelines(lines)
+            run_vendor_test_khronos(path)
+
+
+def khronos_conformance_test():
+    _khronos_partition(False)
+
+
+def khronos_deqp_test():
+    _khronos_partition(True)
 
 
 # Not part of vendor_test()/reftest_all(): CI runs this in its own job, since
@@ -566,7 +597,8 @@ if __name__ == "__main__":
     for key, value in list(locals().items()):
         if callable(value) and value.__module__ == __name__:
             if key not in ["file_len", "print_columns", "print_table",
-                           "run_test", "run_vendor_test_khronos", "_wpt_serve_run",
+                           "run_test", "run_vendor_test_khronos",
+                           "_khronos_partition", "_wpt_serve_run",
                            "_wpt_serve_run_groups", "_wpt_collect",
                            "_wpt_manifest_run"]:
                 test_functions.append(key)
@@ -596,7 +628,14 @@ if __name__ == "__main__":
         default="test_result.txt",
         help="Set a file name to record passed tests",
     )
+    parser.add_argument(
+        "--khronos-jobs", type=int, default=KHRONOS_WEBGL_JOBS,
+        help="Number of parallel Khronos WebGL tests (default: 8)",
+    )
     args = parser.parse_args()
+    if args.khronos_jobs < 1:
+        parser.error("--khronos-jobs must be positive")
+    KHRONOS_WEBGL_JOBS = args.khronos_jobs
 
     if args.timeout > 0:
         os.environ[ENVOPTS.TIMEOUT] = str(args.timeout)

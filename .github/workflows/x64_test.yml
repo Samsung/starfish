@@ -315,11 +315,10 @@ jobs:
         run: |
           xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py reftest_all || exit 1
 
-  # WebGL uses its own Release + Wasm JIT build; the other suites keep
-  # their Debug artifacts. Keep a separate budget for the GL-heavy tests.
+  # Build once for both WebGL test jobs; other suites keep Debug artifacts.
   # See docs/khronos_webgl.md for the conformance lists and result bridge.
-  test_khronos_webgl:
-    timeout-minutes: 90
+  build_khronos_webgl:
+    timeout-minutes: 30
     runs-on: [ code-linux, code-2xlarge ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
@@ -350,11 +349,6 @@ jobs:
       - name: Extract thirdparty submodules
         run: tar xzf thirdparty.tar.gz
 
-      - name: Checkout WebGL conformance submodule
-        env:
-          BART_API_KEY: ${{ secrets.BART_API_KEY }}
-        run: ./tool/ci/cache_webgl.sh
-
       - name: Build Release Starfish with Wasm JIT
         timeout-minutes: 30
         run: |
@@ -364,13 +358,101 @@ jobs:
             -DWORKER=1 -DIDB=1 -DUSE_FFMPEG_MEDIA_PLAYER=1 -DAUDIO_WORKLET=1 -DWEBCRYPTO=1
           cmake --build out/webgl-ci --target starfish.executable --parallel
 
-      - name: Run khronos_test
+      - name: Package WebGL Release artifact
+        run: |
+          tar czf starfish-x64_gcc_webgl_release.tar.gz \
+            out/webgl-ci/bin/lightweight-web-engine out/webgl-ci/lib/*.so*
+
+      - uses: CODE-Actions/upload-artifact@v2
+        with:
+          name: starfish-x64_gcc_webgl_release
+          path: starfish-x64_gcc_webgl_release.tar.gz
+
+  test_khronos_webgl:
+    needs: build_khronos_webgl
+    timeout-minutes: 60
+    runs-on: [ code-linux, code-2xlarge ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+
+    steps:
+      - name: Checkout source..
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          allow-unsafe-pr-checkout: true
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
+      - uses: CODE-Actions/download-artifact@v2
+        with:
+          name: starfish-x64_gcc_webgl_release
+
+      - name: Extract WebGL Release artifact
+        run: tar xzf starfish-x64_gcc_webgl_release.tar.gz
+
+      - name: Checkout WebGL conformance submodule
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: ./tool/ci/cache_webgl.sh
+
+      - name: Run khronos_conformance_test
         timeout-minutes: 60
         env:
           STARFISH_BIN: ./out/webgl-ci/bin/lightweight-web-engine
           LP_NUM_THREADS: "4"
         run: |
-          xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py khronos_test || exit 1
+          xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py khronos_conformance_test --khronos-jobs 8 || exit 1
+
+  test_khronos_deqp:
+    needs: build_khronos_webgl
+    timeout-minutes: 60
+    runs-on: [ self-hosted, linux ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+
+    steps:
+      - name: Checkout source..
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          allow-unsafe-pr-checkout: true
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
+      - uses: CODE-Actions/download-artifact@v2
+        with:
+          name: starfish-x64_gcc_webgl_release
+
+      - name: Extract WebGL Release artifact
+        run: tar xzf starfish-x64_gcc_webgl_release.tar.gz
+
+      - name: Checkout WebGL conformance submodule
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: ./tool/ci/cache_webgl.sh
+
+      - name: Run khronos_deqp_test
+        timeout-minutes: 60
+        env:
+          STARFISH_BIN: ./out/webgl-ci/bin/lightweight-web-engine
+          LP_NUM_THREADS: "2"
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          GALLIUM_DRIVER: llvmpipe
+        run: |
+          xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py khronos_deqp_test --khronos-jobs 26 || exit 1
 
   test_wpt_serve_testharness_and_crashtest:
     needs: build_x64

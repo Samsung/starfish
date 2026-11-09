@@ -679,10 +679,20 @@ The [Khronos WebGL conformance suites](https://github.com/KhronosGroup/WebGL)
 (1.0.3, 2.0.0 and the development `sdk/tests`) are pinned as the
 `third_party/webgl` submodule and served unmodified; `./tool/runner/test_runner.py
 khronos_test` runs the curated lists in `tool/reftest/cairo/khronos_webgl*.res`
-against a `-DWEBGL=1` build. GCC and Clang CI build this suite separately
-with `-DCMAKE_BUILD_TYPE=Release -DENABLE_WASM=1 -DWALRUS_JIT=ON` and run
-`out/webgl-ci/bin/lightweight-web-engine`; other x64 suites use their Debug
-artifacts. CI runs up to eight tests concurrently with `LP_NUM_THREADS=4`.
+against a `-DWEBGL=1` build. GCC CI builds once with
+`-DCMAKE_BUILD_TYPE=Release -DENABLE_WASM=1 -DWALRUS_JIT=ON` on the company
+runner and publishes the executable and libraries. Two test jobs reuse
+`out/webgl-ci/bin/lightweight-web-engine`: `khronos_deqp_test` runs on a
+self-hosted Linux runner with 26 parallel tests and `LP_NUM_THREADS=2`,
+forcing software Mesa llvmpipe; `khronos_conformance_test` runs the remaining
+tests on the company runner with 8 parallel tests and `LP_NUM_THREADS=4`.
+The split preserves all active tests and known-failure comments. Run either
+suite locally under `xvfb-run`; use `--khronos-jobs 26` for dEQP parallelism.
+Clang CI reuses the existing
+`starfish-x64_clang_debug` artifact and runs `khronos_smoke_test`, a 20-test
+subset covering WebGL 1, WebGL 2 and the SDK. Run it locally with
+`./tool/runner/test_runner.py khronos_smoke_test` under the same `xvfb-run`
+wrapper. Clang keeps 8 parallel tests with `LP_NUM_THREADS=4`.
 See `docs/khronos_webgl.md` for how results are collected and how to move
 the pin.
 
