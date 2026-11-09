@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<body>
+    <iframe src="./same_origin_01_iframe.html" frameborder="0"></iframe>
+</body>
+<script>
+    // test for same origin policy with two opaque origin.
+    function receiveMessage(event) {
+        console.log(event.data);
+        event.data.forEach(element => {
+            if (element == false) {
+                testAssert(false);
+            }
+        });
+        testAssert(true);
+        testEnd();
+    }
+    window.addEventListener("message", receiveMessage, false);
+
+</script>
+
+</html>

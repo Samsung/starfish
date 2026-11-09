@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<!--
+  Once a scroll gesture starts (threshold crossed), subsequent touchmove
+  events must not reach JS. The first touchmove that crosses the threshold
+  fires touchcancel instead, and no further touchmove arrives.
+  Tested via the mouse path (simulateMouseMove) since touch simulation is
+  not available; the scroll logic is shared.
+-->
+<head>
+<style>
+  body { margin: 0; }
+  #scroller {
+    width: 200px;
+    height: 100px;
+    overflow-y: scroll;
+  }
+  #content {
+    width: 200px;
+    height: 400px;
+    background: lightyellow;
+  }
+</style>
+</head>
+<body>
+  <div id="scroller">
+    <div id="content"></div>
+  </div>
+
+  <script>
+    var movesAfterScrollStart = 0;
+    var scrollStarted = false;
+
+    document.getElementById("scroller").addEventListener("mousemove", function () {
+      if (scrollStarted) {
+        movesAfterScrollStart++;
+      }
+    });
+
+    function testStart() {
+      simulateMouseDown(100, 80);
+      // These moves cross the threshold and start scrolling.
+      simulateMouseMove(100, 60);
+      simulateMouseMove(100, 40);
+      scrollStarted = true;
+      // These moves arrive after scroll has started — must not reach JS.
+      simulateMouseMove(100, 30);
+      simulateMouseMove(100, 20);
+      simulateMouseUp(100, 20);
+
+      setTimeout(function () {
+        testAssert(movesAfterScrollStart === 0);
+        testEnd();
+      }, 100);
+    }
+  </script>
+</body>
+</html>

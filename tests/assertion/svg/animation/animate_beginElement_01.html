@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>SVG Animation Sample</title>
+</head>
+
+<body>
+    <svg width="350" height="100">
+        <circle id="target" cx="10" cy="50" r="10" fill="red">
+            <animate id="animate1" attributeName="cx" from="10" to="100" dur="1s" fill="freeze" />
+            <animate id="animate2" attributeName="cy" from="10" to="100" dur="1s" fill="freeze" />
+        </circle>
+    </svg>
+
+</body>
+<script type="text/javascript">
+    let startTime, endTime;
+    let frames = [];
+    let state = "none"
+    const reasonableExpectedFrameCount = 20; // 1초 동안 20프레임 이상이어야 함
+    const epsilon = 100; // 허용 오차 범위 100ms end event 구현이 없으므로 테스트에서 100ms 오차 허용
+
+    function percentSTRToFloat(str) {
+        return parseFloat(str.replace("px", "")) / 100;
+    }
+
+    function captureFrame() {
+        const elapsedTime = performance.now() - startTime;
+        const progress = elapsedTime / 1000;
+        const cx = getComputedStyle(target).cx;
+        const cy = getComputedStyle(target).cy;
+
+        frames.push({
+            cx,
+            cy
+        });
+
+        if (progress < 1 || state == "start") {
+            requestAnimationFrame(captureFrame);
+        }
+    }
+
+    let animate1BeginCount = 0;
+    animate1.addEventListener('beginEvent', () => {
+        console.log("Start")
+        requestAnimationFrame(captureFrame);
+        startTime = performance.now();
+        state = "start";
+        animate1BeginCount++;
+        testAssert(animate1BeginCount == 1);
+    });
+
+
+    let animate2BeginCount = 0;
+    animate2.addEventListener('beginEvent', () => {
+        animate2BeginCount++;
+        testAssert(animate2BeginCount == 1);
+    });
+
+    // endEvent미구현으로 대신 setTimeout사용 함
+    setTimeout(() => {
+        state = "stop";
+        endTime = performance.now();
+
+        totalElapsedTime = endTime - startTime;
+        let diff = 1000 - totalElapsedTime;
+
+        if (!(Math.abs(diff) < epsilon)) {
+            // 허용 오차 범위 100ms 보다 event 간격이 크면 테스트 실패
+            console.log("1")
+            testAssert(false);
+        }
+
+        if (frames.length <= reasonableExpectedFrameCount) {
+            // 1초 동안 20프레임 이상이어야 함
+            console.log("2")
+            testAssert(false);
+        }
+        let oldCx = percentSTRToFloat(frames[0].cx);
+        let oldCy = percentSTRToFloat(frames[0].cy);
+        console.log(`frames.length: ${frames.length}`)
+        for (let i = 1; i < frames.length - 1; i++) {
+            // 각 프레임의 rx, ry 값이 이전 프레임보다 커져야 함
+            let cx = percentSTRToFloat(frames[i].cx);
+            let cy = percentSTRToFloat(frames[i].cy);
+            if (!(oldCx < cx && oldCy < cy)) {
+                testAssert(false);
+                console.log(oldCx)
+                console.log(cx)
+                console.log(oldCy)
+                console.log(cy)
+            }
+            oldCx = cx;
+            oldCy = cy;
+        }
+        // 테스트 종료
+        testEnd();
+    }, 1000);
+</script>
+
+</html>

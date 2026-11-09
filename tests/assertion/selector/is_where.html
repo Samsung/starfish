@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>:is() / :where() selector matching and specificity</title>
+</head>
+
+<body>
+  <div id="or1" class="a1"></div>
+  <div id="or2" class="c1"></div>
+
+  <div id="specId" class="c2"></div>
+
+  <div id="specZero" class="token"></div>
+
+  <div id="nested" class="a3"></div>
+
+  <div id="forgive1" class="a4"></div>
+  <div id="forgive2" class="b4"></div>
+
+  <section><div id="comb1" class="x5"></div></section>
+  <div id="comb2" class="x5"></div>
+
+  <div id="invalidateParent"><div id="invalidate" class="card6"></div></div>
+
+  <style>
+    /* (2) :is(#specId, .c2) — id branch beats class branch specificity,
+       so this later, more specific rule wins over .c2 below. */
+    .c2 { color: rgb(0, 0, 255); }
+    :is(#specId, .c2) { color: rgb(255, 0, 0); }
+
+    /* (3) :where(.token) — always contributes zero specificity, so it must
+       lose to the class rule below regardless of declaration order. */
+    .token { color: rgb(0, 128, 0); }
+    :where(.token) { color: rgb(255, 0, 0); }
+
+    /* (7) :is() wrapping a structural pseudo-class (:first-child) must still
+       trigger a restyle when a sibling is inserted/removed, i.e. the
+       structural pseudo's DOM-tree invalidation flag must propagate out
+       through :is()'s per-branch match result. */
+    .card6:is(:first-child) { color: rgb(255, 0, 0); }
+    .card6 { color: rgb(0, 0, 255); }
+  </style>
+
+  <script>
+
+    // Starfish's test build provides testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (e.g. a regular browser like Chrome),
+    // shim a custom testEnd() that tallies console.assert results and reports
+    // the verdict to the console and the document title, so the same file runs
+    // and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) {
+          __pass++;
+        } else {
+          __fail++;
+          __nativeAssert(false, msg);
+        }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[is_where] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // (1) :is(.a, .b) OR matching.
+    console.assert(document.getElementById('or1').matches(':is(.a1, .b1)'),
+      ':is(.a1, .b1) should match an element with class a1');
+    console.assert(document.getElementById('or2').matches(':is(.a1, .c1)'),
+      ':is(.a1, .c1) should match an element with class c1 (second branch)');
+    console.assert(!document.getElementById('or1').matches(':is(.q1, .z1)'),
+      ':is(.q1, .z1) should not match an element with neither class');
+
+    // (2) :is(#id, .c) specificity = highest branch (id beats class).
+    var specIdColor = getComputedStyle(document.getElementById('specId')).color;
+    console.assert(specIdColor === 'rgb(255, 0, 0)',
+      ':is(#specId, .c2) should win via id-level specificity (got ' + specIdColor + ')');
+
+    // (3) :where(...) contributes zero specificity, so the plain class rule
+    // (declared earlier, but with nonzero specificity) wins.
+    var specZeroColor = getComputedStyle(document.getElementById('specZero')).color;
+    console.assert(specZeroColor === 'rgb(0, 128, 0)',
+      ':where(.token) should contribute zero specificity, losing to .token (got ' + specZeroColor + ')');
+
+    // (4) nested :is(:is(.a)).
+    console.assert(document.getElementById('nested').matches(':is(:is(.a3))'),
+      'nested :is(:is(.a3)) should match an element with class a3');
+
+    // (5) forgiving parsing: an invalid branch is dropped, not fatal.
+    console.assert(document.getElementById('forgive1').matches(':is(.a4, :bogus-xyz, .b4)'),
+      ':is(.a4, :bogus-xyz, .b4) should still match via the .a4 branch');
+    console.assert(document.getElementById('forgive2').matches(':is(.a4, :bogus-xyz, .b4)'),
+      ':is(.a4, :bogus-xyz, .b4) should still match via the .b4 branch');
+
+    // (6) combinator argument: :is(section .x5).
+    console.assert(document.getElementById('comb1').matches(':is(section .x5)'),
+      ':is(section .x5) should match a .x5 element that is a descendant of section');
+    console.assert(!document.getElementById('comb2').matches(':is(section .x5)'),
+      ':is(section .x5) should not match a .x5 element outside a section');
+
+    // (7) :is(:first-child) restyle-on-mutation: DOM-tree damage source must
+    // propagate out of the branch match so inserting a new first sibling
+    // correctly invalidates the old first-child's style.
+    var invalidateEl = document.getElementById('invalidate');
+    var beforeColor = getComputedStyle(invalidateEl).color;
+    console.assert(beforeColor === 'rgb(255, 0, 0)',
+      '.card6:is(:first-child) should initially match as the only/first child (got ' + beforeColor + ')');
+    var newFirst = document.createElement('div');
+    document.getElementById('invalidateParent').insertBefore(newFirst, invalidateEl);
+    var afterColor = getComputedStyle(invalidateEl).color;
+    console.assert(afterColor === 'rgb(0, 0, 255)',
+      '.card6:is(:first-child) should stop matching (and restyle) after a sibling is inserted before it (got ' + afterColor + ')');
+
+    testEnd();
+
+  </script>
+</body>
+
+</html>

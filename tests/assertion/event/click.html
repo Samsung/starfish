@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+<style>
+
+#test {
+position: absolute;
+left: 50px;
+top: 50px;
+width: 100px;
+height: 100px;
+background: yellow;
+}
+
+</style>
+
+<body>
+
+<div>
+click event fire test
+</div>
+
+<div id="test" onclick="clickCount++; testAssert('clickCount == 1')">
+#test
+</div>
+
+</body>
+
+<script>
+
+var clickCount = 0;
+
+var test = document.getElementById("test");
+
+console.log(test.onclick)
+
+test.addEventListener("click", function() {
+clickCount++;
+testAssert("clickCount == 2")
+});
+
+
+console.log("test touchEvent Disaptch");
+window.simulateClick(80, 80);
+testAssert("clickCount == 2");
+
+window.onclick = function() { console.log("window.onclick"); clickCount++; testAssert("clickCount == 4");  }
+document.onclick = function() { console.log("document.onclick"); clickCount++; testAssert("clickCount == 3"); }
+document.body.onclick = function() { testAssert(false) }
+console.log("test touch outside of Document");
+window.simulateClick(500, 500);
+testAssert("clickCount == 4");
+testEnd();
+
+</script>
+
+
+</html>

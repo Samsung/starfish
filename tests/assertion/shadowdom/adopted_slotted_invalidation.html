@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>adoptedStyleSheets invalidates ::slotted() outside the first style resolution</title>
+  <style>
+    body { margin: 0; }
+    .box { display: inline-block; width: 40px; height: 40px; }
+  </style>
+</head>
+
+<body>
+  <!-- A ::slotted() rule delivered via adoptedStyleSheets is promoted to the
+     document resolver just like one delivered via <style>/innerHTML (see
+     StyleResolver::invalidateShadowScopeForSheetChange, which
+     syncAdoptedSheetsToCascade delegates to). Both cases below force a style
+     resolution BEFORE the adopted sheet carrying the rule is set, so a bug
+     that only restyles the shadow tree's own light-DOM structure (and misses
+     slotted children living outside it) would leave these stale. -->
+
+  <!-- Case 1: adopt a ::slotted() sheet after the host already has a style. -->
+  <div id="hostA"><div id="childA" class="box"></div></div>
+
+  <script>
+    var hostA = document.getElementById('hostA');
+    var childA = document.getElementById('childA');
+    var srA = hostA.attachShadow({ mode: 'open' });
+    srA.appendChild(document.createElement('slot'));
+
+    function bg(id) {
+      var el = document.getElementById(id);
+      el.offsetTop; // force the first style resolution before adopting a sheet
+      return getComputedStyle(el).backgroundColor;
+    }
+
+    // Force case 1's first resolution with no adopted sheet at all.
+    bg('childA');
+
+    var sheetA = new CSSStyleSheet();
+    sheetA.replaceSync('::slotted(*) { background: green; }');
+    srA.adoptedStyleSheets = [sheetA];
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs
+    // the test. When that harness is absent (other browser), shim a custom
+    // testEnd() that tallies console.assert results and reports the verdict,
+    // so the same file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[adopted_slotted_invalidation] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    console.assert(bg('childA') === 'rgb(0, 128, 0)',
+      'Case 1: ::slotted() from a sheet adopted after the first resolution must apply (got ' +
+      bg('childA') + ')');
+
+    // Case 2: clearing adoptedStyleSheets drops the ::slotted() contribution
+    // -- it must not outlive the sheet it came from.
+    srA.adoptedStyleSheets = [];
+    console.assert(bg('childA') === 'rgba(0, 0, 0, 0)',
+      'Case 2: ::slotted() must stop applying once its adopted sheet is cleared (got ' +
+      bg('childA') + ')');
+
+    testEnd();
+  </script>
+</body>
+
+</html>

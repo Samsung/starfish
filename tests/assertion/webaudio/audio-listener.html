@@ -1,0 +1,57 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Web Audio listener</title>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Web Audio listener complete";
+    };
+}
+
+if (typeof OfflineAudioContext !== "function") {
+    testEnd();
+} else {
+    const context = new OfflineAudioContext(2, 256, 8000);
+    const listener = context.listener;
+    console.assert(listener !== undefined, "Listener exists");
+    if (listener === undefined) {
+        testEnd();
+    } else {
+    console.assert(listener === context.listener, "Listener identity is stable");
+    const defaults = [0, 0, 0, 0, 0, -1, 0, 1, 0];
+    const names = ["positionX", "positionY", "positionZ", "forwardX",
+                   "forwardY", "forwardZ", "upX", "upY", "upZ"];
+    names.forEach(function (name, index) {
+        const param = listener[name];
+        console.assert(param !== undefined, name + " exists");
+        if (!param) {
+            return;
+        }
+        console.assert(param.value === defaults[index], name + " default");
+        console.assert(param.defaultValue === defaults[index],
+                       name + " defaultValue");
+        console.assert(param.automationRate === "a-rate",
+                       name + " automation rate");
+    });
+    listener.setPosition(1, 2, 3);
+    listener.setOrientation(4, 5, 6, 7, 8, 9);
+    console.assert(listener.positionX.value === 1 &&
+                   listener.positionY.value === 2 &&
+                   listener.positionZ.value === 3,
+                   "setPosition updates all coordinates");
+    console.assert(listener.forwardX.value === 4 &&
+                   listener.forwardY.value === 5 &&
+                   listener.forwardZ.value === 6 &&
+                   listener.upX.value === 7 &&
+                   listener.upY.value === 8 &&
+                   listener.upZ.value === 9,
+                   "setOrientation updates both vectors");
+    listener.positionX.setValueAtTime(10, 0.01);
+    context.startRendering().then(function () {
+        console.assert(listener.positionX.value === 10,
+                       "Listener parameter timeline advances");
+        testEnd();
+    });
+    }
+}
+</script>

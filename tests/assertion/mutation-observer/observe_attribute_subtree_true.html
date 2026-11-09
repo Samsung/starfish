@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+</head>
+
+<body>
+    <div id="target">
+        <div id="child"> </div>
+    </div>
+</body>
+<script>
+
+    const attrs = ['data-foo', 'style']
+    const observer = new MutationObserver((mutations) => {
+        testAssert(mutations.length == 2)
+        let idx = 0;
+        mutations.forEach((mutation) => {
+            testAssert(mutation.type == 'attributes');
+            testAssert(mutation.target.id == 'child');
+            testAssert(mutation.attributeName == attrs[idx++]);
+        });
+        testEnd();
+    });
+
+    observer.observe(target, {
+        attributes: true,
+        subtree: true
+    });
+
+    child.setAttribute("data-foo", "");
+    child.setAttribute("style", "background-color: black");
+
+    setTimeout(() => {
+        testAssert(false);
+        testEnd();
+    }, 1000);
+</script>
+
+</html>

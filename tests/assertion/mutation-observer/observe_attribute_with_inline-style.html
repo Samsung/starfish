@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+</head>
+
+<body>
+    <div id="target">
+    </div>
+</body>
+<script>
+    function testStart() {
+        const target = document.getElementById("target");
+        const observer = new MutationObserver((mutations) => {
+            testAssert(mutations.length == 1)
+            mutations.forEach((mutation) => {
+                testAssert(mutation.type == 'attributes');
+                testAssert(mutation.target.id == 'target');
+                testAssert(mutation.attributeName == 'style');
+                testAssert(mutation.oldValue == null);
+            });
+            testEnd();
+        });
+
+        observer.observe(target, {
+            attributes: true,
+        });
+
+        target.style['background-color'] = 'black';
+    }
+</script>
+
+</html>

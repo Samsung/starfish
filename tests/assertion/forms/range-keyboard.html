@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>input type=range: keyboard operation</title>
+</head>
+<body>
+<input id="r" type="range" min="0" max="100" step="5" value="50">
+<input id="rtl" type="range" min="0" max="10" value="5" dir="rtl">
+<input id="any" type="range" min="0" max="1" step="any" value="0.5">
+<script>
+  var r = document.getElementById("r");
+  var events = [];
+  r.addEventListener("input", function () { events.push("input:" + r.value); });
+  r.addEventListener("change", function () { events.push("change:" + r.value); });
+
+  function press(el, key) {
+    el.focus();
+    simulateKeyDown(key);
+    simulateKeyUp(key);
+  }
+
+  function run() {
+    press(r, "ArrowRight");
+    console.assert(r.value === "55", "ArrowRight steps up: " + r.value);
+    press(r, "ArrowUp");
+    console.assert(r.value === "60", "ArrowUp steps up: " + r.value);
+    press(r, "ArrowLeft");
+    console.assert(r.value === "55", "ArrowLeft steps down: " + r.value);
+    press(r, "ArrowDown");
+    console.assert(r.value === "50", "ArrowDown steps down: " + r.value);
+    console.assert(events.join(",") === "input:55,change:55,input:60,change:60,input:55,change:55,input:50,change:50",
+                   "input then change per key: " + events.join(","));
+
+    events = [];
+    press(r, "PageUp");
+    console.assert(r.value === "60", "PageUp jumps a tenth of the range: " + r.value);
+    press(r, "PageDown");
+    console.assert(r.value === "50", "PageDown jumps back: " + r.value);
+    press(r, "End");
+    console.assert(r.value === "100", "End goes to the maximum: " + r.value);
+    press(r, "End");
+    console.assert(r.value === "100", "End at the maximum stays: " + r.value);
+    console.assert(events.join(",") === "input:60,change:60,input:50,change:50,input:100,change:100",
+                   "no events when the value does not change: " + events.join(","));
+    press(r, "Home");
+    console.assert(r.value === "0", "Home goes to the minimum: " + r.value);
+    press(r, "ArrowLeft");
+    console.assert(r.value === "0", "ArrowLeft at the minimum stays: " + r.value);
+
+    var rtl = document.getElementById("rtl");
+    press(rtl, "ArrowRight");
+    console.assert(rtl.value === "4", "ArrowRight steps down in rtl: " + rtl.value);
+    press(rtl, "ArrowLeft");
+    console.assert(rtl.value === "5", "ArrowLeft steps up in rtl: " + rtl.value);
+    press(rtl, "ArrowUp");
+    console.assert(rtl.value === "6", "ArrowUp still steps up in rtl: " + rtl.value);
+
+    var any = document.getElementById("any");
+    press(any, "ArrowRight");
+    console.assert(any.value === "0.51", "step=any moves a hundredth of the range: " + any.value);
+
+    // The keys the control acts on reach script under their UI Events names.
+    var seen = {};
+    r.addEventListener("keydown", function (e) { seen[e.key] = e.code + "/" + e.keyCode; });
+    ["Home", "End", "PageUp", "PageDown"].forEach(function (k) { press(r, k); });
+    console.assert(seen.Home === "Home/36" && seen.End === "End/35" && seen.PageUp === "PageUp/33" && seen.PageDown === "PageDown/34",
+                   "key, code and keyCode of Home/End/PageUp/PageDown: " + JSON.stringify(seen));
+
+    r.disabled = true;
+    r.value = "50";
+    press(r, "ArrowRight");
+    console.assert(r.value === "50", "a disabled control ignores keys: " + r.value);
+
+    var ev = events.length;
+    r.disabled = false;
+    r.value = "50";
+    events = [];
+    r.addEventListener("keydown", function (e) { e.preventDefault(); }, { once: true });
+    press(r, "ArrowRight");
+    console.assert(r.value === "50", "preventDefault on keydown stops the step: " + r.value);
+    console.assert(events.length === 0, "and fires no events");
+
+    testEnd();
+  }
+
+  window.onload = function () {
+    if (typeof simulateKeyDown !== "function") {
+      return;
+    }
+    requestAnimationFrame(function () { requestAnimationFrame(run); });
+  };
+</script>
+</body>
+</html>

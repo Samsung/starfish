@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+</head>
+
+<body>
+
+</body>
+<script>
+    function testStart() {
+        let test1 = document.createElement('div');
+        testAssert(test1.hasAttribute('data-test') == false);
+        testAssert(test1.toggleAttribute('data-test') == true);
+        testAssert(test1.hasAttribute('data-test') == true);
+
+        let test2 = document.createElement('div');
+        test2.setAttribute('data-test', 'value');
+        testAssert(test2.hasAttribute('data-test') == true);
+        testAssert(test2.toggleAttribute('data-test') == false);
+        testAssert(test2.hasAttribute('data-test') == false);
+
+        let test3 = document.createElement('div');
+        test3.setAttribute('data-test', 'value');
+        testAssert(test3.hasAttribute('data-test') == true);
+        testAssert(test3.toggleAttribute('data-test', false) == false);
+        testAssert(test3.hasAttribute('data-test') == false);
+
+
+        let test4 = document.createElement('div');
+        testAssert(test4.hasAttribute('data-test') == false);
+        testAssert(test4.toggleAttribute('data-test', true) == true);
+        testAssert(test4.hasAttribute('data-test') == true);
+        testEnd();
+    }
+    testStart()
+</script>
+
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<script>
+  function testStart() {
+    var svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    var length = svgElement.createSVGLength();
+
+    length.valueAsString = "10";
+    testAssert(length.valueInSpecifiedUnits == 10);
+    testAssert(length.unitType == SVGLength.SVG_LENGTHTYPE_NUMBER);
+
+    length.valueAsString = "20px";
+    testAssert(length.valueInSpecifiedUnits == 20);
+    testAssert(length.unitType == SVGLength.SVG_LENGTHTYPE_PX);
+
+    length.valueAsString = "30cm";
+    testAssert(length.valueInSpecifiedUnits == 30);
+    testAssert(length.unitType == SVGLength.SVG_LENGTHTYPE_CM);
+
+    length.valueAsString = "40mm";
+    testAssert(length.valueInSpecifiedUnits == 40);
+    testAssert(length.unitType == SVGLength.SVG_LENGTHTYPE_MM);
+
+    length.valueAsString = "50in";
+    testAssert(length.valueInSpecifiedUnits == 50);
+    testAssert(length.unitType == SVGLength.SVG_LENGTHTYPE_IN);
+
+    length.valueAsString = "60pc";
+    testAssert(length.valueInSpecifiedUnits == 60);
+    testAssert(length.unitType == SVGLength.SVG_LENGTHTYPE_PC);
+
+    length.valueAsString = "70pt";
+    testAssert(length.valueInSpecifiedUnits == 70);
+    testAssert(length.unitType == SVGLength.SVG_LENGTHTYPE_PT);
+
+    length.valueAsString = "80%";
+    testAssert(length.valueInSpecifiedUnits == 80);
+    testAssert(length.unitType == SVGLength.SVG_LENGTHTYPE_PERCENTAGE);
+
+    testEnd();
+  }
+</script>

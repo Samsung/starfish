@@ -1,0 +1,65 @@
+<p hidden id="hiddentest">
+  ⛔ Your browser doesn't support <code>shadowrootmode</code> attribute yet.
+</p>
+
+<article id="t1">
+  <style>
+    p {
+      padding: 8px;
+      background-color: red;
+    }
+  </style>
+  <template><style>
+      p {
+        padding: 8px;
+        background-color: green;
+      }
+    </style>
+  </template>
+
+  <p>I'm in the DOM.</p>
+</article>
+
+<article id="t2">
+  <template shadowrootmode="open">
+    <style>
+      p {
+        padding: 8px;
+        background-color: blue;
+      }
+    </style>
+    <p>I'm in the shadow DOM.</p>
+  </template>
+</article>
+
+<article id="t3">
+  <template shadowrootmode="open">
+    <p>I'm in the shadow DOM 2.</p>
+  </template>
+</article>
+
+<script>
+console.assert(hiddentest.getBoundingClientRect().width == 0)
+console.assert(hiddentest.getBoundingClientRect().height == 0)
+console.assert(hiddentest.hasAttribute("hidden"))
+
+hiddentest.hidden = false;
+console.assert(hiddentest.getBoundingClientRect().width != 0)
+console.assert(hiddentest.getBoundingClientRect().height != 0)
+console.assert(!hiddentest.hasAttribute("hidden"))
+
+hiddentest.setAttribute("hidden", "asdf")
+console.assert(hiddentest.getBoundingClientRect().width == 0)
+console.assert(hiddentest.getBoundingClientRect().height == 0)
+console.assert(hiddentest.getAttribute("hidden") == "asdf")
+hiddentest.hidden = true;
+console.assert(hiddentest.getAttribute("hidden") == "")
+
+console.assert(window.getComputedStyle(t1.querySelector("p")).backgroundColor == 'rgb(255, 0, 0)')
+console.assert(window.getComputedStyle(t2.shadowRoot.querySelector("p")).backgroundColor == 'rgb(0, 0, 255)')
+console.assert(window.getComputedStyle(t3.shadowRoot.querySelector("p")).backgroundColor == 'rgba(0, 0, 0, 0)')
+
+testEnd();
+
+</script>
+

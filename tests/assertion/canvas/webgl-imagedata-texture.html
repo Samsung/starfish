@@ -1,0 +1,96 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebGL ImageData texture upload</title>
+<canvas id="canvas" width="2" height="2"></canvas>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0, __firstError = '';
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) {
+      __pass++;
+    } else {
+      __fail++;
+      if (!__firstError) __firstError = message;
+      __nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[webgl-imagedata-texture] ' + verdict);
+    document.title = verdict + (__firstError ? ': ' + __firstError : '');
+  };
+}
+
+var gl = document.getElementById('canvas').getContext('webgl2');
+console.assert(!!gl, 'WebGL2 context is required');
+if (gl) {
+  var data = new ImageData(new Uint8ClampedArray([
+    255, 0, 0, 255, 0, 255, 0, 255,
+    0, 0, 255, 255, 255, 255, 255, 255
+  ]), 2, 2);
+  var texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, data);
+  var error = gl.getError();
+  console.assert(error === gl.NO_ERROR, 'RGBA8 ImageData upload error: ' + error);
+
+  var framebuffer = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                          gl.TEXTURE_2D, texture, 0);
+  var pixel = new Uint8Array(4);
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+  console.assert(pixel[0] === 255 && pixel[1] === 0 && pixel[2] === 0 &&
+                 pixel[3] === 255, 'ImageData pixel mismatch: ' + pixel);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.RGBA, gl.FLOAT, data);
+  error = gl.getError();
+  console.assert(error === gl.NO_ERROR, 'RGBA32F ImageData upload error: ' + error);
+
+  gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.FLOAT, data);
+  error = gl.getError();
+  console.assert(error === gl.NO_ERROR, 'RGBA32F ImageData sub-upload error: ' + error);
+
+  function shader(type, source) {
+    var result = gl.createShader(type);
+    gl.shaderSource(result, source);
+    gl.compileShader(result);
+    console.assert(gl.getShaderParameter(result, gl.COMPILE_STATUS),
+                   'Shader compilation failed: ' + gl.getShaderInfoLog(result));
+    return result;
+  }
+  var vertex = shader(gl.VERTEX_SHADER,
+    '#version 300 es\n' +
+    'void main() {\n' +
+    '  vec2 points[3] = vec2[3](vec2(-1., -1.), vec2(3., -1.), vec2(-1., 3.));\n' +
+    '  gl_Position = vec4(points[gl_VertexID], 0., 1.);\n' +
+    '}');
+  var fragment = shader(gl.FRAGMENT_SHADER,
+    '#version 300 es\n' +
+    'precision highp float;\n' +
+    'uniform sampler2D sourceTexture;\n' +
+    'out vec4 color;\n' +
+    'void main() { color = texelFetch(sourceTexture, ivec2(1, 0), 0); }');
+  var program = gl.createProgram();
+  gl.attachShader(program, vertex);
+  gl.attachShader(program, fragment);
+  gl.linkProgram(program);
+  console.assert(gl.getProgramParameter(program, gl.LINK_STATUS),
+                 'Program link failed: ' + gl.getProgramInfoLog(program));
+  gl.useProgram(program);
+  gl.uniform1i(gl.getUniformLocation(program, 'sourceTexture'), 0);
+  gl.viewport(0, 0, 2, 2);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+  console.assert(pixel[0] === 0 && pixel[1] === 255 && pixel[2] === 0 &&
+                 pixel[3] === 255, 'RGBA32F sampled pixel mismatch: ' + pixel);
+  error = gl.getError();
+  console.assert(error === gl.NO_ERROR, 'RGBA32F draw/read error: ' + error);
+}
+testEnd();
+</script>

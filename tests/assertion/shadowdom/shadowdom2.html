@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<body>
+<div id="host1"></div>
+<button onclick="test()">
+add
+</button>
+</body>
+
+<script>
+if(!console.assert) {
+  console.assert = testAssert.bind(this)
+}
+
+console.assert(host1.getBoundingClientRect().height == 0)
+
+const host = document.querySelector("#host1");
+const shadow = host.attachShadow({ mode: "open" });
+const span = document.createElement("span");
+span.textContent = "Asdf";
+shadow.appendChild(span);
+
+let oldHost1Height = host1.getBoundingClientRect().height;
+
+function test()
+{
+  var btn = document.createElement("div");
+  btn.textContent="Asdf";
+  shadow.appendChild(btn);
+}
+
+test()
+test()
+
+console.assert(oldHost1Height * 3 == host1.getBoundingClientRect().height)
+
+testEnd()
+
+</script>
+</html>

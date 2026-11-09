@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<!--
+  Touch input arrives in window coordinates, but hit testing operates in
+  page coordinates: the document scroll offset must be added before the hit
+  test (the mouse path already does this). With the document scrolled, a
+  tap must hit the element visually under the finger, not the element at a
+  point shifted up by the scroll offset.
+-->
+<head>
+<style>
+  body {
+    margin: 0;
+    height: 3000px;
+  }
+
+  #target {
+    position: absolute;
+    top: 1000px;
+    left: 100px;
+    width: 100px;
+    height: 50px;
+    background-color: orange;
+  }
+</style>
+</head>
+<body>
+  <div id="target"></div>
+</body>
+
+<script>
+  var targetClicked = false;
+
+  document.getElementById("target").addEventListener("click", function() {
+    targetClicked = true;
+  });
+
+  function testStart() {
+    window.scrollTo(0, 950);
+
+    setTimeout(function() {
+      // Window coordinates: the target spans page y [1000, 1050], so with
+      // the document scrolled to 950 it spans window y [50, 100].
+      simulateClick(150, 75);
+
+      setTimeout(function() {
+        testAssert(targetClicked === true);
+        testEnd();
+      }, 100);
+    }, 100);
+  }
+</script>
+</html>

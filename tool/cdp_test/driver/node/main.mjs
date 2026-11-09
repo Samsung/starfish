@@ -30,7 +30,7 @@ if (!wsUrl || !suiteDir || !testPath || !targetBaseURLArg) {
 const timeoutMs = (Number(timeoutArg) || 30) * 1000;
 
 // The suite, including the harness Chromium ships with it, is checked out in
-// the test submodule rather than beside this file.
+// the third_party/blink checkout rather than beside this file.
 const VENDORED = resolve(suiteDir, 'resources/inspector-protocol-test.js');
 
 const output = [];

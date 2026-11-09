@@ -1,0 +1,23 @@
+<!--STARFISH_ENABLE_OBSOLETE_SPEC-->
+<body>
+a
+</body>
+<style>
+body {
+width: 100px;
+height: 100px;
+}
+</style>
+<script>
+
+document.body.onclick = function(event) {
+  console.log(window.event)
+  testAssert(event == window.event);
+  wptTestEnd();
+}
+
+testAssert(typeof window.event == "undefined");
+
+simulateClick(50, 50);
+
+</script>

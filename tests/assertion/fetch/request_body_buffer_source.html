@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A fetch() request body reaches the server unchanged, whatever it was made of</title>
+</head>
+<body>
+  <!-- fetch spec #body-mixin: a buffer source (ArrayBuffer / ArrayBufferView)
+       body is a byte sequence, so it must go out byte for byte instead of
+       taking a UTF-8 round trip through a string; a request built from another
+       request keeps that body and its URL; and a method that allows a body but
+       is used without one still sends.
+
+       The document loads over file:// and talks to the test runner's
+       http_server (tool/runner/test_runner.py: internal_test(), port 11011).
+       Its /echo path answers with a description of the request that arrived:
+         {"method","contentType","contentLength","bodyHex","bodyLen"}
+       so the test can compare what was received against what it sent. -->
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and reports the
+    // verdict. When that harness is absent (other browser), shim a testEnd()
+    // that tallies console.assert results, so the same file runs and reports
+    // anywhere -- start the echo server by hand first:
+    //   python3 tool/runner/http_server.py -d <any dir> --bind localhost 11011
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[request_body_buffer_source] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    var ECHO = 'http://localhost:11011/echo';
+
+    // Not valid UTF-8: a body that is carried as a string on the way out comes
+    // back mangled here, where one made of plain ASCII would still match.
+    var RAW = [0x00, 0xff, 0x80, 0x41, 0xe2, 0x28, 0xa1, 0xf0, 0x9f, 0x92, 0xa9];
+    var RAW_HEX = '00ff8041e228a1f09f92a9';
+
+    function bytes() { return new Uint8Array(RAW); }
+
+    function hex(view) {
+      var s = '';
+      for (var i = 0; i < view.length; i++) {
+        s += (view[i] < 16 ? '0' : '') + view[i].toString(16);
+      }
+      return s;
+    }
+
+    function utf8Hex(text) {
+      var utf8 = unescape(encodeURIComponent(text)), s = '';
+      for (var i = 0; i < utf8.length; i++) {
+        var c = utf8.charCodeAt(i);
+        s += (c < 16 ? '0' : '') + c.toString(16);
+      }
+      return s;
+    }
+
+    // A request that never leaves the engine leaves its promise pending
+    // forever. Without a deadline that shows up only as the runner's watchdog
+    // killing the process minutes later, with nothing said about which step
+    // hung.
+    function withDeadline(promise, what) {
+      return new Promise(function (resolve, reject) {
+        var settled = false;
+        var timer = setTimeout(function () {
+          if (!settled) {
+            settled = true;
+            reject(new Error(what + ' got no response within 10s (stalled)'));
+          }
+        }, 10000);
+        promise.then(function (v) {
+          if (!settled) { settled = true; clearTimeout(timer); resolve(v); }
+        }, function (e) {
+          if (!settled) { settled = true; clearTimeout(timer); reject(e); }
+        });
+      });
+    }
+
+    // Resolves with the echo server's account of the request that arrived.
+    function echo(what, input, init) {
+      return withDeadline(fetch(input, init), what).then(function (res) {
+        console.assert(res.ok, what + ' expected a 200 response, got ' + res.status);
+        return withDeadline(res.text(), what + ' response body');
+      }).then(function (text) {
+        return JSON.parse(text);
+      });
+    }
+
+    // 1. A typed-array body arrives as the exact bytes it holds.
+    function typedArrayBody() {
+      return echo('Uint8Array body', ECHO, { method: 'POST', body: bytes() })
+        .then(function (r) {
+          console.assert(r.method === 'POST',
+            'a body-carrying fetch keeps its method, got ' + r.method);
+          console.assert(r.bodyHex === RAW_HEX,
+            'Uint8Array body arrives byte for byte, sent ' + RAW_HEX +
+            ' got ' + r.bodyHex);
+          // fetch #bodyinit-safely-extract gives a buffer source no
+          // Content-Type. LWE sends one anyway because the request leaves
+          // through libcurl's CURLOPT_POSTFIELDS, which fills in a default of
+          // its own -- below the fetch layer, so reported, not asserted.
+          if (r.contentType) {
+            console.log('[request_body_buffer_source] NOTE: buffer source sent ' +
+              'Content-Type: ' + r.contentType + ' (spec: none)');
+          }
+        });
+    }
+
+    // 2. So does a whole ArrayBuffer.
+    function arrayBufferBody() {
+      return echo('ArrayBuffer body', ECHO, { method: 'POST', body: bytes().buffer })
+        .then(function (r) {
+          console.assert(r.bodyHex === RAW_HEX,
+            'ArrayBuffer body arrives byte for byte, sent ' + RAW_HEX +
+            ' got ' + r.bodyHex);
+        });
+    }
+
+    // 3. A view sends its own range, not the buffer behind it.
+    function viewWithOffset() {
+      var view = bytes().subarray(2, 6); // 80 41 e2 28
+      var want = hex(view);
+      return echo('view with byteOffset', ECHO, { method: 'POST', body: view })
+        .then(function (r) {
+          console.assert(r.bodyLen === 4,
+            'a view sends only its own length, expected 4 got ' + r.bodyLen);
+          console.assert(r.bodyHex === want,
+            'a view sends its own range, sent ' + want + ' got ' + r.bodyHex);
+        });
+    }
+
+    // 4. A DataView is a buffer source too.
+    function dataViewBody() {
+      var dv = new DataView(bytes().buffer, 1, 3); // ff 80 41
+      return echo('DataView body', ECHO, { method: 'POST', body: dv })
+        .then(function (r) {
+          console.assert(r.bodyHex === 'ff8041',
+            'DataView body sends its own range, sent ff8041 got ' + r.bodyHex);
+        });
+    }
+
+    // 5. A clone of a request with a buffer-source body is a usable request:
+    //    same URL, same method, same bytes on the wire.
+    function clonedRequest() {
+      var req = new Request(ECHO, { method: 'POST', body: bytes().buffer });
+      var clone = req.clone();
+      console.assert(clone.url === req.url,
+        'a clone keeps the URL, clone ' + clone.url + ' original ' + req.url);
+      console.assert(clone.method === 'POST',
+        'a clone keeps the method, got ' + clone.method);
+      return echo('cloned request', clone).then(function (r) {
+        console.assert(r.bodyHex === RAW_HEX,
+          'a clone sends the same bytes, sent ' + RAW_HEX + ' got ' + r.bodyHex);
+      });
+    }
+
+    // 6. Same for a request constructed from another request.
+    function requestFromRequest() {
+      var req = new Request(ECHO, { method: 'POST', body: 'hello' });
+      var copy = new Request(req);
+      console.assert(copy.url === req.url,
+        'a request built from a request keeps its URL, copy ' + copy.url +
+        ' original ' + req.url);
+      console.assert(copy.method === 'POST',
+        'a request built from a request keeps its method, got ' + copy.method);
+    }
+
+    // 7. A method that allows a body, used without one, still sends.
+    function bodylessPost() {
+      return echo('bodyless POST', ECHO, { method: 'POST' }).then(function (r) {
+        console.assert(r.method === 'POST',
+          'a bodyless POST arrives as a POST, got ' + r.method);
+        console.assert(r.bodyLen === 0,
+          'a bodyless POST carries no body, got ' + r.bodyLen + ' bytes');
+      });
+    }
+
+    // 8. A string body still goes out as UTF-8 text/plain.
+    function stringBody() {
+      var text = 'hello 안녕';
+      var want = utf8Hex(text);
+      return echo('string body', ECHO, { method: 'POST', body: text })
+        .then(function (r) {
+          console.assert(r.bodyHex === want,
+            'a string body goes out as UTF-8, sent ' + want + ' got ' + r.bodyHex);
+          console.assert(/text\/plain/.test(r.contentType || ''),
+            'a string body sends Content-Type text/plain, got ' + r.contentType);
+        });
+    }
+
+    // 9. PUT carries a buffer source the same way POST does.
+    function putBufferBody() {
+      return echo('PUT buffer body', ECHO, { method: 'PUT', body: bytes() })
+        .then(function (r) {
+          console.assert(r.method === 'PUT',
+            'a PUT arrives as a PUT, got ' + r.method);
+          console.assert(r.bodyHex === RAW_HEX,
+            'PUT sends its buffer source byte for byte, sent ' + RAW_HEX +
+            ' got ' + r.bodyHex);
+        });
+    }
+
+    // 10. GET has no body to send.
+    function getHasNoBody() {
+      return echo('GET', ECHO).then(function (r) {
+        console.assert(r.method === 'GET', 'GET arrives as a GET, got ' + r.method);
+        console.assert(r.bodyLen === 0,
+          'GET carries no body, got ' + r.bodyLen + ' bytes');
+      });
+    }
+
+    var TESTS = [
+      typedArrayBody,
+      arrayBufferBody,
+      viewWithOffset,
+      dataViewBody,
+      clonedRequest,
+      requestFromRequest,
+      bodylessPost,
+      stringBody,
+      putBufferBody,
+      getHasNoBody
+    ];
+
+    // One at a time, so a stall or a crash names the step it happened in.
+    TESTS.reduce(function (chain, test) {
+      return chain.then(test);
+    }, Promise.resolve()).then(function () {
+      testEnd();
+    }, function (e) {
+      console.assert(false, 'test run stopped: ' + e);
+      testEnd();
+    });
+
+  </script>
+</body>
+</html>

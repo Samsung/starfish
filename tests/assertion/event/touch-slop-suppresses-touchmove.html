@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<!--
+  The touch-slop threshold suppresses touchmove events for small movements so
+  that slight finger jitter during a tap does not reach JS (and cancel e.g.
+  MUI ripple animations).  A move of 10px from the down point is within the
+  default 20px slop and must NOT dispatch touchmove to the page.
+-->
+<head>
+<style>
+  body { margin: 0; }
+  #target { width: 200px; height: 200px; background: lightyellow; }
+</style>
+</head>
+<body>
+  <div id="target"></div>
+</body>
+<script>
+  var touchMoveCount = 0;
+  document.getElementById("target").addEventListener("touchmove", function() {
+    touchMoveCount++;
+  });
+
+  function testStart() {
+    simulateTouchStart(100, 100);
+    // 10px movement — within the 20px slop, must be suppressed
+    simulateTouchMove(110, 100);
+    simulateTouchMove(108, 102);
+    simulateTouchEnd(110, 100);
+
+    setTimeout(function() {
+      testAssert(touchMoveCount === 0);
+      testEnd();
+    }, 100);
+  }
+</script>
+</html>

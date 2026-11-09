@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        #container {
+            width: 100px;
+            height: 100px;
+            background-color: red;
+        }
+
+        #target {
+            width: 100px;
+            height: 100%;
+            background-color: green;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="container">
+        <div id="target"></div>
+    </div>
+</body>
+<script>
+    function testStart() {
+        // max
+        target.style['width'] = "max(10px, 50px)"
+        testAssert(getComputedStyle(target)["width"] == "50px");
+
+        target.style['width'] = "max(10px, 50px + 100px)"
+        testAssert(getComputedStyle(target)["width"] == "150px");
+
+        target.style['width'] = "max(10px, 10px * 10)"
+        testAssert(getComputedStyle(target)["width"] == "100px");
+
+        target.style['width'] = "max(50px + 50px, 100px - 90px)"
+        testAssert(getComputedStyle(target)["width"] == "100px");
+
+        target.style['width'] = "max(10px, 50px + max(50px, 200px))"
+        testAssert(getComputedStyle(target)["width"] == "250px");
+
+        // min
+        target.style['width'] = "min(10px, 50px)"
+        testAssert(getComputedStyle(target)["width"] == "10px");
+
+        target.style['width'] = "min(20px, 50px + 100px)"
+        testAssert(getComputedStyle(target)["width"] == "20px");
+
+        target.style['width'] = "min(30px, 10px * 10)"
+        testAssert(getComputedStyle(target)["width"] == "30px");
+
+        target.style['width'] = "min(50px + 50px, 100px - 90px)"
+        testAssert(getComputedStyle(target)["width"] == "10px");
+
+        target.style['width'] = "min(20px, 10px + min(5px, 200px))"
+        testAssert(getComputedStyle(target)["width"] == "15px");
+
+        // clamp
+        target.style['width'] = "clamp(10px, 50px, 200px)"
+        testAssert(getComputedStyle(target)["width"] == "50px");
+
+        target.style['width'] = "clamp(10px + 10px, 10px, 200px)"
+        testAssert(getComputedStyle(target)["width"] == "20px");
+
+        target.style['width'] = "clamp(10px + 10px, 10px * 100, 20px * 10)"
+        testAssert(getComputedStyle(target)["width"] == "200px");
+
+        target.style['width'] = "clamp(10px + 10px, 10px * 100, 200px - 50px)"
+        testAssert(getComputedStyle(target)["width"] == "150px");
+
+        target.style['width'] = "clamp(10px + 10px, clamp(10px, 50px, 200px), 200px - 50px)"
+        testAssert(getComputedStyle(target)["width"] == "50px");
+
+        // complex
+        target.style['width'] = "clamp(min(10px, 50px), clamp(100px, 250px, 500px), max(50px, 200px))"
+        testAssert(getComputedStyle(target)["width"] == "200px");
+
+        target.style['width'] = "calc(clamp(min(10px, 50px), clamp(100px, 250px, 500px), max(50px, 200px)))"
+        testAssert(getComputedStyle(target)["width"] == "200px");
+
+        target.style['width'] = "calc(10 * clamp(min(10px, 50px), clamp(100px, 250px, 500px), max(50px, calc(10 * 20px))))"
+        testAssert(getComputedStyle(target)["width"] == "2000px");
+
+        testEnd();
+    }
+</script>
+
+</html>

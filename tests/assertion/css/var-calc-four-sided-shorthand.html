@@ -1,0 +1,37 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Variable substitution before four-sided shorthand expansion</title>
+<link rel="help" href="https://www.w3.org/TR/css-variables-1/#variables-in-shorthands">
+<script>
+if (typeof testEnd !== 'function') {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? 'FAIL' : 'PASS') + ' (' + passed + ' passed, ' + failed + ' failed)';
+    console.log('[var-calc-four-sided-shorthand] ' + document.title);
+  };
+}
+</script>
+<body>
+<script>
+var properties = ['padding', 'margin', 'inset'];
+var suffixes = ['Top', 'Right', 'Bottom', 'Left'];
+for (var p = 0; p < properties.length; p++) {
+  var element = document.createElement('div');
+  element.style.cssText = 'position:absolute; border-style:solid; --base:20px; --half:calc(var(--base) / 2);';
+  element.style.setProperty(properties[p], 'var(--half)');
+  document.body.appendChild(element);
+  var computed = getComputedStyle(element);
+  for (var side = 0; side < 4; side++) {
+    var name = properties[p] === 'inset' ? suffixes[side].toLowerCase() :
+      properties[p] + suffixes[side];
+    console.assert(computed[name] === '10px', name + ' expected 10px, got ' + computed[name]);
+  }
+  element.remove();
+}
+testEnd();
+</script>

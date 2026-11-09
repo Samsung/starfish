@@ -1,0 +1,25 @@
+<body>
+<template id="temp1">
+  <div id="temp2">
+  asdf
+  </div>
+</template>
+
+
+<script>
+
+testAssert(temp1.firstElementChild == null)
+testAssert(temp1.content.firstElementChild.localName == "div")
+
+temp1.appendChild(document.createElement("div"))
+temp1.innerHTML = "<section>asdf2</section>"
+
+testAssert(temp1.firstElementChild.localName == "div")
+testAssert(temp1.content.firstElementChild.localName == "section")
+
+testAssert(temp1.innerHTML == "<section>asdf2</section>")
+testEnd();
+
+</script>
+</body>
+

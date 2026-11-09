@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>requestAnimationFrame runs once per frame when nothing is painted</title>
+<link rel="help" href="https://html.spec.whatwg.org/multipage/webappapis.html#update-the-rendering">
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[raf-idle-frame-rate] " + document.title);
+  };
+}
+</script>
+<script>
+// A callback that changes nothing still waits for the next frame, so a
+// second of them stays near the display rate instead of spinning.
+var calls = 0;
+var start = performance.now();
+function tick() {
+  calls++;
+  if (performance.now() - start < 1000) {
+    requestAnimationFrame(tick);
+    return;
+  }
+  console.assert(calls > 10, "rAF keeps running, got " + calls);
+  console.assert(calls < 300, "rAF runs about once per frame, got " + calls);
+  testEnd();
+}
+setTimeout(function () { requestAnimationFrame(tick); }, 500);
+</script>

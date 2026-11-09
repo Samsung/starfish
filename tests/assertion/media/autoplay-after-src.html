@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>autoplay set after src still starts playback</title>
+</head>
+<body>
+<script>
+  // Each video is muted so the page also autoplays under a browser's
+  // autoplay policy; none is in the document until fully set up, and the
+  // setup runs after the load event, like a framework mounting a <video>
+  // with its attributes into an already parsed page.
+  var SRC = "resources/movie_5.mp4";
+  var log = [];
+  var attrAfter, propAfter, control;
+  function make(name, setup) {
+    var v = document.createElement("video");
+    v.muted = true;
+    v.width = 80;
+    v.height = 60;
+    v.started = false;
+    ["play", "playing", "timeupdate", "error"].forEach(function (t) {
+      v.addEventListener(t, function () {
+        log.push(name + ":" + t);
+        if (t === "timeupdate" && v.currentTime > 0) {
+          v.started = true;
+        }
+      });
+    });
+    setup(v);
+    document.body.appendChild(v);
+    return v;
+  }
+
+  window.addEventListener("load", function () {
+    // The attribute arrives after src, so the load that src started must
+    // pick it up when enough data is available.
+    attrAfter = make("attr", function (v) {
+      v.setAttribute("src", SRC);
+      v.setAttribute("autoplay", "");
+      v.setAttribute("loop", "");
+    });
+    // Same through the IDL attribute.
+    propAfter = make("prop", function (v) {
+      v.src = SRC;
+      v.autoplay = true;
+      v.loop = true;
+    });
+    // Control: without autoplay nothing may start on its own.
+    control = make("none", function (v) {
+      v.src = SRC;
+    });
+
+    var deadline = Date.now() + 10000;
+    (function poll() {
+      if ((attrAfter.started && propAfter.started) || Date.now() > deadline) {
+        finish();
+      } else {
+        setTimeout(poll, 100);
+      }
+    })();
+  });
+
+  function finish() {
+    console.assert(!attrAfter.paused, "attribute after src: paused is false");
+    console.assert(attrAfter.started, "attribute after src: currentTime advances");
+    console.assert(!propAfter.paused, "property after src: paused is false");
+    console.assert(propAfter.started, "property after src: currentTime advances");
+    console.assert(control.paused, "no autoplay attribute: stays paused");
+    console.assert(log.indexOf("none:play") < 0, "no autoplay attribute: no play event");
+    console.assert(log.indexOf("attr:error") < 0 && log.indexOf("prop:error") < 0,
+                   "no media error: " + log.join(","));
+    if (window.testEnd) {
+      testEnd();
+    }
+  }
+</script>
+</body>
+</html>

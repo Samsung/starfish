@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        div {
+            width: 50px;
+            height: 50px;
+            background-color: blue;
+            opacity: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="replaced"></div>
+    <div id="finishedNone"></div>
+    <div id="engineCanceled"></div>
+</body>
+<script type="text/javascript">
+    const keyframes = [{ opacity: 0 }, { opacity: 1 }];
+
+    function opacityOf(id) {
+        return parseFloat(getComputedStyle(document.getElementById(id)).opacity);
+    }
+
+    // 1. A finished fill:forwards animation is replaced by a later animate()
+    //    on the same element: remove event fires, entry leaves the executor,
+    //    and the later animation keeps filling.
+    const replacedTarget = document.getElementById("replaced");
+    const first = replacedTarget.animate(keyframes, { duration: 100, fill: "forwards" });
+    let removeFired = false;
+    first.addEventListener("remove", function () { removeFired = true; });
+
+    setTimeout(function () {
+        replacedTarget.animate(keyframes, { duration: 100, fill: "forwards" });
+
+        setTimeout(function () {
+            testAssert(removeFired);
+            testAssert(opacityOf("replaced") === 1);
+
+            // 2. cancel() on an already finished fill:none animation: no task
+            //    is left in the executor, but the animation is not idle, so
+            //    the cancel event still fires.
+            const finishedNone = document.getElementById("finishedNone")
+                .animate(keyframes, { duration: 100, fill: "none" });
+            setTimeout(function () {
+                let cancelFired = false;
+                finishedNone.addEventListener("cancel", function () { cancelFired = true; });
+                finishedNone.cancel();
+                finishedNone.cancel(); // second call must stay silent
+                setTimeout(function () {
+                    testAssert(cancelFired);
+
+                    // 3. The engine dropping the animation itself (target goes
+                    //    display:none) reports cancel on the Animation object.
+                    const engineTarget = document.getElementById("engineCanceled");
+                    const engineAnim = engineTarget.animate(keyframes,
+                        { duration: 10000, fill: "forwards" });
+                    let engineCancelCount = 0;
+                    engineAnim.addEventListener("cancel", function () { engineCancelCount++; });
+                    setTimeout(function () {
+                        engineTarget.style.display = "none";
+                        setTimeout(function () {
+                            testAssert(engineCancelCount === 1);
+                            testEnd();
+                        }, 300);
+                    }, 50);
+                }, 100);
+            }, 300);
+        }, 300);
+    }, 300);
+</script>
+
+</html>

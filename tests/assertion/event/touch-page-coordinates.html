@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<!--
+  Touch.pageX / pageY are the touch point's viewport coordinates plus the
+  document scroll offset (https://w3c.github.io/touch-events/#dom-touch-pagex).
+  They used to be [Unimplemented] and read as undefined, so swipe handlers that
+  measure the drag from touches[0].pageX computed NaN and never moved.
+-->
+<head>
+<style>
+  body { margin: 0; }
+  #target { width: 400px; height: 2000px; background: peachpuff; }
+</style>
+</head>
+<body>
+  <div id="target"></div>
+</body>
+<script>
+  var target = document.getElementById("target");
+  var seen = [];
+
+  function record(e) {
+    seen.push({
+      type: e.type,
+      pageX: e.changedTouches[0].pageX,
+      pageY: e.changedTouches[0].pageY
+    });
+  }
+  target.addEventListener("touchstart", record);
+  target.addEventListener("touchmove", record);
+  target.addEventListener("touchend", record);
+
+  function checkConstructor() {
+    var defaults = new Touch({ identifier: 1, target: target });
+    testAssert(defaults.pageX === 0);
+    testAssert(defaults.pageY === 0);
+
+    var touch = new Touch({ identifier: 2, target: target, pageX: 15, pageY: 20.5 });
+    testAssert(touch.pageX === 15);
+    testAssert(touch.pageY === 20.5);
+  }
+
+  function testStart() {
+    checkConstructor();
+
+    if (typeof simulateTouchStart !== "function") {
+      testEnd();
+      return;
+    }
+
+    // Unscrolled: page coordinates equal the viewport point.
+    simulateTouchStart(100, 50);
+    simulateTouchMove(60, 50);
+    simulateTouchEnd(60, 50);
+
+    setTimeout(function() {
+      testAssert(seen.length === 3);
+      testAssert(seen[0].type === "touchstart" && seen[0].pageX === 100 && seen[0].pageY === 50);
+      testAssert(seen[1].type === "touchmove" && seen[1].pageX === 60 && seen[1].pageY === 50);
+      testAssert(seen[2].type === "touchend" && seen[2].pageX === 60 && seen[2].pageY === 50);
+
+      // Scrolled: pageY includes the scroll offset.
+      seen = [];
+      window.scrollTo(0, 300);
+      setTimeout(function() {
+        testAssert(window.scrollY === 300);
+        simulateTouchStart(100, 50);
+        simulateTouchEnd(100, 50);
+        setTimeout(function() {
+          testAssert(seen.length === 2);
+          testAssert(seen[0].pageX === 100 && seen[0].pageY === 350);
+          testAssert(seen[1].pageX === 100 && seen[1].pageY === 350);
+          testEnd();
+        }, 100);
+      }, 100);
+    }, 100);
+  }
+</script>
+</html>

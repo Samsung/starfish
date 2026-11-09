@@ -77,6 +77,10 @@ def run_test(argv_input, env=None):
 
 
 def internal_test():
+    # The image-compared tests are the tests/pixel submodule.
+    if not os.path.isdir(join(working_directory, "tests", "pixel", "css")):
+        print("no tests/pixel checkout -- run: git submodule update --init tests/pixel")
+        sys.exit(ERRORCODE.TEST_STOPPED)
     run_test(["basic", "tool/reftest/cairo/internal.res", "common", "-p8"])
     run_test(["basic", "tool/reftest/cairo/internal_manual.res", "common", "--font-dep", "-p8"])
     run_test(["csswg", "tool/pixel_test/svg.res", "cairo", "-p8"])
@@ -84,47 +88,11 @@ def internal_test():
     # Tests whose documents load as file:// but fetch subresources over http.
     # ROOT is the resource-only directory so test documents are not exposed via http.
     from http_server import popen_server
-    ROOT = "test/cairo/internal-test/served-resources"
+    ROOT = "tests/fixtures/served-resources"
     with popen_server(ROOT, working_directory, "localhost", port=11011, silent=True):
         run_test(["basic",
                   "tool/reftest/cairo/internal_with_remote_resource.res",
                   "common", "-p8"])
-
-
-def dom_conformance_test():
-    run_test(["dom_conformance", "tool/reftest/cairo/dom_conformance_test.res", "common"])
-    run_test(["dom_conformance", "tool/reftest/cairo/webkit_dom_conformance_test.res", "common"])
-    run_test(["dom_conformance", "tool/reftest/cairo/blink_dom_conformance_test.res", "common"])
-    run_test(["dom_conformance", "tool/reftest/cairo/gecko_dom_conformance_test.res", "common"])
-
-
-def vendor_test_blink():
-    run_test(["vendor_basic", "tool/reftest/cairo/blink_fast_dom.res", "common"])
-    run_test(["vendor_basic", "tool/reftest/cairo/blink_fast_html.res", "common"])
-    run_test(["vendor_pixel", "tool/reftest/cairo/blink_fast_css.res", "cairo"])
-    run_test(["vendor_pixel", "tool/reftest/cairo/blink_fast_css_manual.res", "cairo", "--font-dep"])
-    run_test(["vendor_pixel", "tool/reftest/cairo/blink_fast_etc.res", "cairo"])
-    run_test(["vendor_pixel", "tool/reftest/cairo/blink_fast_etc_manual.res", "cairo", "--font-dep"])
-    run_test(["vendor_pixel", "tool/reftest/cairo/blink_fast_table.res", "cairo"])
-    run_test(["vendor_pixel", "tool/reftest/cairo/blink_css3.res", "cairo"])
-    run_test(["vendor_pixel", "tool/reftest/cairo/blink_svg.res", "cairo"])
-    run_test(["multi_basic", "tool/reftest/cairo/blink_svg_basic.res", "cairo"])
-    run_test(["multi_basic", "tool/reftest/cairo/blink_fast_canvas_basic.res", "cairo"])
-#    run_test(["vendor_pixel", "tool/reftest/cairo/tool/blink_fast_canvas.res", "cairo"])
-
-
-def vendor_test_gecko():
-    run_test(["vendor_pixel", "tool/reftest/cairo/gecko_layout.res", "cairo"])
-    run_test(["vendor_pixel", "tool/reftest/cairo/gecko_layout_manual.res", "cairo", "--font-dep"])
-
-
-def vendor_test_webkit():
-    run_test(["vendor_basic", "tool/reftest/cairo/webkit_fast_dom.res", "common"])
-    run_test(["vendor_basic", "tool/reftest/cairo/webkit_fast_html.res", "common"])
-    run_test(["vendor_pixel", "tool/reftest/cairo/webkit_fast_css.res", "cairo"])
-    run_test(["vendor_pixel", "tool/reftest/cairo/webkit_fast_css_manual.res", "cairo", "--font-dep"])
-    run_test(["vendor_pixel", "tool/reftest/cairo/webkit_fast_etc.res", "cairo"])
-    run_test(["vendor_pixel", "tool/reftest/cairo/webkit_fast_etc_manual.res", "cairo", "--font-dep"])
 
 
 # Khronos WebGL conformance suites (khronos_test) -- see docs/khronos_webgl.md.
@@ -216,73 +184,69 @@ def khronos_deqp_test():
     _khronos_partition(True)
 
 
-# Not part of vendor_test()/reftest_all(): CI runs this in its own job, since
-# the reftest job works from a .git-less source tarball and only ever fetches
-# test/, while this needs the third_party/webgl submodule (restored like
-# third_party/wpt). It is also slow enough to be worth isolating locally.
+# CI runs this in its own job, which restores the third_party/webgl submodule
+# the way the WPT jobs restore third_party/wpt. It is also slow enough to be
+# worth isolating locally.
 def khronos_test():
     vendor_test_khronos()
     vendor_test_khronos2()
     vendor_test_khronossdk()
 
 
-def vendor_test():
-    vendor_test_blink()
-    vendor_test_gecko()
-    vendor_test_webkit()
+# Browser-vendor test suites, served unmodified out of a sparse submodule
+# checkout (each made by tool/<vendor>/fetch.sh) with the vendor's test root
+# as the server root, so each list holds http://localhost:<port>/<test> URLs
+# like the Khronos lists. A bridge prepended to the vendor's harness scripts
+# stands in for the vendor's own test shell and prints each page's result,
+# which tool/drivers/tests/<vendor>_test.py judges; the lists also hold
+# reftests, which those drivers render and compare.
+# A finished test takes a second or two; the timeout only bounds hangs.
+VENDOR_TIMEOUT_SEC = 30
 
 
-def wpt_css_css21():
-    run_test(["csswg", "tool/reftest/cairo/wpt/css_css21_dev_pixel.res", "cairo"])
-    run_test(["csswg", "tool/reftest/cairo/wpt/css_css21_dev_manual.res", "cairo", "--font-dep"])
+def _vendor_test(kind, root, port, inject_script, inject_into, alias=(), reftests=False):
+    from http_server import popen_server
+
+    if not os.path.isdir(join(working_directory, root)):
+        print("no %s checkout at %s -- run: tool/%s/fetch.sh" % (kind, root, kind))
+        sys.exit(ERRORCODE.TEST_STOPPED)
+    if reftests:
+        from wpt_reftest import ensure_imgdiff
+        ensure_imgdiff()
+    env = dict(os.environ)
+    if not env.get(ENVOPTS.TIMEOUT):
+        env[ENVOPTS.TIMEOUT] = str(VENDOR_TIMEOUT_SEC)
+    with popen_server(root, working_directory, "localhost", port=port, silent=True,
+                      inject_script=inject_script, inject_into=inject_into,
+                      alias=alias):
+        run_test([kind, "tool/reftest/cairo/%s.res" % kind, "common", "-p8"], env)
 
 
-def wpt_css_backgrounds():
-    run_test(["csswg", "tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_pixel.res", "cairo"])
-    run_test(["csswg", "tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_manual.res", "cairo", "--font-dep"])
+# WebKit LayoutTests -- see docs/webkit_layouttests.md. The ports are baked
+# into the lists (tool/<vendor>/update_lists.py).
+def webkit_test():
+    # Keep in sync with HARNESSES in tool/webkit/update_lists.py.
+    _vendor_test("webkit", "third_party/webkit/LayoutTests", 11012,
+                 "tool/webkit/inject_report.js",
+                 ("/js-test-pre.js", "/js-test.js", "/selfhtml.js"),
+                 reftests=True)
 
 
-def wpt_css_color():
-    run_test(["csswg", "tool/reftest/cairo/wpt/css_css-color-3_dev_pixel.res", "cairo"])
-    run_test(["csswg", "tool/reftest/cairo/wpt/css_css-color-3_dev_manual.res", "cairo", "--font-dep"])
-    run_test(["csswg", "tool/reftest/cairo/wpt/css_css-color-4_dev_pixel.res", "cairo"])
+# Blink web tests -- see docs/blink_web_tests.md. Blink kept WebKit's
+# testRunner API, so WebKit's bridge serves both.
+def blink_test():
+    _vendor_test("blink", "third_party/blink/third_party/blink/web_tests", 11013,
+                 "tool/webkit/inject_report.js",
+                 ("/resources/js-test.js", "/resources/testharnessreport.js"),
+                 reftests=True)
 
 
-def wpt_css_flexbox():
-    run_test(["csswg", "tool/reftest/cairo/wpt/css_css-flexbox-1_dev_pixel.res", "cairo"])
-
-
-def wpt_css_transforms():
-    run_test(["csswg", "tool/reftest/cairo/wpt/css_css-transforms-1_dev_pixel.res", "cairo"])
-    run_test(["csswg", "tool/reftest/cairo/wpt/css_css-transforms-1_dev_manual.res", "cairo", "--font-dep"])
-
-
-def wpt_css_variables():
-    run_test(["csswg", "tool/reftest/cairo/wpt/css_css-variables-1_dev_pixel.res", "cairo"])
-
-
-def wpt_mediaqueries():
-    run_test(["csswg", "tool/reftest/cairo/wpt/css_mediaqueries-3_dev_pixel.res", "cairo"])
-
-
-def wpt_selectors():
-    run_test(["csswg", "tool/reftest/cairo/wpt/css_selectors-3_dev_pixel.res", "cairo"])
-    run_test(["csswg", "tool/reftest/cairo/wpt/css_selectors-4_dev_pixel.res", "cairo"])
-
-
-def wpt_css_all():
-    wpt_css_css21()
-    wpt_css_backgrounds()
-    wpt_css_color()
-    wpt_css_flexbox()
-    wpt_css_transforms()
-    wpt_css_variables()
-    wpt_mediaqueries()
-    wpt_selectors()
-
-
-def wpt_all():
-    wpt_css_all()
+# Gecko mochitests and reftests -- see docs/gecko_tests.md.
+def gecko_test():
+    _vendor_test("gecko", "third_party/gecko", 11014,
+                 "tool/gecko/inject_report.js", ("/tests/SimpleTest/SimpleTest.js",),
+                 alias=("/tests/SimpleTest/=testing/mochitest/tests/SimpleTest",),
+                 reftests=True)
 
 
 # WPT (testharness) via on-demand `wpt serve` -- see docs/wpt.md.
@@ -559,21 +523,13 @@ def wpt_serve_crashtest():
     _wpt_manifest_run(_WPT_CRASHTEST_LISTS_DIR, "crashtest")
 
 
-def bidi_test():
-    run_test(["bidi", "tool/reftest/cairo/bidi.res", "cairo", "--font-dep"])
-
-
-def reftest_all():
-    dom_conformance_test()
-    vendor_test()
-    bidi_test()
-    wpt_all()
-
-
 def test_all():
     internal_test()
-    reftest_all()
+    wpt_serve_reftest()
     khronos_test()
+    webkit_test()
+    blink_test()
+    gecko_test()
 
 
 def print_columns(iterable, num_columns):
@@ -601,7 +557,7 @@ if __name__ == "__main__":
                            "run_test", "run_vendor_test_khronos",
                            "_khronos_partition", "_wpt_serve_run",
                            "_wpt_serve_run_groups", "_wpt_collect",
-                           "_wpt_manifest_run"]:
+                           "_wpt_manifest_run", "_vendor_test"]:
                 test_functions.append(key)
     print_columns(sorted(test_functions), 4)
 

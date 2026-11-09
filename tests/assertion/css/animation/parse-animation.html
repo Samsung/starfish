@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<body></body>
+<script type="text/javascript">
+function testObj() {
+    var v = document.createElement("unknown");
+    var test = function (property, content) {
+        v.style[property] = "";
+        v.style[property] = content;
+        return v.style[property].length;
+    }
+    var shouldPass = function (property, content) {
+        if (test(property, content) == 0) {
+            console.log("FAIL: can not parse '" + content + "'");
+        } else {
+            console.log("PASS");
+        }
+    }
+    var shouldFail = function (property, content) {
+        if (test(property, content) != 0) {
+            console.log("FAIL: should not parse '" + content + "'");
+        } else {
+            console.log("PASS");
+        }
+    }
+    return {
+        shouldPass: shouldPass,
+        shouldFail: shouldFail,
+    }
+}
+function testStart() {
+    var runner = testObj();
+    runner.shouldPass('animation-name', "example");
+    runner.shouldPass('animation-name', "example1, example2");
+    runner.shouldPass('animation-name', "example1, example2, example3");
+    runner.shouldPass('animation-duration', "2s");
+    runner.shouldPass('animation-duration', "2s, 4s");
+    runner.shouldPass('animation-duration', "2s, 4s, 6s");
+    runner.shouldPass('animation-timing-function', "steps(1, end)");
+    runner.shouldPass('animation-timing-function', "steps(2, start)");
+    runner.shouldPass('animation-timing-function', "steps(  3)");
+    runner.shouldFail('animation-timing-function', "steps(-3)");
+    runner.shouldFail('animation-timing-function', "steps(0.33)");
+    runner.shouldFail('animation-timing-function', "steps(2, 3)");
+    runner.shouldFail('animation-timing-function', "steps(2,)");
+    runner.shouldFail('animation-timing-function', "steps(2, )");
+    runner.shouldFail('animation-timing-function', "steps (2)");
+    runner.shouldPass('animation-timing-function', "cubic-bezier(0.33, 0, 0.40, 1)");
+    runner.shouldFail('animation-timing-function', "cubic-bezier(0.33, 1)");
+    runner.shouldFail('animation-timing-function', "cubic-bezier(-0.33, 0, 0.40, 1)");
+    runner.shouldFail('animation-timing-function', "cubic-bezier(0.33, 0, -0.40, 1)");
+    runner.shouldFail('animation-timing-function', "cubic-bezier(3, 0, 0.40, 1)");
+    runner.shouldFail('animation-timing-function', "cubic-bezier(0.33, 0, 3, 1)");
+    testEnd();
+}
+</script>

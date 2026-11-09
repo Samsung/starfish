@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Font face URL serialization</title>
+    <link rel="help" href="https://drafts.csswg.org/css-fonts/#src-desc">
+    <link rel="help" href="https://drafts.csswg.org/cssom/#serialize-a-url">
+</head>
+<body>
+<pre id="result"></pre>
+<script>
+(function () {
+    'use strict';
+
+    var total = 0;
+    var failures = 0;
+
+    function assertEqual(actual, expected, description) {
+        total++;
+        var matches = actual === expected;
+        if (!matches) {
+            failures++;
+        }
+        console.assert(matches, description + ': expected ' +
+            JSON.stringify(expected) + ', got ' + JSON.stringify(actual));
+    }
+
+    function source(cssText) {
+        // src is the final descriptor. Read the rule's serialization without
+        // depending on CSSFontFaceRule.style or font-family quoting.
+        var start = cssText.indexOf('src: ');
+        return start === -1 ? '' :
+            cssText.slice(start + 5, cssText.lastIndexOf(';'));
+    }
+
+    var cases = [
+        { name: 'plain URL',
+          input: 'url(foo.woff)', expected: 'url("foo.woff")' },
+        { name: 'unquoted hexadecimal escape',
+          input: 'url(fo\\6f .woff)', expected: 'url("foo.woff")' },
+        { name: 'quoted hexadecimal escape',
+          input: 'url("fo\\6f .woff")', expected: 'url("foo.woff")' },
+        { name: 'six-digit hexadecimal escape',
+          input: 'url(fo\\00006f.woff)', expected: 'url("foo.woff")' },
+        { name: 'literal double quote',
+          input: "url('a\"b.woff')", expected: 'url("a\\"b.woff")' },
+        { name: 'escaped double quote',
+          input: 'url("a\\"b.woff")', expected: 'url("a\\"b.woff")' },
+        { name: 'unquoted escaped double quote',
+          input: 'url(a\\"b.woff)', expected: 'url("a\\"b.woff")' },
+        { name: 'escaped backslash',
+          input: 'url("a\\\\b.woff")', expected: 'url("a\\\\b.woff")' },
+        { name: 'backslash followed by hexadecimal digits',
+          input: 'url("a\\\\62 .woff")', expected: 'url("a\\\\62 .woff")' },
+        { name: 'escaped closing parenthesis',
+          input: 'url(a\\)b.woff)', expected: 'url("a)b.woff")' },
+        { name: 'apostrophe',
+          input: 'url("a\'b.woff")', expected: 'url("a\'b.woff")' },
+        { name: 'escaped newline code point',
+          input: 'url("a\\A b.woff")', expected: 'url("a\\a b.woff")' },
+        { name: 'escaped control character',
+          input: 'url("a\\1 b.woff")', expected: 'url("a\\1 b.woff")' },
+        { name: 'escaped delete character',
+          input: 'url("a\\7F b.woff")', expected: 'url("a\\7f b.woff")' },
+        { name: 'local source',
+          input: 'local("Font Source Test")',
+          expected: 'local("Font Source Test")' },
+        { name: 'local source followed by formatted URL',
+          input: 'local("Font Source Test"), url(fo\\6f .woff) format("woff")',
+          expected: 'local("Font Source Test"), url("foo.woff") format("woff")' },
+        { name: 'multiple URL sources with formats',
+          input: 'url(fo\\6f .woff) format("woff"), url("b\\61 r.ttf") format("truetype")',
+          expected: 'url("foo.woff") format("woff"), url("bar.ttf") format("truetype")' }
+    ];
+
+    cases.forEach(function (testCase) {
+        ['stylesheet', 'insertRule'].forEach(function (path) {
+            var style = document.createElement('style');
+            document.head.appendChild(style);
+            var rule = '@font-face { font-family: FontSourceTest; src: ' +
+                testCase.input + '; }';
+            if (path === 'stylesheet') {
+                style.textContent = rule;
+            } else {
+                style.sheet.insertRule(rule, 0);
+            }
+
+            var serialized = style.sheet.cssRules[0].cssText;
+            var description = testCase.name + ' via ' + path;
+            assertEqual(source(serialized), testCase.expected,
+                description + ' serialization');
+
+            style.textContent = serialized;
+            assertEqual(source(style.sheet.cssRules[0].cssText), testCase.expected,
+                description + ' cssText round trip');
+            style.remove();
+        });
+    });
+
+    document.getElementById('result').textContent =
+        (total - failures) + ' passed; ' + failures + ' failed.';
+    document.title = (failures ? 'FAIL' : 'PASS') + ': Font face URL serialization';
+    if (typeof testEnd === 'function') {
+        testEnd();
+    }
+}());
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Fixed-position descendants stay out of a scroller's scrollable overflow</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { overflow: hidden; }
+  #scroller {
+    position: absolute; top: 0; left: 0; width: 100%; height: 416px;
+    padding-top: 64px; box-sizing: border-box; overflow-x: auto;
+  }
+  .content { height: 661px; }
+  .overlay { position: fixed; top: 0; left: 0; width: 200px; height: 704px; }
+  .bar {
+    position: fixed; bottom: 104px; left: 364px; right: 364px;
+    display: flex; justify-content: center; overflow: hidden;
+  }
+  .row { display: flex; }
+  .chip { flex: none; width: 469px; height: 40px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[scroll-test-10] " + document.title);
+  };
+}
+</script>
+<div id="scroller">
+  <div class="overlay"></div>
+  <div class="content"></div>
+  <div class="bar"><div class="row"><div class="chip"></div><div class="chip"></div></div></div>
+</div>
+<script>
+var scroller = document.getElementById("scroller");
+// Fixed-position boxes are laid out against the viewport, so the 704px
+// overlay adds nothing to the scroller: 64px padding + 661px content.
+console.assert(scroller.scrollHeight === 725, "scrollHeight: " + scroller.scrollHeight);
+scroller.scrollTop = 3000;
+console.assert(scroller.scrollTop === 309, "scrollTop stops at scrollHeight - clientHeight: " + scroller.scrollTop);
+var bar = document.querySelector(".bar").getBoundingClientRect();
+console.assert(bar.width === 72, "fixed bar width from left and right: " + bar.width);
+// A flex item does not shrink below its content (min-width: auto).
+var row = document.querySelector(".row").getBoundingClientRect();
+console.assert(row.width === 938, "row width: " + row.width);
+testEnd();
+</script>

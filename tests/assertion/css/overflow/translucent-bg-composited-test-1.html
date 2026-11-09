@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!-- A background-color that the compositor fills directly (the scroll
+     container's own background under its scrolled buffer, or the only paint
+     of a layer) must keep its alpha: rgba(255, 0, 0, 0.2) over black is
+     rgb(51, 0, 0), not opaque red. -->
+<html>
+<head>
+<style>
+  body { margin: 0; background: black; }
+  .box {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background-color: rgba(255, 0, 0, 0.2);
+  }
+  .scroller { overflow: auto; }
+  .tall { height: 300px; }
+  #scroller { left: 10px; top: 10px; }
+  #rounded { left: 130px; top: 10px; border-radius: 20px; }
+  #layer { left: 250px; top: 10px; will-change: transform; }
+</style>
+</head>
+<body>
+<div id="scroller" class="box scroller"><div class="tall"></div></div>
+<div id="rounded" class="box scroller"><div class="tall"></div></div>
+<div id="layer" class="box"></div>
+<script>
+  screenShot("translucent-bg-composited-test-1.png", function() {
+    var shot = "translucent-bg-composited-test-1.png";
+    testAssert(checkPixelColor(shot, 60, 60, 51, 0, 0, 255, 4));
+    testAssert(checkPixelColor(shot, 180, 60, 51, 0, 0, 255, 4));
+    testAssert(checkPixelColor(shot, 300, 60, 51, 0, 0, 255, 4));
+    testEnd();
+  });
+</script>
+</body>
+</html>

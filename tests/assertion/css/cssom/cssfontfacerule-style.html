@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>CSSFontFaceRule.style returns the @font-face descriptor block</title>
+<style>
+@media all {
+  @font-face {
+    font-family: "Face One";
+    src: url("face-one.woff");
+    font-weight: bold;
+  }
+}
+@font-face {
+  font-family: "Face Two";
+  src: url("face-two.woff");
+}
+.a { color: red; }
+</style>
+<div class="a">a</div>
+<script>
+var failures = 0;
+function check(cond, msg) {
+  console.assert(cond, msg);
+  if (!cond) { failures++; console.log("FAIL: " + msg); }
+}
+
+var sheet = document.styleSheets[0];
+var nested = sheet.cssRules[0].cssRules[0]; // @media > @font-face
+check(nested.type === CSSRule.FONT_FACE_RULE, "nested rule is a font-face rule");
+
+// Reading .style used to hit asCSSStyleRule()'s isCSSStyleRule() assertion.
+var style = nested.style;
+check(style instanceof CSSStyleDeclaration, "style is a CSSStyleDeclaration");
+check(nested.style === style, "style is [SameObject]");
+check(style.parentRule === nested, "style.parentRule is the font-face rule");
+check(style.getPropertyValue("font-family").indexOf("Face One") !== -1,
+      "font-family descriptor is readable: " + style.getPropertyValue("font-family"));
+check(style.getPropertyValue("src").indexOf("face-one.woff") !== -1,
+      "src descriptor is readable: " + style.getPropertyValue("src"));
+check(style.getPropertyValue("font-weight") === "bold",
+      "font-weight descriptor is readable: " + style.getPropertyValue("font-weight"));
+check(style.cssText.indexOf("Face One") !== -1, "cssText serializes the block: " + style.cssText);
+
+// Top-level @font-face and the cssText setter (also the PutForwards target).
+var topRule = sheet.cssRules[1];
+check(topRule.type === CSSRule.FONT_FACE_RULE, "second rule is a font-face rule");
+check(topRule.style.parentRule === topRule, "top-level parentRule");
+topRule.style.cssText = 'font-family: "Face Three"; src: url("face-three.woff"); font-style: italic';
+check(topRule.cssText.indexOf("Face Three") !== -1, "rule.cssText reflects the new font-family: " + topRule.cssText);
+check(topRule.cssText.indexOf("face-three.woff") !== -1, "rule.cssText keeps the src descriptor: " + topRule.cssText);
+check(topRule.cssText.indexOf("italic") !== -1, "rule.cssText reflects font-style: " + topRule.cssText);
+check(topRule.style.getPropertyValue("font-family").indexOf("Face Three") !== -1,
+      "style reflects the new font-family: " + topRule.style.getPropertyValue("font-family"));
+
+// PutForwards=cssText: assigning to .style forwards to .style.cssText.
+topRule.style = 'font-family: "Face Four"; src: url(face-four.woff)';
+check(topRule.cssText.indexOf("Face Four") !== -1, "PutForwards updates the rule: " + topRule.cssText);
+
+// Non-descriptor declarations are dropped, as the parser does for sheet text.
+topRule.style.cssText = 'font-family: "Face Five"; src: url(face-five.woff); color: red; margin: 4px';
+check(topRule.style.getPropertyValue("color") === "", "color is not a descriptor: '" + topRule.style.getPropertyValue("color") + "'");
+check(topRule.style.getPropertyValue("margin") === "", "margin is not a descriptor: '" + topRule.style.getPropertyValue("margin") + "'");
+check(topRule.cssText.indexOf("color") === -1 && topRule.cssText.indexOf("margin") === -1, "rule.cssText carries no non-descriptors: " + topRule.cssText);
+check(topRule.cssText.indexOf("Face Five") !== -1 && topRule.cssText.indexOf("face-five.woff") !== -1, "descriptors kept: " + topRule.cssText);
+check(topRule.style.length === 2, "style.length counts descriptors only: " + topRule.style.length);
+
+// Sibling style rule is untouched.
+check(sheet.cssRules[2].style.color === "red", "style rule declaration intact");
+check(sheet.cssRules[2].style.parentRule === sheet.cssRules[2], "style rule parentRule intact");
+
+console.log(failures === 0 ? "ALL CHECKS PASSED" : failures + " CHECK(S) FAILED");
+if (typeof testEnd === "function") {
+  testEnd(failures === 0);
+}
+</script>

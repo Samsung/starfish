@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>CSS computed URL values</title>
+    <link rel="help" href="https://www.w3.org/TR/css-syntax-3/#consume-escaped-code-point">
+    <link rel="help" href="https://drafts.csswg.org/css-values-4/#relative-urls">
+    <link rel="help" href="https://drafts.csswg.org/cssom/#dom-window-getcomputedstyle">
+    <link rel="help" href="https://url.spec.whatwg.org/#path-state">
+</head>
+<body>
+<pre id="result"></pre>
+<script>
+(function () {
+    'use strict';
+
+    var properties = [
+        { name: 'backgroundImage', cssName: 'background-image' },
+        { name: 'borderImageSource', cssName: 'border-image-source' }
+    ];
+    var total = 0;
+    var failures = 0;
+
+    function assertEqual(actual, expected, description) {
+        total++;
+        var matches = actual === expected;
+        if (!matches) {
+            failures++;
+        }
+        console.assert(matches, description + ': expected ' +
+            JSON.stringify(expected) + ', got ' + JSON.stringify(actual));
+    }
+
+    // CSS escapes are decoded before resolving URLs. URL processing then
+    // percent-encodes quotes and treats backslashes as path separators for
+    // HTTP(S) and file URLs. These cases check computed values, not requests.
+    var cases = [
+        { name: 'plain URL',
+          input: 'url("plain.png")', path: 'plain.png' },
+        { name: 'hexadecimal escape in a quoted URL',
+          input: 'url("a\\62 .png")', path: 'ab.png' },
+        { name: 'hexadecimal escape in an unquoted URL',
+          input: 'url(a\\62 .png)', path: 'ab.png' },
+        { name: 'double quote inside a single-quoted URL',
+          input: "url('a\"b.png')", path: 'a%22b.png' },
+        { name: 'escaped double quote in a quoted URL',
+          input: 'url("a\\"b.png")', path: 'a%22b.png' },
+        { name: 'escaped double quote in an unquoted URL',
+          input: 'url(a\\"b.png)', path: 'a%22b.png' },
+        { name: 'escaped parenthesis in an unquoted URL',
+          input: 'url(a\\)b.png)', path: 'a)b.png' },
+        { name: 'escaped backslash',
+          input: 'url("a\\\\b.png")', path: 'a/b.png' },
+        { name: 'literal backslash before hexadecimal digits',
+          input: 'url("a\\\\62 .png")', path: 'a/62%20.png' }
+    ];
+
+    properties.forEach(function (property) {
+        cases.forEach(function (testCase) {
+            // Resolve an already decoded and URL-encoded reference path,
+            // independently of the CSS parser, against this document's base.
+            var reference = document.createElement('a');
+            reference.href = testCase.path;
+            var expected = 'url("' + reference.href + '")';
+
+            ['setter', 'cssText'].forEach(function (path) {
+                var element = document.createElement('div');
+                if (path === 'setter') {
+                    element.style[property.name] = testCase.input;
+                } else {
+                    element.style.cssText = property.cssName + ': ' + testCase.input;
+                }
+                // CSSOM only exposes resolved values for connected elements.
+                document.body.appendChild(element);
+                var actual = getComputedStyle(element)[property.name];
+                document.body.removeChild(element);
+                assertEqual(actual, expected,
+                    property.cssName + ' via ' + path + ': ' + testCase.name);
+            });
+        });
+    });
+
+    document.getElementById('result').textContent =
+        (total - failures) + ' passed; ' + failures + ' failed.';
+    document.title = (failures ? 'FAIL' : 'PASS') + ': CSS computed URL values';
+    if (typeof testEnd === 'function') {
+        testEnd();
+    }
+}());
+</script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<body></body>
+<script type="text/javascript">
+function testObj() {
+    var v = document.createElement("unknown");
+    var test = function (property, content) {
+        v.style[property] = "";
+        v.style[property] = content;
+        return v.style[property].length;
+    }
+    var shouldPass = function (property, content) {
+        if (test(property, content) == 0) {
+            console.log("FAIL: can not parse '" + content + "'");
+        } else {
+            console.log("PASS");
+        }
+    }
+    var shouldFail = function (property, content) {
+        if (test(property, content) != 0) {
+            console.log("FAIL: should not parse '" + content + "'");
+        } else {
+            console.log("PASS");
+        }
+    }
+    return {
+        shouldPass: shouldPass,
+        shouldFail: shouldFail,
+    }
+}
+function testStart() {
+    var runner = testObj();
+    runner.shouldPass('transition', "1ms, 1ms, 1ms");
+    runner.shouldPass('transition', "1ms 2ms");
+    runner.shouldPass('transition', "transform steps(1)");
+    runner.shouldPass('transition', "steps(1) transform");
+    runner.shouldPass('transition', "1ms transform 2ms steps(3)");
+    runner.shouldPass('transition', "steps(1, end)");
+    runner.shouldPass('transition', "steps(2, start)");
+    runner.shouldPass('transition', "steps(  3)");
+    runner.shouldFail('transition', "steps(-3)");
+    runner.shouldFail('transition', "steps(0.33)");
+    runner.shouldFail('transition', "steps(2, 3)");
+    runner.shouldFail('transition', "steps(2,)");
+    runner.shouldFail('transition', "steps(2, )");
+    runner.shouldFail('transition', "steps (2)");
+    runner.shouldPass('transition', "cubic-bezier(0.33, 0, 0.40, 1)");
+    runner.shouldFail('transition', "cubic-bezier(0.33, 1)");
+    runner.shouldFail('transition', "cubic-bezier(-0.33, 0, 0.40, 1)");
+    runner.shouldFail('transition', "cubic-bezier(0.33, 0, -0.40, 1)");
+    runner.shouldFail('transition', "cubic-bezier(3, 0, 0.40, 1)");
+    runner.shouldFail('transition', "cubic-bezier(0.33, 0, 3, 1)");
+    runner.shouldPass('transition', "transform 583ms cubic-bezier(0.33 , 0, 0.40, 1)");
+    runner.shouldPass('transition', "    transform  583ms   cubic-bezier(  0.33 , 0, 0.40, 1)   ");
+    runner.shouldPass('transition', "transform  583ms cubic-bezier(0.33 , 0, 0.40, 1 ), opacity 583ms cubic-bezier(  0.33 , 0, 0.40, 2)   ");
+    runner.shouldFail('transition', "transform 583ms cubic-bezier(0.33 , 0, 0.40, 1), , opacity 583ms cubic-bezier(  0.33 , 0, 0.40, 2)");
+    runner.shouldFail('transition', "transform 583ms cubic-bezier(0.33 , 0, 0.40, 1),");
+    runner.shouldFail('transition', "transform 583ms cubic-bezier(0.33 , 0, 0.40, 1)   ,");
+    runner.shouldFail('transition', "transform 583ms cubic-bezier(0.33 , 0, 0.40, 1),   ");
+    runner.shouldPass('transition', "left .4s var(--ui-anim-func)");
+    runner.shouldPass('transition', "left .4s var(--ui-anim-func)");
+    testEnd();
+}
+</script>

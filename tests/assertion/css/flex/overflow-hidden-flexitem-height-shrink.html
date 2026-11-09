@@ -1,0 +1,45 @@
+<style>
+html, body { margin: 0 }
+</style>
+
+<div style="display: flex;flex-direction: column;width: 100px; height: 100px;line-height: 20px" >
+   <div style="background: red;" id="a1">
+      AAA <br>
+      AAA <br>
+      AAA <br>
+      AAA <br>
+      AAA <br>
+      AAA <br>
+   </div>
+   <div style="background: blue" id="b1">
+     AAA <br>
+     BBB <br>
+     CCC <br>
+   </div>
+</div>
+
+<div style="display: flex;flex-direction: column;width: 100px; height: 100px;line-height: 20px" >
+   <div style="background: red;overflow: hidden" id="a2">
+      hidden <br>
+      AAA <br>
+      AAA <br>
+      AAA <br>
+   </div>
+   <div style="background: blue" id="b2">
+     AAA <br>
+     BBB <br>
+     CCC <br>
+   </div>
+</div>
+
+<script>
+function testStart() {
+  testAssert(a1.getBoundingClientRect().height==67||a1.getBoundingClientRect().height==66)
+  testAssert(b1.getBoundingClientRect().height==33||b1.getBoundingClientRect().height==34)
+  testAssert(a2.getBoundingClientRect().height==40)
+  testAssert(b2.getBoundingClientRect().height==60)
+  testEnd();
+}
+
+
+</script>

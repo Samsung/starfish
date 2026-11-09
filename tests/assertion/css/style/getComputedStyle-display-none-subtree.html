@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>getComputedStyle inside display:none subtrees returns computed values</title></head>
+<body>
+  <div id="hidden" style="display: none; color: rgb(255, 0, 0);">
+    <div id="child">
+      <span id="grandchild">text</span>
+    </div>
+    <div id="styled">styled by a rule</div>
+    <div id="selfNone" style="display: none;">self none</div>
+  </div>
+  <style>
+    #hidden .rule-target { background-color: rgb(10, 20, 30); }
+  </style>
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (other browser), shim a custom testEnd()
+    // that tallies console.assert results and reports the verdict, so the same
+    // file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[getComputedStyle-display-none-subtree] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // CSSOM: getComputedStyle returns resolved values even for elements that
+    // generate no box; properties whose resolved value needs layout fall back
+    // to the computed value.
+    var child = getComputedStyle(document.getElementById('child'));
+    console.assert(child.display === 'block',
+      'child of display:none parent: display should be "block", got "' + child.display + '"');
+    console.assert(child.color === 'rgb(255, 0, 0)',
+      'child should inherit color through the hidden subtree, got "' + child.color + '"');
+    console.assert(child.backgroundColor === 'rgba(0, 0, 0, 0)',
+      'child background-color should be transparent, got "' + child.backgroundColor + '"');
+
+    var grandchild = getComputedStyle(document.getElementById('grandchild'));
+    console.assert(grandchild.display === 'inline',
+      'grandchild span: display should be "inline", got "' + grandchild.display + '"');
+    console.assert(grandchild.color === 'rgb(255, 0, 0)',
+      'grandchild should inherit color two levels deep, got "' + grandchild.color + '"');
+
+    // Rules must still be matched inside the hidden subtree, not just defaults.
+    document.getElementById('styled').className = 'rule-target';
+    var styled = getComputedStyle(document.getElementById('styled'));
+    console.assert(styled.backgroundColor === 'rgb(10, 20, 30)',
+      'descendant rule should apply inside the hidden subtree, got "' + styled.backgroundColor + '"');
+
+    // An element that is itself display:none keeps working as before.
+    var selfNone = getComputedStyle(document.getElementById('selfNone'));
+    console.assert(selfNone.display === 'none',
+      'display:none element itself should report "none", got "' + selfNone.display + '"');
+
+    testEnd();
+
+  </script>
+</body>
+</html>

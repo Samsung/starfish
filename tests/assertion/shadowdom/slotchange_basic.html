@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>slotchange event basic behavior</title>
+</head>
+<body>
+
+<script>
+// Shim for running in a regular browser without the Starfish harness:
+// collect console.assert results and report a verdict from testEnd().
+if (typeof testEnd !== 'function') {
+    window.testEnd = function() {
+        var passed = true;
+        var a = window.__assertions || [];
+        for (var i = 0; i < a.length; i++) {
+            if (!a[i].ok) { passed = false; console.error('FAIL: ' + a[i].msg); }
+        }
+        console.log('[slotchange_basic] ' + (passed ? 'PASS' : 'FAIL') +
+            ' (' + a.length + ' assertions)');
+        document.title = passed ? 'PASS' : 'FAIL';
+    };
+    var origAssert = console.assert.bind(console);
+    console.assert = function(cond, msg) {
+        window.__assertions = window.__assertions || [];
+        window.__assertions.push({ ok: !!cond, msg: msg || String(cond) });
+        origAssert(cond, msg);
+    };
+}
+
+// Build the shadow tree imperatively (avoid shadowRoot.innerHTML, which is a
+// separate unimplemented path) with a default slot and a named slot "x".
+var host = document.createElement('div');
+document.body.appendChild(host);
+var sr = host.attachShadow({ mode: 'open' });
+var sDefault = document.createElement('slot');           // default (no name)
+var sNamed = document.createElement('slot');
+sNamed.setAttribute('name', 'x');
+sr.appendChild(sDefault);
+sr.appendChild(sNamed);
+
+// Listeners registered before any host-child mutation. slotchange fires as a
+// microtask after assigned-nodes change, so we count and check after a tick.
+var defaultCount = 0, namedCount = 0;
+sDefault.addEventListener('slotchange', function() { defaultCount++; });
+sNamed.addEventListener('slotchange', function() { namedCount++; });
+
+// Phase 1: append a child with no slot= -> distributed to the DEFAULT slot.
+// Spec: only the default slot's assigned nodes change -> slotchange fires on it
+// (case a) and must NOT fire on the named slot (case b).
+var child = document.createElement('div');
+host.appendChild(child);
+
+setTimeout(function() {
+    console.assert(defaultCount === 1,
+        'case a: default slot slotchange fired once on child append (got ' +
+        defaultCount + ')');
+    console.assert(namedCount === 0,
+        'case b: named slot must not fire when only default changed (got ' +
+        namedCount + ')');
+
+    // Phase 2: move the child to the named slot via slot= change. Both the
+    // default slot (loses child) and the named slot (gains child) change ->
+    // each fires slotchange exactly once (case c).
+    child.setAttribute('slot', 'x');
+
+    setTimeout(function() {
+        console.assert(defaultCount === 2,
+            'case c: default slot fires again when child leaves it (got ' +
+            defaultCount + ')');
+        console.assert(namedCount === 1,
+            'case c: named slot fires when child is assigned to it (got ' +
+            namedCount + ')');
+        testEnd();
+    }, 50);
+}, 50);
+</script>
+</body>
+</html>

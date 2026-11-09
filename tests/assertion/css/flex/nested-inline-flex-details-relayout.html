@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Nested inline-flex descendants survive sibling disclosure relayout</title>
+<link rel="help" href="https://www.w3.org/TR/css-flexbox-1/#cross-sizing">
+<style>
+  .workspace { display: flex; align-items: flex-start; gap: 28px; }
+  aside { width: 230px; flex-shrink: 0; }
+  main { flex: 1; min-width: 0; }
+  section { overflow: auto; }
+  .column { display: flex; flex-direction: column; }
+  .spacer { height: 300px; }
+  .row { display: flex; }
+  .item { display: inline-block; margin: 8px; }
+  button { display: inline-flex; }
+  details { border: 1px solid; margin: 10px 0; }
+  summary { padding: 14px 18px; }
+  .detail-body { padding: 0 18px 18px; }
+  pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 360px;
+        overflow: auto; padding: 16px; }
+</style>
+<div class="workspace">
+  <aside>Sidebar</aside>
+  <main>
+    <section><div><div class="column">
+      <div class="spacer">Content</div>
+      <div class="row">
+        <span class="item"><button id="first">First</button></span>
+        <span class="item"><button id="second">Second</button></span>
+      </div>
+    </div></div></section>
+    <details id="disclosure">
+      <summary id="summary">Actions</summary>
+      <div class="detail-body"><p>Local actions</p><pre id="output">None</pre></div>
+    </details>
+  </main>
+</div>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0;
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) { __pass++; }
+    else { __fail++; __nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[nested-inline-flex-details-relayout] ' + verdict);
+    document.title = verdict;
+  };
+}
+
+var first = document.getElementById('first');
+var second = document.getElementById('second');
+var disclosure = document.getElementById('disclosure');
+var summary = document.getElementById('summary');
+var output = document.getElementById('output');
+var initial = second.getBoundingClientRect();
+console.assert(initial.width > 0 && initial.height > 0, 'Initial button has a box');
+
+// Changing one item triggers nested flex measurements. The unchanged item's
+// inline-flex child must still receive final layout before any sibling
+// disclosure change can reuse the surrounding subtree's geometry.
+first.style.borderStyle = 'inset';
+document.body.offsetHeight;
+first.style.borderStyle = 'outset';
+output.textContent = 'Action\nwith\nmultiple\nlines';
+summary.textContent = 'Action received';
+var closedHeight = document.body.offsetHeight;
+
+disclosure.open = true;
+var expandedHeight = document.body.offsetHeight;
+console.assert(expandedHeight > closedHeight,
+  'Opening details increases height: ' + expandedHeight + ' > ' + closedHeight);
+var expanded = second.getBoundingClientRect();
+console.assert(Math.abs(expanded.width - initial.width) < 1,
+  'Unchanged button width: ' + expanded.width + ' versus ' + initial.width);
+console.assert(Math.abs(expanded.height - initial.height) < 1,
+  'Unchanged button height: ' + expanded.height + ' versus ' + initial.height);
+
+disclosure.open = false;
+var collapsedHeight = document.body.offsetHeight;
+console.assert(Math.abs(collapsedHeight - closedHeight) < 1,
+  'Closing restores height: ' + collapsedHeight + ' versus ' + closedHeight);
+disclosure.open = true;
+var reopenedHeight = document.body.offsetHeight;
+console.assert(Math.abs(reopenedHeight - expandedHeight) < 1,
+  'Reopening restores height: ' + reopenedHeight + ' versus ' + expandedHeight);
+testEnd();
+</script>

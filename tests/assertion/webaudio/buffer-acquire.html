@@ -1,0 +1,44 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Web Audio buffer content acquisition</title>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Web Audio buffer acquisition complete";
+    };
+}
+
+if (typeof OfflineAudioContext !== "function") {
+    testEnd();
+} else {
+    function check(attachAfterStart) {
+        const context = new OfflineAudioContext(1, 128, 8000);
+        const buffer = context.createBuffer(1, 128, 8000);
+        const oldView = buffer.getChannelData(0);
+        oldView.fill(1);
+        const source = context.createBufferSource();
+        if (attachAfterStart) {
+            source.start();
+            source.buffer = buffer;
+        } else {
+            source.buffer = buffer;
+            source.start();
+        }
+        console.assert(oldView.byteLength === 0,
+                       "Acquiring content detaches old channel views");
+        const newView = buffer.getChannelData(0);
+        console.assert(newView !== oldView && newView[0] === 1,
+                       "New channel view contains the original data");
+        newView.fill(0.5);
+        console.assert(buffer.getChannelData(0)[0] === 0.5,
+                       "AudioBuffer remains mutable after acquisition");
+        source.connect(context.destination);
+        return context.startRendering().then(function (output) {
+            console.assert(output.getChannelData(0).every(value => value === 1),
+                           "Playback uses the immutable acquired data");
+        });
+    }
+
+    Promise.all([check(false), check(true)]).then(testEnd);
+}
+</script>

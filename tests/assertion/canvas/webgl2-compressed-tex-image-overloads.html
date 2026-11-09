@@ -1,0 +1,109 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebGL2 compressedTex(Sub)Image2D/3D overloads without compressed formats</title>
+<canvas id="canvas" width="1" height="1"></canvas>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0, __firstError = '';
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) {
+      __pass++;
+    } else {
+      __fail++;
+      if (!__firstError) __firstError = message;
+      __nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[webgl2-compressed-tex-image-overloads] ' + verdict);
+    document.title = verdict + (__firstError ? ': ' + __firstError : '');
+  };
+}
+
+// The compressed upload entry points are part of the WebGL 2.0 core API, so
+// they exist even though core defines no compressed format. Without an
+// enabled WEBGL_compressed_texture_* extension any format is INVALID_ENUM,
+// after the PIXEL_UNPACK_BUFFER source rule (offset overloads need a bound
+// buffer, ArrayBufferView overloads need none) and the target binding check.
+var DXT1 = 0x83F0; // COMPRESSED_RGB_S3TC_DXT1_EXT, never enabled here
+
+function hex(v) { return '0x' + v.toString(16); }
+
+function expectError(gl, expected, label) {
+  var error = gl.getError();
+  console.assert(error === expected,
+                 label + ' -> ' + hex(expected) + ', got ' + hex(error));
+}
+
+var gl = document.getElementById('canvas').getContext('webgl2');
+console.assert(!!gl, 'WebGL2 context is required');
+if (gl) {
+  ['compressedTexImage2D', 'compressedTexSubImage2D',
+   'compressedTexImage3D', 'compressedTexSubImage3D'].forEach(function (name) {
+    console.assert(typeof gl[name] === 'function', name + ' must be a function');
+  });
+
+  var data = new Uint8Array(8);
+  gl.getError();
+
+  // No texture bound to the target.
+  gl.compressedTexImage2D(gl.TEXTURE_2D, 0, DXT1, 4, 4, 0, data);
+  expectError(gl, gl.INVALID_OPERATION, 'compressedTexImage2D, no texture');
+
+  var tex2D = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex2D);
+  gl.compressedTexImage2D(gl.TEXTURE_2D, 0, DXT1, 4, 4, 0, data);
+  expectError(gl, gl.INVALID_ENUM, 'compressedTexImage2D(view)');
+  gl.compressedTexImage2D(gl.TEXTURE_2D, 0, DXT1, 4, 4, 0, data, 0, 8);
+  expectError(gl, gl.INVALID_ENUM, 'compressedTexImage2D(view, offset, length)');
+  gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 4, 4, DXT1, data);
+  expectError(gl, gl.INVALID_ENUM, 'compressedTexSubImage2D(view)');
+  gl.compressedTexImage2D(gl.TEXTURE_2D, 0, DXT1, 4, 4, 0, 8, 0);
+  expectError(gl, gl.INVALID_OPERATION,
+              'compressedTexImage2D(offset) without PIXEL_UNPACK_BUFFER');
+  gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 4, 4, DXT1, 8, 0);
+  expectError(gl, gl.INVALID_OPERATION,
+              'compressedTexSubImage2D(offset) without PIXEL_UNPACK_BUFFER');
+  gl.compressedTexImage2D(gl.TEXTURE_3D, 0, DXT1, 4, 4, 0, data);
+  expectError(gl, gl.INVALID_ENUM, 'compressedTexImage2D on TEXTURE_3D');
+
+  var texCube = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, texCube);
+  gl.compressedTexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, DXT1, 4, 4, 0,
+                          data);
+  expectError(gl, gl.INVALID_ENUM, 'compressedTexImage2D on a cube face');
+
+  var tex2DArray = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D_ARRAY, tex2DArray);
+  gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, 0, DXT1, 4, 4, 1, 0, data);
+  expectError(gl, gl.INVALID_ENUM, 'compressedTexImage3D(view)');
+  gl.compressedTexSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, 0, 4, 4, 1, DXT1,
+                             data, 0, 8);
+  expectError(gl, gl.INVALID_ENUM, 'compressedTexSubImage3D(view)');
+  gl.compressedTexImage3D(gl.TEXTURE_2D, 0, DXT1, 4, 4, 1, 0, data);
+  expectError(gl, gl.INVALID_ENUM, 'compressedTexImage3D on TEXTURE_2D');
+
+  var unpack = gl.createBuffer();
+  gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, unpack);
+  gl.bufferData(gl.PIXEL_UNPACK_BUFFER, 8, gl.STATIC_DRAW);
+  gl.getError();
+  gl.compressedTexImage2D(gl.TEXTURE_2D, 0, DXT1, 4, 4, 0, data);
+  expectError(gl, gl.INVALID_OPERATION,
+              'compressedTexImage2D(view) with PIXEL_UNPACK_BUFFER');
+  gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, 0, DXT1, 4, 4, 1, 0, data);
+  expectError(gl, gl.INVALID_OPERATION,
+              'compressedTexImage3D(view) with PIXEL_UNPACK_BUFFER');
+  gl.compressedTexImage2D(gl.TEXTURE_2D, 0, DXT1, 4, 4, 0, 8, 0);
+  expectError(gl, gl.INVALID_ENUM,
+              'compressedTexImage2D(offset) with PIXEL_UNPACK_BUFFER');
+  gl.compressedTexSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, 0, 4, 4, 1, DXT1,
+                             8, 0);
+  expectError(gl, gl.INVALID_ENUM,
+              'compressedTexSubImage3D(offset) with PIXEL_UNPACK_BUFFER');
+  gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+}
+testEnd();
+</script>

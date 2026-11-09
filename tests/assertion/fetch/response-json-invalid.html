@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Response.json() rejects on invalid JSON</title>
+</head>
+<body>
+<script>
+    var windowErrorFired = false;
+    window.onerror = function (m) {
+        windowErrorFired = true;
+    };
+
+    async function run() {
+        var rejectedDirect = false;
+        try {
+            await new Response("<invalid-json/>").json();
+        } catch (e) {
+            rejectedDirect = true;
+            console.assert(e.name === "SyntaxError", "Expected SyntaxError but got " + e.name);
+        }
+        console.assert(rejectedDirect, "Direct Response.json() should have rejected");
+
+        var rejectedNetwork = false;
+        try {
+            var res = await fetch("./resources/invalid.json");
+            await res.json();
+        } catch (e) {
+            rejectedNetwork = true;
+            console.assert(e.name === "SyntaxError", "Expected SyntaxError from network response but got " + e.name);
+        }
+        console.assert(rejectedNetwork, "Network Response.json() should have rejected");
+
+        console.assert(!windowErrorFired, "window.onerror should NOT have fired");
+
+        if (typeof testEnd === "function") {
+            testEnd();
+        }
+    }
+
+    run();
+</script>
+</body>
+</html>

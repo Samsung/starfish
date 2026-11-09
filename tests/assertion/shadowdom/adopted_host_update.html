@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>adoptedStyleSheets: replacing/removing a :host rule updates the host</title>
+</head>
+
+<body>
+  <!-- A `:host` rule from an adopted sheet is promoted into the document's rule
+     set so it reaches the shadow host's cascade. Replacing or clearing the shadow
+     root's adopted sheets must therefore also drop the previously promoted rule;
+     otherwise the host keeps its stale display after the sheet is removed. -->
+  <div id="host"></div>
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (other browser), shim a custom testEnd()
+    // that tallies console.assert results and reports the verdict, so the same
+    // file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[adopted_host_update] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    var host = document.getElementById('host');
+    var sr = host.attachShadow({ mode: 'open' });
+    var flex = new CSSStyleSheet();
+    flex.replaceSync(':host { display: flex; }');
+    var grid = new CSSStyleSheet();
+    grid.replaceSync(':host { display: grid; }');
+
+    // Adopt a :host rule -> host picks it up.
+    sr.adoptedStyleSheets = [flex];
+    console.assert(getComputedStyle(host).display === 'flex',
+      'adopted :host{display:flex} applies (got ' + getComputedStyle(host).display + ')');
+
+    // Clear the adopted sheets -> the promoted rule must be dropped, so the host
+    // reverts to its default display (block for <div>).
+    sr.adoptedStyleSheets = [];
+    console.assert(getComputedStyle(host).display === 'block',
+      'clearing adoptedStyleSheets drops the :host rule, host reverts to block (got ' + getComputedStyle(host).display + ')');
+
+    // Replace with a different :host rule -> host reflects the new value, not a
+    // stale one.
+    sr.adoptedStyleSheets = [grid];
+    console.assert(getComputedStyle(host).display === 'grid',
+      'replacing adoptedStyleSheets applies the new :host{display:grid} (got ' + getComputedStyle(host).display + ')');
+
+    testEnd();
+
+  </script>
+</body>
+
+</html>

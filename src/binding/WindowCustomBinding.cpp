@@ -870,7 +870,9 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
         THROW_EXCEPTION("testImgDiff got a path with unsupported characters");
     }
 
-    cmd += "'" + path + resultImg + "' '" + path + expectedImg + "'";
+    // The third path is where imgdiff writes a diff image if they differ.
+    cmd += "'" + path + resultImg + "' '" + path + expectedImg + "' '" + path +
+           resultImg + "_diff.png'";
 
     STARFISH_LOG_INFO("%s", cmd.c_str());
     FILE* fp = popen(cmd.c_str(), "r");
@@ -888,23 +890,6 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
     STARFISH_LOG_INFO("%s", output.c_str());
 
     if (output.find("[imgdiff-fail]") != std::string::npos) {
-        cmd = "test/tools/image_diff/image_diff --diff ";
-        cmd += "'" + path + resultImg + "' '" + path + expectedImg + "' '" +
-               path + resultImg + "_diff.png'";
-        puts(cmd.c_str());
-
-        FILE* fp = popen(cmd.c_str(), "r");
-        int ch;
-
-        if (!fp) {
-            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        }
-
-        std::string output;
-        while ((ch = fgetc(fp)) != EOF) {
-            output += ch;
-        }
-
         exit(-1);
     }
 

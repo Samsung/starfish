@@ -36,7 +36,6 @@ build/android/**/local.properties
 
 # Node releated
 node_modules
-test/tool/pixel_test/bin/nodejs
 
 # Test suite generated
 Demo.regression
@@ -44,8 +43,6 @@ tmp[0-9]*
 *.png_
 result.csv
 result.xml
-tool/reftest/cairo/internal_part*
-tool/reftest/elf/internal_part*
 error_report
 tool/imgdiff/imgdiff
 
@@ -93,3 +90,6 @@ report.html
 report-*.html
 data.json
 index.html
+# tests/ is checked-in test data; keep the build patterns above off it.
+!tests/**/index.html
+!tests/**/.htaccess

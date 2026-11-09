@@ -1,0 +1,74 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Replacing an audio source discards old decode callbacks</title>
+<body>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Audio source replacement complete";
+    };
+}
+
+function wave(frames) {
+    const sampleRate = 4096;
+    const bytes = new Uint8Array(44 + frames * 2);
+    const view = new DataView(bytes.buffer);
+    function tag(offset, value) {
+        for (let i = 0; i < 4; ++i)
+            bytes[offset + i] = value.charCodeAt(i);
+    }
+    tag(0, "RIFF");
+    view.setUint32(4, bytes.length - 8, true);
+    tag(8, "WAVE");
+    tag(12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    tag(36, "data");
+    view.setUint32(40, frames * 2, true);
+    return URL.createObjectURL(new Blob([bytes], { type: "audio/wav" }));
+}
+
+const oldURL = wave(4096 * 128);
+const newURL = wave(2048);
+const audio = document.createElement("audio");
+let replaced = false;
+let loaded = false;
+let finished = false;
+function finish() {
+    if (finished)
+        return;
+    finished = true;
+    URL.revokeObjectURL(oldURL);
+    URL.revokeObjectURL(newURL);
+    testEnd();
+}
+audio.addEventListener("loadedmetadata", function () {
+    if (!replaced)
+        return;
+    console.assert(Math.abs(audio.duration - 0.5) < 0.001,
+                   "only replacement metadata may update the element");
+    loaded = true;
+    setTimeout(finish, 150);
+});
+audio.addEventListener("error", function () {
+    console.assert(false, "replacing a valid resource must not report an error");
+    finish();
+});
+setTimeout(function () {
+    console.assert(loaded, "replacement resource must load");
+    finish();
+}, 5000);
+audio.src = oldURL;
+audio.load();
+setTimeout(function () {
+    replaced = true;
+    audio.src = newURL;
+    audio.load();
+}, 1);
+</script>
+</body>

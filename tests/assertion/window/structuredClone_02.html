@@ -1,0 +1,56 @@
+<!doctype html>
+<script>
+
+// -------------------------------------------------
+
+var name = '123456';
+var orig = [];
+orig[name] = 'value';
+
+var setter_called = false;
+Object.defineProperty(Object.prototype, name, {
+    set: function(a) {
+        setter_called = true;
+    }
+});
+
+testAssert(orig.hasOwnProperty(name));
+
+clone = structuredClone(orig);
+
+testAssert(Array.isArray(clone));
+testAssert(!setter_called);
+testAssert(clone.hasOwnProperty(name));
+testAssert(clone[name] === orig[name]);
+
+// -------------------------------------------------
+
+var name = '256';
+
+var orig = [];
+for (var i = 0; i < 256; ++i) {
+    orig[i] = i;
+}
+
+orig[name] = 'value';
+
+var setter_called = false;
+Object.defineProperty(Object.prototype, name, {
+    set: function(a) {
+        setter_called = true;
+    }
+});
+
+testAssert(orig.hasOwnProperty(name));
+
+clone = structuredClone(orig);
+
+testAssert(Array.isArray(clone));
+testAssert(!setter_called);
+testAssert(clone.hasOwnProperty(name))
+testAssert(clone[name] === orig[name]);
+
+// -------------------------------------------------
+
+wptTestEnd();
+</script>

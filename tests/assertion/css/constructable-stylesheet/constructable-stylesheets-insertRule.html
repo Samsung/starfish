@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Constructable Stylesheets insertRule/deleteRule/setDisabled Test</title>
+</head>
+
+<body>
+    <div id="target">Hello World</div>
+    <script>
+        (function () {
+            // Test 1: Basic constructor
+            var sheet = new CSSStyleSheet();
+            console.assert(sheet !== null && sheet !== undefined, 'CSSStyleSheet should be created');
+            console.assert(sheet.cssRules.length === 0, 'New stylesheet should have 0 rules');
+            console.assert(sheet.disabled === false, 'New stylesheet should not be disabled');
+
+            // Test 2: insertRule on constructable stylesheet (m_origin is nullptr)
+            var insertResult = sheet.insertRule('#target { color: red; }', 0);
+            console.assert(insertResult === 0, 'insertRule should return the index (0)');
+            console.assert(sheet.cssRules.length === 1, 'Should have 1 rule after insertRule');
+
+            // Verify rule content
+            var rule = sheet.cssRules[0];
+            console.assert(rule.cssText === '#target { color: red; }', 'cssText should match inserted rule');
+            console.assert(rule.selectorText === '#target', 'selectorText should be #target');
+            console.assert(rule.style.color === 'red', 'style.color should be red');
+            console.assert(rule.parentStyleSheet === sheet, 'parentStyleSheet should be the sheet');
+
+            // Test 3: insertRule with index
+            insertResult = sheet.insertRule('.myclass { background: blue; }', 1);
+            console.assert(insertResult === 1, 'insertRule should return the index (1)');
+            console.assert(sheet.cssRules.length === 2, 'Should have 2 rules after second insertRule');
+
+            var rule2 = sheet.cssRules[1];
+            console.assert(rule2.selectorText === '.myclass', 'selectorText should be .myclass');
+            console.assert(rule2.style.background === 'blue', 'style.background should be blue');
+
+            // Test 4: insertRule at specific position (not at end)
+            insertResult = sheet.insertRule('p { margin: 10px; }', 0);
+            console.assert(insertResult === 0, 'insertRule should return the index (0)');
+            console.assert(sheet.cssRules.length === 3, 'Should have 3 rules');
+            console.assert(sheet.cssRules[0].selectorText === 'p', 'First rule should be p');
+            console.assert(sheet.cssRules[1].selectorText === '#target', 'Second rule should be #target');
+            console.assert(sheet.cssRules[2].selectorText === '.myclass', 'Third rule should be .myclass');
+
+            // Test 5: deleteRule on constructable stylesheet
+            sheet.deleteRule(0);
+            console.assert(sheet.cssRules.length === 2, 'Should have 2 rules after deleteRule');
+            console.assert(sheet.cssRules[0].selectorText === '#target', 'First rule should now be #target');
+            console.assert(sheet.cssRules[1].selectorText === '.myclass', 'Second rule should be .myclass');
+
+            // Test 6: setDisabled on constructable stylesheet
+            console.assert(sheet.disabled === false, 'Initial disabled should be false');
+            sheet.disabled = true;
+            console.assert(sheet.disabled === true, 'disabled should be true after setting');
+            sheet.disabled = false;
+            console.assert(sheet.disabled === false, 'disabled should be false again');
+
+            // Test 7: Constructor with disabled option
+            var sheet2 = new CSSStyleSheet({
+                media: 'screen',
+                disabled: true
+            });
+            console.assert(sheet2.disabled === true, 'disabled should be true from constructor');
+            console.assert(sheet2.media.mediaText === 'screen', 'media should be screen');
+
+            // Test 8: Exception - invalid index (too large)
+            var caughtException = false;
+            try {
+                sheet.insertRule('div { color: red; }', 100);
+            } catch (e) {
+                caughtException = true;
+                console.assert(e.name === 'IndexSizeError', 'Exception should be IndexSizeError');
+            }
+            console.assert(caughtException, 'Should throw exception for invalid index');
+
+            // Test 9: Exception - invalid rule syntax
+            caughtException = false;
+            try {
+                sheet.insertRule('this is not a valid rule', 0);
+            } catch (e) {
+                caughtException = true;
+                console.assert(e.name === 'SyntaxError', 'Exception should be SyntaxError');
+            }
+            console.assert(caughtException, 'Should throw exception for invalid rule syntax');
+
+            // Test 10: Exception - deleteRule with invalid index
+            caughtException = false;
+            try {
+                sheet.deleteRule(100);
+            } catch (e) {
+                caughtException = true;
+                console.assert(e.name === 'IndexSizeError', 'Exception should be IndexSizeError');
+            }
+            console.assert(caughtException, 'Should throw exception for invalid delete index');
+
+            // Test 11: Multiple properties in one rule
+            var sheet3 = new CSSStyleSheet();
+            sheet3.insertRule('div { color: red; background: blue; margin: 10px; }', 0);
+            var multiRule = sheet3.cssRules[0];
+            console.assert(multiRule.style.color === 'red', 'color should be red');
+            console.assert(multiRule.style.background === 'blue', 'background should be blue');
+            console.assert(multiRule.style.margin === '10px', 'margin should be 10px');
+
+            // Test 12: Replace existing rule by delete and insert
+            var sheet4 = new CSSStyleSheet();
+            sheet4.insertRule('span { color: red; }', 0);
+            sheet4.insertRule('span { color: blue; }', 1);
+            console.assert(sheet4.cssRules.length === 2, 'Should have 2 rules');
+            console.assert(sheet4.cssRules[0].style.color === 'red', 'First rule color should be red');
+            console.assert(sheet4.cssRules[1].style.color === 'blue', 'Second rule color should be blue');
+            sheet4.deleteRule(0);
+            console.assert(sheet4.cssRules.length === 1, 'Should have 1 rule after delete');
+            console.assert(sheet4.cssRules[0].style.color === 'blue', 'Remaining rule color should be blue');
+
+            if (typeof testEnd === 'function') {
+                testEnd();
+            }
+        })();
+    </script>
+</body>
+
+</html>

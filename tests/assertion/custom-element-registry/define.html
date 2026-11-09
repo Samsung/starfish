@@ -1,0 +1,63 @@
+<style>
+  my-element { 
+    border: 1px solid green;
+  }
+</style>
+
+<my-element id="asdf">MyElement from HTML</my-element>
+<br>
+
+<script>
+  class MyElement extends HTMLElement {
+    constructor() {
+      super();
+
+      // Hook up click listener to set the color to red
+      this.addEventListener('click', function(event) {
+        event.target.style.color = 'red';
+      });
+    }
+  }
+  testAssert(MyElement.prototype != asdf.__proto__)
+  customElements.define('my-element', MyElement);
+  testAssert(MyElement.prototype == asdf.__proto__)
+
+  // Create an instance via JavaScript
+  var myElement = new MyElement();
+  myElement.textContent = "MyElement from Code";
+  document.body.appendChild(myElement);
+
+  testAssert(myElement instanceof MyElement)
+  testAssert(myElement instanceof Element)
+
+  class WrongElement extends HTMLDivElement {
+    constructor() {
+      super();
+    }
+  }
+  customElements.define('wrong-element', WrongElement);
+  try {
+      new WrongElement();
+      testAssert(false);
+  } catch(e) {
+      console.log(e);
+  }
+
+  class WrongElement2 {
+    constructor() {
+    }
+  }
+  
+  customElements.define('wrong-element-2', WrongElement2);
+  try {
+      let e = new WrongElement2();
+      document.body.appendChild(e);
+      textAsset(false)
+  } catch(e) {
+      console.log(e);
+  }
+
+  testEnd();
+
+</script>
+

@@ -1,0 +1,17 @@
+<script>
+  const file1 = new File(["foo\n", "bar"], "foo.txt", {
+    type: "text/plain",
+  });
+
+  try {
+    const file2 = new File(null, "foo.txt", {
+      type: "text/plain",
+    });
+    testAssert(false);
+  } catch (e) {
+    // Do nothing.
+  }
+
+  testAssert(true);
+  wptTestEnd();
+</script>

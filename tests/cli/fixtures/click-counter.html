@@ -1,0 +1,10 @@
+<!doctype html>
+<title>CLI click test</title>
+<button id="counter">Count: 0</button>
+<script>
+var count = 0;
+document.getElementById('counter').addEventListener('click', function() {
+    count++;
+    this.textContent = 'Count: ' + count;
+});
+</script>

@@ -1,0 +1,57 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Grid items with auto margins in a calendar grid are laid out without crashing</title>
+<style>
+  body { margin: 0; width: 800px; }
+  .calendar {
+    display: grid; width: 100%; grid-row-gap: 8px; justify-content: space-between;
+    grid-template-columns: minmax(0, 60px) 1fr minmax(0, 60px) 1fr minmax(0, 60px) 1fr
+      minmax(0, 60px) 1fr minmax(0, 60px) 1fr minmax(0, 60px) 1fr minmax(0, 60px) 0;
+  }
+  .day { width: 40px; height: 40px; margin: auto; padding: 0; border: 0; }
+  .tall { height: 60px; }
+  .late { margin: 0; margin-top: auto; }
+  .sep { display: block; width: 2px; height: calc(100% - 2px); margin: auto 0; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[gridbox_auto_margin_crash] " + document.title);
+  };
+}
+</script>
+<div class="calendar">
+  <button class="day" id="d1">1</button><i class="sep" id="s0"></i><button class="day" id="d2">2</button><i class="sep"></i><button class="day tall" id="d3">3</button><i class="sep"></i><button class="day" id="d4">4</button><i class="sep"></i><button class="day late" id="d5">5</button><i class="sep"></i><button class="day" id="d6">6</button><i class="sep"></i><button class="day" id="d7">7</button><i class="sep"></i>
+  <button class="day" id="d8">8</button><i class="sep"></i><button class="day" id="d9">9</button><i class="sep"></i><button class="day" id="d10">10</button><i class="sep"></i><button class="day" id="d11">11</button><i class="sep"></i><button class="day" id="d12">12</button><i class="sep"></i><button class="day" id="d13">13</button><i class="sep"></i><button class="day" id="d14">14</button><i class="sep"></i>
+  <button class="day" id="d15">15</button><i class="sep"></i><button class="day" id="d16">16</button><i class="sep"></i><button class="day" id="d17">17</button><i class="sep"></i><button class="day" id="d18">18</button><i class="sep"></i><button class="day" id="d19">19</button><i class="sep"></i><button class="day" id="d20">20</button><i class="sep"></i><button class="day" id="d21">21</button><i class="sep"></i>
+  <button class="day" id="d22">22</button><i class="sep"></i><button class="day" id="d23">23</button><i class="sep"></i><button class="day" id="d24">24</button><i class="sep"></i><button class="day" id="d25">25</button><i class="sep"></i><button class="day" id="d26">26</button><i class="sep"></i><button class="day" id="d27">27</button><i class="sep"></i><button class="day" id="d28">28</button><i class="sep"></i>
+  <button class="day" id="d29">29</button><i class="sep"></i><button class="day" id="d30">30</button><i class="sep"></i><button class="day" id="d31">31</button><i class="sep"></i><button class="day" id="d32">32</button><i class="sep"></i><button class="day" id="d33">33</button><i class="sep"></i><button class="day" id="d34">34</button><i class="sep"></i><button class="day" id="d35">35</button><i class="sep"></i>
+</div>
+<script>
+function box(id) { return document.getElementById(id).getBoundingClientRect(); }
+function near(a, b) { return Math.abs(a - b) < 0.5; }
+// Seven 60px day tracks and a final 0px track for the last separator;
+// the six 1fr tracks share the remaining 380px.
+var step = 60 + 380 / 6;
+// margin: auto centres a 40px day in its 60px column. Block-axis auto
+// margins on grid items are covered by WPT css/css-grid/alignment/
+// grid-item-auto-margins-*.
+console.assert(near(box("d1").left, 10), "day 1: " + box("d1").left);
+console.assert(near(box("d7").left, 6 * step + 10), "day 7: " + box("d7").left);
+console.assert(box("d3").top === 0 && box("d3").height === 60, "the tall day sets the first row's height: " + box("d3").top);
+// A day with only margin-top: auto keeps its column's start edge.
+console.assert(near(box("d5").left, 4 * step), "margin-top: auto day: " + box("d5").left);
+// A separator's calc(100% - 2px) height resolves against its 60px row.
+console.assert(box("s0").height === 58, "separator: " + box("s0").height);
+// Later rows are 40px tall and start after an 8px gap: 68, 116, 164, 212.
+console.assert(box("d8").top === 68 && near(box("d8").left, 10), "day 8: " + box("d8").top);
+console.assert(box("d35").top === 212 && near(box("d35").left, 6 * step + 10), "day 35: " + box("d35").left + " " + box("d35").top);
+testEnd();
+</script>

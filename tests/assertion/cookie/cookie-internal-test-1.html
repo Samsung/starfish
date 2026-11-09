@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script>
+    function testStart() {
+      testAssert(document.cookie == "");
+      testEnd();
+    }
+  </script>
+</head>
+
+<body>
+  <p>A Document object that falls into one of the following conditions is a cookie-averse Document object:
+    <br>&nbsp;A Document that has no browsing context.
+    <br>&nbsp;A Document whose URL's scheme is not a network scheme.</p>
+  <p>On getting, if the document is a cookie-averse Document object, then the user agent must return the empty string</p>
+</body>
+
+</html>

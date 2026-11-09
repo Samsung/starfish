@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<title>Percentage max-width of an image inside shrink-to-fit ancestors</title>
+<link rel="help" href="https://www.w3.org/TR/css-sizing-3/#cyclic-percentage-contribution">
+<style>
+  body { margin: 0; width: 800px; }
+  .case { margin-bottom: 4px; }
+  img { max-width: 100%; }
+  .h40 { height: 40px; }
+  .flex { display: flex; }
+  .column { flex-direction: column; }
+  .item { flex: 0 1 auto; min-width: 0; }
+  .line { display: flex; width: 100%; overflow: hidden; }
+</style>
+<body>
+  <!-- Auto width, fixed height: width follows the 1:1 aspect ratio. -->
+  <div class="case"><div id="a1" style="display: inline-block"><img class="h40" src="lime50x50.png"></div></div>
+  <div class="case"><div id="a2" style="float: left"><img class="h40" src="lime50x50.png"></div><div style="clear: both"></div></div>
+  <div class="case" style="position: relative; height: 44px"><div id="a3" style="position: absolute"><img class="h40" src="lime50x50.png"></div></div>
+  <div class="case flex"><div id="a4" class="item"><img class="h40" src="lime50x50.png"></div></div>
+  <div class="case flex"><div id="a5" class="item flex"><img class="h40" src="lime50x50.png"></div></div>
+  <div class="case flex"><div id="a6" class="item flex column"><img class="h40" src="lime50x50.png"></div></div>
+  <!-- Column item > full-width row > image, next to a flex-basis:0 sibling. -->
+  <div class="case flex">
+    <div id="a7" class="item flex column" style="align-self: center"><div class="line"><img class="h40" src="lime50x50.png"></div></div>
+    <div class="item flex column" style="flex-basis: 0; flex-grow: 4"><div class="line">28/12</div></div>
+  </div>
+  <table><tr><td id="a8" style="padding: 0"><img class="h40" src="lime50x50.png"></td></tr></table>
+
+  <!-- Auto width and height: natural size. -->
+  <div class="case"><div id="b1" style="display: inline-block"><img src="lime50x50.png"></div></div>
+  <div class="case flex"><div id="b2" class="item flex column"><img src="lime50x50.png"></div></div>
+
+  <!-- A percentage max-width still clamps against a definite container width. -->
+  <div class="case"><div id="c1" style="display: inline-block; width: 30px"><img class="h40" src="lime50x50.png"></div></div>
+  <!-- max-height still applies with a percentage max-width. -->
+  <div class="case"><div id="c2" style="display: inline-block"><img class="h40" style="max-height: 20px" src="lime50x50.png"></div></div>
+</body>
+<script>
+function imageWidth(id) {
+  return document.getElementById(id).querySelector('img').getBoundingClientRect().width;
+}
+function imageHeight(id) {
+  return document.getElementById(id).querySelector('img').getBoundingClientRect().height;
+}
+function testStart() {
+  var ids = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8'];
+  for (var i = 0; i < ids.length; i++) {
+    testAssert(imageWidth(ids[i]) == 40);
+    testAssert(imageHeight(ids[i]) == 40);
+  }
+  testAssert(document.getElementById('a7').getBoundingClientRect().width == 40);
+
+  testAssert(imageWidth('b1') == 50);
+  testAssert(imageHeight('b1') == 50);
+  testAssert(imageWidth('b2') == 50);
+
+  testAssert(imageWidth('c1') == 30);
+  testAssert(imageHeight('c1') == 40);
+  testAssert(imageWidth('c2') == 20);
+  testAssert(imageHeight('c2') == 20);
+  testEnd();
+}
+</script>

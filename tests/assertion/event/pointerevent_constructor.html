@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+    <h1>PointerEvent: Dispatch custom event</h1>
+    <div id="target0" style="width:800px; height:600px; background-color: green;"></div>
+</body>
+<script>
+    function testStart() {
+        var target0 = document.getElementById("target0");
+        var testBubbles = true;
+        var testCancelable = true;
+        var testPointerId = 42;
+        var testPointerType = 'mouse';
+        var testClientX = 300;
+        var testClientY = 500;
+        var testWidth = 3;
+        var testHeight = 5;
+        var testTiltX = -45;
+        var testTiltY = 30;
+        var testButton = 0;
+        var testButtons = 1;
+        var testPressure = 0.4;
+        var testTangentialPressure = 0.5;
+        var testTwist = 286;
+        var testIsPrimary = true;
+
+        var pointerEventCustom = new PointerEvent("pointerdown",
+            {
+                bubbles: testBubbles,
+                cancelable: testCancelable,
+                pointerId: testPointerId,
+                pointerType: testPointerType,
+                width: testWidth,
+                height: testHeight,
+                clientX: testClientX,
+                clientY: testClientY,
+                tiltX: testTiltX,
+                tiltY: testTiltY,
+                button: testButton,
+                buttons: testButtons,
+                pressure: testPressure,
+                tangentialPressure: testTangentialPressure,
+                twist: testTwist,
+                isPrimary: testIsPrimary
+            });
+        target0.onpointerdown = function (e) {
+            testAssert(e.bubbles == testBubbles);
+            testAssert(e.cancelable == testCancelable);
+            // testAssert(e.pointerId == testPointerId);
+            testAssert(e.pointerType == testPointerType);
+            // testAssert(e.width == testWidth);
+            // testAssert(e.height == testHeight);
+            testAssert(e.clientX == testClientX);
+            testAssert(e.clientY == testClientY);
+            // testAssert(e.tiltX == testTiltX);
+            // testAssert(e.tiltY == testTiltY);
+            testAssert(e.button == testButton);
+            testAssert(e.buttons == testButtons);
+            // testAssert(e.pressure == testPressure);
+            // testAssert(e.tangentialPressure == testTangentialPressure);
+            // testAssert(e.twist == testTwist);
+            // testAssert(e.isPrimary == testIsPrimary);
+            testEnd();
+        };
+        target0.dispatchEvent(pointerEventCustom);
+    }
+</script>
+</html>

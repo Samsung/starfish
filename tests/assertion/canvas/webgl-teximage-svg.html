@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>WebGL texImage2D with SVG image source</title>
+</head>
+<body>
+<canvas id="c1" width="32" height="32"></canvas>
+<canvas id="c2" width="32" height="32"></canvas>
+<script>
+function testContext(gl, isWebGL2) {
+    console.assert(gl !== null, "WebGL context should be available");
+
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    console.assert(gl.getError() === gl.NO_ERROR, "texImage2D error: " + gl.getError());
+
+    var fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+
+    var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    console.assert(status === gl.FRAMEBUFFER_COMPLETE, "FBO status: " + status);
+
+    var pixels = new Uint8Array(4);
+    gl.readPixels(16, 16, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+    console.assert(pixels[0] > 200 && pixels[1] < 50 && pixels[2] < 50 && pixels[3] > 200,
+        (isWebGL2 ? "WebGL2" : "WebGL1") + " pixel mismatch: " + Array.from(pixels));
+
+    console.assert(gl.getError() === gl.NO_ERROR, "gl.getError at end: " + gl.getError());
+}
+
+var img = new Image();
+img.onload = function () {
+    var c1 = document.getElementById("c1");
+    var gl1 = c1.getContext("webgl");
+    testContext(gl1, false);
+
+    var c2 = document.getElementById("c2");
+    var gl2 = c2.getContext("webgl2");
+    if (gl2) {
+        testContext(gl2, true);
+    }
+
+    if (typeof testEnd === "function") {
+        testEnd();
+    }
+};
+img.onerror = function () {
+    console.assert(false, "Failed to load red.svg");
+    if (typeof testEnd === "function") {
+        testEnd();
+    }
+};
+img.src = "red.svg";
+</script>
+</body>
+</html>

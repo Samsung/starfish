@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+    <div id="test1">
+        pointer-events Test (inheritance)
+    </div>
+</body>
+<script>
+    function testStart() {
+        const test1 = document.getElementById('test1');
+
+        document.body.style.pointerEvents = 'none';
+
+        body = window.getComputedStyle(document.body)['pointerEvents'];
+        div = window.getComputedStyle(test1)['pointerEvents'];
+        testAssert(body == 'none');
+        testAssert(div == 'none');
+
+        document.body.style.pointerEvents = 'auto';
+
+        body = window.getComputedStyle(document.body)['pointerEvents'];
+        div = window.getComputedStyle(test1)['pointerEvents'];
+        testAssert(body == 'auto');
+        testAssert(div == 'auto');
+
+        testEnd();
+    }
+</script>
+
+</html>

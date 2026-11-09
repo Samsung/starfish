@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>toDataURL on a canvas without a rendering context</title>
+</head>
+<body>
+<canvas id="attached" width="100" height="50"></canvas>
+<canvas id="empty" width="0" height="50"></canvas>
+<script>
+  // A canvas keeps a transparent black bitmap of its size before any
+  // getContext() call, so toDataURL() must serialize that bitmap instead
+  // of failing. None of these canvases gets a context until after the
+  // data URL has been taken.
+  var PNG = /^data:image\/png[;,]/;
+  var attached = document.getElementById("attached");
+  var detached = document.createElement("canvas");
+
+  var attachedURL = attached.toDataURL();
+  console.assert(PNG.test(attachedURL),
+                 "attached canvas without a context serializes as PNG");
+  console.assert(PNG.test(detached.toDataURL()),
+                 "detached canvas without a context serializes as PNG");
+  console.assert(PNG.test(detached.toDataURL("image/example")),
+                 "an unsupported type falls back to PNG");
+  console.assert(PNG.test(detached.toDataURL("ImAgE/PnG")),
+                 "the type is matched case-insensitively");
+  console.assert(document.getElementById("empty").toDataURL() === "data:,",
+                 "a canvas with no pixels serializes to data:,");
+
+  // Decode the PNG back through an image to check its size and that every
+  // pixel is transparent black.
+  var img = new Image();
+  img.onload = function () {
+    console.assert(img.naturalWidth === 100 && img.naturalHeight === 50,
+                   "PNG has the canvas size, got " + img.naturalWidth + "x" +
+                   img.naturalHeight);
+    var probe = document.createElement("canvas");
+    probe.width = 100;
+    probe.height = 50;
+    var ctx = probe.getContext("2d");
+    ctx.fillStyle = "red";
+    ctx.fillRect(0, 0, 100, 50);
+    ctx.clearRect(0, 0, 100, 50);
+    ctx.drawImage(img, 0, 0);
+    var data = ctx.getImageData(0, 0, 100, 50).data;
+    var nonZero = 0;
+    for (var i = 0; i < data.length; i++) {
+      if (data[i] !== 0) {
+        nonZero++;
+      }
+    }
+    console.assert(nonZero === 0,
+                   "all pixels are transparent black, " + nonZero +
+                   " non-zero bytes");
+    if (window.testEnd) {
+      testEnd();
+    }
+  };
+  img.onerror = function () {
+    console.assert(false, "the PNG decodes");
+    if (window.testEnd) {
+      testEnd();
+    }
+  };
+  img.src = attachedURL;
+</script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Audio rendering continues during a blocked main thread</title>
+<script>
+if (typeof testEnd !== 'function') {
+    window.testEnd = () => { document.title = 'render thread test complete'; };
+}
+function block(ms) {
+    const end = Date.now() + ms;
+    while (Date.now() < end) {}
+}
+function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+async function run() {
+    if (typeof AudioContext !== 'function') return testEnd();
+    const context = new AudioContext({sampleRate: 48000});
+    const other = new AudioContext({sampleRate: 44100});
+    const source = context.createConstantSource();
+    const gain = context.createGain();
+    const analyser = context.createAnalyser();
+    analyser.fftSize = 32;
+    source.connect(gain).connect(analyser).connect(context.destination);
+    source.start();
+    await context.resume();
+    await other.resume();
+    const start = context.currentTime;
+    gain.gain.setValueAtTime(0.25, start);
+    gain.gain.setValueAtTime(0.75, start + 0.05);
+    const disconnected = context.createOscillator();
+    let ended = 0;
+    disconnected.onended = () => {
+        ended++;
+        // Event dispatch must not hold the graph lock across reentrant JS.
+        context.suspend();
+    };
+    disconnected.start();
+    disconnected.stop(start + 0.03);
+    block(200);
+    console.assert(context.currentTime - start > 0.1,
+                   'render clock advances while JS blocks');
+    const data = new Float32Array(32);
+    analyser.getFloatTimeDomainData(data);
+    console.assert(data.every(value => Math.abs(value - 0.75) < 0.001),
+                   'scheduled automation and DSP run without main-thread tasks');
+    console.assert(ended === 0, 'ended is delivered on the main thread');
+    await wait(40);
+    console.assert(ended === 1, 'disconnected source finishes exactly once');
+    await context.suspend();
+    const paused = context.currentTime;
+    const otherStart = other.currentTime;
+    block(80);
+    console.assert(context.currentTime === paused, 'suspend joins the renderer');
+    console.assert(other.currentTime > otherStart,
+                   'another context keeps rendering independently');
+    await context.resume();
+    for (let i = 0; i < 200; i++) {
+        gain.gain.setValueAtTime(i / 200, context.currentTime);
+        gain.disconnect();
+        gain.connect(analyser);
+        analyser.fftSize = i % 2 ? 32 : 64;
+        analyser.getFloatTimeDomainData(data);
+    }
+    await context.close();
+    await other.close();
+    const closed = context.currentTime;
+    block(40);
+    console.assert(context.currentTime === closed, 'close joins the renderer');
+    console.assert(ended === 1, 'completion does not repeat after resume');
+    testEnd();
+}
+run().catch(error => { console.assert(false, String(error)); testEnd(); });
+</script>

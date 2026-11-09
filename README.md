@@ -504,6 +504,21 @@ gradle build
 ninja install_pixel_test_dep
 ```
 
+Starfish's own tests are in `tests/`, by how a test is judged:
+`tests/assertion/` holds pages that judge themselves, `tests/crash/` pages that
+only have to survive, `tests/fixtures/` what they share, and `tests/cdp/` and
+`tests/cli/` the CDP and CLI suites. Image-compared tests are in `tests/pixel/`,
+a submodule because of their size (`git submodule update --init tests/pixel`).
+Upstream test suites are in `third_party/`; Chromium's CDP tests are in the
+sparse `third_party/blink` checkout (`./tool/blink/fetch.sh`). Reftests are the
+WPT reftests, run straight out of the `third_party/wpt` submodule (see
+`docs/wpt.md`), and the WebKit, Blink and Gecko reftests. The WebKit
+LayoutTests (`webkit_test`), Blink web tests (`blink_test`) and Gecko tests
+(`gecko_test`) run out of `third_party/webkit`, `third_party/blink` and
+`third_party/gecko`, sparse checkouts that `./tool/<vendor>/fetch.sh` makes
+(see `docs/webkit_layouttests.md`, `docs/blink_web_tests.md` and
+`docs/gecko_tests.md`).
+
 Wrap every test run in `xvfb-run -s '-screen 0 1920x1080x24' -a`, even on a
 machine with a live desktop session: the suites launch Starfish instances
 8-way in parallel, which spikes load on a real X server, and the fixed
@@ -525,23 +540,13 @@ xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py
 ```
 ``` sh
 # Sub tests
-# A. Dom Conformance Test
-./tool/runner/test_runner.py dom_conformance
+# A. Reftest (WPT reftests from third_party/wpt; see docs/wpt.md)
+./tool/runner/test_runner.py wpt_serve_reftest
 
-# B. Web Platfrom Test
-./tool/runner/test_runner.py wpt_all or
-./tool/runner/test_runner.py wpt_[css_css21|css_backgrounds|css_color|css_flexbox|css_transforms|css_variables|mediaqueries|selectors]
-
-# C. Vendor Test
-./tool/runner/test_runner.py vendor_test or vendor_test_[blink|webkit|gecko]
-
-# C-1. Khronos WebGL conformance (needs a -DWEBGL=1 build; see docs/khronos_webgl.md)
+# B. Khronos WebGL conformance (needs a -DWEBGL=1 build; see docs/khronos_webgl.md)
 ./tool/runner/test_runner.py khronos_test or vendor_test_[khronos|khronos2|khronossdk]
 
-# D. Bidi Test
-./tool/runner/test_runner.py bidi_test
-
-# E. Internal Test
+# C. Internal Test
 ./tool/runner/test_runner.py internal_test
 
 # Impl unload/reload regression (Debug or -DENABLE_TEST=1 build).
@@ -578,7 +583,7 @@ xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/impl_unload_test.py 
   --impl out/debug/lib/liblightweight-web-engine-impl.so \
   --api out/debug/lib/liblightweight-web-engine.so --host-thread
 
-# The direct internal-test driver accepts STARFISH_BIN to choose a build
+# The direct internal test driver accepts STARFISH_BIN to choose a build
 # without changing the repository's ./Starfish symlink.
 STARFISH_BIN="$PWD/out/release/bin/Starfish" xvfb-run -s '-screen 0 1920x1080x24' -a \
   python3 tool/drivers/run_test.py basic tool/reftest/cairo/internal.res common -p8
@@ -614,8 +619,6 @@ ninja -C out/ffmpeg starfish.executable
 # Each real-time AudioContext or playing <audio> element opens its own
 # PulseAudio client; at most 8 are open at once (further ones render
 # silently against the wall clock).
-# To check audible output manually, open
-# test/cairo/internal-test/webaudio/manual-pulse-output.html and press Play.
 # OfflineAudioContext returns rendered PCM without an output device.
 
 # Web Audio API probes (CI): runs tool/webaudio/api_probes.html groups over a
@@ -655,11 +658,19 @@ xvfb-run -s '-screen 0 1920x1080x24' -a \
 xvfb-run -s '-screen 0 1920x1080x24' -a \
   python3 tool/webaudio/test_graph_thread.py --build-dir out/release
 
-# F. CDP Test
+# D. CDP Test
 ./tool/cdp_test/run.py all --worker
 
-# G. LWE CLI Test
+# E. LWE CLI Test
 python3 tool/cli_test/run_cli_test.py
+
+# F. WebKit LayoutTests (run ./tool/webkit/fetch.sh first; see docs/webkit_layouttests.md)
+./tool/runner/test_runner.py webkit_test
+
+# G. Blink web tests and Gecko tests (run ./tool/blink/fetch.sh and
+#    ./tool/gecko/fetch.sh first; see docs/blink_web_tests.md, docs/gecko_tests.md)
+./tool/runner/test_runner.py blink_test
+./tool/runner/test_runner.py gecko_test
 ```
 
 If you want to capture the screenshot on the command line, use:
@@ -667,10 +678,6 @@ If you want to capture the screenshot on the command line, use:
 ``` sh
 # Starfish
 ELM_ENGINE="shot:file=[capture.png]" ./run.sh [filepath=*.html] --pixel-test --width=800 --height=600
-
-# node-WebKit
-test/tool/nwjs-no-AA/nw tool/pixel_test/nw_capture/ -l [filepath=**.res] pc
-test/tool/nwjs-no-AA/nw tool/pixel_test/nw_capture/ -f [filepath=**.html] pc
 ```
 
 ### Khronos WebGL Conformance Tests
@@ -698,29 +705,40 @@ wrapper. Clang keeps 8 parallel tests with `LP_NUM_THREADS=4`.
 See `docs/khronos_webgl.md` for how results are collected and how to move
 the pin.
 
+### WebKit LayoutTests
+
+The [WebKit LayoutTests](https://github.com/WebKit/WebKit/tree/main/LayoutTests)
+of `dom/html` and the `fast/*` directories named in `./tool/webkit/fetch.sh`
+are pinned as the `third_party/webkit` submodule and served unmodified. The
+WebKit tree is several GB, so `git submodule update` skips it;
+`./tool/webkit/fetch.sh` checks out only those directories.
+`./tool/runner/test_runner.py webkit_test` runs the list in
+`tool/reftest/cairo/webkit.res`: text tests, and reftests, which need
+`tool/imgdiff/imgdiff` like `wpt_serve_reftest`. See
+`docs/webkit_layouttests.md` for how results are collected and how to move
+the pin.
+
+### Blink web tests and Gecko tests
+
+Chromium's [Blink web tests](https://chromium.googlesource.com/chromium/src/+/main/third_party/blink/web_tests/)
+and Firefox's DOM mochitests and layout reftests are pinned the same way, as
+the `third_party/blink` and `third_party/gecko` submodules, and served
+unmodified out of sparse checkouts that `./tool/blink/fetch.sh` and
+`./tool/gecko/fetch.sh` make. `./tool/runner/test_runner.py blink_test` and
+`gecko_test` run the lists in `tool/reftest/cairo/blink.res` and `gecko.res`;
+both lists also hold reftests, as WebKit's does. See `docs/blink_web_tests.md` and `docs/gecko_tests.md`.
+
 ### Web Platform Tests
 
 We use the [Web Platform Tests](https://github.com/w3c/web-platform-tests). The Web Platform Tests Project is a W3C-coordinated attempt to build a cross-browser testsuite for the Web-platform stack.
 
-You can find these in `test/reftest/web-platform-tests/*`
+They are pinned as the `third_party/wpt` submodule and served unmodified by
+`wpt serve` (see `docs/wpt.md`).
 
 To run the Web Platform Tests, use:
 
 ``` sh
-./tool/runner/test_runner.py wpt_[name]
-```
-
-### Bidi Tests
-Bidi tests perform pixel tests on a device. To run the tests,
-- Connect your device
-- run the following
-
-```sh
-ninja regression_test_bidi.tizen_wearable_arm.debug
-sdb shell
-cd /home/developer
-./bidi_test_run.sh
-./bidi_test_clean.sh
+./tool/runner/test_runner.py wpt_serve_[name]
 ```
 
 ### JS Debugging

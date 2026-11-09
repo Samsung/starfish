@@ -1,0 +1,31 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Setting select.value fires no input or change event</title>
+<link rel="help" href="https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-value">
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[select-value-setter-no-events] " + document.title);
+  };
+}
+</script>
+<select id="s"><option value="a">A</option><option value="b">B</option></select>
+<script>
+var s = document.getElementById("s");
+var events = [];
+s.addEventListener("change", function () { events.push("change"); });
+s.addEventListener("input", function () { events.push("input"); });
+s.value = "b";
+console.assert(s.value === "b" && s.selectedIndex === 1, "value setter selects the matching option");
+setTimeout(function () {
+  console.assert(events.length === 0, "no events, got: " + events.join(","));
+  testEnd();
+}, 0);
+</script>

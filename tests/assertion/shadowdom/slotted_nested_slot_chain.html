@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>::slotted() across a chain of nested slots</title></head>
+<body>
+  <div id="hostA"><span id="spanA">a</span></div>
+  <div id="hostB"><span id="spanB">b</span></div>
+  <div id="hostC"><span id="spanC">c</span></div>
+  <div id="hostD"><span id="spanD">d</span></div>
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (other browser), shim a custom testEnd()
+    // that tallies console.assert results and reports the verdict, so the same
+    // file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[slotted_nested_slot_chain] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // css-shadow-1 #slotted-pseudo: ::slotted() represents the elements
+    // assigned to a slot *after flattening*. When a shadow tree's <slot> is
+    // itself a slottable of a slot in a nested shadow tree, the light-DOM
+    // node assigned to the outer slot is also a flattened slottable of the
+    // inner slot, so the ::slotted() rules of every shadow tree along that
+    // slot chain apply to it. The combinators preceding ::slotted() are
+    // matched against the ancestors of the slot that lives in the rule's own
+    // tree -- never against a slot deeper down the chain.
+
+    function attach(host, html) {
+      var root = host.attachShadow({ mode: 'open' });
+      root.innerHTML = html;
+      return root;
+    }
+    function style(id) {
+      return getComputedStyle(document.getElementById(id));
+    }
+    var TRANSPARENT = 'rgba(0, 0, 0, 0)';
+    var c;
+
+    // Case A: the inner tree's plain ::slotted() reaches a node that was
+    // slotted into the outer tree and re-slotted through the outer <slot>.
+    var rootA = attach(document.getElementById('hostA'),
+      '<x-inner><slot></slot></x-inner>');
+    attach(rootA.querySelector('x-inner'),
+      '<style>::slotted(span) { color: rgb(1, 2, 3); }</style><slot></slot>');
+    c = style('spanA').color;
+    console.assert(c === 'rgb(1, 2, 3)',
+      'A: inner-tree ::slotted() must reach the re-slotted node, got ' + c);
+
+    // Case B: the outer tree's own ::slotted() rules keep matching when the
+    // outer <slot> is itself re-slotted. Their descendant / child combinators
+    // must resolve against the outer slot's parent (#frame), not jump into the
+    // inner tree.
+    var rootB = attach(document.getElementById('hostB'),
+      '<style>' +
+      '  #frame ::slotted(span) { color: rgb(4, 5, 6); }' +
+      '  #frame > ::slotted(span) { background-color: rgb(7, 8, 9); }' +
+      '</style>' +
+      '<x-inner id="frame"><slot></slot></x-inner>');
+    attach(rootB.querySelector('x-inner'), '<slot></slot>');
+    c = style('spanB').color;
+    console.assert(c === 'rgb(4, 5, 6)',
+      'B: outer "#frame ::slotted()" must still match with a re-slotted slot, got ' + c);
+    c = style('spanB').backgroundColor;
+    console.assert(c === 'rgb(7, 8, 9)',
+      'B: outer "#frame > ::slotted()" must still match with a re-slotted slot, got ' + c);
+
+    // Case C: a combinator in the inner tree matches the inner slot's
+    // ancestors; the identical selector text in the outer tree must NOT match,
+    // because .body is not an ancestor of the outer slot.
+    var rootC = attach(document.getElementById('hostC'),
+      '<style>.body ::slotted(span) { background-color: rgb(10, 11, 12); }</style>' +
+      '<x-inner><slot></slot></x-inner>');
+    var innerRootC = attach(rootC.querySelector('x-inner'),
+      '<style>.body ::slotted(span) { color: rgb(13, 14, 15); }</style>' +
+      '<div class="body"><slot></slot></div>');
+    c = style('spanC').color;
+    console.assert(c === 'rgb(13, 14, 15)',
+      'C: inner ".body ::slotted()" must match through the slot chain, got ' + c);
+    c = style('spanC').backgroundColor;
+    console.assert(c === TRANSPARENT,
+      'C: outer ".body ::slotted()" must NOT match (.body lives in the inner tree), got ' + c);
+
+    // Case D: three trees deep; every tree on the chain contributes.
+    var rootD = attach(document.getElementById('hostD'),
+      '<x-mid><slot></slot></x-mid>');
+    var midRootD = attach(rootD.querySelector('x-mid'),
+      '<style>::slotted(span) { background-color: rgb(16, 17, 18); }</style>' +
+      '<x-inner><slot></slot></x-inner>');
+    attach(midRootD.querySelector('x-inner'),
+      '<style>::slotted(span) { color: rgb(19, 20, 21); }</style><slot></slot>');
+    c = style('spanD').color;
+    console.assert(c === 'rgb(19, 20, 21)',
+      'D: innermost ::slotted() must reach a node two slots away, got ' + c);
+    c = style('spanD').backgroundColor;
+    console.assert(c === 'rgb(16, 17, 18)',
+      'D: middle ::slotted() must reach a node one slot away, got ' + c);
+
+    // Invalidation: a class / id change on the slot's ancestor inside either
+    // tree must restyle the slotted node in the document.
+    var bodyC = innerRootC.querySelector('.body');
+    bodyC.classList.remove('body');
+    c = style('spanC').color;
+    console.assert(c === 'rgb(0, 0, 0)',
+      'C: removing .body in the inner tree must drop the inner rule, got ' + c);
+    bodyC.classList.add('body');
+    c = style('spanC').color;
+    console.assert(c === 'rgb(13, 14, 15)',
+      'C: re-adding .body in the inner tree must re-apply the inner rule, got ' + c);
+
+    var frameB = rootB.querySelector('#frame');
+    frameB.removeAttribute('id');
+    c = style('spanB').color;
+    console.assert(c === 'rgb(0, 0, 0)',
+      'B: removing #frame in the outer tree must drop the outer rule, got ' + c);
+    c = style('spanB').backgroundColor;
+    console.assert(c === TRANSPARENT,
+      'B: removing #frame in the outer tree must drop the child-combinator rule, got ' + c);
+
+    testEnd();
+
+  </script>
+</body>
+</html>

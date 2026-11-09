@@ -1,0 +1,9 @@
+<!doctype html>
+<title>Fill test</title>
+<input id="target" type="text" value="old text" />
+<button id="mirror">Mirror</button>
+<script>
+document.getElementById('mirror').addEventListener('click', function() {
+    this.textContent = document.getElementById('target').value;
+});
+</script>

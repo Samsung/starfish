@@ -59,7 +59,6 @@ P /.circleci
 - .gitignore
 - .gitmodules
 - .gitattributes
-- .gitlab-ci.yml
 - .gbs.conf
 - *.list
 - .clang-format

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+ <head>
+  <meta charset="utf-8">
+  <style>
+    /* .repro is a column flex container with an indefinite main size
+       (auto height). Each item is a nested flex container (a row flex)
+       with flex:1 1 0 (definite zero flex-basis) + align-self:stretch
+       (so its cross size is the definite container width) and a CJK text
+       label.
+
+       Without the CSS Flexbox 4.5 automatic minimum size there is no
+       positive free space to grow into, so every item collapses to a
+       main size of 0 and the three items overlap at the same vertical
+       position. (A naive content-suggestion fix that measured the nested
+       flex container at its fit-content cross size would instead wrap the
+       CJK text char-by-char and overstate the height.)
+
+       With the fix each item is floored by its content-based minimum,
+       measured at its stretched (definite) cross size, so the items stack
+       compactly one line tall -- exactly like the .reference below, which
+       lays out the identical boxes in normal block flow.
+
+       The test passes iff the repro layout matches the reference layout. */
+    .box {
+        width: 200px;
+        border: 2px solid #333;
+        line-height: 20px;
+        font-size: 16px;
+        font-family: sans-serif;
+    }
+    .repro {
+        display: flex;
+        flex-direction: column;
+        /* no height -> main size is indefinite (the trigger) */
+    }
+    .wrap {
+        flex: 1 1 0;         /* flex-basis: 0 */
+        align-self: stretch; /* definite cross size = container width */
+        display: flex;       /* item is itself a (row) flex container */
+        flex-direction: row;
+        justify-content: center;
+        border: 1px solid #4488ff;
+    }
+    /* reference rows: the same nested-flex boxes, but laid out as normal
+       in-flow blocks so each takes its content height (one line). */
+    .ref-row {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        border: 1px solid #4488ff;
+    }
+    .label {
+        flex: 1 1 0;
+        text-align: center;
+        padding: 10px 0;
+        font-weight: bold;
+    }
+  </style>
+ </head>
+ <body>
+   <div class="box repro" id="repro">
+     <div class="wrap"><div class="label">가나 다라마바사 아자</div></div>
+     <div class="wrap"><div class="label">가나다 라마</div></div>
+     <div class="wrap"><div class="label">가나 다 라</div></div>
+   </div>
+
+   <div class="box reference" id="reference">
+     <div class="ref-row"><div class="label">가나 다라마바사 아자</div></div>
+     <div class="ref-row"><div class="label">가나다 라마</div></div>
+     <div class="ref-row"><div class="label">가나 다 라</div></div>
+   </div>
+
+<script>
+   function rowsOf(id) {
+       var box = document.getElementById(id);
+       var boxTop = box.getBoundingClientRect().top;
+       var out = [];
+       var children = box.children;
+       for (var i = 0; i < children.length; i++) {
+           var r = children[i].getBoundingClientRect();
+           // Normalize each row to its offset from the container top so the
+           // two containers (at different y positions) can be compared.
+           out.push({ top: r.top - boxTop, height: r.height });
+       }
+       return out;
+   }
+
+   function near(a, b) { return Math.abs(a - b) <= 1; }
+
+   var repro = rowsOf("repro");
+   var ref = rowsOf("reference");
+
+   // The repro layout must be identical to the reference layout: same
+   // number of rows, same height per row, same vertical offset per row.
+   testAssert(repro.length === ref.length);
+   for (var i = 0; i < ref.length; i++) {
+       testAssert(near(repro[i].height, ref[i].height));
+       testAssert(near(repro[i].top, ref[i].top));
+   }
+
+   // Sanity: rows are one line tall (floored by content) and do not overlap.
+   for (var i = 0; i < repro.length; i++) {
+       testAssert(repro[i].height >= 20);
+   }
+   for (var i = 1; i < repro.length; i++) {
+       testAssert(repro[i].top >= repro[i - 1].top + repro[i - 1].height - 1);
+   }
+
+   testEnd();
+</script>
+</body>
+</html>

@@ -16,7 +16,7 @@ class BehaviorReasonTest(unittest.TestCase):
     def test_output_difference_does_not_store_the_repository_path(self):
         local_url = (
             launcher.REPOSITORY_DIR
-            / "test/cdp/inspector-protocol/resources/test-page.html"
+            / "third_party/blink/third_party/blink/web_tests/http/tests/inspector-protocol/resources/test-page.html"
         ).as_uri()
         error = AssertionError(
             "line 4: expected 'current location: "
@@ -28,12 +28,12 @@ class BehaviorReasonTest(unittest.TestCase):
 
         self.assertEqual("output-differs", category)
         self.assertNotIn(str(launcher.REPOSITORY_DIR), detail)
-        self.assertIn("file://<repo>/test/cdp/inspector-protocol/", detail)
+        self.assertIn("file://<repo>/third_party/blink/third_party/blink/web_tests/http/tests/inspector-protocol/", detail)
 
     def test_harness_error_does_not_store_the_repository_path(self):
         script = (
             launcher.REPOSITORY_DIR
-            / "test/cdp/inspector-protocol/example/example.js"
+            / "third_party/blink/third_party/blink/web_tests/http/tests/inspector-protocol/example/example.js"
         )
 
         category, detail = behavior.reason(
@@ -43,7 +43,7 @@ class BehaviorReasonTest(unittest.TestCase):
         self.assertEqual("harness-error", category)
         self.assertNotIn(str(launcher.REPOSITORY_DIR), detail)
         self.assertEqual(
-            "node exited 1: <repo>/test/cdp/inspector-protocol/"
+            "node exited 1: <repo>/third_party/blink/third_party/blink/web_tests/http/tests/inspector-protocol/"
             "example/example.js:23",
             detail,
         )
@@ -53,19 +53,20 @@ class TargetBaseURLTest(unittest.TestCase):
     def test_upstream_and_internal_test_paths_use_posix_http_bases(self):
         cases = (
             (
-                "inspector-protocol/accessibility/accessibility-getRootNode.js",
+                static_server.INSPECTOR_ROOT
+                / "accessibility/accessibility-getRootNode.js",
                 "http://127.0.0.1:8000/inspector-protocol/accessibility/",
             ),
             (
-                "inspector-protocol-internal/page/internal-case.js",
+                static_server.DOCUMENT_ROOT
+                / "inspector-protocol-internal/page/internal-case.js",
                 "http://127.0.0.1:8000/"
                 "inspector-protocol-internal/page/",
             ),
         )
 
-        for relative, expected in cases:
-            with self.subTest(relative=relative):
-                test_path = static_server.DOCUMENT_ROOT / relative
+        for test_path, expected in cases:
+            with self.subTest(test_path=test_path):
                 self.assertEqual(
                     expected, static_server.target_base_url(test_path)
                 )

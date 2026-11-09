@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+        .boxContainter {
+            width: 1000px;
+            height: 500px;
+            background-color: yellow;
+        }
+
+        .flexContainer {
+            display: flex;
+            flex-direction: column;
+
+        }
+
+        .flexItem {
+            max-width: calc(50%);
+            background-color: blue;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="boxContainter">
+        <div class="flexContainer">
+            <div id="target" class="flexItem">
+                xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+            </div>
+        </div>
+    </div>
+    <script>
+        console.log(getComputedStyle(target)['width'] === "500px");
+        testAssert(getComputedStyle(target)['width'] === "500px");
+        testEnd();
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>animate_keySplines</title>
+</head>
+
+<body>
+    <svg width="150" height="300" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="10" r="10">
+            <animate id="validKeySplines" attributeName="cx" dur="1s" calcMode="spline" values="60; 110; 60; 10; 60"
+                keySplines="0.5 0 0.5 1; 0.5 0 0.5 1; 0.5 0 0.5 1; 0.5 0 0.5 1;" />
+            <animate id="invalidKeySplines" attributeName="cy" dur="1s" calcMode="spline" values="10; 60; 110; 60; 10"
+                keySplines="0.5 0 0.5 1; 0.5 0 0.5 1; 0.5 0 0.5 1; " />
+        </circle>
+    </svg>
+</body>
+<script>
+    function createRef(value) {
+        return {
+            value: value
+        };
+    }
+    let validBeginEventCount = createRef(0);
+    let validEndEventCount = createRef(0);
+    let invalidBeginEventCount = createRef(0);
+    let invalidEndEventCount = createRef(0);
+
+    let counter = (countRef, name) => {
+        let count = countRef;
+        let eventName = name;
+        return function () {
+            count.value++;
+            console.log(`${eventName} event ${count.value}`);
+        }
+    };
+
+    validKeySplines.addEventListener('beginEvent', counter(validBeginEventCount, 'beginEvent'));
+    validKeySplines.addEventListener('endEvent', counter(validEndEventCount, 'endEvent'));
+    invalidKeySplines.addEventListener('beginEvent', counter(invalidBeginEventCount, 'beginEvent'));
+    invalidKeySplines.addEventListener('endEvent', counter(invalidEndEventCount, 'endEvent'));
+    setTimeout(() => {
+        // 'beginEvent should be called once';
+        testAssert(validBeginEventCount.value === 1);
+        // 'endEvent should be called once';
+        testAssert(validEndEventCount.value === 1);
+        // 'beginEvent should be called once';
+        testAssert(invalidBeginEventCount.value === 1);
+        // 'endEvent should be called once';
+        testAssert(invalidBeginEventCount.value === 1);
+
+        testEnd();
+    }, 1500);
+</script>
+
+</html>

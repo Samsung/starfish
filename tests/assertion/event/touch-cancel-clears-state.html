@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<!--
+  simulateTouchCancel must dispatch a touchcancel event and clear internal
+  touch state (hover + active) so subsequent taps work from a clean slate.
+  Concretely: after a cancel, a fresh tap must still fire touchstart/touchend.
+-->
+<head>
+<style>
+  body { margin: 0; }
+  #target { width: 200px; height: 200px; background: lightcoral; }
+</style>
+</head>
+<body>
+  <div id="target"></div>
+</body>
+<script>
+  var events = [];
+  var target = document.getElementById("target");
+  ["touchstart", "touchcancel", "touchend"].forEach(function(type) {
+    target.addEventListener(type, function(e) {
+      events.push(e.type);
+    });
+  });
+
+  function testStart() {
+    // First sequence: start then cancel
+    simulateTouchStart(100, 100);
+    simulateTouchCancel(100, 100);
+    // Second sequence: clean tap after cancel
+    simulateTouchStart(100, 100);
+    simulateTouchEnd(100, 100);
+
+    setTimeout(function() {
+      testAssert(events[0] === "touchstart");
+      testAssert(events[1] === "touchcancel");
+      testAssert(events[2] === "touchstart");
+      testAssert(events[3] === "touchend");
+      testEnd();
+    }, 100);
+  }
+</script>
+</html>

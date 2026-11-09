@@ -1,0 +1,80 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>GIF frames that extend past the logical screen are clipped</title>
+<link rel="help" href="https://www.w3.org/Graphics/GIF/spec-gif89a.txt">
+<script>
+if (typeof testEnd !== 'function') {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? 'FAIL' : 'PASS') + ' (' + passed + ' passed, ' + failed + ' failed)';
+    console.log('[gif-frame-off-screen] ' + document.title);
+  };
+}
+</script>
+<body>
+<p>This test should not crash.</p>
+<!-- An Image Descriptor positions a frame relative to the logical screen,
+     anywhere in a 16-bit space; only the part on the screen is shown.
+     gif-frame-off-screen.gif: a 1x1 screen with its frame at (60000, 60000).
+     gif-frame-clipped.gif: a 2x2 screen with a 2x2 green frame at (1, 1).
+     gif-frame-clipped-animated.gif: the same clipped frame, then an
+     interlaced frame far below the screen, played as an animation. -->
+<img id="offscreen" style="width: 10px; height: 10px">
+<img id="clipped" style="width: 10px; height: 10px">
+<img id="animated" style="width: 10px; height: 10px">
+<script>
+function waitForImage(image, src) {
+  return new Promise(function (resolve) {
+    image.onload = function () { resolve(true); };
+    image.onerror = function () { resolve(false); };
+    image.src = src;
+  });
+}
+
+function nextFrame() {
+  return new Promise(function (resolve) {
+    requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+  });
+}
+
+function wait(ms) {
+  return new Promise(function (resolve) { setTimeout(resolve, ms); });
+}
+
+function pixel(image, x, y) {
+  var canvas = document.createElement('canvas');
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  var context = canvas.getContext('2d');
+  context.drawImage(image, 0, 0);
+  return Array.prototype.slice.call(context.getImageData(x, y, 1, 1).data);
+}
+
+var offscreen = document.getElementById('offscreen');
+var clipped = document.getElementById('clipped');
+var animated = document.getElementById('animated');
+waitForImage(offscreen, 'gif-frame-off-screen.gif').then(function (loaded) {
+  console.assert(loaded, 'a GIF whose frame is off the screen loads');
+  console.assert(offscreen.naturalWidth === 1 && offscreen.naturalHeight === 1,
+                 'the logical screen sets the size, not the frame');
+  return nextFrame();
+}).then(function () {
+  return waitForImage(clipped, 'gif-frame-clipped.gif');
+}).then(function (loaded) {
+  console.assert(loaded, 'a GIF whose frame sticks out of the screen loads');
+  console.assert(clipped.naturalWidth === 2 && clipped.naturalHeight === 2,
+                 'a clipped frame does not grow the screen');
+  console.assert(pixel(clipped, 1, 1).join() === '0,255,0,255',
+                 'the visible part of a clipped frame is drawn, got ' + pixel(clipped, 1, 1));
+  return waitForImage(animated, 'gif-frame-clipped-animated.gif');
+}).then(function (loaded) {
+  console.assert(loaded, 'an animated GIF with off-screen frames loads');
+  // Let several loops of the 20ms frames play.
+  return wait(500);
+}).then(nextFrame).then(testEnd);
+</script>

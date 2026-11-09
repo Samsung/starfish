@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+</head>
+
+<body>
+  <script src="postmessage-typedarray.js"></script>
+  <script>
+    window.onload = function () {
+      var message = originalMessage;
+      parent.postMessage(message, '*');
+
+      for (prop in message) {
+        message[prop][0] = message[prop][1] = message[prop][2] = 99;
+      }
+    }
+  </script>
+</body>
+
+</html>

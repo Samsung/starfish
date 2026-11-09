@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>::slotted() from a nested tree survives a document stylesheet rebuild</title>
+  <style id="doc-sheet">body { margin: 0; }</style>
+</head>
+<body>
+  <div id="host"><span id="first">a</span></div>
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (other browser), shim a custom testEnd()
+    // that tallies console.assert results and reports the verdict, so the same
+    // file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[slotted_nested_after_document_sheet_rebuild] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // The only ::slotted() rule on the page lives in a shadow tree nested
+    // inside another shadow tree, and reaches the document's <span> through
+    // the outer tree's re-slotted <slot>. Rebuilding the document's own rule
+    // set (here: removing a document stylesheet) must not make that rule
+    // disappear from nodes restyled afterwards -- the rule's own tree did not
+    // change.
+    var host = document.getElementById('host');
+    var outer = host.attachShadow({ mode: 'open' });
+    outer.innerHTML = '<x-inner><slot></slot></x-inner>';
+    var inner = outer.querySelector('x-inner').attachShadow({ mode: 'open' });
+    inner.innerHTML =
+      '<style>::slotted(span) { color: rgb(1, 2, 3); }</style><slot></slot>';
+
+    function color(el) { return getComputedStyle(el).color; }
+    var first = document.getElementById('first');
+    var c;
+
+    c = color(first);
+    console.assert(c === 'rgb(1, 2, 3)',
+      'nested ::slotted() applies before the rebuild, got ' + c);
+
+    document.getElementById('doc-sheet').remove();
+
+    // A restyle of the existing slotted node.
+    first.className = 'restyled';
+    c = color(first);
+    console.assert(c === 'rgb(1, 2, 3)',
+      'nested ::slotted() still applies to a restyled node after a document ' +
+      'sheet was removed, got ' + c);
+
+    // A slotted node styled for the first time after the rebuild.
+    var second = document.createElement('span');
+    second.textContent = 'b';
+    host.appendChild(second);
+    c = color(second);
+    console.assert(c === 'rgb(1, 2, 3)',
+      'nested ::slotted() applies to a node slotted after a document sheet ' +
+      'was removed, got ' + c);
+
+    // The same after a document sheet is added again (full rebuild path when
+    // the sheet is not appended last).
+    var sheet = document.createElement('style');
+    sheet.textContent = 'body { padding: 0; }';
+    document.head.insertBefore(sheet, document.head.firstChild);
+    var third = document.createElement('span');
+    third.textContent = 'c';
+    host.appendChild(third);
+    c = color(third);
+    console.assert(c === 'rgb(1, 2, 3)',
+      'nested ::slotted() applies to a node slotted after a document sheet ' +
+      'was inserted, got ' + c);
+
+    testEnd();
+
+  </script>
+</body>
+</html>

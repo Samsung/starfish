@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>a details child change queues no mutation-observer microtask</title></head>
+<body>
+  <details id="details"><summary>S</summary></details>
+  <div id="target"></div>
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (other browser), shim a custom testEnd()
+    // that tallies console.assert results and reports the verdict, so the same
+    // file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[details-child-change-microtask-order] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // HTML rendering gives details a user-agent shadow tree with two slots,
+    // but that tree is an implementation detail: authors cannot observe its
+    // slotchange, and it must not queue the shared "notify mutation
+    // observers" microtask either, or queueMicrotask() callbacks would be
+    // reordered against observer notifications (Blink behaves the same). So
+    // the observed change below queues the first such microtask, after the
+    // queueMicrotask() callback.
+    var order = [];
+    new MutationObserver(function () { order.push('mo'); })
+      .observe(document.getElementById('target'), { childList: true });
+
+    document.getElementById('details').appendChild(document.createElement('div'));
+    queueMicrotask(function () { order.push('qm'); });
+    document.getElementById('target').appendChild(document.createElement('i'));
+
+    setTimeout(function () {
+      console.assert(order.join(',') === 'qm,mo', 'microtask order: ' + order.join(','));
+      testEnd();
+    }, 0);
+
+  </script>
+</body>
+</html>

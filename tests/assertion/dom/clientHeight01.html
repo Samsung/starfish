@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+        html {
+            height: 200px;
+        }
+
+        #target {
+            width: 100px;
+            height: 100px;
+            background-color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="target"></div>
+</body>
+<script>
+    function testStart() {
+        testAssert(document.documentElement.clientHeight == 600);
+        testEnd();
+    }
+</script>
+
+</html>

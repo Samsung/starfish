@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SVG Animation Begin Negative Value Test</title>
+</head>
+<body>
+    <svg width="350" height="100">
+        <circle id="target" cx="10" cy="50" r="10" fill="red">
+            <animate id="anim1" attributeName="cx" from="10" to="100" dur="1s" begin="-1s" fill="freeze" />
+        </circle>
+    </svg>
+</body>
+<script type="text/javascript">
+    let beginFired = false;
+    let endFired = false;
+
+    anim1.addEventListener('beginEvent', () => {
+        beginFired = true;
+        console.log("beginEvent fired");
+    });
+
+    anim1.addEventListener('endEvent', () => {
+        endFired = true;
+        console.log("endEvent fired");
+        testAssert(beginFired, "beginEvent should fire");
+        testAssert(endFired, "endEvent should fire");
+        testEnd();
+    });
+
+    setTimeout(() => {
+        if (!beginFired) {
+            console.log("ERROR: beginEvent not fired - negative begin value not supported");
+            testAssert(false);
+        }
+        if (!endFired) {
+            console.log("ERROR: endEvent not fired");
+            testAssert(false);
+        }
+        testEnd();
+    }, 2000);
+</script>
+</html>

@@ -1,0 +1,147 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>The clear after compositing touches only the drawing buffer</title>
+<canvas id="a" width="4" height="4"></canvas>
+<canvas id="b" width="4" height="4"></canvas>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0, __firstError = '';
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) {
+      __pass++;
+    } else {
+      __fail++;
+      if (!__firstError) __firstError = message;
+      __nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[webgl-composite-clear-keeps-state] ' + verdict);
+    document.title = verdict + (__firstError ? ': ' + __firstError : '');
+  };
+}
+
+// Without preserveDrawingBuffer the drawing buffer reads as cleared to
+// (0, 0, 0, 0) once it has been composited (WebGL 1.0 §2.2). That clear
+// belongs to the drawing buffer only: the page's bound framebuffer, scissor,
+// write masks, clear values and (WebGL 2) rasterizer discard are untouched,
+// and the page's next operation, whichever it is, comes after it.
+
+function nextFrames(count, callback) {
+  requestAnimationFrame(function () {
+    if (count > 1) {
+      nextFrames(count - 1, callback);
+    } else {
+      callback();
+    }
+  });
+}
+
+function pixel(gl) {
+  var p = new Uint8Array(4);
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, p);
+  return Array.prototype.join.call(p, ',');
+}
+
+function same(a, b) {
+  return Array.prototype.join.call(a, ',') === Array.prototype.join.call(b, ',');
+}
+
+function framebuffer(gl) {
+  var tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 4, 4, 0, gl.RGBA,
+                gl.UNSIGNED_BYTE, null);
+  var fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                          gl.TEXTURE_2D, tex, 0);
+  return fb;
+}
+
+function setUp(gl) {
+  // Drawing buffer red, page framebuffer green, then page state that the
+  // composite clear must neither use nor change.
+  gl.clearColor(1, 0, 0, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  var fb = framebuffer(gl);
+  gl.clearColor(0, 1, 0, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.clearColor(0.2, 0.4, 0.6, 0.8);
+  gl.scissor(0, 0, 1, 1);
+  gl.enable(gl.SCISSOR_TEST);
+  gl.colorMask(true, false, true, false);
+  gl.depthMask(false);
+  gl.stencilMaskSeparate(gl.FRONT, 0x0f);
+  gl.stencilMaskSeparate(gl.BACK, 0xf0);
+  return fb;
+}
+
+function checkState(gl, fb, label) {
+  console.assert(gl.getParameter(gl.FRAMEBUFFER_BINDING) === fb,
+                 label + ': page framebuffer still bound');
+  console.assert(pixel(gl) === '0,255,0,255',
+                 label + ': page framebuffer kept, got ' + pixel(gl));
+  var clearColor = gl.getParameter(gl.COLOR_CLEAR_VALUE);
+  console.assert(Math.abs(clearColor[0] - 0.2) < 0.01 &&
+                 Math.abs(clearColor[3] - 0.8) < 0.01,
+                 label + ': clear color kept, got ' + clearColor);
+  console.assert(gl.isEnabled(gl.SCISSOR_TEST),
+                 label + ': scissor test kept');
+  console.assert(same(gl.getParameter(gl.COLOR_WRITEMASK),
+                      [true, false, true, false]),
+                 label + ': color mask kept');
+  console.assert(gl.getParameter(gl.DEPTH_WRITEMASK) === false,
+                 label + ': depth mask kept');
+  console.assert(gl.getParameter(gl.STENCIL_WRITEMASK) === 0x0f &&
+                 gl.getParameter(gl.STENCIL_BACK_WRITEMASK) === 0xf0,
+                 label + ': stencil masks kept');
+}
+
+function checkDrawingBufferCleared(gl, label) {
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  console.assert(pixel(gl) === '0,0,0,0',
+                 label + ': drawing buffer cleared, got ' + pixel(gl));
+}
+
+var A = document.getElementById('a').getContext('webgl');
+var fbA = setUp(A);
+var B = document.getElementById('b').getContext('webgl2');
+var fbB = B ? setUp(B) : null;
+if (B) {
+  B.enable(B.RASTERIZER_DISCARD);
+}
+
+nextFrames(3, function () {
+  // A read is the first operation after the composite.
+  checkState(A, fbA, 'WebGL 1');
+  checkDrawingBufferCleared(A, 'WebGL 1');
+
+  if (B) {
+    console.assert(B.isEnabled(B.RASTERIZER_DISCARD),
+                   'WebGL 2: rasterizer discard kept');
+    B.disable(B.RASTERIZER_DISCARD);
+    // Here a write to the page framebuffer is the first operation.
+    B.clear(0);
+    checkState(B, fbB, 'WebGL 2');
+    checkDrawingBufferCleared(B, 'WebGL 2');
+    // clearBuffer on the drawing buffer right after a composite lands on
+    // top of the composite clear, not under it.
+    B.disable(B.SCISSOR_TEST);
+    B.colorMask(true, true, true, true);
+    nextFrames(3, function () {
+      B.clearBufferfv(B.COLOR, 0, [0, 0, 1, 1]);
+      B.clear(0);
+      console.assert(pixel(B) === '0,0,255,255',
+                     'WebGL 2: clearBuffer after composite kept, got ' +
+                     pixel(B));
+      testEnd();
+    });
+  } else {
+    testEnd();
+  }
+});
+</script>

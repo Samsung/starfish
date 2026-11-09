@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A shadow-tree slot stays in the flat tree: styled, inherited from, and boxed on demand</title>
+<style>
+  .host { display: block; width: 200px; }
+  #inh-host > span { font-size: 16px; }
+</style>
+</head>
+<body>
+  <!-- css-scoping-1 #flat-tree: a slot is in the flat tree and its assigned
+       nodes are its flat-tree children. The HTML UA sheet gives it
+       display: contents, so it normally generates no box, but it still takes
+       part in style inheritance and can be given a box by the author. -->
+  <div id="inh-host" class="host"><span id="inh-slotted">text</span></div>
+  <div id="box-host" class="host"><div id="box-child" style="height: 20px"></div></div>
+  <div id="none-host" class="host"><div id="none-child" style="height: 20px">hidden</div></div>
+  <div id="def-host" class="host"><div id="def-child" style="height: 20px"></div></div>
+  <div id="outer-host" class="host"><span id="deep-slotted">deep</span></div>
+  <div id="fb-host" class="host"></div>
+  <div id="abs-host" class="host" style="position: relative; height: 100px"></div>
+  <div id="re-host" class="host"><div id="re-child" slot="a" style="height: 20px">x</div></div>
+  <div id="fb2-host" class="host"><div id="fb2-later" slot="a" style="height: 20px"></div></div>
+  <div id="ps-host" class="host"><div id="ps-child" style="height: 20px"></div></div>
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (other browser), shim a custom testEnd()
+    // that tallies console.assert results and reports the verdict, so the same
+    // file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[slot_in_rendering_tree] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    function $(id) { return document.getElementById(id); }
+    function rect(el) { return el.getBoundingClientRect(); }
+    function shadow(id, html) {
+      var root = $(id).attachShadow({ mode: 'open' });
+      root.innerHTML = html;
+      return root;
+    }
+
+    // 1. Slotted content inherits from the slot, not from the slot's parent.
+    var inhRoot = shadow('inh-host', '<slot style="color: rgb(0, 128, 0)"></slot>');
+    var inhColor = getComputedStyle($('inh-slotted')).color;
+    console.assert(inhColor === 'rgb(0, 128, 0)',
+      'slotted element inherits color from its slot, got ' + inhColor);
+    var inhSlotDisplay = getComputedStyle(inhRoot.querySelector('slot')).display;
+    console.assert(inhSlotDisplay === 'contents',
+      'UA sheet gives a shadow-tree slot display:contents, got ' + inhSlotDisplay);
+
+    // 2. An author can give the slot a box; slotted content lays out inside it.
+    var boxRoot = shadow('box-host', '<slot style="display: block; padding: 25px"></slot>');
+    var boxSlot = boxRoot.querySelector('slot');
+    console.assert(rect(boxSlot).width === 200 && rect(boxSlot).height === 70,
+      'slot with display:block generates a box sized by its padding and content: ' +
+      rect(boxSlot).width + 'x' + rect(boxSlot).height);
+    console.assert(rect($('box-child')).left === rect($('box-host')).left + 25,
+      'slotted child is offset by the slot box padding: ' +
+      (rect($('box-child')).left - rect($('box-host')).left));
+    console.assert(rect($('box-host')).height === 70,
+      'host is sized by the slot box, got ' + rect($('box-host')).height);
+
+    // 3. display:none on the slot hides its slotted content.
+    shadow('none-host', '<slot style="display: none"></slot>');
+    console.assert(rect($('none-child')).width === 0 && rect($('none-host')).height === 0,
+      'slot with display:none renders nothing: child.width=' + rect($('none-child')).width +
+      ' host.height=' + rect($('none-host')).height);
+
+    // 4. The default (boxless) slot adds nothing to layout.
+    shadow('def-host', '<slot></slot>');
+    console.assert(rect($('def-child')).left === rect($('def-host')).left &&
+                   rect($('def-host')).height === 20,
+      'boxless slot leaves the child where a direct child would be: dx=' +
+      (rect($('def-child')).left - rect($('def-host')).left) + ' host.height=' +
+      rect($('def-host')).height);
+
+    // 5. Nested slots: a node passed through two slots inherits from the inner one.
+    var outerRoot = shadow('outer-host', '<div id="inner-host"><slot></slot></div>');
+    var innerRoot = outerRoot.querySelector('#inner-host').attachShadow({ mode: 'open' });
+    innerRoot.innerHTML = '<slot style="color: rgb(0, 0, 255)"></slot>';
+    var deepColor = getComputedStyle($('deep-slotted')).color;
+    console.assert(deepColor === 'rgb(0, 0, 255)',
+      'node slotted through two slots inherits from the inner slot, got ' + deepColor);
+
+    // 6. Fallback content inherits from the slot too.
+    var fbRoot = shadow('fb-host', '<slot style="color: rgb(0, 128, 0)"><span id="fb-span">fallback</span></slot>');
+    var fbColor = getComputedStyle(fbRoot.querySelector('#fb-span')).color;
+    console.assert(fbColor === 'rgb(0, 128, 0)',
+      'fallback content inherits from the slot, got ' + fbColor);
+    console.assert(rect($('fb-host')).height > 0,
+      'fallback content renders, host.height=' + rect($('fb-host')).height);
+
+    // 7. Dynamic: turning the box on and off relayouts the slotted content.
+    boxSlot.style.display = 'contents';
+    console.assert(rect($('box-child')).left === rect($('box-host')).left &&
+                   rect($('box-host')).height === 20,
+      'slot back to display:contents drops its box: dx=' +
+      (rect($('box-child')).left - rect($('box-host')).left) + ' host.height=' +
+      rect($('box-host')).height);
+    boxSlot.style.display = 'block';
+    console.assert(rect($('box-host')).height === 70,
+      'slot back to display:block regains its box, host.height=' + rect($('box-host')).height);
+
+    // 8. An out-of-flow element appended after layout, slotted through a
+    // boxless slot, still gets its box.
+    shadow('abs-host', '<slot></slot>');
+    rect($('abs-host'));
+    var abs = document.createElement('div');
+    abs.style.cssText = 'position: absolute; width: 50px; height: 50px';
+    $('abs-host').appendChild(abs);
+    console.assert(rect(abs).width === 50,
+      'absolutely positioned element appended into a slot renders, width=' + rect(abs).width);
+
+    // 9. Reassigning a node to another slot moves its box into that slot.
+    shadow('re-host', '<slot name="a"></slot><slot name="b" style="display: block; padding-left: 50px"></slot>');
+    rect($('re-host'));
+    $('re-child').setAttribute('slot', 'b');
+    console.assert(rect($('re-child')).left === rect($('re-host')).left + 50,
+      'node reassigned to a boxed slot lays out inside that slot, dx=' +
+      (rect($('re-child')).left - rect($('re-host')).left));
+
+    // 10. Fallback content that stops rendering when a node gets assigned
+    // leaves the flat tree: cssom-1 getComputedStyle() then returns an empty
+    // declaration, not the style it had while rendered.
+    var fb2Root = shadow('fb2-host', '<slot name="a" style="color: rgb(0, 128, 0)"><span id="fb2-span">fallback</span></slot>');
+    var fb2Later = $('fb2-later'), fb2Span = fb2Root.querySelector('#fb2-span');
+    fb2Later.removeAttribute('slot');
+    rect($('fb2-host'));
+    console.assert(getComputedStyle(fb2Span).color === 'rgb(0, 128, 0)',
+      'fallback shows while nothing is assigned, color=' + getComputedStyle(fb2Span).color);
+    fb2Later.setAttribute('slot', 'a');
+    fb2Root.querySelector('slot').style.color = 'rgb(0, 0, 255)';
+    rect($('fb2-host'));
+    console.assert(getComputedStyle(fb2Span).color === '',
+      'hidden fallback content is outside the flat tree and has no computed style, color="' +
+      getComputedStyle(fb2Span).color + '"');
+
+    // 11. A boxless slot's ::before/::after still generate boxes, placed
+    // around the slotted content where the slot's box would have been
+    // (css-display-3 #unbox).
+    shadow('ps-host', '<style>slot::before, slot::after { content: ""; display: block }' +
+      ' slot::before { height: 30px } slot::after { height: 10px }</style><slot></slot>');
+    console.assert(rect($('ps-child')).top - rect($('ps-host')).top === 30,
+      'slot::before box precedes the slotted content, dy=' +
+      (rect($('ps-child')).top - rect($('ps-host')).top));
+    console.assert(rect($('ps-host')).height === 60,
+      'slot::before and ::after add to the host height, got ' + rect($('ps-host')).height);
+
+    testEnd();
+
+  </script>
+</body>
+</html>

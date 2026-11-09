@@ -67,6 +67,16 @@ class RequestHandler(SimpleHTTPRequestHandler):
         local = self.translate_path(url_path)
         return local if os.path.isfile(local) else None
 
+    # --alias /prefix/=dir: a URL path under /prefix/ is served out of dir,
+    # relative to --directory. Gecko's mochitests load their harness from
+    # /tests/SimpleTest/, which its source tree keeps elsewhere.
+    def translate_path(self, path):
+        for prefix, target in options.alias:
+            if path.startswith(prefix):
+                path = "/" + target.strip("/") + "/" + path[len(prefix) :]
+                break
+        return super().translate_path(path)
+
     def serve_injected(self, local, head_only=False):
         with open(local, "rb") as f:
             payload = options.inject_payload + b"\n" + f.read()
@@ -287,7 +297,7 @@ def start_server(options):
 
 @contextmanager
 def popen_server(directory, cwd, address=None, port=0, silent=False,
-                 inject_script=None, inject_into=()):
+                 inject_script=None, inject_into=(), alias=()):
     from subprocess import Popen, PIPE
 
     process = None
@@ -298,6 +308,8 @@ def popen_server(directory, cwd, address=None, port=0, silent=False,
         command += ["--inject-script", inject_script]
         for suffix in inject_into:
             command += ["--inject-into", suffix]
+    for mapping in alias:
+        command += ["--alias", mapping]
 
     try:
         process = Popen(
@@ -368,8 +380,18 @@ if __name__ == "__main__":
         " prepended; repeatable",
     )
 
+    parser.add_argument(
+        "--alias",
+        metavar="PREFIX=DIR",
+        action="append",
+        default=[],
+        help="Serve URL paths under PREFIX out of DIR (relative to --directory);"
+        " repeatable",
+    )
+
     global options
     options = parser.parse_args()
+    options.alias = [tuple(a.split("=", 1)) for a in options.alias]
     # Read once; it is prepended to every matching response.
     options.inject_payload = b""
     if options.inject_script:

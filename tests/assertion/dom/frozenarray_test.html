@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>FrozenArray Binding Generator Test</title>
+</head>
+
+<body>
+    <script>
+        // Test: FrozenArray binding generator support
+        // https://webidl.spec.whatwg.org/#idl-frozenArray
+        //
+        // FrozenArray<T> attributes must:
+        // 1. Return a frozen Array (mutation throws TypeError)
+        // 2. Return the same object on each access ([SameObject])
+        //
+        // Currently, IntersectionObserver.thresholds is spec'd as
+        // FrozenArray<double> but was implemented as sequence<double>.
+        // These tests verify FrozenArray behavior once the binding
+        // generator supports FrozenArray.
+
+        // ============================================
+        // Test 1: IntersectionObserver.thresholds returns an Array
+        // ============================================
+        try {
+            var observer = new IntersectionObserver(function () {}, { threshold: [0, 0.5, 1] });
+            var thresholds = observer.thresholds;
+
+            console.assert(Array.isArray(thresholds), 'thresholds should be an Array');
+            console.assert(thresholds.length === 3, 'thresholds.length should be 3');
+            console.assert(thresholds[0] === 0, 'thresholds[0] should be 0');
+            console.assert(thresholds[1] === 0.5, 'thresholds[1] should be 0.5');
+            console.assert(thresholds[2] === 1, 'thresholds[2] should be 1');
+        } catch (e) {
+            console.error('Test 1: Error - ' + e.message);
+        }
+
+        // ============================================
+        // Test 2: FrozenArray - Object.isFrozen() returns true
+        // ============================================
+        try {
+            var observer = new IntersectionObserver(function () {}, { threshold: [0, 1] });
+            var thresholds = observer.thresholds;
+
+            console.assert(Object.isFrozen(thresholds), 'FrozenArray should be frozen (Object.isFrozen)');
+        } catch (e) {
+            console.error('Test 2: Error - ' + e.message);
+        }
+
+        // ============================================
+        // Test 3: FrozenArray - push() should throw TypeError
+        // ============================================
+        try {
+            var observer = new IntersectionObserver(function () {}, { threshold: [0, 1] });
+            var thresholds = observer.thresholds;
+
+            var caught = false;
+            try {
+                thresholds.push(0.25);
+            } catch (e) {
+                caught = true;
+                console.assert(e instanceof TypeError, 'push() should throw TypeError on frozen array');
+            }
+            console.assert(caught, 'push() should throw TypeError on frozen array');
+        } catch (e) {
+            console.error('Test 3: Error - ' + e.message);
+        }
+
+        // ============================================
+        // Test 4: FrozenArray - splice() should throw TypeError
+        // ============================================
+        try {
+            var observer = new IntersectionObserver(function () {}, { threshold: [0, 1] });
+            var thresholds = observer.thresholds;
+
+            var caught = false;
+            try {
+                thresholds.splice(0, 1);
+            } catch (e) {
+                caught = true;
+                console.assert(e instanceof TypeError, 'splice() should throw TypeError on frozen array');
+            }
+            console.assert(caught, 'splice() should throw TypeError on frozen array');
+        } catch (e) {
+            console.error('Test 4: Error - ' + e.message);
+        }
+
+        // ============================================
+        // Test 5: FrozenArray - pop() should throw TypeError
+        // ============================================
+        try {
+            var observer = new IntersectionObserver(function () {}, { threshold: [0, 1] });
+            var thresholds = observer.thresholds;
+
+            var caught = false;
+            try {
+                thresholds.pop();
+            } catch (e) {
+                caught = true;
+                console.assert(e instanceof TypeError, 'pop() should throw TypeError on frozen array');
+            }
+            console.assert(caught, 'pop() should throw TypeError on frozen array');
+        } catch (e) {
+            console.error('Test 5: Error - ' + e.message);
+        }
+
+        // ============================================
+        // Test 6: FrozenArray - elements are readable
+        // ============================================
+        try {
+            var observer = new IntersectionObserver(function () {}, { threshold: [0, 0.25, 0.5, 0.75, 1] });
+            var thresholds = observer.thresholds;
+
+            console.assert(thresholds.length === 5, 'length should be 5');
+            console.assert(thresholds[0] === 0, 'thresholds[0] should be 0');
+            console.assert(thresholds[4] === 1, 'thresholds[4] should be 1');
+        } catch (e) {
+            console.error('Test 6: Error - ' + e.message);
+        }
+
+        // ============================================
+        // Test 7: FrozenArray with single-element threshold
+        // ============================================
+        try {
+            var observer = new IntersectionObserver(function () {}, { threshold: [0.5] });
+            var thresholds = observer.thresholds;
+
+            console.assert(Array.isArray(thresholds), 'thresholds should be an Array');
+            console.assert(thresholds.length === 1, 'thresholds.length should be 1');
+            console.assert(thresholds[0] === 0.5, 'thresholds[0] should be 0.5');
+            console.assert(Object.isFrozen(thresholds), 'FrozenArray should be frozen');
+        } catch (e) {
+            console.error('Test 7: Error - ' + e.message);
+        }
+
+        // ============================================
+        // Test 8: FrozenArray - shift() should throw TypeError
+        // ============================================
+        try {
+            var observer = new IntersectionObserver(function () {}, { threshold: [0, 1] });
+            var thresholds = observer.thresholds;
+
+            var caught = false;
+            try {
+                thresholds.shift();
+            } catch (e) {
+                caught = true;
+                console.assert(e instanceof TypeError, 'shift() should throw TypeError on frozen array');
+            }
+            console.assert(caught, 'shift() should throw TypeError on frozen array');
+        } catch (e) {
+            console.error('Test 8: Error - ' + e.message);
+        }
+
+        if (typeof testEnd === 'function') {
+            testEnd();
+        }
+    </script>
+</body>
+
+</html>

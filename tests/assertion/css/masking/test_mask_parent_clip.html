@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            margin: 0;
+            background-color: white;
+        }
+        .parent-clip {
+            position: relative;
+            z-index: 1;
+            width: 300px;
+            height: 300px;
+            background: red;
+            border-radius: 50px;
+            overflow: hidden;
+        }
+        .child-mask {
+            position: relative;
+            z-index: 2;
+            width: 300px;
+            height: 300px;
+            background: blue;
+            opacity: 0.99;
+            mask-image: linear-gradient(to bottom, black, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, black, transparent);
+        }
+    </style>
+</head>
+<body>
+    <div class="parent-clip">
+        <div class="child-mask">
+            <!-- Force non-empty to prevent culling and solid background compositor optimization -->
+            <div style="width: 100px; height: 100px; background: green;"></div>
+        </div>
+    </div>
+</body>
+<script>
+    function testStart() {
+        screenShot("test_mask_parent_clip.png", function () {
+            // Corner at (10, 10) should be clipped (white)
+            var c1 = getPixelColor("test_mask_parent_clip.png", 10, 10);
+            // Center at (150, 150) should be blended purple (red parent + blue child with 50% mask alpha)
+            var c2 = getPixelColor("test_mask_parent_clip.png", 150, 150);
+
+            // Channel mapping is BGRA in getPixelColor:
+            // c.b is Red, c.g is Green, c.r is Blue
+            var c1_ok = (c1.r > 240 && c1.g > 240 && c1.b > 240);
+            var c2_ok = (c2.b > 100 && c2.b < 150) && (c2.g < 50) && (c2.r > 100 && c2.r < 150);
+
+            testAssert(c1_ok);
+            testAssert(c2_ok);
+            testEnd();
+        });
+    }
+</script>
+</html>

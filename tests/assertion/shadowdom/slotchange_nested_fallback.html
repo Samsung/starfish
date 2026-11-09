@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>slotchange fires on nested fallback content change</title>
+</head>
+<body>
+
+<script>
+// Shim for running in a regular browser without the Starfish harness:
+// collect console.assert results and report a verdict from testEnd().
+if (typeof testEnd !== 'function') {
+    window.testEnd = function() {
+        var passed = true;
+        var a = window.__assertions || [];
+        for (var i = 0; i < a.length; i++) {
+            if (!a[i].ok) { passed = false; console.error('FAIL: ' + a[i].msg); }
+        }
+        console.log('[slotchange_nested_fallback] ' + (passed ? 'PASS' : 'FAIL') +
+            ' (' + a.length + ' assertions)');
+        document.title = passed ? 'PASS' : 'FAIL';
+    };
+    var origAssert = console.assert.bind(console);
+    console.assert = function(cond, msg) {
+        window.__assertions = window.__assertions || [];
+        window.__assertions.push({ ok: !!cond, msg: msg || String(cond) });
+        origAssert(cond, msg);
+    };
+}
+
+// Mirrors WPT shadow-dom/slotchange.html #test_fallback3. When fallback content
+// of a slot that shows fallback (empty assigned nodes) is mutated, slotchange
+// must fire on that slot AND on every ancestor slot that also shows fallback,
+// innermost first. assignedNodes() stays empty throughout.
+function buildNestedSlots() {
+    var host = document.createElement('div');
+    document.body.appendChild(host);
+    var sr = host.attachShadow({ mode: 'open' });
+    var s2 = document.createElement('slot');
+    var s1 = document.createElement('slot');
+    var f1 = document.createElement('div');
+    s1.appendChild(f1);
+    s2.appendChild(s1);
+    sr.appendChild(s2);
+    return { host: host, s2: s2, s1: s1, f1: f1, order: [] };
+}
+
+// Scenario 1: add fallback content to the inner nested slot.
+var add = buildNestedSlots();
+add.s1.addEventListener('slotchange', function() { add.order.push('s1'); });
+add.s2.addEventListener('slotchange', function() { add.order.push('s2'); });
+add.s1.appendChild(document.createElement('div'));
+
+// Scenario 2: remove fallback content from the inner nested slot.
+var rem = buildNestedSlots();
+rem.s1.addEventListener('slotchange', function() { rem.order.push('s1'); });
+rem.s2.addEventListener('slotchange', function() { rem.order.push('s2'); });
+rem.f1.remove();
+
+setTimeout(function() {
+    console.assert(add.order.join(',') === 's1,s2',
+        'add: both nested slots fire innermost-first (got [' + add.order + '])');
+    console.assert(add.s1.assignedNodes().length === 0 &&
+                   add.s2.assignedNodes().length === 0,
+        'add: assignedNodes stay empty');
+    console.assert(rem.order.join(',') === 's1,s2',
+        'remove: both nested slots fire innermost-first (got [' + rem.order + '])');
+    console.assert(rem.s1.assignedNodes().length === 0 &&
+                   rem.s2.assignedNodes().length === 0,
+        'remove: assignedNodes stay empty');
+    testEnd();
+}, 80);
+</script>
+</body>
+</html>

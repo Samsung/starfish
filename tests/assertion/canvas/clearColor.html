@@ -1,0 +1,39 @@
+<canvas id="canvas"></canvas>
+<script>
+
+    var canvas;
+    var ctx;
+    var x = 10;
+    var delta = 1;
+    
+    window.onload = function () {
+        canvas = document.getElementById("canvas");
+        if (canvas == null || canvas.getContext == null) return;
+        ctx = canvas.getContext("2d");
+        ctx.fillStyle = "red";
+        draw();
+        testEnd();
+    }
+    function draw() {
+        for (var i = 0; i < 20; i++) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillRect(x, 10, 20, 20);
+
+            if (x + 20 > canvas.width || x < 0) {
+                delta = -delta;
+            }
+            x += delta;
+        }
+        var imageData1 = ctx.getImageData(30, 10, 20, 20);
+        testAssert(imageData1);
+        testAssert(imageData1.data[0] == 255);
+        testAssert(imageData1.data[1] == 0);
+        testAssert(imageData1.data[2] == 0);
+        testAssert(imageData1.data[3] == 255);
+        var imageData2 = ctx.getImageData(10, 10, 20, 20);
+        testAssert(imageData2.data[0] == 0);
+        testAssert(imageData2.data[1] == 0);
+        testAssert(imageData2.data[2] == 0);
+        testAssert(imageData2.data[3] == 0);
+    }
+</script>

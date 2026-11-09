@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>IndexedDB used by the page and four workers at once</title>
+</head>
+<body>
+<p>The page and four dedicated workers each open databases, put a value under
+their own key and read it back, forty times in a row, all at the same time.
+Every value must come back as written and nothing may fail; the IndexedDB
+thread serves all five contexts.</p>
+<script>
+var WORKERS = 4;
+var ITERATIONS = 40;
+var src = [
+  "var n = " + ITERATIONS + ", i = 0, me = 'k' + Math.random().toString(36).slice(2);",
+  "function step() {",
+  "  if (i++ >= n) { postMessage('done'); return; }",
+  "  var r = indexedDB.open('wdb' + (i % 3), 1);",
+  "  r.onupgradeneeded = function (e) { e.target.result.createObjectStore('s'); };",
+  "  r.onsuccess = function (e) {",
+  "    var db = e.target.result;",
+  "    var tx = db.transaction('s', 'readwrite');",
+  "    tx.objectStore('s').put('v' + i, me);",
+  "    var g = tx.objectStore('s').get(me);",
+  "    g.onsuccess = function () { if (g.result !== 'v' + i) postMessage('bad value ' + g.result); db.close(); step(); };",
+  "    g.onerror = function () { postMessage('get error'); };",
+  "  };",
+  "  r.onerror = function () { postMessage('open error'); };",
+  "}",
+  "step();"
+].join('\n');
+var blobURL = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
+var done = 0;
+var problems = [];
+var pageDone = false;
+
+function finish() {
+  console.assert(done === WORKERS, 'every worker finished: ' + done);
+  console.assert(pageDone, 'the page finished its own iterations');
+  console.assert(problems.length === 0, 'no failures: ' + problems.join(', '));
+  if (window.testEnd) testEnd();
+}
+function check() {
+  if (pageDone && done + problems.length >= WORKERS) finish();
+}
+
+for (var w = 0; w < WORKERS; w++) {
+  var worker = new Worker(blobURL);
+  worker.onmessage = function (e) {
+    if (e.data === 'done') done++; else problems.push(e.data);
+    check();
+  };
+}
+
+var pi = 0;
+function pageStep() {
+  if (pi++ >= ITERATIONS) { pageDone = true; check(); return; }
+  var r = indexedDB.open('mdb' + (pi % 3), 1);
+  r.onupgradeneeded = function (e) { e.target.result.createObjectStore('s'); };
+  r.onsuccess = function (e) {
+    var db = e.target.result;
+    var tx = db.transaction('s', 'readwrite');
+    tx.objectStore('s').put('m' + pi, 'page');
+    var g = tx.objectStore('s').get('page');
+    g.onsuccess = function () { if (g.result !== 'm' + pi) problems.push('page bad value ' + g.result); db.close(); pageStep(); };
+    g.onerror = function () { problems.push('page get error'); pageStep(); };
+  };
+  r.onerror = function () { problems.push('page open error'); pageStep(); };
+}
+pageStep();
+
+setTimeout(function () { problems.push('timeout'); pageDone = true; finish(); }, 60000);
+</script>
+</body>
+</html>

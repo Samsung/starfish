@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>:not() / :host() complex-selector-argument support</title>
+</head>
+
+<body>
+  <div id="ab1" class="a1 b1"></div>
+  <div id="a1only" class="a1"></div>
+
+  <div id="list1" class="a2"></div>
+  <div id="list2" class="c2"></div>
+  <div id="list3" class="d2"></div>
+
+  <section><div id="sect1" class="x3"></div></section>
+  <div id="sect2" class="x3"></div>
+
+  <div id="nested1" class="a4"></div>
+  <div id="nested2" class="b4"></div>
+
+  <div id="specNot" class="plain5"></div>
+
+  <div id="hostCompound"></div>
+
+  <div id="invalidateParent"><div id="invalidate" class="card6"></div></div>
+
+  <style>
+    /* :not(#nonexistent5) has id-level specificity, which must beat the
+       later, lower-specificity .plain5 rule (Selectors-4 specificity of a
+       negation pseudo-class = its most specific branch). Scoped to .plain5
+       so it does not leak onto other elements in this file. */
+    .plain5:not(#nonexistent5) { color: rgb(255, 0, 0); }
+    .plain5 { color: rgb(0, 0, 255); }
+
+    /* :not() wrapping a structural pseudo-class (:first-child) must still
+       trigger a restyle when a sibling is inserted/removed, i.e. the
+       structural pseudo's DOM-tree invalidation flag must propagate out
+       through :not()'s per-branch match result. */
+    .card6:not(:first-child) { color: rgb(255, 0, 0); }
+    .card6 { color: rgb(0, 0, 255); }
+  </style>
+
+  <script>
+
+    // Starfish's test build provides testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (e.g. a regular browser like Chrome),
+    // shim a custom testEnd() that tallies console.assert results and reports
+    // the verdict to the console and the document title, so the same file runs
+    // and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) {
+          __pass++;
+        } else {
+          __fail++;
+          __nativeAssert(false, msg);
+        }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[not_host_complex] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // :not(.a1.b1) — compound argument.
+    console.assert(!document.getElementById('ab1').matches(':not(.a1.b1)'),
+      ':not(.a1.b1) should not match an element with both classes a1 and b1');
+    console.assert(document.getElementById('a1only').matches(':not(.a1.b1)'),
+      ':not(.a1.b1) should match an element with only class a1');
+
+    // :not(.a2, .c2) — comma-separated selector list (NOT(OR)).
+    console.assert(!document.getElementById('list1').matches(':not(.a2, .c2)'),
+      ':not(.a2, .c2) should not match an element with class a2');
+    console.assert(!document.getElementById('list2').matches(':not(.a2, .c2)'),
+      ':not(.a2, .c2) should not match an element with class c2');
+    console.assert(document.getElementById('list3').matches(':not(.a2, .c2)'),
+      ':not(.a2, .c2) should match an element with neither class');
+
+    // :not(section .x3) — combinator argument.
+    console.assert(!document.getElementById('sect1').matches(':not(section .x3)'),
+      ':not(section .x3) should not match a .x3 element that is a descendant of section');
+    console.assert(document.getElementById('sect2').matches(':not(section .x3)'),
+      ':not(section .x3) should match a .x3 element outside a section');
+
+    // :not(:is(.a4, .b4)) — nested functional pseudo inside :not().
+    console.assert(!document.getElementById('nested1').matches(':not(:is(.a4, .b4))'),
+      ':not(:is(.a4, .b4)) should not match an element with class a4');
+    console.assert(!document.getElementById('nested2').matches(':not(:is(.a4, .b4))'),
+      ':not(:is(.a4, .b4)) should not match an element with class b4');
+
+    // :not() specificity = its most specific branch, overriding a
+    // lower-specificity rule declared later.
+    var specNotColor = getComputedStyle(document.getElementById('specNot')).color;
+    console.assert(specNotColor === 'rgb(255, 0, 0)',
+      ':not(#nonexistent5) should win via id-level specificity (got ' + specNotColor + ')');
+
+    // :host(.a.b) — shadow host compound matching via adoptedStyleSheets,
+    // the actual Lit/A2UI delivery path for `static styles`.
+    var host = document.getElementById('hostCompound');
+    host.className = 'ha hb';
+    var shadow = host.attachShadow({ mode: 'open' });
+    var sheet = new CSSStyleSheet();
+    sheet.replaceSync(':host(.ha.hb) { display: flex; padding: 7px; }');
+    shadow.adoptedStyleSheets = [sheet];
+    var hostStyle = getComputedStyle(host);
+    console.assert(hostStyle.display === 'flex',
+      ':host(.ha.hb) compound argument should match and apply display:flex (got ' + hostStyle.display + ')');
+    console.assert(hostStyle.paddingTop === '7px',
+      ':host(.ha.hb) compound argument should apply padding (got ' + hostStyle.paddingTop + ')');
+
+    // :not(:first-child) restyle-on-mutation: DOM-tree damage source must
+    // propagate out of the branch match so inserting a new first sibling
+    // correctly invalidates the old first-child's style.
+    var invalidateEl = document.getElementById('invalidate');
+    var beforeColor = getComputedStyle(invalidateEl).color;
+    console.assert(beforeColor === 'rgb(0, 0, 255)',
+      '.card6:not(:first-child) should not match the only/first child initially (got ' + beforeColor + ')');
+    var newFirst6 = document.createElement('div');
+    document.getElementById('invalidateParent').insertBefore(newFirst6, invalidateEl);
+    var afterColor = getComputedStyle(invalidateEl).color;
+    console.assert(afterColor === 'rgb(255, 0, 0)',
+      '.card6:not(:first-child) should start matching (and restyle) after a sibling is inserted before it (got ' + afterColor + ')');
+
+    testEnd();
+
+  </script>
+</body>
+
+</html>

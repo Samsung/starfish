@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>ObservableArray: length truncation</title></head>
+<body>
+<script>
+// Setting .length below the current size truncates the backing list.
+var s1 = new CSSStyleSheet();
+var s2 = new CSSStyleSheet();
+var s3 = new CSSStyleSheet();
+document.adoptedStyleSheets = [s1, s2, s3];
+console.assert(document.adoptedStyleSheets.length === 3, "starts with 3");
+
+document.adoptedStyleSheets.length = 1;
+console.assert(document.adoptedStyleSheets.length === 1, "length set truncates");
+console.assert(document.adoptedStyleSheets[0] === s1, "remaining element kept");
+console.assert(document.adoptedStyleSheets[1] === undefined, "truncated element gone");
+
+document.adoptedStyleSheets.length = 0;
+console.assert(document.adoptedStyleSheets.length === 0, "length=0 clears");
+
+testEnd();
+</script>
+</body>
+</html>

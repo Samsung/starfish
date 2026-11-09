@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>absolutely positioned children of a grid container honour their insets</title>
+<style>
+  /* An abspos child does not participate in the grid layout: its containing
+     block is the grid container's padding box. Only an axis whose insets are
+     both auto falls back to the static position; a specified inset used to be
+     overwritten by it, pinning every such child to the static position.
+     The static position itself is not covered here: css-grid-1 9.1 puts it at
+     the padding edge while Starfish uses the content edge, a separate
+     deviation this test deliberately leaves alone. */
+  #grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: 400px;
+    width: 400px;
+    height: 100px;
+    border: 5px solid black;
+    padding: 10px;
+    background-color: gold;
+  }
+
+  #grid > .abs {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: red;
+  }
+
+  #percent { left: calc(50% - 2px); top: 20px; }
+  #trailing { right: 30px; bottom: 10px; }
+</style>
+</head>
+<body>
+  <div id="grid">
+    <div class="abs" id="percent"></div>
+    <div class="abs" id="trailing"></div>
+    <div id="item"></div>
+  </div>
+
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (other browser), shim a custom testEnd()
+    // that tallies console.assert results and reports the verdict, so the same
+    // file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[grid_abspos-item-insets] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // Border box of #grid: 5px border + 10px padding + 400x100 content.
+    // Containing block (padding box) is 420x120 and starts 5px in.
+    var origin = document.getElementById('grid').getBoundingClientRect();
+
+    function check(id, expectedX, expectedY) {
+      var r = document.getElementById(id).getBoundingClientRect();
+      console.assert(r.x - origin.x === expectedX,
+        id + ' x should be ' + expectedX + 'px from the border box, got ' +
+        (r.x - origin.x));
+      console.assert(r.y - origin.y === expectedY,
+        id + ' y should be ' + expectedY + 'px from the border box, got ' +
+        (r.y - origin.y));
+    }
+
+    // left: calc(50% - 2px) of the 420px padding box = 208px, plus the border.
+    check('percent', 213, 25);
+    // right/bottom resolve from the far edge of the same padding box.
+    check('trailing', 385, 105);
+
+    // The in-flow item is unaffected by its abspos siblings.
+    console.assert(document.getElementById('item').getBoundingClientRect().width === 400,
+      'the in-flow grid item should still fill its track, got ' +
+      document.getElementById('item').getBoundingClientRect().width);
+
+    testEnd();
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<body>
+</body>
+<script>
+  if(!console.assert) {
+      console.assert = testAssert.bind(this)
+  }
+  "use strict";
+
+  var order = 0;
+  function checkOrder(right) {
+      console.assert(order == right);
+      order++;
+  }
+
+  class MyCustomElement extends HTMLElement {
+    static observedAttributes = ["size"];
+
+    constructor() {
+      super();
+      console.log("ctor");
+      checkOrder(0)
+    }
+
+    connectedCallback()
+    {
+      console.log("connected");
+      checkOrder(2)
+      this.setAttribute("size", 0);
+      console.log("connected will end");
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+      console.log(
+        `Attribute ${name} has changed from ${oldValue} to ${newValue}.`,
+      );
+      if (newValue == 123)
+        checkOrder(1)
+      else
+        checkOrder(3)
+    }
+  }
+
+  var e = document.createElement("my-custom-element");
+  document.body.appendChild(e)
+  e.setAttribute("size", "123");
+  customElements.define("my-custom-element", MyCustomElement);
+
+  console.log("testEnd")
+  testEnd();
+
+</script>
+

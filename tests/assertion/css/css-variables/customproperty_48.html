@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #target {
+            background-image: var(--loaderBackground);
+            --loaderBackground: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <div id="target">
+        </div>
+    </div>
+</body>
+<script>
+    function testStart() {
+        {
+            target.style.setProperty('--loaderBackground', 'url(var(--loaderBackground))');
+            testAssert(window.getComputedStyle(target).backgroundImage == 'none');
+        }
+        testEnd();
+    }
+</script>
+
+</html>

@@ -27,7 +27,7 @@ process: one Starfish per entry, and one Node as well for a behavior entry.
                   own HOME
 ```
 
-`driver/static_server.py` serves `test/cdp/` at `http://127.0.0.1:8000` while
+`driver/static_server.py` serves the test pages at `http://127.0.0.1:8000` while
 the behavior pool runs. Every Starfish process in the pool loads test pages from
 it.
 
@@ -49,7 +49,7 @@ checks. Chromium decided that already.
 | `run.py` | Command line, layer choice, worker pool, progress and stats |
 | `driver/testlist.py` | Reads and writes a list, and locks it for one run |
 | `driver/launcher.py` | Finds a build, starts and stops Starfish, cleans up |
-| `driver/static_server.py` | Serves `test/cdp/` over HTTP on port 8000 |
+| `driver/static_server.py` | Serves `tests/cdp/` and Chromium's suite over HTTP on port 8000 |
 | `driver/client.py` | HTTP discovery, a WebSocket, and one CDP call |
 | `driver/commands.py` | Turns the protocol JSON into the schema layer's cases |
 | `driver/case.py` | Runs one schema case: send, then check the response |
@@ -88,15 +88,16 @@ The Node side has its own notes in
 
 ## Test data
 
-The test cases are not written here. They come from the `test` submodule, and
-each is fixed to one upstream revision.
+The test cases are not written here. They live in `tests/cdp/` and the
+`third_party/blink` checkout, and each is fixed to one upstream revision.
 
 | Path | Source | Used by |
 | --- | --- | --- |
-| `test/cdp/protocol/` | ChromeDevTools/devtools-protocol | schema |
-| `test/cdp/inspector-protocol/` | chromium/chromium | behavior |
+| `tests/cdp/protocol/` | ChromeDevTools/devtools-protocol | schema |
+| `web_tests/http/tests/inspector-protocol/` in the `third_party/blink` checkout | chromium/chromium | behavior |
 
-Each directory has a `revision.txt`. A run writes that revision into the
+`tests/cdp/protocol/revision.txt` and the pin of `third_party/blink` name those
+revisions. A run writes the revision into the
 list, so you can tell which upstream a list was built from.
 
 ## State a run keeps

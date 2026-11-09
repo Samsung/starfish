@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<!--
+  Compatibility mouse events for a tap: touchend must be followed by
+  mousemove → mousedown → mouseup → click, in that order.
+  Previously only click was synthesized, so content that tracks a tap through
+  the whole mouse sequence never reacted to touch at all.
+  https://w3c.github.io/touch-events/#mouse-events
+-->
+<head>
+<style>
+  body { margin: 0; }
+  #target { width: 200px; height: 200px; background: honeydew; }
+</style>
+</head>
+<body>
+  <div id="target"></div>
+</body>
+<script>
+  var events = [];
+  var target = document.getElementById("target");
+  ["touchend", "mousemove", "mousedown", "mouseup", "click"].forEach(function(type) {
+    target.addEventListener(type, function(e) {
+      events.push({ type: e.type, button: e.button, buttons: e.buttons });
+    });
+  });
+
+  function indexOfType(type) {
+    for (var i = 0; i < events.length; i++) {
+      if (events[i].type === type) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  function testStart() {
+    simulateTouchStart(100, 100);
+    simulateTouchEnd(100, 100);
+
+    setTimeout(function() {
+      var touchend  = indexOfType("touchend");
+      var mousemove = indexOfType("mousemove");
+      var mousedown = indexOfType("mousedown");
+      var mouseup   = indexOfType("mouseup");
+      var click     = indexOfType("click");
+
+      testAssert(touchend !== -1);
+      testAssert(mousemove !== -1);
+      testAssert(mousedown !== -1);
+      testAssert(mouseup !== -1);
+      testAssert(click !== -1);
+
+      testAssert(touchend < mousemove);
+      testAssert(mousemove < mousedown);
+      testAssert(mousedown < mouseup);
+      testAssert(mouseup < click);
+
+      // No button is pressed during the synthesized move, and the primary
+      // button is pressed for mousedown only.
+      testAssert(events[mousemove].buttons === 0);
+      testAssert(events[mousedown].button === 0);
+      testAssert(events[mousedown].buttons === 1);
+      testAssert(events[mouseup].button === 0);
+      testAssert(events[mouseup].buttons === 0);
+
+      testEnd();
+    }, 100);
+  }
+</script>
+</html>

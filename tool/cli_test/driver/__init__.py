@@ -7,8 +7,8 @@ Everything that depends on how the product is built stays here: the binary
 names the build derives from TARGETNAME, the session socket path, and the
 fake engine under fixtures/. CLITestCase is the API the test cases use.
 
-The test cases live in the test submodule at test/cli, together with the page
-and expected output they load from test/cli/fixtures. They describe behavior
+The test cases live in tests/cli, together with the page and expected
+output they load from tests/cli/fixtures. They describe behavior
 only, so they carry no build or product detail. Adding a test means adding
 one test_*.py there: discovery picks it up with no list to update.
 """

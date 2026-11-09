@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>cssText assignment refreshes a rule's custom properties</title>
+<style>
+.a { color: red; }
+@keyframes k { from { opacity: 0; } to { opacity: 1; } }
+</style>
+<div class="a">a</div>
+<script>
+var failures = 0;
+function check(cond, msg) { console.assert(cond, msg); if (!cond) { failures++; console.log("FAIL: " + msg); } }
+var sheet = document.styleSheets[0];
+var styleRule = sheet.cssRules[0];
+var frame = sheet.cssRules[1].cssRules[0];
+// A rule's style wrapper is a snapshot of the rule's block, so a cssText
+// assignment must refresh its custom properties along with the other values.
+styleRule.style.cssText = "--x: 1; color: red";
+check(styleRule.style.getPropertyValue("--x").trim() === "1", "custom property readable after cssText set: '" + styleRule.style.getPropertyValue("--x") + "'");
+styleRule.style.cssText = "color: blue";
+check(styleRule.style.getPropertyValue("--x") === "", "custom property gone after cssText set without it: '" + styleRule.style.getPropertyValue("--x") + "'");
+styleRule.style.cssText = "--y: 2";
+check(styleRule.style.getPropertyValue("--y").trim() === "2", "later custom property readable: '" + styleRule.style.getPropertyValue("--y") + "'");
+frame.style.cssText = "--k: 3; opacity: 0.25";
+check(frame.style.getPropertyValue("--k").trim() === "3", "keyframe custom property readable: '" + frame.style.getPropertyValue("--k") + "'");
+console.log(failures === 0 ? "ALL CHECKS PASSED" : failures + " CHECK(S) FAILED");
+if (typeof testEnd === "function") { testEnd(failures === 0); }
+</script>

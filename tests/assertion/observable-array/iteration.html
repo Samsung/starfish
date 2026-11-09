@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>ObservableArray: iteration</title></head>
+<body>
+<script>
+// The observable array supports the standard Array iteration protocols.
+var s1 = new CSSStyleSheet();
+var s2 = new CSSStyleSheet();
+var s3 = new CSSStyleSheet();
+document.adoptedStyleSheets = [s1, s2, s3];
+
+var collected = [];
+for (var i = 0; i < document.adoptedStyleSheets.length; i++) {
+    collected.push(document.adoptedStyleSheets[i]);
+}
+console.assert(collected.length === 3, "indexed iteration visits all");
+
+var forOf = [];
+for (var sheet of document.adoptedStyleSheets) {
+    forOf.push(sheet);
+}
+console.assert(forOf.length === 3 && forOf[0] === s1 && forOf[2] === s3, "for..of works");
+
+var spread = [...document.adoptedStyleSheets];
+console.assert(spread.length === 3 && spread[1] === s2, "spread works");
+
+var feCount = 0;
+document.adoptedStyleSheets.forEach(function (sheet) { feCount++; });
+console.assert(feCount === 3, "forEach works");
+
+var keys = [...document.adoptedStyleSheets.keys()];
+console.assert(keys.length === 3 && keys[0] === 0 && keys[2] === 2, "keys() works");
+
+var idx = document.adoptedStyleSheets.indexOf(s2);
+console.assert(idx === 1, "indexOf works");
+
+testEnd();
+</script>
+</body>
+</html>

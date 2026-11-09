@@ -1,0 +1,48 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Queued audio connections preserve order and validation</title>
+<script>
+if (typeof testEnd !== 'function') window.testEnd = () => {};
+async function run() {
+    const context = new OfflineAudioContext(1, 128, 48000);
+    const source = context.createConstantSource();
+    const gain = context.createGain();
+    const modulation = context.createConstantSource();
+    gain.gain.value = 0;
+    modulation.offset.value = 0.25;
+    source.start();
+    modulation.start();
+    gain.connect(context.destination);
+    // Exceed the bounded queue while there is no render thread to drain it.
+    for (let i = 0; i < 1024; i++) {
+        source.connect(gain);
+        source.connect(gain); // Duplicate connections must not double output.
+        source.disconnect(gain);
+        modulation.connect(gain.gain);
+        modulation.disconnect(gain.gain);
+    }
+    let error;
+    try { source.disconnect(gain); } catch (e) { error = e; }
+    console.assert(error && error.name === 'InvalidAccessError',
+                   'disconnect validates the control-side state immediately');
+    source.connect(gain);
+    modulation.connect(gain.gain);
+    // A synchronous control operation must preserve prior connection order.
+    gain.channelCount = 1;
+    const result = await context.startRendering();
+    console.assert(result.getChannelData(0).every(x => Math.abs(x - 0.25) < 1e-6),
+                   'queued node and param connections reach the first quantum');
+    const realtime = new AudioContext();
+    await realtime.suspend();
+    const node = realtime.createGain();
+    for (let i = 0; i < 1024; i++) {
+        node.connect(realtime.destination);
+        node.disconnect();
+    }
+    node.connect(realtime.destination);
+    await realtime.close();
+    console.assert(realtime.state === 'closed',
+                   'close is safe with pending native connection commands');
+}
+run().catch(error => console.assert(false, String(error))).then(testEnd);
+</script>

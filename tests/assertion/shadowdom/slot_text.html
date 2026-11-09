@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style type="text/css">
+    </style>
+</head>
+
+<body>
+</body>
+
+<script type="text/javascript">
+    // Test 1: Text node has assignedSlot property
+    var text = document.createTextNode("hello");
+    console.assert(text.assignedSlot === null, "Test 1: Text node assignedSlot should be null initially");
+
+    // Test 2: Text node assigned to default slot
+    var host = document.createElement("div");
+    document.body.appendChild(host);
+
+    var text2 = document.createTextNode("text content");
+    host.appendChild(text2);
+
+    console.assert(text2.assignedSlot === null, "Test 2: Before shadow root, assignedSlot should be null");
+
+    var shadow = host.attachShadow({ mode: "open" });
+    var slot = document.createElement("slot");
+    shadow.appendChild(slot);
+
+    console.assert(text2.assignedSlot === slot, "Test 2: After adding default slot, text should be assigned");
+
+    // Test 3: Text node with named slot siblings goes to default slot
+    var host2 = document.createElement("div");
+    document.body.appendChild(host2);
+
+    var span = document.createElement("span");
+    span.setAttribute("slot", "named");
+    span.textContent = "named content";
+
+    var text3 = document.createTextNode("default text content");
+
+    host2.appendChild(span);
+    host2.appendChild(text3);
+
+    var shadow2 = host2.attachShadow({ mode: "open" });
+
+    var namedSlot = document.createElement("slot");
+    namedSlot.setAttribute("name", "named");
+    shadow2.appendChild(namedSlot);
+
+    var defaultSlot = document.createElement("slot");
+    shadow2.appendChild(defaultSlot);
+
+    console.assert(span.assignedSlot === namedSlot, "Test 3: Span goes to named slot");
+    console.assert(text3.assignedSlot === defaultSlot, "Test 3: Text goes to default slot");
+
+    // Test 4: Text node assignedSlot is null when no matching slot
+    var host3 = document.createElement("div");
+    document.body.appendChild(host3);
+
+    var text4 = document.createTextNode("orphan text");
+    host3.appendChild(text4);
+
+    var shadow3 = host3.attachShadow({ mode: "open" });
+
+    // Only named slot, no default slot
+    var namedSlot2 = document.createElement("slot");
+    namedSlot2.setAttribute("name", "named");
+    shadow3.appendChild(namedSlot2);
+
+    console.assert(text4.assignedSlot === null, "Test 4: Text assignedSlot should be null when no default slot");
+
+    testEnd();
+</script>
+
+</html>

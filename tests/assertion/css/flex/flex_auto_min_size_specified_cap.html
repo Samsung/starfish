@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">
+  <style>
+    /* CSS Flexbox 4.5 automatic minimum size -- specified size suggestion cap.
+
+       A column flex container with an indefinite main size (auto height), the
+       same trigger as flex_auto_min_size_indefinite_main.html. Here the item
+       has a DEFINITE main size (height) that is SMALLER than its content.
+
+       Per Flexbox 4.5 the content-based automatic minimum is "capped by the
+       specified size suggestion" -- the item's definite preferred main size.
+       So #capped must keep its 20px height and must NOT grow to its 100px
+       content. Its content simply overflows (overflow:visible is the default).
+
+       Without the cap the content-based minimum (100px) floors the item's main
+       size, so #capped over-expands to 100px, overrides its author-set height,
+       and pushes #sibling down. That is the regression this test guards.
+
+       Oracle: #capped equals its specified 20px height, which is smaller than
+       the identical content laid out unconstrained (#natural). The latter
+       proves the content really is taller than 20px, so the cap is doing
+       something (non-vacuous). */
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100px;
+        /* no height -> indefinite main size (the trigger) */
+    }
+    #capped {
+        height: 20px;            /* definite main size, smaller than content */
+        background: blue;
+        /* min-height:auto and overflow:visible are the defaults */
+    }
+    #sibling { height: 20px; background: green; }
+    .tall { height: 100px; }     /* content taller than #capped's 20px */
+
+    /* Unconstrained oracle: the same content with height:auto in normal flow. */
+    #natural { width: 100px; }
+  </style>
+ </head>
+ <body>
+   <div class="container">
+     <div id="capped"><div class="tall"></div></div>
+     <div id="sibling"></div>
+   </div>
+
+   <div id="natural"><div class="tall"></div></div>
+<script>
+   function rect(id) { return document.getElementById(id).getBoundingClientRect(); }
+   function h(id) { return rect(id).height; }
+   function near(a, b) { return Math.abs(a - b) <= 1; }
+
+   // Non-vacuous: the content is genuinely taller than the specified height.
+   testAssert(h("natural") > 20);
+
+   // The cap holds: #capped keeps its specified 20px height, not its content.
+   testAssert(near(h("capped"), 20));
+
+   // The sibling sits directly below the (un-expanded) capped item.
+   testAssert(rect("sibling").top >= rect("capped").bottom - 1);
+   testAssert(near(rect("sibling").top, rect("capped").bottom));
+
+   testEnd();
+</script>
+</body>
+</html>

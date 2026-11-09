@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>var() must not see a previously resolved element's custom properties</title>
+    <style>
+        /* The resolver keeps the custom-property list of the style it is
+           building for var() lookups. An element without custom properties
+           of its own must reset that list; otherwise it inherits whatever the
+           previously resolved style left behind. A ::after is resolved right
+           after its originating element and nothing clears the list after
+           it, so the next element in tree order resolved var(--glow) to the
+           focused item's ring. */
+        .item {
+            width: 100px;
+            height: 20px;
+            margin: 4px;
+            box-shadow: var(--glow, none);
+        }
+
+        .hov {
+            --glow: 0 0 0 8px red;
+        }
+
+        .hov::after {
+            content: "";
+            display: block;
+            width: 4px;
+            height: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="a" class="item hov"></div>
+    <div id="b" class="item"></div>
+    <div id="c" class="item"></div>
+</body>
+<script>
+    function testStart() {
+        // Initial pass resolves a, a::after, b, c: b follows the pseudo.
+        testAssert(window.getComputedStyle(a).boxShadow != 'none');
+        testAssert(window.getComputedStyle(b).boxShadow == 'none');
+        testAssert(window.getComputedStyle(c).boxShadow == 'none');
+
+        // Move the class: this pass resolves a, b, b::after and ends on the
+        // pseudo, so the list it leaves behind would reach the first element
+        // resolved by the next pass.
+        a.classList.remove('hov');
+        b.classList.add('hov');
+        setTimeout(function () {
+            testAssert(window.getComputedStyle(a).boxShadow == 'none');
+            testAssert(window.getComputedStyle(b).boxShadow != 'none');
+
+            // Dirty c alone; the class matches no rule.
+            c.classList.add('touched');
+            setTimeout(function () {
+                testAssert(window.getComputedStyle(c).boxShadow == 'none');
+                testEnd();
+            }, 100);
+        }, 100);
+    }
+    testStart();
+</script>
+
+</html>

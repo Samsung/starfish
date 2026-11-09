@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<!--
+  Regression: a plain tap (no scroll movement) on a scrollable element
+  must still fire click.
+-->
+<head>
+<style>
+  body { margin: 0; }
+  #scroller {
+    width: 200px;
+    height: 100px;
+    overflow-y: scroll;
+  }
+  #content {
+    width: 200px;
+    height: 400px;
+    background: lightgreen;
+  }
+</style>
+</head>
+<body>
+  <div id="scroller">
+    <div id="content"></div>
+  </div>
+
+  <script>
+    var clickFired = false;
+    document.getElementById("scroller").addEventListener("click", function () {
+      clickFired = true;
+    });
+
+    function testStart() {
+      simulateClick(100, 50);
+
+      setTimeout(function () {
+        testAssert(clickFired);
+        testEnd();
+      }, 100);
+    }
+  </script>
+</body>
+</html>

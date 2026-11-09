@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>document.fonts (FontFaceSet) test</title>
+</head>
+<body>
+<script>
+    console.assert(typeof document.fonts === "object", "document.fonts should be an object");
+    console.assert(document.fonts.status === "loading" || document.fonts.status === "loaded",
+        "status should be loading or loaded");
+
+    console.assert(document.fonts.check("10px sans-serif") === true, "check(10px sans-serif) should be true");
+    console.assert(document.fonts.check("bold 16px Arial") === true, "check(bold 16px Arial) should be true");
+
+    var readyPromise = document.fonts.ready;
+    console.assert(readyPromise instanceof Promise, "ready should return a Promise");
+
+    readyPromise.then(function (fonts) {
+        console.assert(fonts === document.fonts, "ready should resolve with document.fonts");
+        console.assert(document.fonts.status === "loaded", "status should be loaded after ready resolves");
+
+        if (typeof testEnd === "function") {
+            testEnd();
+        }
+    });
+</script>
+</body>
+</html>

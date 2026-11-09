@@ -1,0 +1,78 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<title>Local font names preserve fallback URLs</title>
+<link rel="help" href="https://drafts.csswg.org/css-fonts-4/#src-desc">
+<!-- Give each case its own resource URL to isolate font loading. -->
+<style>
+.sample {display:inline-block;font:20px serif;}
+@font-face {font-family:AhemLocal0;src:url("../../../fixtures/resources/webkit/Ahem.ttf?local=0") format("tru\65 type");}
+#control {font-family:AhemLocal0, serif;}
+@font-face {font-family:AhemLocal1;src:local("Missing Font\\"), url("../../../fixtures/resources/webkit/Ahem.ttf?local=1") format("tru\65 type");}
+#trailing-backslash {font-family:AhemLocal1, serif;}
+@font-face {font-family:AhemLocal2;src:local("Missing\\\"Font"), url("../../../fixtures/resources/webkit/Ahem.ttf?local=2") format("tru\65 type");}
+#backslash-quote {font-family:AhemLocal2, serif;}
+@font-face {font-family:AhemLocal3;src:local("Missing)Font"), url("../../../fixtures/resources/webkit/Ahem.ttf?local=3") format("tru\65 type");}
+#quoted-parenthesis {font-family:AhemLocal3, serif;}
+@font-face {font-family:AhemLocal4;src:local('Missing", Font'), url("../../../fixtures/resources/webkit/Ahem.ttf?local=4") format("tru\65 type");}
+#quoted-comma {font-family:AhemLocal4, serif;}
+@font-face {font-family:AhemLocal5;src:local(Missing\)Font), url("../../../fixtures/resources/webkit/Ahem.ttf?local=5") format("tru\65 type");}
+#escaped-parenthesis {font-family:AhemLocal5, serif;}
+@font-face {font-family:AhemLocal6;src:local(Missing\\Font), url("../../../fixtures/resources/webkit/Ahem.ttf?local=6") format("tru\65 type");}
+#escaped-backslash {font-family:AhemLocal6, serif;}
+@font-face {font-family:AhemLocal7;src:local("Missing\a Font"), url("../../../fixtures/resources/webkit/Ahem.ttf?local=7") format("tru\65 type");}
+#escaped-newline {font-family:AhemLocal7, serif;}
+@font-face {font-family:AhemLocal8;src:local(Missing\ Font), url("../../../fixtures/resources/webkit/Ahem.ttf?local=8") format("tru\65 type");}
+#escaped-space {font-family:AhemLocal8, serif;}
+@font-face {font-family:AhemLocal9;src:local(Missing/**/Font), url("../../../fixtures/resources/webkit/Ahem.ttf?local=9") format("tru\65 type");}
+#comment-separated-name {font-family:AhemLocal9, serif;}
+</style></head><body>
+<div><span class="sample" id="fallback">XXXXX</span></div>
+<div><span class="sample" id="control">XXXXX</span></div>
+<div><span class="sample" id="trailing-backslash">XXXXX</span></div>
+<div><span class="sample" id="backslash-quote">XXXXX</span></div>
+<div><span class="sample" id="quoted-parenthesis">XXXXX</span></div>
+<div><span class="sample" id="quoted-comma">XXXXX</span></div>
+<div><span class="sample" id="escaped-parenthesis">XXXXX</span></div>
+<div><span class="sample" id="escaped-backslash">XXXXX</span></div>
+<div><span class="sample" id="escaped-newline">XXXXX</span></div>
+<div><span class="sample" id="escaped-space">XXXXX</span></div>
+<div><span class="sample" id="comment-separated-name">XXXXX</span></div>
+<pre id="result"></pre>
+<script>
+(function () {
+    'use strict';
+    var total = 0;
+    var failures = 0;
+    var finished = false;
+    function check(condition, description) {
+        total++;
+        if (!condition) { failures++; }
+        console.assert(condition, description);
+    }
+    function finish() {
+        finished = true;
+        clearTimeout(timeout);
+        document.getElementById('result').textContent =
+            (total - failures) + ' passed; ' + failures + ' failed.';
+        document.title = (failures ? 'FAIL' : 'PASS') + ': Local font fallback';
+        if (typeof testEnd === 'function') { testEnd(); }
+    }
+    var timeout = setTimeout(function () {
+        check(false, 'Font loading did not finish');
+        finish();
+    }, 10000);
+    window.addEventListener('load', function () {
+        document.getElementById('control').offsetWidth;
+        document.fonts.ready.then(function () {
+            if (finished) { return; }
+            check(document.getElementById('fallback').offsetWidth !== 100,
+                'The fallback must differ from Ahem');
+            ["control", "trailing-backslash", "backslash-quote", "quoted-parenthesis", "quoted-comma", "escaped-parenthesis", "escaped-backslash", "escaped-newline", "escaped-space", "comment-separated-name"].forEach(function (id) {
+                var width = document.getElementById(id).offsetWidth;
+                check(width === 100, id + ': expected loaded Ahem width 100, got ' + width);
+            });
+            finish();
+        });
+    });
+}());
+</script></body></html>

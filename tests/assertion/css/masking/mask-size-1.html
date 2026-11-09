@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <style>
+    .mask {
+      border: 1px solid black;
+      width: 250px;
+      height: 250px;
+      background-color: blue;
+      mask-image: url(support/red-100x100.png);
+      mask-size: contain;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="target" class="mask"></div>
+  <script>
+    function testStart() {
+      testAssert(getComputedStyle(target)['mask-size'] === "contain");
+
+      target.style['mask-size'] = 'cover';
+      testAssert(getComputedStyle(target)['mask-size'] === "cover");
+
+      target.style['mask-size'] = '10px 50px';
+      testAssert(getComputedStyle(target)['mask-size'] === "10px 50px");
+
+      target.style['mask-size'] = '100px 50%';
+      testAssert(getComputedStyle(target)['mask-size'] === "100px 50%");
+
+      testEnd();
+    }
+
+  </script>
+
+</body>
+
+</html>

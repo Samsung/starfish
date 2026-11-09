@@ -1,0 +1,76 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Web Audio buffer source looping</title>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Web Audio buffer source loop complete";
+    };
+}
+
+if (typeof OfflineAudioContext !== "function") {
+    testEnd();
+} else {
+    const sampleRate = 48000;
+    function makeSource(options) {
+        const context = new OfflineAudioContext(1, 128, sampleRate);
+        const buffer = context.createBuffer(1, 4, sampleRate);
+        buffer.getChannelData(0).set([0, 1, 2, 3]);
+        const source = new AudioBufferSourceNode(context,
+            Object.assign({ buffer: buffer, loop: true,
+                            loopStart: 1 / sampleRate,
+                            loopEnd: 3 / sampleRate }, options));
+        source.connect(context.destination);
+        return { context: context, source: source };
+    }
+
+    const forward = makeSource({});
+    forward.source.start();
+    forward.source.stop(8 / sampleRate);
+    const reverse = makeSource({ playbackRate: -1 });
+    reverse.source.start(0, 2 / sampleRate);
+    reverse.source.stop(6 / sampleRate);
+    const limited = makeSource({});
+    limited.source.start(0, 0, 5 / sampleRate);
+    const defaultLoop = makeSource({ loopStart: 0, loopEnd: 0 });
+    defaultLoop.source.start();
+    defaultLoop.source.stop(6 / sampleRate);
+    const fractional = makeSource({ playbackRate: 0.25,
+                                    loopStart: 0.5 / sampleRate,
+                                    loopEnd: 2.5 / sampleRate });
+    fractional.source.start();
+    fractional.source.stop(12 / sampleRate);
+
+    console.assert(forward.source.loop &&
+                   forward.source.loopStart === 1 / sampleRate &&
+                   forward.source.loopEnd === 3 / sampleRate,
+                   "loop options initialize attributes");
+
+    Promise.all([forward.context.startRendering(),
+                 reverse.context.startRendering(),
+                 limited.context.startRendering(),
+                 defaultLoop.context.startRendering(),
+                 fractional.context.startRendering()]).then(function (results) {
+        const f = results[0].getChannelData(0);
+        const r = results[1].getChannelData(0);
+        const l = results[2].getChannelData(0);
+        const d = results[3].getChannelData(0);
+        const q = results[4].getChannelData(0);
+        console.assert(f[0] === 0 && f[1] === 1 && f[2] === 2 &&
+                       f[3] === 1 && f[4] === 2 && f[7] === 1 &&
+                       f[8] === 0,
+                       "forward loop wraps at exclusive loopEnd");
+        console.assert(r[0] === 2 && r[1] === 1 && r[2] === 2 &&
+                       r[3] === 1 && r[6] === 0,
+                       "negative rate loops backward");
+        console.assert(l[0] === 0 && l[4] === 2 && l[5] === 0,
+                       "duration limits total looped buffer content");
+        console.assert(d[0] === 0 && d[3] === 3 && d[4] === 0,
+                       "default endpoints loop whole buffer");
+        console.assert(q[8] === 2 && Math.abs(q[9] - 1.25) < 1e-6 &&
+                       q[10] === 0.5,
+                       "fractional endpoint interpolates across the splice");
+        testEnd();
+    });
+}
+</script>

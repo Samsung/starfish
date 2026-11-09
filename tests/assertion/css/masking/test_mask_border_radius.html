@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            margin: 0;
+            background-color: white;
+        }
+        #test {
+            width: 300px;
+            height: 300px;
+            background: red;
+            border-radius: 50px;
+            overflow: hidden;
+            mask-image: linear-gradient(to bottom, black, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, black, transparent);
+        }
+    </style>
+</head>
+<body>
+    <div id="test">
+        <div style="width: 100px; height: 100px; background: blue;"></div>
+    </div>
+</body>
+<script>
+    function testStart() {
+        screenShot("test_mask_border_radius.png", function () {
+            // Corner at (10, 10) should be clipped (white)
+            var c1 = getPixelColor("test_mask_border_radius.png", 10, 10);
+            // Center at (150, 150) should be faded red (blended red+white = pinkish)
+            var c2 = getPixelColor("test_mask_border_radius.png", 150, 150);
+
+            // Channel mapping is BGRA in getPixelColor:
+            // c.b is Red, c.g is Green, c.r is Blue
+            var c1_ok = (c1.r > 240 && c1.g > 240 && c1.b > 240);
+            var c2_ok = (c2.b > 240 && c2.g > 100 && c2.g < 150 && c2.r > 100 && c2.r < 150);
+
+            testAssert(c1_ok);
+            testAssert(c2_ok);
+            testEnd();
+        });
+    }
+</script>
+</html>

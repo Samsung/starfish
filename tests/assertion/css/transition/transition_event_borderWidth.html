@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <style>
+    body {
+      height: 800px;
+    }
+
+    div {
+      display: block;
+      width: 100px;
+      height: 100px;
+      background-color: yellow;
+    }
+
+    .background {
+      border: 10px solid black;
+      transition: border 1s linear;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="test1" class="background"></div>
+  <div id="test2" class="background"></div>
+  <script>
+    let test1StartCount = 0;
+    test1.addEventListener('transitionstart', (e) => {
+      test1StartCount++;
+    });
+
+    let test1EndCount = 0;
+    test1.addEventListener('transitionend', function (event) {
+      test1EndCount++
+    });
+
+    let test2StartCount = 0;
+    test2.addEventListener('transitionstart', (e) => {
+      test2StartCount++;
+    });
+
+    let test2EndCount = 0;
+    test2.addEventListener('transitionend', function (event) {
+      test2EndCount++
+    });
+
+    window.onload = function () {
+      test1.style.borderLeftWidth = '100px';
+      test1.style.borderRightWidth = '100px';
+      test1.style.borderTopWidth = '100px';
+      test1.style.borderBottomWidth = '100px';
+
+      test2.style.borderWidth = '100px';
+    }
+
+    setTimeout(() => {
+      console.log('test1StartCount expected[4] actual[' + test1StartCount + ']');
+      console.log('test1EndCount expected[4] actual[' + test1EndCount + ']');
+      console.log('test2StartCount expected[4] actual[' + test2StartCount + ']');
+      console.log('test2EndCount expected[4] actual[' + test2EndCount + ']');
+
+      testAssert(test1StartCount == 4);
+      testAssert(test1EndCount == 4);
+      testAssert(test2StartCount == 4);
+      testAssert(test2EndCount == 4);
+      testEnd();
+    }, 1500);
+  </script>
+</body>
+
+
+</html>

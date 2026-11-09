@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Zero-size geometry and degenerate gradients paint nothing and do not crash</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: white; }
+svg { display: block; }
+</style>
+</head>
+<body>
+<!--
+  SVG 2: a rect with a zero width or height is not rendered, and an
+  objectBoundingBox gradient on geometry with no width or no height is
+  ignored. A non-invertible gradientTransform leaves the gradient without a
+  coordinate system either. Each of these used to hand the canvas a singular
+  pattern matrix, which put it into a permanent error state and crashed the
+  following filter layer.
+-->
+<svg width="400" height="100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="red"/>
+      <stop offset="100%" stop-color="blue"/>
+    </linearGradient>
+    <linearGradient id="collapsed" gradientTransform="scale(0)">
+      <stop offset="0%" stop-color="red"/>
+      <stop offset="100%" stop-color="blue"/>
+    </linearGradient>
+    <linearGradient id="solid">
+      <stop offset="0%" stop-color="rgb(0, 128, 0)"/>
+      <stop offset="100%" stop-color="rgb(0, 128, 0)"/>
+    </linearGradient>
+    <filter id="blur" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+  </defs>
+  <!-- zero-size rect with an objectBoundingBox gradient and a filter -->
+  <rect x="50" y="50" width="0" height="0" rx="50" ry="50"
+        fill="url(#grad)" filter="url(#blur)"/>
+  <!-- zero-length line: its bounding box has no width or height -->
+  <line x1="150" y1="50" x2="150" y2="50" stroke="url(#grad)" stroke-width="20"/>
+  <!-- non-invertible gradientTransform -->
+  <rect x="200" y="0" width="100" height="100" fill="url(#collapsed)"/>
+  <!-- control: a regular gradient still paints -->
+  <rect x="300" y="0" width="100" height="100" fill="url(#solid)"/>
+</svg>
+<script>
+    function testStart() {
+        if (typeof screenShot !== "function") {
+            testEnd();
+            return;
+        }
+        var img = "svg_zero_size_gradient.png";
+        screenShot(img, function () {
+            testAssert(checkPixelColor(img, 50, 50, 255, 255, 255, 255));
+            testAssert(checkPixelColor(img, 150, 50, 255, 255, 255, 255));
+            testAssert(checkPixelColor(img, 250, 50, 255, 255, 255, 255));
+            testAssert(checkPixelColor(img, 350, 50, 0, 128, 0, 255));
+            testEnd();
+        });
+    }
+</script>
+</body>
+</html>

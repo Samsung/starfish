@@ -1,0 +1,253 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebGL never reaches a deleted or foreign object through its name</title>
+<canvas id="a" width="4" height="4"></canvas>
+<canvas id="b" width="4" height="4"></canvas>
+<canvas id="c" width="4" height="4"></canvas>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0, __firstError = '';
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) {
+      __pass++;
+    } else {
+      __fail++;
+      if (!__firstError) __firstError = message;
+      __nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[webgl-deleted-and-foreign-objects] ' + verdict);
+    document.title = verdict + (__firstError ? ': ' + __firstError : '');
+  };
+}
+
+// A WebGL object passed to another context is INVALID_OPERATION (WebGL 1.0
+// §5.14). After delete*(), a program lives on only while it is current and a
+// shader only while it is attached (OpenGL ES 2.0 §2.10.1, §2.10.3); once
+// the GL object is gone its name is free for reuse, possibly by another
+// context, so every call naming it must fail with INVALID_VALUE instead of
+// reaching whatever object now has that name.
+
+function hex(v) { return '0x' + v.toString(16); }
+
+function expectError(gl, expected, label) {
+  var error = gl.getError();
+  console.assert(error === expected,
+                 label + ' -> ' + hex(expected) + ', got ' + hex(error));
+}
+
+var vsSource = 'attribute vec4 p; void main() { gl_Position = p; }';
+var fsPlain = 'precision mediump float; void main() { gl_FragColor = vec4(1.0); }';
+var fsSecret = 'precision mediump float; uniform vec4 secret; ' +
+               'void main() { gl_FragColor = secret; }';
+
+function shader(gl, type, source) {
+  var s = gl.createShader(type);
+  gl.shaderSource(s, source);
+  gl.compileShader(s);
+  return s;
+}
+
+function program(gl, fs) {
+  var p = gl.createProgram();
+  gl.attachShader(p, shader(gl, gl.VERTEX_SHADER, vsSource));
+  gl.attachShader(p, shader(gl, gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(p);
+  return p;
+}
+
+var A = document.getElementById('a').getContext('webgl');
+var B = document.getElementById('b').getContext('webgl');
+
+// Freed program and shader names of context A, while context B owns live
+// objects that may have been given those names.
+var pa = program(A, fsPlain);
+var sa = A.createShader(A.FRAGMENT_SHADER);
+A.deleteProgram(pa);
+A.deleteShader(sa);
+expectError(A, A.NO_ERROR, 'A deletes a program and a shader');
+
+var qb = program(B, fsSecret);
+var sb = shader(B, B.FRAGMENT_SHADER, fsSecret);
+B.useProgram(qb);
+var secret = B.getUniformLocation(qb, 'secret');
+B.uniform4f(secret, 11, 22, 33, 44);
+expectError(B, B.NO_ERROR, 'B sets up its program');
+
+console.assert(A.getUniformLocation(pa, 'secret') === null,
+               'getUniformLocation(freed program) is null');
+expectError(A, A.INVALID_VALUE, 'getUniformLocation(freed program)');
+console.assert(A.getActiveUniform(pa, 0) === null,
+               'getActiveUniform(freed program) is null');
+expectError(A, A.INVALID_VALUE, 'getActiveUniform(freed program)');
+console.assert(A.getProgramParameter(pa, A.ACTIVE_UNIFORMS) === null,
+               'getProgramParameter(freed program) is null');
+expectError(A, A.INVALID_VALUE, 'getProgramParameter(freed program)');
+A.useProgram(pa);
+expectError(A, A.INVALID_VALUE, 'useProgram(freed program)');
+console.assert(A.getParameter(A.CURRENT_PROGRAM) === null,
+               'a rejected useProgram leaves CURRENT_PROGRAM alone');
+A.shaderSource(sa, fsPlain);
+expectError(A, A.INVALID_VALUE, 'shaderSource(freed shader)');
+console.assert(A.getShaderSource(sa) === null,
+               'getShaderSource(freed shader) is null');
+expectError(A, A.INVALID_VALUE, 'getShaderSource(freed shader)');
+A.compileShader(sa);
+expectError(A, A.INVALID_VALUE, 'compileShader(freed shader)');
+A.linkProgram(pa);
+expectError(A, A.INVALID_VALUE, 'linkProgram(freed program)');
+console.assert(!A.isProgram(pa) && !A.isShader(sa),
+               'freed program and shader are not objects');
+
+var check = B.getUniform(qb, secret);
+console.assert(check && check[0] === 11 && check[3] === 44,
+               'B keeps its uniform value, got ' + check);
+console.assert(B.getShaderSource(sb) === fsSecret,
+               'B keeps its shader source');
+expectError(B, B.NO_ERROR, 'B reads its own objects');
+
+// Objects of another context.
+var bufferB = B.createBuffer();
+A.bindBuffer(A.ARRAY_BUFFER, bufferB);
+expectError(A, A.INVALID_OPERATION, 'bindBuffer(foreign buffer)');
+console.assert(A.getParameter(A.ARRAY_BUFFER_BINDING) === null,
+               'a foreign buffer is not bound');
+A.shaderSource(sb, fsPlain);
+expectError(A, A.INVALID_OPERATION, 'shaderSource(foreign shader)');
+console.assert(A.getShaderSource(sb) === null,
+               'getShaderSource(foreign shader) is null');
+expectError(A, A.INVALID_OPERATION, 'getShaderSource(foreign shader)');
+A.getShaderInfoLog(sb);
+expectError(A, A.INVALID_OPERATION, 'getShaderInfoLog(foreign shader)');
+A.getProgramInfoLog(qb);
+expectError(A, A.INVALID_OPERATION, 'getProgramInfoLog(foreign program)');
+console.assert(A.getAttachedShaders(qb) === null,
+               'getAttachedShaders(foreign program) is null');
+expectError(A, A.INVALID_OPERATION, 'getAttachedShaders(foreign program)');
+A.validateProgram(qb);
+expectError(A, A.INVALID_OPERATION, 'validateProgram(foreign program)');
+A.detachShader(qb, sb);
+expectError(A, A.INVALID_OPERATION, 'detachShader(foreign objects)');
+console.assert(B.getShaderSource(sb) === fsSecret &&
+               B.getAttachedShaders(qb).length === 2,
+               'B objects are untouched');
+
+// A program deleted while current stays current, usable and queryable until
+// it is replaced; then it is gone.
+var pc = program(A, fsSecret);
+A.useProgram(pc);
+var pcSecret = A.getUniformLocation(pc, 'secret');
+A.deleteProgram(pc);
+expectError(A, A.NO_ERROR, 'deleteProgram(current program)');
+console.assert(A.isProgram(pc), 'a deleted current program is a program');
+console.assert(A.getParameter(A.CURRENT_PROGRAM) === pc,
+               'a deleted current program stays CURRENT_PROGRAM');
+console.assert(A.getProgramParameter(pc, A.DELETE_STATUS) === true,
+               'its DELETE_STATUS is true');
+A.uniform4f(pcSecret, 1, 2, 3, 4);
+expectError(A, A.NO_ERROR, 'its uniforms can still be set');
+A.useProgram(pc);
+expectError(A, A.INVALID_VALUE, 'useProgram(deleted program) again');
+A.useProgram(null);
+console.assert(!A.isProgram(pc), 'replaced, the deleted program is gone');
+A.getProgramParameter(pc, A.DELETE_STATUS);
+expectError(A, A.INVALID_VALUE, 'getProgramParameter(freed program)');
+
+// A program that cannot be made current leaves the current program alone.
+var keep = program(A, fsPlain);
+A.useProgram(keep);
+A.useProgram(A.createProgram());
+expectError(A, A.INVALID_OPERATION, 'useProgram(unlinked program)');
+console.assert(A.getParameter(A.CURRENT_PROGRAM) === keep,
+               'CURRENT_PROGRAM is unchanged');
+A.useProgram(null);
+
+// A shader lives while attached, whatever happened to a shader that held its
+// name before.
+var s1 = A.createShader(A.VERTEX_SHADER);
+A.deleteShader(s1);
+var s2 = A.createShader(A.VERTEX_SHADER);
+var holder = A.createProgram();
+A.attachShader(holder, s2);
+A.deleteShader(s2);
+console.assert(!A.isShader(s1), 'a freed shader is not a shader');
+console.assert(A.isShader(s2), 'a deleted attached shader is a shader');
+console.assert(A.getShaderParameter(s2, A.DELETE_STATUS) === true,
+               'its DELETE_STATUS is true');
+A.detachShader(holder, s2);
+console.assert(!A.isShader(s2), 'detached, the deleted shader is gone');
+A.shaderSource(s2, vsSource);
+expectError(A, A.INVALID_VALUE, 'shaderSource(detached deleted shader)');
+
+// A renderbuffer deleted while its framebuffer is not bound stays attached
+// (OpenGL ES 2.0 §4.4.3), and keeps counting for DEPTH_BITS.
+var depthFb = A.createFramebuffer();
+var colorRb = A.createRenderbuffer();
+A.bindRenderbuffer(A.RENDERBUFFER, colorRb);
+A.renderbufferStorage(A.RENDERBUFFER, A.RGBA4, 4, 4);
+var depthRb = A.createRenderbuffer();
+A.bindRenderbuffer(A.RENDERBUFFER, depthRb);
+A.renderbufferStorage(A.RENDERBUFFER, A.DEPTH_COMPONENT16, 4, 4);
+A.bindFramebuffer(A.FRAMEBUFFER, depthFb);
+A.framebufferRenderbuffer(A.FRAMEBUFFER, A.COLOR_ATTACHMENT0,
+                          A.RENDERBUFFER, colorRb);
+A.framebufferRenderbuffer(A.FRAMEBUFFER, A.DEPTH_ATTACHMENT,
+                          A.RENDERBUFFER, depthRb);
+A.bindFramebuffer(A.FRAMEBUFFER, null);
+A.deleteRenderbuffer(depthRb);
+A.bindFramebuffer(A.FRAMEBUFFER, depthFb);
+console.assert(A.getFramebufferAttachmentParameter(
+                   A.FRAMEBUFFER, A.DEPTH_ATTACHMENT,
+                   A.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME) === depthRb,
+               'the deleted renderbuffer stays attached');
+console.assert(A.getParameter(A.DEPTH_BITS) >= 16,
+               'DEPTH_BITS counts it, got ' + A.getParameter(A.DEPTH_BITS));
+expectError(A, A.NO_ERROR, 'deleted attachment queries');
+A.bindFramebuffer(A.FRAMEBUFFER, null);
+
+// Vertex array objects belong to one GL context, so deleting one must not
+// touch the context that happened to run the previous call.
+var extA = A.getExtension('OES_vertex_array_object');
+var extB = B.getExtension('OES_vertex_array_object');
+if (extA && extB) {
+  var vaoA = extA.createVertexArrayOES();
+  extA.bindVertexArrayOES(vaoA);
+  extA.bindVertexArrayOES(null);
+  var vaoB = extB.createVertexArrayOES();
+  extB.bindVertexArrayOES(vaoB);
+  B.getError();
+  extA.deleteVertexArrayOES(vaoA);
+  console.assert(B.getParameter(extB.VERTEX_ARRAY_BINDING_OES) === vaoB,
+                 'B keeps its bound vertex array');
+  console.assert(!extA.isVertexArrayOES(vaoA),
+                 'a deleted vertex array is not a vertex array');
+  extA.bindVertexArrayOES(vaoB);
+  expectError(A, A.INVALID_OPERATION, 'bindVertexArrayOES(foreign)');
+  expectError(B, B.NO_ERROR, 'no error lands on the other context');
+  extB.bindVertexArrayOES(null);
+}
+
+// WebGL 2: a deleted sync is not waited on, and getUniform needs the
+// location's own program.
+var C = document.getElementById('c').getContext('webgl2');
+if (C) {
+  var sync = C.fenceSync(C.SYNC_GPU_COMMANDS_COMPLETE, 0);
+  C.deleteSync(sync);
+  C.clientWaitSync(sync, 0, 0);
+  expectError(C, C.INVALID_VALUE, 'clientWaitSync(deleted sync)');
+  C.getSyncParameter(sync, C.SYNC_STATUS);
+  expectError(C, C.INVALID_VALUE, 'getSyncParameter(deleted sync)');
+  var withUniform = program(C, fsSecret);
+  var other = program(C, fsSecret);
+  var loc = C.getUniformLocation(withUniform, 'secret');
+  console.assert(C.getUniform(other, loc) === null,
+                 'getUniform with another program\'s location is null');
+  expectError(C, C.INVALID_OPERATION, 'getUniform(other program, location)');
+}
+
+testEnd();
+</script>

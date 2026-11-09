@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+        #test1 {
+            display: grid;
+            width: 500px;
+            background-color: blue;
+
+            /* Don't allow auto on auto repeat */
+            grid-template-columns: repeat(auto-fit, auto);
+        }
+        #test2 {
+            display: grid;
+            width: 500px;
+            background-color: blue;
+
+            /* Don't allow auto on auto repeat*/
+            grid-template-columns: repeat(auto-fill, auto);
+        }
+        #test3 {
+            margin-top: 10px;
+            display: grid;
+            width: 500px;
+            background-color: blue;
+
+            /* Allow auto on fixed repeat */
+            grid-template-columns: repeat(4, auto);
+        }
+        #test4 {
+            margin-top: 10px;
+            display: grid;
+            width: 500px;
+            background-color: blue;
+
+            /* Allow auto */
+            grid-template-columns: 50px auto;
+        }
+        #area1 {
+            background-color: lime;
+            height: 60px;
+        }
+        #area2 {
+            background-color: yellow;
+            height: 60px
+        }
+        #area3 {
+            background-color: blue;
+            height: 60px
+        }
+        #area4 {
+            background-color: red;
+            height: 60px
+        }
+    </style>
+</head>
+
+<body>
+    <div id="test1">
+        <div id="area1"></div>
+        <div id="area2"></div>
+        <div id="area3"></div>
+        <div id="area4"></div>
+    </div>
+    <div id="test2">
+        <div id="area1"></div>
+        <div id="area2"></div>
+        <div id="area3"></div>
+        <div id="area4"></div>
+    </div>
+    <div id="test3">
+        <div id="area1"></div>
+        <div id="area2"></div>
+        <div id="area3"></div>
+        <div id="area4"></div>
+    </div>
+    <div id="test4">
+        <div id="area1"></div>
+        <div id="area2"></div>
+        <div id="area3"></div>
+        <div id="area4"></div>
+    </div>
+    <script>
+        function testStart() {
+            testAssert(getComputedStyle(test1)['grid-template-columns'] == "500px");
+            testAssert(getComputedStyle(test2)['grid-template-columns'] == "500px");
+            testAssert(getComputedStyle(test3)['grid-template-columns'] == "125px 125px 125px 125px");
+            testAssert(getComputedStyle(test4)['grid-template-columns'] == "50px 450px");
+            testEnd();
+        }
+    </script>
+</body>
+
+</html>

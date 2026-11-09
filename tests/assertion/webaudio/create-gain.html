@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>BaseAudioContext.createGain() test</title>
+</head>
+<body>
+<script>
+    var ctx = new AudioContext();
+    console.assert(ctx instanceof AudioContext, "ctx should be AudioContext");
+    console.assert(typeof ctx.createGain === "function", "createGain should be function");
+
+    var gainNode = ctx.createGain();
+    console.assert(gainNode instanceof GainNode, "gainNode should be GainNode");
+    console.assert(gainNode instanceof AudioNode, "gainNode should be AudioNode");
+
+    console.assert(gainNode.gain instanceof AudioParam, "gainNode.gain should be AudioParam");
+    console.assert(gainNode.gain.value === 1.0, "gain.value default should be 1.0: " + gainNode.gain.value);
+    console.assert(gainNode.gain.defaultValue === 1.0, "gain.defaultValue should be 1.0");
+
+    gainNode.gain.value = 0.5;
+    console.assert(gainNode.gain.value === 0.5, "gain.value after set should be 0.5: " + gainNode.gain.value);
+
+    var ret = gainNode.gain.setValueAtTime(0.8, 1.0);
+    console.assert(ret === gainNode.gain, "setValueAtTime should return AudioParam");
+
+    ret = gainNode.gain.linearRampToValueAtTime(0.3, 2.0);
+    console.assert(ret === gainNode.gain, "linearRampToValueAtTime should return AudioParam");
+
+    ret = gainNode.gain.cancelScheduledValues(3.0);
+    console.assert(ret === gainNode.gain, "cancelScheduledValues should return AudioParam");
+
+    gainNode.connect(ctx.destination);
+
+    if (typeof testEnd === "function") {
+        testEnd();
+    }
+</script>
+</body>
+</html>

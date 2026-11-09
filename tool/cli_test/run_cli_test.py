@@ -21,7 +21,7 @@ DEFAULT_BINARY = (
 )
 CLI_TEST_DIR = Path(__file__).resolve().parent
 TEST_LIST = CLI_TEST_DIR / "testlist.json"
-TEST_CASE_DIR = REPOSITORY_DIR / "test" / "cli"
+TEST_CASE_DIR = REPOSITORY_DIR / "tests" / "cli"
 CLI_BINARY_ENVIRONMENT_VARIABLE = "LWE_CLI_TEST_BINARY"
 
 
@@ -40,7 +40,7 @@ def main():
 
     if not TEST_CASE_DIR.is_dir():
         parser.error(
-            "CLI test cases are missing at %s; check out the test submodule"
+            "CLI test cases are missing at %s"
             % TEST_CASE_DIR
         )
 
@@ -83,7 +83,7 @@ def flatten(suite):
 def enabled_tests(tests, parser):
     """Keep only the tests that TEST_LIST names.
 
-    The test submodule can contain tests for features that are not merged
+    tests/cli can contain tests for features that are not merged
     yet. A test runs only after the change that makes it pass adds it to
     the list.
     """

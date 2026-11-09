@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>border-spacing getComputedStyle serialization</title>
+<style>
+  /* Two differing values take the value-list serialization branch, which used
+     to build a ValueList but never attach it to the pair (missing
+     setValueList) -> getPropertyValue dereferenced an unset list and crashed.
+     var() is irrelevant: the trigger is horizontal != vertical spacing. */
+  #two    { border-spacing: 5px 9px; }
+  #one    { border-spacing: 7px; }
+  #twoVar { --x: 19px; --y: 47px; border-spacing: var(--x) var(--y); }
+  #oneVar { --z: 11px; border-spacing: var(--z); }
+</style>
+</head>
+<body>
+  <table id="two"></table>
+  <table id="one"></table>
+  <table id="twoVar"></table>
+  <table id="oneVar"></table>
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (other browser), shim a custom testEnd()
+    // that tallies console.assert results and reports the verdict, so the same
+    // file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[table_border-spacing_computed_value] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    function bs(id) {
+      return getComputedStyle(document.getElementById(id))
+        .getPropertyValue('border-spacing');
+    }
+
+    // Differing horizontal/vertical -> two-value serialization (crash repro).
+    console.assert(bs('two') === '5px 9px',
+      'border-spacing:5px 9px computed should be "5px 9px", got "' + bs('two') + '"');
+    // Equal values collapse to a single token.
+    console.assert(bs('one') === '7px',
+      'border-spacing:7px computed should be "7px", got "' + bs('one') + '"');
+    // var() references resolve then serialize identically (two differing).
+    console.assert(bs('twoVar') === '19px 47px',
+      'border-spacing:var() var() computed should be "19px 47px", got "' + bs('twoVar') + '"');
+    // Single var() -> single token.
+    console.assert(bs('oneVar') === '11px',
+      'border-spacing:var() computed should be "11px", got "' + bs('oneVar') + '"');
+
+    testEnd();
+
+  </script>
+</body>
+</html>

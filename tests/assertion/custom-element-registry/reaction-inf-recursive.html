@@ -1,0 +1,41 @@
+<body>
+</body>
+<script>
+  if(!console.assert) {
+      console.assert = testAssert.bind(this)
+  }
+  "use strict";
+
+  var result=""
+
+  class MyCustomElement extends HTMLElement {
+    static observedAttributes = ["size"];
+
+    constructor() {
+      super();
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+      console.log(
+        `Attribute ${name} has changed from ${oldValue} to ${newValue}.`,
+      );
+     this.setAttribute("size", (newValue - 0) + 1);
+    }
+  }
+
+  var e = document.createElement("my-custom-element");
+  document.body.appendChild(e)
+  customElements.define("my-custom-element", MyCustomElement);
+
+try {
+  e.setAttribute("size", "1");
+  console.assert(Number(e.getAttribute("size")) > 2)
+} catch(e) {
+  console.assert(false)
+}
+
+  // pass if there is no crash
+  testEnd();
+
+</script>
+

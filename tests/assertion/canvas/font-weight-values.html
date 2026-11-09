@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Canvas font-weight values</title>
+</head>
+<body>
+<canvas id="c" width="100" height="100"></canvas>
+<script>
+    var canvas = document.getElementById("c");
+    var ctx = canvas.getContext("2d");
+
+    var weights = [
+        "100", "200", "300", "400", "500", "600", "700", "800", "900",
+        "normal", "bold", "bolder", "lighter"
+    ];
+
+    for (var i = 0; i < weights.length; i++) {
+        var weight = weights[i];
+        ctx.font = weight + " 20px sans-serif";
+        var width = ctx.measureText("WWWW").width;
+        console.assert(typeof width === "number" && isFinite(width) && width > 0,
+            "Font weight " + weight + " produced invalid width: " + width);
+    }
+
+    ctx.font = "700 20px sans-serif";
+    var width700 = ctx.measureText("WWWW").width;
+
+    ctx.font = "bold 20px sans-serif";
+    var widthBold = ctx.measureText("WWWW").width;
+
+    console.assert(width700 === widthBold,
+        "700 and bold should measure the same width: " + width700 + " vs " + widthBold);
+
+    if (typeof testEnd === "function") {
+        testEnd();
+    }
+</script>
+</body>
+</html>

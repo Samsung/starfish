@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        @keyframes moveCX {
+            from {
+                cx: 10px;
+                cy: 10px;
+            }
+
+            to {
+                cx: 100px;
+                cy: 100px;
+            }
+        }
+
+        svg circle {
+            animation: moveCX 1s linear forwards;
+        }
+    </style>
+</head>
+
+<body>
+    <svg width="350" height="100">
+        <circle id="target" cx="10" cy="10" r="10" fill="red">
+    </svg>
+</body>
+<script>
+    let startTime, endTime;
+    let frames = [];
+    let state = "none"
+    const epsilon = 50; // 허용 오차 범위 50ms
+
+    function percentSTRToFloat(str) {
+        return parseFloat(str.replace("px", "")) / 100;
+    }
+
+    function captureFrame() {
+        const elapsedTime = performance.now() - startTime;
+        const progress = elapsedTime / 1000;
+        const cx = getComputedStyle(target).cx;
+        const cy = getComputedStyle(target).cy;
+
+        frames.push({
+            cx,
+            cy
+        });
+
+        if (progress < 1 || state == "start") {
+            requestAnimationFrame(captureFrame);
+        }
+    }
+    requestAnimationFrame(captureFrame);
+
+    target.addEventListener('animationstart', () => {
+        requestAnimationFrame(captureFrame);
+        startTime = performance.now();
+        state = "start";
+    });
+
+    target.addEventListener('animationend', () => {
+        state = "stop";
+        endTime = performance.now();
+
+        totalElapsedTime = endTime - startTime;
+
+        // 1초 애니메이션이 일찍 끝나면 실제 duration 버그이므로 실패시킨다.
+        // 늦게 끝나는 것은 CI 부하로 인한 지연일 뿐이므로 하한만 검사한다.
+        if (!(totalElapsedTime >= 1000 - epsilon)) {
+            testAssert(false);
+        }
+
+        // 보간 검증에 필요한 최소 샘플만 요구한다.
+        // 프레임 수(=프레임율)에 의존하면 CI 성능에 따라 불안정해진다.
+        if (frames.length < 2) {
+            testAssert(false);
+        }
+
+        // linear 애니메이션은 ramp 구간에서 값이 감소하지 않아야 한다. rAF가
+        // tick보다 빠르면 인접 샘플이 같을 수 있으므로 <= 로 비교한다.
+        // forwards fill-mode가 없으면 종료 시 값이 base로 되돌아가며,
+        // animationend 직전 일부 rAF 샘플이 그 복귀값을 잡을 수 있으므로
+        // 값이 떨어지는 시점(복귀)에서 ramp 검증을 멈춘다.
+        let firstCx = percentSTRToFloat(frames[0].cx);
+        let oldCx = firstCx;
+        let oldCy = percentSTRToFloat(frames[0].cy);
+        for (let i = 1; i < frames.length; i++) {
+            let cx = percentSTRToFloat(frames[i].cx);
+            let cy = percentSTRToFloat(frames[i].cy);
+            if (cx < oldCx) {
+                break; // base 값으로 복귀 → ramp 종료
+            }
+            if (!(cx >= oldCx && cy >= oldCy)) {
+                testAssert(false);
+            }
+            oldCx = cx;
+            oldCy = cy;
+        }
+
+        // 애니메이션이 시작값에서 끝값을 향해 실제로 진행했는지 확인한다.
+        // (>= 검사만으로는 멈춘 애니메이션을 잡지 못한다.)
+        if (!(oldCx > firstCx)) {
+            testAssert(false);
+        }
+        // 테스트 종료
+        testEnd();
+    });
+</script>
+
+</html>

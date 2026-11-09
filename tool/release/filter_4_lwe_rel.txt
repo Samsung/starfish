@@ -16,7 +16,6 @@ P /.circleci
 - /test
 + /tool/imgdiff
 - /tool/*.py
-- /tool/coverage
 - /tool/drivers
 - /tool/fonts
 - /tool/gyp
@@ -83,7 +82,6 @@ P /.circleci
 - .git
 - .gitignore
 - .gitmodules
-- .gitlab-ci.yml
 - .gbs.conf
 - *.list
 - .clang-format

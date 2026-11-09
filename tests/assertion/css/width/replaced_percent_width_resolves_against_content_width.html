@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <style>
+    /* Regression test for "Resolve replaced width against content width".
+
+       An in-flow replaced element (<img>) with width:100% must resolve the
+       percentage against its containing block's CONTENT width, exactly like
+       a sibling block box does -- not against the padding box
+       (contentWidth + paddingWidth). The container below has a 400px content
+       width and 50px padding on every side (padding box = 500px). Before the
+       fix the image resolved to 500px and overflowed the padded container,
+       rendering wider than the sibling .blk box. */
+    body { margin: 0; }
+    .box { width: 400px; padding: 50px; background: gray; }
+    .blk { width: 100%; height: 30px; background: green; }
+    img  { width: 100%; height: 30px; background: red; display: block; }
+  </style>
+ </head>
+ <body>
+   <div class="box">
+     <div class="blk" id="blk"></div>
+     <img id="img" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+   </div>
+<script>
+   var blk = document.getElementById('blk').getBoundingClientRect();
+   var img = document.getElementById('img').getBoundingClientRect();
+
+   function approx(a, b) { return Math.abs(a - b) <= 1; }
+
+   // Both boxes resolve width:100% against the 400px content width.
+   testAssert(approx(blk.width, 400));
+   testAssert(approx(img.width, 400));
+
+   // The replaced element matches its sibling block, both in width and in
+   // its left edge (the content-box left), with no padding-sized overflow.
+   testAssert(approx(img.width, blk.width));
+   testAssert(approx(img.left, blk.left));
+
+   testEnd();
+</script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<svg width="200" height="200">
+  <circle cx="40" cy="40" r="40" fill="green" transform="scale(2, 2) translate(10 10)"/>
+</svg>
+<script>
+  function testStart() {
+    var circle = document.querySelector("circle");
+
+    testAssert(circle.transform instanceof SVGAnimatedTransformList);
+    testAssert(circle.transform.baseVal instanceof SVGTransformList);
+
+    var transformlist = circle.transform.baseVal;
+    testAssert(transformlist.getItem(0).type == SVGTransform.SVG_TRANSFORM_SCALE);
+    testAssert(transformlist.getItem(0).matrix.a == 2);
+    testAssert(transformlist.getItem(0).matrix.b == 0);
+    testAssert(transformlist.getItem(0).matrix.c == 0);
+    testAssert(transformlist.getItem(0).matrix.d == 2);
+    testAssert(transformlist.getItem(0).matrix.e == 0);
+    testAssert(transformlist.getItem(0).matrix.f == 0);
+
+
+    transformlist.getItem(0).setMatrix(transformlist.getItem(1).matrix);
+    testAssert(transformlist.getItem(0).type == SVGTransform.SVG_TRANSFORM_MATRIX);
+    testAssert(transformlist.getItem(0).matrix.a == transformlist.getItem(1).matrix.a);
+    testAssert(transformlist.getItem(0).matrix.b == transformlist.getItem(1).matrix.b);
+    testAssert(transformlist.getItem(0).matrix.c == transformlist.getItem(1).matrix.c);
+    testAssert(transformlist.getItem(0).matrix.d == transformlist.getItem(1).matrix.d);
+    testAssert(transformlist.getItem(0).matrix.e == transformlist.getItem(1).matrix.e);
+    testAssert(transformlist.getItem(0).matrix.f == transformlist.getItem(1).matrix.f);
+
+    testAssert(circle.transform.baseVal.getItem(0).type == SVGTransform.SVG_TRANSFORM_MATRIX);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.a == transformlist.getItem(1).matrix.a);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.b == transformlist.getItem(1).matrix.b);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.c == transformlist.getItem(1).matrix.c);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.d == transformlist.getItem(1).matrix.d);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.e == transformlist.getItem(1).matrix.e);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.f == transformlist.getItem(1).matrix.f);
+
+    circle.transform.baseVal = -1;
+    testAssert(circle.transform.baseVal.getItem(0).type == SVGTransform.SVG_TRANSFORM_MATRIX);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.a == transformlist.getItem(1).matrix.a);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.b == transformlist.getItem(1).matrix.b);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.c == transformlist.getItem(1).matrix.c);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.d == transformlist.getItem(1).matrix.d);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.e == transformlist.getItem(1).matrix.e);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.f == transformlist.getItem(1).matrix.f);
+
+    circle.transform.baseVal = 'aString';
+    testAssert(circle.transform.baseVal.getItem(0).type == SVGTransform.SVG_TRANSFORM_MATRIX);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.a == transformlist.getItem(1).matrix.a);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.b == transformlist.getItem(1).matrix.b);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.c == transformlist.getItem(1).matrix.c);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.d == transformlist.getItem(1).matrix.d);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.e == transformlist.getItem(1).matrix.e);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.f == transformlist.getItem(1).matrix.f);
+
+    circle.transform.baseVal = circle;
+    testAssert(circle.transform.baseVal.getItem(0).type == SVGTransform.SVG_TRANSFORM_MATRIX);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.a == transformlist.getItem(1).matrix.a);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.b == transformlist.getItem(1).matrix.b);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.c == transformlist.getItem(1).matrix.c);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.d == transformlist.getItem(1).matrix.d);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.e == transformlist.getItem(1).matrix.e);
+    testAssert(circle.transform.baseVal.getItem(0).matrix.f == transformlist.getItem(1).matrix.f);
+
+    testAssert(circle.transform.baseVal instanceof SVGTransformList);
+    testEnd();
+  }
+</script>

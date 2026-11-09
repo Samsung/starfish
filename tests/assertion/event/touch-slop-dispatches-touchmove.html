@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<!--
+  A move larger than the slop threshold (> 20px from the down point) must
+  dispatch touchmove to JS.  This verifies the slop does not suppress genuine
+  swipe/scroll gestures.
+-->
+<head>
+<style>
+  body { margin: 0; }
+  #target { width: 300px; height: 300px; background: lightgreen; }
+</style>
+</head>
+<body>
+  <div id="target"></div>
+</body>
+<script>
+  var touchMoveCount = 0;
+  document.getElementById("target").addEventListener("touchmove", function() {
+    touchMoveCount++;
+  });
+
+  function testStart() {
+    simulateTouchStart(150, 150);
+    // 50px movement — well above the 20px slop, must reach JS
+    simulateTouchMove(200, 150);
+    simulateTouchEnd(200, 150);
+
+    setTimeout(function() {
+      testAssert(touchMoveCount >= 1);
+      testEnd();
+    }, 100);
+  }
+</script>
+</html>

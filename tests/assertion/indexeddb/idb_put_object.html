@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script>
+        function run() {
+
+            const dbName = 'object_serialize_test';
+            const objectValue = {
+                'num': 1234567,
+                'str': "data",
+                'arr': [1, 2, 3, 4, 5],
+                'int8': new Int8Array([10, -20, 30]),
+                'uint8': new Uint8Array([10, 20, 30]),
+                'int16': new Int16Array([1000, -2000, 3000]),
+                'uint16': new Uint16Array([1000, 2000, 3000]),
+                'int32': new Int32Array([1000000, -2000000, 3000000]),
+                'uint32': new Uint32Array([1000000, 2000000, 3000000]),
+                'obj': {
+                    'str': 'test',
+                    'num': 1000000,
+                    'arr': [1000000, 2000000, 3000000],
+                }
+            };
+
+            function isArrayEqual(arr1, arr2) {
+                if (arr1.length !== arr2.length) {
+                    return false
+                }
+
+                return arr1.every((value, index) => value === arr2[index])
+            }
+
+            function checkTest(v) {
+                testAssert(objectValue.num === v.num);
+                testAssert(objectValue.str === v.str);
+                testAssert(isArrayEqual(objectValue.arr, v.arr));
+                testAssert(isArrayEqual(objectValue.int8, v.int8));
+                testAssert(isArrayEqual(objectValue.uint8, v.uint8));
+                testAssert(isArrayEqual(objectValue.int16, v.int16));
+                testAssert(isArrayEqual(objectValue.uint16, v.uint16));
+                testAssert(isArrayEqual(objectValue.int32, v.int32));
+                testAssert(isArrayEqual(objectValue.uint32, v.uint32));
+                testAssert(objectValue.obj.str === v.obj.str);
+                testAssert(objectValue.obj.num === v.obj.num);
+                testAssert(isArrayEqual(objectValue.obj.arr, v.obj.arr));
+            }
+
+            let openRq = indexedDB.open(dbName, 1);
+            let db;
+            openRq.onupgradeneeded = function (e) {
+                db = e.target.result;
+                let objStore = db.createObjectStore("store");
+
+                objStore.put(objectValue, 'test');
+            }
+
+            openRq.onsuccess = function (e) {
+                let rq = db.transaction("store")
+                    .objectStore("store")
+                    .get('test');
+
+                rq.onsuccess = function (e) {
+                    checkTest(e.target.result);
+
+                    indexedDB.deleteDatabase(dbName);
+                    wptTestEnd();
+                };
+
+                rq.onerror = function (e) {
+                    indexedDB.deleteDatabase(dbName);
+                    testAssert(false);
+                }
+            }
+        }
+    </script>
+</head>
+
+<body onload="run()">
+</body>
+
+</html>

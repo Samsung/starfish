@@ -1,0 +1,31 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Invalid media data reports an error</title>
+<body>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Invalid media error complete";
+    };
+}
+
+const audio = document.createElement("audio");
+let finished = false;
+audio.addEventListener("error", function () {
+    console.assert(audio.error && audio.error.code === 4,
+                   "invalid encoded media reports unsupported source");
+    console.assert(audio.readyState === 0,
+                   "invalid media never claims to have metadata");
+    finished = true;
+    testEnd();
+});
+setTimeout(function () {
+    if (!finished) {
+        console.assert(false, "invalid media must dispatch error");
+        testEnd();
+    }
+}, 5000);
+audio.src = "data:audio/wav,invalid";
+audio.load();
+</script>
+</body>

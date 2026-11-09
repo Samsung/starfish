@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>WebSocket bufferedAmount keeps counting after the connection closes</title>
+</head>
+<body>
+<script>
+// send() on a CLOSING or CLOSED socket discards the data, but the spec still
+// adds its length to bufferedAmount, and the value never resets to zero.
+// A host that cannot be resolved takes the socket to CLOSED without a server.
+var ws = new WebSocket("ws://nonexistent.invalid/");
+var done = false;
+
+function finish() {
+  if (done) return;
+  done = true;
+  if (window.testEnd) testEnd();
+}
+
+ws.onclose = function () {
+  console.assert(ws.readyState === WebSocket.CLOSED, "readyState is CLOSED, got " + ws.readyState);
+  console.assert(ws.bufferedAmount === 0, "bufferedAmount starts at 0, got " + ws.bufferedAmount);
+
+  ws.send("abc");
+  console.assert(ws.bufferedAmount === 3, "text send adds its UTF-8 length, got " + ws.bufferedAmount);
+
+  ws.send("é");
+  console.assert(ws.bufferedAmount === 5, "non-ASCII text counts UTF-8 bytes, got " + ws.bufferedAmount);
+
+  ws.send(new Uint8Array(4));
+  console.assert(ws.bufferedAmount === 9, "binary send adds byteLength, got " + ws.bufferedAmount);
+
+  ws.send(new Blob(["12345"]));
+  console.assert(ws.bufferedAmount === 14, "blob send adds its size, got " + ws.bufferedAmount);
+
+  setTimeout(function () {
+    console.assert(ws.bufferedAmount === 14, "value does not reset after close, got " + ws.bufferedAmount);
+    finish();
+  }, 100);
+};
+
+setTimeout(function () {
+  console.assert(done, "close event never fired");
+  finish();
+}, 10000);
+</script>
+</body>
+</html>

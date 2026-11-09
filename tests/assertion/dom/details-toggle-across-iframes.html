@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>details toggle task follows the element across iframe documents</title></head>
+<body>
+  <iframe id="a"></iframe>
+  <iframe id="b"></iframe>
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (other browser), shim a custom testEnd()
+    // that tallies console.assert results and reports the verdict, so the same
+    // file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[details-toggle-across-iframes] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // HTML "details notification task steps": each open change queues a task
+    // on the element's relevant global object at that moment, replacing a
+    // still-pending one but keeping its old state. HTML "destroy a document"
+    // drops only the tasks of the destroyed document. So after the element
+    // bounced between A and B with a toggle in each, the task last queued in
+    // B survives A's destruction and fires exactly once, and a task dropped
+    // with B is simply gone -- re-toggling must not misbehave.
+    var a = document.getElementById('a');
+    var b = document.getElementById('b');
+    var docA = a.contentDocument;
+    var docB = b.contentDocument;
+    var details = docA.createElement('details');
+    details.appendChild(docA.createElement('summary')).textContent = 'S';
+    docA.body.appendChild(details);
+
+    var toggles = 0;
+    var last = null;
+    details.addEventListener('toggle', function (e) { toggles++; last = e; });
+
+    details.open = true;                              // task queued in A
+    docB.body.appendChild(docB.adoptNode(details));   // move to B
+    details.open = false;                             // re-queued in B, old state kept
+    docA.body.appendChild(docA.adoptNode(details));   // back to A
+    details.open = true;                              // re-queued in A
+    docB.body.appendChild(docB.adoptNode(details));   // and to B again
+    details.open = false;                             // re-queued in B
+    a.remove();                                       // A destroyed: B's task must stay
+
+    setTimeout(function () {
+      console.assert(toggles === 1, 'toggle count after moving A->B->A->B and destroying A: ' + toggles);
+      console.assert(last !== null && last.oldState === 'closed' && last.newState === 'closed',
+        'coalesced states: ' + (last && (last.oldState + ' -> ' + last.newState)));
+
+      details.open = true;                            // task queued in B
+      b.remove();                                     // B destroyed with the task pending
+      details.open = false;                           // must not touch the dropped task
+      setTimeout(function () {
+        console.assert(toggles === 1, 'toggle count after destroying B: ' + toggles);
+        testEnd();
+      }, 0);
+    }, 0);
+
+  </script>
+</body>
+</html>

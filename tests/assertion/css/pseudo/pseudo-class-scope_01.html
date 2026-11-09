@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+</head>
+
+<body>
+    <div id="target">
+        <div><span id="test"></span></div>
+    </div>
+</body>
+<script>
+    function testStart() {
+        testAssert(document.querySelector(":root > body > div > div > span") == test);
+        testAssert(document.querySelector(":scope > body > div > div > span") == test);
+        testAssert(target.querySelector(":root > body > div > div > span") == test);
+        testAssert(target.querySelector(":scope > body > div > div > span") == null);
+        testAssert(target.querySelector(":scope > div > span") == test);
+        testAssert(target.querySelector(":root > div > span") == null);
+        testEnd();
+    }
+</script>
+
+</html>

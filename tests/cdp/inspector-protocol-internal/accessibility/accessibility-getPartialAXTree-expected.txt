@@ -1,0 +1,8 @@
+Tests Accessibility.getPartialAXTree selectors and relatives
+nodeId selects only the requested node: true
+backendNodeId selects only the requested node: true
+objectId selects only the requested node: true
+requested node is first: true
+default fetch includes children and ancestors: true
+node without an AX object is returned as ignored: true
+missing selector returns an error: true

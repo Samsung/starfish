@@ -1,3 +1,3 @@
-test/cairo/internal-test/document/document-height.html
-test/cairo/internal-test/document/document-width.html
-test/cairo/internal-test/window/event-attribute.html
+tests/assertion/document/document-height.html
+tests/assertion/document/document-width.html
+tests/assertion/window/event-attribute.html

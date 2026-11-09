@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<body>
+  <svg width="200" height="200">
+    <rect id="testRect" x="10" y="10" width="50" height="50" fill="blue">
+      <animate id="testAnimate" attributeName="fill" from="blue" to="red" dur="2s" fill="freeze" repeatCount="3"/>
+    </rect>
+  </svg>
+</body>
+<script>
+  function testStart() {
+    var animateElement = document.getElementById("testAnimate");
+
+    // Test that attributeName attribute uses camelCase (not attributename)
+    
+    // Verify the element is properly recognized as SVGAnimateElement
+    testAssert(animateElement instanceof SVGAnimateElement, "Element should be SVGAnimateElement");
+
+    // Test attributeName property - should be accessible via camelCase
+    var attributeNameValue = animateElement.getAttribute("attributeName");
+    testAssert(attributeNameValue === "fill", "attributeName should be 'fill', got " + attributeNameValue);
+
+    // Test that old lowercase 'attributename' does NOT match (camelCase only)
+    var oldStyleAttr = animateElement.getAttribute("attributename");
+    testAssert(oldStyleAttr === null || oldStyleAttr === "", "Old lowercase 'attributename' should not be recognized");
+
+    // Test repeatCount property - should use camelCase (not repeatcount)
+    var repeatCountValue = animateElement.getAttribute("repeatCount");
+    testAssert(repeatCountValue === "3", "repeatCount should be '3', got " + repeatCountValue);
+
+    // Test that old lowercase 'repeatcount' does NOT match (camelCase only)
+    var oldStyleRepeatCount = animateElement.getAttribute("repeatcount");
+    testAssert(oldStyleRepeatCount === null || oldStyleRepeatCount === "", "Old lowercase 'repeatcount' should not be recognized");
+
+    // Test setting attributeName via setAttribute with camelCase
+    var newAnimate = document.createElementNS("http://www.w3.org/2000/svg", "animate");
+    newAnimate.setAttribute("attributeName", "x");
+    testAssert(newAnimate.getAttribute("attributeName") === "x", "Setting attributeName should work");
+
+    // Test setting repeatCount via setAttribute with camelCase
+    newAnimate.setAttribute("repeatCount", "indefinite");
+    testAssert(newAnimate.getAttribute("repeatCount") === "indefinite", "Setting repeatCount should work");
+
+    console.log("All camelCase attributeName tests passed!");
+    testEnd();
+  }
+  testStart();
+</script>
+</html>

@@ -1,0 +1,195 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Local font source serialization</title>
+<link rel="help" href="https://drafts.csswg.org/cssom/#serialize-a-string">
+<link rel="help" href="https://drafts.csswg.org/css-fonts-4/#src-desc">
+</head><body><pre id="result"></pre><script>
+(function () {
+    'use strict';
+    var total = 0;
+    var failures = 0;
+    function equal(actual, expected, description) {
+        total++;
+        if (actual !== expected) { failures++; }
+        console.assert(actual === expected, description + ': expected ' +
+            JSON.stringify(expected) + ', got ' + JSON.stringify(actual));
+    }
+
+    function source(rule) {
+        var text = rule ? rule.cssText : '';
+        var start = text.indexOf('src: ');
+        return start < 0 ? '' : text.slice(start + 5, text.lastIndexOf(';'));
+    }
+    var cases = [
+    [
+        "plain",
+        "local(\"Font Source Test\")",
+        "local(\"Font Source Test\")"
+    ],
+    [
+        "trailing backslash",
+        "local(\"Foo\\\\\")",
+        "local(\"Foo\\\\\")"
+    ],
+    [
+        "backslash and fallback URL",
+        "local(\"Foo\\\\\"), url(a.woff)",
+        "local(\"Foo\\\\\"), url(\"a.woff\")"
+    ],
+    [
+        "middle backslash",
+        "local(\"a\\\\b\")",
+        "local(\"a\\\\b\")"
+    ],
+    [
+        "two backslashes",
+        "local(\"a\\\\\\\\b\")",
+        "local(\"a\\\\\\\\b\")"
+    ],
+    [
+        "escaped quote",
+        "local(\"a\\\"b\")",
+        "local(\"a\\\"b\")"
+    ],
+    [
+        "literal quote",
+        "local('a\"b')",
+        "local(\"a\\\"b\")"
+    ],
+    [
+        "backslash before quote",
+        "local(\"a\\\\\\\"b\")",
+        "local(\"a\\\\\\\"b\")"
+    ],
+    [
+        "parenthesis and comma",
+        "local(\"a),b\")",
+        "local(\"a),b\")"
+    ],
+    [
+        "hexadecimal escape",
+        "local(\"a\\62 c\")",
+        "local(\"abc\")"
+    ],
+    [
+        "six digit escape",
+        "local(\"a\\000062c\")",
+        "local(\"abc\")"
+    ],
+    [
+        "escaped newline",
+        "local(\"a\\A b\")",
+        "local(\"a\\a b\")"
+    ],
+    [
+        "escaped tab",
+        "local(\"a\\9 b\")",
+        "local(\"a\\9 b\")"
+    ],
+    [
+        "literal tab",
+        "local(\"a\tb\")",
+        "local(\"a\\9 b\")"
+    ],
+    [
+        "escaped carriage return",
+        "local(\"a\\D b\")",
+        "local(\"a\\d b\")"
+    ],
+    [
+        "escaped form feed",
+        "local(\"a\\C b\")",
+        "local(\"a\\c b\")"
+    ],
+    [
+        "escaped delete",
+        "local(\"a\\7F b\")",
+        "local(\"a\\7f b\")"
+    ],
+    [
+        "escaped nul",
+        "local(\"a\\0 b\")",
+        "local(\"a\ufffdb\")"
+    ],
+    [
+        "escaped surrogate",
+        "local(\"a\\d800 b\")",
+        "local(\"a\ufffdb\")"
+    ],
+    [
+        "escaped out of range",
+        "local(\"a\\110000 b\")",
+        "local(\"a\ufffdb\")"
+    ],
+    [
+        "quoted spaces",
+        "local(\"  a   b  \")",
+        "local(\"  a   b  \")"
+    ],
+    [
+        "unquoted spaces",
+        "local(  Font   Source  Test  )",
+        "local(\"Font Source Test\")"
+    ],
+    [
+        "unquoted tabs",
+        "local(Font\t\tSource)",
+        "local(\"Font Source\")"
+    ],
+    [
+        "unquoted escape",
+        "local(Fo\\6f)",
+        "local(\"Foo\")"
+    ],
+    [
+        "unquoted escaped space",
+        "local(Foo\\ Bar)",
+        "local(\"Foo Bar\")"
+    ],
+    [
+        "unquoted escaped backslash",
+        "local(Foo\\\\Bar)",
+        "local(\"Foo\\\\Bar\")"
+    ],
+    [
+        "unquoted escaped parenthesis",
+        "local(Foo\\)Bar)",
+        "local(\"Foo)Bar\")"
+    ],
+    [
+        "comment between identifiers",
+        "local(Foo/**/Bar)",
+        "local(\"Foo Bar\")"
+    ],
+    [
+        "uppercase function",
+        "LOCAL(\"Foo\")",
+        "local(\"Foo\")"
+    ],
+    [
+        "escaped format",
+        "local(\"Foo\\\\\"), url(a.ttf) format(\"tru\\65 type\")",
+        "local(\"Foo\\\\\"), url(\"a.ttf\") format(\"truetype\")"
+    ]
+];
+    cases.forEach(function (entry) {
+        ['stylesheet', 'insertRule'].forEach(function (path) {
+            var style = document.createElement('style');
+            document.head.appendChild(style);
+            var text = '@font-face {font-family: LocalSourceTest;src: ' + entry[1] + ';}';
+            if (path === 'stylesheet') { style.textContent = text; }
+            else { style.sheet.insertRule(text, 0); }
+            var rule = style.sheet.cssRules[0];
+            equal(source(rule), entry[2], entry[0] + ' via ' + path);
+            // Avoid CSSFontFaceRule.style: cssText also works in plain browsers.
+            style.textContent = rule ? rule.cssText : '';
+            equal(source(style.sheet.cssRules[0]), entry[2], entry[0] + ' round trip via ' + path);
+            style.remove();
+        });
+    });
+
+    document.getElementById('result').textContent =
+        (total - failures) + ' passed; ' + failures + ' failed.';
+    document.title = (failures ? 'FAIL' : 'PASS') + ': Local font source serialization';
+    if (typeof testEnd === 'function') { testEnd(); }
+}());
+</script></body></html>

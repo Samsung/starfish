@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" data-beasties-container>
+  <head>
+    <meta charset="utf-8">
+    <title>Common</title>
+    <base href="./">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <style>body{font-family:Be Vietnam Pro,sans-serif}</style><link rel="stylesheet" href="styles-BBIF4TBC.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="styles-BBIF4TBC.css"></noscript></head>
+  <body>
+    <app-root></app-root>
+  <link rel="modulepreload" href="chunk-KROQIGCT.js"><script src="polyfills-FFHMD2TL.js" type="module"></script><script src="main-SWNPNVA5.js" type="module"></script></body>
+
+
+  <script>
+  function test() {
+    var list = document.querySelectorAll(".comment")
+    testAssert(list.length == 3)
+    testAssert(list[0].textContent.includes("Building for the web is fantastic!"));
+    testAssert(list[1].textContent.includes("The new template syntax is great"));
+    testAssert(list[2].textContent.includes("I agree with the other comments!"));
+    testEnd();
+  }
+
+  window.onload = function() {
+    window.setTimeout(test, 2000);
+  };
+  </script>
+</html>

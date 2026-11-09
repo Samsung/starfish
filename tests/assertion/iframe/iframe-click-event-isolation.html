@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  .parent-container {
+    background-color: lightblue;
+    position: absolute;
+    width: 500px;
+    height: 400px;
+    top: 0;
+    left: 0;
+  }
+
+  iframe {
+    position: absolute;
+    top: 50px;
+    left: 50px;
+    width: 300px;
+    height: 200px;
+    border: 2px solid black;
+  }
+</style>
+</head>
+<body>
+  <div class="parent-container" id="parentContainer">
+    Parent Container
+    <iframe id="testIframe"></iframe>
+  </div>
+</body>
+
+<script>
+  window.webSecurityDisable();
+
+  var parentClicked = false;
+  var iframeClicked = false;
+
+  // Parent click event handler
+  function onParentClick(e) {
+    parentClicked = true;
+  }
+
+  // Add click listener to parent container
+  document.getElementById('parentContainer').addEventListener('click', onParentClick);
+
+  // Create iframe content
+  var iframeContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body {
+          margin: 0;
+          padding: 10px;
+          background-color: lightgreen;
+        }
+        .clickable-box {
+          width: 100px;
+          height: 100px;
+          background-color: orange;
+          border: 2px solid darkorange;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="clickable-box" id="clickableBox">Click Me</div>
+    </body>
+    </html>
+  `;
+
+  var iframe = document.getElementById('testIframe');
+  iframe.src = 'data:text/html;charset=utf-8,' + encodeURIComponent(iframeContent);
+
+  window.onload = function() {
+    setTimeout(function() {
+      // Wait for iframe to load
+      var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      
+      // Add click listener inside iframe
+      var clickableBox = iframeDoc.getElementById('clickableBox');
+      clickableBox.addEventListener('click', function(e) {
+        iframeClicked = true;
+      });
+
+      // Click inside iframe
+      var iframeRect = iframe.getBoundingClientRect();
+      var clickX = iframeRect.left + 60;
+      var clickY = iframeRect.top + 60;
+
+      simulateClick(clickX, clickY);
+
+      setTimeout(function() {
+        // Test: iframe clicked, parent NOT clicked
+        testAssert(iframeClicked == true);
+        testAssert(parentClicked == false);
+        testEnd();
+      }, 100);
+    }, 500);
+  };
+</script>
+</html>

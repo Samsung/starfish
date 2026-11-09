@@ -1,0 +1,6 @@
+Tests which ignored nodes stay in the accessibility tree
+root chain: RootWebArea > none (ignored) > none (ignored) > generic
+parent of the wrapped button: body
+that parent lists it: true
+button inside a presentational div is reported: true
+that button is not ignored: true

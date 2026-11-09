@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <script>
+        var xhr = new XMLHttpRequest();
+        var url1 = "   data:,Hello%2C%20World!\n";
+        var url2 = "./whitespace-in-url.txt\r\n";
+        var url3 = "./white\nspace-in-url.t\rxt";
+
+        // 1. leading white spaces should be ignored
+        xhr.open("GET", url1, false);
+        xhr.send();
+        testAssert(xhr.responseText == "Hello, World!");
+
+        // 2. trailing white spaces should be ignored
+        xhr.open("GET", url2, false);
+        xhr.send();
+        testAssert(xhr.responseText.trim() == "Hi, Galaxy!");
+
+        // 3. white spaces between non-whitespace characters should not be ignored
+        xhr.open("GET", url3, false);
+        xhr.send();
+        testAssert(xhr.responseText.trim() == "");
+
+        testEnd();
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>An ordinary shadow-tree rule invalidates after the first style resolution</title>
+</head>
+
+<body>
+  <!-- StyleResolver::addSheet()'s fast path skips
+     invalidateShadowScopeForSheetChange() for a sheet with no `:host`/
+     `::slotted` rule, on the premise that CSSStyleSheet::willAddToDocument()
+     already invalidates the shadow tree's own content via per-element rule
+     matching (its walk root is the shadow root for a shadow-scoped sheet --
+     see findRootOfStyleSheet()). This checks that premise directly, with a
+     sheet that has no `:host`/`::slotted` rule at all, so a regression that
+     ties shadow-tree content invalidation to the promotable-selector gate is
+     caught here rather than only in tests that happen to also exercise
+     `:host`/`::slotted`. -->
+  <div id="host"></div>
+
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs
+    // the test. When that harness is absent (other browser), shim a custom
+    // testEnd() that tallies console.assert results and reports the verdict,
+    // so the same file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[style_ordinary_rule_after_first_resolution] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    var host = document.getElementById('host');
+    var sr = host.attachShadow({ mode: 'open' });
+    var inner = document.createElement('div');
+    inner.id = 'inner';
+    sr.appendChild(inner);
+
+    getComputedStyle(inner).backgroundColor; // force the first resolution with no shadow sheet
+
+    var style = document.createElement('style');
+    style.textContent = '#inner { background: green; }';
+    sr.appendChild(style);
+
+    console.assert(getComputedStyle(inner).backgroundColor === 'rgb(0, 128, 0)',
+      'an ordinary rule added after the first resolution must restyle the shadow tree (got ' +
+      getComputedStyle(inner).backgroundColor + ')');
+
+    // Removing the <style> must revert the shadow tree just as symmetrically.
+    sr.removeChild(style);
+    console.assert(getComputedStyle(inner).backgroundColor === 'rgba(0, 0, 0, 0)',
+      'removing the <style> must revert the shadow tree (got ' +
+      getComputedStyle(inner).backgroundColor + ')');
+
+    testEnd();
+
+  </script>
+</body>
+
+</html>

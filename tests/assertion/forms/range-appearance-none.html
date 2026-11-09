@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>input type=range with appearance: none keeps its thumb</title>
+<style>
+  body { margin: 0; background: white; }
+  /* 200px content box, 20px tall: the native track would be the middle 4px */
+  #r { position: absolute; left: 20px; top: 20px; width: 200px; height: 20px; margin: 0; padding: 0; border: 0;
+       appearance: none; background: rgb(0, 200, 0); }
+</style>
+</head>
+<body>
+<input id="r" type="range" min="0" max="100" value="0">
+<p style="position:absolute; top:60px; left:20px; margin:0">A green bar with a dark thumb at its left end; no gray track.</p>
+<script>
+  var shot = "range-appearance-none.png";
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      return;
+    }
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        screenShot(shot, function () {
+          console.assert(checkPixelColors(shot, [
+            // thumb: 12px square at x 20..31, y 24..35
+            { x: 26, y: 30, r: 89, g: 89, b: 89, a: 255 },
+            // where the native track would run, the author background shows
+            { x: 120, y: 30, r: 0, g: 200, b: 0, a: 255 },
+            { x: 215, y: 30, r: 0, g: 200, b: 0, a: 255 },
+          ], 2), "thumb painted over the author background, no native track");
+          // and the control is still operable
+          var r = document.getElementById("r");
+          simulateMouseDown(26 + 188 * 0.5, 30);
+          simulateMouseUp(26 + 188 * 0.5, 30);
+          console.assert(r.value === "50", "appearance: none keeps the control draggable: " + r.value);
+          testEnd();
+        });
+      });
+    });
+  };
+</script>
+</body>
+</html>

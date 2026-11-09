@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>A cross-origin 3xx response without Location is checked like any final response</title>
+<!-- Fetch "HTTP-redirect fetch": a redirect status without a Location header
+     is not a redirect, the response is returned as it is. Like every final
+     response of a CORS request it is then a network error unless the CORS
+     check passes, so a page cannot read another origin's 300/304 status or
+     body.
+
+     The document loads over file:// (an opaque origin), so every request to
+     the test runner's http_server (tool/runner/test_runner.py: internal_test(),
+     port 11011) is cross-origin. /status/<code> answers that status with no
+     Location header; "?acao" adds Access-Control-Allow-Origin: *, and
+     "?loc=<kind>" a malformed Location field that curl does not follow (an
+     empty one, two empty ones, one with a space before the colon, one whose
+     value starts with a bare CR). Whatever such a field looks like to the
+     engine, the 3xx it arrives in stays the final response and must not be
+     readable without CORS approval either, with a body or without one
+     (a 304). -->
+<script>
+// Starfish's test build supplies testEnd()/console.assert and reports the
+// verdict. Elsewhere, shim a testEnd() that tallies console.assert results;
+// start the server by hand first:
+//   python3 tool/runner/http_server.py -d <any dir> --bind localhost 11011
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0;
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (cond, msg) {
+    if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[cors-3xx-without-location] ' + verdict);
+    document.title = verdict;
+  };
+}
+
+var STATUS = 'http://localhost:11011/status/';
+
+function xhr(url) {
+  return new Promise(function (resolve) {
+    var x = new XMLHttpRequest();
+    x.open('GET', url);
+    x.onload = function () {
+      resolve({ error: false, status: x.status, text: x.responseText,
+                type: x.getResponseHeader('Content-Type') });
+    };
+    x.onerror = function () {
+      resolve({ error: true, status: x.status, text: x.responseText });
+    };
+    x.send();
+  });
+}
+
+function fetchText(url) {
+  return fetch(url).then(function (r) {
+    return r.text().then(function (text) {
+      return { error: false, status: r.status, text: text };
+    });
+  }, function () {
+    return { error: true };
+  });
+}
+
+Promise.all([
+  xhr(STATUS + '300'),
+  xhr(STATUS + '304'),
+  fetchText(STATUS + '300'),
+  xhr(STATUS + '300?acao'),
+  fetchText(STATUS + '300?acao'),
+  xhr(STATUS + '302?loc=empty'),
+  xhr(STATUS + '300?loc=twoempty'),
+  xhr(STATUS + '302?loc=space'),
+  xhr(STATUS + '302?loc=cr'),
+  fetchText(STATUS + '302?loc=space'),
+  xhr(STATUS + '304?loc=space')
+]).then(function (r) {
+  console.assert(r[0].error && r[0].status === 0 && r[0].text === '',
+                 'XHR read a 300 without CORS approval: ' + JSON.stringify(r[0]));
+  console.assert(r[1].error && r[1].status === 0,
+                 'XHR read a 304 without CORS approval: ' + JSON.stringify(r[1]));
+  console.assert(r[2].error,
+                 'fetch() read a 300 without CORS approval: ' + JSON.stringify(r[2]));
+  // With CORS approval the 3xx is an ordinary response: status, body and
+  // headers are all there, and nothing was treated as a redirect.
+  console.assert(!r[3].error && r[3].status === 300 &&
+                 r[3].text === 'status 300' && r[3].type === 'text/plain',
+                 'XHR of an approved 300: ' + JSON.stringify(r[3]));
+  console.assert(!r[4].error && r[4].status === 300 &&
+                 r[4].text === 'status 300',
+                 'fetch() of an approved 300: ' + JSON.stringify(r[4]));
+  ['empty', 'twoempty', 'space', 'cr'].forEach(function (kind, i) {
+    var x = r[5 + i];
+    console.assert(x.error && x.status === 0 && x.text === '',
+                   'XHR read a 3xx with a malformed Location (' + kind +
+                   ') without CORS approval: ' + JSON.stringify(x));
+  });
+  console.assert(r[9].error,
+                 'fetch() read a 3xx with a malformed Location without CORS approval: ' +
+                 JSON.stringify(r[9]));
+  console.assert(r[10].error && r[10].status === 0,
+                 'XHR read a bodyless 304 with a malformed Location without CORS approval: ' +
+                 JSON.stringify(r[10]));
+  testEnd();
+});
+</script>

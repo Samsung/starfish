@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Percentage img width attribute in shrink-to-fit containers</title></head>
+<body style="margin:0">
+  <!-- A percentage width attribute maps to the CSS width property, so while a
+       shrink-to-fit container computes its preferred width it behaves as
+       auto and the image contributes its natural width (40x30) as its
+       max-content size, while its min-content size is compressible to zero. -->
+  <table cellpadding="0" cellspacing="0"><tr><td><img id="attr" width="100%"></td></tr></table>
+  <table cellpadding="0" cellspacing="0"><tr><td><img id="css" style="width:100%"></td></tr></table>
+  <table cellpadding="0" cellspacing="0"><tr><td><img id="fixed" width="25"></td></tr></table>
+  <table cellpadding="0" cellspacing="0"><tr><td><img id="withHeight" width="100%" height="60"></td></tr></table>
+  <div style="float:left"><img id="float" width="50%" style="display:block"></div>
+  <div style="clear:both;width:20px"><table cellpadding="0" cellspacing="0"><tr><td><img id="compressed" width="100%"></td></tr></table></div>
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (other browser), shim a custom testEnd()
+    // that tallies console.assert results and reports the verdict, so the same
+    // file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[preferred-width-img-percent-attribute] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // 40x30 blue PNG
+    var src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAeCAIAAADRv8uKAAAAKklEQVR4nO3NMQEAAAgDoGn/zlrBzwcKUMnkQ7+sYrFYLBaLxWKxWCw+WdVIATuftDtcAAAAAElFTkSuQmCC';
+    var imgs = document.querySelectorAll('img');
+    for (var i = 0; i < imgs.length; i++) {
+      imgs[i].src = src;
+    }
+
+    window.onload = function () {
+      function width(id) {
+        return document.getElementById(id).getBoundingClientRect().width;
+      }
+
+      var w = width('attr');
+      console.assert(w === 40, 'width="100%" in auto table cell: expected 40, got ' + w);
+      w = width('css');
+      console.assert(w === 40, 'width:100% in auto table cell: expected 40, got ' + w);
+      w = width('fixed');
+      console.assert(w === 25, 'width="25" in auto table cell: expected 25, got ' + w);
+      w = width('withHeight');
+      console.assert(w === 80, 'width="100%" height="60" in auto table cell: expected 80, got ' + w);
+      w = width('float');
+      console.assert(w === 20, 'width="50%" in float: expected 20, got ' + w);
+      w = width('compressed');
+      console.assert(w === 20, 'width="100%" in auto table narrower than the image: expected 20, got ' + w);
+
+      testEnd();
+    };
+
+  </script>
+</body>
+</html>

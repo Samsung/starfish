@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!-- A mask is anchored to the scroll container's own box, not to the content
+     that scrolls under it, so a scroll cannot be composited by translating the
+     buffer: the mask would travel with the content, and the part of the buffer
+     the mask leaves out never gets painted. Both halves of that are checked
+     here - the rows scrolled into view must be painted, and the mask must stay
+     where the box is. -->
+<html>
+<head>
+<style>
+  body { margin: 0; background: white; }
+  #scroller {
+    width: 200px;
+    height: 150px;
+    overflow: auto;
+    /* Opaque over the top half of the box, cut away over the bottom half. */
+    mask-image: linear-gradient(to bottom,
+                                rgba(255, 255, 255, 1) 0%,
+                                rgba(255, 255, 255, 1) 50%,
+                                rgba(255, 255, 255, 0) 50%,
+                                rgba(255, 255, 255, 0) 100%);
+    -webkit-mask-image: linear-gradient(to bottom,
+                                        rgba(255, 255, 255, 1) 0%,
+                                        rgba(255, 255, 255, 1) 50%,
+                                        rgba(255, 255, 255, 0) 50%,
+                                        rgba(255, 255, 255, 0) 100%);
+  }
+  #red   { width: 200px; height: 100px; background: rgb(255, 0, 0); }
+  #gap   { width: 200px; height: 100px; }
+  #lime  { width: 200px; height: 100px; background: rgb(0, 255, 0); }
+  #trail { width: 200px; height: 200px; }
+</style>
+</head>
+<body>
+<div id="scroller">
+  <div id="red"></div>   <!-- content y=0..100   -->
+  <div id="gap"></div>   <!-- content y=100..200 (white) -->
+  <div id="lime"></div>  <!-- content y=200..300 -->
+  <div id="trail"></div>
+</div>
+<script>
+  // Step 1 - before scroll: red shows through the opaque half, and the
+  // cut-away half shows the page behind the scroller.
+  screenShot("scroll-buf-opt-mask-test-1_before.png", function() {
+    var before = "scroll-buf-opt-mask-test-1_before.png";
+    testAssert(checkPixelColor(before, 10, 10, 255, 0, 0, 255, 4));
+    testAssert(checkPixelColor(before, 10, 140, 255, 255, 255, 255, 4));
+
+    // Step 2 - scroll 200 px: lime was below the box and has to be painted
+    // now, and the mask has to stay put, so lime shows in the top half only.
+    document.getElementById("scroller").scrollTop = 200;
+
+    screenShot("scroll-buf-opt-mask-test-1_after.png", function() {
+      var after = "scroll-buf-opt-mask-test-1_after.png";
+      testAssert(checkPixelColor(after, 10, 10, 0, 255, 0, 255, 4));
+      testAssert(checkPixelColor(after, 10, 140, 255, 255, 255, 255, 4));
+      testEnd();
+    });
+  });
+</script>
+</body>
+</html>

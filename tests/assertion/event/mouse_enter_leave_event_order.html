@@ -1,0 +1,68 @@
+<html>
+<head>
+</head>
+
+<style>
+
+  .out {
+      display:flex;
+      background:red;
+      height: 1000px;
+      width: 1009px;
+      position: relative;
+     flex-direction: column;
+      padding: 10px;
+  }
+
+  .in {
+      position: absolute;
+      height: 100px;
+      left:0px;
+      right:0px;
+      background: blue;
+  }
+
+</style>
+
+<body>
+
+  <body>
+
+    <div class="out" id="out">
+      <div class="in" id="in">
+      </div>
+    </div>
+
+  </body>
+
+  <script>
+    var order = 0;
+    document.getElementById("in").addEventListener("mouseenter", function() {
+        console.log("in enter")
+        testAssert(order == 1);
+        order++;
+    });
+    document.getElementById("out").addEventListener("mouseenter", function() {
+        console.log("out enter")
+        testAssert(order == 0);
+        order++;
+    });
+
+    document.getElementById("in").addEventListener("mouseleave", function() {
+        console.log("in leave")
+        testAssert(order == 2);
+        order++;
+    });
+    document.getElementById("out").addEventListener("mouseleave", function() {
+        console.log("out leave")
+        testAssert(order == 3);
+        testEnd()
+    });
+
+    function testStart() {
+        window.simulateMouseMove(30, 30);
+        window.simulateMouseMove(0, 0);
+    }
+  </script>
+
+</html>

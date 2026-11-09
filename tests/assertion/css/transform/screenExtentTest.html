@@ -1,0 +1,47 @@
+<div id="a">
+  <div id="b">
+  </div>
+</div>
+<style>
+
+#a {
+  width: 100px;
+  height: 100px;
+  background: yellow;
+  transform: translateY(100px) scale(2);
+  margin-left: 100px;
+  margin-top: 100px;
+}
+
+#a:hover {
+  background: grey;
+}
+
+
+#b {
+  background: blue;
+  height: 10px;
+  transform: translateX(50px)
+}
+
+#b:hover {
+  background: purple;
+}
+
+
+</style>
+<script>
+var aa = a.getBoundingClientRect();
+var bb = b.getBoundingClientRect();
+testAssert(aa.x == 58);
+testAssert(aa.y == 150);
+testAssert(aa.width == 200);
+testAssert(aa.height == 200);
+
+testAssert(bb.x == 158);
+testAssert(bb.y == 150);
+testAssert(bb.width == 200);
+testAssert(bb.height == 20);
+
+testEnd();
+</script>

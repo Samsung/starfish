@@ -81,8 +81,7 @@ def pixel_diff(tc_file, tc_result_png, tc_expected_png, handler):
             os.makedirs(dir_name)
         copyfile(tc_result_png, image_1)
         copyfile(tc_expected_png, image_2)
-        gen_cmd = ["test/tools/image_diff/image_diff", "--diff",
-                   image_1, image_2, image_3]
+        gen_cmd = ["tool/imgdiff/imgdiff", image_1, image_2, image_3]
         subprocess.call(gen_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
         print(utils.PColors.red("Check images: " + base_path + "*.png"))
     os.remove(tc_result_png)
@@ -182,14 +181,10 @@ def default_tc_handler(tc_file, diff_result):
 def default_http_expected_namer(tc_file, backend):
     # Remote test
     # Ex) http://52.79.162.207/some/directory/tc_some_name.html
-    #  => test/remote-test/some/directory/tc_some_name_expected.png
+    #  => tests/remote-test/some/directory/tc_some_name_expected.png
     expected = os.path.splitext(tc_file)[0] + "_expected.png"
     path = urlparse(expected).path
-    if backend == "efl":
-        backend = "test/efl/"
-    elif backend == "cairo":
-        backend = "test/cairo/"
-    return backend + REMOTE_EXP_DIR + path
+    return "tests/" + REMOTE_EXP_DIR + path
 
 
 def default_expected_namer(tc_file, backend):

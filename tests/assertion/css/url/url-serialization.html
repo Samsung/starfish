@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>CSS URL serialization</title>
+    <link rel="help" href="https://www.w3.org/TR/css-syntax-3/#consume-escaped-code-point">
+    <link rel="help" href="https://drafts.csswg.org/cssom/#serialize-a-url">
+    <link rel="help" href="https://drafts.csswg.org/cssom/#serialize-a-string">
+</head>
+<body>
+<pre id="result"></pre>
+<script>
+(function () {
+    'use strict';
+
+    var properties = [
+        { name: 'backgroundImage', cssName: 'background-image' },
+        { name: 'borderImageSource', cssName: 'border-image-source' }
+    ];
+    var total = 0;
+    var failures = 0;
+
+    function assertEqual(actual, expected, description) {
+        total++;
+        var matches = actual === expected;
+        if (!matches) {
+            failures++;
+        }
+        console.assert(matches, description + ': expected ' +
+            JSON.stringify(expected) + ', got ' + JSON.stringify(actual));
+    }
+
+    // CSSOM serializes URLs as double-quoted strings, escaping double
+    // quotes and backslashes while leaving apostrophes unchanged.
+    var cases = [
+        { name: 'plain URL',
+          input: 'url("plain.png")', expected: 'url("plain.png")' },
+        { name: 'apostrophe inside a double-quoted URL',
+          input: "url(\"a'b.png\")", expected: "url(\"a'b.png\")" },
+        { name: 'double quote inside a single-quoted URL',
+          input: "url('a\"b.png')", expected: 'url("a\\"b.png")' },
+        { name: 'escaped double quote',
+          input: 'url("a\\"b.png")', expected: 'url("a\\"b.png")' },
+        { name: 'escaped backslash',
+          input: 'url("a\\\\b.png")', expected: 'url("a\\\\b.png")' },
+        // The space terminates the hexadecimal escape; it is not URL data.
+        { name: 'hexadecimal escape in a quoted URL',
+          input: 'url("a\\62 .png")', expected: 'url("ab.png")' },
+        { name: 'hexadecimal escape in an unquoted URL',
+          input: 'url(a\\62 .png)', expected: 'url("ab.png")' },
+        { name: 'escaped double quote in an unquoted URL',
+          input: 'url(a\\"b.png)', expected: 'url("a\\"b.png")' },
+        { name: 'escaped parenthesis in an unquoted URL',
+          input: 'url(a\\)b.png)', expected: 'url("a)b.png")' },
+        // Decoding an escaped backslash must not start another escape.
+        { name: 'literal backslash before hexadecimal digits',
+          input: 'url("a\\\\62 .png")', expected: 'url("a\\\\62 .png")' }
+    ];
+
+    properties.forEach(function (property) {
+        cases.forEach(function (testCase) {
+            ['setter', 'cssText'].forEach(function (path) {
+                var style = document.createElement('div').style;
+                if (path === 'setter') {
+                    style[property.name] = testCase.input;
+                } else {
+                    // Parse the original input, independently of any setter
+                    // serialization, to exercise both declaration entry points.
+                    style.cssText = property.cssName + ': ' + testCase.input;
+                }
+                var description = property.cssName + ' via ' + path +
+                    ': ' + testCase.name;
+                var serialized = style[property.name];
+                assertEqual(serialized, testCase.expected,
+                    description + ' serialization');
+
+                var reparsed = document.createElement('div').style;
+                reparsed[property.name] = serialized;
+                assertEqual(reparsed[property.name], testCase.expected,
+                    description + ' value round trip');
+
+                var declaration = document.createElement('div').style;
+                declaration.cssText = style.cssText;
+                assertEqual(declaration[property.name], testCase.expected,
+                    description + ' cssText round trip');
+            });
+        });
+    });
+
+    document.getElementById('result').textContent =
+        (total - failures) + ' passed; ' + failures + ' failed.';
+    document.title = (failures ? 'FAIL' : 'PASS') + ': CSS URL serialization';
+    if (typeof testEnd === 'function') {
+        testEnd();
+    }
+}());
+</script>
+</body>
+</html>

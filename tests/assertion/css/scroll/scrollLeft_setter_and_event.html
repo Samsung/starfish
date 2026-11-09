@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+        .chartjs-size-monitor,
+        .chartjs-size-monitor-expand,
+        .chartjs-size-monitor-shrink {
+            position: absolute;
+            direction: ltr;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            pointer-events: none;
+            visibility: hidden;
+            z-index: -1;
+        }
+
+        .chartjs-size-monitor-expand>div {
+            position: absolute;
+            width: 1000000px;
+            height: 1000000px;
+            left: 0;
+            top: 0;
+            background-color: blue;
+            transform: translateZ(-1);
+        }
+
+        .chartjs-size-monitor-shrink>div {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            left: 0;
+            top: 0;
+            background-color: yellow;
+            transform: translateZ(-1);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container" class="chartjs-size-monitor">
+        <div id="target1" class="chartjs-size-monitor-expand">
+            <div class=""></div>
+        </div>
+        <div id="target2" class="chartjs-size-monitor-shrink">
+            <div class=""></div>
+        </div>
+    </div>
+
+    <script>
+
+        function test(targetElement, expect) {
+            return new Promise((resolve, reject) => {
+                targetElement.addEventListener("scroll", () => {
+                    let result = (targetElement.scrollLeft == expect);
+                    resolve(result);
+                });
+
+                setTimeout(() => {
+                    reject();
+                }, 3000);
+
+                targetElement.scrollLeft = 1e6;
+            });
+        }
+
+        let test1 = test(target1, 999200);
+        let test2 = test(target2, 800);
+
+        Promise.all([test1, test2]).then((values) => {
+            let ret = true;
+            values.forEach((value) => {
+                ret &= value;
+            });
+            testAssert(ret == true);
+            testEnd();
+        }).catch(() => {
+            testAssert(false);
+            testEnd();
+        });
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+<title>parser-driven custom element upgrade signals a slot change without crashing</title>
+<script>
+// Defining the element before the parser reaches <my-button> means the
+// parser itself upgrades it synchronously while building the tree
+// (Node::parserAppendChild), not from inside a later <script>'s execution.
+// That upgrade attaches a shadow root with a <slot>, which signals a slot
+// change and enqueues a microtask -- the exact path that used to abort the
+// process because the file:// resource-request delegate driving this parse
+// never established a macrotask scope before enqueueing it.
+customElements.define('my-button', class extends HTMLElement {
+  constructor() {
+    super();
+    var template = document.getElementById('button-template').content;
+    this.attachShadow({ mode: 'open' }).appendChild(template.cloneNode(true));
+  }
+});
+</script>
+</head>
+
+<body>
+<template id="button-template">
+  <button><slot>fallback</slot></button>
+</template>
+<my-button id="withText">click me</my-button>
+<my-button id="withoutText"></my-button>
+
+<script>
+// Shim for running in a regular browser without the Starfish harness:
+// collect console.assert results and report a verdict from testEnd().
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0;
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (cond, msg) {
+    if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[parser_upgrade_slotchange] ' + verdict);
+    document.title = verdict;
+  };
+}
+
+// Reaching this line at all is part of the regression coverage: the original
+// bug aborted the process while parsing <my-button>, so this script would
+// never run.
+var slotWithText = document.getElementById('withText').shadowRoot.querySelector('slot');
+var assignedWithText = slotWithText.assignedNodes();
+console.assert(assignedWithText.length === 1 && assignedWithText[0].textContent === 'click me',
+  'light-DOM text is assigned to the slot (got ' +
+  JSON.stringify(assignedWithText.map(function (n) { return n.textContent; })) + ')');
+
+var slotWithoutText = document.getElementById('withoutText').shadowRoot.querySelector('slot');
+console.assert(slotWithoutText.assignedNodes().length === 0,
+  'empty host has no assigned nodes (got ' + slotWithoutText.assignedNodes().length + ')');
+var flattened = slotWithoutText.assignedNodes({ flatten: true });
+console.assert(flattened.length === 1 && flattened[0].textContent === 'fallback',
+  'empty host falls back to the <slot> fallback content (got ' +
+  JSON.stringify(flattened.map(function (n) { return n.textContent; })) + ')');
+
+testEnd();
+</script>
+</body>
+
+</html>

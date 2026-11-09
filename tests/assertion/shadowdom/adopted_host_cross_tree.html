@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>adoptedStyleSheets: :host rules are scoped to their own shadow tree</title>
+</head>
+
+<body>
+  <!-- Per CSS Scoping spec, a :host rule must match only the host element of the
+     shadow tree the rule belongs to. When two shadow roots each adopt a sheet
+     with a different :host{display:...}, each host must see only its own rule.
+     A2UI/Lit depends on this: every component type has its own static styles, and
+     those styles must not bleed into sibling components. -->
+  <div id="hostA"></div>
+  <div id="hostB"></div>
+  <div id="hostC" class="tagged"></div>
+  <div id="hostD"></div>
+  <script>
+
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) {
+          __pass++;
+        } else {
+          __fail++;
+          __nativeAssert(false, msg);
+        }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[adopted_host_cross_tree] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // --- case 1: two hosts adopt different :host{display:} rules ---
+    // Each host must see only its own rule; neither should bleed into the other.
+
+    var hostA = document.getElementById('hostA');
+    var srA = hostA.attachShadow({ mode: 'open' });
+    var sheetA = new CSSStyleSheet();
+    sheetA.replaceSync(':host { display: flex; }');
+    srA.adoptedStyleSheets = [sheetA];
+
+    var hostB = document.getElementById('hostB');
+    var srB = hostB.attachShadow({ mode: 'open' });
+    var sheetB = new CSSStyleSheet();
+    sheetB.replaceSync(':host { display: grid; }');
+    srB.adoptedStyleSheets = [sheetB];
+
+    var cA = getComputedStyle(hostA);
+    console.assert(cA.display === 'flex',
+      'hostA :host{display:flex} must not be overwritten by hostB rule (got ' + cA.display + ')');
+
+    var cB = getComputedStyle(hostB);
+    console.assert(cB.display === 'grid',
+      'hostB :host{display:grid} must not be overwritten by hostA rule (got ' + cB.display + ')');
+
+    // --- case 2: :host(.cls) functional form must also be scoped ---
+    // hostC has class "tagged"; hostD does not. Only hostC should match
+    // the :host(.tagged) rule adopted by srC. hostD adopts its own rule.
+
+    var hostC = document.getElementById('hostC');
+    var srC = hostC.attachShadow({ mode: 'open' });
+    var sheetC = new CSSStyleSheet();
+    sheetC.replaceSync(':host(.tagged) { display: inline-block; }');
+    srC.adoptedStyleSheets = [sheetC];
+
+    var hostD = document.getElementById('hostD');
+    var srD = hostD.attachShadow({ mode: 'open' });
+    var sheetD = new CSSStyleSheet();
+    sheetD.replaceSync(':host { display: inline-flex; }');
+    srD.adoptedStyleSheets = [sheetD];
+
+    var cC = getComputedStyle(hostC);
+    console.assert(cC.display === 'inline-block',
+      'hostC :host(.tagged){display:inline-block} must apply (got ' + cC.display + ')');
+
+    var cD = getComputedStyle(hostD);
+    console.assert(cD.display === 'inline-flex',
+      'hostD :host{display:inline-flex} must not be polluted by hostC rule (got ' + cD.display + ')');
+
+    testEnd();
+
+  </script>
+</body>
+
+</html>

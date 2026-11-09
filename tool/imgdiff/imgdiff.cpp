@@ -214,13 +214,56 @@ public:
 
 
 
+// Writes the differing pixels in red over a faded copy of the expected image.
+static void writeDiff(const char* fileName, Image* result, Image* expected)
+{
+    int width = expected->width();
+    int height = expected->height();
+    std::vector<png_byte> row(width * 3);
+
+    FILE* fp = fopen(fileName, "wb");
+    if (!fp)
+        return;
+    png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    png_infop info = png_create_info_struct(png);
+    if (setjmp(png_jmpbuf(png))) {
+        png_destroy_write_struct(&png, &info);
+        fclose(fp);
+        return;
+    }
+    png_init_io(png, fp);
+    png_set_IHDR(png, info, width, height, 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+    png_write_info(png, info);
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            Color a = result->colorAt(x, y);
+            Color b = expected->colorAt(x, y);
+            png_byte* p = &row[x * 3];
+            if (a != b) {
+                p[0] = 255;
+                p[1] = 0;
+                p[2] = 0;
+            } else {
+                p[0] = 191 + b.r / 4;
+                p[1] = 191 + b.g / 4;
+                p[2] = 191 + b.b / 4;
+            }
+        }
+        png_write_row(png, row.data());
+    }
+    png_write_end(png, NULL);
+    png_destroy_write_struct(&png, &info);
+    fclose(fp);
+}
+
 int main(int argc, char *argv[])
 {
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
 
-    if (argc != 3) {
-        puts("oops! need 2 png file");
+    if (argc != 3 && argc != 4) {
+        puts("usage: imgdiff <result.png> <expected.png> [<diff.png to write on failure>]");
         return -1;
     }
 
@@ -292,6 +335,9 @@ int main(int argc, char *argv[])
         if (maxCnt < 4) {
             printf("diff: %01.2f%% passed (not exactly same)(debug %d)\n", 100.f*(diffCount/((float)(width*height))), maxCnt);
         } else {
+            if (argc == 4) {
+                writeDiff(argv[3], i1, i2);
+            }
             printf("diff: %01.2f%% failed[imgdiff-fail]\n", 100.f*(diffCount/((float)(width*height))));
         }
 

@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A width: 100% child resolves against a start-aligned column flex item sized by its content</title>
+<style>
+  body { margin: 0; }
+  .column { display: flex; flex-direction: column; align-items: start; justify-content: center; min-width: 0; }
+  .label { white-space: nowrap; text-overflow: ellipsis; overflow: hidden; max-width: 100%; }
+  .track { display: block; width: 100%; overflow: hidden; position: relative; }
+  .marquee { width: 630px; height: 20px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[flex-item-resolve-height-correctly] " + document.title);
+  };
+}
+</script>
+<div class="column">
+  <div class="label" id="label"><div class="track" id="track"><div class="marquee"></div></div></div>
+</div>
+<script>
+// align-items: start sizes the label to its content, the 630px marquee.
+var label = document.getElementById("label").getBoundingClientRect();
+var track = document.getElementById("track").getBoundingClientRect();
+console.assert(label.width === 630, "label width: " + label.width);
+console.assert(track.width === 630, "track width: " + track.width);
+testEnd();
+</script>

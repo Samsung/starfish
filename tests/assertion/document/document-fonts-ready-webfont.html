@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>document.fonts.ready waits for CSS fonts and layout</title>
+<link rel="help" href="https://drafts.csswg.org/css-font-loading/#fontfaceset-pending-on-the-environment">
+<style>
+@font-face {
+    font-family: ReadyAhemProbe;
+    src: url('../../fixtures/resources/wpt/fonts/Ahem.ttf');
+}
+#probe { font: 30px ReadyAhemProbe, serif; }
+</style>
+<span id="probe">iiii</span>
+<script>
+if (typeof testEnd !== 'function') {
+    var __pass = 0, __fail = 0;
+    var __nativeAssert = console.assert.bind(console);
+    console.assert = function (condition, message) {
+        if (condition) {
+            __pass++;
+        } else {
+            __fail++;
+            __nativeAssert(false, message);
+        }
+    };
+    window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+            ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[document-fonts-ready-webfont] ' + verdict);
+        document.title = verdict;
+    };
+}
+
+// Subscribe before any geometry read can start the CSS font load.
+var ready = document.fonts.ready;
+ready.then(function (fonts) {
+    console.assert(fonts === document.fonts,
+        'ready resolves with document.fonts; observed ' + fonts);
+    var status = fonts.status;
+    console.assert(status === 'loaded',
+        'ready waits for font loading; observed ' + status);
+    var width = document.getElementById('probe').offsetWidth;
+    console.assert(width === 120,
+        'ready waits for Ahem layout (120px); observed ' + width);
+    console.assert(ready === document.fonts.ready,
+        'initial font loading preserves the pending ready promise; observed ' +
+        (ready === document.fonts.ready));
+    testEnd();
+});
+</script>

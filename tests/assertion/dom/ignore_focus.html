@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        div:focus {
+            background-color: blue;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="focusTarget1" tabindex="1">focusTarget1</div>
+    <div id="focusTarget2" tabindex="2" style="display: none;">focusTarget2</div>
+    <div id="focusTarget3" tabindex="3" style="visibility: hidden;">focusTarget3</div>
+    <div id="focusTarget4" tabindex="4" style="visibility: collapse;">focusTarget4</div>
+    <div id="focusTarget5" tabindex="5">focusTarget5</div>
+
+</body>
+<script>
+    function testStart() {
+        focusTarget1.focus();
+        testAssert(document.activeElement.id == "focusTarget1");
+        focusTarget2.focus();
+        testAssert(document.activeElement.id == "focusTarget1");
+        focusTarget3.focus();
+        testAssert(document.activeElement.id == "focusTarget1");
+        focusTarget4.focus();
+        testAssert(document.activeElement.id == "focusTarget1");
+        focusTarget5.focus();
+        testAssert(document.activeElement.id == "focusTarget5");
+        testEnd();
+    }
+
+</script>
+
+</html>

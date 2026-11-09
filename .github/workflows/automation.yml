@@ -39,16 +39,12 @@ jobs:
           submodule_cache_fetch "${{ inputs.thirdparty_key }}" cache.tar.gz thirdparty.tar.gz
           tar xzf thirdparty.tar.gz
 
-      # test/ holds the CDP schema and Chromium's inspector-protocol tests.
-      - name: Checkout test submodule
+      # Chromium's tests for the CDP behavior layer are in the sparse
+      # third_party/blink checkout.
+      - name: Checkout third_party/blink submodule
         env:
-          DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_SSH_KEY }}
-        run: |
-          install -m 700 -d /root/.ssh
-          printf '%s\n' "$DEPLOY_KEY" > /root/.ssh/id_rsa
-          chmod 600 /root/.ssh/id_rsa
-          git submodule init
-          git submodule update test
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: ./tool/ci/cache_vendor_tests.sh blink
 
       - name: Build
         run: |

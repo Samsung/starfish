@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #target {
+            --fontSize: 12px;
+            --test: var(--fontSize);
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <div id="target">
+        </div>
+    </div>
+</body>
+<script>
+    function testStart() {
+        {
+            testAssert(window.getComputedStyle(target).getPropertyValue("--test") == '12px');
+        }
+        testEnd();
+    }
+    testStart();
+</script>
+</html>

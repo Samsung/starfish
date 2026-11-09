@@ -1,0 +1,79 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Web Audio oscillator basic waveforms</title>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Web Audio oscillator basic complete";
+    };
+}
+
+if (typeof OfflineAudioContext !== "function" ||
+    typeof OscillatorNode !== "function") {
+    testEnd();
+} else {
+    const rate = 48000;
+    const context = new OfflineAudioContext(1, 256, rate);
+    const oscillator = new OscillatorNode(context, {
+        type: "sine", frequency: 6000, detune: 1200
+    });
+    console.assert(oscillator.frequency.value === 6000 &&
+                   oscillator.detune.value === 1200 &&
+                   oscillator.type === "sine" &&
+                   context.createOscillator().frequency.value === 440,
+                   "constructor and factory expose oscillator defaults");
+    let customRejected = false;
+    try {
+        oscillator.type = "custom";
+    } catch (error) {
+        customRejected = error.name === "InvalidStateError";
+    }
+    console.assert(customRejected && oscillator.type === "sine",
+                   "custom type requires a periodic wave");
+    let ended = 0;
+    oscillator.onended = function () { ended++; };
+    oscillator.connect(context.destination);
+    oscillator.start();
+    oscillator.stop(128 / rate);
+    context.startRendering().then(function (buffer) {
+        const samples = buffer.getChannelData(0);
+        console.assert(Math.abs(samples[0]) < 1e-6 &&
+                       Math.abs(samples[1] - 1) < 1e-5 &&
+                       Math.abs(samples[2]) < 1e-5 &&
+                       Math.abs(samples[3] + 1) < 1e-5,
+                       "sine frequency combines frequency and detune");
+        console.assert(samples[128] === 0 && samples[255] === 0 &&
+                       ended === 1,
+                       "scheduled stop silences output and fires ended once");
+        const denseContext = new OfflineAudioContext(1, 128, rate);
+        const real = new Float32Array(41);
+        const imag = new Float32Array(41);
+        for (let harmonic = 1; harmonic <= 40; harmonic++) {
+            real[harmonic] = 0.01;
+            imag[harmonic] = 0.02;
+        }
+        const dense = new PeriodicWave(denseContext, {
+            real: real, imag: imag, disableNormalization: true
+        });
+        const denseOscillator = denseContext.createOscillator();
+        denseOscillator.setPeriodicWave(dense);
+        denseOscillator.frequency.value = 100;
+        denseOscillator.connect(denseContext.destination);
+        denseOscillator.start();
+        denseContext.startRendering().then(function (denseBuffer) {
+            const actual = denseBuffer.getChannelData(0);
+            for (const frame of [0, 1, 50]) {
+                let expected = 0;
+                for (let harmonic = 1; harmonic <= 40; harmonic++) {
+                    const phase = 2 * Math.PI * harmonic * 100 * frame / rate;
+                    expected += real[harmonic] * Math.cos(phase) +
+                                imag[harmonic] * Math.sin(phase);
+                }
+                console.assert(Math.abs(actual[frame] - expected) < 1e-5,
+                               "dense wavetable matches Fourier series");
+            }
+            testEnd();
+        });
+    });
+}
+</script>

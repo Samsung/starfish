@@ -1,0 +1,42 @@
+<nav id="menu-container">
+  <nav-menu id="aaaa">
+    <div>aaaa</div>
+  </nav-menu>
+  <menu-item id="bbbb">
+    <div>bbbb</div>
+  </menu-item>
+</nav>
+<style>
+:defined {
+  background: red;
+}
+
+:not(:defined) div {
+  background: blue;
+}
+
+:defined > div {
+  background: yellow;
+}
+
+</style>
+<script>
+if(!console.assert) {
+    console.assert = testAssert.bind(this)
+}
+
+var aaaadiv = document.querySelector("#aaaa > div")
+var bbbbdiv = document.querySelector("#bbbb > div")
+
+console.assert(window.getComputedStyle(aaaadiv).background.includes("rgb(0, 0, 255)"))
+console.assert(window.getComputedStyle(bbbbdiv).background.includes("rgb(0, 0, 255)"))
+
+customElements.define("nav-menu", class Test extends HTMLElement{})
+
+console.assert(!window.getComputedStyle(aaaadiv).background.includes("rgb(0, 0, 255)"))
+console.assert(window.getComputedStyle(bbbbdiv).background.includes("rgb(0, 0, 255)"))
+
+testEnd();
+
+</script>
+

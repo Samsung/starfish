@@ -1,0 +1,47 @@
+<nav id="menu-container">
+  <div class="menu-placeholder">Loading…</div>
+  <nav-menu>
+    <menu-item>Item 1</menu-item>
+    <menu-item>Item 2</menu-item>
+  </nav-menu>
+</nav>
+<script>
+if(!console.assert) {
+    console.assert = testAssert.bind(this)
+}
+
+let catchCalled = false;
+customElements.whenDefined("div").then(function(a) {
+   console.assert(false)
+}).catch(function(a) {
+   console.log(a)
+   catchCalled = true;
+   console.assert(true)
+});;
+
+const container = document.getElementById("menu-container");
+const placeholder = container.querySelector(".menu-placeholder");
+const undefinedElements = container.querySelectorAll(":not(:defined)");
+console.assert(undefinedElements.length == 3)
+async function removePlaceholder() {
+  const promises = [...undefinedElements].map((button) =>
+    customElements.whenDefined(button.localName),
+  );
+  await Promise.all(promises);
+  container.removeChild(placeholder);
+  console.assert(placeholder.parentElement == null)
+  console.assert(catchCalled)
+  testEnd();
+}
+
+removePlaceholder();
+
+class Test1 extends HTMLElement {};
+customElements.define("nav-menu", Test1)
+console.assert(placeholder.parentElement != null)
+
+class Test2 extends HTMLElement {};
+customElements.define("menu-item", Test2)
+console.assert(placeholder.parentElement != null)
+
+</script>

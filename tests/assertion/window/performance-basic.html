@@ -1,0 +1,42 @@
+<script>
+// Test: performance.mark() creates marks correctly
+performance.mark("test-mark-1");
+const markEntries = performance.getEntriesByName("test-mark-1", "mark");
+testAssert(markEntries.length === 1, "performance.mark() should create a mark entry");
+testAssert(markEntries[0].entryType === "mark", "Mark entry should have entryType 'mark'");
+testAssert(markEntries[0].startTime >= 0, "Mark entry should have a valid startTime");
+testAssert(markEntries[0].duration === 0, "Mark entry should have duration of 0");
+
+// Test: performance.measure() creates measures correctly
+performance.mark("measure-start");
+performance.mark("measure-end");
+performance.measure("test-measure", "measure-start", "measure-end");
+const measureEntries = performance.getEntriesByName("test-measure", "measure");
+testAssert(measureEntries.length === 1, "performance.measure() should create a measure entry");
+testAssert(measureEntries[0].entryType === "measure", "Measure entry should have entryType 'measure'");
+testAssert(measureEntries[0].duration >= 0, "Measure entry should have a non-negative duration");
+
+// Test: performance.getEntries() returns all entries
+const allEntries = performance.getEntries();
+const hasMarks = allEntries.some(e => e.entryType === "mark");
+const hasMeasures = allEntries.some(e => e.entryType === "measure");
+testAssert(hasMarks, "getEntries() should return mark entries");
+testAssert(hasMeasures, "getEntries() should return measure entries");
+
+// Test: performance.getEntriesByType() filters by type
+const marksOnly = performance.getEntriesByType("mark");
+const measuresOnly = performance.getEntriesByType("measure");
+testAssert(marksOnly.every(e => e.entryType === "mark"), "getEntriesByType('mark') should return only marks");
+testAssert(measuresOnly.every(e => e.entryType === "measure"), "getEntriesByType('measure') should return only measures");
+
+// Test: entry.toJSON() works correctly
+const testMark = performance.getEntriesByName("test-mark-1", "mark")[0];
+const jsonEntry = testMark.toJSON();
+testAssert(jsonEntry.name === "test-mark-1", "toJSON() should include name property");
+testAssert(jsonEntry.entryType === "mark", "toJSON() should include entryType property");
+testAssert(typeof jsonEntry.startTime === "number", "toJSON() should include startTime as number");
+testAssert(typeof jsonEntry.duration === "number", "toJSON() should include duration as number");
+
+console.log("\n--- All tests completed ---");
+testEnd();
+</script>

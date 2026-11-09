@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>getComputedStyle on display:none elements with font-relative units</title></head>
+<body>
+  <div id="hidden" style="display:none">
+    <span id="em" style="letter-spacing:0.1em">x</span>
+    <span id="ex" style="letter-spacing:0.1ex">x</span>
+    <span id="ch" style="letter-spacing:0.1ch">x</span>
+    <span id="rem" style="letter-spacing:0.1rem">x</span>
+    <span id="ti" style="text-indent:2ch">x</span>
+  </div>
+  <!-- Rendered control elements for em/rem comparison -->
+  <span id="em-visible" style="letter-spacing:0.1em">x</span>
+  <span id="rem-visible" style="letter-spacing:0.1rem">x</span>
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (other browser), shim a custom testEnd()
+    // that tallies console.assert results and reports the verdict, so the same
+    // file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[getComputedStyle-display-none-font-relative] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // em and rem do not depend on font metrics, so hidden and visible
+    // elements must produce the same px value.
+    var emHidden = getComputedStyle(document.getElementById('em')).letterSpacing;
+    var emVisible = getComputedStyle(document.getElementById('em-visible')).letterSpacing;
+    console.assert(emHidden === emVisible,
+      'em: hidden element letterSpacing should match visible ("' + emHidden +
+      '" vs "' + emVisible + '")');
+    console.assert(parseFloat(emHidden) > 0,
+      'em: letterSpacing should be a positive value, got "' + emHidden + '"');
+
+    var remHidden = getComputedStyle(document.getElementById('rem')).letterSpacing;
+    var remVisible = getComputedStyle(document.getElementById('rem-visible')).letterSpacing;
+    console.assert(remHidden === remVisible,
+      'rem: hidden element letterSpacing should match visible ("' + remHidden +
+      '" vs "' + remVisible + '")');
+    console.assert(parseFloat(remHidden) > 0,
+      'rem: letterSpacing should be a positive value, got "' + remHidden + '"');
+
+    // ex and ch depend on font metrics which are unavailable in a
+    // display:none subtree (font not loaded). The spec fallback (0.5em)
+    // must yield a positive px value rather than crashing.
+    var exVal = getComputedStyle(document.getElementById('ex')).letterSpacing;
+    console.assert(parseFloat(exVal) > 0,
+      'ex: letterSpacing should be a positive value, got "' + exVal + '"');
+
+    var chVal = getComputedStyle(document.getElementById('ch')).letterSpacing;
+    console.assert(parseFloat(chVal) > 0,
+      'ch: letterSpacing should be a positive value, got "' + chVal + '"');
+
+    var tiVal = getComputedStyle(document.getElementById('ti')).textIndent;
+    console.assert(parseFloat(tiVal) > 0,
+      'ch text-indent: should be a positive value, got "' + tiVal + '"');
+
+    testEnd();
+
+  </script>
+</body>
+</html>

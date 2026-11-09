@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script>
+        async function run() {
+
+            const response = await fetch(
+                './resources/bg1.jpg',
+                {
+                    method: 'GET',
+                }
+            );
+
+            testAssert(response.ok);
+            const reader = response.body.getReader();
+
+            let size = 0;
+            while (true) {
+                const { done, value } = await reader.read();
+
+                if (done) {
+                    testAssert(size == 5322269);
+                    wptTestEnd();
+                }
+                size += value.length;
+            }
+            
+        }
+    </script>
+</head>
+
+<body onload="run()">
+</body>
+
+</html>

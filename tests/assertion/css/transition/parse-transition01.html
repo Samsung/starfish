@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+:root {
+  --ui-anim-func: linear;
+  --position: right top;
+  --onesecond: 1s;
+}
+div {
+  width: 100px;
+  height: 100px;
+  background: green;
+}
+.change {
+  width: 200px;
+  height: 200px;
+}
+</style>
+</head>
+<body>
+  <h1>Transition shorthand</h1>
+  <div id="d"></div>
+</body>
+<script>
+function testObj() {
+  var shouldBeEqual = function (origin, result) {
+    if (origin == result) {
+      console.log("PASS")
+    } else {
+      console.log("FAIL: can not parse '" + origin + "'");
+    }
+  }
+  return {shouldBeEqual: shouldBeEqual};
+}
+window.setTimeout(function() {
+  var d = document.getElementById('d');
+  d.style['transition'] = "width 1s var(--onesecond) var(--ui-anim-func), height 1s var(--onesecond) var(--ui-anim-func)";
+  d.classList.add("change");
+
+  var runner = testObj();
+  runner.shouldBeEqual(d.style['transition'].toString(), "width 1s var(--onesecond) var(--ui-anim-func), height 1s var(--onesecond) var(--ui-anim-func)");
+  runner.shouldBeEqual(getComputedStyle(d).transition, "width 1s linear 1s, height 1s linear 1s");
+
+  testEnd();
+}, 1000);
+</script>
+</html>
+

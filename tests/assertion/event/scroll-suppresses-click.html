@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<!--
+  After a scroll gesture (mousedown + mousemove > threshold + mouseup),
+  click must NOT fire — matches Chrome behavior where scroll cancels the
+  tap intent.
+-->
+<head>
+<style>
+  body { margin: 0; }
+  #scroller {
+    width: 200px;
+    height: 100px;
+    overflow-y: scroll;
+  }
+  #content {
+    width: 200px;
+    height: 400px;
+    background: lightblue;
+  }
+</style>
+</head>
+<body>
+  <div id="scroller">
+    <div id="content"></div>
+  </div>
+
+  <script>
+    var clickFired = false;
+    document.getElementById("scroller").addEventListener("click", function () {
+      clickFired = true;
+    });
+
+    function testStart() {
+      // Drag far enough to exceed the 10px scroll threshold.
+      simulateMouseDown(100, 50);
+      simulateMouseMove(100, 30);
+      simulateMouseMove(100, 10);
+      simulateMouseUp(100, 10);
+
+      setTimeout(function () {
+        testAssert(!clickFired);
+        testEnd();
+      }, 100);
+    }
+  </script>
+</body>
+</html>

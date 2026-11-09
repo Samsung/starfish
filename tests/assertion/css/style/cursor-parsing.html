@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>cursor property parsing and getComputedStyle</title>
+    <style>
+        #auto { cursor: auto; }
+        #default { cursor: default; }
+        #pointer { cursor: pointer; }
+        #none { cursor: none; }
+        #crosshair { cursor: crosshair; }
+        #move { cursor: move; }
+        #inherit-parent { cursor: pointer; }
+        #inherit-child { cursor: inherit; }
+        #unset-parent { cursor: pointer; }
+        #unset-child { cursor: unset; }
+        #initial { cursor: pointer; }
+        #initial-child { cursor: initial; }
+        #invalid { cursor: not-a-real-cursor; }
+    </style>
+</head>
+<body>
+    <div id="auto"></div>
+    <div id="default"></div>
+    <div id="pointer"></div>
+    <div id="none"></div>
+    <div id="crosshair"></div>
+    <div id="move"></div>
+    <div id="inherit-parent">
+        <div id="inherit-child"></div>
+    </div>
+    <div id="unset-parent">
+        <div id="unset-child"></div>
+    </div>
+    <div id="initial">
+        <div id="initial-child"></div>
+    </div>
+    <div id="invalid"></div>
+    <script>
+        (function () {
+            function cs(id) {
+                return window.getComputedStyle(document.getElementById(id));
+            }
+
+            // Basic keyword values
+            console.assert(cs('auto').cursor === 'auto',
+                'cursor: auto should serialize to "auto", got: ' + cs('auto').cursor);
+            console.assert(cs('default').cursor === 'default',
+                'cursor: default should serialize to "default", got: ' + cs('default').cursor);
+            console.assert(cs('pointer').cursor === 'pointer',
+                'cursor: pointer should serialize to "pointer", got: ' + cs('pointer').cursor);
+            console.assert(cs('none').cursor === 'none',
+                'cursor: none should serialize to "none", got: ' + cs('none').cursor);
+
+            // Other keywords collapse to "auto" (CursorOtherValue serializes to initial)
+            console.assert(cs('crosshair').cursor === 'auto',
+                'cursor: crosshair should serialize to "auto" (CursorOtherValue), got: ' + cs('crosshair').cursor);
+            console.assert(cs('move').cursor === 'auto',
+                'cursor: move should serialize to "auto" (CursorOtherValue), got: ' + cs('move').cursor);
+
+            // Inheritance: inherit copies parent's computed cursor
+            console.assert(cs('inherit-child').cursor === 'pointer',
+                'cursor: inherit should copy parent pointer, got: ' + cs('inherit-child').cursor);
+
+            // Unset behaves as inherit for inherited properties
+            console.assert(cs('unset-child').cursor === 'pointer',
+                'cursor: unset should copy parent pointer (inherited property), got: ' + cs('unset-child').cursor);
+
+            // Initial resets to auto (the initial value of cursor)
+            console.assert(cs('initial-child').cursor === 'auto',
+                'cursor: initial should reset to auto, got: ' + cs('initial-child').cursor);
+
+            // Invalid value is rejected, falls back to initial (auto)
+            console.assert(cs('invalid').cursor === 'auto',
+                'cursor: invalid value should fall back to auto, got: ' + cs('invalid').cursor);
+
+            // Inline style round-trip
+            var el = document.createElement('div');
+            document.body.appendChild(el);
+            el.style.cursor = 'pointer';
+            console.assert(window.getComputedStyle(el).cursor === 'pointer',
+                'inline cursor: pointer should round-trip, got: ' + window.getComputedStyle(el).cursor);
+            el.style.cursor = 'auto';
+            console.assert(window.getComputedStyle(el).cursor === 'auto',
+                'inline cursor: auto should round-trip, got: ' + window.getComputedStyle(el).cursor);
+
+            if (typeof testEnd === 'function') {
+                testEnd();
+            }
+        })();
+    </script>
+</body>
+</html>

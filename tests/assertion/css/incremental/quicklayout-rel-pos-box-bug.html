@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+
+<div>
+<div id="control">
+	<div id="toggle" class="button left right" style="left: 128px;">btn</div>
+</div>
+  <div id="aaa">
+    aaa
+  </div>
+</div>
+<style>
+
+#control {
+    float: left;
+    margin-top: 3px;
+}
+
+
+#toggle {
+    position: relative;
+    left: 0px;
+}
+
+.button {
+    display: inline-block;
+    height: 18px;
+    background: #666;
+}
+
+</style>
+<script>
+
+var initialPos = document.getElementById("toggle").getBoundingClientRect().x
+
+var doo = "0"
+
+window.setInterval(function() {
+    aaa.textContent = aaa.textContent + doo
+    var now = document.getElementById("toggle").getBoundingClientRect().x
+    console.log(initialPos)
+    console.log(now)
+    testAssert(initialPos == now)
+    if (aaa.textContent.length > 24)
+        testEnd();
+}, 100);
+
+</script>

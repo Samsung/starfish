@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<title>Upgrade edge-cases example</title>
+
+<example-element></example-element>
+
+<script>
+if(!console.assert) {
+    console.assert = testAssert.bind(this)
+}
+  "use strict";
+
+  var order = 0;
+  function checkOrder(right) {
+      console.assert(order == right);
+      order++;
+  }
+
+  const inDocument = document.querySelector("example-element");
+  const outOfDocument = document.createElement("example-element-2");
+
+  // Before the element definition, both are HTMLElement:
+  console.assert(inDocument instanceof HTMLElement);
+  console.assert(outOfDocument instanceof HTMLElement);
+
+  class ExampleElement extends HTMLElement {
+      constructor() {
+          super();
+          console.log("ctor");
+          checkOrder(1)
+      }
+
+      connectedCallback() {
+          console.log("connected");
+          checkOrder(2)
+      }
+  }
+
+  checkOrder(0);
+  customElements.define("example-element", ExampleElement);
+
+  class ExampleElement2 extends HTMLElement {
+      constructor() {
+          super();
+          console.log("ctor");
+          checkOrder(4)
+      }
+
+      connectedCallback() {
+          console.log("connected");
+          checkOrder(5)
+      }
+  }
+  customElements.define("example-element-2", ExampleElement2);
+
+
+  // After element definition, the in-document element was upgraded:
+  console.assert(inDocument instanceof ExampleElement);
+  console.assert(!(outOfDocument instanceof ExampleElement2));
+
+  checkOrder(3)
+  document.body.appendChild(outOfDocument);
+
+  // Now that we've moved the element into the document, it too was upgraded:
+  console.assert(outOfDocument instanceof ExampleElement2);
+
+  class ExampleElement3 extends HTMLElement {
+      constructor() {
+          super();
+          console.log("ctor");
+          checkOrder(6)
+      }
+
+      connectedCallback() {
+          console.log("connected");
+          console.assert(false)
+      }
+  }
+
+  let tc = document.createElement("example-element-3");
+  customElements.define("example-element-3", ExampleElement3);
+  console.assert(!(tc instanceof ExampleElement3));
+  customElements.upgrade(tc);
+  console.assert(tc instanceof ExampleElement3);
+
+  console.log("scriptEnd");
+  testEnd();
+</script>

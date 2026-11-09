@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>ObservableArray: identity / SameObject</title></head>
+<body>
+<script>
+// The adoptedStyleSheets observable array must return the same exotic object on
+// every access, and must look like a real Array.
+var a = document.adoptedStyleSheets;
+var b = document.adoptedStyleSheets;
+console.assert(a === b, "adoptedStyleSheets returns the same object each access");
+console.assert(Array.isArray(a), "adoptedStyleSheets is an Array");
+console.assert(a.length === 0, "starts empty");
+
+var host = document.createElement("div");
+var root = host.attachShadow({ mode: "open" });
+var ra = root.adoptedStyleSheets;
+var rb = root.adoptedStyleSheets;
+console.assert(ra === rb, "ShadowRoot adoptedStyleSheets is SameObject");
+console.assert(Array.isArray(ra), "ShadowRoot adoptedStyleSheets is an Array");
+console.assert(ra !== a, "Document and ShadowRoot have distinct observable arrays");
+
+testEnd();
+</script>
+</body>
+</html>

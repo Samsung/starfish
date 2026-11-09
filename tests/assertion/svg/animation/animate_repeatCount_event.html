@@ -1,0 +1,56 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+    <svg width="300px" height="150px" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
+        <rect id="animateTarget" width="10" height="10">
+            <animate id="animateOrigin" attributeName="rx" values="0;2.5;5" dur="1s" repeatCount="5" />
+        </rect>
+    </svg>
+
+    <script>
+        if (window['testAssert'] == undefined) {
+            testAssert = console.log;
+            testEnd = console.log;
+        }
+
+        function createRef(value) {
+            return {
+                value: value
+            };
+        }
+        let beginEventCount = createRef(0);
+        let endEventCount = createRef(0);
+        let repeatEventCount = createRef(0);
+
+        let counter = (countRef, name) => {
+            let count = countRef;
+            let eventName = name;
+            return function () {
+                count.value++;
+                console.log(`${eventName} event ${count.value}`);
+            }
+        };
+
+        animateOrigin.addEventListener('beginEvent', counter(beginEventCount, 'beginEvent'));
+        animateOrigin.addEventListener('endEvent', counter(endEventCount, 'endEvent'));
+        animateOrigin.addEventListener('repeatEvent', counter(repeatEventCount, 'repeatEvent'));
+
+        animateOrigin.addEventListener('endEvent', () => {
+            // 'beginEvent should be called once';
+            testAssert(beginEventCount.value === 1);
+            // 'endEvent should be called once';
+            testAssert(endEventCount.value === 1);
+            // 'repeatEvent should be called four times';
+            testAssert(repeatEventCount.value === 4);
+            testEnd();
+        });
+
+    </script>
+
+</html>
+</body>

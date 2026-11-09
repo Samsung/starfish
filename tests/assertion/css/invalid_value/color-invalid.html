@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html>
+<meta name="pixel-test">
+
+<style>
+    div {
+        background: red;
+        border: 2px solid black;
+    }
+    span {
+    	background: blue;
+    	border: 4px solid black;
+    }
+</style>
+
+<body>
+    <div>
+    	<span>span1
+    	<span>span2
+    		<div class="a">
+    			Im destroyer
+    		</div>
+    	span2</span>
+    	span1</span>
+    </div>
+</body>
+<script>
+//https://developer.mozilla.org/en/docs/Web/CSS/color_value
+var valid_colorNames=[
+                    'black',
+                    'silver',
+                    'gray',
+                    'white',
+                    'maroon',
+                    'red',
+                    'purple',
+                    'fuchsia',
+                    'green',
+                    'lime',
+                    'olive',
+                    'yellow',
+                    'navy',
+                    'blue',
+                    'teal',
+                    'aqua',
+                    'orange',
+                    'aliceblue',
+                    'antiquewhite',
+                    'aquamarine',
+                    'azure',
+                    'beige',
+                    'bisque',
+                    'blanchedalmond',
+                    'blueviolet',
+                    'brown',
+                    'burlywood',
+                    'cadetblue',
+                    'chartreuse',
+                    'chocolate',
+                    'coral',
+                    'cornflowerblue',
+                    'cornsilk',
+                    'crimson',
+                    'darkblue',
+                    'darkcyan',
+                    'darkgoldenrod',
+                    'darkgray',
+                    'darkgreen',
+                    'darkgrey',
+                    'darkkhaki',
+                    'darkmagenta',
+                    'darkolivegreen',
+                    'darkorange',
+                    'darkorchid',
+                    'darkred',
+                    'darksalmon',
+                    'darkseagreen',
+                    'darkslateblue',
+                    'darkslategray',
+                    'darkslategrey',
+                    'darkturquoise',
+                    'darkviolet',
+                    'deeppink',
+                    'deepskyblue',
+                    'dimgray',
+                    'dimgrey',
+                    'dodgerblue',
+                    'firebrick',
+                    'floralwhite',
+                    'forestgreen',
+                    'gainsboro',
+                    'ghostwhite',
+                    'gold',
+                    'goldenrod',
+                    'greenyellow',
+                    'grey',
+                    'honeydew',
+                    'hotpink',
+                    'indianred',
+                    'indigo',
+                    'ivory',
+                    'khaki',
+                    'lavender',
+                    'lavenderblush',
+                    'lawngreen',
+                    'lemonchiffon',
+                    'lightblue',
+                    'lightcoral',
+                    'lightcyan',
+                    'lightgoldenrodyellow',
+                    'lightgray',
+                    'lightgreen',
+                    'lightgrey',
+                    'lightpink',
+                    'lightsalmon',
+                    'lightseagreen',
+                    'lightskyblue',
+                    'lightslategray',
+                    'lightslategrey',
+                    'lightsteelblue',
+                    'lightyellow',
+                    'limegreen',
+                    'linen',
+                    'mediumaquamarine',
+                    'mediumblue',
+                    'mediumorchid',
+                    'mediumpurple',
+                    'mediumseagreen',
+                    'mediumslateblue',
+                    'mediumspringgreen',
+                    'mediumturquoise',
+                    'mediumvioletred',
+                    'midnightblue',
+                    'mintcream',
+                    'mistyrose',
+                    'moccasin',
+                    'navajowhite',
+                    'oldlace',
+                    'olivedrab',
+                    'orangered',
+                    'orchid',
+                    'palegoldenrod',
+                    'palegreen',
+                    'paleturquoise',
+                    'palevioletred',
+                    'papayawhip',
+                    'peachpuff',
+                    'peru',
+                    'pink',
+                    'plum',
+                    'powderblue',
+                    'rosybrown',
+                    'royalblue',
+                    'saddlebrown',
+                    'salmon',
+                    'sandybrown',
+                    'seagreen',
+                    'seashell',
+                    'sienna',
+                    'skyblue',
+                    'slateblue',
+                    'slategray',
+                    'slategrey',
+                    'snow',
+                    'springgreen',
+                    'steelblue',
+                    'tan',
+                    'thistle',
+                    'tomato',
+                    'turquoise',
+                    'violet',
+                    'wheat',
+                    'whitesmoke',
+                    'yellowgreen'
+                 ];
+
+ var valid_colorNames_camelCase=[
+                     'BLAck',
+                     'sILver',
+                     'grAy',
+                     'WHIte',
+                     'mArooN',
+                     'red',
+                     'PurPLe',
+                     'FucHsIA',
+                     'greeN',
+                     'LIme',
+                     'oLIve',
+                     'yeLLoW',
+                     'NAvy',
+                     'bLue',
+                     'teAL',
+                     'AquA',
+                     'orANge',
+                     'ALIcebLue',
+                     'ANtIqueWHIte',
+                     'AquAmArINe',
+                     'Azure',
+                     'beIge',
+                     'bIsque',
+                     'bLANcHedALmoNd',
+                     'bLuevIoLet',
+                     'broWN',
+                     'burLyWood',
+                     'cAdetbLue',
+                     'cHArtreuse',
+                     'cHocoLAte',
+                     'corAL',
+                     'corNFLoWerbLue',
+                     'corNsILk',
+                     'crImsoN',
+                     'dArkbLue',
+                     'dArkcyAN',
+                     'dArkgoLdeNrod',
+                     'dArkgrAy',
+                     'dArkgreeN',
+                     'dArkgrey',
+                     'dArkkHAkI',
+                     'dArkmAgeNtA',
+                     'dArkoLIvegreeN',
+                     'dArkorANge',
+                     'dArkorcHId',
+                     'dArkred',
+                     'dArksALmoN',
+                     'dArkseAgreeN',
+                     'dArksLAtebLue',
+                     'dArksLAtegrAy',
+                     'dArksLAtegrey',
+                     'dArkturquoIse',
+                     'dArkvIoLet',
+                     'deePPINk',
+                     'deePskybLue',
+                     'dImgrAy',
+                     'dImgrey',
+                     'dodgerbLue',
+                     'FIrebrIck',
+                     'FLorALWHIte',
+                     'ForestgreeN',
+                     'gAINsboro',
+                     'gHostWHIte',
+                     'goLd',
+                     'goLdeNrod',
+                     'greeNyeLLoW',
+                     'grey',
+                     'HoNeydeW',
+                     'HotPINk',
+                     'INdIANred',
+                     'INdIgo',
+                     'Ivory',
+                     'kHAkI',
+                     'LAveNder',
+                     'LAveNderbLusH',
+                     'LAWNgreeN',
+                     'LemoNcHIFFoN',
+                     'LIgHtbLue',
+                     'LIgHtcorAL',
+                     'LIgHtcyAN',
+                     'LIgHtgoLdeNrodyeLLoW',
+                     'LIgHtgrAy',
+                     'LIgHtgreeN',
+                     'LIgHtgrey',
+                     'LIgHtPINk',
+                     'LIgHtsALmoN',
+                     'LIgHtseAgreeN',
+                     'LIgHtskybLue',
+                     'LIgHtsLAtegrAy',
+                     'LIgHtsLAtegrey',
+                     'LIgHtsteeLbLue',
+                     'LIgHtyeLLoW',
+                     'LImegreeN',
+                     'LINeN',
+                     'medIumAquAmArINe',
+                     'medIumbLue',
+                     'medIumorcHId',
+                     'medIumPurPLe',
+                     'medIumseAgreeN',
+                     'medIumsLAtebLue',
+                     'medIumsPrINggreeN',
+                     'medIumturquoIse',
+                     'medIumvIoLetred',
+                     'mIdNIgHtbLue',
+                     'mINtcreAm',
+                     'mIstyrose',
+                     'moccAsIN',
+                     'NAvAjoWHIte',
+                     'oLdLAce',
+                     'oLIvedrAb',
+                     'orANgered',
+                     'orcHId',
+                     'PALegoLdeNrod',
+                     'PALegreeN',
+                     'PALeturquoIse',
+                     'PALevIoLetred',
+                     'PAPAyAWHIP',
+                     'PeAcHPuFF',
+                     'Peru',
+                     'PINk',
+                     'PLum',
+                     'PoWderbLue',
+                     'rosybroWN',
+                     'royALbLue',
+                     'sAddLebroWN',
+                     'sALmoN',
+                     'sANdybroWN',
+                     'seAgreeN',
+                     'seAsHeLL',
+                     'sIeNNA',
+                     'skybLue',
+                     'sLAtebLue',
+                     'sLAtegrAy',
+                     'sLAtegrey',
+                     'sNoW',
+                     'sPrINggreeN',
+                     'steeLbLue',
+                     'tAN',
+                     'tHIstLe',
+                     'tomAto',
+                     'turquoIse',
+                     'vIoLet',
+                     'WHeAt',
+                     'WHItesmoke',
+                     'yeLLoWgreeN'
+                  ];
+
+var invalid_colorNames=[
+                    'BLeckk',
+                    'sILver1',
+                    'grey2',
+                    'WwHIte',
+                    'meperooN',
+                    'redee',
+                    'peerpeLe',
+                    'FucHsIe',
+                    'greeeN',
+                    'LImee',
+                    'oLIeve',
+                    'yeLLoWe',
+                    'Nevy',
+                    'bLue1',
+                    'teeL',
+                    'eque',
+                    'oreNge',
+                    'eLIcebLue',
+                    'eNtIqueWHIte',
+                    'equemerINe',
+                    'ezure',
+                    'beIge1',
+                    'bIsque2',
+                    'bLeNcHedeLmoNd',
+                    'bLuevIoLett',
+                    'broWNnnnnnn',
+                    'burLyWood12',
+                    'cedetbLue',
+                    'cHertreuse',
+                    'cHocoLete',
+                    'coreL',
+                    'cor1NFLoWerbLue',
+                    'c1rNsILk',
+                    'crImsoN2',
+                    'derkbLue',
+                    'derkcyeN',
+                    'derkgoLdeNrod',
+                    'derkgrey',
+                    'derkgreeN',
+                    'derkgrey',
+                    'derkkHekI',
+                    'derkmegeNte',
+                    'derkoLIvegreeN',
+                    'derkoreNge',
+                    'derkorcHId',
+                    'derkred',
+                    'derkseLmoN',
+                    'derkseegreeN',
+                    'derksLetebLue',
+                    'derksLetegrey',
+                    'derksLetegrey',
+                    'derkturquoIse',
+                    'derkvIoLet',
+                    'deepepeINk',
+                    'deepeskybLue',
+                    'dImg1rey',
+                    'dImgr3ey',
+                    'dodgerbsLue',
+                    'FIrebrIck1',
+                    'FLoreLWHIte2',
+                    'ForestgreeNn',
+                    'geINsboro',
+                    'gHostWHItee',
+                    'goerLd',
+                    'gorLdeNrod',
+                    'greeNyeLLoWo',
+                    'gr1eey',
+                    'HoNeydeW1',
+                    'HotpeINke',
+                    'INdIeNred',
+                    'INdIgo23',
+                    'Ivoryry',
+                    'kHekI',
+                    'LeveNder',
+                    'LeveNderbLusH',
+                    'LeWNgreeN',
+                    'LemoNcHIFFoNN',
+                    'LIgHtbLueeee',
+                    'L1IgHtcoreL',
+                    'LI1gHtcyeN',
+                    'LIegHtgoLdeNrodyeLLoW',
+                    'LIgHtgreyye',
+                    'LeIgHtgreeN',
+                    'LIrgHtgreyye',
+                    'LIdgHtpeINk',
+                    'LIsgHtseLmoN',
+                    'LIdgHtseegreeN',
+                    'LIgdHtskybLue',
+                    'LIfgHtsLetegrey',
+                    'LIggHtsLetegrey',
+                    'LIggHtsteeLbLue',
+                    'LIdgHtyeLLoW',
+                    'LImegreeNe',
+                    'LINeN1',
+                    'medIumequemerINe',
+                    'medIumbLue1',
+                    'medIumorcHId44',
+                    'medIumpeurpeLe',
+                    'medIumseegreeNK',
+                    'medIumsLetebLueL',
+                    'medIumsperINggreeNN',
+                    'medIumturquoIsee',
+                    'medIumvIoLetrede',
+                    'mIdNIgHtbLuee',
+                    'mINtcreem',
+                    'mIstyrosee',
+                    'moccesIN',
+                    'NevejoWHIte',
+                    'oLdLece',
+                    'oLIvedreb',
+                    'oreNgered',
+                    'orcHIdeeee',
+                    'peeLegoLdeNrod',
+                    'peeLegreeN',
+                    'peeLeturquoIse',
+                    'peeLevIoLetred',
+                    'peepeeyeWHIpe',
+                    'peeecHpeuFF',
+                    'peeru',
+                    'peINk',
+                    'peLum',
+                    'peoWderbLue',
+                    'rosybbroWN',
+                    'royeLbLuered',
+                    'seddLebroWN',
+                    'seLmoN',
+                    'seNdybroWN',
+                    'seegreeN',
+                    'seesHeLL',
+                    'sIeNNe',
+                    'skybLuee',
+                    'sLetebLue',
+                    'sLetegreey',
+                    'sLetegreey',
+                    'sNoWo',
+                    'sperINggreeN',
+                    'SsteeLbLue',
+                    'teNm',
+                    'tHIsdtLe',
+                    'tometoo',
+                    'terquoIse',
+                    'veIoLet',
+                    'WHeeet',
+                    'WHItesmokee',
+                    'yeLLoWgreeeN'
+               ];
+
+var invalid_3Notations=[
+                   //'#1234', // Valid from CSS Color Module Level 4
+                   '1ff',
+                   '#1234567890',
+                   '#GGJ',
+                   '#@^&'
+               ];
+
+var invalid_6Notations=[
+                    '#1234567',
+                    '1234567',
+                    '#1234567890',
+                    '#FFFFA',
+                    '#ZX34TU',
+                    '#@#$%^&',
+                    '#FFFFFF1'
+                ];
+
+var invalid_functionalNotations=[
+                    'rgba(255, 255, 255, 255)',
+                    'rgba(-1, -255, -255, 1)',
+                    'rggba(255, 255, 255, 1)',
+                    'rgba(255, 255, 255, 1))',
+                    'rgba(25545, 255, 2552, 0.5)',
+                    'rgba(255+1, 255, 255, 1)'
+                ];
+var invalid_functionalNotations_result_chrome=[
+                    'rgb(255, 255, 255)',
+                    'rgb(0, 0, 0)',
+                    'rgba(0, 0, 0, 0.5)',
+                    'rgba(0, 0, 0, 0.5)',
+                    'rgba(255, 255, 255, 0.5)',
+                    'rgba(0, 0, 0, 0.5)'
+                ];
+
+
+var color_use_property=[
+                        'color',
+                        'backgroundColor',
+                        'borderColor',
+                        'borderTopColor',
+                        'borderBottomColor',
+                        'borderLeftColor',
+                        'borderRightColor'
+                    ];
+
+var as = document.getElementsByClassName("a");
+var step=50;
+
+function testStart() {
+
+    // color name notation
+    test_named_color_notation();
+
+    // 3-character dash notation
+    test_3_character_dash_notation();
+
+    // 6-character dash notation
+    test_6_character_dash_notation();
+
+    // 9-character dash notation(?)
+    //test_9_character_dash_notation();
+
+    // functional notations
+    test_functional_notation();
+
+    //opacity
+    test_opacity();
+
+    testEnd();
+}
+
+function test_opacity(){
+    // valid test - Normal
+    for (var i = 0; i < as.length; i ++) {
+        for(var j=0; j < 1; j+=0.1){
+            property_test2(as[i],'opacity',j,j,'Opacity - normal - test');
+        }
+    }
+    // invalid test
+    for (var i = 0; i < as.length; i ++) {
+        as[i].style.opacity='';
+        for(var j=-1; j < 0; j+=0.1){
+            property_test2(as[i],'opacity',j,j,'Opacity - invalid - test');
+        }
+    }
+
+    for (var i = 0; i < as.length; i ++) {
+        as[i].style.opacity='';
+        for(var j=1; j < 20; j++){
+            property_test(as[i],'opacity',j,j,'Opacity - invalid - test');
+        }
+    }
+}
+
+function test_named_color_notation(){
+    // valid test - Normal
+    for (var i = 0; i < as.length; i ++) {
+        for(var j=0; j < valid_colorNames.length; j++){
+            for(var k=0; k < color_use_property.length; k++){
+                property_test(as[i],color_use_property[k],valid_colorNames[j],valid_colorNames[j],'NameColor - normal - '+color_use_property[k]+' test');
+            }
+        }
+    }
+
+    // valid test - Camel Case?
+    for (var i = 0; i < as.length; i ++) {
+        for(var j=0; j < valid_colorNames_camelCase.length; j++){
+            for(var k=0; k < color_use_property.length; k++){
+                property_test(as[i],color_use_property[k],valid_colorNames_camelCase[j],valid_colorNames[j],'NameColor - Camel Case - '+color_use_property[k]+' test');
+            }
+        }
+    }
+
+    // invalid test - Typo Case
+    for (var i = 0; i < as.length; i ++) {
+        var ref_value = 'red';
+        for(var j=0; j < invalid_colorNames.length; j++){
+            for(var k=0; k < color_use_property.length; k++){
+                // initialize
+                as[i].style[color_use_property[k]] = ref_value;
+                //do test
+                property_test(as[i],color_use_property[k],invalid_colorNames[j],ref_value,'NameColor - invalid Case - '+color_use_property[k]+' test');
+            }
+        }
+    }
+}
+
+function test_3_character_dash_notation(){
+    // valid test - Normal
+    for (var i = 0; i < as.length; i ++) {
+        for(var j=0;j<16;j++){
+            for(var k=0;k<16;k++){
+                for(var l=0;l<16;l++){
+                    for(var m=0; m < color_use_property.length; m++){
+                        var r=16*j+j;
+                        var g=16*k+k;
+                        var b=16*l+l;
+                        property_test(as[i],color_use_property[m],convert3CH_notation(j,k,l),'rgb('+r+', '+g+', '+b+')','3-character dash notation - Normal - '+color_use_property[m]+' test');
+                    }
+                }
+            }
+        }
+    }
+
+    // invalid test
+    for (var i = 0; i < as.length; i ++) {
+        var ref_value = '#000';
+        for(var j=0; j < invalid_3Notations.length; j++){
+            for(var k=0; k < color_use_property.length; k++){
+                // initialize
+                as[i].style[color_use_property[k]] = ref_value;
+                //do test
+                property_test(as[i],color_use_property[k],invalid_3Notations[j],'rgb(0, 0, 0)','3-character dash notation - invalid - '+color_use_property[k]+' test');
+            }
+        }
+    }
+}
+
+
+function test_6_character_dash_notation(){
+    // valid test - Normal
+    for (var i = 0; i < as.length; i ++) {
+        for(var j=0;j<256;j+=step){
+            for(var k=0;k<256;k+=step){
+                for(var l=0;l<256;l+=step){
+                    for(var m=0; m < color_use_property.length; m++){
+                        property_test(as[i],color_use_property[m],convert6CH_notation(j,k,l),'rgb('+j+', '+k+', '+l+')','6-character dash notation - Normal - '+color_use_property[m]+' test');
+                    }
+                }
+            }
+        }
+    }
+
+    // invalid test
+    for (var i = 0; i < as.length; i ++) {
+        var ref_value = '#000000';
+        for(var j=0; j < invalid_6Notations.length; j++){
+            for(var k=0; k < color_use_property.length; k++){
+                // initialize
+                as[i].style[color_use_property[k]] = ref_value;
+                //do test
+                property_test(as[i],color_use_property[k],invalid_6Notations[j],'rgb(0, 0, 0)','6-character dash notation - invalid - '+color_use_property[k]+' test');
+            }
+        }
+    }
+}
+
+function test_9_character_dash_notation(){
+    // valid test - Normal
+    for (var i = 0; i < as.length; i ++) {
+        for(var j=0;j<256;j+=step){
+            for(var k=0;k<256;k+=step){
+                for(var l=0;l<256;l+=step){
+                    for(var m=0;m<256;m+=step){
+                        for(var n=0; n < color_use_property.length; n++){
+                            property_test(as[i],color_use_property[n],convert9CH_notation(j,k,l,m),'rgba('+j+', '+k+', '+l+', '+m+')','9-character dash notation - Normal - '+color_use_property[n]+' test');
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // invalid test
+    // for (var i = 0; i < as.length; i ++) {
+    //     var ref_value = '#000000';
+    //     for(var j=0; j < invalid_6Notations.length; j++){
+    //         for(var k=0; k < color_use_property.length; k++){
+    //             // initialize
+    //             as[i].style[color_use_property[k]] = ref_value;
+    //             //do test
+    //             property_test(as[i],color_use_property[k],invalid_6Notations[j],'rgb(0, 0, 0)','6-character dash notation - invalid - '+color_use_property[k]+' test');
+    //         }
+    //     }
+    // }
+}
+
+function test_functional_notation(){
+    // valid test - Normal
+    for (var i = 0; i < as.length; i ++) {
+        for(var j=0;j<256;j+=step){
+            for(var k=0;k<256;k+=step){
+                for(var l=0;l<256;l+=step){
+                    for(var m=0;m<1;m+=0.5){
+                        for(var n=0; n < color_use_property.length; n++){
+                            property_test(as[i],color_use_property[n],convertFunc_notation(j,k,l,m),'rgba('+j+', '+k+', '+l+', '+m+')','functional notation - Normal - '+color_use_property[n]+' test');
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // invalid test
+    for (var i = 0; i < as.length; i ++) {
+        var ref_value = 'rgba(0,0,0,0.5)';
+        for(var j=0; j < invalid_functionalNotations.length; j++){
+            for(var k=0; k < color_use_property.length; k++){
+                //initialize
+                as[i].style[color_use_property[k]] = ref_value;
+                //do test
+                property_test(as[i],color_use_property[k],invalid_functionalNotations[j],invalid_functionalNotations_result_chrome[j],'functional notation - invalid - '+color_use_property[k]+' test');
+            }
+        }
+    }
+}
+
+
+function property_test(element,property,testValue,expectedValue,description){
+    element.style[property] = testValue;
+    if(element.style[property]!=expectedValue){
+        console.log("Test FAIL: DESC:"+description+" ,realValue: "+element.style[property]+" , expectedValue: "+expectedValue);
+    }
+}
+
+function property_test2(element,property,testValue,expectedValue,description){
+    element.style[property] = testValue;
+
+    var prop = expectedValue = parseFloat(element.style[property]).toPrecision(1);
+    expectedValue = parseFloat(expectedValue).toPrecision(1);
+
+    // escargot bug : toPrecision(N) should provide N-digit of precision
+    if(expectedValue == 0.10 || expectedValue == -0.10 )
+        return;
+
+    if(prop != expectedValue){
+        console.log("Test FAIL: DESC:"+description+" ,realValue: "+prop+" , expectedValue: "+expectedValue);
+    }
+}
+
+function convert9CH_notation(r,g,b,a){
+    var result='#';
+    if(r<16){
+        result+='0'+r.toString(16);
+    }else{
+        result+=r.toString(16);
+    }
+    if(g<16){
+        result+='0'+g.toString(16);
+    }else{
+        result+=g.toString(16);
+    }
+    if(b<16){
+        result+='0'+b.toString(16);
+    }else{
+        result+=b.toString(16);
+    }
+    if(a<16){
+        result+='0'+a.toString(16);
+    }else{
+        result+=a.toString(16);
+    }
+    return result;
+}
+
+function convert6CH_notation(r,g,b){
+    var result='#';
+    if(r<16){
+        result+='0'+r.toString(16);
+    }else{
+        result+=r.toString(16);
+    }
+    if(g<16){
+        result+='0'+g.toString(16);
+    }else{
+        result+=g.toString(16);
+    }
+    if(b<16){
+        result+='0'+b.toString(16);
+    }else{
+        result+=b.toString(16);
+    }
+    return result;
+}
+function convert3CH_notation(r,g,b){
+    var result='#';
+    result+=r.toString(16);
+    result+=g.toString(16);
+    result+=b.toString(16);
+    return result;
+}
+
+function convertFunc_notation(r,g,b,a){
+    var result='rgba( ';
+    result+=r+' ,';
+    result+=g+' ,';
+    result+=b+' ,';
+    result+=a+' )';
+    return result;
+}
+
+//testStart();
+</script>
+</html>

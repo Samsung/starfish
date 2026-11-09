@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="100">
+  <defs>
+    <linearGradient id="base">
+      <stop offset="0" stop-color="#ceeeab"/>
+      <stop offset="1" stop-color="#ceeeab" stop-opacity="0"/>
+    </linearGradient>
+    <!-- No stops of its own: stops must be resolved through xlink:href, like
+         the gradients used by openstreetmap.org's logo SVG. -->
+    <linearGradient id="inherited" xlink:href="#base" x1="0" y1="0" x2="1" y2="0"/>
+    <linearGradient id="broken" xlink:href="#does-not-exist"/>
+    <linearGradient id="cyclicA" xlink:href="#cyclicB"/>
+    <linearGradient id="cyclicB" xlink:href="#cyclicA"/>
+  </defs>
+  <rect x="0" y="0" width="50" height="100" fill="url(#inherited)"/>
+  <rect x="50" y="0" width="50" height="100" fill="url(#broken)"/>
+  <rect x="100" y="0" width="50" height="100" fill="url(#cyclicA)"/>
+  <rect x="150" y="0" width="50" height="100" fill="green"/>
+</svg>

@@ -321,7 +321,7 @@
 "}"
 #ifndef STARFISH_TIZEN
 // showModal() focuses the dialog itself when it has no focusable content.
-// The pixel tests internal-test/css/dialog/dialog_modal_01.html,
+// The pixel tests tests/pixel/css/dialog/dialog_modal_01.html,
 // dialog_modal_02.html and dialog_modal_03.html expect no outline around
 // the modal dialog. This rule keeps their expected images valid.
 // Other browsers such as Chrome draw a focus ring here.

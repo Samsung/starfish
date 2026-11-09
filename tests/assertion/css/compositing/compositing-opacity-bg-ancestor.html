@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  html, body { margin: 0; background-color: white; }
+  /*
+   * Like compositing-opacity-bg-self but the opacity:0.5 is on an ANCESTOR of
+   * the composited layer, not the layer itself. ComputeOverflow accumulates
+   * opacity over every ancestor up to the root, so an ancestor opacity also
+   * opens the clipping opacity layer. Regression guard that the fix checks the
+   * whole ancestor chain, not just the layer's own opacity().
+   */
+  .ancestor { opacity: 0.5; }
+  .layer {
+    width: 250px; height: 250px;
+    background-color: red;
+    transform: translateZ(0);
+  }
+  .content { width: 40px; height: 40px; background-color: blue; }
+</style>
+</head>
+<body>
+  <div class="ancestor">
+    <div class="layer"><div class="content"></div></div>
+  </div>
+</body>
+<script>
+  window.onload = function() {
+    setTimeout(function() {
+      screenShot("compositing-opacity-bg-ancestor-temp.png", function() {
+        // content area: blue at 0.5 over white
+        testAssert(checkPixelColor("compositing-opacity-bg-ancestor-temp.png",
+                                   20, 20, 127, 127, 255, 255, 6),
+                   "content pixel should be 50% blue over white");
+        // box interior beyond content: red at 0.5 over white (not clipped)
+        testAssert(checkPixelColor("compositing-opacity-bg-ancestor-temp.png",
+                                   125, 125, 255, 127, 127, 255, 6),
+                   "box interior should be 50% red over white (not clipped)");
+        // far box corner: still red at 0.5 over white
+        testAssert(checkPixelColor("compositing-opacity-bg-ancestor-temp.png",
+                                   230, 230, 255, 127, 127, 255, 6),
+                   "box corner should be 50% red over white (not clipped)");
+        testEnd();
+      }, 100);
+    }, 300);
+  };
+</script>
+</html>

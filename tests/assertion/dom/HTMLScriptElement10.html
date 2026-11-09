@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript">
+      var script = document.createElement("script");
+      testAssert(script.crossOrigin == null);
+
+      script.crossOrigin = "";
+      testAssert(script.crossOrigin == "anonymous");
+
+      script.crossOrigin = "use-credentials";
+      testAssert(script.crossOrigin == "use-credentials");
+
+      script.crossOrigin = "anonymous";
+      testAssert(script.crossOrigin == "anonymous");
+
+      script.crossOrigin = null;
+      testAssert(script.crossOrigin == null);
+
+      script.crossOrigin = "foo";
+      testAssert(script.crossOrigin == "anonymous");
+
+      script.crossOrigin = undefined;
+      testAssert(script.crossOrigin == null);
+
+      script.crossOrigin = "bar";
+      testAssert(script.crossOrigin == "anonymous");
+
+      script.removeAttribute("crossOrigin");
+      testAssert(script.crossOrigin == null);
+
+      testEnd();
+    </script>
+  </head>
+  <body>
+    HTMLScriptElement.crossOrigin
+  </body>
+</html>

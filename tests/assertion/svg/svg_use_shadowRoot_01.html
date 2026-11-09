@@ -1,0 +1,23 @@
+<html>
+<body>
+    <svg id="svgElement" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        preserveAspectRatio="xMidYMid meet" >
+        <defs>
+            <linearGradient id="test" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop style="stop-color: #cac7ff;stop-opacity: 1" offset="0%"></stop>
+                <stop style="stop-color: #92e3eb;stop-opacity: 1" offset="100%"></stop>
+            </linearGradient>
+            <rect id="myRect" x="0" y="0" width="180" height="180"  />
+        </defs>
+        <use xlink:href="#myRect" opacity="1" fill="url(#test)" >
+    </svg>
+</body>
+<script>
+    function testStart() {
+        svgElement.getBoundingClientRect();
+        // crash test.
+        testAssert(true);
+        testEnd();
+    }
+  </script>
+</html>

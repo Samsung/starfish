@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+</head>
+
+<body>
+  <script src="resources/postmessage-typedarray.js"></script>
+  <script>
+    function isArrayEqual(arr1, arr2) {
+      if (arr1.length !== arr2.length) {
+        return false
+      }
+
+      return arr1.every((value, index) => value === arr2[index])
+    }
+
+    window.addEventListener('message', (event) => {
+      var message = event.data;
+
+      testAssert(isArrayEqual(message.int8, originalMessage.int8));
+      testAssert(isArrayEqual(message.uint8, originalMessage.uint8));
+      testAssert(isArrayEqual(message.int16, originalMessage.int16));
+      testAssert(isArrayEqual(message.uint16, originalMessage.uint16));
+      testAssert(isArrayEqual(message.int32, originalMessage.int32));
+      testAssert(isArrayEqual(message.uint32, originalMessage.uint32));
+      testAssert(isArrayEqual(message.offset, originalMessage.offset));
+
+      testEnd();
+    });
+  </script>
+  <iframe src="resources/postmessage-typedarray_iframe.html"></iframe>
+</body>
+
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>A 304 freshens the HTTP cache's stored response without breaking it</title>
+<!-- RFC 9111 4.3.4: a 304 answering a revalidation updates the stored
+     response with the header fields it carries and keeps the others, so a
+     validator (Last-Modified, ETag) that the 304 does not repeat stays. 3.2:
+     a 304's Content-Length never replaces the stored one. The stored script
+     must therefore be revalidated, and served, again on every later load.
+
+     The document loads over file:// and uses the test runner's http_server
+     (tool/runner/test_runner.py: internal_test(), port 11011):
+     /revalidate/<key> serves a script the cache stores with "no-cache"
+     (Last-Modified, or an ETag with "?etag") and answers a conditional
+     request with a bare 304 that says "Content-Length: 0"; /hits/<key>
+     counts the full requests and /hits/<key>-304 the conditional ones. -->
+<script>
+// Starfish's test build supplies testEnd()/console.assert and reports the
+// verdict. Elsewhere, shim a testEnd() that tallies console.assert results;
+// start the server by hand first:
+//   python3 tool/runner/http_server.py -d <any dir> --bind localhost 11011
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0;
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (cond, msg) {
+    if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[http-cache-304-keeps-stored-response] ' + verdict);
+    document.title = verdict;
+  };
+}
+
+var SERVER = 'http://localhost:11011/';
+var RUN = Date.now() + '-' + Math.floor(Math.random() * 1e9);
+var LOADS = 4;
+var ran = 0;
+function revalidated() { ran++; }
+
+function loadScript(url) {
+  return new Promise(function (resolve) {
+    var s = document.createElement('script');
+    s.src = url;
+    s.onload = s.onerror = function () { s.remove(); resolve(); };
+    document.head.appendChild(s);
+  });
+}
+function hits(key) {
+  return fetch(SERVER + 'hits/' + key).then(function (r) {
+    return r.text();
+  }).then(Number);
+}
+
+// Loads the script LOADS times in a row and reports how often it ran and how
+// many full and conditional requests the server saw.
+function run(name, query) {
+  var key = RUN + '-' + name;
+  var before = ran;
+  var p = Promise.resolve();
+  for (var i = 0; i < LOADS; i++) {
+    p = p.then(function () {
+      return loadScript(SERVER + 'revalidate/' + key + query);
+    });
+  }
+  return p.then(function () {
+    return Promise.all([hits(key), hits(key + '-304')]);
+  }).then(function (counts) {
+    return { ran: ran - before, full: counts[0], conditional: counts[1] };
+  });
+}
+
+run('lm', '').then(function (lm) {
+  return run('etag', '?etag').then(function (etag) {
+    [['Last-Modified', lm], ['ETag', etag]].forEach(function (c) {
+      var r = c[1];
+      console.assert(r.ran === LOADS,
+                     c[0] + ': the script did not run on every load: ' + JSON.stringify(r));
+      console.assert(r.full === 1 && r.conditional === LOADS - 1,
+                     c[0] + ': expected 1 full and ' + (LOADS - 1) +
+                     ' conditional requests: ' + JSON.stringify(r));
+    });
+    testEnd();
+  });
+});
+</script>

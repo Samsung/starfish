@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+
+
+<div class="abc">
+</div>
+
+<style>
+
+div {
+background: red;
+width: 100px;
+}
+
+div:before {
+content: ' ';
+display: none;
+}
+
+#a:before {
+content: ' ';
+display: block;
+height: 100px
+}
+
+</style>
+
+<script>
+
+window.onload = function() {
+console.log("force layout")
+document.body.offsetLeft
+console.log("force layout after")
+
+var abc = document.querySelector(".abc")
+abc.id = "a"
+
+console.log(abc.offsetHeight == 100)
+testAssert(abc.offsetHeight == 100)
+testEnd()
+
+}
+
+
+</script>

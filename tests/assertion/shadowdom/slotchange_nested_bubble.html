@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>slotchange bubbles through the slot it is assigned to</title>
+</head>
+<body>
+
+<script>
+// Shim for running in a regular browser without the Starfish harness:
+// collect console.assert results and report a verdict from testEnd().
+if (typeof testEnd !== 'function') {
+    window.testEnd = function() {
+        var passed = true;
+        var a = window.__assertions || [];
+        for (var i = 0; i < a.length; i++) {
+            if (!a[i].ok) { passed = false; console.error('FAIL: ' + a[i].msg); }
+        }
+        console.log('[slotchange_nested_bubble] ' + (passed ? 'PASS' : 'FAIL') +
+            ' (' + a.length + ' assertions)');
+        document.title = passed ? 'PASS' : 'FAIL';
+    };
+    var origAssert = console.assert.bind(console);
+    console.assert = function(cond, msg) {
+        window.__assertions = window.__assertions || [];
+        window.__assertions.push({ ok: !!cond, msg: msg || String(cond) });
+        origAssert(cond, msg);
+    };
+}
+
+// slotchange bubbles. When a slot (outerSlot) is itself assigned to another slot
+// (innerSlot), a slotchange dispatched at outerSlot must traverse the flat tree
+// and reach innerSlot's listener (with target still outerSlot). Geometry mirrors
+// WPT shadow-dom/slotchange-event.html "nested slots's contents change".
+var outerHost = document.createElement('div');
+document.body.appendChild(outerHost);
+var outerShadow = outerHost.attachShadow({ mode: 'open' });
+outerShadow.appendChild(document.createElement('span'));
+
+var outerSlot = document.createElement('slot');
+var outerCount = 0;
+outerSlot.addEventListener('slotchange', function() { outerCount++; });
+
+var innerHost = document.createElement('div');
+innerHost.appendChild(outerSlot);          // outerSlot is innerHost's light child
+outerShadow.appendChild(innerHost);
+
+var innerShadow = innerHost.attachShadow({ mode: 'open' });
+innerShadow.appendChild(document.createElement('span'));
+var innerSlot = document.createElement('slot');
+var innerCount = 0, secondTargetIsOuter = false;
+innerSlot.addEventListener('slotchange', function(e) {
+    e.stopPropagation();
+    if (innerCount === 1) { secondTargetIsOuter = (e.target === outerSlot); }
+    innerCount++;
+});
+innerShadow.appendChild(innerSlot);        // innerSlot gets outerSlot assigned
+
+outerHost.appendChild(document.createElement('span')); // -> assigned to outerSlot
+
+setTimeout(function() {
+    console.assert(outerCount === 1,
+        'outer slot fires slotchange once when its assigned nodes change (got ' +
+        outerCount + ')');
+    console.assert(innerCount === 2,
+        'inner slot sees 2 slotchanges: its own + outerSlot bubbling (got ' +
+        innerCount + ')');
+    console.assert(secondTargetIsOuter,
+        'the bubbled slotchange at inner slot has target === outerSlot');
+    testEnd();
+}, 80);
+</script>
+</body>
+</html>

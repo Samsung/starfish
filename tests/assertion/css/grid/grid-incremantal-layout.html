@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<div style="width:600px">
+<div id="a">
+  <div id="b"><img id="ddd" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAnElEQVR42u3RAQ0AAAgDIE1u9FvDOahAVzLFGS1ECEKEIEQIQoQgRIgQIQgRghAhCBGCECEIQYgQhAhBiBCECEEIQoQgRAhChCBECEIQIgQhQhAiBCFCEIIQIQgRghAhCBGCEIQIQYgQhAhBiBCEIEQIQoQgRAhChCAEIUIQIgQhQhAiBCEIEYIQIQgRghAhCBEiRAhChCBECEK+W3uw+TnWoJc/AAAAAElFTkSuQmCC"></div>
+</div>
+</div>
+<style>
+
+img {
+display: block;
+}
+
+#a {
+  background: blue;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+#b {
+  background: red;
+  overflow:hidden;
+}
+
+</style>
+<script>
+ddd.onload = function() {
+console.log("onload")
+testAssert(b.offsetWidth == 200)
+testEnd()
+}
+
+console.log("force layout");
+console.log(document.body.offsetWidth)
+
+</script>

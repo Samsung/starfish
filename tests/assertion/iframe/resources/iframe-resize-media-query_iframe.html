@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body { margin: 0; }
+#box { display: block; width: 100%; height: 50px; background: green; }
+@media (min-width: 100px) {
+  #box { display: inline-block; width: 30px; height: 20px; }
+}
+</style>
+</head>
+<body>
+<div id="box"></div>
+<script>
+// The parent cannot read this document under file://, so it asks for a
+// snapshot after each resize and this frame answers with what it sees.
+window.addEventListener('message', function () {
+  var box = document.getElementById('box');
+  var style = getComputedStyle(box);
+  var rect = box.getBoundingClientRect();
+  parent.postMessage({
+    innerWidth: innerWidth,
+    matches: matchMedia('(min-width: 100px)').matches,
+    display: style.display,
+    height: style.height,
+    rectWidth: rect.width,
+    rectHeight: rect.height
+  }, '*');
+});
+parent.postMessage('ready', '*');
+</script>
+</body>
+</html>

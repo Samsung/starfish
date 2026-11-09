@@ -1,0 +1,55 @@
+<body>
+    <template id="custom-paragraph">
+        <style>
+            * {
+                line-height: 30px;
+                margin: 0px;
+                padding: 0px;
+            }
+            .back {
+                background-color: blue;
+                color: white;
+                float: left
+            }
+            .back:focus {
+                height: 200px;
+            }
+        </style>
+        <div class="back" id="asd" tabindex="-1">
+            <slot name="my-text">My default text1</slot>
+            <slot name="my-text">My default text1-2</slot>
+            <slot name="my-text-2">My default text2</slot>
+        </div>
+    </template>
+    <my-paragraph id="test"><div slot="my-text"> hahahah </div></my-paragraph>
+</body>
+<script>
+    customElements.define('my-paragraph',
+        class extends HTMLElement {
+            constructor() {
+                super();
+
+                const template = document.getElementById('custom-paragraph');
+                const templateContent = template.content;
+
+                let sd =  this.attachShadow({
+                    mode: 'open',
+                    delegatesFocus: true
+                });
+                sd.appendChild(
+                    templateContent.cloneNode(true)
+                );
+            }
+        }
+    );
+
+    // test empty slot
+    console.assert(test.shadowRoot.getElementById("asd").getBoundingClientRect().height == 60)
+    test.shadowRoot.getElementById("asd").focus();
+
+    // test style apply with state change
+    console.assert(test.shadowRoot.getElementById("asd").getBoundingClientRect().height == 200)
+
+    testEnd();
+</script>
+

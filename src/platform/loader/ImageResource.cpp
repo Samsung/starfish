@@ -109,7 +109,7 @@ protected:
             size_t h = (int)svgBox->height();
             if (!w || !h) {
                 // Should not dispatch 'error' event
-                // test/cairo/reftest/vendor/blink_original/svg/as-image/zero-size-svg-image-with-data-uri.html
+                // third_party/blink/third_party/blink/web_tests/svg/as-image/zero-size-svg-image-with-data-uri.html
                 m_resource->Resource::didLoadFinished();
                 return;
             }

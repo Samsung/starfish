@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<!--
+  A position:fixed iframe is anchored to the viewport: ancestor scroll
+  offsets do not move it, so they must not be subtracted when converting the
+  event position to the inner document's coordinates. With the document
+  scrolled, a click inside the fixed iframe must land on the inner element
+  under the finger, not on a point shifted by the scroll offset.
+-->
+<head>
+<style>
+  body {
+    margin: 0;
+    height: 3000px;
+  }
+
+  #testIframe {
+    position: fixed;
+    top: 100px;
+    left: 100px;
+    width: 300px;
+    height: 200px;
+    border: 0;
+  }
+</style>
+</head>
+<body>
+  <iframe id="testIframe"></iframe>
+</body>
+
+<script>
+  window.webSecurityDisable();
+
+  var boxClicked = false;
+
+  var iframeContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { margin: 0; }
+        #clickableBox {
+          position: absolute;
+          top: 50px;
+          left: 50px;
+          width: 100px;
+          height: 100px;
+          background-color: orange;
+        }
+      </style>
+    </head>
+    <body>
+      <div id="clickableBox"></div>
+    </body>
+    </html>
+  `;
+
+  var iframe = document.getElementById("testIframe");
+  iframe.src = "data:text/html;charset=utf-8," + encodeURIComponent(iframeContent);
+
+  function testStart() {
+    setTimeout(function() {
+      var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      var box = iframeDoc.getElementById("clickableBox");
+      testAssert(!!box);
+      box.addEventListener("click", function() {
+        boxClicked = true;
+      });
+
+      window.scrollTo(0, 500);
+
+      setTimeout(function() {
+        // Window coordinates: the iframe stays at (100, 100) regardless of
+        // the scroll. (180, 180) is (80, 80) inside the iframe, which is
+        // (30, 30) inside the box at (50, 50).
+        simulateClick(180, 180);
+
+        setTimeout(function() {
+          testAssert(boxClicked === true);
+          testEnd();
+        }, 100);
+      }, 100);
+    }, 500);
+  }
+</script>
+</html>

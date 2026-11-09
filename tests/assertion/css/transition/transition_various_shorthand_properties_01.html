@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <style>
+    body {
+      height: 800px;
+    }
+
+    div {
+      display: block;
+      width: 100px;
+      height: 100px;
+      background-color: black;
+    }
+
+    .background {
+      border: 10px solid black;
+      font-size: 10px;
+      transition: background 3s, border 3s, margin 3s, font 3s, padding 3s;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="target" class="background">
+    asd
+  </div>
+
+</body>
+<script>
+  const targetPropertyNames = [
+    'background-color',
+    'border-left-color',
+    'border-top-color',
+    'border-right-color',
+    'border-bottom-color',
+    'margin-left',
+    'margin-top',
+    'margin-right',
+    'margin-bottom',
+    'font-size',
+    'padding-left',
+    'padding-top',
+    'padding-right',
+    'padding-bottom'
+  ]
+
+  let startedPropertyNames = [];
+  let endedPropertyNames = [];
+
+  window.onload = function () {
+    document.getElementById('target').addEventListener('transitionstart', function (event) {
+      startedPropertyNames.push(event.propertyName)
+
+    });
+
+    document.getElementById('target').addEventListener('transitionend', function (event) {
+      endedPropertyNames.push(event.propertyName)
+    });
+
+  }
+  setTimeout(() => {
+    target.style.backgroundColor = 'yellow';
+
+    target.style.borderLeftColor = 'red'
+    target.style.borderRightColor = 'red'
+    target.style.borderTopColor = 'red'
+    target.style.borderBottomColor = 'red'
+
+    target.style.marginLeft = '100px';
+    target.style.marginTop = '100px';
+    target.style.marginBottom = '100px';
+    target.style.marginRight = '100px';
+
+    target.style.paddingLeft = '100px';
+    target.style.paddingTop = '100px';
+    target.style.paddingBottom = '100px';
+    target.style.paddingRight = '100px';
+
+    target.style.fontSize = '100px';
+  }, 1000);
+
+  setTimeout(() => {
+    testAssert(targetPropertyNames.length == startedPropertyNames.length);
+    testAssert(targetPropertyNames.length == endedPropertyNames.length);
+
+    targetPropertyNames.forEach(propertyName => {
+      testAssert(startedPropertyNames.includes(propertyName));
+      testAssert(endedPropertyNames.includes(propertyName));
+    });
+    testEnd();
+  }, 5000);
+</script>
+
+</html>

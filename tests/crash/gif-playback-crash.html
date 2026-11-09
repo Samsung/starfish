@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+
+<body>
+    <p>This test should not crash.</p>
+    <img id="target" src="animated.gif">
+</body>
+<script>
+    var count = 10;
+    function loadGif() {
+        count--;
+        document.getElementById("target").src = "";
+        document.getElementById("target").src = "animated.gif";
+        if (count == 0) {
+            testEnd();
+        } else {
+            console.log("PASS");
+        }
+    }
+
+    function testStart() {
+        setInterval(loadGif, 3000);
+    }
+</script>
+
+</html>

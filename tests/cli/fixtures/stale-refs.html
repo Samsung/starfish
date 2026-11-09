@@ -1,0 +1,17 @@
+<!doctype html>
+<title>Stale ref test</title>
+<button id="remove">Remove</button>
+<button id="victim">Victim</button>
+<button id="grow">Grow</button>
+<div id="log"></div>
+<script>
+document.getElementById('remove').addEventListener('click', function() {
+    document.getElementById('victim').remove();
+});
+document.getElementById('grow').addEventListener('click', function() {
+    var line = document.createElement('p');
+    line.textContent = 'row';
+    document.getElementById('log').appendChild(line);
+    this.parentNode.insertBefore(document.createElement('hr'), this);
+});
+</script>

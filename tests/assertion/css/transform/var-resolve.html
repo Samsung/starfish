@@ -1,0 +1,45 @@
+<style>
+:root {
+  --main-bg-color: blue;
+  line-height: 50px;
+}
+
+p {
+  --not-applied: red;
+}
+
+
+div {
+  background-color: var(--not-exist, var(--not-applied, var(--main-bg-color)));
+}
+
+#tc2 {
+  transform: translate3d(0, var(--p-wx-scroller-current-offset), 0);
+  --p-wx-scroller-block-offset: var(--p-wx-scroller-block-size, var(--p-wx-scroller-scroll-size))* var(--p-wx-scroller-position-block-first-half);
+  --p-wx-scroller-current-offset: calc(var(--p-wx-scroller-block-offset) - var(--p-wx-scroller-scroll-offset));
+  --p-wx-scroller-snap-size: 55px;
+  --p-wx-scroller-scroll-size: 1375px;
+  --p-wx-scroller-block-size: 1375px;
+  --p-wx-scroller-position-block-first-half: -1;
+  --p-wx-scroller-position-block-second-half: -1;
+  --p-wx-scroller-scroll-offset: -495px;
+}
+
+
+</style>
+<div id="tc1">
+asdf
+</div>
+<section style="transform: translateY(1000px);">
+  <section id="tc2">
+  asdf
+  asdf
+  </section>
+</section>
+
+<script>
+  console.assert(window.getComputedStyle(document.getElementById("tc1")).backgroundColor == "rgb(0, 0, 255)");
+  console.assert(document.getElementById("tc2").getBoundingClientRect().y == 178)
+  testEnd();
+
+</script>

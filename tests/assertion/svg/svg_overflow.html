@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html><head>
+<style>
+* { margin: 0; padding: 0; }
+svg { overflow: hidden; margin: 100px; }
+</style>
+</head>
+<body>
+    <div id="viewport" >
+        <svg viewBox="0 0 300 100" xmlns="http://www.w3.org/2000/svg" width="300" height="300">
+            <rect id="test-rect" x="50" y="50" width="10" height="10" fill="red"></rect>
+        </svg>
+    </div>
+
+    <script>
+    var rect = document.getElementById("test-rect");
+    
+    var img = "svg_overflow_simple_01.png";
+    screenShot(img, function () {
+        rect.setAttribute("x", "100")        
+
+        screenShot(img, function () {
+            testAssert(checkPixelColor(img, 150, 250, 255, 255, 255, 255));
+            testAssert(checkPixelColor(img, 200, 250, 255, 0, 0, 255));
+            testEnd() 
+        });
+    });
+    </script>
+
+
+</body></html>
+

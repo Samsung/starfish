@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>adoptedStyleSheets: :host rule participates in the host cascade</title>
+</head>
+
+<body>
+  <!-- A `static styles = css`:host{...}`` in Lit is delivered through a
+     Constructable StyleSheet assigned to ShadowRoot.adoptedStyleSheets. Per CSSOM,
+     adopted style sheets are part of the tree's style sheet list, so a `:host`
+     rule in them must reach the shadow host's cascade just like a `:host` rule in
+     a `<style>` placed inside the shadow tree. -->
+  <div id="divHost"></div>
+  <my-host id="ceHost"></my-host>
+  <script>
+
+    // Starfish's test build provides testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (e.g. a regular browser like Chrome),
+    // shim a custom testEnd() that tallies console.assert results and reports
+    // the verdict to the console and the document title, so the same file runs
+    // and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) {
+          __pass++;
+        } else {
+          __fail++;
+          __nativeAssert(false, msg);
+        }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[adopted_host_display] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // (1) plain element host
+    var divHost = document.getElementById('divHost');
+    var sr1 = divHost.attachShadow({ mode: 'open' });
+    var s1 = new CSSStyleSheet();
+    s1.replaceSync(':host { display: flex; padding: 7px; }');
+    sr1.adoptedStyleSheets = [s1];
+
+    // (2) custom element host (the actual A2UI/Lit path: upgrade then adopt)
+    class MyHost extends HTMLElement {
+      constructor() {
+        super();
+        var sr = this.attachShadow({ mode: 'open' });
+        var s = new CSSStyleSheet();
+        s.replaceSync(':host { display: flex; padding: 7px; }');
+        sr.adoptedStyleSheets = [s];
+      }
+    }
+    customElements.define('my-host', MyHost);
+
+    var c1 = getComputedStyle(divHost);
+    console.assert(c1.display === 'flex',
+      ':host{display:flex} from adoptedStyleSheets applies to a plain host (got ' + c1.display + ')');
+    console.assert(c1.paddingTop === '7px',
+      ':host{padding} from adoptedStyleSheets applies to a plain host (got ' + c1.paddingTop + ')');
+
+    var c2 = getComputedStyle(document.getElementById('ceHost'));
+    console.assert(c2.display === 'flex',
+      ':host{display:flex} from adoptedStyleSheets applies to a custom-element host (got ' + c2.display + ')');
+    console.assert(c2.paddingTop === '7px',
+      ':host{padding} from adoptedStyleSheets applies to a custom-element host (got ' + c2.paddingTop + ')');
+
+    testEnd();
+
+  </script>
+</body>
+
+</html>

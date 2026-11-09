@@ -12,8 +12,6 @@ They cover end-to-end workflows, concurrent clients, and failure cleanup.
 - Linux
 - Python 3
 - Starfish built with `CLI=1`. This also enables CDP.
-- The `test` submodule checked out, because the cases and page fixtures live
-  under `test/cli/`.
 
 For example:
 
@@ -66,18 +64,18 @@ Every command accepts these options, before or after the command word.
 
 ## Add a test
 
-Add a `test_*.py` file under `test/cli/`. Subclass `CLITestCase` from
+Add a `test_*.py` file under `tests/cli/`. Subclass `CLITestCase` from
 `driver.support` so the test gets an isolated `HOME`, a local HTTP server, and
 process cleanup.
 
 Then add the test ID, such as
 `test_commands.CommandIntegrationTest.test_click_changes_page_state`, to
 `tool/cli_test/testlist.json`. Add it in the same change that makes the test
-pass. The `test` submodule can hold tests for features that are not merged
+pass. `tests/cli/` can hold tests for features that are not merged
 yet. A test that is not in the list does not run in CI. A listed ID that no
 longer exists stops the run.
 
-Put pages and expected output under `test/cli/fixtures/`. Use
+Put pages and expected output under `tests/cli/fixtures/`. Use
 `self.resource_url(<name>)` when a test needs to load a page through HTTP.
 
 ## More

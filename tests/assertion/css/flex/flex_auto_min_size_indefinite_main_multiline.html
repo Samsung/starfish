@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">
+  <style>
+    /* CSS Flexbox 4.5 automatic minimum size, multi-line case.
+
+       A column flex container with an indefinite main size (auto height) and
+       items with a definite zero flex-basis (flex: 1 1 0). Each item is a
+       stretch-aligned nested flex container holding text that WRAPS to more
+       than one line at the stretched cross size.
+
+       The content-based automatic minimum must be the item's full content
+       height measured at its definite (stretched) cross size, so a wrapped
+       item is sized to all of its lines -- exactly as the same content laid
+       out in normal block flow (the reference). Flooring only by the first
+       line height collapses a wrapped item to a single line, so its later
+       lines overflow and overlap the next item.
+
+       Oracle: each flex item (#r*) must lay out at the same height as the
+       equivalent block in normal flow (#f*). */
+    body { margin: 16px; font-family: sans-serif; font-size: 16px; }
+
+    .prompt {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: 300px;
+        /* no height -> indefinite main size (the trigger) */
+    }
+    .btn-wrap {
+        flex: 1 1 0;            /* flex-basis: 0 */
+        align-self: stretch;     /* definite cross size = container width */
+        display: flex;           /* the item is itself a flex container */
+        flex-direction: row;
+        border: 1px solid #4488ff;
+    }
+    .btn { flex: 1 1 0; padding: 10px 0; }
+
+    /* Reference: the same labels in normal block flow at the same width.
+       border-box so the reference content (text-layout) width matches the
+       stretched flex item's content width (300px - 2px border = 298px),
+       making the block-flow oracle an exact equivalent. */
+    .ref { width: 300px; }
+    .ref > div { box-sizing: border-box; width: 300px; border: 1px solid #4488ff; padding: 10px 0; }
+  </style>
+ </head>
+ <body>
+   <div class="prompt">
+     <div class="btn-wrap" id="r0"><div class="btn">Show the long label only while the panel is open</div></div>
+     <div class="btn-wrap" id="r1"><div class="btn">Show once</div></div>
+   </div>
+
+   <div class="ref">
+     <div id="f0">Show the long label only while the panel is open</div>
+     <div id="f1">Show once</div>
+   </div>
+<script>
+   function rect(id) { return document.getElementById(id).getBoundingClientRect(); }
+   function h(id) { return rect(id).height; }
+
+   var r0 = rect("r0"), r1 = rect("r1");
+
+   // The first label must actually wrap (otherwise the test is vacuous and
+   // would pass even with a first-line-only floor).
+   testAssert(h("r0") > h("r1"));
+
+   // Oracle: each flex item is sized exactly like the same content in normal
+   // block flow. (Tolerate <=1px sub-pixel rounding.)
+   testAssert(Math.abs(h("r0") - h("f0")) <= 1);
+   testAssert(Math.abs(h("r1") - h("f1")) <= 1);
+
+   // Siblings must not overlap: each starts at or below the previous bottom.
+   testAssert(r1.top >= r0.bottom);
+
+   testEnd();
+</script>
+</body>
+</html>

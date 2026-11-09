@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>template deep clone test</title>
+</head>
+<body>
+<script>
+// Shim for running in a regular browser without the Starfish harness
+if (typeof testEnd !== 'function') {
+    window.testEnd = function() {
+        var passed = true;
+        var assertions = window.__assertions || [];
+        for (var i = 0; i < assertions.length; i++) {
+            if (!assertions[i].ok) {
+                passed = false;
+                console.error('FAIL: ' + assertions[i].msg);
+            }
+        }
+        if (passed) {
+            console.log('PASS: template-deep-clone');
+        }
+    };
+    var origAssert = console.assert.bind(console);
+    console.assert = function(cond, msg) {
+        window.__assertions = window.__assertions || [];
+        window.__assertions.push({ ok: !!cond, msg: msg || String(cond) });
+        origAssert(cond, msg);
+    };
+}
+
+(function() {
+    // Create a template and append a span child to its content
+    var tmpl = document.createElement('template');
+    var span = document.createElement('span');
+    span.textContent = 'hello';
+    tmpl.content.appendChild(span);
+
+    console.assert(tmpl.content.childNodes.length === 1,
+        'original template.content must have 1 child');
+
+    // Deep-clone the template node
+    var clone = tmpl.cloneNode(true);
+
+    console.assert(clone.content.childNodes.length === 1,
+        'cloned template.content.childNodes.length must be 1, got ' +
+        clone.content.childNodes.length);
+
+    console.assert(clone.content.firstChild.tagName === 'SPAN',
+        'cloned template.content.firstChild must be SPAN, got ' +
+        (clone.content.firstChild ? clone.content.firstChild.tagName : 'null'));
+
+    // Shallow clone must NOT copy the content, per the HTML cloning steps
+    // for template (content is cloned only when the deep flag is set).
+    var shallow = tmpl.cloneNode(false);
+
+    console.assert(shallow.content.childNodes.length === 0,
+        'shallow clone template.content must be empty, got ' +
+        shallow.content.childNodes.length);
+
+    testEnd();
+}());
+</script>
+</body>
+</html>

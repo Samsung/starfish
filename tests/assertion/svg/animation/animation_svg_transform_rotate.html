@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>animation_svg_transform_rotate</title>
+    <style>
+        @keyframes rotate-animation {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(180deg);
+            }
+        }
+
+        .rotation {
+            animation: rotate-animation 1s linear;
+            transform-origin: 60px 70px;
+        }
+    </style>
+</head>
+
+<body>
+    <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <rect id="test1" x="60" y="60" width="40" height="40" fill="red" />
+    </svg>
+
+</body>
+<script>
+    if (window['testAssert'] === undefined) {
+        testAssert = console.log
+        testEnd = console.log
+    }
+    let startTime, endTime;
+    let frames = [];
+    let state = "none"
+    const reasonableExpectedFrameCount = 10; // 1초 동안 10프레임 이상이어야 함
+    const epsilon = 100;
+
+    function getScaleAndRotate(element) {
+        let style = window.getComputedStyle(element);
+        if (style.transform == 'none') {
+            return { scaleX: 1, scaleY: 1, rotationAngle: 0 }; // default values when no transformation applied
+        }
+
+        let matrix = style.transform.match(/matrix\(([^)]+)\)/)[1].split(',').map(Number);
+        let scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        let scaleY = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+
+        let rotationAngle = Math.atan2(matrix[1], matrix[0]) * (180 / Math.PI); // Convert to degrees
+        if (rotationAngle < 0) {
+            rotationAngle += 360;
+        }
+        rotationAngle = rotationAngle % 360;
+        console.log(`scaleX: ${scaleX}, scaleY: ${scaleY}, rotationAngle: ${rotationAngle}`);
+        return { scaleX, scaleY, rotationAngle };
+
+    }
+
+    function captureFrame() {
+        const elapsedTime = performance.now() - startTime;
+        const progress = elapsedTime / 1000;
+        const { scaleX, scaleY, rotationAngle } = getScaleAndRotate(test1);
+
+        frames.push({
+            rotationAngle,
+        });
+
+        if (progress < 1 || state == "start") {
+            requestAnimationFrame(captureFrame);
+        }
+    }
+
+    test1.classList.add("rotation");
+
+    test1.addEventListener('animationstart', (e) => {
+        startTime = performance.now();
+        state = "start";
+        requestAnimationFrame(captureFrame);
+    });
+
+    test1.addEventListener('animationend', function (event) {
+        state = "stop";
+        endTime = performance.now();
+
+        totalElapsedTime = endTime - startTime;
+        let diff = 1000 - totalElapsedTime;
+
+        if (!(Math.abs(diff) < epsilon)) {
+            // 허용 오차 범위 100ms 보다 event 간격이 크면 테스트 실패
+            console.log("The total time of the transition is not close to 1 second.");
+            testAssert(false);
+        }
+
+        if (frames.length <= reasonableExpectedFrameCount) {
+            // 1초 동안 20프레임 이상이어야 함
+            console.log("The number of captured frames is less than expected. Expected at least " + reasonableExpectedFrameCount + " frames, but got " + frames.length + ".");
+            testAssert(false);
+        }
+        let oldRotationAngle = frames[0].rotationAngle;
+        for (let i = 1; i < frames.length - 1; i++) {
+            // 각 프레임의 회전각도가 이전 프레임보다 커야 함
+            let rotationAngle = frames[i].rotationAngle;
+            if (!(oldRotationAngle < rotationAngle) && !(oldRotationAngle && !rotationAngle)) {
+                console.log("frame index: ", i);
+                console.log("oldRotationAngle: ", oldRotationAngle, "rotationAngle: ", rotationAngle);
+                testAssert(false);
+            }
+            oldRotationAngle = rotationAngle;
+            testEnd();
+        }
+    });
+</script>
+
+</html>

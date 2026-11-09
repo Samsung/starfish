@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <style>
+    /* Column flex container with an indefinite main size (auto height).
+       Each item has a definite zero flex-basis (flex: 1 1 0px) and
+       min-height:auto. Without the automatic minimum size (CSS Flexbox 4.5)
+       there is no positive free space to grow into, so every item collapses
+       to a main size of 0 and the items overlap at the same vertical
+       position. The floor by the content-based minimum keeps them stacked. */
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100px;
+        line-height: 20px;
+        font-size: 16px;
+        background: green;
+    }
+    .item {
+        flex: 1 1 0px;
+        background: blue;
+    }
+  </style>
+ </head>
+ <body>
+   <div class="container">
+     <div class="item" id="a">AAA</div>
+     <div class="item" id="b">BBB</div>
+     <div class="item" id="c">CCC</div>
+   </div>
+<script>
+   var ra = a.getBoundingClientRect();
+   var rb = b.getBoundingClientRect();
+   var rc = c.getBoundingClientRect();
+
+   // Each item floored by its content-based minimum (one line == 20px).
+   testAssert(ra.height >= 20);
+   testAssert(rb.height >= 20);
+   testAssert(rc.height >= 20);
+
+   // Siblings must not overlap: each starts at or below the previous bottom.
+   testAssert(rb.top >= ra.bottom);
+   testAssert(rc.top >= rb.bottom);
+
+   testEnd();
+</script>
+</body>
+</html>

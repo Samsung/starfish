@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <svg xmlns="http://www.w3.org/2000/svg" width="300px" height="100px">
+        <title>SVG SMIL Animate with Path</title>
+        <circle cx="0" cy="50" r="50" fill="blue" stroke="black" stroke-width="1">
+            <animate id='target' attributeName="cx" from="50" to="300" dur="1s" repeatCount="1" />
+        </circle>
+    </svg>
+
+
+</body>
+
+<script>
+    if (window['testAssert'] === undefined) {
+        testAssert = console.log
+        testEnd = console.log
+    }
+
+    function createResult(event) {
+        return {
+            event: null,
+            callCount: 0,
+        };
+    }
+
+    let endEventResult = createResult();
+    let onendResult = createResult();
+
+    let createEventHandler = (eventHandleResult) => {
+        let result = eventHandleResult;
+        return function (e) {
+            result.event = e;
+            result.callCount++;
+        }
+    };
+
+    target.addEventListener('endEvent', createEventHandler(endEventResult));
+
+    let onend = createEventHandler(onendResult);
+    target.onend = onend;
+
+    setTimeout(() => {
+        testAssert(endEventResult.event != null);
+        testAssert(endEventResult.callCount == 1);
+
+        testAssert(onendResult.event != null);
+        testAssert(onendResult.callCount == 1);
+
+        testAssert(onendResult.event == endEventResult.event);
+
+        testAssert(target.onend == onend);
+        testEnd();
+    }, 1500);
+
+</script>
+
+</html>

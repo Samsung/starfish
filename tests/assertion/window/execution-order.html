@@ -1,0 +1,34 @@
+<!doctype html>
+<script>
+
+var order=0
+
+if (typeof testAssert == "undefined") {
+  testAssert = console.log.bind(console)
+}
+
+setTimeout(function() {
+  testAssert(2==order++)
+  console.log("timeout")
+}, 0)
+
+
+new Promise(function(resolve) {
+  testAssert(0==order++)
+  console.log("resolve pre")
+  resolve();
+}).then(function() {
+  testAssert(1==order++)
+  console.log("promise then")
+});
+
+setTimeout(function() {
+  testAssert(3==order++)
+  console.log("timeout 2")
+
+  wptTestEnd();
+}, 0)
+
+
+
+</script>

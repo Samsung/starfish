@@ -1,0 +1,8 @@
+Tests that Accessibility.loadComplete reports the new root
+role: RootWebArea
+name: Page title
+ignored: false
+has a frameId: true
+has no parent: true
+has children: true
+getChildAXNodes on the reported root works: true

@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>HTMLMediaElement.error stays valid across garbage collection</title>
+<link rel="help" href="https://html.spec.whatwg.org/multipage/media.html#dom-media-error">
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[media-error-survives-gc] " + document.title);
+  };
+}
+</script>
+<video id="v" src="data:video/mp4,not-a-video"></video>
+<script>
+var v = document.getElementById("v");
+function churn() { var a = []; for (var i = 0; i < 2e6; i++) a.push({ i: i }); return a.length; }
+v.addEventListener("error", function () {
+  churn(); churn();
+  setTimeout(function () {
+    churn(); churn();
+    console.assert(v.error instanceof MediaError && v.error.code >= 1 && v.error.code <= 4,
+                   "error is still a MediaError, got: " + v.error);
+    console.assert(v.error === v.error, "error returns the same object");
+    testEnd();
+  }, 100);
+});
+</script>

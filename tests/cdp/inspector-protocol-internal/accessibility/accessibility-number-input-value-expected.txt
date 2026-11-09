@@ -1,0 +1,3 @@
+Tests that a number input reports a number-typed AX value
+number input: spinbutton {"type":"number","value":5}
+text input: textbox {"type":"string","value":"abc"}

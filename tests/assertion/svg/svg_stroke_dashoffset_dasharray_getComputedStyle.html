@@ -1,0 +1,28 @@
+<html lang="en">
+
+<head></head>
+
+<body>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+    }
+  </style>
+
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="800" height="600">
+    <line id="test" x1="1" y1="20" x2="50" y2="20" stroke="black" stroke-width="2" stroke-dasharray="10 5" />
+  </svg>
+
+  <script>
+    window.onload = () => {
+      testAssert(getComputedStyle(test).strokeDasharray != undefined);
+      testAssert(getComputedStyle(test).strokeDashoffset != undefined);
+      testEnd();
+    }
+  </script>
+</body>
+
+</html>

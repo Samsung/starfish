@@ -61,10 +61,6 @@
 	ignore = untracked
 	branch = modules/third_party/earcut.hpp
 	shallow = true
-[submodule "test"]
-	path = test
-	url = git@github.sec.samsung.net:lws-test/web_tc_new.git
-	ignore = dirty
 [submodule "third_party/nanomsg"]
 	path = third_party/nanomsg
 	url = https://github.com/nanomsg/nanomsg.git
@@ -130,4 +126,28 @@
 	url = https://github.com/Samsung/starfish-submodules.git
 	branch = modules/third_party/windows/ffmpeg
 	ignore = untracked
+	shallow = true
+[submodule "third_party/webkit"]
+	path = third_party/webkit
+	url = https://github.com/WebKit/WebKit.git
+	ignore = dirty
+	shallow = true
+	update = none
+[submodule "third_party/blink"]
+	path = third_party/blink
+	url = https://github.com/chromium/chromium.git
+	ignore = dirty
+	shallow = true
+	update = none
+[submodule "third_party/gecko"]
+	path = third_party/gecko
+	url = https://github.com/mozilla-firefox/firefox.git
+	ignore = dirty
+	shallow = true
+	update = none
+[submodule "tests/pixel"]
+	path = tests/pixel
+	url = https://github.com/Samsung/starfish-submodules.git
+	ignore = untracked
+	branch = modules/tests/pixel
 	shallow = true

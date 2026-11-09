@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>ObservableArray: element type rejection</title></head>
+<body>
+<script>
+// Only CSSStyleSheet values may enter the array; other values throw TypeError
+// and leave the backing list unchanged.
+var s1 = new CSSStyleSheet();
+document.adoptedStyleSheets = [s1];
+
+function throwsTypeError(fn) {
+    try {
+        fn();
+    } catch (e) {
+        return e instanceof TypeError;
+    }
+    return false;
+}
+
+console.assert(throwsTypeError(function () {
+    document.adoptedStyleSheets.push({});
+}), "pushing a plain object throws TypeError");
+console.assert(document.adoptedStyleSheets.length === 1, "backing unchanged after rejected push");
+
+console.assert(throwsTypeError(function () {
+    document.adoptedStyleSheets[0] = 123;
+}), "index-assigning a number throws TypeError");
+console.assert(document.adoptedStyleSheets[0] === s1, "backing unchanged after rejected assign");
+
+console.assert(throwsTypeError(function () {
+    document.adoptedStyleSheets = [s1, "not a sheet"];
+}), "whole assignment with a bad element throws TypeError");
+console.assert(document.adoptedStyleSheets.length === 1 &&
+               document.adoptedStyleSheets[0] === s1,
+               "backing unchanged after rejected whole assignment");
+
+testEnd();
+</script>
+</body>
+</html>

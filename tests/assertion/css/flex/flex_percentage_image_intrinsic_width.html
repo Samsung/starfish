@@ -1,0 +1,48 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Flex percentage image intrinsic width</title>
+<style>
+  #container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 400px;
+  }
+
+  #item img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+</style>
+<div id="container"><div id="item"><img id="image"></div></div>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0;
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) {
+      __pass++;
+    } else {
+      __fail++;
+      __nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[flex_percentage_image_intrinsic_width] ' + verdict);
+    document.title = verdict;
+  };
+}
+
+var image = document.getElementById('image');
+image.onload = function () {
+  var itemWidth = document.getElementById('item').getBoundingClientRect().width;
+  var imageWidth = image.getBoundingClientRect().width;
+  console.assert(itemWidth === 120, 'flex item width: ' + itemWidth);
+  console.assert(imageWidth === 120, 'image width: ' + imageWidth);
+  testEnd();
+};
+image.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='80'%3E%3C/svg%3E";
+</script>

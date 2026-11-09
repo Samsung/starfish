@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>import map: one bare specifier imported by two module scripts</title>
+<script type="importmap">
+{ "imports": { "shared": "./importmap_shared.js" } }
+</script>
+<script type="module" src="./importmap_shared_a.js"></script>
+<script type="module" src="./importmap_shared_b.js"></script>
+</head>
+<body>
+<script>
+  // Starfish's test build supplies testEnd()/console.assert and auto-runs the
+  // test. When that harness is absent (other browser), shim a custom testEnd()
+  // that tallies console.assert results and reports the verdict, so the same
+  // file runs and reports anywhere.
+  if (typeof testEnd !== 'function') {
+    var __pass = 0, __fail = 0;
+    var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+    console.assert = function (cond, msg) {
+      if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+    };
+    window.testEnd = function () {
+      var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+        ' (' + __pass + ' passed, ' + __fail + ' failed)';
+      console.log('[importmap_shared_specifier] ' + verdict);
+      document.title = verdict;
+    };
+  }
+
+  // Module scripts are deferred, so both graphs have run by the load event.
+  // https://html.spec.whatwg.org/#fetch-a-single-module-script: the module map
+  // is keyed by the resolved URL, so "shared" resolved through the import map
+  // from two importers must be fetched and evaluated exactly once.
+  window.addEventListener('load', function () {
+    console.assert(window.sharedEvalCount === 1,
+      'shared module evaluated ' + window.sharedEvalCount + ' time(s), expected 1');
+    console.assert(window.a === 42, 'a imported ' + window.a + ', expected 42');
+    console.assert(window.b === 42, 'b imported ' + window.b + ', expected 42');
+    testEnd();
+  });
+</script>
+</body>
+</html>

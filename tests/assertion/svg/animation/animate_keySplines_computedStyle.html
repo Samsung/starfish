@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>animate_keySplines_computedStyle</title>
+</head>
+
+<body>
+    <svg width="150" height="300" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <circle id="target" cx="60" cy="10" r="10">
+            <animate id="animate1" attributeName="cy" dur="1s" calcMode="spline" values="10; 60; 110; 60; 10"
+                keySplines="0.5 0 0.5 1; 0.5 0 0.5 1; 0.5 0 0.5 1;" />
+        </circle>
+    </svg>
+</body>
+<script>
+    let startTime, endTime;
+    let frames = [];
+    let state = "none";
+    const reasonableExpectedFrameCount = 20; // 위와 같은 아무런 변화 없는 애니메이션에서 크롬의 경우 30~40번 정도 캡쳐 됨.
+
+    function percentSTRToFloat(str) {
+        return parseFloat(str.replace("px", "")) / 100;
+    }
+
+    function captureFrame() {
+        const elapsedTime = performance.now() - startTime;
+        const progress = elapsedTime / 1000;
+        const cy = getComputedStyle(target).cy;
+
+        frames.push({
+            cy
+        });
+        if (progress < 1 || state == "start") {
+            requestAnimationFrame(captureFrame);
+        }
+    }
+
+
+    let animate1BeginCount = 0;
+    animate1.addEventListener('beginEvent', () => {
+        console.log("Start")
+        requestAnimationFrame(captureFrame);
+        startTime = performance.now();
+        state = "start";
+    });
+
+    animate1.addEventListener('endEvent', () => {
+        state = "stop";
+        endTime = performance.now();
+
+        totalElapsedTime = endTime - startTime;
+        console.log(`frames.length: ${frames.length}`)
+
+        if (frames.length <= reasonableExpectedFrameCount) {
+            testAssert(false);
+        }
+        let oldCy = percentSTRToFloat(frames[0].cy);
+        for (let i = 1; i < frames.length - 1; i++) {
+            // 각 프레임의 값이 변화 없어야 함.
+            let cy = percentSTRToFloat(frames[i].cy);
+            if (!(oldCy == cy)) {
+                console.log(oldCy)
+                console.log(cy)
+                testAssert(false);
+            }
+            oldCy = cy;
+        }
+        // 테스트 종료
+        testEnd();
+    });
+
+</script>
+
+</html>

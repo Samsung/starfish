@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+    Web Crypto API Test
+</body>
+<script>
+    function testStart() {
+        const myArray1 = new Uint32Array(10);
+        crypto.getRandomValues(myArray1);
+        testAssert(myArray1 != null);
+        testAssert(typeof(myArray1) != 'undefined');
+        testAssert(myArray1.length == 10);
+
+        const myArray2 = new Int32Array(10);
+        crypto.getRandomValues(myArray2);
+        testAssert(myArray2 != null);
+        testAssert(typeof(myArray2) != 'undefined');
+        testAssert(myArray2.length == 10);
+
+        const myArray3 = new Uint8Array(10);
+        crypto.getRandomValues(myArray3);
+        testAssert(myArray3 != null);
+        testAssert(typeof(myArray3) != 'undefined');
+        testAssert(myArray3.length == 10);
+
+        const myArray4 = new Uint16Array(10);
+        crypto.getRandomValues(myArray4);
+        testAssert(myArray4 != null);
+        testAssert(typeof(myArray4) != 'undefined');
+        testAssert(myArray4.length == 10);
+
+        const myArray5 = new Uint8ClampedArray(10);
+        crypto.getRandomValues(myArray5);
+        testAssert(myArray5 != null);
+        testAssert(typeof(myArray5) != 'undefined');
+        testAssert(myArray5.length == 10);
+
+        testEnd();
+    }
+</script>
+
+</html>

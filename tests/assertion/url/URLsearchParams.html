@@ -1,0 +1,18 @@
+<script>
+d = new URL("http://ddd.com/asdf?%EB%91%98%EB%8B%A4=%EB%91%98%EB%8B%A4")
+ds = d.searchParams
+console.log(ds+"")
+testAssert(ds+"" == "%EB%91%98%EB%8B%A4=%EB%91%98%EB%8B%A4")
+ds.append(" ", " ")
+ds.append("아파트","아파트")
+console.log(ds+"")
+testAssert(ds+"" == "%EB%91%98%EB%8B%A4=%EB%91%98%EB%8B%A4&+=+&%EC%95%84%ED%8C%8C%ED%8A%B8=%EC%95%84%ED%8C%8C%ED%8A%B8")
+testAssert("아파트" == ds.get("아파트"))
+testAssert("둘다" == ds.get("둘다"))
+console.log(d+"")
+testAssert(d+"" == "http://ddd.com/asdf?%EB%91%98%EB%8B%A4=%EB%91%98%EB%8B%A4&+=+&%EC%95%84%ED%8C%8C%ED%8A%B8=%EC%95%84%ED%8C%8C%ED%8A%B8")
+d.search = "1=2"
+console.log(ds+"")
+testAssert(ds+"" == "1=2")
+testEnd()
+</script>

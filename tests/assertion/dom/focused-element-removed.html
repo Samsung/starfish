@@ -1,0 +1,11 @@
+<div id="a" tabindex="1">
+</div>
+<div id="b" tabindex="2">
+</div>
+<script>
+a.focus()
+testAssert(document.activeElement==a)
+a.parentElement.removeChild(a)
+testAssert(document.activeElement==document.body)
+wptTestEnd()
+</script>

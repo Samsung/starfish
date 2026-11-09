@@ -102,7 +102,9 @@ tarball=$(mktemp)
 # default extraction filter refusing a symlink target that escapes the
 # destination). A plain `tar czf third_party` archives whatever's on disk
 # under that path regardless of git's view of it, so exclude it explicitly
-# rather than relying on it merely being unpopulated.
+# rather than relying on it merely being unpopulated. third_party/webkit,
+# blink and gecko (update=none in .gitmodules, tool/ci/cache_vendor_tests.sh)
+# are excluded the same way.
 #
 # --exclude='third_party/escargot/test/*': same class of contamination --
 # this job never inits escargot's own "test" submodules (kangax, octane,
@@ -115,6 +117,9 @@ tarball=$(mktemp)
 tar czf "$tarball" \
   --exclude='third_party/wpt' \
   --exclude='third_party/webgl' \
+  --exclude='third_party/webkit' \
+  --exclude='third_party/blink' \
+  --exclude='third_party/gecko' \
   --exclude='third_party/escargot/test/*' \
   "${PATHS[@]}"
 submodule_cache_push "$id" "$tarball" cache.tar.gz

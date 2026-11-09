@@ -1,0 +1,180 @@
+Most of tests/ is written for Starfish. The files listed below come from, or
+are adapted from, third-party projects; their notices are reproduced here
+because the copies themselves carry no per-file header. Files that keep their
+own header (testharness.js, crash/chart.js, the React bundle's *.LICENSE.txt)
+are listed for completeness. tests/cdp/ and the tests/pixel submodule have
+their own LICENSE files.
+
+================================================================================
+web-platform-tests -- 3-Clause BSD License
+https://github.com/web-platform-tests/wpt
+================================================================================
+
+    assertion/css/masking/support/
+    assertion/media/resources/movie_5.mp4
+    assertion/resize-observer/
+    assertion/window/window-security.https.html
+    fixtures/resources/wpt/
+
+# The 3-Clause BSD License
+
+Copyright © web-platform-tests contributors
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+================================================================================
+Chromium web tests -- 3-Clause BSD License
+https://chromium.googlesource.com/chromium/src
+================================================================================
+
+    assertion/window/structuredClone_0[1-3].html
+
+These are adapted from third_party/blink/web_tests/fast/js/structured-clone.html.
+
+Copyright 2015 The Chromium Authors
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+   * Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+   * Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the
+distribution.
+   * Neither the name of Google LLC nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+================================================================================
+W3C DOM Test Suite (DOM Level 2 HTML) -- W3C Software License
+================================================================================
+
+    assertion/dom/HTMLAnchorElement0[1-9].*
+    assertion/dom/HTMLScriptElement*.*
+    assertion/dom/Text0[12].*
+
+Copyright © 2001-2004 World Wide Web Consortium,
+(Massachusetts Institute of Technology, European Research Consortium
+for Informatics and Mathematics, Keio University). All
+Rights Reserved. This work is distributed under the W3C® Software License [1] in the
+hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+[1] http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
+
+
+================================================================================
+Ahem font -- public domain
+================================================================================
+
+    fixtures/resources/webkit/Ahem.otf, Ahem.ttf, Ahem.woff
+    fixtures/resources/webkit_original/Ahem.ttf
+    fixtures/resources/wpt/fonts/Ahem.ttf
+
+Ahem was produced by Todd Fahrner for the CSS Samurai's browser testing and
+belongs to the public domain; the web-platform-tests copy states this and
+applies CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/).
+
+
+================================================================================
+WHATWG HTML Living Standard excerpts -- CC BY 4.0
+================================================================================
+
+    assertion/cookie/cookie-internal-test-1.html, assertion/cookie/cookie-internal-test-2.html
+    assertion/custom-element-registry/upgrade.html
+
+These quote or follow examples from the HTML Living Standard
+(https://html.spec.whatwg.org/), Copyright © WHATWG (Apple, Google, Mozilla,
+Microsoft), licensed under the Creative Commons Attribution 4.0 International
+License (https://creativecommons.org/licenses/by/4.0/).
+
+
+================================================================================
+crash/chart.js -- MIT License
+================================================================================
+
+    Chart.js 4.3.0                 Copyright (c) 2023 Chart.js Contributors
+    @kurkle/color 0.3.2            Copyright (c) 2023 Jukka Kurkela
+
+The license text is at the end of this file.
+
+================================================================================
+assertion/fe-framework-test/ -- framework production builds
+================================================================================
+
+Each directory is a production build of a small sample app (the React
+tic-tac-toe tutorial from react.dev, the Vue TodoMVC example, an Angular
+tutorial app) and therefore bundles these libraries:
+
+    React, ReactDOM, scheduler (react-19-1-releasebuild, via esm.sh in
+      react-19-1-w-babel)          MIT, Copyright (c) Meta Platforms, Inc. and affiliates.
+    web-vitals (react-19-1-releasebuild/static/js/453.*.chunk.js)
+                                   Apache-2.0, Copyright Google LLC
+    Vue (vue-3-2-todo-dist)        MIT, Copyright (c) 2018-present, Yuxi (Evan) You
+    Angular, zone.js (angular-v19-app-dist)
+                                   MIT, Copyright (c) 2010-2025 Google LLC.
+    @babel/standalone (react-19-1-w-babel/babel.min.js)
+                                   MIT, Copyright (c) 2014-present Sebastian McKenzie and other contributors
+    es-module-shims (react-19-1-w-babel/es-module-shims.js)
+                                   MIT, Copyright (C) 2018-2021 Guy Bedford
+    Create React App template and build output (react-19-1-releasebuild)
+                                   MIT, Copyright (c) 2013-present, Facebook, Inc.
+    Vue CLI template and build output (vue-3-2-todo-dist)
+                                   MIT, Copyright (c) 2017-present, Yuxi (Evan) You
+    webpack runtime (react-19-1-releasebuild, vue-3-2-todo-dist)
+                                   MIT, Copyright JS Foundation and other contributors
+
+The code of the React and Vue sample apps comes from documentation licensed
+under the Creative Commons Attribution 4.0 International License
+(https://creativecommons.org/licenses/by/4.0/), compiled here into the builds:
+
+    react-19-1-releasebuild, react-19-1-w-babel
+        Tic-tac-toe tutorial, https://react.dev/learn/tutorial-tic-tac-toe
+        Copyright (c) Meta Platforms, Inc. and affiliates.
+    vue-3-2-todo-dist
+        TodoMVC example, https://github.com/vuejs/docs (src/examples/src/todomvc,
+        removed from the documentation in 2025)
+        Copyright (c) 2019-present, Yuxi (Evan) You and Vue documentation contributors
+
+The Apache License 2.0 is at the repository root (LICENSE.Apache-2.0). The MIT
+License, which applies to the other libraries with the copyright lines above:
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

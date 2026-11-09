@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<meta name="pixel-test">
+
+<style>
+    div {
+        background: red;
+        border: 2px solid black;
+    }
+    span {
+    	background: blue;
+    	border: 4px solid black;
+    }
+</style>
+
+<body>
+    <div>
+    	<span>span1
+    	<span>span2
+    		<div class="a">
+    			Im destroyer
+    		</div>
+    	span2</span>
+    	span1</span>
+    </div>
+</body>
+<script>
+
+
+var length_percent_use_property=[
+                        'width',
+                        'height',
+                        'top',
+                        'bottom',
+                        'left',
+                        'right',
+                        'lineHeight',
+                        'verticalAlign',
+                        'fontSize',
+                        'backgroundSize',
+                        'margin',
+                        'marginTop',
+                        'marginBottom',
+                        'marginLeft',
+                        'marginRight',
+                        'padding',
+                        'paddingTop',
+                        'paddingBottom',
+                        'paddingLeft',
+                        'paddingRight',
+                        //'transformOrigin'
+                    ];
+
+var length_only_unit_use_property = [
+                                        'borderImageWidth',
+                                        'border',
+                                        'borderTopWidth',
+                                        'borderBottomWidth',
+                                        'borderLeftWidth',
+                                        'borderRightWidth',
+                                    ];
+
+var length_unit_use_property = length_only_unit_use_property.concat(length_percent_use_property);
+
+var length_units=[
+                    'px',
+                    'em',
+                    'ex',
+                    'in',
+                    'cm',
+                    'mm',
+                    'pt',
+                    'pc',
+                    'rem',
+                    'ch'
+                ];
+
+var length_units_invalid=[
+                    'pxx',
+                    'emm',
+                    'ext',
+                    'inch',
+                    'cmm',
+                    'mmm',
+                    'kg',
+                    'g',
+                    'meter',
+                    'km',
+                    'pixel',
+                    'dot',
+                    'point',
+                    'ppi',
+                    'dpi'
+                ];
+
+var length_units_unsupported=[
+                ];
+
+
+var as = document.getElementsByClassName("a");
+
+function testStart() {
+
+    //test_normal_value();
+    test_invalid_value();
+
+    testEnd();
+}
+
+function test_invalid_value(){
+    for (var i = 0; i < as.length; i ++) {
+
+        //invalid unit
+        for(var j=0; j < length_units_invalid.length; j++){
+            for(var k=0; k < 2; k++){
+                for(var l=0; l < length_unit_use_property.length; l++){
+                    property_test(as[i],length_unit_use_property[l],k+length_units_invalid[j],'','Length Unit - invalid unit - '+length_unit_use_property[l]+' test');
+                }
+            }
+        }
+
+        //unsupported unit
+        for(var j=0; j < length_units_unsupported.length; j++){
+            for(var k=0; k < 2; k++){
+                for(var l=0; l < length_unit_use_property.length; l++){
+                    property_test(as[i],length_unit_use_property[l],k+length_units_unsupported[j],'','Length Unit - unsupported unit - '+length_unit_use_property[l]+' test');
+                }
+            }
+        }
+    }
+}
+
+function test_normal_value(){
+    // valid test - Normal
+    for (var i = 0; i < as.length; i ++) {
+
+        //length unit test
+        for(var j=0; j < length_units.length; j++){
+            for(var k=0; k < 100; k++){
+                for(var l=0; l < length_unit_use_property.length; l++){
+                    property_test(as[i],length_unit_use_property[l],k+length_units[j],k+length_units[j],'Length Unit - normal - '+length_unit_use_property[l]+' test');
+                }
+            }
+        }
+
+        // % test
+        for(var k=0; k < 100; k++){
+            for(var l=0; l < length_unit_use_property.length; l++){
+                property_test(as[i],length_percent_use_property[l],k+'%',k+'%','Length Unit - normal - '+length_percent_use_property[l]+' % test');
+            }
+        }
+    }
+
+}
+
+
+
+function property_test(element,property,testValue,expectedValue,description){
+    element.style[property] = testValue;
+    if(element.style[property]!=expectedValue){
+        console.log("Test FAIL: DESC:"+description+" ,realValue: "+element.style[property]+" , expectedValue: "+expectedValue);
+    }
+}
+
+
+testStart();
+</script>
+</html>

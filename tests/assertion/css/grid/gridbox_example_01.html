@@ -1,0 +1,56 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Fixed tracks between 1fr tracks, and minmax(0, 1fr) tracks that wide content does not grow</title>
+<style>
+  body { margin: 0; width: 800px; }
+  .page { display: grid; width: 100%; grid-template-columns: 1fr 10px 48px 640px 1fr; }
+  .main { grid-column: 4; }
+  .section {
+    display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-gap: 0 16px; grid-auto-rows: min-content;
+  }
+  .heading { grid-column: 1 / span 6; height: 30px; }
+  .list { grid-column: 1 / span 6; display: flex; flex-direction: column; }
+  .wide { width: 2000px; height: 20px; }
+  .card { grid-column: span 2; height: 40px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[gridbox_example_01] " + document.title);
+  };
+}
+</script>
+<div class="page">
+  <div class="main" id="main">
+    <div class="section">
+      <div class="heading" id="heading"></div>
+      <div class="list" id="list"><div class="wide"></div></div>
+      <div class="card" id="c1"></div><div class="card" id="c2"></div><div class="card" id="c3"></div>
+    </div>
+  </div>
+</div>
+<script>
+function box(id) { return document.getElementById(id).getBoundingClientRect(); }
+function near(a, b) { return Math.abs(a - b) < 0.5; }
+// The 1fr tracks share 800 - (10 + 48 + 640) = 102px, so column 4 starts at 51 + 10 + 48.
+console.assert(box("main").left === 109 && box("main").width === 640,
+  "main column: " + box("main").left + " " + box("main").width);
+console.assert(near(box("heading").width, 640), "heading spans all six columns: " + box("heading").width);
+// minmax(0, 1fr) has no content-based minimum, so the 2000px child cannot widen the tracks.
+console.assert(near(box("list").width, 640), "list keeps the column width: " + box("list").width);
+var column = (640 - 5 * 16) / 6;
+console.assert(near(box("c1").left, 109) && near(box("c1").width, 2 * column + 16),
+  "first card: " + box("c1").left + " " + box("c1").width);
+console.assert(near(box("c2").left, 109 + 2 * column + 32), "second card: " + box("c2").left);
+console.assert(near(box("c3").right, 749) && box("c3").top === box("c1").top,
+  "third card ends the row: " + box("c3").right);
+testEnd();
+</script>

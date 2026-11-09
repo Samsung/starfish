@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>ObservableArray: write-through mutation</title></head>
+<body>
+<script>
+// push / index assignment / splice must write through to the backing list and
+// be visible on a fresh read of the SameObject array.
+var s1 = new CSSStyleSheet();
+var s2 = new CSSStyleSheet();
+var s3 = new CSSStyleSheet();
+
+document.adoptedStyleSheets.push(s1);
+console.assert(document.adoptedStyleSheets.length === 1, "push grows length");
+console.assert(document.adoptedStyleSheets[0] === s1, "pushed element is readable");
+
+document.adoptedStyleSheets.push(s2, s3);
+console.assert(document.adoptedStyleSheets.length === 3, "push of two grows to 3");
+console.assert(document.adoptedStyleSheets[2] === s3, "third element correct");
+
+document.adoptedStyleSheets[0] = s3;
+console.assert(document.adoptedStyleSheets[0] === s3, "index assignment writes through");
+
+// splice out the middle element
+var removed = document.adoptedStyleSheets.splice(1, 1);
+console.assert(removed.length === 1 && removed[0] === s2, "splice returns removed");
+console.assert(document.adoptedStyleSheets.length === 2, "splice shrinks length");
+console.assert(document.adoptedStyleSheets[0] === s3 &&
+               document.adoptedStyleSheets[1] === s3, "splice shifted correctly");
+
+// pop
+document.adoptedStyleSheets.pop();
+console.assert(document.adoptedStyleSheets.length === 1, "pop shrinks length");
+
+testEnd();
+</script>
+</body>
+</html>

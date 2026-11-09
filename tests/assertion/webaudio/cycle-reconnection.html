@@ -1,0 +1,40 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Web Audio cycle reconnection</title>
+<body>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Web Audio cycle reconnection complete";
+    };
+}
+
+if (typeof OfflineAudioContext !== "function") {
+    testEnd();
+} else {
+    function render(disconnectCycle) {
+        const context = new OfflineAudioContext(1, 256, 48000);
+        const source = context.createConstantSource();
+        source.offset.value = 0.5;
+        const gain = context.createGain();
+        source.connect(gain);
+        gain.connect(gain);
+        gain.connect(context.destination);
+        if (disconnectCycle) {
+            gain.disconnect(gain);
+        }
+        source.start();
+        return context.startRendering().then(function (buffer) {
+            const samples = buffer.getChannelData(0);
+            const expected = disconnectCycle ? 0.5 : 0;
+            for (let i = 0; i < samples.length; i++) {
+                console.assert(samples[i] === expected,
+                               "cycle mute follows the current connections");
+            }
+        });
+    }
+
+    Promise.all([render(false), render(true)]).then(testEnd);
+}
+</script>
+</body>

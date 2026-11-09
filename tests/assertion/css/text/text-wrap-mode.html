@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>text-wrap-mode and the white-space / text-wrap shorthands</title>
+<style>
+  body { margin: 0; font: 16px/20px monospace; }
+  .box { width: 120px; }
+  #ref { width: 1000px; }
+  #nowrap { text-wrap: nowrap; }
+  #pre-wrap { white-space: pre; text-wrap: wrap; }
+  #mode-after-ws { white-space: nowrap; text-wrap-mode: wrap; }
+  #ws-after-mode { text-wrap: nowrap; white-space: normal; }
+  #parent { text-wrap: nowrap; }
+  #child-reset { white-space: normal; }
+  #pre-line-nowrap { white-space: pre-line; text-wrap: nowrap; }
+</style>
+</head>
+<body>
+<div id="ref">one two three four five six seven eight nine ten</div>
+<div class="box" id="nowrap">one two three four five six seven eight nine ten</div>
+<div class="box" id="pre-wrap">one two three four five six seven eight nine ten</div>
+<div class="box" id="mode-after-ws">one two three four five six seven eight nine ten</div>
+<div class="box" id="ws-after-mode">one two three four five six seven eight nine ten</div>
+<div class="box" id="parent">
+  <div id="child-inherit">one two three four five six seven eight nine ten</div>
+  <div id="child-reset">one two three four five six seven eight nine ten</div>
+</div>
+<div class="box" id="pre-line-nowrap">one two three four five
+six seven eight nine ten</div>
+<script>
+  function height(id) {
+    return document.getElementById(id).getBoundingClientRect().height;
+  }
+  function computed(id, prop) {
+    return getComputedStyle(document.getElementById(id)).getPropertyValue(prop);
+  }
+
+  var line = height("ref");
+  console.assert(line > 0, "reference line height");
+
+  // Layout: text-wrap-mode is the wrap half of white-space, in cascade order.
+  console.assert(height("nowrap") === line, "text-wrap: nowrap keeps one line");
+  console.assert(height("pre-wrap") > line, "white-space: pre + text-wrap: wrap wraps");
+  console.assert(height("mode-after-ws") > line,
+                 "text-wrap-mode: wrap after white-space: nowrap wraps");
+  console.assert(height("ws-after-mode") > line,
+                 "white-space: normal resets an earlier text-wrap: nowrap");
+  console.assert(height("child-inherit") === line, "text-wrap-mode inherits");
+  console.assert(height("child-reset") > line,
+                 "white-space: normal on the child overrides the inherited nowrap");
+  console.assert(height("pre-line-nowrap") === 2 * line,
+                 "pre-line + nowrap keeps the newline and nothing else breaks");
+
+  // Computed values combine the longhands back into the shorthand.
+  console.assert(computed("nowrap", "white-space") === "nowrap", "computed white-space nowrap");
+  console.assert(computed("nowrap", "text-wrap") === "nowrap", "computed text-wrap nowrap");
+  console.assert(computed("pre-wrap", "white-space") === "pre-wrap", "pre + wrap is pre-wrap");
+  console.assert(computed("mode-after-ws", "white-space") === "normal", "nowrap + wrap is normal");
+  console.assert(computed("pre-line-nowrap", "white-space") === "preserve-breaks nowrap",
+                 "pre-line + nowrap has no keyword");
+  console.assert(computed("pre-line-nowrap", "white-space-collapse") === "preserve-breaks",
+                 "computed white-space-collapse");
+  console.assert(computed("child-inherit", "text-wrap-mode") === "nowrap",
+                 "computed text-wrap-mode inherited");
+
+  // Specified-value serialization of the shorthands.
+  var el = document.createElement("div");
+  el.style.textWrap = "balance nowrap";
+  console.assert(el.style.getPropertyValue("text-wrap") === "nowrap balance",
+                 "text-wrap serializes mode then style");
+  console.assert(el.style.textWrapMode === "nowrap", "text-wrap sets text-wrap-mode");
+  console.assert(el.style.textWrapStyle === "balance", "text-wrap sets text-wrap-style");
+  el.style.textWrap = "balance";
+  console.assert(el.style.textWrapMode === "wrap", "omitted text-wrap-mode resets to wrap");
+  el.style.textWrap = "wrap nowrap";
+  console.assert(el.style.textWrap === "balance", "two modes are invalid and leave the value");
+  el.style.whiteSpace = "nowrap preserve-breaks";
+  console.assert(el.style.whiteSpace === "preserve-breaks nowrap",
+                 "white-space accepts and orders the longhand pair");
+  el.style.whiteSpace = "pre";
+  console.assert(el.style.whiteSpaceCollapse === "preserve" && el.style.textWrapMode === "nowrap",
+                 "white-space: pre expands to preserve + nowrap");
+  el.style.textWrapMode = "wrap";
+  console.assert(el.style.whiteSpace === "pre-wrap", "pre + wrap serializes as pre-wrap");
+  el.style.whiteSpace = "break-spaces";
+  console.assert(el.style.whiteSpace === "pre-wrap", "unsupported break-spaces is rejected");
+
+  console.assert(CSS.supports("text-wrap", "nowrap"), "CSS.supports text-wrap: nowrap");
+  console.assert(CSS.supports("text-wrap-mode", "nowrap"), "CSS.supports text-wrap-mode");
+  console.assert(CSS.supports("white-space", "preserve-breaks nowrap"),
+                 "CSS.supports white-space longhand pair");
+  console.assert(!CSS.supports("text-wrap", "balance pretty"), "two styles are invalid");
+
+  testEnd();
+</script>
+</body>
+</html>

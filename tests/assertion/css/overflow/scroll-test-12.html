@@ -1,0 +1,58 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>An absolutely positioned box scrolls with its horizontal flex scroller</title>
+<style>
+  body { margin: 0; }
+  * { box-sizing: border-box; }
+  .row { display: flex; align-items: center; }
+  .scroller {
+    position: relative; display: flex; overflow-x: auto; width: 800px;
+    padding: 100px 0; margin: -100px 0;
+  }
+  .page { display: flex; flex: 0 0 auto; position: relative; width: 800px; }
+  .column { flex-grow: 1; display: flex; flex-direction: column; margin: auto 0; padding-top: 48px; }
+  .line { display: flex; justify-content: center; }
+  .item { display: flex; position: relative; width: 200px; height: 120px; margin-left: 64px; }
+  .item:first-child { margin: 0; }
+  .label { position: absolute; display: flex; width: 100px; height: 30px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[scroll-test-12] " + document.title);
+  };
+}
+</script>
+<div class="row">
+  <div class="scroller">
+    <div class="page"><div class="column"><div class="line">
+      <div class="item"><div class="label" id="label"></div></div><div class="item"></div><div class="item"></div>
+    </div></div></div>
+    <div class="page"><div class="column"><div class="line">
+      <div class="item"></div><div class="item"></div><div class="item"></div>
+    </div></div></div>
+    <div class="page"><div class="column"><div class="line">
+      <div class="item"></div><div class="item"></div><div class="item"></div>
+    </div></div></div>
+    <div class="page"><div class="column"><div class="line">
+      <div class="item"></div><div class="item"></div><div class="item"></div>
+    </div></div></div>
+  </div>
+</div>
+<script>
+var label = document.getElementById("label");
+var scroller = document.querySelector(".scroller");
+var before = label.getBoundingClientRect().left;
+scroller.scrollLeft = 1500;
+var after = label.getBoundingClientRect().left;
+console.assert(scroller.scrollLeft === 1500, "scrollLeft: " + scroller.scrollLeft);
+console.assert(after === before - 1500, "the label moves with the scroll: " + before + " -> " + after);
+testEnd();
+</script>

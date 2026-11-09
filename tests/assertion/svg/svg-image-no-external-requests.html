@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>An SVG image sends no request for its subresources</title>
+<!-- An SVG document used as an image runs in SVG Integration's secure
+     animated mode: no script and no external resources. Its <image>, media
+     elements and iframes must never reach the network: fetched pixels would
+     end up in an image the embedding page can read back, and every request
+     carries the user's cookies. An iframe with an http: src there must not
+     crash the engine either.
+
+     The document loads over file:// and uses the test runner's http_server
+     (tool/runner/test_runner.py: internal_test(), port 11011): a request to
+     /hit/<key> is counted and /hits/<key> answers how many arrived. -->
+<body>
+<script>
+// Starfish's test build supplies testEnd()/console.assert and reports the
+// verdict. Elsewhere, shim a testEnd() that tallies console.assert results;
+// start the server by hand first:
+//   python3 tool/runner/http_server.py -d <any dir> --bind localhost 11011
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0;
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (cond, msg) {
+    if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[svg-image-no-external-requests] ' + verdict);
+    document.title = verdict;
+  };
+}
+
+var SERVER = 'http://localhost:11011/';
+var RUN = Date.now() + '-' + Math.floor(Math.random() * 1e9);
+function hit(name) { return SERVER + 'hit/' + RUN + '-' + name; }
+function hits(name) {
+  return fetch(SERVER + 'hits/' + RUN + '-' + name).then(function (r) {
+    return r.text();
+  }).then(Number);
+}
+
+// A data: <image> keeps the SVG image loading long enough for its media
+// elements to select a resource.
+var PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAAAyAQMAAACQ++z9' +
+  'AAAAA1BMVEUA/wA0XsCoAAAAD0lEQVQoFWNgGAWjYGgCAAK8AAEb3eOQAAAAAElFTkSuQmCC';
+function esc(s) {
+  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+          .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function svgImage(body) {
+  return 'data:image/svg+xml,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40">' +
+    '<rect width="40" height="40" fill="green"/>' + body + '</svg>');
+}
+function foreignObject(html) {
+  return '<foreignObject width="40" height="40">' +
+    '<div xmlns="http://www.w3.org/1999/xhtml">' + html + '</div></foreignObject>';
+}
+
+function load(src) {
+  return new Promise(function (resolve) {
+    var img = new Image();
+    img.onload = img.onerror = function () { resolve(); };
+    img.src = src;
+    document.body.appendChild(img);
+  });
+}
+
+var NAMES = ['control', 'image', 'video', 'audio', 'source', 'iframe'];
+// One image at a time: an image loading next to others can be done, and its
+// document gone, before its media elements select a resource.
+load(svgImage(
+  '<image width="10" height="10" href="' + PNG + '"/>' + foreignObject(
+    '<video width="10" height="10" preload="auto" autoplay="autoplay" ' +
+      'muted="muted" src="' + esc(hit('video')) + '"></video>' +
+    '<audio preload="auto" autoplay="autoplay" src="' + esc(hit('audio')) + '"></audio>' +
+    '<video width="10" height="10" preload="auto"><source src="' +
+      esc(hit('source')) + '"/></video>'))
+).then(function () {
+  return load(svgImage('<image width="40" height="40" href="' + esc(hit('image')) + '"/>'));
+}).then(function () {
+  return load(svgImage(foreignObject('<iframe src="' + esc(hit('iframe')) + '"></iframe>')));
+}).then(function () {
+  // Shows that requests from this document do reach the counter.
+  return load(hit('control'));
+}).then(function () {
+  // Give a request that should not exist time to arrive.
+  return new Promise(function (resolve) { setTimeout(resolve, 1000); });
+}).then(function () {
+  return Promise.all(NAMES.map(hits));
+}).then(function (counts) {
+  console.assert(counts[0] >= 1, 'the control request was not counted');
+  for (var i = 1; i < NAMES.length; i++) {
+    console.assert(counts[i] === 0, 'the SVG image requested its ' + NAMES[i] +
+                   ' (' + counts[i] + ' requests)');
+  }
+  testEnd();
+}, function (e) {
+  console.assert(false, 'could not read the request counts: ' + e);
+  testEnd();
+});
+</script>
+</body>

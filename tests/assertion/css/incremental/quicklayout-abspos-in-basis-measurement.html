@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!--
+  #ratio establishes a formatting context and gets its height from a
+  percentage padding-top; #overlay is placed against its padding box.
+
+  Resizing the iframe and dirtying its flex container on every tick makes the
+  layout measure the flex base size of .app, and inside that throwaway
+  measurement the clean #ratio is reached through a quick layout of its inline
+  formatting context. That walk registers #overlay with #ratio, which the
+  measurement must not leave queued: nothing else lays it out, and the layout
+  context asserts on the leftover.
+-->
+<iframe id="frame" style="width:420px;height:300px;border:0" src="about:blank"></iframe>
+
+<script>
+var CSS =
+    'html{height:100%}' +
+    'body{margin:0;display:flex;flex-direction:column;height:100%}' +
+    '.app{flex:0 1 auto;min-height:0}' +
+    '.card{position:relative;width:400px}' +
+    '.ratio{position:relative;padding-top:calc(50% + 0px);background:#ccc;overflow:hidden}' +
+    '.overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end}';
+
+var frame = document.getElementById("frame");
+var doc = frame.contentDocument;
+doc.open();
+doc.write('<!DOCTYPE html><style>' + CSS + '</style>' +
+          '<div class="app"><div class="card">' +
+          '<div class="ratio" id="ratio"><div class="overlay" id="overlay">t</div></div>' +
+          '</div></div>');
+doc.close();
+
+function overlayOffset() {
+    var ratio = doc.getElementById("ratio").getBoundingClientRect();
+    var overlay = doc.getElementById("overlay").getBoundingClientRect();
+    return Math.round(overlay.y - ratio.y);
+}
+
+testAssert(overlayOffset() == 0);
+
+var n = 0;
+window.setInterval(function() {
+    n++;
+    frame.style.height = (300 + 20 * (n % 3)) + "px";
+    doc.body.style.paddingBottom = (n % 2) + "px";
+    console.log(overlayOffset());
+    testAssert(overlayOffset() == 0);
+    if (n > 4)
+        testEnd();
+}, 100);
+</script>

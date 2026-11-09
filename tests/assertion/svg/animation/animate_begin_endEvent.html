@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        @keyframes moveCX {
+            from {
+                cx: 10px;
+                cy: 10px;
+            }
+
+            to {
+                cx: 100px;
+                cy: 100px;
+            }
+        }
+
+        #target3 circle {
+            animation: moveCX 1s linear forwards;
+        }
+
+        #target {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <svg width="350" height="100">
+        <circle id="wrongEventTarget" cx="10" cy="50" r="10" fill="red">
+            <animate id="target1" attributeName="cx" from="10" to="100" dur="1s" fill="freeze" />
+            <animate id="target2" attributeName="cy" from="10" to="100" dur="1s" fill="freeze" />
+        </circle>
+    </svg>
+
+</body>
+<script type="text/javascript">
+
+    let target1beginEventCount = 0;
+    let target1endEventCount = 0;
+
+    target1.addEventListener("beginEvent", (e) => {
+        target1beginEventCount++;
+    });
+    target1.addEventListener("endEvent", (e) => {
+        target1endEventCount++;
+    });
+    target1.addEventListener('animationstart', (e) => {
+        // wrong event name
+        testAssert(false);
+    });
+    target1.addEventListener('animationend', (e) => {
+        // wrong event name
+        testAssert(false);
+    });
+
+    let target2beginEventCount = 0;
+    let target2endEventCount = 0;
+    target2.addEventListener("beginEvent", (e) => {
+        target2beginEventCount++;
+    });
+    target2.addEventListener("endEvent", (e) => {
+        target2endEventCount++;
+    });
+
+    target2.addEventListener('animationstart', (e) => {
+        // wrong event name
+        testAssert(false);
+    });
+    target2.addEventListener('animationend', (e) => {
+        // wrong event name
+        testAssert(false);
+    });
+
+    wrongEventTarget.addEventListener('animationstart', (e) => {
+        testAssert(false);
+    });
+    wrongEventTarget.addEventListener('animationend', (e) => {
+        testAssert(false);
+    });
+    wrongEventTarget.addEventListener('beginEvent', (e) => {
+        testAssert(false);
+    });
+    wrongEventTarget.addEventListener('endEvent', (e) => {
+        testAssert(false);
+    });
+
+    setTimeout(() => {
+        testAssert(target1beginEventCount == 1);
+        testAssert(target1endEventCount == 1);
+        testAssert(target2beginEventCount == 1);
+        testAssert(target2endEventCount == 1);
+        testEnd();
+    }, 1500);
+
+</script>
+
+</html>

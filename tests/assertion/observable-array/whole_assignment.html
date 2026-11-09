@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>ObservableArray: whole-array assignment</title></head>
+<body>
+<script>
+// Assigning a fresh array replaces the contents but keeps the SameObject proxy.
+var before = document.adoptedStyleSheets;
+var s1 = new CSSStyleSheet();
+var s2 = new CSSStyleSheet();
+
+document.adoptedStyleSheets = [s1, s2];
+var after = document.adoptedStyleSheets;
+console.assert(after === before, "setter preserves the observable array identity");
+console.assert(after.length === 2, "contents replaced (length 2)");
+console.assert(after[0] === s1 && after[1] === s2, "contents replaced (elements)");
+
+// Re-assign with a shorter array.
+document.adoptedStyleSheets = [s2];
+console.assert(document.adoptedStyleSheets.length === 1, "re-assign shrinks");
+console.assert(document.adoptedStyleSheets[0] === s2, "re-assign element correct");
+
+// Assigning an empty array clears it.
+document.adoptedStyleSheets = [];
+console.assert(document.adoptedStyleSheets.length === 0, "empty assignment clears");
+
+testEnd();
+</script>
+</body>
+</html>

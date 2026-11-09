@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <style>
+    /* Regression test for "Apply row-gap and column-gap by flex axis role".
+
+       The flex layout used to read only column-gap, applying it as the
+       main-axis gap; row-gap was never read. This test exercises the two
+       cases that regressed:
+
+         .row : a wrapped row flex container. column-gap (10px) separates
+                items along the main axis; row-gap (30px) separates the two
+                flex LINES along the cross axis. Before the fix the line gap
+                collapsed to 0, so the wrapped item sat at the line height.
+
+         .col : a column flex container with gap:15px. row-gap is the
+                main-axis gap here, so items must be spaced 15px apart.
+                Before the fix the column main gap collapsed to 0. */
+    body { margin: 0; }
+    .row { display: flex; flex-direction: row; flex-wrap: wrap; width: 250px;
+           column-gap: 10px; row-gap: 30px; }
+    .row > div { width: 100px; height: 40px; background: teal; }
+    .col { display: flex; flex-direction: column; gap: 15px; width: 120px; }
+    .col > div { height: 20px; background: orange; }
+  </style>
+ </head>
+ <body>
+   <div class="row"><div id="r1">1</div><div id="r2">2</div><div id="r3">3</div></div>
+   <div class="col"><div id="c1">a</div><div id="c2">b</div><div id="c3">c</div></div>
+<script>
+   function R(id) { return document.getElementById(id).getBoundingClientRect(); }
+   function approx(a, b) { return Math.abs(a - b) <= 1; }
+
+   var r1 = R('r1'), r2 = R('r2'), r3 = R('r3');
+   var c1 = R('c1'), c2 = R('c2'), c3 = R('c3');
+
+   // Row: items 1 and 2 share the first line, separated by column-gap (10px):
+   // 100px item + 10px gap.
+   testAssert(approx(r2.left - r1.left, 110));
+
+   // Row: item 3 wraps to a second line. row-gap (30px) is the cross-axis
+   // (inter-line) gap: 40px line height + 30px gap. It also returns to the
+   // line's start (left edge of item 1).
+   testAssert(approx(r3.top - r1.top, 70));
+   testAssert(approx(r3.left, r1.left));
+
+   // Column: row-gap is the main-axis gap (gap:15px). Each item is 20px tall,
+   // so successive tops are 35px apart.
+   testAssert(approx(c2.top - c1.top, 35));
+   testAssert(approx(c3.top - c2.top, 35));
+
+   testEnd();
+</script>
+</body>
+</html>

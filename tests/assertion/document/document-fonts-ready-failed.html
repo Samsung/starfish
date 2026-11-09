@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>document.fonts.ready completes after a CSS font fails</title>
+<link rel="help" href="https://drafts.csswg.org/css-font-loading/#dom-fontfaceset-ready">
+<style>
+@font-face {
+    font-family: FailedReadyAhemProbe;
+    src: url('data:font/ttf;base64,AA==');
+}
+#probe { font: 30px FailedReadyAhemProbe, serif; }
+</style>
+<span id="probe">iiii</span>
+<script>
+if (typeof testEnd !== 'function') {
+    var __pass = 0, __fail = 0;
+    var __nativeAssert = console.assert.bind(console);
+    console.assert = function (condition, message) {
+        if (condition) {
+            __pass++;
+        } else {
+            __fail++;
+            __nativeAssert(false, message);
+        }
+    };
+    window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+            ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[document-fonts-ready-failed] ' + verdict);
+        document.title = verdict;
+    };
+}
+
+// Start font selection before lazily creating the FontFaceSet.
+var fallbackWidth = document.getElementById('probe').offsetWidth;
+var ready = document.fonts.ready;
+ready.then(function (fonts) {
+    var status = fonts.status;
+    console.assert(status === 'loaded',
+        'a failed font does not leave ready loading; observed ' + status);
+    var width = document.getElementById('probe').offsetWidth;
+    console.assert(width === fallbackWidth && width > 0,
+        'failed font uses fallback layout; observed ' + width);
+    console.assert(ready === document.fonts.ready,
+        'failed font preserves the pending promise; observed ' +
+        (ready === document.fonts.ready));
+    testEnd();
+}, function (reason) {
+    console.assert(false, 'ready must not reject; observed ' + reason);
+    testEnd();
+});
+</script>

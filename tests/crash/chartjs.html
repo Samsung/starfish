@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./chart.js"></script>
+    <style>
+        #chartwrapper {
+            width: 500px;
+            height: 300px;
+        }
+
+        .flexContainer {
+            display: flex;
+            width: 600px;
+            height: 400px;
+            align-items: center;
+            justify-content: center;
+            background-color: green;
+            flex-direction: column;
+        }
+
+        .flexItem {
+            background-color: black;
+        }
+
+        .flexItemFlex {
+            display: flex;
+            background-color: black;
+        }
+
+        .content {
+            width: 500px;
+            height: 300px;
+            background-color: white;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="flexContainer">
+        <div class="flexItemFlex">
+            <div class="content">
+                <div id="chartwrapper">
+                    <canvas id="myChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+
+        function testStart() {
+            window.setTimeout(() => {
+                const ctx = document.getElementById('myChart');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+                        datasets: [{
+                            label: '# of Votes',
+                            data: [12, 19, 3, 5, 2, 3],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }, 1000);
+
+            window.setTimeout(() => {
+                testEnd();
+            }, 3000);
+        }
+    </script>
+</body>
+
+</html>

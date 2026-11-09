@@ -1,0 +1,36 @@
+<div id="victim">
+</div>
+<style>
+#victim {
+display: -webkit-flex;
+-webkit-flex: 2;
+-webkit-flex-flow: row;
+-webkit-flex-grow: 3;
+-webkit-flex-wrap: nowrap;
+-webkit-flex-basis: 1px;
+-webkit-flex-shrink: 4;
+-webkit-flex-direction: row;
+}
+</style>
+<script>
+
+var s = window.getComputedStyle(victim)
+console.log(s)
+console.log(s.webkitFlex)
+console.log(s.webkitFlexFlow)
+console.log(s.webkitFlexGrow)
+console.log(s.webkitFlexWrap)
+console.log(s.webkitFlexBasis)
+console.log(s.webkitFlexShrink)
+console.log(s.webkitFlexDirection)
+
+testAssert(s.webkitFlex=="3 4 1px")
+testAssert(s.webkitFlexFlow=="row nowrap")
+testAssert(s.webkitFlexGrow=="3")
+testAssert(s.webkitFlexWrap=="nowrap")
+testAssert(s.webkitFlexBasis=="1px")
+testAssert(s.webkitFlexShrink=="4")
+testAssert(s.webkitFlexDirection=="row")
+
+testEnd();
+</script>

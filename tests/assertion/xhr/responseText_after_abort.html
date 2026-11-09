@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+    function run(){
+    
+        var xhr = new XMLHttpRequest();
+        var url = "./responseText_after_abort.txt";
+        var textBeforeAbort = "";
+        var textAfterAbort = "";
+    
+        xhr.onload = function() {
+            testAssert(this.status == 200);
+            textBeforeAbort = this.responseText;
+        };
+        xhr.open("GET", url, true);
+        xhr.send();
+
+        window.setTimeout(function(){xhr.abort()}, 1000);
+        window.setTimeout(function(){
+            textAfterAbort = "*" + xhr.responseText;
+            testAssert(textBeforeAbort != "");
+            testAssert(textAfterAbort == "*");
+            testEnd();
+        }, 2000);
+    }
+  </script>
+</head>
+
+<body onload="run()">
+  <div>XHR's responseText property should be cleaned after the execution of abort() function</div>
+</body>
+</html>

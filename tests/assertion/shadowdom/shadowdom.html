@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<body>
+<div id="host1">ddd</div>
+<span>I'm not in the shadow DOM</span>
+<div id="host2">
+  <template shadowrootmode="open">
+    <span>I'm in the shadow DOM</span>
+  </template>
+</div>
+
+<div id="host3">
+<table id="producttable">
+  <thead>
+    <tr>
+      <td>cd</td>
+      <td>nm</td>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+</div>
+
+<template id="productrow">
+  <tr>
+    <td class="record"></td>
+    <td></td>
+  </tr>
+</template>
+</body>
+
+<script>
+
+if(!console.assert) {
+  console.assert = testAssert.bind(this)
+}
+
+let oldHost1Height = host1.getBoundingClientRect().height;
+
+const host = document.querySelector("#host1");
+const shadow = host.attachShadow({ mode: "open" });
+const span = document.createElement("span");
+span.textContent = "I'm in the shadow DOM";
+shadow.appendChild(document.createElement("br"));
+shadow.appendChild(span);
+
+console.assert(host1.getBoundingClientRect().height == oldHost1Height*2)
+console.assert(host2.firstElementChild == null)
+console.assert(host2.shadowRoot != null)
+console.assert(host2.getBoundingClientRect().height == oldHost1Height)
+
+console.assert(productrow.getBoundingClientRect().height == 0)
+
+console.assert("content" in document.createElement("template"))
+
+const tbody = document.querySelector("tbody");
+const template = document.querySelector("#productrow");
+
+const clone = template.content.cloneNode(true);
+let td = clone.querySelectorAll("td");
+td[0].textContent = "2222";
+td[1].textContent = "asdf";
+tbody.appendChild(clone);
+
+console.assert(host3.innerText.includes("asdf"));
+
+testEnd();
+
+
+</script>
+</html>
+

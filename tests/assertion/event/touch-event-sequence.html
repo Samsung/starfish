@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<!--
+  Basic touch event dispatch: simulateTouchStart/simulateTouchEnd must fire
+  touchstart and touchend on the target element in that order, and the event
+  type string must match.
+-->
+<head>
+<style>
+  body { margin: 0; }
+  #target { width: 200px; height: 200px; background: lightblue; }
+</style>
+</head>
+<body>
+  <div id="target"></div>
+</body>
+<script>
+  var events = [];
+  var target = document.getElementById("target");
+  ["touchstart", "touchend"].forEach(function(type) {
+    target.addEventListener(type, function(e) {
+      events.push(e.type);
+    });
+  });
+
+  function testStart() {
+    simulateTouchStart(100, 100);
+    simulateTouchEnd(100, 100);
+
+    setTimeout(function() {
+      testAssert(events.length === 2);
+      testAssert(events[0] === "touchstart");
+      testAssert(events[1] === "touchend");
+      testEnd();
+    }, 100);
+  }
+</script>
+</html>

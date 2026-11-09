@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <style>
+    /* Regression test for "Resolve flex row-gap percentage against block size".
+
+       column-gap percentages resolve against the inline (horizontal) size and
+       row-gap percentages against the block (vertical) size. The flex layout
+       used to resolve both against the available width, so a percentage
+       row-gap was computed from the wrong dimension.
+
+       This is a column flex container, so row-gap is the main-axis gap, and
+       its percentage must resolve against the block size (the container's
+       definite 200px height): 10% -> 20px. The width (100px) is deliberately
+       different from the height so a width-based resolution (the bug, 10% ->
+       10px) is distinguishable. With no row-gap read at all the gap would be
+       0px. Each item is 30px tall, so the correct successive-top delta is
+       30 + 20 = 50px. */
+    body { margin: 0; }
+    .col { display: flex; flex-direction: column; width: 100px; height: 200px;
+           row-gap: 10%; background: gray; }
+    .col > div { height: 30px; background: blue; }
+  </style>
+ </head>
+ <body>
+   <div class="col"><div id="a">a</div><div id="b">b</div><div id="c">c</div></div>
+<script>
+   function R(id) { return document.getElementById(id).getBoundingClientRect(); }
+   function approx(a, b) { return Math.abs(a - b) <= 1; }
+
+   var a = R('a'), b = R('b'), c = R('c');
+
+   // row-gap: 10% resolves against the 200px block size -> 20px.
+   testAssert(approx(b.top - a.bottom, 20));
+   testAssert(approx(c.top - b.bottom, 20));
+
+   // 30px item height + 20px gap between successive tops.
+   testAssert(approx(b.top - a.top, 50));
+   testAssert(approx(c.top - b.top, 50));
+
+   testEnd();
+</script>
+</body>
+</html>

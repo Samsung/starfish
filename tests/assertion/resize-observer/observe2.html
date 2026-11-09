@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      html {
+        height: 100%;
+      }
+
+      div {
+        width: 100px;
+        height: 100px;
+        background: red;
+        box-sizing: content-box;
+        border: black 10px solid;
+      }
+      span {
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+    </div>
+<span>
+asdf
+</span>
+<script>
+var testCount = 0;
+  const resizeObserver = new ResizeObserver(entries => {
+  for (let entry of entries) {
+    console.log(JSON.stringify(entry.contentRect))
+    console.log(entry.target)
+
+    if (testCount == 0) {
+      testAssert(entry.target == document.querySelector("div"));
+      testAssert(entry.contentRect.width == 100);
+      testAssert(entry.contentRect.height == 100);
+    } else if (testCount == 1) {
+      testAssert(entry.target == document.querySelector("span"));
+      testAssert(entry.contentRect.width == 0);
+      testAssert(entry.contentRect.height == 0);
+      document.querySelector("div").style.width="200px"
+      entry.target.style.fontSize = "100px"; // inline element cannot trigger resize event
+    } else if (testCount == 2) {
+      testAssert(entry.target == document.querySelector("div"));
+      testAssert(entry.contentRect.width == 200);
+      testAssert(entry.contentRect.height == 100);
+      document.querySelector("div").style.width="100px"
+      document.querySelector("div").style.transform="scale(2)";
+      document.querySelector("div").style.border="20px black solid";
+    } else if (testCount == 3) {
+      testAssert(entry.target == document.querySelector("div"));
+      testAssert(entry.contentRect.width == 100);
+      testAssert(entry.contentRect.height == 100);
+      document.querySelector("div").style.border="1px black solid"; // border change cannot trigger resize event
+      document.querySelector("div").style.padding="10px"; // padding change cannot trigger resize event
+      setTimeout(function() {
+        testEnd();
+      }, 1000);
+    } else if (testCount == 4) {
+       testAssert(false);
+    }
+
+    testCount++;
+  }
+});
+
+resizeObserver.observe(document.querySelector('div'));
+resizeObserver.observe(document.querySelector('span'));
+
+function testStart() {
+
+}
+    </script>
+  </body>
+</html>
+

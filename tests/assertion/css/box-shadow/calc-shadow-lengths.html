@@ -1,0 +1,79 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Math functions and variables in shadow lengths</title>
+<link rel="help" href="https://www.w3.org/TR/css-backgrounds-3/#the-box-shadow">
+<style>
+.card { --glow: 35px; width: 408px; height: 144px;
+  border-radius: 0 0 32px 32px; background: #0b0b0b;
+  box-shadow: inset 0 0 35px white; }
+#actual { box-shadow: 0 20px 35px black,
+  inset 0 calc(-1 * var(--glow)) var(--glow) calc(-1 * var(--glow)) white,
+  inset var(--glow) 0 var(--glow) calc(-1 * var(--glow)) white,
+  inset calc(-1 * var(--glow)) 0 var(--glow) calc(-1 * var(--glow)) white; }
+#reference { box-shadow: 0 20px 35px black,
+  inset 0 -35px 35px -35px white, inset 35px 0 35px -35px white,
+  inset -35px 0 35px -35px white; }
+</style>
+<div class="card" id="actual"></div><div class="card" id="reference"></div>
+<script>
+if (typeof testEnd !== 'function') {
+  window.testEnd = function () { console.log('Test complete'); };
+}
+var actual = document.getElementById('actual');
+var reference = document.getElementById('reference');
+console.assert(getComputedStyle(actual).boxShadow ===
+  getComputedStyle(reference).boxShadow, 'Variable math must preserve all four shadows');
+var cases = [
+  ['calc(1em + 10px) calc(2em + 11px) calc(3em + 12px) black',
+   '26px 43px 60px black'],
+  ['inset calc(-1 * 35px) 0 35px calc(-1 * 35px) white',
+   'inset -35px 0 35px -35px white']
+];
+actual.style.fontSize = reference.style.fontSize = '16px';
+cases.forEach(function (values) {
+  actual.style.boxShadow = values[0];
+  reference.style.boxShadow = values[1];
+  console.assert(getComputedStyle(actual).boxShadow ===
+    getComputedStyle(reference).boxShadow, 'Computed shadow lengths: ' + values[0]);
+});
+['calc(1)', 'calc(10%)', 'calc(1px + 10%)', 'calc(1px * 1px)'].forEach(function (value) {
+  actual.style.boxShadow = '';
+  actual.style.boxShadow = value + ' 0 black';
+  console.assert(actual.style.boxShadow === '', 'Reject non-length: ' + value);
+});
+actual.style.boxShadow = '1px 1px calc(-1px) black';
+reference.style.boxShadow = '1px 1px 0 black';
+console.assert(getComputedStyle(actual).boxShadow ===
+  getComputedStyle(reference).boxShadow, 'Negative calculated blur clamps to zero');
+actual.style.boxShadow = '';
+actual.style.boxShadow = '1px 1px -1px black';
+console.assert(actual.style.boxShadow === '', 'Negative literal blur is invalid');
+actual.style.textShadow = 'calc(1em + 10px) calc(-1 * 35px) 2px black';
+reference.style.textShadow = '26px -35px 2px black';
+console.assert(getComputedStyle(actual).textShadow ===
+  getComputedStyle(reference).textShadow, 'Text shadows accept math lengths');
+// A leading calc() is checked first, before an earlier var() value on the
+// same property could mask how the new one is substituted.
+[['boxShadow', 'calc(var(--glow) * 1) 2px 3px black', '35px 2px 3px black'],
+ ['boxShadow', 'calc(var(--glow) + 1px) 0 black, 1px 1px red',
+  '36px 0 black, 1px 1px red'],
+ ['textShadow', 'calc(var(--glow) - 5px) 1px black', '30px 1px black'],
+ ['boxShadow', 'inset 0 calc(-1 * var(--glow)) 3px black',
+  'inset 0 -35px 3px black'],
+ ['boxShadow', '1px 1px calc(var(--glow) * 2) black', '1px 1px 70px black'],
+ ['textShadow', '1px calc(var(--glow) + 0px) black', '1px 35px black']
+].forEach(function (values) {
+  actual.style[values[0]] = values[1];
+  reference.style[values[0]] = values[2];
+  console.assert(getComputedStyle(actual)[values[0]] ===
+    getComputedStyle(reference)[values[0]], 'Variable only inside math: ' + values[1]);
+});
+actual.style.boxShadow = '';
+actual.style.boxShadow = 'calc(var(--glow))';
+getComputedStyle(actual).boxShadow;
+actual.style.boxShadow = '1px var(--glow) black';
+reference.style.boxShadow = '1px 35px black';
+console.assert(getComputedStyle(actual).boxShadow ===
+  getComputedStyle(reference).boxShadow, 'Replacing a lone calc() keeps substitution');
+testEnd();
+</script>

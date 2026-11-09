@@ -1,0 +1,32 @@
+<script>
+	window.onload = ()=>{
+		var triggerscript = document.createElement("script");
+		var Script = document.createElement("script");
+
+		Script.onload = ()=>{console.log("good")}
+		Script.onerror = ()=>{
+			document.open(); //m_moduleScripts clear
+			document.write("gg");
+
+			gg = document.createElement("script");
+			gg.src = "foo.js";
+			gg.type = "module"
+			document.head.appendChild(gg); //avoid null deref
+		}
+
+		Script.src = "bar.js";
+		Script.type = "module"
+
+		triggerscript.src = "baz.js";
+		triggerscript.type = "module";
+
+		document.head.appendChild(Script);
+		document.head.appendChild(triggerscript);
+
+	}
+
+    window.setTimeout(function() {
+        testEnd();
+    }, 1000);
+</script>
+

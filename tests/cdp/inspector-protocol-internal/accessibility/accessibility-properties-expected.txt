@@ -1,0 +1,54 @@
+Tests typed and ordered accessibility properties
+#text: invalid:token=true, focusable:booleanOrUndefined=true, focused:booleanOrUndefined=true, editable:token=plaintext, settable:booleanOrUndefined=true, multiline:boolean=false, readonly:boolean=false, required:boolean=true, keyshortcuts:string=Ctrl+K, roledescription:string=account field, labelledby:nodeList->#label
+#textarea: invalid:token=false, focusable:booleanOrUndefined=true, editable:token=plaintext, multiline:boolean=false, readonly:boolean=true, required:boolean=true
+#aria-invalid: invalid:token=true
+#aria-grammar: <none>
+#aria-spelling: <none>
+#aria-undefined: <none>
+#aria-valid-override: invalid:token=false
+#grammar-textbox: invalid:token=true, settable:booleanOrUndefined=true, multiline:boolean=false, readonly:boolean=false, required:boolean=false
+#aria-disabled-check: disabled:boolean=true, checked:tristate=false
+#rich-generic: focusable:booleanOrUndefined=true, editable:token=richtext
+#rich-textbox: focusable:booleanOrUndefined=true, editable:token=richtext, settable:booleanOrUndefined=true, multiline:boolean=true, readonly:boolean=false, required:boolean=false
+#native-check: invalid:token=false, focusable:booleanOrUndefined=true, checked:tristate=true
+#mixed-check: checked:tristate=mixed
+#mixed-switch: checked:tristate=false
+#treeitem: level:integer=3, checked:tristate=true, expanded:booleanOrUndefined=false, selected:booleanOrUndefined=false
+#checked-option: checked:tristate=true
+#listbox: multiselectable:boolean=false, orientation:token=vertical, required:boolean=false
+#tablist: multiselectable:boolean=false, orientation:token=horizontal
+#tree: multiselectable:boolean=true, orientation:token=vertical, required:boolean=false
+#menubar: orientation:token=vertical
+#searchbox: settable:booleanOrUndefined=true
+#searchbox-readonly: <none>
+#treegrid-default: multiselectable:boolean=false, readonly:boolean=false, required:boolean=false
+#treegrid-horizontal: multiselectable:boolean=false, orientation:token=horizontal, readonly:boolean=false, required:boolean=false
+#heading-default: level:integer=2
+#heading-invalid: level:integer=3
+#level-decimal: level:integer=2
+#level-negative: level:integer=1
+#level-zero: level:integer=1
+#level-overflow: level:integer=1
+#level-plain: level:integer=1
+#list-top: level:integer=1
+#list-nested: level:integer=2
+#level-heading-ten: level:integer=2
+#expanded-listitem: level:integer=1, expanded:booleanOrUndefined=true
+#readonly-ignored: <none>
+#treeitem-top: level:integer=1, selected:booleanOrUndefined=false
+#treeitem-nested: level:integer=2, selected:booleanOrUndefined=false
+#treeitem-nested-tree: level:integer=1, selected:booleanOrUndefined=false
+#unsupported-expanded: modal:boolean=false
+#invalid-expanded: expanded:booleanOrUndefined=true
+#expanded-application: expanded:booleanOrUndefined=true
+#expanded-checkbox: checked:tristate=false, expanded:booleanOrUndefined=true
+#expanded-menuitemcheckbox: checked:tristate=false, expanded:booleanOrUndefined=false
+#expanded-columnheader: readonly:boolean=false, required:boolean=false, expanded:booleanOrUndefined=true
+#selected-outside-grid: readonly:boolean=false, required:boolean=false
+#selected-header: readonly:boolean=false, required:boolean=false, selected:booleanOrUndefined=true
+#option-old: focusable:booleanOrUndefined=true, selected:booleanOrUndefined=false
+#option: focusable:booleanOrUndefined=true, selected:booleanOrUndefined=true
+#hidden-root: ignored=true, reasons=ariaHiddenElement
+#hidden-child: ignored=true, reasons=ariaHiddenSubtree->#hidden-root
+#body-visible: ignored=false
+#hidden-option: ignored=false

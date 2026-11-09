@@ -1,0 +1,54 @@
+<div id="cc">
+<div id="con">
+<div>test</div>
+<div>test</div>
+<div>test</div>
+<div>test</div>
+<div>test</div>
+<div>test</div>
+<div>test</div>
+<div>test</div>
+<div>test</div>
+<div>test</div>
+<div>test</div>
+<div>test</div>
+<div id="ele" tabindex="-1">test</div>
+</div>
+</div>
+<style>
+
+* { margin: 0 }
+
+
+#cc {
+
+height: 2000px;
+
+}
+
+#con {
+    width: 100px;
+    height: 100px;
+    overflow: hidden;
+    line-height: 20px;
+}
+
+#ele {
+    border: 1px black solid;
+background: red;
+}
+
+div > div {
+    width: 100px;
+}
+
+</style>
+<script>
+
+document.getElementById("ele").focus();
+
+testAssert(con.scrollTop > 100);
+testAssert(window.scrollY == 0)
+testEnd();
+</script>
+

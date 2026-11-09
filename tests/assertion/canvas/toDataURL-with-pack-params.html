@@ -1,0 +1,61 @@
+<canvas id="gl" width="51" height="51"></canvas>
+<canvas id="c2d" width="51" height="51"></canvas>
+<script>
+    // The application's pixel pack parameters (PACK_ALIGNMENT, plus
+    // PACK_ROW_LENGTH/PACK_SKIP_* on WebGL2) must not affect what
+    // toDataURL() captures, and toDataURL() must not modify them.
+    // The canvas width is odd so that a leaked PACK_ALIGNMENT of 8
+    // would misalign the readback rows.
+    window.onload = function () {
+        var glCanvas = document.getElementById("gl");
+        var gl = glCanvas.getContext("webgl2") || glCanvas.getContext("webgl");
+        testAssert(gl != null);
+
+        // Left half red, right half green.
+        gl.enable(gl.SCISSOR_TEST);
+        gl.scissor(0, 0, 26, 51);
+        gl.clearColor(1, 0, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.scissor(26, 0, 25, 51);
+        gl.clearColor(0, 1, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.disable(gl.SCISSOR_TEST);
+
+        gl.pixelStorei(gl.PACK_ALIGNMENT, 8);
+        var isWebGL2 = 'PACK_ROW_LENGTH' in gl;
+        if (isWebGL2) {
+            gl.pixelStorei(gl.PACK_ROW_LENGTH, 2048);
+            gl.pixelStorei(gl.PACK_SKIP_ROWS, 3);
+            gl.pixelStorei(gl.PACK_SKIP_PIXELS, 7);
+        }
+
+        var url = glCanvas.toDataURL();
+
+        testAssert(gl.getParameter(gl.PACK_ALIGNMENT) == 8);
+        if (isWebGL2) {
+            testAssert(gl.getParameter(gl.PACK_ROW_LENGTH) == 2048);
+            testAssert(gl.getParameter(gl.PACK_SKIP_ROWS) == 3);
+            testAssert(gl.getParameter(gl.PACK_SKIP_PIXELS) == 7);
+        }
+        testAssert(gl.getError() == gl.NO_ERROR);
+
+        var img = new Image();
+        img.onload = function () {
+            var ctx = document.getElementById("c2d").getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            // Sample away from the first row: rows written with a wrong
+            // stride drift further off with every row.
+            var d = ctx.getImageData(5, 45, 1, 1).data;
+            testAssert(d[0] > 200 && d[1] < 50);
+            d = ctx.getImageData(45, 45, 1, 1).data;
+            testAssert(d[1] > 200 && d[0] < 50);
+            d = ctx.getImageData(45, 3, 1, 1).data;
+            testAssert(d[1] > 200 && d[0] < 50);
+            testEnd();
+        };
+        img.onerror = function () {
+            testAssert(false);
+        };
+        img.src = url;
+    }
+</script>

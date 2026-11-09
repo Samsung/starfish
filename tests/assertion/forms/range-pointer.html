@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>input type=range: pointer operation</title>
+<style>
+  body { margin: 0; }
+  /* 12px thumb on a 200px content box: the thumb center travels 188px from x=26 */
+  #r { position: absolute; left: 20px; top: 20px; width: 200px; height: 20px; margin: 0; padding: 0; border: 0; }
+  #rtl { position: absolute; left: 20px; top: 60px; width: 200px; height: 20px; margin: 0; padding: 0; border: 0; }
+  #far { position: absolute; left: 1000px; top: 100px; width: 200px; height: 20px; margin: 0; padding: 0; border: 0; }
+  #spacer { position: absolute; left: 0; top: 0; width: 2400px; height: 1px; }
+</style>
+</head>
+<body>
+<input id="r" type="range" min="0" max="100" value="50">
+<input id="rtl" type="range" min="0" max="100" value="50" dir="rtl">
+<input id="far" type="range" min="0" max="100" value="50">
+<div id="spacer"></div>
+<script>
+  var r = document.getElementById("r");
+  var events = [];
+  r.addEventListener("input", function () { events.push("input:" + r.value); });
+  r.addEventListener("change", function () { events.push("change:" + r.value); });
+
+  // x for a value: thumb center = 20 + 6 + 188 * value / 100
+  function xFor(value) { return 26 + 188 * value / 100; }
+
+  function run() {
+    // A click sets the value where the thumb center lands.
+    simulateMouseDown(xFor(25), 30);
+    simulateMouseUp(xFor(25), 30);
+    console.assert(r.value === "25", "click puts the thumb under the pointer: " + r.value);
+    console.assert(events.join(",") === "input:25,change:25", "click fires input then change: " + events.join(","));
+    console.assert(document.activeElement === r, "the control takes focus on mousedown");
+
+    // A drag fires input on each move and change once, on release.
+    events = [];
+    simulateMouseDown(xFor(25), 30);
+    simulateMouseMove(xFor(40), 30);
+    simulateMouseMove(xFor(60), 30);
+    simulateMouseUp(xFor(60), 30);
+    console.assert(r.value === "60", "drag follows the pointer: " + r.value);
+    console.assert(events.join(",") === "input:40,input:60,change:60", "drag fires input per move, change on release: " + events.join(","));
+
+    // The drag keeps going outside the box and clamps to the track.
+    events = [];
+    simulateMouseDown(xFor(60), 30);
+    simulateMouseMove(400, 200);
+    simulateMouseUp(400, 200);
+    console.assert(r.value === "100", "a drag past the end clamps to the maximum: " + r.value);
+    console.assert(events.join(",") === "input:100,change:100", "release outside the box still commits: " + events.join(","));
+
+    // Releasing where the drag began changes nothing and fires no change.
+    events = [];
+    simulateMouseDown(xFor(100), 30);
+    simulateMouseUp(xFor(100), 30);
+    console.assert(events.length === 0, "no events when the pointer does not move the value: " + events.join(","));
+
+    // Clicks before the track's start land on the minimum.
+    simulateMouseDown(21, 30);
+    simulateMouseUp(21, 30);
+    console.assert(r.value === "0", "a click before the first thumb position gives the minimum: " + r.value);
+
+    // Touch follows the same path, and keeps following the finger once it
+    // leaves the box.
+    events = [];
+    simulateTouchStart(xFor(50), 30);
+    simulateTouchMove(xFor(70), 30);
+    simulateTouchMove(xFor(80), 90);
+    simulateTouchEnd(xFor(80), 90);
+    console.assert(r.value === "80", "touch drag follows the finger outside the box: " + r.value);
+    console.assert(events.join(",") === "input:50,input:70,input:80,change:80", "touch fires input per move, change on end: " + events.join(","));
+
+    // Disabling mid-drag ends the drag and commits what it changed.
+    events = [];
+    simulateMouseDown(xFor(80), 30);
+    simulateMouseMove(xFor(30), 30);
+    r.disabled = true;
+    simulateMouseMove(xFor(10), 30);
+    simulateMouseUp(xFor(10), 30);
+    r.disabled = false;
+    console.assert(r.value === "30", "disabling mid-drag stops the value where it was: " + r.value);
+    console.assert(events.join(",") === "input:30,change:30", "and commits it: " + events.join(","));
+    simulateMouseMove(xFor(90), 30);
+    console.assert(r.value === "30", "no drag survives being disabled: " + r.value);
+
+    // Pointer mapping on a horizontally scrolled page: the control sits at
+    // page x 1000; after scrolling by 900 it shows at viewport x 100.
+    var far = document.getElementById("far");
+    window.scrollTo(900, 0);
+    console.assert(window.scrollX === 900, "page scrolled: " + window.scrollX);
+    simulateMouseDown(1006 + 188 * 0.25 - 900, 110);
+    simulateMouseUp(1006 + 188 * 0.25 - 900, 110);
+    console.assert(far.value === "25", "click maps through the page scroll: " + far.value);
+    window.scrollTo(0, 0);
+
+    // rtl: the minimum is at the right end.
+    var rtl = document.getElementById("rtl");
+    simulateMouseDown(xFor(25), 70);
+    simulateMouseUp(xFor(25), 70);
+    console.assert(rtl.value === "75", "rtl maps the left side to high values: " + rtl.value);
+
+    // A disabled control ignores the pointer.
+    r.disabled = true;
+    r.value = "50";
+    events = [];
+    simulateMouseDown(xFor(90), 30);
+    simulateMouseUp(xFor(90), 30);
+    console.assert(r.value === "50" && events.length === 0, "a disabled control ignores the pointer: " + r.value);
+
+    testEnd();
+  }
+
+  window.onload = function () {
+    if (typeof simulateMouseDown !== "function") {
+      return;
+    }
+    requestAnimationFrame(function () { requestAnimationFrame(run); });
+  };
+</script>
+</body>
+</html>

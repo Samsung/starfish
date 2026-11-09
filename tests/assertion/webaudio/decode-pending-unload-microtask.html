@@ -1,0 +1,39 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Web Audio pending decode during a microtask unload</title>
+<body>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Web Audio pending decode during a microtask unload complete";
+    };
+}
+
+if (typeof AudioContext !== "function") {
+    testEnd();
+} else {
+    const frame = document.createElement("iframe");
+    frame.onload = function () {
+        const child = frame.contentWindow;
+        const context = new child.AudioContext();
+        const input = new child.ArrayBuffer(2 * 1024 * 1024);
+        const result = new Promise(function (resolve) {
+            context.decodeAudioData(input).then(
+                function () { resolve(false); },
+                function (error) {
+                    resolve(error.name === "InvalidStateError");
+                });
+        });
+        Promise.resolve().then(function () {
+            frame.remove();
+        });
+        result.then(function (rejectedForUnload) {
+            console.assert(rejectedForUnload,
+                           "a microtask unload rejects the pending decode");
+            testEnd();
+        });
+    };
+    document.body.appendChild(frame);
+}
+</script>
+</body>

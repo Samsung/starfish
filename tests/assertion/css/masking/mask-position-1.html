@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <style>
+    .mask {
+      border: 1px solid black;
+      width: 250px;
+      height: 250px;
+      background-color: blue;
+      mask-image: url(support/red-100x100.png);
+      mask-position: center right, center right, center left;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="target" class="mask"></div>
+  <script>
+    function testStart() {
+      testAssert(getComputedStyle(target)['mask-position'] === "100% 50%");
+
+      target.style['mask-position'] = 'top left';
+      testAssert(getComputedStyle(target)['mask-position'] === "0% 0%");
+
+      target.style['mask-position'] = 'center';
+      testAssert(getComputedStyle(target)['mask-position'] === "50% 50%");
+
+      target.style['mask-position'] = 'left';
+      testAssert(getComputedStyle(target)['mask-position'] === "0% 50%");
+
+      target.style['mask-position'] = 'right';
+      testAssert(getComputedStyle(target)['mask-position'] === "100% 50%");
+
+      target.style['mask-position'] = 'top';
+      testAssert(getComputedStyle(target)['mask-position'] === "50% 0%");
+
+      target.style['mask-position'] = 'bottom';
+      testAssert(getComputedStyle(target)['mask-position'] === "50% 100%");
+
+      target.style['mask-position'] = '100px';
+      testAssert(getComputedStyle(target)['mask-position'] === "100px 50%");
+
+      target.style['mask-position'] = '10px 50px';
+      testAssert(getComputedStyle(target)['mask-position'] === "10px 50px");
+
+      target.style['mask-position'] = 'left 100px';
+      testAssert(getComputedStyle(target)['mask-position'] === "0% 100px");
+
+      target.style['mask-position'] = '100px bottom';
+      testAssert(getComputedStyle(target)['mask-position'] === "100px 100%");
+
+      testEnd();
+    }
+
+  </script>
+
+</body>
+
+</html>

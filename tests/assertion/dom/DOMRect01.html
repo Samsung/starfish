@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+    DOMRect Test
+</body>
+<script>
+    function testStart() {
+        const x = 0;
+        const y = 0;
+        const width = 100;
+        const height = 100;
+
+
+        const rect1 = new DOMRect(x, y, width, height);
+        testAssert(rect1 != null);
+        testAssert(typeof(rect1) != 'undefined');
+        testAssert(rect1.x == x);
+        testAssert(rect1.y == y);
+        testAssert(rect1.width == width);
+        testAssert(rect1.height == height);
+
+        const jsonObject = rect1.toJSON();
+        testAssert(jsonObject.x == x);
+        testAssert(jsonObject.y == y);
+        testAssert(jsonObject.width == width);
+        testAssert(jsonObject.height == height);
+
+        testEnd();
+    }
+</script>
+
+</html>

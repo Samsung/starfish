@@ -1,6 +1,6 @@
 {
   "layer": "behavior",
-  "revision": "8c1e8c78de78a9a20327bc2e631cf9726ca37bdc",
+  "revision": "15223f037559c2e4c61a9f47890fe3159b61b9fd",
   "entries": {
     "access-inspected-object.js": {
       "expected": "fail",
@@ -99,7 +99,8 @@
       "suite": "internal"
     },
     "accessibility/accessibility-query-axtree-errors.js": {
-      "expected": "pass"
+      "expected": "fail",
+      "category": "timeout"
     },
     "accessibility/accessibility-query-axtree.js": {
       "expected": "pass"
@@ -240,7 +241,7 @@
     },
     "bfcache/bfcache-request-basic.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "bfcache/report-back-forward-cache-status-blocklisted-features-same-site.js": {
       "expected": "fail",
@@ -286,6 +287,10 @@
       "expected": "fail",
       "category": "output-differs"
     },
+    "browser/add-mock-camera-multiple-sessions.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
     "browser/add-mock-camera-open.js": {
       "expected": "fail",
       "category": "output-differs"
@@ -314,9 +319,17 @@
       "expected": "fail",
       "category": "output-differs"
     },
+    "browser/set-download-behavior-allow-and-name.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
     "browser/set-download-behavior-deny.js": {
       "expected": "fail",
       "category": "timeout"
+    },
+    "cachestorage/cache-data.js": {
+      "expected": "fail",
+      "category": "output-differs"
     },
     "cachestorage/oopif.js": {
       "expected": "fail",
@@ -346,6 +359,10 @@
       "expected": "fail",
       "category": "output-differs"
     },
+    "console/content-security-policy-console-worker-import.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
     "cpu-profiler/console-profile.js": {
       "expected": "fail",
       "category": "script-error"
@@ -371,6 +388,22 @@
     "crash-report/get-entries.js": {
       "expected": "fail",
       "category": "script-error"
+    },
+    "csp/csp-inline-warning-contains-stacktrace.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "csp/csp-setInterval-warning-contains-stacktrace.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "csp/csp-setTimeout-warning-contains-stacktrace.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "csp/frame-src-report-only-console-level.js": {
+      "expected": "fail",
+      "category": "output-differs"
     },
     "css/constructed-stylesheet-mutation.js": {
       "expected": "fail",
@@ -400,11 +433,19 @@
       "expected": "fail",
       "category": "script-error"
     },
+    "css/source-map-header-stylesheet.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
     "css/stylesheet-loading-failed.js": {
       "expected": "fail",
       "category": "timeout"
     },
     "debugger/debugger-script-parsed-generated-module-scripts.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "debugger/fetch-breakpoints.js": {
       "expected": "fail",
       "category": "timeout"
     },
@@ -440,6 +481,10 @@
       "expected": "fail",
       "category": "timeout"
     },
+    "debugger/mutation-observer-terminate-on-resume.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
     "debugger/regress-493631402.js": {
       "expected": "fail",
       "category": "timeout"
@@ -453,6 +498,10 @@
       "category": "timeout"
     },
     "debugger/reload-on-pause/iframe-fetch.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "debugger/reload-on-pause/mutation-observer-popup.js": {
       "expected": "fail",
       "category": "timeout"
     },
@@ -501,14 +550,18 @@
     },
     "device-orientation/base-usage.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "device-orientation/clear-override-without-setting.js": {
       "expected": "pass"
     },
     "device-orientation/device-orientation-overrides-persist-across-navigations.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
+    },
+    "device-orientation/device-orientation-success.js": {
+      "expected": "fail",
+      "category": "timeout"
     },
     "device-orientation/emulation-domain-interaction.js": {
       "expected": "fail",
@@ -516,7 +569,7 @@
     },
     "device-orientation/event-listener-in-frame.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "device-orientation/parameter-validation.js": {
       "expected": "fail",
@@ -682,7 +735,7 @@
     },
     "emulation/emulation-set-disabled-image-types-basic.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "emulation/emulation-set-disabled-image-types-img.js": {
       "expected": "fail",
@@ -718,11 +771,15 @@
     },
     "emulation/emulation-user-agent-override.js": {
       "expected": "fail",
-      "category": "script-error"
+      "category": "output-differs"
     },
     "emulation/prerender-activation-uaf.js": {
       "expected": "fail",
       "category": "timeout"
+    },
+    "emulation/prerender-emulation-overrides-cleared.js": {
+      "expected": "fail",
+      "category": "script-error"
     },
     "emulation/pressure-override-dedicated-worker-basics.js": {
       "expected": "fail",
@@ -734,7 +791,7 @@
     },
     "emulation/pressure-override-enabled-false-print-info-message.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "emulation/pressure-override-enabled-true-print-info-message.js": {
       "expected": "fail",
@@ -746,7 +803,7 @@
     },
     "emulation/pressure-override-multiple-updates-delivery.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "emulation/pressure-override-remove-not-overridden-source.js": {
       "expected": "pass"
@@ -756,13 +813,17 @@
     },
     "emulation/pressure-override-update-delivery.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "emulation/pressure-override-update-not-overridden.js": {
       "expected": "fail",
       "category": "output-differs"
     },
     "emulation/pressure-overrides-persist-across-navigations.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "emulation/screen-info-override-events.js": {
       "expected": "fail",
       "category": "output-differs"
     },
@@ -854,90 +915,6 @@
       "expected": "fail",
       "category": "timeout"
     },
-    "fenced-frame/bringToFront-fenced-frame.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/close-fenced-frame.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/device-emulation-commands-fenced-frame.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/device-emulation-fenced-frame.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/disable-fenced-frame.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/discover-fenced-frame.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/fenced-frame-auto-attach.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/fenced-frame-in-oopif-auto-attach.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/fenced-frame-issue.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/fenced-frame-navigation-request.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/getframeowner-fenced-frame.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/global-commands-fenced-frame.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/handleJavaScriptDialog-fenced-frame.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/history-fenced-frame.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/nested-fenced-frame-auto-attach.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/permissions-policy-fenced-frame.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/reload-fenced-frame.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/security-protocols-fenced-frame.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/setWebLifecycleState-fenced-frame.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/stopLoading-fenced-frame.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
-    "fenced-frame/touch-emulation-fenced-frame.https.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
     "fetch-later/activate-and-redirect-cross-site-when-document-alive.https.js": {
       "expected": "fail",
       "category": "timeout"
@@ -955,8 +932,7 @@
       "category": "timeout"
     },
     "fetch/abort-navigation.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "fetch/about-blank-frame-id.js": {
       "expected": "fail",
@@ -1029,6 +1005,10 @@
     "fetch/fetch-binary-headers.js": {
       "expected": "fail",
       "category": "script-error"
+    },
+    "fetch/fetch-continue-cors-redirect-origin.js": {
+      "expected": "fail",
+      "category": "output-differs"
     },
     "fetch/fetch-continue-cross-origin-post-redirect.js": {
       "expected": "fail",
@@ -1330,6 +1310,10 @@
     "fetch/navigation-request-no-body.js": {
       "expected": "pass"
     },
+    "fetch/network-interception-wildcard-pattern-matching.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
     "fetch/post-data-blobs.js": {
       "expected": "fail",
       "category": "timeout"
@@ -1415,7 +1399,7 @@
     },
     "fetch/service-worker-interception-target.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "fetch/service-worker-interception.js": {
       "expected": "fail",
@@ -1459,7 +1443,31 @@
     },
     "filesystem/read-directory-response.js": {
       "expected": "fail",
-      "category": "script-error"
+      "category": "timeout"
+    },
+    "find-in-page/find-first-rejects-empty-query.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
+    "find-in-page/find-first-restarts-search.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "find-in-page/find-first-scrolls-to-match.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "find-in-page/find-next-and-find-prev-navigate-matches.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "find-in-page/find-next-requires-active-session.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
+    "find-in-page/stop-ends-session.js": {
+      "expected": "fail",
+      "category": "output-differs"
     },
     "iframe-no-src-execution-contexts.js": {
       "expected": "fail",
@@ -1469,9 +1477,29 @@
       "expected": "fail",
       "category": "output-differs"
     },
+    "input/dispatch-mouse-wheel-css-zoom-page-scale.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
     "inspector/worker-script-loaded.js": {
       "expected": "fail",
       "category": "timeout"
+    },
+    "isolated-code-cache/cross-origin-test.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
+    "isolated-code-cache/same-origin-module-test.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
+    "isolated-code-cache/same-origin-test.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
+    "isolated-code-cache/stale-revalidation-test.js": {
+      "expected": "fail",
+      "category": "output-differs"
     },
     "issues/attribute-value-exceeds-max-size-issue.js": {
       "expected": "fail",
@@ -1545,6 +1573,10 @@
       "expected": "fail",
       "category": "timeout"
     },
+    "issues/content-security-policy-issue-css-background-image.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
     "issues/content-security-policy-issue-report-only.js": {
       "expected": "fail",
       "category": "timeout"
@@ -1566,6 +1598,10 @@
       "category": "timeout"
     },
     "issues/content-security-policy-issue-trusted-types-sink.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "issues/content-security-policy-issue-worker-import.js": {
       "expected": "fail",
       "category": "timeout"
     },
@@ -1626,6 +1662,10 @@
       "category": "timeout"
     },
     "issues/exception-simple.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "issues/fenced-frame-deprecation-issue.js": {
       "expected": "fail",
       "category": "timeout"
     },
@@ -1706,6 +1746,10 @@
       "category": "timeout"
     },
     "issues/renderer-cors-issues.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "issues/rtc-peer-connection-create-dtmf-sender-deprecation.js": {
       "expected": "fail",
       "category": "timeout"
     },
@@ -1816,10 +1860,6 @@
       "expected": "fail",
       "category": "timeout"
     },
-    "issues/third-party-cookie-blocking-first-party-set-enabled.js": {
-      "expected": "fail",
-      "category": "timeout"
-    },
     "issues/third-party-cookie-phaseout-exclusion.js": {
       "expected": "fail",
       "category": "timeout"
@@ -1849,6 +1889,10 @@
       "category": "timeout"
     },
     "issues/webtransport-datagram-high-water-mark-deprecation.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "layers/layer-oopif.js": {
       "expected": "fail",
       "category": "timeout"
     },
@@ -2034,7 +2078,7 @@
     },
     "network/cors.js": {
       "expected": "fail",
-      "category": "timeout"
+      "category": "output-differs"
     },
     "network/cross-origin-isolation/coep-issue-reporting.js": {
       "expected": "fail",
@@ -2096,6 +2140,10 @@
       "expected": "fail",
       "category": "timeout"
     },
+    "network/direct-sockets/udp-socket-multicast.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
     "network/direct-sockets/udp-socket-success.js": {
       "expected": "fail",
       "category": "timeout"
@@ -2152,6 +2200,10 @@
       "expected": "fail",
       "category": "timeout"
     },
+    "network/fetch-completed-body-loading-finished.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
     "network/force-third-party-cookie-override.js": {
       "expected": "fail",
       "category": "timeout"
@@ -2204,13 +2256,25 @@
       "expected": "fail",
       "category": "output-differs"
     },
+    "network/get-response-body-fetch-blob-abort.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "network/get-response-body-fetch-blob-detach.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
+    "network/get-response-body-fetch-blob.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
     "network/get-response-body-font.js": {
       "expected": "fail",
       "category": "timeout"
     },
     "network/get-response-body-no-store-image-reuse.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "network/get-response-body.js": {
       "expected": "fail",
@@ -2230,7 +2294,7 @@
     },
     "network/is-same-site.js": {
       "expected": "fail",
-      "category": "timeout"
+      "category": "output-differs"
     },
     "network/load-network-resource-basic.js": {
       "expected": "fail",
@@ -2270,7 +2334,7 @@
     },
     "network/matched-network-conditions-offline-frame.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "network/matched-network-conditions-offline-iframe-worker.js": {
       "expected": "fail",
@@ -2282,7 +2346,7 @@
     },
     "network/matched-network-conditions-offline-oopif-frame.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "network/matched-network-conditions-offline-service-worker.js": {
       "expected": "fail",
@@ -2290,11 +2354,11 @@
     },
     "network/matched-network-conditions-offline-subresource-frame.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "network/matched-network-conditions-offline-subresource-oopif-frame.js": {
       "expected": "fail",
-      "category": "script-error"
+      "category": "timeout"
     },
     "network/matched-network-conditions-offline-worker.js": {
       "expected": "fail",
@@ -2330,11 +2394,11 @@
     },
     "network/navigation-204-loading-failed.js": {
       "expected": "fail",
-      "category": "timeout"
+      "category": "output-differs"
     },
     "network/navigation-long-async-stack.js": {
       "expected": "fail",
-      "category": "timeout"
+      "category": "output-differs"
     },
     "network/navigation-xfer-size.js": {
       "expected": "fail",
@@ -2370,7 +2434,7 @@
     },
     "network/raw-headers-for-protected-document.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "network/raw-response-headers.js": {
       "expected": "fail",
@@ -2378,7 +2442,7 @@
     },
     "network/redirect-302-with-post.js": {
       "expected": "fail",
-      "category": "timeout"
+      "category": "output-differs"
     },
     "network/redirect-cached-navigation.js": {
       "expected": "fail",
@@ -2452,13 +2516,17 @@
       "expected": "fail",
       "category": "timeout"
     },
+    "network/search-durable-response-body-after-navigation.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
     "network/search-in-response.js": {
       "expected": "fail",
       "category": "timeout"
     },
     "network/security-info-on-response.js": {
       "expected": "fail",
-      "category": "script-error"
+      "category": "timeout"
     },
     "network/set-extra-http-header_referer.js": {
       "expected": "fail",
@@ -2466,7 +2534,7 @@
     },
     "network/set-extra-http-headers.js": {
       "expected": "fail",
-      "category": "timeout"
+      "category": "output-differs"
     },
     "network/stream-resource-content-errors.js": {
       "expected": "fail",
@@ -2493,8 +2561,7 @@
       "category": "timeout"
     },
     "network/websocket/offline-no-open.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "network/websocket/offline-no-recieve.js": {
       "expected": "fail",
@@ -2522,7 +2589,7 @@
     },
     "network/websocket/slow-network.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "network/worker-network-events.js": {
       "expected": "fail",
@@ -2591,11 +2658,19 @@
       "expected": "fail",
       "category": "output-differs"
     },
+    "page/capture-screenshot-encoding-error.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
     "page/capture-screenshot-invalid-format.js": {
       "expected": "fail",
       "category": "output-differs"
     },
     "page/capture-screenshot-optimize-for-speed.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
+    "page/capture-screenshot-webp-optimize-for-speed.js": {
       "expected": "fail",
       "category": "output-differs"
     },
@@ -2633,7 +2708,7 @@
     },
     "page/frame-includes-domain-and-registry.js": {
       "expected": "fail",
-      "category": "timeout"
+      "category": "output-differs"
     },
     "page/frame-navigated-secure-origin.js": {
       "expected": "fail",
@@ -2703,6 +2778,13 @@
       "expected": "fail",
       "category": "timeout"
     },
+    "page/get-spell-check-custom-dictionary.js": {
+      "expected": "fail",
+      "category": "script-error"
+    },
+    "page/iframe-main-resource.js": {
+      "expected": "pass"
+    },
     "page/iframe-src-write-delay.js": {
       "expected": "fail",
       "category": "timeout"
@@ -2728,8 +2810,7 @@
       "category": "output-differs"
     },
     "page/inline-document-write.js": {
-      "expected": "fail",
-      "category": "timeout"
+      "expected": "pass"
     },
     "page/intercept-file-chooser-after-navigation.js": {
       "expected": "fail",
@@ -2737,7 +2818,7 @@
     },
     "page/lifecycle-network-idle0.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "page/navigate-204.js": {
       "expected": "fail",
@@ -2779,7 +2860,7 @@
     },
     "page/page-captureScreenshot.js": {
       "expected": "fail",
-      "category": "script-error"
+      "category": "output-differs"
     },
     "page/page-events-associated-isolation.js": {
       "expected": "fail",
@@ -2847,6 +2928,10 @@
       "expected": "fail",
       "category": "timeout"
     },
+    "page/resource-metadata.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
     "page/sandbox-iframe-getResourceContent.js": {
       "expected": "fail",
       "category": "timeout"
@@ -2854,6 +2939,14 @@
     "page/startScreenRecording-audio.js": {
       "expected": "fail",
       "category": "output-differs"
+    },
+    "page/startScreenRecording-capture-area.js": {
+      "expected": "fail",
+      "category": "not-implemented"
+    },
+    "page/startScreenRecording-invalid-params.js": {
+      "expected": "fail",
+      "category": "not-implemented"
     },
     "page/startScreenRecording-multiple-pages.js": {
       "expected": "fail",
@@ -2885,7 +2978,7 @@
     },
     "postmessage/console-cross-origin-iframe-logging.js": {
       "expected": "fail",
-      "category": "script-error"
+      "category": "output-differs"
     },
     "prefetch/clear-prefetch-cache-different-origins.js": {
       "expected": "fail",
@@ -2946,6 +3039,10 @@
     "prerender/prefetch-events-for-ahead-of-prerender.js": {
       "expected": "fail",
       "category": "output-differs"
+    },
+    "prerender/prerender-cross-origin-iframe-status-update.js": {
+      "expected": "fail",
+      "category": "script-error"
     },
     "prerender/prerender-disabled-without-tab-target.js": {
       "expected": "fail",
@@ -3018,16 +3115,14 @@
       "expected": "pass"
     },
     "runtime/eval-await-navigation-message-order.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "runtime/eval-await-navigation-paused-message-order.js": {
       "expected": "fail",
       "category": "output-differs"
     },
     "runtime/eval-await-terminated-on-navigation.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "runtime/eval-cancel-navigation.js": {
       "expected": "fail",
@@ -3036,6 +3131,10 @@
     "runtime/remote-object-id-cross-process.js": {
       "expected": "fail",
       "category": "output-differs"
+    },
+    "runtime/runtime-evaluate-provisional-frame.js": {
+      "expected": "fail",
+      "category": "timeout"
     },
     "runtime/runtime-evaluate-silent.js": {
       "expected": "fail",
@@ -3053,17 +3152,25 @@
       "expected": "fail",
       "category": "output-differs"
     },
+    "service-worker/add-empty-fetch-handler.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
     "service-worker/deliver-push-message.js": {
       "expected": "fail",
       "category": "timeout"
     },
     "service-worker/intercept-css-enable-fetch-claim-on-activate.js": {
       "expected": "fail",
-      "category": "script-error"
+      "category": "output-differs"
     },
     "service-worker/intercept-css-enable-fetch.js": {
       "expected": "fail",
-      "category": "script-error"
+      "category": "output-differs"
+    },
+    "service-worker/lazy-addeventlisteners.js": {
+      "expected": "fail",
+      "category": "timeout"
     },
     "service-worker/network-extrainfo-main-request.js": {
       "expected": "fail",
@@ -3076,6 +3183,10 @@
     "service-worker/network-get-request-body-blob.js": {
       "expected": "fail",
       "category": "script-error"
+    },
+    "service-worker/network-get-response-body-fetch-blob.js": {
+      "expected": "fail",
+      "category": "timeout"
     },
     "service-worker/network-set-user-agent-override.js": {
       "expected": "fail",
@@ -3090,6 +3201,26 @@
       "category": "timeout"
     },
     "service-worker/service-worker-fetch-async-stacks.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "service-worker/service-worker-network-fetch-blocked.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "service-worker/service-worker-network-fetch.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "service-worker/service-worker-pause.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "service-worker/service-worker-v8-cache.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
+    "service-worker/service-workers-navigation-preload.js": {
       "expected": "fail",
       "category": "timeout"
     },
@@ -3163,8 +3294,7 @@
       "category": "output-differs"
     },
     "storage/dom-storage-get-items-by-origin.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "storage/dom-storage-set-items-by-storage-key.js": {
       "expected": "fail",
@@ -3176,7 +3306,7 @@
     },
     "storage/dom-storage-storage-key-for-opaque-origin.js": {
       "expected": "fail",
-      "category": "timeout"
+      "category": "output-differs"
     },
     "storage/dom-storage-storage-key-functionality.js": {
       "expected": "fail",
@@ -3289,6 +3419,30 @@
     "storage/storage-buckets-delete-storage-bucket.js": {
       "expected": "fail",
       "category": "script-error"
+    },
+    "sxg/sxg-cert-not-found.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
+    "sxg/sxg-disable-cache.js": {
+      "expected": "fail",
+      "category": "timeout"
+    },
+    "sxg/sxg-navigation-fail.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
+    "sxg/sxg-navigation-redirect.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
+    "sxg/sxg-navigation.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
+    "sxg/sxg-transfer-size.js": {
+      "expected": "fail",
+      "category": "timeout"
     },
     "target/attach-sw-late.js": {
       "expected": "fail",
@@ -3529,7 +3683,7 @@
     },
     "tracing/animation.js": {
       "expected": "fail",
-      "category": "timeout"
+      "category": "output-differs"
     },
     "tracing/console-timing-async.js": {
       "expected": "fail",
@@ -3609,7 +3763,7 @@
     },
     "tracing/rendering.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "tracing/runtime-stats.js": {
       "expected": "fail",
@@ -3617,7 +3771,7 @@
     },
     "tracing/service-worker-wasm.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "tracing/soft-navigations.js": {
       "expected": "fail",
@@ -3649,7 +3803,7 @@
     },
     "tracing/user-marks.js": {
       "expected": "fail",
-      "category": "output-differs"
+      "category": "timeout"
     },
     "tracing/websocket/web-socket.js": {
       "expected": "fail",
@@ -3800,6 +3954,10 @@
       "category": "output-differs"
     },
     "webauthn/webauthn-user-verification.js": {
+      "expected": "fail",
+      "category": "output-differs"
+    },
+    "webmcp/invoke-tool-cross-origin.js": {
       "expected": "fail",
       "category": "output-differs"
     },

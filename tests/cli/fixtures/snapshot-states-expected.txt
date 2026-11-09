@@ -1,0 +1,9 @@
+@e1 [textbox] "Email" [required]: old
+@e2 [checkbox] "Remember me" [checked=true]
+@e3 [checkbox] "Subscribe" [checked=false]
+@e4 [button] "Toggle" [expanded=true]
+@e5 [button] "Collapsed" [expanded=false]
+@e6 [button] "Disabled action" [disabled]
+@e7 [combobox] "Size" [expanded=false]: Large
+@e8 [option] "Small"
+@e9 [option] "Large" [selected]

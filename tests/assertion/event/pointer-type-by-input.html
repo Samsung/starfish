@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<!--
+  PointerEvent.pointerType must name the input that produced the event:
+  "touch" for a finger, "mouse" for the pointing device. It used to be
+  hard-coded to "mouse" for every pointer event, so content that branches on
+  the pointer type (players switching between their touch and desktop UI)
+  always took the mouse path even on a touch panel.
+  A script-constructed PointerEvent takes the type from its init dictionary,
+  whose default is the empty string.
+  https://w3c.github.io/pointerevents/#dom-pointerevent-pointertype
+-->
+<head>
+<style>
+  body { margin: 0; }
+  #target { width: 200px; height: 200px; background: peachpuff; }
+</style>
+</head>
+<body>
+  <div id="target"></div>
+</body>
+<script>
+  var types = {};
+  var target = document.getElementById("target");
+  ["pointerdown", "pointerup"].forEach(function(type) {
+    target.addEventListener(type, function(e) {
+      types[e.type] = e.pointerType;
+    });
+  });
+
+  function testStart() {
+    simulateTouchStart(100, 100);
+    simulateTouchEnd(100, 100);
+
+    setTimeout(function() {
+      testAssert(types["pointerdown"] === "touch");
+      testAssert(types["pointerup"] === "touch");
+
+      types = {};
+      simulateMouseMove(100, 100);
+      simulateMouseDown(100, 100);
+      simulateMouseUp(100, 100);
+
+      setTimeout(function() {
+        testAssert(types["pointerdown"] === "mouse");
+        testAssert(types["pointerup"] === "mouse");
+
+        testAssert(new PointerEvent("pointerdown").pointerType === "");
+        testAssert(new PointerEvent("pointerdown",
+                                    { pointerType: "touch" }).pointerType === "touch");
+        testAssert(new PointerEvent("pointerdown",
+                                    { pointerId: 42 }).pointerId === 42);
+        testEnd();
+      }, 100);
+    }, 100);
+  }
+</script>
+</html>

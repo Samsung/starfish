@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Terminating workers from their own message handlers</title>
+</head>
+<body>
+<p>Each round starts sixteen dedicated workers at once. Every worker posts a
+message as soon as it starts and keeps posting from a 1 ms interval; the page
+terminates each worker inside the onmessage handler of its first message,
+while the worker is still producing more. Ten rounds; the page must survive
+every round and the first message of every worker must be the one handled.</p>
+<script>
+var ROUNDS = 10;
+var WORKERS = 16;
+var src = [
+  "postMessage('first');",
+  "setInterval(function () { postMessage('later'); }, 1);"
+].join('\n');
+var blobURL = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
+var handled = 0;
+var wrong = [];
+var timedOut = 0;
+
+function finish() {
+  console.assert(timedOut === 0, timedOut + ' workers never reported back');
+  console.assert(handled === ROUNDS * WORKERS, 'every worker handled once: ' + handled);
+  console.assert(wrong.length === 0, 'terminated on the first message, got ' + wrong.join(','));
+  if (window.testEnd) testEnd();
+}
+
+function round(n) {
+  if (n > ROUNDS) { setTimeout(finish, 300); return; }
+  var left = WORKERS;
+  function startOne() {
+    var worker = new Worker(blobURL);
+    var done = false;
+    var end = function (what) {
+      if (done) return;
+      done = true;
+      handled++;
+      if (what === 'timeout') timedOut++;
+      else if (what !== 'first') wrong.push(what);
+      // Terminate from inside the handler: the worker's thread is still
+      // posting, and the message being handled is the one whose dispatch
+      // must not reach back into the terminated worker.
+      worker.terminate();
+      if (--left === 0) setTimeout(function () { round(n + 1); }, 20);
+    };
+    worker.onmessage = function (e) { end(e.data); };
+    worker.onerror = function (e) { end('worker error: ' + e.message); };
+    setTimeout(function () { end('timeout'); }, 5000);
+  }
+  for (var i = 0; i < WORKERS; i++) startOne();
+}
+round(1);
+</script>
+</body>
+</html>

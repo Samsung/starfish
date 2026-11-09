@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>::slotted() matches light-DOM children distributed into a slot</title>
+  <style>
+    body { margin: 0; }
+    .host { margin-bottom: 4px; }
+    .box { display: inline-block; width: 40px; height: 40px; }
+  </style>
+</head>
+
+<body>
+  <!-- Per CSS Scoping spec, ::slotted(<compound>) matches a light-DOM node
+     assigned to a <slot> inside the rule's own shadow tree. Lit's
+     `static styles = css\`::slotted(*){...}\`` depends on this to style
+     projected children (A2UI/lit.dev "slotting-children" sample). Each host
+     below is a white square; a matching ::slotted() rule paints its
+     (otherwise-transparent) child's background green, turning the square
+     green. Neither ".host" nor ".box" set background-color on the child, so
+     the child's own computed background-color is solely determined by
+     ::slotted() -- no competing same-tree selector to confound specificity. -->
+
+  <!-- Case 1: core "::slotted(*)" -- matches any assigned child. -->
+  <div id="hostA" class="host"><div id="childA" class="box"></div></div>
+
+  <!-- Case 2: "::slotted(.tagged)" -- matches only the tagged assigned
+       child, not its untagged sibling. -->
+  <div id="hostB" class="host"><div id="childB1" class="box tagged"></div><div id="childB2" class="box"></div></div>
+
+  <!-- Case 3: ".mydiv ::slotted(*)" ancestor combinator -- the slot is
+       wrapped in a ".mydiv" element inside the shadow tree. -->
+  <div id="hostC" class="host"><div id="childC" class="box"></div></div>
+
+  <!-- Case 4 (negative control): the exact same ".mydiv ::slotted(*)" rule
+       text, but this shadow tree's slot is wrapped in ".other" instead --
+       must NOT match. Proves the ancestor combinator is actually checked,
+       not silently ignored/always-true. -->
+  <div id="hostD" class="host"><div id="childD" class="box"></div></div>
+
+  <script>
+    function attachSlot(parent) {
+      var slot = document.createElement('slot');
+      parent.appendChild(slot);
+    }
+
+    var hostA = document.getElementById('hostA');
+    var srA = hostA.attachShadow({ mode: 'open' });
+    attachSlot(srA);
+    var sheetA = new CSSStyleSheet();
+    sheetA.replaceSync('::slotted(*) { background: green; }');
+    srA.adoptedStyleSheets = [sheetA];
+
+    var hostB = document.getElementById('hostB');
+    var srB = hostB.attachShadow({ mode: 'open' });
+    attachSlot(srB);
+    var sheetB = new CSSStyleSheet();
+    sheetB.replaceSync('::slotted(.tagged) { background: green; }');
+    srB.adoptedStyleSheets = [sheetB];
+
+    var hostC = document.getElementById('hostC');
+    var srC = hostC.attachShadow({ mode: 'open' });
+    var wrapC = document.createElement('div');
+    wrapC.className = 'mydiv';
+    srC.appendChild(wrapC);
+    attachSlot(wrapC);
+    var sheetC = new CSSStyleSheet();
+    sheetC.replaceSync('.mydiv ::slotted(*) { background: green; }');
+    srC.adoptedStyleSheets = [sheetC];
+
+    var hostD = document.getElementById('hostD');
+    var srD = hostD.attachShadow({ mode: 'open' });
+    var wrapD = document.createElement('div');
+    wrapD.className = 'other';
+    srD.appendChild(wrapD);
+    attachSlot(wrapD);
+    var sheetD = new CSSStyleSheet();
+    sheetD.replaceSync('.mydiv ::slotted(*) { background: green; }');
+    srD.adoptedStyleSheets = [sheetD];
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs
+    // the test. When that harness is absent (other browser), shim a custom
+    // testEnd() that tallies console.assert results and reports the verdict,
+    // so the same file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[slotted_basic] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    function bg(id) {
+      return getComputedStyle(document.getElementById(id)).backgroundColor;
+    }
+
+    console.assert(bg('childA') === 'rgb(0, 128, 0)',
+      'Case 1: ::slotted(*) must paint the slotted child green (got ' + bg('childA') + ')');
+
+    console.assert(bg('childB1') === 'rgb(0, 128, 0)',
+      'Case 2: ::slotted(.tagged) must match the tagged slotted child (got ' + bg('childB1') + ')');
+    console.assert(bg('childB2') === 'rgba(0, 0, 0, 0)',
+      'Case 2: ::slotted(.tagged) must NOT match the untagged sibling (got ' + bg('childB2') + ')');
+
+    console.assert(bg('childC') === 'rgb(0, 128, 0)',
+      'Case 3: ".mydiv ::slotted(*)" must match when the slot is wrapped in .mydiv (got ' + bg('childC') + ')');
+    console.assert(bg('childD') === 'rgba(0, 0, 0, 0)',
+      'Case 4: ".mydiv ::slotted(*)" must NOT match when the slot is wrapped in .other instead ' +
+      '(proves the ancestor combinator is actually checked, not ignored) (got ' + bg('childD') + ')');
+
+    testEnd();
+  </script>
+</body>
+
+</html>

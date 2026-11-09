@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Terminating workers with IndexedDB requests in flight</title>
+</head>
+<body>
+<p>Each round starts eight dedicated workers at once. Every worker opens a
+database and queues twenty puts, and reports as soon as it has issued the
+open. The page terminates half of them right away and the other half a few
+milliseconds later, while the IndexedDB thread may still be working on their
+requests. Ten rounds; the page must survive every round.</p>
+<script>
+var ROUNDS = 10;
+var WORKERS = 8;
+var src = [
+  "var r = indexedDB.open('tdb', 1);",
+  "r.onupgradeneeded = function (e) { e.target.result.createObjectStore('s'); };",
+  "r.onsuccess = function (e) {",
+  "  var db = e.target.result;",
+  "  var tx = db.transaction('s', 'readwrite');",
+  "  for (var i = 0; i < 20; i++) tx.objectStore('s').put('v' + i, 'k' + i);",
+  "};",
+  "postMessage('started');"
+].join('\n');
+var blobURL = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
+var started = 0;
+var timedOut = 0;
+
+function finish() {
+  console.assert(timedOut === 0, timedOut + ' workers never reported');
+  console.assert(started === ROUNDS * WORKERS, 'every worker started: ' + started);
+  if (window.testEnd) testEnd();
+}
+
+function round(n) {
+  if (n > ROUNDS) { setTimeout(finish, 300); return; }
+  var left = WORKERS;
+  function startOne(i) {
+    var worker = new Worker(blobURL);
+    var done = false;
+    var end = function (what) {
+      if (done) return;
+      done = true;
+      if (what === 'started') started++; else timedOut++;
+      // Odd workers die right after issuing the open, even ones once their
+      // puts are likely queued on the IndexedDB thread.
+      setTimeout(function () {
+        worker.terminate();
+        if (--left === 0) setTimeout(function () { round(n + 1); }, 20);
+      }, (i % 2) ? 0 : 5);
+    };
+    worker.onmessage = function (e) { end(e.data); };
+    worker.onerror = function (e) { end('worker error: ' + e.message); };
+    setTimeout(function () { end('timeout'); }, 5000);
+  }
+  for (var i = 0; i < WORKERS; i++) startOne(i);
+}
+round(1);
+</script>
+</body>
+</html>

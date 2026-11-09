@@ -20,6 +20,9 @@ ADD_CUSTOM_TARGET (install_pixel_test_dep
     DEPENDS imgdiff
     COMMAND ${CMAKE_COMMAND} -E make_directory ~/.fonts
     COMMAND ${CMAKE_COMMAND} -E copy ${TOOL_ROOT}/fonts/StarfishAhem.ttf ~/.fonts
+    # Tests name the family "Ahem", which StarfishAhem.ttf does not provide; the
+    # CI image installs this file too, so a local run measures what CI measures.
+    COMMAND ${CMAKE_COMMAND} -E copy ${TOOL_ROOT}/../docker/Ahem.ttf ~/.fonts
     COMMAND ${CMAKE_COMMAND} -E copy ${TOOL_ROOT}/fonts/SamsungOne-300C_v1.0.ttf ~/.fonts
     COMMAND ${CMAKE_COMMAND} -E copy ${TOOL_ROOT}/fonts/SamsungOne-600C_v1.0.ttf ~/.fonts
     COMMAND fc-cache -fv

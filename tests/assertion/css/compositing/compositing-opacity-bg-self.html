@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  html, body { margin: 0; background-color: white; }
+  /*
+   * A composited layer (transform:translateZ(0)) with opacity < 1 and a
+   * background-color whose box is much larger than its content. The
+   * background-color must still cover the whole 250x250 box. Regression guard
+   * for: excluding the owner bg-color from the buffer + drawing it via the
+   * compositor would get clipped to the content-only visibleRect by the
+   * opacity layer, leaving most of the box unpainted.
+   */
+  .layer {
+    width: 250px; height: 250px;
+    background-color: red;
+    opacity: 0.5;
+    transform: translateZ(0);
+  }
+  .content { width: 40px; height: 40px; background-color: blue; }
+</style>
+</head>
+<body>
+  <div class="layer"><div class="content"></div></div>
+</body>
+<script>
+  window.onload = function() {
+    setTimeout(function() {
+      screenShot("compositing-opacity-bg-self-temp.png", function() {
+        // content area: blue(0,0,255) at opacity 0.5 over white => (127,127,255)
+        testAssert(checkPixelColor("compositing-opacity-bg-self-temp.png",
+                                   20, 20, 127, 127, 255, 255, 6),
+                   "content pixel should be 50% blue over white");
+        // box interior beyond content: red at 0.5 over white => (255,127,127)
+        testAssert(checkPixelColor("compositing-opacity-bg-self-temp.png",
+                                   125, 125, 255, 127, 127, 255, 6),
+                   "box interior should be 50% red over white (not clipped)");
+        // far box corner: still red at 0.5 over white
+        testAssert(checkPixelColor("compositing-opacity-bg-self-temp.png",
+                                   230, 230, 255, 127, 127, 255, 6),
+                   "box corner should be 50% red over white (not clipped)");
+        testEnd();
+      }, 100);
+    }, 300);
+  };
+</script>
+</html>

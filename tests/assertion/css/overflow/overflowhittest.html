@@ -1,0 +1,38 @@
+<div id="a">
+    <div id="b">
+        inner content
+    </div>
+</div>
+<style>
+#a {
+width: 100px;
+height: 100px;
+overflow-x: hidden;
+overflow-y: hidden;
+}
+
+#b {
+width: 1000px;
+height: 1000px;
+background: blue;
+}
+#b:hover {
+background: red;
+}
+
+
+</style>
+<script>
+b.onclick = function() {
+  testAssert(false);
+}
+
+simulateClick(300, 300);
+var clicked = false;
+b.onclick = function() {
+  clicked = true;
+}
+simulateClick(50, 50);
+testAssert(clicked)
+testEnd();
+</script>

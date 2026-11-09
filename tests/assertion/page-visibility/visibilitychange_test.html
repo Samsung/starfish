@@ -1,0 +1,58 @@
+<html>
+	<head>
+	</head>
+	<body>
+		<div id="vc"></div>
+		<script>
+			var result = ""
+			document.addEventListener("visibilitychange", function() {
+				result += document.visibilityState;
+			});
+
+			window.simulateVisibilitychange(false)
+			window.simulateVisibilitychange(true)
+			console.log(result);
+			testAssert(result == "hiddenvisible");
+
+			testEnd()
+		</script>
+	</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

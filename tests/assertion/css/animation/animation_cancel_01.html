@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        div {
+            width: 100px;
+            height: 100px;
+            background-color: blue;
+            position: relative;
+            animation-name: example;
+            animation-duration: 3s;
+        }
+
+        @keyframes example {
+            0% {
+                background-color: red;
+                left: 0px;
+                top: 0px;
+            }
+
+            25% {
+                background-color: yellow;
+                left: 200px;
+                top: 0px;
+            }
+
+            50% {
+                background-color: purple;
+                left: 200px;
+                top: 200px;
+            }
+
+            75% {
+                background-color: green;
+                left: 0px;
+                top: 200px;
+            }
+
+            100% {
+                background-color: red;
+                left: 0px;
+                top: 0px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="target"></div>
+</body>
+<script>
+    setTimeout(function () {
+        var div = document.querySelector('div');
+        div.style.animationName = 'none'
+    }, 1000); // 1초후 Div 에니메이션 제거
+
+    let isAnimationstarted = false;
+    target.addEventListener('animationstart', (e) => {
+        isAnimationstarted = true;
+        testAssert(true);
+    });
+
+    let isAnimationended = false;
+    target.addEventListener('animationend', (e) => {
+        isAnimationended = true;
+        testAssert(false);
+    });
+
+    setTimeout(function () {
+        testAssert(isAnimationstarted);
+        testAssert(!isAnimationended); // aniamtion이 취소되었기 때문에 animationend가 발생하지 않아야함.
+        testEnd();
+    }, 4000); //에니메이션이 취소되지 않을 경우는 지속시간이 3초이기 때문에, 4초 후 테스트 종료 함.
+</script>
+
+</html>

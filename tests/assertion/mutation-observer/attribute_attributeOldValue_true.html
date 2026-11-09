@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+</head>
+
+<body>
+    <div id="target" class="testClass"> </div>
+</body>
+<script>
+    const attrs = ['data-foo', 'style']
+    const observer = new MutationObserver((mutations) => {
+        testAssert(mutations.length == 1)
+        let idx = 0;
+        mutations.forEach((mutation) => {
+            testAssert(mutation.type == 'attributes');
+            testAssert(mutation.target.id == 'target');
+            testAssert(mutation.attributeName == 'class');
+            testAssert(mutation.oldValue == 'testClass');
+        });
+        testEnd();
+    });
+
+    observer.observe(target, {
+        attributes: true,
+        attributeOldValue: true,
+    });
+
+    target.setAttribute("class", "newTestClass");
+
+    setTimeout(() => {
+        testAssert(false);
+        testEnd();
+    }, 1000);
+</script>
+
+</html>

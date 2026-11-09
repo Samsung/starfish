@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Font face URL loading</title>
+    <link rel="help" href="https://drafts.csswg.org/css-fonts/#src-desc">
+    <link rel="help" href="https://www.w3.org/TR/css-syntax-3/#consume-escaped-code-point">
+    <style>
+        /* Ahem names retain web font selection in Starfish regression mode. */
+        @font-face {
+            font-family: AhemURLControl;
+            src: url("../../../fixtures/resources/webkit/Ahem.ttf");
+        }
+        @font-face {
+            font-family: AhemURLQuoted;
+            src: url("../../../fixtures/resources/webkit/Ahem.\6f tf");
+        }
+        @font-face {
+            font-family: AhemURLUnquoted;
+            src: url(../../../fixtures/resources/webkit/Ahem.wo\66 f);
+        }
+        @font-face {
+            font-family: AhemURLSimple;
+            src: url(../../../fixtures/resources/webkit_original/Ahem\.ttf);
+        }
+        .sample {
+            display: inline-block;
+            font-size: 20px;
+            font-family: serif;
+        }
+        #control { font-family: AhemURLControl, serif; }
+        #quoted { font-family: AhemURLQuoted, serif; }
+        #unquoted { font-family: AhemURLUnquoted, serif; }
+        #simple { font-family: AhemURLSimple, serif; }
+    </style>
+</head>
+<body>
+<div><span class="sample" id="fallback">XXXXX</span></div>
+<div><span class="sample" id="control">XXXXX</span></div>
+<div><span class="sample" id="quoted">XXXXX</span></div>
+<div><span class="sample" id="unquoted">XXXXX</span></div>
+<div><span class="sample" id="simple">XXXXX</span></div>
+<pre id="result"></pre>
+<script>
+(function () {
+    'use strict';
+
+    var total = 0;
+    var failures = 0;
+    var finished = false;
+
+    function assert(condition, description) {
+        total++;
+        if (!condition) {
+            failures++;
+        }
+        console.assert(condition, description);
+    }
+
+    function finish() {
+        finished = true;
+        clearTimeout(timeout);
+        document.getElementById('result').textContent =
+            (total - failures) + ' passed; ' + failures + ' failed.';
+        document.title = (failures ? 'FAIL' : 'PASS') + ': Font face URL loading';
+        if (typeof testEnd === 'function') {
+            testEnd();
+        }
+    }
+
+    var timeout = setTimeout(function () {
+        assert(false, 'Font loading did not finish');
+        finish();
+    }, 10000);
+
+    window.addEventListener('load', function () {
+        // Force layout before waiting for fonts used by the connected samples.
+        document.getElementById('control').offsetWidth;
+        document.fonts.ready.then(function () {
+            if (finished) {
+                return;
+            }
+            // Ahem's five glyphs at 20px occupy exactly 100px. Verify
+            // the fallback differs, so a failed resource request cannot pass.
+            assert(document.getElementById('fallback').offsetWidth !== 100,
+                'Fallback font must differ from Ahem');
+            ['control', 'quoted', 'unquoted', 'simple'].forEach(function (id) {
+                var width = document.getElementById(id).offsetWidth;
+                assert(width === 100, id + ': expected loaded Ahem width 100, got ' + width);
+            });
+            finish();
+        });
+    });
+}());
+</script>
+</body>
+</html>

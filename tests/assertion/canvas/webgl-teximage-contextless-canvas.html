@@ -1,0 +1,137 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebGL texImage2D from a canvas without a rendering context</title>
+<canvas id="canvas" width="1" height="1"></canvas>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0, __firstError = '';
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) {
+      __pass++;
+    } else {
+      __fail++;
+      if (!__firstError) __firstError = message;
+      __nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[webgl-teximage-contextless-canvas] ' + verdict);
+    document.title = verdict + (__firstError ? ': ' + __firstError : '');
+  };
+}
+
+// A canvas on which getContext() was never called still has a bitmap of its
+// size initialized to transparent black, so uploading it must produce a
+// transparent black texture of the canvas size rather than fail.
+var gl = document.getElementById('canvas').getContext('webgl');
+console.assert(!!gl, 'WebGL context is required');
+
+function expectNoError(label) {
+  var error = gl.getError();
+  console.assert(error === gl.NO_ERROR, label + ' error: 0x' + error.toString(16));
+}
+
+// Fills the bound texture with opaque white so a later upload that leaves it
+// untouched is distinguishable from one that writes transparent black.
+function fillWhite(width, height) {
+  var white = new Uint8Array(width * height * 4);
+  white.fill(255);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA,
+                gl.UNSIGNED_BYTE, white);
+}
+
+function readTexture(texture, width, height) {
+  var framebuffer = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                          gl.TEXTURE_2D, texture, 0);
+  var complete = gl.checkFramebufferStatus(gl.FRAMEBUFFER) ===
+                 gl.FRAMEBUFFER_COMPLETE;
+  var pixels = new Uint8Array(width * height * 4);
+  if (complete) {
+    gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.deleteFramebuffer(framebuffer);
+  return complete ? pixels : null;
+}
+
+function allZero(pixels) {
+  for (var i = 0; i < pixels.length; i++) {
+    if (pixels[i] !== 0) return false;
+  }
+  return true;
+}
+
+function checkBlankUpload(label, source, width, height) {
+  var texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  fillWhite(width, height);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+  expectNoError(label + ' upload');
+  var pixels = readTexture(texture, width, height);
+  console.assert(pixels !== null, label + ' texture must be renderable');
+  if (pixels) {
+    console.assert(allZero(pixels),
+                   label + ' must be transparent black, got ' +
+                   Array.prototype.slice.call(pixels, 0, 8));
+  }
+  gl.deleteTexture(texture);
+}
+
+if (gl) {
+  gl.getError();
+
+  var small = document.createElement('canvas');
+  small.width = 4;
+  small.height = 2;
+  checkBlankUpload('4x2 blank canvas', small, 4, 2);
+
+  // The default canvas size is 300x150.
+  checkBlankUpload('default-size blank canvas',
+                   document.createElement('canvas'), 300, 150);
+
+  // Unpack flips and premultiplication leave transparent black unchanged.
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  checkBlankUpload('flipped premultiplied blank canvas', small, 4, 2);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+
+  // A 2D canvas keeps uploading what it drew.
+  var drawn = document.createElement('canvas');
+  drawn.width = 2;
+  drawn.height = 2;
+  var context2d = drawn.getContext('2d');
+  context2d.fillStyle = 'rgb(255, 0, 0)';
+  context2d.fillRect(0, 0, 2, 2);
+  var texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, drawn);
+  expectNoError('2D canvas upload');
+  var pixels = readTexture(texture, 2, 2);
+  console.assert(pixels !== null && pixels[0] === 255 && pixels[1] === 0 &&
+                 pixels[2] === 0 && pixels[3] === 255,
+                 '2D canvas pixel mismatch: ' +
+                 (pixels && Array.prototype.slice.call(pixels, 0, 4)));
+
+  // A canvas with a WebGL context is a valid source and must not crash.
+  var webglCanvas = document.createElement('canvas');
+  webglCanvas.width = 2;
+  webglCanvas.height = 2;
+  console.assert(!!webglCanvas.getContext('webgl'), 'second WebGL context');
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE,
+                webglCanvas);
+  expectNoError('WebGL canvas upload');
+  gl.deleteTexture(texture);
+}
+testEnd();
+</script>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <svg xmlns="http://www.w3.org/2000/svg" width="300px" height="100px">
+        <title>SVG SMIL Animate with Path</title>
+        <circle cx="0" cy="50" r="50" fill="blue" stroke="black" stroke-width="2">
+            <animate id='target' attributeName="cx" from="50" to="300" dur="1s" repeatCount="2" />
+        </circle>
+    </svg>
+
+
+</body>
+
+<script>
+    if (window['testAssert'] === undefined) {
+        testAssert = console.log
+        testEnd = console.log
+    }
+
+    function createResult(event) {
+        return {
+            event: null,
+            callCount: 0,
+        };
+    }
+
+    let repeatEventResult = createResult();
+    let onrepeatResult = createResult();
+
+    let createEventHandler = (eventHandleResult) => {
+        let result = eventHandleResult;
+        return function (e) {
+            result.event = e;
+            result.callCount++;
+        }
+    };
+
+    target.addEventListener('repeatEvent', createEventHandler(repeatEventResult));
+
+    let onrepeat = createEventHandler(onrepeatResult);
+    target.onrepeat = onrepeat;
+    console.log(target.onrepeat);
+    target.addEventListener('endEvent', (e) => {
+        testAssert(repeatEventResult.event != null);
+        testAssert(repeatEventResult.callCount == 1);
+
+        testAssert(onrepeatResult.event != null);
+        testAssert(onrepeatResult.callCount == 1);
+
+        testAssert(onrepeatResult.event == repeatEventResult.event);
+
+        testAssert(target.onrepeat == onrepeat);
+        testEnd();
+    });
+
+</script>
+
+</html>

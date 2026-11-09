@@ -1,0 +1,46 @@
+<style>
+* { margin : 0 }
+div {
+    width: 100px;
+    height: 100px;
+}
+</style>
+<button onclick="asdf()">
+test
+</button>
+<div id="test">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" class="spinner"><g id="dots"><circle class="dot left" cx="13" cy="48" r="9"><animate attributeName="cx" attributeType="XML" type="rotate" values="13;33;13" dur="1s" keySplines="0.33 0 0.3 1;0.33 0 0.3 1;0.33 0 0.3 1" repeatCount="indefinite"></animate></circle><circle class="dot top" cx="48" cy="13" r="9"><animate attributeName="cy" attributeType="XML" type="rotate" values="13;33;13" dur="1s" keySplines="0.33 0 0.3 1;0.33 0 0.3 1;0.33 0 0.3 1" repeatCount="indefinite"></animate></circle><circle class="dot mirror right" cx="83" cy="48" r="9"><animate attributeName="cx" attributeType="XML" type="rotate" values="83;63;83" dur="1s" keySplines="0.33 0 0.3 1;0.33 0 0.3 1;0.33 0 0.3 1" repeatCount="indefinite"></animate></circle><circle class="dot bottom" cx="48" cy="83" r="9"><animate attributeName="cy" attributeType="XML" type="rotate" values="83;63;83" dur="1s" keySplines="0.33 0 0.3 1;0.33 0 0.3 1;0.33 0 0.3 1" repeatCount="indefinite"></animate></circle><animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 48 48" to="360 48 48" dur="1s" repeatCount="indefinite"></animateTransform></g></svg>
+
+</div>
+<script>
+
+function asdf()
+{
+  console.log(test.style.display)
+  if (test.style.display) {
+    test.style.display = "";
+  } else {
+    test.style.display = "none"
+  }
+}
+
+function testStart()
+{
+    var oldRenderingCount = window.renderingCount();
+    asdf();
+    window.setTimeout(function() {
+        console.log(oldRenderingCount);
+        console.log(window.renderingCount());
+        testAssert((oldRenderingCount + 1) == window.renderingCount());
+        asdf();
+        window.setTimeout(function() {
+            console.log(oldRenderingCount);
+            console.log(window.renderingCount());
+            testAssert((oldRenderingCount + 3) < window.renderingCount());
+            testEnd();
+        }, 1000);
+    }, 500);
+}
+
+</script>
+

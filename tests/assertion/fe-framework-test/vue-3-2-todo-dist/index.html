@@ -1,0 +1,48 @@
+<!doctype html><html lang=""><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>vue-test</title><script defer="defer" src="js/chunk-vendors.eb011063.js"></script><script defer="defer" src="js/app.38ed5059.js"></script><link href="css/app.f7bc00f3.css" rel="stylesheet"></head><body><noscript><strong>We're sorry but vue-test doesn't work properly without JavaScript enabled. Please enable it to continue.</strong></noscript><div id="app"></div></body>
+
+<script>
+window.onload = function() {
+window.setTimeout(function() {
+  var el = document.querySelector(".new-todo")
+  el.value = "asdf1"
+  el.dispatchEvent(new KeyboardEvent('keyup', {key: 'Enter'}));
+  el.value = "asdf2"
+  el.dispatchEvent(new KeyboardEvent('keyup', {key: 'Enter'}));
+
+  window.setTimeout(function() {
+    var r = document.querySelectorAll(".view label")
+    testAssert(r.length == 2)
+    document.querySelector(".destroy").click();
+    window.setTimeout(function() {
+      var r = document.querySelectorAll(".view label")
+      testAssert(r.length == 1)
+      testAssert(r[0].textContent == "asdf2")
+      document.querySelector(".toggle").click();
+      var r = document.querySelectorAll(".filters a")
+      r[1].click()
+      window.setTimeout(function() {
+        var r = document.querySelectorAll(".view label")
+        testAssert(r.length == 0)
+        var r = document.querySelectorAll(".filters a")
+        r[0].click()
+        window.setTimeout(function() {
+          var r = document.querySelectorAll(".view label")
+          testAssert(r.length == 1)
+          document.querySelector(".destroy").click();
+          window.setTimeout(function() {
+            var r = document.querySelectorAll(".view label")
+            testAssert(r.length == 0);
+            testEnd();
+            
+          }, 100);
+        }, 100);
+      }, 100);
+    }, 100);
+  }, 100);
+  
+}, 1000);
+}
+
+</script>
+
+</html>

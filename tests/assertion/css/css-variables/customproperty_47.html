@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #target {
+            --my-color: black;
+            --my-length: 10px;
+            --my-func: linear;
+            --my-style: groove;
+            --my-repeat: repeat;
+            --my-overflow: visible;
+            --my-flex-flow: wrap;
+            --my-list-style: outside;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="target"></div>
+</body>
+<script>
+    function testStart() {
+        // border
+        {
+            let test = 'black var(--my-length) solid';
+            target.style.border = test;
+            testAssert(target.style.border == test);
+            target.style.border = ''
+            testAssert(target.style.border == '')
+        }
+
+        // borderTop
+        {
+            let test = 'thick double var(--my-color)';
+            target.style.borderTop = test;
+            testAssert(target.style.borderTop == test);
+            target.style.borderTop = ''
+            testAssert(target.style.borderTop == '')
+        }
+
+        // borderRight
+        {
+            let test = 'thick double var(--my-color)';
+            target.style.borderRight = test;
+            testAssert(target.style.borderRight == test);
+            target.style.borderRight = ''
+            testAssert(target.style.borderRight == '')
+        }
+
+        // borderBottom
+        {
+            let test = 'thick double var(--my-color)';
+            target.style.borderBottom = test;
+            testAssert(target.style.borderBottom == test);
+            target.style.borderBottom = ''
+            testAssert(target.style.borderBottom == '')
+        }
+
+        // borderLeft
+        {
+            let test = 'thick double var(--my-color)';
+            target.style.borderLeft = test;
+            testAssert(target.style.borderLeft == test);
+            target.style.borderLeft = ''
+            testAssert(target.style.borderLeft == '')
+        }
+
+        // borderImage
+        {
+            let test = 'url("dummy.png") 30 / var(--my-length) round';
+            target.style.borderImage = test;
+            testAssert(target.style.borderImage == test);
+            target.style.borderImage = ''
+            testAssert(target.style.borderImage == '')
+        }
+
+        // borderStyle
+        {
+            let test = 'dashed var(--my-style) none dotted';
+            target.style.borderStyle = test;
+            testAssert(target.style.borderStyle == test);
+            target.style.borderStyle = ''
+            testAssert(target.style.borderStyle == '')
+        }
+
+        // borderWidth
+        {
+            let test = '0px 4px 8px 12px';
+            target.style.borderWidth = test;
+            testAssert(target.style.borderWidth == test);
+            target.style.borderWidth = ''
+            testAssert(target.style.borderWidth == '')
+        }
+
+        // borderColor
+        {
+            let test = 'red var(--my-color) green hsla(60, 90%, 50%, .8)';
+            target.style.borderColor = test;
+            testAssert(target.style.borderColor == test);
+            target.style.borderColor = ''
+            testAssert(target.style.borderColor == '')
+        }
+
+        // borderRadius
+        {
+            let test = 'var(--my-length) 100px / 120px';
+            target.style.borderRadius = test;
+            testAssert(target.style.borderRadius == test);
+            target.style.borderRadius = ''
+            testAssert(target.style.borderRadius == '')
+        }
+        // borderBlockStart
+        {
+            let test = 'dashed var(--my-color)';
+            target.style.borderBlockStart = test;
+            testAssert(target.style.borderBlockStart == test);
+            target.style.borderBlockStart = ''
+            testAssert(target.style.borderBlockStart == '')
+        }
+        // borderBlockEnd
+        {
+            let test = 'dashed var(--my-color)';
+            target.style.borderBlockEnd = test;
+            testAssert(target.style.borderBlockEnd == test);
+            target.style.borderBlockEnd = ''
+            testAssert(target.style.borderBlockEnd == '')
+        }
+        // borderInlineStart
+        {
+            let test = 'dashed var(--my-color)';
+            target.style.borderInlineStart = test;
+            testAssert(target.style.borderInlineStart == test);
+            target.style.borderInlineStart = ''
+            testAssert(target.style.borderInlineStart == '')
+        }
+        // borderInlineEnd
+        {
+            let test = 'dashed var(--my-color)';
+            target.style.borderInlineEnd = test;
+            testAssert(target.style.borderInlineEnd == test);
+            target.style.borderInlineEnd = ''
+            testAssert(target.style.borderInlineEnd == '')
+        }
+        // background
+        {
+            let test = 'border-box var(--my-color)';
+            target.style.background = test;
+            testAssert(target.style.background == test);
+            target.style.background = ''
+            testAssert(target.style.background == '')
+        }
+        // backgroundRepeat
+        {
+            let test = 'space var(--my-repeat)';
+            target.style.backgroundRepeat = test;
+            testAssert(target.style.backgroundRepeat == test);
+            target.style.backgroundRepeat = ''
+            testAssert(target.style.backgroundRepeat == '')
+        }
+        // backgroundPosition
+        {
+            let test = 'bottom var(--my-length) right 100px';
+            target.style.backgroundPosition = test;
+            testAssert(target.style.backgroundPosition == test);
+            target.style.backgroundPosition = ''
+            testAssert(target.style.backgroundPosition == '')
+        }
+        // gap
+        {
+            let test = 'var(--my-length) 20px';
+            target.style.gap = test;
+            testAssert(target.style.gap == test);
+            target.style.gap = ''
+            testAssert(target.style.gap == '')
+        }
+        // gridTemplate
+        {
+            let test = '100px 1fr / var(--my-length) 1fr';
+            target.style.gridTemplate = test;
+            testAssert(target.style.gridTemplate == test);
+            target.style.gridTemplate = ''
+            testAssert(target.style.gridTemplate == '')
+        }
+        // textDecoration
+        {
+            let test = 'var(--my-color) wavy underline';
+            target.style.textDecoration = test;
+            testAssert(target.style.textDecoration == test);
+            target.style.textDecoration = ''
+            testAssert(target.style.textDecoration == '')
+        }
+        // margin
+        {
+            let test = 'var(--my-length) 50px 20px';
+            target.style.margin = test;
+            testAssert(target.style.margin == test);
+            target.style.margin = ''
+            testAssert(target.style.margin == '')
+        }
+        // marginBlock
+        {
+            let test = 'var(--my-length) 50px';
+            target.style.marginBlock = test;
+            testAssert(target.style.marginBlock == test);
+            target.style.marginBlock = ''
+            testAssert(target.style.marginBlock == '')
+        }
+        // marginInline
+        {
+            let test = 'var(--my-length) 50px';
+            target.style.marginInline = test;
+            testAssert(target.style.marginInline == test);
+            target.style.marginInline = ''
+            testAssert(target.style.marginInline == '')
+        }
+        // padding
+        {
+            let test = 'var(--my-length) 50px 20px';
+            target.style.padding = test;
+            testAssert(target.style.padding == test);
+            target.style.padding = ''
+            testAssert(target.style.padding == '')
+        }
+        // paddingBlock
+        {
+            let test = 'var(--my-length) 50px';
+            target.style.paddingBlock = test;
+            testAssert(target.style.paddingBlock == test);
+            target.style.paddingBlock = ''
+            testAssert(target.style.paddingBlock == '')
+        }
+        // paddingInline
+        {
+            let test = 'var(--my-length) 50px';
+            target.style.paddingInline = test;
+            testAssert(target.style.paddingInline == test);
+            target.style.paddingInline = ''
+            testAssert(target.style.paddingInline == '')
+        }
+        // font
+        {
+            let test = 'var(--my-length) "Fira Sans", sans-seri';
+            target.style.paddingInline = test;
+            testAssert(target.style.paddingInline == test);
+            target.style.paddingInline = ''
+            testAssert(target.style.paddingInline == '')
+        }
+        // outline
+        {
+            let test = 'thick double var(--my-color)';
+            target.style.outline = test;
+            testAssert(target.style.outline == test);
+            target.style.outline = ''
+            testAssert(target.style.outline == '')
+        }
+        // overflow
+        {
+            let test = 'hidden var(--my-overflow)';
+            target.style.overflow = test;
+            testAssert(target.style.overflow == test);
+            target.style.overflow = ''
+            testAssert(target.style.overflow == '')
+        }
+        // transition
+        {
+            let test = 'left .4s var(--my-func)';
+            target.style.transition = test
+            testAssert(target.style.transition == test);
+            target.style.transition = ''
+            testAssert(target.style.transition == '')
+        }
+        // TODO: animation does not support var() yet correctly in parse and resolve stage
+        // {
+        //     let test = '3s var(--my-func) 1s slidein';
+        //     target.style.animation = test
+        //     testAssert(target.style.animation == test);
+        //     target.style.animation = ''
+        //     testAssert(target.style.animation == '')
+        // }
+        // flexFlow
+        {
+            let test = 'column var(--my-flex-flow)';
+            target.style.flexFlow = test
+            testAssert(target.style.flexFlow == test);
+            target.style.flexFlow = ''
+            testAssert(target.style.flexFlow == '')
+        }
+        // flex
+        {
+            let test = '1 1 var(--my-length)';
+            target.style.flex = test
+            testAssert(target.style.flex == test);
+            target.style.flex = ''
+            testAssert(target.style.flex == '')
+        }
+        // listStyle
+        {
+            let test = 'georgian var(--my-list-style) url("dummy.png")';
+            target.style.listStyle = test
+            testAssert(target.style.listStyle == test);
+            target.style.listStyle = ''
+            testAssert(target.style.listStyle == '')
+        }
+        
+        // TODO: mask
+
+        // maskPosition
+        {
+            let test = '20px var(--my-length)';
+            target.style.maskPosition = test
+            testAssert(target.style.maskPosition == test);
+            target.style.maskPosition = ''
+            testAssert(target.style.maskPosition == '')
+        }
+        
+        // maskRepeat
+        {
+            let test = 'repeat var(--my-repeat)';
+            target.style.maskRepeat = test
+            testAssert(target.style.maskRepeat == test);
+            target.style.maskRepeat = ''
+            testAssert(target.style.maskRepeat == '')
+        }
+
+        testEnd();
+    }
+</script>
+
+</html>

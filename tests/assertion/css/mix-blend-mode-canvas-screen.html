@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>mix-blend-mode: screen on a canvas blends with the box below it</title>
+<style>
+  body { margin: 0; background: black; }
+  #box { position: absolute; left: 20px; top: 20px; width: 200px; height: 200px; background: rgb(64, 128, 64); }
+  canvas { position: absolute; left: 20px; top: 20px; mix-blend-mode: screen; }
+  p { position: absolute; left: 20px; top: 240px; margin: 0; color: white; }
+</style>
+</head>
+<body>
+<div id="box"></div>
+<canvas id="c" width="200" height="200"></canvas>
+<p>Screen of rgb(128,64,128) over rgb(64,128,64) is rgb(160,160,160): a uniform
+gray square. Source-over leaves it purple, lighten makes it rgb(128,128,128).</p>
+<script>
+  var ctx = document.getElementById("c").getContext("2d");
+  ctx.fillStyle = "rgb(128, 64, 128)";
+  ctx.fillRect(0, 0, 200, 200);
+
+  // A canvas is composited as a layer of its own, so the blend happens in
+  // the compositor rather than the painter, and only the screen shows it.
+  var shot = "mix-blend-mode-canvas-screen.png";
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      return;
+    }
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        screenShot(shot, function () {
+          console.assert(checkPixelColors(shot, [
+            { x: 60, y: 60, r: 160, g: 160, b: 160, a: 255 },
+            { x: 120, y: 120, r: 160, g: 160, b: 160, a: 255 },
+            { x: 200, y: 200, r: 160, g: 160, b: 160, a: 255 },
+            { x: 10, y: 120, r: 0, g: 0, b: 0, a: 255 },
+          ], 3), "screen blend of a canvas over a box");
+          testEnd();
+        });
+      });
+    });
+  };
+</script>
+</body>
+</html>

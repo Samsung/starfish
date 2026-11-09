@@ -1,0 +1,67 @@
+<style>
+  my-element { 
+    border: 1px solid green;
+  }
+</style>
+
+<my-element id="asdf">MyElement from HTML</my-element>
+<iframe id="iframe"></iframe>
+<br>
+
+<script>
+  if(!console.assert) {
+      console.assert = testAssert.bind(this)
+  }
+  "use strict";
+
+  var order = 0;
+  function checkOrder(right) {
+      console.assert(order == right);
+      order++;
+  }
+
+  var flag = true;
+  class MyElement extends HTMLElement {
+    #privateField = 88;
+
+    constructor() {
+      super();
+      console.log("ctor");
+      checkOrder(1)
+    }
+
+    connectedCallback() {
+        console.log("connectedCallback" + this.#privateField);
+        testAssert("connectedCallback" + this.#privateField == "connectedCallback88");
+
+        if (flag)
+          checkOrder(2)
+        else
+          checkOrder(5)
+    }
+
+    disconnectedCallback() {
+        console.log("disconnectedCallback");
+        checkOrder(3)
+        flag = false;
+    }
+
+    adoptedCallback() {
+        console.log("adoptedCallback");
+        checkOrder(4)
+    }
+  }
+  checkOrder(0)
+  customElements.define('my-element', MyElement);
+
+  var myElement = asdf;
+  document.body.removeChild(myElement);
+
+  iframe.contentWindow.document.body.appendChild(myElement)
+
+  console.log("scriptEnd");
+
+  testEnd();
+
+</script>
+

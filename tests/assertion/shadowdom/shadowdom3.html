@@ -1,0 +1,81 @@
+<div id="test-parent">
+  <span slot="element-name" id="e1"><div style="width:30px;display:inline-block;">s</div></span>
+  <span slot="element-detail" id="e2"><div style="width:30px;display:inline-block;">s2</div></span>
+  <span slot="element-detail" id="e3"><div style="width:30px;display:inline-block;">s3</div></span>
+  <div>dummy</div>
+</div>
+
+<style>
+
+#test-parent > #e3 {
+  background: red;
+}
+
+</style>
+
+<script>
+
+const holder = document.getElementById(
+        "test-parent",
+      );
+const shadowRoot = holder.attachShadow({ mode: "open" });
+var ele = document.createElement("span");
+ele.innerHTML = "<span><slot id='s1' name='element-name'>X</slot></span>"
+shadowRoot.appendChild(ele);
+
+ele = document.createElement("span");
+ele.innerHTML = "<slot id='s2' name='element-detail'>X</slot>"
+shadowRoot.appendChild(ele);
+
+var s1 = shadowRoot.getElementById("s1");
+var s2 = shadowRoot.getElementById("s2");
+
+console.assert(s1 == holder.firstElementChild.assignedSlot)
+console.assert(s2 == holder.firstElementChild.nextElementSibling.assignedSlot)
+
+console.assert(s1.assignedElements() != s1.assignedElements())
+
+var list = s1.assignedElements();
+console.assert(list[0] == e1 && list.length == 1)
+
+list = s2.assignedElements();
+console.assert(list[0] == e2  && list[1] == e3 && list.length == 2)
+
+
+function m1() {
+    var e = document.getElementById("e1")
+    e.innerHTML=e.innerHTML+'<div style="width:30px;display: inline-block">s</div>';
+}
+
+function m2() {
+    var e = document.getElementById("e2")
+    var ee = document.createElement("div");
+    ee.style.width="100px"
+    ee.style.display="inline-block"
+    ee.innerHTML = "DD"
+    e.appendChild(ee)
+}
+
+// insert test
+console.assert(shadowRoot.firstElementChild.getBoundingClientRect().width==30)
+m1()
+console.assert(shadowRoot.firstElementChild.getBoundingClientRect().width==60)
+console.assert(shadowRoot.firstElementChild.nextElementSibling.getBoundingClientRect().width==60)
+m2()
+console.assert(shadowRoot.firstElementChild.nextElementSibling.getBoundingClientRect().width==160)
+
+// style test
+var eee = document.getElementById("e3");
+var old = window.getComputedStyle(document.getElementById("e3")).background;
+console.assert(old.includes("rgb(255, 0, 0)"))
+
+eee.id=""
+
+console.assert(old != window.getComputedStyle(eee).background)
+
+testEnd()
+
+
+</script>
+
+

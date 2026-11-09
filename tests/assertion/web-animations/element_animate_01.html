@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        #target {
+            width: 100px;
+            height: 100px;
+            background-color: red;
+            position: relative;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="target"></div>
+</body>
+<script type="text/javascript">
+    let startTime, endTime;
+    let frames = [];
+    let state = "none"
+    const reasonableExpectedFrameCount = 35; // 1초 동안 35프레임 이상이어야 함
+    const epsilon = 100; // 허용 오차 범위 100ms end event 구현이 없으므로 테스트에서 100ms 오차 허용
+
+    function percentSTRToFloat(str) {
+        return parseFloat(str.replace("px", "")) / 100;
+    }
+
+    function captureFrame() {
+        const elapsedTime = performance.now() - startTime;
+        const progress = elapsedTime / 1000;
+        const left = getComputedStyle(target).left;
+        const top = getComputedStyle(target).top;
+
+        frames.push({
+            left,
+            top
+        });
+
+        if (progress < 1 || state == "start") {
+            requestAnimationFrame(captureFrame);
+        }
+    }
+
+    function startAnimation() {
+         const keyframes = [{
+                left: '0px',
+                top: '0px',
+            },
+            {
+                left: '100px',
+                top: '100px',
+            }
+        ];
+        const options = {
+            duration: 1000, // 애니메이션 지속 시간 1초로 설정
+            easing: 'linear',
+            fill: 'forwards', // 애니메이션이 끝난 후 최종 상태 유지
+        };
+        animation = target.animate(keyframes, options);
+        startTime = performance.now();
+    }
+
+    startAnimation(); // 애니메이션 시작
+    requestAnimationFrame(captureFrame); // 캡쳐 시작
+
+    // Animation 미구현으로 대신 setTimeout사용 함
+    setTimeout(() => {
+        state = "stop";
+        endTime = performance.now();
+
+        totalElapsedTime = endTime - startTime;
+        let diff = 1000 - totalElapsedTime;
+
+        if (!(Math.abs(diff) < epsilon)) {
+            // 허용 오차 범위 100ms 보다 event 간격이 크면 테스트 실패
+            console.log("1")
+            testAssert(false);
+        }
+
+        if (frames.length <= reasonableExpectedFrameCount) {
+            // 1초 동안 35프레임 이상이어야 함
+            console.log("2")
+            testAssert(false);
+        }
+        let oldLeft = percentSTRToFloat(frames[0].left);
+        let oldTop = percentSTRToFloat(frames[0].top);
+        console.log(`frames.length: ${frames.length}`)
+        for (let i = 1; i < frames.length - 1; i++) {
+            // 각 프레임의 left, top 값이 이전 프레임보다 커져야 함
+            let left = percentSTRToFloat(frames[i].left);
+            let top = percentSTRToFloat(frames[i].top);
+            if (!(oldLeft < left && oldTop < top)) {
+                testAssert(false);
+                console.log(oldCx)
+                console.log(cx)
+                console.log(oldCy)
+                console.log(cy)
+            }
+            oldLeft = left;
+            oldTop = top;
+        }
+        // 테스트 종료
+        testEnd();
+    }, 1000);
+</script>
+
+</html>

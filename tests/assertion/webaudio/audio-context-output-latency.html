@@ -1,0 +1,31 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Web Audio output latency</title>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Web Audio output latency complete";
+    };
+}
+
+if (typeof AudioContext !== "function") {
+    testEnd();
+} else {
+    const context = new AudioContext();
+    console.assert(Number.isFinite(context.outputLatency) &&
+                   context.outputLatency >= 0,
+                   "output latency starts as a nonnegative estimate");
+    context.resume().then(function () {
+        return new Promise(function (resolve) {
+            setTimeout(resolve, 50);
+        });
+    }).then(function () {
+        console.assert(Number.isFinite(context.outputLatency) &&
+                       context.outputLatency >= 0,
+                       "output latency remains a nonnegative estimate");
+        return context.close();
+    }).then(function () {
+        testEnd();
+    });
+}
+</script>

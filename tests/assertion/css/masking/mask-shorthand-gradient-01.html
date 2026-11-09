@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="pixel-test">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: white;
+        }
+
+        /* magenta is used so that the checks do not depend on the
+           r/b channel order of the screenshot backend */
+        .box {
+            position: absolute;
+            top: 10px;
+            width: 100px;
+            height: 200px;
+            background-color: #ff00ff;
+        }
+
+        /* mask shorthand with a gradient image (no url()) */
+        #standard {
+            left: 10px;
+            mask: linear-gradient(180deg, #000 40%, transparent);
+        }
+
+        /* same, through the -webkit- prefixed alias */
+        #prefixed {
+            left: 150px;
+            -webkit-mask: linear-gradient(180deg, #000 40%, transparent);
+        }
+
+        /* shorthand with image + position / size + repeat */
+        #withparts {
+            left: 290px;
+            mask: linear-gradient(180deg, #000 40%, transparent) left top / 100px 200px no-repeat;
+        }
+
+        /* reference: the longhand, which already worked */
+        #reference {
+            left: 430px;
+            mask-image: linear-gradient(180deg, #000 40%, transparent);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box" id="standard"></div>
+    <div class="box" id="prefixed"></div>
+    <div class="box" id="withparts"></div>
+    <div class="box" id="reference"></div>
+</body>
+<script>
+    // Test: the `mask` / `-webkit-mask` shorthand must accept a gradient <image>.
+    // Previously only url() was accepted by the shorthand (and `-webkit-mask` was
+    // not even a known property), so such a declaration was silently dropped and
+    // the element was painted unmasked.
+    function testStart() {
+        var ids = ["standard", "prefixed", "withparts", "reference"];
+
+        // The shorthand must set the mask longhands.
+        for (var i = 0; i < 3; i++) {
+            var style = getComputedStyle(document.getElementById(ids[i]));
+            testAssert(style.maskImage.indexOf("linear-gradient") == 0);
+        }
+        var parts = getComputedStyle(document.getElementById("withparts"));
+        testAssert(parts.maskSize == "100px 200px");
+        testAssert(parts.maskRepeat == "no-repeat");
+
+        screenShot("mask-shorthand-gradient-01.png", function () {
+            var img = "mask-shorthand-gradient-01.png";
+            for (var i = 0; i < ids.length; i++) {
+                var box = document.getElementById(ids[i]).getBoundingClientRect();
+                var cx = Math.floor(box.x + box.width / 2);
+                // Opaque part of the mask (0% ~ 40% of the height) -> magenta.
+                testAssert(checkPixelColor(img, cx, Math.floor(box.y + 10), 255, 0, 255, 255, 4));
+                // Transparent end of the mask -> white page background.
+                testAssert(checkPixelColor(img, cx, Math.floor(box.y + box.height - 2), 255, 255, 255, 255, 8));
+                // Half way through the fade (70% of the height) -> magenta over white.
+                var mid = getPixelColor(img, cx, Math.floor(box.y + box.height * 0.7));
+                testAssert(mid.r > 250 && mid.b > 250 && mid.g > 100 && mid.g < 155);
+            }
+            testEnd();
+        });
+    }
+</script>
+
+</html>

@@ -1,0 +1,185 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebGL2 READ_FRAMEBUFFER binding leaves drawing and the default read buffer alone</title>
+<canvas id="canvas" width="4" height="4"></canvas>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0, __firstError = '';
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) {
+      __pass++;
+    } else {
+      __fail++;
+      if (!__firstError) __firstError = message;
+      __nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[webgl2-read-draw-framebuffer-split] ' + verdict);
+    document.title = verdict + (__firstError ? ': ' + __firstError : '');
+  };
+}
+
+// WebGL 2.0 has separate READ_FRAMEBUFFER and DRAW_FRAMEBUFFER bindings
+// (OpenGL ES 3.0 §4.4.1). Deleting a framebuffer bound only for reading
+// reverts only the read binding; draws must keep going to the draw
+// framebuffer, also after the canvas has been composited. A readBuffer(NONE)
+// on the default framebuffer is context state and survives a canvas resize,
+// but only limits the page's reads, not the canvas's own readback. Calls
+// naming READ_FRAMEBUFFER act on the read binding alone.
+
+function hex(v) { return '0x' + v.toString(16); }
+
+function expectError(gl, expected, label) {
+  var error = gl.getError();
+  console.assert(error === expected,
+                 label + ' -> ' + hex(expected) + ', got ' + hex(error));
+}
+
+function makeFramebuffer(gl, r, g, b) {
+  var rb = gl.createRenderbuffer();
+  gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
+  gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA8, 4, 4);
+  var fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                             gl.RENDERBUFFER, rb);
+  gl.clearColor(r, g, b, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  fb.renderbuffer = rb;
+  return fb;
+}
+
+function attachmentType(gl) {
+  return gl.getFramebufferAttachmentParameter(
+      gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+      gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE);
+}
+
+function nextFrames(count, callback) {
+  requestAnimationFrame(function () {
+    if (count > 1) {
+      nextFrames(count - 1, callback);
+    } else {
+      callback();
+    }
+  });
+}
+
+var gl = document.getElementById('canvas').getContext('webgl2');
+console.assert(!!gl, 'WebGL2 context is required');
+if (!gl) {
+  testEnd();
+} else {
+  var readOnly = makeFramebuffer(gl, 0, 0, 1);
+  var draw = makeFramebuffer(gl, 1, 0, 0);
+
+  // Make the canvas need compositing, so a frame flushes this context.
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.clearColor(0, 0, 0, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER, readOnly);
+  gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, draw);
+  gl.deleteFramebuffer(readOnly);
+  expectError(gl, gl.NO_ERROR, 'bind and delete');
+  console.assert(gl.getParameter(gl.READ_FRAMEBUFFER_BINDING) === null,
+                 'READ_FRAMEBUFFER_BINDING reverts to null on delete');
+  console.assert(gl.getParameter(gl.DRAW_FRAMEBUFFER_BINDING) === draw,
+                 'DRAW_FRAMEBUFFER_BINDING is kept on delete');
+
+  nextFrames(2, function () {
+    console.assert(gl.getParameter(gl.DRAW_FRAMEBUFFER_BINDING) === draw,
+                   'DRAW_FRAMEBUFFER_BINDING is kept across frames');
+    gl.clearColor(0, 1, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, draw);
+    var pixel = new Uint8Array(4);
+    gl.readPixels(1, 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+    expectError(gl, gl.NO_ERROR, 'clear and readPixels');
+    console.assert(pixel[0] === 0 && pixel[1] === 255 && pixel[2] === 0,
+                   'clear after a frame renders into the draw framebuffer, got ' +
+                   Array.prototype.join.call(pixel, ','));
+
+    // The default framebuffer's read buffer survives a canvas resize.
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.readBuffer(gl.NONE);
+    expectError(gl, gl.NO_ERROR, 'readBuffer(NONE) on the default framebuffer');
+    gl.canvas.width = 8;
+    console.assert(gl.drawingBufferWidth === 8, 'drawing buffer resized');
+    console.assert(gl.getParameter(gl.READ_BUFFER) === gl.NONE,
+                   'READ_BUFFER stays NONE after resize');
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, 1, 1, 0);
+    expectError(gl, gl.INVALID_OPERATION,
+                'copyTexImage2D with read buffer NONE after resize');
+
+    // toDataURL reads the drawing buffer whatever the page's read buffer.
+    gl.clearColor(0, 1, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    var withNone = gl.canvas.toDataURL();
+    expectError(gl, gl.NO_ERROR, 'toDataURL with read buffer NONE');
+    gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, 1, 1, 0);
+    expectError(gl, gl.INVALID_OPERATION,
+                'copyTexImage2D with read buffer NONE after toDataURL');
+    gl.readBuffer(gl.BACK);
+    console.assert(withNone === gl.canvas.toDataURL(),
+                   'toDataURL is the same with read buffer NONE and BACK');
+
+    // READ_FRAMEBUFFER = framebuffer, DRAW_FRAMEBUFFER = default.
+    var readFb = makeFramebuffer(gl, 0, 0, 1);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+    gl.readBuffer(gl.COLOR_ATTACHMENT0);
+    expectError(gl, gl.NO_ERROR, 'readBuffer on a read-only bound framebuffer');
+    console.assert(gl.getParameter(gl.READ_BUFFER) === gl.COLOR_ATTACHMENT0,
+                   'READ_BUFFER of the read framebuffer');
+    gl.deleteRenderbuffer(readFb.renderbuffer);
+    console.assert(attachmentType(gl) === gl.NONE,
+                   'deleteRenderbuffer detaches from the read framebuffer');
+    var tex2d = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex2d);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 4, 4, 0, gl.RGBA,
+                  gl.UNSIGNED_BYTE, null);
+    gl.framebufferTexture2D(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                            gl.TEXTURE_2D, tex2d, 0);
+    gl.deleteTexture(tex2d);
+    console.assert(attachmentType(gl) === gl.NONE,
+                   'deleteTexture detaches from the read framebuffer');
+    expectError(gl, gl.NO_ERROR, 'detach on delete');
+
+    var layers = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D_ARRAY, layers);
+    gl.texImage3D(gl.TEXTURE_2D_ARRAY, 0, gl.RGBA8, 4, 4, 2, 0, gl.RGBA,
+                  gl.UNSIGNED_BYTE, null);
+    gl.framebufferTextureLayer(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                               layers, 0, 1);
+    expectError(gl, gl.NO_ERROR,
+                'framebufferTextureLayer on a read-only bound framebuffer');
+    console.assert(gl.getFramebufferAttachmentParameter(
+                       gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                       gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME) === layers,
+                   'framebufferTextureLayer attaches to the read framebuffer');
+    gl.framebufferTextureLayer(gl.TEXTURE_2D, gl.COLOR_ATTACHMENT0, layers,
+                               0, 1);
+    expectError(gl, gl.INVALID_ENUM, 'framebufferTextureLayer bad target');
+
+    // READ_FRAMEBUFFER = default, DRAW_FRAMEBUFFER = framebuffer: the
+    // default framebuffer takes no attachment.
+    gl.bindFramebuffer(gl.FRAMEBUFFER, draw);
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+    gl.framebufferTextureLayer(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                               layers, 0, 0);
+    expectError(gl, gl.INVALID_OPERATION,
+                'framebufferTextureLayer on the default read framebuffer');
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+    console.assert(pixel[0] === 0 && pixel[1] === 255 && pixel[2] === 0,
+                   'drawing buffer intact, got ' +
+                   Array.prototype.join.call(pixel, ','));
+    testEnd();
+  });
+}
+</script>

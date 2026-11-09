@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>slot fallback layout no-crash test</title>
+</head>
+<body>
+<div id="host">
+  <div id="light">light</div>
+</div>
+<script>
+// Shim for running in a regular browser without the Starfish harness
+if (typeof testEnd !== 'function') {
+    window.testEnd = function() {
+        var passed = true;
+        var assertions = window.__assertions || [];
+        for (var i = 0; i < assertions.length; i++) {
+            if (!assertions[i].ok) {
+                passed = false;
+                console.error('FAIL: ' + assertions[i].msg);
+            }
+        }
+        if (passed) {
+            console.log('PASS: slot-fallback-layout');
+        }
+    };
+    var origAssert = console.assert.bind(console);
+    console.assert = function(cond, msg) {
+        window.__assertions = window.__assertions || [];
+        window.__assertions.push({ ok: !!cond, msg: msg || String(cond) });
+        origAssert(cond, msg);
+    };
+}
+
+(function() {
+    // Attach a shadow root and put a slot with fallback content inside
+    var host = document.getElementById('host');
+    var shadow = host.attachShadow({ mode: 'open' });
+
+    // The slot has fallback content: a div#fb
+    shadow.innerHTML = '<div><slot><div id="fb">fallback</div></slot></div>';
+
+    // Force layout — this previously caused SIGSEGV in FrameBlockBox
+    // when the slot element (DOM parent of fallback content) had no frame
+    var crashed = false;
+    try {
+        host.getBoundingClientRect();
+    } catch (e) {
+        crashed = true;
+    }
+
+    console.assert(!crashed, 'getBoundingClientRect must not crash');
+
+    testEnd();
+}());
+</script>
+</body>
+</html>

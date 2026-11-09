@@ -28,9 +28,9 @@ Verdict per test:
     PASS  -> harness completed cleanly (status=0), >=1 subtest, no FAIL subtests
     FAIL  -> any FAIL subtest, harness status!=0, no completion, or shell crash
 
-Needs no stored expected `.txt` files, so it works without the internal
-`test/` submodule. The browser is `./Starfish` unless the `STARFISH_BIN`
-environment variable names another binary (e.g. an FFmpeg build).
+Needs no stored expected `.txt` files. The browser is `./Starfish` unless
+the `STARFISH_BIN` environment variable names another binary (e.g. an FFmpeg
+build).
 
     python3 tool/wpt/scripts/wpt_runner.py \
         tool/wpt/testharness_lists --wpt-root /path/to/wpt

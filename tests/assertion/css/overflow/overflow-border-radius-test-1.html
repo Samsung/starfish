@@ -1,0 +1,57 @@
+<style>
+
+div {
+    width: 100px;
+    height: 100px;
+    border-radius: 10px;
+}
+
+#t {
+  will-change: transform;
+  border-radius: 100px;
+}
+
+#t1 {
+  background: red;  
+  
+}
+
+#t2 {
+  will-change: transform;
+  background: red;
+}
+
+
+</style>
+
+<div id="t">
+<div id="t1"></div>
+<div id="t2"></div>
+</div>
+<script>
+  // Regression for a leaf whose only paint is a solid background-color drawn
+  // directly by the compositor (#t2 has will-change:transform): its 10px
+  // border-radius must still clip the corners. We don't pixel-diff the whole
+  // image (compositor AA at the rounded edge differs slightly from the cairo
+  // reference); instead we assert the actual bug: the top-left corner is cut
+  // (background white) while the center is filled (red). #t1 is the control
+  // path that was always rounded.
+  screenShot("overflow-border-radius-test-1.png", function () {
+      var img = "overflow-border-radius-test-1.png";
+      function assertRounded(box) {
+          var x = Math.round(box.x);
+          var y = Math.round(box.y);
+          // (x+1, y+1) lies in the corner triangle removed by the 10px radius:
+          // ~2.7px outside the corner arc, so it is background when rounded and
+          // solid red when the corner is (wrongly) square.
+          testAssert(checkPixelColor(img, x + 1, y + 1, 255, 255, 255, 255, 4));
+          // sanity: the box really rendered (center is red)
+          testAssert(checkPixelColor(img, Math.round(box.x + box.width / 2),
+                                     Math.round(box.y + box.height / 2),
+                                     255, 0, 0, 255, 16));
+      }
+      assertRounded(document.getElementById("t1").getBoundingClientRect());
+      assertRounded(document.getElementById("t2").getBoundingClientRect());
+      testEnd();
+  });
+</script>

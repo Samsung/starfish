@@ -1,0 +1,9 @@
+@font-face {
+    font-family: StylesheetReadyAhemProbe;
+    src: url('../../../fixtures/resources/wpt/fonts/Ahem.ttf');
+}
+@font-face {
+    font-family: UnusedReadyAhemProbe;
+    src: url('data:font/ttf;base64,AA==');
+}
+#probe { font-family: StylesheetReadyAhemProbe, serif; }

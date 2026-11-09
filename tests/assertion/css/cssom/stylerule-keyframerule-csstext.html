@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>cssText setter on style and keyframe rule declarations</title>
+<style>
+.a { color: red; }
+@keyframes k { from { opacity: 0; } to { opacity: 1; } }
+</style>
+<div class="a">a</div>
+<script>
+var failures = 0;
+function check(cond, msg) { console.assert(cond, msg); if (!cond) { failures++; console.log("FAIL: " + msg); } }
+var sheet = document.styleSheets[0];
+var styleRule = sheet.cssRules[0];
+styleRule.style.cssText = "color: blue; margin-top: 3px";
+check(styleRule.cssText.indexOf("blue") !== -1, "style rule cssText setter: " + styleRule.cssText);
+check(styleRule.style.color === "blue", "style rule wrapper reflects: " + styleRule.style.color);
+check(styleRule.style.cssText.indexOf("src") === -1, "src is not a property of a style rule");
+styleRule.style = "color: green";
+check(styleRule.cssText.indexOf("green") !== -1, "style rule PutForwards: " + styleRule.cssText);
+var keyframes = sheet.cssRules[1];
+check(keyframes.type === CSSRule.KEYFRAMES_RULE, "keyframes rule");
+var frame = keyframes.cssRules[0];
+check(frame.type === CSSRule.KEYFRAME_RULE, "keyframe rule");
+frame.style.cssText = "opacity: 0.5";
+check(frame.cssText.indexOf("0.5") !== -1, "keyframe cssText setter: " + frame.cssText);
+check(frame.style.parentRule === frame, "keyframe parentRule");
+// src must stay rejected outside @font-face via the cssText setter.
+styleRule.style.cssText = "src: url(x.woff); color: red";
+check(styleRule.style.getPropertyValue("src") === "", "src dropped for a style rule: '" + styleRule.style.getPropertyValue("src") + "'");
+check(styleRule.style.color === "red", "color kept: " + styleRule.style.color);
+console.log(failures === 0 ? "ALL CHECKS PASSED" : failures + " CHECK(S) FAILED");
+if (typeof testEnd === "function") { testEnd(failures === 0); }
+</script>

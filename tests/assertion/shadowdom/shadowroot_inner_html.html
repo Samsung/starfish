@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>ShadowRoot.innerHTML builds a shadow tree whose &lt;style&gt; is registered</title>
+  <style>
+    body { margin: 0; }
+    .box { display: inline-block; width: 40px; height: 40px; }
+  </style>
+</head>
+
+<body>
+  <!-- Per the HTML spec, innerHTML is exposed on ShadowRoot as well as Element
+     (the InnerHTML mixin), and its fragment parsing uses the shadow host as the
+     context element. A <style> element created that way is an ordinary node in
+     the shadow tree, so its sheet must reach the shadow tree's style resolver
+     just as createElement('style') + appendChild does. -->
+
+  <!-- Case 1: innerHTML-created <style> styles the shadow tree, the host
+       (via :host) and the slotted light-DOM child (via ::slotted()). -->
+  <div id="hostA"><div id="childA" class="box"></div></div>
+
+  <!-- Case 2: the shadow tree is populated while the host is still detached,
+       and the host is inserted afterwards -- the order a custom element uses
+       when it attaches its shadow root in the constructor. -->
+
+  <!-- Case 3 (negative control): a light-DOM element outside the shadow tree
+       must not be styled by the shadow tree's sheet. -->
+  <div id="outsider" class="box"></div>
+
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs
+    // the test. When that harness is absent (other browser), shim a custom
+    // testEnd() that tallies console.assert results and reports the verdict,
+    // so the same file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[shadowroot_inner_html] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    var MARKUP =
+      '<style>' +
+      ':host { padding: 7px; }' +
+      '.inner { background: green; }' +
+      '::slotted(*) { background: green; }' +
+      '</style>' +
+      '<div class="inner"><slot></slot></div>';
+
+    var hostA = document.getElementById('hostA');
+    var srA = hostA.attachShadow({ mode: 'open' });
+    srA.innerHTML = MARKUP;
+
+    // Case 2: fill the shadow tree before the host joins the document tree.
+    var hostB = document.createElement('div');
+    var childB = document.createElement('div');
+    childB.id = 'childB';
+    childB.className = 'box';
+    hostB.appendChild(childB);
+    var srB = hostB.attachShadow({ mode: 'open' });
+    srB.innerHTML = MARKUP;
+    document.body.appendChild(hostB);
+
+    function style(el) {
+      return getComputedStyle(el);
+    }
+    function bg(id) {
+      return style(document.getElementById(id)).backgroundColor;
+    }
+
+    // Case 1
+    console.assert(srA.childNodes.length === 2,
+      'Case 1: innerHTML must parse into the shadow tree (got ' + srA.childNodes.length + ' child nodes)');
+    console.assert(style(hostA).paddingLeft === '7px',
+      'Case 1: :host from an innerHTML-created <style> must reach the host (got ' +
+      style(hostA).paddingLeft + ')');
+    console.assert(bg('childA') === 'rgb(0, 128, 0)',
+      'Case 1: ::slotted(*) from an innerHTML-created <style> must paint the slotted child green (got ' +
+      bg('childA') + ')');
+    console.assert(style(srA.querySelector('.inner')).backgroundColor === 'rgb(0, 128, 0)',
+      'Case 1: the shadow tree\'s own rule must apply inside the shadow tree (got ' +
+      style(srA.querySelector('.inner')).backgroundColor + ')');
+
+    // Case 2
+    console.assert(style(hostB).paddingLeft === '7px',
+      'Case 2: a shadow tree filled before insertion must still register its <style> (got ' +
+      style(hostB).paddingLeft + ')');
+    console.assert(bg('childB') === 'rgb(0, 128, 0)',
+      'Case 2: ::slotted(*) must apply after the detached host is inserted (got ' + bg('childB') + ')');
+
+    // Case 3: scoping control
+    console.assert(bg('outsider') === 'rgba(0, 0, 0, 0)',
+      'Case 3: the shadow tree\'s sheet must not style light DOM outside it (got ' +
+      bg('outsider') + ')');
+
+    // Case 4: the getter serializes the shadow tree back out.
+    var read = srA.innerHTML;
+    console.assert(read.indexOf('<slot') >= 0 && read.indexOf('::slotted(*)') >= 0,
+      'Case 4: the innerHTML getter must serialize the shadow tree (got ' + read + ')');
+
+    // Case 5: a shadow sheet added after the first style resolution must take
+    // effect. The rules a shadow tree contributes to the outer scope (:host on
+    // the host, ::slotted() on the light-DOM children) are not reached by the
+    // mutation that added the sheet, so this checks they are invalidated.
+    var hostC = document.createElement('div');
+    var childC = document.createElement('div');
+    childC.className = 'box';
+    hostC.appendChild(childC);
+    document.body.appendChild(hostC);
+    var srC = hostC.attachShadow({ mode: 'open' });
+    srC.innerHTML = '<slot></slot>';
+    style(hostC).paddingLeft; // force a resolution with no shadow sheet
+    srC.innerHTML = MARKUP;
+    console.assert(style(hostC).paddingLeft === '7px',
+      'Case 5: :host from a sheet added after first render must apply (got ' +
+      style(hostC).paddingLeft + ')');
+    console.assert(style(childC).backgroundColor === 'rgb(0, 128, 0)',
+      'Case 5: ::slotted() from a sheet added after first render must apply (got ' +
+      style(childC).backgroundColor + ')');
+
+    // Case 6: replacing the shadow tree drops the previous sheet's contribution
+    // to the outer scope -- a promoted :host/::slotted() rule must not outlive
+    // the sheet it came from.
+    srC.innerHTML = '<style>.nothing { color: red; }</style><slot></slot>';
+    console.assert(style(hostC).paddingLeft === '0px',
+      'Case 6: :host must stop applying once its sheet is replaced (got ' +
+      style(hostC).paddingLeft + ')');
+    console.assert(style(childC).backgroundColor === 'rgba(0, 0, 0, 0)',
+      'Case 6: ::slotted() must stop applying once its sheet is replaced (got ' +
+      style(childC).backgroundColor + ')');
+
+    testEnd();
+  </script>
+</body>
+
+</html>

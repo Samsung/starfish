@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<!--
+  mouseleave must NOT fire during a touch sequence.  Before the fix, bridges
+  dispatched mouse-move events even while a finger was down, causing hover
+  state changes that fired spurious mouseleave events — which cancelled MUI
+  ripple animations after the first tap.
+
+  Approach: simulate an entire touchstart → touchend tap; assert that
+  mouseleave never fired on the target during the sequence.
+-->
+<head>
+<style>
+  body { margin: 0; }
+  #target { width: 200px; height: 200px; background: mistyrose; }
+</style>
+</head>
+<body>
+  <div id="target"></div>
+</body>
+<script>
+  var mouseleaveCount = 0;
+  document.getElementById("target").addEventListener("mouseleave", function() {
+    mouseleaveCount++;
+  });
+
+  function testStart() {
+    simulateTouchStart(100, 100);
+    simulateTouchEnd(100, 100);
+
+    setTimeout(function() {
+      testAssert(mouseleaveCount === 0);
+      testEnd();
+    }, 100);
+  }
+</script>
+</html>

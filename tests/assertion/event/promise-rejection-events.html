@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Promise rejection events test</title>
+</head>
+<body>
+<script>
+    var unhandledFired = false;
+    var propertyHandlerFired = false;
+    var rejectionhandledFired = false;
+
+    // 1. Property handler test on window
+    window.onunhandledrejection = function (e) {
+        propertyHandlerFired = true;
+        console.assert(e instanceof PromiseRejectionEvent, "Should be PromiseRejectionEvent");
+        console.assert(e.type === "unhandledrejection", "Type should be unhandledrejection");
+        console.assert(e.cancelable === true, "unhandledrejection should be cancelable");
+    };
+
+    // 2. AddEventListener test
+    var latePromise;
+    window.addEventListener("unhandledrejection", function (e) {
+        unhandledFired = true;
+        console.assert(e.promise !== undefined, "e.promise should be defined");
+        console.assert(e.reason instanceof Error, "e.reason should be Error");
+        console.assert(e.reason.message === "boom" || e.reason.message === "late-boom", "e.reason.message should match");
+        e.preventDefault(); // Prevent default console logging
+    });
+
+    window.addEventListener("rejectionhandled", function (e) {
+        rejectionhandledFired = true;
+        console.assert(e instanceof PromiseRejectionEvent, "Should be PromiseRejectionEvent");
+        console.assert(e.type === "rejectionhandled", "Type should be rejectionhandled");
+        console.assert(e.promise === latePromise, "Handled promise should match");
+    });
+
+    // Fire unhandled rejection
+    var p1 = Promise.reject(new Error("boom"));
+
+    // Fire unhandled rejection that will later be handled
+    latePromise = Promise.reject(new Error("late-boom"));
+
+    setTimeout(function () {
+        console.assert(unhandledFired, "unhandledrejection event listener should have fired");
+        console.assert(propertyHandlerFired, "window.onunhandledrejection should have fired");
+
+        // Add catch handler after unhandledrejection was fired
+        latePromise.catch(function () {});
+
+        setTimeout(function () {
+            console.assert(rejectionhandledFired, "rejectionhandled event should have fired");
+
+            if (typeof testEnd === "function") {
+                testEnd();
+            }
+        }, 50);
+    }, 50);
+</script>
+</body>
+</html>

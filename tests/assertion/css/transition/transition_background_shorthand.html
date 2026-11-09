@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <style>
+    div {
+      display: block;
+      width: 100px;
+      height: 100px;
+      background-color: black;
+    }
+
+    .background {
+      /* border: 10px solid black; */
+      transition: background 1s;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="target" class="background"></div>
+
+</body>
+<script>
+  let started = 0;
+  let ended = 0;
+  window.onload = function () {
+    document.getElementById('target').addEventListener('transitionstart', function (event) {
+      const targetElement = event.target;
+      started++;
+      if (event.propertyName === 'background-color') {
+        testAssert(started == 1);
+      }
+    });
+
+    document.getElementById('target').addEventListener('transitionend', function (event) {
+      const targetElement = event.target;
+      ended++;
+      if (event.propertyName === 'background-color') {
+        testAssert(ended == 1);
+      }
+    });
+    target.style.backgroundColor = 'yellow';
+
+  }
+
+  function testStart() {
+    setTimeout(() => {
+      testAssert(started == 1 && ended == 1);
+      testEnd();
+    }, 3000);
+  }
+</script>
+
+</html>

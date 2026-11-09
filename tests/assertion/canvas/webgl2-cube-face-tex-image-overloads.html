@@ -1,0 +1,101 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebGL2 sized texImage2D/texSubImage2D overloads on cube-map faces</title>
+<canvas id="canvas" width="1" height="1"></canvas>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0, __firstError = '';
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) {
+      __pass++;
+    } else {
+      __fail++;
+      if (!__firstError) __firstError = message;
+      __nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[webgl2-cube-face-tex-image-overloads] ' + verdict);
+    document.title = verdict + (__firstError ? ': ' + __firstError : '');
+  };
+}
+
+// WebGL 2.0 texImage2D/texSubImage2D take a 2D image target, which includes
+// each TEXTURE_CUBE_MAP_* face; the texture bound to TEXTURE_CUBE_MAP is the
+// one being specified.
+var gl = document.getElementById('canvas').getContext('webgl2');
+console.assert(!!gl, 'WebGL2 context is required');
+if (gl) {
+  var red = [255, 0, 0, 255], green = [0, 255, 0, 255];
+  var blue = [0, 0, 255, 255], white = [255, 255, 255, 255];
+  var source = new ImageData(new Uint8ClampedArray(
+    [].concat(red, green, blue, white)), 2, 2);
+  var faces = [gl.TEXTURE_CUBE_MAP_POSITIVE_X, gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
+               gl.TEXTURE_CUBE_MAP_POSITIVE_Y, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+               gl.TEXTURE_CUBE_MAP_POSITIVE_Z, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z];
+
+  function checkFaces(texture, expected, label) {
+    var framebuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    faces.forEach(function (face) {
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, face,
+                              texture, 0);
+      var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+      console.assert(status === gl.FRAMEBUFFER_COMPLETE,
+                     label + ' face 0x' + face.toString(16) +
+                     ' framebuffer status: 0x' + status.toString(16));
+      var pixel = new Uint8Array(4);
+      gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+      console.assert(Array.from(pixel).join() === expected.join(),
+                     label + ' face 0x' + face.toString(16) + ' pixel: ' +
+                     Array.from(pixel) + ', expected: ' + expected);
+    });
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.deleteFramebuffer(framebuffer);
+  }
+
+  function uploadFaces(label, upload) {
+    var texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
+    faces.forEach(function (face) {
+      upload(face);
+      var error = gl.getError();
+      console.assert(error === gl.NO_ERROR, label + ' face 0x' +
+                     face.toString(16) + ' upload error: 0x' + error.toString(16));
+    });
+    return texture;
+  }
+
+  // Sized ImageData texImage2D with a 1x1 source sub-rectangle at (1, 1).
+  gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 1);
+  gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 1);
+  var texture = uploadFaces('texImage2D(ImageData)', function (face) {
+    gl.texImage2D(face, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+                  source);
+  });
+  checkFaces(texture, white, 'texImage2D(ImageData)');
+
+  // Sized ImageData texSubImage2D with a 1x1 source sub-rectangle at (0, 1).
+  gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0);
+  texture = uploadFaces('texSubImage2D(ImageData)', function (face) {
+    gl.texImage2D(face, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texSubImage2D(face, 0, 0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, source);
+  });
+  checkFaces(texture, blue, 'texSubImage2D(ImageData)');
+  gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0);
+
+  // ArrayBufferView overload with srcOffset, selecting the second pixel.
+  var pixels = new Uint8Array([].concat(red, green));
+  texture = uploadFaces('texImage2D(ArrayBufferView, srcOffset)',
+                        function (face) {
+    gl.texImage2D(face, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+                  pixels, 4);
+  });
+  checkFaces(texture, green, 'texImage2D(ArrayBufferView, srcOffset)');
+}
+
+testEnd();
+</script>

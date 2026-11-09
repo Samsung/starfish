@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+        #test1 {
+            width: 1000px;
+        }
+
+        #test2 {
+            display: flex;
+            background-color: green;
+        }
+
+        #test3 {
+            display: flex;
+            flex-direction: row;
+            background-color: blue;
+        }
+
+        .item {
+            display: flex;
+            background-color: red;
+        }
+    </style>
+</head>
+
+<body id="test1">
+    <div id="test2" >
+        <div id="test3">
+            <div tabindex="-1" class="item">"Item one has a fairly long label here?????????"</div>
+            <div tabindex="-1" class="item">"Item two is a short label???????"</div>
+            <div tabindex="-1" class="item">"Item three is a short label?????????"</div>
+            <div tabindex="-1" class="item">"Item four has a slightly longer label????????"</div>
+            <div tabindex="-1" class="item">"Item five has a medium label????????"</div>
+        </div>
+    </div>
+</body>
+<script>
+    function testStart() {
+       console.log(test1.getBoundingClientRect().width)
+       console.log(test2.getBoundingClientRect().width)
+       console.log(test3.getBoundingClientRect().width)
+
+       testAssert(test1.getBoundingClientRect().width == 1000)
+       testAssert(test2.getBoundingClientRect().width == 1000)
+       testAssert(test3.getBoundingClientRect().width == 1000)
+
+       testEnd(); 
+    }
+</script>
+
+</html>

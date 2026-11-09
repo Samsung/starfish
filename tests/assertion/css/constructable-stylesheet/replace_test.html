@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>CSSStyleSheet replace() Test</title>
+</head>
+
+<body>
+    <script>
+        // Test: CSSStyleSheet.replace() per spec
+        // https://drafts.csswg.org/cssom/#dom-cssstylesheet-replace
+
+        // ============================================
+        // TC1: replace on empty sheet - adds rules, resolves with sheet
+        // ============================================
+        (async function () {
+            try {
+                const sheet = new CSSStyleSheet();
+                const result = await sheet.replace('div { color: red; } p { margin: 0; }');
+
+                console.assert(result === sheet, 'TC1.1: replace should resolve with the sheet itself');
+                console.assert(sheet.cssRules.length === 2, 'TC1.2: should have 2 rules after replace');
+                console.assert(sheet.cssRules[0] instanceof CSSStyleRule, 'TC1.3: first rule should be CSSStyleRule');
+                console.assert(sheet.cssRules[0].selectorText === 'div', 'TC1.4: first rule selector should be "div"');
+                console.assert(sheet.cssRules[1].selectorText === 'p', 'TC1.5: second rule selector should be "p"');
+            } catch (e) {
+                console.error('TC1: Error - ' + e.message);
+            }
+        })();
+
+        // ============================================
+        // TC2: replace replaces existing rules, resolves with sheet
+        // ============================================
+        (async function () {
+            try {
+                const sheet = new CSSStyleSheet();
+                sheet.insertRule('a { color: blue; }', 0);
+                sheet.insertRule('b { color: green; }', 1);
+                console.assert(sheet.cssRules.length === 2, 'TC2.1: should have 2 rules before replace');
+
+                const result = await sheet.replace('span { padding: 10px; }');
+
+                console.assert(result === sheet, 'TC2.2: replace should resolve with the sheet itself');
+                console.assert(sheet.cssRules.length === 1, 'TC2.3: should have 1 rule after replace');
+                console.assert(sheet.cssRules[0].selectorText === 'span', 'TC2.4: rule selector should be "span"');
+            } catch (e) {
+                console.error('TC2: Error - ' + e.message);
+            }
+        })();
+
+        // ============================================
+        // TC3: replace with empty string removes all rules
+        // ============================================
+        (async function () {
+            try {
+                const sheet = new CSSStyleSheet();
+                sheet.insertRule('div { color: red; }', 0);
+
+                const result = await sheet.replace('');
+
+                console.assert(result === sheet, 'TC3.1: replace should resolve with the sheet itself');
+                console.assert(sheet.cssRules.length === 0, 'TC3.2: should have 0 rules after replace with empty string');
+            } catch (e) {
+                console.error('TC3: Error - ' + e.message);
+            }
+        })();
+
+        // ============================================
+        // TC4: replace on non-constructed sheet rejects with NotAllowedError
+        // ============================================
+        (async function () {
+            try {
+                const styleEl = document.createElement('style');
+                styleEl.textContent = 'div { color: red; }';
+                document.head.appendChild(styleEl);
+
+                const sheet = styleEl.sheet;
+                var caughtException = false;
+                try {
+                    await sheet.replace('p { color: blue; }');
+                } catch (e) {
+                    caughtException = true;
+                    console.assert(e.name === 'NotAllowedError', 'TC4.1: exception should be NotAllowedError, got: ' + e.name);
+                }
+                console.assert(caughtException, 'TC4.2: should reject with NotAllowedError for non-constructed sheet');
+
+                // Verify original rules are unchanged
+                console.assert(sheet.cssRules.length === 1, 'TC4.3: original rules should be unchanged after NotAllowedError');
+
+                document.head.removeChild(styleEl);
+            } catch (e) {
+                console.error('TC4: Error - ' + e.message);
+            }
+        })();
+
+        // ============================================
+        // TC5: replace - CSSOM access after replacement
+        // ============================================
+        (async function () {
+            try {
+                const sheet = new CSSStyleSheet();
+                await sheet.replace('.test { color: red; background: blue; }');
+
+                console.assert(sheet.cssRules.length === 1, 'TC5.1: should have 1 rule');
+                const rule = sheet.cssRules[0];
+                console.assert(rule instanceof CSSStyleRule, 'TC5.2: rule should be CSSStyleRule');
+                console.assert(rule.selectorText === '.test', 'TC5.3: selectorText should be ".test"');
+                console.assert(rule.style.color === 'red', 'TC5.4: style.color should be "red"');
+                console.assert(rule.style.background === 'blue', 'TC5.5: style.background should be "blue"');
+                console.assert(rule.parentStyleSheet === sheet, 'TC5.6: parentStyleSheet should be the sheet');
+            } catch (e) {
+                console.error('TC5: Error - ' + e.message);
+            }
+        })();
+
+        // ============================================
+        // TC6: replace returns a Promise
+        // ============================================
+        (async function () {
+            try {
+                const sheet = new CSSStyleSheet();
+                const result = sheet.replace('div { color: red; }');
+
+                console.assert(result instanceof Promise, 'TC6.1: replace should return a Promise');
+
+                await result;
+            } catch (e) {
+                console.error('TC6: Error - ' + e.message);
+            }
+        })();
+
+        // ============================================
+        // TC7: replace resolves with the sheet itself (strict equality)
+        // ============================================
+        (async function () {
+            try {
+                const sheet = new CSSStyleSheet();
+                const resolved = await sheet.replace('div { color: red; }');
+
+                console.assert(resolved === sheet, 'TC7.1: resolved value should be the same sheet object (strict equality)');
+            } catch (e) {
+                console.error('TC7: Error - ' + e.message);
+            }
+        })();
+
+        // ============================================
+        // TC8: replace with complex CSS (media query, keyframes)
+        // ============================================
+        (async function () {
+            try {
+                const sheet = new CSSStyleSheet();
+                await sheet.replace('@media screen and (min-width: 500px) { div { color: red; } } @keyframes fade { from { opacity: 0; } to { opacity: 1; } }');
+
+                console.assert(sheet.cssRules.length === 2, 'TC8.1: should have 2 rules (media + keyframes)');
+
+                // Verify media rule
+                const mediaRule = sheet.cssRules[0];
+                console.assert(mediaRule instanceof CSSMediaRule, 'TC8.2: first rule should be CSSMediaRule');
+                console.assert(mediaRule.conditionText.indexOf('screen') !== -1, 'TC8.3: media conditionText should contain "screen"');
+                console.assert(mediaRule.cssRules.length === 1, 'TC8.4: media rule should have 1 nested rule');
+                console.assert(mediaRule.cssRules[0].selectorText === 'div', 'TC8.5: nested rule selector should be "div"');
+                console.assert(mediaRule.cssRules[0].style.color === 'red', 'TC8.6: nested rule color should be "red"');
+
+                // Verify keyframes rule
+                const keyframesRule = sheet.cssRules[1];
+                console.assert(keyframesRule instanceof CSSKeyframesRule, 'TC8.7: second rule should be CSSKeyframesRule');
+                console.assert(keyframesRule.name === 'fade', 'TC8.8: keyframes name should be "fade"');
+                console.assert(keyframesRule.cssRules.length === 2, 'TC8.9: keyframes should have 2 keyframes (from, to)');
+            } catch (e) {
+                console.error('TC8: Error - ' + e.message);
+            }
+        })();
+
+        // ============================================
+        // TC9: replace preserves sheet identity (media, disabled)
+        // ============================================
+        (async function () {
+            try {
+                const sheet = new CSSStyleSheet({ media: 'screen', disabled: true });
+                await sheet.replace('div { color: red; }');
+
+                console.assert(sheet.media.mediaText === 'screen', 'TC9.1: media should be preserved after replace');
+                console.assert(sheet.disabled === true, 'TC9.2: disabled should be preserved after replace');
+                console.assert(sheet.ownerNode === null, 'TC9.3: ownerNode should still be null');
+                console.assert(sheet.title === null, 'TC9.4: title should still be null');
+            } catch (e) {
+                console.error('TC9: Error - ' + e.message);
+            }
+        })();
+
+        // ============================================
+        // TC10: replace multiple times in sequence
+        // ============================================
+        (async function () {
+            try {
+                const sheet = new CSSStyleSheet();
+
+                await sheet.replace('a { color: red; }');
+                console.assert(sheet.cssRules.length === 1, 'TC10.1: should have 1 rule after first replace');
+
+                await sheet.replace('b { color: green; } c { color: blue; }');
+                console.assert(sheet.cssRules.length === 2, 'TC10.2: should have 2 rules after second replace');
+                console.assert(sheet.cssRules[0].selectorText === 'b', 'TC10.3: first rule should be "b"');
+
+                await sheet.replace('');
+                console.assert(sheet.cssRules.length === 0, 'TC10.4: should have 0 rules after empty replace');
+            } catch (e) {
+                console.error('TC10: Error - ' + e.message);
+            }
+        })();
+
+        // ============================================
+        // TC11: replace with invalid CSS - valid rules still added
+        // ============================================
+        (async function () {
+            try {
+                const sheet = new CSSStyleSheet();
+                await sheet.replace('div { color: red; } {{{invalid p { margin: 0; }');
+
+                // At minimum, the valid rule should be present
+                console.assert(sheet.cssRules.length >= 1, 'TC11.1: should have at least 1 valid rule');
+            } catch (e) {
+                console.error('TC11: Error - ' + e.message);
+            }
+        })();
+
+        // ============================================
+        // TC12: replace with completely invalid CSS results in empty sheet
+        // ============================================
+        (async function () {
+            try {
+                const sheet = new CSSStyleSheet();
+                sheet.insertRule('div { color: red; }', 0);
+                sheet.insertRule('p { margin: 0; }', 1);
+                console.assert(sheet.cssRules.length === 2, 'TC12.1: should have 2 rules before replace');
+
+                await sheet.replace('{{{}}}');
+
+                console.assert(sheet.cssRules.length === 0, 'TC12.2: should have 0 rules after replace with completely invalid CSS');
+            } catch (e) {
+                console.error('TC12: Error - ' + e.message);
+            }
+        })();
+
+
+        if (typeof testEnd === 'function') {
+            testEnd();
+        }
+    </script>
+</body>
+
+</html>

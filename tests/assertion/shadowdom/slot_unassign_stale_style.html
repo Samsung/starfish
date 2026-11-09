@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>getComputedStyle reflects a slottable that fell out of the flat tree</title>
+</head>
+
+<body>
+  <!-- A light-DOM child that loses its slot assignment -- because its <slot>
+       was removed, or renamed so nothing matches -- is no longer part of the
+       flat tree per the DOM spec, so it is not rendered: getComputedStyle
+       must resolve every property to the empty string, per CSSOM's resolved
+       value algorithm for a "not rendered" element. -->
+  <div id="hostRemove"></div>
+  <div id="hostRename"></div>
+  <script>
+
+    // Starfish's test build provides testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (e.g. a regular browser like Chrome),
+    // shim a custom testEnd() that tallies console.assert results and reports
+    // the verdict to the console and the document title, so the same file runs
+    // and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) {
+          __pass++;
+        } else {
+          __fail++;
+          __nativeAssert(false, msg);
+        }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[slot_unassign_stale_style] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // (1) <slot> removed from the shadow tree entirely.
+    var hostRemove = document.getElementById('hostRemove');
+    var rootRemove = hostRemove.attachShadow({ mode: 'open' });
+    rootRemove.innerHTML =
+      '<style>::slotted(span) { color: rgb(255, 0, 0); }</style><slot></slot>';
+    var childRemove = document.createElement('span');
+    childRemove.textContent = 'hello';
+    hostRemove.appendChild(childRemove);
+
+    var beforeRemove = getComputedStyle(childRemove);
+    console.assert(beforeRemove.color === 'rgb(255, 0, 0)',
+      'slotted child gets ::slotted() color before removal (got ' + beforeRemove.color + ')');
+
+    rootRemove.querySelector('slot').remove();
+
+    var afterRemove = getComputedStyle(childRemove);
+    console.assert(afterRemove.color === '',
+      'color resolves to "" once the <slot> is removed and the child is unassigned (got "' +
+        afterRemove.color + '")');
+    console.assert(afterRemove.display === '',
+      'display resolves to "" once the <slot> is removed and the child is unassigned (got "' +
+        afterRemove.display + '")');
+
+    // (2) <slot> stays in the tree but is renamed so it no longer matches.
+    var hostRename = document.getElementById('hostRename');
+    var rootRename = hostRename.attachShadow({ mode: 'open' });
+    rootRename.innerHTML =
+      '<style>::slotted(span) { color: rgb(255, 0, 0); }</style><slot></slot>';
+    var childRename = document.createElement('span');
+    childRename.textContent = 'hello';
+    hostRename.appendChild(childRename);
+
+    var beforeRename = getComputedStyle(childRename);
+    console.assert(beforeRename.color === 'rgb(255, 0, 0)',
+      'slotted child gets ::slotted() color before the slot is renamed (got ' +
+        beforeRename.color + ')');
+
+    rootRename.querySelector('slot').name = 'nomatch';
+
+    var afterRename = getComputedStyle(childRename);
+    console.assert(afterRename.color === '',
+      'color resolves to "" once the default slot no longer matches (got "' +
+        afterRename.color + '")');
+    console.assert(afterRename.display === '',
+      'display resolves to "" once the default slot no longer matches (got "' +
+        afterRename.display + '")');
+
+    testEnd();
+
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<script>
+
+// -------------------------------------------------
+
+var orig = {
+        emptySet: new Set,
+        set: new Set([1, 2, 3]),
+        emptyMap: new Map,
+        map: new Map([[1, 2], [3, 4]]),
+    };
+
+clone = structuredClone(orig);
+
+testAssert(clone.emptySet instanceof Set);
+testAssert(clone.emptyMap instanceof Map);
+testAssert(clone.set instanceof Set);
+testAssert(clone.map instanceof Map);
+testAssert(clone.emptySet.size == 0);
+testAssert(clone.emptyMap.size == 0);
+testAssert(clone.set.size == orig.set.size);
+testAssert(clone.map.size == orig.map.size);
+testAssert(clone.set.has(1) && clone.set.has(2) && clone.set.has(3));
+testAssert(clone.map.get(1) == 2 && clone.map.get(3) == 4);
+
+// -------------------------------------------------
+
+
+var set = new Set;
+set.add(set);
+var map = new Map;
+map.set(map, map);
+var orig = { map: map, set: set };
+clone = structuredClone(orig);
+
+testAssert(clone.set instanceof Set);
+testAssert(clone.map instanceof Map);
+testAssert(clone.set === Array.from(clone.set)[0]);
+testAssert(clone.map === Array.from(clone.map)[0][0]);
+testAssert(clone.map === Array.from(clone.map)[0][1]);
+
+// -------------------------------------------------
+
+var set = new Set;
+var map = new Map;
+var setMutator = {
+    get val() {
+        set.add('mutated');
+        return 'setMutator';
+    }
+}
+var mapMutator = {
+    get val() {
+        map.set('mutated', true);
+        return 'mapMutator';
+    }
+}
+set.add(setMutator);
+map.set('mapMutator', mapMutator);
+var orig = { map: map, set: set };
+clone = structuredClone(orig);
+
+testAssert(clone.set instanceof Set);
+testAssert(clone.map instanceof Map);
+testAssert(orig.set.size == 2);
+testAssert(orig.map.size == 2);
+testAssert(clone.set.size == 1);
+testAssert(clone.map.size == 1);
+testAssert(Array.from(clone.set)[0].val == 'setMutator');
+testAssert(clone.map.get('mapMutator').val == 'mapMutator');
+
+// -------------------------------------------------
+
+wptTestEnd();
+</script>

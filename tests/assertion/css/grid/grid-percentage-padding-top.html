@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<div style="width:600px">
+<div id="a">
+  <div id="b">
+  </div>
+</div>
+</div>
+
+
+<style>
+
+#a {
+  background: blue;
+//  width: 600px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+#b {
+  background: red;
+  height: 0;
+  padding-top: 100%;
+}
+
+</style>
+<script>
+
+var s = window.getComputedStyle(b)
+console.log(s.paddingTop)
+testAssert(s.paddingTop=="200px")
+testEnd();
+
+</script>

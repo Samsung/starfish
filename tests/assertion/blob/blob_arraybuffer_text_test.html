@@ -1,0 +1,29 @@
+<script>
+let count =0;
+const blob = new Blob(["abcd"], {type : 'application/text'});
+
+blob.arrayBuffer().then(buffer => {
+  count++;
+  var d = new Uint8Array(buffer)
+  testAssert(d[0]==97)
+  testAssert(d[1]==98)
+  testAssert(d[2]==99)
+  testAssert(d[3]==100)
+  testAssert(d.length == 4)
+
+  // make sure we should copy of blob data
+  d[0] = 98;
+  blob.text().then(text => {
+    console.log(text);
+  testAssert(text=="abcd");
+  });
+
+});
+
+setTimeout(function() {
+  count++;
+  testAssert(count==2);
+  wptTestEnd();
+}, 100);
+
+</script>

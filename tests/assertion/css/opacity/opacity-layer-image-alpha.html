@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  html, body { margin: 0; background-color: black; }
+  /*
+   * An element with opacity < 1 that has no other reason to be composited
+   * (no transform, no will-change) is painted through the canvas opacity
+   * layer rather than into its own graphics buffer. The images it paints --
+   * a background-image drawn once, a repeated background-image, and an
+   * <img> -- must be attenuated by the opacity exactly once, like its
+   * background-color. Regression guard for the cairo canvas multiplying the
+   * layer opacity into each image draw and then again when the layer was
+   * flattened, which left images inside such an element at opacity^2.
+   */
+  .layer {
+    position: absolute; top: 0; left: 0;
+    width: 400px; height: 100px;
+    opacity: 0.5;
+  }
+  .cell { position: absolute; top: 0; width: 100px; height: 100px; }
+  .color { left: 0; background-color: white; }
+  .image {
+    left: 100px;
+    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAD0lEQVR4nGP4jwQYiOMAANuQL9FuRbCyAAAAAElFTkSuQmCC");
+    background-size: 100px 100px;
+    background-repeat: no-repeat;
+  }
+  .repeat {
+    left: 200px;
+    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAD0lEQVR4nGP4jwQYiOMAANuQL9FuRbCyAAAAAElFTkSuQmCC");
+    background-size: 10px 10px;
+    background-repeat: repeat;
+  }
+  .img { left: 300px; }
+</style>
+</head>
+<body>
+  <div class="layer">
+    <div class="cell color"></div>
+    <div class="cell image"></div>
+    <div class="cell repeat"></div>
+    <img class="cell img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAD0lEQVR4nGP4jwQYiOMAANuQL9FuRbCyAAAAAElFTkSuQmCC">
+  </div>
+</body>
+<script>
+  window.onload = function() {
+    setTimeout(function() {
+      screenShot("opacity-layer-image-alpha-temp.png", function() {
+        // white at opacity 0.5 over black => (128,128,128) for every cell
+        testAssert(checkPixelColor("opacity-layer-image-alpha-temp.png",
+                                   50, 50, 128, 128, 128, 255, 4),
+                   "background-color at opacity 0.5");
+        testAssert(checkPixelColor("opacity-layer-image-alpha-temp.png",
+                                   150, 50, 128, 128, 128, 255, 4),
+                   "background-image at opacity 0.5");
+        testAssert(checkPixelColor("opacity-layer-image-alpha-temp.png",
+                                   250, 50, 128, 128, 128, 255, 4),
+                   "repeated background-image at opacity 0.5");
+        testAssert(checkPixelColor("opacity-layer-image-alpha-temp.png",
+                                   350, 50, 128, 128, 128, 255, 4),
+                   "img element at opacity 0.5");
+        testEnd();
+      }, 100);
+    }, 300);
+  };
+</script>
+</html>

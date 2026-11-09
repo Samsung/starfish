@@ -1,0 +1,40 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Animation keyframe objects survive binding length conversion</title>
+<body>
+<script>
+if (typeof testEnd !== 'function') window.testEnd = () => {};
+
+// Web Animations accepts property-indexed keyframes without an array length.
+// https://drafts.csswg.org/web-animations-1/#dom-animatable-animate
+for (const keyframes of [{}, {opacity: [0, 1]}, [{opacity: 0}, {opacity: 1}]]) {
+    try {
+        const animation = document.body.animate(keyframes, {duration: 1});
+        console.assert(animation instanceof Animation, 'keyframes accepted');
+        animation.cancel();
+    } catch (error) {
+        console.assert(false, 'keyframe conversion threw: ' + error);
+    }
+}
+
+// The length fix must retain restricted-float validation for audio sequences.
+const context = new OfflineAudioContext(1, 128, 44100);
+for (const value of [NaN, Infinity, -Infinity]) {
+    let rejected = false;
+    try {
+        new PeriodicWave(context, {real: [value], imag: [0]});
+    } catch (error) {
+        rejected = error instanceof TypeError;
+    }
+    console.assert(rejected, 'non-finite periodic-wave coefficient rejected');
+}
+try {
+    const wave = new PeriodicWave(context, {
+        real: new Float32Array([0, 0]), imag: new Float32Array([0, 1])
+    });
+    console.assert(wave instanceof PeriodicWave, 'finite typed arrays accepted');
+} catch (error) {
+    console.assert(false, 'finite typed array conversion threw: ' + error);
+}
+testEnd();
+</script>

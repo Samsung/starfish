@@ -14,6 +14,8 @@ of spec compliance.
 | C++ style (headers, formatting, classes, nullability, GC) | `docs/Coding_Style_Guide.md` |
 | WPT structure, tooling, `.res` list workflow | `docs/wpt.md` |
 | Khronos WebGL conformance suites (`third_party/webgl` submodule, `khronos_test`, pin upgrades) | `docs/khronos_webgl.md` |
+| WebKit LayoutTests (sparse `third_party/webkit` submodule, `webkit_test`, pin upgrades) | `docs/webkit_layouttests.md` |
+| Blink web tests and Gecko mochitests/reftests (sparse `third_party/blink`, `third_party/gecko` submodules, `blink_test`, `gecko_test`) | `docs/blink_web_tests.md`, `docs/gecko_tests.md` |
 | Supported web surface (HTML tags, DOM interfaces, CSS properties, build-conditional flags) | `docs/Spec.md` |
 | Full test suite list | `./tool/runner/test_runner.py -h` |
 | Module map of `platform/`, `public/`, `binding/`, `shell/`, `launcher/` with feature → file:line navigation (generated snapshot; `src/core/` is not covered) | `code2spec/code2spec-quick-reference.md`, then `code2spec/modules/<module>.md` |
@@ -90,21 +92,28 @@ After a change, run the closest suites first:
 |---|---|---|
 | Any C++ | `./tool/lint/check_tidy.py` | Same check as the PR CI `prepare_source` job's "Check tidy" step |
 | `src/public/contract/**`, `inc/PlatformIntegrationData.h`, `inc/LWEWorker.h` | `./tool/lint/check_contract_abi.py` | Gates UWE delegate contract ABI breaks; same check as the PR CI `prepare_source` job's "Check contract ABI" step |
-| `core/dom`, DOM APIs | `./tool/runner/test_runner.py wpt_serve_testharness_dom internal_test` | Fast |
+| `core/dom`, DOM APIs | `./tool/runner/test_runner.py wpt_serve_testharness_dom internal_test`, then `webkit_test gecko_test` | Fast; each vendor suite needs its `./tool/<vendor>/fetch.sh` once |
 | `core/style`, CSS/selectors | `./tool/runner/test_runner.py wpt_serve_testharness_css` | |
 | HTML parsing/elements | `./tool/runner/test_runner.py wpt_serve_testharness_html` | |
 | fetch / xhr / canvas / svg / ... | matching `wpt_serve_*` suite | |
 | worker / serviceworker | `wpt_serve_testharness_worker` / `_serviceworker` | Excluded from the aggregate suite (needs daemon peers) |
-| Layout, paint, rendering | `wpt_serve_reftest`, or `reftest_all` for a full pass | `reftest_all` is slow; prefer targeted suites while iterating |
-| `core/dom/canvas/webgl`, `platform/canvas/gl` | `khronos_test`, or one of `vendor_test_khronos` / `_khronos2` / `_khronossdk` | Needs `-DWEBGL=1`; not in `reftest_all` (own CI job) |
+| Layout, paint, rendering | `wpt_serve_reftest`, then `webkit_test blink_test gecko_test` | WPT reftests from `third_party/wpt`; the vendor suites add WebKit, Blink and Gecko reftests |
+| `core/dom/canvas/webgl`, `platform/canvas/gl` | `khronos_test`, or one of `vendor_test_khronos` / `_khronos2` / `_khronossdk` | Needs `-DWEBGL=1`; own CI job |
 
 Conventions:
 
 - Internal tests assert with `console.assert` and finish with `testEnd()`;
   they must also run unmodified in a plain browser.
 - Unit tests cover the public embedding API: `Starfish unit-test`.
-- `test/` is a submodule; only modify existing test assets when a test is
-  clearly wrong.
+- A new test goes where its verdict comes from: `tests/assertion/` when the
+  page judges itself, `tests/crash/` when it only has to survive, and
+  `tests/pixel/` when it is compared with an image. `tests/pixel` is a
+  submodule because of its size, so a change there is a `tests/pixel` commit
+  plus a submodule pointer bump. `tests/fixtures/` holds what they share;
+  `tests/cdp/` and `tests/cli/` are the CDP and CLI suites. Upstream test suites
+  belong in `third_party/`: reftests come from WPT and the WebKit, Blink and
+  Gecko suites, and Chromium's CDP tests from the `third_party/blink` checkout.
+  Only modify existing test assets when a test is clearly wrong.
 - `.res` list discipline (details in `docs/wpt.md`): a `#`-commented line
   is a tracked known-failure — never delete or uncomment one just to make a
   run green; `wpt_annotate.py` markers are write-once — a fixed test stays

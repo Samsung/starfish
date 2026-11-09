@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!-- Verify that buffered scroll content renders at the correct position after
+     Scrolling::giveDamageToTarget skips SC recomputation (the fast path).
+     The scroll container has no border/shadow/background so
+     needsRepaintingWhenScrolling() returns false and the fast composite-only
+     path is taken on every scroll event. -->
+<html>
+<head>
+<style>
+  body { margin: 0; background: white; }
+  #scroller {
+    width: 200px;
+    height: 150px;
+    overflow: auto;
+    /* no border / shadow / background — satisfies needsRepaintingWhenScrolling==false */
+  }
+  #red   { width: 200px; height: 100px; background: rgb(255, 0, 0); }
+  #gap   { width: 200px; height: 100px; }
+  #lime  { width: 200px; height: 100px; background: rgb(0, 255, 0); }
+  #trail { width: 200px; height: 200px; }
+</style>
+</head>
+<body>
+<div id="scroller">
+  <div id="red"></div>   <!-- content y=0..100   -->
+  <div id="gap"></div>   <!-- content y=100..200 (white) -->
+  <div id="lime"></div>  <!-- content y=200..300 -->
+  <div id="trail"></div>
+</div>
+<script>
+  // Step 1 — before scroll: top of scroller must show red.
+  screenShot("scroll-buf-opt-scroll-test-1_before.png", function() {
+    var before = "scroll-buf-opt-scroll-test-1_before.png";
+    testAssert(checkPixelColor(before, 10, 10, 255, 0, 0, 255, 4));
+
+    // Step 2 — scroll 200 px: lime block should now be at the top.
+    document.getElementById("scroller").scrollTop = 200;
+
+    screenShot("scroll-buf-opt-scroll-test-1_after.png", function() {
+      var after = "scroll-buf-opt-scroll-test-1_after.png";
+      testAssert(checkPixelColor(after, 10, 10, 0, 255, 0, 255, 4));
+      testEnd();
+    });
+  });
+</script>
+</body>
+</html>

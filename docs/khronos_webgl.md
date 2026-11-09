@@ -43,10 +43,10 @@ xvfb-run -s '-screen 0 1920x1080x24' -a ./Starfish \
   --hide-window --width=800 --height=600 --disable-console --timeout=300
 ```
 
-`khronos_test` is deliberately not part of `reftest_all`; `test_all` still
-includes it. The GCC workflow (`.github/workflows/x64_test.yml`) separates
-its Release build from two test jobs. Each test job restores the WebGL
-submodule through `tool/ci/cache_webgl.sh`, like the WPT cache restore.
+`test_all` still includes `khronos_test`. The GCC workflow
+(`.github/workflows/x64_test.yml`) separates its Release build from two test
+jobs. Each test job restores the WebGL submodule through
+`tool/ci/cache_webgl.sh`, like the WPT cache restore.
 
 `build_khronos_webgl` runs on the company runner (`code-linux`,
 `code-2xlarge`) and builds GCC (`glib_cairo_gl`) with

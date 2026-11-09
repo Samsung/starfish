@@ -1,0 +1,45 @@
+<!doctype html>
+<script>
+
+// -------------------------------------------------
+
+var original = { name: "MDN" };
+original.itself = original;
+clone = structuredClone(original);
+
+testAssert(clone !== original);
+testAssert(clone.name === "MDN");
+testAssert(clone.itself === clone);
+
+// -------------------------------------------------
+
+var inner = {};
+var orig = { inner: inner };
+inner.outer = orig;
+clone = structuredClone(orig);
+testAssert(clone.inner.outer, clone);
+
+// -------------------------------------------------
+
+var name = 'this is a setter';
+var orig = {};
+orig[name] = 'value';
+var setter_called = false;
+Object.defineProperty(Object.prototype, name, {
+    set: function(a) {
+        setter_called = true;
+    }
+});
+
+testAssert(orig.hasOwnProperty(name));
+
+clone = structuredClone(orig);
+
+testAssert(typeof clone === 'object');
+console.log(typeof clone);
+testAssert(!setter_called);
+testAssert(clone.hasOwnProperty(name));
+testAssert(clone[name] === orig[name]);
+
+wptTestEnd();
+</script>

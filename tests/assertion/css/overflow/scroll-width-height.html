@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<style>
+body {
+font-family: Ahem;
+}
+.content {
+line-height:20px;
+}
+#a {
+  width:100px;
+  height:100px;
+  border: 10px red solid;
+  padding: 5px;
+  overflow: auto;
+}
+</style>
+<div id="a" class="content">
+DDDDDDDDDDDDDDDDD<br>DD<br>DD<br>DD<br>DD<br>LAST
+</div>
+<script>
+testAssert(a.scrollHeight == 130); //130
+testAssert(a.scrollWidth == 282); //282
+wptTestEnd();
+</script>

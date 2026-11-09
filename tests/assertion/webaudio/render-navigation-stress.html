@@ -1,0 +1,54 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Audio rendering stops when a child document is discarded</title>
+<body>
+<script>
+if (typeof testEnd !== 'function') window.testEnd = () => {};
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+async function run() {
+    for (let iteration = 0; iteration < 16; iteration++) {
+        const frame = document.createElement('iframe');
+        await new Promise(resolve => {
+            frame.onload = resolve;
+            document.body.appendChild(frame);
+        });
+        const context = new frame.contentWindow.AudioContext();
+        const source = context.createOscillator();
+        const gain = context.createGain();
+        source.connect(gain).connect(context.destination);
+        source.start();
+        await context.resume();
+        const started = context.currentTime;
+        // Yield to the worker, then update topology and parameters repeatedly.
+        await wait(30);
+        console.assert(context.currentTime > started, 'child renderer started');
+        for (let i = 0; i < 512; i++) {
+            gain.disconnect();
+            gain.connect(context.destination);
+        }
+        gain.gain.setValueAtTime(0.25, context.currentTime);
+        await context.suspend();
+        const paused = context.currentTime;
+        for (let i = 0; i < 512; i++) {
+            gain.disconnect();
+            gain.connect(context.destination);
+        }
+        console.assert(context.currentTime === paused, 'saturated queue stays paused');
+        await context.resume();
+        if (iteration % 2) {
+            await new Promise(resolve => {
+                frame.onload = resolve;
+                frame.src = 'about:blank?audio-navigation=' + iteration;
+            });
+        } else {
+            frame.remove();
+        }
+        const stopped = context.currentTime;
+        await wait(20);
+        console.assert(context.currentTime === stopped,
+                       'discarded document no longer advances its render clock');
+        frame.remove();
+    }
+}
+run().catch(error => console.assert(false, String(error))).then(testEnd);
+</script>

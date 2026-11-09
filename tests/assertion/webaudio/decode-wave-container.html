@@ -1,0 +1,49 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WAVE container validation precedes decoder fallback</title>
+<script>
+if (typeof testEnd !== 'function') window.testEnd = () => {};
+function wave() {
+    const buffer = new ArrayBuffer(48);
+    const data = new DataView(buffer);
+    function tag(offset, value) {
+        for (let i = 0; i < 4; i++) data.setUint8(offset + i, value.charCodeAt(i));
+    }
+    tag(0, 'RIFF'); data.setUint32(4, 40, true); tag(8, 'WAVE');
+    tag(12, 'fmt '); data.setUint32(16, 16, true);
+    data.setUint16(20, 1, true); data.setUint16(22, 1, true);
+    data.setUint32(24, 48000, true); data.setUint32(28, 48000, true);
+    data.setUint16(32, 1, true); data.setUint16(34, 8, true);
+    tag(36, 'data'); data.setUint32(40, 4, true);
+    new Uint8Array(buffer, 44).fill(128);
+    return buffer;
+}
+async function run() {
+    const context = new OfflineAudioContext(1, 128, 48000);
+    const valid = await context.decodeAudioData(wave());
+    console.assert(valid.length === 4, 'valid WAVE still decodes');
+    const cases = [
+        [4, 0xffffffff, 'RIFF extends beyond input'],
+        [4, 3, 'RIFF ends before WAVE type'],
+        [40, 0xffffffff, 'data extends beyond RIFF'],
+        [16, 0xffffffff, 'format extends beyond RIFF'],
+        [4, 39, 'odd data chunk lacks its padding'],
+        [40, 2, 'trailing partial chunk header']
+    ];
+    for (const [offset, size, label] of cases) {
+        const bytes = wave();
+        const data = new DataView(bytes);
+        data.setUint32(offset, size, true);
+        if (label === 'odd data chunk lacks its padding') {
+            data.setUint32(40, 3, true);
+        }
+        try {
+            await context.decodeAudioData(bytes);
+            console.assert(false, label + ' must reject');
+        } catch (error) {
+            console.assert(error.name === 'EncodingError', label + ': ' + error);
+        }
+    }
+}
+run().catch(error => console.assert(false, String(error))).then(testEnd);
+</script>

@@ -1,0 +1,52 @@
+<html>
+<head>
+</head>
+
+<style>
+
+* {
+    margin: 0;
+}
+
+  .flex {
+      display:flex;
+      background:red;
+      height: 100px;
+      width: 100px;
+      position: relative;
+s     flex-direction: column;
+      padding: 10px;
+  }
+
+  .sub {
+      position: absolute;
+      height: 100px;
+      left:0px;
+      right:0px;
+      background: blue;
+  }
+
+</style>
+
+<body>
+
+  <body>
+
+    <div class="flex">
+      <div class="sub" id="asdf">
+      </div>
+    </div>
+
+  </body>
+
+  <script>
+    function testStart() {
+
+      var d = document.getElementById("asdf").getBoundingClientRect()
+      testAssert(d.x == 0)
+      testAssert(d.y == 10)
+      testEnd();
+    }
+  </script>
+
+</html>

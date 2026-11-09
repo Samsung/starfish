@@ -1,0 +1,31 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>AudioBufferSourceNode buffer can be set only once</title>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Web Audio node connections complete";
+    };
+}
+
+if (typeof AudioContext === "function") {
+    const context = new AudioContext();
+    const initialBuffer = context.createBuffer(1, 8, context.sampleRate);
+    const sourceWithBuffer = new AudioBufferSourceNode(context,
+                                                       {buffer: initialBuffer});
+    let secondAssignmentRejected = false;
+    try {
+        sourceWithBuffer.buffer = initialBuffer;
+    } catch (error) {
+        secondAssignmentRejected = error.name === "InvalidStateError";
+    }
+    console.assert(secondAssignmentRejected,
+                   "a non-null buffer can be assigned only once");
+    sourceWithBuffer.buffer = null;
+    console.assert(sourceWithBuffer.buffer === null,
+                   "buffer must accept null after a prior non-null set");
+    context.close().then(testEnd);
+} else {
+    testEnd();
+}
+</script>

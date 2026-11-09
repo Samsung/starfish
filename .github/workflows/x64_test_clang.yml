@@ -175,18 +175,6 @@ jobs:
       - name: Add safe directory
         run: git config --global --add safe.directory /__w/starfish/starfish
 
-      - name: Checkout Testcase..
-        env:
-          DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_SSH_KEY }}
-        run: |
-          # ssh resolves ~/.ssh from the passwd home (root -> /root), not $HOME
-          # (the runner sets HOME=/github/home); write the key where ssh looks.
-          install -m 700 -d /root/.ssh
-          printf '%s\n' "$DEPLOY_KEY" > /root/.ssh/id_rsa
-          chmod 600 /root/.ssh/id_rsa
-          git submodule init
-          git submodule update test
-
       - uses: CODE-Actions/download-artifact@v2
         with:
           name: starfish-x64_clang_debug
@@ -207,102 +195,16 @@ jobs:
         run: |
           cmake build/test -G Ninja
           ninja install_pixel_test_dep
+
+      # The image-compared tests live in the tests/pixel submodule.
+      - name: Checkout tests/pixel submodule
+        env:
+          BART_API_KEY: ${{ secrets.BART_API_KEY }}
+        run: ./tool/ci/cache_tests_pixel.sh
 
       - name: Run internal_test
         run: |
           xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py internal_test || exit 1
-
-  test_clang_reftest_all:
-    needs: build_x64_clang
-    timeout-minutes: 60
-    runs-on: [ runner-type3 ]
-    container:
-      image: lws-docker-local.bart.sec.samsung.net/starfish-build:24.04
-      credentials:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-      options: --user root
-
-    steps:
-      # Deliberately not CODE-Actions/checkout: its own internal auth-setup
-      # step runs `git submodule foreach --recursive` unconditionally
-      # (regardless of `submodules: false`), and this runner pool reuses its
-      # on-disk workspace across jobs -- a workspace whose local HEAD is
-      # stuck on an old commit with a broken gitlink/.gitmodules pairing
-      # made that internal step fail outright before this job's own steps
-      # ever ran (confirmed on a real run: "fatal: No url found for
-      # submodule path 'third_party/windows/cairo' in .gitmodules"), even
-      # though this job never asks for any submodule content itself. Take
-      # the source tree from squash_thirdparty's plain artifact instead --
-      # no checkout, nothing for that bug to run against. See pr_ci.yml's
-      # "Publish this checkout as a source artifact" step.
-      - name: Clean workspace
-        run: find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-
-      - name: Download source artifact
-        uses: CODE-Actions/download-artifact@v2
-        with:
-          name: starfish-source
-
-      - name: Extract source
-        run: tar xzf starfish-source.tar.gz
-
-      # test/ is the one submodule this job still needs; cloned directly
-      # from .gitmodules' recorded URL + the pin squash_thirdparty recorded
-      # alongside the tree, not via `git submodule` (which needs a real
-      # superproject .git this checkout deliberately no longer has).
-      - name: Checkout Testcase..
-        env:
-          DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_SSH_KEY }}
-        run: |
-          # ssh resolves ~/.ssh from the passwd home (root -> /root), not $HOME
-          # (the runner sets HOME=/github/home); write the key where ssh looks.
-          install -m 700 -d /root/.ssh
-          printf '%s\n' "$DEPLOY_KEY" > /root/.ssh/id_rsa
-          chmod 600 /root/.ssh/id_rsa
-          # A plain `git clone` only transfers commits reachable from the
-          # remote's currently-advertised branches/tags -- if test/'s pinned
-          # commit isn't a current branch tip any more (this is a live
-          # test-case repo, rebased/force-pushed often), that misses it
-          # outright ("fatal: reference is not a tree", confirmed on a real
-          # run). `git submodule update` never had this problem because it
-          # fetches the exact pinned SHA directly, which most git hosts
-          # (including this one, evidently, since that's how this job
-          # worked before) allow even for a non-tip commit. Do the same
-          # fetch-by-SHA here instead of clone-then-checkout.
-          url=$(git config -f .gitmodules --get submodule.test.url)
-          sha=$(cat test.pin.sha)
-          git init -q test
-          git -C test remote add origin "$url"
-          git -C test fetch --depth 1 origin "$sha"
-          git -C test checkout FETCH_HEAD
-
-      - uses: CODE-Actions/download-artifact@v2
-        with:
-          name: starfish-x64_clang_debug
-
-      - name: Prepare Test
-        run: |
-          mkdir -p ~/.fonts
-          cp /root/workspace/Ahem.ttf ~/.fonts
-          chmod a+x $PWD/out/debug/bin/lightweight-web-engine
-          ln -s -f $PWD/out/debug/bin/lightweight-web-engine Starfish
-          ln -s $PWD/out/debug/lib/libnanomsg.so ./out/debug/lib/libnanomsg.so.5
-          ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.1.1
-          ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.1.1
-          ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.3
-          ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.3
-
-      - name: Build image diff tool
-        run: |
-          cmake build/test -G Ninja
-          ninja install_pixel_test_dep
-
-      - name: Run reftest_all
-        env:
-          LP_NUM_THREADS: "4"
-        run: |
-          xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py reftest_all || exit 1
 
   # Reuse the Clang Debug artifact for smoke coverage; GCC runs the full suites.
   test_clang_khronos_webgl:

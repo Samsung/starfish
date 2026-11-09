@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+  <svg viewBox="0 0 100 100">
+    <switch></switch>
+    <circle></circle>
+  </svg>
+</body>
+<script>
+    function testStart() {
+        
+      var cTag = document.getElementsByTagName("circle")[0];
+        console.log(cTag);
+        testAssert(cTag.toString() == "[object SVGCircleElement]");
+
+        var sTag = document.getElementsByTagName("switch")[0];
+        console.log(sTag);
+        testAssert(sTag.toString() == "[object SVGSwitchElement]");
+        
+        testEnd();
+    }
+    testStart();
+</script>
+
+</html>

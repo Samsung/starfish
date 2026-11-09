@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<style>
+
+#test {
+position: absolute;
+left: 50px;
+top: 50px;
+width: 100px;
+height: 100px;
+background: yellow;
+}
+
+#over {
+width: 100px;
+height: 100px;
+background: blue;
+}
+
+</style>
+
+<body>
+
+<div>
+click event fire test
+</div>
+
+<div id="test" onclick="clickCount++; testAssert('clickCount == 1')">
+#test
+</div>
+
+</body>
+
+<script>
+
+var test = document.getElementById("test");
+test.addEventListener("touchstart", function() {
+    var d = document.createElement("div");
+    d.id = "over"
+    test.appendChild(d);
+});
+
+
+var clickCount = 0;
+
+console.log(test.onclick)
+
+test.addEventListener("click", function() {
+clickCount++;
+console.log(clickCount)
+testAssert("clickCount == 2")
+});
+
+
+console.log("test touchEvent Disaptch");
+window.simulateClick(80, 80);
+console.log(clickCount);
+testAssert("clickCount == 2");
+
+testEnd();
+</script>
+
+
+</html>

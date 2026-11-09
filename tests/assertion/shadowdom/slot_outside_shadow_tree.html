@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>A slot outside a shadow tree is an ordinary element in the flat tree</title>
+  <style>
+    #plainSlot { color: rgb(1, 2, 3); }
+    #slottedSlot { color: rgb(4, 5, 6); }
+  </style>
+</head>
+
+<body>
+  <!-- WHATWG DOM "find flattened slottables" only expands a slot whose root is
+     a shadow root. A <slot> in the light tree takes no part in slot
+     assignment: it is a plain element that its own children inherit from, and
+     when it is itself assigned to a shadow slot it stays in the flattened
+     slottables as-is. Both cases below used to trip the rendering-tree
+     traversal, which treated every <slot> as transparent. -->
+
+  <!-- Case 1: a light-DOM slot with no shadow tree anywhere. -->
+  <div id="plainHost"><slot id="plainSlot"><span id="plainChild">a</span></slot></div>
+
+  <!-- Case 2: a light-DOM slot that is itself slotted into a shadow slot. -->
+  <div id="host"><slot id="slottedSlot"><span id="slottedChild">b</span></slot><span id="sibling">c</span></div>
+
+  <script>
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs
+    // the test. When that harness is absent (other browser), shim a custom
+    // testEnd() that tallies console.assert results and reports the verdict,
+    // so the same file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[slot_outside_shadow_tree] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    function color(id) {
+      return getComputedStyle(document.getElementById(id)).color;
+    }
+
+    // Case 1
+    console.assert(color('plainSlot') === 'rgb(1, 2, 3)',
+      'Case 1: a light-DOM slot is styled like any element (got ' + color('plainSlot') + ')');
+    console.assert(color('plainChild') === 'rgb(1, 2, 3)',
+      'Case 1: a light-DOM slot\'s child inherits from the slot (got ' + color('plainChild') + ')');
+
+    // Case 2
+    var host = document.getElementById('host');
+    var root = host.attachShadow({ mode: 'open' });
+    root.innerHTML = '<slot></slot>';
+    var slottedSlot = document.getElementById('slottedSlot');
+    var flattened = root.firstChild.assignedNodes({ flatten: true });
+
+    console.assert(flattened.length === 2 && flattened[0] === slottedSlot,
+      'Case 2: a slotted light-DOM slot stays in the flattened slottables as-is');
+    console.assert(color('slottedSlot') === 'rgb(4, 5, 6)',
+      'Case 2: a slotted light-DOM slot is styled like any element (got ' + color('slottedSlot') + ')');
+    console.assert(color('slottedChild') === 'rgb(4, 5, 6)',
+      'Case 2: a slotted light-DOM slot\'s child inherits from the slot (got ' + color('slottedChild') + ')');
+    console.assert(color('sibling') === 'rgb(0, 0, 0)',
+      'Case 2: the slot\'s sibling is unaffected (got ' + color('sibling') + ')');
+
+    testEnd();
+  </script>
+</body>
+
+</html>

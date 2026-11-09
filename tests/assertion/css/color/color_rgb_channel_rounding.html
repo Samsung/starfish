@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>rgb() fractional channels round half up</title></head>
+<body>
+  <div id="target"></div>
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (other browser), shim a custom testEnd()
+    // that tallies console.assert results and reports the verdict, so the same
+    // file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[color_rgb_channel_rounding] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // css-color-4 #rgb-functions: a legacy sRGB channel serializes as an
+    // integer rounded to the nearest value, ties toward +infinity.
+    var target = document.getElementById('target');
+    var cases = [
+      ['rgb(1, 136.5, 1)', 'rgb(1, 137, 1)'],
+      ['rgb(254.5, 0.5, 10.5)', 'rgb(255, 1, 11)'],
+      ['rgb(128.5 200.5 250.5)', 'rgb(129, 201, 251)'],
+      ['rgb(1, 136.49, 1)', 'rgb(1, 136, 1)'],
+      ['rgb(170.4, 136.5, 124.3)', 'rgb(170, 137, 124)'],
+      ['rgb(50%, 50%, 50%)', 'rgb(128, 128, 128)'],
+      ['rgba(254.5, 136.5, 0.5, 0.5)', 'rgba(255, 137, 1, 0.5)'],
+    ];
+    cases.forEach(function (c) {
+      target.style.backgroundColor = c[0];
+      var computed = getComputedStyle(target).backgroundColor;
+      console.assert(computed === c[1],
+        c[0] + ' computed as ' + computed + ', expected ' + c[1]);
+    });
+
+    // Canvas parses colors with the same syntax and serializes opaque ones as
+    // hex (html #serialisation-of-a-color).
+    var ctx = document.createElement('canvas').getContext('2d');
+    ctx.fillStyle = 'rgb(1, 136.5, 254.5)';
+    console.assert(ctx.fillStyle === '#0189ff',
+      'canvas fillStyle is ' + ctx.fillStyle + ', expected #0189ff');
+
+    testEnd();
+
+  </script>
+</body>
+</html>

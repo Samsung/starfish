@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  html, body { margin: 0; background-color: white; }
+  /*
+   * Control: same layout as compositing-opacity-bg-self but opacity:1, so no
+   * opacity layer is opened and the compositor-drawn background is not clipped.
+   * Must render correctly both with and without the optimization.
+   */
+  .layer {
+    width: 250px; height: 250px;
+    background-color: red;
+    opacity: 1;
+    transform: translateZ(0);
+  }
+  .content { width: 40px; height: 40px; background-color: blue; }
+</style>
+</head>
+<body>
+  <div class="layer"><div class="content"></div></div>
+</body>
+<script>
+  window.onload = function() {
+    setTimeout(function() {
+      screenShot("compositing-opacity-bg-opaque-temp.png", function() {
+        // content area: opaque blue
+        testAssert(checkPixelColor("compositing-opacity-bg-opaque-temp.png",
+                                   20, 20, 0, 0, 255, 255, 6),
+                   "content pixel should be opaque blue");
+        // box interior beyond content: opaque red
+        testAssert(checkPixelColor("compositing-opacity-bg-opaque-temp.png",
+                                   125, 125, 255, 0, 0, 255, 6),
+                   "box interior should be opaque red");
+        // far box corner: opaque red
+        testAssert(checkPixelColor("compositing-opacity-bg-opaque-temp.png",
+                                   230, 230, 255, 0, 0, 255, 6),
+                   "box corner should be opaque red");
+        testEnd();
+      }, 100);
+    }, 300);
+  };
+</script>
+</html>

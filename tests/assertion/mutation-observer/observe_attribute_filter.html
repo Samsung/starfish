@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+</head>
+
+<body>
+    <div id="target">
+    </div>
+</body>
+<script>
+    function testStart() {
+        const target = document.getElementById("target");
+        const attrs = ['data-foo', 'style']
+        const observer = new MutationObserver((mutations) => {
+            testAssert(mutations.length == 1)
+            let idx = 0;
+            mutations.forEach((mutation) => {
+                testAssert(mutation.type == 'attributes');
+                testAssert(mutation.target.id == 'target');
+                testAssert(mutation.attributeName == attrs[idx++]);
+            });
+            testEnd();
+        });
+
+        observer.observe(target, {
+            attributes: true,
+            attributeFilter: ['data-foo']
+        });
+
+        target.setAttribute("data-foo", "");
+        target.setAttribute("style", "background-color: black");
+
+    }
+    testStart();
+</script>
+
+</html>

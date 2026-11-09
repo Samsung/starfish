@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>:host / ::slotted() rules of a host that lives inside another shadow tree</title></head>
+<body>
+  <div id="outer"></div>
+  <div id="ctl"><span id="ctlSpan">t</span></div>
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (other browser), shim a custom testEnd()
+    // that tallies console.assert results and reports the verdict, so the same
+    // file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[nested_host_promotion] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // css-shadow-1: `:host` matches the shadow host and `::slotted()` matches
+    // the host's light-DOM children that are assigned to a slot. Neither depends
+    // on where the host itself lives, so a component nested inside another
+    // component's shadow tree must be styled exactly like one placed directly
+    // in the document.
+    var sheet = '<style>:host{color:rgb(1, 2, 3)} ::slotted(span){color:rgb(4, 5, 6)}</style><slot></slot>';
+
+    // Host inside another shadow tree.
+    var outerRoot = document.getElementById('outer').attachShadow({mode: 'open'});
+    outerRoot.innerHTML = '<div id="inner"><span id="s">t</span></div>';
+    var inner = outerRoot.querySelector('#inner');
+    inner.attachShadow({mode: 'open'}).innerHTML = sheet;
+    var innerSpan = outerRoot.querySelector('#s');
+
+    // Control: the same component placed directly in the document.
+    var ctl = document.getElementById('ctl');
+    ctl.attachShadow({mode: 'open'}).innerHTML = sheet;
+    var ctlSpan = document.getElementById('ctlSpan');
+
+    var c;
+    c = getComputedStyle(ctl).color;
+    console.assert(c === 'rgb(1, 2, 3)', 'control :host color, got ' + c);
+    c = getComputedStyle(ctlSpan).color;
+    console.assert(c === 'rgb(4, 5, 6)', 'control ::slotted() color, got ' + c);
+
+    c = getComputedStyle(inner).color;
+    console.assert(c === 'rgb(1, 2, 3)', 'nested :host color, got ' + c);
+    c = getComputedStyle(innerSpan).color;
+    console.assert(c === 'rgb(4, 5, 6)', 'nested ::slotted() color, got ' + c);
+
+    // Removing the nested sheet must un-style both targets again, so promoted
+    // rules are not left behind in whichever resolver received them.
+    inner.shadowRoot.querySelector('style').remove();
+    c = getComputedStyle(inner).color;
+    console.assert(c === 'rgb(0, 0, 0)', 'nested :host color after sheet removal, got ' + c);
+    c = getComputedStyle(innerSpan).color;
+    console.assert(c === 'rgb(0, 0, 0)', 'nested ::slotted() color after sheet removal, got ' + c);
+
+    testEnd();
+
+  </script>
+</body>
+</html>

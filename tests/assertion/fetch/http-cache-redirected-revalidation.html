@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>A redirected revalidation is not answered from the stored response</title>
+<!-- A stored response's validators belong to its own URL (RFC 9111 4.3.1),
+     and each redirect leads to a fetch of another URL (Fetch "HTTP-redirect
+     fetch"). When the revalidation of a stored script is redirected, the
+     redirect target must be requested without the stored validators, and
+     its own response must be used, never the stored one.
+
+     The document loads over file:// and uses the test runner's http_server
+     (tool/runner/test_runner.py: internal_test(), port 11011):
+     /revalidate/<key>?etag&moved serves revalidated(<key>) with an ETag
+     and "no-cache", and answers a conditional request with a redirect to
+     /revalidate/<key>-moved?etag, which answers any conditional request with
+     a 304. /hits/<key> counts the full requests and /hits/<key>-304 the
+     conditional ones. -->
+<script>
+// Starfish's test build supplies testEnd()/console.assert and reports the
+// verdict. Elsewhere, shim a testEnd() that tallies console.assert results;
+// start the server by hand first:
+//   python3 tool/runner/http_server.py -d <any dir> --bind localhost 11011
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0;
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (cond, msg) {
+    if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[http-cache-redirected-revalidation] ' + verdict);
+    document.title = verdict;
+  };
+}
+
+var SERVER = 'http://localhost:11011/';
+var KEY = Date.now() + '-' + Math.floor(Math.random() * 1e9);
+var SCRIPT = SERVER + 'revalidate/' + KEY + '?etag&moved';
+var ran = [];
+function revalidated(key) { ran.push(key); }
+
+function loadScript(url) {
+  return new Promise(function (resolve) {
+    var s = document.createElement('script');
+    s.src = url;
+    s.onload = s.onerror = function () { s.remove(); resolve(); };
+    document.head.appendChild(s);
+  });
+}
+function hits(key) {
+  return fetch(SERVER + 'hits/' + key).then(function (r) {
+    return r.text();
+  }).then(Number);
+}
+
+// The first load stores the script; the second revalidates it and is
+// redirected.
+loadScript(SCRIPT).then(function () {
+  return loadScript(SCRIPT);
+}).then(function () {
+  return Promise.all([hits(KEY), hits(KEY + '-304'),
+                      hits(KEY + '-moved'), hits(KEY + '-moved-304')]);
+}).then(function (c) {
+  console.assert(ran.length === 2 && ran[0] === KEY && ran[1] === KEY + '-moved',
+                 'the redirect target did not run its own script: ' + JSON.stringify(ran));
+  console.assert(c[0] === 1 && c[1] === 1,
+                 'expected the script stored once and revalidated once: ' + JSON.stringify(c));
+  console.assert(c[2] === 1 && c[3] === 0,
+                 'the redirect target got the stored validators: ' + JSON.stringify(c));
+  testEnd();
+});
+</script>

@@ -1,0 +1,59 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="pixel-test">
+<title>Items of a scrolling column flex list keep their content height</title>
+<style>
+  @font-face { font-family: Ahem; src: url(../../../fixtures/resources/webkit/Ahem.ttf); }
+  body { margin: 0; font-family: Ahem; }
+  .panel { height: 308px; display: flex; flex-direction: column; row-gap: 8px; }
+  .list { overflow-y: scroll; display: flex; flex-direction: column; row-gap: 12px; font-size: 36px; }
+  .item { display: flex; align-items: baseline; column-gap: 64px; }
+  .name { font-size: 68px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[register-content-height] " + document.title);
+  };
+}
+</script>
+<div class="panel">
+  <div class="list" id="list">
+    <div class="item"><div>1.</div><div class="name">item</div></div>
+    <div class="item"><div>2.</div><div class="name">item</div></div>
+    <div class="item"><div>3.</div><div class="name">item</div></div>
+    <div class="item"><div>4.</div><div class="name">item</div></div>
+    <div class="item"><div>5.</div><div class="name">item</div></div>
+    <div class="item"><div>6.</div><div class="name">item</div></div>
+    <div class="item"><div>7.</div><div class="name">item</div></div>
+    <div class="item"><div>8.</div><div class="name">item</div></div>
+    <div class="item"><div>9.</div><div class="name">item</div></div>
+    <div class="item"><div>10.</div><div class="name">item</div></div>
+    <div class="item"><div>11.</div><div class="name">item</div></div>
+    <div class="item"><div>12.</div><div class="name">item</div></div>
+  </div>
+</div>
+<script>
+// The list is a scroll container, so as a flex item it may shrink to the
+// 308px panel; its items are not, so min-height: auto keeps each at its
+// content height: a 68px Ahem name baseline-aligned with a 36px number.
+window.addEventListener("load", function () {
+var list = document.getElementById("list");
+var items = list.querySelectorAll(".item");
+var heights = Array.prototype.map.call(items, function (e) { return e.getBoundingClientRect().height; });
+console.assert(heights.every(function (h) { return h === 68; }), "item heights: " + heights.join(","));
+var first = items[0].getBoundingClientRect();
+var offset = items[0].firstElementChild.getBoundingClientRect().top - first.top;
+console.assert(Math.abs(offset - 25.6) < 1, "number baseline-aligned with the name: " + offset);
+console.assert(list.clientHeight === 308, "list height: " + list.clientHeight);
+console.assert(list.scrollHeight === 12 * 68 + 11 * 12, "list scrollHeight: " + list.scrollHeight);
+testEnd();
+});
+</script>

@@ -1,0 +1,36 @@
+test flex-item min height
+<div style="
+    display: flex;
+    flex-direction: column;
+    width: 100px;
+    height: 100px;
+    line-height: 15px;
+    font-size:12px;
+    background: green;
+">
+<div id="a" style="height:15px">AAA</div>
+<div style="background:blue;height: 135px;">BBB</div>
+</div>
+
+<div style="
+    display: flex;
+    flex-direction: column;
+    width: 100px;
+    height: 100px;
+    line-height: 15px;
+    font-size:12px;
+    background: green;
+">
+<div id="b" style="height:15px;"></div>
+<div style="background:blue;height: 135px;"></div>
+</div>
+
+<script>
+function testStart() {
+  testAssert(a.getBoundingClientRect().height==15)
+  testAssert(b.getBoundingClientRect().height==10)
+  testEnd();
+}
+
+</script>
+

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+</head>
+
+<body>
+    <div id="target"></div>
+</body>
+<script>
+    function throwTest(observer, options) {
+        try {
+            observer.observe(target, options);
+            testAssert(false);
+        } catch (e) {
+            testAssert(e.name == 'TypeError');
+        }
+    }
+
+    function testStart() {
+        // https://dom.spec.whatwg.org/#dom-mutationobserver-observe
+        const target = document.getElementById('target');
+        const observer = new MutationObserver((mutations) => {});
+
+        // 3. If none of options["childList"], options["attributes"], and options["characterData"] is true, then throw a TypeError.
+        const test1 = {
+            attributes: false,
+            characterData: false
+        };
+        throwTest(observer, test1);
+
+        // 4. If options["attributeOldValue"] is true and options["attributes"] is false, then throw a TypeError.
+        const test2 = {
+            attributes: false,
+            attributeOldValue: true,
+            characterData: true
+        };
+        throwTest(observer, test2);
+
+
+        // 5. If options["attributeFilter"] is present and options["attributes"] is false, then throw a TypeError.
+        const test3 = {
+            characterData: true,
+            attributeFilter: ["a", "a", "a", "b", "b", "c"],
+            attributes: false
+        };
+        throwTest(observer, test3);
+
+
+        // 6. If options["characterDataOldValue"] is true and options["characterData"] is false, then throw a TypeError.
+        const test4 = {
+            characterDataOldValue: true,
+            characterData: false
+        };
+        throwTest(observer, test4);
+        testEnd();
+
+    }
+    testStart();
+</script>
+
+</html>

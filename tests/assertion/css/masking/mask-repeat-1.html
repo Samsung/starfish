@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <style>
+    .mask {
+      border: 1px solid black;
+      width: 250px;
+      height: 250px;
+      background-color: blue;
+      mask-image: url(support/red-100x100.png);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="target" class="mask"></div>
+  <script>
+    function testStart() {
+      testAssert(getComputedStyle(target)['mask-repeat'] === 'repeat');
+
+      target.style['mask-repeat'] = 'no-repeat';
+      testAssert(getComputedStyle(target)['mask-repeat'] === 'no-repeat');
+
+      target.style['mask-repeat'] = 'repeat-x';
+      testAssert(getComputedStyle(target)['mask-repeat'] === 'repeat-x');
+
+      target.style['mask-repeat'] = 'repeat-y';
+      testAssert(getComputedStyle(target)['mask-repeat'] === 'repeat-y');
+
+      testEnd();
+    }
+
+  </script>
+
+</body>
+
+</html>

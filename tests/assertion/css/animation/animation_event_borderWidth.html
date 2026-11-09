@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <style>
+        body {
+            height: 800px;
+        }
+
+        div {
+            display: block;
+            width: 100px;
+            height: 100px;
+            background-color: yellow;
+            border: 10px solid black;
+        }
+
+        @keyframes borderLonghandAnimation {
+            0% {
+                border-left-width: 10px;
+                border-right-width: 10px;
+                border-top-width: 10px;
+                border-bottom-width: 10px;
+            }
+
+            100% {
+                border-left-width: 100px;
+                border-right-width: 100px;
+                border-top-width: 100px;
+                border-bottom-width: 100px;
+            }
+        }
+
+        @keyframes borderShorthandAnimation {
+            0% {
+                border-width: 10px;
+            }
+
+            100% {
+                border-width: 100px;
+            }
+        }
+
+        #test1 {
+            animation: borderLonghandAnimation 1s linear forwards;
+        }
+
+        #test2 {
+            animation: borderShorthandAnimation 1s linear forwards;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="test1"></div>
+    <div id="test2"></div>
+
+    <script>
+
+
+        let test1StartCount = 0;
+        test1.addEventListener('animationstart', () => {
+            test1StartCount++;
+        });
+
+        let test1EndCount = 0;
+        test1.addEventListener('animationend', () => {
+            test1EndCount++;
+        });
+        let test2StartCount = 0;
+        test2.addEventListener('animationstart', (e) => {
+            test2StartCount++;
+        });
+
+        let test2EndCount = 0;
+        test2.addEventListener('animationend', function (event) {
+            test2EndCount++
+        });
+
+        setTimeout(() => {
+            console.log('test1StartCount expected[1] actual[' + test1StartCount + ']');
+            console.log('test1EndCount expected[1] actual[' + test1EndCount + ']');
+            console.log('test2StartCount expected[1] actual[' + test2StartCount + ']');
+            console.log('test2EndCount expected[1] actual[' + test2EndCount + ']');
+
+            testAssert(test1StartCount == 1);
+            testAssert(test1EndCount == 1);
+            testAssert(test2StartCount == 1);
+            testAssert(test2EndCount == 1);
+            testEnd();
+        }, 1500);
+    </script>
+</body>
+
+</html>

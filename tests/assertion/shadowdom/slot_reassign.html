@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>slot reassignment and nested template import</title>
+</head>
+<body>
+
+<template id="tpl_outer">
+  <div id="h2">
+    <template id="tpl_inner"><slot id="s_inner" name="inner"></slot></template>
+    <slot id="s_mid" name="mid" slot="inner"></slot>
+  </div>
+</template>
+
+<script>
+// Shim for running in a regular browser without the Starfish harness
+if (typeof testEnd !== 'function') {
+    window.testEnd = function() {
+        var passed = true;
+        var a = window.__assertions || [];
+        for (var i = 0; i < a.length; i++) {
+            if (!a[i].ok) { passed = false; console.error('FAIL: ' + a[i].msg); }
+        }
+        if (passed) { console.log('PASS: slot-reassign'); }
+    };
+    var origAssert = console.assert.bind(console);
+    console.assert = function(cond, msg) {
+        window.__assertions = window.__assertions || [];
+        window.__assertions.push({ ok: !!cond, msg: msg || String(cond) });
+        origAssert(cond, msg);
+    };
+}
+
+function ids(arr){ var s=[]; for(var i=0;i<arr.length;i++){s.push(arr[i].id||arr[i].nodeName);} return s.join(','); }
+
+// --- 1. importNode(deep) preserves nested <template> content ---
+var outer = document.getElementById('tpl_outer');
+var imp = document.importNode(outer.content, true);
+var innerTpl = imp.querySelector('#tpl_inner');
+console.assert(innerTpl !== null, '1a: nested template present after importNode');
+console.assert(innerTpl && innerTpl.content.querySelector('#s_inner') !== null,
+    '1b: nested template content (s_inner) preserved after importNode');
+
+// --- 2. slot= attribute change reassigns the slottable (Fix 1) ---
+var host = document.createElement('div');
+document.body.appendChild(host);
+var c = document.createElement('div'); c.id='c'; c.setAttribute('slot','one');
+host.appendChild(c);
+var sr = host.attachShadow({mode:'open'});
+var s1 = document.createElement('slot'); s1.id='s1'; s1.setAttribute('name','one'); sr.appendChild(s1);
+var s2 = document.createElement('slot'); s2.id='s2'; s2.setAttribute('name','two'); sr.appendChild(s2);
+
+console.assert(c.assignedSlot === s1, '2a: c initially assigned to s1');
+console.assert(ids(s1.assignedNodes()) === 'c', '2b: s1.assignedNodes == [c]');
+
+c.setAttribute('slot','two');
+console.assert(c.assignedSlot === s2, '2c: after slot= change, c assigned to s2');
+console.assert(ids(s1.assignedNodes()) === '', '2d: s1.assignedNodes now empty');
+console.assert(ids(s2.assignedNodes()) === 'c', '2e: s2.assignedNodes == [c]');
+
+c.setAttribute('slot','none');
+console.assert(c.assignedSlot === null, '2f: slot= to non-existent name -> unassigned');
+console.assert(ids(s2.assignedNodes()) === '', '2g: s2.assignedNodes empty after reassign away');
+
+// --- 3. removing a <slot> from a DETACHED shadow tree clears its
+//        assignedNodes and unassigns its slottables (Fix 2) ---
+var dhost = document.createElement('div'); // detached: never added to document
+var dc = document.createElement('div'); dc.id='dc'; dc.setAttribute('slot','x');
+dhost.appendChild(dc);
+var dsr = dhost.attachShadow({mode:'open'});
+var ds = document.createElement('slot'); ds.id='ds'; ds.setAttribute('name','x'); dsr.appendChild(ds);
+
+console.assert(dc.assignedSlot === ds, '3a: detached: dc assigned to ds');
+console.assert(ids(ds.assignedNodes()) === 'dc', '3b: detached: ds.assignedNodes == [dc]');
+
+ds.remove();
+console.assert(ids(ds.assignedNodes()) === '', '3c: removed slot has empty assignedNodes');
+console.assert(dc.assignedSlot === null, '3d: slottable unassigned after slot removed');
+
+testEnd();
+</script>
+</body>
+</html>

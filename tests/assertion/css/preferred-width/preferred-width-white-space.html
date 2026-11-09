@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<meta name="pixel-test">
+<style>
+
+html {
+font-family: Ahem;
+}
+
+div > div {
+display: inline-block
+}
+
+#a {
+  white-space: normal;
+}
+#b {
+  white-space: nowrap
+}
+#c {
+  white-space: pre;
+}
+#d {
+  white-space: pre-line;
+}
+#e {
+  white-space: pre-wrap;
+}
+
+</style>
+
+
+<div style="width: 10px">
+   <div id="a">XX XX</div>
+   <br><br>
+   <div id="b">XX XX</div>
+   <br><br>
+   <div id="c">XX XX</div>
+   <br><br>
+   <div id="d">XX XX</div>
+   <br><br>
+   <div id="e">XX XX</div>
+</div>
+
+<script>
+
+function testStart() {
+
+  console.log(a.getBoundingClientRect().width)
+  console.log(b.getBoundingClientRect().width)
+  console.log(c.getBoundingClientRect().width)
+  console.log(d.getBoundingClientRect().width)
+  console.log(e.getBoundingClientRect().width)
+
+  testAssert(Math.abs(a.getBoundingClientRect().width - 32) < 1);
+  testAssert(Math.abs(b.getBoundingClientRect().width - 80) < 1);
+  testAssert(Math.abs(c.getBoundingClientRect().width - 80) < 1);
+  testAssert(Math.abs(d.getBoundingClientRect().width - 32) < 1);
+  testAssert(Math.abs(e.getBoundingClientRect().width - 32) < 1);
+  testEnd();
+}
+
+</script>

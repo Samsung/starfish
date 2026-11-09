@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!-- Verify that position:absolute whose containing block lies above a buffered
+     scroll container keeps its screen position after the container scrolls.
+     The scroll container is position:static so it is NOT a containing block;
+     the absolute element's containing block is the initial containing block
+     (viewport), so it must not move when the container scrolls.
+     Our change gives such escaping absolute elements their own graphics buffers
+     so the compositor places them independently of the scroll buffer.
+     Two invariants:
+       (a) absolute element stays at its original screen position after scroll,
+       (b) the scroll content beneath it has actually moved. -->
+<html>
+<head>
+<style>
+  body { margin: 0; background: white; }
+  #scroller {
+    /* position:static (default) — NOT a containing block for abs descendants */
+    width: 300px;
+    height: 200px;
+    overflow: auto;
+    /* no border / shadow / background */
+  }
+  #abs-el {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 60px;
+    height: 60px;
+    background: rgb(0, 0, 255);
+    z-index: 10;
+    /* containing block: initial containing block (viewport top-left),
+       because no positioned ancestor exists above this element */
+  }
+  #red-block { width: 300px; height: 300px; background: rgb(255, 0, 0); }
+  #trail     { width: 300px; height: 300px; }
+</style>
+</head>
+<body>
+<div id="scroller">
+  <div id="red-block"></div>  <!-- scroll content y=0..300, red -->
+  <div id="trail"></div>
+  <div id="abs-el"></div>     <!-- viewport-anchored blue, 10,10..70,70 -->
+</div>
+<script>
+  // Step 1 — before scroll.
+  //   (40,40): inside abs-el → blue.
+  //   (150,150): outside abs-el, scroll offset 0+150=150, in red block → red.
+  screenShot("scroll-buf-opt-abs-test-1_before.png", function() {
+    var before = "scroll-buf-opt-abs-test-1_before.png";
+    testAssert(checkPixelColor(before, 40,  40,  0,   0, 255, 255, 4)); // abs-el blue
+    testAssert(checkPixelColor(before, 150, 150, 255, 0,   0, 255, 4)); // red content
+
+    // Step 2 — scroll 250 px.
+    //   (40,40): abs-el must still be blue (containing block is outside scroll).
+    //   (150,150): scroll offset 250+150=400 > 300 → past red block → white.
+    document.getElementById("scroller").scrollTop = 250;
+
+    screenShot("scroll-buf-opt-abs-test-1_after.png", function() {
+      var after = "scroll-buf-opt-abs-test-1_after.png";
+      testAssert(checkPixelColor(after, 40,  40,  0,   0, 255, 255, 4)); // abs-el still blue
+      testAssert(checkPixelColor(after, 150, 150, 255, 255, 255, 255, 4)); // scrolled past red
+      testEnd();
+    });
+  });
+</script>
+</body>
+</html>

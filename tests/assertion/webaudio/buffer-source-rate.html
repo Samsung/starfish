@@ -1,0 +1,105 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Web Audio buffer source rate</title>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Web Audio buffer source rate complete";
+    };
+}
+
+if (typeof OfflineAudioContext !== "function") {
+    testEnd();
+} else {
+    const sampleRate = 48000;
+    function makeSource(options) {
+        const context = new OfflineAudioContext(1, 384, sampleRate);
+        const buffer = context.createBuffer(1, 256, sampleRate);
+        const samples = buffer.getChannelData(0);
+        for (let i = 0; i < samples.length; i++) {
+            samples[i] = i / 256;
+        }
+        const source = new AudioBufferSourceNode(context,
+            Object.assign({ buffer: buffer }, options));
+        source.connect(context.destination);
+        return { context: context, source: source };
+    }
+
+    const fast = makeSource({ playbackRate: 2 });
+    fast.source.start();
+    const detuned = makeSource({ detune: 1200 });
+    detuned.source.start();
+    const slow = makeSource({ playbackRate: 0.5 });
+    slow.source.start();
+    const automated = makeSource({});
+    automated.source.playbackRate.setValueAtTime(2, 128 / sampleRate);
+    automated.source.start();
+    const reverse = makeSource({ playbackRate: -1 });
+    reverse.source.start(0, 255 / sampleRate);
+    const paused = makeSource({ playbackRate: 0 });
+    paused.source.start(0, 1 / sampleRate);
+    const limited = makeSource({ playbackRate: 2 });
+    limited.source.start(0, 0, 64 / sampleRate);
+    const fromEnd = makeSource({ playbackRate: -1 });
+    fromEnd.source.start(0, 256 / sampleRate);
+    const intoLoop = makeSource({ playbackRate: -1, loop: true,
+                                  loopStart: 64 / sampleRate,
+                                  loopEnd: 128 / sampleRate });
+    intoLoop.source.start(0, 192 / sampleRate);
+
+    console.assert(fast.source.playbackRate.defaultValue === 1 &&
+                   fast.source.playbackRate.value === 2 &&
+                   fast.source.playbackRate.automationRate === "k-rate" &&
+                   detuned.source.detune.defaultValue === 0 &&
+                   detuned.source.detune.value === 1200,
+                   "rate options preserve nominal defaults");
+    let rateRejected = false;
+    try {
+        fast.source.playbackRate.automationRate = "a-rate";
+    } catch (error) {
+        rateRejected = error.name === "InvalidStateError";
+    }
+    console.assert(rateRejected, "buffer source rate is fixed to k-rate");
+
+    Promise.all([fast.context.startRendering(), detuned.context.startRendering(),
+                 slow.context.startRendering(),
+                 automated.context.startRendering(),
+                 reverse.context.startRendering(),
+                 paused.context.startRendering(),
+                 limited.context.startRendering(),
+                 fromEnd.context.startRendering(),
+                 intoLoop.context.startRendering()]).then(function (results) {
+        const f = results[0].getChannelData(0);
+        const d = results[1].getChannelData(0);
+        const s = results[2].getChannelData(0);
+        const a = results[3].getChannelData(0);
+        const r = results[4].getChannelData(0);
+        const p = results[5].getChannelData(0);
+        const l = results[6].getChannelData(0);
+        const e = results[7].getChannelData(0);
+        const x = results[8].getChannelData(0);
+        console.assert(f[0] === 0 && f[64] === 0.5 &&
+                       f[127] === 254 / 256 && f[128] === 0,
+                       "playbackRate doubles buffer progress");
+        console.assert(d[64] === f[64] && d[127] === f[127],
+                       "1200-cent detune doubles playback rate");
+        console.assert(s[128] === 0.25 && s[256] === 0.5,
+                       "half-rate playback resamples buffer");
+        console.assert(a[127] === 127 / 256 && a[128] === 0.5 &&
+                       a[191] === 254 / 256 && a[192] === 0,
+                       "k-rate automation changes at a quantum boundary");
+        console.assert(r[0] === 255 / 256 && Math.abs(r[255]) < 1e-6,
+                       "negative playback rate traverses buffer backward");
+        console.assert(p[0] === 1 / 256 && p[383] === 1 / 256,
+                       "zero playback rate holds the playhead");
+        console.assert(l[31] === 62 / 256 && l[32] === 0,
+                       "duration counts buffer time at changed rate");
+        console.assert(e[0] === 0 && e[1] === 255 / 256,
+                       "reverse playback from buffer end starts with silence");
+        console.assert(x[0] === 192 / 256 && x[64] === 128 / 256 &&
+                       x[65] === 127 / 256 && x[129] === 127 / 256,
+                       "reverse playback enters loop after its end");
+        testEnd();
+    });
+}
+</script>

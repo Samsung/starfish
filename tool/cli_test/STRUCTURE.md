@@ -6,7 +6,7 @@ communicate.
 ## One run
 
 `run_cli_test.py` is one Python process. It finds every `test_*.py` file under
-`test/cli/` and keeps the tests that `testlist.json` enables. Then it runs
+`tests/cli/` and keeps the tests that `testlist.json` enables. Then it runs
 them as one `unittest` suite. Tests run sequentially.
 
 Each test gets its own temporary `HOME` and local HTTP server. CLI commands in
@@ -54,12 +54,12 @@ The two kinds of fixture are used in different ways.
 test case
     |
     +-- starts an HTTP server thread on a free loopback port
-    |         serves the directory test/cli/fixtures/
+    |         serves the directory tests/cli/fixtures/
     |             ^
     |             |  GET from the Starfish engine, for the page the test
     |             |  passed to `open`
     |
-    +-- reads test/cli/fixtures/snapshot-interactive-expected.txt
+    +-- reads tests/cli/fixtures/snapshot-interactive-expected.txt
               and compares it with what `snapshot` printed
 ```
 
@@ -176,12 +176,12 @@ Private test homes and the cleanup of leftovers come from
 [`tool/common/storage.py`](../common/storage.py), which the CDP suite uses
 too.
 
-The behavior cases and their data live in the `test` submodule.
+The behavior cases and their data live in `tests/cli/`.
 
 | Path | What it contains |
 | --- | --- |
-| `test/cli/test_*.py` | Command and session lifecycle cases |
-| `test/cli/fixtures/` | Pages and expected command output |
+| `tests/cli/test_*.py` | Command and session lifecycle cases |
+| `tests/cli/fixtures/` | Pages and expected command output |
 
 ## What one test does
 
@@ -222,7 +222,7 @@ or engine process behind.
 | --- | --- | --- |
 | Private `HOME` | Session socket and start lock | During teardown |
 | Private `bin` | CLI copy and stalled engine, when needed | During teardown |
-| HTTP server thread | Serves `test/cli/fixtures/` | During teardown |
+| HTTP server thread | Serves `tests/cli/fixtures/` | During teardown |
 | CLI client process | Runs one public command | When the command ends |
 | CLI daemon and engine | Keep one session alive | By `close` or teardown |
 

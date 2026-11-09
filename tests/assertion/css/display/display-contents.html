@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>display: contents generates no box but keeps style inheritance</title>
+<style>
+  html { display: contents; }
+  .contents { display: contents; border: 10px solid red; padding: 20px; margin: 30px; }
+  #outer, #dyn-outer, #inh, #before-wrap, #slot-wrap, #img-wrap { width: 200px; }
+  #inner, #dyn-inner, #slot-inner { height: 20px; }
+  /* padding, not border: Chrome snaps border widths to device pixels at
+     fractional zoom levels, which would break the exact offset checks */
+  #dyn { padding-left: 10px; }
+  #inh .contents { color: rgb(0, 128, 0); }
+  #before-wrap .contents::before { content: "P"; }
+  #resolved { width: 50%; height: 50%; margin-left: 25%; }
+  #input-wrap input { display: contents; border: 10px solid red; height: 50px; }
+  #pc::before { display: contents; content: "P"; }
+  #dp, #dp2, #ta { width: 200px; }
+  #tg-lh, #tg-lh-ref { font-size: 10px; line-height: 10px; width: 300px; }
+  #tg-lh-p, #tg-lh-ref > span { font-size: 40px; line-height: 40px; }
+  #tg-ws, #tg-ws-ref { white-space: nowrap; width: 60px; }
+  #tg-ws-p, #tg-ws-ref > span { white-space: normal; }
+  #tg-fx, #tg-fx-ref { display: flex; align-items: flex-end; height: 100px; }
+  #tg-fx-p, #tg-fx-ref > div { align-items: flex-start; }
+  #tg-fx-i, #tg-fx-ref-i { width: 20px; height: 20px; }
+</style>
+</head>
+<body>
+  <div id="outer"><div id="contents" class="contents"><div id="inner"></div></div></div>
+  <div id="dyn-outer"><div id="dyn"><div id="dyn-inner"></div></div></div>
+  <div id="inh"><div class="contents"><span id="inh-span">x</span></div></div>
+  <div id="before-wrap"><div class="contents"></div></div>
+  <div id="resolved" class="contents"></div>
+  <div id="img-wrap"><img style="display: contents; width: 100px; height: 100px"></div>
+  <div id="slot-wrap"><slot id="light-slot"><div id="slot-inner"></div></slot></div>
+  <div id="input-wrap"><input></div>
+  <div><span id="pc">ASS</span></div>
+  <div><span id="pr">ASS</span></div>
+  <div id="ta"><span id="tae" style="display: contents"></span></div>
+  <div id="dp"><div id="de" style="display: contents"><div style="height: 20px"></div></div></div>
+  <div id="dp2"><div id="de2" style="display: contents"><div style="height: 20px"></div></div></div>
+  <div id="nw-wrap" style="width: 60px"><span style="display: contents; white-space: nowrap">Lorem ipsum dolor sit amet</span></div>
+  <div id="nw-ref" style="width: 60px; white-space: nowrap">Lorem ipsum dolor sit amet</div>
+  <div><span id="fc-inline" style="width: fit-content">x</span><span id="fc-contents" style="display: contents; width: fit-content">y</span></div>
+  <div id="md-wrap" style="width: 300px"><dialog id="md" style="display: contents">modal</dialog></div>
+  <div id="md-ref" style="width: 300px">modal</div>
+  <div id="tg-lh"><span id="tg-lh-p" style="display: block">Text</span></div>
+  <div id="tg-lh-ref"><span style="display: contents">Text</span></div>
+  <div id="tg-ws"><span id="tg-ws-p" style="display: block">Lorem ipsum dolor sit amet consectetur</span></div>
+  <div id="tg-ws-ref"><span style="display: contents">Lorem ipsum dolor sit amet consectetur</span></div>
+  <div id="tg-fx"><div id="tg-fx-p" style="display: block"><div id="tg-fx-i"></div></div></div>
+  <div id="tg-fx-ref"><div style="display: contents"><div id="tg-fx-ref-i"></div></div></div>
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (other browser), shim a custom testEnd()
+    // that tallies console.assert results and reports the verdict, so the same
+    // file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[display-contents] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    function rect(el) { return el.getBoundingClientRect(); }
+    function $(id) { return document.getElementById(id); }
+
+    // css-display-3 §2.5: the element itself generates no box; its children
+    // generate boxes as if they were children of its parent.
+    var contents = $('contents'), outer = $('outer'), inner = $('inner');
+    var display = getComputedStyle(contents).display;
+    console.assert(display === 'contents',
+      'computed display serializes as "contents", got ' + display);
+    console.assert(rect(inner).left === rect(outer).left,
+      'border/padding/margin of a display:contents element must not offset ' +
+      'its child: inner.left=' + rect(inner).left + ' outer.left=' + rect(outer).left);
+    console.assert(rect(inner).width === rect(outer).width,
+      'block child fills the parent of the boxless element: inner.width=' +
+      rect(inner).width + ' outer.width=' + rect(outer).width);
+    console.assert(rect(outer).height === rect(inner).height,
+      'the boxless element adds no height: outer.height=' + rect(outer).height +
+      ' inner.height=' + rect(inner).height);
+    var cr = rect(contents);
+    console.assert(cr.width === 0 && cr.height === 0,
+      'getBoundingClientRect of a boxless element is empty, got ' +
+      cr.width + 'x' + cr.height);
+    console.assert(contents.offsetWidth === 0 && contents.offsetHeight === 0,
+      'offsetWidth/Height of a boxless element are 0, got ' +
+      contents.offsetWidth + 'x' + contents.offsetHeight);
+
+    // Style inheritance still flows through the boxless element.
+    var color = getComputedStyle($('inh-span')).color;
+    console.assert(color === 'rgb(0, 128, 0)',
+      'child inherits from the display:contents element, got ' + color);
+
+    // Pseudo-elements of a boxless element still generate boxes (§2.5).
+    console.assert(rect($('before-wrap')).height > 0,
+      '::before of a display:contents element renders, wrap.height=' +
+      rect($('before-wrap')).height);
+
+    // cssom-1 resolved value: with no box the resolved value is the computed
+    // value, not a used value.
+    var rs = getComputedStyle($('resolved'));
+    console.assert(rs.width === '50%', 'resolved width is computed value, got ' + rs.width);
+    console.assert(rs.height === '50%', 'resolved height is computed value, got ' + rs.height);
+    console.assert(rs.marginLeft === '25%', 'resolved margin-left is computed value, got ' + rs.marginLeft);
+
+    // css-display-3 §2.7: display:contents on the root element computes to block.
+    var rootDisplay = getComputedStyle(document.documentElement).display;
+    console.assert(rootDisplay === 'block',
+      'display:contents on the root is blockified, got ' + rootDisplay);
+
+    // css-display-3 Appendix B: on replaced elements display:contents
+    // behaves as display:none.
+    console.assert(rect($('img-wrap')).height === 0,
+      'a replaced element with display:contents renders nothing, wrap.height=' +
+      rect($('img-wrap')).height);
+
+    // html-aam / HTML rendering: the UA sheet gives <slot> display:contents,
+    // so a light-DOM <slot> (an ordinary element outside a shadow tree) has
+    // no box either.
+    var slot = $('light-slot');
+    var slotDisplay = getComputedStyle(slot).display;
+    console.assert(slotDisplay === 'contents',
+      'UA sheet gives slot display:contents, got ' + slotDisplay);
+    console.assert(rect(slot).width === 0,
+      'a light-DOM slot generates no box, width=' + rect(slot).width);
+    console.assert(rect($('slot-inner')).width === rect($('slot-wrap')).width,
+      'the slot child fills the slot parent: inner.width=' +
+      rect($('slot-inner')).width + ' wrap.width=' + rect($('slot-wrap')).width);
+
+    // Dynamic change: box -> boxless -> box must rebuild the box tree.
+    var dyn = $('dyn'), dynInner = $('dyn-inner'), dynOuter = $('dyn-outer');
+    console.assert(rect(dynInner).left === rect(dynOuter).left + 10,
+      'before toggling, the padding offsets the child by 10, got ' +
+      (rect(dynInner).left - rect(dynOuter).left));
+    dyn.style.display = 'contents';
+    console.assert(rect(dynInner).left === rect(dynOuter).left,
+      'after switching to display:contents the child is not offset, got ' +
+      (rect(dynInner).left - rect(dynOuter).left));
+    console.assert(rect(dynOuter).height === rect(dynInner).height,
+      'after switching to display:contents the outer height equals the child, got ' +
+      rect(dynOuter).height + ' vs ' + rect(dynInner).height);
+    dyn.style.display = 'block';
+    console.assert(rect(dynInner).left === rect(dynOuter).left + 10,
+      'after switching back to block the padding offsets the child again, got ' +
+      (rect(dynInner).left - rect(dynOuter).left));
+
+    // Appendix B on a form control that normally does render a box.
+    console.assert(rect($('input-wrap')).height === 0,
+      'an <input> with display:contents renders nothing, wrap.height=' +
+      rect($('input-wrap')).height);
+
+    // css-display-3 §2.5: a pseudo-element with display:contents generates
+    // no box but its `content` text still renders in the parent.
+    console.assert(rect($('pc')).width > rect($('pr')).width,
+      '::before with display:contents still contributes its text: with=' +
+      rect($('pc')).width + ' without=' + rect($('pr')).width);
+
+    // A text node appended to an already-rendered boxless element renders.
+    $('tae').appendChild(document.createTextNode('hello'));
+    console.assert(rect($('ta')).height > 0,
+      'text appended under a display:contents element renders, height=' +
+      rect($('ta')).height);
+
+    // Leaving display:contents must drop the old child boxes: the parent
+    // must not keep a stale copy of the child.
+    var de = $('de'), dp = $('dp');
+    de.style.cssText = 'display: block; position: absolute';
+    console.assert(rect(dp).height === 0,
+      'contents -> absolutely positioned block: parent no longer sized by the ' +
+      'child, height=' + rect(dp).height);
+    de.style.cssText = 'display: contents';
+    console.assert(rect(dp).height === 20,
+      'back to contents: child sizes the parent again, height=' + rect(dp).height);
+    var dp2 = $('dp2');
+    $('de2').style.display = 'block';
+    console.assert(rect(dp2).height === 20,
+      'contents -> block: exactly one copy of the child remains, height=' +
+      rect(dp2).height);
+
+    // css-text-3: white-space applies to text, so text under a boxless
+    // element wraps per that element's value, not its box parent's.
+    console.assert(rect($('nw-wrap')).height === rect($('nw-ref')).height,
+      'nowrap on a display:contents element keeps its text on one line: ' +
+      rect($('nw-wrap')).height + ' vs ' + rect($('nw-ref')).height);
+
+    // cssom-1: without a box, an intrinsic sizing keyword is returned as the
+    // computed value.
+    console.assert(getComputedStyle($('fc-inline')).width === 'fit-content',
+      'inline element: resolved width keeps the keyword, got ' +
+      getComputedStyle($('fc-inline')).width);
+    console.assert(getComputedStyle($('fc-contents')).width === 'fit-content',
+      'display:contents element: resolved width keeps the keyword, got ' +
+      getComputedStyle($('fc-contents')).width);
+
+    // Children are styled against the box parent: text under a boxless
+    // element sizes its line and wraps by its own font/white-space, and a
+    // flex item's `align-self: auto` takes the box parent's align-items. So
+    // turning the parent from a box into display:contents must re-resolve
+    // the children, not only rebuild the box tree; compare against the same
+    // markup laid out that way from the start. (Layout is already clean here,
+    // so the parents have been laid out as boxes before the toggle.)
+    $('tg-lh-p').style.display = 'contents';
+    $('tg-ws-p').style.display = 'contents';
+    $('tg-fx-p').style.display = 'contents';
+    console.assert(rect($('tg-lh')).height === rect($('tg-lh-ref')).height,
+      'after the parent turns boxless, its text sizes the line by its own ' +
+      'line-height: ' + rect($('tg-lh')).height + ' vs ' + rect($('tg-lh-ref')).height);
+    console.assert(rect($('tg-ws')).height === rect($('tg-ws-ref')).height,
+      'after the parent turns boxless, its text wraps by its own white-space: ' +
+      rect($('tg-ws')).height + ' vs ' + rect($('tg-ws-ref')).height);
+    console.assert(rect($('tg-fx-i')).top - rect($('tg-fx')).top ===
+                   rect($('tg-fx-ref-i')).top - rect($('tg-fx-ref')).top,
+      'after the parent turns boxless, the item aligns by the flex container: ' +
+      (rect($('tg-fx-i')).top - rect($('tg-fx')).top) + ' vs ' +
+      (rect($('tg-fx-ref-i')).top - rect($('tg-fx-ref')).top));
+
+    // css-position-4 #top-layer: display:contents on a top layer element
+    // computes to block.
+    var md = $('md');
+    md.showModal();
+    console.assert(getComputedStyle(md).display === 'block',
+      'display:contents on a modal dialog is blockified, got ' +
+      getComputedStyle(md).display);
+    console.assert(rect(md).height > 0,
+      'the modal dialog generates a box, height=' + rect(md).height);
+    md.close();
+    // Leaving the top layer takes the box away again although the specified
+    // display never changed; the inline style still beats the UA sheet's
+    // dialog:not([open]) { display: none }.
+    console.assert(getComputedStyle(md).display === 'contents',
+      'a closed dialog with display:contents is boxless again, got ' +
+      getComputedStyle(md).display);
+    console.assert(rect(md).width === 0 && rect(md).height === 0,
+      'the closed dialog keeps no box, got ' + rect(md).width + 'x' + rect(md).height);
+    console.assert(rect($('md-wrap')).height === rect($('md-ref')).height,
+      'the closed dialog\'s text lays out in the wrapper again: ' +
+      rect($('md-wrap')).height + ' vs ' + rect($('md-ref')).height);
+
+    testEnd();
+
+  </script>
+</body>
+</html>

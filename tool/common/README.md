@@ -20,6 +20,8 @@ from common import storage
 | File | What it holds |
 | --- | --- |
 | `storage.py` | Private test homes, and cleanup of what a run leaves |
+| `vendor_lists.py` | Writing a browser-vendor suite's list (`webkit.res`, `blink.res`, `gecko.res`) |
+| `sparse_submodule.sh` | Sparse checkout of a browser-vendor test submodule, for each `tool/<vendor>/fetch.sh` |
 
 ## storage.py
 

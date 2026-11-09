@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="pixel-test">
+        <style>
+            body {
+                --boo: #ffff8c;
+            }
+            #test {
+                --first-color: #488cff;
+                --second-color: var(--boo);
+                width: 500px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="test"> CSS Custom propery Test</div>
+    </body>
+    <script>
+        function testStart() {
+            const element = document.getElementById("test");
+            var style = window.getComputedStyle(element);
+            testAssert(style != null);
+            testAssert(style.getPropertyValue("--first-color") == "#488cff");
+            testAssert(style.getPropertyValue("--second-color") == "#ffff8c");
+            testEnd();
+        }
+        testStart();
+    </script>
+        
+</html>

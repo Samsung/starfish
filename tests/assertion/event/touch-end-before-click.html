@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<!--
+  Spec event order for a tap: touchstart → touchend → click.
+  Previously click was dispatched before touchend; this tests the corrected
+  order so that framework onTouchEnd handlers run before onClick.
+-->
+<head>
+<style>
+  body { margin: 0; }
+  #target { width: 200px; height: 200px; background: lavender; }
+</style>
+</head>
+<body>
+  <div id="target"></div>
+</body>
+<script>
+  var events = [];
+  var target = document.getElementById("target");
+  ["touchstart", "touchend", "click"].forEach(function(type) {
+    target.addEventListener(type, function(e) {
+      events.push(e.type);
+    });
+  });
+
+  function testStart() {
+    simulateClick(100, 100);
+
+    setTimeout(function() {
+      testAssert(events.indexOf("touchstart") !== -1);
+      testAssert(events.indexOf("touchend")   !== -1);
+      testAssert(events.indexOf("click")      !== -1);
+      // touchend must come before click
+      testAssert(events.indexOf("touchend") < events.indexOf("click"));
+      // touchstart must come before touchend
+      testAssert(events.indexOf("touchstart") < events.indexOf("touchend"));
+      testEnd();
+    }, 100);
+  }
+</script>
+</html>

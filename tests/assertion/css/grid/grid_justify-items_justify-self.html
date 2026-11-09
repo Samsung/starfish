@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>justify-items / justify-self in a grid container</title>
+<style>
+  /* justify-items on the container is the inline-axis counterpart of
+     align-items; justify-self:auto on an item computes to it. Without support
+     every item was stretched to its column track, so a fit-content item such
+     as a centered label sat at the start edge instead of the middle. */
+  .container {
+    position: relative;
+    display: grid;
+    grid-template-columns: 300px;
+    width: 300px;
+    background-color: gold;
+  }
+
+  .container > div {
+    height: 20px;
+    background-color: skyblue;
+  }
+
+  #centering { justify-items: center; }
+
+  .w100 { width: 100px; }
+</style>
+</head>
+<body>
+  <div class="container" id="centering">
+    <div class="w100" id="start" style="justify-self: start"></div>
+    <div class="w100" id="center" style="justify-self: center"></div>
+    <div class="w100" id="end" style="justify-self: end"></div>
+    <div class="w100" id="inherited"></div>
+    <div id="selfStretch" style="justify-self: stretch"></div>
+  </div>
+
+  <div class="container" id="defaulted">
+    <div id="defaultStretch"></div>
+  </div>
+
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (other browser), shim a custom testEnd()
+    // that tallies console.assert results and reports the verdict, so the same
+    // file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[grid_justify-items_justify-self] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    function box(id) {
+      return document.getElementById(id).getBoundingClientRect();
+    }
+
+    function checkOffset(id, expectedOffset, expectedWidth) {
+      var origin = box('centering').x;
+      var r = box(id);
+      console.assert(r.x - origin === expectedOffset,
+        id + ' should start at ' + expectedOffset + 'px into the track, got ' +
+        (r.x - origin));
+      console.assert(r.width === expectedWidth,
+        id + ' width should be ' + expectedWidth + ', got ' + r.width);
+    }
+
+    // A self-aligned item is fit-content sized and placed inside its track.
+    checkOffset('start', 0, 100);
+    checkOffset('center', 100, 100);
+    checkOffset('end', 200, 100);
+    // justify-self:auto takes the container's justify-items.
+    checkOffset('inherited', 100, 100);
+    // stretch keeps filling the track even when the container centers.
+    checkOffset('selfStretch', 0, 300);
+
+    // justify-items defaults to stretching the item across its column track.
+    console.assert(box('defaultStretch').width === 300,
+      'an item of a container without justify-items should fill its track, got ' +
+      box('defaultStretch').width);
+
+    // Explicit keywords round-trip through getComputedStyle.
+    ['start', 'center', 'end'].forEach(function (id) {
+      console.assert(getComputedStyle(document.getElementById(id)).justifySelf === id,
+        'computed justify-self of #' + id + ' should be "' + id + '", got "' +
+        getComputedStyle(document.getElementById(id)).justifySelf + '"');
+    });
+    console.assert(getComputedStyle(document.getElementById('centering')).justifyItems === 'center',
+      'computed justify-items should be "center", got "' +
+      getComputedStyle(document.getElementById('centering')).justifyItems + '"');
+
+    testEnd();
+
+  </script>
+</body>
+</html>

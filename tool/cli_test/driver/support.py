@@ -17,7 +17,7 @@ from . import STORAGE_GROUP
 CLI_BINARY = Path(os.environ["LWE_CLI_TEST_BINARY"])
 DRIVER_DIR = Path(__file__).resolve().parent
 REPOSITORY_DIR = DRIVER_DIR.parents[2]
-FIXTURES_DIR = REPOSITORY_DIR / "test" / "cli" / "fixtures"
+FIXTURES_DIR = REPOSITORY_DIR / "tests" / "cli" / "fixtures"
 STALLED_ENGINE = DRIVER_DIR / "fixtures" / "stalled-engine.py"
 
 # The build names both binaries after TARGETNAME: the CLI is "<name>-cli" and

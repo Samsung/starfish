@@ -1,0 +1,2 @@
+Tests Accessibility.getAXNodeAndAncestors selector errors
+missing selector returns expected error: true

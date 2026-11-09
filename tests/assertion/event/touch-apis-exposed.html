@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<!--
+  Touch input must be detectable. Content decides between its touch and its
+  mouse UI by testing for the legacy touch event handler attributes and for
+  navigator.maxTouchPoints; neither was exposed, so a touch panel was read as
+  a mouse-only device even though the engine dispatches touch events.
+  https://w3c.github.io/touch-events/#extensions-to-the-globaleventhandlers-interface
+  https://w3c.github.io/pointerevents/#dom-navigator-maxtouchpoints
+-->
+<head>
+<style>
+  body { margin: 0; }
+  #target { width: 200px; height: 200px; background: azure; }
+</style>
+</head>
+<body>
+  <div id="target"></div>
+<script>
+  function testStart() {
+    ["ontouchstart", "ontouchmove", "ontouchend", "ontouchcancel"].forEach(
+      function(handler) {
+        testAssert(handler in window);
+        testAssert(handler in Document.prototype);
+        testAssert(handler in HTMLElement.prototype);
+      });
+
+    testAssert(typeof navigator.maxTouchPoints === "number");
+    testAssert(navigator.maxTouchPoints > 0);
+
+    // The attribute has to install a listener, not just exist.
+    var fired = 0;
+    document.getElementById("target").ontouchstart = function() { fired++; };
+    simulateTouchStart(100, 100);
+    simulateTouchEnd(100, 100);
+
+    setTimeout(function() {
+      testAssert(fired === 1);
+      testEnd();
+    }, 100);
+  }
+</script>
+</body>
+</html>

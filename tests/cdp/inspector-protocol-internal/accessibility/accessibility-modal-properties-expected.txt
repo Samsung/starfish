@@ -1,0 +1,11 @@
+Tests native and ARIA modal dialog accessibility
+#nonmodal: role=dialog, chromeRole=35, focusable:booleanOrUndefined=true, modal:boolean=false
+#nonmodal-aria: role=dialog, chromeRole=35, focusable:booleanOrUndefined=true, modal:boolean=true
+#aria-true: role=dialog, chromeRole=35, modal:boolean=true
+#aria-false: role=dialog, chromeRole=35, modal:boolean=false
+#alert: role=alertdialog, chromeRole=3, modal:boolean=true
+#focused-dialog: role=dialog, chromeRole=35, focusable:booleanOrUndefined=true, focused:booleanOrUndefined=true, modal:boolean=false
+#modal: role=dialog, chromeRole=35, focusable:booleanOrUndefined=true, modal:boolean=true
+#outside: ignored=true, reason=activeModalDialog:idref->#modal
+#inside: ignored=false
+#modal-false: role=dialog, chromeRole=35, focusable:booleanOrUndefined=true, modal:boolean=false

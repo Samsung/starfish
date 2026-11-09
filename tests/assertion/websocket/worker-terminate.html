@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Terminating a worker that holds a WebSocket</title>
+</head>
+<body>
+<p>A dedicated worker opens a WebSocket to a host that cannot resolve and the
+page terminates the worker before the socket's error event arrives. Repeated
+three times; each later worker must still start and report back.</p>
+<script>
+// The worker is terminated from a timer, not from inside its message handler:
+// the socket teardown is what this test covers, and the page must stay alive
+// to run the next round.
+var ROUNDS = 3;
+var results = [];
+var src = [
+  "var ws = new WebSocket('ws://nonexistent.invalid/');",
+  "ws.onerror = function () { postMessage('error'); };",
+  "ws.onclose = function () { postMessage('close'); };",
+  "postMessage('created');"
+].join('\n');
+var blobURL = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
+
+function finish() {
+  console.assert(results.length === ROUNDS, 'every round finished: ' + results.join(','));
+  for (var i = 0; i < results.length; i++) {
+    console.assert(results[i] === 'created', 'round ' + (i + 1) + ' worker started before termination, got ' + results[i]);
+  }
+  if (window.testEnd) testEnd();
+}
+
+function round(n) {
+  if (n > ROUNDS) { setTimeout(finish, 300); return; }
+  var worker = new Worker(blobURL);
+  var done = false;
+  var end = function (what) {
+    if (done) return;
+    done = true;
+    results.push(what);
+    setTimeout(function () {
+      worker.terminate();
+      setTimeout(function () { round(n + 1); }, 100);
+    }, 0);
+  };
+  worker.onmessage = function (e) { end(e.data); };
+  worker.onerror = function (e) { end('worker error: ' + e.message); };
+  // A worker that never reports back is the failure this test looks for.
+  setTimeout(function () { end('timeout'); }, 5000);
+}
+round(1);
+</script>
+</body>
+</html>

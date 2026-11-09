@@ -1,0 +1,56 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A GIF with a 65535x65535 logical screen does not crash</title>
+<link rel="help" href="https://html.spec.whatwg.org/multipage/images.html#img-error">
+<script>
+if (typeof testEnd !== 'function') {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? 'FAIL' : 'PASS') + ' (' + passed + ' passed, ' + failed + ' failed)';
+    console.log('[gif-oversized-screen] ' + document.title);
+  };
+}
+</script>
+<body>
+<p>This test should not crash.</p>
+<!-- The header claims 65535x65535 but carries a single 1x1 frame; decoding
+     it would need a ~16 GiB canvas. A user agent may treat an image it
+     cannot decode as broken (Blink refuses decoded sizes beyond its limit
+     too), and it must reject it before allocating rather than abort.
+     Painting it at a small size makes the engine try to decode it. -->
+<img id="huge" style="width: 10px; height: 10px">
+<img id="small">
+<script>
+function waitForImage(image, src) {
+  return new Promise(function (resolve) {
+    image.onload = function () { resolve(true); };
+    image.onerror = function () { resolve(false); };
+    image.src = src;
+  });
+}
+
+function nextFrame() {
+  return new Promise(function (resolve) {
+    requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+  });
+}
+
+var huge = document.getElementById('huge');
+var small = document.getElementById('small');
+waitForImage(huge, 'gif-oversized-screen.gif').then(function (loaded) {
+  console.assert(!loaded, 'a 65535x65535 GIF is a broken image');
+  return nextFrame();
+}).then(function () {
+  return waitForImage(small, 'gif-1x1.gif');
+}).then(function (loaded) {
+  console.assert(loaded, 'a GIF within the size limit still loads');
+  console.assert(small.naturalWidth === 1 && small.naturalHeight === 1,
+                 'a GIF within the size limit keeps its size');
+  return nextFrame();
+}).then(testEnd);
+</script>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+    </style>
+</head>
+
+<body>
+    <svg width="300px" height="300px" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+        <rect id="animateTarget" width="10" height="10">
+            <animateMotion id="animateOrigin" dur="1s" path="M 0 0 L 100 100" fill="freeze">
+            </animateMotion>
+        </rect>
+        <path d="M 5 5 L 95 95" id="path"/>
+        <rect id="animateTarget2" width="10" height="10">
+            <animateMotion id="animateOrigin2" dur="1s" fill="freeze">
+                <mpath href="#path"/>
+            </animateMotion>
+        </rect>
+    </svg>
+</body>
+
+<script>
+    if (window['testAssert'] === undefined) {
+        testAssert = console.log
+        testEnd = console.log
+    }
+
+    let startTime, endTime;
+    let animateFrames = [];
+    let animateFrames2 = [];
+    let state = "none"
+
+    let beginEventCount = 0;
+    let endEventCount = 0;
+    animateOrigin.addEventListener("beginEvent", (e) => {
+        beginEventCount++;
+        checkStart();
+        testAssert(beginEventCount == 1);
+    });
+    animateOrigin.addEventListener("endEvent", (e) => {
+        endEventCount++;
+        checkEnd();
+        testAssert(endEventCount == 1);
+    });
+
+    function checkStart() {
+        if (beginEventCount == 1 && state == 'none') {
+            console.log('all begin event fired! start capturing frames...')
+            state = 'start';
+            startTime = performance.now();
+            requestAnimationFrame(requestAnimationFrameCallback);
+        }
+    }
+
+    function checkEnd() {
+        if (endEventCount == 1 && state == 'start') {
+            console.log('all end event fired!')
+            state = 'end';
+            endTime = performance.now();
+        }
+    }
+
+    function captureFrame(captureTarget, frameStore) {
+        var rt = captureTarget.getBoundingClientRect();
+        frameStore.push({x: rt.x, y: rt.y
+        });
+    }
+
+    const epsilonForFrames = 5; // frame count difference
+    const epsilonForElapsedTime = 100;
+
+    function requestAnimationFrameCallback() {
+        const elapsedTime = performance.now() - startTime;
+        const progress = elapsedTime / 1000;
+
+        captureFrame(animateTarget, animateFrames);
+        captureFrame(animateTarget2, animateFrames2);
+
+        if (progress < 1 || state == "start") {
+            requestAnimationFrame(requestAnimationFrameCallback);
+        } else if (state == 'end') {
+            totalElapsedTime = endTime - startTime;
+            let diff = 1000 - totalElapsedTime;
+            if (!(Math.abs(diff) < epsilonForElapsedTime)) {
+                // 허용 오차 범위 100ms 보다 event 간격이 크면 테스트 실패
+                console.log("total elapsed time : ", totalElapsedTime, "diff : ", diff);
+                testAssert(false);
+            }
+
+            if (animateFrames[0].x == animateFrames[animateFrames.length-1].x) {
+                testAssert(false);
+            }
+            if (animateFrames2[0].x == animateFrames2[animateFrames2.length-1].x) {
+                testAssert(false);
+            }
+            testEnd();
+        }
+    }
+
+</script>
+
+</html>

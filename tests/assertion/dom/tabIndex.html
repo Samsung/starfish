@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+</head>
+
+<body>
+<div id="parent">
+
+</div>
+</body>
+<script>
+    function testStart() {
+        var parent = document.getElementById("parent");
+        var child = document.createElement('div');
+        child.tabIndex = 0;
+        parent.appendChild(child)
+        parent.appendChild(document.createElement('div'))
+        parent.appendChild(document.createElement('div'))
+        parent.appendChild(document.createElement('div'))
+        let result = document.querySelectorAll('#parent [tabindex=\"0\"]');
+        testAssert(result.length == 1);
+        testEnd();
+    }
+    testStart()
+</script>
+
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>CSSStyleSheet Constructor with Options Test</title>
+</head>
+
+<body>
+    <script>
+        // Test: Constructor with CSSStyleSheetInit options
+        // https://drafts.csswg.org/cssom/#dom-cssstylesheet-cssstylesheet
+        // CSSStyleSheetInit: { media, disabled }
+
+        // Test 1: Constructor with disabled: true
+        try {
+            const sheet = new CSSStyleSheet({ disabled: true });
+            console.assert(sheet.disabled === true, 'sheet.disabled should be true');
+        } catch (e) {
+            console.error('Test 1: Error - ' + e.message);
+        }
+
+        // Test 2: Constructor with disabled: false (explicit)
+        try {
+            const sheet = new CSSStyleSheet({ disabled: false });
+            console.assert(sheet.disabled === false, 'sheet.disabled should be false');
+        } catch (e) {
+            console.error('Test 2: Error - ' + e.message);
+        }
+
+        // Test 3: Constructor with media: string (simple media type)
+        try {
+            const sheet = new CSSStyleSheet({ media: 'screen' });
+            console.assert(sheet.media !== null, 'media should not be null');
+            console.assert(sheet.media instanceof MediaList, 'media should be MediaList instance');
+            console.assert(sheet.media.mediaText === 'screen', 'media.mediaText should be "screen"');
+        } catch (e) {
+            console.error('Test 3: Error - ' + e.message);
+        }
+
+        // Test 4: Constructor with media: string (complex media query)
+        try {
+            const sheet = new CSSStyleSheet({ media: 'print and (max-width: 600px)' });
+            console.assert(sheet.media !== null, 'media should not be null');
+            console.assert(sheet.media instanceof MediaList, 'media should be MediaList instance');
+            // MediaText may be normalized, check if it contains the key parts
+            var mediaText = sheet.media.mediaText;
+            console.assert(mediaText.indexOf('print') !== -1, 'mediaText should contain "print"');
+        } catch (e) {
+            console.error('Test 4: Error - ' + e.message);
+        }
+
+        // Test 5: Constructor with media: empty string
+        try {
+            const sheet = new CSSStyleSheet({ media: '' });
+            console.assert(sheet.media !== null, 'media should not be null');
+            console.assert(sheet.media.mediaText === '', 'media.mediaText should be empty string');
+        } catch (e) {
+            console.error('Test 5: Error - ' + e.message);
+        }
+
+        // Test 6: Constructor with media: MediaList object
+        try {
+            // Create a stylesheet and get its media to use as input
+            const sourceSheet = new CSSStyleSheet({ media: 'screen and (min-width: 500px)' });
+            const mediaList = sourceSheet.media;
+            const sheet = new CSSStyleSheet({ media: mediaList });
+            console.assert(sheet.media !== null, 'media should not be null');
+            console.assert(sheet.media instanceof MediaList, 'media should be MediaList instance');
+            // The media queries should be copied
+            console.assert(sheet.media.mediaText.indexOf('screen') !== -1, 'mediaText should contain "screen"');
+        } catch (e) {
+            console.error('Test 6: Error - ' + e.message);
+        }
+
+        // Test 7: Constructor with empty options object - verify all default values
+        try {
+            const sheet = new CSSStyleSheet({});
+            console.assert(sheet.disabled === false, 'disabled should be false (default)');
+            console.assert(sheet.media.mediaText === '', 'media.mediaText should be empty (default)');
+            console.assert(sheet.title === null, 'title should be null (default)');
+            console.assert(sheet.ownerNode === null, 'ownerNode should be null');
+        } catch (e) {
+            console.error('Test 7: Error - ' + e.message);
+        }
+
+        // Test 8: Constructor with multiple options (disabled, media)
+        try {
+            const sheet = new CSSStyleSheet({
+                disabled: true,
+                media: 'all'
+            });
+            console.assert(sheet.disabled === true, 'disabled should be true');
+            console.assert(sheet.media.mediaText === 'all', 'media.mediaText should be "all"');
+        } catch (e) {
+            console.error('Test 8: Error - ' + e.message);
+        }
+
+        // Test 9: Verify disabled can be changed after construction
+        try {
+            const sheet = new CSSStyleSheet({ disabled: false });
+            sheet.disabled = true;
+            console.assert(sheet.disabled === true, 'disabled should be true after set');
+            sheet.disabled = false;
+            console.assert(sheet.disabled === false, 'disabled should be false after set');
+        } catch (e) {
+            console.error('Test 9: Error - ' + e.message);
+        }
+
+        // Test 10: Verify media can be changed after construction
+        try {
+            const sheet = new CSSStyleSheet({ media: 'screen' });
+            sheet.media.mediaText = 'print';
+            console.assert(sheet.media.mediaText === 'print', 'media.mediaText should be "print"');
+        } catch (e) {
+            console.error('Test 10: Error - ' + e.message);
+        }
+
+
+        if (typeof testEnd === 'function') {
+            testEnd();
+        }
+    </script>
+</body>
+
+</html>

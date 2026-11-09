@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        .flex-container {
+            padding-inline-start: 10rem;
+            padding-inline-end: 10rem;
+            border-radius: 5px;
+            background: #60B99A;
+        }
+
+        .test1 {
+            margin: 10px;
+            padding: 20px;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            background: #4584b1;
+        }
+
+        .test2 {
+            margin: 10px;
+            padding: 20px 0px;
+            padding-inline-start: 10rem;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            background: #4584b1;
+        }
+
+        .test3 {
+            margin: 10px;
+            padding: 20px 0px;
+            padding-inline-start: 10rem;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            background: #4584b1;
+            direction: rtl;
+        }
+
+        .test4 {
+            margin: 10px;
+            padding: 20px 0px;
+            padding-inline-end: 10rem;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            background: #4584b1;
+        }
+
+        .test5 {
+            margin: 10px;
+            padding: 20px 0px;
+            padding-inline-end: 10rem;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            background: #4584b1;
+            direction: rtl;
+        }
+
+
+        .test6 {
+            margin: 10px;
+            padding: 20px 20px 20px 20px;
+            padding-inline: 10rem;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            background: #4584b1;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="flex-container">
+        <div id="target1" class="test1">1</div>
+        <div id="target2" class="test2">2</div>
+        <div id="target3" class="test3">3</div>
+        <div id="target4" class="test4">4</div>
+        <div id="target5" class="test5">5</div>
+        <div id="target6" class="test6">6</div>
+    </div>
+</body>
+<script>
+    function testStart() {
+        testAssert(getComputedStyle(target1)['padding'] == getComputedStyle(target1)['padding-inline-start']);
+
+        testAssert(getComputedStyle(target2)['padding-left'] == getComputedStyle(target2)['padding-inline-start']);
+
+        testAssert(getComputedStyle(target3)['padding-right'] == getComputedStyle(target3)['padding-inline-start']);
+
+        testAssert(getComputedStyle(target4)['padding-right'] == getComputedStyle(target4)['padding-inline-end']);
+
+        testAssert(getComputedStyle(target5)['padding-left'] == getComputedStyle(target5)['padding-inline-end']);
+
+        testAssert(getComputedStyle(target6)['padding-left'] == getComputedStyle(target6)['padding-inline']);
+        testAssert(getComputedStyle(target6)['padding-right'] == getComputedStyle(target6)['padding-inline']);
+        testAssert(getComputedStyle(target6)['padding-inline-start'] == getComputedStyle(target6)['padding-inline-end']);
+        testAssert(getComputedStyle(target6)['padding-inline-end'] == getComputedStyle(target6)['padding-inline']);
+
+        testEnd();
+    }
+
+</script>
+
+</html>

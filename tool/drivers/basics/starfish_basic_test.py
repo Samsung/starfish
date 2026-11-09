@@ -159,7 +159,7 @@ def case_runner(tc):
 
 def run_parallel(list_file, nproc=None, width=None, height=None, regression=None,
                  show_progress=None, tc_handler=None, result_handler=None,
-                 progress_interval=0):
+                 progress_interval=0, runner=None):
     from . import parallel
     global __opts
     if __opts is None:
@@ -170,7 +170,9 @@ def run_parallel(list_file, nproc=None, width=None, height=None, regression=None
     __opts.set_show_progress(show_progress)
     __opts.set_tc_handler(tc_handler)
 
-    return parallel.run_test_pool(case_runner, list_file, nproc,
+    # runner: a suite whose list mixes in tests of another kind (reftests)
+    # dispatches each test itself and hands the text ones to case_runner.
+    return parallel.run_test_pool(runner or case_runner, list_file, nproc,
                                   result_handler=result_handler,
                                   progress_interval=progress_interval)
 
@@ -191,6 +193,15 @@ def time_string(raw):
     h, m = divmod(m, 60)
     return " ".join(f"{t}{u}" for t, u in zip([h, m, s], ["h", "m", "s"]) if t > 0 or u == "s")
 
+def record_result(tc_file, passed):
+    """Appends tc_file to the --out-pass-list pass or fail file, if set."""
+    path = TEST_RESULT_PASS_FILE if passed else TEST_RESULT_FAIL_FILE
+    if path:
+        with open(path, 'a') as file:
+            fcntl.flock(file, fcntl.LOCK_EX)
+            file.write(tc_file + '\n')
+            fcntl.flock(file, fcntl.LOCK_UN)
+
 def default_tc_handler(tc_file, output, err, show_progress=True, **kwargs):
     elapsed_time = kwargs.get('elapsed_time', None)
 
@@ -199,11 +210,7 @@ def default_tc_handler(tc_file, output, err, show_progress=True, **kwargs):
     if word_pass != 0 and word_fail == 0:
         if show_progress:
             print(f"{utils.Strings.PASS_SIGN}{tc_file} {time_string(elapsed_time)}")
-        if TEST_RESULT_PASS_FILE:
-            with open(TEST_RESULT_PASS_FILE, 'a') as file:
-                fcntl.flock(file, fcntl.LOCK_EX)
-                file.write(tc_file + '\n')
-                fcntl.flock(file, fcntl.LOCK_UN)
+        record_result(tc_file, True)
         return True
     else:
         if show_progress:
@@ -213,11 +220,7 @@ def default_tc_handler(tc_file, output, err, show_progress=True, **kwargs):
             if err:
                 print("starfish stderr  =>")
                 print(err)
-        if TEST_RESULT_FAIL_FILE:
-            with open(TEST_RESULT_FAIL_FILE, 'a') as file:
-                fcntl.flock(file, fcntl.LOCK_EX)
-                file.write(tc_file + '\n')
-                fcntl.flock(file, fcntl.LOCK_UN)
+        record_result(tc_file, False)
         return False
 
 

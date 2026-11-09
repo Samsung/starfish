@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  .parent-container {
+    background-color: lightblue;
+    position: absolute;
+    width: 500px;
+    height: 400px;
+    top: 0;
+    left: 0;
+  }
+
+  iframe {
+    position: absolute;
+    top: 50px;
+    left: 50px;
+    width: 300px;
+    height: 200px;
+    border: 2px solid black;
+  }
+</style>
+</head>
+<body>
+  <div class="parent-container" id="parentContainer">
+    Parent Container
+    <iframe id="testIframe"></iframe>
+  </div>
+</body>
+
+<script>
+  window.webSecurityDisable();
+
+  var testStep = 0;
+
+  var iframeContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body {
+          margin: 0;
+          padding: 10px;
+          background-color: lightgreen;
+        }
+        .focusable-box {
+          width: 100px;
+          height: 100px;
+          background-color: orange;
+          border: 2px solid darkorange;
+        }
+        .focusable-box:focus {
+          background-color: red;
+        }
+        .non-focusable-box {
+          width: 80px;
+          height: 80px;
+          background-color: yellow;
+          border: 2px solid gold;
+        }
+        input {
+          margin-top: 10px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="focusable-box" id="focusableBox" tabindex="0">Focusable</div>
+      <div class="non-focusable-box" id="nonFocusableBox">Non-Focusable</div>
+      <input id="inputElement" type="text" value="Input">
+    </body>
+    </html>
+  `;
+
+  var iframe = document.getElementById('testIframe');
+  iframe.src = 'data:text/html;charset=utf-8,' + encodeURIComponent(iframeContent);
+
+  window.onload = function() {
+    setTimeout(function() {
+      runTests();
+    }, 500);
+  };
+
+  function runTests() {
+    var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+    var focusableBox = iframeDoc.getElementById('focusableBox');
+    var nonFocusableBox = iframeDoc.getElementById('nonFocusableBox');
+    var inputElement = iframeDoc.getElementById('inputElement');
+
+    var iframeRect = iframe.getBoundingClientRect();
+
+    // Test 1: Click on focusable element inside iframe should set focus
+    testStep = 1;
+    var clickX1 = iframeRect.left + 60;
+    var clickY1 = iframeRect.top + 60;
+    simulateClick(clickX1, clickY1);
+
+    screenShot("iframe-focus-mouse-event-temp.png", function() {
+      testAssert(iframeDoc.activeElement.id == 'focusableBox', 'Test 1: Focus should be on focusableBox inside iframe');      testAssert(checkPixelColor("iframe-focus-mouse-event-temp.png", 150, 150, 255, 0, 0, 255));
+
+      // Test 2: Click on non-focusable element inside iframe should release focus
+      testStep = 2;
+      var clickX2 = iframeRect.left + 160;
+      var clickY2 = iframeRect.top + 60;
+      simulateClick(clickX2, clickY2);
+
+      setTimeout(function() {
+        testAssert(iframeDoc.activeElement == iframeDoc.body, 'Test 2: Focus should be released after clicking non-focusable element');
+
+        // Test 3: Click on input element inside iframe should set focus
+        testStep = 3;
+        var clickX3 = iframeRect.left + 60;
+        var clickY3 = iframeRect.top + 150;
+        simulateClick(clickX3, clickY3);
+
+        setTimeout(function() {
+          testAssert(iframeDoc.activeElement == iframeDoc.body, 'Test 3: Focus should be on inputElement inside iframe');
+
+          testEnd();
+        }, 100);
+      }, 100);
+    }, 100);
+  }
+
+</script>
+</html>

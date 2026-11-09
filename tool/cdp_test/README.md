@@ -6,10 +6,12 @@ and reads the responses.
 
 Two sets of test cases, called layers in `run.py`.
 
-- `schema` (`test/cdp/protocol/`): checks a response for the fields the
+- `schema` (`tests/cdp/protocol/`): checks a response for the fields the
   protocol declares required.
-- `behavior` (`test/cdp/inspector-protocol/`): runs Chromium's own CDP test
-  and compares its output.
+- `behavior` (`web_tests/http/tests/inspector-protocol` in the sparse
+  `third_party/blink` checkout, and `tests/cdp/inspector-protocol-internal/`):
+  runs Chromium's own CDP test and compares its output. `./tool/blink/fetch.sh`
+  makes the checkout.
 
 ## Prerequisites
 
@@ -38,8 +40,9 @@ run.py behavior --include-fails    # every entry, so one can be promoted
 
 `run.py <layer> --help` documents every option and the model the lists follow.
 
-The behavior layer serves `test/cdp/` over HTTP at `http://127.0.0.1:8000`.
-Chromium's tests expect this address. Only one behavior run can use the port at
+The behavior layer serves `tests/cdp/`, with Chromium's suite as
+`/inspector-protocol/`, over HTTP at
+`http://127.0.0.1:8000`. Chromium's tests expect this address. Only one behavior run can use the port at
 a time.
 
 ## Test lists
@@ -69,20 +72,23 @@ run, so a skip carries the reason it was skipped.
 
 ## Update the protocol and tests
 
-A revision is a commit sha or a tag. The current pin is in each
-`revision.txt`; `git ls-remote <upstream-url> HEAD` gives the latest.
+A revision is a commit sha or a tag. The current pin of the protocol is in
+`tests/cdp/protocol/revision.txt`; `git ls-remote <upstream-url> HEAD` gives the
+latest. Chromium's tests are at the pin of `third_party/blink`.
 
 ```sh
 # The CDP protocol, for the schema layer.
 # Upstream: https://github.com/ChromeDevTools/devtools-protocol
-python3 test/cdp/update-protocol.py --revision <cdp-revision>
+python3 tests/cdp/update-protocol.py --revision <cdp-revision>
 python3 tool/cdp_test/run.py schema --include-fails
 
-# Chromium's tests, for the behavior layer.
-# Upstream: https://github.com/chromium/chromium
-python3 test/cdp/update-inspector-protocol.py --revision <chromium-sha>
+# Chromium's tests, for the behavior layer: move the third_party/blink pin
+# (docs/blink_web_tests.md), then
 python3 tool/cdp_test/run.py behavior --include-fails
 ```
+
+Moving the `third_party/blink` pin moves this suite and `blink_test` together,
+so commit the new pin with both lists.
 
 Every run rewrites the list. `--include-fails` also runs the entries
 expected to fail, which is what lets one be promoted back.

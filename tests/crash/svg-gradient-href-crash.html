@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+
+<body>
+    <p>This test should not crash.</p>
+    <img src="svg-gradient-href-crash.svg">
+</body>
+<script>
+    function testStart() {
+        window.setTimeout(function () {
+            testEnd();
+        }, 1000);
+    }
+</script>
+
+</html>

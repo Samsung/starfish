@@ -1,0 +1,48 @@
+<html>
+<head>
+    <style>
+        .parent {
+        width: 200px;
+        height: 200px;
+        overflow-x: auto;
+        overflow-y: auto;
+        background: red;
+        }
+
+        .child1 {
+            width: 100px;
+            height: 100px;
+            overflow-x: auto;
+            overflow-y: auto;
+            background: black;
+            opacity: 0.6;
+        }
+
+        .child2 {
+            position: fixed;
+            width: 50px;
+            height: 50px;
+            background: blue;
+            top:250px;
+        }
+</style>
+</head>
+<body>
+    <div id="a" class="parent">
+        <div class="child1">
+            <div id="b" class="child2" >
+                inner
+            </div>
+        </div>
+    </div>
+    <script>
+    var clicked = false;
+    b.onclick = function() {
+      clicked = true;
+    }
+    simulateClick(30, 250);
+    testAssert(clicked)
+    testEnd();
+    </script>
+</body>
+</html>

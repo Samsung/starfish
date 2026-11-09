@@ -47,6 +47,7 @@ import concurrent.futures
 import contextlib
 import fnmatch
 import pathlib
+import subprocess
 import sys
 import time
 
@@ -74,11 +75,11 @@ LABEL_WIDTH = 14
 # entry using its whole timeout. Ten minutes leaves a schema sweep, which is
 # short whatever the machine, unasked and catches a behavior sweep.
 LONG_RUN_SECONDS = 600
-# Downloaded and internal test data lives in the test submodule. Only the
-# runner and its result lists live here.
-SUITE_DIR = launcher.REPOSITORY_DIR / "test" / "cdp"
+# Downloaded and internal test data lives in tests/cdp, Chromium's suite in the
+# third_party/blink checkout. Only the runner and its result lists live here.
+SUITE_DIR = launcher.REPOSITORY_DIR / "tests" / "cdp"
 PROTOCOL_DIR = SUITE_DIR / "protocol"
-INSPECTOR_DIR = SUITE_DIR / "inspector-protocol"
+INSPECTOR_DIR = static_server.INSPECTOR_ROOT
 INTERNAL_INSPECTOR_DIR = SUITE_DIR / "inspector-protocol-internal"
 
 
@@ -86,8 +87,11 @@ def require(path, what):
     if not path.exists():
         raise SystemExit(
             "%s is missing at %s.\n"
-            "The CDP test data lives in the 'test' submodule; run\n"
-            "  git submodule update --init test" % (what, path))
+            "The CDP test data lives in tests/cdp of this repository;\n"
+            "Chromium's inspector-protocol suite is in the third_party/blink "
+            "checkout:\n"
+            "  ./tool/blink/fetch.sh"
+            % (what, path))
     return path
 
 
@@ -136,7 +140,9 @@ def behavior_layer(args):
     return Layer(
         name="behavior",
         list_path=SCRIPT_DIR / "testlist-behavior.json",
-        revision=(suite_dir / "revision.txt").read_text().strip(),
+        revision=subprocess.check_output(
+            ["git", "-C", str(suite_dir), "rev-parse", "HEAD"],
+            text=True).strip(),
         known=set(roots),
         run_one=lambda starfish, entry, timeout: behavior.run(
             starfish, roots[entry], entry, timeout, suite_dir),
@@ -252,7 +258,7 @@ def run_layer(args, layer):
                     print("%d/%d UNPROBEABLE %s: %s"
                           % (position, len(to_run), name, detail))
                 print("      Use an existing Chromium behavior test, or add "
-                      "one under test/cdp/inspector-protocol-internal/.")
+                      "one under tests/cdp/inspector-protocol-internal/.")
             else:
                 now_skipped[entry] = {"category": category, "detail": detail}
                 # Only a demotion is a failure of this run: an entry already

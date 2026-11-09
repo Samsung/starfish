@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Which pseudo-element chains a compound selector accepts</title></head>
+<body>
+  <style id="sheet"></style>
+  <script>
+
+    // Starfish's test build supplies testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (other browser), shim a custom testEnd()
+    // that tallies console.assert results and reports the verdict, so the same
+    // file runs and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[pseudo_element_chaining] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // Pseudo-elements cannot be chained unless a spec explicitly allows it
+    // (css-pseudo-4: "::marker::before is not allowed; but ::before::marker
+    // is"). css-shadow-1 lets a tree-abiding pseudo-element follow ::slotted(),
+    // and css-lists-3 lets ::marker follow ::before/::after. Anything else after
+    // a pseudo-element -- another pseudo-element, a class, an id, an attribute
+    // or a pseudo-class -- makes the whole selector invalid.
+    //
+    // WPT css/css-pseudo/parsing/tree-abiding-pseudo-elements.html and
+    // css/css-shadow/slotted-parsing.html cover the same rules, but both also
+    // assert CSS.supports("selector(...)"), which this engine lacks, so the
+    // parse-and-serialize half is pinned here.
+    var valid = [
+      '::slotted(*)::before',
+      '::slotted(*)::after',
+      '::slotted(*)::marker',
+      '::slotted(*)::placeholder',
+      '::before::marker',
+      '::after::marker',
+    ];
+    var invalid = [
+      '::slotted(*)::first-line',
+      '::slotted(*)::selection',
+      '::slotted(*)::slotted(*)',
+      '::slotted(*)::before::slotted(*)',
+      '::slotted(*):hover',
+      '::slotted(*).c',
+      '::slotted(*)#i',
+      '::slotted(*)[a]',
+      '::before::before',
+      '::before::after',
+      '::after::before',
+      '::first-line::before',
+      '::placeholder::after',
+      '::placeholder::marker',
+      '::marker::before',
+      '::marker::marker',
+    ];
+
+    var sheet = document.getElementById('sheet').sheet;
+
+    // Returns the serialized selector when the rule parses, or null.
+    function parse(selector) {
+      try {
+        sheet.insertRule('div ' + selector + ' { color: red }', 0);
+      } catch (e) {
+        return null;
+      }
+      if (sheet.cssRules.length === 0) {
+        return null;
+      }
+      var text = sheet.cssRules[0].selectorText;
+      sheet.deleteRule(0);
+      return text;
+    }
+
+    valid.forEach(function (sel) {
+      var text = parse(sel);
+      console.assert(text !== null, sel + ' should parse, got rejected');
+      console.assert(text === 'div ' + sel,
+        sel + ' should serialize as written, got ' + JSON.stringify(text));
+    });
+
+    invalid.forEach(function (sel) {
+      var text = parse(sel);
+      console.assert(text === null,
+        sel + ' should be rejected, got ' + JSON.stringify(text));
+    });
+
+    testEnd();
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!--
+  #overlay is placed against the padding box of #ratio, whose height comes
+  only from a percentage padding-top, so it must stay at the top of that
+  padding box.
+
+  The iframe is resized (viewport damage) and its flex container is dirtied on
+  every tick, which makes the layout reach the clean #ratio through a quick
+  layout of its inline formatting context. That walk must not drop the
+  overlay's position: nothing lays the overlay out again in such a pass.
+-->
+<iframe id="frame" style="width:420px;height:300px;border:0" src="about:blank"></iframe>
+
+<script>
+var CSS =
+    'html{height:100%}' +
+    'body{margin:0;display:flex;flex-direction:column;height:100%}' +
+    '.app{flex:0 1 auto;min-height:0}' +
+    '.card{display:flex;position:relative;width:400px}' +
+    '.ratio{position:relative;padding-top:calc(50% + 0px);background:#ccc;width:100%}' +
+    '.overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end}';
+
+var frame = document.getElementById("frame");
+var doc = frame.contentDocument;
+doc.open();
+doc.write('<!DOCTYPE html><style>' + CSS + '</style>' +
+          '<div class="app"><div class="card">' +
+          '<div class="ratio" id="ratio"><div class="overlay" id="overlay">t</div></div>' +
+          '</div></div>');
+doc.close();
+
+function overlayOffset() {
+    var ratio = doc.getElementById("ratio").getBoundingClientRect();
+    var overlay = doc.getElementById("overlay").getBoundingClientRect();
+    return Math.round(overlay.y - ratio.y);
+}
+
+testAssert(overlayOffset() == 0);
+
+var n = 0;
+window.setInterval(function() {
+    n++;
+    frame.style.height = (300 + 20 * (n % 3)) + "px";
+    doc.body.style.paddingBottom = (n % 2) + "px";
+    console.log(overlayOffset());
+    testAssert(overlayOffset() == 0);
+    if (n > 4)
+        testEnd();
+}, 100);
+</script>

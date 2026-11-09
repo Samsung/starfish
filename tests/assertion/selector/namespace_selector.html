@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>@namespace declarations and namespace-prefixed selectors</title>
+</head>
+
+<body>
+  <!-- (1) explicit prefix: svg|rect -->
+  <svg><rect id="c1" width="10" height="10" /></svg>
+
+  <!-- (2) undeclared prefix inside :not() must drop the WHOLE rule, not
+       degenerate into a compound that matches nothing -->
+  <style>
+    .c2 { background-color: rgb(0, 128, 0); }
+    .c2:not(foo|div) { background-color: rgb(255, 0, 0); }
+  </style>
+  <div id="c2" class="c2"></div>
+
+  <!-- (3) bare `|div` (explicit no-namespace) must NOT match an HTML div,
+       since HTML elements are always in the xhtml namespace -->
+  <style>|div { background-color: rgb(255, 0, 0); }</style>
+  <div id="c3"></div>
+
+  <!-- (4) `*|div` (explicit any-namespace) matches regardless -->
+  <style>*|div { background-color: rgb(0, 128, 0); }</style>
+  <div id="c4"></div>
+
+  <!-- (5) default namespace applies to a bare type selector, so it must NOT
+       match an HTML div (xhtml namespace, not the declared default) -->
+  <style>
+    @namespace url("http://www.w3.org/2000/svg");
+    div { background-color: rgb(255, 0, 0); }
+  </style>
+  <div id="c5"></div>
+
+  <!-- (6) `*|*.a` opts out of the default namespace entirely -->
+  <style>
+    @namespace url("http://www.w3.org/2000/svg");
+    *|*.a { background-color: rgb(0, 128, 0); }
+  </style>
+  <div id="c6" class="a"></div>
+
+  <!-- (7a) @namespace after a style rule is invalid -- must be ignored, so
+       the prefix stays undeclared and the rule using it gets dropped -->
+  <style>
+    .c7a { background-color: rgb(0, 128, 0); }
+    @namespace foo "http://www.w3.org/2000/svg";
+    .c7a:not(foo|div) { background-color: rgb(255, 0, 0); }
+  </style>
+  <div id="c7a" class="c7a"></div>
+
+  <!-- (7b) @namespace nested inside @media is invalid -- same as (7a) -->
+  <style>
+    .c7b { background-color: rgb(0, 128, 0); }
+    @media all {
+      @namespace foo "http://www.w3.org/2000/svg";
+      .c7b:not(foo|div) { background-color: rgb(255, 0, 0); }
+    }
+  </style>
+  <div id="c7b" class="c7b"></div>
+
+  <!-- (8) a prefix declared in one stylesheet is not visible from another --
+       "foo" below is declared only in the first <style>, so the second
+       <style>'s use of foo|div must be treated as undeclared. -->
+  <style>@namespace foo "http://www.w3.org/2000/svg";</style>
+  <style>
+    .c8 { background-color: rgb(0, 128, 0); }
+    .c8:not(foo|div) { background-color: rgb(255, 0, 0); }
+  </style>
+  <div id="c8" class="c8"></div>
+
+  <!-- (11) `|thing` (no-namespace) must match an element that genuinely has
+       no namespace at all (QualifiedName's true-null namespaceURI), not
+       just an element with an empty-string namespace -- these are
+       represented differently internally and must still compare equal. -->
+  <style>|thing { background-color: rgb(0, 128, 0); }</style>
+
+  <!-- (12) :is()/:where()/:not() subject-compound default-namespace
+       exception. Selectors-4: the compound
+       representing the *subject* (rightmost) of a branch inside these
+       pseudo-classes is exempt from the default-namespace rule unless it
+       has its own explicit type/universal selector -- non-subject
+       compounds stay restricted. -->
+
+  <!-- (12a) pure subject exemption: `.c12a-target` (no type) is the whole
+       argument, so it must stay namespace-agnostic and match an HTML
+       (xhtml) element despite an in-scope SVG default namespace --
+       without the exemption, it would incorrectly get svg-ns-restricted
+       and never match an xhtml element at all. Each (12*) case uses its
+       own class names (not shared with earlier cases like (6)'s `.a`) --
+       classes aren't scoped to a <style> block, so a shared name would
+       leak this rule onto an unrelated earlier element. -->
+  <style>
+    @namespace url("http://www.w3.org/2000/svg");
+    .c12a-base { background-color: rgb(0, 128, 0); }
+    *|*:is(.c12a-target) { background-color: rgb(255, 0, 0); }
+  </style>
+  <div id="c12a" class="c12a-base c12a-target"></div>
+
+  <!-- (12b) verifies the exemption is applied to the right compound:
+       `.c12b-target` (subject) is exempt, but the ancestor
+       `.c12b-container` (non-subject) stays default-namespace-restricted,
+       so an SVG-namespace ancestor must not satisfy an xhtml default --
+       the whole :is() must not match. (Passes even without the exemption, since
+       the non-subject restriction alone already blocks the match -- this
+       guards against a stripping bug that exempts the wrong compound, not
+       against a missing exemption.) -->
+  <style>
+    @namespace url("http://www.w3.org/2000/svg");
+    .c12b-base { fill: rgb(0, 128, 0); }
+    *|*:is(.c12b-container .c12b-target) { fill: rgb(255, 0, 0); }
+  </style>
+  <div class="c12b-container">
+    <svg xmlns="http://www.w3.org/2000/svg">
+      <g id="c12b" class="c12b-base c12b-target"></g>
+    </svg>
+  </div>
+
+  <!-- (12c) control: an EXPLICIT universal in the subject compound is not
+       exempt per spec wording, so the default namespace still restricts
+       it -- an xhtml element must not match despite `.c12c-target` alone
+       matching. -->
+  <style>
+    @namespace url("http://www.w3.org/2000/svg");
+    .c12c-base { background-color: rgb(0, 128, 0); }
+    *|*:is(*.c12c-target) { background-color: rgb(255, 0, 0); }
+  </style>
+  <div id="c12c" class="c12c-base c12c-target"></div>
+
+  <!-- (12d) :not() subject exemption: without it, `.c12d-target` (no
+       type) inside :not() would get svg-ns-restricted and could never
+       match an xhtml element, making :not(.c12d-target) wrongly true for
+       an element that DOES have that class. With the exemption,
+       :not(.c12d-target) correctly stays false. -->
+  <style>
+    @namespace url("http://www.w3.org/2000/svg");
+    .c12d-base { background-color: rgb(0, 128, 0); }
+    *|*.c12d-base:not(.c12d-target) { background-color: rgb(255, 0, 0); }
+  </style>
+  <div id="c12d" class="c12d-base c12d-target"></div>
+
+  <script>
+
+    // Starfish's test build provides testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (e.g. a regular browser like Chrome),
+    // shim a custom testEnd() that tallies console.assert results and reports
+    // the verdict to the console and the document title, so the same file runs
+    // and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) {
+          __pass++;
+        } else {
+          __fail++;
+          __nativeAssert(false, msg);
+        }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[namespace_selector] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    function bg(id) {
+      return getComputedStyle(document.getElementById(id)).backgroundColor;
+    }
+
+    // (1) explicit prefix -- svg|rect matches an actual SVG rect.
+    var sheet1 = document.createElement('style');
+    sheet1.textContent =
+      '@namespace svg "http://www.w3.org/2000/svg"; svg|rect { fill: rgb(0, 0, 255); }';
+    document.head.appendChild(sheet1);
+    var c1Fill = getComputedStyle(document.getElementById('c1')).fill;
+    console.assert(c1Fill === 'rgb(0, 0, 255)',
+      'svg|rect should match an SVG rect element (got ' + c1Fill + ')');
+
+    // (2) undeclared prefix inside :not() drops the whole rule.
+    console.assert(bg('c2') === 'rgb(0, 128, 0)',
+      '.c2:not(foo|div) with an undeclared "foo" must be dropped entirely, ' +
+      'leaving only .c2 { green } (got ' + bg('c2') + ')');
+
+    // (3) bare |div (explicit no-namespace) does not match an HTML div.
+    console.assert(bg('c3') !== 'rgb(255, 0, 0)',
+      '|div (explicit no-namespace) must not match an HTML div, which is ' +
+      'always in the xhtml namespace (got ' + bg('c3') + ')');
+
+    // (4) *|div (explicit any-namespace) matches an HTML div.
+    console.assert(bg('c4') === 'rgb(0, 128, 0)',
+      '*|div should match an HTML div regardless of namespace (got ' + bg('c4') + ')');
+
+    // (5) default namespace applied to a bare type selector excludes an
+    // HTML div (xhtml namespace != the declared default).
+    console.assert(bg('c5') !== 'rgb(255, 0, 0)',
+      'a bare type selector under a default @namespace must not match an ' +
+      'HTML div (got ' + bg('c5') + ')');
+
+    // (6) *|*.a opts out of the default namespace.
+    console.assert(bg('c6') === 'rgb(0, 128, 0)',
+      '*|*.a should match regardless of the in-scope default namespace ' +
+      '(got ' + bg('c6') + ')');
+
+    // (7a)/(7b) @namespace declared too late (after a style rule, or nested
+    // inside @media) must be ignored, leaving its prefix undeclared.
+    console.assert(bg('c7a') === 'rgb(0, 128, 0)',
+      '@namespace after a style rule must be invalid, so foo|div stays ' +
+      'undeclared and the :not(foo|div) rule is dropped (got ' + bg('c7a') + ')');
+    console.assert(bg('c7b') === 'rgb(0, 128, 0)',
+      '@namespace nested inside @media must be invalid, same as (7a) ' +
+      '(got ' + bg('c7b') + ')');
+
+    // (8) a prefix is scoped to the stylesheet that declares it.
+    console.assert(bg('c8') === 'rgb(0, 128, 0)',
+      'a prefix declared in one <style> must not be visible from another ' +
+      '(got ' + bg('c8') + ')');
+
+    // (9) CSSOM selectorText round-trips an explicit prefix.
+    // cssRules[0] is the @namespace rule itself; the svg|rect style rule
+    // that follows it is cssRules[1].
+    var rule1 = sheet1.sheet.cssRules[1];
+    console.assert(rule1.selectorText === 'svg|rect',
+      'selectorText should round-trip the explicit prefix (got "' + rule1.selectorText + '")');
+
+    // (10a) namespace prefixes are case-sensitive: "Foo" and "foo" declared
+    // with different URIs must resolve to different namespaces.
+    var sheet10 = document.createElement('style');
+    sheet10.textContent =
+      '@namespace Foo "http://example.com/ns1";\n' +
+      '@namespace foo "http://example.com/ns2";\n' +
+      'Foo|thing { fill: rgb(0, 128, 128); }\n' +
+      'foo|thing { fill: rgb(255, 165, 0); }';
+    document.head.appendChild(sheet10);
+    var ns1Thing = document.createElementNS('http://example.com/ns1', 'thing');
+    var ns2Thing = document.createElementNS('http://example.com/ns2', 'thing');
+    document.body.appendChild(ns1Thing);
+    document.body.appendChild(ns2Thing);
+    var ns1Fill = getComputedStyle(ns1Thing).fill;
+    var ns2Fill = getComputedStyle(ns2Thing).fill;
+    console.assert(ns1Fill === 'rgb(0, 128, 128)',
+      'Foo|thing should match an element in the ns1 namespace (got ' + ns1Fill + ')');
+    console.assert(ns2Fill === 'rgb(255, 165, 0)',
+      'foo|thing should match an element in the ns2 namespace, distinct ' +
+      'from Foo (got ' + ns2Fill + ')');
+
+    // (10b) the @namespace keyword itself is case-insensitive.
+    var sheet10b = document.createElement('style');
+    sheet10b.textContent =
+      '@NAmespace svg2 "http://www.w3.org/2000/svg";\n' +
+      'svg2|circle { fill: rgb(0, 0, 255); }';
+    document.head.appendChild(sheet10b);
+    var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    document.body.appendChild(circle);
+    var circleFill = getComputedStyle(circle).fill;
+    console.assert(circleFill === 'rgb(0, 0, 255)',
+      '@NAmespace (mixed case keyword) should parse the same as @namespace ' +
+      '(got ' + circleFill + ')');
+
+    // (11) `|thing` must match an element with a genuinely null
+    // namespaceURI (not just an empty-string one).
+    var noNsThing = document.createElementNS(undefined, 'thing');
+    document.body.appendChild(noNsThing);
+    console.assert(noNsThing.namespaceURI === null,
+      'createElementNS(undefined, ...) should produce a null namespaceURI ' +
+      '(got ' + noNsThing.namespaceURI + ')');
+    var noNsBg = getComputedStyle(noNsThing).backgroundColor;
+    console.assert(noNsBg === 'rgb(0, 128, 0)',
+      '|thing should match an element with a true-null namespaceURI ' +
+      '(got ' + noNsBg + ')');
+
+    function fill(id) {
+      return getComputedStyle(document.getElementById(id)).fill;
+    }
+
+    // (12a) :is()'s subject-compound exemption: `.c12a-target` alone must
+    // match an HTML element despite an in-scope SVG default namespace.
+    console.assert(bg('c12a') === 'rgb(255, 0, 0)',
+      '*|*:is(.c12a-target) should match, since a type-less subject ' +
+      'compound is exempt from the default namespace (got ' + bg('c12a') + ')');
+
+    // (12b) the subject exemption does not extend to non-subject
+    // compounds: `.c12b-container` (the xhtml ancestor) stays restricted.
+    console.assert(fill('c12b') === 'rgb(0, 128, 0)',
+      '*|*:is(.c12b-container .c12b-target) should not match, since the ' +
+      'non-subject .c12b-container compound stays namespace-restricted ' +
+      '(got ' + fill('c12b') + ')');
+
+    // (12c) control: an explicit universal in the subject compound is not
+    // exempt, so the default namespace still restricts it.
+    console.assert(bg('c12c') === 'rgb(0, 128, 0)',
+      '*|*:is(*.c12c-target) should not match an xhtml element, since an ' +
+      'explicit universal selector is not exempt from the default ' +
+      'namespace (got ' + bg('c12c') + ')');
+
+    // (12d) :not()'s subject exemption: `.c12d-target` inside :not() must
+    // correctly exclude an element that has that class, not be
+    // neutralized by an erroneous default-namespace restriction.
+    console.assert(bg('c12d') === 'rgb(0, 128, 0)',
+      '*|*.c12d-base:not(.c12d-target) should not match an element with ' +
+      'class c12d-target, since :not()\'s subject compound is exempt ' +
+      'from the default namespace (got ' + bg('c12d') + ')');
+
+    testEnd();
+
+  </script>
+</body>
+
+</html>

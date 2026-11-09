@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Web Audio decode during navigation</title>
+<body>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Web Audio decode during navigation complete";
+    };
+}
+
+if (typeof AudioContext !== "function") {
+    testEnd();
+} else {
+    const frame = document.createElement("iframe");
+    frame.onload = function () {
+        const child = frame.contentWindow;
+        const context = new child.AudioContext();
+        for (let i = 0; i < 4; i++) {
+            const input = new child.ArrayBuffer(2 * 1024 * 1024);
+            context.decodeAudioData(input).catch(function () {});
+            console.assert(input.byteLength === 0,
+                           "encoded input detaches before decoding");
+        }
+        frame.remove();
+        console.assert(frame.contentWindow === null,
+                       "removing an iframe discards its browsing context");
+        setTimeout(testEnd, 0);
+    };
+    document.body.appendChild(frame);
+}
+</script>
+</body>

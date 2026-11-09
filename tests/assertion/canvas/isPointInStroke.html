@@ -1,0 +1,15 @@
+<canvas id="canvas"></canvas>
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.rect(50, 0, 20, 20);
+    ctx.translate(50, 0);
+    testAssert(ctx.isPointInStroke(-50, 20) === false);
+    testAssert(ctx.isPointInStroke(10, 20) === false);
+    testAssert(ctx.isPointInStroke(49, 20) === false);
+    testAssert(ctx.isPointInStroke(51, 20) === true);
+    testAssert(ctx.isPointInStroke(69, 20) === true);
+    testAssert(ctx.isPointInStroke(69, 21) === false);
+    testAssert(ctx.isPointInStroke(71, 20) === false);
+    testEnd();
+</script>

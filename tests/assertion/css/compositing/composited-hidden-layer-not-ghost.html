@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  html, body { margin: 0; background-color: white; }
+  /*
+   * A layer that owns a composited buffer (will-change: transform) is painted
+   * red while visible, then made visibility:hidden at the same time an active
+   * transition keeps it composited. An active transition/animation forces
+   * compositing and overrides the visibility cull, so the layer stays
+   * composited even though it is fully hidden. The composite-draw path does not
+   * otherwise honor visibility, so its cached (red) buffer keeps being blitted.
+   * Regression guard for: player controls ghosting over playing video (the
+   * video player's progress bar, hidden via visibility:hidden on its own composited
+   * layer, stayed painted over the video). The hidden layer must not ghost --
+   * its box interior should read as the white page background.
+   */
+  #bar {
+    width: 200px; height: 200px;
+    background-color: red;
+    transition: transform 2s linear;
+    will-change: transform;
+  }
+</style>
+</head>
+<body>
+  <div id="bar"></div>
+<script>
+  window.onload = function() {
+    var bar = document.getElementById("bar");
+    setTimeout(function() {
+      // First paint rasterizes the red buffer while the layer is visible.
+      screenShot("composited-hidden-layer-not-ghost.html.png", function() {
+        // Hide the layer AND start a transition so it stays composited (the
+        // active transition overrides the visibility cull).
+        bar.style.transform = "translateX(1px)";
+        bar.style.visibility = "hidden";
+        setTimeout(function() {
+          screenShot("composited-hidden-layer-not-ghost.html.png", function() {
+            testAssert(checkPixelColor("composited-hidden-layer-not-ghost.html.png",
+                                       100, 100, 255, 255, 255, 255, 6),
+                       "hidden composited layer must not ghost (box center should be white)");
+            testEnd();
+          }, 300);
+        }, 150);
+      }, 100);
+    }, 300);
+  };
+</script>
+</html>

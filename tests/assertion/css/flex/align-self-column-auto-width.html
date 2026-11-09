@@ -1,0 +1,37 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Column flex item width follows align-self</title>
+<link rel="help" href="https://www.w3.org/TR/css-flexbox-1/#algo-cross-item">
+<style>
+.container { display: flex; flex-direction: column; width: 408px; }
+.item { display: flex; flex-direction: column; flex: none;
+  box-sizing: border-box; height: 56px; padding: 0 24px;
+  border: 2px solid; max-width: 448px; }
+.label { width: 100%; flex: none; overflow: hidden; }
+.content { width: 40px; height: 20px; }
+</style>
+<div class="container" id="container"><div class="item" id="item"><div class="label"><div class="content"></div></div></div></div>
+<script>
+if (typeof testEnd !== 'function') {
+  window.testEnd = function () { console.log('Test complete'); };
+}
+var container = document.getElementById('container');
+var item = document.getElementById('item');
+var alignments = ['flex-start', 'center', 'flex-end', 'stretch', 'auto'];
+['column', 'column-reverse'].forEach(function (direction) {
+  container.style.flexDirection = direction;
+  ['stretch', 'flex-start'].forEach(function (parentAlignment) {
+    container.style.alignItems = parentAlignment;
+    alignments.forEach(function (alignment) {
+      item.style.alignSelf = alignment;
+      var stretches = alignment === 'stretch' ||
+        (alignment === 'auto' && parentAlignment === 'stretch');
+      var expected = stretches ? 408 : 92;
+      console.assert(item.getBoundingClientRect().width === expected,
+        direction + ', align-items: ' + parentAlignment + ', align-self: ' +
+        alignment + ': expected width ' + expected);
+    });
+  });
+});
+testEnd();
+</script>

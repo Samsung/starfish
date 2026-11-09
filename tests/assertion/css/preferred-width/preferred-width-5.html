@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+.bar {
+    z-index: 11;
+    /* position: fixed; */
+    width:200px;
+    right: 0;
+    display: flex;
+    flex-direction: row;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+}
+
+.chip {
+//    flex: none;
+    background-color: #203040;
+    color: rgba(255, 255, 255, 0.9);
+    margin-right: 32px;
+    font-size: 24px;
+    min-width: 150px;
+}
+    </style>
+</head>
+
+<body>
+    <div class="bar">
+        <div class="row">
+            <div class="spacer"></div>
+            <div tabindex="-1" class="chip">More items</div>
+            <div tabindex="-1" class="chip">asdf</div>
+            <div tabindex="-1" class="chip">ddd ddddddd dddddd</div>
+            <div tabindex="-1" class="chip">abc</div>
+            <div tabindex="-1" class="chip">123</div>
+            <div class="spacer"></div>
+        </div>
+    </div>
+</body>
+<script>
+
+function testStart() {
+    testAssert(document.body.getElementsByClassName("chip")[4].getBoundingClientRect().right < 900)
+
+    var e = document.body.getElementsByClassName("chip")
+    for (let i = 0; i < e.length; i ++) {
+        e[i].style.flex = "none"
+    }
+    testAssert(document.body.getElementsByClassName("chip")[4].getBoundingClientRect().right > 900)
+    testEnd();
+}
+
+</script>
+</html>
+

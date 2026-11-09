@@ -1,0 +1,146 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Import and namespace URL serialization</title>
+<link rel="help" href="https://drafts.csswg.org/cssom/#serialize-a-string">
+<link rel="help" href="https://drafts.csswg.org/cssom/#serialize-a-url">
+</head><body><pre id="result"></pre><script>
+(function () {
+    'use strict';
+    var total = 0;
+    var failures = 0;
+    function equal(actual, expected, description) {
+        total++;
+        if (actual !== expected) { failures++; }
+        console.assert(actual === expected, description + ': expected ' +
+            JSON.stringify(expected) + ', got ' + JSON.stringify(actual));
+    }
+
+    var cases = [
+    [
+        "plain",
+        "\"data:text/css,/*ab*/\"",
+        "data:text/css,/*ab*/",
+        "url(\"data:text/css,/*ab*/\")"
+    ],
+    [
+        "literal quote",
+        "'data:text/css,/*a\"b*/'",
+        "data:text/css,/*a\"b*/",
+        "url(\"data:text/css,/*a\\\"b*/\")"
+    ],
+    [
+        "escaped quote",
+        "\"data:text/css,/*a\\\"b*/\"",
+        "data:text/css,/*a\"b*/",
+        "url(\"data:text/css,/*a\\\"b*/\")"
+    ],
+    [
+        "backslash",
+        "\"data:text/css,/*a\\\\b*/\"",
+        "data:text/css,/*a\\b*/",
+        "url(\"data:text/css,/*a\\\\b*/\")"
+    ],
+    [
+        "hexadecimal escape",
+        "\"data:text/css,/*a\\62 c*/\"",
+        "data:text/css,/*abc*/",
+        "url(\"data:text/css,/*abc*/\")"
+    ],
+    [
+        "newline",
+        "\"data:text/css,/*a\\A b*/\"",
+        "data:text/css,/*a\nb*/",
+        "url(\"data:text/css,/*a\\a b*/\")"
+    ],
+    [
+        "tab",
+        "\"data:text/css,/*a\\9 b*/\"",
+        "data:text/css,/*a\tb*/",
+        "url(\"data:text/css,/*a\\9 b*/\")"
+    ],
+    [
+        "carriage return",
+        "\"data:text/css,/*a\\D b*/\"",
+        "data:text/css,/*a\rb*/",
+        "url(\"data:text/css,/*a\\d b*/\")"
+    ],
+    [
+        "control",
+        "\"data:text/css,/*a\\1 b*/\"",
+        "data:text/css,/*a\u0001b*/",
+        "url(\"data:text/css,/*a\\1 b*/\")"
+    ],
+    [
+        "delete",
+        "\"data:text/css,/*a\\7F b*/\"",
+        "data:text/css,/*a\u007fb*/",
+        "url(\"data:text/css,/*a\\7f b*/\")"
+    ],
+    [
+        "parenthesis",
+        "\"data:text/css,/*a)b*/\"",
+        "data:text/css,/*a)b*/",
+        "url(\"data:text/css,/*a)b*/\")"
+    ]
+];
+    function readRule(text, path) {
+        var style = document.createElement('style');
+        document.head.appendChild(style);
+        if (path === 'stylesheet') { style.textContent = text; }
+        else { style.sheet.insertRule(text, 0); }
+        // Imported sheets can load asynchronously before sheet is exposed.
+        return new Promise(function (resolve, reject) {
+            var deadline = Date.now() + 5000;
+            function ready() {
+                if (style.sheet) {
+                    resolve({element: style, rule: style.sheet.cssRules[0]});
+                } else if (Date.now() >= deadline) {
+                    style.remove();
+                    reject(new Error('Stylesheet did not become available'));
+                } else {
+                    setTimeout(ready, 0);
+                }
+            }
+            ready();
+        });
+    }
+    async function run() {
+        var kinds = ['import', 'namespace'];
+        var paths = ['stylesheet', 'insertRule'];
+        for (var i = 0; i < cases.length; i++) {
+            var entry = cases[i];
+            for (var k = 0; k < kinds.length; k++) {
+                var kind = kinds[k];
+                for (var j = 0; j < paths.length; j++) {
+                    var path = paths[j];
+                    var prefix = kind === 'import' ? '@import ' : '@namespace test ';
+                    var text = prefix + 'url(' + entry[1] + ');';
+                    var expected = prefix + entry[3] + ';';
+                    var parsed = await readRule(text, path);
+                    var rule = parsed.rule;
+                    var description = kind + ' ' + entry[0] + ' via ' + path;
+                    equal(rule ? rule.cssText : '', expected, description + ' cssText');
+                    equal(rule ? (kind === 'import' ? rule.href : rule.namespaceURI) : '',
+                        entry[2], description + ' decoded URL');
+                    var restored = await readRule(rule ? rule.cssText : '', 'stylesheet');
+                    rule = restored.rule;
+                    equal(rule ? rule.cssText : '', expected, description + ' round trip cssText');
+                    equal(rule ? (kind === 'import' ? rule.href : rule.namespaceURI) : '',
+                        entry[2], description + ' round trip URL');
+                    parsed.element.remove();
+                    restored.element.remove();
+                }
+            }
+        }
+    }
+    function finish() {
+        document.getElementById('result').textContent =
+            (total - failures) + ' passed; ' + failures + ' failed.';
+        document.title = (failures ? 'FAIL' : 'PASS') + ': Import and namespace URL serialization';
+        if (typeof testEnd === 'function') { testEnd(); }
+    }
+    run().then(finish, function (error) {
+        equal(error.message, '', 'Unexpected test error');
+        finish();
+    });
+}());
+</script></body></html>

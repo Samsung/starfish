@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  .parent-container {
+    background-color: lightblue;
+    position: absolute;
+    width: 500px;
+    height: 400px;
+    top: 0;
+    left: 0;
+  }
+
+  iframe {
+    position: absolute;
+    top: 50px;
+    left: 50px;
+    width: 300px;
+    height: 200px;
+    border: 2px solid black;
+  }
+</style>
+</head>
+<body>
+  <div class="parent-container" id="parentContainer">
+    Parent Container
+    <iframe id="testIframe"></iframe>
+  </div>
+</body>
+
+<script>
+  window.webSecurityDisable();
+
+  var parentScreenX = 0;
+  var parentScreenY = 0;
+  var iframeScreenX = 0;
+  var iframeScreenY = 0;
+  var iframeClientX = 0;
+  var iframeClientY = 0;
+  var testPassed = false;
+
+  // Parent click event handler - capture screen coordinates
+  function onParentClick(e) {
+    parentScreenX = e.screenX;
+    parentScreenY = e.screenY;
+  }
+
+  // Add click listener to parent container
+  document.getElementById('parentContainer').addEventListener('click', onParentClick);
+
+  // Create iframe content
+  var iframeContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body {
+          margin: 0;
+          padding: 10px;
+          background-color: lightgreen;
+        }
+        .clickable-box {
+          width: 100px;
+          height: 100px;
+          background-color: orange;
+          border: 2px solid darkorange;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="clickable-box" id="clickableBox">Click Me</div>
+    </body>
+    </html>
+  `;
+
+  var iframe = document.getElementById('testIframe');
+  iframe.src = 'data:text/html;charset=utf-8,' + encodeURIComponent(iframeContent);
+
+  window.onload = function() {
+    setTimeout(function() {
+      // Wait for iframe to load
+      var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      
+      // Add click listener inside iframe to capture screen coordinates
+      var clickableBox = iframeDoc.getElementById('clickableBox');
+      clickableBox.addEventListener('click', function(e) {
+        iframeScreenX = e.screenX;
+        iframeScreenY = e.screenY;
+        iframeClientX = e.clientX;
+        iframeClientY = e.clientY;
+      });
+
+      // Add mousedown listener inside iframe to capture screen coordinates
+      clickableBox.addEventListener('mousedown', function(e) {
+        iframeScreenX = e.screenX;
+        iframeScreenY = e.screenY;
+        iframeClientX = e.clientX;
+        iframeClientY = e.clientY;
+      });
+
+      // Click inside iframe
+      var iframeRect = iframe.getBoundingClientRect();
+      var clickX = iframeRect.left + 60;
+      var clickY = iframeRect.top + 60;
+
+      simulateClick(clickX, clickY);
+
+      setTimeout(function() {
+        // Test: screenX and screenY should be passed through correctly to iframe
+        // screenX/Y should be the actual screen coordinates, not reset to clientX/Y values
+        // The screen coordinates should be different from client coordinates inside the iframe
+        // because the iframe is offset from the top-left of the screen
+        
+        // screenX should be approximately equal to clickX (which is the absolute position)
+        // clientX inside iframe should be relative to the iframe viewport
+        // So screenX should NOT equal clientX (unless iframe is at 0,0)
+        
+        testAssert(iframeScreenX != 0, "screenX should not be 0");
+        testAssert(iframeScreenY != 0, "screenY should not be 0");
+        
+        // The screen coordinates should be the absolute screen position
+        // which should be close to the click position (clickX, clickY)
+        testAssert(Math.abs(iframeScreenX - clickX) < 5, "screenX should be close to clickX");
+        testAssert(Math.abs(iframeScreenY - clickY) < 5, "screenY should be close to clickY");
+        
+        // The client coordinates inside iframe should be relative to iframe viewport
+        // So they should be different from screen coordinates
+        testAssert(iframeClientX != iframeScreenX, "clientX should differ from screenX inside iframe");
+        testAssert(iframeClientY != iframeScreenY, "clientY should differ from screenY inside iframe");
+        
+        // Reset values for mousedown test
+        iframeScreenX = 0;
+        iframeScreenY = 0;
+        iframeClientX = 0;
+        iframeClientY = 0;
+
+        // Test with simulateMouseDown
+        simulateMouseDown(clickX, clickY);
+
+        setTimeout(function() {
+          // Same tests for mousedown
+          testAssert(iframeScreenX != 0, "mousedown: screenX should not be 0");
+          testAssert(iframeScreenY != 0, "mousedown: screenY should not be 0");
+          
+          testAssert(Math.abs(iframeScreenX - clickX) < 5, "mousedown: screenX should be close to clickX");
+          testAssert(Math.abs(iframeScreenY - clickY) < 5, "mousedown: screenY should be close to clickY");
+          
+          testAssert(iframeClientX != iframeScreenX, "mousedown: clientX should differ from screenX inside iframe");
+          testAssert(iframeClientY != iframeScreenY, "mousedown: clientY should differ from screenY inside iframe");
+          
+          testEnd();
+        }, 100);
+      }, 100);
+    }, 500);
+  };
+</script>
+</html>

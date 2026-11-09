@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+</head>
+
+<body>
+    iframe
+    <script>
+        inaccessible = [
+            'document',
+            'alert',
+            'cancelAnimationFrame',
+            'scrollX',
+            'scrollY',
+            'innerWidth',
+            'innerHeight',
+            'pageXOffset',
+            'pageYOffset',
+            'scroll',
+            'scrollTo',
+            'scrollBy',
+            'devicePixelRatio',
+            'navigator',
+        ];
+
+        accessible = [
+            'frames',
+            'length',
+            'top',
+            'parent',
+        ];
+
+        result = [];
+        inaccessible.forEach(element => {
+            try {
+                window.parent[element]
+                result.push(false);
+            } catch (error) {
+                result.push(true);
+            }
+        });
+        accessible.forEach(element => {
+            try {
+                window.parent[element]
+                result.push(true);
+            } catch (error) {
+                result.push(false);
+            }
+        });
+        window.parent.postMessage(result, "*");
+    </script>
+</body>
+
+</html>

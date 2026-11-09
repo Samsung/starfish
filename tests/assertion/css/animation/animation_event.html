@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <style>
+        #animatedElement {
+            width: 100px;
+            height: 100px;
+            background-color: red;
+            animation: multiPropertyAnimation 2s ease-in-out;
+        }
+
+        @keyframes multiPropertyAnimation {
+            0% {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+                background-color: red;
+            }
+
+            50% {
+                transform: translateX(200px) scale(1.5);
+                opacity: 0.5;
+                background-color: blue;
+            }
+
+            100% {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+                background-color: red;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="animatedElement"></div>
+    <script>
+        let startedCount = 0;
+        let endedCount = 0;
+
+        animatedElement.addEventListener('animationstart', () => {
+                console.log('애니메이션이 시작되었습니다.');
+                startedCount++;
+            });
+
+        animatedElement.addEventListener('animationend', () => {
+            console.log('애니메이션이 완료되었습니다.');
+            endedCount++;
+        });
+
+        setTimeout(() => {
+            console.log('애니메이션 시작 횟수:', startedCount);
+            testAssert(startedCount == 1);
+            console.log('애니메이션 종료 횟수:', endedCount);
+            testAssert(endedCount == 1);
+            testEnd();
+        }, 3000);
+
+    </script>
+</body>
+
+</html>

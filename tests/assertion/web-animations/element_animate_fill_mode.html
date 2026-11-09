@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        div {
+            width: 50px;
+            height: 50px;
+            background-color: blue;
+            opacity: 0;
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        #cssBoth {
+            animation: fade-in 200ms both;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="forwards"></div>
+    <div id="both"></div>
+    <div id="none"></div>
+    <div id="cssBoth"></div>
+    <div id="canceled"></div>
+</body>
+<script type="text/javascript">
+    const keyframes = [{ opacity: 0 }, { opacity: 1 }];
+    let finishFired = false;
+
+    function opacityOf(id) {
+        return parseFloat(getComputedStyle(document.getElementById(id)).opacity);
+    }
+
+    function animateWithFill(id, fill) {
+        return document.getElementById(id).animate(keyframes, {
+            duration: 200,
+            fill: fill,
+        });
+    }
+
+    const forwardsAnimation = animateWithFill("forwards", "forwards");
+    forwardsAnimation.addEventListener("finish", function () {
+        finishFired = true;
+    });
+    animateWithFill("both", "both");
+    animateWithFill("none", "none");
+    const canceledAnimation = animateWithFill("canceled", "forwards");
+
+    setTimeout(function () {
+        // The active period is over: only the animations filling forwards keep
+        // the final value of the last keyframe.
+        testAssert(opacityOf("forwards") === 1);
+        testAssert(opacityOf("both") === 1);
+        testAssert(opacityOf("none") === 0);
+        testAssert(opacityOf("cssBoth") === 1);
+        testAssert(finishFired);
+
+        // Canceling drops the filled value as well.
+        canceledAnimation.cancel();
+        setTimeout(function () {
+            testAssert(opacityOf("canceled") === 0);
+            testEnd();
+        }, 200);
+    }, 500);
+</script>
+
+</html>

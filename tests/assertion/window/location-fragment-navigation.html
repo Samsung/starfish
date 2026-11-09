@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>location.href fragment-only assignment is a same-document navigation</title>
+</head>
+
+<body>
+  <!-- Per the HTML "navigate" algorithm, setting location.href to a URL that
+       differs from the current document URL only by fragment must scroll +
+       fire hashchange without reloading the document. It must also NOT
+       accumulate the old fragment into the new URL (e.g. "#a" -> "#b" must
+       yield "#b", not "#a#b"). -->
+  <script>
+
+    // Starfish's test build provides testEnd()/console.assert and auto-runs the
+    // test. When that harness is absent (e.g. a regular browser like Chrome),
+    // shim a custom testEnd() that tallies console.assert results and reports
+    // the verdict to the console and the document title, so the same file runs
+    // and reports anywhere.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) {
+          __pass++;
+        } else {
+          __fail++;
+          __nativeAssert(false, msg);
+        }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[location-fragment-navigation] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // A reload would tear down and re-create the global object / execution
+    // context, so this marker object identity survives iff no reload happened.
+    window.__loadMarker = {};
+    var __markerAtLoad = window.__loadMarker;
+
+    var __hashchangeCount = 0;
+    window.addEventListener('hashchange', function () {
+      __hashchangeCount++;
+    });
+
+    location.href = '#first';
+
+    window.setTimeout(function () {
+      console.assert(location.hash === '#first',
+        'location.hash after "#first" assignment (got ' + location.hash + ')');
+      console.assert(window.__loadMarker === __markerAtLoad,
+        'document must not reload for a fragment-only navigation (marker identity lost)');
+      console.assert(__hashchangeCount === 1,
+        'hashchange must fire exactly once after "#first" (got ' + __hashchangeCount + ')');
+
+      // Assign a different fragment while already on "#first" -- this is the
+      // shape that triggered unbounded URL growth ("#first#second", ...) and
+      // an infinite reload loop before the fix.
+      location.href = '#second';
+
+      window.setTimeout(function () {
+        console.assert(location.hash === '#second',
+          'location.hash after "#first" -> "#second" must be exactly "#second", ' +
+          'not accumulated (got ' + location.hash + ')');
+        console.assert(window.__loadMarker === __markerAtLoad,
+          'document must still not have reloaded after the second fragment assignment');
+        console.assert(__hashchangeCount === 2,
+          'hashchange must have fired twice in total (got ' + __hashchangeCount + ')');
+
+        testEnd();
+      }, 100);
+    }, 100);
+
+  </script>
+</body>
+
+</html>

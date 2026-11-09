@@ -14,8 +14,7 @@ test corpus is reproducible and upgrades are explicit submodule bumps.
 
 We target WPT **testharness.js** tests (JS assertions), **reftests** (`<link
 rel=match|mismatch>` pixel comparison), and **crashtests** (page must load
-without crashing the shell). None of these need stored expected images, so
-nothing here depends on the internal `test/` submodule.
+without crashing the shell). None of these need stored expected images.
 
 Verdicts are computed by Starfish's Python tools rather than WPT's
 `wptrunner`. Testharness results come from `inject_report.js`; reftests use
@@ -92,9 +91,9 @@ protocol; remaining open is not evidence of a test hang.
 
 Out of scope (separate concerns, not run by this path):
 
-- **Golden-image pixel tests** (`csswg`/`vendor_pixel`/`bidi` in
+- **Golden-image pixel tests** (the internal tests in
   `tool/runner/test_runner.py`) — Starfish's own harness, needs expected PNGs
-  from the internal `test/` submodule.
+  from `tests/pixel/`.
 - **print-reftest, wdspec, manual, visual** — need paginated rendering, a
   WebDriver session, or a human, respectively. Not run by this path.
 

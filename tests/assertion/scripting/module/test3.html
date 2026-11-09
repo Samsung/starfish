@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <title>Basic JavaScript module example</title>
+    <style>
+      canvas {
+        border: 1px solid black;
+      }
+    </style>
+    <script>
+        var order = 0;
+    </script>
+    <script type="module" src="./notfound" onload="testAssert(false)" onerror="console.log('onerror')"></script>
+    <script type="module" src="./test3.js" onload="console.log('test3load');testAssert(order++ == 3)"></script>
+    <script type="module" onload="testAssert(false)">
+    testAssert(order == 4)
+    order++;
+    console.log("loading3");
+    </script>
+    <script type="module">
+    import { testImport } from "./test3sub.js"    
+
+    testAssert(order == 5)
+    order++;
+
+    console.log(testImport(3))
+    testAssert(testImport(3) == 6)
+    </script>
+    <script type="module" src="./test32.js" onload="console.log('test3_2load');console.log(order++ == 7)"></script>
+  </head>
+  <body>
+  </body>
+  <script>
+    window.onload=function() {
+        console.log("onload");
+        testAssert(order == 13)
+        order++;
+        testEnd()
+    }
+    let scriptEle = document.createElement("script");
+    scriptEle.setAttribute("src", "./test3_dynamic.js");
+    scriptEle.setAttribute("type", "module");
+    scriptEle.onload=function() {
+        testAssert(order++ == 10)
+    }
+    document.body.appendChild(scriptEle);
+
+    scriptEle = document.createElement("script");
+    scriptEle.setAttribute("src", "./test3_dynamic2.js");
+    scriptEle.setAttribute("type", "module");
+    scriptEle.onload=function() {
+        testAssert(order++ == 12)
+    }
+    document.body.appendChild(scriptEle);
+
+
+
+    addEventListener("DOMContentLoaded", function() {
+        console.log("DOMContentLoaded");
+        testAssert(order == 8)
+        order++;
+    });
+
+  </script>
+</html>

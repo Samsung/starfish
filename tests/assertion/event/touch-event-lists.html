@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<!--
+  TouchEvent.touches / changedTouches / targetTouches must each contain one
+  Touch object per active finger, and Touch.identifier must be readable (not
+  undefined).  Previously identifier and changedTouches/targetTouches were
+  marked [Unimplemented] in the IDL and returned undefined.
+-->
+<head>
+<style>
+  body { margin: 0; }
+  #target { width: 200px; height: 200px; background: peachpuff; }
+</style>
+</head>
+<body>
+  <div id="target"></div>
+</body>
+<script>
+  var startTouches = null;
+  var startChanged = null;
+  var startTarget = null;
+  var endChanged = null;
+  var startIdentifier = undefined;
+
+  var target = document.getElementById("target");
+
+  target.addEventListener("touchstart", function(e) {
+    startTouches  = e.touches.length;
+    startChanged  = e.changedTouches.length;
+    startTarget   = e.targetTouches.length;
+    startIdentifier = e.touches[0].identifier;
+  });
+
+  target.addEventListener("touchend", function(e) {
+    endChanged = e.changedTouches.length;
+  });
+
+  function testStart() {
+    simulateTouchStart(100, 100);
+    simulateTouchEnd(100, 100);
+
+    setTimeout(function() {
+      // All three lists populated on touchstart
+      testAssert(startTouches  === 1);
+      testAssert(startChanged  === 1);
+      testAssert(startTarget   === 1);
+      // identifier must be a number (not undefined)
+      testAssert(typeof startIdentifier === "number");
+      // changedTouches populated on touchend
+      testAssert(endChanged === 1);
+      testEnd();
+    }, 100);
+  }
+</script>
+</html>

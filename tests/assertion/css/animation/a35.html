@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+ <head>
+  <style>
+.test1 {
+    height:100px;
+	--animation-speed: .25s;
+    --opacity: 0.5;
+	position: absolute;
+	inset: 0;
+    background: green;
+}
+
+.test2 {
+	width: 100%;
+	height: 100%;
+	background: red;
+	animation: animation1 var(--animation-speed) cubic-bezier(.65, 0, 1, 1) forwards;
+}
+.test3 {
+	width: 100%;
+	height: 50%;
+	background: blue;
+    animation: animation2 var(--animation-speed) linear forwards;
+}
+
+@keyframes animation1 {
+	0% {
+		height: 0
+    }
+    to {
+		height:100%
+	}
+}
+
+@keyframes animation2{
+	0% {
+		opacity: 0
+	}
+
+	to {
+		opacity: var(--opacity)
+	}
+}
+
+ </style>
+ </head>
+ <body>
+ <div class="test1" id="div1">
+    <div class="test2" id="div2">
+        <div class="test3" id="div3">
+        </div>
+    </div>
+  </div>
+ </body>
+ <script>
+  window.setTimeout(function() {
+    div1 = document.getElementById("div1");
+    div1.style.height="200px";
+  },1);
+  window.setTimeout(function() {
+    cs = window.getComputedStyle(document.getElementById("div2"));
+    testAssert(cs.height == "200px");
+    testEnd();
+  },1000);
+</script>
+</html>

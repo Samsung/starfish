@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<title>Custom element construction stack</title>
+
+<!--
+  Verifies the HTML spec "custom element construction stack" mechanism.
+  https://html.spec.whatwg.org/multipage/custom-elements.html#custom-element-construction-stack
+
+  The core invariant: when an element is upgraded, the HTMLElement constructor
+  must return the *same* element object that was pushed onto the construction
+  stack — not a newly created one.  This is what allows transpiled code
+  (Babel/esbuild) that uses Reflect.construct for super() to set properties
+  on the upgraded element.
+-->
+
+<!-- Scenario A: parser-created element upgraded after define() -->
+<babel-el id="parser-el"></babel-el>
+
+<!-- Scenario E: native class parser upgrade (element exists before define()) -->
+<native-el id="native-parser-el"></native-el>
+
+<script>
+"use strict";
+// Shim for running in a regular browser without the Starfish harness:
+// collect console.assert results and report a verdict from testEnd().
+if (typeof testEnd !== 'function') {
+    window.testEnd = function() {
+        var passed = true;
+        var a = window.__assertions || [];
+        for (var i = 0; i < a.length; i++) {
+            if (!a[i].ok) { passed = false; console.error('FAIL: ' + a[i].msg); }
+        }
+        console.log('[construction-stack] ' + (passed ? 'PASS' : 'FAIL') +
+            ' (' + a.length + ' assertions)');
+        document.title = passed ? 'PASS' : 'FAIL';
+    };
+    var origAssert = console.assert.bind(console);
+    console.assert = function(cond, msg) {
+        window.__assertions = window.__assertions || [];
+        window.__assertions.push({ ok: !!cond, msg: msg || String(cond) });
+        origAssert(cond, msg);
+    };
+}
+
+/*
+ * Transpiled super() pattern.
+ *
+ * ES5 transpilers (Babel, TypeScript, esbuild) convert `super()` into
+ * Reflect.construct(HTMLElement, [], DerivedClass), where:
+ *   - First arg  = the *parent* constructor (HTMLElement), not the derived
+ *                  class, to avoid infinite recursion.
+ *   - Third arg  = newTarget (DerivedClass), so HTMLElement can look up
+ *                  the custom element definition and find the construction
+ *                  stack entry pushed by the upgrade algorithm.
+ *
+ * Without a construction stack, HTMLElement creates a *new* element on
+ * each Reflect.construct call, and properties set afterwards land on this
+ * throwaway object — the upgraded element stays uninitialized.
+ */
+
+function _inherits(sub, sup) {
+    sub.prototype = Object.create(sup.prototype);
+    sub.prototype.constructor = sub;
+    Object.setPrototypeOf(sub, sup);
+}
+
+/* --- Scenario A: parser upgrade with transpiled super() --- */
+
+var BabelEl = (function (_HTMLElement) {
+    _inherits(BabelEl, _HTMLElement);
+
+    function BabelEl() {
+        // Reflect.construct(parent, [], newTarget) — mirrors Babel's
+        // _callSuper which passes the *parent* constructor as first arg.
+        var _this = Reflect.construct(_HTMLElement, [], BabelEl);
+        _this.babelProp = "set";
+        return _this;
+    }
+
+    return BabelEl;
+})(HTMLElement);
+
+customElements.define("babel-el", BabelEl);
+
+var parserEl = document.getElementById("parser-el");
+console.assert(parserEl.babelProp === "set",
+    "parser upgrade: babelProp should be 'set' but got " + parserEl.babelProp);
+console.assert(parserEl instanceof BabelEl,
+    "parser upgrade: should be instance of BabelEl");
+console.assert(parserEl.localName === "babel-el",
+    "parser upgrade: localName should be 'babel-el'");
+
+/* --- Scenario B: createElement with Babel transpile pattern --- */
+
+var el2 = document.createElement("babel-el");
+console.assert(el2.babelProp === "set",
+    "createElement: babelProp should be 'set' but got " + el2.babelProp);
+console.assert(el2 instanceof BabelEl,
+    "createElement: should be instance of BabelEl");
+
+/* --- Scenario C: new with Babel transpile pattern (regression) --- */
+
+var el3 = new BabelEl();
+console.assert(el3.babelProp === "set",
+    "new: babelProp should be 'set' but got " + el3.babelProp);
+console.assert(el3 instanceof BabelEl,
+    "new: should be instance of BabelEl");
+
+/* --- Scenario D: native class syntax (regression) --- */
+
+class NativeEl extends HTMLElement {
+    constructor() {
+        super();
+        this.nativeProp = "native";
+    }
+}
+customElements.define("native-el", NativeEl);
+
+var el4 = document.createElement("native-el");
+console.assert(el4.nativeProp === "native",
+    "native createElement: nativeProp should be 'native' but got " + el4.nativeProp);
+console.assert(el4 instanceof NativeEl,
+    "native createElement: should be instance of NativeEl");
+
+var el5 = new NativeEl();
+console.assert(el5.nativeProp === "native",
+    "native new: nativeProp should be 'native' but got " + el5.nativeProp);
+console.assert(el5 instanceof NativeEl,
+    "native new: should be instance of NativeEl");
+
+/* --- Scenario E: native class parser upgrade (regression) --- */
+
+var el6 = document.getElementById("native-parser-el");
+console.assert(el6.nativeProp === "native",
+    "native parser upgrade: nativeProp should be 'native' but got " + el6.nativeProp);
+console.assert(el6 instanceof NativeEl,
+    "native parser upgrade: should be instance of NativeEl");
+
+/* --- Scenario F: constructor returns different object → TypeError --- */
+/* Note: Chrome resets the element to HTMLUnknownElement on upgrade failure,
+ * so `el7 instanceof BadEl` is false there. Starfish does not yet un-morph
+ * the element, so that assertion is omitted. The error report is still
+ * verified. */
+
+var gotError = false;
+window.onerror = function () { gotError = true; return true; };
+
+class BadEl extends HTMLElement {
+    constructor() {
+        super();
+        return { notAnElement: true };
+    }
+}
+customElements.define("bad-el", BadEl);
+
+var el7 = document.createElement("bad-el");
+console.assert(gotError,
+    "bad constructor: should have reported an error");
+
+window.onerror = null;
+
+testEnd();
+</script>
+</html>

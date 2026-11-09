@@ -1,0 +1,32 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Web Audio compressor look-ahead and tail</title>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Web Audio compressor complete";
+    };
+}
+
+if (typeof OfflineAudioContext !== "function" ||
+    typeof DynamicsCompressorNode !== "function") {
+    testEnd();
+} else {
+    const context = new OfflineAudioContext(1, 4096, 48000);
+    const source = new ConstantSourceNode(context);
+    const compressor = new DynamicsCompressorNode(context);
+    source.connect(compressor).connect(context.destination);
+    source.start();
+    source.stop(0.04);
+    context.startRendering().then(function (buffer) {
+        const samples = buffer.getChannelData(0);
+        console.assert(samples[0] === 0 && samples[500] > 0,
+                       "The compressor applies fixed look-ahead");
+        console.assert(samples[1500] < 1 && compressor.reduction < 0,
+                       "Sustained loud input is compressed");
+        console.assert(samples[2000] > 0 && samples[2400] === 0,
+                       "Delayed audio ends after the source stops");
+        testEnd();
+    });
+}
+</script>

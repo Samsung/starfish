@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+* { margin: 0; padding: 0; }
+body { background: white; }
+</style>
+</head>
+<body>
+    <svg width="400" height="200" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+        <path id="motionPath" d="M 0 100 L 200 100" stroke="lightblue" stroke-width="1" fill="none" opacity="0.3"/>
+        <rect id="target" x="0" y="95" width="10" height="10" fill="red">
+            <animateMotion id="anim" begin="0s" dur="2s" fill="freeze" path="M 0 100 L 200 100"/>
+        </rect>
+    </svg>
+    
+    <script>
+    if (window['testAssert'] === undefined) {
+        testAssert = console.log;
+        testEnd = console.log;
+    }
+    
+    var anim = document.getElementById("anim");
+    var motionPath = document.getElementById("motionPath");
+    var target = document.getElementById("target");
+    var newRect;  // New rect for Step4
+    
+    console.log("Step0: Initial (x=0)");
+    var rect0 = target.getBoundingClientRect();
+    console.log("Step0: rect.x=" + rect0.x);
+    testAssert(rect0.x >= 0 && rect0.x <= 20, "Step0: x=" + rect0.x);
+    
+    // Step1: After 1050ms - animation in progress
+    setTimeout(function() {
+        console.log("Step1: 1000ms (middle x~100)");
+        var rect1 = target.getBoundingClientRect();
+        console.log("Step1: rect.x=" + rect1.x);
+        testAssert(rect1.x > 30 && rect1.x < 180, "Step1: x=" + rect1.x);
+    }, 1050);
+    
+    // Step2: After 1550ms - remove path
+    setTimeout(function() {
+        console.log("Step2: Remove path");
+        anim.removeAttribute("path");
+    }, 1550);
+    
+    // Step3: After 2050ms - verify path removed
+    setTimeout(function() {
+        var rect2 = target.getBoundingClientRect();
+        console.log("Step2: rect.x=" + rect2.x + " (jumped to end)");
+        testAssert(rect2.x >= 150 && rect2.x <= 220, "Step2: x=" + rect2.x);
+    }, 2050);
+    
+    // Step4: After 2100ms - re-add path
+    setTimeout(function() {
+        console.log("Step3: Re-add path");
+        anim.setAttribute("path", "M 0 100 L 200 100");
+    }, 2100);
+    
+    // Step5: After 4600ms - verify path re-added + create new rect
+    setTimeout(function() {
+        var rect3 = target.getBoundingClientRect();
+        console.log("Step3: rect.x=" + rect3.x);
+        testAssert(rect3.x >= 180 && rect3.x <= 220, "Step3: x=" + rect3.x);
+        
+        // Step6: Change path d + new rect
+        console.log("Step4: Change d to diagonal and create new rect");
+        motionPath.setAttribute("d", "M 0 100 L 350 50");
+        
+        newRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        newRect.setAttribute("x", "0");
+        newRect.setAttribute("y", "95");
+        newRect.setAttribute("width", "10");
+        newRect.setAttribute("height", "10");
+        newRect.setAttribute("fill", "red");
+        var newAnim = document.createElementNS("http://www.w3.org/2000/svg", "animateMotion");
+        newAnim.setAttribute("begin", "0s");
+        newAnim.setAttribute("dur", "2s");
+        newAnim.setAttribute("fill", "freeze");
+        newAnim.setAttribute("path", "M 0 100 L 350 50");
+        newRect.appendChild(newAnim);
+        target.parentNode.replaceChild(newRect, target);
+        console.log("newRect created: " + (newRect ? "OK" : "FAIL"));
+    }, 4600);
+    
+    // Step7: After 7500ms - verify diagonal movement (wait enough time)
+    setTimeout(function() {
+        if (!newRect) {
+            console.log("ERROR: newRect is null!");
+            testAssert(false, "newRect is null");
+            testEnd();
+            return;
+        }
+        var rect4 = newRect.getBoundingClientRect();
+        console.log("Step4: rect.x=" + rect4.x + ", rect.y=" + rect4.y);
+        testAssert(rect4.x >= 300 && rect4.x <= 380, "Step4: x=" + rect4.x);
+        testAssert(rect4.y >= 100 && rect4.y <= 180, "Step4: y=" + rect4.y);
+        
+        console.log("All tests passed!");
+        testEnd();
+    }, 7500);
+    </script>
+</body>
+</html>

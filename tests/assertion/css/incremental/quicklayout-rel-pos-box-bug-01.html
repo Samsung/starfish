@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+
+<div id="container" style="opacity: 1;">
+  <div id="icon" style="opacity: 1;">XXXX</div>
+</div>
+<div id="tt">
+</div>
+
+<style>
+
+#container {
+    color: #FFFFFF;
+    position: absolute;
+    left: 835px;
+}
+
+#icon {
+    float: left;
+    position: relative;
+    width: 20px;
+    height: 20px;
+    top: 10px;
+    background-color: red;
+}
+
+</style>
+
+<script>
+
+var initialPos = document.getElementById("icon").getBoundingClientRect().y
+
+window.setInterval(function() {
+    tt.textContent = tt.textContent + "0"
+    var now = document.getElementById("icon").getBoundingClientRect().y
+    console.log(initialPos)
+    console.log(now)
+    testAssert(initialPos == now)
+    if (tt.textContent.length > 5)
+        testEnd();
+
+}, 100);
+
+</script>

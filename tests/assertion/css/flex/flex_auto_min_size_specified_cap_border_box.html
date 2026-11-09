@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">
+  <style>
+    /* CSS Flexbox 4.5 automatic minimum size -- specified size suggestion cap,
+       box-sizing:border-box variant.
+
+       Same trigger as flex_auto_min_size_specified_cap.html (column flex
+       container, indefinite main size, an item whose definite main size is
+       smaller than its content), but #capped is border-box with padding. The
+       specified size suggestion must therefore be converted from its
+       border-box value to a content size (subtracting padding+border) before
+       it caps the content-based minimum.
+
+       #capped: border-box, height:30px, padding:5px -> content height 20px,
+       border-box height 30px. Content is 100px tall. The cap must clamp the
+       content-based minimum to the 20px content size, keeping #capped at a
+       30px border-box height and #sibling directly below it.
+
+       Fail modes this guards:
+        - no cap: #capped over-expands to 100px content -> 110px border-box.
+        - cap present but border/padding not recomputed at cap time (treated as
+          0 in the box-sizing conversion): clamps to 30px content -> 40px
+          border-box. (The flex base-size pass restores border/padding to their
+          pre-call state, so the cap must recompute them.)
+
+       Oracle: #capped equals a 30px border-box; #natural (identical box laid
+       out unconstrained) is taller, proving the cap is non-vacuous. */
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100px;
+        /* no height -> indefinite main size (the trigger) */
+    }
+    #capped {
+        box-sizing: border-box;
+        height: 30px;            /* border-box; content height is 20px */
+        padding: 5px;
+        background: blue;
+    }
+    #sibling { height: 20px; background: green; }
+    .tall { height: 100px; }     /* content taller than #capped */
+
+    /* Unconstrained oracle: the same border-box item with height:auto. */
+    #natural { box-sizing: border-box; width: 100px; padding: 5px; }
+  </style>
+ </head>
+ <body>
+   <div class="container">
+     <div id="capped"><div class="tall"></div></div>
+     <div id="sibling"></div>
+   </div>
+
+   <div id="natural"><div class="tall"></div></div>
+<script>
+   function rect(id) { return document.getElementById(id).getBoundingClientRect(); }
+   function h(id) { return rect(id).height; }
+   function near(a, b) { return Math.abs(a - b) <= 1; }
+
+   // Non-vacuous: unconstrained, the same box is far taller than 30px.
+   testAssert(h("natural") > 30);
+
+   // The cap holds and honors box-sizing: #capped stays a 30px border-box
+   // (20px content + 10px padding), not 110px (no cap) and not 40px (padding
+   // dropped during the box-sizing conversion).
+   testAssert(near(h("capped"), 30));
+
+   // The sibling sits directly below the (un-expanded) capped item.
+   testAssert(rect("sibling").top >= rect("capped").bottom - 1);
+   testAssert(near(rect("sibling").top, rect("capped").bottom));
+
+   testEnd();
+</script>
+</body>
+</html>

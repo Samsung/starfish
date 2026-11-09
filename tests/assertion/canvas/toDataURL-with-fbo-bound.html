@@ -1,0 +1,53 @@
+<canvas id="gl" width="50" height="50"></canvas>
+<canvas id="c2d" width="50" height="50"></canvas>
+<script>
+    // The toDataURL() method must capture the drawing buffer even while
+    // an application framebuffer is bound, and it must leave the GL
+    // read framebuffer binding untouched.
+    window.onload = function () {
+        var glCanvas = document.getElementById("gl");
+        var gl = glCanvas.getContext("webgl");
+        testAssert(gl != null);
+
+        // Drawing buffer = red.
+        gl.clearColor(1, 0, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        // Application FBO = green, kept bound across toDataURL().
+        var fbo = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        var rb = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
+        gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA4, 50, 50);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                                   gl.RENDERBUFFER, rb);
+        gl.clearColor(0, 1, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        var pix = new Uint8Array(4);
+        gl.readPixels(25, 25, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pix);
+        testAssert(pix[1] > 200 && pix[0] < 50);
+
+        var url = glCanvas.toDataURL();
+
+        // The read binding must be restored: readPixels still sees the
+        // green FBO, not the drawing buffer.
+        gl.readPixels(25, 25, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pix);
+        testAssert(pix[1] > 200 && pix[0] < 50);
+        testAssert(gl.getError() == gl.NO_ERROR);
+
+        var img = new Image();
+        img.onload = function () {
+            var ctx = document.getElementById("c2d").getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            var d = ctx.getImageData(25, 25, 1, 1).data;
+            // The image holds the red drawing buffer, not the green FBO.
+            testAssert(d[0] > 200 && d[1] < 50);
+            testEnd();
+        };
+        img.onerror = function () {
+            testAssert(false);
+        };
+        img.src = url;
+    }
+</script>

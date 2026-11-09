@@ -133,17 +133,15 @@ jobs:
       # cloning the actual submodule remotes directly: escargot/googletest/
       # wpt are plain public github.com, but everything else is
       # git@github.sec.samsung.net over SSH, which needs the same deploy key
-      # setup as x64_test.yml/x64_test_clang.yml/push_ci.yml/
-      # wpt_status_nightly.yml use on this same pool -- see the "Setup
-      # deploy key" step below.
+      # setup as push_ci.yml/wpt_status_nightly.yml use on this same pool --
+      # see the "Setup deploy key" step below.
 
       # Only exercised on a cache miss (cache_starfish_thirdparty.sh's SSH
       # clones of the git@github.sec.samsung.net submodule remotes), but
       # cheap enough to always set up rather than gate on the cache lookup.
       # ssh resolves ~/.ssh from the passwd home (root -> /root), not $HOME
       # (the runner sets HOME=/github/home); write the key where ssh looks.
-      # Same key/pattern as x64_test.yml/x64_test_clang.yml/push_ci.yml/
-      # wpt_status_nightly.yml.
+      # Same key/pattern as push_ci.yml/wpt_status_nightly.yml.
       - name: Setup deploy key
         env:
           DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_SSH_KEY }}
@@ -170,8 +168,8 @@ jobs:
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
 
       # Every job downstream of this one that still runs on a reused-
-      # workspace self-hosted pool (test_clang_reftest_all, test_reftest_all,
-      # android.yml's build_android) used to run its own CODE-Actions/
+      # workspace self-hosted pool (android.yml's build_android) used to run
+      # its own CODE-Actions/
       # checkout -- but checkout's own internal auth-setup step runs `git
       # submodule foreach --recursive` unconditionally, regardless of
       # `submodules: false`, and a workspace whose local HEAD is stuck on an
@@ -187,27 +185,17 @@ jobs:
       # has nothing to run against there any more. `git archive` only walks
       # files tracked by THIS repo's own index -- a submodule (mode 160000)
       # entry has no blob, so archive silently skips it rather than
-      # recursing in, meaning this is naturally tiny regardless of
-      # third_party's own size and needs no exclude list.
-      #
-      # The one thing archive can't carry is a submodule's pinned commit --
-      # test/ is the only submodule any of those consumer jobs still fetch
-      # for themselves (see the "Checkout Testcase.." steps in x64_test.yml/
-      # x64_test_clang.yml), so record its pin here too, for them to `git
-      # clone` directly instead of going through `git submodule` (which
-      # needs a real superproject .git this artifact deliberately doesn't
-      # carry).
+      # recursing in, meaning third_party's own size never reaches it and it
+      # needs no exclude list.
       - name: Publish this checkout as a source artifact
         run: |
           git archive --format=tar.gz -o starfish-source.tar.gz HEAD
-          git rev-parse HEAD:test > test.pin.sha
 
       - uses: CODE-Actions/upload-artifact@v2
         with:
           name: starfish-source
           path: |
             starfish-source.tar.gz
-            test.pin.sha
 
   x64_test:
     needs: [ prepare_source ]

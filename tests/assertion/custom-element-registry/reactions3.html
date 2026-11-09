@@ -1,0 +1,52 @@
+<body>
+</body>
+<script>
+  if(!console.assert) {
+      console.assert = testAssert.bind(this)
+  }
+  "use strict";
+
+  var result=""
+
+  class MyCustomElement extends HTMLElement {
+    static observedAttributes = ["size"];
+
+    constructor() {
+      super();
+      console.log("ctor");
+      result += "ctor"
+    }
+
+    connectedCallback()
+    {
+      console.log("connected");
+      result += "connected"
+      this.setAttribute("size", 0);
+      console.log("connected will end");
+      result += "connected will end"
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+      console.log(
+        `Attribute ${name} has changed from ${oldValue} to ${newValue}.`,
+      );
+      result +=  `Attribute ${name} has changed from ${oldValue} to ${newValue}.`
+     if (newValue < 5)
+       this.setAttribute("size", (newValue - 0) + 1);
+    }
+  }
+
+  var e = document.createElement("my-custom-element");
+  document.body.appendChild(e)
+  e.setAttribute("size", "3");
+  customElements.define("my-custom-element", MyCustomElement);
+
+  console.log("testEnd")
+  result += "testEnd"
+
+console.assert(result == "ctorAttribute size has changed from null to 3.connectedAttribute size has changed from 3 to 4.Attribute size has changed from 4 to 0.Attribute size has changed from 0 to 5.Attribute size has changed from 5 to 1.Attribute size has changed from 1 to 2.Attribute size has changed from 2 to 3.Attribute size has changed from 3 to 4.Attribute size has changed from 4 to 5.connected will endtestEnd")
+
+  testEnd();
+
+</script>
+
