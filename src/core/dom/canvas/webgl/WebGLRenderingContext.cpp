@@ -8994,6 +8994,83 @@ void WebGLRenderingContext::zeroTextureLevel(GLenum target, GLint level,
     }
 }
 
+// New texture storage reads as zero too, and for a compressed format zero
+// means zero compressed data: an ASTC decoder shows such blocks as its error
+// color. texStorage2D/3D leaves the contents to the GL, which may hand out
+// anything, so every level of every layer or face gets zero blocks, a bounded
+// chunk of block rows at a time as above.
+void WebGLRenderingContext::zeroCompressedTextureStorage(
+    GLenum target, GLsizei levels, GLenum internalformat, GLsizei width,
+    GLsizei height, GLsizei depth)
+{
+    const Optional<CompressedFormatInfo> info =
+        Pixel::compressedFormatInfo(internalformat);
+    if (!info || levels <= 0 || width <= 0 || height <= 0 || depth <= 0) {
+        return;
+    }
+    const uint8_t blockWidth = info.value().blockWidth;
+    const uint8_t blockHeight = info.value().blockHeight;
+    const auto blocks = [](GLsizei size, uint8_t block) -> size_t {
+        return (static_cast<size_t>(size) + block - 1) / block;
+    };
+    // Level 0 has the widest rows; the other levels reuse its buffer.
+    const size_t rowBytes =
+        blocks(width, blockWidth) * info.value().bytesPerBlock;
+    const size_t rowsPerChunk = std::max<size_t>(1, (64 * 1024) / rowBytes);
+    const std::vector<uint8_t> zeros(
+        std::min(rowsPerChunk, blocks(height, blockHeight)) * rowBytes);
+    ScopedTightUnpackState unpackState(m_gl, isWebGL2RenderingContext());
+    GLint unpackBuffer = 0;
+    if (isWebGL2RenderingContext()) {
+        m_gl->getIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &unpackBuffer);
+        if (unpackBuffer) {
+            m_gl->bindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+        }
+    }
+    const bool is3D = target == GL_TEXTURE_3D || target == GL_TEXTURE_2D_ARRAY;
+    for (GLsizei level = 0; level < levels; level++) {
+        const GLsizei levelWidth = std::max(1, width >> level);
+        const GLsizei levelHeight = std::max(1, height >> level);
+        // A 2D array keeps its layers down the chain; a 3D texture halves.
+        const GLsizei levelDepth =
+            target == GL_TEXTURE_3D ? std::max(1, depth >> level) : depth;
+        const size_t levelRowBytes =
+            blocks(levelWidth, blockWidth) * info.value().bytesPerBlock;
+        const size_t blockRows = blocks(levelHeight, blockHeight);
+        const size_t levelRowsPerChunk = zeros.size() / levelRowBytes;
+        for (size_t row = 0; row < blockRows; row += levelRowsPerChunk) {
+            const size_t rows = std::min(levelRowsPerChunk, blockRows - row);
+            const GLint y = static_cast<GLint>(row * blockHeight);
+            // The last chunk may stop short of a whole block row.
+            const GLsizei rowsHeight = static_cast<GLsizei>(
+                std::min<size_t>(rows * blockHeight, levelHeight - y));
+            const GLsizei imageSize =
+                static_cast<GLsizei>(rows * levelRowBytes);
+            if (is3D) {
+                for (GLsizei z = 0; z < levelDepth; z++) {
+                    m_gl->compressedTexSubImage3D(
+                        target, level, 0, y, z, levelWidth, rowsHeight, 1,
+                        internalformat, imageSize, zeros.data());
+                }
+            } else if (target == GL_TEXTURE_CUBE_MAP) {
+                for (GLenum face = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+                     face <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z; face++) {
+                    m_gl->compressedTexSubImage2D(face, level, 0, y, levelWidth,
+                                                  rowsHeight, internalformat,
+                                                  imageSize, zeros.data());
+                }
+            } else {
+                m_gl->compressedTexSubImage2D(target, level, 0, y, levelWidth,
+                                              rowsHeight, internalformat,
+                                              imageSize, zeros.data());
+            }
+        }
+    }
+    if (unpackBuffer) {
+        m_gl->bindBuffer(GL_PIXEL_UNPACK_BUFFER, unpackBuffer);
+    }
+}
+
 void WebGLRenderingContext::handleTexImageWithArrayBufferView(
     GLenum target, GLint level, GLsizei width, GLsizei height, GLsizei depth,
     GLenum format, GLenum type, Optional<ScriptArrayBufferView> pixels,

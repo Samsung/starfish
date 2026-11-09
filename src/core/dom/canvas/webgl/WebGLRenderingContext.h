@@ -451,6 +451,9 @@ protected:
     void zeroTextureLevel(GLenum target, GLint level, GLsizei width,
                           GLsizei height, GLsizei depth, GLenum format,
                           GLenum type);
+    void zeroCompressedTextureStorage(GLenum target, GLsizei levels,
+                                      GLenum internalformat, GLsizei width,
+                                      GLsizei height, GLsizei depth);
     // A destWidth and destHeight of 0 upload the whole source.
     void handleTexImageWithImageSource(
         const GLenum target, const GLenum format, const GLenum type,
