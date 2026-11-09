@@ -60,7 +60,7 @@ symlinks. Both test jobs depend on this build and use
 | Job | Runner | Suite | Parallel tests | llvmpipe threads per process |
 |---|---|---|---|---|
 | `test_khronos_webgl` | Company (`code-linux`, `code-2xlarge`) | `khronos_conformance_test` | 8 | 4 |
-| `test_khronos_deqp` | Self-hosted Linux (`self-hosted`, `linux`) | `khronos_deqp_test` | 26 | 2 |
+| `test_khronos_deqp` | Self-hosted Linux (`self-hosted`, `linux`) | `khronos_deqp_test` | 52 | 2 |
 
 Both test jobs have a 60-minute budget. The dEQP job forces software Mesa
 with `LIBGL_ALWAYS_SOFTWARE=1` and `GALLIUM_DRIVER=llvmpipe`.
@@ -72,7 +72,7 @@ Use `-f` to include known failures in either partition. Run locally with:
 ```sh
 xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py khronos_conformance_test
 LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe LP_NUM_THREADS=2 \
-  xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py khronos_deqp_test --khronos-jobs 26
+  xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py khronos_deqp_test --khronos-jobs 52
 ```
 
 Clang (`uv_cairo_gl`) reuses the `starfish-x64_clang_debug` artifact from
