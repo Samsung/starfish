@@ -294,6 +294,11 @@ SocketLWSData::SocketLWSData(const char* buf, size_t size,
     memcpy(((char*)m_buffer) + LWS_PRE, buf, size);
 }
 
+// Defined in platform/network/http/HTTPTransaction.cpp: the rule curl follows
+// for skipping certificate verification. Forward declared, as CDPDispatcher
+// does, to keep the curl header chain out of this file.
+bool shouldIgnoreSSLVerify();
+
 SocketLWS::SocketLWS(WebSocket* socket)
     : m_needsToClose(false)
     , m_workerStarted(false)
@@ -360,8 +365,9 @@ SocketLWS::SocketLWS(WebSocket* socket)
 
     if (!strcmp(prot, "https") || !strcmp(prot, "wss")) {
         // Verify the chain against client_ssl_ca_filepath and match the
-        // hostname. Relaxing either of these is only acceptable when web
-        // security has been explicitly turned off, which is handled below.
+        // hostname. Relaxing either of these is only acceptable where curl
+        // skips verification too (shouldIgnoreSSLVerify) or when web security
+        // has been explicitly turned off, both handled below.
         useSSL = LCCSCF_USE_SSL;
     }
 
@@ -393,7 +399,8 @@ SocketLWS::SocketLWS(WebSocket* socket)
             SocketLWSDefaultCertPath;
     }
     if (useSSL &&
-        webBase->getWebSecurityMode() == LWE::WebSecurityMode::Disable) {
+        (shouldIgnoreSSLVerify() ||
+         webBase->getWebSecurityMode() == LWE::WebSecurityMode::Disable)) {
         // On Windows (libwebsockets built with LWS_WITH_SCHANNEL) only
         // LCCSCF_ALLOW_SELFSIGNED is actually honored by the schannel TLS
         // backend -- LCCSCF_ALLOW_EXPIRED/_SKIP_SERVER_CERT_HOSTNAME_CHECK/

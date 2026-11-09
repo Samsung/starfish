@@ -46,6 +46,16 @@ bool globalIgnoreSSLVerify()
     return s_globalIgnoreSSLVerify.load();
 }
 
+bool shouldIgnoreSSLVerify()
+{
+#if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
+    return true;
+#else
+    const char* ignore = getenv("IGNORE_SSL_VERIFY");
+    return (ignore && strlen(ignore)) || s_globalIgnoreSSLVerify.load();
+#endif
+}
+
 HTTPTransaction::HTTPTransaction(CurlMultiRequestData* curlMultiRequestData)
     : m_httpRequest()
     , m_timeout(0)
@@ -70,19 +80,8 @@ HTTPTransaction::HTTPTransaction(CurlMultiRequestData* curlMultiRequestData)
 #ifdef STARFISH_ENABLE_TEST
     , m_enableLog(false)
 #endif
-#if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
-    , m_ignoreSSLVerify(true)
-#else
-    , m_ignoreSSLVerify(false)
-#endif
+    , m_ignoreSSLVerify(shouldIgnoreSSLVerify())
 {
-    if (getenv("IGNORE_SSL_VERIFY") && strlen(getenv("IGNORE_SSL_VERIFY"))) {
-        m_ignoreSSLVerify = true;
-    }
-    // Runtime override via CDP Security.setIgnoreCertificateErrors.
-    if (s_globalIgnoreSSLVerify.load()) {
-        m_ignoreSSLVerify = true;
-    }
 }
 
 HTTPTransaction::~HTTPTransaction()

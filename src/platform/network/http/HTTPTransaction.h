@@ -36,12 +36,19 @@ typedef size_t (*Callback)(void* ptr, size_t size, size_t nmemb, void* data);
 
 // Process-wide override of TLS certificate verification, toggled at runtime by
 // CDP Security.setIgnoreCertificateErrors. When set, every new HTTPTransaction
-// starts with m_ignoreSSLVerify=true regardless of the build/env defaults. Read
-// on the IO thread (transaction construction), written on the main thread
+// and every new wss: WebSocket skips verification regardless of the build/env
+// defaults. Read where those connections are created (the IO thread, and
+// the thread that runs the WebSocket's script), written on the main thread
 // (CDP); implemented with an atomic. Free functions so callers (e.g. the CDP
 // dispatcher) need not pull in the full HTTPTransaction class header chain.
 void setGlobalIgnoreSSLVerify(bool b);
 bool globalIgnoreSSLVerify();
+
+// Whether a new TLS connection skips certificate verification: always in
+// STARFISH_ENABLE_TEST and STARFISH_IGNORE_SSL_VERIFYPEER builds, otherwise
+// when IGNORE_SSL_VERIFY is set or the CDP override above is on. Shared by
+// HTTPTransaction and SocketLWS so that https: and wss: follow one rule.
+bool shouldIgnoreSSLVerify();
 
 class HTTPTransaction {
 public:
