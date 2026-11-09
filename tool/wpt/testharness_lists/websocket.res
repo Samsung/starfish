@@ -1,4 +1,5 @@
 http://web-platform.test:8000/websockets/extended-payload-length.html
+http://web-platform.test:8000/websockets/extended-payload-length.html?wss
 http://web-platform.test:8000/websockets/binary/001.html
 http://web-platform.test:8000/websockets/binary/001.html?wss
 http://web-platform.test:8000/websockets/binary/002.html
@@ -160,6 +161,7 @@ http://web-platform.test:8000/websockets/constructor/011.html?wss
 http://web-platform.test:8000/websockets/constructor/012.html
 http://web-platform.test:8000/websockets/constructor/012.html?wss
 http://web-platform.test:8000/websockets/constructor/013.html
+http://web-platform.test:8000/websockets/constructor/013.html?wss
 http://web-platform.test:8000/websockets/constructor/016.html
 http://web-platform.test:8000/websockets/constructor/016.html?wss
 http://web-platform.test:8000/websockets/constructor/017.html

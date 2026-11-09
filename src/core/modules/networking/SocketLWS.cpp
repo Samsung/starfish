@@ -387,14 +387,13 @@ SocketLWS::SocketLWS(WebSocket* socket)
     // pointer, so the context carries the back reference.
     m_lwsContextCreationInfo->user = this;
 
-    static bool sslInited = false;
-    if (!sslInited && useSSL) {
+    if (useSSL) {
+        // Every context needs this option, not only the first one in
+        // the process: libwebsockets creates a client SSL_CTX only for
+        // a context that carries it, and the library init it triggers is
+        // idempotent.
         m_lwsContextCreationInfo->options |=
             LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
-        sslInited = true;
-    }
-
-    if (useSSL) {
         m_lwsContextCreationInfo->client_ssl_ca_filepath =
             SocketLWSDefaultCertPath;
     }
