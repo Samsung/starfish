@@ -4,6 +4,7 @@ import sys
 import argparse
 
 nproc = None
+progress_interval = 0
 
 def default_result_summarizer(result):
     from basics.utils import PColors
@@ -64,7 +65,7 @@ def run_bidi_test(list, backend, font_dep, out_file=None):
 # > Internal Test
 def run_default_basic_test(list, backend, font_dep, out_file=None):
     import basics.starfish_basic_test as basictest
-    result = basictest.run_parallel(list, nproc)
+    result = basictest.run_parallel(list, nproc, progress_interval=progress_interval)
     return default_result_summarizer(result)
 
 # Default test style (pixel based)
@@ -119,7 +120,12 @@ if __name__ == "__main__":
     parser.add_argument("--font-dep", dest="font_dep", action="store_true")
     parser.add_argument("--proc", "-p", dest="proc", type=int)
     parser.add_argument("--out-file", dest="out_file")
+    parser.add_argument("--progress-interval", type=float, default=0,
+                        help="Basic-test progress interval in seconds (0 disables)")
     args = parser.parse_args()
+    if args.progress_interval < 0:
+        parser.error("--progress-interval must be nonnegative")
+    progress_interval = args.progress_interval
 
     nproc = args.proc
     if not os.path.isfile(args.list_file):

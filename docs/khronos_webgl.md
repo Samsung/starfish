@@ -60,7 +60,7 @@ symlinks. Both test jobs depend on this build and use
 | Job | Runner | Suite | Parallel tests | llvmpipe threads per process |
 |---|---|---|---|---|
 | `test_khronos_webgl` | Company (`code-linux`, `code-2xlarge`) | `khronos_conformance_test` | 8 | 4 |
-| `test_khronos_deqp` | Self-hosted Linux (`self-hosted`, `linux`) | `khronos_deqp_test` | 52 | 2 |
+| `test_khronos_deqp` | Self-hosted Linux (`self-hosted`, `linux`) | `khronos_deqp_test` | `nproc` | 1 |
 
 Both test jobs have a 60-minute budget. The dEQP job forces software Mesa
 with `LIBGL_ALWAYS_SOFTWARE=1` and `GALLIUM_DRIVER=llvmpipe`.
@@ -71,8 +71,8 @@ Use `-f` to include known failures in either partition. Run locally with:
 
 ```sh
 xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py khronos_conformance_test
-LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe LP_NUM_THREADS=2 \
-  xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py khronos_deqp_test --khronos-jobs 52
+LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe LP_NUM_THREADS=1 \
+  xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py khronos_deqp_test --khronos-jobs "$(nproc)"
 ```
 
 Clang (`uv_cairo_gl`) reuses the `starfish-x64_clang_debug` artifact from
@@ -89,6 +89,14 @@ as well, so GCC continues to cover them. Run the same subset locally with:
 ```sh
 xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py khronos_smoke_test
 ```
+
+Khronos runs print progress every 30 seconds and at completion: completed
+and total tests, percentage, pass/fail counts and elapsed seconds. Progress
+continues while slow tests are still running, and results remain in input
+order for final summaries. The basic driver exposes this through
+`--progress-interval` (seconds, default 0 disables periodic output); the
+Khronos wrapper supplies 30. The dEQP CI job uses `nproc` for the worker
+count, keeps one llvmpipe thread per process and logs CPU topology.
 
 The runner defaults to 8 parallel tests (`KHRONOS_WEBGL_JOBS`), adjustable
 with `--khronos-jobs`. Every test drives its own GL context, so tune test

@@ -158,7 +158,8 @@ def case_runner(tc):
 
 
 def run_parallel(list_file, nproc=None, width=None, height=None, regression=None,
-                 show_progress=None, tc_handler=None, result_handler=None):
+                 show_progress=None, tc_handler=None, result_handler=None,
+                 progress_interval=0):
     from . import parallel
     global __opts
     if __opts is None:
@@ -170,7 +171,8 @@ def run_parallel(list_file, nproc=None, width=None, height=None, regression=None
     __opts.set_tc_handler(tc_handler)
 
     return parallel.run_test_pool(case_runner, list_file, nproc,
-                                  result_handler=result_handler)
+                                  result_handler=result_handler,
+                                  progress_interval=progress_interval)
 
 if os.environ.get(ENVOPTS.TEST_RESULT_FILE):
     test_result_file = os.environ.get(ENVOPTS.TEST_RESULT_FILE)

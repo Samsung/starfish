@@ -683,11 +683,13 @@ against a `-DWEBGL=1` build. GCC CI builds once with
 `-DCMAKE_BUILD_TYPE=Release -DENABLE_WASM=1 -DWALRUS_JIT=ON` on the company
 runner and publishes the executable and libraries. Two test jobs reuse
 `out/webgl-ci/bin/lightweight-web-engine`: `khronos_deqp_test` runs on a
-self-hosted Linux runner with 52 parallel tests and `LP_NUM_THREADS=2`,
+self-hosted Linux runner with `nproc` parallel tests and `LP_NUM_THREADS=1`,
 forcing software Mesa llvmpipe; `khronos_conformance_test` runs the remaining
 tests on the company runner with 8 parallel tests and `LP_NUM_THREADS=4`.
 The split preserves all active tests and known-failure comments. Run either
-suite locally under `xvfb-run`; use `--khronos-jobs 52` for dEQP parallelism.
+suite locally under `xvfb-run`; use `--khronos-jobs "$(nproc)"` for dEQP
+parallelism. Khronos runs print completed/pass/fail counts and elapsed time
+every 30 seconds, including when all remaining tests are still running.
 Clang CI reuses the existing
 `starfish-x64_clang_debug` artifact and runs `khronos_smoke_test`, a 20-test
 subset covering WebGL 1, WebGL 2 and the SDK. Run it locally with

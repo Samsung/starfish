@@ -170,7 +170,8 @@ def run_vendor_test_khronos(name):
                       port=KHRONOS_PORT, silent=True,
                       inject_script=KHRONOS_INJECT_SCRIPT,
                       inject_into=KHRONOS_INJECT_INTO):
-        run_test(["basic", name, "common", f"-p{KHRONOS_WEBGL_JOBS}"], env)
+        run_test(["basic", name, "common", f"-p{KHRONOS_WEBGL_JOBS}",
+                  "--progress-interval=30"], env)
 
 
 def vendor_test_khronos():

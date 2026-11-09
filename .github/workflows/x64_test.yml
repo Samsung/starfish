@@ -453,11 +453,11 @@ jobs:
         timeout-minutes: 60
         env:
           STARFISH_BIN: ./out/webgl-ci/bin/lightweight-web-engine
-          LP_NUM_THREADS: "2"
+          LP_NUM_THREADS: "1"
           LIBGL_ALWAYS_SOFTWARE: "1"
           GALLIUM_DRIVER: llvmpipe
         run: |
-          xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py khronos_deqp_test --khronos-jobs 52 || exit 1
+          xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py khronos_deqp_test --khronos-jobs "$(nproc)" || exit 1
 
   test_wpt_serve_testharness_and_crashtest:
     needs: build_x64

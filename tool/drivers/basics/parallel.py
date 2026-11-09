@@ -4,6 +4,7 @@ import sys
 import types
 import multiprocessing
 import os
+import time
 from abc import ABC, abstractclassmethod
 from basics.constants import ENVOPTS
 
@@ -23,8 +24,52 @@ def init_worker():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
+def _run_indexed_case(args):
+    case_runner, tc = args
+    return tc[0], case_runner(tc)
+
+
+def _collect_progress(pool, case_runner, tcs, interval, timeout=0xfff):
+    results = [None] * len(tcs)
+    completed = passed = failed = 0
+    started = time.monotonic()
+    deadline = started + timeout
+
+    def report():
+        elapsed = time.monotonic() - started
+        percent = 100 * completed / len(tcs) if tcs else 100
+        print(f"Progress: {completed}/{len(tcs)} ({percent:.1f}%) "
+              f"pass={passed} fail={failed} elapsed={elapsed:.0f}s",
+              flush=True)
+
+    report()
+    next_report = started + interval
+    iterator = pool.imap_unordered(
+        _run_indexed_case, ((case_runner, tc) for tc in tcs), chunksize=1)
+    while completed < len(tcs):
+        now = time.monotonic()
+        if now >= deadline:
+            raise multiprocessing.TimeoutError
+        try:
+            index, result = iterator.next(
+                timeout=max(0, min(next_report, deadline) - now))
+        except multiprocessing.TimeoutError:
+            if time.monotonic() >= deadline:
+                raise
+        else:
+            # Custom result handlers and result files expect input order.
+            results[index] = result
+            completed += 1
+            passed += result is True
+            failed += result is False
+        if completed == len(tcs) or time.monotonic() >= next_report:
+            report()
+            next_report = time.monotonic() + interval
+    return results
+
+
 def run_test_pool(case_runner, in_path, nproc,
-                  out_path=None, result_handler=None):
+                  out_path=None, result_handler=None, progress_interval=0):
     if type(result_handler) is not types.FunctionType:
         result_handler = default_result_handler
 
@@ -77,14 +122,15 @@ def run_test_pool(case_runner, in_path, nproc,
         nproc = max_nproc
     print("Running " + str(nproc) + " jobs in parallel")
 
-    p = multiprocessing.Pool(nproc, init_worker)
-    try:
-        itr = p.map_async(case_runner, tcs, chunksize=1).get(0xfff)
-
-    except KeyboardInterrupt:
-        print("Terminate (KeyboardInterrupt)")
-        p.terminate()
-        sys.exit(1)
+    with multiprocessing.Pool(nproc, init_worker) as p:
+        try:
+            if progress_interval > 0:
+                itr = _collect_progress(p, case_runner, tcs, progress_interval)
+            else:
+                itr = p.map_async(case_runner, tcs, chunksize=1).get(0xfff)
+        except KeyboardInterrupt:
+            print("Terminate (KeyboardInterrupt)")
+            sys.exit(1)
 
     if out_path is not None:
         i = 0
