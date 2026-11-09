@@ -7970,6 +7970,26 @@ bool WebGLRenderingContext::isCompressedFormatEnabled(GLenum format)
     return info && isExtensionEnabled(info.value().extension);
 }
 
+// The LDR profile of ASTC covers two-dimensional images only. A TEXTURE_3D
+// made of compressed slices (a "sliced 3D" texture) belongs to the HDR
+// profile, so without it KHR_texture_compression_astc_hdr asks for
+// INVALID_OPERATION. The GL may still take such a texture through
+// KHR_texture_compression_astc_sliced_3d, which WebGL does not expose, so
+// the check cannot be left to the driver.
+bool WebGLRenderingContext::isCompressedFormatValidForTarget(GLenum target,
+                                                             GLenum format)
+{
+    if (target != GL_TEXTURE_3D) {
+        return true;
+    }
+    Optional<CompressedFormatInfo> info = Pixel::compressedFormatInfo(format);
+    if (!info ||
+        strcmp(info.value().extension, "WEBGL_compressed_texture_astc") != 0) {
+        return true;
+    }
+    return WebGLExtensionRegistry::instance().hasASTCHDRProfile();
+}
+
 // Checks shared by compressed uploads before any GL call. imageSize must match
 // the format's block layout exactly, which also keeps the driver from reading
 // past the end of the client data.
@@ -7997,6 +8017,14 @@ bool WebGLRenderingContext::checkCompressedTexImage(
         setGLError(GL_INVALID_ENUM,
                    StringUtils::formatString(
                        "compressed format (0x%04X) is not enabled.", format)
+                       .c_str());
+        return false;
+    }
+    if (!isCompressedFormatValidForTarget(target, format)) {
+        setGLError(GL_INVALID_OPERATION,
+                   StringUtils::formatString("compressed format (0x%04X) "
+                                             "cannot be used with TEXTURE_3D.",
+                                             format)
                        .c_str());
         return false;
     }

@@ -4531,6 +4531,15 @@ void WebGL2RenderingContext::texStorage3D(GLenum target, GLsizei levels,
         return;
     }
 
+    if (!isCompressedFormatValidForTarget(target, internalformat)) {
+        setGLError(GL_INVALID_OPERATION,
+                   StringUtils::formatString("compressed format (0x%04X) "
+                                             "cannot be used with TEXTURE_3D.",
+                                             internalformat)
+                       .c_str());
+        return;
+    }
+
     if (levels <= 0 || width <= 0 || height <= 0 || depth <= 0) {
         setGLError(GL_INVALID_VALUE, "dimensions must be greater than 0.");
         return;

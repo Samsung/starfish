@@ -577,6 +577,7 @@ protected:
     }
 
     bool isCompressedFormatEnabled(GLenum format);
+    bool isCompressedFormatValidForTarget(GLenum target, GLenum format);
     bool checkCompressedTexImage(GLenum target, bool is3D, GLenum format,
                                  GLsizei width, GLsizei height, GLsizei depth,
                                  size_t imageSize);
