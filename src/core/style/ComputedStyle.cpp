@@ -326,10 +326,10 @@ void ComputedStyle::loadFont(Node* consumer, bool respectLetterSpacing)
 {
     // font-size does not allow negative values (css-fonts-4): a calc()
     // that computes below zero is clamped to 0 when the size resolves.
-    m_inheritedStyles.m_fontSize =
-        Length(Length::Fixed,
-               std::max(0.f,
-                        m_inheritedStyles.m_fontSize.specifiedFontValue(consumer)));
+    m_inheritedStyles.m_fontSize = Length(
+        Length::Fixed,
+        std::max(0.f,
+                 m_inheritedStyles.m_fontSize.specifiedFontValue(consumer)));
     float fixedFontSize = this->fixedFontSize();
 
     char style = m_inheritedStyles.m_fontStyle;

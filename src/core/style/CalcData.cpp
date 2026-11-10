@@ -569,86 +569,86 @@ CSSTime CalcData::timeValue() const
 
 namespace {
 
-// Canonical serialization order of a calc() summation: numbers, then
-// percentages, then dimensions sorted by unit name (css-values-4,
-// "Serialization"). Each term keeps its own sign; only the display order
-// of the additive terms changes.
-int lengthUnitRank(const CSSLength& length)
-{
-    switch (length.kind()) {
-    case CSSLength::CH:
-        return 0;
-    case CSSLength::CM:
-        return 1;
-    case CSSLength::EM:
-        return 2;
-    case CSSLength::EX:
-        return 3;
-    case CSSLength::INCH:
-        return 4;
-    case CSSLength::MM:
-        return 5;
-    case CSSLength::PC:
-        return 6;
-    case CSSLength::PT:
-        return 7;
-    case CSSLength::PX:
-        return 8;
-    case CSSLength::REM:
-        return 9;
-    case CSSLength::VH:
-        return 10;
-    case CSSLength::VMAX:
-        return 11;
-    case CSSLength::VMIN:
-        return 12;
-    case CSSLength::VW:
-        return 13;
-    default:
-        return 14;
-    }
-}
-
-int termRank(CalcTerm* term)
-{
-    CalcValueType type = term->type();
-    if (type.isNumber()) {
-        return 0;
-    }
-    if (type.isPercentage()) {
-        return 100;
-    }
-    if (!type.isLength() && !type.isAngle() && !type.isTime()) {
-        // Nested calc() or unresolved type: keep at the end, stable.
-        return 300;
-    }
-
-    // The first non-number value carries the term's unit.
-    auto it = term->values().begin();
-    while (it != term->values().end() && (*it).type().isNumber()) {
-        ++it;
-    }
-    if (it == term->values().end() || (*it).type().isCalcData()) {
-        return 300;
-    }
-
-    if (type.isLength()) {
-        return 200 + lengthUnitRank((*it).lengthValue());
-    }
-    if (type.isAngle()) {
-        switch ((*it).angleValue().kind()) {
-        case CSSAngle::DEG:
-            return 200;
-        case CSSAngle::GRAD:
-            return 201;
-        case CSSAngle::RAD:
-            return 202;
+    // Canonical serialization order of a calc() summation: numbers, then
+    // percentages, then dimensions sorted by unit name (css-values-4,
+    // "Serialization"). Each term keeps its own sign; only the display order
+    // of the additive terms changes.
+    int lengthUnitRank(const CSSLength& length)
+    {
+        switch (length.kind()) {
+        case CSSLength::CH:
+            return 0;
+        case CSSLength::CM:
+            return 1;
+        case CSSLength::EM:
+            return 2;
+        case CSSLength::EX:
+            return 3;
+        case CSSLength::INCH:
+            return 4;
+        case CSSLength::MM:
+            return 5;
+        case CSSLength::PC:
+            return 6;
+        case CSSLength::PT:
+            return 7;
+        case CSSLength::PX:
+            return 8;
+        case CSSLength::REM:
+            return 9;
+        case CSSLength::VH:
+            return 10;
+        case CSSLength::VMAX:
+            return 11;
+        case CSSLength::VMIN:
+            return 12;
+        case CSSLength::VW:
+            return 13;
         default:
-            return 203; // TURN
+            return 14;
         }
     }
-    return 200 + ((*it).timeValue().kind() == CSSTime::S ? 1 : 0); // ms < s
-}
+
+    int termRank(CalcTerm* term)
+    {
+        CalcValueType type = term->type();
+        if (type.isNumber()) {
+            return 0;
+        }
+        if (type.isPercentage()) {
+            return 100;
+        }
+        if (!type.isLength() && !type.isAngle() && !type.isTime()) {
+            // Nested calc() or unresolved type: keep at the end, stable.
+            return 300;
+        }
+
+        // The first non-number value carries the term's unit.
+        auto it = term->values().begin();
+        while (it != term->values().end() && (*it).type().isNumber()) {
+            ++it;
+        }
+        if (it == term->values().end() || (*it).type().isCalcData()) {
+            return 300;
+        }
+
+        if (type.isLength()) {
+            return 200 + lengthUnitRank((*it).lengthValue());
+        }
+        if (type.isAngle()) {
+            switch ((*it).angleValue().kind()) {
+            case CSSAngle::DEG:
+                return 200;
+            case CSSAngle::GRAD:
+                return 201;
+            case CSSAngle::RAD:
+                return 202;
+            default:
+                return 203; // TURN
+            }
+        }
+        return 200 + ((*it).timeValue().kind() == CSSTime::S ? 1 : 0); // ms < s
+    }
 
 } // namespace
 
@@ -690,16 +690,22 @@ CalcTerm* mergeTermGroup(GCVector<CalcTerm*>& group)
         if (type.isNumber()) {
             sum = CalcValue(sum.numberValue() + value.numberValue(), false);
         } else if (type.isPercentage()) {
-            sum = CalcValue(sum.percentageValue() + value.percentageValue(), true);
+            sum = CalcValue(sum.percentageValue() + value.percentageValue(),
+                            true);
         } else if (type.isLength()) {
             sum = CalcValue(CSSLength(sum.lengthValue().kind(),
-                                      sum.lengthValue().value() + value.lengthValue().value()));
+                                      sum.lengthValue().value() +
+                                          value.lengthValue().value()));
         } else if (type.isTime()) {
             // the canonical time unit is seconds; toTimeValue() is ms
-            sum = CalcValue(CSSTime(CSSTime::S,
-                                    (sum.timeValue().toTimeValue() + value.timeValue().toTimeValue()) / 1000.0));
+            sum = CalcValue(
+                CSSTime(CSSTime::S, (sum.timeValue().toTimeValue() +
+                                     value.timeValue().toTimeValue()) /
+                                        1000.0));
         } else if (type.isAngle()) {
-            sum = CalcValue(CSSAngle(CSSAngle::DEG, sum.angleValue().toDegreeValue() + value.angleValue().toDegreeValue()));
+            sum = CalcValue(CSSAngle(CSSAngle::DEG,
+                                     sum.angleValue().toDegreeValue() +
+                                         value.angleValue().toDegreeValue()));
         }
         ++it;
     }
@@ -745,7 +751,8 @@ CalcTerm* canonicalizeTerm(CalcTerm* term)
     return canonical;
 }
 
-void mergeConsecutiveSameUnit(GCVector<CalcTerm*>& terms, GCVector<CalcTerm*>& merged)
+void mergeConsecutiveSameUnit(GCVector<CalcTerm*>& terms,
+                              GCVector<CalcTerm*>& merged)
 {
     auto it = terms.begin();
     while (it != terms.end()) {
@@ -824,10 +831,9 @@ String* CalcData::toString()
             argument.push_back(canonical[termIndex]);
             ++termIndex;
         }
-        std::stable_sort(argument.begin(), argument.end(),
-                         [](CalcTerm* a, CalcTerm* b) {
-                             return termRank(a) < termRank(b);
-                         });
+        std::stable_sort(
+            argument.begin(), argument.end(),
+            [](CalcTerm* a, CalcTerm* b) { return termRank(a) < termRank(b); });
         GCVector<CalcTerm*> mergedArgument;
         mergeConsecutiveSameUnit(argument, mergedArgument);
 
@@ -839,10 +845,12 @@ String* CalcData::toString()
             String* serialized = (*termIt)->toString();
             if (serialized->charAt(0) == '-') {
                 builder.appendString(String::createASCIIString("- "));
-                builder.appendString(serialized->substring(1, serialized->length() - 1));
+                builder.appendString(
+                    serialized->substring(1, serialized->length() - 1));
             } else if (serialized->charAt(0) == '+') {
                 builder.appendString(String::createASCIIString("+ "));
-                builder.appendString(serialized->substring(1, serialized->length() - 1));
+                builder.appendString(
+                    serialized->substring(1, serialized->length() - 1));
             } else {
                 builder.appendString(String::createASCIIString("+ "));
                 builder.appendString(serialized);

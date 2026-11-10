@@ -158,30 +158,26 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
         // Padding does not allow negative values (css-box-3): a calc()
         // that computes below zero is clamped to 0 at used-value time.
         if (padding->left().isSpecified() && !m_flags.m_isLeftMBPCleared) {
-            setPaddingLeft(
-                std::max(0.f,
-                         padding->left().specifiedValue(parentContentWidth, node)));
+            setPaddingLeft(std::max(
+                0.f, padding->left().specifiedValue(parentContentWidth, node)));
         } else {
             setPaddingLeft(0);
         }
         if (padding->top().isSpecified()) {
-            setPaddingTop(
-                std::max(0.f,
-                         padding->top().specifiedValue(parentContentWidth, node)));
+            setPaddingTop(std::max(
+                0.f, padding->top().specifiedValue(parentContentWidth, node)));
         } else {
             setPaddingTop(0);
         }
         if (padding->right().isSpecified() && !m_flags.m_isRightMBPCleared) {
-            setPaddingRight(
-                std::max(0.f,
-                         padding->right().specifiedValue(parentContentWidth, node)));
+            setPaddingRight(std::max(0.f, padding->right().specifiedValue(
+                                              parentContentWidth, node)));
         } else {
             setPaddingRight(0);
         }
         if (padding->bottom().isSpecified()) {
-            setPaddingBottom(
-                std::max(0.f,
-                         padding->bottom().specifiedValue(parentContentWidth, node)));
+            setPaddingBottom(std::max(0.f, padding->bottom().specifiedValue(
+                                               parentContentWidth, node)));
         } else {
             setPaddingBottom(0);
         }
