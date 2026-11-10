@@ -28,7 +28,6 @@
 #include "LWEWebView.h"
 
 #include <tizen_core_wl.h>
-#include <tizen_core_wl_internal.h>
 #include <tizen_core_imf.h>
 #include <EGL/egl.h>
 
@@ -46,9 +45,9 @@
 namespace {
 
 bool createEGLDisplay(EGLDisplay& display, EGLConfig& config,
-                      struct wl_display* wlDisplay)
+                      tizen_core_wl_native_display_h wlDisplay)
 {
-    EGLDisplay eglDisplay = eglGetDisplay(wlDisplay);
+    EGLDisplay eglDisplay = eglGetDisplay((EGLNativeDisplayType)wlDisplay);
     if (eglDisplay == EGL_NO_DISPLAY) {
         printf("Got no EGL display.\n");
         return false;
@@ -236,8 +235,8 @@ public:
             tizen_core_wl_window_set_type(
                 m_window, TIZEN_CORE_WL_WINDOW_TYPE_NOTIFICATION);
 
-            struct wl_surface* surface = nullptr;
-            tizen_core_wl_window_private_get_wl_surface(m_window, &surface);
+            tizen_core_wl_native_surface_h surface = nullptr;
+            tizen_core_wl_window_get_native_surface(m_window, &surface);
             if (tizen_core_wl_create_egl_window(m_window, width, height,
                                                 &m_eglWindow) !=
                     TIZEN_CORE_WL_ERROR_NONE ||
@@ -257,8 +256,8 @@ public:
             m_ownsWindow = false;
         }
 
-        struct wl_display* wlDisplay = nullptr;
-        tizen_core_wl_display_private_get_wl_display(m_display, &wlDisplay);
+        tizen_core_wl_native_display_h wlDisplay = nullptr;
+        tizen_core_wl_display_get_native_display(m_display, &wlDisplay);
         if (!createEGLDisplay(m_eglDisplay, m_eglConfig, wlDisplay) ||
             !createEGLSurface(m_eglSurface, m_eglDisplay, m_eglConfig,
                               m_eglWindow) ||

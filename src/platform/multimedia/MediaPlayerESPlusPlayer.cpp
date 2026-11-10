@@ -401,6 +401,14 @@ bool MediaPlayerESPlusPlayer::setupOverlayDisplay()
     m_lastVideoSourceROI = { { 0.0, 0.0, 1.0, 1.0 } };
     esplusplayer_set_display_roi(m_player, 0, 0, 1, 1);
 
+#if STARFISH_TIZEN_MAJOR_VERSION >= 11
+    void* windowHandle = m_container->webView()->publicLayerUserDataMap()
+                             ["__internalLWEWebViewTcoreWaylandHandle"];
+    ret = esplusplayer_set_display(m_player, ESPLUSPLAYER_DISPLAY_TYPE_OVERLAY2,
+                                   windowHandle);
+    STARFISH_LOG_INFO("ESPP: set_display(OVERLAY2, %p) -> %d", windowHandle,
+                      ret);
+#else
     auto width = m_container->webView()->renderer()->width();
     auto height = m_container->webView()->renderer()->height();
     void* ecoreWindowHandle = m_container->webView()->publicLayerUserDataMap()
@@ -420,6 +428,7 @@ bool MediaPlayerESPlusPlayer::setupOverlayDisplay()
         STARFISH_LOG_INFO("ESPP: set_display(OVERLAY, %p) -> %d", windowHandle,
                           ret);
     }
+#endif
     if (ret != ESPLUSPLAYER_ERROR_TYPE_NONE) {
         PLAYER_LOGE("ESPP: overlay display connect failed: %s",
                     esplusplayer_get_error_string(
