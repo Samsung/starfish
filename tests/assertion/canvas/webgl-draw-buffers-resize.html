@@ -1,0 +1,93 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>The default framebuffer's draw buffer survives a resize</title>
+<canvas id="a" width="4" height="4"></canvas>
+<canvas id="b" width="4" height="4"></canvas>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0, __firstError = '';
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) {
+      __pass++;
+    } else {
+      __fail++;
+      if (!__firstError) __firstError = message;
+      __nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[webgl-draw-buffers-resize] ' + verdict);
+    document.title = verdict + (__firstError ? ': ' + __firstError : '');
+  };
+}
+
+// The default framebuffer's draw buffer (DRAW_BUFFER0: BACK or NONE, set by
+// WEBGL_draw_buffers' drawBuffersWEBGL or WebGL 2's drawBuffers) is context
+// state, which a resize keeps: only the drawing buffer is replaced
+// (WebGL 1.0 §2.2), whichever framebuffer is bound at the time.
+
+var DRAW_BUFFER0 = 0x8825;
+
+function pixel(gl) {
+  var p = new Uint8Array(4);
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, p);
+  return Array.prototype.join.call(p, ',');
+}
+
+function clearRed(gl) {
+  gl.clearColor(1, 0, 0, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+}
+
+function check(canvas, gl, drawBuffers, label) {
+  drawBuffers([gl.NONE]);
+  canvas.width = 8;
+  console.assert(gl.getParameter(DRAW_BUFFER0) === gl.NONE,
+                 label + ': NONE after a resize');
+  clearRed(gl);
+  console.assert(pixel(gl) === '0,0,0,0',
+                 label + ': NONE draws nothing after a resize, got ' +
+                 pixel(gl));
+
+  var fb = gl.createFramebuffer();
+  var tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA,
+                gl.UNSIGNED_BYTE, null);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                          gl.TEXTURE_2D, tex, 0);
+  canvas.width = 6;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  console.assert(gl.getParameter(DRAW_BUFFER0) === gl.NONE,
+                 label + ': NONE after a resize under a framebuffer object');
+  clearRed(gl);
+  console.assert(pixel(gl) === '0,0,0,0',
+                 label + ': NONE draws nothing after a resize under a ' +
+                 'framebuffer object, got ' + pixel(gl));
+
+  // Not asserted: drawing after drawBuffers([BACK]) here, which Chrome 156
+  // does not do once such a resize has happened.
+  console.assert(gl.getError() === gl.NO_ERROR, label + ': no error');
+}
+
+var canvasA = document.getElementById('a');
+var gl1 = canvasA.getContext('webgl');
+var ext = gl1 && gl1.getExtension('WEBGL_draw_buffers');
+if (ext) {
+  check(canvasA, gl1, function (buffers) { ext.drawBuffersWEBGL(buffers); },
+        'WebGL 1');
+} else {
+  console.log('WEBGL_draw_buffers is not supported: WebGL 1 not tested');
+}
+var canvasB = document.getElementById('b');
+var gl2 = canvasB.getContext('webgl2');
+if (gl2) {
+  check(canvasB, gl2, function (buffers) { gl2.drawBuffers(buffers); },
+        'WebGL 2');
+}
+testEnd();
+</script>

@@ -238,6 +238,8 @@ public:
                              GLsizei instanceCount);
     void drawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
                                WebGLintptr offset, GLsizei instanceCount);
+    // Core in WebGL 2, reached through WEBGL_draw_buffers in WebGL 1.
+    void drawBuffers(GCAtomicVector<GLenum> buffers);
     void enable(GLenum cap);
     void enableVertexAttribArray(GLuint index);
     void finish();
@@ -435,6 +437,9 @@ public:
 
 private:
     bool checkAttribOrUniformName(String* name);
+    // The color attachment points this context takes: MAX_COLOR_ATTACHMENTS in
+    // WebGL 2 and with WEBGL_draw_buffers, COLOR_ATTACHMENT0 alone otherwise.
+    GLint colorAttachmentCount();
     bool isBlendEquationEnabled(GLenum mode);
     // Frees the GL program of a deleted program that is no longer current.
     void releaseProgram(WebGLProgram* program);
@@ -485,12 +490,18 @@ private:
     // (the source as the preprocessor reads it) and, in `code`, the lines the
     // compiler surely sees as they are, with every other name and every macro
     // name as `#name` (shaderLimitationError()); false with `error` when the
-    // shader fails to compile instead.
+    // shader fails to compile instead. `writesFragColorToDrawBuffer0Only`
+    // tells whether the text writes gl_FragColor without enabling
+    // GL_EXT_draw_buffers.
     bool shaderSourceForDriver(const std::string& view, std::string& out,
-                               std::string& code, std::string& error);
+                               std::string& code, std::string& error,
+                               bool& writesFragColorToDrawBuffer0Only);
     bool isShaderExtensionEnabled(const std::string& name);
+    // `enablesDrawBuffers` follows the directive when it is for
+    // GL_EXT_draw_buffers and passes to the driver.
     void appendExtensionDirective(const std::string& view, size_t line,
-                                  size_t rest, size_t end, std::string& out);
+                                  size_t rest, size_t end, std::string& out,
+                                  bool& enablesDrawBuffers);
     bool isBoundCubeMapTexture(GLenum target);
     // The texture bound at texture unit `unit` (a number, not an enum) to
     // `target`.
@@ -509,6 +520,12 @@ private:
     // The draw's last check: INVALID_OPERATION when a texture the current
     // program samples has a sampled level attached to the draw framebuffer.
     bool validateFeedbackLoops();
+    // WEBGL_draw_buffers: without "#extension GL_EXT_draw_buffers"
+    // gl_FragColor is DRAW_BUFFER0's output alone, so a WebGL 1 draw with
+    // another draw buffer that is not NONE is INVALID_OPERATION unless
+    // colorMask writes nothing. (WebGL 2 draws such a program to DRAW_BUFFER0,
+    // see drawArrays().)
+    bool validateFragColorDrawBuffers();
     // The levels [base, last] a sampler at `unit` of `target` reads from
     // `texture`, and whether the engine's record defines every one of them.
     bool sampledLevels(const WebGLTexture* texture, GLuint unit, GLenum target,
@@ -667,6 +684,8 @@ private:
     bool m_hasPendingJobsBetweenFrames;
 
 protected:
+    // DRAW_BUFFER0 of the default framebuffer, BACK or NONE (drawBuffers()).
+    GLenum m_defaultDrawBuffer = 0x405; /* GL_BACK */
     GLErrorSet m_GLErrors;
     GLint getCurrentProgram();
     void completePendingJobs();

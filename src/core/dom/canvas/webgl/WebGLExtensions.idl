@@ -74,3 +74,11 @@ interface WEBGL_compressed_texture_etc {
     const GLenum COMPRESSED_RGBA8_ETC2_EAC = 0x9278;
     const GLenum COMPRESSED_SRGB8_ALPHA8_ETC2_EAC = 0x9279;
 };
+
+// 16. EXT_frag_depth
+[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), LegacyNoInterfaceObject]
+interface EXT_frag_depth { };
+
+// 27. EXT_shader_texture_lod
+[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), LegacyNoInterfaceObject]
+interface EXT_shader_texture_lod { };

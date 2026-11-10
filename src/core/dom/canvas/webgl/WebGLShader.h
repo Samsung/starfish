@@ -50,6 +50,17 @@ public:
     {
         return m_compileFailed;
     }
+    // Whether the source the driver last compiled writes gl_FragColor without
+    // enabling GL_EXT_draw_buffers, which makes gl_FragColor DRAW_BUFFER0's
+    // output alone (WEBGL_draw_buffers).
+    void setWritesFragColorToDrawBuffer0Only(bool writes)
+    {
+        m_writesFragColorToDrawBuffer0Only = writes;
+    }
+    bool writesFragColorToDrawBuffer0Only() const
+    {
+        return m_writesFragColorToDrawBuffer0Only;
+    }
 
     // Number of live programs this shader is attached to.
     uint32_t attachCount() const
@@ -79,6 +90,7 @@ public:
 private:
     std::string m_source;
     bool m_compileFailed = false;
+    bool m_writesFragColorToDrawBuffer0Only = false;
     uint32_t m_attachCount = 0;
     std::string m_infoLog;
 };

@@ -68,9 +68,12 @@ public:
         return GCVector<WebGLShader*>();
     }
 
-    bool usesFragColor() const
+    // The executable of the last successful link writes gl_FragColor to
+    // DRAW_BUFFER0 alone when a shader linked into it does
+    // (WebGLShader::writesFragColorToDrawBuffer0Only()).
+    bool writesFragColorToDrawBuffer0Only() const
     {
-        return m_usesFragColor;
+        return m_writesFragColorToDrawBuffer0Only;
     }
 
     bool hasActiveUniformBlocks() const
@@ -122,6 +125,9 @@ public:
     // Rebuilds the sampler table from the driver's last successful link,
     // every unit 0 (OpenGL ES 2.0 §2.10.4).
     void updateSamplers(GL* gl);
+    // Takes writesFragColorToDrawBuffer0Only() from the shaders the driver
+    // just linked.
+    void updateFragColorOutput();
 
     void setLinkFailed(bool linkFailed)
     {
@@ -171,7 +177,7 @@ private:
     WebGLShader* m_attachedShaders[2] = { nullptr, nullptr };
     GCAtomicVector<UniformBlockInfo> m_uniformBlocks;
     GCAtomicVector<SamplerInfo> m_samplers;
-    bool m_usesFragColor = false;
+    bool m_writesFragColorToDrawBuffer0Only = false;
     bool m_linkFailed = false;
     GLenum m_transformFeedbackBufferMode = 0x8C80; // GL_INTERLEAVED_ATTRIBS
     GLint m_transformFeedbackVaryingsCount = 0;

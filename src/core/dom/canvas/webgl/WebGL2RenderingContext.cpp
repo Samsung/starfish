@@ -164,15 +164,12 @@ void WebGL2RenderingContext::onResize()
 {
     WebGLRenderingContext::onResize();
 
-    // The new default framebuffer starts with GL's initial read and draw
-    // buffers, but a NONE the page set on the default framebuffer must stay.
+    // The new default framebuffer starts with GL's initial read buffer, but a
+    // NONE the page set on the default framebuffer must stay (the draw buffer
+    // is WebGLRenderingContext::onResize()'s).
     GLContextScope contextScope(m_context);
     if (!m_readFramebuffer && m_defaultReadBuffer == GL_NONE) {
         gl()->readBuffer(GL_NONE);
-    }
-    if (!m_drawFramebuffer && m_defaultDrawBuffer == GL_NONE) {
-        const GLenum none = GL_NONE;
-        gl()->drawBuffers(1, &none);
     }
 }
 
@@ -448,40 +445,6 @@ Optional<ScriptValue> WebGL2RenderingContext::getParameterImpl(GLenum pname)
         std::vector<GLint> values(1);
         gl()->getIntegerv(pname, &values[0]);
         return createScriptValue(values[0]);
-    }
-    case GL_DRAW_BUFFER0:
-    case GL_DRAW_BUFFER1:
-    case GL_DRAW_BUFFER2:
-    case GL_DRAW_BUFFER3:
-    case GL_DRAW_BUFFER4:
-    case GL_DRAW_BUFFER5:
-    case GL_DRAW_BUFFER6:
-    case GL_DRAW_BUFFER7:
-    case GL_DRAW_BUFFER8:
-    case GL_DRAW_BUFFER9:
-    case GL_DRAW_BUFFER10:
-    case GL_DRAW_BUFFER11:
-    case GL_DRAW_BUFFER12:
-    case GL_DRAW_BUFFER13:
-    case GL_DRAW_BUFFER14:
-    case GL_DRAW_BUFFER15: {
-        size_t index = pname - GL_DRAW_BUFFER0;
-        if (isDefaultFramebufferBound()) {
-            if (index == 0) {
-                return createScriptValue(
-                    static_cast<uint32_t>(m_defaultDrawBuffer));
-            }
-            return createScriptValue(static_cast<uint32_t>(GL_NONE));
-        }
-        Optional<WebGLFramebuffer*> maybeFb = getState()->webGLFramebuffer();
-        if (maybeFb.hasValue() && maybeFb.value()) {
-            WebGLFramebuffer* fb = maybeFb.value();
-            if (index < fb->drawBufferCount()) {
-                return createScriptValue(
-                    static_cast<uint32_t>(fb->drawBuffers()[index]));
-            }
-        }
-        return createScriptValue(static_cast<uint32_t>(GL_NONE));
     }
     case GL_READ_BUFFER: {
         if (!m_readFramebuffer) {
@@ -4011,69 +3974,6 @@ void WebGL2RenderingContext::readBuffer(GLenum src)
     }
 
     setGLError(GL_INVALID_ENUM);
-}
-
-void WebGL2RenderingContext::drawBuffers(GCAtomicVector<GLenum> buffers)
-{
-    ENTER_CONTEXT_SCOPE();
-    GLint maxDrawBuffers = 0;
-    gl()->getIntegerv(GL_MAX_DRAW_BUFFERS, &maxDrawBuffers);
-    if (buffers.size() > static_cast<size_t>(maxDrawBuffers)) {
-        setGLError(GL_INVALID_VALUE,
-                   "buffers length exceeds MAX_DRAW_BUFFERS.");
-        return;
-    }
-
-    // OpenGL ES 3.0.6 §4.2.1: a value outside NONE, BACK and the
-    // COLOR_ATTACHMENTi of table 4.3 is INVALID_ENUM, ahead of the checks
-    // against the bound framebuffer.
-    GLint maxColorAttachments = 0;
-    gl()->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
-    for (size_t i = 0; i < buffers.size(); ++i) {
-        const GLenum buffer = buffers[i];
-        if (buffer != GL_NONE && buffer != GL_BACK &&
-            (buffer < GL_COLOR_ATTACHMENT0 ||
-             buffer >= GL_COLOR_ATTACHMENT0 +
-                           static_cast<GLenum>(maxColorAttachments))) {
-            setGLError(GL_INVALID_ENUM, "not NONE, BACK or COLOR_ATTACHMENTi");
-            return;
-        }
-    }
-
-    if (isDefaultFramebufferBound()) {
-        if (buffers.size() != 1 ||
-            (buffers[0] != GL_NONE && buffers[0] != GL_BACK)) {
-            setGLError(GL_INVALID_OPERATION,
-                       "the default framebuffer takes [BACK] or [NONE]");
-            return;
-        }
-        m_defaultDrawBuffer = buffers[0];
-        // The WebGL default framebuffer is emulated with m_framebufferTexture's
-        // FBO, so GL_BACK is not a name GL accepts here -- the driver wants
-        // COLOR_ATTACHMENTi or NONE and rejects anything else. Translate, the
-        // same way bindFramebuffer() and readBuffer() already do.
-        const GLenum drawBuffer =
-            buffers[0] == GL_BACK ? GL_COLOR_ATTACHMENT0 : GL_NONE;
-        gl()->drawBuffers(1, &drawBuffer);
-        return;
-    }
-
-    for (size_t i = 0; i < buffers.size(); ++i) {
-        if (buffers[i] != GL_NONE &&
-            buffers[i] != static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + i)) {
-            setGLError(GL_INVALID_OPERATION,
-                       "buffers[i] must be NONE or COLOR_ATTACHMENTi");
-            return;
-        }
-    }
-
-    gl()->drawBuffers(buffers.size(), buffers.data());
-
-    Optional<WebGLFramebuffer*> maybeFb =
-        getBoundFramebuffer(GL_DRAW_FRAMEBUFFER);
-    if (maybeFb.hasValue() && maybeFb.value()) {
-        maybeFb.value()->setDrawBuffers(buffers);
-    }
 }
 
 // OpenGL ES 3.0.6 §4.2.3: drawbuffer is a draw buffer for COLOR and 0 for

@@ -435,6 +435,14 @@ void WebGLRenderingContext::onResize()
     // bindings must survive it (WebGL 1.0 §2.2), but the default framebuffer
     // has a new GL name, so rebind what each target refers to.
     GLContextScope contextScope(m_context);
+    // The new drawing buffer's framebuffer starts with GL's initial draw
+    // buffer; a NONE the page set on the default framebuffer is context state
+    // and stays, whichever framebuffer is bound now.
+    if (m_defaultDrawBuffer == GL_NONE) {
+        const GLenum none = GL_NONE;
+        m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER, m_framebufferTexture->fbo());
+        m_gl->drawBuffers(1, &none);
+    }
     for (GLenum target : { GL_READ_FRAMEBUFFER, GL_DRAW_FRAMEBUFFER }) {
         Optional<WebGLFramebuffer*> framebuffer = getBoundFramebuffer(target);
         m_gl->bindFramebuffer(target, framebuffer
@@ -1506,7 +1514,8 @@ static bool isExtensionMacroName(const std::string& name)
 void WebGLRenderingContext::appendExtensionDirective(const std::string& view,
                                                      size_t line, size_t rest,
                                                      size_t end,
-                                                     std::string& out)
+                                                     std::string& out,
+                                                     bool& enablesDrawBuffers)
 {
     auto skipSpaces = [&view, end](size_t i) {
         while (i < end && (view[i] == ' ' || view[i] == '\t' ||
@@ -1531,6 +1540,9 @@ void WebGLRenderingContext::appendExtensionDirective(const std::string& view,
         // driver reports every other behavior that is an error for `all`.
         if (behavior != "warn" || i != end) {
             out.append(view, line, end - line);
+            if (behavior == "disable") {
+                enablesDrawBuffers = false;
+            }
         } else {
             // A dropped line keeps one space so the line breaks on its two
             // sides cannot fuse into one (line numbers stay).
@@ -1544,6 +1556,10 @@ void WebGLRenderingContext::appendExtensionDirective(const std::string& view,
         out += "#error malformed #extension directive";
     } else if (isShaderExtensionEnabled(name)) {
         out.append(view, line, end - line);
+        // GLSL ES 1.00 §3.4: the last directive for an extension decides.
+        if (name == "GL_EXT_draw_buffers") {
+            enablesDrawBuffers = behavior != "disable";
+        }
     } else if (behavior == "require") {
         out += "#error extension " + name + " is not supported";
     } else {
@@ -1876,14 +1892,20 @@ static bool isNonZeroConstantIndex(const std::string& text, size_t i,
 // extensions the context did not enable hidden, and their #extension
 // directives replaced. Every identifier is checked, as the driver sees them
 // all: a macro expansion makes no new one, as token pasting fails here.
-bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
-                                                  std::string& out,
-                                                  std::string& code,
-                                                  std::string& error)
+bool WebGLRenderingContext::shaderSourceForDriver(
+    const std::string& view, std::string& out, std::string& code,
+    std::string& error, bool& writesFragColorToDrawBuffer0Only)
 {
     static const char kSpaces[] = " \t\v\f";
     const bool hidesMaxDrawBuffers =
         webGLVersion() == 1 && !isShaderExtensionEnabled("GL_EXT_draw_buffers");
+    const bool allowsFragDepthEXT =
+        isShaderExtensionEnabled("GL_EXT_frag_depth");
+    // shortcut: gl_FragColor in an #if group the preprocessor drops still
+    // counts as written, and a directive in one still counts; evaluate #if to
+    // tell.
+    bool usesFragColor = false;
+    bool enablesDrawBuffers = false;
     const bool essl3 = webGLVersion() >= 2 && isESSL3Source(view);
     // GLSL ES 1.00 has one gl_FragData element without draw buffers: §7.4 in
     // WebGL 1, WebGL 2.0 "GLSL ES 1.00 Fragment Shader Output" in WebGL 2.
@@ -1922,7 +1944,8 @@ bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
         }
 
         if (directive == "extension") {
-            appendExtensionDirective(view, line, afterDirective, end, out);
+            appendExtensionDirective(view, line, afterDirective, end, out,
+                                     enablesDrawBuffers);
         } else if (directive == "line" &&
                    appendLineDirective(view, afterDirective, end, out)) {
             // replaced by its value
@@ -1950,10 +1973,14 @@ bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
                     continue;
                 }
                 const std::string token = view.substr(i, tokenEnd - i);
-                if (isReservedShaderName(token)) {
+                // EXT_frag_depth's built-in; the driver declares it only after
+                // the directive, so a shader without one still fails there.
+                if (isReservedShaderName(token) &&
+                    !(allowsFragDepthEXT && token == "gl_FragDepthEXT")) {
                     error = "Reserved identifier " + token;
                     return false;
                 }
+                usesFragColor |= token == "gl_FragColor";
                 // The name a #define defines keeps its spelling, so that the
                 // driver still rejects defining a reserved GL_ name.
                 const bool isDefined = isMacroName && i >= afterDirective;
@@ -2084,6 +2111,7 @@ bool WebGLRenderingContext::shaderSourceForDriver(const std::string& view,
         code += '\n';
         line = next;
     }
+    writesFragColorToDrawBuffer0Only = usesFragColor && !enablesDrawBuffers;
     return true;
 }
 
@@ -3315,7 +3343,9 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
     std::string driverSource;
     std::string code;
     std::string error;
-    if (!shaderSourceForDriver(view, driverSource, code, error)) {
+    bool writesFragColorToDrawBuffer0Only = false;
+    if (!shaderSourceForDriver(view, driverSource, code, error,
+                               writesFragColorToDrawBuffer0Only)) {
         shader->setCompileFailed(true);
         shader->setInfoLog(error);
         return;
@@ -3523,6 +3553,10 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
     const char* sourceArray[1] = { driverSource.c_str() };
     m_gl->shaderSource(shader->glObject(), 1, sourceArray, nullptr);
     m_gl->compileShader(shader->glObject());
+    // Only a fragment shader writes gl_FragColor; a vertex shader may still
+    // name it where the compiler never sees it (an unused macro, an #if 0).
+    shader->setWritesFragColorToDrawBuffer0Only(
+        !isVertex && writesFragColorToDrawBuffer0Only);
 }
 
 // A copy rectangle reaching past INT32_MAX lies outside every framebuffer;
@@ -4420,7 +4454,8 @@ void WebGLRenderingContext::drawArraysInstanced(GLenum mode, GLint first,
 
     completePendingJobs();
     if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs() ||
-        !validateStencilSettings() || !validateFeedbackLoops())
+        !validateStencilSettings() || !validateFeedbackLoops() ||
+        !validateFragColorDrawBuffers())
         return;
     const bool standIns = bindIncompleteTextureStandIns();
     m_gl->drawArraysInstanced(mode, first, count, instanceCount);
@@ -4524,7 +4559,8 @@ void WebGLRenderingContext::drawElementsInstanced(GLenum mode, GLsizei count,
 
     completePendingJobs();
     if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs() ||
-        !validateStencilSettings() || !validateFeedbackLoops())
+        !validateStencilSettings() || !validateFeedbackLoops() ||
+        !validateFragColorDrawBuffers())
         return;
     const bool standIns = bindIncompleteTextureStandIns();
     m_gl->drawElementsInstanced(
@@ -4534,6 +4570,74 @@ void WebGLRenderingContext::drawElementsInstanced(GLenum mode, GLsizei count,
         restoreSampledTextureBindings();
     }
     m_ownerHTMLCanvasElement->setNeedsComposite();
+}
+
+void WebGLRenderingContext::drawBuffers(GCAtomicVector<GLenum> buffers)
+{
+    ENTER_CONTEXT_SCOPE();
+    GLint maxDrawBuffers = 0;
+    gl()->getIntegerv(GL_MAX_DRAW_BUFFERS, &maxDrawBuffers);
+    if (buffers.size() > static_cast<size_t>(maxDrawBuffers)) {
+        setGLError(GL_INVALID_VALUE,
+                   "buffers length exceeds MAX_DRAW_BUFFERS.");
+        return;
+    }
+
+    // OpenGL ES 3.0.6 §4.2.1: a value outside NONE, BACK and the
+    // COLOR_ATTACHMENTi of table 4.3 is INVALID_ENUM, ahead of the checks
+    // against the bound framebuffer. EXT_draw_buffers, which
+    // WEBGL_draw_buffers mirrors, has no such step: the checks below make
+    // every such value INVALID_OPERATION.
+    if (isWebGL2RenderingContext()) {
+        GLint maxColorAttachments = 0;
+        gl()->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+        for (size_t i = 0; i < buffers.size(); ++i) {
+            const GLenum buffer = buffers[i];
+            if (buffer != GL_NONE && buffer != GL_BACK &&
+                (buffer < GL_COLOR_ATTACHMENT0 ||
+                 buffer >= GL_COLOR_ATTACHMENT0 +
+                               static_cast<GLenum>(maxColorAttachments))) {
+                setGLError(GL_INVALID_ENUM,
+                           "not NONE, BACK or COLOR_ATTACHMENTi");
+                return;
+            }
+        }
+    }
+
+    if (isDefaultFramebufferBound()) {
+        if (buffers.size() != 1 ||
+            (buffers[0] != GL_NONE && buffers[0] != GL_BACK)) {
+            setGLError(GL_INVALID_OPERATION,
+                       "the default framebuffer takes [BACK] or [NONE]");
+            return;
+        }
+        m_defaultDrawBuffer = buffers[0];
+        // The WebGL default framebuffer is emulated with m_framebufferTexture's
+        // FBO, so GL_BACK is not a name GL accepts here -- the driver wants
+        // COLOR_ATTACHMENTi or NONE and rejects anything else. Translate, the
+        // same way bindFramebuffer() and readBuffer() already do.
+        const GLenum drawBuffer =
+            buffers[0] == GL_BACK ? GL_COLOR_ATTACHMENT0 : GL_NONE;
+        gl()->drawBuffers(1, &drawBuffer);
+        return;
+    }
+
+    for (size_t i = 0; i < buffers.size(); ++i) {
+        if (buffers[i] != GL_NONE &&
+            buffers[i] != static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + i)) {
+            setGLError(GL_INVALID_OPERATION,
+                       "buffers[i] must be NONE or COLOR_ATTACHMENTi");
+            return;
+        }
+    }
+
+    gl()->drawBuffers(buffers.size(), buffers.data());
+
+    Optional<WebGLFramebuffer*> maybeFb =
+        getBoundFramebuffer(GL_DRAW_FRAMEBUFFER);
+    if (maybeFb.hasValue() && maybeFb.value()) {
+        maybeFb.value()->setDrawBuffers(buffers);
+    }
 }
 
 void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
@@ -4594,7 +4698,7 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
         return;
     }
 
-    if (!validateFeedbackLoops()) {
+    if (!validateFeedbackLoops() || !validateFragColorDrawBuffers()) {
         return;
     }
 
@@ -4604,7 +4708,7 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
     if (!isDefaultFramebufferBound()) {
         Optional<WebGLProgram*> maybeProg = m_state->webGLProgram();
         if (maybeProg.hasValue() && maybeProg.value() &&
-            maybeProg.value()->usesFragColor()) {
+            maybeProg.value()->writesFragColorToDrawBuffer0Only()) {
             Optional<WebGLFramebuffer*> maybeFb = m_state->webGLFramebuffer();
             if (maybeFb.hasValue() && maybeFb.value()) {
                 WebGLFramebuffer* fb = maybeFb.value();
@@ -4690,7 +4794,9 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
 
     // A draw of nothing still reports a feedback loop, as drawArrays does.
     if (count == 0) {
-        validateFeedbackLoops();
+        if (validateFeedbackLoops()) {
+            validateFragColorDrawBuffers();
+        }
         return;
     }
 
@@ -4717,7 +4823,8 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
     }
 
     if (!validateDrawCallUBO() || !validateDrawCallVertexAttribs() ||
-        !validateStencilSettings() || !validateFeedbackLoops()) {
+        !validateStencilSettings() || !validateFeedbackLoops() ||
+        !validateFragColorDrawBuffers()) {
         return;
     }
 
@@ -4727,7 +4834,7 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
     if (!isDefaultFramebufferBound()) {
         Optional<WebGLProgram*> maybeProg = m_state->webGLProgram();
         if (maybeProg.hasValue() && maybeProg.value() &&
-            maybeProg.value()->usesFragColor()) {
+            maybeProg.value()->writesFragColorToDrawBuffer0Only()) {
             Optional<WebGLFramebuffer*> maybeFb = m_state->webGLFramebuffer();
             if (maybeFb.hasValue() && maybeFb.value()) {
                 WebGLFramebuffer* fb = maybeFb.value();
@@ -4832,14 +4939,7 @@ void WebGLRenderingContext::framebufferRenderbuffer(
         return;
     }
 
-    // WebGL 1 has no WEBGL_draw_buffers: COLOR_ATTACHMENT0 is its only one.
-    GLint maxColorAttachments = 1;
-    if (isWebGL2) {
-        m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
-    }
-    if (maxColorAttachments < 1) {
-        maxColorAttachments = 1;
-    }
+    const GLint maxColorAttachments = colorAttachmentCount();
     if (attachment >= GL_COLOR_ATTACHMENT0 &&
         attachment < static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + 16)) {
         if (attachment >=
@@ -4927,14 +5027,7 @@ void WebGLRenderingContext::framebufferTexture2D(
         }
     }
 
-    // WebGL 1 has no WEBGL_draw_buffers: COLOR_ATTACHMENT0 is its only one.
-    GLint maxColorAttachments = 1;
-    if (isWebGL2) {
-        m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
-    }
-    if (maxColorAttachments < 1) {
-        maxColorAttachments = 1;
-    }
+    const GLint maxColorAttachments = colorAttachmentCount();
     if (attachment >= GL_COLOR_ATTACHMENT0 &&
         attachment < static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + 16)) {
         if (attachment >=
@@ -5349,6 +5442,58 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         GLint value = 0;
         m_gl->getIntegerv(pname, &value);
         return createScriptValue(static_cast<uint32_t>(value));
+    }
+    case GL_MAX_COLOR_ATTACHMENTS:
+    case GL_MAX_DRAW_BUFFERS: {
+        // WebGL 2 answers these before; WebGL 1 has them with
+        // WEBGL_draw_buffers.
+        if (!isExtensionEnabled("WEBGL_draw_buffers")) {
+            setGLError(GL_INVALID_ENUM);
+            return scriptNull();
+        }
+        GLint value = 0;
+        m_gl->getIntegerv(pname, &value);
+        return createScriptValue(value);
+    }
+    case GL_DRAW_BUFFER0:
+    case GL_DRAW_BUFFER1:
+    case GL_DRAW_BUFFER2:
+    case GL_DRAW_BUFFER3:
+    case GL_DRAW_BUFFER4:
+    case GL_DRAW_BUFFER5:
+    case GL_DRAW_BUFFER6:
+    case GL_DRAW_BUFFER7:
+    case GL_DRAW_BUFFER8:
+    case GL_DRAW_BUFFER9:
+    case GL_DRAW_BUFFER10:
+    case GL_DRAW_BUFFER11:
+    case GL_DRAW_BUFFER12:
+    case GL_DRAW_BUFFER13:
+    case GL_DRAW_BUFFER14:
+    case GL_DRAW_BUFFER15: {
+        // Core in WebGL 2; WebGL 1 has it with WEBGL_draw_buffers.
+        if (!isWebGL2RenderingContext() &&
+            !isExtensionEnabled("WEBGL_draw_buffers")) {
+            setGLError(GL_INVALID_ENUM);
+            return scriptNull();
+        }
+        size_t index = pname - GL_DRAW_BUFFER0;
+        if (isDefaultFramebufferBound()) {
+            if (index == 0) {
+                return createScriptValue(
+                    static_cast<uint32_t>(m_defaultDrawBuffer));
+            }
+            return createScriptValue(static_cast<uint32_t>(GL_NONE));
+        }
+        Optional<WebGLFramebuffer*> maybeFb = m_state->webGLFramebuffer();
+        if (maybeFb.hasValue() && maybeFb.value()) {
+            WebGLFramebuffer* fb = maybeFb.value();
+            if (index < fb->drawBufferCount()) {
+                return createScriptValue(
+                    static_cast<uint32_t>(fb->drawBuffers()[index]));
+            }
+        }
+        return createScriptValue(static_cast<uint32_t>(GL_NONE));
     }
     case GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT: {
         if (!isExtensionEnabled("EXT_texture_filter_anisotropic")) {
@@ -5830,14 +5975,7 @@ ScriptValue WebGLRenderingContext::getFramebufferAttachmentParameter(
         return scriptNull();
     }
 
-    // WebGL 1 has no WEBGL_draw_buffers: COLOR_ATTACHMENT0 is its only one.
-    GLint maxColorAttachments = 1;
-    if (isWebGL2) {
-        m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
-    }
-    if (maxColorAttachments < 1) {
-        maxColorAttachments = 1;
-    }
+    const GLint maxColorAttachments = colorAttachmentCount();
 
     bool isValidAttachment =
         (attachment >= GL_COLOR_ATTACHMENT0 &&
@@ -6887,6 +7025,7 @@ void WebGLRenderingContext::linkProgram(WebGLProgram* program)
     m_gl->getProgramiv(program->glObject(), GL_LINK_STATUS, &linkStatus);
     if (linkStatus == GL_TRUE) {
         program->updateSamplers(m_gl);
+        program->updateFragColorOutput();
     }
 
     program->incrementLinkCount();
@@ -10712,6 +10851,16 @@ static bool isGLSLSourceCharacter(char32_t c)
     return c >= '\t' && c <= '\r';
 }
 
+GLint WebGLRenderingContext::colorAttachmentCount()
+{
+    GLint count = 1;
+    if (isWebGL2RenderingContext() ||
+        isExtensionEnabled("WEBGL_draw_buffers")) {
+        m_gl->getIntegerv(GL_MAX_COLOR_ATTACHMENTS, &count);
+    }
+    return std::max(count, 1);
+}
+
 bool WebGLRenderingContext::checkAttribOrUniformName(String* name)
 {
     // If the passed name is longer than the restriction defined in Maximum
@@ -10931,6 +11080,36 @@ void WebGLRenderingContext::restoreSampledTextureBindings()
         m_gl->bindTexture(sampler.target, texture ? texture->glObject() : 0);
     }
     m_gl->activeTexture(m_activeTextureUnit);
+}
+
+bool WebGLRenderingContext::validateFragColorDrawBuffers()
+{
+    WebGLProgram* program = m_state->webGLProgram().valueOrNull();
+    if (webGLVersion() >= 2 || !program ||
+        !program->writesFragColorToDrawBuffer0Only()) {
+        return true;
+    }
+    WebGLFramebuffer* framebuffer =
+        getBoundFramebuffer(GL_DRAW_FRAMEBUFFER).valueOrNull();
+    if (!framebuffer) {
+        return true; // The default framebuffer has DRAW_BUFFER0 alone.
+    }
+    bool hasOtherDrawBuffer = false;
+    for (size_t i = 1; i < framebuffer->drawBufferCount(); ++i) {
+        hasOtherDrawBuffer |= framebuffer->drawBuffers()[i] != GL_NONE;
+    }
+    if (!hasOtherDrawBuffer) {
+        return true;
+    }
+    GLboolean mask[4] = { GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE };
+    m_gl->getBooleanv(GL_COLOR_WRITEMASK, mask);
+    if (!mask[0] && !mask[1] && !mask[2] && !mask[3]) {
+        return true;
+    }
+    setGLError(GL_INVALID_OPERATION,
+               "gl_FragColor without GL_EXT_draw_buffers has no output for "
+               "a draw buffer other than DRAW_BUFFER0");
+    return false;
 }
 
 bool WebGLRenderingContext::validateFeedbackLoops()
@@ -11246,16 +11425,12 @@ void WebGLRenderingContext::completePendingJobs()
     // §2.2); all of that is page state and is put back afterwards.
     clearWithDefaultState(m_framebufferTexture->fbo(), [&] {
         // drawBuffers([NONE]) on the default framebuffer is page state too.
-        GLint drawBuffer = GL_COLOR_ATTACHMENT0;
-        if (isWebGL2RenderingContext()) {
-            m_gl->getIntegerv(GL_DRAW_BUFFER0, &drawBuffer);
-        }
         const GLenum buffers[2] = { GL_COLOR_ATTACHMENT0, GL_NONE };
-        if (drawBuffer == GL_NONE) {
+        if (m_defaultDrawBuffer == GL_NONE) {
             m_gl->drawBuffers(1, &buffers[0]);
         }
         m_gl->clear(mask);
-        if (drawBuffer == GL_NONE) {
+        if (m_defaultDrawBuffer == GL_NONE) {
             m_gl->drawBuffers(1, &buffers[1]);
         }
     });

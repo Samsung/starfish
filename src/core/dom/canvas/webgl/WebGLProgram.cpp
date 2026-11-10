@@ -42,10 +42,6 @@ void WebGLProgram::addAttachedShader(WebGLShader* shader)
             }
             if (m_attachedShaders[i] == nullptr) {
                 m_attachedShaders[i] = shader;
-                if (shader->source().find("gl_FragColor") !=
-                    std::string::npos) {
-                    m_usesFragColor = true;
-                }
                 return;
             }
         }
@@ -119,6 +115,16 @@ static GLenum samplerTarget(GLenum type)
         return GL_TEXTURE_2D_ARRAY;
     default:
         return 0;
+    }
+}
+
+void WebGLProgram::updateFragColorOutput()
+{
+    m_writesFragColorToDrawBuffer0Only = false;
+    for (WebGLShader* shader : m_attachedShaders) {
+        if (shader && shader->writesFragColorToDrawBuffer0Only()) {
+            m_writesFragColorToDrawBuffer0Only = true;
+        }
     }
 }
 

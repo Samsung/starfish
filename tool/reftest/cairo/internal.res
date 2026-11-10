@@ -866,6 +866,8 @@ tests/assertion/canvas/webgl-composite-clear-keeps-state.html
 tests/assertion/canvas/webgl-teximage-contextless-canvas.html
 tests/assertion/canvas/webgl2-texture-size-limit.html
 tests/assertion/canvas/webgl2-compressed-texture-s3tc.html
+tests/assertion/canvas/webgl-draw-buffers-frag-color.html
+tests/assertion/canvas/webgl-draw-buffers-resize.html
 tests/assertion/canvas/toDataURL-nocontext.html
 tests/pixel/css/overflow/overflow-pseudo-element.html
 #tests/pixel/iframe/iframe-hittest.html

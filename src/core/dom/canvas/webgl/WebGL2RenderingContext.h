@@ -460,7 +460,6 @@ public:
                                         GLsizei height);
 
     /* Multiple Render Targets & Clear Buffers */
-    void drawBuffers(GCAtomicVector<GLenum> buffers);
     void clearBufferfv(GLenum buffer, GLint drawbuffer, Float32List values,
                        unsigned long long srcOffset = 0);
     void clearBufferiv(GLenum buffer, GLint drawbuffer, Int32List values,
@@ -687,7 +686,6 @@ private:
 
     GLenum m_currentVertexAttribType = GL_FLOAT;
     GLenum m_defaultReadBuffer = 0x405; /* GL_BACK */
-    GLenum m_defaultDrawBuffer = 0x405; /* GL_BACK */
     Optional<WebGLFramebuffer*> m_readFramebuffer;
     Optional<WebGLFramebuffer*> m_drawFramebuffer;
     bool isReadBufferNone();

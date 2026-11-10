@@ -48,7 +48,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/context/resource-sha
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/angle-instanced-arrays.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-blend-minmax.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-frag-depth.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-shader-texture-lod.html # @ignore Passed due to unsupported extension.
+# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-shader-texture-lod.html # @ignore Mesa's OpenGL ES driver has no GL_EXT_shader_texture_lod, so EXT_shader_texture_lod is not exposed and the page passes without testing it.
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-sRGB.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/ext-texture-filter-anisotropic.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/get-extension.html

@@ -1,0 +1,203 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WEBGL_draw_buffers: gl_FragColor without the directive</title>
+<canvas id="c" width="4" height="4"></canvas>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0, __firstError = '';
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) {
+      __pass++;
+    } else {
+      __fail++;
+      if (!__firstError) __firstError = message;
+      __nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[webgl-draw-buffers-frag-color] ' + verdict);
+    document.title = verdict + (__firstError ? ': ' + __firstError : '');
+  };
+}
+
+// WEBGL_draw_buffers (extension registry, rev 18): in a fragment shader
+// without "#extension GL_EXT_draw_buffers" gl_FragColor is the output of
+// DRAW_BUFFER0 only, and a draw while a draw buffer other than DRAW_BUFFER0
+// is not NONE generates INVALID_OPERATION, unless all four colorMask
+// channels are false. With the directive gl_FragColor goes to every draw
+// buffer. A program draws with the shaders of its last successful link.
+
+var VS = 'attribute vec4 p; void main() { gl_Position = p; }';
+var RED = 'precision mediump float;\n' +
+          'void main() { gl_FragColor = vec4(1, 0, 0, 1); }';
+var GREEN_EXT = '#extension GL_EXT_draw_buffers : require\n' +
+                'precision mediump float;\n' +
+                'void main() { gl_FragColor = vec4(0, 1, 0, 1); }';
+var BLUE_DISABLED = '#extension GL_EXT_draw_buffers : disable\n' +
+                    'precision mediump float;\n' +
+                    'void main() { gl_FragColor = vec4(0, 0, 1, 1); }';
+
+var gl = document.getElementById('c').getContext('webgl');
+var ext = gl && gl.getExtension('WEBGL_draw_buffers');
+if (!ext) {
+  console.log('WEBGL_draw_buffers is not supported: nothing to test');
+  testEnd();
+} else {
+  run();
+  testEnd();
+}
+
+function shader(type, source) {
+  var s = gl.createShader(type);
+  gl.shaderSource(s, source);
+  gl.compileShader(s);
+  console.assert(gl.getShaderParameter(s, gl.COMPILE_STATUS),
+                 'compiles: ' + source);
+  return s;
+}
+
+function program(fs) {
+  var p = gl.createProgram();
+  var f = shader(gl.FRAGMENT_SHADER, fs);
+  gl.attachShader(p, shader(gl.VERTEX_SHADER, VS));
+  gl.attachShader(p, f);
+  gl.bindAttribLocation(p, 0, 'p');
+  gl.linkProgram(p);
+  console.assert(gl.getProgramParameter(p, gl.LINK_STATUS), 'links: ' + fs);
+  return { program: p, fs: f };
+}
+
+function run() {
+  var A0 = ext.COLOR_ATTACHMENT0_WEBGL, A1 = ext.COLOR_ATTACHMENT1_WEBGL;
+  var textures = [gl.createTexture(), gl.createTexture()];
+  var mrt = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, mrt);
+  textures.forEach(function (t, i) {
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 4, 4, 0, gl.RGBA,
+                  gl.UNSIGNED_BYTE, null);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, A0 + i, gl.TEXTURE_2D, t, 0);
+  });
+  console.assert(gl.checkFramebufferStatus(gl.FRAMEBUFFER) ===
+                 gl.FRAMEBUFFER_COMPLETE, 'two attachments complete');
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]),
+                gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  gl.viewport(0, 0, 4, 4);
+
+  // Reads attachment i through a framebuffer of its own: WebGL 1 reads
+  // COLOR_ATTACHMENT0 only.
+  function read(i) {
+    var fb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                            gl.TEXTURE_2D, textures[i], 0);
+    var p = new Uint8Array(4);
+    gl.readPixels(1, 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, p);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, mrt);
+    gl.deleteFramebuffer(fb);
+    return Array.prototype.join.call(p, ',');
+  }
+  function clear() {
+    ext.drawBuffersWEBGL([A0, A1]);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+  }
+  function draw(p, buffers) {
+    ext.drawBuffersWEBGL(buffers);
+    gl.useProgram(p.program);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    return gl.getError();
+  }
+
+  var red = program(RED);
+  clear();
+  console.assert(draw(red, [A0, A1]) === gl.INVALID_OPERATION,
+                 'gl_FragColor, no directive, [A0, A1]: INVALID_OPERATION');
+  console.assert(read(0) === '0,0,0,0' && read(1) === '0,0,0,0',
+                 'the rejected draw draws nothing, got ' + read(0) + ' / ' +
+                 read(1));
+  console.assert(draw(red, [gl.NONE, A1]) === gl.INVALID_OPERATION,
+                 'gl_FragColor, no directive, [NONE, A1]: INVALID_OPERATION');
+  gl.colorMask(false, false, false, false);
+  console.assert(draw(red, [A0, A1]) === gl.NO_ERROR,
+                 'colorMask all false: no error');
+  gl.colorMask(false, true, false, false);
+  console.assert(draw(red, [A0, A1]) === gl.INVALID_OPERATION,
+                 'colorMask partly false: INVALID_OPERATION');
+  gl.colorMask(true, true, true, true);
+  console.assert(draw(red, [A0, gl.NONE]) === gl.NO_ERROR,
+                 'gl_FragColor, no directive, [A0, NONE]: no error');
+  console.assert(read(0) === '255,0,0,255' && read(1) === '0,0,0,0',
+                 '[A0, NONE] draws attachment 0 only, got ' + read(0) +
+                 ' / ' + read(1));
+
+  var disabled = program(BLUE_DISABLED);
+  console.assert(draw(disabled, [A0, A1]) === gl.INVALID_OPERATION,
+                 '#extension GL_EXT_draw_buffers : disable: INVALID_OPERATION');
+
+  var green = program(GREEN_EXT);
+  clear();
+  console.assert(draw(green, [A0, A1]) === gl.NO_ERROR,
+                 'with the directive: no error');
+  console.assert(read(0) === '0,255,0,255' && read(1) === '0,255,0,255',
+                 'with the directive gl_FragColor broadcasts, got ' +
+                 read(0) + ' / ' + read(1));
+
+  // The red program's shader gets the directive: nothing changes until the
+  // program is linked again, and detaching afterwards changes nothing either.
+  gl.shaderSource(red.fs, GREEN_EXT);
+  gl.compileShader(red.fs);
+  clear();
+  console.assert(draw(red, [A0, A1]) === gl.INVALID_OPERATION,
+                 'recompiled but not relinked: still INVALID_OPERATION');
+  gl.linkProgram(red.program);
+  console.assert(draw(red, [A0, A1]) === gl.NO_ERROR,
+                 'relinked with the directive: no error');
+  gl.detachShader(red.program, red.fs);
+  clear();
+  console.assert(draw(red, [A0, A1]) === gl.NO_ERROR,
+                 'detached after the link: no error');
+  console.assert(read(0) === '0,255,0,255' && read(1) === '0,255,0,255',
+                 'the relinked program broadcasts, got ' + read(0) + ' / ' +
+                 read(1));
+
+  // GLSL ES 1.00 §3.4: the last #extension directive for an extension
+  // decides, and "all : disable" disables every extension.
+  var EXT = '#extension GL_EXT_draw_buffers : ';
+  var FRAG_COLOR = 'precision mediump float;\n' +
+                   'void main() { gl_FragColor = vec4(1, 1, 0, 1); }';
+  console.assert(draw(program(EXT + 'require\n' + EXT + 'disable\n' +
+                              FRAG_COLOR), [A0, A1]) ===
+                 gl.INVALID_OPERATION,
+                 'require, then disable: INVALID_OPERATION');
+  console.assert(draw(program(EXT + 'disable\n' + EXT + 'require\n' +
+                              FRAG_COLOR), [A0, A1]) === gl.NO_ERROR,
+                 'disable, then require: no error');
+  console.assert(draw(program(EXT + 'require\n#extension all : disable\n' +
+                              FRAG_COLOR), [A0, A1]) ===
+                 gl.INVALID_OPERATION,
+                 'require, then all : disable: INVALID_OPERATION');
+
+  // The rule is about the fragment shader: a vertex shader naming
+  // gl_FragColor (here in a macro it never expands) changes nothing.
+  var vs = '#define UNUSED gl_FragColor\n' + VS;
+  var mrt = EXT + 'require\nprecision mediump float;\n' +
+            'void main() { gl_FragData[0] = vec4(1); ' +
+            'gl_FragData[1] = vec4(1); }';
+  var p = gl.createProgram();
+  gl.attachShader(p, shader(gl.VERTEX_SHADER, vs));
+  gl.attachShader(p, shader(gl.FRAGMENT_SHADER, mrt));
+  gl.bindAttribLocation(p, 0, 'p');
+  gl.linkProgram(p);
+  console.assert(draw({ program: p }, [A0, A1]) === gl.NO_ERROR,
+                 'a vertex shader naming gl_FragColor, gl_FragData with ' +
+                 'the directive: no error');
+  console.assert(gl.getError() === gl.NO_ERROR, 'no stray error');
+}
+</script>

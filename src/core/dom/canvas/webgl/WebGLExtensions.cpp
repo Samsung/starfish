@@ -34,6 +34,7 @@
 #include "core/dom/canvas/webgl/WebGLOES_VertexArrayObject.h"
 #include "core/dom/canvas/webgl/WebGLANGLE_InstancedArrays.h"
 #include "core/dom/canvas/webgl/WebGLWEBGL_CompressedTextureASTC.h"
+#include "core/dom/canvas/webgl/WebGLWEBGL_DrawBuffers.h"
 
 #include "platform/canvas/gl/IncludeGL.h"
 #include "platform/canvas/gl/GL.h"
@@ -138,7 +139,10 @@ void WebGLExtensionRegistry::initialize(GL* gl)
       (isDesktopGL && isCoreProfile3))                                         \
     V(EXT_texture_compression_s3tc, WEBGL_compressed_texture_s3tc, AnyVersion, \
       false)                                                                   \
-    V(ARB_ES3_compatibility, WEBGL_compressed_texture_etc, AnyVersion, hasETC2)
+    V(ARB_ES3_compatibility, WEBGL_compressed_texture_etc, AnyVersion,         \
+      hasETC2)                                                                 \
+    V(EXT_frag_depth, EXT_frag_depth, WebGL1Only, false)                       \
+    V(EXT_shader_texture_lod, EXT_shader_texture_lod, WebGL1Only, false)
 
 #define V(name, spec, availability, alsoSupportedWhen)                    \
     if (has(#name) || (alsoSupportedWhen)) {                              \
@@ -167,11 +171,15 @@ void WebGLExtensionRegistry::initialize(GL* gl)
         has("EXT_instanced_arrays") || has("NV_instanced_arrays") ||
         has("ARB_instanced_arrays");
 
+    // WEBGL_draw_buffers needs an OpenGL ES 3 context: drawBuffersWEBGL is
+    // GL::drawBuffers, which wraps the ES 3 entry point only.
 #define SUPPORTED_GL_EXTENSIONS(V)                            \
     V(OES_vertex_array_object, WebGL1Only, false)             \
     V(ANGLE_instanced_arrays, WebGL1Only, hasInstancedArrays) \
     V(WEBGL_compressed_texture_astc, AnyVersion,              \
-      has("KHR_texture_compression_astc_ldr"))
+      has("KHR_texture_compression_astc_ldr"))                \
+    V(WEBGL_draw_buffers, WebGL1Only,                         \
+      (isCoreProfile3 && has("EXT_draw_buffers")))
 
 #define V(name, availability, alsoSupportedWhen)                           \
     if (has(#name) || (alsoSupportedWhen)) {                               \
