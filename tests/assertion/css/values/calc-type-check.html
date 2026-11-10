@@ -44,5 +44,19 @@ target.style.paddingTop = "calc(2% + 1px)";
 console.assert(target.style.paddingTop === "calc(2% + 1px)",
   "accepted calc(2% + 1px): " + target.style.paddingTop);
 
+// <number> and <percentage> cannot be combined in calc()
+// (css-values-4 §5.6): Chrome 157 rejects these declarations, so the
+// previously set value survives
+target.style.paddingTop = "1px";
+target.style.paddingTop = "calc(1 + 100%)";
+console.assert(target.style.paddingTop === "1px",
+  "rejected calc(1 + 100%): " + target.style.paddingTop);
+target.style.paddingTop = "calc(100% + 1)";
+console.assert(target.style.paddingTop === "1px",
+  "rejected calc(100% + 1): " + target.style.paddingTop);
+target.style.paddingTop = "calc(1 + 100% + 2px)";
+console.assert(target.style.paddingTop === "1px",
+  "rejected calc(1 + 100% + 2px): " + target.style.paddingTop);
+
 testEnd();
 </script>
