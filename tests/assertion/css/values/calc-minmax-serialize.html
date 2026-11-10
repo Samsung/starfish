@@ -1,0 +1,54 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>min()/max()/clamp() serialize with their function name, comma-separated arguments in written order, and canonicalized summations inside each argument</title>
+<style>
+  #target { font-size: 20px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[calc-minmax-serialize] " + document.title);
+  };
+}
+</script>
+<div id="target"></div>
+<script>
+// css-values-4 "Serialization": min()/max()/clamp() keep their function
+// name and comma-separated arguments in written order; each argument
+// serializes as a canonical summation (sorted, same-unit terms merged).
+// Expectations cross-validated in Chrome 157.
+var target = document.getElementById("target");
+
+target.style.paddingTop = "min(2em, 3%)";
+console.assert(target.style.paddingTop === "min(2em, 3%)",
+  "min(2em, 3%): " + target.style.paddingTop);
+
+target.style.paddingTop = "max(1em, 2%)";
+console.assert(target.style.paddingTop === "max(1em, 2%)",
+  "max(1em, 2%): " + target.style.paddingTop);
+
+target.style.paddingTop = "clamp(1px, 2em, 3%)";
+console.assert(target.style.paddingTop === "clamp(1px, 2em, 3%)",
+  "clamp(1px, 2em, 3%): " + target.style.paddingTop);
+
+target.style.paddingTop = "min(1px + 2px, 3em)";
+console.assert(target.style.paddingTop === "min(3px, 3em)",
+  "min with merged argument: " + target.style.paddingTop);
+
+target.style.paddingTop = "max(1em + 2em, 3%)";
+console.assert(target.style.paddingTop === "max(3em, 3%)",
+  "max with merged argument: " + target.style.paddingTop);
+
+target.style.paddingTop = "min(3px + 1em, 2%)";
+console.assert(target.style.paddingTop === "min(1em + 3px, 2%)",
+  "min with sorted argument: " + target.style.paddingTop);
+
+testEnd();
+</script>

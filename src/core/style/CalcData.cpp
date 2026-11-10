@@ -708,71 +708,149 @@ CalcTerm* mergeTermGroup(GCVector<CalcTerm*>& group)
     return term;
 }
 
-String* CalcData::toString()
+// Absolute length units canonicalize to px inside math functions
+// (css-values-4: the canonical length unit is the px).
+CalcTerm* canonicalizeTerm(CalcTerm* term)
 {
-    StringBuilder builder;
-
-    // Sort a copy so serialization never reorders the parsed structure.
-    // Only a summation has a canonical order; min()/max()/clamp() keep
-    // their argument order.
-    GCVector<CalcTerm*> sorted(m_terms);
-    if (m_type == Type::kCalc) {
-        std::stable_sort(sorted.begin(), sorted.end(),
-                         [](CalcTerm* a, CalcTerm* b) {
-                             return termRank(a) < termRank(b);
-                         });
+    if (!isSingleValueTerm(term)) {
+        return term;
     }
+    CalcValue& value = *term->values().begin();
+    if (!value.type().isLength()) {
+        return term;
+    }
+    CSSLength length = value.lengthValue();
+    float pixels;
+    switch (length.kind()) {
+    case CSSLength::INCH:
+        pixels = length.value() * 96;
+        break;
+    case CSSLength::CM:
+        pixels = length.value() * 96 / 2.54f;
+        break;
+    case CSSLength::MM:
+        pixels = length.value() * 96 / 25.4f;
+        break;
+    case CSSLength::PT:
+        pixels = length.value() * 96 / 72.f;
+        break;
+    case CSSLength::PC:
+        pixels = length.value() * 16;
+        break;
+    default:
+        return term;
+    }
+    CalcTerm* canonical = new CalcTerm();
+    canonical->appendValue(CalcValue(CSSLength(CSSLength::PX, pixels)));
+    return canonical;
+}
 
-    // Combine consecutive terms that share a unit (css-values-4,
-    // "Serialization"): numbers, percentages and equal-unit dimensions are
-    // summed; time merges into seconds and angles into degrees. The calc()
-    // wrapper stays even when one term remains.
-    GCVector<CalcTerm*> merged;
-    auto start = sorted.begin();
-    while (start != sorted.end()) {
-        CalcTerm* first = *start;
-        auto run = start;
-        size_t groupSize = 1;
+void mergeConsecutiveSameUnit(GCVector<CalcTerm*>& terms, GCVector<CalcTerm*>& merged)
+{
+    auto it = terms.begin();
+    while (it != terms.end()) {
+        CalcTerm* first = *it;
+        auto run = it;
+        size_t runSize = 1;
         ++run;
-        while (run != sorted.end() && canMergeTerms(first, *run)) {
-            ++groupSize;
+        while (run != terms.end() && canMergeTerms(first, *run)) {
+            ++runSize;
             ++run;
         }
-        if (groupSize == 1) {
+        if (runSize == 1) {
             merged.push_back(first);
         } else {
             GCVector<CalcTerm*> group;
-            auto git = start;
-            for (size_t k = 0; k < groupSize; ++k) {
+            auto git = it;
+            for (size_t k = 0; k < runSize; ++k) {
                 group.push_back(*git);
                 ++git;
             }
             merged.push_back(mergeTermGroup(group));
         }
-        start = run;
+        it = run;
+    }
+}
+
+String* CalcData::toString()
+{
+    StringBuilder builder;
+
+    if (m_type == Type::kMin) {
+        builder.appendString(String::createASCIIString("min("));
+    } else if (m_type == Type::kMax) {
+        builder.appendString(String::createASCIIString("max("));
+    } else if (m_type == Type::kClamp) {
+        builder.appendString(String::createASCIIString("clamp("));
+    } else {
+        builder.appendString(String::createASCIIString("calc("));
     }
 
-    builder.appendString(String::createASCIIString("calc("));
-    auto it = merged.begin();
-    builder.appendString((*it)->toString());
-    it++;
-    while (it != merged.end()) {
-        builder.appendString(String::spaceString);
-        String* r = (*it)->toString();
+    // Canonicalize each term: absolute lengths resolve to px so that all
+    // absolute units share the px group.
+    GCVector<CalcTerm*> canonical;
+    for (auto termIt = m_terms.begin(); termIt != m_terms.end(); ++termIt) {
+        canonical.push_back(canonicalizeTerm(*termIt));
+    }
 
-        if (r->charAt(0) == '-') {
-            builder.appendString(String::createASCIIString("- "));
-            builder.appendString(r->substring(1, r->length() - 1));
-        } else if (r->charAt(0) == '+') {
-            builder.appendString(String::createASCIIString("+ "));
-            builder.appendString(r->substring(1, r->length() - 1));
-        } else {
-            builder.appendString(String::createASCIIString("+ "));
-            builder.appendString(r);
+    // Argument start indices in term order: a calc() summation is a single
+    // argument, min()/max() take two and clamp() three.
+    std::vector<size_t> starts;
+    for (auto boundary = m_argumentsStartPostion.begin();
+         boundary != m_argumentsStartPostion.end(); ++boundary) {
+        starts.push_back(*boundary);
+    }
+    if (starts.empty()) {
+        starts.push_back(0);
+    }
+
+    size_t termIndex = 0;
+    for (size_t argIndex = 0; argIndex < starts.size(); ++argIndex) {
+        size_t spanEnd = (argIndex + 1 < starts.size()) ? starts[argIndex + 1]
+                                                        : canonical.size();
+        if (spanEnd <= termIndex) {
+            continue;
+        }
+        if (termIndex > 0) {
+            builder.appendString(String::createASCIIString(", "));
         }
 
-        it++;
+        // Each argument serializes as a canonical summation: sorted by
+        // rank with same-unit bare terms summed (css-values-4,
+        // "Serialization"). min()/max()/clamp() arguments keep their
+        // written order.
+        GCVector<CalcTerm*> argument;
+        while (termIndex < spanEnd) {
+            argument.push_back(canonical[termIndex]);
+            ++termIndex;
+        }
+        std::stable_sort(argument.begin(), argument.end(),
+                         [](CalcTerm* a, CalcTerm* b) {
+                             return termRank(a) < termRank(b);
+                         });
+        GCVector<CalcTerm*> mergedArgument;
+        mergeConsecutiveSameUnit(argument, mergedArgument);
+
+        auto termIt = mergedArgument.begin();
+        builder.appendString((*termIt)->toString());
+        ++termIt;
+        while (termIt != mergedArgument.end()) {
+            builder.appendString(String::spaceString);
+            String* serialized = (*termIt)->toString();
+            if (serialized->charAt(0) == '-') {
+                builder.appendString(String::createASCIIString("- "));
+                builder.appendString(serialized->substring(1, serialized->length() - 1));
+            } else if (serialized->charAt(0) == '+') {
+                builder.appendString(String::createASCIIString("+ "));
+                builder.appendString(serialized->substring(1, serialized->length() - 1));
+            } else {
+                builder.appendString(String::createASCIIString("+ "));
+                builder.appendString(serialized);
+            }
+            ++termIt;
+        }
     }
+
     builder.appendChar(')');
     return builder.finalize();
 }
