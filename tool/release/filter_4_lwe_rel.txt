@@ -78,11 +78,20 @@ P /.circleci
 - /third_party/escargot/test_sqlite3_real.js
 - /third_party/escargot/test_bcrypt_real.js
 - /docker/Dockerfile.android-build
+- /third_party/gecko
+- /third_party/webkit
+- /third_party/blink
+- /tool/blink
+- /tool/webkit
+- /tool/gecko
+- /tool/wpt
+- /tests
 
 - .git
 - .gitignore
 - .gitmodules
 - .gbs.conf
+- *.yml
 - *.list
 - .clang-format
 - .circleci
