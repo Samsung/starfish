@@ -14341,7 +14341,7 @@ bool CSSStyleValuePair::updateValueUnitFontSize(const CSSTokenValue& value)
         m_value.m_fontSize = FontSizeValue::XLargeFontSizeValue;
     } else if (value.equals("xx-large")) {
         m_value.m_fontSize = FontSizeValue::XXLargeFontSizeValue;
-    } else if (value.equals("xxx-large")) {
+    } else if (value.equals("xxx-large") || value.equals("-webkit-xxx-large")) {
         m_value.m_fontSize = FontSizeValue::XXXLargeFontSizeValue;
     } else if (value.equals("larger")) {
         m_value.m_fontSize = FontSizeValue::LargerFontSizeValue;
