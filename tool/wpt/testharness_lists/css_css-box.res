@@ -72,7 +72,7 @@ http://web-platform.test:8000/css/css-box/parsing/max-width-invalid.html
 http://web-platform.test:8000/css/css-box/parsing/max-width-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-box/parsing/overflow-invalid.html
 http://web-platform.test:8000/css/css-box/parsing/overflow-valid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-box/parsing/padding-computed.html
+http://web-platform.test:8000/css/css-box/parsing/padding-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-box/parsing/padding-invalid.html
 http://web-platform.test:8000/css/css-box/parsing/padding-shorthand.html
 http://web-platform.test:8000/css/css-box/parsing/padding-valid.html

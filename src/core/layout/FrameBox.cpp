@@ -27,6 +27,7 @@
 #include "core/dom/HTMLImageElement.h"
 #include "core/style/FilterFunctions.h"
 #include "core/layout/FrameBox.h"
+#include <algorithm>
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameFlexibleBox.h"
 #include "core/layout/FrameDocument.h"
@@ -154,27 +155,33 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
     // padding
     auto padding = std::get<2>(mbp);
     if (padding) {
+        // Padding does not allow negative values (css-box-3): a calc()
+        // that computes below zero is clamped to 0 at used-value time.
         if (padding->left().isSpecified() && !m_flags.m_isLeftMBPCleared) {
             setPaddingLeft(
-                padding->left().specifiedValue(parentContentWidth, node));
+                std::max(0.f,
+                         padding->left().specifiedValue(parentContentWidth, node)));
         } else {
             setPaddingLeft(0);
         }
         if (padding->top().isSpecified()) {
             setPaddingTop(
-                padding->top().specifiedValue(parentContentWidth, node));
+                std::max(0.f,
+                         padding->top().specifiedValue(parentContentWidth, node)));
         } else {
             setPaddingTop(0);
         }
         if (padding->right().isSpecified() && !m_flags.m_isRightMBPCleared) {
             setPaddingRight(
-                padding->right().specifiedValue(parentContentWidth, node));
+                std::max(0.f,
+                         padding->right().specifiedValue(parentContentWidth, node)));
         } else {
             setPaddingRight(0);
         }
         if (padding->bottom().isSpecified()) {
             setPaddingBottom(
-                padding->bottom().specifiedValue(parentContentWidth, node));
+                std::max(0.f,
+                         padding->bottom().specifiedValue(parentContentWidth, node)));
         } else {
             setPaddingBottom(0);
         }
