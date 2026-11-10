@@ -1,0 +1,52 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>calc() summation serializes in canonical order (numbers, percentages, then dimensions by unit)</title>
+<style>
+  #target { font-size: 20px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[calc-serialization-order] " + document.title);
+  };
+}
+</script>
+<div id="target"></div>
+<script>
+// css-values-4 "Serialization": a calc() summation is serialized numbers
+// first, then percentages, then dimensions sorted by unit, regardless of
+// the order in the parsed value. Expectations cross-validated in Chrome
+// (headless 157). Known gaps tracked apart: same-unit merging (Chrome
+// simplifies calc(1s + 2ms) to calc(1.002s)), leading unary minus being
+// rejected at parse, and invalid number/length mixing being accepted.
+var target = document.getElementById("target");
+
+// percentage before dimension even though the declaration wrote em first
+target.style.paddingTop = "calc(2em + 3%)";
+console.assert(target.style.paddingTop === "calc(3% + 2em)",
+  "specified paddingTop: " + target.style.paddingTop);
+
+// an already-canonical summation is unchanged
+target.style.paddingTop = "calc(3% - 2em)";
+console.assert(target.style.paddingTop === "calc(3% - 2em)",
+  "specified paddingTop (canonical input): " + target.style.paddingTop);
+
+// multiple dimensions sorted by unit (em < px)
+target.style.width = "calc(1px + 1em + 2%)";
+console.assert(target.style.width === "calc(2% + 1em + 1px)",
+  "specified width: " + target.style.width);
+
+// the cssText round-trip serializes the same way
+target.style.cssText = "padding-top: calc(2em + 3%)";
+console.assert(target.style.cssText === "padding-top: calc(3% + 2em);",
+  "cssText: " + target.style.cssText);
+
+testEnd();
+</script>

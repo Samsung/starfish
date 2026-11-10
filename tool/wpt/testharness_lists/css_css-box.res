@@ -75,7 +75,7 @@ http://web-platform.test:8000/css/css-box/parsing/overflow-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-box/parsing/padding-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-box/parsing/padding-invalid.html
 http://web-platform.test:8000/css/css-box/parsing/padding-shorthand.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-box/parsing/padding-valid.html
+http://web-platform.test:8000/css/css-box/parsing/padding-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-box/parsing/visibility-computed.html
 http://web-platform.test:8000/css/css-box/parsing/visibility-invalid.html
 http://web-platform.test:8000/css/css-box/parsing/visibility-valid.html

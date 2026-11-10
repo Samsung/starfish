@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "core/style/Style.h"
 #include "core/style/CalcData.h"
+#include <algorithm>
 
 namespace Starfish {
 LayoutUnit CalcValue::specifiedValue(const LayoutUnit& parentContentLength,
@@ -560,15 +561,111 @@ CSSTime CalcData::timeValue() const
     return t;
 }
 
+namespace {
+
+// Canonical serialization order of a calc() summation: numbers, then
+// percentages, then dimensions sorted by unit name (css-values-4,
+// "Serialization"). Each term keeps its own sign; only the display order
+// of the additive terms changes.
+int lengthUnitRank(const CSSLength& length)
+{
+    switch (length.kind()) {
+    case CSSLength::CH:
+        return 0;
+    case CSSLength::CM:
+        return 1;
+    case CSSLength::EM:
+        return 2;
+    case CSSLength::EX:
+        return 3;
+    case CSSLength::INCH:
+        return 4;
+    case CSSLength::MM:
+        return 5;
+    case CSSLength::PC:
+        return 6;
+    case CSSLength::PT:
+        return 7;
+    case CSSLength::PX:
+        return 8;
+    case CSSLength::REM:
+        return 9;
+    case CSSLength::VH:
+        return 10;
+    case CSSLength::VMAX:
+        return 11;
+    case CSSLength::VMIN:
+        return 12;
+    case CSSLength::VW:
+        return 13;
+    default:
+        return 14;
+    }
+}
+
+int termRank(CalcTerm* term)
+{
+    CalcValueType type = term->type();
+    if (type.isNumber()) {
+        return 0;
+    }
+    if (type.isPercentage()) {
+        return 100;
+    }
+    if (!type.isLength() && !type.isAngle() && !type.isTime()) {
+        // Nested calc() or unresolved type: keep at the end, stable.
+        return 300;
+    }
+
+    // The first non-number value carries the term's unit.
+    auto it = term->values().begin();
+    while (it != term->values().end() && (*it).type().isNumber()) {
+        ++it;
+    }
+    if (it == term->values().end() || (*it).type().isCalcData()) {
+        return 300;
+    }
+
+    if (type.isLength()) {
+        return 200 + lengthUnitRank((*it).lengthValue());
+    }
+    if (type.isAngle()) {
+        switch ((*it).angleValue().kind()) {
+        case CSSAngle::DEG:
+            return 200;
+        case CSSAngle::GRAD:
+            return 201;
+        case CSSAngle::RAD:
+            return 202;
+        default:
+            return 203; // TURN
+        }
+    }
+    return 200 + ((*it).timeValue().kind() == CSSTime::S ? 1 : 0); // ms < s
+}
+
+} // namespace
+
 String* CalcData::toString()
 {
     StringBuilder builder;
 
+    // Sort a copy so serialization never reorders the parsed structure.
+    // Only a summation has a canonical order; min()/max()/clamp() keep
+    // their argument order.
+    GCVector<CalcTerm*> sorted(m_terms);
+    if (m_type == Type::kCalc) {
+        std::stable_sort(sorted.begin(), sorted.end(),
+                         [](CalcTerm* a, CalcTerm* b) {
+                             return termRank(a) < termRank(b);
+                         });
+    }
+
     builder.appendString(String::createASCIIString("calc("));
-    auto it = m_terms.begin();
+    auto it = sorted.begin();
     builder.appendString((*it)->toString());
     it++;
-    while (it != m_terms.end()) {
+    while (it != sorted.end()) {
         builder.appendString(String::spaceString);
         String* r = (*it)->toString();
 
