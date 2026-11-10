@@ -646,6 +646,62 @@ int termRank(CalcTerm* term)
 
 } // namespace
 
+// Only bare values merge; product chains and nested calc() keep their place.
+bool isSingleValueTerm(CalcTerm* term)
+{
+    return term->values().size() == 1;
+}
+
+bool canMergeTerms(CalcTerm* a, CalcTerm* b)
+{
+    if (!isSingleValueTerm(a) || !isSingleValueTerm(b)) {
+        return false;
+    }
+    CalcValueType type = a->values().begin()->type();
+    if (!(type == b->values().begin()->type()) || type.isCalcData() ||
+        type.isNone() || type.isInvalid()) {
+        return false;
+    }
+    if (type.isNumber() || type.isPercentage()) {
+        return true;
+    }
+    if (type.isLength()) {
+        return a->values().begin()->lengthValue().kind() ==
+               b->values().begin()->lengthValue().kind();
+    }
+    // time merges into seconds, angles into degrees
+    return type.isTime() || type.isAngle();
+}
+
+CalcTerm* mergeTermGroup(GCVector<CalcTerm*>& group)
+{
+    auto it = group.begin();
+    CalcValue sum = *(*it)->values().begin();
+    CalcValueType type = sum.type();
+    ++it;
+    while (it != group.end()) {
+        CalcValue value = *(*it)->values().begin();
+        if (type.isNumber()) {
+            sum = CalcValue(sum.numberValue() + value.numberValue(), false);
+        } else if (type.isPercentage()) {
+            sum = CalcValue(sum.percentageValue() + value.percentageValue(), true);
+        } else if (type.isLength()) {
+            sum = CalcValue(CSSLength(sum.lengthValue().kind(),
+                                      sum.lengthValue().value() + value.lengthValue().value()));
+        } else if (type.isTime()) {
+            // the canonical time unit is seconds; toTimeValue() is ms
+            sum = CalcValue(CSSTime(CSSTime::S,
+                                    (sum.timeValue().toTimeValue() + value.timeValue().toTimeValue()) / 1000.0));
+        } else if (type.isAngle()) {
+            sum = CalcValue(CSSAngle(CSSAngle::DEG, sum.angleValue().toDegreeValue() + value.angleValue().toDegreeValue()));
+        }
+        ++it;
+    }
+    CalcTerm* term = new CalcTerm();
+    term->appendValue(sum);
+    return term;
+}
+
 String* CalcData::toString()
 {
     StringBuilder builder;
@@ -661,11 +717,40 @@ String* CalcData::toString()
                          });
     }
 
+    // Combine consecutive terms that share a unit (css-values-4,
+    // "Serialization"): numbers, percentages and equal-unit dimensions are
+    // summed; time merges into seconds and angles into degrees. The calc()
+    // wrapper stays even when one term remains.
+    GCVector<CalcTerm*> merged;
+    auto start = sorted.begin();
+    while (start != sorted.end()) {
+        CalcTerm* first = *start;
+        auto run = start;
+        size_t groupSize = 1;
+        ++run;
+        while (run != sorted.end() && canMergeTerms(first, *run)) {
+            ++groupSize;
+            ++run;
+        }
+        if (groupSize == 1) {
+            merged.push_back(first);
+        } else {
+            GCVector<CalcTerm*> group;
+            auto git = start;
+            for (size_t k = 0; k < groupSize; ++k) {
+                group.push_back(*git);
+                ++git;
+            }
+            merged.push_back(mergeTermGroup(group));
+        }
+        start = run;
+    }
+
     builder.appendString(String::createASCIIString("calc("));
-    auto it = sorted.begin();
+    auto it = merged.begin();
     builder.appendString((*it)->toString());
     it++;
-    while (it != sorted.end()) {
+    while (it != merged.end()) {
         builder.appendString(String::spaceString);
         String* r = (*it)->toString();
 

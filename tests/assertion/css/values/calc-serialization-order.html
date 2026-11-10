@@ -43,6 +43,35 @@ target.style.width = "calc(1px + 1em + 2%)";
 console.assert(target.style.width === "calc(2% + 1em + 1px)",
   "specified width: " + target.style.width);
 
+// same-unit terms merge into one (numbers, percentages, equal-unit lengths)
+target.style.paddingTop = "calc(1px + 2px)";
+console.assert(target.style.paddingTop === "calc(3px)",
+  "specified paddingTop (merged px): " + target.style.paddingTop);
+target.style.paddingTop = "calc(1em + 2em)";
+console.assert(target.style.paddingTop === "calc(3em)",
+  "specified paddingTop (merged em): " + target.style.paddingTop);
+target.style.paddingTop = "calc(2% + 1%)";
+console.assert(target.style.paddingTop === "calc(3%)",
+  "specified paddingTop (merged %): " + target.style.paddingTop);
+target.style.paddingTop = "calc(2em + 1em + 3px)";
+console.assert(target.style.paddingTop === "calc(3em + 3px)",
+  "specified paddingTop (merged em + px): " + target.style.paddingTop);
+
+// different units stay unmerged, sorted by unit
+target.style.paddingTop = "calc(1px + 1em)";
+console.assert(target.style.paddingTop === "calc(1em + 1px)",
+  "specified paddingTop (unmerged units): " + target.style.paddingTop);
+
+// time merges into the canonical unit (seconds)
+target.style.animationDelay = "calc(1s + 2ms)";
+console.assert(target.style.animationDelay === "calc(1.002s)",
+  "specified animationDelay (merged time): " + target.style.animationDelay);
+
+// angle merges into the canonical unit (degrees)
+target.style.transform = "rotate(calc(1deg + 2turn))";
+console.assert(target.style.transform === "rotate(calc(721deg))",
+  "specified transform (merged angle): " + target.style.transform);
+
 // the cssText round-trip serializes the same way
 target.style.cssText = "padding-top: calc(2em + 3%)";
 console.assert(target.style.cssText === "padding-top: calc(3% + 2em);",
