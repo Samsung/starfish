@@ -4427,9 +4427,9 @@ void WebGL2RenderingContext::texStorage2D(GLenum target, GLsizei levels,
     if (hasNewGLError()) {
         return;
     }
-    zeroCompressedTextureStorage(target, levels, internalformat, width, height,
-                                 1);
     if (texture) {
+        initializeTextureStorage(target, texture, levels, internalformat, width,
+                                 height, 1);
         texture->setStorage2D(target, levels, internalformat, width, height);
     }
 }
@@ -4500,9 +4500,9 @@ void WebGL2RenderingContext::texStorage3D(GLenum target, GLsizei levels,
     if (hasNewGLError()) {
         return;
     }
-    zeroCompressedTextureStorage(target, levels, internalformat, width, height,
-                                 depth);
     if (texture) {
+        initializeTextureStorage(target, texture, levels, internalformat, width,
+                                 height, depth);
         texture->setStorage3D(target, levels, internalformat, width, height,
                               depth);
     }

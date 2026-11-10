@@ -460,6 +460,11 @@ protected:
     void zeroCompressedTextureStorage(GLenum target, GLsizei levels,
                                       GLenum internalformat, GLsizei width,
                                       GLsizei height, GLsizei depth);
+    // Gives the storage texStorage2D/3D made for `texture`, bound to
+    // `target`, its initial contents.
+    void initializeTextureStorage(GLenum target, WebGLTexture* texture,
+                                  GLsizei levels, GLenum internalformat,
+                                  GLsizei width, GLsizei height, GLsizei depth);
     // A destWidth and destHeight of 0 upload the whole source.
     void handleTexImageWithImageSource(
         const GLenum target, const GLenum format, const GLenum type,

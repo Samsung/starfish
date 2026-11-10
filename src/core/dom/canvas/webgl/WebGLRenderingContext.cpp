@@ -9611,6 +9611,69 @@ void WebGLRenderingContext::zeroCompressedTextureStorage(
     }
 }
 
+// WebGL 1.0 §4.1 holds for texStorage2D/3D as well: the GL leaves new storage
+// undefined, and a driver that reuses memory hands back what an earlier
+// texture held. So every level of every layer or face starts as zero texels
+// or, for a compressed format, zero blocks. A depth or stencil image is
+// cleared like a new renderbuffer, to depth 1.0 and stencil 0.
+void WebGLRenderingContext::initializeTextureStorage(
+    GLenum target, WebGLTexture* texture, GLsizei levels, GLenum internalformat,
+    GLsizei width, GLsizei height, GLsizei depth)
+{
+    if (Pixel::compressedFormatInfo(internalformat)) {
+        zeroCompressedTextureStorage(target, levels, internalformat, width,
+                                     height, depth);
+        return;
+    }
+    GLenum format = 0;
+    GLenum type = 0;
+    // STENCIL_INDEX8 has no upload format, so it is cleared too.
+    const bool isColor = Pixel::formatAndTypeOf(internalformat, format, type) &&
+                         !isDepthTextureFormat(format);
+    const bool isCubeMap = target == GL_TEXTURE_CUBE_MAP;
+    const bool isLayered =
+        target == GL_TEXTURE_3D || target == GL_TEXTURE_2D_ARRAY;
+    for (GLint level = 0; level < levels; level++) {
+        const GLsizei levelWidth = std::max(1, width >> level);
+        const GLsizei levelHeight = std::max(1, height >> level);
+        // A 2D array keeps its layers down the chain; a 3D texture halves.
+        const GLsizei levelDepth =
+            target == GL_TEXTURE_3D ? std::max(1, depth >> level) : depth;
+        if (isColor) {
+            if (isCubeMap) {
+                for (GLenum face = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+                     face <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z; face++) {
+                    zeroTextureLevel(face, level, levelWidth, levelHeight, 1,
+                                     format, type);
+                }
+            } else {
+                zeroTextureLevel(target, level, levelWidth, levelHeight,
+                                 levelDepth, format, type);
+            }
+            continue;
+        }
+        // A framebuffer takes one face or layer at a time.
+        const GLsizei images = isCubeMap ? 6 : levelDepth;
+        for (GLsizei image = 0; image < images; image++) {
+            initializeImage(internalformat, [&](GLenum attachment) {
+                if (isLayered) {
+                    m_gl->framebufferTextureLayer(
+                        GL_DRAW_FRAMEBUFFER, attachment, texture->glObject(),
+                        level, image);
+                    return;
+                }
+                const GLenum imageTarget =
+                    isCubeMap ? GL_TEXTURE_CUBE_MAP_POSITIVE_X +
+                                    static_cast<GLenum>(image)
+                              : target;
+                m_gl->framebufferTexture2D(GL_DRAW_FRAMEBUFFER, attachment,
+                                           imageTarget, texture->glObject(),
+                                           level);
+            });
+        }
+    }
+}
+
 void WebGLRenderingContext::handleTexImageWithArrayBufferView(
     GLenum target, GLint level, GLsizei width, GLsizei height, GLsizei depth,
     GLenum format, GLenum type, Optional<ScriptArrayBufferView> pixels,

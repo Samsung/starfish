@@ -1,0 +1,270 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebGL2 texStorage2D/3D storage starts with its initial contents</title>
+<canvas id="canvas" width="4" height="4"></canvas>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0, __firstError = '';
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) {
+      __pass++;
+    } else {
+      __fail++;
+      if (!__firstError) __firstError = message;
+      __nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[webgl2-texstorage-initial-contents] ' + verdict);
+    document.title = verdict + (__firstError ? ': ' + __firstError : '');
+  };
+}
+
+// WebGL 1.0 §4.1: a texture made without data reads as 0, whatever memory
+// the driver hands out. texStorage2D/3D storage has no data either, so every
+// level of every layer or face must read as 0, and a depth or stencil image
+// as depth 1.0 and stencil 0, like a new renderbuffer. Each case first fills
+// a texture of the same shape with other values and deletes it, so that
+// a driver that reuses memory would show them.
+
+var SIZE = 32, LAYERS = 4, LEVELS = 3;
+
+var gl = document.getElementById('canvas').getContext('webgl2');
+console.assert(!!gl, 'WebGL2 context is required');
+
+// name, upload format, upload type, upload array, elements per pixel,
+// read format, read type, read array, alpha a zero texel reads with
+function colorFormats() {
+  var formats = [
+    ['RGBA8', gl.RGBA, gl.UNSIGNED_BYTE, Uint8Array, 4,
+     gl.RGBA, gl.UNSIGNED_BYTE, Uint8Array, 0],
+    ['RGB565', gl.RGB, gl.UNSIGNED_SHORT_5_6_5, Uint16Array, 1,
+     gl.RGBA, gl.UNSIGNED_BYTE, Uint8Array, 255],
+    ['R8', gl.RED, gl.UNSIGNED_BYTE, Uint8Array, 1,
+     gl.RGBA, gl.UNSIGNED_BYTE, Uint8Array, 255],
+    ['RGBA8UI', gl.RGBA_INTEGER, gl.UNSIGNED_BYTE, Uint8Array, 4,
+     gl.RGBA_INTEGER, gl.UNSIGNED_INT, Uint32Array, 0],
+    ['RGBA32I', gl.RGBA_INTEGER, gl.INT, Int32Array, 4,
+     gl.RGBA_INTEGER, gl.INT, Int32Array, 0]
+  ];
+  if (gl.getExtension('EXT_color_buffer_float')) {
+    formats.push(['RGBA16F', gl.RGBA, gl.FLOAT, Float32Array, 4,
+                  gl.RGBA, gl.FLOAT, Float32Array, 0]);
+  }
+  return formats;
+}
+var depthFormats = ['DEPTH_COMPONENT16', 'DEPTH_COMPONENT24',
+                    'DEPTH_COMPONENT32F', 'DEPTH24_STENCIL8',
+                    'DEPTH32F_STENCIL8'];
+
+function isLayered(target) {
+  return target === gl.TEXTURE_3D || target === gl.TEXTURE_2D_ARRAY;
+}
+
+function levelSize(level) {
+  return Math.max(1, SIZE >> level);
+}
+
+// The images a framebuffer attaches one at a time: faces or layers.
+function imageCount(target, level) {
+  if (target === gl.TEXTURE_CUBE_MAP) return 6;
+  if (target === gl.TEXTURE_3D) return Math.max(1, LAYERS >> level);
+  return target === gl.TEXTURE_2D_ARRAY ? LAYERS : 1;
+}
+
+function allocate(target, internalformat) {
+  var texture = gl.createTexture();
+  gl.bindTexture(target, texture);
+  if (isLayered(target)) {
+    gl.texStorage3D(target, LEVELS, internalformat, SIZE, SIZE, LAYERS);
+  } else {
+    gl.texStorage2D(target, LEVELS, internalformat, SIZE, SIZE);
+  }
+  return texture;
+}
+
+function attach(attachment, target, texture, level, image) {
+  if (isLayered(target)) {
+    gl.framebufferTextureLayer(gl.FRAMEBUFFER, attachment, texture, level,
+                               image);
+  } else {
+    gl.framebufferTexture2D(
+        gl.FRAMEBUFFER, attachment,
+        target === gl.TEXTURE_CUBE_MAP ?
+            gl.TEXTURE_CUBE_MAP_POSITIVE_X + image : target,
+        texture, level);
+  }
+}
+
+function forEachImage(target, callback) {
+  for (var level = 0; level < LEVELS; level++) {
+    for (var image = 0; image < imageCount(target, level); image++) {
+      callback(level, image);
+    }
+  }
+}
+
+function deleteAfterUse(texture) {
+  gl.finish();
+  gl.deleteTexture(texture);
+  gl.finish();
+}
+
+function dirtyColor(target, format) {
+  var texture = allocate(target, gl[format[0]]);
+  for (var level = 0; level < LEVELS; level++) {
+    var size = levelSize(level);
+    var layers = isLayered(target) ? imageCount(target, level) : 1;
+    var data = new format[3](size * size * layers * format[4]);
+    for (var i = 0; i < data.length; i++) {
+      data[i] = 90;
+    }
+    if (isLayered(target)) {
+      gl.texSubImage3D(target, level, 0, 0, 0, size, size, layers, format[1],
+                       format[2], data);
+    } else {
+      for (var image = 0; image < imageCount(target, level); image++) {
+        gl.texSubImage2D(
+            target === gl.TEXTURE_CUBE_MAP ?
+                gl.TEXTURE_CUBE_MAP_POSITIVE_X + image : target,
+            level, 0, 0, size, size, format[1], format[2], data);
+      }
+    }
+  }
+  deleteAfterUse(texture);
+}
+
+function dirtyDepth(target, name, attachment) {
+  var texture = allocate(target, gl[name]);
+  gl.clearDepth(0.25);
+  gl.clearStencil(90);
+  forEachImage(target, function (level, image) {
+    attach(attachment, target, texture, level, image);
+    gl.clear(gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+  });
+  attach(attachment, target, null, 0, 0);
+  gl.clearDepth(1);
+  gl.clearStencil(0);
+  deleteAfterUse(texture);
+}
+
+function testColor(target, targetName, format) {
+  dirtyColor(target, format);
+  var texture = allocate(target, gl[format[0]]);
+  var wrong = 0;
+  forEachImage(target, function (level, image) {
+    var size = levelSize(level);
+    attach(gl.COLOR_ATTACHMENT0, target, texture, level, image);
+    var pixels = new format[7](size * size * 4);
+    for (var i = 0; i < pixels.length; i++) {
+      pixels[i] = 90;
+    }
+    gl.readPixels(0, 0, size, size, format[5], format[6], pixels);
+    for (var i = 0; i < pixels.length; i++) {
+      if (pixels[i] !== (i % 4 === 3 ? format[8] : 0)) {
+        wrong++;
+      }
+    }
+  });
+  attach(gl.COLOR_ATTACHMENT0, target, null, 0, 0);
+  console.assert(wrong === 0, targetName + ' ' + format[0] + ': ' + wrong +
+                              ' values are not 0');
+  gl.deleteTexture(texture);
+}
+
+// Draws just in front of the far plane where the stencil is 0, so a pixel
+// is drawn only where the depth is 1.0 and the stencil 0.
+function testDepth(target, targetName, name, program, color) {
+  var attachment = name.indexOf('STENCIL') < 0 ?
+      gl.DEPTH_ATTACHMENT : gl.DEPTH_STENCIL_ATTACHMENT;
+  dirtyDepth(target, name, attachment);
+  var texture = allocate(target, gl[name]);
+  var wrong = 0;
+  gl.useProgram(program);
+  gl.enable(gl.DEPTH_TEST);
+  gl.depthFunc(gl.LESS);
+  gl.depthMask(false);
+  gl.enable(gl.STENCIL_TEST);
+  gl.stencilFunc(gl.EQUAL, 0, 0xff);
+  forEachImage(target, function (level, image) {
+    var size = levelSize(level);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, color);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA8, size, size);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                               gl.RENDERBUFFER, color);
+    attach(attachment, target, texture, level, image);
+    gl.viewport(0, 0, size, size);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    var pixels = new Uint8Array(size * size * 4);
+    gl.readPixels(0, 0, size, size, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+    for (var i = 0; i < pixels.length; i += 4) {
+      if (pixels[i] !== 255) {
+        wrong++;
+      }
+    }
+  });
+  attach(attachment, target, null, 0, 0);
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                             gl.RENDERBUFFER, null);
+  gl.disable(gl.DEPTH_TEST);
+  gl.depthMask(true);
+  gl.disable(gl.STENCIL_TEST);
+  console.assert(wrong === 0, targetName + ' ' + name + ': ' + wrong +
+                              ' pixels are not depth 1.0 and stencil 0');
+  gl.deleteTexture(texture);
+}
+
+function makeProgram() {
+  var sources = [
+    [gl.VERTEX_SHADER, '#version 300 es\n' +
+     'void main() {\n' +
+     '  gl_Position = vec4(float((gl_VertexID & 1) * 4 - 1),\n' +
+     '                     float((gl_VertexID & 2) * 2 - 1), 0.99, 1.0);\n' +
+     '}'],
+    [gl.FRAGMENT_SHADER, '#version 300 es\n' +
+     'precision mediump float;\n' +
+     'out vec4 color;\n' +
+     'void main() { color = vec4(1.0, 0.0, 0.0, 1.0); }']
+  ];
+  var program = gl.createProgram();
+  sources.forEach(function (source) {
+    var shader = gl.createShader(source[0]);
+    gl.shaderSource(shader, source[1]);
+    gl.compileShader(shader);
+    gl.attachShader(program, shader);
+  });
+  gl.linkProgram(program);
+  console.assert(gl.getProgramParameter(program, gl.LINK_STATUS),
+                 'the test program links');
+  return program;
+}
+
+if (gl) {
+  var program = makeProgram();
+  var color = gl.createRenderbuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, gl.createFramebuffer());
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+  gl.pixelStorei(gl.PACK_ALIGNMENT, 1);
+  ['TEXTURE_2D', 'TEXTURE_CUBE_MAP', 'TEXTURE_2D_ARRAY', 'TEXTURE_3D'].forEach(
+      function (targetName) {
+        var target = gl[targetName];
+        colorFormats().forEach(function (format) {
+          testColor(target, targetName, format);
+        });
+        if (target === gl.TEXTURE_3D) {
+          return; // no 3D depth textures
+        }
+        depthFormats.forEach(function (name) {
+          testDepth(target, targetName, name, program, color);
+        });
+      });
+  var error = gl.getError();
+  console.assert(error === gl.NO_ERROR,
+                 'no GL error, got 0x' + error.toString(16));
+}
+testEnd();
+</script>
