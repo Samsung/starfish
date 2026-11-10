@@ -1749,6 +1749,24 @@ void PageDomain::processMessage(CDPCommand& cmd, const std::string& method)
     }
 
     if (method == "reload") {
+        const std::string& sid = cmd.sessionId();
+        WebView* wv = m_dispatcher->webView();
+
+        // Reload re-navigates the current document's URL. Clients wait for
+        // Page.loadEventFired after reload (Chromium's inspector-protocol
+        // tests do; puppeteer's page.reload() gates on the same lifecycle),
+        // so run the navigate path: beginNavigation, the real navigation
+        // with a history-replacing entry, then finishNavigation's lifecycle.
+        // Unlike Page.navigate, Fetch interception of the document request is
+        // not parked: a reload through an enabled Fetch domain still loads.
+        BrowsingContext* bc = wv->mainBrowsingContext();
+        if (bc && bc->document() && bc->document()->urlString()) {
+            String* url = bc->document()->urlString();
+            beginNavigation(sid, url->toUTF8NonGCString());
+            wv->navigate(new ResourceURL(url), HistoryManagerAction::Replace,
+                         new ReferrerURL(String::emptyString));
+            finishNavigation(sid);
+        }
         cmd.sendResultEmpty();
         return;
     }

@@ -26,6 +26,7 @@
 #include "core/dom/Element.h"
 #include "core/dom/ShadowRoot.h"
 
+#include <algorithm>
 #include <string>
 
 namespace Starfish {
@@ -89,9 +90,19 @@ bool NodeRegistry::has(Node* node) const
 
 void NodeRegistry::reset()
 {
+    // Remember how far ids were issued: a lookup of an id at or below this
+    // after the reset names a node of a previous document (Chromium answers
+    // "Document is not active." there), while a higher or negative id was
+    // never issued ("No node found for given backend id").
+    m_prevMaxId = std::max(m_prevMaxId, m_next - 1);
     m_nodeToId.clear();
     m_idToNode.clear();
     m_next = 1;
+}
+
+bool NodeRegistry::wasIssued(int nodeId) const
+{
+    return nodeId >= 1 && (nodeId < m_next || nodeId <= m_prevMaxId);
 }
 
 static void addStringMember(rapidjson::Value& obj, const char* key,

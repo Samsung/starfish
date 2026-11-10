@@ -99,8 +99,7 @@
       "suite": "internal"
     },
     "accessibility/accessibility-query-axtree-errors.js": {
-      "expected": "fail",
-      "category": "timeout"
+      "expected": "pass"
     },
     "accessibility/accessibility-query-axtree.js": {
       "expected": "pass"

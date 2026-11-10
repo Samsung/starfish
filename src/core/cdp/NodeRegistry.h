@@ -37,6 +37,12 @@ public:
     bool has(Node* node) const;
     void reset(); // navigate: drop all mappings, m_next=1
 
+    // True when an id in this range was handed out at some point, even if a
+    // navigation since dropped it. A failed lookup of an issued id means the
+    // node belonged to a previous document; a failed lookup of an id that was
+    // never issued means the client made it up.
+    bool wasIssued(int nodeId) const;
+
     // An id alone does not mean the client knows the node: the registry also
     // hands out ids to commands that never serialize one, such as the
     // Accessibility queries. These two say what the client has actually been
@@ -66,6 +72,8 @@ private:
     GCUnorderedMap<Node*, Entry> m_nodeToId;
     GCUnorderedMap<int, Node*> m_idToNode;
     int m_next;
+    // The highest id issued before the last reset (0 when none).
+    int m_prevMaxId = 0;
 };
 
 } // namespace Starfish

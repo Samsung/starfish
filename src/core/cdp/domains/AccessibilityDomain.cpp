@@ -138,10 +138,17 @@ static Node* resolveTargetNode(CDPDispatcher* dispatcher, CDPCommand& cmd)
     }
     if (cmd.params()->HasMember("backendNodeId") &&
         (*cmd.params())["backendNodeId"].IsInt()) {
-        Optional<Node*> node =
-            registry->lookup((*cmd.params())["backendNodeId"].GetInt());
+        int backendNodeId = (*cmd.params())["backendNodeId"].GetInt();
+        Optional<Node*> node = registry->lookup(backendNodeId);
         if (!node) {
-            cmd.sendError(-32000, "No node found for given backend id");
+            // Chromium distinguishes an id it never issued from one the last
+            // navigation dropped: the stale node's document is no longer
+            // active (accessibility-query-axtree-errors.js).
+            if (registry->wasIssued(backendNodeId)) {
+                cmd.sendError(-32000, "Document is not active.");
+            } else {
+                cmd.sendError(-32000, "No node found for given backend id");
+            }
             return nullptr;
         }
         return node.value();
