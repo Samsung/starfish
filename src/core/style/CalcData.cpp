@@ -99,7 +99,12 @@ String* CalcValue::toString()
         return builder.finalize();
     } else if (m_type.isCalcData()) {
         String* s = m_data.m_calcData->toString();
-        return s->substring(4, s->length() - 4);
+        if (m_data.m_calcData->type() == CalcData::Type::kCalc) {
+            // A nested calc() term serializes parenthesized: "(...)".
+            return s->substring(4, s->length() - 4);
+        }
+        // min()/max()/clamp() keep their function name and parens.
+        return s;
     }
 
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -611,6 +616,11 @@ namespace {
 
     int termRank(CalcTerm* term)
     {
+        // Nested min()/max()/clamp() terms keep their written position: they
+        // are never merged or reordered.
+        if (term->values().begin()->type().isCalcData()) {
+            return 300;
+        }
         CalcValueType type = term->type();
         if (type.isNumber()) {
             return 0;

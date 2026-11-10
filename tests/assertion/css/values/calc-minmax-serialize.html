@@ -50,5 +50,14 @@ target.style.paddingTop = "min(3px + 1em, 2%)";
 console.assert(target.style.paddingTop === "min(1em + 3px, 2%)",
   "min with sorted argument: " + target.style.paddingTop);
 
+// a nested min()/max() with an unresolvable percentage keeps its full
+// function form inside the parent calc()
+target.style.paddingTop = "calc(1px + min(2em, 3%))";
+console.assert(target.style.paddingTop === "calc(1px + min(2em, 3%))",
+  "nested min: " + target.style.paddingTop);
+target.style.paddingTop = "calc(1px + max(1em, 2%))";
+console.assert(target.style.paddingTop === "calc(1px + max(1em, 2%))",
+  "nested max: " + target.style.paddingTop);
+
 testEnd();
 </script>
