@@ -2002,6 +2002,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("x-large");
         case FontSizeValue::XXLargeFontSizeValue:
             return String::fromUTF8("xx-large");
+        case FontSizeValue::XXXLargeFontSizeValue:
+            return String::fromUTF8("xxx-large");
         case FontSizeValue::LargerFontSizeValue:
             return String::fromUTF8("larger");
         case FontSizeValue::SmallerFontSizeValue:
@@ -14332,6 +14334,8 @@ bool CSSStyleValuePair::updateValueUnitFontSize(const CSSTokenValue& value)
         m_value.m_fontSize = FontSizeValue::XLargeFontSizeValue;
     } else if (value.equals("xx-large")) {
         m_value.m_fontSize = FontSizeValue::XXLargeFontSizeValue;
+    } else if (value.equals("xxx-large")) {
+        m_value.m_fontSize = FontSizeValue::XXXLargeFontSizeValue;
     } else if (value.equals("larger")) {
         m_value.m_fontSize = FontSizeValue::LargerFontSizeValue;
     } else if (value.equals("smaller")) {

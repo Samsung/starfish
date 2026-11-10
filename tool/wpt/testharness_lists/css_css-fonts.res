@@ -89,7 +89,7 @@ http://web-platform.test:8000/css/css-fonts/parsing/font-kerning-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/parsing/font-size-adjust-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-fonts/parsing/font-size-adjust-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/parsing/font-size-adjust-valid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/parsing/font-size-computed.html
+http://web-platform.test:8000/css/css-fonts/parsing/font-size-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-fonts/parsing/font-size-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/parsing/font-size-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-fonts/parsing/font-stretch-alias.html
