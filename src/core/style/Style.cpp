@@ -13753,6 +13753,13 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
             return false;
         }
     }
+
+    // css-values-4 type checking: a summation mixing incompatible types
+    // (e.g. <number> - <length>) is invalid at parse time.
+    CalcValueType summedType = data->calcValueType();
+    if (summedType.isInvalid() || summedType.isNone()) {
+        return false;
+    }
     return true;
 }
 

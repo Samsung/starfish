@@ -1,0 +1,48 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>calc() rejects type-mismatched sums (number vs length) and keeps the previous declaration</title>
+<style>
+  #target { font-size: 20px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[calc-type-check] " + document.title);
+  };
+}
+</script>
+<div id="target"></div>
+<script>
+// css-values-4 type checking: a calc() that mixes <number> with
+// <length> is invalid and the declaration is ignored, so the
+// previously set value survives. Chrome 157 rejects all of these.
+var target = document.getElementById("target");
+var invalid = [
+  "calc(1 - 2px)",
+  "calc(2px - 1)",
+  "calc(2px + 1)",
+  "calc(1 + 2px)",
+  "calc(1px * 2px)",
+  "calc(1px / 1px)",
+];
+for (var i = 0; i < invalid.length; ++i) {
+  target.style.paddingTop = "1px";
+  target.style.paddingTop = invalid[i];
+  console.assert(target.style.paddingTop === "1px",
+    "rejected " + invalid[i] + " but got: " + target.style.paddingTop);
+}
+
+// positive control: a valid length-percentage calc is accepted
+target.style.paddingTop = "calc(2% + 1px)";
+console.assert(target.style.paddingTop === "calc(2% + 1px)",
+  "accepted calc(2% + 1px): " + target.style.paddingTop);
+
+testEnd();
+</script>

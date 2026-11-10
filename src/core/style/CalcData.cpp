@@ -442,6 +442,12 @@ CalcValueType CalcData::calcValueType() const
             if (lType.isLength() && rType.isPercentage()) {
                 lType = rType;
             } else if (lType.isPercentage() && rType.isLength()) {
+            } else if (lType.isNumber() && rType.isPercentage()) {
+                // A number merges into a percentage summation
+                // (css-values-4 type checking: <number> + <percentage>
+                // resolves to <percentage>)
+                lType = rType;
+            } else if (lType.isPercentage() && rType.isNumber()) {
             } else {
                 return CalcValueType::ValueKind::kInvalid;
             }
