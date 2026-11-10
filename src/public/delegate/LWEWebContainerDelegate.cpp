@@ -29,6 +29,8 @@
 #include "public/contract/ResourceErrorDelegate.h"
 
 #include "core/modules/renderer/Renderer.h"
+#include "PlatformImageGLAdapter.h"
+#include "PlatformImageSoftwareAdapter.h"
 #include "core/dom/Touch.h"
 #include "browser/history/HistoryManager.h"
 #include "core/page/BrowsingContext.h"
@@ -361,6 +363,20 @@ public:
 
     WebContainerImpl(Starfish::WebView* webView);
 
+    void SetGLRenderTargetCallbacks(
+        const Starfish::GLRenderTargetCallbacks& callbacks)
+    {
+        ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() {
+            m_webView->renderer()->registerGLRenderTargetCallbacks(callbacks);
+        });
+    }
+
+    void SetSoftwareRenderTargetCallbacks(
+        const Starfish::SoftwareRenderTargetCallbacks& callbacks)
+    {
+        m_webView->renderer()->registerSoftwareRenderTargetCallbacks(callbacks);
+    }
+
 private:
     // use Destroy function instead of using delete operator
     virtual ~WebContainerImpl()
@@ -579,10 +595,6 @@ WebContainer* WebContainer::CreateGL(const WebContainerArguments& args,
     return newWebContainer;
 }
 
-#ifdef STARFISH_FLUTTER
-#include <tbm_surface.h>
-#endif
-
 WebContainer* WebContainer::CreateWithPlatformImage(
     const WebContainerArguments& args, const OnPrepareImage& prepareImageCb,
     const OnFlush& flushCb)
@@ -595,54 +607,21 @@ WebContainer* WebContainer::CreateWithPlatformImage(
 
         newWebContainer = new (NoGC) WebContainerImpl(webView);
 
-        // Tracks the currently CPU-mapped TBM surface so it can be unmapped
-        // before the next map and after the last render, preventing
-        // "tbm_bo_free with lock_cnt > 0" on SW backend. Heap-allocated
-        // (not a stack local) and captured by value below: the renderer
-        // stores and keeps invoking these callbacks long after this factory
-        // function returns, so a stack local captured by reference would be
-        // a dangling reference on every call after the first. Stored as
-        // void* so it can be captured unconditionally without requiring
-        // <tbm_surface.h> outside STARFISH_FLUTTER builds.
-        auto mappedTbmSurface = std::make_shared<void*>(nullptr);
+        auto adapter = std::make_shared<PlatformImageSoftwareAdapter>();
 
-        webView->renderer()->registerRenderingPrepareCallback(
-            [prepareImageCb, mappedTbmSurface](void) -> Starfish::RenderInfo {
-                WebContainer::ExternalImageInfo buffer = prepareImageCb();
-                Starfish::RenderInfo result;
-#ifdef STARFISH_FLUTTER
-                tbm_surface_info_s tbmSurfaceInfo;
-                // Unmap the previous frame's surface before mapping the new
-                // one.
-                if (*mappedTbmSurface != nullptr) {
-                    tbm_surface_unmap((tbm_surface_h)*mappedTbmSurface);
-                    *mappedTbmSurface = nullptr;
-                }
-                if (tbm_surface_map((tbm_surface_h)buffer.imageAddress,
-                                    TBM_SURF_OPTION_WRITE, &tbmSurfaceInfo) ==
-                    TBM_SURFACE_ERROR_NONE) {
-                    result.updatedBufferAddress = tbmSurfaceInfo.planes[0].ptr;
-                    result.bufferStride = tbmSurfaceInfo.planes[0].stride;
-                    *mappedTbmSurface = (void*)buffer.imageAddress;
-                }
-#endif
-                return result;
-            });
-
-        webView->renderer()->registerRenderingFinishedCallback(
-            [newWebContainer, flushCb,
-             mappedTbmSurface](const Starfish::RenderResult& renderResult) {
-                flushCb(newWebContainer, renderResult.didPaintingOrCompositing);
-#ifdef STARFISH_FLUTTER
-                // Unmap the TBM surface after rendering is complete.
-                // This ensures the surface is unmapped before Destroy() is
-                // called.
-                if (*mappedTbmSurface != nullptr) {
-                    tbm_surface_unmap((tbm_surface_h)*mappedTbmSurface);
-                    *mappedTbmSurface = nullptr;
-                }
-#endif
-            });
+        Starfish::SoftwareRenderTargetCallbacks callbacks;
+        callbacks.acquire = [prepareImageCb,
+                             adapter](Starfish::SoftwareRenderTarget& target) {
+            target = adapter->map(prepareImageCb().imageAddress);
+            return target.pixels != nullptr;
+        };
+        callbacks.release = [newWebContainer, flushCb, adapter](bool rendered) {
+            adapter->unmap();
+            if (rendered) {
+                flushCb(newWebContainer, true);
+            }
+        };
+        webView->renderer()->registerSoftwareRenderTargetCallbacks(callbacks);
     });
     return newWebContainer;
 }
@@ -714,19 +693,35 @@ WebContainer* WebContainer::CreateGLWithPlatformImage(
                                                          extension);
                 });
         }
-        webView->renderer()->registerRenderingPrepareCallback(
-            [prepareImageCb](void) -> Starfish::RenderInfo {
-                WebContainer::ExternalImageInfo tmp = prepareImageCb();
-                Starfish::RenderInfo result;
-                result.updatedBufferAddress = tmp.imageAddress;
-                result.bufferStride = 0;
-                return result;
-            });
-
-        webView->renderer()->registerSurfaceFlushedCallback(
-            [newWebContainer, flushCb](bool needsFlush) {
-                flushCb(newWebContainer, needsFlush);
-            });
+#if defined(STARFISH_ENABLE_TBM_PLATFORM_IMAGE)
+        auto adapter = std::make_shared<PlatformImageGLAdapter>();
+        Starfish::GLRenderTargetCallbacks callbacks;
+        callbacks.acquire = [adapter, prepareImageCb, flushCb, newWebContainer,
+                             webView](Starfish::GLRenderTarget& target) {
+            auto image = prepareImageCb();
+            if (!adapter->acquire(
+                    static_cast<tbm_surface_h>(image.imageAddress), target)) {
+                flushCb(newWebContainer, false);
+                return false;
+            }
+            auto matrix = webView->renderer()->screenMatrix();
+            target.matrix[0] = matrix.scaleX;
+            target.matrix[1] = matrix.skewX;
+            target.matrix[2] = matrix.translateX;
+            target.matrix[3] = matrix.skewY;
+            target.matrix[4] = matrix.scaleY;
+            target.matrix[5] = matrix.translateY;
+            target.matrix[6] = matrix.perspectiveX;
+            target.matrix[7] = matrix.perspectiveY;
+            target.matrix[8] = matrix.perspectiveScale;
+            return true;
+        };
+        callbacks.release = [adapter, flushCb, newWebContainer](bool rendered) {
+            adapter->release(rendered);
+            flushCb(newWebContainer, rendered);
+        };
+        webView->renderer()->registerGLRenderTargetCallbacks(callbacks);
+#endif
     });
     return newWebContainer;
 }
@@ -2001,6 +1996,48 @@ void WebContainerImpl::SetNeedsFullRepainting()
 } // namespace LWEDelegate
 
 extern "C" {
+
+bool EXPORT_UNMANAGED_API LWEDelegate_WebContainer_SetGLRenderTargetCallbacks(
+    uintptr_t container, uintptr_t callbacks)
+{
+#if defined(STARFISH_HEADLESS)
+    return false;
+#else
+    if (LWEDelegate::g_starfishInstance->isHeadless()) {
+        return false;
+    }
+    static_cast<LWEDelegate::WebContainerImpl*>(
+        reinterpret_cast<LWEDelegate::WebContainer*>(container))
+        ->SetGLRenderTargetCallbacks(
+            *reinterpret_cast<Starfish::GLRenderTargetCallbacks*>(callbacks));
+    return true;
+#endif
+}
+
+uintptr_t EXPORT_UNMANAGED_API
+LWEDelegate_WebContainer_CreateSoftwareWithRenderTarget(uintptr_t arguments,
+                                                        uintptr_t callbacks)
+{
+#if defined(STARFISH_HEADLESS)
+    return 0;
+#else
+    auto& args =
+        *reinterpret_cast<LWEDelegate::WebContainer::WebContainerArguments*>(
+            arguments);
+    auto& target =
+        *reinterpret_cast<Starfish::SoftwareRenderTargetCallbacks*>(callbacks);
+    LWEDelegate::WebContainerImpl* instance = nullptr;
+    LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
+        [&]() {
+            auto* view = LWEDelegate::createStarfishWebViewInstance(
+                args.width, args.height, args.devicePixelRatio,
+                args.defaultFontName, args.locale, args.timezoneID, true);
+            instance = new (NoGC) LWEDelegate::WebContainerImpl(view);
+            instance->SetSoftwareRenderTargetCallbacks(target);
+        });
+    return reinterpret_cast<uintptr_t>(instance);
+#endif
+}
 
 uintptr_t LWEDelegate_WebContainer_Create(unsigned width, unsigned height,
                                           float devicePixelRatio,

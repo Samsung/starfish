@@ -141,6 +141,8 @@ void Renderer::clearNativeHandlers()
 
     m_renderingPrepareCallback = nullptr;
     m_renderingFinishedCallback = nullptr;
+    m_glRenderTargetCallbacks = {};
+    m_softwareRenderTargetCallbacks = {};
 
     m_showSoftwareKeyboardIfPossibleCallback = nullptr;
     m_hideSoftwareKeyboardIfPossibleCallback = nullptr;
@@ -157,7 +159,6 @@ void Renderer::clearNativeHandlers()
     m_getScreenMatrix = nullptr;
 
     m_canRenderingCallback = nullptr;
-    m_surfaceFlushCallback = nullptr;
 
     std::unordered_map<WindowHandlerKind, std::function<void(void*)>>().swap(
         m_handlersToCallbacks);
@@ -168,10 +169,8 @@ void Renderer::destroy()
     STARFISH_LOG_INFO("Renderer::destroy()");
     m_isDestroyed = true;
     clearResources();
-    // The native display can only be terminated after the render thread has
-    // detached its context from the draw and read surfaces.
-    clearCurrentContext();
-    clearNativeHandlers();
+    // The compositor owns GL resources; release them while its context and
+    // host callbacks remain usable. Detaching first leaks these resources.
     if (m_compositorContext) {
         delete m_compositorContext;
         m_compositorContext = nullptr;
@@ -179,6 +178,8 @@ void Renderer::destroy()
 #if !defined(STARFISH_HEADLESS)
     m_gl = nullptr;
 #endif
+    clearCurrentContext();
+    clearNativeHandlers();
 }
 
 void Renderer::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
@@ -417,6 +418,13 @@ void Renderer::clearResources()
     webView()->clearStackingContext();
 
     if (m_compositorContext) {
+#if !defined(STARFISH_HEADLESS)
+        // Resource cleanup can be queued after another WebView rendered.
+        // GL names are scoped to the owning context/share group, not a thread.
+        if (!m_isDestroyed) {
+            makeCurrent();
+        }
+#endif
         m_compositorContext->onIdle();
     }
 }

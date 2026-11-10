@@ -61,6 +61,7 @@ public:
     // legacy implementations and shutdown from an invalid lifecycle thread.
     bool unload();
     bool isLoaded();
+    bool supportsGLRenderTarget();
 
 private:
     LWEDelegateLoader() = default;

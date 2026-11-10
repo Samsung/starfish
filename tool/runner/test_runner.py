@@ -126,13 +126,16 @@ KHRONOS_WEBGL_JOBS = 8
 # suite enough headroom that only real hangs trip the watchdog; the other
 # (DOM/CSS) suites keep the tighter default.
 KHRONOS_WEBGL_TIMEOUT_SEC = 1200
+# The dEQP texture-filtering combinations can approach 1200s on llvmpipe.
+# Allow margin for shared-runner contention while still detecting hangs.
+KHRONOS_DEQP_TIMEOUT_SEC = 1800
 
-def run_vendor_test_khronos(name):
+def run_vendor_test_khronos(name, timeout=KHRONOS_WEBGL_TIMEOUT_SEC):
     from http_server import popen_server
 
     env = dict(os.environ)
     if not env.get(ENVOPTS.TIMEOUT):
-        env[ENVOPTS.TIMEOUT] = str(KHRONOS_WEBGL_TIMEOUT_SEC)
+        env[ENVOPTS.TIMEOUT] = str(timeout)
 
     with popen_server(KHRONOS_WEBGL_ROOT, working_directory, KHRONOS_ADDRESS,
                       port=KHRONOS_PORT, silent=True,
@@ -173,7 +176,8 @@ def _khronos_partition(deqp):
             path = join(directory, name)
             with open(path, "w") as output:
                 output.writelines(lines)
-            run_vendor_test_khronos(path)
+            run_vendor_test_khronos(
+                path, KHRONOS_DEQP_TIMEOUT_SEC if deqp else KHRONOS_WEBGL_TIMEOUT_SEC)
 
 
 def khronos_conformance_test():

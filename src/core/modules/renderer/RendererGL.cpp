@@ -39,6 +39,7 @@
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/renderer/Renderer.h"
+#include "core/modules/renderer/GLRenderTargetCallbacks.h"
 #include "platform/event/PlatformKeyEventData.h"
 #include "core/modules/renderer/RendererFactory.h"
 
@@ -107,6 +108,11 @@ public:
 
     virtual void destroy() override
     {
+        // Another WebView can have rendered most recently on this thread.
+        // Context-local cleanup must run in this renderer's own context.
+        if (m_compositorContext) {
+            makeCurrent();
+        }
         if (m_glPaintingSurface) {
             m_glPaintingSurface->detachNativeBuffer();
             m_glPaintingSurface = nullptr;
@@ -183,14 +189,20 @@ public:
         makeCurrent();
         STARFISH_ASSERT(m_compositorContext);
 
-        m_compositorContext->willRendering();
-        if (m_renderingPrepareCallback) {
-            RenderInfo renderInfo = m_renderingPrepareCallback();
-#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-            m_compositorContext->prepareExternalSurface(
-                renderInfo.updatedBufferAddress);
-#endif
+        auto* targetCallbacks = m_glRenderTargetCallbacks.acquire
+                                    ? &m_glRenderTargetCallbacks
+                                    : nullptr;
+        if (targetCallbacks) {
+            ExternalGLRenderTarget target{};
+            if (!targetCallbacks->acquire(target)) {
+                return RenderResult();
+            }
+            setExternalGLRenderTarget(target);
+            constexpr GLenum framebufferTarget = 0x8D40; // GL_FRAMEBUFFER
+            gl()->bindFramebuffer(framebufferTarget, target.framebuffer);
         }
+
+        m_compositorContext->willRendering();
 
         RenderResult ret = Renderer::rendering();
         if (ret.didPaintingOrCompositing) {
@@ -211,12 +223,7 @@ public:
             }
             m_compositorContext->didRendering();
             swapBuffers();
-#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-            m_compositorContext->flushExternalSurface(
-                m_surfaceFlushCallback, ret.didPaintingOrCompositing);
-#endif
         } else {
-#if !defined(STARFISH_ENABLE_TEST)
             if (shouldDrawOnEveryRenderingCallback()) {
                 // We should draw every frame in GL backend for non-buffer mode
                 if (webView()->didCompositeBefore()) {
@@ -238,11 +245,6 @@ public:
                 m_compositorContext->didRendering();
                 swapBuffers();
             }
-#endif
-#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-            m_compositorContext->flushExternalSurface(m_surfaceFlushCallback,
-                                                      false);
-#endif
         }
 
 #if defined(STARFISH_ENABLE_TEST)
@@ -251,6 +253,10 @@ public:
             g_screenShotCallback = nullptr;
         }
 #endif
+        clearExternalGLRenderTarget();
+        if (targetCallbacks && targetCallbacks->release) {
+            targetCallbacks->release(ret.didPaintingOrCompositing);
+        }
         return ret;
     }
 
@@ -345,7 +351,7 @@ public:
 
     virtual bool clearCurrentContext() override
     {
-        if (!m_onClearCurrentContext(this)) {
+        if (!m_onClearCurrentContext || !m_onClearCurrentContext(this)) {
             return false;
         }
         m_currentContext = kEmptyContextOrUnknown;

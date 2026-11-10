@@ -312,6 +312,13 @@ protected:
 // C wrappers used for dlopen/dlsym.
 extern "C" {
 
+// Optional registration entry point; absent in older implementations.
+bool EXPORT_UNMANAGED_API LWEDelegate_WebContainer_SetGLRenderTargetCallbacks(
+    uintptr_t container, uintptr_t callbacks);
+uintptr_t EXPORT_UNMANAGED_API
+LWEDelegate_WebContainer_CreateSoftwareWithRenderTarget(uintptr_t arguments,
+                                                        uintptr_t callbacks);
+
 uintptr_t EXPORT_UNMANAGED_API LWEDelegate_WebContainer_Create(
     unsigned width, unsigned height, float devicePixelRatio,
     const char* defaultFontName, const char* locale, const char* timezoneID);
@@ -349,6 +356,8 @@ typedef struct {
                                            uintptr_t);
     uintptr_t (*CreateHeadless)(unsigned, unsigned, float, const char*,
                                 const char*, const char*);
+    bool (*SetGLRenderTargetCallbacks)(uintptr_t, uintptr_t);
+    uintptr_t (*CreateSoftwareWithRenderTarget)(uintptr_t, uintptr_t);
 
 } WebContainerProcTable;
 }

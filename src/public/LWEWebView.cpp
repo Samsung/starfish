@@ -30,6 +30,7 @@
 #endif
 
 #include "APIRecorder.h"
+#include "core/modules/renderer/GLRenderTargetCallbacks.h"
 
 #include <assert.h>
 #include <iostream>
@@ -75,6 +76,11 @@ static_assert(static_cast<uint32_t>(InitializeOption::PreferIncrementalGC) ==
 static_assert(static_cast<uint32_t>(InitializeOption::Headless) ==
                   LWEDelegate::kInitializeOptionHeadless,
               "InitializeOption must match the contract");
+
+void LWE::Initialize(const char* storageDirectoryPath)
+{
+    Initialize(storageDirectoryPath, InitializeOption::None);
+}
 
 void LWE::Initialize(const char* storageDirectoryPath, InitializeOption option)
 {
@@ -758,6 +764,134 @@ WebContainer* WebContainer::CreateGL(const WebContainerArguments& args,
             // Do nothing, use Destroy to release delegate.
         });
     return instance;
+}
+
+WebContainer* WebContainer::CreateSoftwareWithRenderTarget(
+    const WebContainerArguments& args,
+    const AcquireSoftwareRenderTarget& acquireTarget,
+    const ReleaseSoftwareRenderTarget& releaseTarget)
+{
+    if (!acquireTarget || !releaseTarget) {
+        return nullptr;
+    }
+#ifdef STARFISH_API_ENABLE_LOADER
+    auto create = LWEDelegateLoader::getSafeInstance()
+                      ->kWebContainerProcTable.CreateSoftwareWithRenderTarget;
+    if (!create) {
+        return nullptr;
+    }
+#endif
+    auto* instance = new WebContainer();
+    LWEDelegate::WebContainer::WebContainerArguments arguments{
+        args.width,           args.height, args.devicePixelRatio,
+        args.defaultFontName, args.locale, args.timezoneID
+    };
+    Starfish::SoftwareRenderTargetCallbacks callbacks;
+    callbacks.acquire =
+        [instance, acquireTarget](Starfish::SoftwareRenderTarget& target) {
+            SoftwareRenderTarget publicTarget{};
+            if (!acquireTarget(instance, publicTarget)) {
+                return false;
+            }
+            target.pixels = publicTarget.pixels;
+            target.stride = publicTarget.stride;
+            target.width = publicTarget.width;
+            target.height = publicTarget.height;
+            return true;
+        };
+    callbacks.release = [instance, releaseTarget](bool rendered) {
+        releaseTarget(instance, rendered);
+    };
+#ifdef STARFISH_API_ENABLE_LOADER
+    auto* delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
+        create(reinterpret_cast<uintptr_t>(&arguments),
+               reinterpret_cast<uintptr_t>(&callbacks)));
+#else
+    auto* delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
+        LWEDelegate_WebContainer_CreateSoftwareWithRenderTarget(
+            reinterpret_cast<uintptr_t>(&arguments),
+            reinterpret_cast<uintptr_t>(&callbacks)));
+#endif
+    if (!delegate) {
+        delete instance;
+        return nullptr;
+    }
+    instance->m_delegate =
+        LWEDelegateRef(static_cast<void*>(delegate), [](void*) {});
+    return instance;
+}
+
+WebContainer* WebContainer::CreateGLWithRenderTarget(
+    const WebContainerArguments& args, const RendererGLConfiguration& config,
+    const AcquireGLRenderTarget& acquireTarget,
+    const ReleaseGLRenderTarget& releaseTarget)
+{
+#if defined(STARFISH_HEADLESS)
+    (void)args;
+    (void)config;
+    (void)acquireTarget;
+    (void)releaseTarget;
+    return nullptr;
+#else
+#ifdef STARFISH_API_ENABLE_LOADER
+    if (!LWEDelegateLoader::getSafeInstance()->supportsGLRenderTarget()) {
+        return nullptr;
+    }
+#endif
+    if (!acquireTarget || !config.onMakeCurrent || !config.onSwapBuffers) {
+        return nullptr;
+    }
+    auto* container = CreateGL(args, config);
+    if (!container || !container->m_delegate.get()) {
+        delete container;
+        return nullptr;
+    }
+    Starfish::GLRenderTargetCallbacks callback;
+    callback.acquire = [container,
+                        acquireTarget](Starfish::GLRenderTarget& target) {
+        GLRenderTarget publicTarget{};
+        if (!acquireTarget(container, publicTarget)) {
+            return false;
+        }
+        target.width = publicTarget.width;
+        target.height = publicTarget.height;
+        target.clipX = publicTarget.clipX;
+        target.clipY = publicTarget.clipY;
+        target.clipWidth = publicTarget.clipWidth;
+        target.clipHeight = publicTarget.clipHeight;
+        for (unsigned i = 0; i < 9; ++i) {
+            target.matrix[i] = publicTarget.matrix[i];
+        }
+        target.opacity = publicTarget.opacity;
+        for (unsigned i = 0; i < 3; ++i) {
+            target.color[i] = publicTarget.color[i];
+        }
+        target.framebuffer = publicTarget.framebuffer;
+        target.preserveContents = publicTarget.preserveContents;
+        return true;
+    };
+    if (releaseTarget) {
+        callback.release = [container, releaseTarget](bool rendered) {
+            releaseTarget(container, rendered);
+        };
+    }
+#ifdef STARFISH_API_ENABLE_LOADER
+    bool registered =
+        LWEDelegateLoader::getSafeInstance()
+            ->kWebContainerProcTable.SetGLRenderTargetCallbacks(
+                reinterpret_cast<uintptr_t>(container->m_delegate.get()),
+                reinterpret_cast<uintptr_t>(&callback));
+#else
+    bool registered = LWEDelegate_WebContainer_SetGLRenderTargetCallbacks(
+        reinterpret_cast<uintptr_t>(container->m_delegate.get()),
+        reinterpret_cast<uintptr_t>(&callback));
+#endif
+    if (!registered) {
+        container->Destroy();
+        return nullptr;
+    }
+    return container;
+#endif
 }
 
 WebContainer* WebContainer::CreateWebContainer(void* delegate)

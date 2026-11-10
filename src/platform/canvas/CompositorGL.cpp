@@ -372,6 +372,19 @@ static GLuint loadShader(GL* gl, GLenum type, const GLchar* shaderSrc)
     // Create the shader object
     shader = gl->createShader(type);
 
+    // Root color belongs to the embedding view, not to intermediate FBOs.
+    std::string source;
+    if (type == GL_FRAGMENT_SHADER) {
+        source = shaderSrc;
+        auto main = source.find("void main");
+        STARFISH_RELEASE_ASSERT(main != std::string::npos);
+        source.replace(main, 9, "void starfishMain");
+        source +=
+            "\nuniform vec3 uHostColor;\n"
+            "void main(void) { starfishMain(); "
+            "gl_FragColor.rgb *= uHostColor; }\n";
+        shaderSrc = source.c_str();
+    }
     // Load the shader source
     gl->shaderSource(shader, 1, &shaderSrc, NULL);
 
@@ -931,13 +944,6 @@ public:
     // instead of every frame start stalling until the GPU is idle.
     GLsync m_lastFrameFence = nullptr;
 
-#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-    GLuint m_mainViewTexture;
-    GLuint m_mainViewFBO;
-    GLuint m_mainViewRBO;
-    EGLImageKHR m_mainViewImage;
-#endif
-
     CompositorContextGL(Renderer* renderer)
     {
         STARFISH_LOG_INFO("CompositorContextGL::CompositorContextGL");
@@ -951,16 +957,44 @@ public:
         // clearGLProgramVariables().
         m_polygonPosBuffer = 0;
         m_polygonPosBufferCapacity = 0;
-#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-        m_mainViewTexture = 0;
-        m_mainViewFBO = 0;
-        m_mainViewRBO = 0;
-#endif
     }
 
     GL* gl()
     {
         return m_renderer->gl();
+    }
+
+    void updateHostColor(GLuint program = 0)
+    {
+        if (!program) {
+            GLint current = 0;
+            gl()->getIntegerv(GL_CURRENT_PROGRAM, &current);
+            program = static_cast<GLuint>(current);
+        }
+        if (!program) {
+            return;
+        }
+        GLint location = gl()->getUniformLocation(program, "uHostColor");
+        if (location < 0) {
+            return;
+        }
+        GLint framebuffer = 0;
+        gl()->getIntegerv(GL_FRAMEBUFFER_BINDING, &framebuffer);
+        const auto& target = m_renderer->externalGLRenderTarget();
+        if (target &&
+            static_cast<unsigned>(framebuffer) == target.value().framebuffer) {
+            gl()->uniform3fv(location, 1, target.value().color);
+        } else {
+            gl()->uniform3f(location, 1, 1, 1);
+        }
+    }
+
+    void useProgram(GLuint program)
+    {
+        gl()->useProgram(program);
+        if (program) {
+            updateHostColor(program);
+        }
     }
 
     void clearGLProgramVariables()
@@ -1080,7 +1114,7 @@ public:
     ~CompositorContextGL()
     {
         STARFISH_LOG_INFO("CompositorContextGL::~CompositorContextGL");
-        gl()->useProgram(0);
+        useProgram(0);
 
         cleanUpTextureCache();
         cleanUpFBOCache();
@@ -1093,15 +1127,6 @@ public:
         gl()->deleteBuffers(1, &m_texTexPosBuffer);
         gl()->deleteBuffers(1, &m_texIdxBuffer);
         gl()->deleteBuffers(1, &m_polygonPosBuffer);
-
-#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-        if (m_mainViewRBO) {
-            gl()->deleteRenderbuffers(1, &m_mainViewRBO);
-        }
-        if (m_mainViewFBO) {
-            gl()->deleteFramebuffers(1, &m_mainViewFBO);
-        }
-#endif
     }
 
     void cleanUpTextureCache()
@@ -1419,63 +1444,8 @@ public:
 
     virtual void willRendering() override
     {
+        m_lastProgram = 0;
     }
-
-#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-    virtual void prepareExternalSurface(void* externalSurface) override
-    {
-        gl()->bindFramebuffer(GL_FRAMEBUFFER, m_mainViewFBO);
-        gl()->bindRenderbuffer(GL_RENDERBUFFER, m_mainViewRBO);
-
-        EGLDisplay display = eglGetCurrentDisplay();
-
-        if (g_isSupported_EGL_NATIVE_SURFACE_TIZEN) {
-            EGLint attribs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
-            m_mainViewImage =
-                gl()->xglCreateImage(EGL_NATIVE_SURFACE_TIZEN,
-                                     (void*)(intptr_t)externalSurface, attribs);
-        } else {
-            EGLint attribs[EGL_ATTRIBUTE_MAX];
-            if (!prepareEglAttributeList(
-                    attribs, EGL_ATTRIBUTE_MAX,
-                    static_cast<tbm_surface_h>(externalSurface))) {
-                return;
-            }
-            m_mainViewImage =
-                gl()->xglCreateImage(EGL_LINUX_DMA_BUF_EXT, nullptr, attribs);
-        }
-
-        gl()->genTextures(1, &m_mainViewTexture);
-        gl()->bindTexture(GL_TEXTURE_2D, m_mainViewTexture);
-
-        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-        gl()->xglImageTargetTexture2DOES(GL_TEXTURE_2D, m_mainViewImage);
-
-        gl()->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                   GL_TEXTURE_2D, m_mainViewTexture, 0);
-    }
-
-    virtual void flushExternalSurface(
-        const std::function<void(bool needsFlush)>& cb,
-        bool isRendered) override
-    {
-        gl()->bindTexture(GL_TEXTURE_2D, 0);
-        gl()->bindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        if (isRendered) {
-            gl()->finish();
-        }
-        cb(isRendered);
-        gl()->xglDestroyImage(m_mainViewImage);
-        m_mainViewImage = nullptr;
-        gl()->deleteTextures(1, &m_mainViewTexture);
-    }
-#endif
 
     virtual void didRendering() override
     {
@@ -1628,7 +1598,7 @@ public:
             checkError(gl());
 
             m_lastProgram = m_polygonShaderProgram;
-            gl()->useProgram(m_polygonShaderProgram);
+            useProgram(m_polygonShaderProgram);
 
             m_polygonShaderProgramPosition =
                 gl()->getAttribLocation(m_polygonShaderProgram, "aPosition");
@@ -1639,7 +1609,7 @@ public:
         } else {
             if (m_lastProgram != m_polygonShaderProgram) {
                 m_lastProgram = m_polygonShaderProgram;
-                gl()->useProgram(m_polygonShaderProgram);
+                useProgram(m_polygonShaderProgram);
             }
         }
 
@@ -1675,7 +1645,7 @@ public:
             checkError(gl());
 
             m_lastProgram = m_rectShaderProgram;
-            gl()->useProgram(m_rectShaderProgram);
+            useProgram(m_rectShaderProgram);
 
             m_rectShaderProgramPosition =
                 gl()->getUniformLocation(m_rectShaderProgram, "uPosition");
@@ -1688,7 +1658,7 @@ public:
         } else {
             if (m_lastProgram != m_rectShaderProgram) {
                 m_lastProgram = m_rectShaderProgram;
-                gl()->useProgram(m_rectShaderProgram);
+                useProgram(m_rectShaderProgram);
 
                 bindTexIdx(m_rectShaderProgramTexIdx, true);
             }
@@ -1738,7 +1708,7 @@ public:
             checkError(gl());
 
             m_lastProgram = m_overlayShaderProgram;
-            gl()->useProgram(m_overlayShaderProgram);
+            useProgram(m_overlayShaderProgram);
             m_overlayShaderProgramPosition =
                 gl()->getUniformLocation(m_overlayShaderProgram, "uPosition");
             m_overlayShaderProgramColor =
@@ -1755,7 +1725,7 @@ public:
             bindTexIdx(m_overlayShaderProgramTexIdx, true);
         } else if (m_lastProgram != m_overlayShaderProgram) {
             m_lastProgram = m_overlayShaderProgram;
-            gl()->useProgram(m_overlayShaderProgram);
+            useProgram(m_overlayShaderProgram);
             bindTexIdx(m_overlayShaderProgramTexIdx, true);
         }
         return m_overlayShaderProgram;
@@ -1878,7 +1848,7 @@ public:
             checkError(gl());
 
             m_lastProgram = m_texShaderProgramEGLImageExternal;
-            gl()->useProgram(m_texShaderProgramEGLImageExternal);
+            useProgram(m_texShaderProgramEGLImageExternal);
             checkError(gl());
 
             m_texShaderProgramEGLImageExternalPosition =
@@ -1909,7 +1879,7 @@ public:
         } else {
             if (m_lastProgram != m_texShaderProgramEGLImageExternal) {
                 m_lastProgram = m_texShaderProgramEGLImageExternal;
-                gl()->useProgram(m_texShaderProgramEGLImageExternal);
+                useProgram(m_texShaderProgramEGLImageExternal);
 
                 bindTexPos(m_texShaderProgramEGLImageExternalTexPos);
                 bindTexIdx(m_texShaderProgramEGLImageExternalTexIdx, true);
@@ -1999,7 +1969,7 @@ public:
             checkError(gl());
 
             m_lastProgram = m_texShaderProgramEGLImageExternalWithMask;
-            gl()->useProgram(m_texShaderProgramEGLImageExternalWithMask);
+            useProgram(m_texShaderProgramEGLImageExternalWithMask);
             checkError(gl());
 
             m_texShaderProgramEGLImageExternalWithMaskPosition =
@@ -2067,7 +2037,7 @@ public:
         } else {
             if (m_lastProgram != m_texShaderProgramEGLImageExternalWithMask) {
                 m_lastProgram = m_texShaderProgramEGLImageExternalWithMask;
-                gl()->useProgram(m_texShaderProgramEGLImageExternalWithMask);
+                useProgram(m_texShaderProgramEGLImageExternalWithMask);
 
                 bindTexPos(m_texShaderProgramEGLImageExternalWithMaskTexPos);
                 bindTexIdx(m_texShaderProgramEGLImageExternalWithMaskTexIdx,
@@ -2131,7 +2101,7 @@ public:
             checkError(gl());
 
             m_lastProgram = m_texShaderProgram;
-            gl()->useProgram(m_texShaderProgram);
+            useProgram(m_texShaderProgram);
             checkError(gl());
 
             m_texShaderProgramPosition =
@@ -2159,7 +2129,7 @@ public:
         } else {
             if (m_lastProgram != m_texShaderProgram) {
                 m_lastProgram = m_texShaderProgram;
-                gl()->useProgram(m_texShaderProgram);
+                useProgram(m_texShaderProgram);
 
                 bindTexPos(m_texShaderProgramTexPos);
                 bindTexIdx(m_texShaderProgramTexIdx, true);
@@ -2274,7 +2244,7 @@ public:
             checkError(gl());
 
             m_lastProgram = m_texShaderProgramRoundedClip;
-            gl()->useProgram(m_texShaderProgramRoundedClip);
+            useProgram(m_texShaderProgramRoundedClip);
             checkError(gl());
 
             GLuint p = m_texShaderProgramRoundedClip;
@@ -2315,7 +2285,7 @@ public:
         } else {
             if (m_lastProgram != m_texShaderProgramRoundedClip) {
                 m_lastProgram = m_texShaderProgramRoundedClip;
-                gl()->useProgram(m_texShaderProgramRoundedClip);
+                useProgram(m_texShaderProgramRoundedClip);
 
                 bindTexPos(m_texShaderProgramRoundedClipTexPos);
                 bindTexIdx(m_texShaderProgramRoundedClipTexIdx, true);
@@ -2360,7 +2330,7 @@ public:
             checkError(gl());
 
             m_lastProgram = m_texShaderProgramRoundedClipEGLImageExternal;
-            gl()->useProgram(m_texShaderProgramRoundedClipEGLImageExternal);
+            useProgram(m_texShaderProgramRoundedClipEGLImageExternal);
             checkError(gl());
 
             GLuint p = m_texShaderProgramRoundedClipEGLImageExternal;
@@ -2406,7 +2376,7 @@ public:
             if (m_lastProgram !=
                 m_texShaderProgramRoundedClipEGLImageExternal) {
                 m_lastProgram = m_texShaderProgramRoundedClipEGLImageExternal;
-                gl()->useProgram(m_texShaderProgramRoundedClipEGLImageExternal);
+                useProgram(m_texShaderProgramRoundedClipEGLImageExternal);
 
                 bindTexPos(m_texShaderProgramRoundedClipEGLImageExternalTexPos);
                 bindTexIdx(m_texShaderProgramRoundedClipEGLImageExternalTexIdx,
@@ -2486,7 +2456,7 @@ public:
             checkError(gl());
 
             m_lastProgram = m_texShaderProgramWithMask;
-            gl()->useProgram(m_texShaderProgramWithMask);
+            useProgram(m_texShaderProgramWithMask);
             checkError(gl());
 
             m_texShaderProgramWithMaskPosition = gl()->getUniformLocation(
@@ -2535,7 +2505,7 @@ public:
         } else {
             if (m_lastProgram != m_texShaderProgramWithMask) {
                 m_lastProgram = m_texShaderProgramWithMask;
-                gl()->useProgram(m_texShaderProgramWithMask);
+                useProgram(m_texShaderProgramWithMask);
 
                 bindTexPos(m_texShaderProgramWithMaskTexPos);
                 bindTexIdx(m_texShaderProgramWithMaskTexIdx, true);
@@ -2703,7 +2673,7 @@ public:
         if (m_texBlurShaderProgramW) {
             if (m_lastProgram != m_texBlurShaderProgramW) {
                 m_lastProgram = m_texBlurShaderProgramW;
-                gl()->useProgram(m_texBlurShaderProgramW);
+                useProgram(m_texBlurShaderProgramW);
                 bindTexPos(m_texBlurShaderProgramWTexPos);
                 bindTexIdx(m_texBlurShaderProgramWTexIdx, true);
             }
@@ -2717,7 +2687,7 @@ public:
         checkError(gl());
 
         m_lastProgram = m_texBlurShaderProgramW;
-        gl()->useProgram(m_texBlurShaderProgramW);
+        useProgram(m_texBlurShaderProgramW);
 
         m_texBlurShaderProgramWPosition =
             gl()->getUniformLocation(m_texBlurShaderProgramW, "uPosition");
@@ -2756,7 +2726,7 @@ public:
         if (m_texBlurShaderProgramEGLImageExternalW) {
             if (m_lastProgram != m_texBlurShaderProgramEGLImageExternalW) {
                 m_lastProgram = m_texBlurShaderProgramEGLImageExternalW;
-                gl()->useProgram(m_texBlurShaderProgramEGLImageExternalW);
+                useProgram(m_texBlurShaderProgramEGLImageExternalW);
                 bindTexPos(m_texBlurShaderProgramEGLImageExternalWTexPos);
                 bindTexIdx(m_texBlurShaderProgramEGLImageExternalWTexIdx, true);
             }
@@ -2772,7 +2742,7 @@ public:
         checkError(gl());
 
         m_lastProgram = m_texBlurShaderProgramEGLImageExternalW;
-        gl()->useProgram(m_texBlurShaderProgramEGLImageExternalW);
+        useProgram(m_texBlurShaderProgramEGLImageExternalW);
 
         m_texBlurShaderProgramEGLImageExternalWPosition =
             gl()->getUniformLocation(m_texBlurShaderProgramEGLImageExternalW,
@@ -2816,7 +2786,7 @@ public:
         if (m_texBlurShaderProgramH) {
             if (m_lastProgram != m_texBlurShaderProgramH) {
                 m_lastProgram = m_texBlurShaderProgramH;
-                gl()->useProgram(m_texBlurShaderProgramH);
+                useProgram(m_texBlurShaderProgramH);
                 bindTexPos(m_texBlurShaderProgramHTexPos);
                 bindTexIdx(m_texBlurShaderProgramHTexIdx, true);
             }
@@ -2830,7 +2800,7 @@ public:
         checkError(gl());
 
         m_lastProgram = m_texBlurShaderProgramH;
-        gl()->useProgram(m_texBlurShaderProgramH);
+        useProgram(m_texBlurShaderProgramH);
 
         m_texBlurShaderProgramHPosition =
             gl()->getUniformLocation(m_texBlurShaderProgramH, "uPosition");
@@ -2880,7 +2850,7 @@ public:
         if (m_texBlurShaderProgramHWithMask) {
             if (m_lastProgram != m_texBlurShaderProgramHWithMask) {
                 m_lastProgram = m_texBlurShaderProgramHWithMask;
-                gl()->useProgram(m_texBlurShaderProgramHWithMask);
+                useProgram(m_texBlurShaderProgramHWithMask);
                 bindTexPos(m_texBlurShaderProgramHWithMaskTexPos);
                 bindTexIdx(m_texBlurShaderProgramHWithMaskTexIdx, true);
             }
@@ -2895,7 +2865,7 @@ public:
         checkError(gl());
 
         m_lastProgram = m_texBlurShaderProgramHWithMask;
-        gl()->useProgram(m_texBlurShaderProgramHWithMask);
+        useProgram(m_texBlurShaderProgramHWithMask);
 
         m_texBlurShaderProgramHWithMaskPosition = gl()->getUniformLocation(
             m_texBlurShaderProgramHWithMask, "uPosition");
@@ -3100,11 +3070,6 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
     gl->genBuffers(1, &compositorContext->m_texTexPosBuffer);
     gl->genBuffers(1, &compositorContext->m_texIdxBuffer);
     gl->genBuffers(1, &compositorContext->m_polygonPosBuffer);
-
-#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-    gl->genFramebuffers(1, &compositorContext->m_mainViewFBO);
-    gl->genRenderbuffers(1, &compositorContext->m_mainViewRBO);
-#endif
 
     return compositorContext;
 }
@@ -4117,6 +4082,7 @@ public:
     void setViewport()
     {
         gl()->viewport(0, 0, screenWidth(), screenHeight());
+        m_compositorContext->updateHostColor();
     }
 
     size_t screenWidth()
@@ -4131,6 +4097,36 @@ public:
 
     void scissor(float x, float y, float width, float height)
     {
+        const auto& externalTarget =
+            m_webView->renderer()->externalGLRenderTarget();
+        if (externalTarget && m_fboState.empty()) {
+            const auto& target = externalTarget.value();
+            SkPoint corners[4] = { { x, y },
+                                   { x + width, y },
+                                   { x, y + height },
+                                   { x + width, y + height } };
+            m_screenMatrix.mapPoints(corners, 4);
+            float minX = corners[0].x(), maxX = minX;
+            float minY = corners[0].y(), maxY = minY;
+            for (size_t i = 1; i < 4; ++i) {
+                minX = std::min(minX, corners[i].x());
+                maxX = std::max(maxX, corners[i].x());
+                minY = std::min(minY, corners[i].y());
+                maxY = std::max(maxY, corners[i].y());
+            }
+            int left = std::max(static_cast<int>(floor(minX)), target.clipX);
+            int bottom = std::max(static_cast<int>(screenHeight() - ceil(maxY)),
+                                  target.clipY);
+            int right =
+                std::min(static_cast<int>(ceil(maxX)),
+                         target.clipX + static_cast<int>(target.clipWidth));
+            int top =
+                std::min(static_cast<int>(screenHeight() - floor(minY)),
+                         target.clipY + static_cast<int>(target.clipHeight));
+            gl()->scissor(left, bottom, std::max(right - left, 0),
+                          std::max(top - bottom, 0));
+            return;
+        }
         float maxX = x + width;
         float maxY = y + height;
 
@@ -4203,11 +4199,24 @@ public:
         m_globalScale = m_webView->glCompositorScale();
         m_screenWidth = m_webView->renderer()->width();
         m_screenHeight = m_webView->renderer()->height();
+        const auto& externalTarget =
+            m_webView->renderer()->externalGLRenderTarget();
+        if (externalTarget) {
+            m_screenWidth = externalTarget.value().width;
+            m_screenHeight = externalTarget.value().height;
+        }
         m_compositorContext = (CompositorContextGL*)compositorContext;
         TransformationMatrix m = m_webView->renderer()->screenMatrix();
         m_screenMatrix.setAll(m.scaleX, m.skewX, m.translateX, m.skewY,
                               m.scaleY, m.translateY, m.perspectiveX,
                               m.perspectiveY, m.perspectiveScale);
+        if (externalTarget) {
+            const auto& target = externalTarget.value();
+            m_screenMatrix.setAll(
+                target.matrix[0], target.matrix[1], target.matrix[2],
+                target.matrix[3], target.matrix[4], target.matrix[5],
+                target.matrix[6], target.matrix[7], target.matrix[8]);
+        }
         setViewport();
 
         gl()->disable(GL_CULL_FACE);
@@ -4218,10 +4227,11 @@ public:
         auto& lastState = m_state.back();
         lastState.matrixStaysInRect = true;
         lastState.matrix = SkMatrix::I();
-        lastState.opacity = 1;
+        lastState.opacity = externalTarget ? externalTarget.value().opacity : 1;
         lastState.blurRadius = 0;
         lastState.blendMode = BlendMode::Normal;
-        lastState.clipRect = Unit::Rect(0, 0, screenWidth(), screenHeight());
+        lastState.clipRect = Unit::Rect(0, 0, m_webView->renderer()->width(),
+                                        m_webView->renderer()->height());
 
         applyDevicePixelRatio();
     }
@@ -4249,6 +4259,17 @@ public:
 
     virtual void clearColor(const Unit::Color& clr) override
     {
+        const auto& externalTarget =
+            m_webView->renderer()->externalGLRenderTarget();
+        if (externalTarget && externalTarget.value().preserveContents &&
+            m_fboState.empty()) {
+            auto color = m_state.back().color;
+            m_state.back().color = clr;
+            drawRect(Unit::Rect(0, 0, m_webView->renderer()->width(),
+                                m_webView->renderer()->height()));
+            m_state.back().color = color;
+            return;
+        }
         // A clear targeting a bound FBO must happen now (deferral only applies
         // to the default framebuffer).
         if (m_fboState.size() != 0) {

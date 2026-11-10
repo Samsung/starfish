@@ -25,6 +25,7 @@
 #include "core/page/RenderResult.h"
 #include "core/event/EventModifierData.h"
 #include "platform/canvas/gl/GL.h"
+#include "core/modules/renderer/GLRenderTargetCallbacks.h"
 
 namespace Starfish {
 enum WindowHandlerKind {
@@ -106,6 +107,25 @@ struct TransformationMatrix {
 };
 
 class Renderer : public gc {
+public:
+    using ExternalGLRenderTarget = ::Starfish::GLRenderTarget;
+
+    const Optional<ExternalGLRenderTarget>& externalGLRenderTarget() const
+    {
+        return m_externalGLRenderTarget;
+    }
+    void setExternalGLRenderTarget(const ExternalGLRenderTarget& target)
+    {
+        m_externalGLRenderTarget = target;
+    }
+    void clearExternalGLRenderTarget()
+    {
+        m_externalGLRenderTarget.reset();
+    }
+
+private:
+    Optional<ExternalGLRenderTarget> m_externalGLRenderTarget;
+
 public:
     virtual ~Renderer(){};
     static Renderer* create(Starfish* starfish, uint32_t width,
@@ -220,16 +240,21 @@ public:
         m_renderingPrepareCallback = cb;
     }
 
+    void registerGLRenderTargetCallbacks(const GLRenderTargetCallbacks& cb)
+    {
+        m_glRenderTargetCallbacks = cb;
+    }
+
+    void registerSoftwareRenderTargetCallbacks(
+        const SoftwareRenderTargetCallbacks& cb)
+    {
+        m_softwareRenderTargetCallbacks = cb;
+    }
+
     void registerRenderingFinishedCallback(
         const std::function<void(const RenderResult& renderResult)>& cb)
     {
         m_renderingFinishedCallback = cb;
-    }
-
-    void registerSurfaceFlushedCallback(
-        const std::function<void(bool surfaceFlushCallback)>& cb)
-    {
-        m_surfaceFlushCallback = cb;
     }
 
     void registerOnMakeCurrent(
@@ -403,6 +428,8 @@ protected:
     std::function<void(Renderer* renderer)> m_setNeedsRenderingCallback;
 
     std::function<RenderInfo(void)> m_renderingPrepareCallback;
+    GLRenderTargetCallbacks m_glRenderTargetCallbacks;
+    SoftwareRenderTargetCallbacks m_softwareRenderTargetCallbacks;
     std::function<void(const RenderResult& renderResult)>
         m_renderingFinishedCallback;
 
@@ -424,7 +451,6 @@ protected:
     std::function<TransformationMatrix(Renderer* renderer)> m_getScreenMatrix;
 
     std::function<bool(Renderer* renderer)> m_canRenderingCallback;
-    std::function<void(bool needsFlush)> m_surfaceFlushCallback;
 
     std::unordered_map<WindowHandlerKind, std::function<void(void*)>>
         m_handlersToCallbacks;

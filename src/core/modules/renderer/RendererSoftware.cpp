@@ -88,6 +88,32 @@ public:
         return m_internalBuffer;
     }
 
+    virtual RenderResult rendering() override
+    {
+        if (!m_softwareRenderTargetCallbacks.acquire) {
+            return Renderer::rendering();
+        }
+        if (UNLIKELY(!canRendering())) {
+            return RenderResult();
+        }
+        SoftwareRenderTarget target{};
+        if (!m_softwareRenderTargetCallbacks.acquire(target)) {
+            return RenderResult();
+        }
+        if (!target.pixels || target.width < width() ||
+            target.height < height() || target.stride < size_t(width()) * 4 ||
+            target.stride > UINT32_MAX) {
+            m_softwareRenderTargetCallbacks.release(false);
+            return RenderResult();
+        }
+        updateDrawingBufferAddress(target.pixels, target.stride);
+        auto result = Renderer::rendering();
+        m_softwareRenderTargetCallbacks.release(
+            result.didPaintingOrCompositing);
+        m_internalBuffer = nullptr;
+        return result;
+    }
+
     virtual Canvas* preparePainting() override
     {
 #ifdef STARFISH_ENABLE_TEST
@@ -103,9 +129,11 @@ public:
         }
 #endif
 #if !defined(STARFISH_TIZEN_VERSION_5_0)
-        RenderInfo renderInfo = m_renderingPrepareCallback();
-        updateDrawingBufferAddress(renderInfo.updatedBufferAddress,
-                                   renderInfo.bufferStride);
+        if (!m_softwareRenderTargetCallbacks.acquire) {
+            RenderInfo renderInfo = m_renderingPrepareCallback();
+            updateDrawingBufferAddress(renderInfo.updatedBufferAddress,
+                                       renderInfo.bufferStride);
+        }
 #endif
         CanvasSurface* target = CanvasSurface::createCanvasTarget(
             (uint8_t*)m_internalBuffer, m_width, m_height, m_stride);
@@ -128,9 +156,11 @@ public:
         }
 #endif
 #if !defined(STARFISH_TIZEN_VERSION_5_0)
-        RenderInfo renderInfo = m_renderingPrepareCallback();
-        updateDrawingBufferAddress(renderInfo.updatedBufferAddress,
-                                   renderInfo.bufferStride);
+        if (!m_softwareRenderTargetCallbacks.acquire) {
+            RenderInfo renderInfo = m_renderingPrepareCallback();
+            updateDrawingBufferAddress(renderInfo.updatedBufferAddress,
+                                       renderInfo.bufferStride);
+        }
 #endif
         CanvasSurface* target = CanvasSurface::createCanvasTarget(
             (uint8_t*)m_internalBuffer, m_width, m_height, m_stride);

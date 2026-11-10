@@ -446,20 +446,4 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
         [](WebContainer* c, bool needsFlush) {});
 }
 } // namespace LWEDelegate
-extern "C" size_t __attribute__((visibility("default"))) createWebViewInstance(
-    unsigned x, unsigned y, unsigned width, unsigned height,
-    float devicePixelRatio, const char* defaultFontName, const char* locale,
-    const char* timezoneID,
-    const std::function<::LWEDelegate::WebContainer::ExternalImageInfo(void)>&
-        prepareImageCb,
-    const std::function<void(::LWEDelegate::WebContainer*, bool needsFlush)>&
-        flushCb,
-    bool useSWBackend)
-{
-    ::LWEDelegate::WebViewFlutter* wv = new ::LWEDelegate::WebViewFlutter(
-        x, y, width, height, devicePixelRatio, defaultFontName, locale,
-        timezoneID, prepareImageCb, flushCb, useSWBackend);
-    return (size_t)::LWE::WebContainer::CreateWebContainer(
-        static_cast<void*>(wv->FetchWebContainer()));
-}
 #endif

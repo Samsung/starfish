@@ -149,6 +149,11 @@ bool LWEDelegateLoader::unload()
     return true;
 }
 
+bool LWEDelegateLoader::supportsGLRenderTarget()
+{
+    return kWebContainerProcTable.SetGLRenderTargetCallbacks != nullptr;
+}
+
 bool LWEDelegateLoader::isLoaded()
 {
     return m_handle != nullptr;
@@ -247,6 +252,13 @@ bool LWEDelegateLoader::loadWebContainerProcTable()
         reinterpret_cast<decltype(WebContainerProcTable::CreateHeadless)>(
             dlsym(m_handle, "LWEDelegate_WebContainer_CreateHeadless"));
 
+    kWebContainerProcTable.SetGLRenderTargetCallbacks = reinterpret_cast<
+        decltype(WebContainerProcTable::SetGLRenderTargetCallbacks)>(
+        dlsym(m_handle, "LWEDelegate_WebContainer_SetGLRenderTargetCallbacks"));
+    kWebContainerProcTable.CreateSoftwareWithRenderTarget = reinterpret_cast<
+        decltype(WebContainerProcTable::CreateSoftwareWithRenderTarget)>(dlsym(
+        m_handle, "LWEDelegate_WebContainer_CreateSoftwareWithRenderTarget"));
+
     return kWebContainerProcTable.Create &&
            kWebContainerProcTable.CreateWithBuffer &&
            kWebContainerProcTable.CreateWithPlatformImage &&
@@ -285,8 +297,7 @@ void LWEDelegateLoader::unloadSettingsProcTable()
 
 void LWEDelegateLoader::unloadWebContainerProcTable()
 {
-    kWebContainerProcTable = { nullptr, nullptr, nullptr,
-                               nullptr, nullptr, nullptr };
+    kWebContainerProcTable = {};
 }
 
 void LWEDelegateLoader::unloadWebViewProcTable()

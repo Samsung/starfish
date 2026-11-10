@@ -41,11 +41,6 @@ public:
     // Orders the current (shared) context's following GL commands after the
     // last composited frame without blocking the CPU.
     virtual void waitForLastFrameOnGPU() = 0;
-#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-    virtual void prepareExternalSurface(void* externalSurface) = 0;
-    virtual void flushExternalSurface(
-        const std::function<void(bool needsFlush)>& cb, bool needsFlush) = 0;
-#endif
 };
 
 class Compositor : public gc {

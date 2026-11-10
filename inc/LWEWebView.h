@@ -141,8 +141,9 @@ public:
      * separate thread regardless of the PreferSeparateThread flag.
      *
      */
+    static void Initialize(const char* storageDirectoryPath);
     static void Initialize(const char* storageDirectoryPath,
-                           InitializeOption option = InitializeOption::None);
+                           InitializeOption option);
 
     /**
      * \brief Returns the initialization status of lightweight web engine.
@@ -366,6 +367,63 @@ public:
         double perspectiveY;
         double perspectiveScale;
     };
+
+    // The embedder owns the framebuffer and keeps it valid until release.
+    // Dimensions are physical pixels. matrix maps WebView coordinates to
+    // target pixels, in row-major order. The clip uses GL's bottom-left origin.
+    // opacity and color multiply the WebView output. Set preserveContents when
+    // pixels outside the WebView must survive (for example, a host window).
+    struct GLRenderTarget {
+        unsigned width;
+        unsigned height;
+        int clipX;
+        int clipY;
+        unsigned clipWidth;
+        unsigned clipHeight;
+        double matrix[9];
+        float opacity;
+        float color[3];
+        unsigned framebuffer;
+        bool preserveContents;
+    };
+
+    // Called on the LWE render thread with the host GL context current.
+    // Return false when the host cannot provide a target for this frame.
+    using AcquireGLRenderTarget =
+        std::function<bool(WebContainer*, GLRenderTarget&)>;
+
+    // Called on the LWE thread once after each successful acquisition,
+    // including skipped frames. The embedder must synchronize GPU access before
+    // handing a rendered target to another consumer.
+    using ReleaseGLRenderTarget = std::function<void(WebContainer*, bool)>;
+
+    // The host keeps the pixels writable until release. Pixels are
+    // premultiplied ARGB32 in native byte order; stride is in bytes.
+    struct SoftwareRenderTarget {
+        void* pixels;
+        size_t stride;
+        unsigned width;
+        unsigned height;
+    };
+
+    // Both callbacks run on the LWE thread. Release is called exactly once
+    // after each successful acquisition, even when no pixels were painted.
+    // Return false from acquire when no target is currently available.
+    using AcquireSoftwareRenderTarget =
+        std::function<bool(WebContainer*, SoftwareRenderTarget&)>;
+    using ReleaseSoftwareRenderTarget =
+        std::function<void(WebContainer*, bool)>;
+
+    static WebContainer* CreateSoftwareWithRenderTarget(
+        const WebContainerArguments& args,
+        const AcquireSoftwareRenderTarget& acquireTarget,
+        const ReleaseSoftwareRenderTarget& releaseTarget);
+
+    static WebContainer* CreateGLWithRenderTarget(
+        const WebContainerArguments& args,
+        const RendererGLConfiguration& config,
+        const AcquireGLRenderTarget& acquireTarget,
+        const ReleaseGLRenderTarget& releaseTarget = {});
 
     void RegisterPreRenderingHandler(const std::function<RenderInfo(void)>& cb);
     void RegisterOnRenderedHandler(

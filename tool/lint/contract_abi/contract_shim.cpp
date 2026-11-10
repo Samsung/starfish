@@ -160,6 +160,11 @@ CONTRACT_ABI_CHECK_WRAPPER(WebContainerProcTable, CreateGLWithPlatformImage,
                            LWEDelegate_WebContainer_CreateGLWithPlatformImage);
 CONTRACT_ABI_CHECK_WRAPPER(WebContainerProcTable, CreateHeadless,
                            LWEDelegate_WebContainer_CreateHeadless);
+CONTRACT_ABI_CHECK_WRAPPER(WebContainerProcTable, SetGLRenderTargetCallbacks,
+                           LWEDelegate_WebContainer_SetGLRenderTargetCallbacks);
+CONTRACT_ABI_CHECK_WRAPPER(
+    WebContainerProcTable, CreateSoftwareWithRenderTarget,
+    LWEDelegate_WebContainer_CreateSoftwareWithRenderTarget);
 
 CONTRACT_ABI_CHECK_WRAPPER(WebViewProcTable, Create,
                            LWEDelegate_WebView_Create);
