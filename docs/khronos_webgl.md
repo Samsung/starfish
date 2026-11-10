@@ -136,7 +136,7 @@ expected pass and gates CI; a `#`-commented line is a tracked known failure
 and is never deleted or uncommented just to make a run green. After fixing a
 feature, run the list with `-f`, then uncomment the tests that now pass.
 
-Every `khronos_webgl2.res` line ends in `?webglVersion=2`, the query Khronos's
+Every `khronos_webgl2.res` line carries `?webglVersion=2`, the query Khronos's
 own runner (`webgl-conformance-tests.html`) appends to each page of the 2.0.0
 suite. The harness creates a WebGL 1 context unless that query says
 otherwise, so without it the `conformance/` half of the suite — and the
@@ -145,6 +145,13 @@ query on new lines. The 1.0.3 list needs none: that runner asks for WebGL 1,
 the default. The sdk list is bare for the same reason, but its harness also
 runs most pages as WebGL 2 (2.0.1), and each such page gets a second line
 with the query.
+
+A dEQP page runs none of the cases on the suite's skip list
+(`deqp/framework/common/tcuSkipList.js`, mostly cases that fail on
+particular drivers), so a page with every case on it passes without
+testing anything. When the page's skip reasons are driver bugs, not test
+issues, its line adds `&runSkippedTests`, which turns the whole skip list
+off for that page.
 
 ## Upgrading the pin
 
