@@ -1,0 +1,98 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WEBGL_compressed_texture_s3tc block and target rules</title>
+<canvas id="canvas" width="1" height="1"></canvas>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0, __firstError = '';
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) {
+      __pass++;
+    } else {
+      __fail++;
+      if (!__firstError) __firstError = message;
+      __nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[webgl2-compressed-texture-s3tc] ' + verdict);
+    document.title = verdict + (__firstError ? ': ' + __firstError : '');
+  };
+}
+
+// WEBGL_compressed_texture_s3tc: width << level and height << level are
+// multiples of 4 (texStorage* follows its compressedTexImage* pseudo-code),
+// and EXT_texture_compression_s3tc has no TEXTURE_3D.
+
+function hex(v) { return '0x' + v.toString(16); }
+
+function expectError(gl, expected, label) {
+  var error = gl.getError();
+  console.assert(error === expected,
+                 label + ' -> ' + hex(expected) + ', got ' + hex(error));
+}
+
+function bindNew(gl, target) {
+  gl.bindTexture(target, gl.createTexture());
+}
+
+var gl = document.getElementById('canvas').getContext('webgl2');
+console.assert(!!gl, 'WebGL2 context is required');
+var ext = gl && gl.getExtension('WEBGL_compressed_texture_s3tc');
+if (gl && !ext) {
+  console.log('WEBGL_compressed_texture_s3tc is not supported; nothing to check');
+}
+if (ext) {
+  var DXT1 = ext.COMPRESSED_RGB_S3TC_DXT1_EXT;
+  var formats = Array.from(gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS));
+  [ext.COMPRESSED_RGB_S3TC_DXT1_EXT, ext.COMPRESSED_RGBA_S3TC_DXT1_EXT,
+   ext.COMPRESSED_RGBA_S3TC_DXT3_EXT, ext.COMPRESSED_RGBA_S3TC_DXT5_EXT]
+      .forEach(function (format) {
+    console.assert(formats.indexOf(format) >= 0,
+                   'COMPRESSED_TEXTURE_FORMATS lists ' + hex(format));
+  });
+  gl.getError();
+
+  bindNew(gl, gl.TEXTURE_2D);
+  gl.compressedTexImage2D(gl.TEXTURE_2D, 0, DXT1, 4, 4, 0, new Uint8Array(8));
+  expectError(gl, gl.NO_ERROR, 'compressedTexImage2D level 0 4x4');
+  gl.compressedTexImage2D(gl.TEXTURE_2D, 0, DXT1, 5, 5, 0, new Uint8Array(32));
+  expectError(gl, gl.INVALID_OPERATION, 'compressedTexImage2D level 0 5x5');
+  gl.compressedTexImage2D(gl.TEXTURE_2D, 0, DXT1, 2, 2, 0, new Uint8Array(8));
+  expectError(gl, gl.INVALID_OPERATION, 'compressedTexImage2D level 0 2x2');
+  gl.compressedTexImage2D(gl.TEXTURE_2D, 1, DXT1, 2, 2, 0, new Uint8Array(8));
+  expectError(gl, gl.NO_ERROR, 'compressedTexImage2D level 1 2x2');
+  gl.compressedTexImage2D(gl.TEXTURE_2D, 1, DXT1, 3, 3, 0, new Uint8Array(8));
+  expectError(gl, gl.INVALID_OPERATION, 'compressedTexImage2D level 1 3x3');
+  gl.compressedTexImage2D(gl.TEXTURE_2D, 2, DXT1, 1, 1, 0, new Uint8Array(8));
+  expectError(gl, gl.NO_ERROR, 'compressedTexImage2D level 2 1x1');
+
+  bindNew(gl, gl.TEXTURE_2D);
+  gl.texStorage2D(gl.TEXTURE_2D, 1, DXT1, 5, 5);
+  expectError(gl, gl.INVALID_OPERATION, 'texStorage2D 5x5');
+  bindNew(gl, gl.TEXTURE_2D);
+  gl.texStorage2D(gl.TEXTURE_2D, 3, DXT1, 8, 8);
+  expectError(gl, gl.NO_ERROR, 'texStorage2D 8x8, 3 levels');
+
+  bindNew(gl, gl.TEXTURE_3D);
+  gl.compressedTexImage3D(gl.TEXTURE_3D, 0, DXT1, 4, 4, 1, 0,
+                          new Uint8Array(8));
+  expectError(gl, gl.INVALID_OPERATION, 'compressedTexImage3D TEXTURE_3D');
+  bindNew(gl, gl.TEXTURE_3D);
+  gl.texStorage3D(gl.TEXTURE_3D, 1, DXT1, 4, 4, 1);
+  expectError(gl, gl.INVALID_OPERATION, 'texStorage3D TEXTURE_3D');
+
+  bindNew(gl, gl.TEXTURE_2D_ARRAY);
+  gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, 0, DXT1, 4, 4, 2, 0,
+                          new Uint8Array(16));
+  expectError(gl, gl.NO_ERROR, 'compressedTexImage3D TEXTURE_2D_ARRAY 4x4x2');
+  gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, 0, DXT1, 5, 5, 1, 0,
+                          new Uint8Array(32));
+  expectError(gl, gl.INVALID_OPERATION,
+              'compressedTexImage3D TEXTURE_2D_ARRAY 5x5x1');
+}
+testEnd();
+</script>

@@ -70,7 +70,7 @@ http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-verte
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/oes-vertex-array-object.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-compressed-texture-atc.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-compressed-texture-pvrtc.html
-# http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-compressed-texture-size-limit.html
+http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-compressed-texture-size-limit.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-debug-renderer-info.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-debug-shaders.html
 http://localhost:11010/conformance-suites/1.0.3/conformance/extensions/webgl-depth-texture.html

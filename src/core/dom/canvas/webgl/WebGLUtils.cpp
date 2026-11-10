@@ -254,6 +254,16 @@ bool Pixel::isKnownTypeWebGL2(GLenum type)
 
 Optional<CompressedFormatInfo> Pixel::compressedFormatInfo(GLenum format)
 {
+    // https://registry.khronos.org/webgl/extensions/WEBGL_compressed_texture_s3tc/
+    // COMPRESSED_RGB_S3TC_DXT1_EXT (0x83F0) .. COMPRESSED_RGBA_S3TC_DXT5_EXT
+    // (0x83F3): the two DXT1 formats use 8 bytes per 4x4 block, DXT3 and
+    // DXT5 16.
+    if (format >= 0x83F0 && format <= 0x83F3) {
+        return CompressedFormatInfo{ "WEBGL_compressed_texture_s3tc", 4, 4,
+                                     static_cast<uint8_t>(
+                                         format <= 0x83F1 ? 8 : 16) };
+    }
+
     // https://registry.khronos.org/webgl/extensions/WEBGL_compressed_texture_etc/
     // COMPRESSED_R11_EAC (0x9270) .. COMPRESSED_SRGB8_ALPHA8_ETC2_EAC (0x9279)
     if (format >= 0x9270 && format <= 0x9279) {

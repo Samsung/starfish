@@ -3637,6 +3637,12 @@ void WebGL2RenderingContext::framebufferTextureLayer(
                 setGLError(GL_INVALID_OPERATION);
                 return;
             }
+            // OpenGL ES 3.0.6 §4.4.2.4: a 2D array texture's level is at most
+            // log2 of MAX_TEXTURE_SIZE as reported.
+            if (texture->target() == GL_TEXTURE_2D_ARRAY &&
+                !validateTexLevelAndSize(GL_TEXTURE_2D_ARRAY, level, 0, 0)) {
+                return;
+            }
             texName = texture->glObject();
         }
     }
@@ -4479,6 +4485,12 @@ void WebGL2RenderingContext::texStorage2D(GLenum target, GLsizei levels,
         setGLError(GL_INVALID_VALUE, "dimensions must be greater than 0.");
         return;
     }
+    // WebGL 2.0 texStorage2D: the pseudo-code calls compressedTexImage2D for
+    // a compressed format, whose level 0 rules then apply.
+    if (!validateTexLevelAndSize(target, 0, width, height) ||
+        !validateCompressedTexDimensions(internalformat, 0, width, height)) {
+        return;
+    }
 
     GLsizei maxDim2D = std::max(width, height);
     GLsizei maxLevels2D = 0;
@@ -4548,6 +4560,10 @@ void WebGL2RenderingContext::texStorage3D(GLenum target, GLsizei levels,
         setGLError(GL_INVALID_VALUE, "dimensions must be greater than 0.");
         return;
     }
+    if (!validateTexLevelAndSize(target, 0, width, height) ||
+        !validateCompressedTexDimensions(internalformat, 0, width, height)) {
+        return;
+    }
 
     GLsizei maxDim3D = std::max(width, std::max(height, depth));
     GLsizei maxLevels3D = 0;
@@ -4613,6 +4629,10 @@ void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
 {
     ENTER_CONTEXT_SCOPE();
 
+    if (!validateTexLevelAndSize(target, level, width, height)) {
+        return;
+    }
+
     WebGLTexture* texture = getBoundTextureObject(target);
     if (texture && texture->isImmutable()) {
         setGLError(GL_INVALID_OPERATION, "Texture is immutable.");
@@ -4668,6 +4688,10 @@ void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
 {
     ENTER_CONTEXT_SCOPE();
 
+    if (!validateTexLevelAndSize(target, level, width, height)) {
+        return;
+    }
+
     WebGLTexture* texture = getBoundTextureObject(target);
     if (!hasBoundTexture(target)) {
         setGLError(
@@ -4717,6 +4741,10 @@ void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
 {
     ENTER_CONTEXT_SCOPE();
 
+    if (!validateTexLevelAndSize(target, level, width, height)) {
+        return;
+    }
+
     WebGLTexture* texture = getBoundTextureObject(target);
     if (texture && texture->isImmutable()) {
         setGLError(GL_INVALID_OPERATION, "Texture is immutable.");
@@ -4761,6 +4789,10 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
                                         GLenum type, WebGLintptr pboOffset)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!validateTexLevelAndSize(target, level, width, height)) {
+        return;
+    }
 
     WebGLTexture* texture = getBoundTextureObject(target);
     if (texture && texture->isImmutable()) {
@@ -4818,6 +4850,10 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
 {
     ENTER_CONTEXT_SCOPE();
 
+    if (!validateTexLevelAndSize(target, level, width, height)) {
+        return;
+    }
+
     WebGLTexture* texture = getBoundTextureObject(target);
     if (!hasBoundTexture(target)) {
         setGLError(
@@ -4872,6 +4908,10 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
 
     if (target != GL_TEXTURE_3D && target != GL_TEXTURE_2D_ARRAY) {
         setGLError(GL_INVALID_ENUM, "target is invalid.");
+        return;
+    }
+
+    if (!validateTexLevelAndSize(target, level, width, height)) {
         return;
     }
 
@@ -4931,6 +4971,10 @@ void WebGL2RenderingContext::texImage3D(
 
     if (target != GL_TEXTURE_3D && target != GL_TEXTURE_2D_ARRAY) {
         setGLError(GL_INVALID_ENUM, "target is invalid.");
+        return;
+    }
+
+    if (!validateTexLevelAndSize(target, level, width, height)) {
         return;
     }
 

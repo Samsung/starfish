@@ -57,7 +57,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-deb
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-debug-shaders.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-etc.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-pvrtc.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-size-limit.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-compressed-texture-size-limit.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/extensions/webgl-shared-resources.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/angle-ambiguous-function-call.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/glsl/bugs/angle-constructor-invalid-parameters.html?webglVersion=2

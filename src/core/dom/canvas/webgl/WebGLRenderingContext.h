@@ -475,6 +475,8 @@ private:
     // `target` would write the image the read buffer reads.
     bool copiesIntoReadBuffer(const WebGLTexture* texture, GLenum target,
                               GLint level);
+    // MAX_TEXTURE_SIZE or MAX_CUBE_MAP_TEXTURE_SIZE, as reported and enforced.
+    GLint textureSizeLimit(GLenum pname);
     bool validateTexImageSource(GLenum format, GLenum type);
     bool validateTexSubImageFormat(GLenum format);
     bool isTexSubImageTypeAllowed(GLenum target, GLint level, GLenum format,
@@ -581,6 +583,16 @@ protected:
 
     bool isCompressedFormatEnabled(GLenum format);
     bool isCompressedFormatValidForTarget(GLenum target, GLenum format);
+    // INVALID_VALUE, and false, unless level, width and height fit the
+    // reported limits of `target` (OpenGL ES 3.0.6 §3.8.3). TEXTURE_3D, the
+    // layer count of a TEXTURE_2D_ARRAY and other targets are left to the GL.
+    bool validateTexLevelAndSize(GLenum target, GLint level, GLsizei width,
+                                 GLsizei height);
+    // INVALID_OPERATION, and false, for an S3TC image that breaks
+    // WEBGL_compressed_texture_s3tc's block rule; call it after
+    // validateTexLevelAndSize().
+    bool validateCompressedTexDimensions(GLenum format, GLint level,
+                                         GLsizei width, GLsizei height);
     bool checkCompressedTexImage(GLenum target, bool is3D, GLenum format,
                                  GLsizei width, GLsizei height, GLsizei depth,
                                  size_t imageSize);

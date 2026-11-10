@@ -1,0 +1,142 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebGL2 texture definitions follow the reported size limit</title>
+<canvas id="canvas" width="1" height="1"></canvas>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0, __firstError = '';
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) {
+      __pass++;
+    } else {
+      __fail++;
+      if (!__firstError) __firstError = message;
+      __nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[webgl2-texture-size-limit] ' + verdict);
+    document.title = verdict + (__firstError ? ': ' + __firstError : '');
+  };
+}
+
+// OpenGL ES 3.0.6 §3.8.3-§3.8.4: a level above log2 of the reported size
+// limit, or a width or height above that limit shifted right by the level, is
+// INVALID_VALUE for every call that defines a texture.
+
+function hex(v) { return '0x' + v.toString(16); }
+
+function expectError(gl, expected, label) {
+  var error = gl.getError();
+  console.assert(error === expected,
+                 label + ' -> ' + hex(expected) + ', got ' + hex(error));
+}
+
+function bindNew(gl, target) {
+  gl.bindTexture(target, gl.createTexture());
+}
+
+var gl = document.getElementById('canvas').getContext('webgl2');
+console.assert(!!gl, 'WebGL2 context is required');
+if (gl) {
+  var max = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+  var cubeMax = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
+  var maxLevel = Math.floor(Math.log2(max));
+  gl.getError();
+
+  // texStorage*; a successful one makes the texture immutable, so every
+  // call gets a new texture.
+  bindNew(gl, gl.TEXTURE_2D);
+  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, max + 1, 1);
+  expectError(gl, gl.INVALID_VALUE, 'texStorage2D width MAX_TEXTURE_SIZE + 1');
+  bindNew(gl, gl.TEXTURE_2D);
+  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, max, 1);
+  expectError(gl, gl.NO_ERROR, 'texStorage2D width MAX_TEXTURE_SIZE');
+  bindNew(gl, gl.TEXTURE_CUBE_MAP);
+  gl.texStorage2D(gl.TEXTURE_CUBE_MAP, 1, gl.RGBA8, cubeMax + 1, cubeMax + 1);
+  expectError(gl, gl.INVALID_VALUE,
+              'texStorage2D cube MAX_CUBE_MAP_TEXTURE_SIZE + 1');
+  bindNew(gl, gl.TEXTURE_2D_ARRAY);
+  gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.RGBA8, max + 1, 1, 1);
+  expectError(gl, gl.INVALID_VALUE,
+              'texStorage3D 2D array width MAX_TEXTURE_SIZE + 1');
+  gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.RGBA8, 1, max + 1, 1);
+  expectError(gl, gl.INVALID_VALUE,
+              'texStorage3D 2D array height MAX_TEXTURE_SIZE + 1');
+
+  // A TexImageSource upload takes its size from the source.
+  bindNew(gl, gl.TEXTURE_2D);
+  var wide = new ImageData(max + 1, 1);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, wide);
+  expectError(gl, gl.INVALID_VALUE,
+              'texImage2D(ImageData) width MAX_TEXTURE_SIZE + 1');
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, max + 1, 1, 0, gl.RGBA,
+                gl.UNSIGNED_BYTE, wide);
+  expectError(gl, gl.INVALID_VALUE,
+              'texImage2D(width, height, ImageData) width MAX_TEXTURE_SIZE + 1');
+  gl.texImage2D(gl.TEXTURE_2D, maxLevel, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE,
+                new ImageData(2, 1));
+  expectError(gl, gl.INVALID_VALUE,
+              'texImage2D(ImageData) 2x1 at level log2(MAX_TEXTURE_SIZE)');
+  gl.texImage2D(gl.TEXTURE_2D, maxLevel + 1, gl.RGBA, gl.RGBA,
+                gl.UNSIGNED_BYTE, new ImageData(1, 1));
+  expectError(gl, gl.INVALID_VALUE,
+              'texImage2D(ImageData) at level log2(MAX_TEXTURE_SIZE) + 1');
+  gl.texImage2D(gl.TEXTURE_2D, maxLevel, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE,
+                new ImageData(1, 1));
+  expectError(gl, gl.NO_ERROR,
+              'texImage2D(ImageData) 1x1 at level log2(MAX_TEXTURE_SIZE)');
+  bindNew(gl, gl.TEXTURE_2D_ARRAY);
+  gl.texImage3D(gl.TEXTURE_2D_ARRAY, maxLevel + 1, gl.RGBA8, 1, 1, 1, 0,
+                gl.RGBA, gl.UNSIGNED_BYTE, new ImageData(1, 1));
+  expectError(gl, gl.INVALID_VALUE,
+              'texImage3D(ImageData) 2D array at level log2(MAX_TEXTURE_SIZE) + 1');
+
+  // Enough data for a (max + 1) x 1 RGBA row, so the size is the only error.
+  var rowBytes = (max + 1) * 4;
+  bindNew(gl, gl.TEXTURE_2D);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, max + 1, 1, 0, gl.RGBA,
+                gl.UNSIGNED_BYTE, new Uint8Array(rowBytes), 0);
+  expectError(gl, gl.INVALID_VALUE,
+              'texImage2D(srcData, srcOffset) width MAX_TEXTURE_SIZE + 1');
+  bindNew(gl, gl.TEXTURE_2D_ARRAY);
+  gl.texImage3D(gl.TEXTURE_2D_ARRAY, 0, gl.RGBA8, max + 1, 1, 1, 0, gl.RGBA,
+                gl.UNSIGNED_BYTE, new Uint8Array(rowBytes), 0);
+  expectError(gl, gl.INVALID_VALUE,
+              'texImage3D(srcData, srcOffset) 2D array width MAX_TEXTURE_SIZE + 1');
+
+  var unpack = gl.createBuffer();
+  gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, unpack);
+  gl.bufferData(gl.PIXEL_UNPACK_BUFFER, rowBytes, gl.STATIC_DRAW);
+  bindNew(gl, gl.TEXTURE_2D);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, max + 1, 1, 0, gl.RGBA,
+                gl.UNSIGNED_BYTE, 0);
+  expectError(gl, gl.INVALID_VALUE,
+              'texImage2D(PIXEL_UNPACK_BUFFER) width MAX_TEXTURE_SIZE + 1');
+  bindNew(gl, gl.TEXTURE_2D_ARRAY);
+  gl.texImage3D(gl.TEXTURE_2D_ARRAY, 0, gl.RGBA8, max + 1, 1, 1, 0, gl.RGBA,
+                gl.UNSIGNED_BYTE, 0);
+  expectError(gl, gl.INVALID_VALUE,
+              'texImage3D(PIXEL_UNPACK_BUFFER) 2D array width MAX_TEXTURE_SIZE + 1');
+  gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+
+  // OpenGL ES 3.0.6 §4.4.2.4: a 2D array texture attaches levels up to
+  // log2(MAX_TEXTURE_SIZE).
+  var layered = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D_ARRAY, layered);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, gl.createFramebuffer());
+  gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, layered,
+                             maxLevel + 1, 0);
+  expectError(gl, gl.INVALID_VALUE,
+              'framebufferTextureLayer 2D array level log2(MAX_TEXTURE_SIZE) + 1');
+  gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, layered,
+                             maxLevel, 0);
+  expectError(gl, gl.NO_ERROR,
+              'framebufferTextureLayer 2D array level log2(MAX_TEXTURE_SIZE)');
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+}
+testEnd();
+</script>

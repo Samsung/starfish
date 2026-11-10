@@ -3564,8 +3564,7 @@ void WebGLRenderingContext::copyTexImage2D(GLenum target, GLint level,
         return;
     }
 
-    if (level < 0 || width < 0 || height < 0) {
-        setGLError(GL_INVALID_VALUE, "negative level or dimension");
+    if (!validateTexLevelAndSize(target, level, width, height)) {
         return;
     }
 
@@ -4970,8 +4969,12 @@ void WebGLRenderingContext::framebufferTexture2D(
             return;
         }
 
-        GLint maxTexSize = 0;
-        m_gl->getIntegerv(GL_MAX_TEXTURE_SIZE, &maxTexSize);
+        // OpenGL ES 3.0.6 §4.4.2.4: a cube map face's levels follow the cube
+        // map limit.
+        const bool isCubeFace = textarget >= GL_TEXTURE_CUBE_MAP_POSITIVE_X &&
+                                textarget <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
+        const GLint maxTexSize = textureSizeLimit(
+            isCubeFace ? GL_MAX_CUBE_MAP_TEXTURE_SIZE : GL_MAX_TEXTURE_SIZE);
         GLint maxLevels = 0;
         while ((maxTexSize >> maxLevels) > 0) {
             ++maxLevels;
@@ -5229,11 +5232,9 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
     case GL_BLUE_BITS:
     case GL_GREEN_BITS:
     case GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
-    case GL_MAX_CUBE_MAP_TEXTURE_SIZE:
     case GL_MAX_FRAGMENT_UNIFORM_VECTORS:
     case GL_MAX_RENDERBUFFER_SIZE:
     case GL_MAX_TEXTURE_IMAGE_UNITS:
-    case GL_MAX_TEXTURE_SIZE:
     case GL_MAX_VARYING_VECTORS:
     case GL_MAX_VERTEX_ATTRIBS:
     case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
@@ -5252,6 +5253,9 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         m_gl->getIntegerv(pname, &values[0]);
         return ValueRef::create(values[0]);
     }
+    case GL_MAX_CUBE_MAP_TEXTURE_SIZE:
+    case GL_MAX_TEXTURE_SIZE:
+        return ValueRef::create(textureSizeLimit(pname));
     case GL_DEPTH_BITS: {
         if (!isDefaultFramebufferBound()) {
             Optional<WebGLFramebuffer*> maybeFb =
@@ -5577,9 +5581,10 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
     // Uint32Array
     case GL_COMPRESSED_TEXTURE_FORMATS: {
         // The formats of the compressed texture extensions enabled so far:
-        // the ETC2/EAC run, then the RGBA and SRGB8_ALPHA8 ASTC runs.
+        // the S3TC run, the ETC2/EAC run, then the RGBA and SRGB8_ALPHA8 ASTC
+        // runs.
         std::vector<uint32_t> formats;
-        for (GLenum first : { 0x9270u, 0x93B0u, 0x93D0u }) {
+        for (GLenum first : { 0x83F0u, 0x9270u, 0x93B0u, 0x93D0u }) {
             for (GLenum format = first;
                  Pixel::compressedFormatInfo(format).hasValue(); ++format) {
                 if (isCompressedFormatEnabled(format)) {
@@ -7961,6 +7966,56 @@ bool WebGLRenderingContext::bufferDataSucceeded(GLenum target)
     return false;
 }
 
+// The driver's limit, capped at 8192: one RGBA8 level then takes at most
+// 256 MiB instead of the 1 GiB a 16384 limit allows. Drivers accept sizes up
+// to their own limit, so the calls that define a texture check this one
+// themselves (validateTexLevelAndSize()).
+GLint WebGLRenderingContext::textureSizeLimit(GLenum pname)
+{
+    GLint size = 0;
+    m_gl->getIntegerv(pname, &size);
+    return std::min<GLint>(size, 8192);
+}
+
+// OpenGL ES 3.0.6 §3.8.3, which TexStorage* (§3.8.4), CopyTexImage2D (§3.8.5)
+// and CompressedTexImage* (§3.8.6) follow: level is at most log2 of the
+// target's limit, and width and height at most that limit >> level.
+bool WebGLRenderingContext::validateTexLevelAndSize(GLenum target, GLint level,
+                                                    GLsizei width,
+                                                    GLsizei height)
+{
+    GLenum pname = GL_MAX_TEXTURE_SIZE;
+    switch (target) {
+    case GL_TEXTURE_2D:
+    case GL_TEXTURE_2D_ARRAY:
+        break;
+    case GL_TEXTURE_CUBE_MAP:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+        pname = GL_MAX_CUBE_MAP_TEXTURE_SIZE;
+        break;
+    default:
+        return true;
+    }
+    const GLint maxSize = textureSizeLimit(pname);
+    GLint levelCount = 0;
+    while ((maxSize >> levelCount) > 0) {
+        ++levelCount;
+    }
+    // level is bounded before it is used as a shift count.
+    if (level < 0 || level >= levelCount || width < 0 || height < 0 ||
+        width > (maxSize >> level) || height > (maxSize >> level)) {
+        setGLError(GL_INVALID_VALUE,
+                   "level or size exceeds the texture size limit");
+        return false;
+    }
+    return true;
+}
+
 // A compressed format is only accepted once the WebGL extension defining it
 // has been enabled on this context; the core specifications define none.
 // https://registry.khronos.org/webgl/specs/latest/1.0/#COMPRESSED_TEXTURE_SUPPORT
@@ -7968,6 +8023,12 @@ bool WebGLRenderingContext::isCompressedFormatEnabled(GLenum format)
 {
     Optional<CompressedFormatInfo> info = Pixel::compressedFormatInfo(format);
     return info && isExtensionEnabled(info.value().extension);
+}
+
+// COMPRESSED_RGB_S3TC_DXT1_EXT (0x83F0) .. COMPRESSED_RGBA_S3TC_DXT5_EXT
+static bool isS3TCFormat(GLenum format)
+{
+    return format >= 0x83F0 && format <= 0x83F3;
 }
 
 // The LDR profile of ASTC covers two-dimensional images only. A TEXTURE_3D
@@ -7982,12 +8043,38 @@ bool WebGLRenderingContext::isCompressedFormatValidForTarget(GLenum target,
     if (target != GL_TEXTURE_3D) {
         return true;
     }
+    // EXT_texture_compression_s3tc (OpenGL ES 3.0 interactions): S3TC has no
+    // 3D textures, which some GLs take anyway.
+    if (isS3TCFormat(format)) {
+        return false;
+    }
     Optional<CompressedFormatInfo> info = Pixel::compressedFormatInfo(format);
     if (!info ||
         strcmp(info.value().extension, "WEBGL_compressed_texture_astc") != 0) {
         return true;
     }
     return WebGLExtensionRegistry::instance().hasASTCHDRProfile();
+}
+
+// WEBGL_compressed_texture_s3tc: width << level and height << level are
+// multiples of 4, so the image's level 0 is whole blocks. Drivers take other
+// sizes. level is in range here, and from level 2 on every size maps back to
+// a multiple of 4.
+bool WebGLRenderingContext::validateCompressedTexDimensions(GLenum format,
+                                                            GLint level,
+                                                            GLsizei width,
+                                                            GLsizei height)
+{
+    if (!isS3TCFormat(format)) {
+        return true;
+    }
+    const GLsizei multiple = 4 >> std::max(0, std::min(level, 2));
+    if (width % multiple == 0 && height % multiple == 0) {
+        return true;
+    }
+    setGLError(GL_INVALID_OPERATION,
+               "S3TC width and height shifted by level must be multiples of 4");
+    return false;
 }
 
 // Checks shared by compressed uploads before any GL call. imageSize must match
@@ -8061,7 +8148,10 @@ void WebGLRenderingContext::compressedTexImage(
     const void* data)
 {
     if (!checkCompressedTexImage(target, is3D, internalformat, width, height,
-                                 depth, imageSize)) {
+                                 depth, imageSize) ||
+        !validateTexLevelAndSize(target, level, width, height) ||
+        !validateCompressedTexDimensions(internalformat, level, width,
+                                         height)) {
         return;
     }
 
@@ -8086,7 +8176,9 @@ void WebGLRenderingContext::compressedTexImage(
 }
 
 // Block alignment of the region and the format matching the level are left to
-// the GL, which reports both as INVALID_OPERATION as WebGL requires.
+// the GL, which reports both as INVALID_OPERATION as WebGL requires. For S3TC
+// the GL may also take a region that ends in a partial block at the level's
+// edge, where WEBGL_compressed_texture_s3tc asks for the level's full size.
 void WebGLRenderingContext::compressedTexSubImage(
     GLenum target, bool is3D, GLint level, GLint xoffset, GLint yoffset,
     GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format,
@@ -9224,7 +9316,7 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
     // A sized upload with no texels converts nothing.
     const bool hasSubRectangle = destWidth > 0 || destHeight > 0;
     if (hasSubRectangle) {
-        // The size sets the size of the conversion buffer, so the GL's own
+        // The size sets the size of the conversion buffer, so the reported
         // limits (OpenGL ES 3.0.6 §3.8.3) are applied before it is built.
         GLint maxSize = 0;
         GLint maxDepth = 1;
@@ -9232,13 +9324,12 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
             m_gl->getIntegerv(GL_MAX_3D_TEXTURE_SIZE, &maxSize);
             maxDepth = maxSize;
         } else if (target == GL_TEXTURE_2D_ARRAY) {
-            m_gl->getIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
+            maxSize = textureSizeLimit(GL_MAX_TEXTURE_SIZE);
             m_gl->getIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &maxDepth);
         } else {
-            m_gl->getIntegerv(target == GL_TEXTURE_2D
-                                  ? GL_MAX_TEXTURE_SIZE
-                                  : GL_MAX_CUBE_MAP_TEXTURE_SIZE,
-                              &maxSize);
+            maxSize = textureSizeLimit(target == GL_TEXTURE_2D
+                                           ? GL_MAX_TEXTURE_SIZE
+                                           : GL_MAX_CUBE_MAP_TEXTURE_SIZE);
         }
         if (destWidth > maxSize || destHeight > maxSize || depth > maxDepth) {
             setGLError(GL_INVALID_VALUE, "size exceeds the texture limit");
@@ -9313,8 +9404,7 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
             const uint32_t svgWidth = element->width();
             const uint32_t svgHeight = element->height();
             // The page sets that size, and it sizes the raster buffer.
-            GLint maxSize = 0;
-            m_gl->getIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
+            const GLint maxSize = textureSizeLimit(GL_MAX_TEXTURE_SIZE);
             if (svgWidth > uint32_t(maxSize) || svgHeight > uint32_t(maxSize) ||
                 uint64_t(svgWidth) * svgHeight * 4 > SIZE_MAX) {
                 setGLError(GL_INVALID_VALUE,
@@ -9554,6 +9644,10 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
         return;
     }
 
+    if (!validateTexLevelAndSize(target, level, width, height)) {
+        return;
+    }
+
     if (border != 0) {
         setGLError(GL_INVALID_VALUE, "border must be 0");
         return;
@@ -9704,6 +9798,10 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
                   isPowerOfTwo(helper->height()))) {
                 setGLError(GL_INVALID_VALUE,
                            "level > 0 of a non-power-of-two size");
+                return;
+            }
+            if (!validateTexLevelAndSize(target, level, helper->width(),
+                                         helper->height())) {
                 return;
             }
 
@@ -10084,16 +10182,21 @@ void WebGLRenderingContext::texImageVideo(GLenum target, GLint level,
         m_gl->texParameteri(sourceTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         if (internalFormat) {
-            m_gl->bindTexture(bindingTarget, texture->glObject());
-            m_gl->texImage2D(target, level, internalFormat.value(), width,
-                             height, 0, format, type, nullptr);
-            if (hasNewGLError()) {
+            // The frame gives the size, known only once it is bound.
+            if (!validateTexLevelAndSize(target, level, width, height)) {
                 sourceTarget = 0;
             } else {
-                texture->setImageLevelInfo(target, level,
-                                           internalFormat.value(), width,
-                                           height, 1, type);
-                allocated = true;
+                m_gl->bindTexture(bindingTarget, texture->glObject());
+                m_gl->texImage2D(target, level, internalFormat.value(), width,
+                                 height, 0, format, type, nullptr);
+                if (hasNewGLError()) {
+                    sourceTarget = 0;
+                } else {
+                    texture->setImageLevelInfo(target, level,
+                                               internalFormat.value(), width,
+                                               height, 1, type);
+                    allocated = true;
+                }
             }
         }
     }
