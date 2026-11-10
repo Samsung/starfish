@@ -56,10 +56,37 @@ public:
         return Type::FrameBuffer;
     }
 
+    // The framebuffer the page draws into; multisampled when isMultisampled().
     inline GLuint fbo()
     {
         return m_fbo;
     }
+
+    // The framebuffer the drawing buffer's pixels are read from, after
+    // resolve().
+    GLuint resolvedFbo()
+    {
+        return m_resolveFbo ? m_resolveFbo : m_fbo;
+    }
+
+    bool isMultisampled() const
+    {
+        return m_samples > 0;
+    }
+
+    // fbo() may hold a newer image than the one resolve() copied last.
+    void setNeedsResolve()
+    {
+        m_needsResolve = true;
+    }
+
+    // Copies a multisampled renderbuffer fbo() into the texture the
+    // compositor and readbacks use, when it may have changed since the last
+    // copy (with EXT_multisampled_render_to_texture the driver does it).
+    // Runs with the owning context current and opens no context scope;
+    // framebuffer bindings, the scissor test and fbo()'s read buffer are left
+    // as they were.
+    void resolve();
 
     void setAttributes(FrameBufferAttributes attributes)
     {
@@ -67,10 +94,20 @@ public:
     }
 
 private:
+    bool createFramebuffer(unsigned width, unsigned height, GLsizei samples,
+                           bool renderToTexture);
+
     GLuint m_fbo{ 0 };
+    GLuint m_resolveFbo{ 0 };
     GLuint m_textureId{ 0 };
+    GLuint m_rboColor{ 0 };
     GLuint m_rboDepth{ 0 };
     GLuint m_rboOrTextureIdForDepthStencil{ 0 };
+    GLsizei m_samples{ 0 };
+    GLsizei m_width{ 0 };
+    GLsizei m_height{ 0 };
+    // A new buffer has never been resolved.
+    bool m_needsResolve{ true };
     FrameBufferAttributes m_attributes;
     Renderer* m_renderer{ nullptr };
     GL* m_gl{ nullptr };

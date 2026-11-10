@@ -5548,8 +5548,10 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
         return;
     }
 
-    gl()->readPixels(x, y, width, height, format, type,
-                     reinterpret_cast<void*>(clampToGLintptr(offset)));
+    readFromReadFramebuffer([&] {
+        gl()->readPixels(x, y, width, height, format, type,
+                         reinterpret_cast<void*>(clampToGLintptr(offset)));
+    });
 }
 
 void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
@@ -5662,7 +5664,8 @@ void WebGL2RenderingContext::readPixels(GLint x, GLint y, GLsizei width,
     }
 
     GLvoid* data = dstData->rawBuffer() + (dstOffset * elementSize);
-    gl()->readPixels(x, y, width, height, format, type, data);
+    readFromReadFramebuffer(
+        [&] { gl()->readPixels(x, y, width, height, format, type, data); });
 }
 
 void WebGL2RenderingContext::copyTexSubImage3D(GLenum target, GLint level,
@@ -5704,8 +5707,10 @@ void WebGL2RenderingContext::copyTexSubImage3D(GLenum target, GLint level,
         return;
     }
 
-    gl()->copyTexSubImage3D(target, level, xoffset, yoffset, zoffset, x, y,
-                            width, height);
+    readFromReadFramebuffer([&] {
+        gl()->copyTexSubImage3D(target, level, xoffset, yoffset, zoffset, x, y,
+                                width, height);
+    });
 }
 
 } // namespace Starfish

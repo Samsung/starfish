@@ -27,6 +27,7 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/modules/renderer/Renderer.h"
+#include "core/dom/canvas/webgl/WebGLExtensions.h"
 
 #include <cmath>
 
@@ -130,6 +131,19 @@ void WebGLRenderingContextBaseMixIn::resetSurface()
     {
         GLContextScope scope(m_context);
 
+        // The registry reads GL_EXTENSIONS, so it can only be built while a
+        // context is current. The constructor runs before m_context exists,
+        // and on ports where nothing is current at that point (ANGLE on
+        // Windows) getString returned null there and left the registry empty
+        // -- every getExtension() answered null and getSupportedExtensions()
+        // was empty. FramebufferTexture::create() asks it for
+        // EXT_multisampled_render_to_texture, so it is built before the first
+        // drawing buffer.
+        if (!WebGLExtensionRegistry::instance().isInitialized()) {
+            WebGLExtensionRegistry::instance().initialize(
+                m_ownerHTMLCanvasElement->webView()->renderer()->gl());
+        }
+
         // Ensure that the framebufferTexture is destroyed and a new one
         // created when invoked in the resize event.
         m_framebufferTexture.reset();
@@ -146,6 +160,11 @@ void WebGLRenderingContextBaseMixIn::resetSurface()
         m_canvasSurface = CanvasSurface::create(
             m_ownerHTMLCanvasElement->webView()->renderer(), bufferWidth,
             bufferHeight, 1, CanvasSurface::PreferUnitedTexture);
+        // A drawing buffer that could not be multisampled stays
+        // single-sampled for the rest of the context's life, and is reported
+        // so (getContextAttributes()).
+        m_frameBufferAttributes.antialias =
+            m_framebufferTexture->isMultisampled();
 
         // Seeing CompositorGL::initCompositorContextGl, by default a surface is
         // mapped to u,v coordinates that are set to the opposite of the y-axis

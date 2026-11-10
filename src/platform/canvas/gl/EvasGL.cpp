@@ -1697,6 +1697,35 @@ public:
         STARFISH_UNSUPPORTED("glRenderbufferStorageMultisample");
     }
 
+    void renderbufferStorageMultisampleEXT(GLenum target, GLsizei samples,
+                                           GLenum internalformat, GLsizei width,
+                                           GLsizei height) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glRenderbufferStorageMultisampleEXT) {
+            m_evasGLAPI->glRenderbufferStorageMultisampleEXT(
+                target, samples, internalformat, width, height);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glRenderbufferStorageMultisampleEXT");
+    }
+
+    void framebufferTexture2DMultisampleEXT(GLenum target, GLenum attachment,
+                                            GLenum textarget, GLuint texture,
+                                            GLint level,
+                                            GLsizei samples) override
+    {
+#if defined(EVAS_GL_GLES3)
+        if (m_evasGLAPI->glFramebufferTexture2DMultisampleEXT) {
+            m_evasGLAPI->glFramebufferTexture2DMultisampleEXT(
+                target, attachment, textarget, texture, level, samples);
+            return;
+        }
+#endif
+        STARFISH_UNSUPPORTED("glFramebufferTexture2DMultisampleEXT");
+    }
+
     void readBuffer(GLenum src) override
     {
 #if defined(EVAS_GL_GLES3)

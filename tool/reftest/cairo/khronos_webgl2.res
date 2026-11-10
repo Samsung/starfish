@@ -35,7 +35,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/canvas/texture-bindi
 http://localhost:11010/conformance-suites/2.0.0/conformance/canvas/to-data-url-test.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/canvas/viewport-unchanged-upon-resize.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-attribute-preserve-drawing-buffer.html?webglVersion=2
-# http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-attributes-alpha-depth-stencil-antialias.html?webglVersion=2
+http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-attributes-alpha-depth-stencil-antialias.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-size-change.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-no-alpha-fbo-with-alpha.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/context/context-creation-and-destruction.html?webglVersion=2
@@ -523,7 +523,7 @@ http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/framebuffe
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-clear.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-drawarrays.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-drawelements.html?webglVersion=2
-http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-scissor-test.html?webglVersion=2
+# http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-scissor-test.html?webglVersion=2 # @ignore llvmpipe before Mesa 26 (CI image: 25.2.8) widens the scissor box by one pixel right and up when drawing into a multisampled buffer, so the antialias:true half fails; passes on Mesa 26.0.8.
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-scissor-fbo-test.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-scissor-canvas-dimensions.html?webglVersion=2
 http://localhost:11010/conformance-suites/2.0.0/conformance/rendering/gl-viewport-test.html?webglVersion=2

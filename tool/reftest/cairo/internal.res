@@ -861,6 +861,7 @@ tests/assertion/canvas/font-weight-values.html
 # [known-fail:PRE_FIX_BASELINE] tests/assertion/canvas/webgl2-cube-face-tex-image-overloads.html
 tests/assertion/canvas/webgl2-compressed-tex-image-overloads.html
 tests/assertion/canvas/webgl2-read-draw-framebuffer-split.html
+tests/assertion/canvas/webgl-antialias-readback.html
 tests/assertion/canvas/webgl-deleted-and-foreign-objects.html
 tests/assertion/canvas/webgl-composite-clear-keeps-state.html
 tests/assertion/canvas/webgl-teximage-contextless-canvas.html

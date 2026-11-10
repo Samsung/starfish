@@ -464,6 +464,18 @@ public:
                                                 GLenum internalformat,
                                                 GLsizei width,
                                                 GLsizei height) = 0;
+    // EXT_multisampled_render_to_texture. Call only when the driver lists the
+    // extension: drivers hand out these entry points without it (llvmpipe).
+    virtual void renderbufferStorageMultisampleEXT(GLenum target,
+                                                   GLsizei samples,
+                                                   GLenum internalformat,
+                                                   GLsizei width,
+                                                   GLsizei height) = 0;
+    virtual void framebufferTexture2DMultisampleEXT(GLenum target,
+                                                    GLenum attachment,
+                                                    GLenum textarget,
+                                                    GLuint texture, GLint level,
+                                                    GLsizei samples) = 0;
     virtual void readBuffer(GLenum src) = 0;
 };
 

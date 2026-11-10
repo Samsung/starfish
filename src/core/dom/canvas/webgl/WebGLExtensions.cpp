@@ -200,6 +200,8 @@ void WebGLExtensionRegistry::initialize(GL* gl)
 #undef SUPPORTED_GL_EXTENSIONS
 
     m_hasASTCHDRProfile = has("KHR_texture_compression_astc_hdr");
+    m_hasEXT_multisampled_render_to_texture =
+        has("EXT_multisampled_render_to_texture");
 
     m_hasEXT_texture_format_BGRA8888 =
         (extensions.find("GL_EXT_texture_format_BGRA8888") !=

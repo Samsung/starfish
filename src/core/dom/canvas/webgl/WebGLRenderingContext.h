@@ -585,6 +585,9 @@ private:
     // Fills pixels as readDrawingBuffer() would when the drawing buffer reads
     // cleared, and returns whether it did.
     bool readClearedDrawingBuffer(uint8_t* pixels, size_t stride);
+    // Clears every image of a drawing buffer just made, the page's state
+    // left as it was. The context must be current.
+    void clearNewDrawingBuffer();
 
 protected:
     bool hasBoundTexture(GLenum target) const;
@@ -689,6 +692,10 @@ protected:
     GLErrorSet m_GLErrors;
     GLint getCurrentProgram();
     void completePendingJobs();
+    // Runs `read`, a readPixels or copyTex(Sub)Image* call, with the
+    // drawing buffer's resolved image bound to READ_FRAMEBUFFER in place of
+    // the multisampled one, when that is what READ_FRAMEBUFFER reads.
+    void readFromReadFramebuffer(const std::function<void()>& read);
     // Clears the image of `renderbuffer`'s storage to its initial values
     // (initializeImage()).
     void initializeRenderbuffer(WebGLRenderbuffer* renderbuffer);

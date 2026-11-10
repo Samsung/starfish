@@ -1,0 +1,207 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebGL antialiased drawing buffer reads back whole</title>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0, __firstError = '';
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) {
+      __pass++;
+    } else {
+      __fail++;
+      if (!__firstError) __firstError = message;
+      __nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[webgl-antialias-readback] ' + verdict);
+    document.title = verdict + (__firstError ? ': ' + __firstError : '');
+  };
+}
+
+// WebGL 1.0 §2.2: with antialias false the drawing buffer must not be
+// antialiased; WebGL 2.0 "The Drawing Buffer": antialias must be obeyed.
+// Reads of the drawing buffer (readPixels, copyTexImage2D, texImage2D and
+// drawImage of the canvas, toDataURL) see all of it: the page's scissor test
+// limits drawing only, and its readBuffer(NONE) only the page's own reads.
+// WebGL 1.0 §2.2: a drawing buffer reads cleared when first created and when
+// its size changes.
+
+var SIZE = 4;
+
+function hex(v) { return '0x' + v.toString(16); }
+
+function expectError(gl, expected, label) {
+  var error = gl.getError();
+  console.assert(error === expected,
+                 label + ' -> ' + hex(expected) + ', got ' + hex(error));
+}
+
+function at(pixels, x, y) {
+  var i = 4 * (y * SIZE + x);
+  return Array.prototype.slice.call(pixels, i, i + 4).join(',');
+}
+
+function readAll(gl) {
+  var pixels = new Uint8Array(SIZE * SIZE * 4);
+  gl.readPixels(0, 0, SIZE, SIZE, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+  return pixels;
+}
+
+function allZero(pixels) {
+  return Array.prototype.every.call(pixels, function (v) { return v === 0; });
+}
+
+// The whole buffer red, then pixel (0, 0) in `color`; the scissor test is
+// left on, boxing that pixel.
+function paint(gl, color) {
+  gl.disable(gl.SCISSOR_TEST);
+  gl.clearColor(1, 0, 0, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.enable(gl.SCISSOR_TEST);
+  gl.scissor(0, 0, 1, 1);
+  gl.clearColor(color[0], color[1], color[2], 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+}
+
+function rgba(color) {
+  return color.map(function (c) { return c * 255; }).concat(255).join(',');
+}
+
+var RED = '255,0,0,255';
+
+function newContext(name, attributes) {
+  var canvas = document.createElement('canvas');
+  canvas.width = canvas.height = SIZE;
+  return canvas.getContext(name, attributes);
+}
+
+['webgl', 'webgl2'].forEach(function (name) {
+  var off = newContext(name, { antialias: false });
+  console.assert(off.getContextAttributes().antialias === false,
+                 name + ': antialias false is reported');
+  console.assert(off.getParameter(off.SAMPLE_BUFFERS) === 0 &&
+                 off.getParameter(off.SAMPLES) === 0,
+                 name + ': antialias false is not multisampled');
+  var byDefault = newContext(name);
+  if (!byDefault.getContextAttributes().antialias) {
+    console.assert(byDefault.getParameter(byDefault.SAMPLE_BUFFERS) === 0,
+                   name + ': a buffer reported not antialiased is not ' +
+                   'multisampled');
+  }
+});
+console.assert(newContext('webgl2').getContextAttributes().antialias === true,
+               'webgl2 obeys the default antialias true');
+
+var fresh = newContext('webgl2');
+console.assert(allZero(readAll(fresh)), 'a new drawing buffer reads cleared');
+fresh.clearColor(0, 1, 0, 1);
+fresh.clear(fresh.COLOR_BUFFER_BIT);
+fresh.canvas.width = SIZE + 1;
+console.assert(allZero(readAll(fresh)), 'a resized drawing buffer reads cleared');
+expectError(fresh, fresh.NO_ERROR, 'reads of a new and a resized buffer');
+
+var gl = newContext('webgl2', { antialias: true, preserveDrawingBuffer: true });
+var single = newContext('webgl2',
+                        { antialias: false, preserveDrawingBuffer: true });
+var canvas2d = document.createElement('canvas');
+canvas2d.width = canvas2d.height = SIZE;
+var context2d = canvas2d.getContext('2d');
+
+// drawImage puts the drawing buffer's top row first; GL (0, 0) is its
+// bottom-left pixel.
+function drawnImage() {
+  context2d.clearRect(0, 0, SIZE, SIZE);
+  context2d.drawImage(gl.canvas, 0, 0);
+  return context2d.getImageData(0, 0, SIZE, SIZE).data;
+}
+
+var color = [0, 1, 0];
+paint(gl, color);
+var pixels = readAll(gl);
+expectError(gl, gl.NO_ERROR, 'readPixels');
+console.assert(at(pixels, 0, 0) === rgba(color) && at(pixels, 3, 3) === RED,
+               'readPixels under a scissor box reads the whole buffer, got ' +
+               at(pixels, 0, 0) + ' / ' + at(pixels, 3, 3));
+
+color = [0, 1, 1];
+paint(gl, color);
+var packBuffer = gl.createBuffer();
+gl.bindBuffer(gl.PIXEL_PACK_BUFFER, packBuffer);
+gl.bufferData(gl.PIXEL_PACK_BUFFER, SIZE * SIZE * 4, gl.STREAM_READ);
+gl.readPixels(0, 0, SIZE, SIZE, gl.RGBA, gl.UNSIGNED_BYTE, 0);
+pixels = new Uint8Array(SIZE * SIZE * 4);
+gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, pixels);
+gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+expectError(gl, gl.NO_ERROR, 'readPixels into a pixel pack buffer');
+console.assert(at(pixels, 0, 0) === rgba(color) && at(pixels, 3, 3) === RED,
+               'readPixels into a pixel pack buffer reads the whole buffer, ' +
+               'got ' + at(pixels, 0, 0) + ' / ' + at(pixels, 3, 3));
+
+color = [0, 0, 0];
+paint(gl, color);
+var view = new Uint8Array(4 + SIZE * SIZE * 4);
+gl.readPixels(0, 0, SIZE, SIZE, gl.RGBA, gl.UNSIGNED_BYTE, view, 4);
+expectError(gl, gl.NO_ERROR, 'readPixels with a destination offset');
+pixels = view.subarray(4);
+console.assert(at(pixels, 0, 0) === rgba(color) && at(pixels, 3, 3) === RED,
+               'readPixels with a destination offset reads the whole buffer, ' +
+               'got ' + at(pixels, 0, 0) + ' / ' + at(pixels, 3, 3));
+
+color = [0, 0, 1];
+paint(gl, color);
+var texture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, texture);
+gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, SIZE, SIZE, 0);
+expectError(gl, gl.NO_ERROR, 'copyTexImage2D');
+var framebuffer = gl.createFramebuffer();
+gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D,
+                        texture, 0);
+pixels = readAll(gl);
+console.assert(at(pixels, 0, 0) === rgba(color) && at(pixels, 3, 3) === RED,
+               'copyTexImage2D under a scissor box copies the whole buffer, ' +
+               'got ' + at(pixels, 0, 0) + ' / ' + at(pixels, 3, 3));
+gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+color = [1, 1, 0];
+paint(gl, color);
+var image = drawnImage();
+console.assert(at(image, 0, 3) === rgba(color) && at(image, 3, 0) === RED,
+               'drawImage under a scissor box draws the whole buffer, got ' +
+               at(image, 0, 3) + ' / ' + at(image, 3, 0));
+
+// Another context uploads the canvas: its first row is the canvas's top one.
+color = [1, 0, 1];
+paint(gl, color);
+var other = newContext('webgl2');
+var uploaded = other.createTexture();
+other.bindTexture(other.TEXTURE_2D, uploaded);
+other.texImage2D(other.TEXTURE_2D, 0, other.RGBA, other.RGBA,
+                 other.UNSIGNED_BYTE, gl.canvas);
+expectError(other, other.NO_ERROR, 'texImage2D of the canvas');
+other.bindFramebuffer(other.FRAMEBUFFER, other.createFramebuffer());
+other.framebufferTexture2D(other.FRAMEBUFFER, other.COLOR_ATTACHMENT0,
+                           other.TEXTURE_2D, uploaded, 0);
+pixels = readAll(other);
+console.assert(at(pixels, 0, 3) === rgba(color) && at(pixels, 3, 0) === RED,
+               'texImage2D of the canvas uploads the whole buffer, got ' +
+               at(pixels, 0, 3) + ' / ' + at(pixels, 3, 0));
+
+gl.readBuffer(gl.NONE);
+gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, 1, 1, 0);
+expectError(gl, gl.INVALID_OPERATION, 'copyTexImage2D with read buffer NONE');
+gl.readBuffer(gl.BACK);
+
+color = [1, 1, 1];
+paint(gl, color);
+paint(single, color);
+console.assert(gl.canvas.toDataURL() === single.canvas.toDataURL(),
+               'toDataURL under a scissor box encodes the whole buffer');
+expectError(gl, gl.NO_ERROR, 'toDataURL');
+
+testEnd();
+</script>

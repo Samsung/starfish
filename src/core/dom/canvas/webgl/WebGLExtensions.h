@@ -78,6 +78,11 @@ public:
         return m_hasASTCHDRProfile;
     }
 
+    bool hasEXT_multisampled_render_to_texture()
+    {
+        return m_hasEXT_multisampled_render_to_texture;
+    }
+
 private:
     WebGLExtensionRegistry();
 
@@ -104,6 +109,7 @@ private:
 
     bool m_hasEXT_texture_format_BGRA8888 = false;
     bool m_hasASTCHDRProfile = false;
+    bool m_hasEXT_multisampled_render_to_texture = false;
     bool m_isInitialized = false;
 };
 

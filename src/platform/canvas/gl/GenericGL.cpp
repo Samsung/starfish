@@ -1448,6 +1448,31 @@ public:
                                          height);
     }
 
+    void renderbufferStorageMultisampleEXT(GLenum target, GLsizei samples,
+                                           GLenum internalformat, GLsizei width,
+                                           GLsizei height) override
+    {
+        if (m_glRenderbufferStorageMultisampleEXT) {
+            m_glRenderbufferStorageMultisampleEXT(
+                target, samples, internalformat, width, height);
+            return;
+        }
+        STARFISH_UNSUPPORTED("glRenderbufferStorageMultisampleEXT");
+    }
+
+    void framebufferTexture2DMultisampleEXT(GLenum target, GLenum attachment,
+                                            GLenum textarget, GLuint texture,
+                                            GLint level,
+                                            GLsizei samples) override
+    {
+        if (m_glFramebufferTexture2DMultisampleEXT) {
+            m_glFramebufferTexture2DMultisampleEXT(
+                target, attachment, textarget, texture, level, samples);
+            return;
+        }
+        STARFISH_UNSUPPORTED("glFramebufferTexture2DMultisampleEXT");
+    }
+
     void readBuffer(GLenum src) override
     {
         glReadBuffer(src);
@@ -1493,6 +1518,14 @@ public:
         m_glInvalidateFramebuffer =
             reinterpret_cast<PFNGLINVALIDATEFRAMEBUFFERPROC>(
                 renderer->getProcAddress("glInvalidateFramebuffer"));
+        m_glRenderbufferStorageMultisampleEXT =
+            reinterpret_cast<RenderbufferStorageMultisampleEXTProc>(
+                renderer->getProcAddress(
+                    "glRenderbufferStorageMultisampleEXT"));
+        m_glFramebufferTexture2DMultisampleEXT =
+            reinterpret_cast<FramebufferTexture2DMultisampleEXTProc>(
+                renderer->getProcAddress(
+                    "glFramebufferTexture2DMultisampleEXT"));
     }
 
     ~GenericGL()
@@ -1515,6 +1548,15 @@ private:
         nullptr;
 #endif
     PFNGLINVALIDATEFRAMEBUFFERPROC m_glInvalidateFramebuffer = nullptr;
+    // Not every GL header declares EXT_multisampled_render_to_texture.
+    typedef void(GLAPIENTRY *RenderbufferStorageMultisampleEXTProc)(
+        GLenum, GLsizei, GLenum, GLsizei, GLsizei);
+    typedef void(GLAPIENTRY *FramebufferTexture2DMultisampleEXTProc)(
+        GLenum, GLenum, GLenum, GLuint, GLint, GLsizei);
+    RenderbufferStorageMultisampleEXTProc
+        m_glRenderbufferStorageMultisampleEXT = nullptr;
+    FramebufferTexture2DMultisampleEXTProc
+        m_glFramebufferTexture2DMultisampleEXT = nullptr;
 };
 
 #if !defined(STARFISH_SHELL_EFL)

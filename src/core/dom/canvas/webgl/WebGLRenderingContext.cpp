@@ -188,20 +188,18 @@ void WebGLRenderingContext::preInitialize(ScriptValue contextAttributes)
 
 #undef SET_ATTRIBUTE
         m_frameBufferAttributes.alpha = m_attributes.alpha();
-        m_frameBufferAttributes.antialias = m_attributes.antialias();
         m_frameBufferAttributes.depth = m_attributes.depth();
         m_frameBufferAttributes.stencil = m_attributes.stencil();
     }
 
-    // In WebGL 1.0 antialias is only a request, and getContextAttributes()
-    // reports the drawing buffer actually created (§5.2), which is never
-    // multisampled. Deviation: WebGL 2.0 must obey the request (§3.2), but a
-    // multisampled default framebuffer is not implemented, so a WebGL 2
-    // context reports the requested value while its drawing buffer stays
-    // single-sampled (SAMPLES 0).
+    // WebGL 1.0 §2.2: antialias is a request, and the actual context
+    // parameters are those of the drawing buffer created; a WebGL 1 one is
+    // never multisampled. WebGL 2.0 ("The Drawing Buffer") must obey it, so
+    // its drawing buffer is multisampled unless the driver cannot make one.
     if (webGLVersion() == 1) {
         m_attributes.setAntialias(false);
     }
+    m_frameBufferAttributes.antialias = m_attributes.antialias();
 }
 
 void WebGLRenderingContext::initialize()
@@ -222,15 +220,7 @@ void WebGLRenderingContext::initialize()
     // bind default frame buffer
     GLContextScope contextScope(m_context);
 
-    // The registry reads GL_EXTENSIONS, so it can only be built while a
-    // context is current. The constructor runs before m_context exists, and
-    // on ports where nothing is current at that point (ANGLE on Windows)
-    // getString returned null there and left the registry empty -- every
-    // getExtension() answered null and getSupportedExtensions() was empty.
-    if (!WebGLExtensionRegistry::instance().isInitialized()) {
-        WebGLExtensionRegistry::instance().initialize(m_gl);
-    }
-
+    clearNewDrawingBuffer();
     m_gl->bindFramebuffer(GL_FRAMEBUFFER, m_framebufferTexture->fbo());
 
     // WebGL 2.0, "PRIMITIVE_RESTART_FIXED_INDEX is always enabled"; the cap
@@ -244,6 +234,8 @@ void WebGLRenderingContext::flushDrawingCommands()
 {
     GLRevertableContextScope scope(
         m_context, executionContext()->webBase()->asWebView()->renderer());
+    // The compositor samples the single-sampled image.
+    m_framebufferTexture->resolve();
     // we need to bind 0(screen) buffer for sending commands to gpu
     m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER, getCurrentFBO());
@@ -284,7 +276,9 @@ void WebGLRenderingContext::readDrawingBuffer(uint8_t* pixels, size_t stride)
 {
     GLint prevReadFbo = 0;
     m_gl->getIntegerv(GL_READ_FRAMEBUFFER_BINDING, &prevReadFbo);
-    m_gl->bindFramebuffer(GL_READ_FRAMEBUFFER, m_framebufferTexture->fbo());
+    m_framebufferTexture->resolve();
+    m_gl->bindFramebuffer(GL_READ_FRAMEBUFFER,
+                          m_framebufferTexture->resolvedFbo());
     // A WebGL 2 page may have set the default framebuffer's read buffer to
     // NONE; that limits the page's own reads, not the canvas's readback.
     GLint prevReadBuffer = GL_COLOR_ATTACHMENT0;
@@ -336,6 +330,32 @@ void WebGLRenderingContext::readDrawingBuffer(uint8_t* pixels, size_t stride)
         uint8_t* pBot = pixels + bot * stride;
         std::swap_ranges(pTop, pTop + width * 4, pBot);
     }
+}
+
+// OpenGL ES 3.0.6 §4.3.2 and §3.8.5 refuse reads (INVALID_OPERATION) only
+// from a multisampled framebuffer object; a multisampled default framebuffer
+// reads as single-sampled. WebGL's default framebuffer is a framebuffer object
+// to the GL, so its resolved image is read. Its readBuffer(NONE) must still
+// fail the read, which the multisampled framebuffer does with the same error.
+void WebGLRenderingContext::readFromReadFramebuffer(
+    const std::function<void()>& read)
+{
+    const GLuint resolved = m_framebufferTexture->resolvedFbo();
+    if (resolved == m_framebufferTexture->fbo() ||
+        getBoundFramebuffer(GL_READ_FRAMEBUFFER).valueOrNull()) {
+        read();
+        return;
+    }
+    GLint readBuffer = GL_NONE;
+    m_gl->getIntegerv(GL_READ_BUFFER, &readBuffer);
+    if (readBuffer == GL_NONE) {
+        read();
+        return;
+    }
+    m_framebufferTexture->resolve();
+    m_gl->bindFramebuffer(GL_READ_FRAMEBUFFER, resolved);
+    read();
+    m_gl->bindFramebuffer(GL_READ_FRAMEBUFFER, m_framebufferTexture->fbo());
 }
 
 // A presented drawing buffer without preserveDrawingBuffer reads cleared
@@ -435,6 +455,7 @@ void WebGLRenderingContext::onResize()
     // bindings must survive it (WebGL 1.0 §2.2), but the default framebuffer
     // has a new GL name, so rebind what each target refers to.
     GLContextScope contextScope(m_context);
+    clearNewDrawingBuffer();
     // The new drawing buffer's framebuffer starts with GL's initial draw
     // buffer; a NONE the page set on the default framebuffer is context state
     // and stays, whichever framebuffer is bound now.
@@ -540,7 +561,10 @@ Optional<WebGLContextAttributes> WebGLRenderingContext::getContextAttributes()
 {
     ENTER_CONTEXT_SCOPE(Optional<WebGLContextAttributes>());
 
-    return m_attributes;
+    WebGLContextAttributes attributes = m_attributes;
+    // The drawing buffer may have been made single-sampled (resetSurface()).
+    attributes.setAntialias(m_frameBufferAttributes.antialias);
+    return attributes;
 }
 
 Optional<GCVector<String*>> WebGLRenderingContext::getSupportedExtensions()
@@ -3673,34 +3697,40 @@ void WebGLRenderingContext::copyTexImage2D(GLenum target, GLint level,
     }
 
     // The GL validates and defines the level first.
-    m_gl->copyTexImage2D(target, level, internalformat,
-                         copyOriginForGL(x, width), copyOriginForGL(y, height),
-                         width, height, border);
-    if (!hasNewGLError()) {
-        texture->setImageLevelInfo(target, level, internalformat, width, height,
-                                   1);
-        // WebGL 1.0 "Reading Pixels Outside the Framebuffer": texels for
-        // pixels outside the read framebuffer are 0.
-        GLsizei fbWidth = 0;
-        GLsizei fbHeight = 0;
-        GLenum format = 0;
-        GLenum type = 0;
-        if (readFramebufferSize(fbWidth, fbHeight) &&
-            Pixel::formatAndTypeOf(internalformat, format, type)) {
-            const int64_t x0 = std::max<int64_t>(x, 0);
-            const int64_t y0 = std::max<int64_t>(y, 0);
-            const int64_t x1 = std::min<int64_t>(int64_t(x) + width, fbWidth);
-            const int64_t y1 = std::min<int64_t>(int64_t(y) + height, fbHeight);
-            if (x0 != x || y0 != y || x1 != int64_t(x) + width ||
-                y1 != int64_t(y) + height) {
-                zeroTextureLevel(target, level, width, height, 1, format, type);
-                if (x1 > x0 && y1 > y0) {
-                    m_gl->copyTexSubImage2D(target, level, x0 - x, y0 - y, x0,
-                                            y0, x1 - x0, y1 - y0);
+    // The out-of-bounds copy below reads the same framebuffer.
+    readFromReadFramebuffer([&] {
+        m_gl->copyTexImage2D(target, level, internalformat,
+                             copyOriginForGL(x, width),
+                             copyOriginForGL(y, height), width, height, border);
+        if (!hasNewGLError()) {
+            texture->setImageLevelInfo(target, level, internalformat, width,
+                                       height, 1);
+            // WebGL 1.0 "Reading Pixels Outside the Framebuffer": texels for
+            // pixels outside the read framebuffer are 0.
+            GLsizei fbWidth = 0;
+            GLsizei fbHeight = 0;
+            GLenum format = 0;
+            GLenum type = 0;
+            if (readFramebufferSize(fbWidth, fbHeight) &&
+                Pixel::formatAndTypeOf(internalformat, format, type)) {
+                const int64_t x0 = std::max<int64_t>(x, 0);
+                const int64_t y0 = std::max<int64_t>(y, 0);
+                const int64_t x1 =
+                    std::min<int64_t>(int64_t(x) + width, fbWidth);
+                const int64_t y1 =
+                    std::min<int64_t>(int64_t(y) + height, fbHeight);
+                if (x0 != x || y0 != y || x1 != int64_t(x) + width ||
+                    y1 != int64_t(y) + height) {
+                    zeroTextureLevel(target, level, width, height, 1, format,
+                                     type);
+                    if (x1 > x0 && y1 > y0) {
+                        m_gl->copyTexSubImage2D(target, level, x0 - x, y0 - y,
+                                                x0, y0, x1 - x0, y1 - y0);
+                    }
                 }
             }
         }
-    }
+    });
 }
 
 bool WebGLRenderingContext::copiesIntoReadBuffer(const WebGLTexture* texture,
@@ -3812,9 +3842,11 @@ void WebGLRenderingContext::copyTexSubImage2D(GLenum target, GLint level,
         }
     }
 
-    m_gl->copyTexSubImage2D(target, level, xoffset, yoffset,
-                            copyOriginForGL(x, width),
-                            copyOriginForGL(y, height), width, height);
+    readFromReadFramebuffer([&] {
+        m_gl->copyTexSubImage2D(target, level, xoffset, yoffset,
+                                copyOriginForGL(x, width),
+                                copyOriginForGL(y, height), width, height);
+    });
 }
 
 WebGLBuffer* WebGLRenderingContext::createBuffer()
@@ -8670,7 +8702,8 @@ void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
         GLvoid* data = pixelsView->rawBuffer();
 
         completePendingJobs();
-        m_gl->readPixels(x, y, width, height, format, type, data);
+        readFromReadFramebuffer(
+            [&] { m_gl->readPixels(x, y, width, height, format, type, data); });
     } else {
         // If pixels is null, an INVALID_VALUE error is generated.
         setGLError(GL_INVALID_VALUE);
@@ -11404,6 +11437,10 @@ void WebGLRenderingContext::completePendingJobs()
         default behavior can be changed by setting the `preserveDrawingBuffer`
         attribute of the WebGLContextAttributes object.
     */
+    // Every call that draws into or reads the drawing buffer comes here
+    // first, so from here on the multisampled image may be newer than its
+    // resolved copy.
+    m_framebufferTexture->setNeedsResolve();
     if (!m_hasPendingJobsBetweenFrames) {
         return;
     }
@@ -11432,6 +11469,21 @@ void WebGLRenderingContext::completePendingJobs()
         m_gl->clear(mask);
         if (m_defaultDrawBuffer == GL_NONE) {
             m_gl->drawBuffers(1, &buffers[1]);
+        }
+    });
+}
+
+// WebGL 1.0 §2.2: the drawing buffer is cleared when first created and when
+// its size changes, rather than left with what the driver hands out.
+void WebGLRenderingContext::clearNewDrawingBuffer()
+{
+    clearWithDefaultState(m_framebufferTexture->fbo(), [&] {
+        m_gl->clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+                    GL_STENCIL_BUFFER_BIT);
+        const GLuint resolved = m_framebufferTexture->resolvedFbo();
+        if (resolved != m_framebufferTexture->fbo()) {
+            m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER, resolved);
+            m_gl->clear(GL_COLOR_BUFFER_BIT);
         }
     });
 }
