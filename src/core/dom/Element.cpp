@@ -47,6 +47,9 @@
 #include "core/dom/xml/XMLSerializer.h"
 #include "core/dom/UIEvent.h"
 #include "core/dom/Scrolling.h"
+#if defined(STARFISH_ENABLE_CDP)
+#include "core/cdp/AXChangeNotifier.h"
+#endif
 #include "core/dom/svg/SVGElement.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
@@ -1523,6 +1526,12 @@ bool Element::setScrollLeft(double s, bool layoutIfNeeds)
     if (ensureRareElementMembers()->m_scrollLeft != (LayoutUnit)s) {
         ensureRareElementMembers()->m_scrollLeft = s;
         elementScrollPropertyChanged(this);
+        // The scroll position decides which slide of a tabs-mode scroller
+        // is the active tabpanel, so the accessibility tree can change
+        // without any DOM mutation.
+#if defined(STARFISH_ENABLE_CDP)
+        notifyAXNodeChangedIfObserved(this);
+#endif
         return true;
     }
 

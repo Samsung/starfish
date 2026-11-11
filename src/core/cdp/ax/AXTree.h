@@ -55,11 +55,13 @@ const char* axIgnoredReasonName(AXIgnoredReason reason);
 // node and the InlineTextBox under it, so the DOM node alone does not
 // identify an AX node.
 enum class AXNodeKind {
-    Root,          // the document
-    Element,       // an element
-    StaticText,    // a text node
-    InlineText,    // the box under a StaticText node
-    MenuListPopup, // the list a drop down select shows its options in
+    Root,              // the document
+    Element,           // an element
+    StaticText,        // a text node
+    InlineText,        // the box under a StaticText node
+    MenuListPopup,     // the list a drop down select shows its options in
+    ScrollMarkerGroup, // the ::scroll-marker-group of a tabs-mode scroller
+    ScrollMarker,      // one ::scroll-marker of a tabs-mode scroller
 };
 
 // One node of the accessibility tree.
@@ -131,6 +133,15 @@ public:
         return m_ignoredReasonTarget;
     }
 
+    // The scroll container a synthesized tablist node exposes through the
+    // ARIA controls relationship. Set only on the marker group node, whose
+    // DOM origin is a pseudo-element and therefore has no Element of its
+    // own. Null otherwise.
+    Element* controlsTarget() const
+    {
+        return m_controlsTarget;
+    }
+
     // The element this node came from, or null for the document and for
     // text.
     Element* element() const;
@@ -149,6 +160,7 @@ private:
     bool m_includedInTree = true;
     std::vector<AXIgnoredReason> m_ignoredReasons;
     Element* m_ignoredReasonTarget = nullptr;
+    Element* m_controlsTarget = nullptr;
 };
 
 // The accessibility tree of one document.

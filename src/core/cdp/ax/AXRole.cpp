@@ -277,7 +277,7 @@ int axChromeRoleForRole(const std::string& role)
         { "group", 93 },
         { "tab", 164 },
         { "tablist", 165 },
-        { "tabPanel", 166 },
+        { "tabpanel", 166 },
         { "canvas", 10 },
         { "tree", 179 },
         { "LabelText", 104 },

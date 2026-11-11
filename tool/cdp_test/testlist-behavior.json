@@ -88,7 +88,7 @@
     },
     "accessibility/accessibility-nodes-updated-retrieves-children.js": {
       "expected": "fail",
-      "category": "script-error"
+      "category": "output-differs"
     },
     "accessibility/accessibility-number-input-value.js": {
       "expected": "pass",

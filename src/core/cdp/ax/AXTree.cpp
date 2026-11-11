@@ -120,6 +120,7 @@ namespace {
 
     constexpr const char* kInertAttribute = "inert";
     constexpr const char* kPopupIdSuffix = "-popup";
+    constexpr const char* kMarkerGroupIdSuffix = "-marker-group";
     constexpr const char* kMenuListPopupRole = "MenuListPopup";
 
     std::string toUTF8(String* s)
@@ -262,14 +263,56 @@ private:
     void addChildren(Node* parentDOMNode, AXNode* parentAXNode,
                      const InheritedState& state)
     {
+        // CSS Overflow 5 tabs mode: the element children of a scroller that
+        // has a marker group are its slides, and only the active slide is
+        // in the accessibility tree.
+        Element* tabsScroller = nullptr;
+        int activeIndex = -1;
+        if (parentDOMNode->isElement()) {
+            Element* element = parentDOMNode->asElement();
+            ComputedStyle* style = element->style();
+            if (style &&
+                style->scrollMarkerGroup() !=
+                    ScrollMarkerGroupValue::NoneScrollMarkerGroupValue) {
+                tabsScroller = element;
+                activeIndex = activeSlideIndex(element);
+            }
+        }
+
+        int slideIndex = 0;
         Node* child = parentDOMNode->firstRenderingChild();
         RenderingSiblingIterator iterator(child);
         while (Optional<Node*> next = iterator.next()) {
             if (!next.value()) {
                 break;
             }
-            addSubtree(next.value(), parentAXNode, state);
+            if (tabsScroller) {
+                // Only the element children are slides; whitespace between
+                // them and generated pseudo-element boxes are not.
+                if (next.value()->isPseudoElement() ||
+                    !next.value()->isElement()) {
+                    continue;
+                }
+                addSubtree(next.value(), parentAXNode, state, tabsScroller,
+                           slideIndex == activeIndex);
+                slideIndex++;
+            } else {
+                addSubtree(next.value(), parentAXNode, state, nullptr, false);
+            }
         }
+    }
+
+    // The slide a tabs-mode scroller is scrolled to. One slide is one
+    // client width of scroll offset, the layout the carousel pattern uses.
+    int activeSlideIndex(Element* scroller)
+    {
+        double width = scroller->clientWidth();
+        if (width <= 0) {
+            return 0;
+        }
+        double offset = scroller->scrollLeft(false);
+        int index = static_cast<int>(offset / width + 0.5);
+        return index < 0 ? 0 : index;
     }
 
     ContentVisibilityValue contentVisibilityOf(Element* element)
@@ -295,7 +338,8 @@ private:
     }
 
     void addSubtree(Node* domNode, AXNode* parentAXNode,
-                    const InheritedState& parentState)
+                    const InheritedState& parentState,
+                    Element* tabsScroller = nullptr, bool tabsActive = false)
     {
         if (domNode->isText()) {
             addTextNode(domNode, parentAXNode, parentState);
@@ -357,6 +401,12 @@ private:
 
         AXNode* node = create(element, AXNodeKind::Element);
         node->m_role = axRoleForElement(element, tag);
+        if (tabsScroller && tabsActive &&
+            (node->m_role.empty() || node->m_role == "generic")) {
+            // The minimum role of an active slide in the tabs mode is
+            // tabpanel (CSS Overflow 5, ::scroll-marker-group).
+            node->m_role = "tabpanel";
+        }
         computeIgnored(node, element, tag, rendered, state);
         // accname step 2A: a hidden node has no name of its own. It still
         // contributes text when another element points at it, which is
@@ -366,6 +416,12 @@ private:
         }
         attach(node, parentAXNode);
 
+        // An inactive slide of a tabs-mode scroller is out of the tree with
+        // its whole subtree (the tabpanel the user cannot see). The node
+        // itself stays reachable through the parent chain.
+        if (tabsScroller && !tabsActive) {
+            return;
+        }
         if (skipChildren) {
             return;
         }
@@ -382,6 +438,7 @@ private:
         state.displayLockRoot = false;
         state.displayLocked = lockedChildren;
         addChildren(element, childParent, state);
+        addScrollMarkerGroupIfNeeds(element, node, childParent, parentAXNode);
     }
 
     static bool isInsideDropDown(Element* option)
@@ -410,6 +467,59 @@ private:
         popup->m_role = kMenuListPopupRole;
         attach(popup, selectNode);
         return popup;
+    }
+
+    // CSS Overflow 5: a scroller whose scroll-marker-group is not none has
+    // a generated ::scroll-marker-group, and with the tentative tabs switch
+    // it gets the implicit tablist role while each slide's marker gets the
+    // implicit tab role. The engine does not generate boxes for the
+    // pseudo-elements yet, so this subtree is synthesized straight from the
+    // scroller's element children. Chromium reports the group outside the
+    // scroller's child list (only the active tabpanel is a child), so the
+    // group attaches to the scroller's own parent.
+    void addScrollMarkerGroupIfNeeds(Element* scroller, AXNode* scrollerNode,
+                                     AXNode* childParent, AXNode* groupParent)
+    {
+        ComputedStyle* style = scroller->style();
+        if (!style || style->scrollMarkerGroup() ==
+                          ScrollMarkerGroupValue::NoneScrollMarkerGroupValue) {
+            return;
+        }
+        // A scroller left out of the tree reports no marker group either;
+        // its slides moved up to groupParent, so keep the group with them.
+        if (!scrollerNode->m_includedInTree) {
+            groupParent = childParent;
+        }
+
+        std::string baseId = idFor(scroller, AXNodeKind::Element);
+        std::string groupId = baseId + kMarkerGroupIdSuffix;
+        m_tree->m_nodes.push_back(std::unique_ptr<AXNode>(
+            new AXNode(nullptr, AXNodeKind::ScrollMarkerGroup, groupId)));
+        AXNode* group = m_tree->m_nodes.back().get();
+        m_tree->m_byId[groupId] = group;
+        group->m_role = "tablist";
+        group->m_controlsTarget = scroller;
+        attach(group, groupParent);
+
+        int index = 0;
+        Node* child = scroller->firstRenderingChild();
+        RenderingSiblingIterator iterator(child);
+        while (Optional<Node*> next = iterator.next()) {
+            if (!next.value()) {
+                break;
+            }
+            if (next.value()->isPseudoElement() || !next.value()->isElement()) {
+                continue;
+            }
+            std::string tabId = baseId + "-marker-" + std::to_string(index);
+            m_tree->m_nodes.push_back(std::unique_ptr<AXNode>(
+                new AXNode(nullptr, AXNodeKind::ScrollMarker, tabId)));
+            AXNode* tab = m_tree->m_nodes.back().get();
+            m_tree->m_byId[tabId] = tab;
+            tab->m_role = "tab";
+            attach(tab, group);
+            index++;
+        }
     }
 
     void addTextNode(Node* domNode, AXNode* parentAXNode,

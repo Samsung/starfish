@@ -644,6 +644,25 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
 
     Element* element = node->element();
     if (!element) {
+        // The synthesized marker group of a tabs-mode scroller has no DOM
+        // element; the scroll container it controls is the only property
+        // Chromium reports for it (AXRelation::kControls).
+        if (node->kind() == AXNodeKind::ScrollMarkerGroup &&
+            node->controlsTarget()) {
+            rapidjson::Value related(rapidjson::kArrayType);
+            rapidjson::Value item(rapidjson::kObjectType);
+            item.AddMember("backendDOMNodeId",
+                           m_registry->getOrCreate(node->controlsTarget()),
+                           *m_allocator);
+            related.PushBack(item, *m_allocator);
+            rapidjson::Value property(rapidjson::kObjectType);
+            property.AddMember("name", "controls", *m_allocator);
+            rapidjson::Value value(rapidjson::kObjectType);
+            value.AddMember("type", "idrefList", *m_allocator);
+            value.AddMember("relatedNodes", related, *m_allocator);
+            property.AddMember("value", value, *m_allocator);
+            properties.PushBack(property, *m_allocator);
+        }
         out.AddMember("properties", properties, *m_allocator);
         return;
     }
@@ -706,10 +725,38 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
         addStringProperty(properties, "invalid", "token", "false");
     }
 
+    // Chromium's FillLiveRegionProperties: an element that opted into
+    // aria-live reports the live state, and atomic and relevant report
+    // their defaults unless the author set them.
+    const std::string live = lowered(axAttribute(element, "aria-live"));
+    if (live == "polite" || live == "assertive") {
+        addStringProperty(properties, "live", "token", live);
+        const std::string atomic = lowered(axAttribute(element, "aria-atomic"));
+        addBooleanProperty(properties, "atomic", "boolean", atomic == "true");
+        std::string relevant = lowered(axAttribute(element, "aria-relevant"));
+        if (relevant.empty()) {
+            relevant = "additions text";
+        }
+        addStringProperty(properties, "relevant", "tokenList", relevant);
+    }
+
     const bool nativeDialogIsOpen = element->isHTMLDialogElement() &&
                                     element->asHTMLDialogElement()->open();
+    // A scroll container that actually overflows is reachable by scrolling,
+    // which makes it a focus candidate the way Chromium's scroller
+    // containers are. Only auto/scroll overflow counts: a plain overflow
+    // hidden or visible box is not a scroll container.
+    const bool overflowIsScroller =
+        element->appliedOverflowX() == OverflowValue::AutoOverflow ||
+        element->appliedOverflowX() == OverflowValue::ScrollOverflow ||
+        element->appliedOverflowY() == OverflowValue::AutoOverflow ||
+        element->appliedOverflowY() == OverflowValue::ScrollOverflow;
+    const bool scrollable = overflowIsScroller && element->frame() &&
+                            element->frame()->isFrameBox() &&
+                            (element->scrollWidth() > element->clientWidth() ||
+                             element->scrollHeight() > element->clientHeight());
     const bool focusableCandidate =
-        axHasAttribute(element, "tabindex") || tag == "input" ||
+        scrollable || axHasAttribute(element, "tabindex") || tag == "input" ||
         tag == "button" || tag == "select" || tag == "textarea" ||
         tag == "option" || editingHost || nativeDialogIsOpen ||
         role == "DisclosureTriangle" || role == "DisclosureTriangleGrouped" ||
