@@ -2431,13 +2431,6 @@ LayoutRect StackingContext::visibleRect()
             seeded.unite(m_visibleRectContentOnly);
             m_rareData->m_visibleRect = seeded;
         }
-        if (m_needsGraphicsBuffer) {
-            // A buffered layer normally gets its rect from
-            // applyStackingContextProperties; keep the whole-pixel contract
-            // its buffer relies on if it is ever produced here instead.
-            snapVisibleRectToPixels(m_rareData->m_visibleRect,
-                                    bufferPixelPhase(m_owner));
-        }
         m_isVisibleRectComputedForNonGraphicsLayer = true;
     }
     return m_rareData ? m_rareData->m_visibleRect : LayoutRect(0, 0, 0, 0);

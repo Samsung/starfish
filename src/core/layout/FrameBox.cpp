@@ -96,7 +96,7 @@ public:
     }
 
 private:
-    static Optional<PixelSnappedPaintScope*> s_current;
+    static thread_local Optional<PixelSnappedPaintScope*> s_current;
     FrameBox* m_box;
     LayoutUnit m_width;
     LayoutUnit m_height;
@@ -105,7 +105,8 @@ private:
     Optional<PixelSnappedPaintScope*> m_previous;
 };
 
-Optional<PixelSnappedPaintScope*> PixelSnappedPaintScope::s_current;
+thread_local Optional<PixelSnappedPaintScope*>
+    PixelSnappedPaintScope::s_current;
 
 static void updateBorderRadiusByFactor(BorderRadiusFixedData& v, float factor)
 {
