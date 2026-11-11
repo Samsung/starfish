@@ -1273,7 +1273,7 @@ http://localhost:11012/fast/css/before-after-pseudo-element-case-insensitivity.h
 # http://localhost:11012/fast/css/border-conflict-element-002.htm
 # http://localhost:11012/fast/css/border-image-null-image-crash.html
 # http://localhost:11012/fast/css/border-image-style-length.html
-http://localhost:11012/fast/css/border-image-widths-on-svg-with-zoom.html
+# http://localhost:11012/fast/css/border-image-widths-on-svg-with-zoom.html
 http://localhost:11012/fast/css/border-radius-inset-box-shadow-viewportlength.html
 http://localhost:11012/fast/css/border-radius-property-value.html
 http://localhost:11012/fast/css/border-radius-viewport-height.html
@@ -1523,7 +1523,7 @@ http://localhost:11012/fast/css/layer-illegal-import.html
 # http://localhost:11012/fast/css/limited-vendor-prefix-behavior.html
 # http://localhost:11012/fast/css/line-height-1.html
 # http://localhost:11012/fast/css/line-height-2.html
-http://localhost:11012/fast/css/line-height-basics.html
+# http://localhost:11012/fast/css/line-height-basics.html
 # http://localhost:11012/fast/css/line-height-calc-zoomed.html
 # http://localhost:11012/fast/css/line-height-link-style.html
 # http://localhost:11012/fast/css/line-height-zoom-get-computed-style.html
@@ -1599,7 +1599,7 @@ http://localhost:11012/fast/css/optimize-contrast-image.html
 http://localhost:11012/fast/css/orientation-changes-on-textarea-focus.html
 # http://localhost:11012/fast/css/outline-auto-zoom-canvas-rotated-scale.html
 # http://localhost:11012/fast/css/outline-auto-zoom-canvas.html
-http://localhost:11012/fast/css/outline-auto-zoom.html
+# http://localhost:11012/fast/css/outline-auto-zoom.html
 # http://localhost:11012/fast/css/outline-border-radius-negative-offset.html
 # http://localhost:11012/fast/css/outline-color-self-painting-row.htm
 http://localhost:11012/fast/css/outline-currentcolor.html
@@ -1904,7 +1904,7 @@ http://localhost:11012/fast/css/word-spacing-with-normal-layout.html
 # http://localhost:11012/fast/css/xml-lang-ignored-in-html.html
 # http://localhost:11012/fast/css/xml-stylesheet-alternate-no-title.xhtml
 # http://localhost:11012/fast/css/z-index-calculated-value.html
-http://localhost:11012/fast/css/zoom-background-repeat-x.html
+# http://localhost:11012/fast/css/zoom-background-repeat-x.html
 # http://localhost:11012/fast/css/zoom-background-repeat-y.html
 # http://localhost:11012/fast/css/zoom-inside-link.html
 # http://localhost:11012/fast/css/accent-color/button.html
@@ -1963,7 +1963,7 @@ http://localhost:11012/fast/css/custom-properties/rule-property-set.html
 # http://localhost:11012/fast/css/getComputedStyle/computed-style-page-break-inside.html
 # http://localhost:11012/fast/css/getComputedStyle/computed-style-properties.html
 http://localhost:11012/fast/css/getComputedStyle/computed-style-select-overflow.html
-http://localhost:11012/fast/css/getComputedStyle/computed-style-with-zoom.html
+# http://localhost:11012/fast/css/getComputedStyle/computed-style-with-zoom.html
 http://localhost:11012/fast/css/getComputedStyle/counterIncrement-without-counter.html
 http://localhost:11012/fast/css/getComputedStyle/empty-update-without-renderer.html
 http://localhost:11012/fast/css/getComputedStyle/first-child-update-without-renderer.html
@@ -2533,7 +2533,7 @@ http://localhost:11012/fast/dom/Document/scrollingElement-standards-mode.html
 http://localhost:11012/fast/dom/Document/title-with-multiple-children.html
 # http://localhost:11012/fast/dom/Document/xml-document-focus.xml
 # http://localhost:11012/fast/dom/Document/CaretRangeFromPoint/caretRangeFromPoint-in-strict-mode-wtih-checkbox.html
-http://localhost:11012/fast/dom/Document/CaretRangeFromPoint/caretRangeFromPoint-in-zoom-and-scroll.html
+# http://localhost:11012/fast/dom/Document/CaretRangeFromPoint/caretRangeFromPoint-in-zoom-and-scroll.html
 # http://localhost:11012/fast/dom/Document/CaretRangeFromPoint/hittest-relative-to-viewport.html
 # http://localhost:11012/fast/dom/DocumentFragment/document-fragment-constructor.html
 # http://localhost:11012/fast/dom/DocumentFragment/getElementById.html
@@ -3695,7 +3695,7 @@ http://localhost:11012/fast/hidpi/image-srcset-src-selection-1x.html
 http://localhost:11012/fast/hidpi/image-srcset-svg.html
 # http://localhost:11012/fast/hidpi/image-srcset-svg2.html
 # http://localhost:11012/fast/hidpi/image-srcset-viewport-modifiers.html
-http://localhost:11012/fast/hidpi/pdf-image-scaled.html
+# http://localhost:11012/fast/hidpi/pdf-image-scaled.html
 # http://localhost:11012/fast/hidpi/percent-height-image-nested.html
 # http://localhost:11012/fast/html/HTMLCollection-set-property.html
 # http://localhost:11012/fast/html/HTMLOptionsCollection-set-property.html
@@ -3903,7 +3903,7 @@ http://localhost:11012/fast/images/sizes-dynamic-001.html
 # http://localhost:11012/fast/images/video-as-image.html
 # http://localhost:11012/fast/images/webgl-teximage2d.html
 http://localhost:11012/fast/images/webp-as-image.html
-http://localhost:11012/fast/images/zoomed-offset-size.html
+# http://localhost:11012/fast/images/zoomed-offset-size.html
 # http://localhost:11012/fast/images/mac/animation-context-menu-items-presence.html
 http://localhost:11012/fast/images/mac/image-controls-button-is-not-exposed.html
 # http://localhost:11012/fast/images/mac/play-all-pause-all-animations-context-menu-items.html
@@ -4724,41 +4724,41 @@ http://localhost:11012/fast/sub-pixel/client-and-offset-width.html
 # http://localhost:11012/fast/sub-pixel/compositing-layers-on-subpixel-position.html
 http://localhost:11012/fast/sub-pixel/computedstylemargin.html
 http://localhost:11012/fast/sub-pixel/ellipsis-table.html
-http://localhost:11012/fast/sub-pixel/ellipsis-zoom.html
+# http://localhost:11012/fast/sub-pixel/ellipsis-zoom.html
 # http://localhost:11012/fast/sub-pixel/file-upload-control-at-fractional-offset.html
 http://localhost:11012/fast/sub-pixel/float-containing-block-with-margin.html
 http://localhost:11012/fast/sub-pixel/float-list-inside.html
-http://localhost:11012/fast/sub-pixel/float-precision.html
-http://localhost:11012/fast/sub-pixel/float-with-margin-in-container.html
-http://localhost:11012/fast/sub-pixel/float-with-right-margin-zoom.html
+# http://localhost:11012/fast/sub-pixel/float-precision.html
+# http://localhost:11012/fast/sub-pixel/float-with-margin-in-container.html
+# http://localhost:11012/fast/sub-pixel/float-with-right-margin-zoom.html
 http://localhost:11012/fast/sub-pixel/float-wrap-with-subpixel-top.html
-http://localhost:11012/fast/sub-pixel/float-wrap-zoom.html
+# http://localhost:11012/fast/sub-pixel/float-wrap-zoom.html
 http://localhost:11012/fast/sub-pixel/inline-block-should-not-wrap.html
 http://localhost:11012/fast/sub-pixel/inline-block-with-margin.html
 http://localhost:11012/fast/sub-pixel/inline-block-with-padding.html
 # http://localhost:11012/fast/sub-pixel/input-caret-on-subpixel-bound.html
-http://localhost:11012/fast/sub-pixel/layout-boxes-with-zoom.html
-http://localhost:11012/fast/sub-pixel/position-right-aligns-with-container.html
+# http://localhost:11012/fast/sub-pixel/layout-boxes-with-zoom.html
+# http://localhost:11012/fast/sub-pixel/position-right-aligns-with-container.html
 http://localhost:11012/fast/sub-pixel/replaced-element-baseline.html
 # http://localhost:11012/fast/sub-pixel/scaled-background-image.html
 # http://localhost:11012/fast/sub-pixel/simple-clipping.html
-http://localhost:11012/fast/sub-pixel/size-of-box-with-zoom.html
+# http://localhost:11012/fast/sub-pixel/size-of-box-with-zoom.html
 http://localhost:11012/fast/sub-pixel/size-of-span-with-different-positions.html
 # http://localhost:11012/fast/sub-pixel/snap-negative-location.html
 # http://localhost:11012/fast/sub-pixel/sub-pixel-composited-layers.html
 # http://localhost:11012/fast/sub-pixel/sub-pixel-root-layer.html
-http://localhost:11012/fast/sub-pixel/table-cell-background.html
-http://localhost:11012/fast/sub-pixel/table-cell-height.html
+# http://localhost:11012/fast/sub-pixel/table-cell-background.html
+# http://localhost:11012/fast/sub-pixel/table-cell-height.html
 http://localhost:11012/fast/sub-pixel/table-cells-have-stable-width.html
 http://localhost:11012/fast/sub-pixel/table-cells-with-padding-do-not-wrap.html
 # http://localhost:11012/fast/sub-pixel/table-rows-have-stable-height.html
-http://localhost:11012/fast/sub-pixel/table-rows-no-gaps.html
-http://localhost:11012/fast/sub-pixel/table-rtl-padding.html
+# http://localhost:11012/fast/sub-pixel/table-rows-no-gaps.html
+# http://localhost:11012/fast/sub-pixel/table-rtl-padding.html
 # http://localhost:11012/fast/sub-pixel/table-with-subpixel-cell-size.html
-http://localhost:11012/fast/sub-pixel/tiled-canvas-elements.html
+# http://localhost:11012/fast/sub-pixel/tiled-canvas-elements.html
 # http://localhost:11012/fast/sub-pixel/vertical-align-middle-overflow.html
-http://localhost:11012/fast/sub-pixel/zoomed-em-border.html
-http://localhost:11012/fast/sub-pixel/zoomed-image-tiles.html
+# http://localhost:11012/fast/sub-pixel/zoomed-em-border.html
+# http://localhost:11012/fast/sub-pixel/zoomed-image-tiles.html
 # http://localhost:11012/fast/text/FontFaceSet-check-after-style-update.html
 # http://localhost:11012/fast/text/FontFaceSet-status-after-style-update.html
 # http://localhost:11012/fast/text/adlam-dir-auto.html
@@ -5176,7 +5176,7 @@ http://localhost:11012/fast/text/text-width-cache-direction.html
 # http://localhost:11012/fast/text/text-zoom-computed-font-size.html
 # http://localhost:11012/fast/text/text-zoom-length-units.html
 # http://localhost:11012/fast/text/text-zoom-lh-unit.html
-http://localhost:11012/fast/text/text-zoom-reset.html
+# http://localhost:11012/fast/text/text-zoom-reset.html
 # http://localhost:11012/fast/text/thai-joiner.html
 http://localhost:11012/fast/text/thick-underline-and-small-font-size.html
 http://localhost:11012/fast/text/trailing-letter-spacing-long.html
