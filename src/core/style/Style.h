@@ -1964,6 +1964,12 @@ public:
         return m_value.m_widthHeightKeywordValue;
     }
 
+    void setWidthHeightKeywordValue(WidthHeightKeywordValue v)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind;
+        m_value.m_widthHeightKeywordValue = v;
+    }
+
     PointerEventsValue pointerEventsValue() const
     {
         STARFISH_ASSERT(m_valueKind == PointerEventsValueKind);

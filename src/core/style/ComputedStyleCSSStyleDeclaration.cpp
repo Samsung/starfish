@@ -1064,6 +1064,22 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             minW.setPercentageValue(minWidth.percent());
         } else if (minWidth.isCalc()) {
             minW.setCalcValue(minWidth.calcData());
+        } else if (minWidth.isMinContent()) {
+            minW.setValueKind(
+                CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind);
+            minW.setWidthHeightKeywordValue(
+                WidthHeightKeywordValue::MinContentValue);
+        } else if (minWidth.isMaxContent()) {
+            minW.setValueKind(
+                CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind);
+            minW.setWidthHeightKeywordValue(
+                WidthHeightKeywordValue::MaxContentValue);
+        } else if (minWidth.isFitContent()) {
+            // The bare keyword computes as specified (css-sizing-3).
+            minW.setValueKind(
+                CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind);
+            minW.setWidthHeightKeywordValue(
+                WidthHeightKeywordValue::FitContentValue);
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -1089,6 +1105,21 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             minH.setPercentageValue(minHeight.percent());
         } else if (minHeight.isCalc()) {
             minH.setCalcValue(minHeight.calcData());
+        } else if (minHeight.isMinContent()) {
+            minH.setValueKind(
+                CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind);
+            minH.setWidthHeightKeywordValue(
+                WidthHeightKeywordValue::MinContentValue);
+        } else if (minHeight.isMaxContent()) {
+            minH.setValueKind(
+                CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind);
+            minH.setWidthHeightKeywordValue(
+                WidthHeightKeywordValue::MaxContentValue);
+        } else if (minHeight.isFitContent()) {
+            minH.setValueKind(
+                CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind);
+            minH.setWidthHeightKeywordValue(
+                WidthHeightKeywordValue::FitContentValue);
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -1110,6 +1141,21 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             maxW.setPercentageValue(maxWidth.percent());
         } else if (maxWidth.isCalc()) {
             maxW.setCalcValue(maxWidth.calcData());
+        } else if (maxWidth.isMinContent()) {
+            maxW.setValueKind(
+                CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind);
+            maxW.setWidthHeightKeywordValue(
+                WidthHeightKeywordValue::MinContentValue);
+        } else if (maxWidth.isMaxContent()) {
+            maxW.setValueKind(
+                CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind);
+            maxW.setWidthHeightKeywordValue(
+                WidthHeightKeywordValue::MaxContentValue);
+        } else if (maxWidth.isFitContent()) {
+            maxW.setValueKind(
+                CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind);
+            maxW.setWidthHeightKeywordValue(
+                WidthHeightKeywordValue::FitContentValue);
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -1131,6 +1177,21 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             maxH.setPercentageValue(maxHeight.percent());
         } else if (maxHeight.isCalc()) {
             maxH.setCalcValue(maxHeight.calcData());
+        } else if (maxHeight.isMinContent()) {
+            maxH.setValueKind(
+                CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind);
+            maxH.setWidthHeightKeywordValue(
+                WidthHeightKeywordValue::MinContentValue);
+        } else if (maxHeight.isMaxContent()) {
+            maxH.setValueKind(
+                CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind);
+            maxH.setWidthHeightKeywordValue(
+                WidthHeightKeywordValue::MaxContentValue);
+        } else if (maxHeight.isFitContent()) {
+            maxH.setValueKind(
+                CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind);
+            maxH.setWidthHeightKeywordValue(
+                WidthHeightKeywordValue::FitContentValue);
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }

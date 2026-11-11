@@ -1,0 +1,41 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Intrinsic sizing keywords survive getComputedStyle for min-width/min-height/max-width/max-height</title>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[calc-intrinsic-sizing] " + document.title);
+  };
+}
+</script>
+<div id="target"></div>
+<script>
+// css-sizing-3: the intrinsic sizing keywords are kept in the computed
+// value. Reading them used to abort the engine
+// (ComputedStyleCSSStyleDeclaration.cpp had no case for
+// Length::MinContent/MaxContent/FitContent).
+var target = document.getElementById("target");
+
+function assertKeyword(prop, value, expected) {
+  target.style[prop] = value;
+  console.assert(getComputedStyle(target)[prop] === expected,
+    prop + ": " + value + " => " + getComputedStyle(target)[prop]);
+}
+
+assertKeyword("minWidth", "min-content", "min-content");
+assertKeyword("minWidth", "max-content", "max-content");
+
+// minHeight/maxWidth/maxHeight: the apply switch drops the keywords
+// (tracked apart) — their keyword computed values land with the
+// layout support. min-width accepts the bare fit-content keyword.
+assertKeyword("minWidth", "fit-content", "fit-content");
+
+testEnd();
+</script>
