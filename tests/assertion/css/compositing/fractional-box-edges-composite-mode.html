@@ -3,6 +3,10 @@
 <head>
 <title>Boxes between pixels paint the same crisp edges with and without layers</title>
 <style>
+  @font-face {
+    font-family: Ahem;
+    src: url("../../../fixtures/resources/wpt/fonts/Ahem.ttf");
+  }
   body { margin: 0; background: white; }
   /* Edges fall 0.4px past a pixel boundary, so they round to whole pixels:
      the background covers 20..70 by 20..60, the border box 100..150 with a
@@ -14,6 +18,15 @@
               height: 36.2px; border: 2px solid green; background: white; }
   #outlined { position: absolute; left: 180.4px; top: 20.4px; width: 50px;
               height: 40px; outline: 1px solid green; }
+  /* A box thinner than a pixel still covers one pixel: 80.1..80.4 rounds to
+     an empty span, which keeps row 80. */
+  #thin { position: absolute; left: 20.4px; top: 80.1px; width: 50px;
+          height: 0.3px; background: green; }
+  /* Glyphs are not pixel snapped, so a background clipped to text follows
+     the glyph at 260.6..300.6: column 300 is partly covered, 301 is not. */
+  #clipped { position: absolute; left: 260.6px; top: 20px; font: 40px/40px Ahem;
+             background: green; -webkit-background-clip: text;
+             background-clip: text; color: transparent; }
   /* Made a layer later, which puts the whole page in composite mode. */
   #layer { position: absolute; left: 0; top: 100px; width: 10px; height: 10px; }
   p { position: absolute; left: 0; top: 140px; margin: 0; font: 16px sans-serif; }
@@ -23,11 +36,14 @@
 <div id="bg"></div>
 <div id="bordered"></div>
 <div id="outlined"></div>
+<div id="thin"></div>
+<div id="clipped">X</div>
 <div id="layer"></div>
-<p>Three green boxes with crisp edges.</p>
+<p>Three green boxes and a thin green line with crisp edges, and a green square.</p>
 <script>
   var white = { r: 255, g: 255, b: 255, a: 255 };
   var green = { r: 0, g: 128, b: 0, a: 255 };
+  var partlyGreen = { r: 128, g: 192, b: 128, a: 255 };
   function at(x, y, c) {
     return { x: x, y: y, r: c.r, g: c.g, b: c.b, a: c.a };
   }
@@ -39,7 +55,17 @@
       at(149, 40, green), at(150, 40, green), at(151, 40, white),
       at(178, 40, white), at(179, 40, green), at(180, 40, white),
       at(229, 40, white), at(230, 40, green), at(231, 40, white),
+      at(45, 79, white), at(45, 80, green), at(45, 81, white),
+      at(299, 40, green), at(301, 40, white),
     ];
+  }
+  // Antialiasing of the glyph edge differs a little between rasterizers.
+  function glyphEdge() {
+    return [at(300, 40, partlyGreen)];
+  }
+  function check(png, label) {
+    console.assert(checkPixelColors(png, edges(), 3), label);
+    console.assert(checkPixelColors(png, glyphEdge(), 8), label + ": glyph edge");
   }
   function afterTwoFrames(callback) {
     requestAnimationFrame(function () {
@@ -50,16 +76,16 @@
     if (typeof screenShot !== "function") {
       return;
     }
-    afterTwoFrames(function () {
-      screenShot("fractional-box-edges-direct.png", function () {
-        console.assert(checkPixelColors("fractional-box-edges-direct.png", edges(), 3),
-                       "edges without layers");
-        document.getElementById("layer").style.willChange = "transform";
-        afterTwoFrames(function () {
-          screenShot("fractional-box-edges-composited.png", function () {
-            console.assert(checkPixelColors("fractional-box-edges-composited.png", edges(), 3),
-                           "edges in composite mode");
-            testEnd();
+    document.fonts.ready.then(function () {
+      afterTwoFrames(function () {
+        screenShot("fractional-box-edges-direct.png", function () {
+          check("fractional-box-edges-direct.png", "edges without layers");
+          document.getElementById("layer").style.willChange = "transform";
+          afterTwoFrames(function () {
+            screenShot("fractional-box-edges-composited.png", function () {
+              check("fractional-box-edges-composited.png", "edges in composite mode");
+              testEnd();
+            });
           });
         });
       });

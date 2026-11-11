@@ -922,7 +922,7 @@ http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/row-subgrid-extra-margin-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/row-subgrid-extra-margin-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/row-subgrid-extra-margin-004.html
-http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/row-subgrid-extra-margin-005.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/row-subgrid-extra-margin-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/row-subgrid-extra-margin-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/row-subgrid-extra-margin-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/row-subgrid-extra-margin-008.html

@@ -61,27 +61,51 @@ public:
         : m_box(box)
         , m_width(box->width())
         , m_height(box->height())
+        , m_previous(s_current)
     {
         Unit::Rect snapped = canvas->snapRectToDevicePixels(
             Unit::Rect(0, 0, m_width.toFloat(), m_height.toFloat()));
-        if (snapped.x() || snapped.y()) {
-            canvas->translate(snapped.x(), snapped.y());
+        m_offsetX = snapped.x();
+        m_offsetY = snapped.y();
+        if (m_offsetX || m_offsetY) {
+            canvas->translate(m_offsetX, m_offsetY);
         }
         box->setWidth(snapped.width());
         box->setHeight(snapped.height());
+        s_current = this;
     }
 
     ~PixelSnappedPaintScope()
     {
+        s_current = m_previous;
         m_box->setWidth(m_width);
         m_box->setHeight(m_height);
     }
 
+    // Text is painted at the box's layout position, so a text mask painted
+    // inside the scope has to undo the snap to line up with the glyphs.
+    static void translateToLayoutOrigin(Canvas* canvas, FrameBox* box)
+    {
+        if (!s_current || s_current.value()->m_box != box) {
+            return;
+        }
+        PixelSnappedPaintScope* scope = s_current.value();
+        if (scope->m_offsetX || scope->m_offsetY) {
+            canvas->translate(-scope->m_offsetX, -scope->m_offsetY);
+        }
+    }
+
 private:
+    static Optional<PixelSnappedPaintScope*> s_current;
     FrameBox* m_box;
     LayoutUnit m_width;
     LayoutUnit m_height;
+    float m_offsetX;
+    float m_offsetY;
+    Optional<PixelSnappedPaintScope*> m_previous;
 };
+
+Optional<PixelSnappedPaintScope*> PixelSnappedPaintScope::s_current;
 
 static void updateBorderRadiusByFactor(BorderRadiusFixedData& v, float factor)
 {
@@ -2737,7 +2761,10 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
                                     paintingRect.height());
                 canvas->beginTextClip(maskRect);
                 canvas->setTextMaskPainting(true);
+                canvas->save();
+                PixelSnappedPaintScope::translateToLayoutOrigin(canvas, box);
                 box->paintTextForMask(canvas);
+                canvas->restore();
                 canvas->setTextMaskPainting(false);
                 canvas->beginTextClipContent();
                 paintBgColor(canvas);
@@ -3030,7 +3057,10 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                                 paintingRect.height());
             canvas->beginTextClip(maskRect);
             canvas->setTextMaskPainting(true);
+            canvas->save();
+            PixelSnappedPaintScope::translateToLayoutOrigin(canvas, box);
             box->paintTextForMask(canvas);
+            canvas->restore();
             canvas->setTextMaskPainting(false);
             canvas->beginTextClipContent();
         }

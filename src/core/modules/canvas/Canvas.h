@@ -297,8 +297,9 @@ struct CanvasRenderTargetInfo {
 // replaced content and overflow clips are painted on the device pixel grid,
 // so an edge looks the same wherever the box lands and whichever layer it is
 // painted into. Each edge of the local rect is rounded to the nearest device
-// pixel. Only axis-aligned matrices are snapped: under rotation or skew there
-// is no grid to snap to.
+// pixel, but a non-empty side keeps at least one device pixel so a thin box
+// does not vanish. Only axis-aligned matrices are snapped: under rotation or
+// skew there is no grid to snap to.
 inline Unit::Rect snapRectToDeviceGrid(const SkMatrix& ctm,
                                        const Unit::Rect& rt)
 {
@@ -308,13 +309,21 @@ inline Unit::Rect snapRectToDeviceGrid(const SkMatrix& ctm,
         ctm.getScaleY() <= 0) {
         return rt;
     }
-    double sx = ctm.getScaleX(), sy = ctm.getScaleY();
-    double tx = ctm.getTranslateX(), ty = ctm.getTranslateY();
-    double x = (std::round(rt.x() * sx + tx) - tx) / sx;
-    double y = (std::round(rt.y() * sy + ty) - ty) / sy;
-    double maxX = (std::round((rt.x() + rt.width()) * sx + tx) - tx) / sx;
-    double maxY = (std::round((rt.y() + rt.height()) * sy + ty) - ty) / sy;
-    return Unit::Rect(x, y, maxX - x, maxY - y);
+    auto snapSpan = [](double start, double length, double scale,
+                       double translate, double& snappedStart,
+                       double& snappedLength) {
+        double begin = std::round(start * scale + translate);
+        double end = std::round((start + length) * scale + translate);
+        if (length > 0 && end <= begin) {
+            end = begin + 1;
+        }
+        snappedStart = (begin - translate) / scale;
+        snappedLength = (end - begin) / scale;
+    };
+    double x, y, w, h;
+    snapSpan(rt.x(), rt.width(), ctm.getScaleX(), ctm.getTranslateX(), x, w);
+    snapSpan(rt.y(), rt.height(), ctm.getScaleY(), ctm.getTranslateY(), y, h);
+    return Unit::Rect(x, y, w, h);
 }
 
 class Canvas : public gc {

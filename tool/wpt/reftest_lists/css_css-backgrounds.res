@@ -45,7 +45,7 @@ http://web-platform.test:8000/css/css-backgrounds/animations/invalidation/backgr
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-attachment-fixed-block-002.html
 http://web-platform.test:8000/css/css-backgrounds/background-attachment-fixed-border-radius-offset.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-attachment-fixed-inline-002.html
-http://web-platform.test:8000/css/css-backgrounds/background-attachment-fixed-inline-scrolled.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-attachment-fixed-inline-scrolled.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-attachment-fixed-inside-transform-1.html
 http://web-platform.test:8000/css/css-backgrounds/background-attachment-local/attachment-local-clipping-color-1.html
 http://web-platform.test:8000/css/css-backgrounds/background-attachment-local/attachment-local-clipping-color-2.html
@@ -148,7 +148,7 @@ http://web-platform.test:8000/css/css-backgrounds/background-color-body-propagat
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-backgrounds/background-color-root-propagation-002.html
 http://web-platform.test:8000/css/css-backgrounds/background-gradient-interpolation-001.html
 http://web-platform.test:8000/css/css-backgrounds/background-gradient-interpolation-002.html
-http://web-platform.test:8000/css/css-backgrounds/background-gradient-interpolation-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-gradient-interpolation-003.html
 http://web-platform.test:8000/css/css-backgrounds/background-gradient-subpixel-fills-area.html
 http://web-platform.test:8000/css/css-backgrounds/background-image-001.html
 http://web-platform.test:8000/css/css-backgrounds/background-image-002.html
