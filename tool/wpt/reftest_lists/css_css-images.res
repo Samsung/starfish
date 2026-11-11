@@ -124,7 +124,7 @@ http://web-platform.test:8000/css/css-images/image-light-dark.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-exif-png-3.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-exif-png.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-from-image-composited-dynamic1.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-from-image-composited-dynamic2.html
+# [vacuous-pass:IMAGE_ORIENTATION_UNIMPLEMENTED] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-from-image-composited-dynamic2.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-from-image-composited.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-from-image-content-images.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-from-image-dynamic1.html
@@ -412,7 +412,7 @@ http://web-platform.test:8000/css/css-images/object-view-box-empty-bounds.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/object-view-box-fit-contain-canvas.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/object-view-box-fit-contain-img.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/object-view-box-fit-contain-svg.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/object-view-box-fit-contain-video.html
+# [vacuous-pass:VIDEO_POSTER_UNIMPLEMENTED] http://web-platform.test:8000/css/css-images/object-view-box-fit-contain-video.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/object-view-box-fit-cover-canvas.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/object-view-box-fit-cover-img.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/object-view-box-fit-cover-svg.html
@@ -424,7 +424,7 @@ http://web-platform.test:8000/css/css-images/object-view-box-fit-cover-video.htm
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/object-view-box-fit-none-canvas.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/object-view-box-fit-none-img.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/object-view-box-fit-none-svg.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/object-view-box-fit-none-video.html
+# [vacuous-pass:VIDEO_POSTER_UNIMPLEMENTED] http://web-platform.test:8000/css/css-images/object-view-box-fit-none-video.html
 http://web-platform.test:8000/css/css-images/object-view-box-iframe.html
 http://web-platform.test:8000/css/css-images/object-view-box-negative-bounds.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/object-view-box-property-changed.html

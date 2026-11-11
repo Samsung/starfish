@@ -277,9 +277,9 @@ http://web-platform.test:8000/html/canvas/element/text/direction-rtl.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/compositing/2d.composite.grid.no_filter.shadow.fillRect.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/compositing/2d.composite.grid.no_filter.shadow.pattern.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/compositing/2d.composite.grid.no_filter.shadow.pattern.w.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.gradient.colorInterpolationMethod.html
+# [vacuous-pass:OFFSCREEN_CANVAS_UNIMPLEMENTED] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.gradient.colorInterpolationMethod.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.gradient.colorInterpolationMethod.w.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.gradient.hueInterpolationMethod.html
+# [vacuous-pass:OFFSCREEN_CANVAS_UNIMPLEMENTED] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.gradient.hueInterpolationMethod.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.gradient.hueInterpolationMethod.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.canvasFilterObject.componentTransfer.discrete.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.canvasFilterObject.componentTransfer.discrete.tentative.w.html
