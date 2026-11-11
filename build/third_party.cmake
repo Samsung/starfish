@@ -130,10 +130,14 @@ IF ((CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT (BACKEND STREQUAL "flutter
     SET (NANOMSG_CFLAGS "${NANOMSG_CFLAGS_COMMON} ${NANOMSG_CFLAGS_CUSTOM} ${NANOMSG_CFLAGS_ARCH} ${NANOMSG_CFLAGS_MODE}")
     SET (NANOMSG_CUSTOM -DNN_ENABLE_DOC=OFF -DNN_TESTS=OFF -DNN_TOOLS=OFF -DNN_ENABLE_GETADDRINFO_A=OFF -DCMAKE_INSTALL_PREFIX=${NANOMSG_BUILDDIR}/dist)
 
+    # Pass extra flags as CMAKE_<LANG>_FLAGS_INIT, which CMake appends to the
+    # CFLAGS/CXXFLAGS environment; setting CMAKE_<LANG>_FLAGS instead drops the
+    # packager's hardening flags (Tizen rpm carries -Wl,-z,relro in CFLAGS, not
+    # LDFLAGS), so the library loses RELRO and stack protection.
     ADD_CUSTOM_COMMAND (OUTPUT ${NANOMSG_LOCAL_TARGET}
                         COMMENT "BUILD NANOMSG"
                         COMMAND ${CMAKE_COMMAND} -E make_directory ${NANOMSG_BUILDDIR}
-                        COMMAND cd ${THIRD_PARTY_ROOT}/nanomsg/ && cmake ${CMAKE_COMMAND} -S . -B${NANOMSG_BUILDDIR} -DCMAKE_C_FLAGS=${NANOMSG_CFLAGS} -DCMAKE_CXX_FLAGS=${NANOMSG_CFLAGS} ${NANOMSG_CUSTOM} -DCMAKE_C_COMPILER=${THIRD_PARTY_C_COMPILER_OPTION} -DCMAKE_CXX_COMPILER=${THIRD_PARTY_CXX_COMPILER_OPTION}
+                        COMMAND cd ${THIRD_PARTY_ROOT}/nanomsg/ && cmake ${CMAKE_COMMAND} -S . -B${NANOMSG_BUILDDIR} -DCMAKE_C_FLAGS_INIT=${NANOMSG_CFLAGS} -DCMAKE_CXX_FLAGS_INIT=${NANOMSG_CFLAGS} ${NANOMSG_CUSTOM} -DCMAKE_C_COMPILER=${THIRD_PARTY_C_COMPILER_OPTION} -DCMAKE_CXX_COMPILER=${THIRD_PARTY_CXX_COMPILER_OPTION}
                         COMMAND cd ${THIRD_PARTY_ROOT}/nanomsg/ && cmake --build ${NANOMSG_BUILDDIR}
     )
 
@@ -614,8 +618,9 @@ IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
     SET (JPEG_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libjpeg_lwe.so)
     SET (JPEG_OPTION "-DCMAKE_BUILD_TYPE=Release -DENABLE_SHARED=TRUE -DENABLE_STATIC=FALSE -DWITH_JPEG8=TRUE")
 
+    # _INIT keeps the environment CFLAGS; see the comment at NANOMSG above.
     IF(CMAKE_SYSTEM_NAME STREQUAL "Tizen" AND ${CUSTOM} STREQUAL "prod_tv")
-        SET (JPEG_OPTION ${JPEG_OPTION}" -DENABLE_COLOR_PICKER=TRUE -DCMAKE_C_FLAGS='-D_TIZEN_PRODUCT_TV -D_USE_PRODUCT_TV'")
+        SET (JPEG_OPTION ${JPEG_OPTION}" -DENABLE_COLOR_PICKER=TRUE -DCMAKE_C_FLAGS_INIT='-D_TIZEN_PRODUCT_TV -D_USE_PRODUCT_TV'")
     ENDIF()
 
     ADD_CUSTOM_COMMAND (OUTPUT ${JPEG_LOCAL_TARGET}
@@ -659,11 +664,15 @@ IF (CMAKE_SYSTEM_NAME STREQUAL "Tizen")
 ELSE()
     SET (WEBP_BUILD_OPTION "")
 ENDIF()
+    # _INIT keeps the environment CFLAGS; see the comment at NANOMSG above.
+    # The hand-written link below passes CFLAGS/LDFLAGS itself, as CMake's
+    # shared-library link rule would.
+    SEPARATE_ARGUMENTS (WEBP_LINK_FLAGS UNIX_COMMAND "$ENV{CFLAGS} $ENV{LDFLAGS}")
     ADD_CUSTOM_COMMAND (OUTPUT ${WEBP_LOCAL_TARGET}
                         WORKING_DIRECTORY ${WEBP_DIR}
                         COMMENT "BUILD WEBP"
                         COMMAND cp -r ${WEBP_DIR} ${OUTPUT_DIRECTORY}
-                        COMMAND cd ${WEBP_BUILD_DIR} && CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} CFLAGS=${WEBP_BUILD_OPTION} ${CMAKE_COMMAND} ${WEBP_OPTION} -DCMAKE_C_COMPILER=${THIRD_PARTY_C_COMPILER_OPTION} -DCMAKE_CXX_COMPILER=${THIRD_PARTY_CXX_COMPILER_OPTION}
+                        COMMAND cd ${WEBP_BUILD_DIR} && CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} ${CMAKE_COMMAND} ${WEBP_OPTION} -DCMAKE_C_FLAGS_INIT=${WEBP_BUILD_OPTION} -DCMAKE_C_COMPILER=${THIRD_PARTY_C_COMPILER_OPTION} -DCMAKE_CXX_COMPILER=${THIRD_PARTY_CXX_COMPILER_OPTION}
                         COMMAND cd ${WEBP_BUILD_DIR} && ${CMAKE_COMMAND} --build . --target webp
     )
 
@@ -671,7 +680,7 @@ ENDIF()
                         WORKING_DIRECTORY ${WEBP_BUILD_DIR}
                         DEPENDS ${WEBP_LOCAL_TARGET}
                         COMMENT "LINK WEBP"
-                        COMMAND ${CMAKE_C_COMPILER} -shared -o ${WEBP_TARGET} -Wl,-soname,libwebp_lwe.so
+                        COMMAND ${CMAKE_C_COMPILER} ${WEBP_LINK_FLAGS} -shared -o ${WEBP_TARGET} -Wl,-soname,libwebp_lwe.so
                                 -Wl,--whole-archive libwebp.a -Wl,--no-whole-archive
                                 libsharpyuv.a -Wl,--exclude-libs,libsharpyuv.a -lm -lpthread
     )
