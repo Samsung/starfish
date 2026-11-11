@@ -245,7 +245,7 @@ def url_to_test_path(url, url_base="/"):
     return path.lstrip("/") + (("?" + parts.query) if parts.query else "")
 
 
-def _screenshot(url, out_path, timeout, width=800, height=600):
+def _screenshot(url, out_path, timeout, width=800, height=600, extra_args=()):
     """Render one page and dump a PNG. Returns (ok, reason, log).
 
     log carries the captured Starfish stdout+stderr (crash backtraces print
@@ -256,7 +256,8 @@ def _screenshot(url, out_path, timeout, width=800, height=600):
     try:
         with _isolated_storage_dir() as storage_dir:
             cmd = STARFISH_CMD_PREFIX + [STARFISH, url, "--hide-window", "--screen-shot=" + out_path,
-                  "--width=%d" % width, "--height=%d" % height, "--storage-dir=" + storage_dir]
+                  "--width=%d" % width, "--height=%d" % height, "--storage-dir=" + storage_dir,
+                  *extra_args]
             r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                env=env, timeout=timeout)
     except subprocess.TimeoutExpired as e:

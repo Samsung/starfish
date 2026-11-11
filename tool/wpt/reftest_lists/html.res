@@ -277,9 +277,9 @@ http://web-platform.test:8000/html/canvas/element/text/direction-rtl.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/compositing/2d.composite.grid.no_filter.shadow.fillRect.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/compositing/2d.composite.grid.no_filter.shadow.pattern.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/compositing/2d.composite.grid.no_filter.shadow.pattern.w.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.gradient.colorInterpolationMethod.html
+http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.gradient.colorInterpolationMethod.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.gradient.colorInterpolationMethod.w.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.gradient.hueInterpolationMethod.html
+http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.gradient.hueInterpolationMethod.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.gradient.hueInterpolationMethod.w.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.canvasFilterObject.componentTransfer.discrete.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/canvas/offscreen/filters/2d.filter.canvasFilterObject.componentTransfer.discrete.tentative.w.html
@@ -545,7 +545,7 @@ http://web-platform.test:8000/html/canvas/offscreen/text/canvas.2d.fontStretch.u
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-30.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-31.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-32.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-33.html
+http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-33.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-34.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-35.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-36.html

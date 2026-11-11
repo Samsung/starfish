@@ -26,7 +26,7 @@ http://web-platform.test:8000/css/css-align/baseline-of-scrollable-2.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-align/baseline-rules/inline-table-inline-block-baseline-vert-rl-synthesis.tentative.html
 http://web-platform.test:8000/css/css-align/baseline-rules/inline-table-inline-block-baseline-vert-rl.html
 http://web-platform.test:8000/css/css-align/baseline-rules/inline-table-inline-block-baseline.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-align/baseline-rules/synthesized-baseline-table-cell-001.html
+http://web-platform.test:8000/css/css-align/baseline-rules/synthesized-baseline-table-cell-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-align/blocks/align-content-block-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-align/blocks/align-content-block-012.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-align/blocks/align-content-block-break-content-010.html

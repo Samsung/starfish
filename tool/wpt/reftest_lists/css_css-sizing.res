@@ -231,7 +231,7 @@ http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-052.
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-011.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-012.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-013.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-014.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-014.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-015.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-016.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-017.html
@@ -552,7 +552,7 @@ http://web-platform.test:8000/css/css-sizing/stretch/fixed-table-1.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/svg-no-ar-max-height-min-content.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/svg-no-ar-min-height-min-content.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/table-child-percentage-height-with-border-box.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/thin-element-render.html
+http://web-platform.test:8000/css/css-sizing/thin-element-render.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/vert-block-size-small-or-larger-than-container-with-min-or-max-content-1.html
 http://web-platform.test:8000/css/css-sizing/vert-block-size-small-or-larger-than-container-with-min-or-max-content-2a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/vert-block-size-small-or-larger-than-container-with-min-or-max-content-2b.html

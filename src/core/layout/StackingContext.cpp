@@ -58,13 +58,10 @@ inline void computeBufferSizeFromVisibleRect(LayoutUnit minX, LayoutUnit minY,
                                              size_t& bufferWidth,
                                              size_t& bufferHeight)
 {
-#if defined(STARFISH_ENABLE_TEST)
-    bufferWidth = (int)(maxX - minX);
-    bufferHeight = (int)(maxY - minY);
-#else
+    // Bounds come from a rect snapped to whole pixels
+    // (snapVisibleRectToPixels), so the size is integral.
     bufferWidth = (maxX - minX).round();
     bufferHeight = (maxY - minY).round();
-#endif
 }
 
 struct StackingContext::ComputeStackingContextContext {
@@ -1285,6 +1282,47 @@ static void computeVisibleRect(StackingContext* source, StackingContext* c,
     }
 }
 
+// A buffer's rect is both where its content is painted from and where the
+// compositor places it. Text widens its contribution by a fractional glyph
+// overhang allowance (InlineTextBox::computeVisibleRect), so a rect whose edge
+// is set by text has a fractional origin: every edge inside the buffer is then
+// painted at a sub-pixel phase the non-composited path never produces, and the
+// finished buffer is resampled again at composite time. Snap outward to whole
+// pixels so a layer paints and composites at the same phase as direct painting.
+// The compositor places the buffer at the owner's position plus the rect
+// origin, so the grid to snap to is the screen's, not the owner's: `phase` is
+// the fraction of the owner's position (bufferPixelPhase). An owner laid out
+// between pixels gets a rect that starts between its own pixels, and its
+// content is antialiased into the buffer the way direct painting does it.
+// The snap is in CSS pixels. Under a fractional device pixel ratio the buffer
+// can still sit between device pixels; snapping to device pixels instead would
+// re-quantise the rect whenever additionalPixelRatio changes and repaint the
+// buffer through every frame of a scale animation, so that case is left alone.
+static void snapVisibleRectToPixels(LayoutRect& rect,
+                                    const LayoutLocation& phase)
+{
+    if (rect.isEmpty()) {
+        // Nothing to place; growing it would allocate a buffer for nothing.
+        return;
+    }
+    LayoutUnit minX = LayoutUnit((rect.x() + phase.x()).floor()) - phase.x();
+    LayoutUnit minY = LayoutUnit((rect.y() + phase.y()).floor()) - phase.y();
+    LayoutUnit maxX = LayoutUnit((rect.maxX() + phase.x()).ceil()) - phase.x();
+    LayoutUnit maxY = LayoutUnit((rect.maxY() + phase.y()).ceil()) - phase.y();
+    rect = LayoutRect(minX, minY, maxX - minX, maxY - minY);
+}
+
+// The fraction of the owner's laid-out position. Layout replaces the stacking
+// contexts, so it is current whenever a rect is computed. Transforms are left
+// out on purpose: a layer keeps its buffer while a transform moves it, so a
+// phase taken from an animated matrix would be stale on the next frame and
+// leave the layer blurred once it comes to rest on a whole pixel.
+static LayoutLocation bufferPixelPhase(FrameBox* owner)
+{
+    LayoutLocation position = owner->absolutePoint(nullptr);
+    return LayoutLocation(position.x().fraction(), position.y().fraction());
+}
+
 static CanvasSurface::CanvasSurfaceFlag computeSurfaceFlag(StackingContext* sc,
                                                            size_t tileWidth,
                                                            size_t tileHeight)
@@ -1359,7 +1397,9 @@ bool StackingContext::isOwnerBackgroundDrawnByCompositor()
 
 void StackingContext::drawOwnerBackgroundByCompositor(Compositor* compositor)
 {
-    auto rect = m_owner->makeRect(BoxValue::PaddingBoxBoxValue);
+    auto rect =
+        snapRectToDeviceGrid(compositor->currentTransformMatrix(),
+                             m_owner->makeRect(BoxValue::PaddingBoxBoxValue));
     compositor->setFillColor(m_owner->style()->backgroundColor());
     if (m_owner->hasFrameBorderRadius()) {
         // the compositor cannot fill an arbitrary path; clip to the rounded
@@ -1485,6 +1525,9 @@ void StackingContext::applyStackingContextProperties(
                     m_rareData->m_visibleRect.unite(scrollRect);
                 }
             }
+
+            snapVisibleRectToPixels(m_rareData->m_visibleRect,
+                                    bufferPixelPhase(m_owner));
 
             if (m_owner->isRootElement()) {
                 if (m_rareData->m_visibleRect.x() < 0) {
@@ -1734,15 +1777,12 @@ public:
 
         if (!m_ownerStackingContext->needsGraphicsBuffer()) {
             LayoutRect rect = m_ownerStackingContext->screenExtent();
+            // Already in screen coordinates.
+            snapVisibleRectToPixels(rect, LayoutLocation(0, 0));
             LayoutUnit minX = rect.x();
             LayoutUnit maxX = rect.maxX();
             LayoutUnit minY = rect.y();
             LayoutUnit maxY = rect.maxY();
-
-            minX = minX.floor();
-            maxX = maxX.ceil();
-            minY = minY.floor();
-            maxY = maxY.ceil();
 
             size_t bufferWidth;
             size_t bufferHeight;
@@ -1959,7 +1999,8 @@ void StackingContext::fillGraphicsBufferContents(
     }
     if (needsComputeOverflow && canApplyScroll) {
         canvas->save();
-        canvas->clip(m_owner->makeRect(BoxValue::PaddingBoxBoxValue));
+        canvas->clip(canvas->snapRectToDevicePixels(
+            m_owner->makeRect(BoxValue::PaddingBoxBoxValue)));
         const LayoutRect rect(0, 0, m_owner->width(), m_owner->height());
         m_owner->applyBorderRadiusClippingIfNeeds(canvas, rect);
         if (canApplyScroll) {
@@ -2389,6 +2430,13 @@ LayoutRect StackingContext::visibleRect()
             LayoutRect seeded = m_owner->frameVisibleRect();
             seeded.unite(m_visibleRectContentOnly);
             m_rareData->m_visibleRect = seeded;
+        }
+        if (m_needsGraphicsBuffer) {
+            // A buffered layer normally gets its rect from
+            // applyStackingContextProperties; keep the whole-pixel contract
+            // its buffer relies on if it is ever produced here instead.
+            snapVisibleRectToPixels(m_rareData->m_visibleRect,
+                                    bufferPixelPhase(m_owner));
         }
         m_isVisibleRectComputedForNonGraphicsLayer = true;
     }
@@ -3204,7 +3252,8 @@ void StackingContext::paintStackingContext(Canvas* canvas,
 
     bool wasTranslateAppliedDueToScroll = false;
     if (owner()->shouldApplyOverflow()) {
-        canvas->clip(owner()->makeRect(BoxValue::PaddingBoxBoxValue));
+        canvas->clip(canvas->snapRectToDevicePixels(
+            owner()->makeRect(BoxValue::PaddingBoxBoxValue)));
         const LayoutRect rect(0, 0, m_owner->width(), m_owner->height());
         m_owner->applyBorderRadiusClippingIfNeeds(canvas, rect);
         if (m_owner->isFrameBlockBox()) {

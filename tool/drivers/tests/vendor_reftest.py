@@ -35,18 +35,19 @@ def expected_references(url, root):
             if os.path.isfile(local_stem + suffix + ext)]
 
 
-def run(url, references, width=800, height=600):
+def run(url, references, width=800, height=600, extra_args=()):
     """references: [(relation, ref_url)], relation "==" or "!=". Every one
-    must hold. Returns (ok, reason)."""
+    must hold. extra_args go to every Starfish run of the test and its
+    references. Returns (ok, reason)."""
     timeout = float(os.environ.get(ENVOPTS.TIMEOUT) or DEFAULT_TIMEOUT_SEC)
     with tempfile.TemporaryDirectory(prefix="vendor-reftest-") as tmp:
         test_png = os.path.join(tmp, "test.png")
-        ok, reason, _ = _screenshot(url, test_png, timeout, width, height)
+        ok, reason, _ = _screenshot(url, test_png, timeout, width, height, extra_args)
         if not ok:
             return False, reason
         for i, (relation, ref_url) in enumerate(references):
             ref_png = os.path.join(tmp, "ref%d.png" % i)
-            ok, reason, _ = _screenshot(ref_url, ref_png, timeout, width, height)
+            ok, reason, _ = _screenshot(ref_url, ref_png, timeout, width, height, extra_args)
             if not ok:
                 return False, "REF_" + reason
             try:

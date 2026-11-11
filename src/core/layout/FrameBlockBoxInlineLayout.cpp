@@ -1772,8 +1772,8 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
 
                 if (overflowApplied) {
                     canvas->save();
-                    canvas->clip(
-                        childBox->makeRect(BoxValue::PaddingBoxBoxValue));
+                    canvas->clip(canvas->snapRectToDevicePixels(
+                        childBox->makeRect(BoxValue::PaddingBoxBoxValue)));
                     const LayoutRect rect(0, 0, childBox->width(),
                                           childBox->height());
                     childBox->applyBorderRadiusClippingIfNeeds(canvas, rect);
@@ -5096,7 +5096,8 @@ void FrameBlockBox::paintContent(PaintingContext& ctx)
 
     if (overflowApplied) {
         ctx.m_canvas->save();
-        ctx.m_canvas->clip(makeRect(BoxValue::PaddingBoxBoxValue));
+        ctx.m_canvas->clip(ctx.m_canvas->snapRectToDevicePixels(
+            makeRect(BoxValue::PaddingBoxBoxValue)));
         const LayoutRect rect(0, 0, width(), height());
         applyBorderRadiusClippingIfNeeds(ctx.m_canvas, rect);
         ctx.m_canvas->translate(-scrollLeft(), -scrollTop());

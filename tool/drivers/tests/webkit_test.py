@@ -50,9 +50,23 @@ def references(url):
     return vendor_reftest.expected_references(url, LAYOUT_TESTS_DIR)
 
 
+def device_scale_args(url):
+    """WebKitTestRunner renders a test whose path holds /hidpi-3x- or /hidpi-
+    at device scale 3 or 2 (overrideDeviceScaleFactorForTest in
+    Tools/TestRunnerShared/TestFeatures.cpp); its reference assumes that
+    scale."""
+    path = urlparse(url).path
+    if "/hidpi-3x-" in path:
+        return ["--device-pixel-ratio=3"]
+    if "/hidpi-" in path:
+        return ["--device-pixel-ratio=2"]
+    return []
+
+
 def case_runner(tc):
     url = tc[1]
     refs = references(url)
     if not refs:
         return basictest.case_runner(tc)
-    return vendor_reftest.report(url, *vendor_reftest.run(url, refs))
+    return vendor_reftest.report(
+        url, *vendor_reftest.run(url, refs, extra_args=device_scale_args(url)))

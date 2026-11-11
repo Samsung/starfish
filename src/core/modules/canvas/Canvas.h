@@ -293,6 +293,30 @@ struct CanvasRenderTargetInfo {
     }
 };
 
+// Box geometry is laid out in fractional CSS pixels, but box decorations,
+// replaced content and overflow clips are painted on the device pixel grid,
+// so an edge looks the same wherever the box lands and whichever layer it is
+// painted into. Each edge of the local rect is rounded to the nearest device
+// pixel. Only axis-aligned matrices are snapped: under rotation or skew there
+// is no grid to snap to.
+inline Unit::Rect snapRectToDeviceGrid(const SkMatrix& ctm,
+                                       const Unit::Rect& rt)
+{
+    auto tp = ctm.getType();
+    if ((tp & SkMatrix::TypeMask::kAffine_Mask) ||
+        (tp & SkMatrix::TypeMask::kPerspective_Mask) || ctm.getScaleX() <= 0 ||
+        ctm.getScaleY() <= 0) {
+        return rt;
+    }
+    double sx = ctm.getScaleX(), sy = ctm.getScaleY();
+    double tx = ctm.getTranslateX(), ty = ctm.getTranslateY();
+    double x = (std::round(rt.x() * sx + tx) - tx) / sx;
+    double y = (std::round(rt.y() * sy + ty) - ty) / sy;
+    double maxX = (std::round((rt.x() + rt.width()) * sx + tx) - tx) / sx;
+    double maxY = (std::round((rt.y() + rt.height()) * sy + ty) - ty) / sy;
+    return Unit::Rect(x, y, maxX - x, maxY - y);
+}
+
 class Canvas : public gc {
 protected:
     Canvas()
@@ -433,33 +457,14 @@ public:
     virtual void strokeRect(const LayoutRect& rt) = 0;
     void drawPixelSnappedRect(const LayoutRect& rt)
     {
-#if defined(STARFISH_ENABLE_TEST)
-        // retain old method for our test suite
-        LayoutUnit rx = rt.x();
-        LayoutUnit ry = rt.y();
-        int xx = rx.floor();
-        int yy = ry.floor();
-        int ww = snapSizeToPixel(rt.width(), rx);
-        int hh = snapSizeToPixel(rt.height(), ry);
-        drawRect(LayoutRect(xx, yy, ww, hh));
-#else
-        auto ctm = currentTransformMatrix();
-        auto tp = ctm.getType();
-        if (!(tp & SkMatrix::TypeMask::kScale_Mask) &&
-            !(tp & SkMatrix::TypeMask::kAffine_Mask) &&
-            !(tp & SkMatrix::TypeMask::kPerspective_Mask)) {
-            save();
-            LayoutUnit tx = ctm.getTranslateX();
-            LayoutUnit ty = ctm.getTranslateY();
-            resetMatrix();
-            LayoutRect newRt(rt.x() + tx, rt.y() + ty, rt.width(), rt.height());
-            drawRect(newRt.snapSizeToPixel());
-            restore();
-        } else {
-            drawRect(rt);
-        }
-#endif
+        drawRect(snapRectToDevicePixels(
+            Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height())));
     }
+    Unit::Rect snapRectToDevicePixels(const Unit::Rect& rt)
+    {
+        return snapRectToDeviceGrid(currentTransformMatrix(), rt);
+    }
+
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,
                           LayoutLocation p3,
                           LayoutLocation p4) = 0; // left, top, right, bottom

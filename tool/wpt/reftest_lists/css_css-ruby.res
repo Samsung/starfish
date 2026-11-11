@@ -39,7 +39,7 @@ http://web-platform.test:8000/css/css-ruby/pseudo-first-letter.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ruby/ruby-base-container-abs.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ruby/ruby-base-container-float.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ruby/ruby-base-different-size.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ruby/ruby-bidi-001.html
+http://web-platform.test:8000/css/css-ruby/ruby-bidi-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ruby/ruby-bidi-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ruby/ruby-bidi-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ruby/ruby-bidi-004.html

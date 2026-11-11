@@ -956,6 +956,7 @@ tests/assertion/css/compositing/compositing-opacity-bg-ancestor.html
 tests/assertion/css/compositing/composited-hidden-layer-not-ghost.html
 tests/assertion/css/compositing/composited-layer-fractional-origin.html
 tests/assertion/css/compositing/composited-layer-fractional-position.html
+tests/assertion/css/compositing/fractional-box-edges-composite-mode.html
 tests/pixel/css/compositing/mix-blend-mode-overlay-layer.html
 tests/pixel/dom/text-element-added.html
 tests/assertion/dom/same_origin_01.html

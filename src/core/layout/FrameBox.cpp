@@ -50,6 +50,39 @@
 
 namespace Starfish {
 
+// Paints the box on the device pixels its edges round to, as a pixel-snapped
+// rect: the origin moves to the nearest device pixel and the size becomes the
+// distance between the rounded edges, so the far edges round from their own
+// fractional positions. Box decorations then line up with the snapped clips
+// and buffers instead of blending into the neighboring pixels.
+class PixelSnappedPaintScope {
+public:
+    PixelSnappedPaintScope(Canvas* canvas, FrameBox* box)
+        : m_box(box)
+        , m_width(box->width())
+        , m_height(box->height())
+    {
+        Unit::Rect snapped = canvas->snapRectToDevicePixels(
+            Unit::Rect(0, 0, m_width.toFloat(), m_height.toFloat()));
+        if (snapped.x() || snapped.y()) {
+            canvas->translate(snapped.x(), snapped.y());
+        }
+        box->setWidth(snapped.width());
+        box->setHeight(snapped.height());
+    }
+
+    ~PixelSnappedPaintScope()
+    {
+        m_box->setWidth(m_width);
+        m_box->setHeight(m_height);
+    }
+
+private:
+    FrameBox* m_box;
+    LayoutUnit m_width;
+    LayoutUnit m_height;
+};
+
 static void updateBorderRadiusByFactor(BorderRadiusFixedData& v, float factor)
 {
     v.m_topLeftVertical *= factor;
@@ -533,6 +566,7 @@ void FrameBox::paintOutline(Canvas* canvas)
     auto s = style()->outlineStyle();
     if (s != BorderStyleValue::NoneBorderStyleValue) {
         canvas->save();
+        PixelSnappedPaintScope snappedPaint(canvas, this);
         canvas->resetClip();
         auto u = absolutePointIncludingScroll(
             node()->document()->frame()->asFrameBox(), false);
@@ -958,7 +992,7 @@ void FrameBox::clipToBox(Canvas* canvas, BoxValue box)
 {
     Unit::Rect rect = makeRect(box);
     if (!hasFrameBorderRadius()) {
-        canvas->clip(rect);
+        canvas->clip(canvas->snapRectToDevicePixels(rect));
         return;
     }
 
@@ -1186,6 +1220,7 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
     }
 
     canvas->save();
+    PixelSnappedPaintScope snappedPaint(canvas, this);
 
     paintBoxShadows(canvas);
     const LayoutRect rect(0, 0, width(), height());
@@ -3000,8 +3035,8 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
             canvas->beginTextClipContent();
         }
 
-        canvas->clip(
-            Unit::Rect(0, 0, paintingRect.width(), paintingRect.height()));
+        canvas->clip(canvas->snapRectToDevicePixels(
+            Unit::Rect(0, 0, paintingRect.width(), paintingRect.height())));
 
         float positionW = positioningRect.width();
         float positionH = positioningRect.height();
@@ -3060,6 +3095,22 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
 
         auto repeatX = style->backgroundRepeatX(idx);
         auto repeatY = style->backgroundRepeatY(idx);
+        // Only the origin moves to the device grid: rounding both edges could
+        // change the drawn size and resample the image.
+        auto snapImageOrigin = [&](LayoutUnit x, LayoutUnit y) {
+            Unit::Rect snapped =
+                canvas->snapRectToDevicePixels(Unit::Rect(x, y, 0, 0));
+            return Unit::Rect(snapped.x(), snapped.y(), imgW, imgH);
+        };
+        // A repeated image keeps its fractional tile phase (dst's origin);
+        // only the far edges of the painted area move to the device grid.
+        auto snapRepeatArea = [&](LayoutUnit x, LayoutUnit y, float w,
+                                  float h) {
+            Unit::Rect snapped =
+                canvas->snapRectToDevicePixels(Unit::Rect(x, y, w, h));
+            return Unit::Rect(x, y, snapped.maxX() - x.toFloat(),
+                              snapped.maxY() - y.toFloat());
+        };
 
         bool shouldApplyRepeat = type.isGradient() ? hasSpecifiedSize : true;
 
@@ -3070,12 +3121,12 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                 if (positioningRect.x() == paintingRect.x() &&
                     positioningRect.y() == paintingRect.y() &&
                     paintingW == imgW && paintingH == imgH) {
-                    canvas->drawImage(id, Unit::Rect(x, y, imgW, imgH),
+                    canvas->drawImage(id, snapImageOrigin(x, y),
                                       imageRenderingValue);
                 } else {
                     canvas->drawRepeatImage(
-                        id, Unit::Rect(x, y, paintingW, paintingH), imgW, imgH,
-                        true, true, imageRenderingValue);
+                        id, snapRepeatArea(x, y, paintingW, paintingH), imgW,
+                        imgH, true, true, imageRenderingValue);
                 }
             } else if (type.isGradient()) {
                 paintGradient(canvas, box, style->backgroundImage(idx),
@@ -3086,9 +3137,9 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                    repeatX == RepeatStyleValue::NoRepeatRepeatValue &&
                    repeatY == RepeatStyleValue::RepeatRepeatValue) {
             if (type.isURL()) {
-                canvas->drawRepeatImage(id, Unit::Rect(x, y, imgW, paintingH),
-                                        imgW, imgH, false, true,
-                                        imageRenderingValue);
+                canvas->drawRepeatImage(
+                    id, snapRepeatArea(x, y, imgW, paintingH), imgW, imgH,
+                    false, true, imageRenderingValue);
             } else if (type.isGradient()) {
                 paintGradient(canvas, box, style->backgroundImage(idx),
                               Unit::Rect(x, y, imgW, paintingH), imgW, imgH,
@@ -3099,9 +3150,9 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                    repeatX == RepeatStyleValue::RepeatRepeatValue &&
                    repeatY == RepeatStyleValue::NoRepeatRepeatValue) {
             if (type.isURL()) {
-                canvas->drawRepeatImage(id, Unit::Rect(x, y, paintingW, imgH),
-                                        imgW, imgH, true, false,
-                                        imageRenderingValue);
+                canvas->drawRepeatImage(
+                    id, snapRepeatArea(x, y, paintingW, imgH), imgW, imgH, true,
+                    false, imageRenderingValue);
             } else if (type.isGradient()) {
                 paintGradient(canvas, box, style->backgroundImage(idx),
                               Unit::Rect(x, y, paintingW, imgH), imgW, imgH,
@@ -3109,7 +3160,7 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
             }
         } else {
             if (type.isURL()) {
-                canvas->drawImage(id, Unit::Rect(x, y, imgW, imgH),
+                canvas->drawImage(id, snapImageOrigin(x, y),
                                   imageRenderingValue);
             } else if (type.isGradient()) {
                 paintGradient(canvas, box, style->backgroundImage(idx),

@@ -90,7 +90,7 @@ http://web-platform.test:8000/css/css-inline/empty-span-height.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-inline/empty-span-scroll.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-inline/empty-span-size-001.html
 http://web-platform.test:8000/css/css-inline/empty-span-size-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-inline/empty-text-node-001.html
+http://web-platform.test:8000/css/css-inline/empty-text-node-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-inline/initial-letter/Initial-letter-breaking-rtl.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-inline/initial-letter/Initial-letter-breaking-vlr.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-inline/initial-letter/Initial-letter-breaking-vrl.html

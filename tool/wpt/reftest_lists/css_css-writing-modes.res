@@ -937,7 +937,7 @@ http://web-platform.test:8000/css/css-writing-modes/percentage-padding-in-shrink
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/sizing-orthogonal-percentage-margin-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/sizing-orthogonal-percentage-margin-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/sizing-orthogonal-percentage-margin-008.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-writing-modes/sizing-percentages-replaced-orthogonal-001.html
+http://web-platform.test:8000/css/css-writing-modes/sizing-percentages-replaced-orthogonal-001.html
 http://web-platform.test:8000/css/css-writing-modes/slr-alongside-vlr-floats.html
 http://web-platform.test:8000/css/css-writing-modes/srl-alongside-vrl-floats.html
 http://web-platform.test:8000/css/css-writing-modes/svg-aliasing-001.html

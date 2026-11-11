@@ -45,7 +45,7 @@ http://web-platform.test:8000/css/css-backgrounds/animations/invalidation/backgr
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-attachment-fixed-block-002.html
 http://web-platform.test:8000/css/css-backgrounds/background-attachment-fixed-border-radius-offset.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-attachment-fixed-inline-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-attachment-fixed-inline-scrolled.html
+http://web-platform.test:8000/css/css-backgrounds/background-attachment-fixed-inline-scrolled.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-attachment-fixed-inside-transform-1.html
 http://web-platform.test:8000/css/css-backgrounds/background-attachment-local/attachment-local-clipping-color-1.html
 http://web-platform.test:8000/css/css-backgrounds/background-attachment-local/attachment-local-clipping-color-2.html
@@ -99,7 +99,7 @@ http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-text-dyna
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-text-inline-block-child.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-text-inline.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-text-multi-line.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-text-multiline-background-image.html
+http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-text-multiline-background-image.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-text-multiline-linebreak.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-text-on-body-not-propagated-to-root.html
 http://web-platform.test:8000/css/css-backgrounds/background-clip/clip-text-on-body-propagated-to-root.html
@@ -148,8 +148,8 @@ http://web-platform.test:8000/css/css-backgrounds/background-color-body-propagat
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-backgrounds/background-color-root-propagation-002.html
 http://web-platform.test:8000/css/css-backgrounds/background-gradient-interpolation-001.html
 http://web-platform.test:8000/css/css-backgrounds/background-gradient-interpolation-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-gradient-interpolation-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/background-gradient-subpixel-fills-area.html
+http://web-platform.test:8000/css/css-backgrounds/background-gradient-interpolation-003.html
+http://web-platform.test:8000/css/css-backgrounds/background-gradient-subpixel-fills-area.html
 http://web-platform.test:8000/css/css-backgrounds/background-image-001.html
 http://web-platform.test:8000/css/css-backgrounds/background-image-002.html
 http://web-platform.test:8000/css/css-backgrounds/background-image-003.html
@@ -620,7 +620,7 @@ http://web-platform.test:8000/css/css-backgrounds/border-top-width-medium.html
 http://web-platform.test:8000/css/css-backgrounds/border-top-width-thick.html
 http://web-platform.test:8000/css/css-backgrounds/border-top-width-thin.html
 http://web-platform.test:8000/css/css-backgrounds/border-width-pixel-snapping-001-a.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/border-width-pixel-snapping-001-b.html
+http://web-platform.test:8000/css/css-backgrounds/border-width-pixel-snapping-001-b.html
 http://web-platform.test:8000/css/css-backgrounds/border-width-small-values-001-a.html
 http://web-platform.test:8000/css/css-backgrounds/border-width-small-values-001-b.html
 http://web-platform.test:8000/css/css-backgrounds/border-width-small-values-001-c.html
@@ -634,10 +634,10 @@ http://web-platform.test:8000/css/css-backgrounds/border-width-small-values-001-
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/box-shadow/slice-inline-fragmentation-003.html
 http://web-platform.test:8000/css/css-backgrounds/box-shadow-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/box-shadow-029.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/box-shadow-039.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/box-shadow-040.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/box-shadow-041.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/box-shadow-042.html
+http://web-platform.test:8000/css/css-backgrounds/box-shadow-039.html
+http://web-platform.test:8000/css/css-backgrounds/box-shadow-040.html
+http://web-platform.test:8000/css/css-backgrounds/box-shadow-041.html
+http://web-platform.test:8000/css/css-backgrounds/box-shadow-042.html
 http://web-platform.test:8000/css/css-backgrounds/box-shadow-body.html
 http://web-platform.test:8000/css/css-backgrounds/box-shadow-border-radius-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/box-shadow-calc.html

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Boxes between pixels paint the same crisp edges with and without layers</title>
+<style>
+  body { margin: 0; background: white; }
+  /* Edges fall 0.4px past a pixel boundary, so they round to whole pixels:
+     the background covers 20..70 by 20..60, the border box 100..150 with a
+     2px border, and the outline columns 179 and 230. Painting an edge
+     between pixels leaves a blended column. */
+  #bg { position: absolute; left: 20.4px; top: 20.4px; width: 50.2px;
+        height: 40.2px; background: green; }
+  #bordered { position: absolute; left: 100.4px; top: 20.4px; width: 46.2px;
+              height: 36.2px; border: 2px solid green; background: white; }
+  #outlined { position: absolute; left: 180.4px; top: 20.4px; width: 50px;
+              height: 40px; outline: 1px solid green; }
+  /* Made a layer later, which puts the whole page in composite mode. */
+  #layer { position: absolute; left: 0; top: 100px; width: 10px; height: 10px; }
+  p { position: absolute; left: 0; top: 140px; margin: 0; font: 16px sans-serif; }
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<div id="bordered"></div>
+<div id="outlined"></div>
+<div id="layer"></div>
+<p>Three green boxes with crisp edges.</p>
+<script>
+  var white = { r: 255, g: 255, b: 255, a: 255 };
+  var green = { r: 0, g: 128, b: 0, a: 255 };
+  function at(x, y, c) {
+    return { x: x, y: y, r: c.r, g: c.g, b: c.b, a: c.a };
+  }
+  function edges() {
+    return [
+      at(19, 40, white), at(20, 40, green), at(70, 40, green), at(71, 40, white),
+      at(45, 19, white), at(45, 20, green), at(45, 60, green), at(45, 61, white),
+      at(99, 40, white), at(100, 40, green), at(101, 40, green), at(102, 40, white),
+      at(149, 40, green), at(150, 40, green), at(151, 40, white),
+      at(178, 40, white), at(179, 40, green), at(180, 40, white),
+      at(229, 40, white), at(230, 40, green), at(231, 40, white),
+    ];
+  }
+  function afterTwoFrames(callback) {
+    requestAnimationFrame(function () {
+      requestAnimationFrame(callback);
+    });
+  }
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      return;
+    }
+    afterTwoFrames(function () {
+      screenShot("fractional-box-edges-direct.png", function () {
+        console.assert(checkPixelColors("fractional-box-edges-direct.png", edges(), 3),
+                       "edges without layers");
+        document.getElementById("layer").style.willChange = "transform";
+        afterTwoFrames(function () {
+          screenShot("fractional-box-edges-composited.png", function () {
+            console.assert(checkPixelColors("fractional-box-edges-composited.png", edges(), 3),
+                           "edges in composite mode");
+            testEnd();
+          });
+        });
+      });
+    });
+  };
+</script>
+</body>
+</html>

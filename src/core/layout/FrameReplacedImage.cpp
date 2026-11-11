@@ -71,6 +71,7 @@ void FrameReplacedImage::paintReplaced(Canvas* canvas)
                 borderLeft() + paddingLeft(), borderTop() + paddingTop(),
                 width() - borderWidth() - paddingWidth(),
                 height() - borderHeight() - paddingHeight());
+            frameRect = canvas->snapRectToDevicePixels(frameRect);
 
             if (style()->hasObjectSizing()) {
                 canvas->save();
@@ -78,8 +79,9 @@ void FrameReplacedImage::paintReplaced(Canvas* canvas)
                 LayoutRect imgRect =
                     computeObjectFit(id->width(), id->height());
                 canvas->drawImage(id,
-                                  Unit::Rect(imgRect.x(), imgRect.y(),
-                                             imgRect.width(), imgRect.height()),
+                                  canvas->snapRectToDevicePixels(Unit::Rect(
+                                      imgRect.x(), imgRect.y(), imgRect.width(),
+                                      imgRect.height())),
                                   style()->imageRendering());
                 canvas->restore();
             } else {
@@ -148,14 +150,16 @@ void FrameReplacedImage::paintReplaced(Canvas* canvas)
 
             Unit::Rect frameRect =
                 Unit::Rect(x, y, imageDstWidth, imageDstHeight);
+            frameRect = canvas->snapRectToDevicePixels(frameRect);
             if (style()->hasObjectSizing()) {
                 canvas->save();
                 canvas->clip(frameRect);
                 LayoutRect imgRect =
                     computeObjectFit(id->width(), id->height());
                 canvas->drawImage(id,
-                                  Unit::Rect(imgRect.x(), imgRect.y(),
-                                             imgRect.width(), imgRect.height()),
+                                  canvas->snapRectToDevicePixels(Unit::Rect(
+                                      imgRect.x(), imgRect.y(), imgRect.width(),
+                                      imgRect.height())),
                                   style()->imageRendering());
                 canvas->restore();
             } else {

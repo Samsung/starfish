@@ -1165,7 +1165,7 @@ http://localhost:11012/fast/borders/border-radius-inner-clip.html
 # http://localhost:11012/fast/borders/dotted-border-on-subpixel-position.html
 http://localhost:11012/fast/borders/double-1px-border-assert.html
 http://localhost:11012/fast/borders/hidpi-3x-input-hairline-border.html
-# http://localhost:11012/fast/borders/hidpi-border-clipping-right-after-move.html
+http://localhost:11012/fast/borders/hidpi-border-clipping-right-after-move.html
 http://localhost:11012/fast/borders/hidpi-border-image-gradient-on-subpixels.html
 # http://localhost:11012/fast/borders/hidpi-border-painting-groove.html
 # http://localhost:11012/fast/borders/hidpi-border-painting-ridge.html
@@ -1175,7 +1175,7 @@ http://localhost:11012/fast/borders/hidpi-border-width-flooring.html
 # http://localhost:11012/fast/borders/hidpi-double-border-with-border-radius-always-produce-solid-line.html
 # http://localhost:11012/fast/borders/hidpi-outline-hairline-painting.html
 http://localhost:11012/fast/borders/hidpi-outline-on-subpixel-position.html
-# http://localhost:11012/fast/borders/hidpi-rounded-border-on-subpixel-position.html
+http://localhost:11012/fast/borders/hidpi-rounded-border-on-subpixel-position.html
 # http://localhost:11012/fast/borders/hidpi-simple-hairline-border-painting.html
 http://localhost:11012/fast/borders/logical-border-props-with-variables.html
 # http://localhost:11012/fast/borders/outline-border-radius-simple.html
@@ -3649,7 +3649,7 @@ http://localhost:11012/fast/hidpi/filters-shadow.html
 # http://localhost:11012/fast/hidpi/filters-turbulence.html
 # http://localhost:11012/fast/hidpi/hidpi-form-controls-drawing-size.html
 http://localhost:11012/fast/hidpi/hidpi-long-page-with-inset-element.html
-# http://localhost:11012/fast/hidpi/hidpi-nested-layers-missing-content.html
+http://localhost:11012/fast/hidpi/hidpi-nested-layers-missing-content.html
 http://localhost:11012/fast/hidpi/image-set-as-background-quotes.html
 http://localhost:11012/fast/hidpi/image-set-cross-fade.html
 # http://localhost:11012/fast/hidpi/image-set-gradient-multi.html
@@ -4044,7 +4044,7 @@ http://localhost:11012/fast/inline/hanging-content-inside-inline-box-should-not-
 # http://localhost:11012/fast/inline/hidpi-outline-auto-with-border-radius-horizontal-rtl.html
 # http://localhost:11012/fast/inline/hidpi-outline-auto-with-border-radius-vertical-ltr.html
 # http://localhost:11012/fast/inline/hidpi-outline-auto-with-border-radius-vertical-rtl.html
-http://localhost:11012/fast/inline/hidpi-outline-auto-with-fractional-radius.html
+# http://localhost:11012/fast/inline/hidpi-outline-auto-with-fractional-radius.html
 # http://localhost:11012/fast/inline/hidpi-outline-auto-with-one-focusring-rect.html
 # http://localhost:11012/fast/inline/hidpi-outline-inline-box-writing-modes.html
 # http://localhost:11012/fast/inline/hidpi-pixel-gap-between-adjacent-selection-inlines.html
@@ -4055,7 +4055,7 @@ http://localhost:11012/fast/inline/hidpi-rtl-text-does-not-fit-line-and-gets-cut
 # http://localhost:11012/fast/inline/hidpi-selection-gap-on-subpixel-position.html
 # http://localhost:11012/fast/inline/hidpi-selection-gap-overlaps-inline-selection.html
 http://localhost:11012/fast/inline/hidpi-slow-path-text-on-subpixel-position.html
-http://localhost:11012/fast/inline/hidpi-underline-under-superscript.html
+# http://localhost:11012/fast/inline/hidpi-underline-under-superscript.html
 # http://localhost:11012/fast/inline/hyphen-across-renderers.html
 # http://localhost:11012/fast/inline/hyphenation-when-overflow-wrap-is-break-word.html
 # http://localhost:11012/fast/inline/ideographic-baseline-with-block-inside.html
@@ -4235,7 +4235,7 @@ http://localhost:11012/fast/inline-block/simple-line-layout.html
 http://localhost:11012/fast/layers/blank-content-when-child-layer-is-at-negative-big-number.html
 http://localhost:11012/fast/layers/deep-layer-update.html
 # http://localhost:11012/fast/layers/dialog-is-stacking-context.html
-# http://localhost:11012/fast/layers/hidpi-box-positioned-off-by-one-when-transform-is-present.html
+http://localhost:11012/fast/layers/hidpi-box-positioned-off-by-one-when-transform-is-present.html
 http://localhost:11012/fast/layers/hidpi-floor-negative-coordinate-values-to-maintain-rounding-direction.html
 http://localhost:11012/fast/layers/hidpi-nested-layers-with-subpixel-accumulation.html
 # http://localhost:11012/fast/layers/hidpi-transform-on-child-content-is-mispositioned.html

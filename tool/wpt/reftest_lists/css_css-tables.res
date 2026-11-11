@@ -75,8 +75,8 @@ http://web-platform.test:8000/css/css-tables/min-height-table-2.html
 http://web-platform.test:8000/css/css-tables/min-height-table.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/min-max-size-table-content-box.html
 http://web-platform.test:8000/css/css-tables/out-of-order-elements-collapsed-border.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/paint/col-change-span-bg-invalidation-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/paint/col-change-span-bg-invalidation-002.html
+http://web-platform.test:8000/css/css-tables/paint/col-change-span-bg-invalidation-001.html
+http://web-platform.test:8000/css/css-tables/paint/col-change-span-bg-invalidation-002.html
 http://web-platform.test:8000/css/css-tables/paint/col-paint-htb-rtl.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/paint/col-paint-vrl-rtl.html
 http://web-platform.test:8000/css/css-tables/paint/row-background-paint-remove-last-cell.html
@@ -101,8 +101,8 @@ http://web-platform.test:8000/css/css-tables/subpixel-collapsed-borders-001.html
 http://web-platform.test:8000/css/css-tables/subpixel-collapsed-borders-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/subpixel-collapsed-borders-003.html
 http://web-platform.test:8000/css/css-tables/subpixel-table-cell-height-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/subpixel-table-cell-width-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/subpixel-table-cell-width-002.html
+http://web-platform.test:8000/css/css-tables/subpixel-table-cell-width-001.html
+http://web-platform.test:8000/css/css-tables/subpixel-table-cell-width-002.html
 http://web-platform.test:8000/css/css-tables/subpixel-table-width-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/table-as-item-cell-percentage-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/table-as-item-cell-percentage-002.html

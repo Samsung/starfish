@@ -1148,7 +1148,7 @@ http://web-platform.test:8000/css/css-text/white-space/full-width-leading-spaces
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/hanging-whitespace-002.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/hanging-whitespace-003.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/hanging-whitespace-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/line-edge-white-space-collapse-001.html
+http://web-platform.test:8000/css/css-text/white-space/line-edge-white-space-collapse-001.html
 http://web-platform.test:8000/css/css-text/white-space/line-edge-white-space-collapse-002.html
 http://web-platform.test:8000/css/css-text/white-space/lone-cr-001.tentative.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-text/white-space/object-replacement-1.html
@@ -1329,12 +1329,12 @@ http://web-platform.test:8000/css/css-text/white-space/trailing-other-space-sepa
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-005.html
+http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-rtl-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-rtl-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-rtl-003.html
+http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-rtl-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-rtl-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-rtl-005.html
+http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-rtl-005.html
 http://web-platform.test:8000/css/css-text/white-space/trailing-space-rtl-001.html
 http://web-platform.test:8000/css/css-text/white-space/white-space-applies-to-text-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/white-space-collapse-discard-001.xht
@@ -1386,7 +1386,7 @@ http://web-platform.test:8000/css/css-text/white-space/white-space-pre-wrap-trai
 http://web-platform.test:8000/css/css-text/white-space/white-space-pre-wrap-trailing-spaces-013.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/white-space-pre-wrap-trailing-spaces-014.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/white-space-pre-wrap-trailing-spaces-015.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/white-space-pre-wrap-trailing-spaces-021.html
+http://web-platform.test:8000/css/css-text/white-space/white-space-pre-wrap-trailing-spaces-021.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/white-space-pre-wrap-trailing-spaces-022.html
 http://web-platform.test:8000/css/css-text/white-space/white-space-pre-wrap-trailing-spaces-023.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/white-space-trim-discard-inner-001.xht

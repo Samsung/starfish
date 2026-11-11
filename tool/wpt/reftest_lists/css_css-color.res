@@ -90,7 +90,7 @@ http://web-platform.test:8000/css/css-color/hsl-005.html
 http://web-platform.test:8000/css/css-color/hsl-006.html
 http://web-platform.test:8000/css/css-color/hsl-007.html
 http://web-platform.test:8000/css/css-color/hsl-008.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/hsl-clamp-negative-saturation.html
+http://web-platform.test:8000/css/css-color/hsl-clamp-negative-saturation.html
 http://web-platform.test:8000/css/css-color/hsla-001.html
 http://web-platform.test:8000/css/css-color/hsla-002.html
 http://web-platform.test:8000/css/css-color/hsla-003.html
@@ -99,7 +99,7 @@ http://web-platform.test:8000/css/css-color/hsla-005.html
 http://web-platform.test:8000/css/css-color/hsla-006.html
 http://web-platform.test:8000/css/css-color/hsla-007.html
 http://web-platform.test:8000/css/css-color/hsla-008.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/hsla-clamp-negative-saturation.html
+http://web-platform.test:8000/css/css-color/hsla-clamp-negative-saturation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/hwb-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/hwb-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/hwb-003.html
@@ -234,8 +234,8 @@ http://web-platform.test:8000/css/css-color/t32-opacity-offscreen-b.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/t32-opacity-offscreen-multiple-boxes-2-c.xht
 http://web-platform.test:8000/css/css-color/t32-opacity-offscreen-with-alpha-c.xht
 http://web-platform.test:8000/css/css-color/t32-opacity-zorder-c.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/t41-html4-keywords-a.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/t421-rgb-clip-outside-gamut-b.xht
+http://web-platform.test:8000/css/css-color/t41-html4-keywords-a.xht
+http://web-platform.test:8000/css/css-color/t421-rgb-clip-outside-gamut-b.xht
 http://web-platform.test:8000/css/css-color/t421-rgb-func-int-a.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/t421-rgb-func-no-mixed-f.xht
 http://web-platform.test:8000/css/css-color/t421-rgb-func-pct-a.xht
@@ -250,12 +250,12 @@ http://web-platform.test:8000/css/css-color/t422-rgba-a0.6-a.xht
 http://web-platform.test:8000/css/css-color/t422-rgba-a1.0-a.xht
 http://web-platform.test:8000/css/css-color/t422-rgba-clamping-a0.0-b.xht
 http://web-platform.test:8000/css/css-color/t422-rgba-clamping-a1.0-b.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/t422-rgba-clip-outside-device-gamut-b.xht
+http://web-platform.test:8000/css/css-color/t422-rgba-clip-outside-device-gamut-b.xht
 http://web-platform.test:8000/css/css-color/t422-rgba-func-int-a.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/t422-rgba-func-no-mixed-f.xht
 http://web-platform.test:8000/css/css-color/t422-rgba-func-pct-a.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/t422-rgba-func-whitespace-b.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/t422-rgba-values-meaning-b.xht
+http://web-platform.test:8000/css/css-color/t422-rgba-values-meaning-b.xht
 http://web-platform.test:8000/css/css-color/t423-transparent-1-a.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/t423-transparent-2-a.xht
 http://web-platform.test:8000/css/css-color/t424-hsl-basic-a.xht
@@ -279,8 +279,8 @@ http://web-platform.test:8000/css/css-color/t424-hsl-values-b-9.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/t425-hsla-basic-a.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/t425-hsla-h-rotating-b.xht
 http://web-platform.test:8000/css/css-color/t425-hsla-parsing-f.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/t425-hsla-values-b.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/t43-svg-keywords-a.xht
+http://web-platform.test:8000/css/css-color/t425-hsla-values-b.xht
+http://web-platform.test:8000/css/css-color/t43-svg-keywords-a.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/t44-currentcolor-background-b.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/t44-currentcolor-border-b.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/t44-currentcolor-inherited-c.xht

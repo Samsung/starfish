@@ -450,7 +450,7 @@ http://web-platform.test:8000/css/css-grid/grid-items/grid-minimum-size-grid-ite
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-items/grid-minimum-size-grid-items-012.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-items/grid-minimum-size-grid-items-013.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-items/grid-minimum-size-grid-items-014.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-items/grid-minimum-size-grid-items-015.html
+http://web-platform.test:8000/css/css-grid/grid-items/grid-minimum-size-grid-items-015.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-items/grid-minimum-size-grid-items-016.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-items/grid-minimum-size-grid-items-017.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-items/grid-minimum-size-grid-items-018.html
@@ -922,7 +922,7 @@ http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/row-subgrid-extra-margin-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/row-subgrid-extra-margin-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/row-subgrid-extra-margin-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/row-subgrid-extra-margin-005.html
+http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/row-subgrid-extra-margin-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/row-subgrid-extra-margin-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/row-subgrid-extra-margin-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to-grid-lanes/track-sizing/row-subgrid-extra-margin-008.html
@@ -1203,7 +1203,7 @@ http://web-platform.test:8000/css/css-grid/img-src-changes.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/implicit-grids/grid-support-grid-auto-columns-rows-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/implicit-grids/grid-support-grid-auto-columns-rows-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/layout-algorithm/auto-margins-ignored-during-track-sizing-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/layout-algorithm/flex-and-intrinsic-sizes-002.html
+http://web-platform.test:8000/css/css-grid/layout-algorithm/flex-and-intrinsic-sizes-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/layout-algorithm/flex-sizing-rows-indefinite-height-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/layout-algorithm/flex-sizing-rows-indefinite-height.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/layout-algorithm/flex-tracks-with-fractional-size.html
@@ -1242,7 +1242,7 @@ http://web-platform.test:8000/css/css-grid/placement/grid-layout-placement-short
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/placement/grid-placement-using-named-grid-lines-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/placement/grid-placement-using-named-grid-lines-006.html
 http://web-platform.test:8000/css/css-grid/placement/grid-placement-using-named-grid-lines-007.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/placement/grid-placement-using-named-grid-lines-008.html
+http://web-platform.test:8000/css/css-grid/placement/grid-placement-using-named-grid-lines-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/placement/grid-placement-using-named-grid-lines-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/placement/grid-template-areas-must-keep-named-columns-order-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/relative-grandchild.html

@@ -44,7 +44,7 @@ http://web-platform.test:8000/css/css-borders/border-shape/border-shape-shadow-s
 http://web-platform.test:8000/css/css-borders/border-shape/border-shape-stroke-invalidation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-borders/border-shape/border-shape-two-shapes-shadow.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-borders/border-shape-absolute-coords-shape.tentative.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-borders/borders-on-sub-unit-sized-elements.html
+http://web-platform.test:8000/css/css-borders/borders-on-sub-unit-sized-elements.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-borders/corner-shape/corner-shape-backdrop-filter-overflow.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-borders/corner-shape/corner-shape-backdrop-filter-video-overflow.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-borders/corner-shape/corner-shape-backdrop-filter.html

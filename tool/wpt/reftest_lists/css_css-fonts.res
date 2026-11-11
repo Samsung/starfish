@@ -1,8 +1,8 @@
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/alternates-order.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/ascent-descent-override.html
 http://web-platform.test:8000/css/css-fonts/downloadable-font-scoped-to-document.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/first-available-font-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/first-available-font-002.html
+http://web-platform.test:8000/css/css-fonts/first-available-font-001.html
+http://web-platform.test:8000/css/css-fonts/first-available-font-002.html
 http://web-platform.test:8000/css/css-fonts/first-available-font-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/first-available-font-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-fonts/first-available-font-005.html

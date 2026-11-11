@@ -21,6 +21,7 @@
 #define __StarfishComputeOverflow__
 
 #include "core/layout/FrameBox.h"
+#include "core/modules/canvas/Canvas.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/FrameReplaced.h"
@@ -298,7 +299,8 @@ private:
         Unit::Rect rect(frameBox->borderLeft(), frameBox->borderTop(),
                         frameBox->width() - frameBox->borderWidth(),
                         frameBox->height() - frameBox->borderHeight());
-        m_canvasOrCompositor->clip(rect);
+        m_canvasOrCompositor->clip(snapRectToDeviceGrid(
+            m_canvasOrCompositor->currentTransformMatrix(), rect));
     }
 
     void clipBorderRadiusIfNeeds(FrameBox* frameBox)

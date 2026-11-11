@@ -47,7 +47,7 @@ http://web-platform.test:8000/css/css-transforms/backface-visibility-hidden-001.
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/backface-visibility-hidden-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/backface-visibility-hidden-006.html
 http://web-platform.test:8000/css/css-transforms/backface-visibility-hidden-animated-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/backface-visibility-hidden-animated-002.html
+http://web-platform.test:8000/css/css-transforms/backface-visibility-hidden-animated-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/backface-visibility-hidden-child-translate.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/backface-visibility-hidden-child-will-change-transform.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/backface-visibility-with-sibling-001.html
@@ -370,7 +370,7 @@ http://web-platform.test:8000/css/css-transforms/skewY/svg-skewy-016.html
 http://web-platform.test:8000/css/css-transforms/skewY/svg-skewy-021.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/skewY/svg-skewy-with-units.html
 http://web-platform.test:8000/css/css-transforms/subpixel-perspective-backface-hidden.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-transforms/subpixel-perspective-translate-z-0.html
+http://web-platform.test:8000/css/css-transforms/subpixel-perspective-translate-z-0.html
 http://web-platform.test:8000/css/css-transforms/subpixel-transform-changes-001.html
 http://web-platform.test:8000/css/css-transforms/subpixel-transform-changes-002.html
 http://web-platform.test:8000/css/css-transforms/subpixel-transform-changes-003.html
