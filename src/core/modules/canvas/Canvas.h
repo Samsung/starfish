@@ -297,9 +297,10 @@ struct CanvasRenderTargetInfo {
 // replaced content and overflow clips are painted on the device pixel grid,
 // so an edge looks the same wherever the box lands and whichever layer it is
 // painted into. Each edge of the local rect is rounded to the nearest device
-// pixel, but a non-empty side keeps at least one device pixel so a thin box
-// does not vanish. Only axis-aligned matrices are snapped: under rotation or
-// skew there is no grid to snap to.
+// pixel, but a side longer than four LayoutUnits keeps at least one device
+// pixel so a thin box does not vanish, as in Chrome (SnapSizeToPixel); a
+// shorter one is layout residue and stays empty. Only axis-aligned matrices
+// are snapped: under rotation or skew there is no grid to snap to.
 inline Unit::Rect snapRectToDeviceGrid(const SkMatrix& ctm,
                                        const Unit::Rect& rt)
 {
@@ -314,7 +315,7 @@ inline Unit::Rect snapRectToDeviceGrid(const SkMatrix& ctm,
                        double& snappedLength) {
         double begin = std::round(start * scale + translate);
         double end = std::round((start + length) * scale + translate);
-        if (length > 0 && end <= begin) {
+        if (end <= begin && length * scale > 4.0 / kFixedPointDenominator) {
             end = begin + 1;
         }
         snappedStart = (begin - translate) / scale;
@@ -469,9 +470,22 @@ public:
         drawRect(snapRectToDevicePixels(
             Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height())));
     }
+    // The grid is the one this canvas rasterises on: the device pixel ratio
+    // times its layer buffer's own ratio. Content under a CSS transform that
+    // scales is off that grid and left alone, as Chrome snaps before
+    // transforms: snapping it would make a box's painted size follow the
+    // transform and change on every frame of a scale animation.
     Unit::Rect snapRectToDevicePixels(const Unit::Rect& rt)
     {
-        return snapRectToDeviceGrid(currentTransformMatrix(), rt);
+        SkMatrix ctm = currentTransformMatrix();
+        float gridScale = m_renderTargetInfo.m_devicePixelRatio;
+        if (m_targetSurface) {
+            gridScale *= m_targetSurface.value()->additionalPixelRatio();
+        }
+        if (ctm.getScaleX() != gridScale || ctm.getScaleY() != gridScale) {
+            return rt;
+        }
+        return snapRectToDeviceGrid(ctm, rt);
     }
 
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,

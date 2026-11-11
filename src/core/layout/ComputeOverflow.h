@@ -299,8 +299,20 @@ private:
         Unit::Rect rect(frameBox->borderLeft(), frameBox->borderTop(),
                         frameBox->width() - frameBox->borderWidth(),
                         frameBox->height() - frameBox->borderHeight());
-        m_canvasOrCompositor->clip(snapRectToDeviceGrid(
-            m_canvasOrCompositor->currentTransformMatrix(), rect));
+        m_canvasOrCompositor->clip(snapClipRect(m_canvasOrCompositor, rect));
+    }
+
+    // A canvas clips by its own snapping rule, so the clip lines up with the
+    // boxes it paints.
+    static Unit::Rect snapClipRect(Canvas* canvas, const Unit::Rect& rect)
+    {
+        return canvas->snapRectToDevicePixels(rect);
+    }
+
+    template <typename U>
+    static Unit::Rect snapClipRect(U* target, const Unit::Rect& rect)
+    {
+        return snapRectToDeviceGrid(target->currentTransformMatrix(), rect);
     }
 
     void clipBorderRadiusIfNeeds(FrameBox* frameBox)

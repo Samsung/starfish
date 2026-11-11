@@ -22,6 +22,17 @@
      an empty span, which keeps row 80. */
   #thin { position: absolute; left: 20.4px; top: 80.1px; width: 50px;
           height: 0.3px; background: green; }
+  /* Layout residue no taller than 1/16px paints nothing, as in Chrome: row
+     90 stays white. */
+  #residue { position: absolute; left: 20.4px; top: 90.1px; width: 50px;
+             height: 0.05px; background: green; }
+  /* Under a CSS scale the box is not resized to the device grid, which would
+     make its painted size follow the transform: its edges at 331.5 and 361.5
+     leave columns 331 and 361 partly covered. */
+  #scaled { position: absolute; left: 0; top: 0; transform-origin: 0 0;
+            transform: scale(1.5); }
+  #scaled div { position: absolute; left: 221px; top: 14px; width: 20px;
+                height: 26px; background: green; }
   /* Glyphs are not pixel snapped, so a background clipped to text follows
      the glyph at 260.6..300.6: column 300 is partly covered, 301 is not. */
   #clipped { position: absolute; left: 260.6px; top: 20px; font: 40px/40px Ahem;
@@ -37,9 +48,11 @@
 <div id="bordered"></div>
 <div id="outlined"></div>
 <div id="thin"></div>
+<div id="residue"></div>
 <div id="clipped">X</div>
+<div id="scaled"><div></div></div>
 <div id="layer"></div>
-<p>Three green boxes and a thin green line with crisp edges, and a green square.</p>
+<p>Three green boxes and a thin green line with crisp edges, and two green squares.</p>
 <script>
   var white = { r: 255, g: 255, b: 255, a: 255 };
   var green = { r: 0, g: 128, b: 0, a: 255 };
@@ -56,16 +69,19 @@
       at(178, 40, white), at(179, 40, green), at(180, 40, white),
       at(229, 40, white), at(230, 40, green), at(231, 40, white),
       at(45, 79, white), at(45, 80, green), at(45, 81, white),
+      at(45, 90, white),
       at(299, 40, green), at(301, 40, white),
+      at(330, 40, white), at(332, 40, green), at(360, 40, green), at(362, 40, white),
     ];
   }
-  // Antialiasing of the glyph edge differs a little between rasterizers.
-  function glyphEdge() {
-    return [at(300, 40, partlyGreen)];
+  // Antialiasing of a partly covered column differs a little between
+  // rasterizers.
+  function softEdges() {
+    return [at(300, 40, partlyGreen), at(331, 40, partlyGreen), at(361, 40, partlyGreen)];
   }
   function check(png, label) {
     console.assert(checkPixelColors(png, edges(), 3), label);
-    console.assert(checkPixelColors(png, glyphEdge(), 8), label + ": glyph edge");
+    console.assert(checkPixelColors(png, softEdges(), 8), label + ": soft edges");
   }
   function afterTwoFrames(callback) {
     requestAnimationFrame(function () {
