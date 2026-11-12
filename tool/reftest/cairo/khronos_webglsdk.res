@@ -14,3 +14,5 @@ http://localhost:11010/sdk/tests/conformance2/textures/misc/pbo-texture-uploads.
 http://localhost:11010/sdk/tests/conformance2/textures/misc/tex-unpack-params-with-flip-y-and-premultiply-alpha.html
 http://localhost:11010/sdk/tests/conformance2/rendering/blitframebuffer-size-overflow.html
 http://localhost:11010/sdk/tests/conformance2/rendering/blitframebuffer-resolve-to-back-buffer.html
+http://localhost:11010/sdk/tests/conformance/glsl/preprocessor/macro-expansion-tricky.html
+http://localhost:11010/sdk/tests/conformance/glsl/preprocessor/macro-expansion-tricky.html?webglVersion=2

@@ -2139,6 +2139,37 @@ bool WebGLRenderingContext::shaderSourceForDriver(
     return true;
 }
 
+// Where the replacement list of a #define starts, given the end of its macro
+// name and of its line. A function-like macro (a `(` right after the name, as
+// in C++) starts it after the parameter list and puts the parameter names in
+// `params`: in the body they stand for the arguments, whose tokens count
+// where they are written, so they reference no macro or function of the same
+// name. Without a `)` on the line, all after the name counts as the body,
+// which only over-counts.
+static size_t macroBodyBegin(const std::string& view, size_t nameEnd,
+                             size_t end,
+                             std::unordered_set<std::string>& params)
+{
+    params.clear();
+    if (nameEnd >= end || view[nameEnd] != '(') {
+        return nameEnd;
+    }
+    const size_t close = view.find(')', nameEnd);
+    if (close >= end) {
+        return nameEnd;
+    }
+    for (size_t k = nameEnd + 1; k < close;) {
+        const size_t e = identifierEnd(view, k);
+        if (e > k) {
+            params.insert(view.substr(k, e - k));
+            k = e;
+        } else {
+            k++;
+        }
+    }
+    return close + 1;
+}
+
 // The frames of the deepest call stack the driver can reach in `view`
 // (preprocessorView()), or a value above `limit` when it provably exceeds
 // `limit` or the text cannot be bounded soundly. A text scanner neither
@@ -2183,10 +2214,12 @@ static size_t shaderCallDepth(const std::string& view, size_t limit)
     bool macroHasUnbalancedParen = false;
     struct MacroBody {
         uint32_t id;
+        size_t nameEnd;
         size_t begin;
         size_t end;
     };
     std::vector<MacroBody> bodies; // every definition, in source order
+    std::unordered_set<std::string> params;
     auto macroNode = [&](const std::string& name) {
         auto it = macroId.emplace(name, static_cast<uint32_t>(macroId.size()));
         if (it.second) {
@@ -2210,9 +2243,11 @@ static size_t shaderCallDepth(const std::string& view, size_t limit)
                 if (nameEnd > name) {
                     const uint32_t id =
                         macroNode(view.substr(name, nameEnd - name));
+                    const size_t begin =
+                        macroBodyBegin(view, nameEnd, end, params);
                     size_t open = 0;
                     int paren = 0;
-                    for (size_t k = nameEnd; k < end; k++) {
+                    for (size_t k = begin; k < end; k++) {
                         const char c = view[k];
                         if (c == '{') {
                             open++;
@@ -2230,19 +2265,23 @@ static size_t shaderCallDepth(const std::string& view, size_t limit)
                         macroHasUnbalancedParen = true;
                     }
                     macroOwnBraces[id] = std::max(macroOwnBraces[id], open);
-                    bodies.push_back({ id, nameEnd, end });
+                    bodies.push_back({ id, nameEnd, begin, end });
                 }
             }
         }
         line = std::min(view.find_first_not_of("\r\n", end), view.size());
     }
-    // Resolve the macro names each body references (now that all are known).
+    // Resolve the macro names each body references (now that all are known);
+    // a parameter name references none.
     for (const MacroBody& body : bodies) {
+        macroBodyBegin(view, body.nameEnd, body.end, params);
         for (size_t k = body.begin; k < body.end;) {
             const size_t e = identifierEnd(view, k);
             if (e > k) {
-                auto found = macroId.find(view.substr(k, e - k));
-                if (found != macroId.end() && found->second != body.id) {
+                const std::string token = view.substr(k, e - k);
+                auto found = macroId.find(token);
+                if (found != macroId.end() && found->second != body.id &&
+                    !params.count(token)) {
                     macroRefs[body.id].push_back(found->second);
                 }
                 k = e;
@@ -2251,9 +2290,10 @@ static size_t shaderCallDepth(const std::string& view, size_t limit)
             }
         }
     }
-    // weight[id] = the `{` the macro's expansion adds, saturating; a cyclic
-    // dependency (illegal, infinite expansion) saturates. Memoized, explicit
-    // stack, no recursion.
+    // weight[id] = the `{` the macro's expansion adds, saturating. A cycle
+    // saturates too: a macro is not expanded again inside its own expansion,
+    // so the expansion is finite, but these weights do not follow that rule.
+    // Memoized, explicit stack, no recursion.
     const size_t macros = macroOwnBraces.size();
     std::vector<size_t> weight(macros, 0);
     std::vector<uint8_t> macroState(macros, 0); // 0 new, 1 on stack, 2 done
@@ -2380,10 +2420,15 @@ static size_t shaderCallDepth(const std::string& view, size_t limit)
                         std::min(identifierEnd(view, name), end);
                     const uint32_t macro =
                         nameNode(view.substr(name, nameEnd - name));
-                    for (size_t k = nameEnd; pass == 1 && k < end;) {
+                    const size_t begin =
+                        macroBodyBegin(view, nameEnd, end, params);
+                    for (size_t k = begin; pass == 1 && k < end;) {
                         const size_t e = std::min(identifierEnd(view, k), end);
                         if (e > k) {
-                            addCall(macro, view.substr(k, e - k));
+                            const std::string token = view.substr(k, e - k);
+                            if (!params.count(token)) {
+                                addCall(macro, token);
+                            }
                         }
                         k = std::max(e, k + 1);
                     }
