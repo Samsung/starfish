@@ -391,73 +391,73 @@ http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-002.xht
 http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-004.xht
 http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-005.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-006.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-007.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-008.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-007.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-008.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-009.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-010.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-011.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-012.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-010.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-011.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-012.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-013.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-014.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-015.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-016.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-017.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-018.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-019.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-020.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-021.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-014.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-015.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-016.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-017.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-018.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-019.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-020.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-021.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-022.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-023.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-024.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-025.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-026.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-027.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-028.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-029.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-030.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-023.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-024.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-025.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-026.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-027.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-028.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-029.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-030.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-031.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-032.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-033.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-034.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-035.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-036.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-037.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-038.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-039.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-032.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-033.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-034.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-035.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-036.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-037.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-038.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-039.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-040.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-041.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-042.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-043.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-044.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-045.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-041.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-042.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-043.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-044.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-box-model-045.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-breaking-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-breaking-002.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-breaking-003.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-glyph-mirroring-001.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-glyph-mirroring-002.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/bidi-glyph-mirroring-002.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-inline-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/bidi-inline-002.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/direction-001.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/direction-002.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/direction-003.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-001.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-002.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-003.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-004.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-005.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-006.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-007.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/direction-001.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/direction-002.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/direction-003.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-001.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-002.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-003.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-004.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-005.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-006.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-007.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-008.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-009.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-012.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-009.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-012.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-013.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-014.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-015.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/direction-applies-to-015.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/line-breaking-bidi-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/line-breaking-bidi-002.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/line-breaking-bidi-003.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/unicode-bidi-001.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/unicode-bidi-002.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/line-breaking-bidi-003.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/unicode-bidi-001.xht
+http://web-platform.test:8000/css/CSS2/bidi-text/unicode-bidi-002.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/unicode-bidi-003.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/bidi-text/unicode-bidi-004.xht
 http://web-platform.test:8000/css/CSS2/bidi-text/unicode-bidi-applies-to-001.xht
@@ -1035,9 +1035,9 @@ http://web-platform.test:8000/css/CSS2/box-display/block-in-inline-zero-height-m
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/box-display/containing-block-009.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/box-display/containing-block-010.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/box-display/containing-block-019.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/box-display/containing-block-020.xht
+http://web-platform.test:8000/css/CSS2/box-display/containing-block-020.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/box-display/containing-block-021.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/box-display/containing-block-022.xht
+http://web-platform.test:8000/css/CSS2/box-display/containing-block-022.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/box-display/containing-block-023.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/box-display/containing-block-026.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/box-display/containing-block-027.xht
@@ -1376,7 +1376,7 @@ http://web-platform.test:8000/css/CSS2/floats/floats-in-table-caption-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats/floats-placement-004.html
 http://web-platform.test:8000/css/CSS2/floats/floats-placement-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats/floats-placement-006.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats/floats-placement-007.html
+http://web-platform.test:8000/css/CSS2/floats/floats-placement-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats/floats-placement-008.html
 http://web-platform.test:8000/css/CSS2/floats/floats-placement-vertical-001a.xht
 http://web-platform.test:8000/css/CSS2/floats/floats-placement-vertical-001b.xht
@@ -1439,7 +1439,7 @@ http://web-platform.test:8000/css/CSS2/floats/negative-block-margin-pushing-floa
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats/negative-margin-float-positioning.html
 http://web-platform.test:8000/css/CSS2/floats/new-fc-beside-adjoining-float-2.html
 http://web-platform.test:8000/css/CSS2/floats/new-fc-beside-adjoining-float.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats/new-fc-beside-float-with-margin-rtl.html
+http://web-platform.test:8000/css/CSS2/floats/new-fc-beside-float-with-margin-rtl.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats/new-fc-beside-float-with-margin.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats/new-fc-beside-float-with-min-width.html
 http://web-platform.test:8000/css/CSS2/floats/new-fc-relayout.html
@@ -1612,7 +1612,7 @@ http://web-platform.test:8000/css/CSS2/floats-clear/floats-143.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats-clear/floats-144.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats-clear/floats-145.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats-clear/floats-146.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats-clear/floats-147.xht
+http://web-platform.test:8000/css/CSS2/floats-clear/floats-147.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats-clear/floats-149.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats-clear/floats-150.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats-clear/floats-152.xht
@@ -2372,7 +2372,7 @@ http://web-platform.test:8000/css/CSS2/lists/list-style-image-applies-to-016.htm
 http://web-platform.test:8000/css/CSS2/lists/list-style-image-applies-to-017.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/lists/list-style-position-018.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/lists/list-style-position-023.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/lists/list-style-position-024.xht
+http://web-platform.test:8000/css/CSS2/lists/list-style-position-024.xht
 http://web-platform.test:8000/css/CSS2/lists/list-style-position-applies-to-001.xht
 http://web-platform.test:8000/css/CSS2/lists/list-style-position-applies-to-002.xht
 http://web-platform.test:8000/css/CSS2/lists/list-style-position-applies-to-003.xht
@@ -2618,52 +2618,52 @@ http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-left-applies-
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-005.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-007.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-008.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-008.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-016.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-017.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-018.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-019.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-020.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-019.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-020.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-028.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-029.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-030.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-031.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-032.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-031.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-032.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-040.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-041.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-042.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-043.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-044.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-043.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-044.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-052.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-053.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-054.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-055.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-056.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-055.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-056.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-064.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-065.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-066.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-067.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-068.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-067.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-068.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-076.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-077.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-078.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-079.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-080.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-079.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-080.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-088.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-089.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-090.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-091.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-092.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-100.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-101.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-102.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-103.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-104.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-091.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-092.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-100.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-101.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-102.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-103.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-104.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-109.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-110.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-111.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-112.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-113.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-113.xht
 http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-114.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-applies-to-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-applies-to-002.xht
@@ -2966,15 +2966,15 @@ http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-047.xh
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-058.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-059.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-060.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-061.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-062.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-061.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-062.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-067.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-068.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-069.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-070.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-071.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-072.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-073.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-073.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-078.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-079.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-right-080.xht
@@ -3240,7 +3240,7 @@ http://web-platform.test:8000/css/CSS2/normal-flow/block-non-replaced-height-013
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-non-replaced-width-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-non-replaced-width-002.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-non-replaced-width-003.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-non-replaced-width-004.xht
+http://web-platform.test:8000/css/CSS2/normal-flow/block-non-replaced-width-004.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-non-replaced-width-005.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-non-replaced-width-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/normal-flow/block-non-replaced-width-007.xht
@@ -3919,16 +3919,16 @@ http://web-platform.test:8000/css/CSS2/other-formats/xml/background-19.xml
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-min-001.html
 http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-min-max-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-001.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-002.xht
+http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-002.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-003.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-004.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-005.xht
+http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-005.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-006.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-007.xht
+http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-007.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-008.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-010.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-011.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-012.xht
+http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-012.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-013.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-014.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-non-replaced-width-015.xht
@@ -4009,22 +4009,22 @@ http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-height-036.
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-038.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-039.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-041.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-043.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-048.xht
+http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-043.xht
+http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-048.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-050.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-051.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-052.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-053.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-055.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-057.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-062.xht
+http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-057.xht
+http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-062.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-064.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-065.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-066.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-067.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-069.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-071.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-076.xht
+http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-071.xht
+http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-width-076.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/abspos-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/abspos-002.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/abspos-007.xht
@@ -4041,7 +4041,7 @@ http://web-platform.test:8000/css/CSS2/positioning/absolute-replaced-height-036.
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/abspos-019.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/abspos-020.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/abspos-022.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/abspos-024.xht
+http://web-platform.test:8000/css/CSS2/positioning/abspos-024.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/abspos-025.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/abspos-026.xht
 http://web-platform.test:8000/css/CSS2/positioning/abspos-027.xht
@@ -4265,7 +4265,7 @@ http://web-platform.test:8000/css/CSS2/positioning/position-relative-031.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/position-relative-033.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/position-relative-035.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/position-relative-037.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/position-relative-038.xht
+http://web-platform.test:8000/css/CSS2/positioning/position-relative-038.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/position-relative-nested-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/position-static-001.xht
 http://web-platform.test:8000/css/CSS2/positioning/positioning-float-001.xht
@@ -4273,60 +4273,60 @@ http://web-platform.test:8000/css/CSS2/positioning/positioning-float-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/relpos-calcs-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/relpos-calcs-002.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/relpos-calcs-003.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/relpos-calcs-004.xht
+http://web-platform.test:8000/css/CSS2/positioning/relpos-calcs-004.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/relpos-calcs-005.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/relpos-calcs-006.xht
+http://web-platform.test:8000/css/CSS2/positioning/relpos-calcs-006.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/relpos-calcs-007.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-004.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-005.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-006.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-007.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-008.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-016.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-017.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-018.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-019.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-020.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-028.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-029.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-030.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-031.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-032.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-040.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-041.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-042.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-043.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-044.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-052.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-053.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-054.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-055.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-056.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-064.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-065.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-066.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-067.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-068.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-076.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-077.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-078.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-079.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-080.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-088.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-089.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-090.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-091.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-092.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-100.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-101.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-102.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-103.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-104.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-109.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-110.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-111.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-112.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-113.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-004.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-005.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-006.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-007.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-008.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-016.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-017.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-018.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-019.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-020.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-028.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-029.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-030.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-031.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-032.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-040.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-041.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-042.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-043.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-044.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-052.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-053.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-054.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-055.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-056.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-064.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-065.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-066.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-067.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-068.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-076.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-077.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-078.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-079.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-080.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-088.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-089.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-090.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-091.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-092.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-100.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-101.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-102.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-103.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-104.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-109.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-110.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-111.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-112.xht
+http://web-platform.test:8000/css/CSS2/positioning/right-113.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-applies-to-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-applies-to-002.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/positioning/right-applies-to-003.xht
@@ -5706,9 +5706,9 @@ http://web-platform.test:8000/css/CSS2/text/text-align-justify-with-overflow.htm
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/text/text-align-white-space-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/text/text-align-white-space-002.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/text/text-align-white-space-004.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/text/text-align-white-space-005.xht
+http://web-platform.test:8000/css/CSS2/text/text-align-white-space-005.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/text/text-align-white-space-006.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/text/text-align-white-space-008.xht
+http://web-platform.test:8000/css/CSS2/text/text-align-white-space-008.xht
 http://web-platform.test:8000/css/CSS2/text/text-decoration-applies-to-001.xht
 http://web-platform.test:8000/css/CSS2/text/text-decoration-applies-to-002.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/text/text-decoration-applies-to-005.xht
@@ -5893,8 +5893,8 @@ http://web-platform.test:8000/css/CSS2/text/white-space-collapsing-003.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/text/white-space-collapsing-004.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/text/white-space-collapsing-005.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/text/white-space-collapsing-bidi-001.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/text/white-space-collapsing-bidi-002.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/text/white-space-collapsing-bidi-003.xht
+http://web-platform.test:8000/css/CSS2/text/white-space-collapsing-bidi-002.xht
+http://web-platform.test:8000/css/CSS2/text/white-space-collapsing-bidi-003.xht
 http://web-platform.test:8000/css/CSS2/text/white-space-collapsing-breaks-001.xht
 http://web-platform.test:8000/css/CSS2/text/white-space-generated-content-before-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/text/white-space-mixed-001.xht

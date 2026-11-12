@@ -1,9 +1,9 @@
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/abspos/abspos-autopos-htb-ltr.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/abspos/abspos-autopos-htb-rtl.html
+http://web-platform.test:8000/css/css-flexbox/abspos/abspos-autopos-htb-rtl.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/abspos/abspos-autopos-vlr-ltr.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/abspos/abspos-autopos-vlr-rtl.html
+# [vacuous-pass:WRITING_MODE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-flexbox/abspos/abspos-autopos-vlr-rtl.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/abspos/abspos-autopos-vrl-ltr.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/abspos/abspos-autopos-vrl-rtl.html
+# [vacuous-pass:WRITING_MODE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-flexbox/abspos/abspos-autopos-vrl-rtl.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/abspos/dynamic-align-self-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/abspos/flex-abspos-align-self-safe-outer-cb-001.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/abspos/flex-abspos-align-self-safe-outer-cb-002.tentative.html
@@ -521,7 +521,7 @@ http://web-platform.test:8000/css/css-flexbox/flexbox-overflow-horiz-003.html
 http://web-platform.test:8000/css/css-flexbox/flexbox-overflow-horiz-004.html
 http://web-platform.test:8000/css/css-flexbox/flexbox-overflow-horiz-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flexbox-overflow-padding-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flexbox-overflow-padding-002.html
+# [vacuous-pass:WRITING_MODE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-flexbox/flexbox-overflow-padding-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flexbox-overflow-vert-001.html
 http://web-platform.test:8000/css/css-flexbox/flexbox-overflow-vert-002.html
 http://web-platform.test:8000/css/css-flexbox/flexbox-overflow-vert-003.html
@@ -885,7 +885,7 @@ http://web-platform.test:8000/css/css-flexbox/order/order-with-row-reverse.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/order-painting.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/ortho-table-item-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/overflow-area-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/overflow-area-002.html
+http://web-platform.test:8000/css/css-flexbox/overflow-area-002.html
 http://web-platform.test:8000/css/css-flexbox/overflow-area-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/overflow-auto-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/overflow-auto-005.html

@@ -515,16 +515,16 @@ http://web-platform.test:8000/html/canvas/offscreen/text/canvas.2d.fontStretch.u
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-auto-dynamic-simple-textContent.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-01.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-02.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-03.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-04.html
+http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-03.html
+http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-04.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-05.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-06.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-07.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-08.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-09.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-10.html
+http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-09.html
+http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-10.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-11.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-12.html
+http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-12.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-13.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-14.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-15.html
@@ -533,28 +533,28 @@ http://web-platform.test:8000/html/canvas/offscreen/text/canvas.2d.fontStretch.u
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-18.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-19.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-20.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-21.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-22.html
+http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-21.html
+http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-22.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-23.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-24.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-25.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-26.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-27.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-28.html
+http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-27.html
+http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-28.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-29.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-30.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-31.html
+http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-31.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-32.html
 http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-33.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-34.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-35.html
+http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-35.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-36.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-37.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-38.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-39.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-40.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-41.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-42.html
+http://web-platform.test:8000/html/dom/elements/global-attributes/dir-shadow-42.html
 http://web-platform.test:8000/html/dom/elements/global-attributes/dir_auto-EN-L.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/dom/elements/global-attributes/dir_auto-EN-R.html
 http://web-platform.test:8000/html/dom/elements/global-attributes/dir_auto-L.html
@@ -664,7 +664,7 @@ http://web-platform.test:8000/html/editing/the-hidden-attribute/hidden-until-fou
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/html/interaction/focus/anchor-element-focus-ring.html
 http://web-platform.test:8000/html/obsolete/requirements-for-implementations/the-marquee-element-0/marquee-min-intrinsic-size.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/obsolete/requirements-for-implementations/the-marquee-element-0/marquee-with-trusted-types.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/bidi-rendering/slot-no-isolate-001.html
+http://web-platform.test:8000/html/rendering/bidi-rendering/slot-no-isolate-001.html
 http://web-platform.test:8000/html/rendering/bindings/the-button-element/button-type-menu-historical.html
 http://web-platform.test:8000/html/rendering/bindings/the-input-element-as-a-text-entry-widget/unrecognized-type-should-fallback-as-text-type.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/bindings/the-select-element-0/option-label.html

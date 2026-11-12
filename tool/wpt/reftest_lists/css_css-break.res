@@ -685,9 +685,9 @@ http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-096.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-097.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-098.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-099.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-100.html
+# [vacuous-pass:MULTICOL_UNIMPLEMENTED] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-100.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-101.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-102.html
+# [vacuous-pass:MULTICOL_UNIMPLEMENTED] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-102.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-103.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-104.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/out-of-flow-in-multicolumn-105.html

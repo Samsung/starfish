@@ -11,7 +11,7 @@ http://web-platform.test:8000/css/selectors/dir-selector-change-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/dir-selector-ltr-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/dir-selector-ltr-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/dir-selector-ltr-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/selectors/dir-selector-rtl-001.html
+http://web-platform.test:8000/css/selectors/dir-selector-rtl-001.html
 http://web-platform.test:8000/css/selectors/dir-selector-white-space-001.html
 http://web-platform.test:8000/css/selectors/dir-style-01a.html
 http://web-platform.test:8000/css/selectors/dir-style-01b.html
