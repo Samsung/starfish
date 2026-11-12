@@ -16,3 +16,5 @@ http://localhost:11010/sdk/tests/conformance2/rendering/blitframebuffer-size-ove
 http://localhost:11010/sdk/tests/conformance2/rendering/blitframebuffer-resolve-to-back-buffer.html
 http://localhost:11010/sdk/tests/conformance/glsl/preprocessor/macro-expansion-tricky.html
 http://localhost:11010/sdk/tests/conformance/glsl/preprocessor/macro-expansion-tricky.html?webglVersion=2
+http://localhost:11010/sdk/tests/conformance/glsl/misc/extension-enable-and-disable.html
+http://localhost:11010/sdk/tests/conformance/extensions/oes-standard-derivatives.html

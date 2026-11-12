@@ -1530,6 +1530,41 @@ static bool isExtensionMacroName(const std::string& name)
     return i > 3 && i < name.size() && name[i] == '_';
 }
 
+// Reads the name and the behavior, each empty when missing, of the #extension
+// directive whose line ends at `end` and whose text after "extension" starts
+// at `rest` (GLSL ES 1.00 and 3.00 §3.4: `#extension name : behavior`). False
+// when more follows the behavior.
+static bool readExtensionDirective(const std::string& view, size_t rest,
+                                   size_t end, std::string& name,
+                                   std::string& behavior)
+{
+    auto skipSpaces = [&view, end](size_t i) {
+        while (i < end && (view[i] == ' ' || view[i] == '\t' ||
+                           view[i] == '\v' || view[i] == '\f')) {
+            i++;
+        }
+        return i;
+    };
+    const size_t nameBegin = skipSpaces(rest);
+    const size_t nameEnd = std::min(identifierEnd(view, nameBegin), end);
+    name = view.substr(nameBegin, nameEnd - nameBegin);
+    behavior.clear();
+    size_t i = skipSpaces(nameEnd);
+    if (i < end && view[i] == ':') {
+        const size_t behaviorBegin = skipSpaces(i + 1);
+        i = std::min(identifierEnd(view, behaviorBegin), end);
+        behavior = view.substr(behaviorBegin, i - behaviorBegin);
+        i = skipSpaces(i);
+    }
+    return i == end;
+}
+
+static bool isExtensionBehavior(const std::string& behavior)
+{
+    return behavior == "require" || behavior == "enable" ||
+           behavior == "warn" || behavior == "disable";
+}
+
 // Appends the line the driver gets for the #extension directive
 // view[line, end), whose text after "extension" starts at `rest` (GLSL ES
 // 1.00 and 3.00 §3.4). It stays for an extension the context enabled; of any
@@ -1541,28 +1576,14 @@ void WebGLRenderingContext::appendExtensionDirective(const std::string& view,
                                                      std::string& out,
                                                      bool& enablesDrawBuffers)
 {
-    auto skipSpaces = [&view, end](size_t i) {
-        while (i < end && (view[i] == ' ' || view[i] == '\t' ||
-                           view[i] == '\v' || view[i] == '\f')) {
-            i++;
-        }
-        return i;
-    };
-    const size_t nameBegin = skipSpaces(rest);
-    const size_t nameEnd = std::min(identifierEnd(view, nameBegin), end);
-    const std::string name = view.substr(nameBegin, nameEnd - nameBegin);
-    size_t i = skipSpaces(nameEnd);
+    std::string name;
     std::string behavior;
-    if (i < end && view[i] == ':') {
-        const size_t behaviorBegin = skipSpaces(i + 1);
-        i = std::min(identifierEnd(view, behaviorBegin), end);
-        behavior = view.substr(behaviorBegin, i - behaviorBegin);
-        i = skipSpaces(i);
-    }
+    const bool complete =
+        readExtensionDirective(view, rest, end, name, behavior);
     if (name == "all") {
         // `all : warn` makes Mesa enable every extension it supports; the
         // driver reports every other behavior that is an error for `all`.
-        if (behavior != "warn" || i != end) {
+        if (behavior != "warn" || !complete) {
             out.append(view, line, end - line);
             if (behavior == "disable") {
                 enablesDrawBuffers = false;
@@ -1574,9 +1595,7 @@ void WebGLRenderingContext::appendExtensionDirective(const std::string& view,
         }
         return;
     }
-    if (name.empty() || i != end ||
-        (behavior != "require" && behavior != "enable" && behavior != "warn" &&
-         behavior != "disable")) {
+    if (name.empty() || !complete || !isExtensionBehavior(behavior)) {
         out += "#error malformed #extension directive";
     } else if (isShaderExtensionEnabled(name)) {
         out.append(view, line, end - line);
@@ -1913,8 +1932,9 @@ static bool isNonZeroConstantIndex(const std::string& text, size_t i,
 }
 
 // The text the driver compiles: `view` with the names of the shader
-// extensions the context did not enable hidden, and their #extension
-// directives replaced. Every identifier is checked, as the driver sees them
+// extensions the context did not enable hidden, their #extension directives
+// replaced, and in GLSL ES 1.00 the directives of an enabled one that follow
+// code moved to the top. Every identifier is checked, as the driver sees them
 // all: a macro expansion makes no new one, as token pasting fails here.
 bool WebGLRenderingContext::shaderSourceForDriver(
     const std::string& view, std::string& out, std::string& code,
@@ -1935,12 +1955,88 @@ bool WebGLRenderingContext::shaderSourceForDriver(
     // WebGL 1, WebGL 2.0 "GLSL ES 1.00 Fragment Shader Output" in WebGL 2.
     const bool singleFragData =
         !essl3 && !isShaderExtensionEnabled("GL_EXT_draw_buffers");
+    // GLSL ES 1.00 in WebGL (WebGL 1.0 "GLSL ES #extension directive
+    // location"): an #extension directive may follow non-preprocessor tokens
+    // unless its behavior is `disable`, and its scope is the whole shader,
+    // the last directive for an extension deciding. A driver takes directives
+    // only before every token, so an enabled extension with a directive after
+    // code gets one at the top with the behavior of its last directive, and
+    // its directives are dropped in place. shortcut: only when none of them is
+    // in an #if group, malformed or a `disable` after code, and the shader has
+    // no `#extension all`; otherwise they stay where they are, for the driver.
+    std::vector<std::pair<std::string, std::string>> hoistedExtensions;
+    std::unordered_set<std::string> hoisted;
+    if (!essl3) {
+        struct ExtensionDirectives {
+            bool followsCode = false;
+            bool stays = false;
+            std::string behavior; // of the last one
+        };
+        std::unordered_map<std::string, ExtensionDirectives> directives;
+        std::vector<std::string> names; // in source order
+        bool hasAll = false;
+        bool afterCode = false; // also code an #if or a macro may drop
+        size_t depth = 0;
+        for (size_t line = 0; line < view.size();) {
+            const size_t end =
+                std::min(view.find_first_of("\r\n", line), view.size());
+            const size_t hash = view.find_first_not_of(kSpaces, line);
+            if (hash < end && view[hash] == '#') {
+                const size_t name =
+                    std::min(view.find_first_not_of(kSpaces, hash + 1), end);
+                const size_t afterName =
+                    std::min(identifierEnd(view, name), end);
+                const std::string directive =
+                    view.substr(name, afterName - name);
+                if (directive == "extension") {
+                    std::string extension;
+                    std::string behavior;
+                    const bool complete = readExtensionDirective(
+                        view, afterName, end, extension, behavior);
+                    if (extension == "all") {
+                        hasAll = true;
+                    } else {
+                        auto found = directives.emplace(extension,
+                                                        ExtensionDirectives());
+                        if (found.second) {
+                            names.push_back(extension);
+                        }
+                        ExtensionDirectives& d = found.first->second;
+                        d.followsCode |= afterCode;
+                        d.stays |= depth || !complete ||
+                                   !isExtensionBehavior(behavior) ||
+                                   (afterCode && behavior == "disable");
+                        d.behavior = behavior;
+                    }
+                } else if (directive == "if" || directive == "ifdef" ||
+                           directive == "ifndef") {
+                    depth++;
+                } else if (directive == "endif" && depth) {
+                    depth--;
+                }
+            } else if (hash < end) {
+                afterCode = true;
+            }
+            line = std::min(view.find_first_not_of("\r\n", end), view.size());
+        }
+        for (const std::string& extension : names) {
+            const ExtensionDirectives& d = directives[extension];
+            if (!hasAll && d.followsCode && !d.stays &&
+                isShaderExtensionEnabled(extension)) {
+                hoistedExtensions.push_back({ extension, d.behavior });
+                hoisted.insert(extension);
+            }
+        }
+    }
     // Neither #if nor macros are evaluated here, so the language rules below
     // reject a token only where the compiler surely sees it: outside every
     // #if group, on a line that is no directive, not named by an earlier
     // #define, and before any function-like macro, which may drop its
     // arguments.
     size_t conditionalDepth = 0;
+    // Whether the compiler surely saw a non-preprocessor token: one on a code
+    // line the rules below judge that is no macro name.
+    bool afterSureCode = false;
     std::unordered_set<std::string> macroNames;
     bool hasFunctionLikeMacro = false;
     // The names that are surely object-like macros: defined outside every #if
@@ -1968,8 +2064,30 @@ bool WebGLRenderingContext::shaderSourceForDriver(
         }
 
         if (directive == "extension") {
-            appendExtensionDirective(view, line, afterDirective, end, out,
-                                     enablesDrawBuffers);
+            std::string extension;
+            std::string behavior;
+            readExtensionDirective(view, afterDirective, end, extension,
+                                   behavior);
+            // In GLSL ES 3.00 no directive may follow code (WebGL 2.0 "GLSL
+            // ES 3.00 #extension directive location"), in GLSL ES 1.00 no
+            // `disable` (see above).
+            if (!conditionalDepth && afterSureCode &&
+                (essl3 || behavior == "disable")) {
+                error = essl3 ? "#extension is not allowed after code"
+                              : "#extension disable is not allowed after code";
+                return false;
+            }
+            if (hoisted.count(extension)) {
+                // At the top instead; one space keeps the line breaks on its
+                // two sides apart.
+                if (extension == "GL_EXT_draw_buffers") {
+                    enablesDrawBuffers = behavior != "disable";
+                }
+                out += ' ';
+            } else {
+                appendExtensionDirective(view, line, afterDirective, end, out,
+                                         enablesDrawBuffers);
+            }
         } else if (directive == "line" &&
                    appendLineDirective(view, afterDirective, end, out)) {
             // replaced by its value
@@ -1992,6 +2110,9 @@ bool WebGLRenderingContext::shaderSourceForDriver(
             for (size_t i = line; i < end;) {
                 const size_t tokenEnd = identifierEnd(view, i);
                 if (tokenEnd == i) {
+                    afterSureCode |= isCode && view[i] != ' ' &&
+                                     view[i] != '\t' && view[i] != '\v' &&
+                                     view[i] != '\f';
                     code += isCode ? view[i] : ' ';
                     out += view[i++];
                     continue;
@@ -2043,6 +2164,7 @@ bool WebGLRenderingContext::shaderSourceForDriver(
                     return false;
                 }
                 if (isCode && !isMacro) {
+                    afterSureCode = true;
                     if (!essl3 && (token == "while" || token == "do")) {
                         // WebGL 1.0 "Supported GLSL Constructs" (GLSL ES
                         // 1.00 Appendix A §4).
@@ -2134,6 +2256,35 @@ bool WebGLRenderingContext::shaderSourceForDriver(
         out.append(view, end, next - end);
         code += '\n';
         line = next;
+    }
+    if (!hoistedExtensions.empty()) {
+        // After `#version` when the shader starts with one; the text before is
+        // as in `view`, and #line keeps the numbers of the lines that follow.
+        size_t at = 0;
+        const size_t first = view.find_first_not_of(" \t\v\f\r\n");
+        if (first < view.size() && view[first] == '#') {
+            const size_t name = std::min(
+                view.find_first_not_of(kSpaces, first + 1), view.size());
+            if (identifierEnd(view, name) == name + 7 &&
+                view.compare(name, 7, "version") == 0) {
+                const size_t lineEnd =
+                    std::min(view.find_first_of("\r\n", name), view.size());
+                at = lineEnd + lineBreakLength(view, lineEnd);
+            }
+        }
+        size_t number = 1;
+        for (size_t i = 0; i < at;) {
+            const size_t length = lineBreakLength(view, i);
+            number += length ? 1 : 0;
+            i += length ? length : 1;
+        }
+        std::string top;
+        for (const auto& extension : hoistedExtensions) {
+            top += "#extension " + extension.first + " : " + extension.second +
+                   "\n";
+        }
+        top += "#line " + std::to_string(number) + "\n";
+        out.insert(at, top);
     }
     writesFragColorToDrawBuffer0Only = usesFragColor && !enablesDrawBuffers;
     return true;
