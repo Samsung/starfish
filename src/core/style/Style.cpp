@@ -6739,7 +6739,7 @@ void StyleResolver::applyProperty(Element* element,
                    (newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Unset)) {
             style->setOpacity(1.0);
-                } else if (newCssValue.valueKind() ==
+        } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::Number) {
             float beforeClip = newCssValue.numberValue();
             style->setOpacity(
@@ -6748,9 +6748,8 @@ void StyleResolver::applyProperty(Element* element,
                    CSSStyleValuePair::ValueKind::CalcValueKind) {
             // A number-typed calc() (e.g. min(.1, .2)) resolves to a plain
             // number at computed-value time and clamps to [0, 1].
-                        float number = newCssValue.calcValue()->numberValue();
-            style->setOpacity(number < 0 ? 0
-                                         : (number > 1.0 ? 1.0 : number));
+            float number = newCssValue.calcValue()->numberValue();
+            style->setOpacity(number < 0 ? 0 : (number > 1.0 ? 1.0 : number));
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -13587,7 +13586,7 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
             auto str = parser.parsedString();
             CalcValue val;
             if (parser.consumeIfNext('(')) {
-                                CalcData* newData = new CalcData(str);
+                CalcData* newData = new CalcData(str);
                 bool negate = !isPlus;
                 if (parseCalc(parser, newData, isLenParser, isAngleParser,
                               isTimeParser, isLineheightParser, isNumberParser,
@@ -13820,7 +13819,7 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
         (calcParserOption == CSSStyleValuePair::CalcParserOption::AngleParser);
     bool isTimeParser =
         (calcParserOption == CSSStyleValuePair::CalcParserOption::TimeParser);
-        bool isLineheightParser =
+    bool isLineheightParser =
         (calcParserOption ==
          CSSStyleValuePair::CalcParserOption::LineheightParser);
     bool isNumberParser =
@@ -13838,9 +13837,9 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
         }
 
         CalcData* data = new CalcData(name);
-        bool result = parseCalc(parser, data, isLenParser, isAngleParser,
-                                isTimeParser, isLineheightParser,
-                                isNumberParser, parserOption);
+        bool result =
+            parseCalc(parser, data, isLenParser, isAngleParser, isTimeParser,
+                      isLineheightParser, isNumberParser, parserOption);
         if (result && parser.isEnd()) {
             m_valueKind = CSSStyleValuePair::ValueKind::CalcValueKind;
             m_value = data;
@@ -15877,9 +15876,9 @@ bool CSSStyleValuePair::updateValueOpacity(Document* document,
     }
     // <number> accepts calc(): a number-typed calc entry (css-values-4
     // §5.6); unit-carrying terms are rejected by the type check.
-    return updateValueUnitCalc(tokens[0],
-                               CSSStyleValuePair::CalcParserOption::NumberParser,
-                               CSSPropertyParser::AllowNegative);
+    return updateValueUnitCalc(
+        tokens[0], CSSStyleValuePair::CalcParserOption::NumberParser,
+        CSSPropertyParser::AllowNegative);
 }
 
 bool CSSStyleValuePair::updateValueFontWeight(Document* document,
