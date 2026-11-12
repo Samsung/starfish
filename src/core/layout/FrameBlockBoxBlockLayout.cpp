@@ -426,8 +426,13 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
                            marginInfo->negativeMargin());
     if (!marginInfo->canCollapseWithMarginBottom()) {
         auto r = ctx.marginCollapseResult(this);
-        r.m_normalFlowHeightAdvance =
-            ctx.maxPositiveMarginBottom() - ctx.maxNegativeMarginBottom();
+        // CSS 2 8.3.1: when every child so far collapsed through, their
+        // margins joined this block's top margin above; they take no room
+        // inside the block as well.
+        if (!marginInfo->canCollapseWithMarginTop()) {
+            r.m_normalFlowHeightAdvance =
+                ctx.maxPositiveMarginBottom() - ctx.maxNegativeMarginBottom();
+        }
         ctx.setMarginCollapseResult(this, r);
         ctx.setMaxMarginBottom(0, 0);
     }

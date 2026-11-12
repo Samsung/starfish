@@ -1,0 +1,54 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Margins that collapse through the top of a block take no room inside it</title>
+<style>
+  body { margin: 0; }
+  .before, .after { height: 10px; }
+  /* The empty child's margins join the parent's top margin (CSS 2 8.3.1);
+     the bottom border only keeps them from reaching the bottom margin. */
+  #bordered { border-bottom: 5px solid black; }
+  #fixed { height: 20px; }
+  .empty { margin: 50px 0; }
+  /* A child with content ends the run: its bottom margin stays inside. */
+  #content { border-bottom: 5px solid black; }
+  #content > div { height: 10px; margin: 30px 0; }
+</style>
+<div class="before"></div>
+<div id="bordered"><div class="empty"></div></div>
+<div class="after" id="after-bordered"></div>
+<div id="fixed"><div class="empty"></div></div>
+<div class="after" id="after-fixed"></div>
+<div id="content"><div></div></div>
+<div class="after" id="after-content"></div>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[margins-collapsed-through-top] " + document.title);
+  };
+}
+
+function rect(id) {
+  return document.getElementById(id).getBoundingClientRect();
+}
+function check(id, top, height) {
+  var r = rect(id);
+  console.assert(r.top === top && r.height === height,
+    id + " should be at " + top + " with height " + height + ", got " + r.top + " / " + r.height);
+}
+
+check("bordered", 60, 5);
+check("after-bordered", 65, 10);
+check("fixed", 125, 20);
+check("after-fixed", 145, 10);
+check("content", 185, 45);
+check("after-content", 230, 10);
+
+testEnd();
+</script>
